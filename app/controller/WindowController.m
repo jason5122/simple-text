@@ -34,11 +34,19 @@
         CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
         CFArrayRef fontDescriptors =
             CTFontDescriptorCreateMatchingFontDescriptors(descriptor, NULL);
-        for (NSFontDescriptor* descriptor in (NSArray*)CFBridgingRelease(fontDescriptors)) {
-            NSString* familyName = [descriptor objectForKey:NSFontFamilyAttribute];
-            NSString* fontSize = [descriptor objectForKey:NSFontFaceAttribute];
-            logDefault(@"WindowController", @"%@ %@", familyName, fontSize);
+
+        for (int i = 0; i < CFArrayGetCount(fontDescriptors); i++) {
+            CTFontDescriptorRef descriptor = CFArrayGetValueAtIndex(fontDescriptors, i);
+            CFStringRef familyName =
+                CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
+            CFStringRef style =
+                CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
+            logDefault(@"WindowController", @"%@ %@", familyName, style);
+
+            CTFontRef font = CTFontCreateWithFontDescriptor(descriptor, 16, NULL);
         }
+
+        CTFontRef appleSymbolsFont = CTFontCreateWithName(CFSTR("Apple Symbols"), 16, NULL);
     }
     return self;
 }

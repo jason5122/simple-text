@@ -47,6 +47,22 @@
         }
 
         CTFontRef appleSymbolsFont = CTFontCreateWithName(CFSTR("Apple Symbols"), 16, NULL);
+        CTFontRef menloFont = CTFontCreateWithName(CFSTR("Menlo"), 16, NULL);
+
+        unichar characters[1];
+        [@"e" getCharacters:characters range:NSMakeRange(0, 1)];
+        CGGlyph glyphs[1];
+        if (CTFontGetGlyphsForCharacters(menloFont, characters, glyphs, 1)) {
+            logDefault(@"WindowController", @"got glyphs! %d", glyphs[0]);
+
+            CGRect bounds;
+            CTFontGetBoundingRectsForGlyphs(menloFont, kCTFontOrientationDefault, glyphs, &bounds,
+                                            1);
+            logDefault(@"WindowController", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
+                       bounds.size.width, bounds.size.height);
+        } else {
+            logDefault(@"WindowController", @"could not get glyphs for characters");
+        }
     }
     return self;
 }

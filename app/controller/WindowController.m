@@ -33,10 +33,6 @@
     [self.window center];
     [self.window setFrameAutosaveName:@"glyph-atlas-cpp"];
     [self.window makeKeyAndOrderFront:nil];
-
-    // OpenGLLayer does not display initially due to OpenGL uniform issue; use hack to display it
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_MSEC), dispatch_get_main_queue(),
-                   ^{ [mainView.layer setNeedsDisplay]; });
 }
 
 @end

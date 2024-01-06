@@ -110,6 +110,8 @@
         // Unbind so future calls won't modify this VAO/VBO.
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        [self draw];  // Initial draw call.
     }
     return context;
 }
@@ -121,12 +123,7 @@
     return true;
 }
 
-- (void)drawInCGLContext:(CGLContextObj)glContext
-             pixelFormat:(CGLPixelFormatObj)pixelFormat
-            forLayerTime:(CFTimeInterval)timeInterval
-             displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(glContext);
-
+- (void)draw {
     glViewport(0, 0, width, height);
 
     GLuint uWidth = glGetUniformLocation(shaderProgram, "width");
@@ -139,6 +136,15 @@
     glUseProgram(shaderProgram);
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, 18);
+}
+
+- (void)drawInCGLContext:(CGLContextObj)glContext
+             pixelFormat:(CGLPixelFormatObj)pixelFormat
+            forLayerTime:(CFTimeInterval)timeInterval
+             displayTime:(const CVTimeStamp*)timeStamp {
+    CGLSetCurrentContext(glContext);
+
+    [self draw];
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

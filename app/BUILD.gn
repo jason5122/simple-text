@@ -12,8 +12,12 @@ macos_app_bundle("app") {
     "AppDelegate.m",
     "controller/WindowController.m",
     "main.m",
+    "model/BoingRenderer.m",
     "util/FileUtil.mm",
     "util/LogUtil.mm",
+    "util/file_util.m",
+    "util/shader_util.c",
+    "view/MyNSOpenGLView.m",
     "view/OpenGLLayer.mm",
   ]
 
@@ -21,6 +25,7 @@ macos_app_bundle("app") {
     "Cocoa.framework",
     "QuartzCore.framework",
     "OpenGL.framework",
+    "GLKit.framework",
   ]
 
   include_dirs = [ "//app" ]
@@ -39,6 +44,9 @@ icon("icon") {
 
 bundle_data("shaders") {
   sources = [
+    "resources/color.fsh",
+    "resources/color.vsh",
+    "resources/lighting.vsh",
     "resources/triangle_frag.glsl",
     "resources/triangle_vert.glsl",
   ]

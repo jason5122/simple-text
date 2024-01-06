@@ -1,4 +1,5 @@
 #import "WindowController.h"
+#import "view/MyNSOpenGLView.h"
 #import "view/OpenGLLayer.h"
 
 @implementation WindowController
@@ -19,7 +20,8 @@
         openGLView.layer = openGLLayer;
         openGLLayer.asynchronous = true;
 
-        self.window.contentView = openGLView;
+        // self.window.contentView = openGLView;
+        self.window.contentView = [[MyNSOpenGLView alloc] initWithFrame:frameRect];
     }
     return self;
 }

@@ -36,16 +36,10 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
     // NOTE: to use integrated GPU:
     // 1. NSOpenGLPFAAllowOfflineRenderers when using NSOpenGL
     // 2. kCGLPFAAllowOfflineRenderers when using CGL
-    NSOpenGLPixelFormatAttribute attribs[] = {NSOpenGLPFADoubleBuffer,
+    NSOpenGLPixelFormatAttribute attribs[] = {NSOpenGLPFAColorSize,
+                                              24,
+                                              NSOpenGLPFADoubleBuffer,
                                               NSOpenGLPFAAllowOfflineRenderers,
-                                              NSOpenGLPFAMultisample,
-                                              1,
-                                              NSOpenGLPFASampleBuffers,
-                                              1,
-                                              NSOpenGLPFASamples,
-                                              4,
-                                              NSOpenGLPFAColorSize,
-                                              32,
                                               NSOpenGLPFAOpenGLProfile,
                                               NSOpenGLProfileVersion3_2Core,
                                               0};

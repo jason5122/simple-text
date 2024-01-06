@@ -15,7 +15,6 @@ macos_app_bundle("app") {
     "model/BoingRenderer.m",
     "util/FileUtil.mm",
     "util/LogUtil.mm",
-    "util/file_util.m",
     "util/shader_util.c",
     "view/MyNSOpenGLView.m",
     "view/OpenGLLayer.mm",

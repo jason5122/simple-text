@@ -1,5 +1,5 @@
 #import "BoingRenderer.h"
-#import "util/file_util.h"
+#import "util/FileUtil.h"
 #import "util/shader_util.h"
 #import <GLKit/GLKit.h>
 
@@ -217,8 +217,8 @@ static float shininess = 10.0;
 
 - (void)setupShaders {
     for (int i = 0; i < NUM_PROGRAMS; i++) {
-        char* vsrc = readFile(pathForResource(program[i].vert));
-        char* fsrc = readFile(pathForResource(program[i].frag));
+        char* vsrc = readFile(resourcePath(program[i].vert));
+        char* fsrc = readFile(resourcePath(program[i].frag));
         GLsizei attribCt = 0;
         GLchar* attribUsed[NUM_ATTRIBS];
         GLint attrib[NUM_ATTRIBS];

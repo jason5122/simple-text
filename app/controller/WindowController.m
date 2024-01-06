@@ -1,4 +1,5 @@
 #import "WindowController.h"
+#import "util/LogUtil.h"
 #import "view/OpenGLLayer.h"
 
 @implementation WindowController
@@ -25,6 +26,19 @@
         // openGLLayer.asynchronous = true;
 
         self.window.contentView = mainView;
+
+        NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
+        CTFontDescriptorRef descriptor =
+            CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
+        CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
+        CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
+        CFArrayRef fontDescriptors =
+            CTFontDescriptorCreateMatchingFontDescriptors(descriptor, NULL);
+        for (NSFontDescriptor* descriptor in (NSArray*)CFBridgingRelease(fontDescriptors)) {
+            NSString* familyName = [descriptor objectForKey:NSFontFamilyAttribute];
+            NSString* fontSize = [descriptor objectForKey:NSFontFaceAttribute];
+            logDefault(@"WindowController", @"%@ %@", familyName, fontSize);
+        }
     }
     return self;
 }

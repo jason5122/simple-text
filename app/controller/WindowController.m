@@ -14,13 +14,12 @@
                                                       defer:false];
         self.window.title = @"Glyph Atlas C++";
 
-        openGLView = [[NSView alloc] initWithFrame:frameRect];
-        openGLLayer = [OpenGLLayer layer];
-        openGLView.layer = openGLLayer;
+        mainView = [[NSView alloc] initWithFrame:frameRect];
+        mainView.layer = [OpenGLLayer layer];
+        mainView.layer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
-        openGLLayer.needsDisplayOnBoundsChange = true;
 
-        self.window.contentView = openGLView;
+        self.window.contentView = mainView;
     }
     return self;
 }
@@ -29,6 +28,10 @@
     [self.window center];
     [self.window setFrameAutosaveName:@"glyph-atlas-cpp"];
     [self.window makeKeyAndOrderFront:nil];
+
+    // OpenGLLayer does not display initially due to OpenGL uniform issue; use hack to display it
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_MSEC), dispatch_get_main_queue(),
+                   ^{ [mainView.layer setNeedsDisplay]; });
 }
 
 @end

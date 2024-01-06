@@ -1,8 +1,7 @@
 #import <Cocoa/Cocoa.h>
 
 @interface WindowController : NSWindowController {
-    NSView* openGLView;
-    CAOpenGLLayer* openGLLayer;
+    NSView* mainView;
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect;

@@ -5,8 +5,8 @@
 
 @interface OpenGLLayer () {
     GLuint shaderProgram;
-    GLuint vao;
-    GLuint vbo;
+    GLuint vao, vbo;
+    GLfloat width, height;
 }
 @end
 
@@ -39,6 +39,9 @@
     CGLContextObj context = nullptr;
     CGLCreateContext(pixelFormat, nullptr, &context);
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
+        width = self.frame.size.width;
+        height = self.frame.size.height;
+
         // https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_designstrategies/opengl_designstrategies.html#//apple_ref/doc/uid/TP40001987-CH2-SW4
         GLint params = 1;
         CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
@@ -46,6 +49,7 @@
         CGLSetCurrentContext(context);
 
         logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
+        logDefault(@"OpenGL", @"%fx%f", width, height);
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -70,12 +74,32 @@
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
         float vertices[] = {
-            0.0f, 0.0f,  //
-            0.5f, 0.5f,  //
-            0.0f, 0.5f,  //
+            // Tab bar
+            0, 1051 - 60,     //
+            1728, 1051,       //
+            0, 1051,          //
+            1728, 1051 - 60,  //
+            1728, 1051,       //
+            0, 1051 - 60,     //
+
+            // Side bar
+            200, 0,     //
+            0, 1051,    //
+            0, 0,       //
+            200, 1051,  //
+            0, 1051,    //
+            200, 0,     //
+
+            // Status bar
+            0, 100,     //
+            1728, 0,    //
+            0, 0,       //
+            1728, 100,  //
+            1728, 0,    //
+            0, 100,     //
         };
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
         // Unbind so future calls won't modify this VAO/VBO.
@@ -89,7 +113,7 @@
                 pixelFormat:(CGLPixelFormatObj)pixelFormat
                forLayerTime:(CFTimeInterval)timeInterval
                 displayTime:(const CVTimeStamp*)timeStamp {
-    return YES;
+    return true;
 }
 
 - (void)drawInCGLContext:(CGLContextObj)glContext
@@ -98,20 +122,18 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(glContext);
 
-    logDefault(@"OpenGL", @"%fx%f", self.frame.size.width, self.frame.size.height);
+    glViewport(0, 0, width, height);
 
-    glViewport(0, 0, 1728, 1051);
-
-    GLuint uViewportSize = glGetUniformLocation(shaderProgram, "viewportSize");
-    GLfloat w = self.frame.size.width;
-    GLfloat h = self.frame.size.height;
-    glUniform2fv(uViewportSize, 2, new float[2]{w, h});
+    GLuint uWidth = glGetUniformLocation(shaderProgram, "width");
+    GLuint uHeight = glGetUniformLocation(shaderProgram, "height");
+    glUniform1f(uWidth, width);
+    glUniform1f(uHeight, height);
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(shaderProgram);
     glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 18);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

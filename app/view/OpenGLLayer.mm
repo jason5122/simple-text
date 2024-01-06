@@ -73,34 +73,39 @@
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
+        float gray = 228 / 255.f;
+        float darkGray = 207 / 255.f;
         float vertices[] = {
             // Tab bar
-            0, 1051 - 60,     //
-            1728, 1051,       //
-            0, 1051,          //
-            1728, 1051 - 60,  //
-            1728, 1051,       //
-            0, 1051 - 60,     //
+            0, 1051 - 30, gray, gray, gray,     //
+            1728, 1051, gray, gray, gray,       //
+            0, 1051, gray, gray, gray,          //
+            1728, 1051 - 30, gray, gray, gray,  //
+            1728, 1051, gray, gray, gray,       //
+            0, 1051 - 30, gray, gray, gray,     //
 
             // Side bar
-            200, 0,     //
-            0, 1051,    //
-            0, 0,       //
-            200, 1051,  //
-            0, 1051,    //
-            200, 0,     //
+            200, 0, gray, gray, gray,     //
+            0, 1051, gray, gray, gray,    //
+            0, 0, gray, gray, gray,       //
+            200, 1051, gray, gray, gray,  //
+            0, 1051, gray, gray, gray,    //
+            200, 0, gray, gray, gray,     //
 
             // Status bar
-            0, 100,     //
-            1728, 0,    //
-            0, 0,       //
-            1728, 100,  //
-            1728, 0,    //
-            0, 100,     //
+            0, 50, darkGray, darkGray, darkGray,     //
+            1728, 0, darkGray, darkGray, darkGray,   //
+            0, 0, darkGray, darkGray, darkGray,      //
+            1728, 50, darkGray, darkGray, darkGray,  //
+            1728, 0, darkGray, darkGray, darkGray,   //
+            0, 50, darkGray, darkGray, darkGray,     //
         };
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                              (void*)(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
 
         // Unbind so future calls won't modify this VAO/VBO.
         glBindVertexArray(0);

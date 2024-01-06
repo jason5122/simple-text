@@ -1,9 +1,12 @@
 #version 330 core
 
 layout(location = 0) in vec2 pixelPos;
+layout(location = 1) in vec3 vertexColor;
 
 uniform float width;
 uniform float height;
+
+out vec3 color;
 
 vec2 pixelToClipSpace(vec2 point, vec2 resolution) {
     vec2 vertexCoords = pixelPos / resolution;  // Normalize to [0.0, 1.0].
@@ -15,4 +18,5 @@ vec2 pixelToClipSpace(vec2 point, vec2 resolution) {
 void main() {
     gl_Position.xy = pixelToClipSpace(pixelPos, vec2(width, height));
     gl_Position.zw = vec2(0.0, 1.0);
+    color = vertexColor;
 }

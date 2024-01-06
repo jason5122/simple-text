@@ -12,7 +12,6 @@ macos_app_bundle("app") {
     "AppDelegate.m",
     "controller/WindowController.m",
     "main.m",
-    "model/Renderer.mm",
     "util/log_util.mm",
     "view/OpenGLLayer.m",
   ]
@@ -28,18 +27,9 @@ macos_app_bundle("app") {
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
-  deps = [
-    ":icon",
-    ":shaders",
-  ]
+  deps = [ ":icon" ]
 }
 
 icon("icon") {
   sources = [ "resources/app.iconset" ]
-}
-
-bundle_data("shaders") {
-  sources = [ "$root_gen_dir/shaders/shaders.metallib" ]
-  outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
-  public_deps = [ "//app/shaders:metal_shaders_to_metallib" ]
 }

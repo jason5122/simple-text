@@ -57,7 +57,7 @@
 
     // We're just going to draw a single red quad spinning around based on the current time.
     // Nothing particularly fancy.
-    GLfloat rotate = timeInterval * 60.0;  // 60 degrees per second!
+    GLfloat rotate = timeInterval * 120.0;  // 120 degrees per second!
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();

@@ -17,7 +17,8 @@
         openGLView = [[NSView alloc] initWithFrame:frameRect];
         openGLLayer = [OpenGLLayer layer];
         openGLView.layer = openGLLayer;
-        openGLLayer.asynchronous = true;
+        // openGLLayer.asynchronous = true;
+        openGLLayer.needsDisplayOnBoundsChange = true;
 
         self.window.contentView = openGLView;
     }

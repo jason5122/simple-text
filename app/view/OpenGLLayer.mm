@@ -39,6 +39,10 @@
     CGLContextObj context = nullptr;
     CGLCreateContext(pixelFormat, nullptr, &context);
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
+        // https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_designstrategies/opengl_designstrategies.html#//apple_ref/doc/uid/TP40001987-CH2-SW4
+        GLint params = 1;
+        CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
+
         CGLSetCurrentContext(context);
 
         logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
@@ -77,9 +81,6 @@
         // Unbind so future calls won't modify this VAO/VBO.
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // GLint params = 1;
-        // CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
     }
     return context;
 }
@@ -96,6 +97,15 @@
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(glContext);
+
+    logDefault(@"OpenGL", @"%fx%f", self.frame.size.width, self.frame.size.height);
+
+    // glViewport(0, 0, 2000 - self.frame.size.width, self.frame.size.height);
+
+    GLuint uViewportSize = glGetUniformLocation(shaderProgram, "viewportSize");
+    GLfloat w = self.frame.size.width;
+    GLfloat h = self.frame.size.height;
+    glUniform2fv(uViewportSize, 2, new float[2]{w, h});
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);

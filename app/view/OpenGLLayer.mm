@@ -1,15 +1,51 @@
 #import "OpenGLLayer.h"
+#import "util/FileUtil.h"
+#import "util/LogUtil.h"
 #import <OpenGL/OpenGL.h>
 #import <OpenGL/gl.h>
 
 @implementation OpenGLLayer
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return [super copyCGLPixelFormatForDisplayMask:mask];
+    CGLPixelFormatAttribute attribs[] = {
+        kCGLPFADisplayMask,
+        static_cast<CGLPixelFormatAttribute>(mask),
+        kCGLPFAColorSize,
+        static_cast<CGLPixelFormatAttribute>(24),
+        kCGLPFAAlphaSize,
+        static_cast<CGLPixelFormatAttribute>(8),
+        kCGLPFAAccelerated,
+        kCGLPFANoRecovery,
+        kCGLPFADoubleBuffer,
+        kCGLPFAAllowOfflineRenderers,
+        kCGLPFAOpenGLProfile,
+        static_cast<CGLPixelFormatAttribute>(kCGLOGLPVersion_Legacy),
+        static_cast<CGLPixelFormatAttribute>(0),
+    };
+
+    CGLPixelFormatObj pixelFormat = nullptr;
+    GLint numFormats = 0;
+    CGLChoosePixelFormat(attribs, &pixelFormat, &numFormats);
+    return pixelFormat;
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    return [super copyCGLContextForPixelFormat:pixelFormat];
+    CGLContextObj context = nullptr;
+    CGLCreateContext(pixelFormat, nullptr, &context);
+    if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
+        CGLSetCurrentContext(context);
+
+        logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
+        const GLchar* vertSource = readFile(resourcePath("triangle_frag.glsl"));
+        const GLchar* fragSource = readFile(resourcePath("triangle_vert.glsl"));
+
+        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+        glShaderSource(vertexShader, 1, &vertSource, nullptr);
+        glShaderSource(fragmentShader, 1, &fragSource, nullptr);
+    }
+    return context;
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext

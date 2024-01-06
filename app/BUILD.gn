@@ -12,14 +12,14 @@ macos_app_bundle("app") {
     "AppDelegate.m",
     "controller/WindowController.m",
     "main.m",
-    "util/log_util.mm",
+    "util/FileUtil.mm",
+    "util/LogUtil.mm",
     "view/OpenGLLayer.mm",
   ]
 
   frameworks = [
     "Cocoa.framework",
     "QuartzCore.framework",
-    "Metal.framework",
     "OpenGL.framework",
   ]
 
@@ -27,9 +27,20 @@ macos_app_bundle("app") {
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
-  deps = [ ":icon" ]
+  deps = [
+    ":icon",
+    ":shaders",
+  ]
 }
 
 icon("icon") {
   sources = [ "resources/app.iconset" ]
+}
+
+bundle_data("shaders") {
+  sources = [
+    "resources/triangle_frag.glsl",
+    "resources/triangle_vert.glsl",
+  ]
+  outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
 }

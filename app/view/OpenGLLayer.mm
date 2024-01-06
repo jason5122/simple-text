@@ -45,8 +45,8 @@
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        const GLchar* vertSource = readFile(resourcePath("triangle_frag.glsl"));
-        const GLchar* fragSource = readFile(resourcePath("triangle_vert.glsl"));
+        const GLchar* vertSource = readFile(resourcePath("triangle_vert.glsl"));
+        const GLchar* fragSource = readFile(resourcePath("triangle_frag.glsl"));
         glShaderSource(vertexShader, 1, &vertSource, nullptr);
         glShaderSource(fragmentShader, 1, &fragSource, nullptr);
         glCompileShader(vertexShader);
@@ -60,47 +60,26 @@
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        // glGenVertexArrays(1, &vao);
-        // glGenBuffers(1, &vbo);
-        // glBindVertexArray(vao);
-        // glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-        // float vertices[] = {
-        //     -0.5f, -0.5f, 0.0f,  // left
-        //     0.5f,  -0.5f, 0.0f,  // right
-        //     0.0f,  0.5f,  0.0f   // top
-        // };
-        // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        // glEnableVertexAttribArray(0);
-
-        // // Unbind so future calls won't modify this VAO/VBO.
-        // glBindVertexArray(0);
-        // glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // GLint params = 1;
-        // CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
-
-        float vertices[] = {
-            // positions        // colors
-            0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom left
-            0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f   // top
-        };
-
         glGenVertexArrays(1, &vao);
         glGenBuffers(1, &vbo);
         glBindVertexArray(vao);
-
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        float vertices[] = {
+            -0.5f, -0.5f, 0.0f,  // left
+            0.5f,  -0.5f, 0.0f,  // right
+            0.0f,  0.5f,  0.0f   // top
+        };
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
-                              (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
+        // Unbind so future calls won't modify this VAO/VBO.
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // GLint params = 1;
+        // CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
     }
     return context;
 }
@@ -118,15 +97,8 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(glContext);
 
-    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    // glClear(GL_COLOR_BUFFER_BIT);
-    // glUseProgram(shaderProgram);
-    // glBindVertexArray(vao);
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-
     glUseProgram(shaderProgram);
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -147,9 +119,9 @@
 }
 
 - (void)dealloc {
+    glDeleteProgram(shaderProgram);
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
-    glDeleteProgram(shaderProgram);
 }
 
 @end

@@ -13,7 +13,7 @@ macos_app_bundle("app") {
     "controller/WindowController.m",
     "main.m",
     "util/log_util.mm",
-    "view/OpenGLLayer.m",
+    "view/OpenGLLayer.mm",
   ]
 
   frameworks = [

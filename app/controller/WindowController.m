@@ -14,15 +14,8 @@
                                                       defer:false];
         self.window.title = @"Glyph Atlas C++";
 
-        self.window.titlebarAppearsTransparent = true;
-        self.window.backgroundColor = [NSColor colorWithSRGBRed:228 / 255.f
-                                                          green:228 / 255.f
-                                                           blue:228 / 255.f
-                                                          alpha:1.f];
-
         openGLView = [[NSView alloc] initWithFrame:frameRect];
         openGLLayer = [OpenGLLayer layer];
-        [openGLLayer setNeedsDisplay];
         openGLView.layer = openGLLayer;
         openGLLayer.asynchronous = true;
 

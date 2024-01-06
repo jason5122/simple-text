@@ -1,0 +1,113 @@
+import("//build/config/mac/mac_sdk.gni")
+
+declare_args() {
+  target_triplet = ""
+}
+
+config("compiler") {
+  configs = [
+    ":compiler_codegen",
+    ":include_dirs",
+    ":objc_abi_version",
+    ":objc_use_arc",
+    ":cpp_standard",
+    ":objc_standard",
+  ]
+}
+
+config("shared_binary") {
+  if (current_os == "ios" || current_os == "mac") {
+    configs = [ ":rpath_config" ]
+  }
+}
+
+config("compiler_codegen") {
+  # |target_triplet| is the variable that the user can set via GN args. The user
+  # doesn't have to necessarily set it though. In most cases we can infer it
+  # by looking at target_os and target_cpu.
+  if (target_triplet != "") {
+    # If the user provides the target_triplet in gn args, respect that.
+    # Otherwise guess it looking at the target os and cpu variables.
+    _target_triplet = target_triplet
+  } else if (target_os == "mac" && target_cpu == "arm64") {
+    _target_triplet = "arm64-apple-macos"
+  } else if (target_os == "mac" && target_cpu == "x64") {
+    _target_triplet = "x86_64-apple-macos"
+  } else {
+    assert(
+        false,
+        "Cannot guess the target triplet from the target_os and target_cpu combination. Please set the target_triplet GN arg explicitly. See https://clang.llvm.org/docs/CrossCompilation.html#target-triple")
+  }
+
+  cflags = [
+    "-target",
+    "$_target_triplet$mac_deployment_target",
+  ]
+  ldflags = [
+    "-target",
+    "$_target_triplet$mac_deployment_target",
+  ]
+  swiftflags = [
+    "-target",
+    "${_target_triplet}13",
+  ]
+}
+
+config("include_dirs") {
+  include_dirs = [
+    "//",
+    root_gen_dir,
+  ]
+}
+
+config("objc_abi_version") {
+  cflags_objc = [ "-fobjc-abi-version=2" ]
+  cflags_objcc = cflags_objc
+  ldflags = [
+    "-Xlinker",
+    "-objc_abi_version",
+    "-Xlinker",
+    "2",
+  ]
+}
+
+config("objc_use_arc") {
+  cflags_objc = [
+    "-fobjc-arc",
+    "-fobjc-weak",
+  ]
+  cflags_objcc = cflags_objc
+}
+
+config("cpp_standard") {
+  cflags_c = [ "--std=c11" ]
+  cflags_cc = [
+    "--std=c++17",
+    "--stdlib=libc++",
+  ]
+  ldflags = [ "--stdlib=libc++" ]
+}
+
+config("objc_standard") {
+  cflags_objc = [ "--std=c11" ]
+  cflags_objcc = [
+    "--std=c++17",
+    "--stdlib=libc++",
+  ]
+  ldflags = [ "--stdlib=libc++" ]
+}
+
+if (current_os == "ios" || current_os == "mac") {
+  config("rpath_config") {
+    ldflags = [
+      "-Xlinker",
+      "-rpath",
+      "-Xlinker",
+      "@executable_path/../Frameworks",
+      "-Xlinker",
+      "-rpath",
+      "-Xlinker",
+      "@loader_path/../Frameworks",
+    ]
+  }
+}

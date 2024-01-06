@@ -1,0 +1,23 @@
+template("icon") {
+  assert(defined(invoker.sources),
+         "sources must be defined for icon ($target_name)")
+
+  _compile_target = target_name + "_compile"
+  _compile_output = "$target_out_dir/$_compile_target/{{source_name_part}}.icns"
+
+  action_foreach(_compile_target) {
+    script = "//build/config/mac/scripts/generate_icon.py"
+    sources = invoker.sources
+    outputs = [ _compile_output ]
+    args = [
+      "{{source}}",
+      "-o=" + rebase_path(_compile_output, root_build_dir),
+    ]
+  }
+
+  bundle_data(target_name) {
+    public_deps = [ ":$_compile_target" ]
+    sources = get_target_outputs(":$_compile_target")
+    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+  }
+}

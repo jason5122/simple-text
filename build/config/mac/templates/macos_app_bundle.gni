@@ -1,0 +1,110 @@
+import("//build/config/mac/templates/merge_plist.gni")
+
+declare_args() {
+  code_signing_identity = ""
+}
+
+template("macos_app_bundle") {
+  _output_name = target_name
+  if (defined(invoker.output_name)) {
+    _output_name = invoker.output_name
+  }
+
+  _bundle_identifier = "com.example.app"
+  if (defined(invoker.bundle_identifier)) {
+    _bundle_identifier = invoker.bundle_identifier
+  }
+
+  _code_signing_identity = ""
+  if (defined(invoker.code_signing_identity)) {
+    _code_signing_identity = invoker.code_signing_identity
+  }
+
+  _display_name = _output_name
+  if (defined(invoker.display_name)) {
+    _display_name = invoker.display_name
+  }
+
+  _executable_target = target_name + "_executable"
+  _plist_target = target_name + "_plist"
+  _plist_bundle = target_name + "_plist_bundle"
+
+  executable(_executable_target) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "bundle_extension",
+                             "bundle_identifier_prefix",
+                             "bundle_type",
+                             "display_name",
+                             "info_plist",
+                             "output_name",
+                             "public_headers",
+                           ])
+
+    output_extension = ""
+    output_name = _output_name
+    output_prefix_override = true
+    output_dir = "$target_gen_dir/$_executable_target"
+  }
+
+  merge_plist(_plist_target) {
+    substitutions = {
+      DEVELOPMENT_LANGUAGE = "en"
+      EXECUTABLE_NAME = "$_output_name"
+      PRODUCT_BUNDLE_IDENTIFIER = "$_bundle_identifier"
+      PRODUCT_BUNDLE_PACKAGE_TYPE = "AAPL"
+      PRODUCT_NAME = "$_display_name"
+    }
+
+    format = "xml1"
+    output = "$target_out_dir/$_plist_target/Info.plist"
+
+    plists = [ "//build/config/mac/resources/Info.plist" ]
+    if (defined(invoker.info_plist)) {
+      plists += [ invoker.info_plist ]
+    }
+  }
+
+  bundle_data(_plist_bundle) {
+    public_deps = [ ":$_plist_target" ]
+    sources = [ "$target_out_dir/$_plist_target/Info.plist" ]
+    outputs = [ "{{bundle_contents_dir}}/Info.plist" ]
+  }
+
+  create_bundle(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "display_name",
+                             "output_name",
+                             "bundle_type",
+                           ])
+    public_deps = [
+      ":$_executable_target",
+      ":$_plist_bundle",
+    ]
+
+    bundle_root_dir = "$root_out_dir/$_output_name.app"
+    bundle_contents_dir = "$bundle_root_dir/Contents"
+    bundle_resources_dir = "$bundle_contents_dir/Resources"
+    bundle_executable_dir = "$bundle_contents_dir/MacOS"
+
+    code_signing_script = "//build/config/mac/scripts/codesign.py"
+    code_signing_sources =
+        [ "$target_gen_dir/$_executable_target/$_output_name" ]
+    code_signing_outputs = [
+      "$bundle_executable_dir/$_output_name",
+      "$bundle_contents_dir/_CodeSignature/CodeResources",
+    ]
+    code_signing_args = [
+      "code-sign-bundle",
+      "-t=" + "macosx",
+      "-i=" + _code_signing_identity,
+      "-b=" + rebase_path("$target_gen_dir/$_executable_target/$_output_name",
+                          root_build_dir),
+      "--disable-embedded-mobileprovision",
+      rebase_path(bundle_root_dir, root_build_dir),
+    ]
+  }
+}

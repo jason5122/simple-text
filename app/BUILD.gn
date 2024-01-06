@@ -1,0 +1,45 @@
+import("//build/config/mac/templates/icon.gni")
+import("//build/config/mac/templates/macos_app_bundle.gni")
+
+macos_app_bundle("app") {
+  output_name = "GlyphAtlasCpp"
+  bundle_identifier = "com.jason5122.glyph-atlas-cpp"
+  info_plist = "resources/Info.plist"
+
+  # define `code_signing_identity` in args.gn
+
+  sources = [
+    "AppDelegate.m",
+    "controller/WindowController.m",
+    "main.m",
+    "model/Renderer.mm",
+    "util/log_util.mm",
+    "view/OpenGLLayer.m",
+  ]
+
+  frameworks = [
+    "Cocoa.framework",
+    "QuartzCore.framework",
+    "Metal.framework",
+    "OpenGL.framework",
+  ]
+
+  include_dirs = [ "//app" ]
+
+  defines = [ "GL_SILENCE_DEPRECATION" ]
+
+  deps = [
+    ":icon",
+    ":shaders",
+  ]
+}
+
+icon("icon") {
+  sources = [ "resources/app.iconset" ]
+}
+
+bundle_data("shaders") {
+  sources = [ "$root_gen_dir/shaders/shaders.metallib" ]
+  outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
+  public_deps = [ "//app/shaders:metal_shaders_to_metallib" ]
+}

@@ -1,0 +1,229 @@
+template("mac_toolchain") {
+  toolchain(target_name) {
+    assert(defined(invoker.toolchain_args),
+           "Toolchains must declare toolchain_args")
+
+    toolchain_args = {
+      forward_variables_from(invoker.toolchain_args, "*")
+    }
+
+    cc = "clang"
+    cxx = "clang++"
+    ar = "llvm-ar"
+
+    tool("link") {
+      rspfile = "{{output}}.rsp"
+      rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
+
+      command = "$cxx {{ldflags}} -o {{output}} @$rspfile"
+      description = "LINK {{output}}"
+
+      outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = ""
+      output_prefix = ""
+    }
+
+    tool("alink") {
+      rspfile = "{{output}}.rsp"
+      rspfile_content = "{{inputs}}"
+
+      # Remove the output file first so that ar doesn't try to modify the existing file.
+      command = "$ar {{arflags}} -r -c -s -D {{output}} @$rspfile"
+      command = "rm -f {{output}} && $command"
+      description = "AR {{output}}"
+
+      outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
+      default_output_dir = "{{target_out_dir}}"
+      default_output_extension = ".a"
+      output_prefix = "lib"
+    }
+
+    tool("solink") {
+      rspfile = "{{output}}.rsp"
+      rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
+
+      command = "$cxx -dynamiclib {{ldflags}} -o {{output}} @$rspfile"
+      description = "SOLINK {{output}}"
+
+      outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = ".dylib"
+      output_prefix = "lib"
+    }
+
+    tool("cc") {
+      depfile = "{{output}}.d"
+      depsformat = "gcc"
+      precompiled_header_type = "gcc"
+      command = "$cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
+      description = "CC {{output}}"
+      outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.o" ]
+    }
+
+    tool("cxx") {
+      depfile = "{{output}}.d"
+      depsformat = "gcc"
+      precompiled_header_type = "gcc"
+      command = "$cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -c {{source}} -o {{output}}"
+      description = "CXX {{output}}"
+      outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.o" ]
+    }
+
+    tool("objc") {
+      depfile = "{{output}}.d"
+      depsformat = "gcc"
+      precompiled_header_type = "gcc"
+      command = "$cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{framework_dirs}} {{cflags}} {{cflags_objc}} -c {{source}} -o {{output}}"
+      description = "OBJC {{output}}"
+      outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.o" ]
+    }
+
+    tool("objcxx") {
+      depfile = "{{output}}.d"
+      depsformat = "gcc"
+      precompiled_header_type = "gcc"
+      command = "$cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{framework_dirs}} {{cflags}} {{cflags_objcc}} -c {{source}} -o {{output}}"
+      description = "OBJCXX {{output}}"
+      outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.o" ]
+    }
+
+    tool("swift") {
+      depfile = "{{target_out_dir}}/{{module_name}}.d"
+      depsformat = "gcc"
+
+      outputs = [
+        # The module needs to be the first output listed. The blank line after
+        # the module is required to prevent `gn format` from changing the file
+        # order.
+        "{{target_gen_dir}}/{{module_name}}.swiftmodule",
+
+        "{{target_gen_dir}}/{{target_output_name}}.h",
+        "{{target_gen_dir}}/{{module_name}}.swiftdoc",
+        "{{target_gen_dir}}/{{module_name}}.swiftsourceinfo",
+      ]
+
+      _tool =
+          rebase_path("//build/config/mac/scripts/swiftc.py", root_build_dir)
+
+      # Additional flags passed to the wrapper script but that are only
+      # set conditionally.
+      _extra_flags = ""
+      swift_whole_module_optimization = true
+      if (swift_whole_module_optimization) {
+        _extra_flags += " -whole-module-optimization"
+        _objects_dir = "{{target_out_dir}}"
+
+        outputs += [ "$_objects_dir/{{module_name}}.o" ]
+      } else {
+        _objects_dir = "{{target_out_dir}}/{{label_name}}"
+
+        partial_outputs = [ "$_objects_dir/{{source_name_part}}.o" ]
+      }
+
+      # Starting with version 5.6, the Swift compiler will always
+      # generates precompiled headers. In anterior version, it was
+      # used when bridging headers and whole module optimisation
+      # where enabled, and it could be disabled with the parameter
+      # `-disable-bridging-pch`.
+      #
+      # The precompiled headers are binary files (i.e. they are not
+      # regular Objective-C header files and cannot be loaded as such).
+      #
+      # There is an hidden requirements that the compiler needs to
+      # be told where to save those .pch files (via the parameter
+      # `-pch-output-dir $dir`). If this parameter is not passed, the
+      # compiler will silently write them at an incorrect location,
+      # leading later pass to try to load those .pch files as either
+      # regular header files (.h) or object files (.o) and causing
+      # to compilation failures.
+      #
+      # List the directory where the precompiled header is generated
+      # as an output, but do not list the .pch file itself. This is
+      # because the names includes two hashes (one corresponding to
+      # the compiler revision, and the other probably derived from
+      # the module itself) that are difficult to generate.
+      #
+      # Still we want to avoid creating a directory that has the same
+      # name as a file generated by another rule, so explicitly list
+      # the directory in `outputs` so that gn can warn it is conflicts
+      # with another output file.
+
+      _pch_output_dir = "{{target_out_dir}}/{{module_name}}:pch/"
+      outputs += [ _pch_output_dir ]
+
+      # The Swift compiler assumes that the generated header will be used by
+      # Objective-C code compiled with module support enabled (-fmodules).
+      #
+      # The import looks like this in the generated header:
+      #
+      #     #if __has_feature(modules)
+      #     @import UIKit;
+      #     #endif
+      #
+      # As Chromium code is compiled without support for modules (i.e. the
+      # code is compiled without `-fmodules`), the dependent modules are not
+      # imported from the generated header, which causes compilation failure
+      # if the client code does not first import the required modules (see
+      # https://crbug.com/1316061 for details).
+      #
+      # Secondly, clang ToT always returns `1` when `__has_features(modules)`
+      # is evaluated, even if building with `-fno-modules` when building with
+      # `-std=c++20` (see https://crbug.com/1284275 for details). This causes
+      # the `@import` lines to be reached and the build to fail (since the
+      # support for modules is not enabled).
+      #
+      # Instruct swiftc.py to rewrite the generated header to use the old
+      # import pre-processor instructions (#import <UIKit/UIKit.h>) to work
+      # around those two issues.
+      _extra_flags += " -fix-module-imports"
+      command = "$python_path $_tool -module-name {{module_name}} " +
+                "-root-dir " + rebase_path("//", root_build_dir) + " " +
+                "-object-dir $_objects_dir -pch-output-dir $_pch_output_dir " +
+                "-module-path {{target_gen_dir}}/{{module_name}}.swiftmodule " +
+                "-header-path {{target_gen_dir}}/{{target_output_name}}.h " +
+                "-depfile {{target_out_dir}}/{{module_name}}.d " +
+                "-bridge-header {{bridge_header}} $_extra_flags " +
+                "{{swiftflags}} {{include_dirs}} {{module_dirs}} {{inputs}}"
+      description = "SWIFT {{output}}"
+    }
+
+    tool("stamp") {
+      command = "touch {{output}}"
+      description = "STAMP {{output}}"
+    }
+
+    tool("copy_bundle_data") {
+      command = "rm -rf {{output}} && cp -a {{source}} {{output}}"
+      description = "COPY_BUNDLE_DATA {{output}}"
+    }
+  }
+}
+
+mac_toolchain("clang_x86") {
+  toolchain_args = {
+    current_cpu = "x86"
+    current_os = "mac"
+  }
+}
+
+mac_toolchain("clang_x64") {
+  toolchain_args = {
+    current_cpu = "x64"
+    current_os = "mac"
+  }
+}
+
+mac_toolchain("clang_arm") {
+  toolchain_args = {
+    current_cpu = "arm"
+    current_os = "mac"
+  }
+}
+
+mac_toolchain("clang_arm64") {
+  toolchain_args = {
+    current_cpu = "arm64"
+    current_os = "mac"
+  }
+}

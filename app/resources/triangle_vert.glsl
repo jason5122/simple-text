@@ -3,8 +3,8 @@
 layout(location = 0) in vec2 pixelPos;
 layout(location = 1) in vec3 vertexColor;
 
-uniform float width;
-uniform float height;
+uniform float screenWidth;
+uniform float screenHeight;
 
 out vec3 color;
 
@@ -16,7 +16,7 @@ vec2 pixelToClipSpace(vec2 point, vec2 resolution) {
 }
 
 void main() {
-    gl_Position.xy = pixelToClipSpace(pixelPos, vec2(width, height));
+    gl_Position.xy = pixelToClipSpace(pixelPos, vec2(screenWidth, screenHeight));
     gl_Position.zw = vec2(0.0, 1.0);
     color = vertexColor;
 }

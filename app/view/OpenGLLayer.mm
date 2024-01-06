@@ -6,7 +6,7 @@
 @interface OpenGLLayer () {
     GLuint shaderProgram;
     GLuint vao, vbo;
-    GLfloat width, height;
+    GLfloat screenWidth, screenHeight;
 }
 @end
 
@@ -39,8 +39,8 @@
     CGLContextObj context = nullptr;
     CGLCreateContext(pixelFormat, nullptr, &context);
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
-        width = self.frame.size.width;
-        height = self.frame.size.height;
+        screenWidth = NSScreen.mainScreen.frame.size.width;
+        screenHeight = NSScreen.mainScreen.frame.size.height;
 
         // https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_designstrategies/opengl_designstrategies.html#//apple_ref/doc/uid/TP40001987-CH2-SW4
         GLint params = 1;
@@ -49,7 +49,7 @@
         CGLSetCurrentContext(context);
 
         logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
-        logDefault(@"OpenGL", @"%fx%f", width, height);
+        logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -124,12 +124,12 @@
 }
 
 - (void)draw {
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, screenWidth, screenHeight);
 
-    GLuint uWidth = glGetUniformLocation(shaderProgram, "width");
-    GLuint uHeight = glGetUniformLocation(shaderProgram, "height");
-    glUniform1f(uWidth, width);
-    glUniform1f(uHeight, height);
+    GLuint uWidth = glGetUniformLocation(shaderProgram, "screenWidth");
+    GLuint uHeight = glGetUniformLocation(shaderProgram, "screenHeight");
+    glUniform1f(uWidth, screenWidth);
+    glUniform1f(uHeight, screenHeight);
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);

@@ -100,7 +100,7 @@
 
     logDefault(@"OpenGL", @"%fx%f", self.frame.size.width, self.frame.size.height);
 
-    // glViewport(0, 0, 2000 - self.frame.size.width, self.frame.size.height);
+    glViewport(0, 0, 1728, 1051);
 
     GLuint uViewportSize = glGetUniformLocation(shaderProgram, "viewportSize");
     GLfloat w = self.frame.size.width;

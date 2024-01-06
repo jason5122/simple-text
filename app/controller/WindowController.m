@@ -46,6 +46,7 @@
             CTFontRef font = CTFontCreateWithFontDescriptor(descriptor, 16, NULL);
         }
 
+        CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, NULL);
         CTFontRef appleSymbolsFont = CTFontCreateWithName(CFSTR("Apple Symbols"), 16, NULL);
         CTFontRef menloFont = CTFontCreateWithName(CFSTR("Menlo"), 16, NULL);
 
@@ -60,6 +61,11 @@
                                             1);
             logDefault(@"WindowController", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
                        bounds.size.width, bounds.size.height);
+
+            bool isColored = CTFontGetSymbolicTraits(appleEmojiFont) & kCTFontTraitColorGlyphs;
+            if (isColored) {
+                logDefault(@"WindowController", @"font is colored");
+            }
         } else {
             logDefault(@"WindowController", @"could not get glyphs for characters");
         }

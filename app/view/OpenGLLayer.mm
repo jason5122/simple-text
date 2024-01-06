@@ -126,10 +126,8 @@
 - (void)draw {
     glViewport(0, 0, screenWidth, screenHeight);
 
-    GLuint uWidth = glGetUniformLocation(shaderProgram, "screenWidth");
-    GLuint uHeight = glGetUniformLocation(shaderProgram, "screenHeight");
-    glUniform1f(uWidth, screenWidth);
-    glUniform1f(uHeight, screenHeight);
+    GLuint uResolution = glGetUniformLocation(shaderProgram, "resolution");
+    glUniform2fv(uResolution, 1, new GLfloat[]{screenWidth, screenHeight});
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);

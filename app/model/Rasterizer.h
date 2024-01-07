@@ -3,8 +3,7 @@
 #import <Cocoa/Cocoa.h>
 #import <vector>
 
-class RasterizedGlyph {
-public:
+struct RasterizedGlyph {
     char character;
     int32_t width;
     int32_t height;

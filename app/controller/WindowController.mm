@@ -30,14 +30,17 @@
 
         Rasterizer rasterizer = Rasterizer();
         CGGlyph glyph = rasterizer.get_glyph(@"E");
-        std::vector<uint8_t> buffer = rasterizer.rasterize_glyph(glyph);
 
-        for (int i = 0; i < buffer.size(); i += 3) {
-            uint8_t r = buffer[i];
-            uint8_t g = buffer[i + 1];
-            uint8_t b = buffer[i + 2];
-            logDefault(@"Rasterizer", @"%d %d %d", r, g, b);
-        }
+        RasterizedGlyph rasterizedGlyph = rasterizer.rasterize_glyph(glyph);
+        std::vector<uint8_t> buffer = rasterizedGlyph.buffer;
+        // logDefault(@"WindowController", @"%dx%d, buffer size = %d", rasterizedGlyph.width,
+        //            rasterizedGlyph.height, buffer.size());
+        // for (int i = 0; i < buffer.size(); i += 3) {
+        //     uint8_t r = buffer[i];
+        //     uint8_t g = buffer[i + 1];
+        //     uint8_t b = buffer[i + 2];
+        //     logDefault(@"Rasterizer", @"%d %d %d", r, g, b);
+        // }
     }
     return self;
 }

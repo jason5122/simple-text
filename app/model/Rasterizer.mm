@@ -40,20 +40,6 @@ Rasterizer::Rasterizer() {
     CTFontRef appleSymbolsFont = CTFontCreateWithName(CFSTR("Apple Symbols"), 32, NULL);
 }
 
-CGGlyph Rasterizer::get_glyph(NSString* characterString) {
-    CTFontRef menloFont = CTFontCreateWithName(CFSTR("Menlo"), 32, NULL);
-
-    unichar characters[1];
-    [characterString getCharacters:characters range:NSMakeRange(0, 1)];
-    CGGlyph glyphs[1];
-    if (CTFontGetGlyphsForCharacters(menloFont, characters, glyphs, 1)) {
-        logDefault(@"Rasterizer", @"got glyphs! %d", glyphs[0]);
-    } else {
-        logDefault(@"Rasterizer", @"could not get glyphs for characters");
-    }
-    return glyphs[0];
-}
-
 RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
     CTFontRef menloFont = CTFontCreateWithName(CFSTR("Menlo"), 32, NULL);
 

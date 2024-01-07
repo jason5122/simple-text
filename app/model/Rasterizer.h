@@ -16,7 +16,6 @@ class Rasterizer {
 public:
     Rasterizer();
 
-    CGGlyph get_glyph(NSString* characterString);
     RasterizedGlyph rasterize_glyph(CGGlyph glyph);
     bool is_colored_placeholder();
 };

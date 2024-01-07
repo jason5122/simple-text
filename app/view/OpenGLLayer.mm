@@ -1,5 +1,6 @@
 #import "OpenGLLayer.h"
 #import "model/Atlas.h"
+#import "model/Font.h"
 #import "model/Rasterizer.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
@@ -52,7 +53,8 @@
 
         Atlas atlas = Atlas(1024);
         Rasterizer rasterizer = Rasterizer();
-        CGGlyph glyph = rasterizer.get_glyph(@"E");
+        Font menlo = Font(CFSTR("Menlo"), 32);
+        CGGlyph glyph = menlo.get_glyph(@"E");
         RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph);
         atlas.insert_inner(rasterized_glyph);
 
@@ -61,8 +63,8 @@
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        const GLchar* vertSource = readFile(resourcePath("triangle_vert.glsl"));
-        const GLchar* fragSource = readFile(resourcePath("triangle_frag.glsl"));
+        const GLchar* vertSource = readFile(resourcePath("text_vert.glsl"));
+        const GLchar* fragSource = readFile(resourcePath("text_frag.glsl"));
         glShaderSource(vertexShader, 1, &vertSource, nullptr);
         glShaderSource(fragmentShader, 1, &fragSource, nullptr);
         glCompileShader(vertexShader);
@@ -76,50 +78,7 @@
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-        float gray = 228 / 255.f;
-        float darkGray = 207 / 255.f;
-        float vertices[] = {
-            // Tab bar
-            0, 1051 - 30, gray, gray, gray,     //
-            1728, 1051, gray, gray, gray,       //
-            0, 1051, gray, gray, gray,          //
-            1728, 1051 - 30, gray, gray, gray,  //
-            1728, 1051, gray, gray, gray,       //
-            0, 1051 - 30, gray, gray, gray,     //
-
-            // Side bar
-            200, 0, gray, gray, gray,     //
-            0, 1051, gray, gray, gray,    //
-            0, 0, gray, gray, gray,       //
-            200, 1051, gray, gray, gray,  //
-            0, 1051, gray, gray, gray,    //
-            200, 0, gray, gray, gray,     //
-
-            // Status bar
-            0, 50, darkGray, darkGray, darkGray,     //
-            1728, 0, darkGray, darkGray, darkGray,   //
-            0, 0, darkGray, darkGray, darkGray,      //
-            1728, 50, darkGray, darkGray, darkGray,  //
-            1728, 0, darkGray, darkGray, darkGray,   //
-            0, 50, darkGray, darkGray, darkGray,     //
-        };
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void*)(2 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        // Unbind so future calls won't modify this VAO/VBO.
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        [self draw];  // Initial draw call.
+        // [self draw];  // Initial draw call.
     }
     return context;
 }

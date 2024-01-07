@@ -1,7 +1,7 @@
 #pragma once
 
-#include "model/Rasterizer.h"
-#include <OpenGL/gl3.h>
+#import "model/Rasterizer.h"
+#import <OpenGL/gl3.h>
 
 struct Glyph {
     GLuint tex_id;

@@ -1,5 +1,5 @@
-#include "Atlas.h"
-#include "util/LogUtil.h"
+#import "Atlas.h"
+#import "util/LogUtil.h"
 
 Atlas::Atlas(int32_t size) : width(size), height(size) {
     GLuint tex_id;

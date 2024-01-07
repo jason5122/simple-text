@@ -13,6 +13,7 @@ macos_app_bundle("app") {
     "controller/WindowController.mm",
     "main.m",
     "model/Atlas.mm",
+    "model/Font.mm",
     "model/Rasterizer.mm",
     "util/FileUtil.mm",
     "util/LogUtil.mm",
@@ -41,8 +42,8 @@ icon("icon") {
 
 bundle_data("shaders") {
   sources = [
-    "resources/triangle_frag.glsl",
-    "resources/triangle_vert.glsl",
+    "resources/text_frag.glsl",
+    "resources/text_vert.glsl",
   ]
   outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
 }

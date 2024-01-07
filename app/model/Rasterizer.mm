@@ -92,6 +92,10 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
     size_t bytesPerRow = CGBitmapContextGetBytesPerRow(context);
     size_t len = height * bytesPerRow;
 
+    CFStringRef fontFamily = CTFontCopyName(menloFont, kCTFontFamilyNameKey);
+    CFStringRef fontFace = CTFontCopyName(menloFont, kCTFontSubFamilyNameKey);
+    CGFloat fontSize = CTFontGetSize(menloFont);
+    logDefault(@"Rasterizer", @"%@ %@ %f", fontFamily, fontFace, fontSize);
     logDefault(@"Rasterizer", @"%dx%d", rasterizedWidth, rasterizedHeight);
     logDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
                len);

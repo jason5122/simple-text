@@ -1,21 +1,7 @@
 #import "Rasterizer.h"
+#import "util/CGFloatUtil.h"
 #import "util/LogUtil.h"
 #import <Cocoa/Cocoa.h>
-
-static inline CGFLOAT_TYPE CGFloat_floor(CGFLOAT_TYPE cgfloat) {
-#if CGFLOAT_IS_DOUBLE
-    return floor(cgfloat);
-#else
-    return floorf(cgfloat);
-#endif
-}
-static inline CGFLOAT_TYPE CGFloat_ceil(CGFLOAT_TYPE cgfloat) {
-#if CGFLOAT_IS_DOUBLE
-    return ceil(cgfloat);
-#else
-    return ceilf(cgfloat);
-#endif
-}
 
 Rasterizer::Rasterizer() {
     NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};

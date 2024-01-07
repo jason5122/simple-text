@@ -1,13 +1,6 @@
 #import "Font.h"
+#import "util/CGFloatUtil.h"
 #import "util/LogUtil.h"
-
-static inline CGFLOAT_TYPE CGFloat_round(CGFLOAT_TYPE cgfloat) {
-#if CGFLOAT_IS_DOUBLE
-    return round(cgfloat);
-#else
-    return roundf(cgfloat);
-#endif
-}
 
 Font::Font(CFStringRef name, CGFloat size) {
     fontRef = CTFontCreateWithName(name, size, nullptr);

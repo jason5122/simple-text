@@ -29,11 +29,11 @@
 
         self.window.contentView = mainView;
 
-        Rasterizer rasterizer = Rasterizer();
-        CGGlyph glyph = rasterizer.get_glyph(@"E");
+        // Rasterizer rasterizer = Rasterizer();
+        // CGGlyph glyph = rasterizer.get_glyph(@"E");
 
-        RasterizedGlyph rasterizedGlyph = rasterizer.rasterize_glyph(glyph);
-        std::vector<uint8_t> buffer = rasterizedGlyph.buffer;
+        // RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph);
+        // std::vector<uint8_t> buffer = rasterized_glyph.buffer;
     }
     return self;
 }

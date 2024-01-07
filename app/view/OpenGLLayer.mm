@@ -1,5 +1,6 @@
 #import "OpenGLLayer.h"
 #import "model/Atlas.h"
+#import "model/Rasterizer.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import <OpenGL/gl3.h>
@@ -50,6 +51,10 @@
         CGLSetCurrentContext(context);
 
         Atlas atlas = Atlas(1024);
+        Rasterizer rasterizer = Rasterizer();
+        CGGlyph glyph = rasterizer.get_glyph(@"E");
+        RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph);
+        atlas.insert_inner(rasterized_glyph);
 
         logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
         logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);

@@ -1,7 +1,8 @@
 #include "Atlas.h"
+#include "util/LogUtil.h"
 
 Atlas::Atlas(int32_t size) : width(size), height(size) {
-    GLuint tex_id = 0;
+    GLuint tex_id;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
@@ -34,6 +35,10 @@ Glyph Atlas::insert_inner(RasterizedGlyph& glyph) {
     float uv_left = static_cast<float>(offset_x) / this->width;
     float uv_width = static_cast<float>(glyph.width) / this->width;
     float uv_height = static_cast<float>(glyph.height) / this->height;
+
+    logDefault(@"Atlas", @"%d %d %d %d %d %f %f %f %f", tex_id, static_cast<int16_t>(glyph.top),
+               static_cast<int16_t>(glyph.left), static_cast<int16_t>(glyph.width),
+               static_cast<int16_t>(glyph.height), uv_bot, uv_left, uv_width, uv_height);
 
     return Glyph{tex_id,
                  static_cast<int16_t>(glyph.top),

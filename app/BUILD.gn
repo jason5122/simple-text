@@ -10,8 +10,9 @@ macos_app_bundle("app") {
 
   sources = [
     "AppDelegate.m",
-    "controller/WindowController.m",
+    "controller/WindowController.mm",
     "main.m",
+    "model/Rasterizer.mm",
     "util/FileUtil.mm",
     "util/LogUtil.mm",
     "view/OpenGLLayer.mm",

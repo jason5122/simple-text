@@ -51,11 +51,16 @@
 
         CGLSetCurrentContext(context);
 
-        Atlas atlas = Atlas(1024);
-        Rasterizer rasterizer = Rasterizer();
         Font menlo = Font(CFSTR("Menlo"), 32);
+        Metrics metrics = menlo.metrics();
+        logDefault(@"OpenGL", @"average_advance = %f, line_height = %f", metrics.average_advance,
+                   metrics.line_height);
+
+        Rasterizer rasterizer = Rasterizer();
         CGGlyph glyph = menlo.get_glyph(@"E");
         RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph);
+
+        Atlas atlas = Atlas(1024);
         atlas.insert_inner(rasterized_glyph);
 
         logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));

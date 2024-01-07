@@ -12,6 +12,6 @@ class Font {
 
 public:
     Font(CFStringRef name, CGFloat size);
-    void metrics();
+    Metrics metrics();
     CGGlyph get_glyph(NSString* characterString);
 };

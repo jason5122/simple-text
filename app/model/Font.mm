@@ -1,11 +1,30 @@
 #import "Font.h"
 #import "util/LogUtil.h"
 
-Font::Font(CFStringRef name, CGFloat size) {
-    fontRef = CTFontCreateWithName(name, size, NULL);
+static inline CGFLOAT_TYPE CGFloat_round(CGFLOAT_TYPE cgfloat) {
+#if CGFLOAT_IS_DOUBLE
+    return round(cgfloat);
+#else
+    return roundf(cgfloat);
+#endif
 }
 
-void Font::metrics() {}
+Font::Font(CFStringRef name, CGFloat size) {
+    fontRef = CTFontCreateWithName(name, size, nullptr);
+}
+
+Metrics Font::metrics() {
+    CGGlyph glyph = get_glyph(@"0");
+    double average_advance =
+        CTFontGetAdvancesForGlyphs(fontRef, kCTFontOrientationDefault, &glyph, nullptr, 1);
+
+    CGFloat ascent = CGFloat_round(CTFontGetAscent(fontRef));
+    CGFloat descent = CGFloat_round(CTFontGetDescent(fontRef));
+    CGFloat leading = CGFloat_round(CTFontGetLeading(fontRef));
+    CGFloat line_height = ascent + descent + leading;
+
+    return Metrics{average_advance, line_height};
+}
 
 CGGlyph Font::get_glyph(NSString* characterString) {
     unichar characters[1];

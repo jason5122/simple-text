@@ -1,5 +1,6 @@
 #pragma once
 
+#include "model/Rasterizer.h"
 #include <OpenGL/gl3.h>
 
 class Atlas {
@@ -11,5 +12,6 @@ class Atlas {
     int row_tallest = 0;
 
 public:
-    Atlas(int size);
+    Atlas(uint32_t size);
+    void insert_inner(RasterizedGlyph& glyph);
 };

@@ -1,5 +1,6 @@
 #import "Rasterizer.h"
 #import "util/LogUtil.h"
+#import <Cocoa/Cocoa.h>
 
 static inline CGFLOAT_TYPE CGFloat_floor(CGFLOAT_TYPE cgfloat) {
 #if CGFLOAT_IS_DOUBLE
@@ -103,15 +104,21 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
     logDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
 
     int pixels = len / 4;
-    std::vector<uint8_t> rgb;
-    rgb.reserve(pixels * 3);
+    std::vector<uint8_t> rgb_buffer;
+    rgb_buffer.reserve(pixels * 3);
     for (int i = 0; i < pixels; i++) {
         int offset = i * 4;
-        rgb.push_back(bitmapData[offset + 2]);
-        rgb.push_back(bitmapData[offset + 1]);
-        rgb.push_back(bitmapData[offset]);
+        rgb_buffer.push_back(bitmapData[offset + 2]);
+        rgb_buffer.push_back(bitmapData[offset + 1]);
+        rgb_buffer.push_back(bitmapData[offset]);
     }
-    return RasterizedGlyph(rasterizedWidth, rasterizedHeight, rgb);
+    int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
+    return RasterizedGlyph{'E',
+                           static_cast<int32_t>(rasterizedWidth),
+                           static_cast<int32_t>(rasterizedHeight),
+                           top,
+                           rasterizedLeft,
+                           rgb_buffer};
 }
 
 bool Rasterizer::is_colored_placeholder() {

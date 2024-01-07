@@ -1,6 +1,6 @@
 #include "Atlas.h"
 
-Atlas::Atlas(int size) : width(size), height(size) {
+Atlas::Atlas(uint32_t size) : width(size), height(size) {
     GLuint tex_id = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex_id);

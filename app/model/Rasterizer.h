@@ -5,11 +5,12 @@
 
 class RasterizedGlyph {
 public:
-    uint32_t width, height;
+    char character;
+    int32_t width;
+    int32_t height;
+    int32_t top;
+    int32_t left;
     std::vector<uint8_t> buffer;
-
-    RasterizedGlyph(uint32_t width, uint32_t height, std::vector<uint8_t> buffer)
-        : width(width), height(height), buffer(buffer){};
 };
 
 class Rasterizer {

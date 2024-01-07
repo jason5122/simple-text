@@ -22,9 +22,10 @@
                                                           alpha:1.f];
 
         mainView = [[NSView alloc] initWithFrame:frameRect];
-        mainView.layer = [OpenGLLayer layer];
-        mainView.layer.needsDisplayOnBoundsChange = true;
+        CAOpenGLLayer* openGLLayer = [OpenGLLayer layer];
+        openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
+        mainView.layer = openGLLayer;
 
         self.window.contentView = mainView;
 

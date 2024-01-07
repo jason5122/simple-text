@@ -43,8 +43,8 @@
         screenHeight = NSScreen.mainScreen.frame.size.height;
 
         // https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_designstrategies/opengl_designstrategies.html#//apple_ref/doc/uid/TP40001987-CH2-SW4
-        GLint params = 1;
-        CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
+        // GLint params = 1;
+        // CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
 
         CGLSetCurrentContext(context);
 

@@ -100,6 +100,8 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
     logDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
                len);
 
+    logDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
+
     int pixels = len / 4;
     std::vector<uint8_t> rgb;
     rgb.reserve(pixels * 3);

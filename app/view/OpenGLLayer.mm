@@ -1,4 +1,5 @@
 #import "OpenGLLayer.h"
+#import "model/Atlas.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import <OpenGL/gl3.h>
@@ -47,6 +48,8 @@
         // CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
 
         CGLSetCurrentContext(context);
+
+        Atlas atlas = Atlas(1024);
 
         logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
         logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);

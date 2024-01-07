@@ -1,5 +1,6 @@
 #import "WindowController.h"
 #import "model/Rasterizer.h"
+#import "util/LogUtil.h"
 #import "view/OpenGLLayer.h"
 
 @implementation WindowController
@@ -28,7 +29,15 @@
         self.window.contentView = mainView;
 
         Rasterizer rasterizer = Rasterizer();
-        rasterizer.get_glyph(@"E");
+        CGGlyph glyph = rasterizer.get_glyph(@"E");
+        std::vector<uint8_t> buffer = rasterizer.rasterize_glyph(glyph);
+
+        for (int i = 0; i < buffer.size(); i += 3) {
+            uint8_t r = buffer[i];
+            uint8_t g = buffer[i + 1];
+            uint8_t b = buffer[i + 2];
+            logDefault(@"Rasterizer", @"%d %d %d", r, g, b);
+        }
     }
     return self;
 }

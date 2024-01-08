@@ -80,14 +80,15 @@ struct InstanceData {
 
         CGLSetCurrentContext(context);
 
-        Font menlo = Font(CFSTR("Menlo"), 32);
-        Metrics metrics = menlo.metrics();
-        logDefault(@"OpenGL", @"average_advance = %f, line_height = %f", metrics.average_advance,
-                   metrics.line_height);
+        // Font menlo = Font(CFSTR("Menlo"), 32);
+        // Metrics metrics = menlo.metrics();
+        // logDefault(@"OpenGL", @"average_advance = %f, line_height = %f",
+        // metrics.average_advance,
+        //            metrics.line_height);
 
-        float cell_width = floor(metrics.average_advance + 1);
-        float cell_height = floor(metrics.line_height + 2);
-        logDefault(@"OpenGL", @"cell_width = %f, cell_height = %f", cell_width, cell_height);
+        // float cell_width = floor(metrics.average_advance + 1);
+        // float cell_height = floor(metrics.line_height + 2);
+        // logDefault(@"OpenGL", @"cell_width = %f, cell_height = %f", cell_width, cell_height);
 
         // Rasterizer rasterizer = Rasterizer();
         // CGGlyph glyph_index = menlo.get_glyph(@"E");
@@ -96,35 +97,36 @@ struct InstanceData {
         // Atlas atlas = Atlas(1024);
         // Glyph glyph = atlas.insert_inner(rasterized_glyph);
 
-        logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
-        logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);
+        // logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
+        // logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);
 
-        logDefault(@"OpenGL", @"viewport_size: %fx%f", self.frame.size.width,
-                   self.frame.size.height);
-        float viewport_width = self.frame.size.width;
-        float viewport_height = self.frame.size.height;
-        size_info = {viewport_width * 2, viewport_height * 2, cell_width, cell_height, 10.0, 10.0};
+        // logDefault(@"OpenGL", @"viewport_size: %fx%f", self.frame.size.width,
+        //            self.frame.size.height);
+        // float viewport_width = self.frame.size.width;
+        // float viewport_height = self.frame.size.height;
+        // size_info = {viewport_width * 2, viewport_height * 2, cell_width,
+        // cell_height, 10.0, 10.0};
 
-        glViewport(size_info.padding_x, size_info.padding_y,
-                   size_info.width - 2 * size_info.padding_x,
-                   size_info.height - 2 * size_info.padding_y);
-        glUseProgram(shaderProgram);
+        // glViewport(size_info.padding_x, size_info.padding_y,
+        //            size_info.width - 2 * size_info.padding_x,
+        //            size_info.height - 2 * size_info.padding_y);
+        // glUseProgram(shaderProgram);
 
-        u_projection = glGetUniformLocation(shaderProgram, "projection");
-        u_cell_dim = glGetUniformLocation(shaderProgram, "cellDim");
+        // u_projection = glGetUniformLocation(shaderProgram, "projection");
+        // u_cell_dim = glGetUniformLocation(shaderProgram, "cellDim");
 
-        float scale_x = 2.0 / (size_info.width - 2.0 * size_info.padding_x);
-        float scale_y = -2.0 / (size_info.height - 2.0 * size_info.padding_y);
-        float offset_x = -1.0;
-        float offset_y = 1.0;
-        logDefault(@"OpenGL", @"%f %f", scale_x, scale_y);
-        glUniform4f(u_projection, offset_x, offset_y, scale_x, scale_y);
-        glUseProgram(0);
+        // float scale_x = 2.0 / (size_info.width - 2.0 * size_info.padding_x);
+        // float scale_y = -2.0 / (size_info.height - 2.0 * size_info.padding_y);
+        // float offset_x = -1.0;
+        // float offset_y = 1.0;
+        // logDefault(@"OpenGL", @"%f %f", scale_x, scale_y);
+        // glUniform4f(u_projection, offset_x, offset_y, scale_x, scale_y);
+        // glUseProgram(0);
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        const GLchar* vertSource = readFile(resourcePath("text_vert.glsl"));
-        const GLchar* fragSource = readFile(resourcePath("text_frag.glsl"));
+        const GLchar* vertSource = readFile(resourcePath("triangle_vert.glsl"));
+        const GLchar* fragSource = readFile(resourcePath("triangle_frag.glsl"));
         glShaderSource(vertexShader, 1, &vertSource, nullptr);
         glShaderSource(fragmentShader, 1, &fragSource, nullptr);
         glCompileShader(vertexShader);
@@ -138,42 +140,83 @@ struct InstanceData {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        glDepthMask(GL_FALSE);
+        // glEnable(GL_BLEND);
+        // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+        // glDepthMask(GL_FALSE);
+
+        // glGenVertexArrays(1, &vao);
+        // glGenBuffers(1, &ebo);
+        // glGenBuffers(1, &vbo_instance);
+        // glBindVertexArray(vao);
+
+        // uint32_t indices[] = {0, 1, 3, 1, 2, 3};
+        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        // glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+
+        // glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+        // glBufferData(GL_ARRAY_BUFFER, 4096 * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
+
+        // GLuint index = 0;
+        // GLuint size = 0;
+
+        // glVertexAttribPointer(index, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData),
+        // &size); glEnableVertexAttribArray(index); glVertexAttribDivisor(index, 1); index++; size
+        // += 2 * sizeof(uint16_t);
+
+        // glVertexAttribPointer(index, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), &size);
+        // glEnableVertexAttribArray(index);
+        // glVertexAttribDivisor(index, 1);
+        // index++;
+        // size += 4 * sizeof(int16_t);
+
+        // glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), &size);
+        // glEnableVertexAttribArray(index);
+        // glVertexAttribDivisor(index, 1);
+        // index++;
+        // size += 4 * sizeof(float);
 
         glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &ebo);
         glGenBuffers(1, &vbo_instance);
         glBindVertexArray(vao);
-
-        uint32_t indices[] = {0, 1, 3, 1, 2, 3};
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW);
-
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-        glBufferData(GL_ARRAY_BUFFER, 4096 * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
 
-        GLuint index = 0;
-        GLuint size = 0;
+        float gray = 228 / 255.f;
+        float darkGray = 207 / 255.f;
+        float vertices[] = {
+            // Tab bar
+            0, 1051 - 30, gray, gray, gray,     //
+            1728, 1051, gray, gray, gray,       //
+            0, 1051, gray, gray, gray,          //
+            1728, 1051 - 30, gray, gray, gray,  //
+            1728, 1051, gray, gray, gray,       //
+            0, 1051 - 30, gray, gray, gray,     //
 
-        glVertexAttribPointer(index, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), &size);
-        glEnableVertexAttribArray(index);
-        glVertexAttribDivisor(index, 1);
-        index++;
-        size += 2 * sizeof(uint16_t);
+            // Side bar
+            200, 0, gray, gray, gray,     //
+            0, 1051, gray, gray, gray,    //
+            0, 0, gray, gray, gray,       //
+            200, 1051, gray, gray, gray,  //
+            0, 1051, gray, gray, gray,    //
+            200, 0, gray, gray, gray,     //
 
-        glVertexAttribPointer(index, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), &size);
-        glEnableVertexAttribArray(index);
-        glVertexAttribDivisor(index, 1);
-        index++;
-        size += 4 * sizeof(int16_t);
+            // Status bar
+            0, 50, darkGray, darkGray, darkGray,     //
+            1728, 0, darkGray, darkGray, darkGray,   //
+            0, 0, darkGray, darkGray, darkGray,      //
+            1728, 50, darkGray, darkGray, darkGray,  //
+            1728, 0, darkGray, darkGray, darkGray,   //
+            0, 50, darkGray, darkGray, darkGray,     //
+        };
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                              (void*)(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
 
-        glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), &size);
-        glEnableVertexAttribArray(index);
-        glVertexAttribDivisor(index, 1);
-        index++;
-        size += 4 * sizeof(float);
+        // Unbind so future calls won't modify this VAO/VBO.
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         [self draw];  // Initial draw call.
     }
@@ -181,29 +224,40 @@ struct InstanceData {
 }
 
 - (void)draw {
+    // glUseProgram(shaderProgram);
+    // glUniform2f(u_cell_dim, size_info.cell_width, size_info.cell_height);
+
+    // glBindVertexArray(vao);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    // glActiveTexture(GL_TEXTURE0);
+
+    // std::vector<InstanceData> instances;
+
+    // Font menlo = Font(CFSTR("Menlo"), 32);
+    // Atlas atlas = Atlas(1024);
+    // Rasterizer rasterizer = Rasterizer();
+    // CGGlyph glyph_index = menlo.get_glyph(@"E");
+    // RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
+    // Glyph glyph = atlas.insert_inner(rasterized_glyph);
+    // instances.push_back(InstanceData{0, 10, glyph.left, glyph.top, glyph.width, glyph.height,
+    //                                  glyph.uv_left, glyph.uv_bot, glyph.uv_width,
+    //                                  glyph.uv_height});
+
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(InstanceData),
+    // instances.data()); glBindTexture(GL_TEXTURE_2D, glyph.tex_id);
+    // glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+
+    glViewport(0, 0, screenWidth, screenHeight);
+
+    GLuint uResolution = glGetUniformLocation(shaderProgram, "resolution");
+    glUniform2fv(uResolution, 1, new GLfloat[]{screenWidth, screenHeight});
+
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(shaderProgram);
-    glUniform2f(u_cell_dim, size_info.cell_width, size_info.cell_height);
-
     glBindVertexArray(vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glActiveTexture(GL_TEXTURE0);
-
-    std::vector<InstanceData> instances;
-
-    Font menlo = Font(CFSTR("Menlo"), 32);
-    Atlas atlas = Atlas(1024);
-    Rasterizer rasterizer = Rasterizer();
-    CGGlyph glyph_index = menlo.get_glyph(@"E");
-    RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
-    Glyph glyph = atlas.insert_inner(rasterized_glyph);
-    instances.push_back(InstanceData{0, 10, glyph.left, glyph.top, glyph.width, glyph.height,
-                                     glyph.uv_left, glyph.uv_bot, glyph.uv_width,
-                                     glyph.uv_height});
-
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(InstanceData), instances.data());
-    glBindTexture(GL_TEXTURE_2D, glyph.tex_id);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glDrawArrays(GL_TRIANGLES, 0, 18);
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext

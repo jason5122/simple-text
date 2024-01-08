@@ -34,8 +34,9 @@ struct InstanceData {
     GLuint shaderProgram;
     GLuint vao;
     GLuint ebo;
-    GLuint vbo;
+    GLuint vbo_instance;
     GLfloat screenWidth, screenHeight;
+    GLint u_projection;
     GLint u_cell_dim;
     SizeInfo size_info;
 }
@@ -88,12 +89,12 @@ struct InstanceData {
         float cell_height = floor(metrics.line_height + 2);
         logDefault(@"OpenGL", @"cell_width = %f, cell_height = %f", cell_width, cell_height);
 
-        Rasterizer rasterizer = Rasterizer();
-        CGGlyph glyph_index = menlo.get_glyph(@"E");
-        RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
+        // Rasterizer rasterizer = Rasterizer();
+        // CGGlyph glyph_index = menlo.get_glyph(@"E");
+        // RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
 
-        Atlas atlas = Atlas(1024);
-        Glyph glyph = atlas.insert_inner(rasterized_glyph);
+        // Atlas atlas = Atlas(1024);
+        // Glyph glyph = atlas.insert_inner(rasterized_glyph);
 
         logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
         logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);
@@ -109,13 +110,15 @@ struct InstanceData {
                    size_info.height - 2 * size_info.padding_y);
         glUseProgram(shaderProgram);
 
-        GLuint uProjection = glGetUniformLocation(shaderProgram, "projection");
+        u_projection = glGetUniformLocation(shaderProgram, "projection");
+        u_cell_dim = glGetUniformLocation(shaderProgram, "cellDim");
+
         float scale_x = 2.0 / (size_info.width - 2.0 * size_info.padding_x);
         float scale_y = -2.0 / (size_info.height - 2.0 * size_info.padding_y);
         float offset_x = -1.0;
         float offset_y = 1.0;
         logDefault(@"OpenGL", @"%f %f", scale_x, scale_y);
-        glUniform4f(uProjection, offset_x, offset_y, scale_x, scale_y);
+        glUniform4f(u_projection, offset_x, offset_y, scale_x, scale_y);
         glUseProgram(0);
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -135,7 +138,44 @@ struct InstanceData {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        // [self draw];  // Initial draw call.
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+        glDepthMask(GL_FALSE);
+
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &ebo);
+        glGenBuffers(1, &vbo_instance);
+        glBindVertexArray(vao);
+
+        uint32_t indices[] = {0, 1, 3, 1, 2, 3};
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+        glBufferData(GL_ARRAY_BUFFER, 4096 * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
+
+        GLuint index = 0;
+        GLuint size = 0;
+
+        glVertexAttribPointer(index, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), &size);
+        glEnableVertexAttribArray(index);
+        glVertexAttribDivisor(index, 1);
+        index++;
+        size += 2 * sizeof(uint16_t);
+
+        glVertexAttribPointer(index, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), &size);
+        glEnableVertexAttribArray(index);
+        glVertexAttribDivisor(index, 1);
+        index++;
+        size += 4 * sizeof(int16_t);
+
+        glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), &size);
+        glEnableVertexAttribArray(index);
+        glVertexAttribDivisor(index, 1);
+        index++;
+        size += 4 * sizeof(float);
+
+        [self draw];  // Initial draw call.
     }
     return context;
 }
@@ -146,8 +186,24 @@ struct InstanceData {
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glActiveTexture(GL_TEXTURE0);
+
+    std::vector<InstanceData> instances;
+
+    Font menlo = Font(CFSTR("Menlo"), 32);
+    Atlas atlas = Atlas(1024);
+    Rasterizer rasterizer = Rasterizer();
+    CGGlyph glyph_index = menlo.get_glyph(@"E");
+    RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
+    Glyph glyph = atlas.insert_inner(rasterized_glyph);
+    instances.push_back(InstanceData{0, 10, glyph.left, glyph.top, glyph.width, glyph.height,
+                                     glyph.uv_left, glyph.uv_bot, glyph.uv_width,
+                                     glyph.uv_height});
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(InstanceData), instances.data());
+    glBindTexture(GL_TEXTURE_2D, glyph.tex_id);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
@@ -181,9 +237,9 @@ struct InstanceData {
 }
 
 - (void)dealloc {
-    glDeleteProgram(shaderProgram);
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
+    // glDeleteProgram(shaderProgram);
+    // glDeleteVertexArrays(1, &vao);
+    // glDeleteBuffers(1, &vbo_instance);
 }
 
 @end

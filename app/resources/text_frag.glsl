@@ -10,5 +10,5 @@ uniform vec3 textColor;
 void main() {
     float alpha = texture(text, TexCoords).r;
     color = vec4(textColor, alpha);
-    // color = vec4(textColor, 1.0);
+    color = vec4(textColor, 1.0);
 }

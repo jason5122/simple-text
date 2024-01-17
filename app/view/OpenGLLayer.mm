@@ -11,6 +11,7 @@
 #import <glm/gtc/type_ptr.hpp>
 
 @interface OpenGLLayer () {
+    GLfloat screenWidth, screenHeight;
     Renderer* renderer;
 }
 @end
@@ -44,8 +45,8 @@
     CGLContextObj context = nullptr;
     CGLCreateContext(pixelFormat, nullptr, &context);
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
-        GLfloat screenWidth = NSScreen.mainScreen.frame.size.width;
-        GLfloat screenHeight = NSScreen.mainScreen.frame.size.height;
+        screenWidth = NSScreen.mainScreen.frame.size.width;
+        screenHeight = NSScreen.mainScreen.frame.size.height;
 
         // https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_designstrategies/opengl_designstrategies.html#//apple_ref/doc/uid/TP40001987-CH2-SW4
         // GLint params = 1;
@@ -73,9 +74,9 @@
         // logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
         // logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);
 
-        glEnable(GL_CULL_FACE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
 
         renderer = new Renderer(screenWidth, screenHeight);
         renderer->init();
@@ -86,6 +87,7 @@
 }
 
 - (void)draw {
+    glViewport(0, 0, screenWidth, screenHeight);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 

@@ -102,7 +102,7 @@ bool Renderer::load_glyphs() {
 
 void Renderer::render_text(std::string text, float x, float y, float scale, glm::vec3 color) {
     glUseProgram(shaderProgram);
-    glUniform3f(glGetUniformLocation(shaderProgram, "textColor"), color.x, color.y, color.z);
+    glUniform3fv(glGetUniformLocation(shaderProgram, "textColor"), 1, glm::value_ptr(color));
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 

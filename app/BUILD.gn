@@ -54,8 +54,6 @@ bundle_data("shaders") {
     "resources/SourceCodePro-Regular.ttf",
     "resources/text_frag.glsl",
     "resources/text_vert.glsl",
-    "resources/triangle_frag.glsl",
-    "resources/triangle_vert.glsl",
   ]
   outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
 }

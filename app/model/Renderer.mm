@@ -24,7 +24,7 @@ void Renderer::init() {
     glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -34,8 +34,8 @@ void Renderer::init() {
 void Renderer::setup_shaders() {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vertSource = readFile(resourcePath("triangle_vert.glsl"));
-    const GLchar* fragSource = readFile(resourcePath("triangle_frag.glsl"));
+    const GLchar* vertSource = readFile(resourcePath("text_vert.glsl"));
+    const GLchar* fragSource = readFile(resourcePath("text_frag.glsl"));
     glShaderSource(vertexShader, 1, &vertSource, nullptr);
     glShaderSource(fragmentShader, 1, &fragSource, nullptr);
     glCompileShader(vertexShader);
@@ -90,7 +90,7 @@ bool Renderer::load_glyphs() {
         Character character = {
             texture, glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x};
-        characters.insert(std::pair<char, Character>(c, character));
+        characters.insert({std::pair<char, Character>(c, character)});
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 

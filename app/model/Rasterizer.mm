@@ -77,12 +77,18 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
 
     int pixels = len / 4;
     std::vector<uint8_t> rgb_buffer;
-    rgb_buffer.reserve(pixels * 3);
+    // rgb_buffer.reserve(pixels * 3);
+    rgb_buffer.reserve(pixels);
     for (int i = 0; i < pixels; i++) {
         int offset = i * 4;
-        rgb_buffer.push_back(bitmapData[offset + 2]);
-        rgb_buffer.push_back(bitmapData[offset + 1]);
-        rgb_buffer.push_back(bitmapData[offset]);
+        // rgb_buffer.push_back(bitmapData[offset + 2]);
+        // rgb_buffer.push_back(bitmapData[offset + 1]);
+        // rgb_buffer.push_back(bitmapData[offset]);
+
+        uint8_t alpha = (bitmapData[offset] + bitmapData[offset + 1] + bitmapData[offset + 2]) / 3;
+        rgb_buffer.push_back(alpha);
+
+        logDefault(@"Rasterizer", @"%d", bitmapData[offset + 3]);
     }
     int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
     return RasterizedGlyph{'E',

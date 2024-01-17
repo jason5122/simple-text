@@ -30,6 +30,9 @@ macos_app_bundle("app") {
   include_dirs = [
     "//app",
     "third_party",
+
+    # TODO: Remove this and automatically include ft2build.h using `public` instead
+    "third_party/freetype/include",
   ]
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
@@ -37,7 +40,7 @@ macos_app_bundle("app") {
   deps = [
     ":icon",
     ":shaders",
-    "third_party/freetype:freetype_source",
+    "third_party/freetype:freetype",
   ]
 }
 
@@ -47,6 +50,7 @@ icon("icon") {
 
 bundle_data("shaders") {
   sources = [
+    "resources/SourceCodePro-Regular.ttf",
     "resources/text_frag.glsl",
     "resources/text_vert.glsl",
     "resources/triangle_frag.glsl",

@@ -1,4 +1,7 @@
-source_set("freetype_source") {
+source_set("freetype") {
+  # TODO: Allow dependents to automatically include ft2build.h
+  # public = [ "include/ft2build.h" ]
+
   defines = [ "FT2_BUILD_LIBRARY" ]
 
   sources = [

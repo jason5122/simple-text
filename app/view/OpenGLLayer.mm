@@ -221,6 +221,11 @@ struct InstanceData {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         renderer = new Renderer(screenWidth, screenHeight);
+        if (renderer->init()) {
+            logDefault(@"OpenGL", @"renderer init was successful!");
+        } else {
+            logDefault(@"OpenGL", @"renderer init failed");
+        }
 
         [self draw];  // Initial draw call.
     }

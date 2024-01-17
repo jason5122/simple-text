@@ -88,21 +88,68 @@ bool Renderer::load_glyphs() {
         GLsizei height = face->glyph->bitmap.rows;
         GLsizei top = face->glyph->bitmap_top;
         GLsizei left = face->glyph->bitmap_left;
-        const void* buffer = face->glyph->bitmap.buffer;
+        // const void* buffer = face->glyph->bitmap.buffer;
         // GLsizei width = rasterized_glyph.width;
         // GLsizei height = rasterized_glyph.height;
         // GLsizei top = rasterized_glyph.top;
         // GLsizei left = rasterized_glyph.left;
         // const void* buffer = &rasterized_glyph.buffer;
 
+        std::vector<uint8_t> pixels = {
+            136, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 244, 0,   136, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 244, 0,   136, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 244, 0,   136, 255, 255, 255, 128,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136,
+            255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255,
+            255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,   0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255, 255,
+            255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   136, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 144, 0,   0,   0,   136, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 144, 0,   0,   0,   136, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 144, 0,   0,   0,   136, 255, 255, 255,
+            128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136,
+            255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255,
+            255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 128, 0,   0,   0,   0,   0,   0,
+            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   136, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 112, 136, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            112, 136, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 112};
+
+        uint8_t* buffer = &pixels[0];
+
         int len = face->glyph->bitmap.width * face->glyph->bitmap.rows;
         for (int i = 0; i < len; i++) {
-            logDefault(@"Renderer", @"%d", face->glyph->bitmap.buffer[i]);
+            uint8_t c1 = static_cast<uint8_t>(face->glyph->bitmap.buffer[i]);
+            uint8_t c2 = buffer[i];
+            if (c1 != c2) {
+                logError(@"Renderer", @"*gasp*");
+            }
         }
 
-        logDefault(@"Renderer", @"%dx%d versus %dx%d", width, height, rasterized_glyph.width,
-                   rasterized_glyph.height);
-        logDefault(@"Renderer", @"%d versus len = %d", rasterized_glyph.buffer.size(), len);
+        // logDefault(@"Renderer", @"%dx%d versus %dx%d", width, height, rasterized_glyph.width,
+        //            rasterized_glyph.height);
+        // logDefault(@"Renderer", @"%d versus len = %d", rasterized_glyph.buffer.size(), len);
 
         GLuint texture;
         glGenTextures(1, &texture);
@@ -128,7 +175,7 @@ bool Renderer::load_glyphs() {
     return true;
 }
 
-void Renderer::render_text(std::string text, float x, float y, float scale, glm::vec3 color) {
+void Renderer::render_text(std::string text, float x, float y, glm::vec3 color) {
     glUseProgram(shaderProgram);
     glUniform3fv(glGetUniformLocation(shaderProgram, "textColor"), 1, glm::value_ptr(color));
     glActiveTexture(GL_TEXTURE0);
@@ -141,11 +188,11 @@ void Renderer::render_text(std::string text, float x, float y, float scale, glm:
     for (const char c : text) {
         Character ch = characters[c];
 
-        float xpos = x + ch.bearing.x * scale;
-        float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+        float xpos = x + ch.bearing.x;
+        float ypos = y - (ch.size.y - ch.bearing.y);
 
-        float w = ch.size.x * scale;
-        float h = ch.size.y * scale;
+        float w = ch.size.x;
+        float h = ch.size.y;
 
         float vertices[6][4] = {
             {xpos, ypos + h, 0.0f, 0.0f},      //

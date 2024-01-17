@@ -91,8 +91,10 @@
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    renderer->render_text("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-    renderer->render_text("This is sample text", 540.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
+    renderer->render_text("abc", 440.0f, 470.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+    // renderer->render_text("This is sample text", 440.0f, 470.0f, 1.0f, glm::vec3(0.5, 0.8f,
+    // 0.2f)); renderer->render_text("This is sample text", 540.0f, 570.0f, 1.0f, glm::vec3(0.3,
+    // 0.7f, 0.9f));
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext

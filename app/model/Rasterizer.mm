@@ -27,7 +27,7 @@ Rasterizer::Rasterizer() {
 }
 
 RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
-    CTFontRef menloFont = CTFontCreateWithName(CFSTR("Menlo"), 32, nullptr);
+    CTFontRef menloFont = CTFontCreateWithName(CFSTR("Menlo"), 48, nullptr);
 
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(menloFont, kCTFontOrientationDefault, &glyph, &bounds, 1);

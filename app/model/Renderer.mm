@@ -1,4 +1,6 @@
 #import "Renderer.h"
+#import "model/Font.h"
+#import "model/Rasterizer.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 
@@ -24,7 +26,7 @@ void Renderer::init() {
     glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -56,41 +58,75 @@ bool Renderer::load_glyphs() {
     FT_Library ft;
     error = FT_Init_FreeType(&ft);
     if (error != FT_Err_Ok) {
-        logDefault(@"Renderer", @"%s", FT_Error_String(error));
+        logError(@"Renderer", @"%s", FT_Error_String(error));
         return false;
     }
 
     FT_Face face;
-    error = FT_New_Face(ft, resourcePath("Antonio-Regular.ttf"), 0, &face);
+    error = FT_New_Face(ft, resourcePath("SourceCodePro-Regular.ttf"), 0, &face);
     if (error != FT_Err_Ok) {
-        logDefault(@"Renderer", @"%s", FT_Error_String(error));
+        logError(@"Renderer", @"%s", FT_Error_String(error));
         return false;
     }
 
+    Font menlo = Font(CFSTR("Menlo"), 48);
+    Metrics metrics = menlo.metrics();
+    Rasterizer rasterizer = Rasterizer();
+    logDefault(@"Renderer", @"average_advance = %f, line_height = %f", metrics.average_advance,
+               metrics.line_height);
+
+    float cell_width = floor(metrics.average_advance + 1);
+    float cell_height = floor(metrics.line_height + 2);
+    logDefault(@"Renderer", @"cell_width = %f, cell_height = %f", cell_width, cell_height);
+
     FT_Set_Pixel_Sizes(face, 0, 48);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    for (unsigned char c = 0; c < 128; c++) {
-        error = FT_Load_Char(face, c, FT_LOAD_RENDER);
+    for (unsigned char ch = 'a'; ch <= 'c'; ch++) {
+        CGGlyph glyph_index = menlo.get_glyph([NSString stringWithFormat:@"%c", ch]);
+        RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
+
+        error = FT_Load_Char(face, ch, FT_LOAD_RENDER);
         if (error != FT_Err_Ok) {
-            logDefault(@"Renderer", @"%s", FT_Error_String(error));
+            logError(@"Renderer", @"%s", FT_Error_String(error));
             return false;
         }
 
-        unsigned int texture;
+        GLsizei width = face->glyph->bitmap.width;
+        GLsizei height = face->glyph->bitmap.rows;
+        GLsizei top = face->glyph->bitmap_top;
+        GLsizei left = face->glyph->bitmap_left;
+        // GLsizei advance = face->glyph->advance.x >> 6;
+        const void* buffer = face->glyph->bitmap.buffer;
+        // GLsizei width = rasterized_glyph.width;
+        // GLsizei height = rasterized_glyph.height;
+        // GLsizei top = rasterized_glyph.top;
+        // GLsizei left = rasterized_glyph.left;
+        GLsizei advance = metrics.average_advance + 1;
+        // const void* buffer = &rasterized_glyph.buffer;
+
+        if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY) {
+            logDefault(@"Renderer", @"correct pixel mode");
+        } else {
+            logError(@"Renderer", @"wrong pixel mode!");
+        }
+
+        GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows,
-                     0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, buffer);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+        //              buffer);
+
+        logDefault(@"Renderer", @"%dx%d versus %dx%d", width, height, rasterized_glyph.width,
+                   rasterized_glyph.height);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        Character character = {
-            texture, glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x};
-        characters.insert({std::pair<char, Character>(c, character)});
+        Character character = {texture, glm::ivec2(width, height), glm::ivec2(left, top), advance};
+        characters.insert({ch, character});
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -133,9 +169,10 @@ void Renderer::render_text(std::string text, float x, float y, float scale, glm:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         // render quad
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-        x += (ch.advance >> 6) * scale;  // bitshift by 6 to get value in pixels (2^6 = 64 (divide
-                                         // amount of 1/64th pixels by 64 to get amount of pixels))
+
+        logDefault(@"Renderer", @"advance = %f", (ch.advance >> 6) * scale);
+        // x += (ch.advance >> 6) * scale;
+        x += ch.advance;
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

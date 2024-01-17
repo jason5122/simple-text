@@ -1,29 +1,29 @@
-#version 330 core
-
-in vec2 TexCoords;
-
-layout(location = 0, index = 0) out vec4 color;
-layout(location = 0, index = 1) out vec4 alphaMask;
-
-uniform sampler2D mask;
-
-void main() {
-    vec3 textColor = texture(mask, TexCoords).rgb;
-    alphaMask = vec4(textColor, textColor.r);
-    color = vec4(51 / 255.0, 51 / 255.0, 51 / 255.0, 1.0);
-}
-
 // #version 330 core
 
 // in vec2 TexCoords;
 
-// out vec4 color;
+// layout(location = 0, index = 0) out vec4 color;
+// layout(location = 0, index = 1) out vec4 alphaMask;
 
-// uniform sampler2D text;
-// uniform vec3 textColor;
+// uniform sampler2D mask;
 
 // void main() {
-//     float alpha = texture(text, TexCoords).r;
-//     color = vec4(textColor, alpha);
-//     // color = vec4(textColor, 1.0);
+//     vec3 textColor = texture(mask, TexCoords).rgb;
+//     alphaMask = vec4(textColor, textColor.r);
+//     color = vec4(0.0, 0.0, 0.0, 1.0);
 // }
+
+#version 330 core
+
+in vec2 TexCoords;
+
+out vec4 color;
+
+uniform sampler2D text;
+uniform vec3 textColor;
+
+void main() {
+    float alpha = texture(text, TexCoords).r;
+    color = vec4(textColor, alpha);
+    // color = vec4(textColor, 1.0);
+}

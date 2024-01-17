@@ -70,18 +70,11 @@ bool Renderer::load_glyphs() {
     }
 
     Font menlo = Font(CFSTR("Menlo"), 48);
-    Metrics metrics = menlo.metrics();
     Rasterizer rasterizer = Rasterizer();
-    logDefault(@"Renderer", @"average_advance = %f, line_height = %f", metrics.average_advance,
-               metrics.line_height);
-
-    float cell_width = floor(metrics.average_advance + 1);
-    float cell_height = floor(metrics.line_height + 2);
-    logDefault(@"Renderer", @"cell_width = %f, cell_height = %f", cell_width, cell_height);
 
     FT_Set_Pixel_Sizes(face, 0, 48);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    for (unsigned char ch = 'a'; ch <= 'c'; ch++) {
+    for (unsigned char ch = 'E'; ch <= 'E'; ch++) {
         CGGlyph glyph_index = menlo.get_glyph([NSString stringWithFormat:@"%c", ch]);
         RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
 
@@ -95,20 +88,12 @@ bool Renderer::load_glyphs() {
         GLsizei height = face->glyph->bitmap.rows;
         GLsizei top = face->glyph->bitmap_top;
         GLsizei left = face->glyph->bitmap_left;
-        GLsizei advance = face->glyph->advance.x >> 6;
         const void* buffer = face->glyph->bitmap.buffer;
         // GLsizei width = rasterized_glyph.width;
         // GLsizei height = rasterized_glyph.height;
         // GLsizei top = rasterized_glyph.top;
         // GLsizei left = rasterized_glyph.left;
-        // GLsizei advance = metrics.average_advance + 1;
         // const void* buffer = &rasterized_glyph.buffer;
-
-        if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY) {
-            logDefault(@"Renderer", @"correct pixel mode");
-        } else {
-            logError(@"Renderer", @"wrong pixel mode!");
-        }
 
         int len = face->glyph->bitmap.width * face->glyph->bitmap.rows;
         for (int i = 0; i < len; i++) {
@@ -117,20 +102,22 @@ bool Renderer::load_glyphs() {
 
         logDefault(@"Renderer", @"%dx%d versus %dx%d", width, height, rasterized_glyph.width,
                    rasterized_glyph.height);
+        logDefault(@"Renderer", @"%d versus len = %d", rasterized_glyph.buffer.size(), len);
 
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, buffer);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,
-        // buffer);
+
+        GLint format = GL_RED;
+        // GLint format = GL_RGB;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, buffer);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        Character character = {texture, glm::ivec2(width, height), glm::ivec2(left, top), advance};
+        Character character = {texture, glm::ivec2(width, height), glm::ivec2(left, top)};
         characters.insert({ch, character});
     }
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -146,6 +133,10 @@ void Renderer::render_text(std::string text, float x, float y, float scale, glm:
     glUniform3fv(glGetUniformLocation(shaderProgram, "textColor"), 1, glm::value_ptr(color));
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
+
+    Font menlo = Font(CFSTR("Menlo"), 48);
+    Metrics metrics = menlo.metrics();
+    float advance = metrics.average_advance + 1;
 
     for (const char c : text) {
         Character ch = characters[c];
@@ -171,7 +162,7 @@ void Renderer::render_text(std::string text, float x, float y, float scale, glm:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        x += ch.advance;
+        x += advance;
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

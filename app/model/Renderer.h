@@ -14,7 +14,7 @@ class Renderer {
 public:
     Renderer(float width, float height);
     void init();
-    void render_text(std::string text, float x, float y, glm::vec3 color);
+    void render_text(std::string text, float x, float y);
     ~Renderer();
 
 private:

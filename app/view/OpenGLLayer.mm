@@ -48,35 +48,10 @@
         screenWidth = NSScreen.mainScreen.frame.size.width;
         screenHeight = NSScreen.mainScreen.frame.size.height;
 
-        // https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_designstrategies/opengl_designstrategies.html#//apple_ref/doc/uid/TP40001987-CH2-SW4
-        // GLint params = 1;
-        // CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &params);
-
         CGLSetCurrentContext(context);
-
-        // Font menlo = Font(CFSTR("Menlo"), 32);
-        // Metrics metrics = menlo.metrics();
-        // logDefault(@"OpenGL", @"average_advance = %f, line_height = %f",
-        // metrics.average_advance,
-        //            metrics.line_height);
-
-        // float cell_width = floor(metrics.average_advance + 1);
-        // float cell_height = floor(metrics.line_height + 2);
-        // logDefault(@"OpenGL", @"cell_width = %f, cell_height = %f", cell_width, cell_height);
-
-        // Rasterizer rasterizer = Rasterizer();
-        // CGGlyph glyph_index = menlo.get_glyph(@"E");
-        // RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
-
-        // Atlas atlas = Atlas(1024);
-        // Glyph glyph = atlas.insert_inner(rasterized_glyph);
-
-        // logDefault(@"OpenGL", @"%s", glGetString(GL_VERSION));
-        // logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
 
         renderer = new Renderer(screenWidth, screenHeight);

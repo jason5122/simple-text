@@ -15,6 +15,7 @@ macos_app_bundle("app") {
     "model/Atlas.mm",
     "model/Font.mm",
     "model/Rasterizer.mm",
+    "model/Renderer.mm",
     "util/FileUtil.mm",
     "util/LogUtil.mm",
     "view/OpenGLLayer.mm",
@@ -26,13 +27,17 @@ macos_app_bundle("app") {
     "OpenGL.framework",
   ]
 
-  include_dirs = [ "//app" ]
+  include_dirs = [
+    "//app",
+    "third_party",
+  ]
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
   deps = [
     ":icon",
     ":shaders",
+    "third_party/freetype:freetype_source",
   ]
 }
 

@@ -2,6 +2,7 @@
 #import "model/Atlas.h"
 #import "model/Font.h"
 #import "model/Rasterizer.h"
+#import "model/Renderer.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import <OpenGL/gl3.h>
@@ -39,6 +40,7 @@ struct InstanceData {
     GLint u_projection;
     GLint u_cell_dim;
     SizeInfo size_info;
+    Renderer* renderer;
 }
 @end
 
@@ -217,6 +219,8 @@ struct InstanceData {
         // Unbind so future calls won't modify this VAO/VBO.
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        renderer = new Renderer(screenWidth, screenHeight);
 
         [self draw];  // Initial draw call.
     }

@@ -50,6 +50,7 @@ icon("icon") {
 
 bundle_data("shaders") {
   sources = [
+    "resources/Antonio-Regular.ttf",
     "resources/SourceCodePro-Regular.ttf",
     "resources/text_frag.glsl",
     "resources/text_vert.glsl",

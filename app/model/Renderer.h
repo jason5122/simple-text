@@ -1,9 +1,5 @@
 class Renderer {
 public:
-    Renderer(float width, float height);
+    Renderer();
     bool init();
-
-private:
-    float width;
-    float height;
 };

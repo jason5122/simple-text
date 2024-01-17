@@ -2,10 +2,16 @@
 #import "model/Atlas.h"
 #import "model/Font.h"
 #import "model/Rasterizer.h"
-#import "model/Renderer.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import <OpenGL/gl3.h>
+#import <glm/glm.hpp>
+#import <glm/gtc/matrix_transform.hpp>
+#import <glm/gtc/type_ptr.hpp>
+#import <map>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 struct SizeInfo {
     float width;
@@ -31,6 +37,13 @@ struct InstanceData {
     float uv_height;
 };
 
+struct Character {
+    unsigned int tex_id;   // ID handle of the glyph texture
+    glm::ivec2 size;       // size of glyph
+    glm::ivec2 bearing;    // Offset from baseline to left/top of glyph
+    unsigned int advance;  // Horizontal offset to advance to next glyph
+};
+
 @interface OpenGLLayer () {
     GLuint shaderProgram;
     GLuint vao;
@@ -40,7 +53,7 @@ struct InstanceData {
     GLint u_projection;
     GLint u_cell_dim;
     SizeInfo size_info;
-    Renderer* renderer;
+    // std::map<GLchar, Character> characters;
 }
 @end
 
@@ -125,6 +138,10 @@ struct InstanceData {
         // glUniform4f(u_projection, offset_x, offset_y, scale_x, scale_y);
         // glUseProgram(0);
 
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         const GLchar* vertSource = readFile(resourcePath("triangle_vert.glsl"));
@@ -142,89 +159,48 @@ struct InstanceData {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        // glEnable(GL_BLEND);
-        // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        // glDepthMask(GL_FALSE);
+        glm::mat4 projection = glm::ortho(0.0f, screenWidth, 0.0f, screenHeight);
+        glUseProgram(shaderProgram);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE,
+                           glm::value_ptr(projection));
 
-        // glGenVertexArrays(1, &vao);
-        // glGenBuffers(1, &ebo);
-        // glGenBuffers(1, &vbo_instance);
-        // glBindVertexArray(vao);
+        FT_Library ft;
+        if (FT_Init_FreeType(&ft)) {
+            logDefault(@"OpenGL", @"error initializing FreeType");
+        }
 
-        // uint32_t indices[] = {0, 1, 3, 1, 2, 3};
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        // glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW);
-
-        // glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-        // glBufferData(GL_ARRAY_BUFFER, 4096 * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
-
-        // GLuint index = 0;
-        // GLuint size = 0;
-
-        // glVertexAttribPointer(index, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData),
-        // &size); glEnableVertexAttribArray(index); glVertexAttribDivisor(index, 1); index++; size
-        // += 2 * sizeof(uint16_t);
-
-        // glVertexAttribPointer(index, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), &size);
-        // glEnableVertexAttribArray(index);
-        // glVertexAttribDivisor(index, 1);
-        // index++;
-        // size += 4 * sizeof(int16_t);
-
-        // glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), &size);
-        // glEnableVertexAttribArray(index);
-        // glVertexAttribDivisor(index, 1);
-        // index++;
-        // size += 4 * sizeof(float);
-
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo_instance);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-
-        float gray = 228 / 255.f;
-        float darkGray = 207 / 255.f;
-        float vertices[] = {
-            // Tab bar
-            0, 1051 - 30, gray, gray, gray,     //
-            1728, 1051, gray, gray, gray,       //
-            0, 1051, gray, gray, gray,          //
-            1728, 1051 - 30, gray, gray, gray,  //
-            1728, 1051, gray, gray, gray,       //
-            0, 1051 - 30, gray, gray, gray,     //
-
-            // Side bar
-            200, 0, gray, gray, gray,     //
-            0, 1051, gray, gray, gray,    //
-            0, 0, gray, gray, gray,       //
-            200, 1051, gray, gray, gray,  //
-            0, 1051, gray, gray, gray,    //
-            200, 0, gray, gray, gray,     //
-
-            // Status bar
-            0, 50, darkGray, darkGray, darkGray,     //
-            1728, 0, darkGray, darkGray, darkGray,   //
-            0, 0, darkGray, darkGray, darkGray,      //
-            1728, 50, darkGray, darkGray, darkGray,  //
-            1728, 0, darkGray, darkGray, darkGray,   //
-            0, 50, darkGray, darkGray, darkGray,     //
-        };
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void*)(2 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        // Unbind so future calls won't modify this VAO/VBO.
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        renderer = new Renderer(screenWidth, screenHeight);
-        if (renderer->init()) {
-            logDefault(@"OpenGL", @"renderer init was successful!");
+        FT_Face face;
+        FT_Error error = FT_New_Face(ft, resourcePath("Antonio-Regular.ttf"), 0, &face);
+        if (error != FT_Err_Ok) {
+            logDefault(@"OpenGL", @"%s", FT_Error_String(error));
         } else {
-            logDefault(@"OpenGL", @"renderer init failed");
+            FT_Set_Pixel_Sizes(face, 0, 48);
+
+            // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            for (unsigned char c = 0; c < 128; c++) {
+                // if (FT_Load_Char(face, c, FT_LOAD_RENDER)) return false;
+
+                // unsigned int texture;
+                // glGenTextures(1, &texture);
+                // glBindTexture(GL_TEXTURE_2D, texture);
+                // glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width,
+                // face->glyph->bitmap.rows,
+                //              0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                // Character character = {texture,
+                //                        glm::ivec2(face->glyph->bitmap.width,
+                //                        face->glyph->bitmap.rows),
+                //                        glm::ivec2(face->glyph->bitmap_left,
+                //                        face->glyph->bitmap_top), static_cast<unsigned
+                //                        int>(face->glyph->advance.x)};
+                // characters.insert(std::pair<char, Character>(c, character));
+            }
+            // glBindTexture(GL_TEXTURE_2D, 0);
         }
 
         [self draw];  // Initial draw call.
@@ -233,40 +209,6 @@ struct InstanceData {
 }
 
 - (void)draw {
-    // glUseProgram(shaderProgram);
-    // glUniform2f(u_cell_dim, size_info.cell_width, size_info.cell_height);
-
-    // glBindVertexArray(vao);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    // glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    // glActiveTexture(GL_TEXTURE0);
-
-    // std::vector<InstanceData> instances;
-
-    // Font menlo = Font(CFSTR("Menlo"), 32);
-    // Atlas atlas = Atlas(1024);
-    // Rasterizer rasterizer = Rasterizer();
-    // CGGlyph glyph_index = menlo.get_glyph(@"E");
-    // RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
-    // Glyph glyph = atlas.insert_inner(rasterized_glyph);
-    // instances.push_back(InstanceData{0, 10, glyph.left, glyph.top, glyph.width, glyph.height,
-    //                                  glyph.uv_left, glyph.uv_bot, glyph.uv_width,
-    //                                  glyph.uv_height});
-
-    // glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(InstanceData),
-    // instances.data()); glBindTexture(GL_TEXTURE_2D, glyph.tex_id);
-    // glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-
-    glViewport(0, 0, screenWidth, screenHeight);
-
-    GLuint uResolution = glGetUniformLocation(shaderProgram, "resolution");
-    glUniform2fv(uResolution, 1, new GLfloat[]{screenWidth, screenHeight});
-
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(shaderProgram);
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 18);
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext

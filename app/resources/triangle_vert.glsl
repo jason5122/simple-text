@@ -1,21 +1,12 @@
 #version 330 core
 
-layout(location = 0) in vec2 pixelPos;
-layout(location = 1) in vec3 vertexColor;
+layout(location = 0) in vec4 vertex;  // <vec2 pos, vec2 tex>
 
-uniform vec2 resolution;
+out vec2 TexCoords;
 
-out vec3 color;
-
-vec2 pixelToClipSpace(vec2 point) {
-    vec2 vertexCoords = pixelPos / resolution;  // Normalize to [0.0, 1.0].
-    // vertexCoords.y = 1.0 - vertexCoords.y;  // Set origin to top left instead of bottom left.
-    vec2 vertexPosition = (vertexCoords * 2.0) - 1.0;  // Convert to [-1.0, 1.0].
-    return vertexPosition;
-}
+uniform mat4 projection;
 
 void main() {
-    gl_Position.xy = pixelToClipSpace(pixelPos);
-    gl_Position.zw = vec2(0.0, 1.0);
-    color = vertexColor;
+    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
+    TexCoords = vertex.zw;
 }

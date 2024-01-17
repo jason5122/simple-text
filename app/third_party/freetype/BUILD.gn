@@ -2,13 +2,22 @@ source_set("freetype") {
   # TODO: Allow dependents to automatically include ft2build.h
   # public = [ "include/ft2build.h" ]
 
-  defines = [ "FT2_BUILD_LIBRARY" ]
+  defines = [
+    "FT2_BUILD_LIBRARY",
+    "FT_CONFIG_OPTION_ERROR_STRINGS",
+  ]
 
   sources = [
     "src/base/ftbase.c",
+    "src/base/ftbitmap.c",
+    "src/base/ftdebug.c",
     "src/base/ftinit.c",
     "src/base/ftmm.c",
     "src/base/ftsystem.c",
+    "src/gzip/ftgzip.c",
+    "src/raster/raster.c",
+    "src/sfnt/sfnt.c",
+    "src/smooth/smooth.c",
     "src/truetype/truetype.c",
   ]
 

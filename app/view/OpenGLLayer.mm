@@ -1,17 +1,7 @@
 #import "OpenGLLayer.h"
-#import "model/Atlas.h"
-#import "model/Font.h"
-#import "model/Rasterizer.h"
 #import "model/Renderer.h"
-#import "util/FileUtil.h"
-#import "util/LogUtil.h"
-#import <OpenGL/gl3.h>
-#import <glm/glm.hpp>
-#import <glm/gtc/matrix_transform.hpp>
-#import <glm/gtc/type_ptr.hpp>
 
 @interface OpenGLLayer () {
-    GLfloat screenWidth, screenHeight;
     Renderer* renderer;
 }
 @end
@@ -45,29 +35,12 @@
     CGLContextObj context = nullptr;
     CGLCreateContext(pixelFormat, nullptr, &context);
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
-        screenWidth = NSScreen.mainScreen.frame.size.width;
-        screenHeight = NSScreen.mainScreen.frame.size.height;
-
         CGLSetCurrentContext(context);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        glDepthMask(GL_FALSE);
-
-        renderer = new Renderer(screenWidth, screenHeight);
-        renderer->init();
-
-        [self draw];  // Initial draw call.
+        renderer = new Renderer(NSScreen.mainScreen.frame.size.width * self.contentsScale,
+                                NSScreen.mainScreen.frame.size.height * self.contentsScale);
     }
     return context;
-}
-
-- (void)draw {
-    glViewport(0, 0, screenWidth, screenHeight);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    renderer->render_text("EEE", 440.0f, 470.0f);
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
@@ -83,7 +56,7 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(glContext);
 
-    [self draw];
+    renderer->render_text("EEE", 440.0f, 470.0f);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

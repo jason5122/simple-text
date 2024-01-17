@@ -27,20 +27,18 @@
         // openGLLayer.asynchronous = true;
         mainView.layer = openGLLayer;
 
+        // Fixes blurriness on HiDPI displays.
+        // https://bugzilla.gnome.org/show_bug.cgi?id=765194
+        mainView.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
+
         self.window.contentView = mainView;
-
-        // Rasterizer rasterizer = Rasterizer();
-        // CGGlyph glyph = rasterizer.get_glyph(@"E");
-
-        // RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph);
-        // std::vector<uint8_t> buffer = rasterized_glyph.buffer;
     }
     return self;
 }
 
 - (void)showWindow {
     [self.window center];
-    [self.window setFrameAutosaveName:@"glyph-atlas-cpp"];
+    [self.window setFrameAutosaveName:self.window.title];
     [self.window makeKeyAndOrderFront:nil];
 }
 

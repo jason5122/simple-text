@@ -13,16 +13,15 @@ struct Character {
 class Renderer {
 public:
     Renderer(float width, float height);
-    void init();
     void render_text(std::string text, float x, float y);
     ~Renderer();
 
 private:
-    GLfloat width, height;
+    float width, height;
     GLuint shaderProgram;
     GLuint VAO, VBO;
     std::map<GLchar, Character> characters;
 
-    void setup_shaders();
+    void link_shaders();
     bool load_glyphs();
 };

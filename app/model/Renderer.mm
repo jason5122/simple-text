@@ -4,12 +4,16 @@
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 
-Renderer::Renderer(float width, float height) : width(width), height(height) {}
+Renderer::Renderer(float width, float height) : width(width), height(height) {
+    glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    glDepthMask(GL_FALSE);
 
-void Renderer::init() {
-    setup_shaders();
+    link_shaders();
 
-    glm::mat4 projection = glm::ortho(0.0f, width, 0.0f, height);
+    float proj_width = NSScreen.mainScreen.frame.size.width;
+    float proj_height = NSScreen.mainScreen.frame.size.height;
+    glm::mat4 projection = glm::ortho(0.0f, proj_width, 0.0f, proj_height);
     glUseProgram(shaderProgram);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE,
                        glm::value_ptr(projection));
@@ -28,25 +32,6 @@ void Renderer::init() {
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-}
-
-void Renderer::setup_shaders() {
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vertSource = readFile(resourcePath("text_vert.glsl"));
-    const GLchar* fragSource = readFile(resourcePath("text_frag.glsl"));
-    glShaderSource(vertexShader, 1, &vertSource, nullptr);
-    glShaderSource(fragmentShader, 1, &fragSource, nullptr);
-    glCompileShader(vertexShader);
-    glCompileShader(fragmentShader);
-
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 }
 
 bool Renderer::load_glyphs() {
@@ -82,6 +67,10 @@ bool Renderer::load_glyphs() {
 }
 
 void Renderer::render_text(std::string text, float x, float y) {
+    glViewport(0, 0, width, height);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     glUseProgram(shaderProgram);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
@@ -118,6 +107,25 @@ void Renderer::render_text(std::string text, float x, float y) {
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Renderer::link_shaders() {
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    const GLchar* vertSource = readFile(resourcePath("text_vert.glsl"));
+    const GLchar* fragSource = readFile(resourcePath("text_frag.glsl"));
+    glShaderSource(vertexShader, 1, &vertSource, nullptr);
+    glShaderSource(fragmentShader, 1, &fragSource, nullptr);
+    glCompileShader(vertexShader);
+    glCompileShader(fragmentShader);
+
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 }
 
 Renderer::~Renderer() {

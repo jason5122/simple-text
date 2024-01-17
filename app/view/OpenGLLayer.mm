@@ -75,7 +75,8 @@
         // logDefault(@"OpenGL", @"%fx%f", screenWidth, screenHeight);
 
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
 
         renderer = new Renderer(screenWidth, screenHeight);
@@ -88,7 +89,7 @@
 
 - (void)draw {
     glViewport(0, 0, screenWidth, screenHeight);
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     renderer->render_text("abc", 440.0f, 470.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));

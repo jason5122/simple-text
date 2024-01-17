@@ -95,13 +95,13 @@ bool Renderer::load_glyphs() {
         GLsizei height = face->glyph->bitmap.rows;
         GLsizei top = face->glyph->bitmap_top;
         GLsizei left = face->glyph->bitmap_left;
-        // GLsizei advance = face->glyph->advance.x >> 6;
+        GLsizei advance = face->glyph->advance.x >> 6;
         const void* buffer = face->glyph->bitmap.buffer;
         // GLsizei width = rasterized_glyph.width;
         // GLsizei height = rasterized_glyph.height;
         // GLsizei top = rasterized_glyph.top;
         // GLsizei left = rasterized_glyph.left;
-        GLsizei advance = metrics.average_advance + 1;
+        // GLsizei advance = metrics.average_advance + 1;
         // const void* buffer = &rasterized_glyph.buffer;
 
         if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY) {
@@ -110,15 +110,20 @@ bool Renderer::load_glyphs() {
             logError(@"Renderer", @"wrong pixel mode!");
         }
 
+        int len = face->glyph->bitmap.width * face->glyph->bitmap.rows;
+        for (int i = 0; i < len; i++) {
+            logDefault(@"Renderer", @"%d", face->glyph->bitmap.buffer[i]);
+        }
+
+        logDefault(@"Renderer", @"%dx%d versus %dx%d", width, height, rasterized_glyph.width,
+                   rasterized_glyph.height);
+
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, buffer);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-        //              buffer);
-
-        logDefault(@"Renderer", @"%dx%d versus %dx%d", width, height, rasterized_glyph.width,
-                   rasterized_glyph.height);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,
+        // buffer);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -150,7 +155,7 @@ void Renderer::render_text(std::string text, float x, float y, float scale, glm:
 
         float w = ch.size.x * scale;
         float h = ch.size.y * scale;
-        // update VBO for each character
+
         float vertices[6][4] = {
             {xpos, ypos + h, 0.0f, 0.0f},      //
             {xpos, ypos, 0.0f, 1.0f},          //
@@ -159,19 +164,13 @@ void Renderer::render_text(std::string text, float x, float y, float scale, glm:
             {xpos + w, ypos, 1.0f, 1.0f},      //
             {xpos + w, ypos + h, 1.0f, 0.0f},  //
         };
-        // render glyph texture over quad
         glBindTexture(GL_TEXTURE_2D, ch.tex_id);
-        // update content of VBO memory
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices),
-                        vertices);  // be sure to use glBufferSubData and not glBufferData
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        // render quad
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        logDefault(@"Renderer", @"advance = %f", (ch.advance >> 6) * scale);
-        // x += (ch.advance >> 6) * scale;
         x += ch.advance;
     }
     glBindVertexArray(0);

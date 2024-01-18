@@ -3,34 +3,11 @@
 #import "util/LogUtil.h"
 #import <Cocoa/Cocoa.h>
 
-Rasterizer::Rasterizer() {
-    NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
-    CTFontDescriptorRef descriptor =
-        CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
-    CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
-    CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
-    CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor, NULL);
-
-    for (int i = 0; i < CFArrayGetCount(fontDescriptors); i++) {
-        CTFontDescriptorRef descriptor =
-            (CTFontDescriptorRef)CFArrayGetValueAtIndex(fontDescriptors, i);
-        CFStringRef familyName =
-            (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
-        CFStringRef style =
-            (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
-        logDefault(@"Rasterizer", @"%@ %@", familyName, style);
-
-        CTFontRef font = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
-    }
-
-    CTFontRef appleSymbolsFont = CTFontCreateWithName(CFSTR("Apple Symbols"), 32, nullptr);
-}
+Rasterizer::Rasterizer(CTFontRef fontRef) : fontRef(fontRef) {}
 
 RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
-    CTFontRef menloFont = CTFontCreateWithName(CFSTR("Menlo"), 48, nullptr);
-
     CGRect bounds;
-    CTFontGetBoundingRectsForGlyphs(menloFont, kCTFontOrientationDefault, &glyph, &bounds, 1);
+    CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph, &bounds, 1);
     logDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
                bounds.size.width, bounds.size.height);
 
@@ -58,16 +35,16 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
     CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
     CGPoint rasterizationOrigin = CGPointMake(-rasterizedLeft, rasterizedDescent);
 
-    CTFontDrawGlyphs(menloFont, &glyph, &rasterizationOrigin, 1, context);
+    CTFontDrawGlyphs(fontRef, &glyph, &rasterizationOrigin, 1, context);
 
     uint8_t* bitmapData = (uint8_t*)CGBitmapContextGetData(context);
     size_t height = CGBitmapContextGetHeight(context);
     size_t bytesPerRow = CGBitmapContextGetBytesPerRow(context);
     size_t len = height * bytesPerRow;
 
-    CFStringRef fontFamily = CTFontCopyName(menloFont, kCTFontFamilyNameKey);
-    CFStringRef fontFace = CTFontCopyName(menloFont, kCTFontSubFamilyNameKey);
-    CGFloat fontSize = CTFontGetSize(menloFont);
+    CFStringRef fontFamily = CTFontCopyName(fontRef, kCTFontFamilyNameKey);
+    CFStringRef fontFace = CTFontCopyName(fontRef, kCTFontSubFamilyNameKey);
+    CGFloat fontSize = CTFontGetSize(fontRef);
     logDefault(@"Rasterizer", @"%@ %@ %f", fontFamily, fontFace, fontSize);
     logDefault(@"Rasterizer", @"%dx%d", rasterizedWidth, rasterizedHeight);
     logDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
@@ -91,15 +68,4 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
                            top,
                            rasterizedLeft,
                            rgb_buffer};
-}
-
-bool Rasterizer::is_colored_placeholder() {
-    CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, nullptr);
-    bool isColored = CTFontGetSymbolicTraits(appleEmojiFont) & kCTFontTraitColorGlyphs;
-    if (isColored) {
-        logDefault(@"Rasterizer", @"font is colored");
-    } else {
-        logDefault(@"Rasterizer", @"font is NOT colored");
-    }
-    return isColored;
 }

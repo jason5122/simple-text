@@ -1,6 +1,6 @@
 #import "Renderer.h"
-#import "model/Font.h"
 #import "model/Rasterizer.h"
+#import "util/CTFontUtil.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 
@@ -13,6 +13,31 @@ Renderer::Renderer(float width, float height) : width(width), height(height) {
 
     glUseProgram(shaderProgram);
     glUniform2f(glGetUniformLocation(shaderProgram, "resolution"), width, height);
+
+    // Font experiments.
+    fontRef = CTFontCreateWithName(CFSTR("Menlo"), 48, nullptr);
+    CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, nullptr);
+    logDefault(@"Renderer", @"colored? %d", CTFontIsColored(appleEmojiFont));
+
+    NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
+    CTFontDescriptorRef descriptor =
+        CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
+    CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
+    CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
+    CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor, NULL);
+
+    for (int i = 0; i < CFArrayGetCount(fontDescriptors); i++) {
+        CTFontDescriptorRef descriptor =
+            (CTFontDescriptorRef)CFArrayGetValueAtIndex(fontDescriptors, i);
+        CFStringRef familyName =
+            (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
+        CFStringRef style =
+            (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
+        logDefault(@"Renderer", @"%@ %@", familyName, style);
+
+        CTFontRef font = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
+    }
+    // Font experiments.
 
     bool success = load_glyphs();
     if (!success) {
@@ -31,12 +56,11 @@ Renderer::Renderer(float width, float height) : width(width), height(height) {
 }
 
 bool Renderer::load_glyphs() {
-    Font menlo = Font(CFSTR("Menlo"), 48);
-    Rasterizer rasterizer = Rasterizer();
+    Rasterizer rasterizer = Rasterizer(fontRef);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     for (unsigned char ch = 'E'; ch <= 'E'; ch++) {
-        CGGlyph glyph_index = menlo.get_glyph([NSString stringWithFormat:@"%c", ch]);
+        CGGlyph glyph_index = CTFontGetGlyphIndex(fontRef, ch);
         RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
 
         GLsizei width = rasterized_glyph.width;
@@ -71,9 +95,7 @@ void Renderer::render_text(std::string text, float x, float y) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
-    Font menlo = Font(CFSTR("Menlo"), 48);
-    Metrics metrics = menlo.metrics();
-    float advance = metrics.average_advance;
+    Metrics metrics = CTFontGetMetrics(fontRef);
 
     for (const char c : text) {
         Character ch = characters[c];
@@ -99,7 +121,7 @@ void Renderer::render_text(std::string text, float x, float y) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        x += advance;
+        x += metrics.average_advance;
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

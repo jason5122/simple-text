@@ -1,3 +1,6 @@
+#pragma once
+
+#import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
 #import <glm/glm.hpp>
 #import <glm/gtc/matrix_transform.hpp>
@@ -20,6 +23,8 @@ private:
     float width, height;
     GLuint shaderProgram;
     GLuint VAO, VBO;
+
+    CTFontRef fontRef;
     std::map<GLchar, Character> characters;
 
     void link_shaders();

@@ -6,17 +6,13 @@
 
 Renderer::Renderer(float width, float height) : width(width), height(height) {
     glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
 
     link_shaders();
 
-    float proj_width = NSScreen.mainScreen.frame.size.width;
-    float proj_height = NSScreen.mainScreen.frame.size.height;
-    glm::mat4 projection = glm::ortho(0.0f, proj_width, 0.0f, proj_height);
     glUseProgram(shaderProgram);
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE,
-                       glm::value_ptr(projection));
+    glUniform2f(glGetUniformLocation(shaderProgram, "resolution"), width, height);
 
     bool success = load_glyphs();
     if (!success) {
@@ -68,7 +64,7 @@ bool Renderer::load_glyphs() {
 
 void Renderer::render_text(std::string text, float x, float y) {
     glViewport(0, 0, width, height);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
@@ -77,7 +73,7 @@ void Renderer::render_text(std::string text, float x, float y) {
 
     Font menlo = Font(CFSTR("Menlo"), 48);
     Metrics metrics = menlo.metrics();
-    float advance = metrics.average_advance + 1;
+    float advance = metrics.average_advance;
 
     for (const char c : text) {
         Character ch = characters[c];

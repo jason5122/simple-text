@@ -4,7 +4,8 @@
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 
-Renderer::Renderer(float width, float height) : width(width), height(height) {
+Renderer::Renderer(float width, float height, CTFontRef mainFont)
+    : width(width), height(height), mainFont(mainFont) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
@@ -15,7 +16,6 @@ Renderer::Renderer(float width, float height) : width(width), height(height) {
     glUniform2f(glGetUniformLocation(shaderProgram, "resolution"), width, height);
 
     // Font experiments.
-    fontRef = CTFontCreateWithName(CFSTR("Menlo"), 48, nullptr);
     CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, nullptr);
     logDefault(@"Renderer", @"colored? %d", CTFontIsColored(appleEmojiFont));
 
@@ -35,7 +35,7 @@ Renderer::Renderer(float width, float height) : width(width), height(height) {
             (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
         logDefault(@"Renderer", @"%@ %@", familyName, style);
 
-        CTFontRef font = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
+        CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
     }
     // Font experiments.
 
@@ -56,11 +56,11 @@ Renderer::Renderer(float width, float height) : width(width), height(height) {
 }
 
 bool Renderer::load_glyphs() {
-    Rasterizer rasterizer = Rasterizer(fontRef);
+    Rasterizer rasterizer = Rasterizer(mainFont);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     for (unsigned char ch = 'E'; ch <= 'E'; ch++) {
-        CGGlyph glyph_index = CTFontGetGlyphIndex(fontRef, ch);
+        CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
         RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
 
         GLsizei width = rasterized_glyph.width;
@@ -95,7 +95,7 @@ void Renderer::render_text(std::string text, float x, float y) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
-    Metrics metrics = CTFontGetMetrics(fontRef);
+    Metrics metrics = CTFontGetMetrics(mainFont);
 
     for (const char c : text) {
         Character ch = characters[c];

@@ -37,8 +37,12 @@
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(context);
 
-        renderer = new Renderer(NSScreen.mainScreen.frame.size.width * self.contentsScale,
-                                NSScreen.mainScreen.frame.size.height * self.contentsScale);
+        CGFloat fontSize = 24;
+        CTFontRef mainFont =
+            CTFontCreateWithName(CFSTR("Menlo"), fontSize * self.contentsScale, nullptr);
+        renderer =
+            new Renderer(NSScreen.mainScreen.frame.size.width * self.contentsScale,
+                         NSScreen.mainScreen.frame.size.height * self.contentsScale, mainFont);
     }
     return context;
 }

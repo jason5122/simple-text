@@ -15,7 +15,7 @@ struct Character {
 
 class Renderer {
 public:
-    Renderer(float width, float height);
+    Renderer(float width, float height, CTFontRef mainFont);
     void render_text(std::string text, float x, float y);
     ~Renderer();
 
@@ -24,7 +24,7 @@ private:
     GLuint shaderProgram;
     GLuint VAO, VBO;
 
-    CTFontRef fontRef;
+    CTFontRef mainFont;
     std::map<GLchar, Character> characters;
 
     void link_shaders();

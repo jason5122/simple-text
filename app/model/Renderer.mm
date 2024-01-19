@@ -39,12 +39,9 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
     }
-    // Font experiments.
+    // End of font experiments.
 
-    bool success = load_glyphs();
-    if (!success) {
-        logDefault(@"Renderer", @"error loading font glyphs");
-    }
+    load_glyphs();
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -72,35 +69,31 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-bool Renderer::load_glyphs() {
+void Renderer::load_glyphs() {
     Rasterizer rasterizer = Rasterizer(mainFont);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    for (unsigned char ch = 'A'; ch <= 'z'; ch++) {
+    for (int i = 32; i < 128; i++) {
+        char ch = static_cast<char>(i);
         CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
-        RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
-
-        GLsizei width = rasterized_glyph.width;
-        GLsizei height = rasterized_glyph.height;
-        GLsizei top = rasterized_glyph.top;
-        GLsizei left = rasterized_glyph.left;
-        uint8_t* buffer = &rasterized_glyph.buffer[0];
+        RasterizedGlyph glyph = rasterizer.rasterize_glyph(glyph_index);
 
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glyph.width, glyph.height, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, &glyph.buffer[0]);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        Character character = {texture, glm::ivec2(width, height), glm::ivec2(left, top)};
+        Character character = {texture, glm::ivec2(glyph.width, glyph.height),
+                               glm::ivec2(glyph.left, glyph.top)};
         characters.insert({ch, character});
     }
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
-    return true;
 }
 
 void Renderer::render_text(std::string text, float x, float y) {
@@ -119,7 +112,6 @@ void Renderer::render_text(std::string text, float x, float y) {
 
         float xpos = x + ch.bearing.x;
         float ypos = y - (ch.size.y - ch.bearing.y);
-
         float w = ch.size.x;
         float h = ch.size.y;
 

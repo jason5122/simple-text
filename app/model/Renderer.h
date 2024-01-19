@@ -28,5 +28,5 @@ private:
     std::map<GLchar, Character> characters;
 
     void link_shaders();
-    bool load_glyphs();
+    void load_glyphs();
 };

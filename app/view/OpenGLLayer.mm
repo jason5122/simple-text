@@ -60,7 +60,7 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(context);
 
-    renderer->render_text("Hello world", 500.0f, 500.0f);
+    renderer->render_text("Hello world!", 500.0f, 500.0f);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

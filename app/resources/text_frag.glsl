@@ -14,5 +14,5 @@ void main() {
 
     vec3 textColor = texture(mask, TexCoords).rgb;
     alphaMask = vec4(textColor, textColor.r);
-    color = vec4(yellow, 1.0);
+    color = vec4(black, 1.0);
 }

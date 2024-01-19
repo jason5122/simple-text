@@ -37,7 +37,7 @@
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(context);
 
-        CGFloat fontSize = 24;
+        CGFloat fontSize = 48;
         CTFontRef mainFont =
             CTFontCreateWithName(CFSTR("Source Code Pro"), fontSize * self.contentsScale, nullptr);
         renderer =

@@ -3,13 +3,14 @@
 #import "util/CTFontUtil.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
+#import "util/OpenGLErrorUtil.h"
 
 Renderer::Renderer(float width, float height, CTFontRef mainFont)
     : width(width), height(height), mainFont(mainFont) {
     glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
     link_shaders();
 
@@ -45,15 +46,30 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
         logDefault(@"Renderer", @"error loading font glyphs");
     }
 
+    GLuint indices[] = {
+        0, 1, 3,  // first triangle
+        1, 2, 3,  // second triangle
+    };
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
+
+    // Unbind.
     glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 bool Renderer::load_glyphs() {
@@ -83,7 +99,7 @@ bool Renderer::load_glyphs() {
         Character character = {texture, glm::ivec2(width, height), glm::ivec2(left, top)};
         characters.insert({ch, character});
     }
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
     return true;
 }
 
@@ -107,25 +123,29 @@ void Renderer::render_text(std::string text, float x, float y) {
         float w = ch.size.x;
         float h = ch.size.y;
 
-        float vertices[6][4] = {
-            {xpos, ypos + h, 0.0f, 0.0f},      //
-            {xpos, ypos, 0.0f, 1.0f},          //
-            {xpos + w, ypos, 1.0f, 1.0f},      //
-            {xpos, ypos + h, 0.0f, 0.0f},      //
-            {xpos + w, ypos, 1.0f, 1.0f},      //
-            {xpos + w, ypos + h, 1.0f, 0.0f},  //
+        float vertices[4][4] = {
+            {xpos + w, ypos + h, 1.0f, 0.0f},  // bottom right
+            {xpos + w, ypos, 1.0f, 1.0f},      // top right
+            {xpos, ypos, 0.0f, 1.0f},          // top left
+            {xpos, ypos + h, 0.0f, 0.0f},      // bottom left
         };
+
         glBindTexture(GL_TEXTURE_2D, ch.tex_id);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        x += metrics.average_advance;
+        glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+        x += metrics.average_advance;      // FIXME: Assumes font is monospaced.
     }
+    // Unbind.
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
+    // https://learnopengl.com/In-Practice/Debugging
+    glPrintError();
 }
 
 void Renderer::link_shaders() {
@@ -148,7 +168,8 @@ void Renderer::link_shaders() {
 }
 
 Renderer::~Renderer() {
-    glDeleteProgram(shaderProgram);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteProgram(shaderProgram);
 }

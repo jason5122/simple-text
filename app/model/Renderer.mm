@@ -7,8 +7,9 @@
 Renderer::Renderer(float width, float height, CTFontRef mainFont)
     : width(width), height(height), mainFont(mainFont) {
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
     link_shaders();
 

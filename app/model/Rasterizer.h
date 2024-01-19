@@ -4,7 +4,6 @@
 #import <vector>
 
 struct RasterizedGlyph {
-    char character;
     int32_t width;
     int32_t height;
     int32_t top;

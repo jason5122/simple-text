@@ -59,7 +59,7 @@ bool Renderer::load_glyphs() {
     Rasterizer rasterizer = Rasterizer(mainFont);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    for (unsigned char ch = 'E'; ch <= 'E'; ch++) {
+    for (unsigned char ch = 'A'; ch <= 'z'; ch++) {
         CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
         RasterizedGlyph rasterized_glyph = rasterizer.rasterize_glyph(glyph_index);
 

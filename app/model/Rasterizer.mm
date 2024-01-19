@@ -62,10 +62,7 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
         rgb_buffer.push_back(bitmapData[offset]);
     }
     int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
-    return RasterizedGlyph{'E',
-                           static_cast<int32_t>(rasterizedWidth),
-                           static_cast<int32_t>(rasterizedHeight),
-                           top,
-                           rasterizedLeft,
+    return RasterizedGlyph{static_cast<int32_t>(rasterizedWidth),
+                           static_cast<int32_t>(rasterizedHeight), top, rasterizedLeft,
                            rgb_buffer};
 }

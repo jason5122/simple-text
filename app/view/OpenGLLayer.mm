@@ -39,7 +39,7 @@
 
         CGFloat fontSize = 24;
         CTFontRef mainFont =
-            CTFontCreateWithName(CFSTR("Menlo"), fontSize * self.contentsScale, nullptr);
+            CTFontCreateWithName(CFSTR("Source Code Pro"), fontSize * self.contentsScale, nullptr);
         renderer =
             new Renderer(NSScreen.mainScreen.frame.size.width * self.contentsScale,
                          NSScreen.mainScreen.frame.size.height * self.contentsScale, mainFont);
@@ -47,30 +47,30 @@
     return context;
 }
 
-- (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
+- (BOOL)canDrawInCGLContext:(CGLContextObj)context
                 pixelFormat:(CGLPixelFormatObj)pixelFormat
                forLayerTime:(CFTimeInterval)timeInterval
                 displayTime:(const CVTimeStamp*)timeStamp {
     return true;
 }
 
-- (void)drawInCGLContext:(CGLContextObj)glContext
+- (void)drawInCGLContext:(CGLContextObj)context
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(glContext);
+    CGLSetCurrentContext(context);
 
-    renderer->render_text("EEE", 440.0f, 470.0f);
+    renderer->render_text("Hello world", 500.0f, 500.0f);
 
     // Calls glFlush() by default.
-    [super drawInCGLContext:glContext
+    [super drawInCGLContext:context
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
 }
 
-- (void)releaseCGLContext:(CGLContextObj)glContext {
-    [super releaseCGLContext:glContext];
+- (void)releaseCGLContext:(CGLContextObj)context {
+    [super releaseCGLContext:context];
 }
 
 - (void)releaseCGLPixelFormat:(CGLPixelFormatObj)pixelFormat {

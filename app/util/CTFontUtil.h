@@ -16,7 +16,7 @@ static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {
     if (CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, 1)) {
         // logDefault(@"CTFontUtil", @"got glyphs! %d", glyphs[0]);
     } else {
-        logDefault(@"CTFontUtil", @"could not get glyphs for characters");
+        logDefault(@"CTFontUtil", @"could not get glyphs for char: %c, value: %d", ch, ch);
     }
     return glyphs[0];
 }

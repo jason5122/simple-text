@@ -4,6 +4,7 @@ layout(location = 0) in vec4 vertex;  // <vec2 pixel_pos, vec2 tex_coords>
 layout(location = 1) in vec2 grid_coords;
 layout(location = 2) in vec4 glyph;
 layout(location = 3) in vec4 uv;
+layout(location = 4) in vec2 temp;
 
 out vec2 tex_coords;
 
@@ -28,6 +29,6 @@ void main() {
     vec2 cell_position = cell_dim * grid_coords;
 
     gl_Position = vec4(pixelToClipSpace(vertex.xy + cell_position), 0.0, 1.0);
-    tex_coords = uv_offset + position * vertex.zw;
+    tex_coords = uv_offset + position * temp;
     // tex_coords = uv_offset + position * uv_size;
 }

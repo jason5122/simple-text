@@ -14,10 +14,15 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glDepthMask(GL_FALSE);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
-    linkShaders();
+    this->linkShaders();
+
+    Metrics metrics = CTFontGetMetrics(mainFont);
+    float cell_width = CGFloat_floor(metrics.average_advance + 1);
+    float cell_height = CGFloat_floor(metrics.line_height + 2);
 
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
+    glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     // Font experiments.
     CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, nullptr);
@@ -43,17 +48,13 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     }
     // End of font experiments.
 
-    loadGlyphs();
-
-    Metrics metrics = CTFontGetMetrics(mainFont);
-    float cell_width = CGFloat_floor(metrics.average_advance + 1);
-    float cell_height = CGFloat_floor(metrics.line_height + 2);
+    this->loadGlyphs();
 
     std::vector<glm::vec2> offsets(100);
     int i = 0;
     for (int row = 0; row < 10; row++) {
         for (int col = 0; col < 10; col++) {
-            offsets[i++] = glm::vec2(row * cell_width, col * cell_height);
+            offsets[i++] = glm::vec2(row, col);
         }
     }
 
@@ -92,12 +93,6 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void Renderer::clearAndResize() {
-    glViewport(0, 0, width, height);
-    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Renderer::renderText(std::string text, float x, float y) {
@@ -178,6 +173,12 @@ void Renderer::loadGlyphs() {
     }
 }
 
+void Renderer::clearAndResize() {
+    glViewport(0, 0, width, height);
+    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 void Renderer::linkShaders() {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -200,6 +201,7 @@ void Renderer::linkShaders() {
 Renderer::~Renderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
     glDeleteProgram(shader_program);
 }

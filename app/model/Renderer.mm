@@ -175,9 +175,18 @@ void Renderer::loadGlyphs() {
 
     int offset_x = 0;
     int offset_y = 0;
-    for (char ch : std::string("Hello world!")) {
+    int tallest = 0;
+    for (int i = 32; i < 127; i++) {
+        char ch = static_cast<char>(i);
+
         CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
         RasterizedGlyph glyph = rasterizer.rasterizeGlyph(glyph_index);
+
+        tallest = std::max(glyph.height, tallest);
+        if (offset_x + glyph.width > ATLAS_SIZE) {
+            offset_x = 0;
+            offset_y += tallest;
+        }
 
         glBindTexture(GL_TEXTURE_2D, atlas);
         glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,

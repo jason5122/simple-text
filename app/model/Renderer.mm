@@ -86,7 +86,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
@@ -108,9 +108,9 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glVertexAttribDivisor(2, 1);
     size += 4 * sizeof(int16_t);
 
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
-    glVertexAttribDivisor(3, 1);
+    // glEnableVertexAttribArray(3);
+    // glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    // glVertexAttribDivisor(3, 1);
     size += 4 * sizeof(float);
 
     glEnableVertexAttribArray(4);
@@ -134,22 +134,43 @@ void Renderer::renderText(std::string text, float x, float y) {
     float w = glyph.size.x;
     float h = glyph.size.y;
 
-    float vertices[4][4] = {
-        {xpos + w, ypos + h, glyph.uv_width, 0.0f},         // bottom right
-        {xpos + w, ypos, glyph.uv_width, glyph.uv_height},  // top right
-        {xpos, ypos, 0.0f, glyph.uv_height},                // top left
-        {xpos, ypos + h, 0.0f, 0.0f},                       // bottom left
+    float vertices[4][2] = {
+        {xpos + w, ypos + h},  // bottom right
+        {xpos + w, ypos},      // top right
+        {xpos, ypos},          // top left
+        {xpos, ypos + h},      // bottom left
     };
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
     std::vector<InstanceData> instances;
-    for (uint16_t row = 0; row < text.size(); row++) {
-        char ch = text[row];
+    for (uint16_t col = 0; col < text.size(); col++) {
+        char ch = text[col];
         AtlasGlyph glyph = glyph_cache[ch];
-        instances.push_back(InstanceData{row, 0, glyph.left, glyph.top, glyph.width, glyph.height,
-                                         glyph.uv_left, glyph.uv_bot, glyph.uv_width,
-                                         glyph.uv_height, glyph.uv_width, glyph.uv_height});
+        instances.push_back(InstanceData{
+            // grid_coords
+            col,
+            0,
+            // glyph
+            glyph.left,
+            glyph.top,
+            glyph.width,
+            glyph.height,
+            // uv
+            // glyph.uv_left,
+            0,
+            // glyph.uv_bot,
+            0,
+            glyph.uv_width,
+            // 0,
+            glyph.uv_height,
+            // 0,
+            // temp
+            // glyph.uv_width,
+            0,
+            // glyph.uv_height,
+            0,
+        });
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

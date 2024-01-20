@@ -12,6 +12,7 @@ uniform vec2 scroll_offset;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
+    point.y = 1.0 - point.y;     // Set origin to top left instead of bottom left.
     return (point * 2.0) - 1.0;  // Convert to [-1.0, 1.0].
 }
 
@@ -25,9 +26,11 @@ void main() {
     position.x = (gl_VertexID == 0 || gl_VertexID == 1) ? 1. : 0.;
     position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
 
+    // Position of cell from top-left.
     vec2 cell_position = cell_dim * grid_coords;
-    cell_position += glyph_offset + glyph_size * position;
+    glyph_offset.y = cell_dim.y - glyph_offset.y;
 
+    cell_position += glyph_offset + glyph_size * position;
     cell_position += scroll_offset;
 
     gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);

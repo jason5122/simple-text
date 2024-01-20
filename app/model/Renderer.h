@@ -12,8 +12,8 @@ struct AtlasGlyph {
     int32_t top;
     int32_t width;
     int32_t height;
-    float uv_bot;
     float uv_left;
+    float uv_bot;
     float uv_width;
     float uv_height;
 };

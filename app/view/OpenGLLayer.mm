@@ -66,7 +66,7 @@
     renderer->clearAndResize();
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
-    renderer->renderText("HHH", x, y);
+    renderer->renderText("Hello world!", x, y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

@@ -172,16 +172,15 @@ void Renderer::loadGlyphs() {
         glBindTexture(GL_TEXTURE_2D, atlas);
         glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,
                         GL_UNSIGNED_BYTE, &glyph.buffer[0]);
-
         glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
-        float uv_bot = offset_x;
-        float uv_left = offset_y;
+        float uv_left = static_cast<float>(offset_x) / ATLAS_SIZE;
+        float uv_bot = static_cast<float>(offset_y) / ATLAS_SIZE;
         float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
         float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
 
         AtlasGlyph atlas_glyph = {glyph.left, glyph.top, glyph.width, glyph.height,
-                                  uv_bot,     uv_left,   uv_width,    uv_height};
+                                  uv_left,    uv_bot,    uv_width,    uv_height};
         glyph_cache.insert({ch, atlas_glyph});
 
         offset_x += glyph.width;

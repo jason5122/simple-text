@@ -43,14 +43,18 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     load_glyphs();
 
-    glm::vec2 translations[3];
-    translations[0] = glm::vec2(0.0f, 0.0f);
-    translations[1] = glm::vec2(50.0f, 0.0f);
-    translations[2] = glm::vec2(100.0f, 0.0f);
+    Metrics metrics = CTFontGetMetrics(mainFont);
+    std::vector<glm::vec2> offsets(100);
+    int i = 0;
+    for (int row = 0; row < 10; row++) {
+        for (int col = 0; col < 10; col++) {
+            offsets[i++] = glm::vec2(row * metrics.average_advance, col * metrics.line_height);
+        }
+    }
 
     glGenBuffers(1, &VBO_instance);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 3, &translations[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * offsets.size(), &offsets[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     GLuint indices[] = {
@@ -121,8 +125,6 @@ void Renderer::render_text(std::string text, float x, float y) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
-    Metrics metrics = CTFontGetMetrics(mainFont);
-
     Character ch = characters[text[0]];
     float xpos = x + ch.bearing.x;
     float ypos = y - (ch.size.y - ch.bearing.y);
@@ -137,35 +139,9 @@ void Renderer::render_text(std::string text, float x, float y) {
     glBindTexture(GL_TEXTURE_2D, ch.tex_id);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 3);
-
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
-    // for (const char c : text) {
-    //     Character ch = characters[c];
-
-    //     float xpos = x + ch.bearing.x;
-    //     float ypos = y - (ch.size.y - ch.bearing.y);
-    //     float w = ch.size.x;
-    //     float h = ch.size.y;
-
-    //     float vertices[4][4] = {
-    //         {xpos + w, ypos + h, 1.0f, 0.0f},  // bottom right
-    //         {xpos + w, ypos, 1.0f, 1.0f},      // top right
-    //         {xpos, ypos, 0.0f, 1.0f},          // top left
-    //         {xpos, ypos + h, 0.0f, 0.0f},      // bottom left
-    //     };
-
-    //     glBindTexture(GL_TEXTURE_2D, ch.tex_id);
-    //     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-    //     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    //     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 3);
-
-    //     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
-    //     x += metrics.average_advance;      // FIXME: Assumes font is monospaced.
-    // }
     // Unbind.
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

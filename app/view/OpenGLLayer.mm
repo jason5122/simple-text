@@ -74,7 +74,7 @@
 
     for (int i = 0; i < 1; i++) {
         float offset = i * 100.0f;
-        renderer->render_text("Hello world!", x, y + offset);
+        renderer->render_text("E", x, y + offset);
     }
 
     // Calls glFlush() by default.

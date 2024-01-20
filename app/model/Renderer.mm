@@ -43,6 +43,16 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     load_glyphs();
 
+    glm::vec2 translations[3];
+    translations[0] = glm::vec2(0.0f, 0.0f);
+    translations[1] = glm::vec2(50.0f, 0.0f);
+    translations[2] = glm::vec2(100.0f, 0.0f);
+
+    glGenBuffers(1, &VBO_instance);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_instance);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 3, &translations[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     GLuint indices[] = {
         0, 1, 3,  // first triangle
         1, 2, 3,  // second triangle
@@ -60,8 +70,14 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_instance);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(1, 1);
 
     // Unbind.
     glBindVertexArray(0);
@@ -107,30 +123,49 @@ void Renderer::render_text(std::string text, float x, float y) {
 
     Metrics metrics = CTFontGetMetrics(mainFont);
 
-    for (const char c : text) {
-        Character ch = characters[c];
+    Character ch = characters[text[0]];
+    float xpos = x + ch.bearing.x;
+    float ypos = y - (ch.size.y - ch.bearing.y);
+    float w = ch.size.x;
+    float h = ch.size.y;
+    float vertices[4][4] = {
+        {xpos + w, ypos + h, 1.0f, 0.0f},  // bottom right
+        {xpos + w, ypos, 1.0f, 1.0f},      // top right
+        {xpos, ypos, 0.0f, 1.0f},          // top left
+        {xpos, ypos + h, 0.0f, 0.0f},      // bottom left
+    };
+    glBindTexture(GL_TEXTURE_2D, ch.tex_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 3);
 
-        float xpos = x + ch.bearing.x;
-        float ypos = y - (ch.size.y - ch.bearing.y);
-        float w = ch.size.x;
-        float h = ch.size.y;
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
-        float vertices[4][4] = {
-            {xpos + w, ypos + h, 1.0f, 0.0f},  // bottom right
-            {xpos + w, ypos, 1.0f, 1.0f},      // top right
-            {xpos, ypos, 0.0f, 1.0f},          // top left
-            {xpos, ypos + h, 0.0f, 0.0f},      // bottom left
-        };
+    // for (const char c : text) {
+    //     Character ch = characters[c];
 
-        glBindTexture(GL_TEXTURE_2D, ch.tex_id);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    //     float xpos = x + ch.bearing.x;
+    //     float ypos = y - (ch.size.y - ch.bearing.y);
+    //     float w = ch.size.x;
+    //     float h = ch.size.y;
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    //     float vertices[4][4] = {
+    //         {xpos + w, ypos + h, 1.0f, 0.0f},  // bottom right
+    //         {xpos + w, ypos, 1.0f, 1.0f},      // top right
+    //         {xpos, ypos, 0.0f, 1.0f},          // top left
+    //         {xpos, ypos + h, 0.0f, 0.0f},      // bottom left
+    //     };
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
-        x += metrics.average_advance;      // FIXME: Assumes font is monospaced.
-    }
+    //     glBindTexture(GL_TEXTURE_2D, ch.tex_id);
+    //     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+
+    //     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    //     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 3);
+
+    //     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+    //     x += metrics.average_advance;      // FIXME: Assumes font is monospaced.
+    // }
     // Unbind.
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

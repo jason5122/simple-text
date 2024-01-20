@@ -23,6 +23,7 @@ private:
     float width, height;
     GLuint shaderProgram;
     GLuint VAO, VBO, EBO;
+    GLuint VBO_instance;
 
     CTFontRef mainFont;
     std::map<GLchar, Character> characters;

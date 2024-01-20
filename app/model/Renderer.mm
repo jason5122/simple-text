@@ -97,9 +97,9 @@ void Renderer::load_glyphs() {
 }
 
 void Renderer::render_text(std::string text, float x, float y) {
-    glViewport(0, 0, width, height);
-    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // glViewport(0, 0, width, height);
+    // glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
     glActiveTexture(GL_TEXTURE0);

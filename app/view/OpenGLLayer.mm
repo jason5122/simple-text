@@ -63,8 +63,19 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(context);
 
+    // FIXME: Move these to Renderer in the future.
+    glViewport(0, 0, NSScreen.mainScreen.frame.size.width * self.contentsScale,
+               NSScreen.mainScreen.frame.size.height * self.contentsScale);
+    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     // renderer->render_text("E", 500.0f, 500.0f);
-    renderer->render_text(std::to_string(timeInterval), x, y);
+    // renderer->render_text(std::to_string(timeInterval), x, y);
+
+    for (int i = 0; i < 1; i++) {
+        float offset = i * 100.0f;
+        renderer->render_text("Hello world!", x, y + offset);
+    }
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

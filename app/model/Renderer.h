@@ -10,6 +10,10 @@
 struct AtlasGlyph {
     glm::ivec2 size;
     glm::ivec2 bearing;  // Offset from baseline to left/top of glyph.
+    int32_t left;
+    int32_t top;
+    int32_t width;
+    int32_t height;
     float uv_bot;
     float uv_left;
     float uv_width;

@@ -6,8 +6,19 @@
 #import "util/OpenGLErrorUtil.h"
 
 struct InstanceData {
+    // grid_coords
     uint16_t col;
     uint16_t row;
+    // glyph
+    int32_t left;
+    int32_t top;
+    int32_t width;
+    int32_t height;
+    // uv
+    float uv_left;
+    float uv_bot;
+    float uv_width;
+    float uv_height;
 };
 
 Renderer::Renderer(float width, float height, CTFontRef mainFont)
@@ -78,11 +89,16 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 
-    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glVertexAttribDivisor(1, 1);
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData),
+                          (void*)(2 * sizeof(uint16_t)));
+    glVertexAttribDivisor(2, 1);
 
     // Unbind.
     glBindVertexArray(0);
@@ -107,17 +123,21 @@ void Renderer::renderText(std::string text, float x, float y) {
         {xpos, ypos, 0.0f, glyph.uv_height},                // top left
         {xpos, ypos + h, 0.0f, 0.0f},                       // bottom left
     };
-    glBindTexture(GL_TEXTURE_2D, atlas);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
     std::vector<InstanceData> instances;
     for (uint16_t row = 0; row < text.size(); row++) {
-        instances.push_back(InstanceData{row, 0});
+        char ch = text[row];
+        AtlasGlyph glyph = glyph_cache[ch];
+        instances.push_back(InstanceData{row, 0, glyph.left, glyph.top, glyph.width, glyph.height,
+                                         glyph.uv_left, glyph.uv_bot, glyph.uv_width,
+                                         glyph.uv_height});
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
+    glBindTexture(GL_TEXTURE_2D, atlas);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
@@ -166,6 +186,10 @@ void Renderer::loadGlyphs() {
 
         AtlasGlyph atlas_glyph = {glm::ivec2(glyph.width, glyph.height),
                                   glm::ivec2(glyph.left, glyph.top),
+                                  glyph.left,
+                                  glyph.top,
+                                  glyph.width,
+                                  glyph.height,
                                   uv_bot,
                                   uv_left,
                                   uv_width,

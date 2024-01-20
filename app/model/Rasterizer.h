@@ -4,6 +4,7 @@
 #import <vector>
 
 struct RasterizedGlyph {
+    // TODO: Reorder members to match AtlasGlyph member order.
     int32_t width;
     int32_t height;
     int32_t top;

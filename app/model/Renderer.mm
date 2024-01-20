@@ -5,6 +5,8 @@
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
 
+struct InstanceData {};
+
 Renderer::Renderer(float width, float height, CTFontRef mainFont)
     : width(width), height(height), mainFont(mainFont) {
     glEnable(GL_BLEND);
@@ -12,14 +14,14 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glDepthMask(GL_FALSE);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
-    link_shaders();
+    linkShaders();
 
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
 
     // Font experiments.
     CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, nullptr);
-    logDefault(@"Renderer", @"colored? %d", CTFontIsColored(appleEmojiFont));
+    LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(appleEmojiFont));
 
     NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
     CTFontDescriptorRef descriptor =
@@ -35,13 +37,13 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
             (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
         CFStringRef style =
             (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
-        logDefault(@"Renderer", @"%@ %@", familyName, style);
+        LogDefault(@"Renderer", @"%@ %@", familyName, style);
 
         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
     }
     // End of font experiments.
 
-    load_glyphs();
+    loadGlyphs();
 
     Metrics metrics = CTFontGetMetrics(mainFont);
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
@@ -57,7 +59,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     glGenBuffers(1, &vbo_instance);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * offsets.size(), &offsets[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 65536, &offsets[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     GLuint indices[] = {
@@ -92,11 +94,13 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::render_text(std::string text, float x, float y) {
-    // glViewport(0, 0, width, height);
-    // glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
-    // glClear(GL_COLOR_BUFFER_BIT);
+void Renderer::clearAndResize() {
+    glViewport(0, 0, width, height);
+    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
 
+void Renderer::renderText(std::string text, float x, float y) {
     glUseProgram(shader_program);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -107,15 +111,11 @@ void Renderer::render_text(std::string text, float x, float y) {
     float w = glyph.size.x;
     float h = glyph.size.y;
 
-    // UV coordinates are normalized to [0, 1].
-    float uv_width = w / ATLAS_SIZE;
-    float uv_height = h / ATLAS_SIZE;
-
     float vertices[4][4] = {
-        {xpos + w, ypos + h, uv_width, 0.0f},   // bottom right
-        {xpos + w, ypos, uv_width, uv_height},  // top right
-        {xpos, ypos, 0.0f, uv_height},          // top left
-        {xpos, ypos + h, 0.0f, 0.0f},           // bottom left
+        {xpos + w, ypos + h, glyph.uv_width, 0.0f},         // bottom right
+        {xpos + w, ypos, glyph.uv_width, glyph.uv_height},  // top right
+        {xpos, ypos, 0.0f, glyph.uv_height},                // top left
+        {xpos, ypos + h, 0.0f, 0.0f},                       // bottom left
     };
     glBindTexture(GL_TEXTURE_2D, atlas);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -132,7 +132,7 @@ void Renderer::render_text(std::string text, float x, float y) {
     glPrintError();
 }
 
-void Renderer::load_glyphs() {
+void Renderer::loadGlyphs() {
     Rasterizer rasterizer = Rasterizer(mainFont);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -149,25 +149,40 @@ void Renderer::load_glyphs() {
 
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
-    CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, 'E');
-    RasterizedGlyph glyph = rasterizer.rasterize_glyph(glyph_index);
+    int offset_x = 0;
+    int offset_y = 0;
+    for (char ch : std::string("Hello world!")) {
+        CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
+        RasterizedGlyph glyph = rasterizer.rasterizeGlyph(glyph_index);
 
-    glBindTexture(GL_TEXTURE_2D, atlas);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, glyph.width, glyph.height, GL_RGB, GL_UNSIGNED_BYTE,
-                    &glyph.buffer[0]);
+        glBindTexture(GL_TEXTURE_2D, atlas);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,
+                        GL_UNSIGNED_BYTE, &glyph.buffer[0]);
 
-    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+        glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
-    AtlasGlyph atlas_glyph = {glm::ivec2(glyph.width, glyph.height),
-                              glm::ivec2(glyph.left, glyph.top)};
-    glyph_cache.insert({'E', atlas_glyph});
+        float uv_bot = offset_x;
+        float uv_left = offset_y;
+        float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
+        float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
+
+        AtlasGlyph atlas_glyph = {glm::ivec2(glyph.width, glyph.height),
+                                  glm::ivec2(glyph.left, glyph.top),
+                                  uv_bot,
+                                  uv_left,
+                                  uv_width,
+                                  uv_height};
+        glyph_cache.insert({ch, atlas_glyph});
+
+        offset_x += glyph.width;
+    }
 }
 
-void Renderer::link_shaders() {
+void Renderer::linkShaders() {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vert_source = readFile(resourcePath("text_vert.glsl"));
-    const GLchar* frag_source = readFile(resourcePath("text_frag.glsl"));
+    const GLchar* vert_source = ReadFile(ResourcePath("text_vert.glsl"));
+    const GLchar* frag_source = ReadFile(ResourcePath("text_frag.glsl"));
     glShaderSource(vertex_shader, 1, &vert_source, nullptr);
     glShaderSource(fragment_shader, 1, &frag_source, nullptr);
     glCompileShader(vertex_shader);

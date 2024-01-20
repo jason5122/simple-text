@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-void logDefault(NSString* category, NSString* format, ...);
-void logError(NSString* category, NSString* format, ...);
+void LogDefault(NSString* category, NSString* format, ...);
+void LogError(NSString* category, NSString* format, ...);
 
 #ifdef __cplusplus
 }

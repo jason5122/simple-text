@@ -5,10 +5,10 @@
 
 Rasterizer::Rasterizer(CTFontRef fontRef) : fontRef(fontRef) {}
 
-RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
+RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph, &bounds, 1);
-    // logDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
+    // LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
     //            bounds.size.width, bounds.size.height);
 
     int32_t rasterizedLeft = CGFloat_floor(bounds.origin.x);
@@ -45,12 +45,12 @@ RasterizedGlyph Rasterizer::rasterize_glyph(CGGlyph glyph) {
     CFStringRef fontFamily = CTFontCopyName(fontRef, kCTFontFamilyNameKey);
     CFStringRef fontFace = CTFontCopyName(fontRef, kCTFontSubFamilyNameKey);
     CGFloat fontSize = CTFontGetSize(fontRef);
-    // logDefault(@"Rasterizer", @"%@ %@ %f", fontFamily, fontFace, fontSize);
-    // logDefault(@"Rasterizer", @"%dx%d", rasterizedWidth, rasterizedHeight);
-    // logDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
+    // LogDefault(@"Rasterizer", @"%@ %@ %f", fontFamily, fontFace, fontSize);
+    // LogDefault(@"Rasterizer", @"%dx%d", rasterizedWidth, rasterizedHeight);
+    // LogDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
     //            len);
 
-    // logDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
+    // LogDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
 
     int pixels = len / 4;
     std::vector<uint8_t> rgb_buffer;

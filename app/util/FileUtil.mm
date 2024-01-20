@@ -2,14 +2,14 @@
 #import <Foundation/Foundation.h>
 #import <sys/stat.h>
 
-const char* resourcePath(const char* resourceName) {
+const char* ResourcePath(const char* resourceName) {
     NSString* path =
         [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:resourceName]
                                         ofType:nil];
     return [path fileSystemRepresentation];
 }
 
-char* readFile(const char* fileName) {
+char* ReadFile(const char* fileName) {
     struct stat statbuf;
     FILE* fh;
     char* source;

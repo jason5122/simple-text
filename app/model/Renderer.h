@@ -8,15 +8,19 @@
 #import <map>
 
 struct AtlasGlyph {
-    glm::ivec2 size;     // Size of glyph.
+    glm::ivec2 size;
     glm::ivec2 bearing;  // Offset from baseline to left/top of glyph.
-    // glm::vec2 uv;        // UV offset for atlas entry.
+    float uv_bot;
+    float uv_left;
+    float uv_width;
+    float uv_height;
 };
 
 class Renderer {
 public:
     Renderer(float width, float height, CTFontRef mainFont);
-    void render_text(std::string text, float x, float y);
+    void renderText(std::string text, float x, float y);
+    void clearAndResize();
     ~Renderer();
 
 private:
@@ -31,6 +35,6 @@ private:
     CTFontRef mainFont;
     std::map<GLchar, AtlasGlyph> glyph_cache;
 
-    void link_shaders();
-    void load_glyphs();
+    void linkShaders();
+    void loadGlyphs();
 };

@@ -8,8 +8,6 @@
 #import <map>
 
 struct AtlasGlyph {
-    glm::ivec2 size;
-    glm::ivec2 bearing;  // Offset from baseline to left/top of glyph.
     int32_t left;
     int32_t top;
     int32_t width;
@@ -31,7 +29,7 @@ private:
     float width, height;
 
     GLuint shader_program;
-    GLuint vao, vbo, vbo_instance, ebo;
+    GLuint vao, vbo_instance, ebo;
     static const int BATCH_MAX = 65536;
 
     GLuint atlas;

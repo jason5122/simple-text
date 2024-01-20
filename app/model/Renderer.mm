@@ -19,9 +19,6 @@ struct InstanceData {
     float uv_bot;
     float uv_width;
     float uv_height;
-    // tex_coords
-    float u;
-    float v;
 };
 
 Renderer::Renderer(float width, float height, CTFontRef mainFont)
@@ -73,7 +70,6 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     };
 
     glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
     glGenBuffers(1, &vbo_instance);
     glGenBuffers(1, &ebo);
 
@@ -92,25 +88,14 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glVertexAttribDivisor(0, 1);
     size += 2 * sizeof(uint16_t);
 
-    // glEnableVertexAttribArray(1);
-    // glVertexAttribPointer(1, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
-    // glVertexAttribDivisor(1, 1);
-    size += 4 * sizeof(int16_t);
-
-    // glEnableVertexAttribArray(2);
-    // glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
-    // glVertexAttribDivisor(2, 1);
-    size += 4 * sizeof(float);
-
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribPointer(1, 4, GL_INT, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(1, 1);
+    size += 4 * sizeof(int32_t);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 2, nullptr, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(2, 1);
 
     // Unbind.
     glBindVertexArray(0);
@@ -120,58 +105,30 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
 void Renderer::renderText(std::string text, float x, float y) {
     glUseProgram(shader_program);
+    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
+
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
-
-    AtlasGlyph glyph = glyph_cache[text[0]];
-    float xpos = x + glyph.bearing.x;
-    float ypos = y - (glyph.size.y - glyph.bearing.y);
-    float w = glyph.size.x;
-    float h = glyph.size.y;
-
-    float vertices[4][2] = {
-        {xpos + w, ypos + h},  // bottom right
-        {xpos + w, ypos},      // top right
-        {xpos, ypos},          // top left
-        {xpos, ypos + h},      // bottom left
-    };
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
     std::vector<InstanceData> instances;
     for (uint16_t col = 0; col < text.size(); col++) {
         char ch = text[col];
         AtlasGlyph glyph = glyph_cache[ch];
-        InstanceData instance{};
-        instance.col = col;
-        instance.row = 0;
-        instance.uv_width = glyph.uv_width;
-        instance.uv_height = glyph.uv_height;
-        instances.push_back(instance);
-        // instances.push_back(InstanceData{
-        //     // grid_coords
-        //     col,
-        //     0,
-        //     // glyph
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     // uv
-        //     // glyph.uv_left,
-        //     0,
-        //     // glyph.uv_bot,
-        //     0,
-        //     glyph.uv_width,
-        //     // 0,
-        //     glyph.uv_height,
-        //     // 0,
-        //     // temp
-        //     // glyph.uv_width,
-        //     0,
-        //     // glyph.uv_height,
-        //     0,
-        // });
+        instances.push_back(InstanceData{
+            // grid_coords
+            col,
+            0,
+            // glyph
+            glyph.left,
+            glyph.top,
+            glyph.width,
+            glyph.height,
+            // uv
+            glyph.uv_left,
+            glyph.uv_bot,
+            glyph.uv_width,
+            glyph.uv_height,
+        });
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
@@ -223,16 +180,8 @@ void Renderer::loadGlyphs() {
         float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
         float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
 
-        AtlasGlyph atlas_glyph = {glm::ivec2(glyph.width, glyph.height),
-                                  glm::ivec2(glyph.left, glyph.top),
-                                  glyph.left,
-                                  glyph.top,
-                                  glyph.width,
-                                  glyph.height,
-                                  uv_bot,
-                                  uv_left,
-                                  uv_width,
-                                  uv_height};
+        AtlasGlyph atlas_glyph = {glyph.left, glyph.top, glyph.width, glyph.height,
+                                  uv_bot,     uv_left,   uv_width,    uv_height};
         glyph_cache.insert({ch, atlas_glyph});
 
         offset_x += glyph.width;
@@ -266,7 +215,6 @@ void Renderer::linkShaders() {
 
 Renderer::~Renderer() {
     glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
     glDeleteProgram(shader_program);

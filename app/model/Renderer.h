@@ -7,10 +7,10 @@
 #import <glm/gtc/type_ptr.hpp>
 #import <map>
 
-struct Character {
-    GLuint tex_id;       // ID handle of the glyph texture
-    glm::ivec2 size;     // size of glyph
-    glm::ivec2 bearing;  // Offset from baseline to left/top of glyph
+struct AtlasGlyph {
+    glm::ivec2 size;     // Size of glyph.
+    glm::ivec2 bearing;  // Offset from baseline to left/top of glyph.
+    // glm::vec2 uv;        // UV offset for atlas entry.
 };
 
 class Renderer {
@@ -21,13 +21,15 @@ public:
 
 private:
     float width, height;
-    GLuint shaderProgram;
-    GLuint VAO, VBO, EBO;
-    GLuint VBO_instance;
+    GLuint shader_program;
+    GLuint vao, vbo, vbo_instance, ebo;
+
     GLuint atlas;
+    // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
+    static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
 
     CTFontRef mainFont;
-    std::map<GLchar, Character> characters;
+    std::map<GLchar, AtlasGlyph> glyph_cache;
 
     void link_shaders();
     void load_glyphs();

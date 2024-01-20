@@ -1,9 +1,9 @@
 #version 330 core
 
-layout(location = 0) in vec4 vertex;  // <vec2 pos, vec2 tex>
-layout(location = 1) in vec2 offset;
+layout(location = 0) in vec4 vertex;  // <vec2 pixel_pos, vec2 tex_coords>
+layout(location = 1) in vec2 instance_offset;
 
-out vec2 TexCoords;
+out vec2 tex_coords;
 
 uniform vec2 resolution;
 
@@ -13,6 +13,6 @@ vec2 pixelToClipSpace(vec2 point) {
 }
 
 void main() {
-    gl_Position = vec4(pixelToClipSpace(vertex.xy + offset), 0.0, 1.0);
-    TexCoords = vertex.zw;
+    gl_Position = vec4(pixelToClipSpace(vertex.xy + instance_offset), 0.0, 1.0);
+    tex_coords = vertex.zw;
 }

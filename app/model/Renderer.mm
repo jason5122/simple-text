@@ -14,8 +14,8 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     link_shaders();
 
-    glUseProgram(shaderProgram);
-    glUniform2f(glGetUniformLocation(shaderProgram, "resolution"), width, height);
+    glUseProgram(shader_program);
+    glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
 
     // Font experiments.
     CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, nullptr);
@@ -55,8 +55,8 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
         }
     }
 
-    glGenBuffers(1, &VBO_instance);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_instance);
+    glGenBuffers(1, &vbo_instance);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * offsets.size(), &offsets[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -65,23 +65,23 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
         1, 2, 3,  // second triangle
     };
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_instance);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glVertexAttribDivisor(1, 1);
@@ -97,18 +97,19 @@ void Renderer::render_text(std::string text, float x, float y) {
     // glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     // glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
+    glUseProgram(shader_program);
     glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(VAO);
+    glBindVertexArray(vao);
 
-    Character ch = characters[text[0]];
-    float xpos = x + ch.bearing.x;
-    float ypos = y - (ch.size.y - ch.bearing.y);
-    float w = ch.size.x;
-    float h = ch.size.y;
+    AtlasGlyph glyph = glyph_cache[text[0]];
+    float xpos = x + glyph.bearing.x;
+    float ypos = y - (glyph.size.y - glyph.bearing.y);
+    float w = glyph.size.x;
+    float h = glyph.size.y;
 
-    float uv_width = w / 1024.0;
-    float uv_height = h / 1024.0;
+    // UV coordinates are normalized to [0, 1].
+    float uv_width = w / ATLAS_SIZE;
+    float uv_height = h / ATLAS_SIZE;
 
     float vertices[4][4] = {
         {xpos + w, ypos + h, uv_width, 0.0f},   // bottom right
@@ -117,7 +118,7 @@ void Renderer::render_text(std::string text, float x, float y) {
         {xpos, ypos + h, 0.0f, 0.0f},           // bottom left
     };
     glBindTexture(GL_TEXTURE_2D, atlas);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
@@ -138,7 +139,8 @@ void Renderer::load_glyphs() {
     glGenTextures(1, &atlas);
     glBindTexture(GL_TEXTURE_2D, atlas);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ATLAS_SIZE, ATLAS_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -156,33 +158,33 @@ void Renderer::load_glyphs() {
 
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
-    Character character = {atlas, glm::ivec2(glyph.width, glyph.height),
-                           glm::ivec2(glyph.left, glyph.top)};
-    characters.insert({'E', character});
+    AtlasGlyph atlas_glyph = {glm::ivec2(glyph.width, glyph.height),
+                              glm::ivec2(glyph.left, glyph.top)};
+    glyph_cache.insert({'E', atlas_glyph});
 }
 
 void Renderer::link_shaders() {
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vertSource = readFile(resourcePath("text_vert.glsl"));
-    const GLchar* fragSource = readFile(resourcePath("text_frag.glsl"));
-    glShaderSource(vertexShader, 1, &vertSource, nullptr);
-    glShaderSource(fragmentShader, 1, &fragSource, nullptr);
-    glCompileShader(vertexShader);
-    glCompileShader(fragmentShader);
+    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    const GLchar* vert_source = readFile(resourcePath("text_vert.glsl"));
+    const GLchar* frag_source = readFile(resourcePath("text_frag.glsl"));
+    glShaderSource(vertex_shader, 1, &vert_source, nullptr);
+    glShaderSource(fragment_shader, 1, &frag_source, nullptr);
+    glCompileShader(vertex_shader);
+    glCompileShader(fragment_shader);
 
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 }
 
 Renderer::~Renderer() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
+    glDeleteProgram(shader_program);
 }

@@ -1,10 +1,10 @@
 #version 330 core
 
-layout(location = 0) in vec2 pixel_pos;
-layout(location = 1) in vec2 grid_coords;
-layout(location = 2) in vec4 glyph;
-layout(location = 3) in vec4 uv;
-layout(location = 4) in vec2 temp;
+layout(location = 0) in vec2 grid_coords;
+// layout(location = 1) in vec4 glyph;
+// layout(location = 2) in vec4 uv;
+layout(location = 1) in vec2 temp;
+layout(location = 4) in vec2 pixel_pos;
 
 out vec2 tex_coords;
 
@@ -17,8 +17,8 @@ vec2 pixelToClipSpace(vec2 point) {
 }
 
 void main() {
-    vec2 glyph_offset = glyph.xy;  // <left, top>
-    vec2 glyph_size = glyph.zw;    // <width, height>
+    // vec2 glyph_offset = glyph.xy;  // <left, top>
+    // vec2 glyph_size = glyph.zw;    // <width, height>
     // vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
     // vec2 uv_size = uv.zw;          // <uv_width, uv_height>
 

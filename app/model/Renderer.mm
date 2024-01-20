@@ -82,40 +82,35 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
 
     size_t size = 0;
 
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)size);
-    // glVertexAttribDivisor(0, 1);
-    // size += 4 * sizeof(float);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
-    glVertexAttribDivisor(1, 1);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(0, 1);
     size += 2 * sizeof(uint16_t);
 
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
-    glVertexAttribDivisor(2, 1);
+    // glEnableVertexAttribArray(1);
+    // glVertexAttribPointer(1, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    // glVertexAttribDivisor(1, 1);
     size += 4 * sizeof(int16_t);
 
-    // glEnableVertexAttribArray(3);
-    // glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
-    // glVertexAttribDivisor(3, 1);
+    // glEnableVertexAttribArray(2);
+    // glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    // glVertexAttribDivisor(2, 1);
     size += 4 * sizeof(float);
 
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(1, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 2, nullptr, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
-    glVertexAttribDivisor(4, 1);
+    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
     // Unbind.
     glBindVertexArray(0);
@@ -147,30 +142,36 @@ void Renderer::renderText(std::string text, float x, float y) {
     for (uint16_t col = 0; col < text.size(); col++) {
         char ch = text[col];
         AtlasGlyph glyph = glyph_cache[ch];
-        instances.push_back(InstanceData{
-            // grid_coords
-            col,
-            0,
-            // glyph
-            glyph.left,
-            glyph.top,
-            glyph.width,
-            glyph.height,
-            // uv
-            // glyph.uv_left,
-            0,
-            // glyph.uv_bot,
-            0,
-            glyph.uv_width,
-            // 0,
-            glyph.uv_height,
-            // 0,
-            // temp
-            // glyph.uv_width,
-            0,
-            // glyph.uv_height,
-            0,
-        });
+        InstanceData instance{};
+        instance.col = col;
+        instance.row = 0;
+        instance.uv_width = glyph.uv_width;
+        instance.uv_height = glyph.uv_height;
+        instances.push_back(instance);
+        // instances.push_back(InstanceData{
+        //     // grid_coords
+        //     col,
+        //     0,
+        //     // glyph
+        //     0,
+        //     0,
+        //     0,
+        //     0,
+        //     // uv
+        //     // glyph.uv_left,
+        //     0,
+        //     // glyph.uv_bot,
+        //     0,
+        //     glyph.uv_width,
+        //     // 0,
+        //     glyph.uv_height,
+        //     // 0,
+        //     // temp
+        //     // glyph.uv_width,
+        //     0,
+        //     // glyph.uv_height,
+        //     0,
+        // });
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

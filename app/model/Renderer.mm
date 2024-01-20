@@ -64,11 +64,6 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     this->loadGlyphs();
 
-    glGenBuffers(1, &vbo_instance);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
     GLuint indices[] = {
         0, 1, 3,  // first triangle
         1, 2, 3,  // second triangle
@@ -76,20 +71,22 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
+    glGenBuffers(1, &vbo_instance);
     glGenBuffers(1, &ebo);
 
     glBindVertexArray(vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)0);
@@ -139,9 +136,9 @@ void Renderer::renderText(std::string text, float x, float y) {
 
     glBindTexture(GL_TEXTURE_2D, atlas);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
     // Unbind.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 

@@ -28,6 +28,6 @@ void main() {
     vec2 cell_position = cell_dim * grid_coords;
 
     gl_Position = vec4(pixelToClipSpace(vertex.xy + cell_position), 0.0, 1.0);
-    tex_coords = vertex.zw;
+    tex_coords = uv_offset + position * vertex.zw;
     // tex_coords = uv_offset + position * uv_size;
 }

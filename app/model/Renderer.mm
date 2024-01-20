@@ -92,33 +92,6 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::load_glyphs() {
-    Rasterizer rasterizer = Rasterizer(mainFont);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    for (int i = 32; i < 127; i++) {
-        char ch = static_cast<char>(i);
-        CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
-        RasterizedGlyph glyph = rasterizer.rasterize_glyph(glyph_index);
-
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glyph.width, glyph.height, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, &glyph.buffer[0]);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        Character character = {texture, glm::ivec2(glyph.width, glyph.height),
-                               glm::ivec2(glyph.left, glyph.top)};
-        characters.insert({ch, character});
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
-}
-
 void Renderer::render_text(std::string text, float x, float y) {
     // glViewport(0, 0, width, height);
     // glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
@@ -133,13 +106,17 @@ void Renderer::render_text(std::string text, float x, float y) {
     float ypos = y - (ch.size.y - ch.bearing.y);
     float w = ch.size.x;
     float h = ch.size.y;
+
+    float uv_width = w / 1024.0;
+    float uv_height = h / 1024.0;
+
     float vertices[4][4] = {
-        {xpos + w, ypos + h, 1.0f, 0.0f},  // bottom right
-        {xpos + w, ypos, 1.0f, 1.0f},      // top right
-        {xpos, ypos, 0.0f, 1.0f},          // top left
-        {xpos, ypos + h, 0.0f, 0.0f},      // bottom left
+        {xpos + w, ypos + h, uv_width, 0.0f},   // bottom right
+        {xpos + w, ypos, uv_width, uv_height},  // top right
+        {xpos, ypos, 0.0f, uv_height},          // top left
+        {xpos, ypos + h, 0.0f, 0.0f},           // bottom left
     };
-    glBindTexture(GL_TEXTURE_2D, ch.tex_id);
+    glBindTexture(GL_TEXTURE_2D, atlas);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);
@@ -152,6 +129,36 @@ void Renderer::render_text(std::string text, float x, float y) {
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
+}
+
+void Renderer::load_glyphs() {
+    Rasterizer rasterizer = Rasterizer(mainFont);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &atlas);
+    glBindTexture(GL_TEXTURE_2D, atlas);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+
+    CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, 'E');
+    RasterizedGlyph glyph = rasterizer.rasterize_glyph(glyph_index);
+
+    glBindTexture(GL_TEXTURE_2D, atlas);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, glyph.width, glyph.height, GL_RGB, GL_UNSIGNED_BYTE,
+                    &glyph.buffer[0]);
+
+    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+
+    Character character = {atlas, glm::ivec2(glyph.width, glyph.height),
+                           glm::ivec2(glyph.left, glyph.top)};
+    characters.insert({'E', character});
 }
 
 void Renderer::link_shaders() {

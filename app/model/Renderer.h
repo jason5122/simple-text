@@ -24,6 +24,7 @@ private:
     GLuint shaderProgram;
     GLuint VAO, VBO, EBO;
     GLuint VBO_instance;
+    GLuint atlas;
 
     CTFontRef mainFont;
     std::map<GLchar, Character> characters;

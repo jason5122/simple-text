@@ -44,11 +44,14 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     load_glyphs();
 
     Metrics metrics = CTFontGetMetrics(mainFont);
+    float cell_width = CGFloat_floor(metrics.average_advance + 1);
+    float cell_height = CGFloat_floor(metrics.line_height + 2);
+
     std::vector<glm::vec2> offsets(100);
     int i = 0;
     for (int row = 0; row < 10; row++) {
         for (int col = 0; col < 10; col++) {
-            offsets[i++] = glm::vec2(row * metrics.average_advance, col * metrics.line_height);
+            offsets[i++] = glm::vec2(row * cell_width, col * cell_height);
         }
     }
 

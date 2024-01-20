@@ -1,5 +1,8 @@
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 
-@interface OpenGLLayer : CAOpenGLLayer
+@interface OpenGLLayer : CAOpenGLLayer {
+@public
+    float x, y;
+}
 @end

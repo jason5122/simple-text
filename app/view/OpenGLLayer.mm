@@ -1,6 +1,5 @@
 #import "OpenGLLayer.h"
 #import "model/Renderer.h"
-#import "util/LogUtil.h"
 
 @interface OpenGLLayer () {
     Renderer* renderer;
@@ -44,6 +43,9 @@
         renderer =
             new Renderer(NSScreen.mainScreen.frame.size.width * self.contentsScale,
                          NSScreen.mainScreen.frame.size.height * self.contentsScale, mainFont);
+
+        x = 500.0f;
+        y = 500.0f;
     }
     return context;
 }
@@ -62,7 +64,7 @@
     CGLSetCurrentContext(context);
 
     // renderer->render_text("E", 500.0f, 500.0f);
-    renderer->render_text(std::to_string(timeInterval), 500.0f, 500.0f);
+    renderer->render_text(std::to_string(timeInterval), x, y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

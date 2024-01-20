@@ -1,7 +1,6 @@
 #import "WindowController.h"
 #import "model/Rasterizer.h"
 #import "util/LogUtil.h"
-#import "view/OpenGLLayer.h"
 
 @implementation WindowController
 
@@ -22,7 +21,7 @@
                                                           alpha:1.f];
 
         mainView = [[NSView alloc] initWithFrame:frameRect];
-        CAOpenGLLayer* openGLLayer = [OpenGLLayer layer];
+        openGLLayer = [OpenGLLayer layer];
         openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
         mainView.layer = openGLLayer;
@@ -40,6 +39,31 @@
     [self.window center];
     [self.window setFrameAutosaveName:self.window.title];
     [self.window makeKeyAndOrderFront:nil];
+}
+
+- (void)scrollWheel:(NSEvent*)event {
+    if (event.type == NSEventTypeScrollWheel) {
+        openGLLayer->x += event.scrollingDeltaX * 2;
+        openGLLayer->y += -event.scrollingDeltaY * 2;
+        [mainView.layer setNeedsDisplay];
+    }
+}
+
+- (void)keyDown:(NSEvent*)event {
+    NSString* characters = [event characters];
+    for (uint32_t k = 0; k < characters.length; k++) {
+        // unichar key = [characters characterAtIndex:k];
+        // switch (key) {
+        // case 'k':
+        //     openGLLayer->x = 0.0f;
+        //     openGLLayer->y = 0.0f;
+        //     [mainView.layer setNeedsDisplay];
+        //     break;
+        // }
+        openGLLayer->x = 0.0f;
+        openGLLayer->y = 0.0f;
+        [mainView.layer setNeedsDisplay];
+    }
 }
 
 @end

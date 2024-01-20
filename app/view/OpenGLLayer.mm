@@ -65,13 +65,8 @@
 
     renderer->clearAndResize();
 
-    // renderer->renderText("E", 500.0f, 500.0f);
     // renderer->renderText(std::to_string(timeInterval), x, y);
-
-    for (int i = 0; i < 1; i++) {
-        float offset = i * 100.0f;
-        renderer->renderText("Hello world!", x, y + offset);
-    }
+    renderer->renderText("HHH", x, y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

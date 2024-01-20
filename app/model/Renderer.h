@@ -25,8 +25,10 @@ public:
 
 private:
     float width, height;
+
     GLuint shader_program;
     GLuint vao, vbo, vbo_instance, ebo;
+    static const int BATCH_MAX = 65536;
 
     GLuint atlas;
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE

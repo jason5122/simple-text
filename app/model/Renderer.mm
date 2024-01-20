@@ -53,16 +53,9 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     this->loadGlyphs();
 
-    std::vector<InstanceData> instances;
-    for (uint16_t row = 0; row < 10; row++) {
-        for (uint16_t col = 0; col < 10; col++) {
-            instances.push_back(InstanceData{row, col});
-        }
-    }
-
     glGenBuffers(1, &vbo_instance);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * 65536, &instances[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     GLuint indices[] = {
@@ -117,7 +110,15 @@ void Renderer::renderText(std::string text, float x, float y) {
     glBindTexture(GL_TEXTURE_2D, atlas);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);
+
+    std::vector<InstanceData> instances;
+    for (uint16_t row = 0; row < text.size(); row++) {
+        instances.push_back(InstanceData{row, 0});
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
+
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
     // Unbind.

@@ -70,7 +70,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     };
 
     glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
+    // glGenBuffers(1, &vbo);
     glGenBuffers(1, &vbo_instance);
     glGenBuffers(1, &ebo);
 
@@ -79,23 +79,35 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+    // glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
 
+    size_t size = 0;
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)size);
+    glVertexAttribDivisor(0, 1);
+    size += 4 * sizeof(float);
+
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)0);
+    glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(1, 1);
+    size += 2 * sizeof(uint16_t);
 
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData),
-                          (void*)(2 * sizeof(uint16_t)));
+    glVertexAttribPointer(2, 4, GL_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(2, 1);
+    size += 4 * sizeof(int16_t);
+
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(3, 1);
 
     // Unbind.
     glBindVertexArray(0);
@@ -120,7 +132,7 @@ void Renderer::renderText(std::string text, float x, float y) {
         {xpos, ypos, 0.0f, glyph.uv_height},                // top left
         {xpos, ypos + h, 0.0f, 0.0f},                       // bottom left
     };
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
     std::vector<InstanceData> instances;
@@ -132,7 +144,8 @@ void Renderer::renderText(std::string text, float x, float y) {
                                          glyph.uv_height});
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 4 * sizeof(float), sizeof(InstanceData) * instances.size(),
+                    &instances[0]);
 
     glBindTexture(GL_TEXTURE_2D, atlas);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
@@ -224,7 +237,7 @@ void Renderer::linkShaders() {
 
 Renderer::~Renderer() {
     glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
+    // glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
     glDeleteProgram(shader_program);

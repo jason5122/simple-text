@@ -1,5 +1,6 @@
 #pragma once
 
+#import "model/AtlasRenderer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
 #import <glm/glm.hpp>
@@ -38,6 +39,8 @@ private:
 
     CTFontRef mainFont;
     std::map<GLchar, AtlasGlyph> glyph_cache;
+
+    AtlasRenderer* atlas_renderer;
 
     void linkShaders();
     void loadGlyphs();

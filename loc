@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tokei -e third_party app

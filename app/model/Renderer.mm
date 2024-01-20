@@ -101,6 +101,8 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    atlas_renderer = new AtlasRenderer(width, height);
 }
 
 void Renderer::renderText(std::string text, float x, float y) {
@@ -144,6 +146,14 @@ void Renderer::renderText(std::string text, float x, float y) {
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
+
+    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas, ATLAS_SIZE);
+
+    glDisable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas, ATLAS_SIZE);
+    glEnable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Renderer::loadGlyphs() {

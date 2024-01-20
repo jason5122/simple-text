@@ -12,6 +12,7 @@ macos_app_bundle("app") {
     "AppDelegate.m",
     "controller/WindowController.mm",
     "main.m",
+    "model/AtlasRenderer.mm",
     "model/Rasterizer.mm",
     "model/Renderer.mm",
     "util/FileUtil.mm",
@@ -48,6 +49,8 @@ icon("icon") {
 
 bundle_data("shaders") {
   sources = [
+    "resources/atlas_frag.glsl",
+    "resources/atlas_vert.glsl",
     "resources/text_frag.glsl",
     "resources/text_vert.glsl",
   ]

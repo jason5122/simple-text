@@ -5,7 +5,10 @@
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
 
-struct InstanceData {};
+struct InstanceData {
+    uint16_t col;
+    uint16_t row;
+};
 
 Renderer::Renderer(float width, float height, CTFontRef mainFont)
     : width(width), height(height), mainFont(mainFont) {
@@ -50,17 +53,16 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     this->loadGlyphs();
 
-    std::vector<glm::vec2> offsets(100);
-    int i = 0;
-    for (int row = 0; row < 10; row++) {
-        for (int col = 0; col < 10; col++) {
-            offsets[i++] = glm::vec2(row, col);
+    std::vector<InstanceData> instances;
+    for (uint16_t row = 0; row < 10; row++) {
+        for (uint16_t col = 0; col < 10; col++) {
+            instances.push_back(InstanceData{row, col});
         }
     }
 
     glGenBuffers(1, &vbo_instance);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 65536, &offsets[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * 65536, &instances[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     GLuint indices[] = {
@@ -85,7 +87,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glVertexAttribDivisor(1, 1);
 

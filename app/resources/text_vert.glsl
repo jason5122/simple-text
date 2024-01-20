@@ -14,6 +14,8 @@ vec2 pixelToClipSpace(vec2 point) {
 }
 
 void main() {
-    gl_Position = vec4(pixelToClipSpace(vertex.xy + grid_coords * cell_dim), 0.0, 1.0);
+    vec2 cell_position = cell_dim * grid_coords;
+
+    gl_Position = vec4(pixelToClipSpace(vertex.xy + cell_position), 0.0, 1.0);
     tex_coords = vertex.zw;
 }

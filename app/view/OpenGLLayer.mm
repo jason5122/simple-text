@@ -1,8 +1,10 @@
 #import "OpenGLLayer.h"
 #import "model/Renderer.h"
+#import <string>
 
 @interface OpenGLLayer () {
     Renderer* renderer;
+    std::string buffer;
 }
 @end
 
@@ -66,13 +68,18 @@
     renderer->clearAndResize();
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
-    renderer->renderText("Hello world!", x, y);
+    // renderer->renderText("Hello world!", x, y);
+    renderer->renderText(buffer, x, y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
+}
+
+- (void)insertCharacter:(char)ch {
+    buffer.push_back(ch);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)context {

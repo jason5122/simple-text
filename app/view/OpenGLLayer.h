@@ -5,4 +5,7 @@
 @public
     float x, y;
 }
+
+- (void)insertCharacter:(char)ch;
+
 @end

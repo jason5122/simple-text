@@ -52,6 +52,9 @@
 - (void)keyDown:(NSEvent*)event {
     NSString* characters = [event characters];
     for (uint32_t k = 0; k < characters.length; k++) {
+        char ch = [characters characterAtIndex:k];
+        LogDefault(@"WindowController", @"insert char: %c", ch);
+        [openGLLayer insertCharacter:ch];
         // unichar key = [characters characterAtIndex:k];
         // switch (key) {
         // case 'k':
@@ -60,8 +63,8 @@
         //     [mainView.layer setNeedsDisplay];
         //     break;
         // }
-        openGLLayer->x = 0.0f;
-        openGLLayer->y = 0.0f;
+        // openGLLayer->x = 0.0f;
+        // openGLLayer->y = 0.0f;
         [mainView.layer setNeedsDisplay];
     }
 }

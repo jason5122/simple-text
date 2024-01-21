@@ -3,8 +3,10 @@
 layout(location = 0) in vec2 grid_coords;
 layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
+layout(location = 3) in int in_colored;
 
 out vec2 tex_coords;
+flat out int colored;
 
 uniform vec2 resolution;
 uniform vec2 cell_dim;
@@ -35,4 +37,5 @@ void main() {
 
     gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
     tex_coords = uv_offset + uv_size * position;
+    colored = in_colored;
 }

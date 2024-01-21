@@ -1,5 +1,6 @@
 #import "Rasterizer.h"
 #import "util/CGFloatUtil.h"
+#import "util/CTFontUtil.h"
 #import "util/LogUtil.h"
 #import <Cocoa/Cocoa.h>
 
@@ -16,6 +17,7 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
     int32_t rasterizedDescent = CGFloat_ceil(-bounds.origin.y);
     int32_t rasterizedAscent = CGFloat_ceil(bounds.size.height + bounds.origin.y);
     uint32_t rasterizedHeight = rasterizedDescent + rasterizedAscent;
+    int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
 
     CGContextRef context = CGBitmapContextCreate(
         nullptr, rasterizedWidth, rasterizedHeight, 8, rasterizedWidth * 4,
@@ -53,27 +55,28 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
                len);
     // LogDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
 
-    // int pixels = len / 4;
-    // std::vector<uint8_t> rgb_buffer;
-    // rgb_buffer.reserve(pixels * 3);
-    // for (int i = 0; i < pixels; i++) {
-    //     int offset = i * 4;
-    //     rgb_buffer.push_back(bitmapData[offset + 2]);
-    //     rgb_buffer.push_back(bitmapData[offset + 1]);
-    //     rgb_buffer.push_back(bitmapData[offset]);
-    // }
+    bool colored = CTFontIsColored(fontRef);
+
     int pixels = len / 4;
-    std::vector<uint8_t> rgb_buffer;
-    rgb_buffer.reserve(pixels * 4);
+    std::vector<uint8_t> buffer;
+    int size = colored ? pixels * 4 : pixels * 3;
+
+    // TODO: This assumes little endian; detect and support big endian.
+    buffer.reserve(size);
     for (int i = 0; i < pixels; i++) {
         int offset = i * 4;
-        rgb_buffer.push_back(bitmapData[offset + 2]);
-        rgb_buffer.push_back(bitmapData[offset + 1]);
-        rgb_buffer.push_back(bitmapData[offset]);
-        rgb_buffer.push_back(bitmapData[offset + 3]);
+        buffer.push_back(bitmapData[offset + 2]);
+        buffer.push_back(bitmapData[offset + 1]);
+        buffer.push_back(bitmapData[offset]);
+        if (colored) buffer.push_back(bitmapData[offset + 3]);
     }
-    int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
-    return RasterizedGlyph{static_cast<int32_t>(rasterizedWidth),
-                           static_cast<int32_t>(rasterizedHeight), top, rasterizedLeft,
-                           rgb_buffer};
+
+    return RasterizedGlyph{
+        colored,
+        rasterizedLeft,
+        top,
+        static_cast<int32_t>(rasterizedWidth),
+        static_cast<int32_t>(rasterizedHeight),
+        buffer,
+    };
 }

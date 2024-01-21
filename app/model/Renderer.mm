@@ -19,6 +19,8 @@ struct InstanceData {
     float uv_bot;
     float uv_width;
     float uv_height;
+    // flags
+    uint8_t colored;
 };
 
 Renderer::Renderer(float width, float height, CTFontRef mainFont)
@@ -63,8 +65,6 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     CGGlyph glyph_index = CTFontGetEmojiGlyphIndex(emojiFont);
     LogDefault(@"Renderer", @"index: %d", glyph_index);
-
-    // CTFontRef ctFont = CTFontCreateWithName(CFSTR(@"AppleColorEmoji"), 0.0, NULL);
     // End of font experiments.
 
     this->loadGlyphs();
@@ -101,6 +101,12 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(2, 1);
+    size += 4 * sizeof(float);
+
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(3, 1);
+    size += sizeof(uint8_t);
 
     // Unbind.
     glBindVertexArray(0);
@@ -135,6 +141,8 @@ void Renderer::renderText(std::string text, float x, float y) {
             glyph.uv_bot,
             glyph.uv_width,
             glyph.uv_height,
+            // flags
+            1,
         });
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
@@ -198,9 +206,9 @@ void Renderer::loadGlyphs() {
     }
 
     glBindTexture(GL_TEXTURE_2D, atlas);
-    // glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,
-    //                 GL_UNSIGNED_BYTE, &glyph.buffer[0]);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGBA,
+
+    GLenum format = glyph.colored ? GL_RGBA : GL_RGB;
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, format,
                     GL_UNSIGNED_BYTE, &glyph.buffer[0]);
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 

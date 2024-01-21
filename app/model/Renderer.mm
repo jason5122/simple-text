@@ -39,8 +39,8 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     // Font experiments.
-    CTFontRef appleEmojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16, nullptr);
-    LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(appleEmojiFont));
+    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 48, nullptr);
+    LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(emojiFont));
 
     NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
     CTFontDescriptorRef descriptor =
@@ -60,6 +60,11 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
     }
+
+    CGGlyph glyph_index = CTFontGetEmojiGlyphIndex(emojiFont);
+    LogDefault(@"Renderer", @"index: %d", glyph_index);
+
+    // CTFontRef ctFont = CTFontCreateWithName(CFSTR(@"AppleColorEmoji"), 0.0, NULL);
     // End of font experiments.
 
     this->loadGlyphs();
@@ -157,7 +162,8 @@ void Renderer::renderText(std::string text, float x, float y) {
 }
 
 void Renderer::loadGlyphs() {
-    Rasterizer rasterizer = Rasterizer(mainFont);
+    // Rasterizer rasterizer = Rasterizer(mainFont);
+    Rasterizer rasterizer = Rasterizer(emojiFont);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &atlas);
@@ -176,34 +182,37 @@ void Renderer::loadGlyphs() {
     int offset_x = 0;
     int offset_y = 0;
     int tallest = 0;
-    for (int i = 32; i < 127; i++) {
-        char ch = static_cast<char>(i);
+    // for (int i = 32; i < 127; i++) {
+    // char ch = static_cast<char>(i);
 
-        CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
-        RasterizedGlyph glyph = rasterizer.rasterizeGlyph(glyph_index);
+    char ch = 'e';
 
-        tallest = std::max(glyph.height, tallest);
-        if (offset_x + glyph.width > ATLAS_SIZE) {
-            offset_x = 0;
-            offset_y += tallest;
-        }
+    // CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
+    CGGlyph glyph_index = CTFontGetEmojiGlyphIndex(emojiFont);
+    RasterizedGlyph glyph = rasterizer.rasterizeGlyph(glyph_index);
 
-        glBindTexture(GL_TEXTURE_2D, atlas);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,
-                        GL_UNSIGNED_BYTE, &glyph.buffer[0]);
-        glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
-
-        float uv_left = static_cast<float>(offset_x) / ATLAS_SIZE;
-        float uv_bot = static_cast<float>(offset_y) / ATLAS_SIZE;
-        float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
-        float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
-
-        AtlasGlyph atlas_glyph = {glyph.left, glyph.top, glyph.width, glyph.height,
-                                  uv_left,    uv_bot,    uv_width,    uv_height};
-        glyph_cache.insert({ch, atlas_glyph});
-
-        offset_x += glyph.width;
+    tallest = std::max(glyph.height, tallest);
+    if (offset_x + glyph.width > ATLAS_SIZE) {
+        offset_x = 0;
+        offset_y += tallest;
     }
+
+    glBindTexture(GL_TEXTURE_2D, atlas);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,
+                    GL_UNSIGNED_BYTE, &glyph.buffer[0]);
+    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+
+    float uv_left = static_cast<float>(offset_x) / ATLAS_SIZE;
+    float uv_bot = static_cast<float>(offset_y) / ATLAS_SIZE;
+    float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
+    float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
+
+    AtlasGlyph atlas_glyph = {glyph.left, glyph.top, glyph.width, glyph.height,
+                              uv_left,    uv_bot,    uv_width,    uv_height};
+    glyph_cache.insert({ch, atlas_glyph});
+
+    offset_x += glyph.width;
+    // }
 }
 
 void Renderer::clearAndResize() {

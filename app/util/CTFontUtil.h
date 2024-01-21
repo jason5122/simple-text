@@ -21,6 +21,25 @@ static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {
     return glyphs[0];
 }
 
+static inline CGGlyph CTFontGetEmojiGlyphIndex(CTFontRef fontRef) {
+    NSData* data = [@"\U0001F603" dataUsingEncoding:NSUTF32LittleEndianStringEncoding];
+    UTF32Char emojiValue;
+    [data getBytes:&emojiValue length:sizeof(emojiValue)];
+    // Convert UTF32Char to UniChar surrogate pair.
+    // Found here:
+    // http://stackoverflow.com/questions/13005091/how-to-tell-if-a-particular-font-has-a-specific-glyph-64k#
+    UniChar characters[2] = {};
+    CFIndex length = (CFStringGetSurrogatePairForLongCharacter(emojiValue, characters) ? 2 : 1);
+    CGGlyph glyphs[2] = {};
+    bool ret = CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, length);
+    if (ret) {
+        LogDefault(@"Renderer", @"yo?????? ¬åß˚∆∂ƒˆøß∆∂");
+    } else {
+        LogDefault(@"Renderer", @"aw damn...");
+    }
+    return glyphs[0];
+}
+
 static inline Metrics CTFontGetMetrics(CTFontRef fontRef) {
     CGGlyph glyph = CTFontGetGlyphIndex(fontRef, '0');
     double average_advance =

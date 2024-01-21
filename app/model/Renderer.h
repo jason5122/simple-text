@@ -38,6 +38,7 @@ private:
     static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
 
     CTFontRef mainFont;
+    CTFontRef emojiFont;
     std::map<GLchar, AtlasGlyph> glyph_cache;
 
     AtlasRenderer* atlas_renderer;

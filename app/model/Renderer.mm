@@ -39,7 +39,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     // Font experiments.
-    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 48, nullptr);
+    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 96, nullptr);
     LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(emojiFont));
 
     NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};

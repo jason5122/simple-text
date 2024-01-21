@@ -20,7 +20,8 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
     CGContextRef context = CGBitmapContextCreate(
         nullptr, rasterizedWidth, rasterizedHeight, 8, rasterizedWidth * 4,
         CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-    CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
+    // CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
+    CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 0.0);
 
     CGContextFillRect(context, CGRectMake(0.0, 0.0, rasterizedWidth, rasterizedHeight));
     CGContextSetAllowsFontSmoothing(context, true);
@@ -52,14 +53,24 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
                len);
     // LogDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
 
+    // int pixels = len / 4;
+    // std::vector<uint8_t> rgb_buffer;
+    // rgb_buffer.reserve(pixels * 3);
+    // for (int i = 0; i < pixels; i++) {
+    //     int offset = i * 4;
+    //     rgb_buffer.push_back(bitmapData[offset + 2]);
+    //     rgb_buffer.push_back(bitmapData[offset + 1]);
+    //     rgb_buffer.push_back(bitmapData[offset]);
+    // }
     int pixels = len / 4;
     std::vector<uint8_t> rgb_buffer;
-    rgb_buffer.reserve(pixels * 3);
+    rgb_buffer.reserve(pixels * 4);
     for (int i = 0; i < pixels; i++) {
         int offset = i * 4;
         rgb_buffer.push_back(bitmapData[offset + 2]);
         rgb_buffer.push_back(bitmapData[offset + 1]);
         rgb_buffer.push_back(bitmapData[offset]);
+        rgb_buffer.push_back(bitmapData[offset + 3]);
     }
     int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
     return RasterizedGlyph{static_cast<int32_t>(rasterizedWidth),

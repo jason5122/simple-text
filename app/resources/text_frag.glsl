@@ -13,11 +13,12 @@ void main() {
     vec3 blue = vec3(102, 153, 204) / 255.0;
 
     // vec3 text_color = texture(mask, tex_coords).rgb;
-    // out_alpha_mask = vec4(text_color, text_color.r);
-    // out_color = vec4(black, 1.0);
+    // alpha_mask = vec4(text_color, text_color.r);
+    // color = vec4(black, 1.0);
 
     color = texture(mask, tex_coords);
     alpha_mask = vec4(color.a);
+    // alpha_mask = vec4(color.r, 1.0, 1.0, 1.0);
 
     // Revert alpha premultiplication.
     if (color.a != 0.0) {
@@ -25,4 +26,7 @@ void main() {
     }
 
     color = vec4(color.rgb, 1.0);
+
+    // alpha_mask = vec4(texture(mask, tex_coords).a);
+    // color = vec4(text_color, 1.0);
 }

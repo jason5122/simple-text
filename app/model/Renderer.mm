@@ -39,7 +39,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     // Font experiments.
-    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 96, nullptr);
+    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 36 * 2, nullptr);
     LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(emojiFont));
 
     NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
@@ -198,7 +198,9 @@ void Renderer::loadGlyphs() {
     }
 
     glBindTexture(GL_TEXTURE_2D, atlas);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,
+    // glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGB,
+    //                 GL_UNSIGNED_BYTE, &glyph.buffer[0]);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, GL_RGBA,
                     GL_UNSIGNED_BYTE, &glyph.buffer[0]);
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 

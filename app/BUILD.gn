@@ -34,9 +34,13 @@ macos_app_bundle("app") {
     # TODO: Remove this and automatically include headers using `public` keyword instead
     "third_party/freetype/include",
     "third_party/tree-sitter/include",
+    "third_party/tree-sitter-highlight/include",
   ]
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
+
+  # TODO: Incorporate this into GN. Right now, manually run `cargo build` before running GN/Ninja.
+  libs = [ "third_party/tree-sitter-highlight/target/release/libtree_sitter_highlight.a" ]
 
   deps = [
     ":icon",
@@ -55,6 +59,7 @@ bundle_data("shaders") {
     "resources/atlas_frag.glsl",
     "resources/atlas_vert.glsl",
     "resources/example.json",
+    "resources/highlights.scm",
     "resources/text_frag.glsl",
     "resources/text_vert.glsl",
   ]

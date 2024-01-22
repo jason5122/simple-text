@@ -3,6 +3,7 @@
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
 #include <tree_sitter/api.h>
+#include <tree_sitter/highlight.h>
 #include <tuple>
 
 struct InstanceData {
@@ -41,21 +42,6 @@ void TreeSitterExperiment() {
     // Get the root node of the syntax tree.
     TSNode root_node = ts_tree_root_node(tree);
 
-    // Get some child nodes.
-    TSNode array_node = ts_node_named_child(root_node, 0);
-    TSNode number_node = ts_node_named_child(array_node, 0);
-
-    // Check that the nodes have the expected types.
-    // assert(strcmp(ts_node_type(root_node), "document") == 0);
-    // assert(strcmp(ts_node_type(array_node), "array") == 0);
-    // assert(strcmp(ts_node_type(number_node), "number") == 0);
-
-    // // Check that the nodes have the expected child counts.
-    // assert(ts_node_child_count(root_node) == 1);
-    // assert(ts_node_child_count(array_node) == 5);
-    // assert(ts_node_named_child_count(array_node) == 2);
-    // assert(ts_node_child_count(number_node) == 0);
-
     // Print the syntax tree as an S-expression.
     char* string = ts_node_string(root_node);
     LogDefault(@"Renderer", @"Syntax tree: %s\n", string);
@@ -64,6 +50,47 @@ void TreeSitterExperiment() {
     free(string);
     ts_tree_delete(tree);
     ts_parser_delete(parser);
+}
+
+void TreeSitterHighlighterExperiment() {
+    std::vector<const char*> highlight_names = {
+        "attribute",
+        "constant",
+        "function.builtin",
+        "function",
+        "keyword",
+        "operator",
+        "property",
+        "punctuation",
+        "punctuation.bracket",
+        "punctuation.delimiter",
+        "string",
+        "string.special",
+        "tag",
+        "type",
+        "type.builtin",
+        "variable",
+        "variable.builtin",
+        "variable.parameter",
+    };
+    TSHighlighter* highlighter = ts_highlighter_new(&highlight_names[0], nullptr, 0);
+
+    TSHighlightError error;
+
+    error = ts_highlighter_add_language(highlighter, "source.json", nullptr, tree_sitter_json(),
+                                        ReadFile(ResourcePath("highlights.scm")), nullptr, nullptr,
+                                        172, 0, 0);
+
+    const char* source_code = ReadFile(ResourcePath("example.json"));
+    TSHighlightBuffer* buffer = ts_highlight_buffer_new();
+    if (error != TSHighlightOk) {
+        LogError(@"Renderer", @"error: add language highlighter failed");
+    }
+
+    error = ts_highlighter_highlight(highlighter, "source.json", source_code, 19, buffer, nullptr);
+    const uint8_t* contents = ts_highlight_buffer_content(buffer);
+
+    LogDefault(@"Renderer", @"%s", contents);
 }
 
 Renderer::Renderer(float width, float height, std::string main_font_name,
@@ -78,6 +105,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
     TreeSitterExperiment();
+    TreeSitterHighlighterExperiment();
 
     this->linkShaders();
 

@@ -1,6 +1,8 @@
 #pragma once
 
+#import "model/Atlas.h"
 #import "model/AtlasRenderer.h"
+#import "model/GlyphCache.h"
 #import "model/Rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
@@ -11,21 +13,10 @@
 #import <string>
 #import <vector>
 
-struct AtlasGlyph {
-    bool colored;
-    int32_t left;
-    int32_t top;
-    int32_t width;
-    int32_t height;
-    float uv_left;
-    float uv_bot;
-    float uv_width;
-    float uv_height;
-};
-
 class Renderer {
 public:
-    Renderer(float width, float height, CTFontRef mainFont);
+    Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
+             int font_size);
     void renderText(std::vector<std::string> text, float x, float y);
     void clearAndResize();
     ~Renderer();
@@ -44,6 +35,7 @@ private:
 
     Rasterizer rasterizer;
 
+    GlyphCache glyph_cache2;
     CTFontRef mainFont;
     CTFontRef emojiFont;
     std::map<GLchar, AtlasGlyph> glyph_cache;

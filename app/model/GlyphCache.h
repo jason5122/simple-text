@@ -1,0 +1,4 @@
+class GlyphCache {
+public:
+    GlyphCache();
+};

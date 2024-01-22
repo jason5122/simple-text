@@ -45,11 +45,10 @@
         CGLSetCurrentContext(context);
 
         CGFloat fontSize = 16;
-        CTFontRef mainFont =
-            CTFontCreateWithName(CFSTR("Source Code Pro"), fontSize * self.contentsScale, nullptr);
         renderer =
             new Renderer(NSScreen.mainScreen.frame.size.width * self.contentsScale,
-                         NSScreen.mainScreen.frame.size.height * self.contentsScale, mainFont);
+                         NSScreen.mainScreen.frame.size.height * self.contentsScale,
+                         "Source Code Pro", "Apple Color Emoji", fontSize * self.contentsScale);
 
         x = 500.0f;
         y = 500.0f;

@@ -22,8 +22,16 @@ struct InstanceData {
     uint8_t colored;
 };
 
-Renderer::Renderer(float width, float height, CTFontRef mainFont)
-    : width(width), height(height), mainFont(mainFont) {
+Renderer::Renderer(float width, float height, std::string main_font_name,
+                   std::string emoji_font_name, int font_size)
+    : width(width), height(height) {
+    CFStringRef mainFontName =
+        CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
+    CFStringRef emojiFontName =
+        CFStringCreateWithCString(nullptr, emoji_font_name.c_str(), kCFStringEncodingUTF8);
+    mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
+    emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
@@ -32,9 +40,6 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     this->linkShaders();
 
     // Font experiments.
-    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16 * 2, nullptr);
-    LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(emojiFont));
-
     NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
     CTFontDescriptorRef descriptor =
         CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
@@ -52,7 +57,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
         if (CFEqual(style, CFSTR("Italic"))) {
             LogDefault(@"Renderer", @"%@ %@", familyName, style);
-            CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, 16 * 2, nullptr);
+            CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, font_size, nullptr);
             this->mainFont = tempFont;
         }
     }

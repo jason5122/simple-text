@@ -53,26 +53,8 @@ void TreeSitterExperiment() {
 }
 
 void TreeSitterHighlighterExperiment() {
-    std::vector<const char*> highlight_names = {
-        "attribute",
-        "constant",
-        "function.builtin",
-        "function",
-        "keyword",
-        "operator",
-        "property",
-        "punctuation",
-        "punctuation.bracket",
-        "punctuation.delimiter",
-        "string",
-        "string.special",
-        "tag",
-        "type",
-        "type.builtin",
-        "variable",
-        "variable.builtin",
-        "variable.parameter",
-    };
+    std::vector<const char*> highlight_names = {"number", "constant.builtin"};
+    std::vector<const char*> attribute_strings = {"num", "constant"};
     TSHighlighter* highlighter = ts_highlighter_new(&highlight_names[0], nullptr, 0);
 
     TSHighlightError error;
@@ -87,7 +69,7 @@ void TreeSitterHighlighterExperiment() {
         LogError(@"Renderer", @"error: add language highlighter failed");
     }
 
-    error = ts_highlighter_highlight(highlighter, "source.json", source_code, 19, buffer, nullptr);
+    error = ts_highlighter_highlight(highlighter, "source.json", source_code, 37, buffer, nullptr);
     const uint8_t* contents = ts_highlight_buffer_content(buffer);
 
     LogDefault(@"Renderer", @"%s", contents);

@@ -8,6 +8,8 @@
 #import <glm/gtc/matrix_transform.hpp>
 #import <glm/gtc/type_ptr.hpp>
 #import <map>
+#import <string>
+#import <vector>
 
 struct AtlasGlyph {
     bool colored;
@@ -24,7 +26,7 @@ struct AtlasGlyph {
 class Renderer {
 public:
     Renderer(float width, float height, CTFontRef mainFont);
-    void renderText(std::string text, float x, float y);
+    void renderText(std::vector<std::string> text, float x, float y);
     void clearAndResize();
     ~Renderer();
 

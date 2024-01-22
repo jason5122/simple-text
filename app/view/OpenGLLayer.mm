@@ -1,10 +1,11 @@
 #import "OpenGLLayer.h"
 #import "model/Renderer.h"
 #import <string>
+#import <vector>
 
 @interface OpenGLLayer () {
     Renderer* renderer;
-    std::string buffer;
+    std::vector<std::string> text;
 }
 @end
 
@@ -48,6 +49,8 @@
 
         x = 500.0f;
         y = 500.0f;
+        text.push_back("");
+        text.push_back("hi there");
     }
     return context;
 }
@@ -69,8 +72,9 @@
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
     // renderer->renderText("Hello world!", x, y);
-    renderer->renderText(buffer, x, y);
     // renderer->renderText("Hello world! -", x, y);
+
+    renderer->renderText(text, x, y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context
@@ -80,7 +84,7 @@
 }
 
 - (void)insertCharacter:(char)ch {
-    buffer.push_back(ch);
+    text[0].push_back(ch);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)context {

@@ -115,7 +115,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     atlas_renderer = new AtlasRenderer(width, height);
 }
 
-void Renderer::renderText(std::string text, float x, float y) {
+void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
 
@@ -123,31 +123,33 @@ void Renderer::renderText(std::string text, float x, float y) {
     glBindVertexArray(vao);
 
     std::vector<InstanceData> instances;
-    for (uint16_t col = 0; col < text.size(); col++) {
-        char ch = text[col];
+    for (uint16_t row = 0; row < text.size(); row++) {
+        for (uint16_t col = 0; col < text[row].size(); col++) {
+            char ch = text[row][col];
 
-        if (!glyph_cache.count(ch)) {
-            this->loadGlyph(ch);
+            if (!glyph_cache.count(ch)) {
+                this->loadGlyph(ch);
+            }
+
+            AtlasGlyph glyph = glyph_cache[ch];
+            instances.push_back(InstanceData{
+                // grid_coords
+                col,
+                row,
+                // glyph
+                glyph.left,
+                glyph.top,
+                glyph.width,
+                glyph.height,
+                // uv
+                glyph.uv_left,
+                glyph.uv_bot,
+                glyph.uv_width,
+                glyph.uv_height,
+                // flags
+                glyph.colored,
+            });
         }
-
-        AtlasGlyph glyph = glyph_cache[ch];
-        instances.push_back(InstanceData{
-            // grid_coords
-            col,
-            0,
-            // glyph
-            glyph.left,
-            glyph.top,
-            glyph.width,
-            glyph.height,
-            // uv
-            glyph.uv_left,
-            glyph.uv_bot,
-            glyph.uv_width,
-            glyph.uv_height,
-            // flags
-            glyph.colored,
-        });
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
@@ -174,9 +176,6 @@ void Renderer::renderText(std::string text, float x, float y) {
 }
 
 void Renderer::createAtlas() {
-    // rasterizer = new Rasterizer(mainFont);
-    // rasterizer = new Rasterizer(emojiFont);
-
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &atlas);
     glBindTexture(GL_TEXTURE_2D, atlas);

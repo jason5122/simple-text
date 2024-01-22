@@ -138,7 +138,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
                 this->loadGlyph(ch);
             }
 
-            Rgb text_color = BLACK;
+            Rgb text_color = row == 0 ? YELLOW : BLACK;
 
             AtlasGlyph glyph = glyph_cache[ch];
             instances.push_back(InstanceData{

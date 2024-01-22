@@ -21,10 +21,6 @@ void main() {
         alpha_mask = vec4(texel.a);
         color = vec4(texel.rgb, 1.0);
     } else {
-        vec3 black = vec3(51, 51, 51) / 255.0;
-        vec3 yellow = vec3(249, 174, 88) / 255.0;
-        vec3 blue = vec3(102, 153, 204) / 255.0;
-
         alpha_mask = vec4(texel.rgb, texel.r);
         color = vec4(text_color.rgb, 1.0);
     }

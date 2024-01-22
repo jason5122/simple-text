@@ -29,6 +29,8 @@ public:
 private:
     static const int BATCH_MAX = 65536;
     static constexpr Rgb BLACK{51, 51, 51};
+    static constexpr Rgb YELLOW{249, 174, 88};
+    static constexpr Rgb BLUE{102, 153, 204};
 
     float width, height;
 

@@ -1,5 +1,8 @@
 #import "OpenGLLayer.h"
 #import "model/Renderer.h"
+#import "util/FileUtil.h"
+#include <fstream>
+#import <sstream>
 #import <string>
 #import <vector>
 
@@ -40,7 +43,7 @@
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(context);
 
-        CGFloat fontSize = 48;
+        CGFloat fontSize = 16;
         CTFontRef mainFont =
             CTFontCreateWithName(CFSTR("Source Code Pro"), fontSize * self.contentsScale, nullptr);
         renderer =
@@ -50,7 +53,12 @@
         x = 500.0f;
         y = 500.0f;
         text.push_back("");
-        text.push_back("hi there");
+
+        std::ifstream infile(ResourcePath("text_vert.glsl"));
+        std::string line;
+        while (std::getline(infile, line)) {
+            text.push_back(line);
+        }
     }
     return context;
 }

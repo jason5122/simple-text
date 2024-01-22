@@ -40,7 +40,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     // Font experiments.
-    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 36 * 2, nullptr);
+    emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16 * 2, nullptr);
     LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(emojiFont));
 
     NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
@@ -202,7 +202,7 @@ void Renderer::createAtlas() {
 }
 
 void Renderer::loadGlyph(char ch) {
-    bool emoji = ch == '-' ? true : false;
+    bool emoji = ch == '%' ? true : false;
 
     CGGlyph glyph_index;
     RasterizedGlyph glyph;

@@ -50,7 +50,7 @@
 }
 
 - (void)keyDown:(NSEvent*)event {
-    NSString* characters = [event characters];
+    NSString* characters = event.characters;
     for (uint32_t k = 0; k < characters.length; k++) {
         char ch = [characters characterAtIndex:k];
         LogDefault(@"WindowController", @"insert char: %c", ch);

@@ -1,6 +1,7 @@
 #pragma once
 
 #import "model/AtlasRenderer.h"
+#import "model/Rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
 #import <glm/glm.hpp>
@@ -9,6 +10,7 @@
 #import <map>
 
 struct AtlasGlyph {
+    bool colored;
     int32_t left;
     int32_t top;
     int32_t width;
@@ -36,6 +38,9 @@ private:
     GLuint atlas;
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
     static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
+    int offset_x, offset_y, tallest;
+
+    Rasterizer rasterizer;
 
     CTFontRef mainFont;
     CTFontRef emojiFont;
@@ -44,5 +49,6 @@ private:
     AtlasRenderer* atlas_renderer;
 
     void linkShaders();
-    void loadGlyphs();
+    void createAtlas();
+    void loadGlyph(char ch);
 };

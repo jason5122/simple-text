@@ -4,9 +4,9 @@
 #import "util/LogUtil.h"
 #import <Cocoa/Cocoa.h>
 
-Rasterizer::Rasterizer(CTFontRef fontRef) : fontRef(fontRef) {}
+Rasterizer::Rasterizer() {}
 
-RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
+RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef) {
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph, &bounds, 1);
     // LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
@@ -19,11 +19,14 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
     uint32_t rasterizedHeight = rasterizedDescent + rasterizedAscent;
     int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
 
+    bool colored = CTFontIsColored(fontRef);
+
     CGContextRef context = CGBitmapContextCreate(
         nullptr, rasterizedWidth, rasterizedHeight, 8, rasterizedWidth * 4,
         CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-    // CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
-    CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 0.0);
+
+    CGFloat alpha = colored ? 0.0 : 1.0;
+    CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, alpha);
 
     CGContextFillRect(context, CGRectMake(0.0, 0.0, rasterizedWidth, rasterizedHeight));
     CGContextSetAllowsFontSmoothing(context, true);
@@ -54,8 +57,6 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph) {
     LogDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
                len);
     // LogDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
-
-    bool colored = CTFontIsColored(fontRef);
 
     int pixels = len / 4;
     std::vector<uint8_t> buffer;

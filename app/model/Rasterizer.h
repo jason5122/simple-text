@@ -14,9 +14,6 @@ struct RasterizedGlyph {
 
 class Rasterizer {
 public:
-    Rasterizer(CTFontRef fontRef);
-    RasterizedGlyph rasterizeGlyph(CGGlyph glyph);
-
-private:
-    CTFontRef fontRef;
+    Rasterizer();
+    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef);
 };

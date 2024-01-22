@@ -1,5 +1,4 @@
 #import "Renderer.h"
-#import "model/Rasterizer.h"
 #import "util/CTFontUtil.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
@@ -67,7 +66,7 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
     LogDefault(@"Renderer", @"index: %d", glyph_index);
     // End of font experiments.
 
-    this->loadGlyphs();
+    this->createAtlas();
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -126,6 +125,11 @@ void Renderer::renderText(std::string text, float x, float y) {
     std::vector<InstanceData> instances;
     for (uint16_t col = 0; col < text.size(); col++) {
         char ch = text[col];
+
+        if (!glyph_cache.count(ch)) {
+            this->loadGlyph(ch);
+        }
+
         AtlasGlyph glyph = glyph_cache[ch];
         instances.push_back(InstanceData{
             // grid_coords
@@ -142,7 +146,7 @@ void Renderer::renderText(std::string text, float x, float y) {
             glyph.uv_width,
             glyph.uv_height,
             // flags
-            1,
+            glyph.colored,
         });
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
@@ -169,9 +173,9 @@ void Renderer::renderText(std::string text, float x, float y) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void Renderer::loadGlyphs() {
-    // Rasterizer rasterizer = Rasterizer(mainFont);
-    Rasterizer rasterizer = Rasterizer(emojiFont);
+void Renderer::createAtlas() {
+    // rasterizer = new Rasterizer(mainFont);
+    // rasterizer = new Rasterizer(emojiFont);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &atlas);
@@ -187,22 +191,35 @@ void Renderer::loadGlyphs() {
 
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
-    int offset_x = 0;
-    int offset_y = 0;
-    int tallest = 0;
+    offset_x = 0;
+    offset_y = 0;
+    tallest = 0;
+
+    // Preload common glyphs.
     // for (int i = 32; i < 127; i++) {
-    // char ch = static_cast<char>(i);
+    //     char ch = static_cast<char>(i);
+    //     this->loadGlyph(ch);
+    // }
+}
 
-    char ch = 'e';
+void Renderer::loadGlyph(char ch) {
+    bool emoji = ch == '-' ? true : false;
 
-    // CGGlyph glyph_index = CTFontGetGlyphIndex(mainFont, ch);
-    CGGlyph glyph_index = CTFontGetEmojiGlyphIndex(emojiFont);
-    RasterizedGlyph glyph = rasterizer.rasterizeGlyph(glyph_index);
+    CGGlyph glyph_index;
+    RasterizedGlyph glyph;
+    if (emoji) {
+        glyph_index = CTFontGetEmojiGlyphIndex(emojiFont);
+        glyph = rasterizer.rasterizeGlyph(glyph_index, emojiFont);
+    } else {
+        glyph_index = CTFontGetGlyphIndex(mainFont, ch);
+        glyph = rasterizer.rasterizeGlyph(glyph_index, mainFont);
+    }
 
     tallest = std::max(glyph.height, tallest);
     if (offset_x + glyph.width > ATLAS_SIZE) {
         offset_x = 0;
         offset_y += tallest;
+        tallest = 0;
     }
 
     glBindTexture(GL_TEXTURE_2D, atlas);
@@ -217,12 +234,13 @@ void Renderer::loadGlyphs() {
     float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
     float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
 
-    AtlasGlyph atlas_glyph = {glyph.left, glyph.top, glyph.width, glyph.height,
-                              uv_left,    uv_bot,    uv_width,    uv_height};
+    AtlasGlyph atlas_glyph = {
+        glyph.colored, glyph.left, glyph.top, glyph.width, glyph.height,
+        uv_left,       uv_bot,     uv_width,  uv_height,
+    };
     glyph_cache.insert({ch, atlas_glyph});
 
     offset_x += glyph.width;
-    // }
 }
 
 void Renderer::clearAndResize() {

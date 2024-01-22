@@ -31,19 +31,11 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
 
     this->linkShaders();
 
-    Metrics metrics = CTFontGetMetrics(mainFont);
-    float cell_width = CGFloat_floor(metrics.average_advance + 1);
-    float cell_height = CGFloat_floor(metrics.line_height + 2);
-
-    glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
-    glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
-
     // Font experiments.
     emojiFont = CTFontCreateWithName(CFSTR("Apple Color Emoji"), 16 * 2, nullptr);
     LogDefault(@"Renderer", @"colored? %d", CTFontIsColored(emojiFont));
 
-    NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Menlo"};
+    NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
     CTFontDescriptorRef descriptor =
         CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
     CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
@@ -57,14 +49,22 @@ Renderer::Renderer(float width, float height, CTFontRef mainFont)
             (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
         CFStringRef style =
             (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
-        LogDefault(@"Renderer", @"%@ %@", familyName, style);
 
-        CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, 32, nullptr);
+        if (CFEqual(style, CFSTR("Italic"))) {
+            LogDefault(@"Renderer", @"%@ %@", familyName, style);
+            CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, 16 * 2, nullptr);
+            this->mainFont = tempFont;
+        }
     }
-
-    CGGlyph glyph_index = CTFontGetEmojiGlyphIndex(emojiFont);
-    LogDefault(@"Renderer", @"index: %d", glyph_index);
     // End of font experiments.
+
+    Metrics metrics = CTFontGetMetrics(mainFont);
+    float cell_width = CGFloat_floor(metrics.average_advance + 1);
+    float cell_height = CGFloat_floor(metrics.line_height + 2);
+
+    glUseProgram(shader_program);
+    glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
+    glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     this->createAtlas();
 

@@ -3,8 +3,6 @@
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
 #include <tree_sitter/api.h>
-#include <tree_sitter/highlight.h>
-#include <tuple>
 
 struct InstanceData {
     // grid_coords
@@ -52,28 +50,7 @@ void TreeSitterExperiment() {
     ts_parser_delete(parser);
 }
 
-void TreeSitterHighlighterExperiment() {
-    std::vector<const char*> highlight_names = {"number", "constant.builtin"};
-    std::vector<const char*> attribute_strings = {"num", "constant"};
-    TSHighlighter* highlighter = ts_highlighter_new(&highlight_names[0], nullptr, 0);
-
-    TSHighlightError error;
-
-    error = ts_highlighter_add_language(highlighter, "source.json", nullptr, tree_sitter_json(),
-                                        ReadFile(ResourcePath("highlights.scm")), nullptr, nullptr,
-                                        172, 0, 0);
-
-    const char* source_code = ReadFile(ResourcePath("example.json"));
-    TSHighlightBuffer* buffer = ts_highlight_buffer_new();
-    if (error != TSHighlightOk) {
-        LogError(@"Renderer", @"error: add language highlighter failed");
-    }
-
-    error = ts_highlighter_highlight(highlighter, "source.json", source_code, 37, buffer, nullptr);
-    const uint8_t* contents = ts_highlight_buffer_content(buffer);
-
-    LogDefault(@"Renderer", @"%s", contents);
-}
+void TreeSitterHighlighterExperiment() {}
 
 Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size)

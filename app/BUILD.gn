@@ -39,9 +39,6 @@ macos_app_bundle("app") {
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
-  # TODO: Incorporate this into GN. Right now, manually run `cargo build` before running GN/Ninja.
-  libs = [ "third_party/tree-sitter-highlight/target/release/libtree_sitter_highlight.a" ]
-
   deps = [
     ":icon",
     ":shaders",
@@ -58,6 +55,7 @@ bundle_data("shaders") {
   sources = [
     "resources/atlas_frag.glsl",
     "resources/atlas_vert.glsl",
+    "resources/example.js",
     "resources/example.json",
     "resources/highlights.scm",
     "resources/text_frag.glsl",

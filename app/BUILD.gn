@@ -31,8 +31,9 @@ macos_app_bundle("app") {
     "//app",
     "third_party",
 
-    # TODO: Remove this and automatically include ft2build.h using `public` instead
+    # TODO: Remove this and automatically include headers using `public` keyword instead
     "third_party/freetype/include",
+    "third_party/tree-sitter/include",
   ]
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
@@ -41,6 +42,7 @@ macos_app_bundle("app") {
     ":icon",
     ":shaders",
     "third_party/freetype:freetype",
+    "third_party/tree-sitter:tree-sitter",
   ]
 }
 
@@ -52,7 +54,7 @@ bundle_data("shaders") {
   sources = [
     "resources/atlas_frag.glsl",
     "resources/atlas_vert.glsl",
-    "resources/example.cc",
+    "resources/example.json",
     "resources/text_frag.glsl",
     "resources/text_vert.glsl",
   ]

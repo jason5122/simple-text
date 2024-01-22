@@ -1,0 +1,10 @@
+source_set("tree-sitter") {
+  cflags_c = [ "-std=c99" ]
+
+  sources = [
+    "src/lib.c",
+    "tree-sitter-json/src/parser.c",
+  ]
+
+  include_dirs = [ "include" ]
+}

@@ -2,6 +2,7 @@
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
+#include <tree_sitter/api.h>
 #include <tuple>
 
 struct InstanceData {
@@ -25,6 +26,46 @@ struct InstanceData {
     uint8_t colored;
 };
 
+extern "C" TSLanguage* tree_sitter_json();
+
+void TreeSitterExperiment() {
+    TSParser* parser = ts_parser_new();
+
+    // Set the parser's language (JSON in this case).
+    ts_parser_set_language(parser, tree_sitter_json());
+
+    // Build a syntax tree based on source code stored in a string.
+    const char* source_code = ReadFile(ResourcePath("example.json"));
+    TSTree* tree = ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
+
+    // Get the root node of the syntax tree.
+    TSNode root_node = ts_tree_root_node(tree);
+
+    // Get some child nodes.
+    TSNode array_node = ts_node_named_child(root_node, 0);
+    TSNode number_node = ts_node_named_child(array_node, 0);
+
+    // Check that the nodes have the expected types.
+    // assert(strcmp(ts_node_type(root_node), "document") == 0);
+    // assert(strcmp(ts_node_type(array_node), "array") == 0);
+    // assert(strcmp(ts_node_type(number_node), "number") == 0);
+
+    // // Check that the nodes have the expected child counts.
+    // assert(ts_node_child_count(root_node) == 1);
+    // assert(ts_node_child_count(array_node) == 5);
+    // assert(ts_node_named_child_count(array_node) == 2);
+    // assert(ts_node_child_count(number_node) == 0);
+
+    // Print the syntax tree as an S-expression.
+    char* string = ts_node_string(root_node);
+    LogDefault(@"Renderer", @"Syntax tree: %s\n", string);
+
+    // Free all of the heap-allocated memory.
+    free(string);
+    ts_tree_delete(tree);
+    ts_parser_delete(parser);
+}
+
 Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size)
     : width(width), height(height) {
@@ -35,6 +76,8 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
+
+    TreeSitterExperiment();
 
     this->linkShaders();
 

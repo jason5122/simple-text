@@ -54,7 +54,7 @@
         y = 500.0f;
         text.push_back("");
 
-        std::ifstream infile(ResourcePath("example.cc"));
+        std::ifstream infile(ResourcePath("example.json"));
         std::string line;
         while (std::getline(infile, line)) {
             text.push_back(line);

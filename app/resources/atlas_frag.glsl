@@ -8,21 +8,23 @@ layout(location = 0, index = 1) out vec4 alpha_mask;
 uniform sampler2D mask;
 
 void main() {
-    vec3 black = vec3(51, 51, 51) / 255.0;
-    vec3 yellow = vec3(249, 174, 88) / 255.0;
-    vec3 blue = vec3(102, 153, 204) / 255.0;
+    vec4 texel = texture(mask, tex_coords);
 
-    // vec3 text_color = texture(mask, tex_coords).rgb;
-    // out_alpha_mask = vec4(text_color, text_color.r);
-    // out_color = vec4(yellow, 1.0);
+    bool colored = false;  // DEV: Toggle this to simulate printing color and non-color glyphs.
+    if (colored) {
+        // Revert alpha premultiplication.
+        if (texel.a != 0.0) {
+            texel.rgb /= texel.a;
+        }
 
-    color = texture(mask, tex_coords);
-    alpha_mask = vec4(color.a);
+        alpha_mask = vec4(texel.a);
+        color = vec4(texel.rgb, 1.0);
+    } else {
+        vec3 black = vec3(51, 51, 51) / 255.0;
+        vec3 yellow = vec3(249, 174, 88) / 255.0;
+        vec3 blue = vec3(102, 153, 204) / 255.0;
 
-    // Revert alpha premultiplication.
-    if (color.a != 0.0) {
-        color.rgb = vec3(color.rgb / color.a);
+        alpha_mask = vec4(texel.rgb, texel.r);
+        color = vec4(black, 1.0);
     }
-
-    color = vec4(color.rgb, 1.0);
 }

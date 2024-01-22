@@ -25,6 +25,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size)
     : width(width), height(height) {
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
+    atlas_renderer = new AtlasRenderer(width, height);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
@@ -115,8 +116,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    atlas_renderer = new AtlasRenderer(width, height);
 }
 
 void Renderer::renderText(std::vector<std::string> text, float x, float y) {
@@ -170,17 +169,17 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
 
-    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas.tex_id, ATLAS_SIZE);
+    atlas_renderer->draw(x + atlas.ATLAS_SIZE, y, atlas.tex_id, atlas.ATLAS_SIZE);
 
     glDisable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas.tex_id, ATLAS_SIZE);
+    atlas_renderer->draw(x + atlas.ATLAS_SIZE, y, atlas.tex_id, atlas.ATLAS_SIZE);
     glEnable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Renderer::loadGlyph(char ch) {
-    bool emoji = ch == '%' ? true : false;
+    bool emoji = ch == '%' ? true : false;  // DEBUG: Emoji testing hack.
     RasterizedGlyph glyph = rasterizer->rasterizeChar(ch, emoji);
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({ch, atlas_glyph});

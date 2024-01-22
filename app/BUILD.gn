@@ -14,7 +14,6 @@ macos_app_bundle("app") {
     "main.m",
     "model/Atlas.cc",
     "model/AtlasRenderer.mm",
-    "model/GlyphCache.mm",
     "model/Rasterizer.mm",
     "model/Renderer.mm",
     "util/FileUtil.mm",

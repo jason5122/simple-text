@@ -2,7 +2,6 @@
 
 #import "model/Atlas.h"
 #import "model/AtlasRenderer.h"
-#import "model/GlyphCache.h"
 #import "model/Rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
@@ -22,22 +21,18 @@ public:
     ~Renderer();
 
 private:
+    static const int BATCH_MAX = 65536;
+
     float width, height;
 
     GLuint shader_program;
     GLuint vao, vbo_instance, ebo;
-    static const int BATCH_MAX = 65536;
-
-    // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
-    static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
 
     Atlas atlas;
     Rasterizer* rasterizer;
-
-    GlyphCache glyph_cache2;
-    std::map<GLchar, AtlasGlyph> glyph_cache;
-
     AtlasRenderer* atlas_renderer;
+
+    std::map<GLchar, AtlasGlyph> glyph_cache;
 
     void linkShaders();
     void loadGlyph(char ch);

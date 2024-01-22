@@ -17,15 +17,15 @@ struct AtlasGlyph {
 
 class Atlas {
 public:
+    // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
+    static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
+
     GLuint tex_id;
 
     Atlas();
     AtlasGlyph insertGlyph(RasterizedGlyph& glyph);
 
 private:
-    // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
-    static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
-
     int offset_x = 0;
     int offset_y = 0;
     int tallest = 0;

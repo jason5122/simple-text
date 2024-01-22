@@ -41,16 +41,50 @@ void TreeSitterExperiment() {
     TSNode root_node = ts_tree_root_node(tree);
 
     // Print the syntax tree as an S-expression.
-    char* string = ts_node_string(root_node);
-    LogDefault(@"Renderer", @"Syntax tree: %s\n", string);
+    // char* string = ts_node_string(root_node);
+    // LogDefault(@"Renderer", @"Syntax tree: \n%s", string);
+
+    uint32_t error_offset = 0;
+    TSQueryError error_type = TSQueryErrorNone;
+    const char* query_code = ReadFile(ResourcePath("highlights.scm"));
+    TSQuery* query = ts_query_new(tree_sitter_json(), query_code, strlen(query_code),
+                                  &error_offset, &error_type);
+
+    if (error_type != TSQueryErrorNone) {
+        LogError(@"Renderer", @"Error creating new TSQuery. error_offset: %d, error type: %d",
+                 error_offset, error_type);
+    }
+
+    uint32_t capture_count = ts_query_capture_count(query);
+    for (int i = 0; i < capture_count; i++) {
+        uint32_t length;
+        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
+
+        LogDefault(@"Renderer", @"capture_name: %s", capture_name);
+    }
+
+    TSQueryCursor* query_cursor = ts_query_cursor_new();
+    ts_query_cursor_exec(query_cursor, query, root_node);
+
+    TSQueryMatch match;
+    while (ts_query_cursor_next_match(query_cursor, &match)) {
+        const TSQueryCapture* captures = match.captures;
+        for (int i = 0; i < match.capture_count; i++) {
+            TSQueryCapture capture = captures[i];
+            TSNode node = capture.node;
+            uint32_t start_byte = ts_node_start_byte(node);
+            uint32_t end_byte = ts_node_end_byte(node);
+
+            LogDefault(@"Renderer", @"%s, start: %d, end: %d, capture index: %d, node id: %d",
+                       ts_node_type(node), start_byte, end_byte, capture.index, capture.node.id);
+        }
+    }
 
     // Free all of the heap-allocated memory.
-    free(string);
+    // free(string);
     ts_tree_delete(tree);
     ts_parser_delete(parser);
 }
-
-void TreeSitterHighlighterExperiment() {}
 
 Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size)
@@ -64,7 +98,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
     TreeSitterExperiment();
-    TreeSitterHighlighterExperiment();
 
     this->linkShaders();
 

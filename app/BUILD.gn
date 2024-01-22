@@ -55,7 +55,6 @@ bundle_data("shaders") {
   sources = [
     "resources/atlas_frag.glsl",
     "resources/atlas_vert.glsl",
-    "resources/example.js",
     "resources/example.json",
     "resources/highlights.scm",
     "resources/text_frag.glsl",

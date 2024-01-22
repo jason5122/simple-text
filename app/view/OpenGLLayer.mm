@@ -1,6 +1,7 @@
 #import "OpenGLLayer.h"
 #import "model/Renderer.h"
 #import "util/FileUtil.h"
+#import "util/LogUtil.h"
 #include <fstream>
 #import <sstream>
 #import <string>
@@ -76,12 +77,13 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(context);
 
+    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+
     renderer->clearAndResize();
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
     // renderer->renderText("Hello world!", x, y);
     // renderer->renderText("Hello world! -", x, y);
-
     renderer->renderText(text, x, y);
 
     // Calls glFlush() by default.
@@ -89,6 +91,11 @@
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
+
+    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    uint64_t microseconds = (end - start) / 1e3;
+    float fps = 1000000.0 / microseconds;
+    LogDefault(@"OpenGLLayer", @"%ld µs (%f fps)", microseconds, fps);
 }
 
 - (void)insertCharacter:(char)ch {

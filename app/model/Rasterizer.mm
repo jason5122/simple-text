@@ -52,10 +52,10 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef) {
     CFStringRef fontFace = CTFontCopyName(fontRef, kCTFontSubFamilyNameKey);
     CGFloat fontSize = CTFontGetSize(fontRef);
 
-    LogDefault(@"Rasterizer", @"%@ %@ %f", fontFamily, fontFace, fontSize);
-    LogDefault(@"Rasterizer", @"%dx%d", rasterizedWidth, rasterizedHeight);
-    LogDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
-               len);
+    // LogDefault(@"Rasterizer", @"%@ %@ %f", fontFamily, fontFace, fontSize);
+    // LogDefault(@"Rasterizer", @"%dx%d", rasterizedWidth, rasterizedHeight);
+    // LogDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
+    //            len);
     // LogDefault(@"Rasterizer", @"RGB = %d %d %d", bitmapData[2], bitmapData[1], bitmapData[0]);
 
     int pixels = len / 4;

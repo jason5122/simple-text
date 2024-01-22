@@ -1,5 +1,4 @@
 #import "Renderer.h"
-#import "util/CTFontUtil.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
@@ -25,12 +24,7 @@ struct InstanceData {
 Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size)
     : width(width), height(height) {
-    CFStringRef mainFontName =
-        CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
-    CFStringRef emojiFontName =
-        CFStringCreateWithCString(nullptr, emoji_font_name.c_str(), kCFStringEncodingUTF8);
-    mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
-    emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
+    rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
@@ -40,38 +34,43 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     this->linkShaders();
 
     // Font experiments.
-    NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
-    CTFontDescriptorRef descriptor =
-        CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
-    CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
-    CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
-    CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor, NULL);
+    // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
+    // CTFontDescriptorRef descriptor =
+    //     CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
+    // CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
+    // CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
+    // CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor,
+    // NULL);
 
-    for (int i = 0; i < CFArrayGetCount(fontDescriptors); i++) {
-        CTFontDescriptorRef descriptor =
-            (CTFontDescriptorRef)CFArrayGetValueAtIndex(fontDescriptors, i);
-        CFStringRef familyName =
-            (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
-        CFStringRef style =
-            (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
+    // for (int i = 0; i < CFArrayGetCount(fontDescriptors); i++) {
+    //     CTFontDescriptorRef descriptor =
+    //         (CTFontDescriptorRef)CFArrayGetValueAtIndex(fontDescriptors, i);
+    //     CFStringRef familyName =
+    //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
+    //     CFStringRef style =
+    //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
 
-        if (CFEqual(style, CFSTR("Italic"))) {
-            LogDefault(@"Renderer", @"%@ %@", familyName, style);
-            CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, font_size, nullptr);
-            this->mainFont = tempFont;
-        }
-    }
+    //     if (CFEqual(style, CFSTR("Italic"))) {
+    //         LogDefault(@"Renderer", @"%@ %@", familyName, style);
+    //         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, font_size, nullptr);
+    //         this->mainFont = tempFont;
+    //     }
+    // }
     // End of font experiments.
 
-    Metrics metrics = CTFontGetMetrics(mainFont);
+    // Preload common glyphs.
+    // for (int i = 32; i < 127; i++) {
+    //     char ch = static_cast<char>(i);
+    //     this->loadGlyph(ch);
+    // }
+
+    Metrics metrics = rasterizer->metrics;
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
     float cell_height = CGFloat_floor(metrics.line_height + 2);
 
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
-
-    this->createAtlas();
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -159,7 +158,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    glBindTexture(GL_TEXTURE_2D, atlas);
+    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
@@ -171,80 +170,20 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
 
-    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas, ATLAS_SIZE);
+    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas.tex_id, ATLAS_SIZE);
 
     glDisable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas, ATLAS_SIZE);
+    atlas_renderer->draw(x + ATLAS_SIZE, y, atlas.tex_id, ATLAS_SIZE);
     glEnable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void Renderer::createAtlas() {
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glGenTextures(1, &atlas);
-    glBindTexture(GL_TEXTURE_2D, atlas);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ATLAS_SIZE, ATLAS_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
-
-    offset_x = 0;
-    offset_y = 0;
-    tallest = 0;
-
-    // Preload common glyphs.
-    // for (int i = 32; i < 127; i++) {
-    //     char ch = static_cast<char>(i);
-    //     this->loadGlyph(ch);
-    // }
-}
-
 void Renderer::loadGlyph(char ch) {
     bool emoji = ch == '%' ? true : false;
-
-    CGGlyph glyph_index;
-    RasterizedGlyph glyph;
-    if (emoji) {
-        glyph_index = CTFontGetEmojiGlyphIndex(emojiFont);
-        glyph = rasterizer.rasterizeGlyph(glyph_index, emojiFont);
-    } else {
-        glyph_index = CTFontGetGlyphIndex(mainFont, ch);
-        glyph = rasterizer.rasterizeGlyph(glyph_index, mainFont);
-    }
-
-    tallest = std::max(glyph.height, tallest);
-    if (offset_x + glyph.width > ATLAS_SIZE) {
-        offset_x = 0;
-        offset_y += tallest;
-        tallest = 0;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, atlas);
-
-    GLenum format = glyph.colored ? GL_RGBA : GL_RGB;
-    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, format,
-                    GL_UNSIGNED_BYTE, &glyph.buffer[0]);
-    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
-
-    float uv_left = static_cast<float>(offset_x) / ATLAS_SIZE;
-    float uv_bot = static_cast<float>(offset_y) / ATLAS_SIZE;
-    float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
-    float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
-
-    AtlasGlyph atlas_glyph = {
-        glyph.colored, glyph.left, glyph.top, glyph.width, glyph.height,
-        uv_left,       uv_bot,     uv_width,  uv_height,
-    };
+    RasterizedGlyph glyph = rasterizer->rasterizeChar(ch, emoji);
+    AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({ch, atlas_glyph});
-
-    offset_x += glyph.width;
 }
 
 void Renderer::clearAndResize() {

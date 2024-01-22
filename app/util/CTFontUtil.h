@@ -2,6 +2,7 @@
 
 #import "util/CGFloatUtil.h"
 #import "util/LogUtil.h"
+#import <Cocoa/Cocoa.h>
 
 struct Metrics {
     double average_advance;

@@ -1,5 +1,7 @@
 #pragma once
 
+#import <Cocoa/Cocoa.h>
+
 static inline CGFLOAT_TYPE CGFloat_floor(CGFLOAT_TYPE cgfloat) {
 #if CGFLOAT_IS_DOUBLE
     return floor(cgfloat);

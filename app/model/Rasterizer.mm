@@ -1,14 +1,28 @@
 #import "Rasterizer.h"
 #import "util/CGFloatUtil.h"
-#import "util/CTFontUtil.h"
 #import "util/LogUtil.h"
-#import <Cocoa/Cocoa.h>
 
-Rasterizer::Rasterizer() {}
+Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size) {
+    CFStringRef mainFontName =
+        CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
+    CFStringRef emojiFontName =
+        CFStringCreateWithCString(nullptr, emoji_font_name.c_str(), kCFStringEncodingUTF8);
+    mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
+    emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
 
-RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef) {
+    metrics = CTFontGetMetrics(mainFont);
+}
+
+RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
+    CGGlyph glyph_index =
+        emoji ? CTFontGetEmojiGlyphIndex(emojiFont) : CTFontGetGlyphIndex(mainFont, ch);
+    CTFontRef fontRef = emoji ? emojiFont : mainFont;
+    return rasterizeGlyph(glyph_index, fontRef);
+}
+
+RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef) {
     CGRect bounds;
-    CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph, &bounds, 1);
+    CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
     // LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
     //            bounds.size.width, bounds.size.height);
 
@@ -41,7 +55,7 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef) {
     CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
     CGPoint rasterizationOrigin = CGPointMake(-rasterizedLeft, rasterizedDescent);
 
-    CTFontDrawGlyphs(fontRef, &glyph, &rasterizationOrigin, 1, context);
+    CTFontDrawGlyphs(fontRef, &glyph_index, &rasterizationOrigin, 1, context);
 
     uint8_t* bitmapData = (uint8_t*)CGBitmapContextGetData(context);
     size_t height = CGBitmapContextGetHeight(context);

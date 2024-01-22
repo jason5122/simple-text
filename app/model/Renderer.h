@@ -28,21 +28,17 @@ private:
     GLuint vao, vbo_instance, ebo;
     static const int BATCH_MAX = 65536;
 
-    GLuint atlas;
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
     static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
-    int offset_x, offset_y, tallest;
 
-    Rasterizer rasterizer;
+    Atlas atlas;
+    Rasterizer* rasterizer;
 
     GlyphCache glyph_cache2;
-    CTFontRef mainFont;
-    CTFontRef emojiFont;
     std::map<GLchar, AtlasGlyph> glyph_cache;
 
     AtlasRenderer* atlas_renderer;
 
     void linkShaders();
-    void createAtlas();
     void loadGlyph(char ch);
 };

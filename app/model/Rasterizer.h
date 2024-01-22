@@ -1,19 +1,19 @@
 #pragma once
 
+#import "model/RasterizedGlyph.h"
+#import "util/CTFontUtil.h"
 #import <Cocoa/Cocoa.h>
-#import <vector>
-
-struct RasterizedGlyph {
-    bool colored;
-    int32_t left;
-    int32_t top;
-    int32_t width;
-    int32_t height;
-    std::vector<uint8_t> buffer;
-};
 
 class Rasterizer {
 public:
-    Rasterizer();
+    Metrics metrics;
+
+    Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size);
+    RasterizedGlyph rasterizeChar(char ch, bool emoji);
+
+private:
+    CTFontRef mainFont;
+    CTFontRef emojiFont;
+
     RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef);
 };

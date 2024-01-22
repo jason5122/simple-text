@@ -12,6 +12,12 @@
 #import <string>
 #import <vector>
 
+struct Rgb {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+};
+
 class Renderer {
 public:
     Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
@@ -22,6 +28,7 @@ public:
 
 private:
     static const int BATCH_MAX = 65536;
+    static constexpr Rgb BLACK{51, 51, 51};
 
     float width, height;
 

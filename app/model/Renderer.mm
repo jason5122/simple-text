@@ -2,6 +2,7 @@
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
+#include <tuple>
 
 struct InstanceData {
     // grid_coords
@@ -18,6 +19,9 @@ struct InstanceData {
     float uv_width;
     float uv_height;
     // flags
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
     uint8_t colored;
 };
 
@@ -110,7 +114,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(3, 1);
-    size += sizeof(uint8_t);
+    size += 4 * sizeof(uint8_t);
 
     // Unbind.
     glBindVertexArray(0);
@@ -134,6 +138,8 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
                 this->loadGlyph(ch);
             }
 
+            Rgb text_color = BLACK;
+
             AtlasGlyph glyph = glyph_cache[ch];
             instances.push_back(InstanceData{
                 // grid_coords
@@ -150,6 +156,9 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
                 glyph.uv_width,
                 glyph.uv_height,
                 // flags
+                text_color.r,
+                text_color.g,
+                text_color.b,
                 glyph.colored,
             });
         }
@@ -169,11 +178,11 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
 
-    atlas_renderer->draw(x + atlas.ATLAS_SIZE, y, atlas.tex_id, atlas.ATLAS_SIZE);
+    atlas_renderer->draw(x + 1700.0f, y, atlas.tex_id);
 
     glDisable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(x + atlas.ATLAS_SIZE, y, atlas.tex_id, atlas.ATLAS_SIZE);
+    atlas_renderer->draw(x + 1700.0f, y, atlas.tex_id);
     glEnable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

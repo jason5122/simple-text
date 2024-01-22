@@ -1,4 +1,5 @@
 #import "AtlasRenderer.h"
+#import "model/Atlas.h"
 #import "util/FileUtil.h"
 
 AtlasRenderer::AtlasRenderer(float width, float height) : width(width), height(height) {
@@ -37,13 +38,13 @@ AtlasRenderer::AtlasRenderer(float width, float height) : width(width), height(h
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void AtlasRenderer::draw(float x, float y, GLuint atlas, float atlas_size) {
+void AtlasRenderer::draw(float x, float y, GLuint atlas) {
     glUseProgram(shader_program);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    float w = atlas_size;
-    float h = atlas_size;
+    float w = Atlas::ATLAS_SIZE;
+    float h = Atlas::ATLAS_SIZE;
 
     float vertices[4][4] = {
         {x + w, y + h, 1.0f, 0.0f},  // bottom right

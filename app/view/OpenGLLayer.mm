@@ -54,7 +54,7 @@
         y = 500.0f;
         text.push_back("");
 
-        std::ifstream infile(ResourcePath("text_vert.glsl"));
+        std::ifstream infile(ResourcePath("example.cc"));
         std::string line;
         while (std::getline(infile, line)) {
             text.push_back(line);
@@ -77,6 +77,7 @@
     CGLSetCurrentContext(context);
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
     renderer->clearAndResize();
 

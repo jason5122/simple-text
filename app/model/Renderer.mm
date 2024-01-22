@@ -55,18 +55,19 @@ void TreeSitterExperiment() {
                  error_offset, error_type);
     }
 
+    std::vector<const char*> capture_names;
     uint32_t capture_count = ts_query_capture_count(query);
     for (int i = 0; i < capture_count; i++) {
         uint32_t length;
         const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
-
-        LogDefault(@"Renderer", @"capture_name: %s", capture_name);
+        capture_names.push_back(capture_name);
     }
 
     TSQueryCursor* query_cursor = ts_query_cursor_new();
     ts_query_cursor_exec(query_cursor, query, root_node);
 
     TSQueryMatch match;
+    const void* prev_id = 0;
     while (ts_query_cursor_next_match(query_cursor, &match)) {
         const TSQueryCapture* captures = match.captures;
         for (int i = 0; i < match.capture_count; i++) {
@@ -75,8 +76,16 @@ void TreeSitterExperiment() {
             uint32_t start_byte = ts_node_start_byte(node);
             uint32_t end_byte = ts_node_end_byte(node);
 
-            LogDefault(@"Renderer", @"%s, start: %d, end: %d, capture index: %d, node id: %d",
-                       ts_node_type(node), start_byte, end_byte, capture.index, capture.node.id);
+            // FIXME: Properly skip overlapping highlighting events.
+            while (node.id == prev_id) {
+                i++;
+                node = captures[i].node;
+            }
+
+            prev_id = node.id;
+
+            LogDefault(@"Renderer", @"%d, [%d, %d], %s", capture.node.id, start_byte, end_byte,
+                       capture_names[capture.index]);
         }
     }
 
@@ -97,7 +106,12 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glDepthMask(GL_FALSE);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
+    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     TreeSitterExperiment();
+    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    uint64_t microseconds = (end - start) / 1e3;
+    float fps = 1000000.0 / microseconds;
+    LogDefault(@"Renderer", @"Tree-sitter: %ld µs (%f fps)", microseconds, fps);
 
     this->linkShaders();
 

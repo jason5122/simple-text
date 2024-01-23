@@ -68,6 +68,8 @@ void TreeSitterExperiment() {
 
     TSQueryMatch match;
     const void* prev_id = 0;
+    uint32_t prev_start = -1;
+    uint32_t prev_end = -1;
     while (ts_query_cursor_next_match(query_cursor, &match)) {
         const TSQueryCapture* captures = match.captures;
         for (int i = 0; i < match.capture_count; i++) {
@@ -76,16 +78,14 @@ void TreeSitterExperiment() {
             uint32_t start_byte = ts_node_start_byte(node);
             uint32_t end_byte = ts_node_end_byte(node);
 
-            // FIXME: Properly skip overlapping highlighting events.
-            while (node.id == prev_id) {
-                i++;
-                node = captures[i].node;
+            if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
+                LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
+                           capture_names[capture.index]);
             }
 
             prev_id = node.id;
-
-            LogDefault(@"Renderer", @"%d, [%d, %d], %s", capture.node.id, start_byte, end_byte,
-                       capture_names[capture.index]);
+            prev_start = start_byte;
+            prev_end = end_byte;
         }
     }
 

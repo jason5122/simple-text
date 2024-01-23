@@ -64,7 +64,6 @@ void Renderer::treeSitterExperiment() {
     }
 
     TSQueryCursor* query_cursor = ts_query_cursor_new();
-    ts_query_cursor_set_byte_range(query_cursor, 0, byte_cutoff);
     ts_query_cursor_exec(query_cursor, query, root_node);
 
     const void* prev_id = 0;
@@ -228,23 +227,36 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
     uint32_t byte_offset = 0;
     int range_idx = 0;
 
-    uint16_t size = std::min(row_offset + 100, static_cast<int>(text.size()));
-    for (uint16_t row = row_offset; row < size; row++) {
-        if (byte_offset >= byte_cutoff) break;  // DEBUG: Performance testing.
+    bool infinite_scroll = true;
 
+    if (infinite_scroll) {
+        for (uint16_t row = 0; row < row_offset; row++) {
+            for (uint16_t col = 0; col < text[row].size(); col++) {
+                byte_offset++;
+            }
+            byte_offset++;
+        }
+    } else {
+        row_offset = 0;
+    }
+
+    uint16_t size =
+        infinite_scroll ? std::min(row_offset + 40, static_cast<int>(text.size())) : text.size();
+
+    for (uint16_t row = row_offset; row < size; row++) {
         for (uint16_t col = 0; col < text[row].size(); col++) {
             char ch = text[row][col];
 
             Rgb text_color = BLACK;
 
-            // if (byte_offset >= highlight_ranges[range_idx].second) {
-            //     range_idx++;
-            // }
+            if (byte_offset >= highlight_ranges[range_idx].second) {
+                range_idx++;
+            }
 
-            // if (highlight_ranges[range_idx].first <= byte_offset &&
-            //     byte_offset < highlight_ranges[range_idx].second) {
-            //     text_color = highlight_colors[range_idx];
-            // }
+            if (highlight_ranges[range_idx].first <= byte_offset &&
+                byte_offset < highlight_ranges[range_idx].second) {
+                text_color = highlight_colors[range_idx];
+            }
 
             if (!glyph_cache.count(ch)) {
                 this->loadGlyph(ch);

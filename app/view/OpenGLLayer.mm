@@ -72,15 +72,14 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(context);
 
-    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
     renderer->clearAndResize();
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
 
-    uint16_t row_offset = y / -42.0;
-    renderer->renderText(text, x, y, row_offset);
+    renderer->renderText(text, x, y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context
@@ -88,7 +87,7 @@
                forLayerTime:timeInterval
                 displayTime:timeStamp];
 
-    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
     LogDefault(@"OpenGLLayer", @"%ld µs (%f fps)", microseconds, fps);

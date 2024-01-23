@@ -216,7 +216,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string> text, float x, float y, uint16_t row_offset) {
+void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
 
@@ -229,9 +229,14 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
 
     bool infinite_scroll = true;
 
+    Metrics metrics = rasterizer->metrics;
+    float cell_height = CGFloat_floor(metrics.line_height + 2);
+
+    int row_offset = y / -cell_height;
+    if (row_offset < 0) row_offset = 0;
+
     if (infinite_scroll) {
-        for (uint16_t row = 0; row < std::min(row_offset, static_cast<uint16_t>(text.size()));
-             row++) {
+        for (uint16_t row = 0; row < std::min(row_offset, static_cast<int>(text.size())); row++) {
             for (uint16_t col = 0; col < text[row].size(); col++) {
                 byte_offset++;
             }

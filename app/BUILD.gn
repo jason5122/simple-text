@@ -39,6 +39,12 @@ macos_app_bundle("app") {
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
+  cflags = [
+    "-flto=thin",
+    "-O3",
+  ]
+  ldflags = cflags
+
   deps = [
     ":icon",
     ":shaders",

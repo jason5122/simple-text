@@ -225,7 +225,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
     std::vector<InstanceData> instances;
     uint32_t byte_offset = 0;
     int range_idx = 0;
-    for (uint16_t row = row_offset; row < row_offset + 30; row++) {
+    for (uint16_t row = row_offset; row < row_offset + 100; row++) {
         if (byte_offset >= byte_cutoff) break;  // DEBUG: Performance testing.
 
         for (uint16_t col = 0; col < text[row].size(); col++) {
@@ -250,7 +250,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
             instances.push_back(InstanceData{
                 // grid_coords
                 col,
-                static_cast<uint16_t>(row - row_offset),
+                row,
                 // glyph
                 glyph.left,
                 glyph.top,

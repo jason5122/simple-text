@@ -52,6 +52,8 @@
 
         x = 500.0f;
         y = 500.0f;
+        row_offset = 0;
+        y_accumulation = 0;
 
         std::ifstream infile(ResourcePath("larger_example.json"));
         std::string line;
@@ -83,6 +85,14 @@
     // renderer->renderText(std::to_string(timeInterval), x, y);
     // renderer->renderText("Hello world!", x, y);
     // renderer->renderText("Hello world! -", x, y);
+
+    if (y_accumulation > 2000.0) {
+        row_offset -= 50;
+        y_accumulation = 0;
+    } else if (y_accumulation < -2000.0) {
+        row_offset += 50;
+        y_accumulation = 0;
+    }
     renderer->renderText(text, x, y, row_offset);
 
     // Calls glFlush() by default.

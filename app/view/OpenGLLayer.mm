@@ -53,7 +53,7 @@
         x = 500.0f;
         y = 500.0f;
 
-        std::ifstream infile(ResourcePath("example.json"));
+        std::ifstream infile(ResourcePath("larger_example.json"));
         std::string line;
         while (std::getline(infile, line)) {
             text.push_back(line);

@@ -34,15 +34,15 @@ void Renderer::treeSitterExperiment() {
     ts_parser_set_language(parser, tree_sitter_json());
 
     // Build a syntax tree based on source code stored in a string.
-    const char* source_code = ReadFile(ResourcePath("example.json"));
+    const char* source_code = ReadFile(ResourcePath("larger_example.json"));
     TSTree* tree = ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 
     // Get the root node of the syntax tree.
     TSNode root_node = ts_tree_root_node(tree);
 
     // Print the syntax tree as an S-expression.
-    char* string = ts_node_string(root_node);
-    LogDefault(@"Renderer", @"Syntax tree: \n%s", string);
+    // char* string = ts_node_string(root_node);
+    // LogDefault(@"Renderer", @"Syntax tree: \n%s", string);
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
@@ -79,11 +79,13 @@ void Renderer::treeSitterExperiment() {
             uint32_t end_byte = ts_node_end_byte(node);
 
             if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
-                LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
-                           capture_names[capture.index]);
+                // LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
+                //            capture_names[capture.index]);
 
                 highlight_ranges.push_back({start_byte, end_byte});
                 if (capture.index == 0) {
+                    highlight_colors.push_back(PURPLE);
+                } else if (capture.index == 1) {
                     highlight_colors.push_back(GREEN);
                 } else if (capture.index == 2) {
                     highlight_colors.push_back(YELLOW);
@@ -103,7 +105,7 @@ void Renderer::treeSitterExperiment() {
     }
 
     // Free all of the heap-allocated memory.
-    free(string);
+    // free(string);
     ts_tree_delete(tree);
     ts_parser_delete(parser);
 }
@@ -292,7 +294,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
 }
 
 void Renderer::loadGlyph(char ch) {
-    bool emoji = ch == '%' ? true : false;  // DEBUG: Emoji testing hack.
+    bool emoji = ch == '$' ? true : false;  // DEBUG: Emoji testing hack.
     RasterizedGlyph glyph = rasterizer->rasterizeChar(ch, emoji);
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({ch, atlas_glyph});

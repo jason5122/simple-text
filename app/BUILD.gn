@@ -57,6 +57,7 @@ bundle_data("shaders") {
     "resources/atlas_vert.glsl",
     "resources/example.json",
     "resources/highlights.scm",
+    "resources/larger_example.json",
     "resources/text_frag.glsl",
     "resources/text_vert.glsl",
   ]

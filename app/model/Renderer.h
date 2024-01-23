@@ -34,6 +34,7 @@ private:
     static constexpr Rgb GREEN{128, 185, 121};
     static constexpr Rgb RED{236, 95, 102};
     static constexpr Rgb GREY2{153, 153, 153};
+    static constexpr Rgb PURPLE{198, 149, 198};
 
     std::vector<std::pair<uint32_t, uint32_t>> highlight_ranges;
     std::vector<Rgb> highlight_colors;

@@ -75,6 +75,18 @@
 
 - (void)rightMouseUp:(NSEvent*)event {
     LogDefault(@"WindowController", @"right click");
+
+    NSMenu* contextMenu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
+    [contextMenu addItemWithTitle:@"Insert test string"
+                           action:@selector(insertTestString)
+                    keyEquivalent:@""];
+    [contextMenu popUpMenuPositioningItem:nil atLocation:NSEvent.mouseLocation inView:mainView];
+}
+
+- (void)insertTestString {
+    [openGLLayer insertCharacter:'h'];
+    [openGLLayer insertCharacter:'i'];
+    [mainView.layer setNeedsDisplay];
 }
 
 @end

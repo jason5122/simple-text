@@ -52,7 +52,6 @@
 
         x = 500.0f;
         y = 500.0f;
-        text.push_back("");
 
         std::ifstream infile(ResourcePath("example.json"));
         std::string line;

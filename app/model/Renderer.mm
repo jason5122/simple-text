@@ -27,7 +27,7 @@ struct InstanceData {
 
 extern "C" TSLanguage* tree_sitter_json();
 
-void TreeSitterExperiment() {
+void Renderer::treeSitterExperiment() {
     TSParser* parser = ts_parser_new();
 
     // Set the parser's language (JSON in this case).
@@ -41,8 +41,8 @@ void TreeSitterExperiment() {
     TSNode root_node = ts_tree_root_node(tree);
 
     // Print the syntax tree as an S-expression.
-    // char* string = ts_node_string(root_node);
-    // LogDefault(@"Renderer", @"Syntax tree: \n%s", string);
+    char* string = ts_node_string(root_node);
+    LogDefault(@"Renderer", @"Syntax tree: \n%s", string);
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
@@ -81,6 +81,19 @@ void TreeSitterExperiment() {
             if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
                 LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
                            capture_names[capture.index]);
+
+                highlight_ranges.push_back({start_byte, end_byte});
+                if (capture.index == 0) {
+                    highlight_colors.push_back(GREEN);
+                } else if (capture.index == 2) {
+                    highlight_colors.push_back(YELLOW);
+                } else if (capture.index == 3) {
+                    highlight_colors.push_back(RED);
+                } else if (capture.index == 5) {
+                    highlight_colors.push_back(GREY2);
+                } else {
+                    highlight_colors.push_back(BLACK);
+                }
             }
 
             prev_id = node.id;
@@ -90,7 +103,7 @@ void TreeSitterExperiment() {
     }
 
     // Free all of the heap-allocated memory.
-    // free(string);
+    free(string);
     ts_tree_delete(tree);
     ts_parser_delete(parser);
 }
@@ -107,7 +120,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    TreeSitterExperiment();
+    this->treeSitterExperiment();
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
@@ -207,15 +220,26 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glBindVertexArray(vao);
 
     std::vector<InstanceData> instances;
+    uint32_t byte_offset = 0;
+    int range_idx = 0;
     for (uint16_t row = 0; row < text.size(); row++) {
         for (uint16_t col = 0; col < text[row].size(); col++) {
             char ch = text[row][col];
 
+            Rgb text_color = BLACK;
+
+            if (byte_offset >= highlight_ranges[range_idx].second) {
+                range_idx++;
+            }
+
+            if (highlight_ranges[range_idx].first <= byte_offset &&
+                byte_offset < highlight_ranges[range_idx].second) {
+                text_color = highlight_colors[range_idx];
+            }
+
             if (!glyph_cache.count(ch)) {
                 this->loadGlyph(ch);
             }
-
-            Rgb text_color = row == 0 ? YELLOW : BLACK;
 
             AtlasGlyph glyph = glyph_cache[ch];
             instances.push_back(InstanceData{
@@ -238,7 +262,10 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
                 text_color.b,
                 glyph.colored,
             });
+
+            byte_offset++;
         }
+        byte_offset++;
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

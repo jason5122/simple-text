@@ -44,7 +44,13 @@
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         // openGLLayer->x += event.scrollingDeltaX * 2;
-        openGLLayer->y += event.scrollingDeltaY * 2;
+        // openGLLayer->y += event.scrollingDeltaY * 2;
+
+        if (event.scrollingDeltaY < 0) {
+            openGLLayer->row_offset += 1;
+        } else if (openGLLayer->row_offset > 0) {
+            openGLLayer->row_offset -= 1;
+        }
         [mainView.layer setNeedsDisplay];
     }
 }

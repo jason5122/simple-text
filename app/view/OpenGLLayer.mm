@@ -83,7 +83,7 @@
     // renderer->renderText(std::to_string(timeInterval), x, y);
     // renderer->renderText("Hello world!", x, y);
     // renderer->renderText("Hello world! -", x, y);
-    renderer->renderText(text, x, y);
+    renderer->renderText(text, x, y, row_offset);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

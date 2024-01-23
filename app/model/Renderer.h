@@ -22,7 +22,7 @@ class Renderer {
 public:
     Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
              int font_size);
-    void renderText(std::vector<std::string> text, float x, float y);
+    void renderText(std::vector<std::string> text, float x, float y, uint16_t row_offset);
     void clearAndResize();
     ~Renderer();
 

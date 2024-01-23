@@ -215,7 +215,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string> text, float x, float y) {
+void Renderer::renderText(std::vector<std::string> text, float x, float y, uint16_t row_offset) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
 
@@ -225,7 +225,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     std::vector<InstanceData> instances;
     uint32_t byte_offset = 0;
     int range_idx = 0;
-    for (uint16_t row = 0; row < text.size(); row++) {
+    for (uint16_t row = row_offset; row < row_offset + 30; row++) {
         if (byte_offset >= byte_cutoff) break;  // DEBUG: Performance testing.
 
         for (uint16_t col = 0; col < text[row].size(); col++) {
@@ -233,14 +233,14 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
 
             Rgb text_color = BLACK;
 
-            if (byte_offset >= highlight_ranges[range_idx].second) {
-                range_idx++;
-            }
+            // if (byte_offset >= highlight_ranges[range_idx].second) {
+            //     range_idx++;
+            // }
 
-            if (highlight_ranges[range_idx].first <= byte_offset &&
-                byte_offset < highlight_ranges[range_idx].second) {
-                text_color = highlight_colors[range_idx];
-            }
+            // if (highlight_ranges[range_idx].first <= byte_offset &&
+            //     byte_offset < highlight_ranges[range_idx].second) {
+            //     text_color = highlight_colors[range_idx];
+            // }
 
             if (!glyph_cache.count(ch)) {
                 this->loadGlyph(ch);
@@ -250,7 +250,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
             instances.push_back(InstanceData{
                 // grid_coords
                 col,
-                row,
+                static_cast<uint16_t>(row - row_offset),
                 // glyph
                 glyph.left,
                 glyph.top,

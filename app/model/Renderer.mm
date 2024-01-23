@@ -66,42 +66,41 @@ void Renderer::treeSitterExperiment() {
     TSQueryCursor* query_cursor = ts_query_cursor_new();
     ts_query_cursor_exec(query_cursor, query, root_node);
 
-    TSQueryMatch match;
     const void* prev_id = 0;
     uint32_t prev_start = -1;
     uint32_t prev_end = -1;
-    while (ts_query_cursor_next_match(query_cursor, &match)) {
-        const TSQueryCapture* captures = match.captures;
-        for (int i = 0; i < match.capture_count; i++) {
-            TSQueryCapture capture = captures[i];
-            TSNode node = capture.node;
-            uint32_t start_byte = ts_node_start_byte(node);
-            uint32_t end_byte = ts_node_end_byte(node);
 
-            if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
-                // LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
-                //            capture_names[capture.index]);
+    TSQueryMatch match;
+    uint32_t capture_index;
+    while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
+        TSQueryCapture capture = match.captures[capture_index];
+        TSNode node = capture.node;
+        uint32_t start_byte = ts_node_start_byte(node);
+        uint32_t end_byte = ts_node_end_byte(node);
 
-                highlight_ranges.push_back({start_byte, end_byte});
-                if (capture.index == 0) {
-                    highlight_colors.push_back(PURPLE);
-                } else if (capture.index == 1) {
-                    highlight_colors.push_back(GREEN);
-                } else if (capture.index == 2) {
-                    highlight_colors.push_back(YELLOW);
-                } else if (capture.index == 3) {
-                    highlight_colors.push_back(RED);
-                } else if (capture.index == 5) {
-                    highlight_colors.push_back(GREY2);
-                } else {
-                    highlight_colors.push_back(BLACK);
-                }
+        if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
+            // LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
+            //            capture_names[capture.index]);
+
+            highlight_ranges.push_back({start_byte, end_byte});
+            if (capture.index == 0) {
+                highlight_colors.push_back(PURPLE);
+            } else if (capture.index == 1) {
+                highlight_colors.push_back(GREEN);
+            } else if (capture.index == 2) {
+                highlight_colors.push_back(YELLOW);
+            } else if (capture.index == 3) {
+                highlight_colors.push_back(RED);
+            } else if (capture.index == 5) {
+                highlight_colors.push_back(GREY2);
+            } else {
+                highlight_colors.push_back(BLACK);
             }
-
-            prev_id = node.id;
-            prev_start = start_byte;
-            prev_end = end_byte;
         }
+
+        prev_id = node.id;
+        prev_start = start_byte;
+        prev_end = end_byte;
     }
 
     // Free all of the heap-allocated memory.

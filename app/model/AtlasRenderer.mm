@@ -38,8 +38,9 @@ AtlasRenderer::AtlasRenderer(float width, float height) : width(width), height(h
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void AtlasRenderer::draw(float x, float y, GLuint atlas) {
+void AtlasRenderer::draw(float x, float y, GLuint atlas, int new_width, int new_height) {
     glUseProgram(shader_program);
+    glUniform2f(glGetUniformLocation(shader_program, "resolution"), new_width, new_height);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 

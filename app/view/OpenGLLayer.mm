@@ -45,10 +45,9 @@
         CGLSetCurrentContext(context);
 
         CGFloat fontSize = 16;
-        renderer =
-            new Renderer(NSScreen.mainScreen.frame.size.width * self.contentsScale,
-                         NSScreen.mainScreen.frame.size.height * self.contentsScale,
-                         "Source Code Pro", "Apple Color Emoji", fontSize * self.contentsScale);
+        renderer = new Renderer(self.frame.size.width * self.contentsScale,
+                                self.frame.size.height * self.contentsScale, "Source Code Pro",
+                                "Apple Color Emoji", fontSize * self.contentsScale);
 
         std::ifstream infile(ResourcePath("larger_example.json"));
         std::string line;
@@ -75,11 +74,14 @@
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
+    glViewport(0, 0, self.frame.size.width * self.contentsScale,
+               self.frame.size.height * self.contentsScale);
     renderer->clearAndResize();
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
 
-    renderer->renderText(text, x, y);
+    renderer->renderText(text, x, y, self.frame.size.width * self.contentsScale,
+                         self.frame.size.height * self.contentsScale);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

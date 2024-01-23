@@ -216,9 +216,11 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string> text, float x, float y) {
+void Renderer::renderText(std::vector<std::string> text, float x, float y, int new_width,
+                          int new_height) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
+    glUniform2f(glGetUniformLocation(shader_program, "resolution"), new_width, new_height);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -311,11 +313,11 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
 
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width, new_height);
 
     glDisable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width, new_height);
     glEnable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
@@ -328,7 +330,7 @@ void Renderer::loadGlyph(char ch) {
 }
 
 void Renderer::clearAndResize() {
-    glViewport(0, 0, width, height);
+    // glViewport(0, 0, width, height);
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }

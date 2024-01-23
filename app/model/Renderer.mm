@@ -64,12 +64,14 @@ void Renderer::treeSitterExperiment() {
     }
 
     TSQueryCursor* query_cursor = ts_query_cursor_new();
+    ts_query_cursor_set_byte_range(query_cursor, 0, byte_cutoff);
     ts_query_cursor_exec(query_cursor, query, root_node);
 
     const void* prev_id = 0;
     uint32_t prev_start = -1;
     uint32_t prev_end = -1;
 
+    // TODO: Profile this code and optimize it to be as fast as Tree-sitter's CLI.
     TSQueryMatch match;
     uint32_t capture_index;
     while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
@@ -224,6 +226,8 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     uint32_t byte_offset = 0;
     int range_idx = 0;
     for (uint16_t row = 0; row < text.size(); row++) {
+        if (byte_offset >= byte_cutoff) break;  // DEBUG: Performance testing.
+
         for (uint16_t col = 0; col < text[row].size(); col++) {
             char ch = text[row][col];
 

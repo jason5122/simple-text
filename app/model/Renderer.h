@@ -36,6 +36,8 @@ private:
     static constexpr Rgb GREY2{153, 153, 153};
     static constexpr Rgb PURPLE{198, 149, 198};
 
+    uint32_t byte_cutoff = 3000;  // DEBUG: Performance testing.
+
     std::vector<std::pair<uint32_t, uint32_t>> highlight_ranges;
     std::vector<Rgb> highlight_colors;
 

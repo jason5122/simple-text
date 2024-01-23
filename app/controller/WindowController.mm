@@ -73,4 +73,8 @@
     }
 }
 
+- (void)rightMouseUp:(NSEvent*)event {
+    LogDefault(@"WindowController", @"right click");
+}
+
 @end

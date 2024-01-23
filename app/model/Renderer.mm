@@ -111,8 +111,7 @@ void Renderer::treeSitterExperiment() {
 }
 
 Renderer::Renderer(float width, float height, std::string main_font_name,
-                   std::string emoji_font_name, int font_size)
-    : width(width), height(height) {
+                   std::string emoji_font_name, int font_size) {
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
 
@@ -129,6 +128,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     LogDefault(@"Renderer", @"Tree-sitter: %ld µs (%f fps)", microseconds, fps);
 
     this->linkShaders();
+    this->resize(width, height);
 
     // Font experiments.
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
@@ -164,11 +164,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     Metrics metrics = rasterizer->metrics;
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
     float cell_height = CGFloat_floor(metrics.line_height + 2);
-
-    LogDefault(@"Renderer", @"cell_height: %f", cell_height);
-
     glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     GLuint indices[] = {
@@ -216,11 +212,12 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string> text, float x, float y, int new_width,
-                          int new_height) {
+void Renderer::renderText(std::vector<std::string> text, float x, float y) {
+    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
-    glUniform2f(glGetUniformLocation(shader_program, "resolution"), new_width, new_height);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -309,32 +306,34 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, int n
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glDisable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glEnable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
-
-    atlas_renderer->draw(new_width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width,
-                         new_height);
-
-    glDisable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(new_width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width,
-                         new_height);
-    glEnable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Renderer::loadGlyph(char ch) {
-    bool emoji = ch == '$' ? true : false;  // DEBUG: Emoji testing hack.
+    bool emoji = ch == '@' ? true : false;  // DEBUG: Emoji testing hack.
     RasterizedGlyph glyph = rasterizer->rasterizeChar(ch, emoji);
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({ch, atlas_glyph});
 }
 
-void Renderer::clearAndResize() {
-    // glViewport(0, 0, width, height);
-    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+void Renderer::resize(int new_width, int new_height) {
+    width = new_width;
+    height = new_height;
+
+    glViewport(0, 0, width, height);
+    glUseProgram(shader_program);
+    glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
+
+    atlas_renderer->resize(width, height);
 }
 
 void Renderer::linkShaders() {

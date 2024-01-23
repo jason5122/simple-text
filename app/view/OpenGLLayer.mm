@@ -74,14 +74,10 @@
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
-    glViewport(0, 0, self.frame.size.width * self.contentsScale,
-               self.frame.size.height * self.contentsScale);
-    renderer->clearAndResize();
+    renderer->resize(self.frame.size.width * self.contentsScale,
+                     self.frame.size.height * self.contentsScale);
 
-    // renderer->renderText(std::to_string(timeInterval), x, y);
-
-    renderer->renderText(text, x, y, self.frame.size.width * self.contentsScale,
-                         self.frame.size.height * self.contentsScale);
+    renderer->renderText(text, x, y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

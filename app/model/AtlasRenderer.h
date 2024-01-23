@@ -6,7 +6,8 @@
 class AtlasRenderer {
 public:
     AtlasRenderer(float width, float height);
-    void draw(float x, float y, GLuint atlas, int new_width, int new_height);
+    void draw(float x, float y, GLuint atlas);
+    void resize(int new_width, int new_height);
     ~AtlasRenderer();
 
 private:

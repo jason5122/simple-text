@@ -166,6 +166,8 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
     float cell_height = CGFloat_floor(metrics.line_height + 2);
 
+    LogDefault(@"Renderer", @"cell_height: %f", cell_height);
+
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
@@ -225,7 +227,9 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
     std::vector<InstanceData> instances;
     uint32_t byte_offset = 0;
     int range_idx = 0;
-    for (uint16_t row = row_offset; row < row_offset + 100; row++) {
+
+    uint16_t size = std::min(row_offset + 100, static_cast<int>(text.size()));
+    for (uint16_t row = row_offset; row < size; row++) {
         if (byte_offset >= byte_cutoff) break;  // DEBUG: Performance testing.
 
         for (uint16_t col = 0; col < text[row].size(); col++) {

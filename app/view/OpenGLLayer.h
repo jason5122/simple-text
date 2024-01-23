@@ -4,8 +4,6 @@
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
     float x, y;
-    uint16_t row_offset;
-    float y_accumulation;
 }
 
 - (void)insertCharacter:(char)ch;

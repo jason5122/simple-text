@@ -50,10 +50,8 @@
                          NSScreen.mainScreen.frame.size.height * self.contentsScale,
                          "Source Code Pro", "Apple Color Emoji", fontSize * self.contentsScale);
 
-        x = 500.0f;
-        y = 500.0f;
-        row_offset = 0;
-        y_accumulation = 0;
+        // x = 500.0f;
+        // y = 500.0f;
 
         std::ifstream infile(ResourcePath("larger_example.json"));
         std::string line;
@@ -83,16 +81,8 @@
     renderer->clearAndResize();
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
-    // renderer->renderText("Hello world!", x, y);
-    // renderer->renderText("Hello world! -", x, y);
 
-    if (y_accumulation > 2000.0) {
-        row_offset -= 50;
-        y_accumulation = 0;
-    } else if (y_accumulation < -2000.0) {
-        row_offset += 50;
-        y_accumulation = 0;
-    }
+    uint16_t row_offset = round(y / -42.0);
     renderer->renderText(text, x, y, row_offset);
 
     // Calls glFlush() by default.

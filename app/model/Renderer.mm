@@ -313,11 +313,13 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, int n
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
 
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width, new_height);
+    atlas_renderer->draw(new_width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width,
+                         new_height);
 
     glDisable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width, new_height);
+    atlas_renderer->draw(new_width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id, new_width,
+                         new_height);
     glEnable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

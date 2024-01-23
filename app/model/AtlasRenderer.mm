@@ -1,15 +1,14 @@
 #import "AtlasRenderer.h"
 #import "model/Atlas.h"
 #import "util/FileUtil.h"
-#import "util/OpenGLErrorUtil.h"
 
 AtlasRenderer::AtlasRenderer(float width, float height) {
+    this->linkShaders();
+    this->resize(width, height);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
-
-    this->resize(width, height);
-    this->linkShaders();
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -38,6 +37,8 @@ AtlasRenderer::AtlasRenderer(float width, float height) {
 }
 
 void AtlasRenderer::draw(float x, float y, GLuint atlas) {
+    this->resize(width, height);  // TODO: Why is this needed here?
+
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
@@ -60,10 +61,6 @@ void AtlasRenderer::draw(float x, float y, GLuint atlas) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
-    // https://learnopengl.com/In-Practice/Debugging
-    glPrintError();
 }
 
 void AtlasRenderer::resize(int new_width, int new_height) {

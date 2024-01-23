@@ -115,6 +115,9 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
 
+    this->linkShaders();
+    this->resize(width, height);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
@@ -126,9 +129,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
     LogDefault(@"Renderer", @"Tree-sitter: %ld µs (%f fps)", microseconds, fps);
-
-    this->linkShaders();
-    this->resize(width, height);
 
     // Font experiments.
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};

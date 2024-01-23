@@ -82,7 +82,7 @@
 
     // renderer->renderText(std::to_string(timeInterval), x, y);
 
-    uint16_t row_offset = round(y / -42.0);
+    uint16_t row_offset = y / -42.0;
     renderer->renderText(text, x + 500.0f, y + 500.0f, row_offset);
 
     // Calls glFlush() by default.

@@ -230,7 +230,8 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
     bool infinite_scroll = true;
 
     if (infinite_scroll) {
-        for (uint16_t row = 0; row < row_offset; row++) {
+        for (uint16_t row = 0; row < std::min(row_offset, static_cast<uint16_t>(text.size()));
+             row++) {
             for (uint16_t col = 0; col < text[row].size(); col++) {
                 byte_offset++;
             }
@@ -241,7 +242,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
     }
 
     uint16_t size =
-        infinite_scroll ? std::min(row_offset + 40, static_cast<int>(text.size())) : text.size();
+        infinite_scroll ? std::min(row_offset + 35, static_cast<int>(text.size())) : text.size();
 
     for (uint16_t row = row_offset; row < size; row++) {
         for (uint16_t col = 0; col < text[row].size(); col++) {
@@ -249,13 +250,15 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
 
             Rgb text_color = BLACK;
 
-            if (byte_offset >= highlight_ranges[range_idx].second) {
-                range_idx++;
-            }
+            if (range_idx < highlight_ranges.size()) {
+                while (byte_offset >= highlight_ranges[range_idx].second) {
+                    range_idx++;
+                }
 
-            if (highlight_ranges[range_idx].first <= byte_offset &&
-                byte_offset < highlight_ranges[range_idx].second) {
-                text_color = highlight_colors[range_idx];
+                if (highlight_ranges[range_idx].first <= byte_offset &&
+                    byte_offset < highlight_ranges[range_idx].second) {
+                    text_color = highlight_colors[range_idx];
+                }
             }
 
             if (!glyph_cache.count(ch)) {

@@ -242,7 +242,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y, uint1
     }
 
     uint16_t size =
-        infinite_scroll ? std::min(row_offset + 35, static_cast<int>(text.size())) : text.size();
+        infinite_scroll ? std::min(row_offset + 60, static_cast<int>(text.size())) : text.size();
 
     for (uint16_t row = row_offset; row < size; row++) {
         for (uint16_t col = 0; col < text[row].size(); col++) {

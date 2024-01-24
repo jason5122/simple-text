@@ -10,6 +10,7 @@ public:
 
     Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size);
     RasterizedGlyph rasterizeChar(char ch, bool emoji);
+    bool isFontMonospace();
 
 private:
     CTFontRef mainFont;

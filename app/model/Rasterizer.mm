@@ -24,6 +24,10 @@ RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
     return rasterizeGlyph(glyph_index, fontRef);
 }
 
+bool Rasterizer::isFontMonospace() {
+    return CTFontIsMonospace(mainFont);
+}
+
 RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef) {
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);

@@ -303,6 +303,11 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
             });
 
             total_advance += glyph.advance;
+            // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
+            if (rasterizer->isFontMonospace()) {
+                total_advance = CGFloat_round(total_advance + 1);
+            }
+
             byte_offset++;
         }
         byte_offset++;

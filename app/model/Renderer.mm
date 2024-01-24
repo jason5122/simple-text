@@ -80,6 +80,7 @@ void Renderer::treeSitterExperiment() {
         uint32_t end_byte = ts_node_end_byte(node);
 
         if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
+            // DEV: This significantly slows down highlighting. Only enable when debugging.
             // LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
             //            capture_names[capture.index]);
 

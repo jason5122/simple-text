@@ -11,6 +11,10 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
     emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
 
     metrics = CTFontGetMetrics(mainFont);
+
+    if (CTFontIsMonospace(mainFont)) {
+        LogDefault(@"Rasterizer", @"Using monospace font.");
+    }
 }
 
 RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
@@ -86,12 +90,18 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRe
         if (colored) buffer.push_back(bitmapData[offset + 3]);
     }
 
+    // NOTE: Don't round here! Round after summing the total advance, right before passing to the
+    // shader.
+    float advance =
+        CTFontGetAdvancesForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
+
     return RasterizedGlyph{
         colored,
         rasterizedLeft,
         top,
         static_cast<int32_t>(rasterizedWidth),
         static_cast<int32_t>(rasterizedHeight),
+        advance,
         buffer,
     };
 }

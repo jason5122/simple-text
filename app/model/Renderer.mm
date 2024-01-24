@@ -23,6 +23,8 @@ struct InstanceData {
     uint8_t g;
     uint8_t b;
     uint8_t colored;
+    // advance
+    float advance;
 };
 
 extern "C" TSLanguage* tree_sitter_json();
@@ -207,6 +209,11 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glVertexAttribDivisor(3, 1);
     size += 4 * sizeof(uint8_t);
 
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(4, 1);
+    size += sizeof(float);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -250,6 +257,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
         infinite_scroll ? std::min(row_offset + 60, static_cast<int>(text.size())) : text.size();
 
     for (uint16_t row = row_offset; row < size; row++) {
+        float total_advance = 0;
         for (uint16_t col = 0; col < text[row].size(); col++) {
             char ch = text[row][col];
 
@@ -290,8 +298,11 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
                 text_color.g,
                 text_color.b,
                 glyph.colored,
+                // advance
+                static_cast<float>(CGFloat_round(total_advance)),
             });
 
+            total_advance += glyph.advance;
             byte_offset++;
         }
         byte_offset++;

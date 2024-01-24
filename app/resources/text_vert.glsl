@@ -4,6 +4,7 @@ layout(location = 0) in vec2 grid_coords;
 layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
 layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
+layout(location = 4) in float total_advance;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
@@ -29,7 +30,8 @@ void main() {
     position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
 
     // Position of cell from top-left.
-    vec2 cell_position = cell_dim * grid_coords;
+    vec2 cell_position = vec2(total_advance, cell_dim.y * grid_coords.y);
+    // vec2 cell_position = cell_dim * grid_coords;
     glyph_offset.y = cell_dim.y - glyph_offset.y;
 
     cell_position += glyph_offset + glyph_size * position;

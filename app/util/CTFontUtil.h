@@ -57,3 +57,7 @@ static inline Metrics CTFontGetMetrics(CTFontRef fontRef) {
 static inline bool CTFontIsColored(CTFontRef fontRef) {
     return CTFontGetSymbolicTraits(fontRef) & kCTFontTraitColorGlyphs;
 }
+
+static inline bool CTFontIsMonospace(CTFontRef fontRef) {
+    return CTFontGetSymbolicTraits(fontRef) & kCTFontTraitMonoSpace;
+}

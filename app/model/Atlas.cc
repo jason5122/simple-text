@@ -40,6 +40,6 @@ AtlasGlyph Atlas::insertGlyph(RasterizedGlyph& glyph) {
 
     return AtlasGlyph{
         glyph.colored, glyph.left, glyph.top, glyph.width, glyph.height,
-        uv_left,       uv_bot,     uv_width,  uv_height,
+        glyph.advance, uv_left,    uv_bot,    uv_width,    uv_height,
     };
 }

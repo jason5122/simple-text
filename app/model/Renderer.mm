@@ -265,16 +265,16 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
 
             Rgb text_color = BLACK;
 
-            if (range_idx < highlight_ranges.size()) {
-                while (byte_offset >= highlight_ranges[range_idx].second) {
-                    range_idx++;
-                }
+            // if (range_idx < highlight_ranges.size()) {
+            //     while (byte_offset >= highlight_ranges[range_idx].second) {
+            //         range_idx++;
+            //     }
 
-                if (highlight_ranges[range_idx].first <= byte_offset &&
-                    byte_offset < highlight_ranges[range_idx].second) {
-                    text_color = highlight_colors[range_idx];
-                }
-            }
+            //     if (highlight_ranges[range_idx].first <= byte_offset &&
+            //         byte_offset < highlight_ranges[range_idx].second) {
+            //         text_color = highlight_colors[range_idx];
+            //     }
+            // }
 
             if (!glyph_cache.count(ch)) {
                 this->loadGlyph(ch);
@@ -284,12 +284,16 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
             instances.push_back(InstanceData{
                 // grid_coords
                 col,
-                row,
+                static_cast<uint16_t>(row + 10),
                 // glyph
-                glyph.left,
-                glyph.top,
-                glyph.width,
-                glyph.height,
+                // glyph.left,
+                0,
+                // glyph.top,
+                0,
+                // glyph.width,
+                static_cast<int32_t>(20 - 1),
+                // glyph.height,
+                static_cast<int32_t>(42 - 1),
                 // uv
                 glyph.uv_left,
                 glyph.uv_bot,
@@ -317,6 +321,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
+    glDisable(GL_BLEND);
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
@@ -325,15 +330,15 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glDisable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glEnable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glDisable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glEnable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    cursor_renderer->draw(x + cell_width * 20, y + cell_height * 10, cell_width, cell_height);
+    cursor_renderer->draw(x, y, cell_width, cell_height);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

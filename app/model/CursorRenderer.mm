@@ -44,16 +44,15 @@ void CursorRenderer::draw(float x_old, float y_old, float cell_width, float cell
     // float w = 4.0;
     // float h = cell_height;
 
-    float pos_x = 10 * (cell_width + 1);
-    float pos_y = 10 * (cell_height + 1);
+    float pos_x = 0 * cell_width + x_old;
+    float pos_y = 10 * cell_height + y_old;
 
     float half_width = width / 2;
     float half_height = height / 2;
     float x = pos_x / half_width - 1.0;
     float y = -pos_y / half_height + 1.0;
-    // float w = cell_width / half_width;
-    // float h = cell_height / half_height;
     float w = 4.0 / half_width;
+    // float w = (cell_width - 1) / half_width;
     float h = cell_height / half_height;
 
     LogDefault(@"CursorRenderer", @"pos_x = %f, pos_y = %f", pos_x, pos_y);

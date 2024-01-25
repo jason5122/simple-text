@@ -41,22 +41,17 @@ void CursorRenderer::draw(float x_old, float y_old, float cell_width, float cell
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    // float w = 4.0;
-    // float h = cell_height;
+    float x = 20 * cell_width + x_old;
+    float y = 19 * cell_height + y_old;
 
-    float pos_x = 0 * cell_width + x_old;
-    float pos_y = 1 * cell_height + y_old;
+    float w = 4;
+    float h = cell_height;
 
-    float half_width = width / 2;
-    float half_height = height / 2;
-    float x = pos_x / half_width - 1.0;
-    float y = -pos_y / half_height + 1.0;
-    float w = 4.0 / half_width;
-    // float w = (cell_width - 1) / half_width;
-    float h = cell_height / half_height;
+    x -= w / 2;
 
-    LogDefault(@"CursorRenderer", @"pos_x = %f, pos_y = %f", pos_x, pos_y);
-    LogDefault(@"CursorRenderer", @"width = %f, height = %f", w, h);
+    int extra_padding = 8;
+    y -= extra_padding;
+    h += extra_padding * 2;
 
     float vertices[4][2] = {
         {x + w, y + h},  // bottom right

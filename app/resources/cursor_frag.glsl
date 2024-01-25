@@ -3,5 +3,7 @@
 out vec4 frag_color;
 
 void main() {
-    frag_color = vec4(1.0, 0.0, 0.0, 1.0);
+    vec3 blue2 = vec3(95, 180, 180) / 255.0;
+
+    frag_color = vec4(blue2, 1.0);
 }

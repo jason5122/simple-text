@@ -235,7 +235,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     uint32_t byte_offset = 0;
     int range_idx = 0;
 
-    bool infinite_scroll = false;
+    bool infinite_scroll = true;
 
     Metrics metrics = rasterizer->metrics;
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
@@ -265,16 +265,16 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
 
             Rgb text_color = BLACK;
 
-            // if (range_idx < highlight_ranges.size()) {
-            //     while (byte_offset >= highlight_ranges[range_idx].second) {
-            //         range_idx++;
-            //     }
+            if (range_idx < highlight_ranges.size()) {
+                while (byte_offset >= highlight_ranges[range_idx].second) {
+                    range_idx++;
+                }
 
-            //     if (highlight_ranges[range_idx].first <= byte_offset &&
-            //         byte_offset < highlight_ranges[range_idx].second) {
-            //         text_color = highlight_colors[range_idx];
-            //     }
-            // }
+                if (highlight_ranges[range_idx].first <= byte_offset &&
+                    byte_offset < highlight_ranges[range_idx].second) {
+                    text_color = highlight_colors[range_idx];
+                }
+            }
 
             if (!glyph_cache.count(ch)) {
                 this->loadGlyph(ch);
@@ -284,16 +284,12 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
             instances.push_back(InstanceData{
                 // grid_coords
                 col,
-                static_cast<uint16_t>(0),
+                row,
                 // glyph
                 glyph.left,
-                // 0,
                 glyph.top,
-                // 0,
                 glyph.width,
-                // static_cast<int32_t>(20 - 1),
                 glyph.height,
-                // static_cast<int32_t>(42 - 1),
                 // uv
                 glyph.uv_left,
                 glyph.uv_bot,
@@ -332,12 +328,12 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glDisable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glEnable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glDisable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glEnable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
     cursor_renderer->draw(x, y, cell_width, cell_height);
@@ -364,6 +360,7 @@ void Renderer::resize(int new_width, int new_height) {
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
 
     atlas_renderer->resize(width, height);
+    cursor_renderer->resize(width, height);
 }
 
 void Renderer::linkShaders() {

@@ -13,7 +13,7 @@ macos_app_bundle("app") {
     "controller/WindowController.mm",
     "main.m",
     "model/Atlas.cc",
-    "model/AtlasRenderer.mm",
+    "model/AtlasRenderer.cc",
     "model/Rasterizer.mm",
     "model/Renderer.mm",
     "util/FileUtil.mm",

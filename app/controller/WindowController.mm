@@ -43,10 +43,10 @@
 
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
-        // openGLLayer->x += event.scrollingDeltaX * 2;
+        // openGLLayer->x += event.scrollingDeltaX * NSScreen.mainScreen.backingScaleFactor;
         // if (openGLLayer->x > 0) openGLLayer->x = 0;
 
-        openGLLayer->y += event.scrollingDeltaY * 2;
+        openGLLayer->y += event.scrollingDeltaY * NSScreen.mainScreen.backingScaleFactor;
         if (openGLLayer->y > 0) openGLLayer->y = 0;
 
         [mainView.layer setNeedsDisplay];

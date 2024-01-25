@@ -41,6 +41,8 @@ RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRe
     uint32_t rasterizedHeight = rasterizedDescent + rasterizedAscent;
     int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
 
+    top -= metrics.descent;
+
     bool colored = CTFontIsColored(fontRef);
 
     CGContextRef context = CGBitmapContextCreate(

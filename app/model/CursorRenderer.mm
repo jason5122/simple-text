@@ -45,7 +45,7 @@ void CursorRenderer::draw(float x_old, float y_old, float cell_width, float cell
     // float h = cell_height;
 
     float pos_x = 0 * cell_width + x_old;
-    float pos_y = 10 * cell_height + y_old;
+    float pos_y = 1 * cell_height + y_old;
 
     float half_width = width / 2;
     float half_height = height / 2;

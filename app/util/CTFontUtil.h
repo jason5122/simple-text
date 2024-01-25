@@ -7,6 +7,7 @@
 struct Metrics {
     double average_advance;
     double line_height;
+    double descent;
 };
 
 static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {
@@ -51,7 +52,7 @@ static inline Metrics CTFontGetMetrics(CTFontRef fontRef) {
     CGFloat leading = CGFloat_round(CTFontGetLeading(fontRef));
     CGFloat line_height = ascent + descent + leading;
 
-    return Metrics{average_advance, line_height};
+    return Metrics{average_advance, line_height, -descent};
 }
 
 static inline bool CTFontIsColored(CTFontRef fontRef) {

@@ -235,7 +235,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     uint32_t byte_offset = 0;
     int range_idx = 0;
 
-    bool infinite_scroll = true;
+    bool infinite_scroll = false;
 
     Metrics metrics = rasterizer->metrics;
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
@@ -284,16 +284,16 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
             instances.push_back(InstanceData{
                 // grid_coords
                 col,
-                static_cast<uint16_t>(row + 10),
+                static_cast<uint16_t>(0),
                 // glyph
-                // glyph.left,
-                0,
-                // glyph.top,
-                0,
-                // glyph.width,
-                static_cast<int32_t>(20 - 1),
-                // glyph.height,
-                static_cast<int32_t>(42 - 1),
+                glyph.left,
+                // 0,
+                glyph.top,
+                // 0,
+                glyph.width,
+                // static_cast<int32_t>(20 - 1),
+                glyph.height,
+                // static_cast<int32_t>(42 - 1),
                 // uv
                 glyph.uv_left,
                 glyph.uv_bot,
@@ -308,6 +308,8 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
                 static_cast<float>(CGFloat_round(total_advance)),
             });
 
+            LogDefault(@"Renderer", @"%c, top = %d, left = %d", ch, glyph.top, glyph.left);
+
             total_advance += glyph.advance;
             // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
             if (rasterizer->isFontMonospace()) {
@@ -321,7 +323,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    glDisable(GL_BLEND);
+    // glDisable(GL_BLEND);
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 

@@ -1,7 +1,10 @@
 #import "view/OpenGLLayer.h"
 #import <Cocoa/Cocoa.h>
 
-@interface View : NSView
+@interface View : NSView {
+    NSTrackingArea* trackingArea;
+}
+
 @end
 
 @interface WindowController : NSWindowController {

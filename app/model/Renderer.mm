@@ -320,7 +320,6 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    // glDisable(GL_BLEND);
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
@@ -339,7 +338,8 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     glDisable(GL_BLEND);
     uint16_t cursor_col = round(cursor_x / cell_width);
     uint16_t cursor_row = (height - cursor_y) / cell_height;
-    LogDefault(@"Renderer", @"pixels: %f %f", cursor_x, width - cursor_y);
+
+    LogDefault(@"Renderer", @"pixels: %f %f", cursor_x, height - cursor_y);
     LogDefault(@"Renderer", @"cursor: (%d, %d)", cursor_col, cursor_row);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
     glEnable(GL_BLEND);

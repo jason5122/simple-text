@@ -74,7 +74,7 @@
 }
 
 - (void)mouseDown:(NSEvent*)event {
-    openGLLayer->cursorPoint = NSEvent.mouseLocation;
+    openGLLayer->cursorPoint = event.locationInWindow;
     [mainView.layer setNeedsDisplay];
 }
 
@@ -98,28 +98,53 @@
 
 @implementation View
 
-- (void)viewWillMoveToWindow:(NSWindow*)newWindow {
-    NSTrackingArea* trackingArea = [[NSTrackingArea alloc]
-        initWithRect:self.bounds
-             options:NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved |
-                     NSTrackingActiveAlways | NSTrackingInVisibleRect
-               owner:self
-            userInfo:nil];
+- (id)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
+        trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                    options:options
+                                                      owner:self
+                                                   userInfo:nil];
+        [self addTrackingArea:trackingArea];
+    }
+    return self;
+}
+
+- (void)updateTrackingAreas {
+    [super updateTrackingAreas];
+    [self removeTrackingArea:trackingArea];
+
+    NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
+    trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                options:options
+                                                  owner:self
+                                               userInfo:nil];
     [self addTrackingArea:trackingArea];
 }
 
-- (void)mouseEntered:(NSEvent*)event {
-    LogDefault(@"View", @"mouse entered");
-    [NSCursor.IBeamCursor set];
-}
+// - (void)viewWillMoveToWindow:(NSWindow*)newWindow {
+//     NSTrackingAreaOptions options = NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved |
+//                                     NSTrackingCursorUpdate | NSTrackingInVisibleRect |
+//                                     NSTrackingActiveAlways;
+//     NSTrackingArea* trackingArea = [[NSTrackingArea alloc] initWithRect:NSZeroRect
+//                                                                 options:options
+//                                                                   owner:self
+//                                                                userInfo:nil];
+//     [self addTrackingArea:trackingArea];
+// }
 
-- (void)mouseExited:(NSEvent*)event {
-    LogDefault(@"View", @"mouse exited");
-    [NSCursor.arrowCursor set];
-}
+// - (void)mouseEntered:(NSEvent*)event {
+//     LogDefault(@"View", @"mouse entered");
+//     [NSCursor.IBeamCursor set];
+// }
+
+// - (void)mouseExited:(NSEvent*)event {
+//     LogDefault(@"View", @"mouse exited");
+//     [NSCursor.arrowCursor set];
+// }
 
 - (void)mouseMoved:(NSEvent*)event {
-    LogDefault(@"View", @"mouse moved");
     [NSCursor.IBeamCursor set];
 }
 

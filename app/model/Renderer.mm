@@ -36,7 +36,7 @@ void Renderer::treeSitterExperiment() {
     ts_parser_set_language(parser, tree_sitter_json());
 
     // Build a syntax tree based on source code stored in a string.
-    const char* source_code = ReadFile(ResourcePath("larger_example.json"));
+    const char* source_code = ReadFile(ResourcePath("sample_files/larger_example.json"));
     TSTree* tree = ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 
     // Get the root node of the syntax tree.
@@ -366,8 +366,8 @@ void Renderer::resize(int new_width, int new_height) {
 void Renderer::linkShaders() {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vert_source = ReadFile(ResourcePath("text_vert.glsl"));
-    const GLchar* frag_source = ReadFile(ResourcePath("text_frag.glsl"));
+    const GLchar* vert_source = ReadFile(ResourcePath("shaders/text_vert.glsl"));
+    const GLchar* frag_source = ReadFile(ResourcePath("shaders/text_frag.glsl"));
     glShaderSource(vertex_shader, 1, &vert_source, nullptr);
     glShaderSource(fragment_shader, 1, &frag_source, nullptr);
     glCompileShader(vertex_shader);

@@ -48,7 +48,9 @@ macos_app_bundle("app") {
 
   deps = [
     ":icon",
+    ":sample_files",
     ":shaders",
+    ":tree_sitter_queries",
     "third_party/freetype:freetype",
     "third_party/tree-sitter:tree-sitter",
   ]
@@ -60,15 +62,25 @@ icon("icon") {
 
 bundle_data("shaders") {
   sources = [
-    "resources/atlas_frag.glsl",
-    "resources/atlas_vert.glsl",
-    "resources/cursor_frag.glsl",
-    "resources/cursor_vert.glsl",
-    "resources/example.json",
-    "resources/highlights.scm",
-    "resources/larger_example.json",
-    "resources/text_frag.glsl",
-    "resources/text_vert.glsl",
+    "resources/shaders/atlas_frag.glsl",
+    "resources/shaders/atlas_vert.glsl",
+    "resources/shaders/cursor_frag.glsl",
+    "resources/shaders/cursor_vert.glsl",
+    "resources/shaders/text_frag.glsl",
+    "resources/shaders/text_vert.glsl",
   ]
+  outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
+}
+
+bundle_data("sample_files") {
+  sources = [
+    "resources/sample_files/example.json",
+    "resources/sample_files/larger_example.json",
+  ]
+  outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
+}
+
+bundle_data("tree_sitter_queries") {
+  sources = [ "resources/highlights.scm" ]
   outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
 }

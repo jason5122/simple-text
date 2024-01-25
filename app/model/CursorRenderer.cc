@@ -83,8 +83,8 @@ void CursorRenderer::resize(int new_width, int new_height) {
 void CursorRenderer::linkShaders() {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vert_source = ReadFile(ResourcePath("cursor_vert.glsl"));
-    const GLchar* frag_source = ReadFile(ResourcePath("cursor_frag.glsl"));
+    const GLchar* vert_source = ReadFile(ResourcePath("shaders/cursor_vert.glsl"));
+    const GLchar* frag_source = ReadFile(ResourcePath("shaders/cursor_frag.glsl"));
     glShaderSource(vertex_shader, 1, &vert_source, nullptr);
     glShaderSource(fragment_shader, 1, &frag_source, nullptr);
     glCompileShader(vertex_shader);

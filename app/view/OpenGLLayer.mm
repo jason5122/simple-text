@@ -49,7 +49,7 @@
                                 self.frame.size.height * self.contentsScale, "Source Code Pro",
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
-        std::ifstream infile(ResourcePath("larger_example.json"));
+        std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
         std::string line;
         while (std::getline(infile, line)) {
             text.push_back(line);

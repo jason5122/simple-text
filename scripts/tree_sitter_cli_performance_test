@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tree-sitter highlight --scope source.json "app/resources/sample_files/larger_example.json" --time

@@ -1,8 +1,11 @@
 #import "view/OpenGLLayer.h"
 #import <Cocoa/Cocoa.h>
 
+@interface View : NSView
+@end
+
 @interface WindowController : NSWindowController {
-    NSView* mainView;
+    View* mainView;
     OpenGLLayer* openGLLayer;
 }
 

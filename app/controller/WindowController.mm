@@ -20,7 +20,7 @@
                                                            blue:228 / 255.f
                                                           alpha:1.f];
 
-        mainView = [[NSView alloc] initWithFrame:frameRect];
+        mainView = [[View alloc] initWithFrame:frameRect];
         openGLLayer = [OpenGLLayer layer];
         openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
@@ -73,6 +73,11 @@
     }
 }
 
+- (void)mouseDown:(NSEvent*)event {
+    openGLLayer->cursorPoint = NSEvent.mouseLocation;
+    [mainView.layer setNeedsDisplay];
+}
+
 - (void)rightMouseUp:(NSEvent*)event {
     LogDefault(@"WindowController", @"right click");
 
@@ -87,6 +92,35 @@
     [openGLLayer insertCharacter:'h'];
     [openGLLayer insertCharacter:'i'];
     [mainView.layer setNeedsDisplay];
+}
+
+@end
+
+@implementation View
+
+- (void)viewWillMoveToWindow:(NSWindow*)newWindow {
+    NSTrackingArea* trackingArea = [[NSTrackingArea alloc]
+        initWithRect:self.bounds
+             options:NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved |
+                     NSTrackingActiveAlways | NSTrackingInVisibleRect
+               owner:self
+            userInfo:nil];
+    [self addTrackingArea:trackingArea];
+}
+
+- (void)mouseEntered:(NSEvent*)event {
+    LogDefault(@"View", @"mouse entered");
+    [NSCursor.IBeamCursor set];
+}
+
+- (void)mouseExited:(NSEvent*)event {
+    LogDefault(@"View", @"mouse exited");
+    [NSCursor.arrowCursor set];
+}
+
+- (void)mouseMoved:(NSEvent*)event {
+    LogDefault(@"View", @"mouse moved");
+    [NSCursor.IBeamCursor set];
 }
 
 @end

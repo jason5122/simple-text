@@ -6,9 +6,6 @@
 #import "model/Rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
-#import <glm/glm.hpp>
-#import <glm/gtc/matrix_transform.hpp>
-#import <glm/gtc/type_ptr.hpp>
 #import <map>
 #import <string>
 #import <vector>
@@ -23,7 +20,8 @@ class Renderer {
 public:
     Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
              int font_size);
-    void renderText(std::vector<std::string> text, float scroll_x, float scroll_y);
+    void renderText(std::vector<std::string> text, float scroll_x, float scroll_y, float cursor_x,
+                    float cursor_y);
     void resize(int new_width, int new_height);
     ~Renderer();
 

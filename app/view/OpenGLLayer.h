@@ -4,6 +4,7 @@
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
     float x, y;
+    CGPoint cursorPoint;
 }
 
 - (void)insertCharacter:(char)ch;

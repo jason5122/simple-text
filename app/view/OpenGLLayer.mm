@@ -77,7 +77,8 @@
     renderer->resize(self.frame.size.width * self.contentsScale,
                      self.frame.size.height * self.contentsScale);
 
-    renderer->renderText(text, x, y);
+    renderer->renderText(text, x, y, cursorPoint.x * self.contentsScale,
+                         cursorPoint.y * self.contentsScale);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

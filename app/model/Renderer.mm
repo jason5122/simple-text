@@ -223,7 +223,8 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string> text, float scroll_x, float scroll_y) {
+void Renderer::renderText(std::vector<std::string> text, float scroll_x, float scroll_y,
+                          float cursor_x, float cursor_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -336,7 +337,11 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    cursor_renderer->draw(scroll_x, scroll_y);
+    uint16_t cursor_col = round(cursor_x / cell_width);
+    uint16_t cursor_row = (height - cursor_y) / cell_height;
+    LogDefault(@"Renderer", @"pixels: %f %f", cursor_x, width - cursor_y);
+    LogDefault(@"Renderer", @"cursor: (%d, %d)", cursor_col, cursor_row);
+    cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

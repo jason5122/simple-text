@@ -117,7 +117,12 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size) {
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
-    cursor_renderer = new CursorRenderer(width, height);
+
+    Metrics metrics = rasterizer->metrics;
+    float cell_width = CGFloat_floor(metrics.average_advance + 1);
+    float cell_height = CGFloat_floor(metrics.line_height + 2);
+
+    cursor_renderer = new CursorRenderer(width, height, cell_width, cell_height);
 
     this->linkShaders();
     this->resize(width, height);
@@ -165,9 +170,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     //     this->loadGlyph(ch);
     // }
 
-    Metrics metrics = rasterizer->metrics;
-    float cell_width = CGFloat_floor(metrics.average_advance + 1);
-    float cell_height = CGFloat_floor(metrics.line_height + 2);
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
@@ -221,12 +223,12 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string> text, float x, float y) {
+void Renderer::renderText(std::vector<std::string> text, float scroll_x, float scroll_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
+    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -241,7 +243,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
     float cell_height = CGFloat_floor(metrics.line_height + 2);
 
-    int row_offset = y / -cell_height;
+    int row_offset = scroll_y / -cell_height;
     if (row_offset < 0) row_offset = 0;
 
     if (infinite_scroll) {
@@ -304,8 +306,6 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
                 static_cast<float>(CGFloat_round(total_advance)),
             });
 
-            LogDefault(@"Renderer", @"%c, top = %d, left = %d", ch, glyph.top, glyph.left);
-
             total_advance += glyph.advance;
             // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
             if (rasterizer->isFontMonospace()) {
@@ -336,7 +336,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    cursor_renderer->draw(x, y, cell_width, cell_height);
+    cursor_renderer->draw(scroll_x, scroll_y);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

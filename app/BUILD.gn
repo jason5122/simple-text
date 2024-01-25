@@ -14,7 +14,7 @@ macos_app_bundle("app") {
     "main.m",
     "model/Atlas.cc",
     "model/AtlasRenderer.cc",
-    "model/CursorRenderer.cc",
+    "model/CursorRenderer.mm",
     "model/Rasterizer.mm",
     "model/Renderer.mm",
     "util/FileUtil.mm",

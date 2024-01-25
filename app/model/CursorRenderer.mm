@@ -1,6 +1,7 @@
 #import "CursorRenderer.h"
 #import "model/Atlas.h"
 #import "util/FileUtil.h"
+#import "util/LogUtil.h"
 
 CursorRenderer::CursorRenderer(float width, float height) {
     this->linkShaders();
@@ -34,7 +35,7 @@ CursorRenderer::CursorRenderer(float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void CursorRenderer::draw(float x, float y, float cell_width, float cell_height) {
+void CursorRenderer::draw(float x_old, float y_old, float cell_width, float cell_height) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
     glActiveTexture(GL_TEXTURE0);
@@ -42,8 +43,21 @@ void CursorRenderer::draw(float x, float y, float cell_width, float cell_height)
 
     // float w = 4.0;
     // float h = cell_height;
-    float w = 10.0;
-    float h = cell_height * 2;
+
+    float pos_x = 10 * (cell_width + 1);
+    float pos_y = 10 * (cell_height + 1);
+
+    float half_width = width / 2;
+    float half_height = height / 2;
+    float x = pos_x / half_width - 1.0;
+    float y = -pos_y / half_height + 1.0;
+    // float w = cell_width / half_width;
+    // float h = cell_height / half_height;
+    float w = 4.0 / half_width;
+    float h = cell_height / half_height;
+
+    LogDefault(@"CursorRenderer", @"pos_x = %f, pos_y = %f", pos_x, pos_y);
+    LogDefault(@"CursorRenderer", @"width = %f, height = %f", w, h);
 
     float vertices[4][2] = {
         {x + w, y + h},  // bottom right

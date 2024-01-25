@@ -13,7 +13,7 @@
                                                   styleMask:mask
                                                     backing:NSBackingStoreBuffered
                                                       defer:false];
-        self.window.title = @"Glyph Atlas C++";
+        self.window.title = @"Simple Text";
         self.window.titlebarAppearsTransparent = true;
         self.window.backgroundColor = [NSColor colorWithSRGBRed:228 / 255.f
                                                           green:228 / 255.f

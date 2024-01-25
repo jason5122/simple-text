@@ -8,6 +8,6 @@ mkdir -p out/universal
 
 # https://chromium.googlesource.com/chromium/src/+/main/docs/mac_arm64.md#universal-builds
 ./scripts/universalizer.py \
-  out/arm64/GlyphAtlasCpp.app \
-  out/x86_64/GlyphAtlasCpp.app \
-  out/universal/GlyphAtlasCpp.app
+  out/arm64/Simple\ Text.app \
+  out/x86_64/Simple\ Text.app \
+  out/universal/Simple\ Text.app

@@ -1,4 +1,4 @@
-# MetalApp
+# Simple Text
 
 ## Building
 
@@ -36,12 +36,4 @@ gn gen out
 ninja -C out
 ```
 
-This generates `MetalApp.app` in the `out/` directory.
-
-## Viewing logs
-
-```
-log stream --predicate 'subsystem contains "com.jason5122.metal-app"' --style compact
-```
-
-You can also use `Console.app`, but I prefer viewing them in the terminal so I use this command.
+This generates `Simple Text.app` in the `out/` directory.

@@ -2,8 +2,8 @@ import("//build/config/mac/templates/icon.gni")
 import("//build/config/mac/templates/macos_app_bundle.gni")
 
 macos_app_bundle("app") {
-  output_name = "GlyphAtlasCpp"
-  bundle_identifier = "com.jason5122.glyph-atlas-cpp"
+  output_name = "Simple Text"
+  bundle_identifier = "com.jason5122.simple-text"
   info_plist = "resources/Info.plist"
 
   # define `code_signing_identity` in args.gn

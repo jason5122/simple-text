@@ -31,7 +31,6 @@ void main() {
 
     // Position of cell from top-left.
     vec2 cell_position = vec2(total_advance, cell_dim.y * grid_coords.y);
-    // vec2 cell_position = cell_dim * grid_coords;
     glyph_offset.y = cell_dim.y - glyph_offset.y;
 
     cell_position += glyph_offset + glyph_size * position;

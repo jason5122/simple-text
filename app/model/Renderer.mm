@@ -117,6 +117,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size) {
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
+    cursor_renderer = new CursorRenderer(width, height);
 
     this->linkShaders();
     this->resize(width, height);
@@ -237,6 +238,7 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     bool infinite_scroll = true;
 
     Metrics metrics = rasterizer->metrics;
+    float cell_width = CGFloat_floor(metrics.average_advance + 1);
     float cell_height = CGFloat_floor(metrics.line_height + 2);
 
     int row_offset = y / -cell_height;
@@ -329,6 +331,10 @@ void Renderer::renderText(std::vector<std::string> text, float x, float y) {
     atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
     glEnable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glDisable(GL_BLEND);
+    cursor_renderer->draw(x + cell_width * 20, y + cell_height * 10, cell_width, cell_height);
+    glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
     // https://learnopengl.com/In-Practice/Debugging

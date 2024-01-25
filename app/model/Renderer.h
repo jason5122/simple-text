@@ -2,6 +2,7 @@
 
 #import "model/Atlas.h"
 #import "model/AtlasRenderer.h"
+#import "model/CursorRenderer.h"
 #import "model/Rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
@@ -47,6 +48,7 @@ private:
     Atlas atlas;
     Rasterizer* rasterizer;
     AtlasRenderer* atlas_renderer;
+    CursorRenderer* cursor_renderer;
 
     std::map<GLchar, AtlasGlyph> glyph_cache;
 

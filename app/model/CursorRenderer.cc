@@ -1,13 +1,11 @@
-#import "AtlasRenderer.h"
+#import "CursorRenderer.h"
 #import "model/Atlas.h"
 #import "util/FileUtil.h"
 
-AtlasRenderer::AtlasRenderer(float width, float height) {
+CursorRenderer::CursorRenderer(float width, float height) {
     this->linkShaders();
     this->resize(width, height);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
 
     GLuint indices[] = {
@@ -25,10 +23,10 @@ AtlasRenderer::AtlasRenderer(float width, float height) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 2, nullptr, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
     // Unbind.
     glBindVertexArray(0);
@@ -36,33 +34,34 @@ AtlasRenderer::AtlasRenderer(float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void AtlasRenderer::draw(float x, float y, GLuint atlas) {
+void CursorRenderer::draw(float x, float y, float cell_width, float cell_height) {
     glUseProgram(shader_program);
+    glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    float w = Atlas::ATLAS_SIZE;
-    float h = Atlas::ATLAS_SIZE;
+    // float w = 4.0;
+    // float h = cell_height;
+    float w = 10.0;
+    float h = cell_height * 2;
 
-    float vertices[4][4] = {
-        {x + w, y + h, 1.0f, 0.0f},  // bottom right
-        {x + w, y, 1.0f, 1.0f},      // top right
-        {x, y, 0.0f, 1.0f},          // top left
-        {x, y + h, 0.0f, 0.0f},      // bottom left
+    float vertices[4][2] = {
+        {x + w, y + h},  // bottom right
+        {x + w, y},      // top right
+        {x, y},          // top left
+        {x, y + h},      // bottom left
     };
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
-    glBindTexture(GL_TEXTURE_2D, atlas);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
     glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void AtlasRenderer::resize(int new_width, int new_height) {
+void CursorRenderer::resize(int new_width, int new_height) {
     width = new_width;
     height = new_height;
 
@@ -71,11 +70,11 @@ void AtlasRenderer::resize(int new_width, int new_height) {
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
 }
 
-void AtlasRenderer::linkShaders() {
+void CursorRenderer::linkShaders() {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vert_source = ReadFile(ResourcePath("atlas_vert.glsl"));
-    const GLchar* frag_source = ReadFile(ResourcePath("atlas_frag.glsl"));
+    const GLchar* vert_source = ReadFile(ResourcePath("cursor_vert.glsl"));
+    const GLchar* frag_source = ReadFile(ResourcePath("cursor_frag.glsl"));
     glShaderSource(vertex_shader, 1, &vert_source, nullptr);
     glShaderSource(fragment_shader, 1, &frag_source, nullptr);
     glCompileShader(vertex_shader);
@@ -90,7 +89,7 @@ void AtlasRenderer::linkShaders() {
     glDeleteShader(fragment_shader);
 }
 
-AtlasRenderer::~AtlasRenderer() {
+CursorRenderer::~CursorRenderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);

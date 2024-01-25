@@ -14,6 +14,7 @@ macos_app_bundle("app") {
     "main.m",
     "model/Atlas.cc",
     "model/AtlasRenderer.cc",
+    "model/CursorRenderer.cc",
     "model/Rasterizer.mm",
     "model/Renderer.mm",
     "util/FileUtil.mm",
@@ -61,6 +62,8 @@ bundle_data("shaders") {
   sources = [
     "resources/atlas_frag.glsl",
     "resources/atlas_vert.glsl",
+    "resources/cursor_frag.glsl",
+    "resources/cursor_vert.glsl",
     "resources/example.json",
     "resources/highlights.scm",
     "resources/larger_example.json",

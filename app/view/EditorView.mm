@@ -7,11 +7,39 @@
 #import <string>
 #import <vector>
 
+@interface OpenGLLayer : CAOpenGLLayer {
+@public
+    float x, y;
+    CGPoint cursorPoint;
+
+@private
+    Renderer* renderer;
+    std::vector<std::string> text;
+}
+
+- (void)insertCharacter:(char)ch;
+
+@end
+
+@interface EditorView () {
+    OpenGLLayer* openGLLayer;
+}
+@end
+
 @implementation EditorView
 
 - (id)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
+        openGLLayer = [OpenGLLayer layer];
+        openGLLayer.needsDisplayOnBoundsChange = true;
+        // openGLLayer.asynchronous = true;
+        self.layer = openGLLayer;
+
+        // Fixes blurriness on HiDPI displays.
+        // https://bugzilla.gnome.org/show_bug.cgi?id=765194
+        self.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
+
         NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
         trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
                                                     options:options
@@ -38,12 +66,59 @@
     [NSCursor.IBeamCursor set];
 }
 
-@end
+- (void)scrollWheel:(NSEvent*)event {
+    if (event.type == NSEventTypeScrollWheel) {
+        // openGLLayer->x += event.scrollingDeltaX * NSScreen.mainScreen.backingScaleFactor;
+        // if (openGLLayer->x > 0) openGLLayer->x = 0;
 
-@interface OpenGLLayer () {
-    Renderer* renderer;
-    std::vector<std::string> text;
+        openGLLayer->y += event.scrollingDeltaY * NSScreen.mainScreen.backingScaleFactor;
+        if (openGLLayer->y > 0) openGLLayer->y = 0;
+
+        [self.layer setNeedsDisplay];
+    }
 }
+
+- (void)keyDown:(NSEvent*)event {
+    NSString* characters = event.characters;
+    for (uint32_t k = 0; k < characters.length; k++) {
+        char ch = [characters characterAtIndex:k];
+        LogDefault(@"WindowController", @"insert char: %c", ch);
+        [openGLLayer insertCharacter:ch];
+        // unichar key = [characters characterAtIndex:k];
+        // switch (key) {
+        // case 'k':
+        //     openGLLayer->x = 0.0f;
+        //     openGLLayer->y = 0.0f;
+        //     [self.layer setNeedsDisplay];
+        //     break;
+        // }
+        // openGLLayer->x = 0.0f;
+        // openGLLayer->y = 0.0f;
+        [self.layer setNeedsDisplay];
+    }
+}
+
+- (void)mouseDown:(NSEvent*)event {
+    openGLLayer->cursorPoint = event.locationInWindow;
+    [self.layer setNeedsDisplay];
+}
+
+- (void)rightMouseUp:(NSEvent*)event {
+    LogDefault(@"WindowController", @"right click");
+
+    NSMenu* contextMenu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
+    [contextMenu addItemWithTitle:@"Insert test string"
+                           action:@selector(insertTestString)
+                    keyEquivalent:@""];
+    [contextMenu popUpMenuPositioningItem:nil atLocation:NSEvent.mouseLocation inView:self];
+}
+
+- (void)insertTestString {
+    [openGLLayer insertCharacter:'h'];
+    [openGLLayer insertCharacter:'i'];
+    [self.layer setNeedsDisplay];
+}
+
 @end
 
 @implementation OpenGLLayer

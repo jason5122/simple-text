@@ -15,10 +15,7 @@ def ReadPlistFromString(plist_bytes):
     Returns:
       The contents of property list as a python object.
     """
-    if sys.version_info.major == 2:
-        return plistlib.readPlistFromString(plist_bytes)
-    else:
-        return plistlib.loads(plist_bytes)
+    return plistlib.loads(plist_bytes)
 
 
 def LoadPlistFile(plist_path):
@@ -30,13 +27,8 @@ def LoadPlistFile(plist_path):
     Returns:
       The content of the property list file as a python object.
     """
-    if sys.version_info.major == 2:
-        return plistlib.readPlistFromString(
-            subprocess.check_output(['xcrun', 'plutil', '-convert', 'xml1', '-o', '-', plist_path])
-        )
-    else:
-        with open(plist_path, 'rb') as fp:
-            return plistlib.load(fp)
+    with open(plist_path, 'rb') as fp:
+        return plistlib.load(fp)
 
 
 def CreateSymlink(value, location):
@@ -50,28 +42,13 @@ def CreateSymlink(value, location):
 class Bundle(object):
     """Wraps a bundle."""
 
-    def __init__(self, bundle_path, platform):
+    def __init__(self, bundle_path):
         """Initializes the Bundle object with data from bundle Info.plist file."""
         self._path = bundle_path
-        self._kind = Bundle.Kind(platform, os.path.splitext(bundle_path)[-1])
         self._data = None
 
     def Load(self):
         self._data = LoadPlistFile(self.info_plist_path)
-
-    @staticmethod
-    def Kind(platform, extension):
-        if platform == 'iphonesimulator' or platform == 'iphoneos':
-            return 'ios'
-        if platform == 'macosx':
-            if extension == '.framework':
-                return 'mac_framework'
-            return 'mac'
-        raise ValueError('unknown bundle type %s for %s' % (extension, platform))
-
-    @property
-    def kind(self):
-        return self._kind
 
     @property
     def path(self):
@@ -79,28 +56,18 @@ class Bundle(object):
 
     @property
     def contents_dir(self):
-        if self._kind == 'mac':
-            return os.path.join(self.path, 'Contents')
-        if self._kind == 'mac_framework':
-            return os.path.join(self.path, 'Versions/A')
-        return self.path
+        return os.path.join(self.path, 'Contents')
 
     @property
     def executable_dir(self):
-        if self._kind == 'mac':
-            return os.path.join(self.contents_dir, 'MacOS')
-        return self.contents_dir
+        return os.path.join(self.contents_dir, 'MacOS')
 
     @property
     def resources_dir(self):
-        if self._kind == 'mac' or self._kind == 'mac_framework':
-            return os.path.join(self.contents_dir, 'Resources')
-        return self.path
+        return os.path.join(self.contents_dir, 'Resources')
 
     @property
     def info_plist_path(self):
-        if self._kind == 'mac_framework':
-            return os.path.join(self.resources_dir, 'Info.plist')
         return os.path.join(self.contents_dir, 'Info.plist')
 
     @property
@@ -237,9 +204,6 @@ class CodeSignBundleAction(Action):
             help='disable code signature',
         )
         parser.add_argument(
-            '--platform', '-t', required=True, help='platform the signed bundle is targeting'
-        )
-        parser.add_argument(
             '--partial-info-plist',
             '-p',
             action='append',
@@ -259,7 +223,7 @@ class CodeSignBundleAction(Action):
         if not args.identity:
             args.identity = '-'
 
-        bundle = Bundle(args.path, args.platform)
+        bundle = Bundle(args.path)
 
         if args.partial_info_plist:
             GenerateBundleInfoPlist(bundle, args.plist_compiler_path, args.partial_info_plist)
@@ -301,11 +265,6 @@ class CodeSignBundleAction(Action):
             sys.stderr.flush()
             sys.exit(1)
 
-        # Delete existing embedded mobile provisioning.
-        embedded_provisioning_profile = os.path.join(bundle.path, 'embedded.mobileprovision')
-        if os.path.isfile(embedded_provisioning_profile):
-            os.unlink(embedded_provisioning_profile)
-
         # Delete existing code signature.
         if os.path.exists(bundle.signature_dir):
             shutil.rmtree(bundle.signature_dir)
@@ -314,28 +273,6 @@ class CodeSignBundleAction(Action):
         if not os.path.isdir(bundle.executable_dir):
             os.makedirs(bundle.executable_dir)
         shutil.copy(args.binary, bundle.binary_path)
-
-        if bundle.kind == 'mac_framework':
-            # Create Versions/Current -> Versions/A symlink
-            CreateSymlink('A', os.path.join(bundle.path, 'Versions/Current'))
-
-            # Create $binary_name -> Versions/Current/$binary_name symlink
-            CreateSymlink(
-                os.path.join('Versions/Current', bundle.binary_name),
-                os.path.join(bundle.path, bundle.binary_name),
-            )
-
-            # Create optional symlinks.
-            for name in ('Headers', 'Resources', 'Modules'):
-                target = os.path.join(bundle.path, 'Versions/A', name)
-                if os.path.exists(target):
-                    CreateSymlink(
-                        os.path.join('Versions/Current', name), os.path.join(bundle.path, name)
-                    )
-                else:
-                    obsolete_path = os.path.join(bundle.path, name)
-                    if os.path.exists(obsolete_path):
-                        os.unlink(obsolete_path)
 
         if args.no_signature:
             return

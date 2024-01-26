@@ -19,7 +19,7 @@ macos_app_bundle("app") {
     "model/Renderer.mm",
     "util/FileUtil.mm",
     "util/LogUtil.mm",
-    "view/OpenGLLayer.mm",
+    "view/EditorView.mm",
   ]
 
   frameworks = [

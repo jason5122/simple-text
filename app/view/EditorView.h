@@ -1,5 +1,4 @@
 #import <Cocoa/Cocoa.h>
-#import <QuartzCore/QuartzCore.h>
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
@@ -8,5 +7,11 @@
 }
 
 - (void)insertCharacter:(char)ch;
+
+@end
+
+@interface EditorView : NSView {
+    NSTrackingArea* trackingArea;
+}
 
 @end

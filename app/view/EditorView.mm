@@ -1,4 +1,4 @@
-#import "OpenGLLayer.h"
+#import "EditorView.h"
 #import "model/Renderer.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
@@ -6,6 +6,39 @@
 #import <sstream>
 #import <string>
 #import <vector>
+
+@implementation EditorView
+
+- (id)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
+        trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                    options:options
+                                                      owner:self
+                                                   userInfo:nil];
+        [self addTrackingArea:trackingArea];
+    }
+    return self;
+}
+
+- (void)updateTrackingAreas {
+    [super updateTrackingAreas];
+    [self removeTrackingArea:trackingArea];
+
+    NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
+    trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                options:options
+                                                  owner:self
+                                               userInfo:nil];
+    [self addTrackingArea:trackingArea];
+}
+
+- (void)mouseMoved:(NSEvent*)event {
+    [NSCursor.IBeamCursor set];
+}
+
+@end
 
 @interface OpenGLLayer () {
     Renderer* renderer;

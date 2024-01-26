@@ -20,17 +20,17 @@
                                                            blue:228 / 255.f
                                                           alpha:1.f];
 
-        mainView = [[View alloc] initWithFrame:frameRect];
+        editorView = [[EditorView alloc] initWithFrame:frameRect];
         openGLLayer = [OpenGLLayer layer];
         openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
-        mainView.layer = openGLLayer;
+        editorView.layer = openGLLayer;
 
         // Fixes blurriness on HiDPI displays.
         // https://bugzilla.gnome.org/show_bug.cgi?id=765194
-        mainView.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
+        editorView.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
 
-        self.window.contentView = mainView;
+        self.window.contentView = editorView;
     }
     return self;
 }
@@ -49,7 +49,7 @@
         openGLLayer->y += event.scrollingDeltaY * NSScreen.mainScreen.backingScaleFactor;
         if (openGLLayer->y > 0) openGLLayer->y = 0;
 
-        [mainView.layer setNeedsDisplay];
+        [editorView.layer setNeedsDisplay];
     }
 }
 
@@ -64,18 +64,18 @@
         // case 'k':
         //     openGLLayer->x = 0.0f;
         //     openGLLayer->y = 0.0f;
-        //     [mainView.layer setNeedsDisplay];
+        //     [editorView.layer setNeedsDisplay];
         //     break;
         // }
         // openGLLayer->x = 0.0f;
         // openGLLayer->y = 0.0f;
-        [mainView.layer setNeedsDisplay];
+        [editorView.layer setNeedsDisplay];
     }
 }
 
 - (void)mouseDown:(NSEvent*)event {
     openGLLayer->cursorPoint = event.locationInWindow;
-    [mainView.layer setNeedsDisplay];
+    [editorView.layer setNeedsDisplay];
 }
 
 - (void)rightMouseUp:(NSEvent*)event {
@@ -85,67 +85,13 @@
     [contextMenu addItemWithTitle:@"Insert test string"
                            action:@selector(insertTestString)
                     keyEquivalent:@""];
-    [contextMenu popUpMenuPositioningItem:nil atLocation:NSEvent.mouseLocation inView:mainView];
+    [contextMenu popUpMenuPositioningItem:nil atLocation:NSEvent.mouseLocation inView:editorView];
 }
 
 - (void)insertTestString {
     [openGLLayer insertCharacter:'h'];
     [openGLLayer insertCharacter:'i'];
-    [mainView.layer setNeedsDisplay];
-}
-
-@end
-
-@implementation View
-
-- (id)initWithFrame:(NSRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
-        trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
-                                                    options:options
-                                                      owner:self
-                                                   userInfo:nil];
-        [self addTrackingArea:trackingArea];
-    }
-    return self;
-}
-
-- (void)updateTrackingAreas {
-    [super updateTrackingAreas];
-    [self removeTrackingArea:trackingArea];
-
-    NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
-    trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
-                                                options:options
-                                                  owner:self
-                                               userInfo:nil];
-    [self addTrackingArea:trackingArea];
-}
-
-// - (void)viewWillMoveToWindow:(NSWindow*)newWindow {
-//     NSTrackingAreaOptions options = NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved |
-//                                     NSTrackingCursorUpdate | NSTrackingInVisibleRect |
-//                                     NSTrackingActiveAlways;
-//     NSTrackingArea* trackingArea = [[NSTrackingArea alloc] initWithRect:NSZeroRect
-//                                                                 options:options
-//                                                                   owner:self
-//                                                                userInfo:nil];
-//     [self addTrackingArea:trackingArea];
-// }
-
-// - (void)mouseEntered:(NSEvent*)event {
-//     LogDefault(@"View", @"mouse entered");
-//     [NSCursor.IBeamCursor set];
-// }
-
-// - (void)mouseExited:(NSEvent*)event {
-//     LogDefault(@"View", @"mouse exited");
-//     [NSCursor.arrowCursor set];
-// }
-
-- (void)mouseMoved:(NSEvent*)event {
-    [NSCursor.IBeamCursor set];
+    [editorView.layer setNeedsDisplay];
 }
 
 @end

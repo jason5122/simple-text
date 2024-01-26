@@ -1,14 +1,9 @@
-#import "view/OpenGLLayer.h"
+#import "view/EditorView.h"
+// #import "view/OpenGLLayer.h"
 #import <Cocoa/Cocoa.h>
 
-@interface View : NSView {
-    NSTrackingArea* trackingArea;
-}
-
-@end
-
 @interface WindowController : NSWindowController {
-    View* mainView;
+    EditorView* editorView;
     OpenGLLayer* openGLLayer;
 }
 

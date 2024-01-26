@@ -30,8 +30,8 @@ macos_app_bundle("app") {
   ]
 
   include_dirs = [
+    # TODO: Remove these and use full paths to headers like Chromium.
     "//app",
-    "third_party",
 
     # TODO: Remove this and automatically include headers using `public` keyword instead
     "third_party/freetype/include",

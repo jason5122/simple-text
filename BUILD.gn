@@ -1,5 +1,7 @@
 group("all") {
   deps = [
-    "//app",  # expands to app:app
+    # GN expands something like "//app" to //app:app
+    "//app",
+    "//font",
   ]
 }

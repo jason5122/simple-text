@@ -6,18 +6,6 @@ import subprocess
 import sys
 
 
-def ReadPlistFromString(plist_bytes):
-    """Parse property list from given |plist_bytes|.
-
-    Args:
-      plist_bytes: contents of property list to load. Must be bytes in python 3.
-
-    Returns:
-      The contents of property list as a python object.
-    """
-    return plistlib.loads(plist_bytes)
-
-
 def LoadPlistFile(plist_path):
     """Loads property list file at |plist_path|.
 
@@ -29,14 +17,6 @@ def LoadPlistFile(plist_path):
     """
     with open(plist_path, 'rb') as fp:
         return plistlib.load(fp)
-
-
-def CreateSymlink(value, location):
-    """Creates symlink with value at location if the target exists."""
-    target = os.path.join(os.path.dirname(location), value)
-    if os.path.exists(location):
-        os.unlink(location)
-    os.symlink(value, location)
 
 
 class Bundle(object):
@@ -129,149 +109,75 @@ def CodeSignBundle(bundle_path, identity, extra_args):
         sys.stderr.write('\n')
 
 
-def GenerateBundleInfoPlist(bundle, plist_compiler, partial_plist):
-    """Generates the bundle Info.plist for a list of partial .plist files.
+def Execute(args):
+    if not args.identity:
+        args.identity = '-'
 
-    Args:
-      bundle: a Bundle instance
-      plist_compiler: string, path to the Info.plist compiler
-      partial_plist: list of path to partial .plist files to merge
-    """
+    bundle = Bundle(args.path)
+    bundle.Load()
 
-    # Filter empty partial .plist files (this happens if an application
-    # does not compile any asset catalog, in which case the partial .plist
-    # file from the asset catalog compilation step is just a stamp file).
-    filtered_partial_plist = []
-    for plist in partial_plist:
-        plist_size = os.stat(plist).st_size
-        if plist_size:
-            filtered_partial_plist.append(plist)
-
-    # Invoke the plist_compiler script. It needs to be a python script.
-    subprocess.check_call(
-        [
-            'python3',
-            plist_compiler,
-            'merge',
-            '-f',
-            'binary1',
-            '-o',
-            bundle.info_plist_path,
-        ]
-        + filtered_partial_plist
+    # According to Apple documentation, the application binary must be the same
+    # as the bundle name without the .app suffix. See crbug.com/740476 for more
+    # information on what problem this can cause.
+    #
+    # To prevent this class of error, fail with an error if the binary name is
+    # incorrect in the Info.plist as it is not possible to update the value in
+    # Info.plist at this point (the file has been copied by a different target
+    # and ninja would consider the build dirty if it was updated).
+    #
+    # Also checks that the name of the bundle is correct too (does not cause the
+    # build to be considered dirty, but still terminate the script in case of an
+    # incorrect bundle name).
+    #
+    # Apple documentation is available at:
+    # https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
+    bundle_name = os.path.splitext(os.path.basename(bundle.path))[0]
+    errors = bundle.Validate(
+        {
+            'CFBundleName': bundle_name,
+            'CFBundleExecutable': bundle_name,
+        }
     )
+    if errors:
+        for key in sorted(errors):
+            value, expected_value = errors[key]
+            sys.stderr.write(
+                '%s: error: %s value incorrect: %s != %s\n'
+                % (bundle.path, key, value, expected_value)
+            )
+        sys.stderr.flush()
+        sys.exit(1)
 
+    # Delete existing code signature.
+    if os.path.exists(bundle.signature_dir):
+        shutil.rmtree(bundle.signature_dir)
 
-class CodeSignBundleAction:
-    """Class implementing the code-sign-bundle action."""
+    # Copy main binary into bundle.
+    if not os.path.isdir(bundle.executable_dir):
+        os.makedirs(bundle.executable_dir)
+    shutil.copy(args.binary, bundle.binary_path)
 
-    name = 'code-sign-bundle'
-    help = 'perform code signature for a bundle'
+    if args.no_signature:
+        return
 
-    @staticmethod
-    def _Execute(args):
-        if not args.identity:
-            args.identity = '-'
+    codesign_extra_args = []
 
-        bundle = Bundle(args.path)
-
-        if args.partial_info_plist:
-            GenerateBundleInfoPlist(bundle, args.plist_compiler_path, args.partial_info_plist)
-
-        # The bundle Info.plist may have been updated by GenerateBundleInfoPlist()
-        # above. Load the bundle information from Info.plist after the modification
-        # have been written to disk.
-        bundle.Load()
-
-        # According to Apple documentation, the application binary must be the same
-        # as the bundle name without the .app suffix. See crbug.com/740476 for more
-        # information on what problem this can cause.
-        #
-        # To prevent this class of error, fail with an error if the binary name is
-        # incorrect in the Info.plist as it is not possible to update the value in
-        # Info.plist at this point (the file has been copied by a different target
-        # and ninja would consider the build dirty if it was updated).
-        #
-        # Also checks that the name of the bundle is correct too (does not cause the
-        # build to be considered dirty, but still terminate the script in case of an
-        # incorrect bundle name).
-        #
-        # Apple documentation is available at:
-        # https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
-        bundle_name = os.path.splitext(os.path.basename(bundle.path))[0]
-        errors = bundle.Validate(
-            {
-                'CFBundleName': bundle_name,
-                'CFBundleExecutable': bundle_name,
-            }
-        )
-        if errors:
-            for key in sorted(errors):
-                value, expected_value = errors[key]
-                sys.stderr.write(
-                    '%s: error: %s value incorrect: %s != %s\n'
-                    % (bundle.path, key, value, expected_value)
-                )
-            sys.stderr.flush()
-            sys.exit(1)
-
-        # Delete existing code signature.
-        if os.path.exists(bundle.signature_dir):
-            shutil.rmtree(bundle.signature_dir)
-
-        # Copy main binary into bundle.
-        if not os.path.isdir(bundle.executable_dir):
-            os.makedirs(bundle.executable_dir)
-        shutil.copy(args.binary, bundle.binary_path)
-
-        if args.no_signature:
-            return
-
-        codesign_extra_args = []
-
-        CodeSignBundle(bundle.path, args.identity, codesign_extra_args)
+    CodeSignBundle(bundle.path, args.identity, codesign_extra_args)
 
 
 def Main():
     parser = argparse.ArgumentParser('codesign')
 
-    parser.set_defaults(func=CodeSignBundleAction._Execute)
+    parser.set_defaults(func=Execute)
 
-    parser.add_argument(
-        '--entitlements',
-        '-e',
-        dest='entitlements_path',
-        help='path to the entitlements file to use',
-    )
-    parser.add_argument('path', help='path to the iOS bundle to codesign')
+    parser.add_argument('path', help='path to the macOS bundle to codesign')
     parser.add_argument('--identity', '-i', required=True, help='identity to use to codesign')
-    parser.add_argument('--binary', '-b', required=True, help='path to the iOS bundle binary')
-    parser.add_argument(
-        '--framework',
-        '-F',
-        action='append',
-        default=[],
-        dest='frameworks',
-        help='install and resign system framework',
-    )
+    parser.add_argument('--binary', '-b', required=True, help='path to the macOS bundle binary')
     parser.add_argument(
         '--disable-code-signature',
         action='store_true',
         dest='no_signature',
         help='disable code signature',
-    )
-    parser.add_argument(
-        '--partial-info-plist',
-        '-p',
-        action='append',
-        default=[],
-        help='path to partial Info.plist to merge to create bundle Info.plist',
-    )
-    parser.add_argument(
-        '--plist-compiler-path',
-        '-P',
-        action='store',
-        help='path to the plist compiler script (for --partial-info-plist)',
     )
     parser.set_defaults(no_signature=False)
 

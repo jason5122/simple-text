@@ -162,61 +162,11 @@ def GenerateBundleInfoPlist(bundle, plist_compiler, partial_plist):
     )
 
 
-class Action(object):
-    """Class implementing one action supported by the script."""
-
-    @classmethod
-    def Register(cls, subparsers):
-        parser = subparsers.add_parser(cls.name, help=cls.help)
-        parser.set_defaults(func=cls._Execute)
-        cls._Register(parser)
-
-
-class CodeSignBundleAction(Action):
+class CodeSignBundleAction:
     """Class implementing the code-sign-bundle action."""
 
     name = 'code-sign-bundle'
     help = 'perform code signature for a bundle'
-
-    @staticmethod
-    def _Register(parser):
-        parser.add_argument(
-            '--entitlements',
-            '-e',
-            dest='entitlements_path',
-            help='path to the entitlements file to use',
-        )
-        parser.add_argument('path', help='path to the iOS bundle to codesign')
-        parser.add_argument('--identity', '-i', required=True, help='identity to use to codesign')
-        parser.add_argument('--binary', '-b', required=True, help='path to the iOS bundle binary')
-        parser.add_argument(
-            '--framework',
-            '-F',
-            action='append',
-            default=[],
-            dest='frameworks',
-            help='install and resign system framework',
-        )
-        parser.add_argument(
-            '--disable-code-signature',
-            action='store_true',
-            dest='no_signature',
-            help='disable code signature',
-        )
-        parser.add_argument(
-            '--partial-info-plist',
-            '-p',
-            action='append',
-            default=[],
-            help='path to partial Info.plist to merge to create bundle Info.plist',
-        )
-        parser.add_argument(
-            '--plist-compiler-path',
-            '-P',
-            action='store',
-            help='path to the plist compiler script (for --partial-info-plist)',
-        )
-        parser.set_defaults(no_signature=False)
 
     @staticmethod
     def _Execute(args):
@@ -283,10 +233,47 @@ class CodeSignBundleAction(Action):
 
 
 def Main():
-    parser = argparse.ArgumentParser('codesign iOS bundles')
-    subparsers = parser.add_subparsers()
+    parser = argparse.ArgumentParser('codesign')
 
-    CodeSignBundleAction.Register(subparsers)
+    parser.set_defaults(func=CodeSignBundleAction._Execute)
+
+    parser.add_argument(
+        '--entitlements',
+        '-e',
+        dest='entitlements_path',
+        help='path to the entitlements file to use',
+    )
+    parser.add_argument('path', help='path to the iOS bundle to codesign')
+    parser.add_argument('--identity', '-i', required=True, help='identity to use to codesign')
+    parser.add_argument('--binary', '-b', required=True, help='path to the iOS bundle binary')
+    parser.add_argument(
+        '--framework',
+        '-F',
+        action='append',
+        default=[],
+        dest='frameworks',
+        help='install and resign system framework',
+    )
+    parser.add_argument(
+        '--disable-code-signature',
+        action='store_true',
+        dest='no_signature',
+        help='disable code signature',
+    )
+    parser.add_argument(
+        '--partial-info-plist',
+        '-p',
+        action='append',
+        default=[],
+        help='path to partial Info.plist to merge to create bundle Info.plist',
+    )
+    parser.add_argument(
+        '--plist-compiler-path',
+        '-P',
+        action='store',
+        help='path to the plist compiler script (for --partial-info-plist)',
+    )
+    parser.set_defaults(no_signature=False)
 
     args = parser.parse_args()
     args.func(args)

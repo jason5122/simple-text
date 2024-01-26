@@ -103,7 +103,6 @@ template("macos_app_bundle") {
       "-i=" + _code_signing_identity,
       "-b=" + rebase_path("$target_gen_dir/$_executable_target/$_output_name",
                           root_build_dir),
-      "--disable-embedded-mobileprovision",
       rebase_path(bundle_root_dir, root_build_dir),
     ]
   }

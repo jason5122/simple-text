@@ -9,9 +9,10 @@ macos_app_bundle("app") {
   # define `code_signing_identity` in args.gn
 
   sources = [
-    "AppDelegate.m",
+    "AppDelegate.mm",
     "controller/WindowController.mm",
-    "main.m",
+    "main.cc",
+    "main_mac.mm",
     "model/Atlas.cc",
     "model/AtlasRenderer.cc",
     "model/CursorRenderer.cc",

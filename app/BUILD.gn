@@ -16,12 +16,6 @@ mac_app_bundle("app") {
 
   frameworks = [ "Cocoa.framework" ]
 
-  cflags = [
-    "-flto=thin",
-    "-O3",
-  ]
-  ldflags = cflags
-
   deps = [
     ":icon",
     ":sample_files",

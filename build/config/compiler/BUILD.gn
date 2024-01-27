@@ -1,0 +1,38 @@
+config("default_include_dirs") {
+  include_dirs = [
+    "//",
+    root_gen_dir,
+  ]
+}
+
+config("compiler") {
+  cflags = []
+  cflags_c = []
+  cflags_cc = []
+  cflags_objc = []
+  cflags_objcc = []
+  ldflags = []
+
+  cflags_c += [ "-std=c11" ]
+  cflags_cc += [ "-std=c++17" ]
+
+  # Pass the same C/C++ flags to the Objective-C/C++ compiler.
+  cflags_objc += cflags_c
+  cflags_objcc += cflags_cc
+
+  cflags += [
+    "-flto=thin",
+    "-O2",
+  ]
+}
+
+if (is_mac) {
+  config("enable_arc") {
+    common_flags = [
+      "-fobjc-arc",
+      "-fno-objc-arc-exceptions",
+    ]
+    cflags_objc = common_flags
+    cflags_objcc = common_flags
+  }
+}

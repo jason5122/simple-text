@@ -1,3 +1,0 @@
-declare_args() {
-  mac_deployment_target = "12.3"
-}

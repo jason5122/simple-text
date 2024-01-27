@@ -1,0 +1,34 @@
+if (target_os == "") {
+  target_os = host_os
+}
+if (target_cpu == "") {
+  target_cpu = host_cpu
+}
+
+is_mac = target_os == "mac"
+is_linux = target_os == "linux"
+is_win = target_os == "win"
+
+default_compiler_configs = [
+  "//build/config/compiler",
+  "//build/config/compiler:default_include_dirs",
+]
+
+if (is_mac) {
+  default_compiler_configs += [ "//build/config/compiler:enable_arc" ]
+}
+
+set_defaults("executable") {
+  configs = default_compiler_configs
+}
+set_defaults("static_library") {
+  configs = default_compiler_configs
+}
+set_defaults("shared_library") {
+  configs = default_compiler_configs
+}
+set_defaults("source_set") {
+  configs = default_compiler_configs
+}
+
+set_default_toolchain("//build/toolchain/$target_os:clang_$target_cpu")

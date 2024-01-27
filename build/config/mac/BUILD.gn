@@ -1,0 +1,20 @@
+config("compiler") {
+  # CPU architecture.
+  if (target_cpu == "x64") {
+    clang_arch = "x86_64"
+  } else if (target_cpu == "arm64") {
+    clang_arch = target_cpu
+  } else {
+    assert(false, "unknown target_cpu $target_cpu")
+  }
+
+  # These flags are shared between the C compiler and linker.
+  common_mac_flags = [
+    "-arch",
+    clang_arch,
+  ]
+
+  asmflags = common_mac_flags
+  cflags = common_mac_flags
+  ldflags = common_mac_flags
+}

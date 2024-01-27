@@ -12,6 +12,11 @@ config("compiler") {
   cflags_objc = []
   cflags_objcc = []
   ldflags = []
+  configs = []
+
+  if (is_mac) {
+    configs += [ "//build/config/mac:compiler" ]
+  }
 
   cflags_c += [ "-std=c11" ]
   cflags_cc += [ "-std=c++17" ]

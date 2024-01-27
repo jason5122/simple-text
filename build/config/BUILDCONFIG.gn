@@ -31,4 +31,4 @@ set_defaults("source_set") {
   configs = default_compiler_configs
 }
 
-set_default_toolchain("//build/toolchain/$target_os:clang_$target_cpu")
+set_default_toolchain("//build/toolchain/$target_os:clang")

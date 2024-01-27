@@ -1,8 +1,8 @@
 #import "Renderer.h"
+#import "third_party/tree_sitter/include/tree_sitter/api.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
-#include <tree_sitter/api.h>
 
 struct InstanceData {
     // grid_coords

@@ -1,34 +1,50 @@
 #import "Rasterizer.h"
 #import "app/util/CGFloatUtil.h"
 #import "app/util/LogUtil.h"
+#import "font/util/CTFontUtil.h"
+#import <Cocoa/Cocoa.h>
 
-Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size) {
+class Rasterizer::impl {
+public:
+    CTFontRef mainFont;
+    CTFontRef emojiFont;
+    Metrics metrics;
+
+    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef);
+};
+
+Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size)
+    : pimpl{new impl{}} {
     CFStringRef mainFontName =
         CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
     CFStringRef emojiFontName =
         CFStringCreateWithCString(nullptr, emoji_font_name.c_str(), kCFStringEncodingUTF8);
-    mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
-    emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
 
-    metrics = CTFontGetMetrics(mainFont);
+    pimpl->mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
+    pimpl->emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
+    pimpl->metrics = CTFontGetMetrics(pimpl->mainFont);
 
-    if (CTFontIsMonospace(mainFont)) {
+    if (CTFontIsMonospace(pimpl->mainFont)) {
         LogDefault(@"Rasterizer", @"Using monospace font.");
     }
 }
 
 RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
-    CGGlyph glyph_index =
-        emoji ? CTFontGetEmojiGlyphIndex(emojiFont) : CTFontGetGlyphIndex(mainFont, ch);
-    CTFontRef fontRef = emoji ? emojiFont : mainFont;
-    return rasterizeGlyph(glyph_index, fontRef);
+    CGGlyph glyph_index = emoji ? CTFontGetEmojiGlyphIndex(pimpl->emojiFont)
+                                : CTFontGetGlyphIndex(pimpl->mainFont, ch);
+    CTFontRef fontRef = emoji ? pimpl->emojiFont : pimpl->mainFont;
+    return pimpl->rasterizeGlyph(glyph_index, fontRef);
 }
 
 bool Rasterizer::isFontMonospace() {
-    return CTFontIsMonospace(mainFont);
+    return CTFontIsMonospace(pimpl->mainFont);
 }
 
-RasterizedGlyph Rasterizer::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef) {
+Metrics Rasterizer::metrics() {
+    return pimpl->metrics;
+}
+
+RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef) {
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
     // LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,

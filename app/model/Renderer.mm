@@ -1,4 +1,5 @@
 #import "Renderer.h"
+#import "app/util/CGFloatUtil.h"
 #import "app/util/FileUtil.h"
 #import "app/util/LogUtil.h"
 #import "app/util/OpenGLErrorUtil.h"
@@ -118,7 +119,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
 
-    Metrics metrics = rasterizer->metrics;
+    Metrics metrics = rasterizer->metrics();
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
     float cell_height = CGFloat_floor(metrics.line_height + 2);
 
@@ -240,7 +241,7 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
 
     bool infinite_scroll = true;
 
-    Metrics metrics = rasterizer->metrics;
+    Metrics metrics = rasterizer->metrics();
     float cell_width = CGFloat_floor(metrics.average_advance + 1);
     float cell_height = CGFloat_floor(metrics.line_height + 2);
 

@@ -3,7 +3,7 @@
 #import "app/model/Atlas.h"
 #import "app/model/AtlasRenderer.h"
 #import "app/model/CursorRenderer.h"
-#import "app/model/Rasterizer.h"
+#import "font/Rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
 #import <map>

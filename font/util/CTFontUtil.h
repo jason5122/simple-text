@@ -2,13 +2,8 @@
 
 #import "app/util/CGFloatUtil.h"
 #import "app/util/LogUtil.h"
+#import "font/types/Metrics.h"
 #import <Cocoa/Cocoa.h>
-
-struct Metrics {
-    double average_advance;
-    double line_height;
-    double descent;
-};
 
 static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {
     NSString* chString = [NSString stringWithFormat:@"%c", ch];

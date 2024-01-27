@@ -16,7 +16,6 @@ macos_app_bundle("app") {
     "model/Atlas.cc",
     "model/AtlasRenderer.cc",
     "model/CursorRenderer.cc",
-    "model/Rasterizer.mm",
     "model/Renderer.mm",
     "util/FileUtil.mm",
     "util/LogUtil.mm",
@@ -42,6 +41,7 @@ macos_app_bundle("app") {
     ":sample_files",
     ":shaders",
     ":tree_sitter_queries",
+    "//font",
     "//third_party/freetype",
     "//third_party/tree_sitter",
   ]

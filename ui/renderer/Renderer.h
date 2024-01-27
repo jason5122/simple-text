@@ -4,7 +4,6 @@
 #import "ui/renderer/Atlas.h"
 #import "ui/renderer/AtlasRenderer.h"
 #import "ui/renderer/CursorRenderer.h"
-#import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
 #import <map>
 #import <string>

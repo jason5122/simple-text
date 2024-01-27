@@ -1,4 +1,5 @@
 #import "LogUtil.h"
+#import <os/log.h>
 
 const NSString* bundleId = NSBundle.mainBundle.bundleIdentifier;
 
@@ -19,5 +20,21 @@ void LogError(NSString* category, NSString* format, ...) {
     va_list args;
     va_start(args, format);
     Logv(OS_LOG_TYPE_ERROR, category, format, args);
+    va_end(args);
+}
+
+void LogDefault(const char* category, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    Logv(OS_LOG_TYPE_DEFAULT, [NSString stringWithUTF8String:category],
+         [NSString stringWithUTF8String:format], args);
+    va_end(args);
+}
+
+void LogError(const char* category, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    Logv(OS_LOG_TYPE_ERROR, [NSString stringWithUTF8String:category],
+         [NSString stringWithUTF8String:format], args);
     va_end(args);
 }

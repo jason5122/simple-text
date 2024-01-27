@@ -5,5 +5,5 @@
 #endif
 
 int main() {
-    return os_main();
+    return SimpleTextMain();
 }

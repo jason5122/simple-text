@@ -1,6 +1,5 @@
 #import "Renderer.h"
 #import "third_party/tree_sitter/include/tree_sitter/api.h"
-#import "util/CGFloatUtil.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
 #import "util/OpenGLErrorUtil.h"
@@ -45,7 +44,7 @@ void Renderer::treeSitterExperiment() {
 
     // Print the syntax tree as an S-expression.
     // char* string = ts_node_string(root_node);
-    // LogDefault(@"Renderer", @"Syntax tree: \n%s", string);
+    // LogDefault("Renderer", "Syntax tree: \n%s", string);
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
@@ -84,7 +83,7 @@ void Renderer::treeSitterExperiment() {
 
         if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
             // DEV: This significantly slows down highlighting. Only enable when debugging.
-            // LogDefault(@"Renderer", @"%d, [%d, %d], %s", node.id, start_byte, end_byte,
+            // LogDefault("Renderer", "%d, [%d, %d], %s", node.id, start_byte, end_byte,
             //            capture_names[capture.index]);
 
             highlight_ranges.push_back({start_byte, end_byte});
@@ -120,8 +119,8 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     atlas_renderer = new AtlasRenderer(width, height);
 
     Metrics metrics = rasterizer->metrics();
-    float cell_width = CGFloat_floor(metrics.average_advance + 1);
-    float cell_height = CGFloat_floor(metrics.line_height + 2);
+    float cell_width = std::floor(metrics.average_advance + 1);
+    float cell_height = std::floor(metrics.line_height + 2);
 
     cursor_renderer = new CursorRenderer(width, height, cell_width, cell_height);
 
@@ -138,7 +137,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
-    LogDefault(@"Renderer", @"Tree-sitter: %ld µs (%f fps)", microseconds, fps);
+    LogDefault("Renderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
 
     // Font experiments.
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
@@ -158,7 +157,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
 
     //     if (CFEqual(style, CFSTR("Italic"))) {
-    //         LogDefault(@"Renderer", @"%@ %@", familyName, style);
+    //         LogDefault("Renderer", "%@ %@", familyName, style);
     //         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, font_size, nullptr);
     //         this->mainFont = tempFont;
     //     }
@@ -242,8 +241,8 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     bool infinite_scroll = true;
 
     Metrics metrics = rasterizer->metrics();
-    float cell_width = CGFloat_floor(metrics.average_advance + 1);
-    float cell_height = CGFloat_floor(metrics.line_height + 2);
+    float cell_width = std::floor(metrics.average_advance + 1);
+    float cell_height = std::floor(metrics.line_height + 2);
 
     int row_offset = scroll_y / -cell_height;
     if (row_offset < 0) row_offset = 0;
@@ -305,13 +304,13 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
                 text_color.b,
                 glyph.colored,
                 // advance
-                static_cast<float>(CGFloat_round(total_advance)),
+                static_cast<float>(std::round(total_advance)),
             });
 
             total_advance += glyph.advance;
             // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
             if (rasterizer->isFontMonospace()) {
-                total_advance = CGFloat_round(total_advance + 1);
+                total_advance = std::round(total_advance + 1);
             }
 
             byte_offset++;
@@ -340,8 +339,8 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     uint16_t cursor_col = round(cursor_x / cell_width);
     uint16_t cursor_row = (height - cursor_y) / cell_height;
 
-    LogDefault(@"Renderer", @"pixels: %f %f", cursor_x, height - cursor_y);
-    LogDefault(@"Renderer", @"cursor: (%d, %d)", cursor_col, cursor_row);
+    LogDefault("Renderer", "pixels: %f %f", cursor_x, height - cursor_y);
+    LogDefault("Renderer", "cursor: (%d, %d)", cursor_col, cursor_row);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
     glEnable(GL_BLEND);
 

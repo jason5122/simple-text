@@ -1,1 +1,1 @@
-int os_main();
+int SimpleTextMain();

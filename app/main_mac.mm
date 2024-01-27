@@ -1,7 +1,7 @@
 #import "AppDelegate.h"
 #import <Cocoa/Cocoa.h>
 
-int os_main() {
+int SimpleTextMain() {
     @autoreleasepool {
         NSApplication* app = NSApplication.sharedApplication;
         AppDelegate* appDelegate = [[AppDelegate alloc] init];

@@ -5,7 +5,7 @@ source_set("ui") {
     "renderer/Atlas.cc",
     "renderer/AtlasRenderer.cc",
     "renderer/CursorRenderer.cc",
-    "renderer/Renderer.mm",
+    "renderer/Renderer.cc",
   ]
 
   frameworks = [

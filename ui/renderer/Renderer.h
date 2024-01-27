@@ -1,13 +1,13 @@
 #pragma once
 
-#import "font/Rasterizer.h"
-#import "ui/renderer/Atlas.h"
-#import "ui/renderer/AtlasRenderer.h"
-#import "ui/renderer/CursorRenderer.h"
-#import <OpenGL/gl3.h>
-#import <map>
-#import <string>
-#import <vector>
+#include "font/Rasterizer.h"
+#include "ui/renderer/Atlas.h"
+#include "ui/renderer/AtlasRenderer.h"
+#include "ui/renderer/CursorRenderer.h"
+#include <OpenGL/gl3.h>
+#include <map>
+#include <string>
+#include <vector>
 
 struct Rgb {
     uint8_t r;

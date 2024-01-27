@@ -1,8 +1,8 @@
-#import "Renderer.h"
-#import "third_party/tree_sitter/include/tree_sitter/api.h"
-#import "util/FileUtil.h"
-#import "util/LogUtil.h"
-#import "util/OpenGLErrorUtil.h"
+#include "Renderer.h"
+#include "third_party/tree_sitter/include/tree_sitter/api.h"
+#include "util/FileUtil.h"
+#include "util/LogUtil.h"
+#include "util/OpenGLErrorUtil.h"
 
 struct InstanceData {
     // grid_coords
@@ -53,7 +53,7 @@ void Renderer::treeSitterExperiment() {
                                   &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        LogError(@"Renderer", @"Error creating new TSQuery. error_offset: %d, error type: %d",
+        LogError("Renderer", "Error creating new TSQuery. error_offset: %d, error type: %d",
                  error_offset, error_type);
     }
 

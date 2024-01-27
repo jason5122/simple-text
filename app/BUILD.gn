@@ -1,7 +1,7 @@
 import("//build/config/mac/templates/icon.gni")
-import("//build/config/mac/templates/macos_app_bundle.gni")
+import("//build/config/mac/templates/mac_app_bundle.gni")
 
-macos_app_bundle("app") {
+mac_app_bundle("app") {
   output_name = "Simple Text"
   bundle_identifier = "com.jason5122.simple-text"
   info_plist = "resources/Info.plist"
@@ -10,25 +10,11 @@ macos_app_bundle("app") {
 
   sources = [
     "AppDelegate.mm",
-    "controller/WindowController.mm",
     "main.cc",
     "main_mac.mm",
-    "model/Atlas.cc",
-    "model/AtlasRenderer.cc",
-    "model/CursorRenderer.cc",
-    "model/Renderer.mm",
-    "util/FileUtil.mm",
-    "util/LogUtil.mm",
-    "view/EditorView.mm",
   ]
 
-  frameworks = [
-    "Cocoa.framework",
-    "QuartzCore.framework",
-    "OpenGL.framework",
-  ]
-
-  defines = [ "GL_SILENCE_DEPRECATION" ]
+  frameworks = [ "Cocoa.framework" ]
 
   cflags = [
     "-flto=thin",
@@ -44,6 +30,8 @@ macos_app_bundle("app") {
     "//font",
     "//third_party/freetype",
     "//third_party/tree_sitter",
+    "//ui",
+    "//util",
   ]
 }
 

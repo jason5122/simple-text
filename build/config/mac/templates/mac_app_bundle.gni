@@ -4,7 +4,7 @@ declare_args() {
   code_signing_identity = ""
 }
 
-template("macos_app_bundle") {
+template("mac_app_bundle") {
   _output_name = target_name
   if (defined(invoker.output_name)) {
     _output_name = invoker.output_name

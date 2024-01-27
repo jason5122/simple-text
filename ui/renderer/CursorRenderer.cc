@@ -1,6 +1,6 @@
 #import "CursorRenderer.h"
-#import "app/model/Atlas.h"
-#import "app/util/FileUtil.h"
+#import "ui/renderer/Atlas.h"
+#import "util/FileUtil.h"
 
 CursorRenderer::CursorRenderer(float width, float height, float cell_width, float cell_height)
     : cell_width(cell_width), cell_height(cell_height) {

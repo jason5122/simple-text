@@ -1,6 +1,6 @@
 #import "AtlasRenderer.h"
-#import "app/model/Atlas.h"
-#import "app/util/FileUtil.h"
+#import "ui/renderer/Atlas.h"
+#import "util/FileUtil.h"
 
 AtlasRenderer::AtlasRenderer(float width, float height) {
     this->linkShaders();

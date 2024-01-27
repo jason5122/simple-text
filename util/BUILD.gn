@@ -1,0 +1,8 @@
+source_set("util") {
+  sources = [
+    "FileUtil.mm",
+    "LogUtil.mm",
+  ]
+
+  frameworks = [ "Cocoa.framework" ]
+}

@@ -1,7 +1,7 @@
 #import "Rasterizer.h"
-#import "app/util/CGFloatUtil.h"
-#import "app/util/LogUtil.h"
-#import "font/util/CTFontUtil.h"
+#import "util/CGFloatUtil.h"
+#import "util/CTFontUtil.h"
+#import "util/LogUtil.h"
 #import <Cocoa/Cocoa.h>
 
 class Rasterizer::impl {

@@ -1,0 +1,20 @@
+source_set("ui") {
+  sources = [
+    "mac/EditorView.mm",
+    "mac/WindowController.mm",
+    "renderer/Atlas.cc",
+    "renderer/AtlasRenderer.cc",
+    "renderer/CursorRenderer.cc",
+    "renderer/Renderer.mm",
+  ]
+
+  frameworks = [
+    "Cocoa.framework",
+    "QuartzCore.framework",
+    "OpenGL.framework",
+  ]
+
+  defines = [ "GL_SILENCE_DEPRECATION" ]
+
+  deps = [ "//util" ]
+}

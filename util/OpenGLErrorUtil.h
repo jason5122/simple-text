@@ -1,4 +1,4 @@
-#import "app/util/LogUtil.h"
+#import "util/LogUtil.h"
 
 static inline void glPrintError() {
     GLenum error = glGetError();

@@ -1,9 +1,9 @@
 #pragma once
 
-#import "app/model/Atlas.h"
-#import "app/model/AtlasRenderer.h"
-#import "app/model/CursorRenderer.h"
 #import "font/Rasterizer.h"
+#import "ui/renderer/Atlas.h"
+#import "ui/renderer/AtlasRenderer.h"
+#import "ui/renderer/CursorRenderer.h"
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
 #import <map>

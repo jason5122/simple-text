@@ -1,4 +1,4 @@
-#import "app/view/EditorView.h"
+#import "ui/mac/EditorView.h"
 #import <Cocoa/Cocoa.h>
 
 @interface WindowController : NSWindowController {

@@ -1,6 +1,6 @@
 #import "Rasterizer.h"
-#import "util/CGFloatUtil.h"
-#import "util/LogUtil.h"
+#import "app/util/CGFloatUtil.h"
+#import "app/util/LogUtil.h"
 
 Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size) {
     CFStringRef mainFontName =

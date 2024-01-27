@@ -1,7 +1,7 @@
 #pragma once
 
-#import "util/CGFloatUtil.h"
-#import "util/LogUtil.h"
+#import "app/util/CGFloatUtil.h"
+#import "app/util/LogUtil.h"
 #import <Cocoa/Cocoa.h>
 
 struct Metrics {

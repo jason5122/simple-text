@@ -1,7 +1,7 @@
 #pragma once
 
-#import "model/RasterizedGlyph.h"
-#import "util/CTFontUtil.h"
+#import "app/model/RasterizedGlyph.h"
+#import "app/util/CTFontUtil.h"
 #import <Cocoa/Cocoa.h>
 
 class Rasterizer {

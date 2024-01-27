@@ -29,15 +29,6 @@ macos_app_bundle("app") {
     "OpenGL.framework",
   ]
 
-  include_dirs = [
-    # TODO: Remove these and use full paths to headers like Chromium.
-    "//app",
-    # TODO: Remove this and automatically include headers using `public` keyword instead
-    # "third_party/freetype/include",
-    # "third_party/tree-sitter/include",
-    # "third_party/tree-sitter-highlight/include",
-  ]
-
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
   cflags = [

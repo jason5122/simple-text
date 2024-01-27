@@ -1,7 +1,7 @@
 #import "EditorView.h"
-#import "model/Renderer.h"
-#import "util/FileUtil.h"
-#import "util/LogUtil.h"
+#import "app/model/Renderer.h"
+#import "app/util/FileUtil.h"
+#import "app/util/LogUtil.h"
 #include <fstream>
 #import <sstream>
 #import <string>

@@ -20,6 +20,8 @@
 
         editorView = [[EditorView alloc] initWithFrame:frameRect];
         self.window.contentView = editorView;
+
+        [self.window makeFirstResponder:editorView];
     }
     return self;
 }

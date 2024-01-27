@@ -6,7 +6,7 @@ template("icon") {
   _compile_output = "$target_out_dir/$_compile_target/{{source_name_part}}.icns"
 
   action_foreach(_compile_target) {
-    script = "//build/config/mac/scripts/generate_icon.py"
+    script = "//build/config/mac/generate_icon.py"
     sources = invoker.sources
     outputs = [ _compile_output ]
     args = [

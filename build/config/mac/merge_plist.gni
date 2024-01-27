@@ -57,7 +57,7 @@ template("merge_plist") {
                              "substitutions_json",
                            ])
 
-    script = "//build/config/mac/scripts/merge_plist.py"
+    script = "//build/config/mac/merge_plist.py"
     sources = invoker.plists
     outputs = [ invoker.output ]
 

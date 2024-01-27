@@ -1,5 +1,5 @@
-import("//build/config/mac/templates/icon.gni")
-import("//build/config/mac/templates/mac_app_bundle.gni")
+import("//build/config/mac/icon.gni")
+import("//build/config/mac/mac_app_bundle.gni")
 
 mac_app_bundle("app") {
   output_name = "Simple Text"

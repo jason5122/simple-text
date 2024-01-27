@@ -1,4 +1,4 @@
-import("//build/config/mac/templates/merge_plist.gni")
+import("//build/config/mac/merge_plist.gni")
 
 declare_args() {
   code_signing_identity = ""
@@ -60,7 +60,7 @@ template("mac_app_bundle") {
     format = "xml1"
     output = "$target_out_dir/$_plist_target/Info.plist"
 
-    plists = [ "//build/config/mac/resources/Info.plist" ]
+    plists = [ "//build/config/mac/Info.plist" ]
     if (defined(invoker.info_plist)) {
       plists += [ invoker.info_plist ]
     }
@@ -90,7 +90,7 @@ template("mac_app_bundle") {
     bundle_resources_dir = "$bundle_contents_dir/Resources"
     bundle_executable_dir = "$bundle_contents_dir/MacOS"
 
-    code_signing_script = "//build/config/mac/scripts/codesign.py"
+    code_signing_script = "//build/config/mac/codesign.py"
     code_signing_sources =
         [ "$target_gen_dir/$_executable_target/$_output_name" ]
     code_signing_outputs = [

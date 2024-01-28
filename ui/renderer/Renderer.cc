@@ -234,7 +234,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
 }
 
 void Renderer::renderText(std::vector<std::string> text, float scroll_x, float scroll_y,
-                          float cursor_x, float cursor_y) {
+                          float cursor_x, float cursor_y, float drag_x, float drag_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -358,8 +358,12 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     uint16_t cursor_col = round(cursor_x / cell_width);
     uint16_t cursor_row = (height - cursor_y) / cell_height;
 
+    uint16_t drag_col = round(drag_x / cell_width);
+    uint16_t drag_row = (height - drag_y) / cell_height;
+
     LogDefault("Renderer", "pixels: %f %f", cursor_x, height - cursor_y);
     LogDefault("Renderer", "cursor: (%d, %d)", cursor_col, cursor_row);
+    LogDefault("Renderer", "drag: (%d, %d)", drag_col, drag_row);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
     glEnable(GL_BLEND);
 

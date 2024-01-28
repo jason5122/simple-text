@@ -11,6 +11,7 @@
 @public
     float x, y;
     CGPoint cursorPoint;
+    CGPoint dragPoint;
 
 @private
     Renderer* renderer;
@@ -103,6 +104,17 @@
     [self.layer setNeedsDisplay];
 }
 
+- (void)mouseDragged:(NSEvent*)event {
+    LogDefault(@"WindowController", @"drag: %f %f", event.locationInWindow.x,
+               event.locationInWindow.y);
+    openGLLayer->dragPoint = event.locationInWindow;
+    [self.layer setNeedsDisplay];
+}
+
+- (void)mouseUp:(NSEvent*)event {
+    LogDefault(@"WindowController", @"drag ended");
+}
+
 - (void)rightMouseUp:(NSEvent*)event {
     LogDefault(@"WindowController", @"right click");
 
@@ -186,7 +198,8 @@
                      self.frame.size.height * self.contentsScale);
 
     renderer->renderText(text, x, y, cursorPoint.x * self.contentsScale,
-                         cursorPoint.y * self.contentsScale);
+                         cursorPoint.y * self.contentsScale, dragPoint.x * self.contentsScale,
+                         dragPoint.y * self.contentsScale);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

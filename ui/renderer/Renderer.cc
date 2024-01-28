@@ -233,8 +233,8 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string>& text, float scroll_x, float scroll_y,
-                          float cursor_x, float cursor_y, float drag_x, float drag_y) {
+void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x,
+                          float cursor_y, float drag_x, float drag_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -258,8 +258,9 @@ void Renderer::renderText(std::vector<std::string>& text, float scroll_x, float 
     if (row_offset < 0) row_offset = 0;
 
     if (infinite_scroll) {
-        for (uint16_t row = 0; row < std::min(row_offset, static_cast<int>(text.size())); row++) {
-            for (uint16_t col = 0; col < text[row].size(); col++) {
+        for (uint16_t row = 0; row < std::min(row_offset, static_cast<int>(buffer.lineCount()));
+             row++) {
+            for (uint16_t col = 0; col < buffer.data[row].size(); col++) {
                 byte_offset++;
             }
             byte_offset++;
@@ -268,8 +269,9 @@ void Renderer::renderText(std::vector<std::string>& text, float scroll_x, float 
         row_offset = 0;
     }
 
-    uint16_t size =
-        infinite_scroll ? std::min(row_offset + 60, static_cast<int>(text.size())) : text.size();
+    uint16_t size = infinite_scroll
+                        ? std::min(row_offset + 60, static_cast<int>(buffer.lineCount()))
+                        : buffer.lineCount();
 
     uint16_t cursor_col = round(cursor_x / cell_width);
     uint16_t cursor_row = (height - cursor_y) / cell_height;
@@ -277,9 +279,9 @@ void Renderer::renderText(std::vector<std::string>& text, float scroll_x, float 
     uint16_t drag_col = round(drag_x / cell_width);
     uint16_t drag_row = (height - drag_y) / cell_height;
 
-    LogDefault("Renderer", "pixels: %f %f", cursor_x, height - cursor_y);
-    LogDefault("Renderer", "cursor: (%d, %d)", cursor_col, cursor_row);
-    LogDefault("Renderer", "drag: (%d, %d)", drag_col, drag_row);
+    // LogDefault("Renderer", "pixels: %f %f", cursor_x, height - cursor_y);
+    // LogDefault("Renderer", "cursor: (%d, %d)", cursor_col, cursor_row);
+    // LogDefault("Renderer", "drag: (%d, %d)", drag_col, drag_row);
 
     uint16_t start_row, start_col;
     uint16_t end_row, end_col;
@@ -297,8 +299,8 @@ void Renderer::renderText(std::vector<std::string>& text, float scroll_x, float 
 
     for (uint16_t row = row_offset; row < size; row++) {
         float total_advance = 0;
-        for (uint16_t col = 0; col < text[row].size(); col++) {
-            char ch = text[row][col];
+        for (uint16_t col = 0; col < buffer.data[row].size(); col++) {
+            char ch = buffer.data[row][col];
 
             Rgb text_color = BLACK;
 

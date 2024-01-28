@@ -16,7 +16,6 @@
 
 @private
     Renderer* renderer;
-    std::vector<std::string> text;
     std::unique_ptr<Buffer> buffer;
 }
 
@@ -172,17 +171,13 @@
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
         std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
-        std::string line;
-        while (std::getline(infile, line)) {
-            text.push_back(line);
-        }
 
-        buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
-        // buffer = std::unique_ptr<Buffer>(new Buffer(infile));
+        // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
+        buffer = std::unique_ptr<Buffer>(new Buffer(infile));
 
-        for (const std::string& line : *buffer) {
-            LogDefault("EditorView", line);
-        }
+        // for (const std::string& line : *buffer) {
+        //     LogDefault("EditorView", line);
+        // }
     }
     return context;
 }
@@ -206,7 +201,7 @@
     renderer->resize(self.frame.size.width * self.contentsScale,
                      self.frame.size.height * self.contentsScale);
 
-    renderer->renderText(text, x, y, cursorPoint.x * self.contentsScale,
+    renderer->renderText(*buffer, x, y, cursorPoint.x * self.contentsScale,
                          cursorPoint.y * self.contentsScale, dragPoint.x * self.contentsScale,
                          dragPoint.y * self.contentsScale);
 
@@ -223,7 +218,7 @@
 }
 
 - (void)insertCharacter:(char)ch {
-    text[0].push_back(ch);
+    (*buffer).data[0].push_back(ch);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)context {

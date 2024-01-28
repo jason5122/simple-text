@@ -12,6 +12,8 @@ uniform int rendering_pass;
 
 void main() {
     if (rendering_pass == 0) {
+        if (background_color.a == 0.0) discard;
+
         alpha_mask = vec4(1.0);
         color = vec4(background_color.rgb * background_color.a, background_color.a);
     } else {

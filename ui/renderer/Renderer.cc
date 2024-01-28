@@ -5,26 +5,31 @@
 #include "util/OpenGLErrorUtil.h"
 
 struct InstanceData {
-    // grid_coords
+    // Grid coordinates.
     uint16_t col;
     uint16_t row;
-    // glyph
+    // Glyph properties.
     int32_t left;
     int32_t top;
     int32_t width;
     int32_t height;
-    // uv
+    // UV mapping.
     float uv_left;
     float uv_bot;
     float uv_width;
     float uv_height;
-    // flags
+    // Color, packed with colored flag.
     uint8_t r;
     uint8_t g;
     uint8_t b;
     uint8_t colored;
-    // advance
-    float advance;
+    // Total font advance.
+    float total_advance;
+    // Background color.
+    uint8_t bg_r;
+    uint8_t bg_g;
+    uint8_t bg_b;
+    uint8_t bg_a;
 };
 
 extern "C" TSLanguage* tree_sitter_json();
@@ -57,7 +62,7 @@ void Renderer::treeSitterExperiment() {
                  error_offset, error_type);
     }
 
-    std::vector<const char*> capture_names;
+    std::vector<std::string> capture_names;
     uint32_t capture_count = ts_query_capture_count(query);
     for (int i = 0; i < capture_count; i++) {
         uint32_t length;
@@ -217,6 +222,11 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glVertexAttribDivisor(4, 1);
     size += sizeof(float);
 
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(5, 1);
+    size += 4 * sizeof(uint8_t);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -285,26 +295,31 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
 
             AtlasGlyph glyph = glyph_cache[ch];
             instances.push_back(InstanceData{
-                // grid_coords
+                // Grid coordinates.
                 col,
                 row,
-                // glyph
+                // Glyph properties.
                 glyph.left,
                 glyph.top,
                 glyph.width,
                 glyph.height,
-                // uv
+                // UV mapping.
                 glyph.uv_left,
                 glyph.uv_bot,
                 glyph.uv_width,
                 glyph.uv_height,
-                // flags
+                // Color, packed with colored flag.
                 text_color.r,
                 text_color.g,
                 text_color.b,
                 glyph.colored,
-                // advance
+                // Total font advance.
                 static_cast<float>(std::round(total_advance)),
+                // Background color.
+                YELLOW.r,
+                YELLOW.g,
+                YELLOW.b,
+                255,
             });
 
             total_advance += glyph.advance;
@@ -321,6 +336,10 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+
+    glUniform1i(glGetUniformLocation(shader_program, "rendering_pass"), 0);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glUniform1i(glGetUniformLocation(shader_program, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.

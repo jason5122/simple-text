@@ -271,6 +271,30 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     uint16_t size =
         infinite_scroll ? std::min(row_offset + 60, static_cast<int>(text.size())) : text.size();
 
+    uint16_t cursor_col = round(cursor_x / cell_width);
+    uint16_t cursor_row = (height - cursor_y) / cell_height;
+
+    uint16_t drag_col = round(drag_x / cell_width);
+    uint16_t drag_row = (height - drag_y) / cell_height;
+
+    LogDefault("Renderer", "pixels: %f %f", cursor_x, height - cursor_y);
+    LogDefault("Renderer", "cursor: (%d, %d)", cursor_col, cursor_row);
+    LogDefault("Renderer", "drag: (%d, %d)", drag_col, drag_row);
+
+    uint16_t start_row, start_col;
+    uint16_t end_row, end_col;
+    if (cursor_row < drag_row) {
+        start_row = cursor_row;
+        start_col = cursor_col;
+        end_row = drag_row;
+        end_col = drag_col;
+    } else {
+        start_row = drag_row;
+        start_col = drag_col;
+        end_row = cursor_row;
+        end_col = cursor_col;
+    }
+
     for (uint16_t row = row_offset; row < size; row++) {
         float total_advance = 0;
         for (uint16_t col = 0; col < text[row].size(); col++) {
@@ -287,6 +311,12 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
                     byte_offset < highlight_ranges[range_idx].second) {
                     text_color = highlight_colors[range_idx];
                 }
+            }
+
+            uint8_t bg_a = 0;
+            if (start_row < row && row < end_row || row == start_row && col >= start_col ||
+                row == end_row && col < end_col) {
+                bg_a = 255;
             }
 
             if (!glyph_cache.count(ch)) {
@@ -319,7 +349,7 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
                 YELLOW.r,
                 YELLOW.g,
                 YELLOW.b,
-                255,
+                bg_a,
             });
 
             total_advance += glyph.advance;
@@ -355,16 +385,8 @@ void Renderer::renderText(std::vector<std::string> text, float scroll_x, float s
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    uint16_t cursor_col = round(cursor_x / cell_width);
-    uint16_t cursor_row = (height - cursor_y) / cell_height;
 
-    uint16_t drag_col = round(drag_x / cell_width);
-    uint16_t drag_row = (height - drag_y) / cell_height;
-
-    LogDefault("Renderer", "pixels: %f %f", cursor_x, height - cursor_y);
-    LogDefault("Renderer", "cursor: (%d, %d)", cursor_col, cursor_row);
-    LogDefault("Renderer", "drag: (%d, %d)", drag_col, drag_row);
-    cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
+    cursor_renderer->draw(scroll_x, scroll_y, drag_col, drag_row);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

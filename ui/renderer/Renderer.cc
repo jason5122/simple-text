@@ -233,7 +233,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Renderer::renderText(std::vector<std::string> text, float scroll_x, float scroll_y,
+void Renderer::renderText(std::vector<std::string>& text, float scroll_x, float scroll_y,
                           float cursor_x, float cursor_y, float drag_x, float drag_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);

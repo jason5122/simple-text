@@ -23,18 +23,18 @@ void LogError(NSString* category, NSString* format, ...) {
     va_end(args);
 }
 
-void LogDefault(const char* category, const char* format, ...) {
+void LogDefault(std::string category, std::string format, ...) {
     va_list args;
     va_start(args, format);
-    Logv(OS_LOG_TYPE_DEFAULT, [NSString stringWithUTF8String:category],
-         [NSString stringWithUTF8String:format], args);
+    Logv(OS_LOG_TYPE_DEFAULT, [NSString stringWithUTF8String:category.c_str()],
+         [NSString stringWithUTF8String:format.c_str()], args);
     va_end(args);
 }
 
-void LogError(const char* category, const char* format, ...) {
+void LogError(std::string category, std::string format, ...) {
     va_list args;
     va_start(args, format);
-    Logv(OS_LOG_TYPE_ERROR, [NSString stringWithUTF8String:category],
-         [NSString stringWithUTF8String:format], args);
+    Logv(OS_LOG_TYPE_ERROR, [NSString stringWithUTF8String:category.c_str()],
+         [NSString stringWithUTF8String:format.c_str()], args);
     va_end(args);
 }

@@ -16,5 +16,8 @@ source_set("ui") {
 
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
-  deps = [ "//util" ]
+  deps = [
+    "//base",
+    "//util",
+  ]
 }

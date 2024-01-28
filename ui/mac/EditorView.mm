@@ -1,8 +1,9 @@
 #import "EditorView.h"
+#import "base/Buffer.h"
 #import "ui/renderer/Renderer.h"
 #import "util/FileUtil.h"
 #import "util/LogUtil.h"
-#include <fstream>
+#import <fstream>
 #import <sstream>
 #import <string>
 #import <vector>
@@ -16,6 +17,7 @@
 @private
     Renderer* renderer;
     std::vector<std::string> text;
+    std::unique_ptr<Buffer> buffer;
 }
 
 - (void)insertCharacter:(char)ch;
@@ -173,6 +175,13 @@
         std::string line;
         while (std::getline(infile, line)) {
             text.push_back(line);
+        }
+
+        buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
+        // buffer = std::unique_ptr<Buffer>(new Buffer(infile));
+
+        for (const std::string& line : *buffer) {
+            LogDefault("EditorView", line);
         }
     }
     return context;

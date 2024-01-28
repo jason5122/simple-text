@@ -23,36 +23,26 @@ vec2 pixelToClipSpace(vec2 point) {
 }
 
 void main() {
-    background_color = in_background_color / 255.0;
+    vec2 position;
+    position.x = (gl_VertexID == 0 || gl_VertexID == 1) ? 1. : 0.;
+    position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
+
+    vec2 cell_position = vec2(total_advance, cell_dim.y * grid_coords.y);
+    cell_position += scroll_offset;
 
     if (rendering_pass == 0) {
-        vec2 position;
-        position.x = (gl_VertexID == 0 || gl_VertexID == 1) ? 1. : 0.;
-        position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
-
-        vec2 cell_position = vec2(total_advance, cell_dim.y * grid_coords.y);
-
         cell_position += cell_dim * position;
-        cell_position += scroll_offset;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
-        tex_coords = vec2(0, 0);
+        background_color = in_background_color / 255.0;
     } else {
         vec2 glyph_offset = glyph.xy;  // <left, top>
         vec2 glyph_size = glyph.zw;    // <width, height>
         vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
         vec2 uv_size = uv.zw;          // <uv_width, uv_height>
 
-        vec2 position;
-        position.x = (gl_VertexID == 0 || gl_VertexID == 1) ? 1. : 0.;
-        position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
-
-        // Position of cell from top-left.
-        vec2 cell_position = vec2(total_advance, cell_dim.y * grid_coords.y);
         glyph_offset.y = cell_dim.y - glyph_offset.y;
-
         cell_position += glyph_offset + glyph_size * position;
-        cell_position += scroll_offset;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         tex_coords = uv_offset + uv_size * position;

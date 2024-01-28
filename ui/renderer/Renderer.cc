@@ -245,10 +245,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     glBindVertexArray(vao);
 
     std::vector<InstanceData> instances;
-    uint32_t byte_offset = 0;
     int range_idx = 0;
-
-    bool infinite_scroll = true;
 
     Metrics metrics = rasterizer->metrics();
     float cell_width = std::floor(metrics.average_advance + 1);
@@ -257,21 +254,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     int row_offset = scroll_y / -cell_height;
     if (row_offset < 0) row_offset = 0;
 
-    if (infinite_scroll) {
-        for (uint16_t row = 0; row < std::min(row_offset, static_cast<int>(buffer.lineCount()));
-             row++) {
-            for (uint16_t col = 0; col < buffer.data[row].size(); col++) {
-                byte_offset++;
-            }
-            byte_offset++;
-        }
-    } else {
-        row_offset = 0;
-    }
-
-    uint16_t size = infinite_scroll
-                        ? std::min(row_offset + 60, static_cast<int>(buffer.lineCount()))
-                        : buffer.lineCount();
+    uint32_t byte_offset = buffer.byteOfLine(row_offset);
 
     uint16_t cursor_col = round(cursor_x / cell_width);
     uint16_t cursor_row = (height - cursor_y) / cell_height;
@@ -297,6 +280,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
         end_col = cursor_col;
     }
 
+    size_t size = std::min(static_cast<size_t>(row_offset + 60), buffer.lineCount());
     for (uint16_t row = row_offset; row < size; row++) {
         float total_advance = 0;
         for (uint16_t col = 0; col < buffer.data[row].size(); col++) {

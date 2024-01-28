@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font/types/RasterizedGlyph.h"
+#include "font/types/rasterized_glyph.h"
 #include <OpenGL/gl3.h>
 
 struct AtlasGlyph {

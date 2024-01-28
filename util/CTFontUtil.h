@@ -1,8 +1,8 @@
 #pragma once
 
-#import "font/types/Metrics.h"
+#import "font/types/metrics.h"
 #import "util/CGFloatUtil.h"
-#import "util/LogUtil.h"
+#import "util/log_util.h"
 #import <Cocoa/Cocoa.h>
 
 static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {

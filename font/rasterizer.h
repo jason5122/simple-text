@@ -1,7 +1,7 @@
 #pragma once
 
-#include "font/types/Metrics.h"
-#include "font/types/RasterizedGlyph.h"
+#include "font/types/metrics.h"
+#include "font/types/rasterized_glyph.h"
 
 class Rasterizer {
 public:

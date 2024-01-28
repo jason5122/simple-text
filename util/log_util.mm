@@ -1,4 +1,4 @@
-#import "LogUtil.h"
+#import "log_util.h"
 #import <os/log.h>
 
 const NSString* bundleId = NSBundle.mainBundle.bundleIdentifier;

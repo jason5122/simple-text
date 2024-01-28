@@ -1,4 +1,4 @@
-#include "Buffer.h"
+#include "buffer.h"
 #include <sstream>
 
 Buffer::Buffer(std::string s) {

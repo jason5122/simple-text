@@ -1,10 +1,10 @@
 #pragma once
 
-#include "base/Buffer.h"
-#include "font/Rasterizer.h"
-#include "ui/renderer/Atlas.h"
-#include "ui/renderer/AtlasRenderer.h"
-#include "ui/renderer/CursorRenderer.h"
+#include "base/buffer.h"
+#include "font/rasterizer.h"
+#include "ui/renderer/atlas.h"
+#include "ui/renderer/atlas_renderer.h"
+#include "ui/renderer/cursor_renderer.h"
 #include <OpenGL/gl3.h>
 #include <map>
 #include <string>

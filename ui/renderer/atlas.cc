@@ -1,4 +1,4 @@
-#include "Atlas.h"
+#include "atlas.h"
 
 Atlas::Atlas() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

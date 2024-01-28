@@ -1,6 +1,6 @@
 #pragma once
 
-#import "util/LogUtil.h"
+#import "util/log_util.h"
 
 static inline void glPrintError() {
     GLenum error = glGetError();

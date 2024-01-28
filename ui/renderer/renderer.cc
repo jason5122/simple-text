@@ -1,8 +1,8 @@
-#include "Renderer.h"
+#include "renderer.h"
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
-#include "util/FileUtil.h"
-#include "util/LogUtil.h"
-#include "util/OpenGLErrorUtil.h"
+#include "util/file_util.h"
+#include "util/log_util.h"
+#include "util/opengl_error_util.h"
 
 struct InstanceData {
     // Grid coordinates.

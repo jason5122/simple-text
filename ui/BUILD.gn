@@ -2,10 +2,10 @@ source_set("ui") {
   sources = [
     "mac/EditorView.mm",
     "mac/WindowController.mm",
-    "renderer/Atlas.cc",
-    "renderer/AtlasRenderer.cc",
-    "renderer/CursorRenderer.cc",
-    "renderer/Renderer.cc",
+    "renderer/atlas.cc",
+    "renderer/atlas_renderer.cc",
+    "renderer/cursor_renderer.cc",
+    "renderer/renderer.cc",
   ]
 
   frameworks = [

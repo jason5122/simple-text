@@ -1,7 +1,7 @@
 source_set("util") {
   sources = [
-    "FileUtil.mm",
-    "LogUtil.mm",
+    "file_util.mm",
+    "log_util.mm",
   ]
 
   frameworks = [ "Cocoa.framework" ]

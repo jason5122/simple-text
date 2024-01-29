@@ -305,13 +305,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 }
             }
 
-            char* slice;
-            asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, line + offset);
-
-            if (ret > 1) {
-                LogDefault("Renderer", slice);
-            }
-
             uint32_t unicode_scalar = 0;
             for (int i = 0; i < ret; i++) {
                 uint8_t byte = (line + offset)[i];

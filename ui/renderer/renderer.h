@@ -8,7 +8,6 @@
 #include <OpenGL/gl3.h>
 #include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 struct Rgb {
@@ -50,7 +49,7 @@ private:
     CursorRenderer* cursor_renderer;
 
     std::map<GLchar, AtlasGlyph> glyph_cache;
-    std::unordered_map<uint32_t, AtlasGlyph> glyph_cache2;
+    std::map<uint32_t, AtlasGlyph> glyph_cache2;
 
     void linkShaders();
     void loadGlyph(char ch);

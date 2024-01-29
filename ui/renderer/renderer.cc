@@ -259,8 +259,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     int row_offset = scroll_y / -cell_height;
     if (row_offset < 0) row_offset = 0;
 
-    uint32_t byte_offset = buffer.byteOfLine(row_offset);
-
     uint16_t cursor_col = round(cursor_x / cell_width);
     uint16_t cursor_row = (height - cursor_y) / cell_height;
 
@@ -285,17 +283,17 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
         end_col = cursor_col;
     }
 
+    size_t byte_offset = buffer.byteOfLine(row_offset);
     size_t size = std::min(static_cast<size_t>(row_offset + 60), buffer.lineCount());
     for (uint16_t row = row_offset; row < size; row++) {
         const char* line = buffer.data[row].c_str();
         size_t ret;
         float total_advance = 0;
-        for (size_t offset = 0; line[offset] != '\0'; offset += ret) {
+        for (size_t offset = 0; line[offset] != '\0'; offset += ret, byte_offset += ret) {
             ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
 
             Rgb text_color = BLACK;
 
-            size_t byte_offset = buffer.byteOfLine(row) + offset;
             if (range_idx < highlight_ranges.size()) {
                 while (byte_offset >= highlight_ranges[range_idx].second) {
                     range_idx++;
@@ -425,7 +423,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
         //     byte_offset++;
         // }
-        // byte_offset++;
+        byte_offset++;
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

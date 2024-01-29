@@ -76,6 +76,15 @@
         openGLLayer->y += event.scrollingDeltaY;
         if (openGLLayer->y > 0) openGLLayer->y = 0;
 
+        // https://developer.apple.com/documentation/appkit/nsevent/1527943-pressedmousebuttons?language=objc
+        if (NSEvent.pressedMouseButtons & (1 << 0)) {
+            // Prevent scrolling cursor past top of buffer.
+            // FIXME: The behavior is still a little buggy near the top of buffer.
+            if (!(openGLLayer->y == 0 && event.scrollingDeltaY > 0)) {
+                openGLLayer->dragPoint.y += event.scrollingDeltaY;
+            }
+        }
+
         [self.layer setNeedsDisplay];
     }
 }
@@ -104,6 +113,10 @@
     openGLLayer->cursorPoint = event.locationInWindow;
     openGLLayer->cursorPoint.x += openGLLayer->x;
     openGLLayer->cursorPoint.y += openGLLayer->y;
+
+    openGLLayer->dragPoint = event.locationInWindow;
+    openGLLayer->dragPoint.x += openGLLayer->x;
+    openGLLayer->dragPoint.y += openGLLayer->y;
     [self.layer setNeedsDisplay];
 }
 

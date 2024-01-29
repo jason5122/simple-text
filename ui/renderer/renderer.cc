@@ -306,9 +306,9 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
             }
 
             uint8_t bg_a = 0;
-            // if (start_row < row && row < end_row) {
-            //     bg_a = 255;
-            // }
+            if (start_row <= row && row <= end_row) {
+                bg_a = 255;
+            }
 
             uint32_t unicode_scalar = 0;
             for (int i = 0; i < ret; i++) {
@@ -447,8 +447,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     glDisable(GL_BLEND);
 
-    cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
-    // cursor_renderer->draw(scroll_x, scroll_y, drag_col, drag_row);
+    cursor_renderer->draw(scroll_x, scroll_y, drag_col, drag_row);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

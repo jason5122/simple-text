@@ -9,13 +9,12 @@
 #
 #   - plists
 #
-#       list of path to Apple Property List file to merge (the file may be
-#       in either "json", "binary1" or "xml1" format)
+#       list of path to Apple Property List file to merge
 #
 #   - format (optional)
 #
-#       format in which the file must be saved; must be one of "json",
-#       "binary1" or "xml1" (default to "json" if omitted)
+#       format in which the file must be saved; must be one of "xml" or "binary"
+#       (default to "xml" if omitted)
 #
 #   - substitutions (optional)
 #
@@ -61,7 +60,7 @@ template("merge_plist") {
     sources = invoker.plists
     outputs = [ invoker.output ]
 
-    _format = "json"
+    _format = "xml"
     if (defined(invoker.format)) {
       _format = invoker.format
     }

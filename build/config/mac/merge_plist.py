@@ -8,35 +8,28 @@ import json
 import re
 import subprocess
 import sys
+import plistlib
 
 
-# Pattern representing a variable to substitue in a string value.
+# Pattern representing a variable to substitute in a string value.
 VARIABLE_PATTERN = re.compile(r'\$\(([^)]*)\)')
 
 
-def GetCommandOutput(command):
-    """Returns the output of `command` as a string."""
-    return subprocess.check_output(command, encoding='utf-8')
-
-
-def LoadPlist(plist_path):
+def load_plist(plist_path):
     """Loads Apple Property List file at |plist_path|."""
-    return json.loads(GetCommandOutput(['plutil', '-convert', 'json', '-o', '-', plist_path]))
+    with open(plist_path, 'rb') as fp:
+        return plistlib.load(fp)
 
 
-def SavePlist(plist_path, content, format):
+def save_plist(plist_path, content, fmt_str):
     """Saves |content| as Apple Property List in |format| at |plist_path|."""
-    proc = subprocess.Popen(
-        ['plutil', '-convert', format, '-o', plist_path, '-'], stdin=subprocess.PIPE
-    )
-    output, _ = proc.communicate(json.dumps(content).encode('utf-8'))
-    if proc.returncode:
-        raise subprocess.CalledProcessError(
-            proc.returncode, ['plutil', '-convert', format, '-o', plist_path, '-'], output
-        )
+    fmt = plistlib.FMT_XML if fmt_str == 'xml' else plistlib.FMT_BINARY
+
+    with open(plist_path, 'wb') as fp:
+        plistlib.dump(content, fp, fmt=fmt)
 
 
-def MergeObjects(obj1, obj2):
+def merge_objects(obj1, obj2):
     """Merges two objects (either dictionary, list, string or numbers)."""
     if type(obj1) != type(obj2):
         return obj2
@@ -46,7 +39,7 @@ def MergeObjects(obj1, obj2):
         for key in obj2:
             value1 = obj1.get(key, None)
             value2 = obj2.get(key, None)
-            result[key] = MergeObjects(value1, value2)
+            result[key] = merge_objects(value1, value2)
         return result
 
     if isinstance(obj2, list):
@@ -55,24 +48,24 @@ def MergeObjects(obj1, obj2):
     return obj2
 
 
-def MergePlists(plist_paths):
+def merge_plists(plist_paths):
     """Loads and merges all Apple Property List files at |plist_paths|."""
     plist = {}
     for plist_path in plist_paths:
-        plist = MergeObjects(plist, LoadPlist(plist_path))
+        plist = merge_objects(plist, load_plist(plist_path))
     return plist
 
 
-def PerformSubstitutions(plist, substitutions):
+def perform_substitutions(plist, substitutions):
     """Performs variables substitutions in |plist| given by |substitutions|."""
     if isinstance(plist, dict):
         result = dict(plist)
         for key in plist:
-            result[key] = PerformSubstitutions(plist[key], substitutions)
+            result[key] = perform_substitutions(plist[key], substitutions)
         return result
 
     if isinstance(plist, list):
-        return [PerformSubstitutions(item, substitutions) for item in plist]
+        return [perform_substitutions(item, substitutions) for item in plist]
 
     if isinstance(plist, str):
         result = plist
@@ -89,13 +82,13 @@ def PerformSubstitutions(plist, substitutions):
     return plist
 
 
-def PerformSubstitutionsFrom(plist, substitutions_path):
+def perform_substitutions_from(plist, substitutions_path):
     """Performs variable substitutions in |plist| from |substitutions_path|."""
     with open(substitutions_path) as substitutions_file:
-        return PerformSubstitutions(plist, json.load(substitutions_file))
+        return perform_substitutions(plist, json.load(substitutions_file))
 
 
-def ParseArgs(argv):
+def parse_args(argv):
     """Parses command line arguments."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -107,8 +100,8 @@ def ParseArgs(argv):
     parser.add_argument(
         '-f',
         '--format',
-        default='json',
-        choices=('json', 'binary1', 'xml1'),
+        default='xml',
+        choices=('xml', 'binary'),
         help='format of the generated file',
     )
     parser.add_argument('-o', '--output', default='-', help='path to the result; - means stdout')
@@ -118,13 +111,13 @@ def ParseArgs(argv):
 
 
 def main(argv):
-    args = ParseArgs(argv)
+    args = parse_args(argv)
 
-    data = MergePlists(args.inputs)
+    data = merge_plists(args.inputs)
     if args.substitutions:
-        data = PerformSubstitutionsFrom(data, args.substitutions)
+        data = perform_substitutions_from(data, args.substitutions)
 
-    SavePlist(args.output, data, args.format)
+    save_plist(args.output, data, args.format)
 
 
 if __name__ == '__main__':

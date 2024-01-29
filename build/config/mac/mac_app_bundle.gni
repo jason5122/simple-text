@@ -57,7 +57,6 @@ template("mac_app_bundle") {
       PRODUCT_NAME = "$_display_name"
     }
 
-    format = "xml1"
     output = "$target_out_dir/$_plist_target/Info.plist"
 
     plists = [ "//build/config/mac/Info.plist" ]

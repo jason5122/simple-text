@@ -19,7 +19,6 @@ mac_app_bundle("app") {
   deps = [
     ":icon",
     ":sample_files",
-    ":shaders",
     ":tree_sitter_queries",
     "//font",
     "//third_party/freetype",
@@ -27,22 +26,14 @@ mac_app_bundle("app") {
     "//ui",
     "//util",
   ]
+
+  if (is_mac) {
+    deps += [ "//ui/renderer:shaders" ]
+  }
 }
 
 icon("icon") {
   sources = [ "resources/app.iconset" ]
-}
-
-bundle_data("shaders") {
-  sources = [
-    "resources/shaders/atlas_frag.glsl",
-    "resources/shaders/atlas_vert.glsl",
-    "resources/shaders/cursor_frag.glsl",
-    "resources/shaders/cursor_vert.glsl",
-    "resources/shaders/text_frag.glsl",
-    "resources/shaders/text_vert.glsl",
-  ]
-  outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
 }
 
 bundle_data("sample_files") {

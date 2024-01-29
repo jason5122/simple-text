@@ -312,7 +312,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
             AtlasGlyph glyph = glyph_cache[ch];
             instances.push_back(InstanceData{
                 // Grid coordinates.
-                col,
+                0,
                 row,
                 // Glyph properties.
                 glyph.left,

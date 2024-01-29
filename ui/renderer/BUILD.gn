@@ -1,0 +1,13 @@
+if (is_mac) {
+  bundle_data("shaders") {
+    sources = [
+      "shaders/atlas_frag.glsl",
+      "shaders/atlas_vert.glsl",
+      "shaders/cursor_frag.glsl",
+      "shaders/cursor_vert.glsl",
+      "shaders/text_frag.glsl",
+      "shaders/text_vert.glsl",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
+  }
+}

@@ -306,8 +306,20 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
             }
 
             uint8_t bg_a = 0;
-            if (start_row <= row && row <= end_row) {
+            if (start_row < row && row < end_row) {
                 bg_a = 255;
+            }
+            if (start_row == end_row) {
+                if (row == start_row && cursor_x <= total_advance && total_advance <= drag_x) {
+                    bg_a = 255;
+                }
+            } else {
+                if (row == start_row && total_advance >= cursor_x) {
+                    bg_a = 255;
+                }
+                if (row == end_row && total_advance <= drag_x) {
+                    bg_a = 255;
+                }
             }
 
             uint32_t unicode_scalar = 0;
@@ -447,6 +459,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     glDisable(GL_BLEND);
 
+    cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
     cursor_renderer->draw(scroll_x, scroll_y, drag_col, drag_row);
     glEnable(GL_BLEND);
 

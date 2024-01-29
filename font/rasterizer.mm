@@ -1,9 +1,12 @@
-#import "font/example.h"
 #import "rasterizer.h"
 #import "util/CGFloatUtil.h"
 #import "util/CTFontUtil.h"
 #import "util/log_util.h"
 #import <Cocoa/Cocoa.h>
+
+extern "C" {
+#include "third_party/libgrapheme/grapheme.h"
+}
 
 class Rasterizer::impl {
 public:
@@ -13,6 +16,34 @@ public:
 
     RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef);
 };
+
+void libgraphemeExample(const char* s) {
+    size_t ret;
+
+    LogDefault("libgrapheme", s);
+
+    // Print each grapheme cluster with byte-length.
+    LogDefault("libgrapheme", "grapheme clusters in NUL-delimited input:\n");
+    for (size_t offset = 0; s[offset] != '\0'; offset += ret) {
+        ret = grapheme_next_character_break_utf8(s + offset, SIZE_MAX);
+
+        char* slice;
+        asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
+
+        LogDefault("libgrapheme", slice);
+    }
+
+    // Do the same, but this time string is length-delimited.
+    size_t len = 17;
+    LogDefault("libgrapheme", "grapheme clusters in input delimited to %zu bytes:\n", len);
+    for (size_t offset = 0; offset < len; offset += ret) {
+        ret = grapheme_next_character_break_utf8(s + offset, len - offset);
+
+        char* slice;
+        asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
+        LogDefault("libgrapheme", slice);
+    }
+}
 
 Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size)
     : pimpl{new impl{}} {
@@ -29,7 +60,12 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
         LogDefault(@"Rasterizer", @"Using monospace font.");
     }
 
-    libgraphemeExample();
+    // UTF-8 encoded input
+    const char* s = "T\xC3\xABst \xF0\x9F\x91\xA8\xE2\x80\x8D\xF0"
+                    "\x9F\x91\xA9\xE2\x80\x8D\xF0\x9F\x91\xA6 \xF0"
+                    "\x9F\x87\xBA\xF0\x9F\x87\xB8 \xE0\xA4\xA8\xE0"
+                    "\xA5\x80 \xE0\xAE\xA8\xE0\xAE\xBF!";
+    libgraphemeExample(s);
 }
 
 RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {

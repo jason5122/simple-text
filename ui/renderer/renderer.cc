@@ -46,7 +46,7 @@ void Renderer::treeSitterExperiment() {
     ts_parser_set_language(parser, tree_sitter_json());
 
     // Build a syntax tree based on source code stored in a string.
-    const char* source_code = ReadFile(ResourcePath("sample_files/larger_example.json"));
+    const char* source_code = ReadFile(ResourcePath("sample_files/proportional_font_test.json"));
     TSTree* tree = ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 
     // Get the root node of the syntax tree.
@@ -265,10 +265,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     uint16_t drag_col = round(drag_x / cell_width);
     uint16_t drag_row = (height - drag_y) / cell_height;
 
-    // LogDefault("Renderer", "pixels: %f %f", cursor_x, height - cursor_y);
-    // LogDefault("Renderer", "cursor: (%d, %d)", cursor_col, cursor_row);
-    // LogDefault("Renderer", "drag: (%d, %d)", drag_col, drag_row);
-
     uint16_t start_row, start_col;
     uint16_t end_row, end_col;
     if (cursor_row < drag_row) {
@@ -368,71 +364,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 total_advance = std::round(total_advance + 1);
             }
         }
-
-        // total_advance = 0;
-        // for (uint16_t col = 0; col < buffer.data[row].size(); col++) {
-        //     char ch = buffer.data[row][col];
-
-        //     Rgb text_color = BLACK;
-
-        //     if (range_idx < highlight_ranges.size()) {
-        //         while (byte_offset >= highlight_ranges[range_idx].second) {
-        //             range_idx++;
-        //         }
-
-        //         if (highlight_ranges[range_idx].first <= byte_offset &&
-        //             byte_offset < highlight_ranges[range_idx].second) {
-        //             text_color = highlight_colors[range_idx];
-        //         }
-        //     }
-
-        //     uint8_t bg_a = 0;
-        //     if (start_row < row && row < end_row || row == start_row && col >= start_col ||
-        //         row == end_row && col < end_col) {
-        //         bg_a = 255;
-        //     }
-
-        //     if (!glyph_cache.count(ch)) {
-        //         this->loadGlyph(ch);
-        //     }
-
-        //     AtlasGlyph glyph = glyph_cache[ch];
-        //     instances.push_back(InstanceData{
-        //         // Grid coordinates.
-        //         0,
-        //         row,
-        //         // Glyph properties.
-        //         glyph.left,
-        //         glyph.top,
-        //         glyph.width,
-        //         glyph.height,
-        //         // UV mapping.
-        //         glyph.uv_left,
-        //         glyph.uv_bot,
-        //         glyph.uv_width,
-        //         glyph.uv_height,
-        //         // Color, packed with colored flag.
-        //         text_color.r,
-        //         text_color.g,
-        //         text_color.b,
-        //         glyph.colored,
-        //         // Total font advance.
-        //         static_cast<float>(std::round(total_advance)),
-        //         // Background color.
-        //         YELLOW.r,
-        //         YELLOW.g,
-        //         YELLOW.b,
-        //         bg_a,
-        //     });
-
-        //     total_advance += glyph.advance;
-        //     // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
-        //     if (rasterizer->isFontMonospace()) {
-        //         total_advance = std::round(total_advance + 1);
-        //     }
-
-        //     byte_offset++;
-        // }
         byte_offset++;
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

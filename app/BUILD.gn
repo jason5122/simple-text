@@ -40,6 +40,7 @@ bundle_data("sample_files") {
   sources = [
     "resources/sample_files/example.json",
     "resources/sample_files/larger_example.json",
+    "resources/sample_files/proportional_font_test.json",
   ]
   outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
 }

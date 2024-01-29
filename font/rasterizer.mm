@@ -1,3 +1,4 @@
+#import "font/example.h"
 #import "rasterizer.h"
 #import "util/CGFloatUtil.h"
 #import "util/CTFontUtil.h"
@@ -27,6 +28,8 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
     if (CTFontIsMonospace(pimpl->mainFont)) {
         LogDefault(@"Rasterizer", @"Using monospace font.");
     }
+
+    libgraphemeExample();
 }
 
 RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {

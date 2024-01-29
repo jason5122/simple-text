@@ -1,3 +1,8 @@
 source_set("font") {
-  sources = [ "rasterizer.mm" ]
+  sources = [
+    "example.c",
+    "rasterizer.mm",
+  ]
+
+  deps = [ "//third_party/libgrapheme" ]
 }

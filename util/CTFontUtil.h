@@ -7,9 +7,9 @@
 
 static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {
     NSString* chString = [NSString stringWithFormat:@"%c", ch];
-    unichar characters[1];
+    UniChar characters[1] = {};
     [chString getCharacters:characters range:NSMakeRange(0, 1)];
-    CGGlyph glyphs[1];
+    CGGlyph glyphs[1] = {};
     if (CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, 1)) {
         // LogDefault(@"CTFontUtil", @"got glyphs! %d", glyphs[0]);
     } else {

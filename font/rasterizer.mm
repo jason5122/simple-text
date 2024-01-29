@@ -3,6 +3,7 @@
 #import "util/CTFontUtil.h"
 #import "util/log_util.h"
 #import <Cocoa/Cocoa.h>
+#import <iostream>
 
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
@@ -23,19 +24,18 @@ void libgraphemeExample(const char* s) {
     LogDefault("libgrapheme", s);
 
     // Print each grapheme cluster with byte-length.
-    LogDefault("libgrapheme", "grapheme clusters in NUL-delimited input:\n");
+    LogDefault("libgrapheme", "grapheme clusters in NUL-delimited input:");
     for (size_t offset = 0; s[offset] != '\0'; offset += ret) {
         ret = grapheme_next_character_break_utf8(s + offset, SIZE_MAX);
 
         char* slice;
         asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
-
         LogDefault("libgrapheme", slice);
     }
 
     // Do the same, but this time string is length-delimited.
     size_t len = 17;
-    LogDefault("libgrapheme", "grapheme clusters in input delimited to %zu bytes:\n", len);
+    LogDefault("libgrapheme", "grapheme clusters in input delimited to %zu bytes:", len);
     for (size_t offset = 0; offset < len; offset += ret) {
         ret = grapheme_next_character_break_utf8(s + offset, len - offset);
 
@@ -43,6 +43,24 @@ void libgraphemeExample(const char* s) {
         asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
         LogDefault("libgrapheme", slice);
     }
+
+    // Print each codepoint.
+    LogDefault("libgrapheme", "codepoints:");
+    for (size_t offset = 0; s[offset] != '\0'; offset += ret) {
+        ret = grapheme_decode_utf8(s + offset, SIZE_MAX, NULL);
+
+        char* slice;
+        asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
+        LogDefault("libgrapheme", slice);
+    }
+}
+
+const char* hex(char c) {
+    const char REF[] = "0123456789ABCDEF";
+    static char output[3] = "XX";
+    output[0] = REF[0x0f & c >> 4];
+    output[1] = REF[0x0f & c];
+    return output;
 }
 
 Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size)
@@ -66,6 +84,19 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
                     "\x9F\x87\xBA\xF0\x9F\x87\xB8 \xE0\xA4\xA8\xE0"
                     "\xA5\x80 \xE0\xAE\xA8\xE0\xAE\xBF!";
     libgraphemeExample(s);
+
+    std::string str = u8"ABC가나다";
+    std::cout << str << ": ";
+    for (auto c : str) {
+        std::cout << hex(c) << " ";
+    }
+    std::cout << '\n';
+
+    NSString* chString = [NSString stringWithUTF8String:"\xC3\xAB"];
+    UniChar characters[1] = {};
+    [chString getCharacters:characters range:NSMakeRange(0, 1)];
+
+    std::cout << hex(characters[0]) << '\n';
 }
 
 RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {

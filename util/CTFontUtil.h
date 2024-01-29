@@ -18,6 +18,19 @@ static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {
     return glyphs[0];
 }
 
+static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, const char* utf8_str) {
+    NSString* chString = [NSString stringWithUTF8String:utf8_str];
+    UniChar characters[1] = {};
+    [chString getCharacters:characters range:NSMakeRange(0, 1)];
+    CGGlyph glyphs[1] = {};
+    if (CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, 1)) {
+        // LogDefault(@"CTFontUtil", @"got glyphs! %d", glyphs[0]);
+    } else {
+        LogDefault(@"CTFontUtil", @"could not get glyphs for codepoint: %s", utf8_str);
+    }
+    return glyphs[0];
+}
+
 static inline CGGlyph CTFontGetEmojiGlyphIndex(CTFontRef fontRef) {
     NSData* data = [@"\U0001F603" dataUsingEncoding:NSUTF32LittleEndianStringEncoding];
     UTF32Char emojiValue;
@@ -38,7 +51,7 @@ static inline CGGlyph CTFontGetEmojiGlyphIndex(CTFontRef fontRef) {
 }
 
 static inline Metrics CTFontGetMetrics(CTFontRef fontRef) {
-    CGGlyph glyph = CTFontGetGlyphIndex(fontRef, '0');
+    CGGlyph glyph = CTFontGetGlyphIndex(fontRef, "\x30");  // '0'
     double average_advance =
         CTFontGetAdvancesForGlyphs(fontRef, kCTFontOrientationDefault, &glyph, nullptr, 1);
 

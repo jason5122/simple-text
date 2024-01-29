@@ -97,6 +97,16 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
     [chString getCharacters:characters range:NSMakeRange(0, 1)];
 
     std::cout << hex(characters[0]) << '\n';
+
+    const char* utf8_str = u8"가";
+    uint32_t unicode_scalar = 0;
+
+    std::cout << "len: " << strlen(utf8_str) << '\n';
+    for (int i = 0; i < strlen(utf8_str); i++) {
+        uint8_t byte = utf8_str[i];
+        unicode_scalar |= byte << 8 * i;
+    }
+    std::cout << std::bitset<32>(unicode_scalar) << '\n';
 }
 
 RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
@@ -104,6 +114,11 @@ RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
                                 : CTFontGetGlyphIndex(pimpl->mainFont, ch);
     CTFontRef fontRef = emoji ? pimpl->emojiFont : pimpl->mainFont;
     return pimpl->rasterizeGlyph(glyph_index, fontRef);
+}
+
+RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
+    CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+    return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont);
 }
 
 bool Rasterizer::isFontMonospace() {

@@ -3,6 +3,11 @@
 #include "util/file_util.h"
 #include "util/log_util.h"
 #include "util/opengl_error_util.h"
+#include <iostream>
+
+extern "C" {
+#include "third_party/libgrapheme/grapheme.h"
+}
 
 struct InstanceData {
     // Grid coordinates.
@@ -282,34 +287,33 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     size_t size = std::min(static_cast<size_t>(row_offset + 60), buffer.lineCount());
     for (uint16_t row = row_offset; row < size; row++) {
+        const char* line = buffer.data[row].c_str();
+        size_t ret;
         float total_advance = 0;
-        for (uint16_t col = 0; col < buffer.data[row].size(); col++) {
-            char ch = buffer.data[row][col];
+        for (size_t offset = 0; line[offset] != '\0'; offset += ret) {
+            ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
+
+            char* slice;
+            asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, line + offset);
+
+            if (ret > 1) {
+                LogDefault("Renderer", slice);
+            }
+
+            uint32_t unicode_scalar = 0;
+            for (int i = 0; i < ret; i++) {
+                uint8_t byte = (line + offset)[i];
+                unicode_scalar |= byte << 8 * i;
+            }
+
+            if (!glyph_cache2.count(unicode_scalar)) {
+                this->loadGlyph2(unicode_scalar, line + offset);
+                LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
+            }
 
             Rgb text_color = BLACK;
 
-            if (range_idx < highlight_ranges.size()) {
-                while (byte_offset >= highlight_ranges[range_idx].second) {
-                    range_idx++;
-                }
-
-                if (highlight_ranges[range_idx].first <= byte_offset &&
-                    byte_offset < highlight_ranges[range_idx].second) {
-                    text_color = highlight_colors[range_idx];
-                }
-            }
-
-            uint8_t bg_a = 0;
-            if (start_row < row && row < end_row || row == start_row && col >= start_col ||
-                row == end_row && col < end_col) {
-                bg_a = 255;
-            }
-
-            if (!glyph_cache.count(ch)) {
-                this->loadGlyph(ch);
-            }
-
-            AtlasGlyph glyph = glyph_cache[ch];
+            AtlasGlyph glyph = glyph_cache2[unicode_scalar];
             instances.push_back(InstanceData{
                 // Grid coordinates.
                 0,
@@ -335,7 +339,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 YELLOW.r,
                 YELLOW.g,
                 YELLOW.b,
-                bg_a,
+                0,
             });
 
             total_advance += glyph.advance;
@@ -343,10 +347,73 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
             if (rasterizer->isFontMonospace()) {
                 total_advance = std::round(total_advance + 1);
             }
-
-            byte_offset++;
         }
-        byte_offset++;
+
+        // total_advance = 0;
+        // for (uint16_t col = 0; col < buffer.data[row].size(); col++) {
+        //     char ch = buffer.data[row][col];
+
+        //     Rgb text_color = BLACK;
+
+        //     if (range_idx < highlight_ranges.size()) {
+        //         while (byte_offset >= highlight_ranges[range_idx].second) {
+        //             range_idx++;
+        //         }
+
+        //         if (highlight_ranges[range_idx].first <= byte_offset &&
+        //             byte_offset < highlight_ranges[range_idx].second) {
+        //             text_color = highlight_colors[range_idx];
+        //         }
+        //     }
+
+        //     uint8_t bg_a = 0;
+        //     if (start_row < row && row < end_row || row == start_row && col >= start_col ||
+        //         row == end_row && col < end_col) {
+        //         bg_a = 255;
+        //     }
+
+        //     if (!glyph_cache.count(ch)) {
+        //         this->loadGlyph(ch);
+        //     }
+
+        //     AtlasGlyph glyph = glyph_cache[ch];
+        //     instances.push_back(InstanceData{
+        //         // Grid coordinates.
+        //         0,
+        //         row,
+        //         // Glyph properties.
+        //         glyph.left,
+        //         glyph.top,
+        //         glyph.width,
+        //         glyph.height,
+        //         // UV mapping.
+        //         glyph.uv_left,
+        //         glyph.uv_bot,
+        //         glyph.uv_width,
+        //         glyph.uv_height,
+        //         // Color, packed with colored flag.
+        //         text_color.r,
+        //         text_color.g,
+        //         text_color.b,
+        //         glyph.colored,
+        //         // Total font advance.
+        //         static_cast<float>(std::round(total_advance)),
+        //         // Background color.
+        //         YELLOW.r,
+        //         YELLOW.g,
+        //         YELLOW.b,
+        //         bg_a,
+        //     });
+
+        //     total_advance += glyph.advance;
+        //     // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
+        //     if (rasterizer->isFontMonospace()) {
+        //         total_advance = std::round(total_advance + 1);
+        //     }
+
+        //     byte_offset++;
+        // }
+        // byte_offset++;
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
@@ -385,6 +452,12 @@ void Renderer::loadGlyph(char ch) {
     RasterizedGlyph glyph = rasterizer->rasterizeChar(ch, emoji);
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({ch, atlas_glyph});
+}
+
+void Renderer::loadGlyph2(uint32_t scalar, const char* utf8_str) {
+    RasterizedGlyph glyph = rasterizer->rasterizeUTF8(utf8_str);
+    AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
+    glyph_cache2.insert({scalar, atlas_glyph});
 }
 
 void Renderer::resize(int new_width, int new_height) {

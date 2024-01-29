@@ -7,6 +7,7 @@ class Rasterizer {
 public:
     Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size);
     RasterizedGlyph rasterizeChar(char ch, bool emoji);
+    RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     bool isFontMonospace();
     Metrics metrics();
 

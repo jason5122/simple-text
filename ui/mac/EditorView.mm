@@ -70,10 +70,10 @@
 
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
-        // openGLLayer->x += event.scrollingDeltaX * NSScreen.mainScreen.backingScaleFactor;
+        // openGLLayer->x += event.scrollingDeltaX;
         // if (openGLLayer->x > 0) openGLLayer->x = 0;
 
-        openGLLayer->y += event.scrollingDeltaY * NSScreen.mainScreen.backingScaleFactor;
+        openGLLayer->y += event.scrollingDeltaY;
         if (openGLLayer->y > 0) openGLLayer->y = 0;
 
         [self.layer setNeedsDisplay];
@@ -102,6 +102,8 @@
 
 - (void)mouseDown:(NSEvent*)event {
     openGLLayer->cursorPoint = event.locationInWindow;
+    openGLLayer->cursorPoint.x += openGLLayer->x;
+    openGLLayer->cursorPoint.y += openGLLayer->y;
     [self.layer setNeedsDisplay];
 }
 
@@ -109,6 +111,8 @@
     LogDefault(@"WindowController", @"drag: %f %f", event.locationInWindow.x,
                event.locationInWindow.y);
     openGLLayer->dragPoint = event.locationInWindow;
+    openGLLayer->dragPoint.x += openGLLayer->x;
+    openGLLayer->dragPoint.y += openGLLayer->y;
     [self.layer setNeedsDisplay];
 }
 
@@ -201,9 +205,9 @@
     renderer->resize(self.frame.size.width * self.contentsScale,
                      self.frame.size.height * self.contentsScale);
 
-    renderer->renderText(*buffer, x, y, cursorPoint.x * self.contentsScale,
-                         cursorPoint.y * self.contentsScale, dragPoint.x * self.contentsScale,
-                         dragPoint.y * self.contentsScale);
+    renderer->renderText(*buffer, x * self.contentsScale, y * self.contentsScale,
+                         cursorPoint.x * self.contentsScale, cursorPoint.y * self.contentsScale,
+                         dragPoint.x * self.contentsScale, dragPoint.y * self.contentsScale);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

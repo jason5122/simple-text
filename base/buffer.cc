@@ -27,10 +27,8 @@ std::string Buffer::line(size_t line_index) {
 size_t Buffer::byteOfLine(size_t line_index) {
     size_t byte_offset = 0;
     for (uint16_t row = 0; row < line_index; row++) {
-        for (uint16_t col = 0; col < data[row].size(); col++) {
-            byte_offset++;
-        }
-        byte_offset++;
+        byte_offset += data[row].size();
+        byte_offset++;  // Include newline.
     }
     return byte_offset;
 }

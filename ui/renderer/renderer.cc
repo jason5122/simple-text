@@ -293,6 +293,20 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
         for (size_t offset = 0; line[offset] != '\0'; offset += ret) {
             ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
 
+            Rgb text_color = BLACK;
+
+            size_t byte_offset = buffer.byteOfLine(row) + offset;
+            if (range_idx < highlight_ranges.size()) {
+                while (byte_offset >= highlight_ranges[range_idx].second) {
+                    range_idx++;
+                }
+
+                if (highlight_ranges[range_idx].first <= byte_offset &&
+                    byte_offset < highlight_ranges[range_idx].second) {
+                    text_color = highlight_colors[range_idx];
+                }
+            }
+
             char* slice;
             asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, line + offset);
 
@@ -310,8 +324,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 this->loadGlyph2(unicode_scalar, line + offset);
                 LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
             }
-
-            Rgb text_color = BLACK;
 
             AtlasGlyph glyph = glyph_cache2[unicode_scalar];
             instances.push_back(InstanceData{

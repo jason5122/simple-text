@@ -268,11 +268,13 @@ float Renderer::closestBoundaryForX(const char* line, float x) {
             return total_advance;
         }
 
-        total_advance += glyph.advance;
+        // total_advance += glyph.advance;
+        total_advance += std::round(glyph.advance);
+
         // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
-        if (rasterizer->isFontMonospace()) {
-            total_advance = std::round(total_advance + 1);
-        }
+        // if (rasterizer->isFontMonospace()) {
+        //     total_advance = std::round(total_advance + 1);
+        // }
     }
     return 0;
 }
@@ -298,29 +300,29 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     int row_offset = scroll_y / -cell_height;
     if (row_offset < 0) row_offset = 0;
 
-    uint16_t cursor_row = (height - cursor_y) / cell_height;
-    float cursor_col = this->closestBoundaryForX(buffer.data[cursor_row].c_str(), cursor_x);
+    int cursor_row = cursor_y / cell_height;
+    float cursor_boundary_x = this->closestBoundaryForX(buffer.data[cursor_row].c_str(), cursor_x);
 
-    uint16_t drag_row = (height - drag_y) / cell_height;
-    float drag_col = this->closestBoundaryForX(buffer.data[drag_row].c_str(), drag_x);
+    int drag_row = drag_y / cell_height;
+    float drag_boundary_x = this->closestBoundaryForX(buffer.data[drag_row].c_str(), drag_x);
 
-    uint16_t start_row, start_col;
-    uint16_t end_row, end_col;
+    int start_row, start_col;
+    int end_row, end_col;
     if (cursor_row < drag_row) {
         start_row = cursor_row;
-        start_col = cursor_col;
+        start_col = cursor_boundary_x;
         end_row = drag_row;
-        end_col = drag_col;
+        end_col = drag_boundary_x;
     } else {
         start_row = drag_row;
-        start_col = drag_col;
+        start_col = drag_boundary_x;
         end_row = cursor_row;
-        end_col = cursor_col;
+        end_col = cursor_boundary_x;
     }
 
     size_t byte_offset = buffer.byteOfLine(row_offset);
     size_t size = std::min(static_cast<size_t>(row_offset + 60), buffer.lineCount());
-    for (uint16_t row = row_offset; row < size; row++) {
+    for (int row = row_offset; row < size; row++) {
         const char* line = buffer.data[row].c_str();
         size_t ret;
         float total_advance = 0;
@@ -375,7 +377,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
             instances.push_back(InstanceData{
                 // Grid coordinates.
                 0,
-                row,
+                static_cast<uint16_t>(row),
                 // Glyph properties.
                 glyph.left,
                 glyph.top,
@@ -403,11 +405,13 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 glyph.advance,
             });
 
-            total_advance += glyph.advance;
+            // total_advance += glyph.advance;
+            total_advance += std::round(glyph.advance);
+
             // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
-            if (rasterizer->isFontMonospace()) {
-                total_advance = std::round(total_advance + 1);
-            }
+            // if (rasterizer->isFontMonospace()) {
+            //     total_advance = std::round(total_advance + 1);
+            // }
         }
         byte_offset++;
     }
@@ -435,8 +439,10 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     glDisable(GL_BLEND);
 
-    cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row * cell_height, cell_height);
-    cursor_renderer->draw(scroll_x, scroll_y, drag_col, drag_row * cell_height, cell_height);
+    cursor_renderer->draw(scroll_x, scroll_y, cursor_boundary_x, cursor_row * cell_height,
+                          cell_height);
+    cursor_renderer->draw(scroll_x, scroll_y, drag_boundary_x, drag_row * cell_height,
+                          cell_height);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

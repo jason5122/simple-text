@@ -81,7 +81,7 @@
             // Prevent scrolling cursor past top of buffer.
             // FIXME: The behavior is still a little buggy near the top of buffer.
             if (!(openGLLayer->y == 0 && event.scrollingDeltaY > 0)) {
-                openGLLayer->dragPoint.y += event.scrollingDeltaY;
+                openGLLayer->dragPoint.y -= event.scrollingDeltaY;
             }
         }
 
@@ -117,6 +117,10 @@
     openGLLayer->dragPoint = event.locationInWindow;
     openGLLayer->dragPoint.x += openGLLayer->x;
     openGLLayer->dragPoint.y += openGLLayer->y;
+
+    openGLLayer->cursorPoint.y = openGLLayer.frame.size.height - openGLLayer->cursorPoint.y;
+    openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
+
     [self.layer setNeedsDisplay];
 }
 
@@ -126,6 +130,9 @@
     openGLLayer->dragPoint = event.locationInWindow;
     openGLLayer->dragPoint.x += openGLLayer->x;
     openGLLayer->dragPoint.y += openGLLayer->y;
+
+    openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
+
     [self.layer setNeedsDisplay];
 }
 
@@ -182,7 +189,7 @@
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(context);
 
-        CGFloat fontSize = 16;
+        CGFloat fontSize = 24;
         renderer = new Renderer(self.frame.size.width * self.contentsScale,
                                 self.frame.size.height * self.contentsScale, "Arial",
                                 "Apple Color Emoji", fontSize * self.contentsScale);

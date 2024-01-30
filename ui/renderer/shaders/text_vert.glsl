@@ -6,6 +6,7 @@ layout(location = 2) in vec4 uv;
 layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
 layout(location = 4) in float total_advance;
 layout(location = 5) in vec4 in_background_color;
+layout(location = 6) in float advance;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
@@ -31,7 +32,8 @@ void main() {
     cell_position += scroll_offset;
 
     if (rendering_pass == 0) {
-        cell_position += cell_dim * position;
+        cell_position.x += advance * position.x;
+        cell_position.y += cell_dim.y * position.y;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         background_color = in_background_color / 255.0;

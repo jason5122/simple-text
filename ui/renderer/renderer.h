@@ -55,4 +55,5 @@ private:
     void loadGlyph(char ch);
     void loadGlyph2(uint32_t scalar, const char* utf8_str);
     void treeSitterExperiment();
+    float closestBoundaryForX(const char* line, float x);
 };

@@ -35,6 +35,8 @@ struct InstanceData {
     uint8_t bg_g;
     uint8_t bg_b;
     uint8_t bg_a;
+    // Glyph advance.
+    float advance;
 };
 
 extern "C" TSLanguage* tree_sitter_json();
@@ -231,10 +233,48 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glVertexAttribDivisor(5, 1);
     size += 4 * sizeof(uint8_t);
 
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(6, 1);
+    size += sizeof(float);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+float Renderer::closestBoundaryForX(const char* line, float x) {
+    size_t ret;
+    float total_advance = 0;
+    for (size_t offset = 0; line[offset] != '\0'; offset += ret) {
+        ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
+
+        uint32_t unicode_scalar = 0;
+        for (int i = 0; i < ret; i++) {
+            uint8_t byte = (line + offset)[i];
+            unicode_scalar |= byte << 8 * i;
+        }
+
+        if (!glyph_cache2.count(unicode_scalar)) {
+            this->loadGlyph2(unicode_scalar, line + offset);
+            LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
+        }
+
+        AtlasGlyph glyph = glyph_cache2[unicode_scalar];
+
+        total_advance += glyph.advance;
+        // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
+        if (rasterizer->isFontMonospace()) {
+            total_advance = std::round(total_advance + 1);
+        }
+
+        float glyph_center = total_advance + glyph.advance / 2;
+        if (glyph_center >= x) {
+            return total_advance;
+        }
+    }
+    return 0;
 }
 
 void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x,
@@ -258,47 +298,11 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     int row_offset = scroll_y / -cell_height;
     if (row_offset < 0) row_offset = 0;
 
-    uint16_t cursor_col = round(cursor_x / cell_width);
     uint16_t cursor_row = (height - cursor_y) / cell_height;
+    float cursor_col = this->closestBoundaryForX(buffer.data[cursor_row].c_str(), cursor_x);
 
-    uint16_t drag_col = round(drag_x / cell_width);
     uint16_t drag_row = (height - drag_y) / cell_height;
-
-    {
-        const char* line = buffer.data[cursor_row].c_str();
-        size_t ret;
-        float total_advance = 0;
-        LogDefault("Renderer", "line %d", cursor_row);
-        for (size_t offset = 0; line[offset] != '\0'; offset += ret) {
-            ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
-
-            uint32_t unicode_scalar = 0;
-            for (int i = 0; i < ret; i++) {
-                uint8_t byte = (line + offset)[i];
-                unicode_scalar |= byte << 8 * i;
-            }
-
-            if (!glyph_cache2.count(unicode_scalar)) {
-                this->loadGlyph2(unicode_scalar, line + offset);
-                LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
-            }
-
-            AtlasGlyph glyph = glyph_cache2[unicode_scalar];
-
-            total_advance += glyph.advance;
-            // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
-            if (rasterizer->isFontMonospace()) {
-                total_advance = std::round(total_advance + 1);
-            }
-
-            if (total_advance >= cursor_x) {
-                LogDefault("Renderer", "total_advance: %f vs cursor_x: %f", total_advance,
-                           cursor_x);
-                cursor_col = total_advance;
-                break;
-            }
-        }
-    }
+    float drag_col = this->closestBoundaryForX(buffer.data[drag_row].c_str(), drag_x);
 
     uint16_t start_row, start_col;
     uint16_t end_row, end_col;
@@ -336,23 +340,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 }
             }
 
-            uint8_t bg_a = 0;
-            if (start_row < row && row < end_row) {
-                bg_a = 255;
-            }
-            if (start_row == end_row) {
-                if (row == start_row && cursor_x <= total_advance && total_advance <= drag_x) {
-                    bg_a = 255;
-                }
-            } else {
-                if (row == start_row && total_advance >= cursor_x) {
-                    bg_a = 255;
-                }
-                if (row == end_row && total_advance <= drag_x) {
-                    bg_a = 255;
-                }
-            }
-
             uint32_t unicode_scalar = 0;
             for (int i = 0; i < ret; i++) {
                 uint8_t byte = (line + offset)[i];
@@ -365,6 +352,26 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
             }
 
             AtlasGlyph glyph = glyph_cache2[unicode_scalar];
+
+            uint8_t bg_a = 0;
+            if (start_row < row && row < end_row) {
+                bg_a = 255;
+            }
+
+            float glyph_center = total_advance + glyph.advance / 2;
+            if (start_row == end_row) {
+                if (row == start_row && cursor_x <= glyph_center && glyph_center <= drag_x) {
+                    bg_a = 255;
+                }
+            } else {
+                if (row == start_row && glyph_center >= cursor_x) {
+                    bg_a = 255;
+                }
+                if (row == end_row && glyph_center <= drag_x) {
+                    bg_a = 255;
+                }
+            }
+
             instances.push_back(InstanceData{
                 // Grid coordinates.
                 0,
@@ -385,12 +392,15 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 text_color.b,
                 glyph.colored,
                 // Total font advance.
-                static_cast<float>(std::round(total_advance)),
+                // static_cast<float>(std::round(total_advance)),
+                total_advance,
                 // Background color.
                 YELLOW.r,
                 YELLOW.g,
                 YELLOW.b,
                 bg_a,
+                // Glyph advance.
+                glyph.advance,
             });
 
             total_advance += glyph.advance;
@@ -426,7 +436,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     glDisable(GL_BLEND);
 
     cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row * cell_height);
-    cursor_renderer->draw(scroll_x, scroll_y, drag_x, drag_row * cell_height);
+    cursor_renderer->draw(scroll_x, scroll_y, drag_col, drag_row * cell_height);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

@@ -40,7 +40,7 @@
 #include "utils.h"
 
 #include "xdg-shell-client-protocol.h"
-#include "xdg-decoration-client-protocol.h"
+#include "xdg-decoration-unstable-v1-client-protocol.h"
 
 #ifdef HAVE_XDG_SHELL_V6
 #define XDG_WM_BASE_VER 6

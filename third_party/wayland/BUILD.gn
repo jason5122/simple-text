@@ -5,6 +5,5 @@ wayland_protocol("xdg_shell_protocol") {
 }
 
 wayland_protocol("xdg_decoration_protocol") {
-  sources = [ "src/unstable/xdg-decoration/xdg-decoration.xml" ]
-  # sources = [ "src/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml" ]
+  sources = [ "src/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml" ]
 }

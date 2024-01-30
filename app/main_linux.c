@@ -207,6 +207,11 @@ static void draw(struct window* window) {
     glClearColor(rgb[0], rgb[1], rgb[2], 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    float vertices[] = {-0.5, -0.5, 0.0, 0.5, 0.5, -0.5};
+    glVertexPointer(2, GL_FLOAT, 0, vertices);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
     eglSwapBuffers(window->client->egl_display, window->egl_surface);
 }
 
@@ -256,6 +261,8 @@ int SimpleTextMain() {
             goto out;
         }
     }
+
+    printf("%s\n", glGetString(GL_VERSION));
 
     while (window->open) {
         if (libdecor_dispatch(context, 0) < 0) {

@@ -4,7 +4,13 @@ source_set("libdecor") {
   sources = [
     "src/libdecor-fallback.c",
     "src/libdecor.c",
-    "src/xdg-decoration-protocol.c",
-    "src/xdg-shell-protocol.c",
+
+    # TODO: Add GTK decorations plugin.
+    # "src/plugins/gtk/libdecor-gtk.c",
+  ]
+
+  deps = [
+    "//third_party/wayland:xdg_decoration_protocol",
+    "//third_party/wayland:xdg_shell_protocol",
   ]
 }

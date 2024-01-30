@@ -1,0 +1,10 @@
+import("//third_party/wayland/wayland_protocol.gni")
+
+wayland_protocol("xdg_shell_protocol") {
+  sources = [ "src/stable/xdg-shell/xdg-shell.xml" ]
+}
+
+wayland_protocol("xdg_decoration_protocol") {
+  sources = [ "src/unstable/xdg-decoration/xdg-decoration.xml" ]
+  # sources = [ "src/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml" ]
+}

@@ -29,6 +29,7 @@ config("compiler") {
     "-flto=thin",
     "-O2",
   ]
+  ldflags = cflags
 }
 
 if (is_mac) {

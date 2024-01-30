@@ -3,8 +3,8 @@ group("all") {
     # GN expands something like "//app" to "//app:app".
     "//app",
     "//base",
-    "//font",
-    "//ui",
-    "//util",
+    # "//font",
+    # "//ui",
+    # "//util",
   ]
 }

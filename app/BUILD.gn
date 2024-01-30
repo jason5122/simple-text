@@ -1,51 +1,60 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
-mac_app_bundle("app") {
-  output_name = "Simple Text"
-  bundle_identifier = "com.jason5122.simple-text"
-  info_plist = "resources/Info.plist"
+if (is_mac) {
+  mac_app_bundle("app") {
+    output_name = "Simple Text"
+    bundle_identifier = "com.jason5122.simple-text"
+    info_plist = "resources/Info.plist"
 
-  # define `code_signing_identity` in args.gn
+    # define `code_signing_identity` in args.gn
 
-  sources = [
-    "AppDelegate.mm",
-    "main.cc",
-    "main_mac.mm",
-  ]
+    sources = [
+      "AppDelegate.mm",
+      "main.cc",
+      "main_mac.mm",
+    ]
 
-  frameworks = [ "Cocoa.framework" ]
+    frameworks = [ "Cocoa.framework" ]
 
-  deps = [
-    ":icon",
-    ":sample_files",
-    ":tree_sitter_queries",
-    "//font",
-    "//third_party/freetype",
-    "//third_party/tree_sitter",
-    "//ui",
-    "//util",
-  ]
+    deps = [
+      ":icon",
+      ":sample_files",
+      ":tree_sitter_queries",
+      "//font",
+      "//third_party/freetype",
+      "//third_party/tree_sitter",
+      "//ui",
+      "//util",
+    ]
 
-  if (is_mac) {
-    deps += [ "//ui/renderer:shaders" ]
+    if (is_mac) {
+      deps += [ "//ui/renderer:shaders" ]
+    }
   }
-}
 
-icon("icon") {
-  sources = [ "resources/app.iconset" ]
-}
+  icon("icon") {
+    sources = [ "resources/app.iconset" ]
+  }
 
-bundle_data("sample_files") {
-  sources = [
-    "resources/sample_files/example.json",
-    "resources/sample_files/larger_example.json",
-    "resources/sample_files/proportional_font_test.json",
-  ]
-  outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
-}
+  bundle_data("sample_files") {
+    sources = [
+      "resources/sample_files/example.json",
+      "resources/sample_files/larger_example.json",
+      "resources/sample_files/proportional_font_test.json",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
+  }
 
-bundle_data("tree_sitter_queries") {
-  sources = [ "resources/highlights.scm" ]
-  outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+  bundle_data("tree_sitter_queries") {
+    sources = [ "resources/highlights.scm" ]
+    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+  }
+} else if (is_linux) {
+  executable("app") {
+    sources = [
+      "main.cc",
+      "main_linux.cc",
+    ]
+  }
 }

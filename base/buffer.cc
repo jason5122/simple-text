@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include <sstream>
+#include <cstdint>
 
 Buffer::Buffer(std::string s) {
     std::stringstream ss(s);

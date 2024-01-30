@@ -52,9 +52,20 @@ if (is_mac) {
   }
 } else if (is_linux) {
   executable("app") {
+    output_name = "simple_text"
+
     sources = [
       "main.cc",
-      "main_linux.cc",
+      "main_linux.c",
     ]
+
+    libs = [
+      "wayland-client",
+      "wayland-egl",
+      "EGL",
+      "GL",
+    ]
+
+    deps = [ "//third_party/libdecor" ]
   }
 }

@@ -18,7 +18,7 @@ config("compiler") {
     configs += [ "//build/config/mac:compiler" ]
   }
 
-  cflags_c += [ "-std=c11" ]
+  # cflags_c += [ "-std=c11" ]
   cflags_cc += [ "-std=c++17" ]
 
   # Pass the same C/C++ flags to the Objective-C/C++ compiler.

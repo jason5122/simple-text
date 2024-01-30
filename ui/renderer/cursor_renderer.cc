@@ -34,7 +34,7 @@ CursorRenderer::CursorRenderer(float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y) {
+void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y, float cell_height) {
     glUseProgram(shader_program);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -43,7 +43,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y) {
     y += scroll_y;
 
     float w = 4;
-    float h = 100;
+    float h = cell_height;
 
     x -= w / 2;
 

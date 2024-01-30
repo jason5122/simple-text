@@ -182,12 +182,12 @@
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(context);
 
-        CGFloat fontSize = 48;
+        CGFloat fontSize = 16;
         renderer = new Renderer(self.frame.size.width * self.contentsScale,
                                 self.frame.size.height * self.contentsScale, "Arial",
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
-        std::ifstream infile(ResourcePath("sample_files/proportional_font_test.json"));
+        std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
 
         // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
         buffer = std::unique_ptr<Buffer>(new Buffer(infile));

@@ -2,15 +2,11 @@
 #import "ui/renderer/atlas.h"
 #import "util/file_util.h"
 
-CursorRenderer::CursorRenderer(float width, float height, float cell_width, float cell_height)
-    : cell_width(cell_width), cell_height(cell_height) {
+CursorRenderer::CursorRenderer(float width, float height) {
     this->linkShaders();
     this->resize(width, height);
 
     glDepthMask(GL_FALSE);
-
-    glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -38,16 +34,16 @@ CursorRenderer::CursorRenderer(float width, float height, float cell_width, floa
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void CursorRenderer::draw(float scroll_x, float scroll_y, uint16_t col, uint16_t row) {
+void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y) {
     glUseProgram(shader_program);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    float x = col * cell_width + scroll_x;
-    float y = row * cell_height + scroll_y;
+    x += scroll_x;
+    y += scroll_y;
 
     float w = 4;
-    float h = cell_height;
+    float h = 100;
 
     x -= w / 2;
 

@@ -127,12 +127,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size) {
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
-
-    Metrics metrics = rasterizer->metrics();
-    float cell_width = std::floor(metrics.average_advance + 1);
-    float cell_height = std::floor(metrics.line_height + 2);
-
-    cursor_renderer = new CursorRenderer(width, height, cell_width, cell_height);
+    cursor_renderer = new CursorRenderer(width, height);
 
     this->linkShaders();
     this->resize(width, height);
@@ -179,6 +174,10 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     //     char ch = static_cast<char>(i);
     //     this->loadGlyph(ch);
     // }
+
+    Metrics metrics = rasterizer->metrics();
+    float cell_width = std::floor(metrics.average_advance + 1);
+    float cell_height = std::floor(metrics.line_height + 2);
 
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
@@ -264,6 +263,42 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     uint16_t drag_col = round(drag_x / cell_width);
     uint16_t drag_row = (height - drag_y) / cell_height;
+
+    {
+        const char* line = buffer.data[cursor_row].c_str();
+        size_t ret;
+        float total_advance = 0;
+        LogDefault("Renderer", "line %d", cursor_row);
+        for (size_t offset = 0; line[offset] != '\0'; offset += ret) {
+            ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
+
+            uint32_t unicode_scalar = 0;
+            for (int i = 0; i < ret; i++) {
+                uint8_t byte = (line + offset)[i];
+                unicode_scalar |= byte << 8 * i;
+            }
+
+            if (!glyph_cache2.count(unicode_scalar)) {
+                this->loadGlyph2(unicode_scalar, line + offset);
+                LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
+            }
+
+            AtlasGlyph glyph = glyph_cache2[unicode_scalar];
+
+            total_advance += glyph.advance;
+            // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
+            if (rasterizer->isFontMonospace()) {
+                total_advance = std::round(total_advance + 1);
+            }
+
+            if (total_advance >= cursor_x) {
+                LogDefault("Renderer", "total_advance: %f vs cursor_x: %f", total_advance,
+                           cursor_x);
+                cursor_col = total_advance;
+                break;
+            }
+        }
+    }
 
     uint16_t start_row, start_col;
     uint16_t end_row, end_col;
@@ -390,8 +425,8 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     glDisable(GL_BLEND);
 
-    cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row);
-    cursor_renderer->draw(scroll_x, scroll_y, drag_col, drag_row);
+    cursor_renderer->draw(scroll_x, scroll_y, cursor_col, cursor_row * cell_height);
+    cursor_renderer->draw(scroll_x, scroll_y, drag_x, drag_row * cell_height);
     glEnable(GL_BLEND);
 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

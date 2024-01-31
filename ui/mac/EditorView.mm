@@ -231,7 +231,7 @@
 
     renderer->resize(self.frame.size.width * self.contentsScale,
                      self.frame.size.height * self.contentsScale);
-    renderer->setCursorPosition(*buffer, cursor_x, cursor_y);
+    renderer->setCursorPositions(*buffer, cursor_x, cursor_y, drag_x, drag_y);
     renderer->renderText(*buffer, scroll_x, scroll_y, cursor_x, cursor_y, drag_x, drag_y);
 
     // Calls glFlush() by default.

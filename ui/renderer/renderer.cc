@@ -171,12 +171,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // }
     // End of font experiments.
 
-    // Preload common glyphs.
-    // for (int i = 32; i < 127; i++) {
-    //     char ch = static_cast<char>(i);
-    //     this->loadGlyph(ch);
-    // }
-
     Metrics metrics = rasterizer->metrics();
     float cell_width = std::floor(metrics.average_advance + 1);
     float cell_height = std::floor(metrics.line_height + 2);
@@ -257,25 +251,19 @@ std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x
             unicode_scalar |= byte << 8 * i;
         }
 
-        if (!glyph_cache2.count(unicode_scalar)) {
-            this->loadGlyph2(unicode_scalar, line + offset);
+        if (!glyph_cache.count(unicode_scalar)) {
+            this->loadGlyph(unicode_scalar, line + offset);
             LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
         }
 
-        AtlasGlyph glyph = glyph_cache2[unicode_scalar];
+        AtlasGlyph glyph = glyph_cache[unicode_scalar];
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
             return {total_advance, offset};
         }
 
-        // total_advance += glyph.advance;
         total_advance += std::round(glyph.advance);
-
-        // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
-        // if (rasterizer->isFontMonospace()) {
-        //     total_advance = std::round(total_advance + 1);
-        // }
     }
     return {total_advance, offset};
 }
@@ -300,27 +288,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     int row_offset = scroll_y / -cell_height;
     if (row_offset < 0) row_offset = 0;
-
-    int cursor_row = cursor_y / cell_height;
-    float cursor_boundary_x =
-        this->closestBoundaryForX(buffer.data[cursor_row].c_str(), cursor_x).first;
-
-    int drag_row = drag_y / cell_height;
-    float drag_boundary_x = this->closestBoundaryForX(buffer.data[drag_row].c_str(), drag_x).first;
-
-    int start_row, start_col;
-    int end_row, end_col;
-    if (cursor_row < drag_row) {
-        start_row = cursor_row;
-        start_col = cursor_boundary_x;
-        end_row = drag_row;
-        end_col = drag_boundary_x;
-    } else {
-        start_row = drag_row;
-        start_col = drag_boundary_x;
-        end_row = cursor_row;
-        end_col = cursor_boundary_x;
-    }
 
     size_t byte_offset = buffer.byteOfLine(row_offset);
     size_t size = std::min(static_cast<size_t>(row_offset + 60), buffer.lineCount());
@@ -350,31 +317,15 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 unicode_scalar |= byte << 8 * i;
             }
 
-            if (!glyph_cache2.count(unicode_scalar)) {
-                this->loadGlyph2(unicode_scalar, line + offset);
+            if (!glyph_cache.count(unicode_scalar)) {
+                this->loadGlyph(unicode_scalar, line + offset);
                 LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
             }
 
-            AtlasGlyph glyph = glyph_cache2[unicode_scalar];
+            AtlasGlyph glyph = glyph_cache[unicode_scalar];
 
-            uint8_t bg_a = 0;
-            if (start_row < row && row < end_row) {
-                bg_a = 255;
-            }
-
-            float glyph_center = total_advance + glyph.advance / 2;
-            if (start_row == end_row) {
-                if (row == start_row && cursor_x <= glyph_center && glyph_center <= drag_x) {
-                    bg_a = 255;
-                }
-            } else {
-                if (row == start_row && glyph_center >= cursor_x) {
-                    bg_a = 255;
-                }
-                if (row == end_row && glyph_center <= drag_x) {
-                    bg_a = 255;
-                }
-            }
+            float glyph_center_x = total_advance + glyph.advance / 2;
+            uint8_t bg_a = this->isGlyphInSelection(row, glyph_center_x) ? 255 : 0;
 
             instances.push_back(InstanceData{
                 // Grid coordinates.
@@ -396,7 +347,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 text_color.b,
                 glyph.colored,
                 // Total font advance.
-                // static_cast<float>(std::round(total_advance)),
                 total_advance,
                 // Background color.
                 YELLOW.r,
@@ -407,13 +357,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
                 glyph.advance,
             });
 
-            // total_advance += glyph.advance;
             total_advance += std::round(glyph.advance);
-
-            // FIXME: Hack to render almost like Sublime Text (pretty much pixel perfect!).
-            // if (rasterizer->isFontMonospace()) {
-            //     total_advance = std::round(total_advance + 1);
-            // }
         }
         byte_offset++;
     }
@@ -440,10 +384,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-
-    cursor_renderer->draw(scroll_x, scroll_y, last_cursor_x, last_cursor_row * cell_height,
-                          cell_height);
-    cursor_renderer->draw(scroll_x, scroll_y, drag_boundary_x, drag_row * cell_height,
+    cursor_renderer->draw(scroll_x, scroll_y, drag_cursor_x, drag_cursor_row * cell_height,
                           cell_height);
     glEnable(GL_BLEND);
 
@@ -452,28 +393,76 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     glPrintError();
 }
 
-void Renderer::setCursorPosition(Buffer& buffer, float cursor_x, float cursor_y) {
+bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {
+    int start_row, end_row;
+    float start_x, end_x;
+
+    if (last_cursor_row == drag_cursor_row) {
+        if (last_cursor_x <= drag_cursor_x) {
+            start_row = last_cursor_row;
+            end_row = drag_cursor_row;
+            start_x = last_cursor_x;
+            end_x = drag_cursor_x;
+        } else {
+            start_row = drag_cursor_row;
+            end_row = last_cursor_row;
+            start_x = drag_cursor_x;
+            end_x = last_cursor_x;
+        }
+    } else if (last_cursor_row < drag_cursor_row) {
+        start_row = last_cursor_row;
+        end_row = drag_cursor_row;
+        start_x = last_cursor_x;
+        end_x = drag_cursor_x;
+    } else {
+        start_row = drag_cursor_row;
+        end_row = last_cursor_row;
+        start_x = drag_cursor_x;
+        end_x = last_cursor_x;
+    }
+
+    if (start_row < row && row < end_row) {
+        return true;
+    }
+    if (start_row == end_row) {
+        if (row == start_row && start_x <= glyph_center_x && glyph_center_x <= end_x) {
+            return true;
+        }
+    } else {
+        if (row == start_row && start_x <= glyph_center_x) {
+            return true;
+        }
+        if (row == end_row && glyph_center_x <= end_x) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
+                                  float drag_y) {
     Metrics metrics = rasterizer->metrics();
     float cell_height = std::floor(metrics.line_height + 2);
 
-    last_cursor_row = cursor_y / cell_height;
+    float x;
+    size_t offset;
 
-    auto [x, offset] = this->closestBoundaryForX(buffer.data[last_cursor_row].c_str(), cursor_x);
+    last_cursor_row = cursor_y / cell_height;
+    std::tie(x, offset) =
+        this->closestBoundaryForX(buffer.data[last_cursor_row].c_str(), cursor_x);
     last_cursor_byte_offset = offset;
     last_cursor_x = x;
+
+    drag_cursor_row = drag_y / cell_height;
+    std::tie(x, offset) = this->closestBoundaryForX(buffer.data[drag_cursor_row].c_str(), drag_x);
+    drag_cursor_byte_offset = offset;
+    drag_cursor_x = x;
 }
 
-void Renderer::loadGlyph(char ch) {
-    bool emoji = ch == '@' ? true : false;  // DEBUG: Emoji testing hack.
-    RasterizedGlyph glyph = rasterizer->rasterizeChar(ch, emoji);
-    AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
-    glyph_cache.insert({ch, atlas_glyph});
-}
-
-void Renderer::loadGlyph2(uint32_t scalar, const char* utf8_str) {
+void Renderer::loadGlyph(uint32_t scalar, const char* utf8_str) {
     RasterizedGlyph glyph = rasterizer->rasterizeUTF8(utf8_str);
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
-    glyph_cache2.insert({scalar, atlas_glyph});
+    glyph_cache.insert({scalar, atlas_glyph});
 }
 
 void Renderer::resize(int new_width, int new_height) {

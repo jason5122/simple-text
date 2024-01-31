@@ -85,6 +85,11 @@ toolchain("clang") {
     description = "STAMP {{output}}"
   }
 
+  tool("copy") {
+    command = "ln -f {{source}} {{output}} 2>/dev/null || (rm -rf {{output}} && cp -af {{source}} {{output}})"
+    description = "COPY {{source}} {{output}}"
+  }
+
   tool("copy_bundle_data") {
     command = "rm -rf {{output}} && cp -a {{source}} {{output}}"
     description = "COPY_BUNDLE_DATA {{output}}"

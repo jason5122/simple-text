@@ -14,3 +14,27 @@ source_set("libgrapheme") {
     "src/word.c",
   ]
 }
+
+declare_args() {
+  UNICODE_VERSION = "15.0.0"
+}
+
+copy("copy_unicode_data") {
+  unicode_ucd_dir = "//third_party/unicode/ucd/$UNICODE_VERSION"
+  sources = [
+    "$unicode_ucd_dir/BidiBrackets.txt",
+    "$unicode_ucd_dir/BidiMirroring.txt",
+    "$unicode_ucd_dir/DerivedCoreProperties.txt",
+    "$unicode_ucd_dir/EastAsianWidth.txt",
+    "$unicode_ucd_dir/LineBreak.txt",
+    "$unicode_ucd_dir/SpecialCasing.txt",
+    "$unicode_ucd_dir/UnicodeData.txt",
+    "$unicode_ucd_dir/auxiliary/GraphemeBreakProperty.txt",
+    "$unicode_ucd_dir/auxiliary/SentenceBreakProperty.txt",
+    "$unicode_ucd_dir/auxiliary/WordBreakProperty.txt",
+    "$unicode_ucd_dir/emoji/emoji-data.txt",
+    "$unicode_ucd_dir/extracted/DerivedBidiClass.txt",
+  ]
+  outputs =
+      [ "$root_gen_dir/third_party/libgrapheme/data/{{source_file_part}}" ]
+}

@@ -18,10 +18,17 @@ struct Rgb {
 
 class Renderer {
 public:
+    int last_cursor_row = 0;
+    size_t last_cursor_byte_offset = 0;
+    float last_cursor_x = 0;
+
+    int drag_cursor_row = 0;
+    size_t drag_cursor_byte_offset = 0;
+    float drag_cursor_x = 0;
+
     Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
              int font_size);
-    void renderText(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x, float cursor_y,
-                    float drag_x, float drag_y);
+    void renderText(Buffer& buffer, float scroll_x, float scroll_y);
     void resize(int new_width, int new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
@@ -51,14 +58,6 @@ private:
     CursorRenderer* cursor_renderer;
 
     std::map<uint32_t, AtlasGlyph> glyph_cache;
-
-    int last_cursor_row = 0;
-    size_t last_cursor_byte_offset = 0;
-    float last_cursor_x = 0;
-
-    int drag_cursor_row = 0;
-    size_t drag_cursor_byte_offset = 0;
-    float drag_cursor_x = 0;
 
     void linkShaders();
     void loadGlyph(uint32_t scalar, const char* utf8_str);

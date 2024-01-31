@@ -125,8 +125,6 @@
 }
 
 - (void)mouseDragged:(NSEvent*)event {
-    LogDefault(@"WindowController", @"drag: %f %f", event.locationInWindow.x,
-               event.locationInWindow.y);
     openGLLayer->dragPoint = event.locationInWindow;
     openGLLayer->dragPoint.x += openGLLayer->x;
     openGLLayer->dragPoint.y += openGLLayer->y;
@@ -136,13 +134,7 @@
     [self.layer setNeedsDisplay];
 }
 
-- (void)mouseUp:(NSEvent*)event {
-    LogDefault(@"WindowController", @"drag ended");
-}
-
 - (void)rightMouseUp:(NSEvent*)event {
-    LogDefault(@"WindowController", @"right click");
-
     NSMenu* contextMenu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
     [contextMenu addItemWithTitle:@"Insert test string"
                            action:@selector(insertTestString)
@@ -152,7 +144,10 @@
 
 - (void)insertTestString {
     [openGLLayer insertCharacter:'h'];
-    [openGLLayer insertCharacter:'i'];
+    [openGLLayer insertCharacter:'e'];
+    [openGLLayer insertCharacter:'l'];
+    [openGLLayer insertCharacter:'l'];
+    [openGLLayer insertCharacter:'o'];
     [self.layer setNeedsDisplay];
 }
 
@@ -228,11 +223,12 @@
     float cursor_y = cursorPoint.y * self.contentsScale;
     float drag_x = dragPoint.x * self.contentsScale;
     float drag_y = dragPoint.y * self.contentsScale;
+    float width = self.frame.size.width * self.contentsScale;
+    float height = self.frame.size.height * self.contentsScale;
 
-    renderer->resize(self.frame.size.width * self.contentsScale,
-                     self.frame.size.height * self.contentsScale);
+    renderer->resize(width, height);
     renderer->setCursorPositions(*buffer, cursor_x, cursor_y, drag_x, drag_y);
-    renderer->renderText(*buffer, scroll_x, scroll_y, cursor_x, cursor_y, drag_x, drag_y);
+    renderer->renderText(*buffer, scroll_x, scroll_y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context
@@ -247,7 +243,7 @@
 }
 
 - (void)insertCharacter:(char)ch {
-    (*buffer).data[0].push_back(ch);
+    (*buffer).data[renderer->drag_cursor_row].insert(renderer->drag_cursor_byte_offset, 1, ch);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)context {

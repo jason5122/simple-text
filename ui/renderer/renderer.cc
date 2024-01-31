@@ -268,8 +268,7 @@ std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x
     return {total_advance, offset};
 }
 
-void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x,
-                          float cursor_y, float drag_x, float drag_y) {
+void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 

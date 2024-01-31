@@ -17,6 +17,7 @@
    - Linux:
      - `mesa-libEGL-devel` for `<EGL/egl.h>`
      - Reference [libdecor](https://gitlab.freedesktop.org/libdecor/libdecor) for a list of dependencies.
+6. Add delegates to Objective-C code.
 
 ## Unordered
 

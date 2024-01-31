@@ -1,5 +1,5 @@
 source_set("libdecor") {
-  # cflags_c = [ "-std=c99" ]
+  cflags_c = [ "-std=c99" ]
 
   sources = [
     "src/libdecor-fallback.c",

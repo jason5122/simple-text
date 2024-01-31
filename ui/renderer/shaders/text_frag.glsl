@@ -15,7 +15,8 @@ void main() {
         if (background_color.a == 0.0) discard;
 
         alpha_mask = vec4(1.0);
-        color = vec4(background_color.rgb * background_color.a, background_color.a);
+        // color = vec4(background_color.rgb * background_color.a, background_color.a);
+        color = vec4(0.89, 0.902, 0.91, background_color.a);
     } else {
         vec4 texel = texture(mask, tex_coords);
 

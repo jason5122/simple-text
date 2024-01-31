@@ -189,9 +189,9 @@
     if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(context);
 
-        CGFloat fontSize = 24;
+        CGFloat fontSize = 16;
         renderer = new Renderer(self.frame.size.width * self.contentsScale,
-                                self.frame.size.height * self.contentsScale, "Arial",
+                                self.frame.size.height * self.contentsScale, "Source Code Pro",
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
         std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
@@ -222,12 +222,17 @@
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
+    float scroll_x = x * self.contentsScale;
+    float scroll_y = y * self.contentsScale;
+    float cursor_x = cursorPoint.x * self.contentsScale;
+    float cursor_y = cursorPoint.y * self.contentsScale;
+    float drag_x = dragPoint.x * self.contentsScale;
+    float drag_y = dragPoint.y * self.contentsScale;
+
     renderer->resize(self.frame.size.width * self.contentsScale,
                      self.frame.size.height * self.contentsScale);
-
-    renderer->renderText(*buffer, x * self.contentsScale, y * self.contentsScale,
-                         cursorPoint.x * self.contentsScale, cursorPoint.y * self.contentsScale,
-                         dragPoint.x * self.contentsScale, dragPoint.y * self.contentsScale);
+    renderer->setCursorPosition(*buffer, cursor_x, cursor_y);
+    renderer->renderText(*buffer, scroll_x, scroll_y, cursor_x, cursor_y, drag_x, drag_y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:context

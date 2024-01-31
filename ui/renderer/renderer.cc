@@ -244,10 +244,11 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-float Renderer::closestBoundaryForX(const char* line, float x) {
+std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x) {
+    size_t offset;
     size_t ret;
     float total_advance = 0;
-    for (size_t offset = 0; line[offset] != '\0'; offset += ret) {
+    for (offset = 0; line[offset] != '\0'; offset += ret) {
         ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
 
         uint32_t unicode_scalar = 0;
@@ -265,7 +266,7 @@ float Renderer::closestBoundaryForX(const char* line, float x) {
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
-            return total_advance;
+            return {total_advance, offset};
         }
 
         // total_advance += glyph.advance;
@@ -276,7 +277,7 @@ float Renderer::closestBoundaryForX(const char* line, float x) {
         //     total_advance = std::round(total_advance + 1);
         // }
     }
-    return 0;
+    return {total_advance, offset};
 }
 
 void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x,
@@ -301,10 +302,11 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     if (row_offset < 0) row_offset = 0;
 
     int cursor_row = cursor_y / cell_height;
-    float cursor_boundary_x = this->closestBoundaryForX(buffer.data[cursor_row].c_str(), cursor_x);
+    float cursor_boundary_x =
+        this->closestBoundaryForX(buffer.data[cursor_row].c_str(), cursor_x).first;
 
     int drag_row = drag_y / cell_height;
-    float drag_boundary_x = this->closestBoundaryForX(buffer.data[drag_row].c_str(), drag_x);
+    float drag_boundary_x = this->closestBoundaryForX(buffer.data[drag_row].c_str(), drag_x).first;
 
     int start_row, start_col;
     int end_row, end_col;
@@ -439,7 +441,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
 
     glDisable(GL_BLEND);
 
-    cursor_renderer->draw(scroll_x, scroll_y, cursor_boundary_x, cursor_row * cell_height,
+    cursor_renderer->draw(scroll_x, scroll_y, last_cursor_x, last_cursor_row * cell_height,
                           cell_height);
     cursor_renderer->draw(scroll_x, scroll_y, drag_boundary_x, drag_row * cell_height,
                           cell_height);
@@ -448,6 +450,17 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, float 
     // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
     // https://learnopengl.com/In-Practice/Debugging
     glPrintError();
+}
+
+void Renderer::setCursorPosition(Buffer& buffer, float cursor_x, float cursor_y) {
+    Metrics metrics = rasterizer->metrics();
+    float cell_height = std::floor(metrics.line_height + 2);
+
+    last_cursor_row = cursor_y / cell_height;
+
+    auto [x, offset] = this->closestBoundaryForX(buffer.data[last_cursor_row].c_str(), cursor_x);
+    last_cursor_byte_offset = offset;
+    last_cursor_x = x;
 }
 
 void Renderer::loadGlyph(char ch) {

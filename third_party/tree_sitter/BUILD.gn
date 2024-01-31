@@ -1,5 +1,7 @@
 source_set("tree_sitter") {
-  cflags_c = [ "-std=c99" ]
+  # Due to GN's ordering, we set C99 this way instead of through `cflags_c` directly.
+  # This sets C99 *after* the default compiler config. Using cflags_c sets C99 before the default.
+  configs += [ "//build/config/compiler:c99" ]
 
   sources = [
     "src/lib.c",

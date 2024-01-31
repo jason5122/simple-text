@@ -47,3 +47,7 @@ if (is_mac) {
     cflags_objcc = common_flags
   }
 }
+
+config("c99") {
+  cflags_c = [ "-std=c99" ]
+}

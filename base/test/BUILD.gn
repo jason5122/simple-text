@@ -1,9 +1,10 @@
 executable("tree_sitter_test") {
-  sources = [ "tree_sitter_test.c" ]
+  sources = [ "tree_sitter_test.cc" ]
 
   deps = [
     ":copy_test_files",
     "//third_party/tree_sitter",
+    "//util",
   ]
 }
 

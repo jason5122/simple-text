@@ -1,5 +1,4 @@
 #include "renderer.h"
-#include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "util/file_util.h"
 #include "util/log_util.h"
 #include "util/opengl_error_util.h"
@@ -61,6 +60,28 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // uint64_t microseconds = (end - start) / 1e3;
     // float fps = 1000000.0 / microseconds;
     // LogDefault("Renderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
+
+    parser = ts_parser_new();
+    ts_parser_set_language(parser, tree_sitter_json());
+
+    uint32_t error_offset = 0;
+    TSQueryError error_type = TSQueryErrorNone;
+    const char* query_code = ReadFile(ResourcePath("highlights.scm"));
+    query = ts_query_new(tree_sitter_json(), query_code, strlen(query_code), &error_offset,
+                         &error_type);
+
+    if (error_type != TSQueryErrorNone) {
+        LogError("Renderer", "Error creating new TSQuery. error_offset: %d, error type: %d",
+                 error_offset, error_type);
+    }
+
+    std::vector<std::string> capture_names;
+    uint32_t capture_count = ts_query_capture_count(query);
+    for (int i = 0; i < capture_count; i++) {
+        uint32_t length;
+        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
+        capture_names.push_back(capture_name);
+    }
 
     // Font experiments.
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
@@ -170,35 +191,37 @@ const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t*
 }
 
 void Renderer::parseBuffer(Buffer& buffer) {
-    TSParser* parser = ts_parser_new();
-    ts_parser_set_language(parser, tree_sitter_json());
-
     const char* source_code = buffer.toCString();
     buffer_t buf = {source_code, strlen(source_code)};
     TSInput input = {&buf, read, TSInputEncodingUTF8};
-    TSTree* tree = ts_parser_parse(parser, NULL, input);
+    tree = ts_parser_parse(parser, tree, input);
 
+    this->highlight();
+}
+
+void Renderer::editBuffer(Buffer& buffer) {
+    const char* source_code = buffer.toCString();
+
+    TSInputEdit edit = {
+        static_cast<uint32_t>(drag_cursor_row),
+        static_cast<uint32_t>(strlen(source_code) - 1),
+        static_cast<uint32_t>(strlen(source_code)),
+        // These are unused!
+        {0, 0},
+        {0, 0},
+        {0, 0},
+    };
+    ts_tree_edit(tree, &edit);
+
+    buffer_t buf = {source_code, strlen(source_code)};
+    TSInput input = {&buf, read, TSInputEncodingUTF8};
+    tree = ts_parser_parse(parser, tree, input);
+
+    this->highlight();
+}
+
+void Renderer::highlight() {
     TSNode root_node = ts_tree_root_node(tree);
-
-    uint32_t error_offset = 0;
-    TSQueryError error_type = TSQueryErrorNone;
-    const char* query_code = ReadFile(ResourcePath("highlights.scm"));
-    TSQuery* query = ts_query_new(tree_sitter_json(), query_code, strlen(query_code),
-                                  &error_offset, &error_type);
-
-    if (error_type != TSQueryErrorNone) {
-        LogError("Renderer", "Error creating new TSQuery. error_offset: %d, error type: %d",
-                 error_offset, error_type);
-    }
-
-    std::vector<std::string> capture_names;
-    uint32_t capture_count = ts_query_capture_count(query);
-    for (int i = 0; i < capture_count; i++) {
-        uint32_t length;
-        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
-        capture_names.push_back(capture_name);
-    }
-
     TSQueryCursor* query_cursor = ts_query_cursor_new();
     ts_query_cursor_exec(query_cursor, query, root_node);
 
@@ -244,11 +267,6 @@ void Renderer::parseBuffer(Buffer& buffer) {
         prev_start = start_byte;
         prev_end = end_byte;
     }
-
-    // Free all of the heap-allocated memory.
-    // free(string);
-    ts_tree_delete(tree);
-    ts_parser_delete(parser);
 }
 
 std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x) {

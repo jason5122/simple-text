@@ -2,6 +2,7 @@
 
 #include "base/buffer.h"
 #include "font/rasterizer.h"
+#include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/atlas_renderer.h"
 #include "ui/renderer/cursor_renderer.h"
@@ -33,6 +34,7 @@ public:
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
     void parseBuffer(Buffer& buffer);
+    void editBuffer(Buffer& buffer);
     ~Renderer();
 
 private:
@@ -60,8 +62,13 @@ private:
 
     std::map<uint32_t, AtlasGlyph> glyph_cache;
 
+    TSParser* parser;
+    TSTree* tree = NULL;
+    TSQuery* query;
+
     void linkShaders();
     void loadGlyph(uint32_t scalar, const char* utf8_str);
     std::pair<float, size_t> closestBoundaryForX(const char* line, float x);
     bool isGlyphInSelection(int row, float glyph_center_x);
+    void highlight();
 };

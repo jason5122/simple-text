@@ -199,7 +199,12 @@
         //     LogDefault("EditorView", line);
         // }
 
+        uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         renderer->parseBuffer(*buffer);
+        uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+        uint64_t microseconds = (end - start) / 1e3;
+        float fps = 1000000.0 / microseconds;
+        LogDefault("OpenGLLayer", "Tree-sitter parseBuffer(): %ld µs (%f fps)", microseconds, fps);
     }
     return context;
 }
@@ -249,11 +254,11 @@
     (*buffer).data[renderer->drag_cursor_row].insert(renderer->drag_cursor_byte_offset, 1, ch);
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    renderer->parseBuffer(*buffer);
+    renderer->editBuffer(*buffer);
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
-    LogDefault("OpenGLLayer", "Tree-sitter parseBuffer(): %ld µs (%f fps)", microseconds, fps);
+    LogDefault("OpenGLLayer", "Tree-sitter editBuffer(): %ld µs (%f fps)", microseconds, fps);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)context {

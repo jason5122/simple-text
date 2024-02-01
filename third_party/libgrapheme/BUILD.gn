@@ -13,6 +13,76 @@ source_set("libgrapheme") {
     "src/util.c",
     "src/word.c",
   ]
+
+  include_dirs = [ "$root_gen_dir/third_party/libgrapheme/gen" ]
+
+  deps = [ ":generate_headers" ]
+}
+
+template("compile_tool") {
+  executable(target_name) {
+    forward_variables_from(invoker, "*", [ "deps" ])
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+    configs += [ "//build/config/compiler:c99" ]
+    sources += [ "gen/util.c" ]
+  }
+}
+
+compile_tool("bidirectional") {
+  sources = [ "gen/bidirectional.c" ]
+}
+
+compile_tool("case") {
+  sources = [ "gen/case.c" ]
+}
+
+compile_tool("character") {
+  sources = [ "gen/character.c" ]
+}
+
+compile_tool("line") {
+  sources = [ "gen/line.c" ]
+}
+
+compile_tool("sentence") {
+  sources = [ "gen/sentence.c" ]
+}
+
+compile_tool("word") {
+  sources = [ "gen/word.c" ]
+}
+
+action_foreach("generate_headers") {
+  script = "generate_headers.py"
+  cmd_dir = rebase_path(root_out_dir)
+  args = [
+    "$cmd_dir/{{source_name_part}}",
+    rebase_path(
+        "$root_gen_dir/third_party/libgrapheme/gen/{{source_name_part}}.h",
+        root_build_dir),
+    rebase_path("$root_gen_dir/third_party/libgrapheme", root_build_dir),
+  ]
+  sources = [
+    "gen/bidirectional.c",
+    "gen/case.c",
+    "gen/character.c",
+    "gen/line.c",
+    "gen/sentence.c",
+    "gen/word.c",
+  ]
+  outputs =
+      [ "$root_gen_dir/third_party/libgrapheme/gen/{{source_name_part}}.h" ]
+  deps = [
+    ":bidirectional",
+    ":case",
+    ":character",
+    ":copy_unicode_data",
+    ":line",
+    ":sentence",
+    ":word",
+  ]
 }
 
 declare_args() {

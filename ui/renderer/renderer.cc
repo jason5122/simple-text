@@ -183,23 +183,42 @@ struct buffer_t {
     size_t len;
 };
 
-// TODO: Implement reading more than one character at once.
-// https://github.com/neovim/neovim/blob/master/src/nvim/lua/treesitter.c#L358
-// https://github.com/tree-sitter/tree-sitter/issues/1277
-const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t* bytes_read) {
-    if (byte_index >= ((buffer_t*)payload)->len) {
-        *bytes_read = 0;
-        return (char*)"";
-    } else {
-        *bytes_read = 1;
-        return (char*)(((buffer_t*)payload)->buf) + byte_index;
+void memchrsub(void* data, char c, char x, size_t len) {
+    char* p = (char*)data;
+    char* end = (char*)data + len;
+    while ((p = (char*)memchr(p, c, (size_t)(end - p)))) {
+        *p++ = x;
     }
 }
 
+const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t* bytes_read) {
+    Buffer* buffer = (Buffer*)payload;
+    if (position.row >= buffer->lineCount()) {
+        *bytes_read = 0;
+        return "";
+    }
+
+    const size_t BUFSIZE = 256;
+    static char buf[BUFSIZE];
+
+    const char* line = buffer->data[position.row].c_str();
+    size_t len = buffer->data[position.row].size();
+    size_t tocopy = std::min(len - position.column, BUFSIZE);
+
+    memcpy(buf, line + position.column, tocopy);
+    memchrsub(buf, '\n', '\0', tocopy);  // Translate embedded \n to NUL.
+    *bytes_read = (uint32_t)tocopy;
+    if (tocopy < BUFSIZE) {
+        // Add the final \n.
+        // If it didn't fit, read() will be called again on the same line with the column advanced.
+        buf[tocopy] = '\n';
+        (*bytes_read)++;
+    }
+    return buf;
+}
+
 void Renderer::parseBuffer(Buffer& buffer) {
-    const char* source_code = buffer.toCString();
-    buffer_t buf = {source_code, strlen(source_code)};
-    TSInput input = {&buf, read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, read, TSInputEncodingUTF8};
     tree = ts_parser_parse(parser, tree, input);
 
     this->highlight();
@@ -219,8 +238,7 @@ void Renderer::editBuffer(Buffer& buffer) {
     };
     ts_tree_edit(tree, &edit);
 
-    buffer_t buf = {source_code, strlen(source_code)};
-    TSInput input = {&buf, read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, read, TSInputEncodingUTF8};
     tree = ts_parser_parse(parser, tree, input);
 
     this->highlight();

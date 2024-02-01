@@ -8,3 +8,9 @@ group("all") {
     # "//util",
   ]
 }
+
+group("tests") {
+  testonly = true
+
+  deps = [ "//base/test:tree_sitter_test" ]
+}

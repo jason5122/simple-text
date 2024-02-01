@@ -189,7 +189,7 @@
                                 self.frame.size.height * self.contentsScale, "Source Code Pro",
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
-        std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
+        std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
 
         // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
         buffer = std::unique_ptr<Buffer>(new Buffer(infile));

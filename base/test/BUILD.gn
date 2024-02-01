@@ -1,0 +1,14 @@
+executable("tree_sitter_test") {
+  sources = [ "tree_sitter_test.c" ]
+
+  deps = [
+    ":copy_test_files",
+    "//third_party/tree_sitter",
+  ]
+}
+
+copy("copy_test_files") {
+  sources = [ "//app/resources/sample_files/50k_lines.json" ]
+
+  outputs = [ "$root_out_dir/{{source_file_part}}" ]
+}

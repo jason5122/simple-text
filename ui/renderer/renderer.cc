@@ -269,6 +269,19 @@ void Renderer::highlight() {
     }
 }
 
+float Renderer::getGlyphAdvance(const char* utf8_str) {
+    uint32_t unicode_scalar = utf8_str[0];
+
+    LogDefault("Renderer", "getGlyphAdvance for %s: %d", utf8_str, unicode_scalar);
+
+    if (!glyph_cache.count(unicode_scalar)) {
+        this->loadGlyph(unicode_scalar, utf8_str);
+    }
+
+    AtlasGlyph glyph = glyph_cache[unicode_scalar];
+    return glyph.advance;
+}
+
 std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x) {
     size_t offset;
     size_t ret;

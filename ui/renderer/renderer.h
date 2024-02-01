@@ -35,6 +35,7 @@ public:
                             float drag_y);
     void parseBuffer(Buffer& buffer);
     void editBuffer(Buffer& buffer);
+    float getGlyphAdvance(const char* utf8_str);
     ~Renderer();
 
 private:

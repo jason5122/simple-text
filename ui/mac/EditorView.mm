@@ -14,7 +14,7 @@
     CGPoint cursorPoint;
     CGPoint dragPoint;
 
-@private
+    // @private
     Renderer* renderer;
     std::unique_ptr<Buffer> buffer;
 }
@@ -121,6 +121,12 @@
     openGLLayer->cursorPoint.y = openGLLayer.frame.size.height - openGLLayer->cursorPoint.y;
     openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
 
+    float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
+    float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
+    float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
+    float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
+    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, cursor_x, cursor_y, drag_x,
+                                              drag_y);
     [self.layer setNeedsDisplay];
 }
 
@@ -131,6 +137,12 @@
 
     openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
 
+    float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
+    float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
+    float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
+    float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
+    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, cursor_x, cursor_y, drag_x,
+                                              drag_y);
     [self.layer setNeedsDisplay];
 }
 
@@ -227,15 +239,10 @@
 
     float scroll_x = x * self.contentsScale;
     float scroll_y = y * self.contentsScale;
-    float cursor_x = cursorPoint.x * self.contentsScale;
-    float cursor_y = cursorPoint.y * self.contentsScale;
-    float drag_x = dragPoint.x * self.contentsScale;
-    float drag_y = dragPoint.y * self.contentsScale;
     float width = self.frame.size.width * self.contentsScale;
     float height = self.frame.size.height * self.contentsScale;
 
     renderer->resize(width, height);
-    renderer->setCursorPositions(*buffer, cursor_x, cursor_y, drag_x, drag_y);
     renderer->renderText(*buffer, scroll_x, scroll_y);
 
     // Calls glFlush() by default.
@@ -252,6 +259,13 @@
 
 - (void)insertCharacter:(char)ch {
     (*buffer).data[renderer->drag_cursor_row].insert(renderer->drag_cursor_byte_offset, 1, ch);
+
+    std::string tmp = std::string(1, ch);
+    float advance = renderer->getGlyphAdvance(tmp.c_str());
+    renderer->last_cursor_byte_offset++;
+    renderer->last_cursor_x += advance;
+    renderer->drag_cursor_byte_offset++;
+    renderer->drag_cursor_x += advance;
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     renderer->editBuffer(*buffer);

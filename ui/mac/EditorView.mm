@@ -218,11 +218,6 @@
 
         // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
         buffer = std::unique_ptr<Buffer>(new Buffer(infile));
-        // LogDefault("OpenGLLayer", "%s", buffer->toCString());
-
-        // for (const std::string& line : *buffer) {
-        //     LogDefault("EditorView", line);
-        // }
 
         uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         renderer->parseBuffer(*buffer);

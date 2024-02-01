@@ -225,12 +225,10 @@ void Renderer::parseBuffer(Buffer& buffer) {
 }
 
 void Renderer::editBuffer(Buffer& buffer) {
-    const char* source_code = buffer.toCString();
-
     TSInputEdit edit = {
         static_cast<uint32_t>(drag_cursor_row),
-        static_cast<uint32_t>(strlen(source_code) - 1),
-        static_cast<uint32_t>(strlen(source_code)),
+        static_cast<uint32_t>(buffer.byteCount() - 1),
+        static_cast<uint32_t>(buffer.byteCount()),
         // These are unused!
         {0, 0},
         {0, 0},

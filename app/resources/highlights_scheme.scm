@@ -20,8 +20,9 @@
   .
   "]")
 
-((symbol) @operator
- (#match? @operator "^(\\+|-|\\*|/|=|>|<|>=|<=)$"))
+; FIXME: This colors regular variables as operators too.
+; ((symbol) @operator
+;  (#match? @operator "^(\\+|-|\\*|/|=|>|<|>=|<=)$"))
 
 (list
   .

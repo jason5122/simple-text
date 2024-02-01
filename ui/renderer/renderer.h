@@ -45,6 +45,7 @@ private:
     static constexpr Rgb BLUE{102, 153, 204};
     static constexpr Rgb GREEN{128, 185, 121};
     static constexpr Rgb RED{236, 95, 102};
+    static constexpr Rgb RED2{249, 123, 88};
     static constexpr Rgb GREY2{153, 153, 153};
     static constexpr Rgb PURPLE{198, 149, 198};
 

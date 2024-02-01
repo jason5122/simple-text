@@ -46,6 +46,7 @@
 "==" @operator
 ">" @operator
 "||" @operator
+"/=" @operator
 
 "." @delimiter
 ";" @delimiter
@@ -58,14 +59,14 @@
 (char_literal) @number
 
 (call_expression
-  function: (identifier) @function)
+ function: (identifier) @function)
 (call_expression
-  function: (field_expression
-    field: (field_identifier) @function))
+ function: (field_expression
+            field: (field_identifier) @function))
 (function_declarator
-  declarator: (identifier) @function)
+ declarator: (identifier) @function)
 (preproc_function_def
-  name: (identifier) @function.special)
+ name: (identifier) @function.special)
 
 (field_identifier) @property
 (statement_identifier) @label
@@ -82,31 +83,31 @@
 ; inherits: c
 
 [
-  "in"
-  "out"
-  "inout"
-  "uniform"
-  "shared"
-  "layout"
-  "attribute"
-  "varying"
-  "buffer"
-  "coherent"
-  "readonly"
-  "writeonly"
-  "precision"
-  "highp"
-  "mediump"
-  "lowp"
-  "centroid"
-  "sample"
-  "patch"
-  "smooth"
-  "flat"
-  "noperspective"
-  "invariant"
-  "precise"
-] @type.qualifier
+ "in"
+ "out"
+ "inout"
+ "uniform"
+ "shared"
+ "layout"
+ "attribute"
+ "varying"
+ "buffer"
+ "coherent"
+ "readonly"
+ "writeonly"
+ "precision"
+ "highp"
+ "mediump"
+ "lowp"
+ "centroid"
+ "sample"
+ "patch"
+ "smooth"
+ "flat"
+ "noperspective"
+ "invariant"
+ "precise"
+ ] @type.qualifier
 
 "subroutine" @keyword.function
 

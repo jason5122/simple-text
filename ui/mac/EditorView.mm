@@ -208,10 +208,10 @@
                                 self.frame.size.height * self.contentsScale, "Source Code Pro",
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
-        std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
+        // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
         // std::ifstream infile(ResourcePath("sample_files/example.json"));
-        // std::ifstream infile(ResourcePath("sample_files/example.scm"));
+        std::ifstream infile(ResourcePath("sample_files/example.scm"));
         // std::ifstream infile(ResourcePath("sample_files/example.cc"));
         // std::ifstream infile(ResourcePath("sample_files/example.glsl"));
         // std::ifstream infile(ResourcePath("sample_files/strange.json"));

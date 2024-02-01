@@ -23,15 +23,39 @@ int main() {
     TSParser* parser = ts_parser_new();
     ts_parser_set_language(parser, tree_sitter_json());
 
-    const char* source_code = ReadFile("50k_lines.json");
-
+    // const char* source_code = ReadFile("example.json");
+    const char* source_code = R"(
+{
+  // Test comment.
+  "year": 2024,
+  "static": true
+})";
     buffer buf = {source_code, strlen(source_code)};
     TSInput input = {&buf, read, TSInputEncodingUTF8};
 
-    TSTree* tree = ts_parser_parse(parser, NULL, input);
-    TSTree* new_tree = ts_parser_parse(parser, tree, input);
+    const char* source_code_edited = R"(
+{
+  // Test comment.
+  "year": 2024,
+  "static": true,
+  "name": "John Smith"
+})";
+    buffer buf_edited = {source_code_edited, strlen(source_code_edited)};
+    TSInput input_edited = {&buf_edited, read, TSInputEncodingUTF8};
 
-    std::cout << "Hello world!\n";
+    TSNode root_node;
+    TSTree* tree;
+
+    tree = ts_parser_parse(parser, NULL, input);
+    root_node = ts_tree_root_node(tree);
+    std::cout << ts_node_string(root_node) << '\n';
+
+    TSInputEdit edit = {53, 55, 79, {3, 16}, {4, 0}, {5, 0}};
+    ts_tree_edit(tree, &edit);
+
+    tree = ts_parser_parse(parser, tree, input_edited);
+    root_node = ts_tree_root_node(tree);
+    std::cout << ts_node_string(root_node) << '\n';
 
     return 0;
 }

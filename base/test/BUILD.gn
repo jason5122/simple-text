@@ -9,7 +9,7 @@ executable("tree_sitter_test") {
 }
 
 copy("copy_test_files") {
-  sources = [ "//app/resources/sample_files/50k_lines.json" ]
+  sources = [ "//app/resources/sample_files/example.json" ]
 
   outputs = [ "$root_out_dir/{{source_file_part}}" ]
 }

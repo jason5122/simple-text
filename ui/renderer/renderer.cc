@@ -279,7 +279,7 @@ float Renderer::getGlyphAdvance(const char* utf8_str) {
     }
 
     AtlasGlyph glyph = glyph_cache[unicode_scalar];
-    return glyph.advance;
+    return std::round(glyph.advance);
 }
 
 std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x) {

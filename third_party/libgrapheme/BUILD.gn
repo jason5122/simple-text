@@ -27,6 +27,8 @@ template("compile_tool") {
     }
     configs += [ "//build/config/compiler:c99" ]
     sources += [ "gen/util.c" ]
+
+    output_dir = "$root_gen_dir/third_party/libgrapheme/gen"
   }
 }
 
@@ -56,7 +58,8 @@ compile_tool("word") {
 
 action_foreach("generate_headers") {
   script = "generate_headers.py"
-  cmd_dir = rebase_path(root_out_dir)
+
+  cmd_dir = rebase_path("$root_gen_dir/third_party/libgrapheme/gen")
   args = [
     "$cmd_dir/{{source_name_part}}",
     rebase_path(

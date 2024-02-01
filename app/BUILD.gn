@@ -46,6 +46,8 @@ if (is_mac) {
       "resources/sample_files/example.scm",
       "resources/sample_files/larger_example.json",
       "resources/sample_files/proportional_font_test.json",
+      "resources/sample_files/sort.scm",
+      "resources/sample_files/sort_bugged.scm",
       "resources/sample_files/strange.json",
 
       # "resources/sample_files/50k_lines.json",

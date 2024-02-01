@@ -1,6 +1,6 @@
 #include "buffer.h"
-#include <sstream>
 #include <cstdint>
+#include <sstream>
 
 Buffer::Buffer(std::string s) {
     std::stringstream ss(s);
@@ -32,4 +32,16 @@ size_t Buffer::byteOfLine(size_t line_index) {
         byte_offset++;  // Include newline.
     }
     return byte_offset;
+}
+
+// FIXME: This is SLOW! This is a naïve implementation for testing.
+const char* Buffer::toCString() {
+    std::stringstream ss;
+    for (const std::string& line : data) {
+        ss << line;
+        ss << '\n';
+    }
+    const std::string& tmp = ss.str();
+    const char* cstr = tmp.c_str();
+    return cstr;
 }

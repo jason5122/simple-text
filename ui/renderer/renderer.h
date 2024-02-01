@@ -32,6 +32,7 @@ public:
     void resize(int new_width, int new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
+    void parseBuffer(Buffer& buffer);
     ~Renderer();
 
 private:
@@ -61,7 +62,6 @@ private:
 
     void linkShaders();
     void loadGlyph(uint32_t scalar, const char* utf8_str);
-    void treeSitterExperiment();
     std::pair<float, size_t> closestBoundaryForX(const char* line, float x);
     bool isGlyphInSelection(int row, float glyph_center_x);
 };

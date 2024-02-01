@@ -41,90 +41,6 @@ struct InstanceData {
 
 extern "C" TSLanguage* tree_sitter_json();
 
-void Renderer::treeSitterExperiment() {
-    TSParser* parser = ts_parser_new();
-
-    // Set the parser's language (JSON in this case).
-    ts_parser_set_language(parser, tree_sitter_json());
-
-    // Build a syntax tree based on source code stored in a string.
-    const char* source_code = ReadFile(ResourcePath("sample_files/10k_lines.json"));
-    TSTree* tree = ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
-
-    // Get the root node of the syntax tree.
-    TSNode root_node = ts_tree_root_node(tree);
-
-    // Print the syntax tree as an S-expression.
-    // char* string = ts_node_string(root_node);
-    // LogDefault("Renderer", "Syntax tree: \n%s", string);
-
-    uint32_t error_offset = 0;
-    TSQueryError error_type = TSQueryErrorNone;
-    const char* query_code = ReadFile(ResourcePath("highlights.scm"));
-    TSQuery* query = ts_query_new(tree_sitter_json(), query_code, strlen(query_code),
-                                  &error_offset, &error_type);
-
-    if (error_type != TSQueryErrorNone) {
-        LogError("Renderer", "Error creating new TSQuery. error_offset: %d, error type: %d",
-                 error_offset, error_type);
-    }
-
-    std::vector<std::string> capture_names;
-    uint32_t capture_count = ts_query_capture_count(query);
-    for (int i = 0; i < capture_count; i++) {
-        uint32_t length;
-        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
-        capture_names.push_back(capture_name);
-    }
-
-    TSQueryCursor* query_cursor = ts_query_cursor_new();
-    ts_query_cursor_exec(query_cursor, query, root_node);
-
-    const void* prev_id = 0;
-    uint32_t prev_start = -1;
-    uint32_t prev_end = -1;
-
-    // TODO: Profile this code and optimize it to be as fast as Tree-sitter's CLI.
-    TSQueryMatch match;
-    uint32_t capture_index;
-    while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
-        TSQueryCapture capture = match.captures[capture_index];
-        TSNode node = capture.node;
-        uint32_t start_byte = ts_node_start_byte(node);
-        uint32_t end_byte = ts_node_end_byte(node);
-
-        if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
-            // DEV: This significantly slows down highlighting. Only enable when debugging.
-            // LogDefault("Renderer", "%d, [%d, %d], %s", node.id, start_byte, end_byte,
-            //            capture_names[capture.index]);
-
-            highlight_ranges.push_back({start_byte, end_byte});
-            if (capture.index == 0) {
-                highlight_colors.push_back(PURPLE);
-            } else if (capture.index == 1) {
-                highlight_colors.push_back(GREEN);
-            } else if (capture.index == 2) {
-                highlight_colors.push_back(YELLOW);
-            } else if (capture.index == 3) {
-                highlight_colors.push_back(RED);
-            } else if (capture.index == 5) {
-                highlight_colors.push_back(GREY2);
-            } else {
-                highlight_colors.push_back(BLACK);
-            }
-        }
-
-        prev_id = node.id;
-        prev_start = start_byte;
-        prev_end = end_byte;
-    }
-
-    // Free all of the heap-allocated memory.
-    // free(string);
-    ts_tree_delete(tree);
-    ts_parser_delete(parser);
-}
-
 Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size) {
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
@@ -139,12 +55,12 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glDepthMask(GL_FALSE);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
 
-    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    this->treeSitterExperiment();
-    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    uint64_t microseconds = (end - start) / 1e3;
-    float fps = 1000000.0 / microseconds;
-    LogDefault("Renderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
+    // uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    // this->treeSitterExperiment();
+    // uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    // uint64_t microseconds = (end - start) / 1e3;
+    // float fps = 1000000.0 / microseconds;
+    // LogDefault("Renderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
 
     // Font experiments.
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
@@ -236,6 +152,103 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+struct buffer_t {
+    const char* buf;
+    size_t len;
+};
+
+const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t* bytes_read) {
+    if (byte_index >= ((buffer_t*)payload)->len) {
+        *bytes_read = 0;
+        return (char*)"";
+    } else {
+        *bytes_read = 1;
+        return (char*)(((buffer_t*)payload)->buf) + byte_index;
+    }
+}
+
+void Renderer::parseBuffer(Buffer& buffer) {
+    TSParser* parser = ts_parser_new();
+    ts_parser_set_language(parser, tree_sitter_json());
+
+    const char* source_code = buffer.toCString();
+    buffer_t buf = {source_code, strlen(source_code)};
+    TSInput input = {&buf, read, TSInputEncodingUTF8};
+    TSTree* tree = ts_parser_parse(parser, NULL, input);
+
+    TSNode root_node = ts_tree_root_node(tree);
+
+    uint32_t error_offset = 0;
+    TSQueryError error_type = TSQueryErrorNone;
+    const char* query_code = ReadFile(ResourcePath("highlights.scm"));
+    TSQuery* query = ts_query_new(tree_sitter_json(), query_code, strlen(query_code),
+                                  &error_offset, &error_type);
+
+    if (error_type != TSQueryErrorNone) {
+        LogError("Renderer", "Error creating new TSQuery. error_offset: %d, error type: %d",
+                 error_offset, error_type);
+    }
+
+    std::vector<std::string> capture_names;
+    uint32_t capture_count = ts_query_capture_count(query);
+    for (int i = 0; i < capture_count; i++) {
+        uint32_t length;
+        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
+        capture_names.push_back(capture_name);
+    }
+
+    TSQueryCursor* query_cursor = ts_query_cursor_new();
+    ts_query_cursor_exec(query_cursor, query, root_node);
+
+    const void* prev_id = 0;
+    uint32_t prev_start = -1;
+    uint32_t prev_end = -1;
+
+    // TODO: Profile this code and optimize it to be as fast as Tree-sitter's CLI.
+    TSQueryMatch match;
+    uint32_t capture_index;
+
+    highlight_ranges.clear();
+    highlight_colors.clear();
+
+    while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
+        TSQueryCapture capture = match.captures[capture_index];
+        TSNode node = capture.node;
+        uint32_t start_byte = ts_node_start_byte(node);
+        uint32_t end_byte = ts_node_end_byte(node);
+
+        if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
+            // DEV: This significantly slows down highlighting. Only enable when debugging.
+            // LogDefault("Renderer", "%d, [%d, %d], %s", node.id, start_byte, end_byte,
+            //            capture_names[capture.index]);
+
+            highlight_ranges.push_back({start_byte, end_byte});
+            if (capture.index == 0) {
+                highlight_colors.push_back(PURPLE);
+            } else if (capture.index == 1) {
+                highlight_colors.push_back(GREEN);
+            } else if (capture.index == 2) {
+                highlight_colors.push_back(YELLOW);
+            } else if (capture.index == 3) {
+                highlight_colors.push_back(RED);
+            } else if (capture.index == 5) {
+                highlight_colors.push_back(GREY2);
+            } else {
+                highlight_colors.push_back(BLACK);
+            }
+        }
+
+        prev_id = node.id;
+        prev_start = start_byte;
+        prev_end = end_byte;
+    }
+
+    // Free all of the heap-allocated memory.
+    // free(string);
+    ts_tree_delete(tree);
+    ts_parser_delete(parser);
 }
 
 std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x) {

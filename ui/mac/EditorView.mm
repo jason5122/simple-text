@@ -189,7 +189,8 @@
                                 self.frame.size.height * self.contentsScale, "Source Code Pro",
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
-        std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
+        // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
+        std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
 
         // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
         buffer = std::unique_ptr<Buffer>(new Buffer(infile));
@@ -197,6 +198,8 @@
         // for (const std::string& line : *buffer) {
         //     LogDefault("EditorView", line);
         // }
+
+        renderer->parseBuffer(*buffer);
     }
     return context;
 }
@@ -244,6 +247,13 @@
 
 - (void)insertCharacter:(char)ch {
     (*buffer).data[renderer->drag_cursor_row].insert(renderer->drag_cursor_byte_offset, 1, ch);
+
+    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    renderer->parseBuffer(*buffer);
+    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+    uint64_t microseconds = (end - start) / 1e3;
+    float fps = 1000000.0 / microseconds;
+    LogDefault("OpenGLLayer", "Tree-sitter parseBuffer(): %ld µs (%f fps)", microseconds, fps);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)context {

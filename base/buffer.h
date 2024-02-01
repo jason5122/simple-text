@@ -13,6 +13,7 @@ public:
     size_t lineCount();
     std::string line(size_t line_index);
     size_t byteOfLine(size_t line_index);
+    const char* toCString();
 
     BufferType::iterator begin() {
         return data.begin();

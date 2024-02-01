@@ -82,6 +82,13 @@
             // FIXME: The behavior is still a little buggy near the top of buffer.
             if (!(openGLLayer->y == 0 && event.scrollingDeltaY > 0)) {
                 openGLLayer->dragPoint.y -= event.scrollingDeltaY;
+
+                float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
+                float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
+                float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
+                float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
+                openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, cursor_x, cursor_y,
+                                                          drag_x, drag_y);
             }
         }
 

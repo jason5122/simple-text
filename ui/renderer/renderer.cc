@@ -180,6 +180,9 @@ struct buffer_t {
     size_t len;
 };
 
+// TODO: Implement reading more than one character at once.
+// https://github.com/neovim/neovim/blob/master/src/nvim/lua/treesitter.c#L358
+// https://github.com/tree-sitter/tree-sitter/issues/1277
 const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t* bytes_read) {
     if (byte_index >= ((buffer_t*)payload)->len) {
         *bytes_read = 0;

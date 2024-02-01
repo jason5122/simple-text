@@ -209,10 +209,16 @@
                                 "Apple Color Emoji", fontSize * self.contentsScale);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
-        std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
+        // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
+        // std::ifstream infile(ResourcePath("sample_files/example.json"));
+        std::ifstream infile(ResourcePath("sample_files/example.scm"));
+        // std::ifstream infile(ResourcePath("sample_files/example.cc"));
+        // std::ifstream infile(ResourcePath("sample_files/example.glsl"));
+        // std::ifstream infile(ResourcePath("sample_files/strange.json"));
 
         // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
         buffer = std::unique_ptr<Buffer>(new Buffer(infile));
+        // LogDefault("OpenGLLayer", "%s", buffer->toCString());
 
         // for (const std::string& line : *buffer) {
         //     LogDefault("EditorView", line);

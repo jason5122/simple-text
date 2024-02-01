@@ -1,0 +1,13 @@
+/*
+On OS X, basic text manipulations (left, right, command+left, etc) make use of the system key bindings,
+and don't need to be repeated here. Anything listed here will take precedence, however.
+*/
+[
+  { "keys": ["super+shift+n"], "command": "new_window" },
+  { "keys": ["super+shift+w"], "command": "close_window" },
+  { "keys": ["super+alt+shift+n"], "command": "new_os_tab" },
+  { "keys": ["ctrl+alt+tab"], "command": "next_os_tab" },
+  { "keys": ["ctrl+alt+shift+tab"], "command": "prev_os_tab" },
+  { "keys": ["super+o"], "command": "prompt_open" },
+  { "keys": ["super+shift+t"], "command": "reopen_last_file", "args": { "source": "window" } }
+]

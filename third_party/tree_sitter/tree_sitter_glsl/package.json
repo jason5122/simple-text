@@ -1,0 +1,39 @@
+{
+  "name": "tree-sitter-glsl",
+  "version": "0.1.6",
+  "description": "GLSL grammar for tree-sitter (based on tree-sitter-c)",
+  "main": "bindings/node",
+  "keywords": [
+    "parser",
+    "glsl"
+  ],
+  "author": "Stephan Seitz",
+  "license": "MIT",
+  "dependencies": {
+    "nan": "^2.17.0"
+  },
+  "devDependencies": {
+    "tree-sitter-c": "^0.20.6",
+    "tree-sitter-cli": "^0.20.7"
+  },
+  "scripts": {
+    "test": "tree-sitter test",
+    "test-windows": "tree-sitter test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/theHamsta/tree-sitter-glsl.git"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.cpp",
+      "file-types": [
+        "vert",
+        "frag",
+        "vsh",
+        "fsh",
+        "glsl"
+      ]
+    }
+  ]
+}

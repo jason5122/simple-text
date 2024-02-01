@@ -5,7 +5,15 @@ source_set("tree_sitter") {
 
   sources = [
     "src/lib.c",
-    "tree_sitter_json/src/parser.c",
+
+    # "tree_sitter_glsl/src/parser.c",
+
+    "tree_sitter_scheme/src/parser.c",
+
+    # "tree_sitter_cpp/src/parser.c",
+    # "tree_sitter_cpp/src/scanner.c",
+
+    # "tree_sitter_json/src/parser.c",
   ]
 
   include_dirs = [ "include" ]

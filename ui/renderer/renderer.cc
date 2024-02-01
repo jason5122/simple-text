@@ -38,9 +38,9 @@ struct InstanceData {
     float advance;
 };
 
-// extern "C" TSLanguage* tree_sitter_json();
+extern "C" TSLanguage* tree_sitter_json();
 // extern "C" TSLanguage* tree_sitter_cpp();
-extern "C" TSLanguage* tree_sitter_scheme();
+// extern "C" TSLanguage* tree_sitter_scheme();
 // extern "C" TSLanguage* tree_sitter_glsl();
 
 Renderer::Renderer(float width, float height, std::string main_font_name,
@@ -65,12 +65,12 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // LogDefault("Renderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
 
     parser = ts_parser_new();
-    ts_parser_set_language(parser, tree_sitter_scheme());
+    ts_parser_set_language(parser, tree_sitter_json());
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    const char* query_code = ReadFile(ResourcePath("highlights_scheme.scm"));
-    query = ts_query_new(tree_sitter_scheme(), query_code, strlen(query_code), &error_offset,
+    const char* query_code = ReadFile(ResourcePath("highlights_json.scm"));
+    query = ts_query_new(tree_sitter_json(), query_code, strlen(query_code), &error_offset,
                          &error_type);
 
     if (error_type != TSQueryErrorNone) {
@@ -226,9 +226,9 @@ void Renderer::parseBuffer(Buffer& buffer) {
 
 void Renderer::editBuffer(Buffer& buffer) {
     TSInputEdit edit = {
-        static_cast<uint32_t>(drag_cursor_row),
-        static_cast<uint32_t>(buffer.byteCount() - 1),
-        static_cast<uint32_t>(buffer.byteCount()),
+        static_cast<uint32_t>(buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset - 1),
+        static_cast<uint32_t>(buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset),
+        static_cast<uint32_t>(buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset + 1),
         // These are unused!
         {0, 0},
         {0, 0},
@@ -246,8 +246,6 @@ void Renderer::highlight() {
     TSNode root_node = ts_tree_root_node(tree);
     TSQueryCursor* query_cursor = ts_query_cursor_new();
     ts_query_cursor_exec(query_cursor, query, root_node);
-
-    LogDefault("Renderer", "%s", ts_node_string(root_node));
 
     const void* prev_id = 0;
     uint32_t prev_start = -1;

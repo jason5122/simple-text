@@ -286,6 +286,7 @@
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     renderer->editBuffer(*buffer);
+    renderer->parseBuffer(*buffer);
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;

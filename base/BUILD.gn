@@ -1,3 +1,6 @@
 source_set("base") {
-  sources = [ "buffer.cc" ]
+  sources = [
+    "buffer.cc",
+    "syntax_highlighter.cc",
+  ]
 }

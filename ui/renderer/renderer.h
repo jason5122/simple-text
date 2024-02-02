@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/buffer.h"
+#include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "ui/renderer/atlas.h"
@@ -64,9 +65,9 @@ private:
 
     std::map<uint32_t, AtlasGlyph> glyph_cache;
 
-    TSParser* parser;
     TSTree* tree = NULL;
-    TSQuery* query;
+
+    SyntaxHighlighter highlighter;
 
     void linkShaders();
     void loadGlyph(uint32_t scalar, const char* utf8_str);

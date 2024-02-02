@@ -64,29 +64,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // float fps = 1000000.0 / microseconds;
     // LogDefault("Renderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
 
-    parser = ts_parser_new();
-    ts_parser_set_language(parser, tree_sitter_scheme());
-
-    uint32_t error_offset = 0;
-    TSQueryError error_type = TSQueryErrorNone;
-    const char* query_code = ReadFile(ResourcePath("highlights_scheme.scm"));
-    query = ts_query_new(tree_sitter_scheme(), query_code, strlen(query_code), &error_offset,
-                         &error_type);
-
-    if (error_type != TSQueryErrorNone) {
-        LogError("Renderer", "Error creating new TSQuery. error_offset: %d, error type: %d",
-                 error_offset, error_type);
-    }
-
-    std::vector<std::string> capture_names;
-    uint32_t capture_count = ts_query_capture_count(query);
-    for (int i = 0; i < capture_count; i++) {
-        uint32_t length;
-        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
-        capture_names.push_back(capture_name);
-        LogDefault("Renderer", "capture name %d: %s", i, capture_name);
-    }
-
     // Font experiments.
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
     // CTFontDescriptorRef descriptor =
@@ -220,7 +197,7 @@ const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t*
 
 void Renderer::parseBuffer(Buffer& buffer) {
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
-    tree = ts_parser_parse(parser, tree, input);
+    tree = ts_parser_parse(highlighter.parser, tree, input);
 
     this->highlight();
 }
@@ -238,7 +215,7 @@ void Renderer::editBuffer(Buffer& buffer) {
     ts_tree_edit(tree, &edit);
 
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
-    tree = ts_parser_parse(parser, tree, input);
+    tree = ts_parser_parse(highlighter.parser, tree, input);
 
     this->highlight();
 }
@@ -246,7 +223,7 @@ void Renderer::editBuffer(Buffer& buffer) {
 void Renderer::highlight() {
     TSNode root_node = ts_tree_root_node(tree);
     TSQueryCursor* query_cursor = ts_query_cursor_new();
-    ts_query_cursor_exec(query_cursor, query, root_node);
+    ts_query_cursor_exec(query_cursor, highlighter.query, root_node);
 
     const void* prev_id = 0;
     uint32_t prev_start = -1;

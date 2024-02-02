@@ -13,55 +13,9 @@ class Rasterizer::impl {
 public:
     CTFontRef mainFont;
     CTFontRef emojiFont;
-    Metrics metrics;
 
-    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef);
+    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef, float descent);
 };
-
-void libgraphemeExample(const char* s) {
-    size_t ret;
-
-    LogDefault("libgrapheme", s);
-
-    // Print each grapheme cluster with byte-length.
-    LogDefault("libgrapheme", "grapheme clusters in NUL-delimited input:");
-    for (size_t offset = 0; s[offset] != '\0'; offset += ret) {
-        ret = grapheme_next_character_break_utf8(s + offset, SIZE_MAX);
-
-        char* slice;
-        asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
-        LogDefault("libgrapheme", slice);
-    }
-
-    // Do the same, but this time string is length-delimited.
-    size_t len = 17;
-    LogDefault("libgrapheme", "grapheme clusters in input delimited to %zu bytes:", len);
-    for (size_t offset = 0; offset < len; offset += ret) {
-        ret = grapheme_next_character_break_utf8(s + offset, len - offset);
-
-        char* slice;
-        asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
-        LogDefault("libgrapheme", slice);
-    }
-
-    // Print each codepoint.
-    LogDefault("libgrapheme", "codepoints:");
-    for (size_t offset = 0; s[offset] != '\0'; offset += ret) {
-        ret = grapheme_decode_utf8(s + offset, SIZE_MAX, NULL);
-
-        char* slice;
-        asprintf(&slice, "%2zu bytes | %.*s\n", ret, (int)ret, s + offset);
-        LogDefault("libgrapheme", slice);
-    }
-}
-
-const char* hex(char c) {
-    const char REF[] = "0123456789ABCDEF";
-    static char output[3] = "XX";
-    output[0] = REF[0x0f & c >> 4];
-    output[1] = REF[0x0f & c];
-    return output;
-}
 
 Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size)
     : pimpl{new impl{}} {
@@ -72,64 +26,38 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
 
     pimpl->mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
     pimpl->emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
-    pimpl->metrics = CTFontGetMetrics(pimpl->mainFont);
 
     if (CTFontIsMonospace(pimpl->mainFont)) {
         LogDefault(@"Rasterizer", @"Using monospace font.");
     }
 
-    // UTF-8 encoded input
-    const char* s = "T\xC3\xABst \xF0\x9F\x91\xA8\xE2\x80\x8D\xF0"
-                    "\x9F\x91\xA9\xE2\x80\x8D\xF0\x9F\x91\xA6 \xF0"
-                    "\x9F\x87\xBA\xF0\x9F\x87\xB8 \xE0\xA4\xA8\xE0"
-                    "\xA5\x80 \xE0\xAE\xA8\xE0\xAE\xBF!";
-    libgraphemeExample(s);
+    CGFloat ascent = CGFloat_round(CTFontGetAscent(pimpl->mainFont));
+    CGFloat descent = CGFloat_round(CTFontGetDescent(pimpl->mainFont));
+    CGFloat leading = CGFloat_round(CTFontGetLeading(pimpl->mainFont));
+    CGFloat line_height = ascent + descent + leading;
 
-    std::string str = u8"ABC가나다";
-    std::cout << str << ": ";
-    for (auto c : str) {
-        std::cout << hex(c) << " ";
-    }
-    std::cout << '\n';
-
-    NSString* chString = [NSString stringWithUTF8String:"\xC3\xAB"];
-    UniChar characters[1] = {};
-    [chString getCharacters:characters range:NSMakeRange(0, 1)];
-
-    std::cout << hex(characters[0]) << '\n';
-
-    const char* utf8_str = u8"가";
-    uint32_t unicode_scalar = 0;
-
-    std::cout << "len: " << strlen(utf8_str) << '\n';
-    for (int i = 0; i < strlen(utf8_str); i++) {
-        uint8_t byte = utf8_str[i];
-        unicode_scalar |= byte << 8 * i;
-    }
-    std::cout << std::bitset<32>(unicode_scalar) << '\n';
+    this->line_height = line_height + 2;
+    this->descent = -descent;
 }
 
 RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
     CGGlyph glyph_index = emoji ? CTFontGetEmojiGlyphIndex(pimpl->emojiFont)
                                 : CTFontGetGlyphIndex(pimpl->mainFont, ch);
     CTFontRef fontRef = emoji ? pimpl->emojiFont : pimpl->mainFont;
-    return pimpl->rasterizeGlyph(glyph_index, fontRef);
+    return pimpl->rasterizeGlyph(glyph_index, fontRef, descent);
 }
 
 RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
     CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
-    return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont);
+    return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);
 }
 
 bool Rasterizer::isFontMonospace() {
     return CTFontIsMonospace(pimpl->mainFont);
 }
 
-Metrics Rasterizer::metrics() {
-    return pimpl->metrics;
-}
-
-RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef) {
+RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,
+                                                 float descent) {
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
     // LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
@@ -142,7 +70,7 @@ RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef 
     uint32_t rasterizedHeight = rasterizedDescent + rasterizedAscent;
     int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
 
-    top -= metrics.descent;
+    top -= descent;
 
     bool colored = CTFontIsColored(fontRef);
 

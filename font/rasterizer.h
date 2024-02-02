@@ -1,15 +1,16 @@
 #pragma once
 
-#include "font/types/metrics.h"
 #include "font/types/rasterized_glyph.h"
 
 class Rasterizer {
 public:
+    float line_height;
+    float descent;
+
     Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size);
     RasterizedGlyph rasterizeChar(char ch, bool emoji);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     bool isFontMonospace();
-    Metrics metrics();
 
 private:
     // https://herbsutter.com/gotw/_100/

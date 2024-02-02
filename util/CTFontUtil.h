@@ -1,6 +1,5 @@
 #pragma once
 
-#import "font/types/metrics.h"
 #import "util/CGFloatUtil.h"
 #import "util/log_util.h"
 #import <Cocoa/Cocoa.h>
@@ -48,19 +47,6 @@ static inline CGGlyph CTFontGetEmojiGlyphIndex(CTFontRef fontRef) {
         LogDefault(@"Renderer", @"aw damn...");
     }
     return glyphs[0];
-}
-
-static inline Metrics CTFontGetMetrics(CTFontRef fontRef) {
-    CGGlyph glyph = CTFontGetGlyphIndex(fontRef, "\x30");  // '0'
-    double average_advance =
-        CTFontGetAdvancesForGlyphs(fontRef, kCTFontOrientationDefault, &glyph, nullptr, 1);
-
-    CGFloat ascent = CGFloat_round(CTFontGetAscent(fontRef));
-    CGFloat descent = CGFloat_round(CTFontGetDescent(fontRef));
-    CGFloat leading = CGFloat_round(CTFontGetLeading(fontRef));
-    CGFloat line_height = ascent + descent + leading;
-
-    return Metrics{average_advance, line_height, -descent};
 }
 
 static inline bool CTFontIsColored(CTFontRef fontRef) {

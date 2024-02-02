@@ -91,12 +91,8 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // }
     // End of font experiments.
 
-    Metrics metrics = rasterizer->metrics();
-    float cell_width = std::floor(metrics.average_advance + 1);
-    float cell_height = std::floor(metrics.line_height + 2);
-
     glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "cell_dim"), cell_width, cell_height);
+    glUniform1f(glGetUniformLocation(shader_program, "line_height"), rasterizer->line_height);
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -261,13 +257,10 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     std::vector<InstanceData> instances;
     int range_idx = 0;
 
-    Metrics metrics = rasterizer->metrics();
-    float cell_width = std::floor(metrics.average_advance + 1);
-    float cell_height = std::floor(metrics.line_height + 2);
+    float cell_height = rasterizer->line_height;
 
     int row_offset = -scroll_y / cell_height;
     if (row_offset < 0) row_offset = 0;
-    if (row_offset > buffer.lineCount()) row_offset = 0;
 
     LogDefault("Renderer", "row_offset: %d", row_offset);
 
@@ -424,8 +417,7 @@ bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {
 
 void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                                   float drag_y) {
-    Metrics metrics = rasterizer->metrics();
-    float cell_height = std::floor(metrics.line_height + 2);
+    float cell_height = rasterizer->line_height;
 
     float x;
     size_t offset;

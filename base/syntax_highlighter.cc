@@ -8,7 +8,7 @@ extern "C" TSLanguage* tree_sitter_glsl();
 extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
-SyntaxHighlighter::SyntaxHighlighter() {
+void SyntaxHighlighter::setLanguage(std::string scope) {
     parser = ts_parser_new();
     ts_parser_set_language(parser, tree_sitter_scheme());
 

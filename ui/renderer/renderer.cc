@@ -49,6 +49,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
     cursor_renderer = new CursorRenderer(width, height);
+    highlighter.setLanguage("source.scheme");
 
     this->linkShaders();
     this->resize(width, height);
@@ -156,11 +157,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
-
-struct buffer_t {
-    const char* buf;
-    size_t len;
-};
 
 void memchrsub(void* data, char c, char x, size_t len) {
     char* p = (char*)data;

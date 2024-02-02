@@ -231,7 +231,7 @@
         uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         uint64_t microseconds = (end - start) / 1e3;
         float fps = 1000000.0 / microseconds;
-        LogDefault("OpenGLLayer", "Tree-sitter parseBuffer(): %ld µs (%f fps)", microseconds, fps);
+        LogDefault("OpenGLLayer", "Tree-sitter only parse: %ld µs (%f fps)", microseconds, fps);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -290,14 +290,13 @@
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
-    LogDefault("OpenGLLayer", "Tree-sitter editBuffer(): %ld µs (%f fps)", microseconds, fps);
+    LogDefault("OpenGLLayer", "Tree-sitter edit and parse: %ld µs (%f fps)", microseconds, fps);
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-    LogDefault("OpenGLLayer", "observe key value change");
     [self setNeedsDisplay];
 }
 

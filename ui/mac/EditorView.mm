@@ -203,10 +203,10 @@
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLContextObj context = nullptr;
-    CGLCreateContext(pixelFormat, nullptr, &context);
-    if (context || (context = [super copyCGLContextForPixelFormat:pixelFormat])) {
-        CGLSetCurrentContext(context);
+    CGLContextObj glContext = nullptr;
+    CGLCreateContext(pixelFormat, nullptr, &glContext);
+    if (glContext || (glContext = [super copyCGLContextForPixelFormat:pixelFormat])) {
+        CGLSetCurrentContext(glContext);
 
         CGFloat fontSize = 16;
         renderer = new Renderer(self.frame.size.width * self.contentsScale,
@@ -235,21 +235,21 @@
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
-    return context;
+    return glContext;
 }
 
-- (BOOL)canDrawInCGLContext:(CGLContextObj)context
+- (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
                 pixelFormat:(CGLPixelFormatObj)pixelFormat
                forLayerTime:(CFTimeInterval)timeInterval
                 displayTime:(const CVTimeStamp*)timeStamp {
     return true;
 }
 
-- (void)drawInCGLContext:(CGLContextObj)context
+- (void)drawInCGLContext:(CGLContextObj)glContext
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(context);
+    CGLSetCurrentContext(glContext);
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
@@ -263,7 +263,7 @@
     renderer->renderText(*buffer, scroll_x, scroll_y);
 
     // Calls glFlush() by default.
-    [super drawInCGLContext:context
+    [super drawInCGLContext:glContext
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
@@ -300,8 +300,8 @@
     [self setNeedsDisplay];
 }
 
-- (void)releaseCGLContext:(CGLContextObj)context {
-    [super releaseCGLContext:context];
+- (void)releaseCGLContext:(CGLContextObj)glContext {
+    [super releaseCGLContext:glContext];
 }
 
 - (void)releaseCGLPixelFormat:(CGLPixelFormatObj)pixelFormat {

@@ -265,11 +265,15 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     float cell_width = std::floor(metrics.average_advance + 1);
     float cell_height = std::floor(metrics.line_height + 2);
 
-    int row_offset = scroll_y / -cell_height;
+    int row_offset = -scroll_y / cell_height;
     if (row_offset < 0) row_offset = 0;
+    if (row_offset > buffer.lineCount()) row_offset = 0;
 
+    LogDefault("Renderer", "row_offset: %d", row_offset);
+
+    int visible_rows = std::ceil(height / cell_height);
     size_t byte_offset = buffer.byteOfLine(row_offset);
-    size_t size = std::min(static_cast<size_t>(row_offset + 60), buffer.lineCount());
+    size_t size = std::min(static_cast<size_t>(row_offset + visible_rows), buffer.lineCount());
     for (int row = row_offset; row < size; row++) {
         const char* line = buffer.data[row].c_str();
         size_t ret;

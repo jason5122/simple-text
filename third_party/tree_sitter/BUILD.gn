@@ -3,18 +3,37 @@ source_set("tree_sitter") {
   # This sets C99 *after* the default compiler config. Using cflags_c sets C99 before the default.
   configs += [ "//build/config/compiler:c99" ]
 
-  sources = [
-    "src/lib.c",
+  sources = [ "src/lib.c" ]
 
-    # "tree_sitter_glsl/src/parser.c",
+  include_dirs = [ "include" ]
 
-    "tree_sitter_scheme/src/parser.c",
-
-    # "tree_sitter_cpp/src/parser.c",
-    # "tree_sitter_cpp/src/scanner.c",
-
-    # "tree_sitter_json/src/parser.c",
+  deps = [
+    ":tree_sitter_cpp",
+    ":tree_sitter_glsl",
+    ":tree_sitter_json",
+    ":tree_sitter_scheme",
   ]
+}
 
+source_set("tree_sitter_cpp") {
+  sources = [
+    "tree_sitter_cpp/src/parser.c",
+    "tree_sitter_cpp/src/scanner.c",
+  ]
+  include_dirs = [ "include" ]
+}
+
+source_set("tree_sitter_glsl") {
+  sources = [ "tree_sitter_glsl/src/parser.c" ]
+  include_dirs = [ "include" ]
+}
+
+source_set("tree_sitter_json") {
+  sources = [ "tree_sitter_json/src/parser.c" ]
+  include_dirs = [ "include" ]
+}
+
+source_set("tree_sitter_scheme") {
+  sources = [ "tree_sitter_scheme/src/parser.c" ]
   include_dirs = [ "include" ]
 }

@@ -38,10 +38,10 @@ struct InstanceData {
     float advance;
 };
 
-// extern "C" TSLanguage* tree_sitter_json();
-// extern "C" TSLanguage* tree_sitter_cpp();
+extern "C" TSLanguage* tree_sitter_cpp();
+extern "C" TSLanguage* tree_sitter_glsl();
+extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
-// extern "C" TSLanguage* tree_sitter_glsl();
 
 Renderer::Renderer(float width, float height, std::string main_font_name,
                    std::string emoji_font_name, int font_size) {

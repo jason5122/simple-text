@@ -197,31 +197,22 @@ const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t*
 
 void Renderer::parseBuffer(Buffer& buffer) {
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
-    tree = ts_parser_parse(highlighter.parser, tree, input);
+    highlighter.tree = ts_parser_parse(highlighter.parser, highlighter.tree, input);
 
     this->highlight();
 }
 
 void Renderer::editBuffer(Buffer& buffer) {
-    TSInputEdit edit = {
-        static_cast<uint32_t>(buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset - 1),
-        static_cast<uint32_t>(buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset),
-        static_cast<uint32_t>(buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset + 1),
-        // These are unused!
-        {0, 0},
-        {0, 0},
-        {0, 0},
-    };
-    ts_tree_edit(tree, &edit);
+    size_t start_byte = buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset - 1;
+    size_t old_end_byte = buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset;
+    size_t new_end_byte = buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset + 1;
+    highlighter.edit(start_byte, old_end_byte, new_end_byte);
 
-    TSInput input = {&buffer, read, TSInputEncodingUTF8};
-    tree = ts_parser_parse(highlighter.parser, tree, input);
-
-    this->highlight();
+    this->parseBuffer(buffer);
 }
 
 void Renderer::highlight() {
-    TSNode root_node = ts_tree_root_node(tree);
+    TSNode root_node = ts_tree_root_node(highlighter.tree);
     TSQueryCursor* query_cursor = ts_query_cursor_new();
     ts_query_cursor_exec(query_cursor, highlighter.query, root_node);
 

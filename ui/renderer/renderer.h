@@ -65,8 +65,6 @@ private:
 
     std::map<uint32_t, AtlasGlyph> glyph_cache;
 
-    TSTree* tree = NULL;
-
     SyntaxHighlighter highlighter;
 
     void linkShaders();

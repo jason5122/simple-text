@@ -19,8 +19,9 @@ SyntaxHighlighter::SyntaxHighlighter() {
                          &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        LogError("Renderer", "Error creating new TSQuery. error_offset: %d, error type: %d",
-                 error_offset, error_type);
+        LogError("SyntaxHighlighter",
+                 "Error creating new TSQuery. error_offset: %d, error type: %d", error_offset,
+                 error_type);
     }
 
     std::vector<std::string> capture_names;
@@ -29,6 +30,19 @@ SyntaxHighlighter::SyntaxHighlighter() {
         uint32_t length;
         const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
         capture_names.push_back(capture_name);
-        LogDefault("Renderer", "capture name %d: %s", i, capture_name);
+        LogDefault("SyntaxHighlighter", "capture name %d: %s", i, capture_name);
     }
+}
+
+void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte) {
+    TSInputEdit edit = {
+        static_cast<uint32_t>(start_byte),
+        static_cast<uint32_t>(old_end_byte),
+        static_cast<uint32_t>(new_end_byte),
+        // These are unused!
+        {0, 0},
+        {0, 0},
+        {0, 0},
+    };
+    ts_tree_edit(tree, &edit);
 }

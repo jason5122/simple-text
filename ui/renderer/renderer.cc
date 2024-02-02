@@ -473,26 +473,26 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glUniform1i(glGetUniformLocation(shader_program, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
-    // Unbind.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // // Unbind.
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+    // glBindVertexArray(0);
+    // glBindTexture(GL_TEXTURE_2D, 0);
 
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glDisable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glEnable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glDisable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glEnable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
     cursor_renderer->draw(scroll_x, scroll_y, drag_cursor_x, drag_cursor_row * cell_height,
                           cell_height);
     glEnable(GL_BLEND);
 
-    // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
-    // https://learnopengl.com/In-Practice/Debugging
-    glPrintError();
+    // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
+    // // https://learnopengl.com/In-Practice/Debugging
+    // glPrintError();
 }
 
 bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {

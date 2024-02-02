@@ -34,7 +34,7 @@
     self = [super initWithFrame:frame];
     if (self) {
         openGLLayer = [OpenGLLayer layer];
-        openGLLayer.needsDisplayOnBoundsChange = true;
+        // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
         self.layer = openGLLayer;
 
@@ -170,6 +170,11 @@
     [self.layer setNeedsDisplay];
 }
 
+// TODO: Implement light/dark mode detection.
+- (void)viewDidChangeEffectiveAppearance {
+    LogDefault("EditorView", "viewDidChangeEffectiveAppearance");
+}
+
 @end
 
 @implementation OpenGLLayer
@@ -227,6 +232,8 @@
         uint64_t microseconds = (end - start) / 1e3;
         float fps = 1000000.0 / microseconds;
         LogDefault("OpenGLLayer", "Tree-sitter parseBuffer(): %ld µs (%f fps)", microseconds, fps);
+
+        [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
     return context;
 }
@@ -283,6 +290,14 @@
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
     LogDefault("OpenGLLayer", "Tree-sitter editBuffer(): %ld µs (%f fps)", microseconds, fps);
+}
+
+- (void)observeValueForKeyPath:(NSString*)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary*)change
+                       context:(void*)context {
+    LogDefault("OpenGLLayer", "observe key value change");
+    [self setNeedsDisplay];
 }
 
 - (void)releaseCGLContext:(CGLContextObj)context {

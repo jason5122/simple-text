@@ -23,7 +23,7 @@
     Rasterizer rasterizer;
 }
 
-- (void)insertUTF8String:(const char*)str;
+- (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
 
 @end
 
@@ -110,13 +110,21 @@ const char* hex(char c) {
 
 - (void)keyDown:(NSEvent*)event {
     const char* str = event.characters.UTF8String;
-    for (size_t i = 0; str[i] != '\0'; i++) {
-        std::cout << hex(str[i]) << " ";
-    }
-    std::cout << '\n';
-    [openGLLayer insertUTF8String:str];
+    size_t bytes = strlen(str);
 
-    [self.layer setNeedsDisplay];
+    if (bytes > 0) {
+        for (size_t i = 0; str[i] != '\0'; i++) {
+            std::cout << hex(str[i]) << " ";
+        }
+        std::cout << '\n';
+
+        if (str[0] == 0x0D) {
+            std::cout << "new line inserted\n";
+        }
+
+        [openGLLayer insertUTF8String:str bytes:bytes];
+        [self.layer setNeedsDisplay];
+    }
 }
 
 - (void)mouseDown:(NSEvent*)event {
@@ -165,7 +173,7 @@ const char* hex(char c) {
 }
 
 - (void)insertTestString {
-    [openGLLayer insertUTF8String:u8"hello"];
+    [openGLLayer insertUTF8String:u8"∆" bytes:3];
     [self.layer setNeedsDisplay];
 }
 
@@ -274,8 +282,7 @@ const char* hex(char c) {
     LogDefault(@"OpenGLLayer", @"%ld µs (%f fps)", microseconds, fps);
 }
 
-- (void)insertUTF8String:(const char*)str {
-    size_t bytes = strlen(str);
+- (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
     (*buffer).data[renderer->cursor_end_line].insert(renderer->cursor_end_col_offset, str);
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);

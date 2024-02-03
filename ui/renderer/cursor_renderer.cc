@@ -1,6 +1,7 @@
-#import "cursor_renderer.h"
-#import "ui/renderer/atlas.h"
-#import "util/file_util.h"
+#include "base/rgb.h"
+#include "cursor_renderer.h"
+#include "ui/renderer/atlas.h"
+#include "util/file_util.h"
 
 struct InstanceData {
     // Coordinates.
@@ -9,6 +10,11 @@ struct InstanceData {
     // Rectangle size.
     float rect_width;
     float rect_height;
+    // Color.
+    float r;
+    float g;
+    float b;
+    float a;
 };
 
 CursorRenderer::CursorRenderer(float width, float height) {
@@ -44,6 +50,11 @@ CursorRenderer::CursorRenderer(float width, float height) {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(1, 1);
+    size += 2 * sizeof(float);
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(2, 1);
     size += 4 * sizeof(float);
 
     // Unbind.
@@ -68,7 +79,19 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y, floa
     h += extra_padding * 2;
 
     std::vector<InstanceData> instances;
-    instances.push_back(InstanceData{x, y, w, h});
+    instances.push_back(InstanceData{
+        // Coordinates.
+        x,
+        y,
+        // Rectangle size.
+        w,
+        h,
+        // Color.
+        BLUE2.r,
+        BLUE2.g,
+        BLUE2.b,
+        1.0,
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

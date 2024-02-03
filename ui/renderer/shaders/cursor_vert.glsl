@@ -2,6 +2,9 @@
 
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
+layout(location = 2) in vec4 in_color;
+
+flat out vec4 color;
 
 uniform vec2 resolution;
 uniform vec2 scroll_offset;
@@ -21,4 +24,5 @@ void main() {
     final_position += scroll_offset;
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
+    color = vec4(in_color.rgb / 255.0, in_color.a);
 }

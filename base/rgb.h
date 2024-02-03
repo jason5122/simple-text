@@ -11,6 +11,7 @@ struct Rgb {
 constexpr Rgb BLACK{51, 51, 51};
 constexpr Rgb YELLOW{249, 174, 88};
 constexpr Rgb BLUE{102, 153, 204};
+constexpr Rgb BLUE2{95, 180, 180};
 constexpr Rgb GREEN{128, 185, 121};
 constexpr Rgb RED{236, 95, 102};
 constexpr Rgb RED2{249, 123, 88};

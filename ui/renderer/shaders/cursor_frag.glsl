@@ -1,9 +1,9 @@
 #version 330 core
 
+flat in vec4 color;
+
 out vec4 frag_color;
 
 void main() {
-    vec3 blue2 = vec3(95, 180, 180) / 255.0;
-
-    frag_color = vec4(blue2, 1.0);
+    frag_color = color;
 }

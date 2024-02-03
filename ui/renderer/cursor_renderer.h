@@ -1,6 +1,6 @@
 #pragma once
 
-#import <OpenGL/gl3.h>
+#include <OpenGL/gl3.h>
 
 class CursorRenderer {
 public:

@@ -10,10 +10,11 @@ public:
     ~CursorRenderer();
 
 private:
+    static const int BATCH_MAX = 65536;
     float width, height;
 
     GLuint shader_program;
-    GLuint vao, vbo, ebo;
+    GLuint vao, vbo, vbo_instance, ebo;
 
     void linkShaders();
 };

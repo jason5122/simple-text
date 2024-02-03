@@ -2,6 +2,15 @@
 #import "ui/renderer/atlas.h"
 #import "util/file_util.h"
 
+struct InstanceData {
+    // Coordinates.
+    float coord_x;
+    float coord_y;
+    // Rectangle size.
+    float rect_width;
+    float rect_height;
+};
+
 CursorRenderer::CursorRenderer(float width, float height) {
     this->linkShaders();
     this->resize(width, height);
@@ -15,6 +24,7 @@ CursorRenderer::CursorRenderer(float width, float height) {
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
+    glGenBuffers(1, &vbo_instance);
     glGenBuffers(1, &ebo);
 
     glBindVertexArray(vao);
@@ -22,11 +32,26 @@ CursorRenderer::CursorRenderer(float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 2, nullptr, GL_STATIC_DRAW);
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 2, nullptr, GL_STATIC_DRAW);
+
+    // glEnableVertexAttribArray(0);
+    // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
+
+    size_t size = 0;
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(0, 1);
+    size += 2 * sizeof(float);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribDivisor(1, 1);
+    size += 4 * sizeof(float);
 
     // Unbind.
     glBindVertexArray(0);
@@ -51,16 +76,24 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y, floa
     y -= extra_padding;
     h += extra_padding * 2;
 
-    float vertices[4][2] = {
-        {x + w, y + h},  // bottom right
-        {x + w, y},      // top right
-        {x, y},          // top left
-        {x, y + h},      // bottom left
-    };
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    // TODO: Use (scroll_x, scroll_y) instead, and move (x, y) to InstanceData.
+    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    std::vector<InstanceData> instances;
+    instances.push_back(InstanceData{0, 0, w, h});
+
+    // float vertices[4][2] = {
+    //     {x + w, y + h},  // bottom right
+    //     {x + w, y},      // top right
+    //     {x, y},          // top left
+    //     {x, y + h},      // bottom left
+    // };
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
+
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
@@ -98,6 +131,7 @@ void CursorRenderer::linkShaders() {
 CursorRenderer::~CursorRenderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
     glDeleteProgram(shader_program);
 }

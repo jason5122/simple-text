@@ -279,14 +279,14 @@
 }
 
 - (void)insertCharacter:(char)ch {
-    (*buffer).data[renderer->drag_cursor_row].insert(renderer->drag_cursor_byte_offset, 1, ch);
+    (*buffer).data[renderer->cursor_end_line].insert(renderer->cursor_end_col_offset, 1, ch);
 
     std::string tmp = std::string(1, ch);
     float advance = renderer->getGlyphAdvance(tmp.c_str());
-    renderer->last_cursor_byte_offset++;
-    renderer->last_cursor_x += advance;
-    renderer->drag_cursor_byte_offset++;
-    renderer->drag_cursor_x += advance;
+    renderer->cursor_start_col_offset++;
+    renderer->cursor_start_x += advance;
+    renderer->cursor_end_col_offset++;
+    renderer->cursor_end_x += advance;
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     renderer->editBuffer(*buffer);

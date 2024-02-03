@@ -13,13 +13,13 @@
 
 class Renderer {
 public:
-    int last_cursor_row = 0;
-    size_t last_cursor_byte_offset = 0;
-    float last_cursor_x = 0;
+    size_t cursor_start_line = 0;
+    size_t cursor_start_col_offset = 0;
+    float cursor_start_x = 0;
 
-    int drag_cursor_row = 0;
-    size_t drag_cursor_byte_offset = 0;
-    float drag_cursor_x = 0;
+    size_t cursor_end_line = 0;
+    size_t cursor_end_col_offset = 0;
+    float cursor_end_x = 0;
 
     Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
              int font_size, float line_height);

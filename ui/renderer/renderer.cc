@@ -196,9 +196,9 @@ void Renderer::parseBuffer(Buffer& buffer) {
 }
 
 void Renderer::editBuffer(Buffer& buffer) {
-    size_t start_byte = buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset - 1;
-    size_t old_end_byte = buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset;
-    size_t new_end_byte = buffer.byteOfLine(drag_cursor_row) + drag_cursor_byte_offset + 1;
+    size_t start_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset - 1;
+    size_t old_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
+    size_t new_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset + 1;
     highlighter.edit(start_byte, old_end_byte, new_end_byte);
 }
 
@@ -358,7 +358,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    cursor_renderer->draw(scroll_x, scroll_y, drag_cursor_x, drag_cursor_row * line_height,
+    cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line * line_height,
                           line_height);
     glEnable(GL_BLEND);
 
@@ -371,28 +371,28 @@ bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {
     int start_row, end_row;
     float start_x, end_x;
 
-    if (last_cursor_row == drag_cursor_row) {
-        if (last_cursor_x <= drag_cursor_x) {
-            start_row = last_cursor_row;
-            end_row = drag_cursor_row;
-            start_x = last_cursor_x;
-            end_x = drag_cursor_x;
+    if (cursor_start_line == cursor_end_line) {
+        if (cursor_start_x <= cursor_end_x) {
+            start_row = cursor_start_line;
+            end_row = cursor_end_line;
+            start_x = cursor_start_x;
+            end_x = cursor_end_x;
         } else {
-            start_row = drag_cursor_row;
-            end_row = last_cursor_row;
-            start_x = drag_cursor_x;
-            end_x = last_cursor_x;
+            start_row = cursor_end_line;
+            end_row = cursor_start_line;
+            start_x = cursor_end_x;
+            end_x = cursor_start_x;
         }
-    } else if (last_cursor_row < drag_cursor_row) {
-        start_row = last_cursor_row;
-        end_row = drag_cursor_row;
-        start_x = last_cursor_x;
-        end_x = drag_cursor_x;
+    } else if (cursor_start_line < cursor_end_line) {
+        start_row = cursor_start_line;
+        end_row = cursor_end_line;
+        start_x = cursor_start_x;
+        end_x = cursor_end_x;
     } else {
-        start_row = drag_cursor_row;
-        end_row = last_cursor_row;
-        start_x = drag_cursor_x;
-        end_x = last_cursor_x;
+        start_row = cursor_end_line;
+        end_row = cursor_start_line;
+        start_x = cursor_end_x;
+        end_x = cursor_start_x;
     }
 
     if (start_row < row && row < end_row) {
@@ -418,16 +418,16 @@ void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y
     float x;
     size_t offset;
 
-    last_cursor_row = cursor_y / line_height;
+    cursor_start_line = cursor_y / line_height;
     std::tie(x, offset) =
-        this->closestBoundaryForX(buffer.data[last_cursor_row].c_str(), cursor_x);
-    last_cursor_byte_offset = offset;
-    last_cursor_x = x;
+        this->closestBoundaryForX(buffer.data[cursor_start_line].c_str(), cursor_x);
+    cursor_start_col_offset = offset;
+    cursor_start_x = x;
 
-    drag_cursor_row = drag_y / line_height;
-    std::tie(x, offset) = this->closestBoundaryForX(buffer.data[drag_cursor_row].c_str(), drag_x);
-    drag_cursor_byte_offset = offset;
-    drag_cursor_x = x;
+    cursor_end_line = drag_y / line_height;
+    std::tie(x, offset) = this->closestBoundaryForX(buffer.data[cursor_end_line].c_str(), drag_x);
+    cursor_end_col_offset = offset;
+    cursor_end_x = x;
 }
 
 void Renderer::loadGlyph(uint32_t scalar, const char* utf8_str) {

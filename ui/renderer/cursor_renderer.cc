@@ -23,7 +23,6 @@ CursorRenderer::CursorRenderer(float width, float height) {
     };
 
     glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
     glGenBuffers(1, &vbo_instance);
     glGenBuffers(1, &ebo);
 
@@ -31,12 +30,6 @@ CursorRenderer::CursorRenderer(float width, float height) {
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 2, nullptr, GL_STATIC_DRAW);
-
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
@@ -61,11 +54,9 @@ CursorRenderer::CursorRenderer(float width, float height) {
 
 void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y, float cell_height) {
     glUseProgram(shader_program);
+    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
-
-    x += scroll_x;
-    y += scroll_y;
 
     float w = 4;
     float h = cell_height;
@@ -76,20 +67,9 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y, floa
     y -= extra_padding;
     h += extra_padding * 2;
 
-    // TODO: Use (scroll_x, scroll_y) instead, and move (x, y) to InstanceData.
-    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), x, y);
-
     std::vector<InstanceData> instances;
-    instances.push_back(InstanceData{0, 0, w, h});
+    instances.push_back(InstanceData{x, y, w, h});
 
-    // float vertices[4][2] = {
-    //     {x + w, y + h},  // bottom right
-    //     {x + w, y},      // top right
-    //     {x, y},          // top left
-    //     {x, y + h},      // bottom left
-    // };
-    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
@@ -130,7 +110,6 @@ void CursorRenderer::linkShaders() {
 
 CursorRenderer::~CursorRenderer() {
     glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
     glDeleteProgram(shader_program);

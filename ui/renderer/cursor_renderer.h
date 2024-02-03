@@ -14,7 +14,7 @@ private:
     float width, height;
 
     GLuint shader_program;
-    GLuint vao, vbo, vbo_instance, ebo;
+    GLuint vao, vbo_instance, ebo;
 
     void linkShaders();
 };

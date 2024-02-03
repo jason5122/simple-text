@@ -208,9 +208,9 @@ const char* hex(char c) {
         CGLSetCurrentContext(glContext);
 
         CGFloat fontSize = 16 * self.contentsScale;
-        rasterizer = Rasterizer("Arial", "Apple Color Emoji", fontSize);
+        rasterizer = Rasterizer("Source Code Pro", "Apple Color Emoji", fontSize);
         renderer = new Renderer(self.frame.size.width * self.contentsScale,
-                                self.frame.size.height * self.contentsScale, "Arial",
+                                self.frame.size.height * self.contentsScale, "Source Code Pro",
                                 "Apple Color Emoji", fontSize, rasterizer.line_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
@@ -275,22 +275,22 @@ const char* hex(char c) {
 }
 
 - (void)insertUTF8String:(const char*)str {
+    size_t bytes = strlen(str);
     (*buffer).data[renderer->cursor_end_line].insert(renderer->cursor_end_col_offset, str);
 
-    size_t bytes = strlen(str);
-    float advance = renderer->getGlyphAdvance(str);
-    renderer->cursor_start_col_offset += bytes;
-    renderer->cursor_start_x += advance;
-    renderer->cursor_end_col_offset += bytes;
-    renderer->cursor_end_x += advance;
-
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    // renderer->editBuffer(*buffer, bytes);
+    renderer->editBuffer(*buffer, bytes);
     renderer->parseBuffer(*buffer);
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
     LogDefault("OpenGLLayer", "Tree-sitter edit and parse: %ld µs (%f fps)", microseconds, fps);
+
+    float advance = renderer->getGlyphAdvance(str);
+    renderer->cursor_start_col_offset += bytes;
+    renderer->cursor_start_x += advance;
+    renderer->cursor_end_col_offset += bytes;
+    renderer->cursor_end_x += advance;
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

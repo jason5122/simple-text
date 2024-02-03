@@ -197,9 +197,9 @@ void Renderer::parseBuffer(Buffer& buffer) {
 }
 
 void Renderer::editBuffer(Buffer& buffer, size_t bytes) {
-    size_t start_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset - bytes;
+    size_t start_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
     size_t old_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
-    size_t new_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
+    size_t new_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset + bytes;
     highlighter.edit(start_byte, old_end_byte, new_end_byte);
 }
 

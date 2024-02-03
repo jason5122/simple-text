@@ -1,5 +1,6 @@
 #include "base/rgb.h"
 #include "renderer.h"
+#include "ui/util/utf8_util.h"
 #include "util/file_util.h"
 #include "util/log_util.h"
 #include "util/opengl_error_util.h"
@@ -195,17 +196,15 @@ void Renderer::parseBuffer(Buffer& buffer) {
     highlighter.getHighlights();
 }
 
-void Renderer::editBuffer(Buffer& buffer) {
-    size_t start_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset - 1;
+void Renderer::editBuffer(Buffer& buffer, size_t bytes) {
+    size_t start_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset - bytes;
     size_t old_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
-    size_t new_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset + 1;
+    size_t new_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
     highlighter.edit(start_byte, old_end_byte, new_end_byte);
 }
 
 float Renderer::getGlyphAdvance(const char* utf8_str) {
-    uint32_t unicode_scalar = utf8_str[0];
-
-    LogDefault("Renderer", "getGlyphAdvance for %s: %d", utf8_str, unicode_scalar);
+    uint32_t unicode_scalar = UTF8StringToScalar(utf8_str);
 
     if (!glyph_cache.count(unicode_scalar)) {
         this->loadGlyph(unicode_scalar, utf8_str);
@@ -222,11 +221,7 @@ std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x
     for (offset = 0; line[offset] != '\0'; offset += ret) {
         ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
 
-        uint32_t unicode_scalar = 0;
-        for (int i = 0; i < ret; i++) {
-            uint8_t byte = (line + offset)[i];
-            unicode_scalar |= byte << 8 * i;
-        }
+        uint32_t unicode_scalar = UTF8StringToScalar(line + offset);
 
         if (!glyph_cache.count(unicode_scalar)) {
             this->loadGlyph(unicode_scalar, line + offset);
@@ -285,11 +280,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
                 }
             }
 
-            uint32_t unicode_scalar = 0;
-            for (int i = 0; i < ret; i++) {
-                uint8_t byte = (line + offset)[i];
-                unicode_scalar |= byte << 8 * i;
-            }
+            uint32_t unicode_scalar = UTF8StringToScalar(line + offset);
 
             if (!glyph_cache.count(unicode_scalar)) {
                 this->loadGlyph(unicode_scalar, line + offset);

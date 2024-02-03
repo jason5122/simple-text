@@ -28,7 +28,7 @@ public:
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
     void parseBuffer(Buffer& buffer);
-    void editBuffer(Buffer& buffer);
+    void editBuffer(Buffer& buffer, size_t bytes);
     float getGlyphAdvance(const char* utf8_str);
     ~Renderer();
 

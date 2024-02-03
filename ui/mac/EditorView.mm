@@ -4,6 +4,7 @@
 #import "util/file_util.h"
 #import "util/log_util.h"
 #import <fstream>
+#import <iostream>
 #import <sstream>
 #import <string>
 #import <vector>
@@ -22,7 +23,7 @@
     Rasterizer rasterizer;
 }
 
-- (void)insertCharacter:(char)ch;
+- (void)insertUTF8String:(const char*)str;
 
 @end
 
@@ -99,24 +100,23 @@
     }
 }
 
+const char* hex(char c) {
+    const char REF[] = "0123456789ABCDEF";
+    static char output[3] = "XX";
+    output[0] = REF[0x0f & c >> 4];
+    output[1] = REF[0x0f & c];
+    return output;
+}
+
 - (void)keyDown:(NSEvent*)event {
-    NSString* characters = event.characters;
-    for (uint32_t k = 0; k < characters.length; k++) {
-        char ch = [characters characterAtIndex:k];
-        LogDefault(@"WindowController", @"insert char: %c", ch);
-        [openGLLayer insertCharacter:ch];
-        // unichar key = [characters characterAtIndex:k];
-        // switch (key) {
-        // case 'k':
-        //     openGLLayer->x = 0.0f;
-        //     openGLLayer->y = 0.0f;
-        //     [self.layer setNeedsDisplay];
-        //     break;
-        // }
-        // openGLLayer->x = 0.0f;
-        // openGLLayer->y = 0.0f;
-        [self.layer setNeedsDisplay];
+    const char* str = event.characters.UTF8String;
+    for (size_t i = 0; str[i] != '\0'; i++) {
+        std::cout << hex(str[i]) << " ";
     }
+    std::cout << '\n';
+    [openGLLayer insertUTF8String:str];
+
+    [self.layer setNeedsDisplay];
 }
 
 - (void)mouseDown:(NSEvent*)event {
@@ -161,15 +161,11 @@
     [contextMenu addItemWithTitle:@"Insert test string"
                            action:@selector(insertTestString)
                     keyEquivalent:@""];
-    [contextMenu popUpMenuPositioningItem:nil atLocation:NSEvent.mouseLocation inView:self];
+    [contextMenu popUpMenuPositioningItem:nil atLocation:event.locationInWindow inView:self];
 }
 
 - (void)insertTestString {
-    [openGLLayer insertCharacter:'h'];
-    [openGLLayer insertCharacter:'e'];
-    [openGLLayer insertCharacter:'l'];
-    [openGLLayer insertCharacter:'l'];
-    [openGLLayer insertCharacter:'o'];
+    [openGLLayer insertUTF8String:u8"hello"];
     [self.layer setNeedsDisplay];
 }
 
@@ -212,9 +208,9 @@
         CGLSetCurrentContext(glContext);
 
         CGFloat fontSize = 16 * self.contentsScale;
-        rasterizer = Rasterizer("Source Code Pro", "Apple Color Emoji", fontSize);
+        rasterizer = Rasterizer("Arial", "Apple Color Emoji", fontSize);
         renderer = new Renderer(self.frame.size.width * self.contentsScale,
-                                self.frame.size.height * self.contentsScale, "Source Code Pro",
+                                self.frame.size.height * self.contentsScale, "Arial",
                                 "Apple Color Emoji", fontSize, rasterizer.line_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
@@ -278,18 +274,18 @@
     LogDefault(@"OpenGLLayer", @"%ld µs (%f fps)", microseconds, fps);
 }
 
-- (void)insertCharacter:(char)ch {
-    (*buffer).data[renderer->cursor_end_line].insert(renderer->cursor_end_col_offset, 1, ch);
+- (void)insertUTF8String:(const char*)str {
+    (*buffer).data[renderer->cursor_end_line].insert(renderer->cursor_end_col_offset, str);
 
-    std::string tmp = std::string(1, ch);
-    float advance = renderer->getGlyphAdvance(tmp.c_str());
-    renderer->cursor_start_col_offset++;
+    size_t bytes = strlen(str);
+    float advance = renderer->getGlyphAdvance(str);
+    renderer->cursor_start_col_offset += bytes;
     renderer->cursor_start_x += advance;
-    renderer->cursor_end_col_offset++;
+    renderer->cursor_end_col_offset += bytes;
     renderer->cursor_end_x += advance;
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    renderer->editBuffer(*buffer);
+    // renderer->editBuffer(*buffer, bytes);
     renderer->parseBuffer(*buffer);
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;

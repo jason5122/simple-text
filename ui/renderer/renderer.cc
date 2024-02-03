@@ -45,7 +45,8 @@ extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
 Renderer::Renderer(float width, float height, std::string main_font_name,
-                   std::string emoji_font_name, int font_size) {
+                   std::string emoji_font_name, int font_size, float line_height)
+    : line_height(line_height) {
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
     cursor_renderer = new CursorRenderer(width, height);
@@ -92,7 +93,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     // End of font experiments.
 
     glUseProgram(shader_program);
-    glUniform1f(glGetUniformLocation(shader_program, "line_height"), rasterizer->line_height);
+    glUniform1f(glGetUniformLocation(shader_program, "line_height"), line_height);
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -257,17 +258,14 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     std::vector<InstanceData> instances;
     int range_idx = 0;
 
-    float cell_height = rasterizer->line_height;
-
-    int row_offset = -scroll_y / cell_height;
-    if (row_offset < 0) row_offset = 0;
+    size_t row_offset = -scroll_y / line_height;
 
     LogDefault("Renderer", "row_offset: %d", row_offset);
 
-    int visible_rows = std::ceil(height / cell_height);
+    int visible_rows = std::ceil(height / line_height);
     size_t byte_offset = buffer.byteOfLine(row_offset);
     size_t size = std::min(static_cast<size_t>(row_offset + visible_rows), buffer.lineCount());
-    for (int row = row_offset; row < size; row++) {
+    for (size_t row = row_offset; row < size; row++) {
         const char* line = buffer.data[row].c_str();
         size_t ret;
         float total_advance = 0;
@@ -360,8 +358,8 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    cursor_renderer->draw(scroll_x, scroll_y, drag_cursor_x, drag_cursor_row * cell_height,
-                          cell_height);
+    cursor_renderer->draw(scroll_x, scroll_y, drag_cursor_x, drag_cursor_row * line_height,
+                          line_height);
     glEnable(GL_BLEND);
 
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
@@ -417,18 +415,16 @@ bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {
 
 void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                                   float drag_y) {
-    float cell_height = rasterizer->line_height;
-
     float x;
     size_t offset;
 
-    last_cursor_row = cursor_y / cell_height;
+    last_cursor_row = cursor_y / line_height;
     std::tie(x, offset) =
         this->closestBoundaryForX(buffer.data[last_cursor_row].c_str(), cursor_x);
     last_cursor_byte_offset = offset;
     last_cursor_x = x;
 
-    drag_cursor_row = drag_y / cell_height;
+    drag_cursor_row = drag_y / line_height;
     std::tie(x, offset) = this->closestBoundaryForX(buffer.data[drag_cursor_row].c_str(), drag_x);
     drag_cursor_byte_offset = offset;
     drag_cursor_x = x;

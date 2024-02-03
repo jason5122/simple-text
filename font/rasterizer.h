@@ -7,6 +7,7 @@ public:
     float line_height;
     float descent;
 
+    Rasterizer() = default;
     Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size);
     RasterizedGlyph rasterizeChar(char ch, bool emoji);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);

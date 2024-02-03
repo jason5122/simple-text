@@ -22,7 +22,7 @@ public:
     float drag_cursor_x = 0;
 
     Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
-             int font_size);
+             int font_size, float line_height);
     void renderText(Buffer& buffer, float scroll_x, float scroll_y);
     void resize(int new_width, int new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
@@ -36,6 +36,7 @@ private:
     static const int BATCH_MAX = 65536;
 
     float width, height;
+    float line_height;
 
     GLuint shader_program;
     GLuint vao, vbo_instance, ebo;

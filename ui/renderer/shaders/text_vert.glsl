@@ -1,6 +1,6 @@
 #version 330 core
 
-layout(location = 0) in vec2 grid_coords;
+layout(location = 0) in uint line;
 layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
 layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
@@ -28,7 +28,7 @@ void main() {
     position.x = (gl_VertexID == 0 || gl_VertexID == 1) ? 1. : 0.;
     position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
 
-    vec2 cell_position = vec2(total_advance, line_height * grid_coords.y);
+    vec2 cell_position = vec2(total_advance, line_height * line);
     cell_position += scroll_offset;
 
     if (rendering_pass == 0) {

@@ -11,9 +11,7 @@ extern "C" {
 }
 
 struct InstanceData {
-    // Grid coordinates.
-    uint16_t col;
-    uint16_t row;
+    uint32_t line;
     // Glyph properties.
     int32_t left;
     int32_t top;
@@ -116,9 +114,9 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     size_t size = 0;
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(0, 1);
-    size += 2 * sizeof(uint16_t);
+    size += sizeof(uint32_t);
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 4, GL_INT, GL_FALSE, sizeof(InstanceData), (void*)size);
@@ -174,11 +172,11 @@ const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t*
     const size_t BUFSIZE = 256;
     static char buf[BUFSIZE];
 
-    const char* line = buffer->data[position.row].c_str();
+    const char* line_str = buffer->data[position.row].c_str();
     size_t len = buffer->data[position.row].size();
     size_t tocopy = std::min(len - position.column, BUFSIZE);
 
-    memcpy(buf, line + position.column, tocopy);
+    memcpy(buf, line_str + position.column, tocopy);
     memchrsub(buf, '\n', '\0', tocopy);  // Translate embedded \n to NUL.
     *bytes_read = (uint32_t)tocopy;
     if (tocopy < BUFSIZE) {
@@ -253,19 +251,17 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     std::vector<InstanceData> instances;
     int range_idx = 0;
 
-    size_t row_offset = -scroll_y / line_height;
+    size_t scroll_line = -scroll_y / line_height;
 
-    LogDefault("Renderer", "row_offset: %d", row_offset);
-
-    int visible_rows = std::ceil(height / line_height);
-    size_t byte_offset = buffer.byteOfLine(row_offset);
-    size_t size = std::min(static_cast<size_t>(row_offset + visible_rows), buffer.lineCount());
-    for (size_t row = row_offset; row < size; row++) {
-        const char* line = buffer.data[row].c_str();
+    size_t visible_lines = std::ceil(height / line_height);
+    size_t byte_offset = buffer.byteOfLine(scroll_line);
+    size_t size = std::min(static_cast<size_t>(scroll_line + visible_lines), buffer.lineCount());
+    for (size_t line = scroll_line; line < size; line++) {
+        const char* line_str = buffer.data[line].c_str();
         size_t ret;
         float total_advance = 0;
-        for (size_t offset = 0; line[offset] != '\0'; offset += ret, byte_offset += ret) {
-            ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
+        for (size_t offset = 0; line_str[offset] != '\0'; offset += ret, byte_offset += ret) {
+            ret = grapheme_decode_utf8(line_str + offset, SIZE_MAX, NULL);
 
             Rgb text_color = BLACK;
 
@@ -280,22 +276,20 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
                 }
             }
 
-            uint32_t unicode_scalar = UTF8StringToScalar(line + offset);
+            uint32_t unicode_scalar = UTF8StringToScalar(line_str + offset);
 
             if (!glyph_cache.count(unicode_scalar)) {
-                this->loadGlyph(unicode_scalar, line + offset);
+                this->loadGlyph(unicode_scalar, line_str + offset);
                 LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
             }
 
             AtlasGlyph glyph = glyph_cache[unicode_scalar];
 
             float glyph_center_x = total_advance + glyph.advance / 2;
-            uint8_t bg_a = this->isGlyphInSelection(row, glyph_center_x) ? 255 : 0;
+            uint8_t bg_a = this->isGlyphInSelection(line, glyph_center_x) ? 255 : 0;
 
             instances.push_back(InstanceData{
-                // Grid coordinates.
-                0,
-                static_cast<uint16_t>(row),
+                static_cast<uint32_t>(line),
                 // Glyph properties.
                 glyph.left,
                 glyph.top,
@@ -350,7 +344,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     glDisable(GL_BLEND);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
-                          buffer.lineCount(), visible_rows);
+                          buffer.lineCount(), visible_lines);
     glEnable(GL_BLEND);
 
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

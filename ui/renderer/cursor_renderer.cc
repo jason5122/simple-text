@@ -63,33 +63,53 @@ CursorRenderer::CursorRenderer(float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void CursorRenderer::draw(float scroll_x, float scroll_y, float x, float y, float cell_height) {
+void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
+                          float line_height, size_t line_count) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    float w = 4;
-    float h = cell_height;
+    float rect_width = 4;
+    float rect_height = line_height;
 
-    x -= w / 2;
+    cursor_x -= rect_width / 2;
 
     int extra_padding = 8;
-    y -= extra_padding;
-    h += extra_padding * 2;
+    float cursor_y = cursor_line * line_height;
+    cursor_y -= extra_padding;
+    rect_height += extra_padding * 2;
 
     std::vector<InstanceData> instances;
     instances.push_back(InstanceData{
         // Coordinates.
-        x,
-        y,
+        cursor_x + scroll_x,
+        cursor_y + scroll_y,
         // Rectangle size.
-        w,
-        h,
+        rect_width,
+        rect_height,
         // Color.
         BLUE2.r,
         BLUE2.g,
         BLUE2.b,
+        1.0,
+    });
+
+    // Add scroll bar.
+    float scroll_bar_width = 20;
+    float scroll_bar_height = 100;
+    float scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
+    instances.push_back(InstanceData{
+        // Coordinates.
+        width - scroll_bar_width,
+        (height - scroll_bar_height) * scroll_bar_position_percentage,
+        // Rectangle size.
+        scroll_bar_width,
+        scroll_bar_height,
+        // Color.
+        RED.r,
+        RED.g,
+        RED.b,
         1.0,
     });
 

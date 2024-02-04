@@ -349,8 +349,8 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line * line_height,
-                          line_height);
+    cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
+                          buffer.lineCount());
     glEnable(GL_BLEND);
 
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

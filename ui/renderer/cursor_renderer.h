@@ -1,11 +1,13 @@
 #pragma once
 
 #include <OpenGL/gl3.h>
+#include <cstddef>
 
 class CursorRenderer {
 public:
     CursorRenderer(float width, float height);
-    void draw(float scroll_x, float scroll_y, float x, float y, float cell_height);
+    void draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
+              float line_height, size_t line_count);
     void resize(int new_width, int new_height);
     ~CursorRenderer();
 

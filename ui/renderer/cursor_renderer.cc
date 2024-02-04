@@ -95,6 +95,8 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         1.0,
     });
 
+    line_count -= 1;  // TODO: Merge this with EditorView.
+
     // Add scroll bar.
     float scroll_bar_width = 20;
     float scroll_bar_height = height * (static_cast<float>(visible_lines) / line_count);

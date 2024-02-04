@@ -75,7 +75,9 @@
         // openGLLayer->x += event.scrollingDeltaX;
         // if (openGLLayer->x > 0) openGLLayer->x = 0;
 
-        float max_y = openGLLayer->buffer->lineCount() * openGLLayer->rasterizer.line_height;
+        size_t line_count = openGLLayer->buffer->lineCount();
+        line_count -= 1;  // TODO: Merge this with CursorRenderer.
+        float max_y = line_count * openGLLayer->rasterizer.line_height;
         // TODO: Formulate max_y without the need for division.
         max_y /= openGLLayer.contentsScale;
 

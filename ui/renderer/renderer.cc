@@ -404,12 +404,14 @@ void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y
     size_t offset;
 
     cursor_start_line = cursor_y / line_height;
+    if (cursor_start_line > buffer.lineCount()) cursor_start_line = buffer.lineCount();
     std::tie(x, offset) =
         this->closestBoundaryForX(buffer.data[cursor_start_line].c_str(), cursor_x);
     cursor_start_col_offset = offset;
     cursor_start_x = x;
 
     cursor_end_line = drag_y / line_height;
+    if (cursor_end_line > buffer.lineCount()) cursor_end_line = buffer.lineCount();
     std::tie(x, offset) = this->closestBoundaryForX(buffer.data[cursor_end_line].c_str(), drag_x);
     cursor_end_col_offset = offset;
     cursor_end_x = x;

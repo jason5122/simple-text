@@ -18,8 +18,6 @@
     // @private
     Renderer* renderer;
     std::unique_ptr<Buffer> buffer;
-
-@private
     Rasterizer rasterizer;
 }
 
@@ -77,8 +75,14 @@
         // openGLLayer->x += event.scrollingDeltaX;
         // if (openGLLayer->x > 0) openGLLayer->x = 0;
 
+        float max_y = openGLLayer->buffer->lineCount() * openGLLayer->rasterizer.line_height;
+        // TODO: Formulate max_y without the need for division.
+        max_y /= openGLLayer.contentsScale;
+
         openGLLayer->y += event.scrollingDeltaY;
-        if (openGLLayer->y > 0) openGLLayer->y = 0;
+
+        if (-openGLLayer->y < 0) openGLLayer->y = 0;
+        if (-openGLLayer->y > max_y) openGLLayer->y = -max_y;
 
         // https://developer.apple.com/documentation/appkit/nsevent/1527943-pressedmousebuttons?language=objc
         if (NSEvent.pressedMouseButtons & (1 << 0)) {

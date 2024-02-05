@@ -72,8 +72,8 @@
 
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
-        // openGLLayer->x += event.scrollingDeltaX;
-        // if (openGLLayer->x > 0) openGLLayer->x = 0;
+        openGLLayer->x += event.scrollingDeltaX;
+        if (openGLLayer->x > 0) openGLLayer->x = 0;
 
         size_t line_count = openGLLayer->buffer->lineCount();
         line_count -= 1;  // TODO: Merge this with CursorRenderer.

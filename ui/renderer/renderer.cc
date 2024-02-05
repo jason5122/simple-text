@@ -319,6 +319,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             total_advance += std::round(glyph.advance);
         }
         byte_offset++;
+        longest_byte_offset = std::max(total_advance, longest_byte_offset);
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
@@ -344,7 +345,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     glDisable(GL_BLEND);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
-                          buffer.lineCount(), visible_lines);
+                          buffer.lineCount(), visible_lines, longest_byte_offset);
     glEnable(GL_BLEND);
 
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

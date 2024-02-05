@@ -2,6 +2,7 @@
 #include "cursor_renderer.h"
 #include "ui/renderer/atlas.h"
 #include "util/file_util.h"
+#include "util/log_util.h"
 
 struct InstanceData {
     // Coordinates.
@@ -64,7 +65,8 @@ CursorRenderer::CursorRenderer(float width, float height) {
 }
 
 void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-                          float line_height, size_t line_count, size_t visible_lines) {
+                          float line_height, size_t line_count, size_t visible_lines,
+                          float longest_x) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
@@ -97,7 +99,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
 
     line_count -= 1;  // TODO: Merge this with EditorView.
 
-    // Add scroll bar.
+    // Add vertical scroll bar.
     float scroll_bar_width = 20;
     float scroll_bar_height = height * (static_cast<float>(visible_lines) / line_count);
     float scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
@@ -108,6 +110,23 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         // Rectangle size.
         scroll_bar_width,
         scroll_bar_height,
+        // Color.
+        182,
+        182,
+        182,
+        1.0,
+    });
+
+    LogDefault("CursorRenderer", "longest_x = %f, width = %f", longest_x, width);
+
+    // Add horizontal scroll bar.
+    instances.push_back(InstanceData{
+        // Coordinates.
+        width * (-scroll_x / longest_x),
+        height - 20,
+        // Rectangle size.
+        width * (width / longest_x),
+        20,
         // Color.
         182,
         182,

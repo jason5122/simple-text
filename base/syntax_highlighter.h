@@ -17,4 +17,6 @@ private:
     TSParser* parser;
     TSQuery* query;
     TSTree* tree = NULL;
+
+    std::string scope;
 };

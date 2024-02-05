@@ -9,14 +9,25 @@ extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
 void SyntaxHighlighter::setLanguage(std::string scope) {
+    this->scope = scope;
+
     parser = ts_parser_new();
-    ts_parser_set_language(parser, tree_sitter_scheme());
+
+    TSLanguage* language;
+    const char* highlights_query_filename;
+    if (scope == "source.scheme") {
+        language = tree_sitter_scheme();
+        highlights_query_filename = "highlights_scheme.scm";
+    } else if (scope == "source.json") {
+        language = tree_sitter_json();
+        highlights_query_filename = "highlights_json.scm";
+    }
+    ts_parser_set_language(parser, language);
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    const char* query_code = ReadFile(ResourcePath("highlights_scheme.scm"));
-    query = ts_query_new(tree_sitter_scheme(), query_code, strlen(query_code), &error_offset,
-                         &error_type);
+    const char* query_code = ReadFile(ResourcePath(highlights_query_filename));
+    query = ts_query_new(language, query_code, strlen(query_code), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
         LogError("SyntaxHighlighter",
@@ -80,20 +91,35 @@ void SyntaxHighlighter::getHighlights() {
 
             highlight_ranges.push_back({start_byte, end_byte});
 
-            // JSON
-            // if (capture.index == 0) {
-            //     highlight_colors.push_back(PURPLE);
-            // } else if (capture.index == 1) {
-            //     highlight_colors.push_back(GREEN);
-            // } else if (capture.index == 2) {
-            //     highlight_colors.push_back(YELLOW);
-            // } else if (capture.index == 3) {
-            //     highlight_colors.push_back(RED);
-            // } else if (capture.index == 5) {
-            //     highlight_colors.push_back(GREY2);
-            // } else {
-            //     highlight_colors.push_back(BLACK);
-            // }
+            if (scope == "source.scheme") {
+                if (capture.index == 1) {
+                    highlight_colors.push_back(YELLOW);
+                } else if (capture.index == 2) {
+                    highlight_colors.push_back(RED);
+                } else if (capture.index == 3) {
+                    highlight_colors.push_back(GREEN);
+                } else if (capture.index == 5) {
+                    highlight_colors.push_back(GREY2);
+                } else if (capture.index == 7) {
+                    highlight_colors.push_back(BLUE);
+                } else {
+                    highlight_colors.push_back(BLACK);
+                }
+            } else if (scope == "source.json") {
+                if (capture.index == 0) {
+                    highlight_colors.push_back(PURPLE);
+                } else if (capture.index == 1) {
+                    highlight_colors.push_back(GREEN);
+                } else if (capture.index == 2) {
+                    highlight_colors.push_back(YELLOW);
+                } else if (capture.index == 3) {
+                    highlight_colors.push_back(RED);
+                } else if (capture.index == 5) {
+                    highlight_colors.push_back(GREY2);
+                } else {
+                    highlight_colors.push_back(BLACK);
+                }
+            }
 
             // GLSL
             // if (capture.index == 0) {
@@ -113,21 +139,6 @@ void SyntaxHighlighter::getHighlights() {
             // } else {
             //     highlight_colors.push_back(BLACK);
             // }
-
-            // Scheme
-            if (capture.index == 1) {
-                highlight_colors.push_back(YELLOW);
-            } else if (capture.index == 2) {
-                highlight_colors.push_back(RED);
-            } else if (capture.index == 3) {
-                highlight_colors.push_back(GREEN);
-            } else if (capture.index == 5) {
-                highlight_colors.push_back(GREY2);
-            } else if (capture.index == 7) {
-                highlight_colors.push_back(BLUE);
-            } else {
-                highlight_colors.push_back(BLACK);
-            }
         }
 
         prev_id = node.id;

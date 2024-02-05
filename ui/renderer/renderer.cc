@@ -49,7 +49,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
     cursor_renderer = new CursorRenderer(width, height);
-    highlighter.setLanguage("source.scheme");
+    highlighter.setLanguage("source.json");
 
     this->linkShaders();
     this->resize(width, height);
@@ -336,12 +336,12 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glBindVertexArray(0);
     // glBindTexture(GL_TEXTURE_2D, 0);
 
-    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glDisable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glEnable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glDisable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glEnable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,

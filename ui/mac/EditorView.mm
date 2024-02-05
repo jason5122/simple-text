@@ -75,6 +75,7 @@
         // TODO: Formulate max_y without the need for division.
         float longest_line_x = openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale;
         longest_line_x -= openGLLayer.frame.size.width;
+        if (longest_line_x < 0) longest_line_x = 0;
 
         openGLLayer->x += event.scrollingDeltaX;
         if (-openGLLayer->x < 0) openGLLayer->x = 0;

@@ -99,38 +99,45 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
     line_count -= 1;  // TODO: Merge this with EditorView.
 
     // Add vertical scroll bar.
-    float scroll_bar_width = 20;
+    float vertical_scroll_bar_width = 20;
     float total_y = line_count * line_height;
-    float scroll_bar_height = height * (height / total_y);
-    float scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
-    instances.push_back(InstanceData{
-        // Coordinates.
-        width - scroll_bar_width,
-        (height - scroll_bar_height) * scroll_bar_position_percentage,
-        // Rectangle size.
-        scroll_bar_width,
-        scroll_bar_height,
-        // Color.
-        182,
-        182,
-        182,
-        1.0,
-    });
+    float vertical_scroll_bar_height = height * (height / total_y);
+    float vertical_scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
+    if (vertical_scroll_bar_height < height) {
+        instances.push_back(InstanceData{
+            // Coordinates.
+            width - vertical_scroll_bar_width,
+            (height - vertical_scroll_bar_height) * vertical_scroll_bar_position_percentage,
+            // Rectangle size.
+            vertical_scroll_bar_width,
+            vertical_scroll_bar_height,
+            // Color.
+            182,
+            182,
+            182,
+            1.0,
+        });
+    }
 
     // Add horizontal scroll bar.
-    instances.push_back(InstanceData{
-        // Coordinates.
-        width * (-scroll_x / longest_x),
-        height - 20,
-        // Rectangle size.
-        width * (width / longest_x),
-        20,
-        // Color.
-        182,
-        182,
-        182,
-        1.0,
-    });
+    float horizontal_scroll_bar_width = width * (width / longest_x);
+    float horizontal_scroll_bar_height = 20;
+    float horizontal_scroll_bar_position_percentage = -scroll_x / longest_x;
+    if (horizontal_scroll_bar_width < width) {
+        instances.push_back(InstanceData{
+            // Coordinates.
+            width * horizontal_scroll_bar_position_percentage,
+            height - horizontal_scroll_bar_height,
+            // Rectangle size.
+            horizontal_scroll_bar_width,
+            horizontal_scroll_bar_height,
+            // Color.
+            182,
+            182,
+            182,
+            1.0,
+        });
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

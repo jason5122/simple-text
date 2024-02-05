@@ -65,7 +65,8 @@ CursorRenderer::CursorRenderer(float width, float height) {
 }
 
 void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-                          float line_height, size_t line_count, float longest_x) {
+                          float line_height, size_t line_count, float longest_x,
+                          size_t visible_lines) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
@@ -99,11 +100,11 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
     line_count -= 1;  // TODO: Merge this with EditorView.
 
     // Add vertical scroll bar.
-    float vertical_scroll_bar_width = 20;
-    float total_y = line_count * line_height;
-    float vertical_scroll_bar_height = height * (height / total_y);
-    float vertical_scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
-    if (vertical_scroll_bar_height < height) {
+    if (line_count > 0) {
+        float vertical_scroll_bar_width = 20;
+        float total_y = (line_count + visible_lines) * line_height;
+        float vertical_scroll_bar_height = height * (height / total_y);
+        float vertical_scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{
             // Coordinates.
             width - vertical_scroll_bar_width,

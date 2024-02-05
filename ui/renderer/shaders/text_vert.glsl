@@ -9,14 +9,13 @@ layout(location = 5) in vec4 in_background_color;
 layout(location = 6) in float advance;
 
 out vec2 tex_coords;
-out vec4 text_color;
+flat out vec4 text_color;
 flat out vec4 background_color;
 
 uniform vec2 resolution;
 uniform float line_height;
 uniform vec2 scroll_offset;
 uniform int rendering_pass;
-uniform float time_interval;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
@@ -54,9 +53,6 @@ void main() {
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         tex_coords = uv_offset + uv_size * position;
-        // text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
-
-        vec3 rainbow = hsl2rgb(vec3(time_interval + uv.x + uv.y, 0.5, 0.5));
-        text_color = vec4(rainbow, in_text_color.a);
+        text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
     }
 }

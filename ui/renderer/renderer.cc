@@ -238,13 +238,12 @@ std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x
     return {total_advance, offset};
 }
 
-void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y, double time_interval) {
+void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
-    glUniform1f(glGetUniformLocation(shader_program, "time_interval"), time_interval);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

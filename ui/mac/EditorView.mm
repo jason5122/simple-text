@@ -73,7 +73,7 @@
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         // TODO: Formulate max_y without the need for division.
-        float longest_line_x = openGLLayer->renderer->longest_line_x / 2;
+        float longest_line_x = openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale;
         longest_line_x -= openGLLayer.frame.size.width;
 
         openGLLayer->x += event.scrollingDeltaX;

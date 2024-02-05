@@ -65,8 +65,7 @@ CursorRenderer::CursorRenderer(float width, float height) {
 }
 
 void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-                          float line_height, size_t line_count, size_t visible_lines,
-                          float longest_x) {
+                          float line_height, size_t line_count, float longest_x) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
@@ -101,7 +100,8 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
 
     // Add vertical scroll bar.
     float scroll_bar_width = 20;
-    float scroll_bar_height = height * (static_cast<float>(visible_lines) / line_count);
+    float total_y = line_count * line_height;
+    float scroll_bar_height = height * (height / total_y);
     float scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
     instances.push_back(InstanceData{
         // Coordinates.

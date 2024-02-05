@@ -345,7 +345,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     glDisable(GL_BLEND);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
-                          buffer.lineCount(), visible_lines, longest_line_x);
+                          buffer.lineCount(), longest_line_x);
     glEnable(GL_BLEND);
 
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.

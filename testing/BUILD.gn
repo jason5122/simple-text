@@ -1,0 +1,7 @@
+executable("testing") {
+  testonly = true
+
+  sources = [ "empty_main.cc" ]
+
+  deps = [ "//third_party/googletest:gtest_main" ]
+}

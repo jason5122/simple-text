@@ -1,0 +1,30 @@
+source_set("gtest_main") {
+  testonly = true
+
+  sources = [ "src/googletest/src/gtest_main.cc" ]
+
+  include_dirs = [ "src/googletest/include" ]
+
+  deps = [ ":gtest" ]
+}
+
+source_set("gtest") {
+  testonly = true
+
+  sources = [
+    "src/googletest/src/gtest-assertion-result.cc",
+    "src/googletest/src/gtest-death-test.cc",
+    "src/googletest/src/gtest-filepath.cc",
+    "src/googletest/src/gtest-matchers.cc",
+    "src/googletest/src/gtest-port.cc",
+    "src/googletest/src/gtest-printers.cc",
+    "src/googletest/src/gtest-test-part.cc",
+    "src/googletest/src/gtest-typed-test.cc",
+    "src/googletest/src/gtest.cc",
+  ]
+
+  include_dirs = [
+    "src/googletest/include",
+    "src/googletest",
+  ]
+}

@@ -24,6 +24,11 @@ vec2 pixelToClipSpace(vec2 point) {
     return (point * 2.0) - 1.0;  // Convert to [-1.0, 1.0].
 }
 
+vec3 hsl2rgb(vec3 c) {
+    vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+    return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
+}
+
 void main() {
     vec2 position;
     position.x = (gl_VertexID == 0 || gl_VertexID == 1) ? 1. : 0.;
@@ -51,20 +56,7 @@ void main() {
         tex_coords = uv_offset + uv_size * position;
         // text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
 
-        float r = clamp(abs(sin(time_interval)), 0.0, 1.0);
-        float g = clamp(abs(cos(time_interval)), 0.0, 1.0);
-        float b = clamp(abs(sin(time_interval)), 0.0, 1.0);
-        if (gl_VertexID == 0) {
-            text_color = vec4(b, g, r, in_text_color.a);
-        }
-        if (gl_VertexID == 1) {
-            text_color = vec4(g, r, b, in_text_color.a);
-        }
-        if (gl_VertexID == 2) {
-            text_color = vec4(b, g, r, in_text_color.a);
-        }
-        if (gl_VertexID == 3) {
-            text_color = vec4(g, b, r, in_text_color.a);
-        }
+        vec3 rainbow = hsl2rgb(vec3(time_interval + uv.x + uv.y, 0.5, 0.5));
+        text_color = vec4(rainbow, in_text_color.a);
     }
 }

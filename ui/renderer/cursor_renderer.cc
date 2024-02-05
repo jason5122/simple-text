@@ -117,8 +117,6 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         1.0,
     });
 
-    LogDefault("CursorRenderer", "longest_x = %f, width = %f", longest_x, width);
-
     // Add horizontal scroll bar.
     instances.push_back(InstanceData{
         // Coordinates.

@@ -72,8 +72,13 @@
 
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
+        // TODO: Formulate max_y without the need for division.
+        float longest_line_x = openGLLayer->renderer->longest_line_x / 2;
+        longest_line_x -= openGLLayer.frame.size.width;
+
         openGLLayer->x += event.scrollingDeltaX;
-        if (openGLLayer->x > 0) openGLLayer->x = 0;
+        if (-openGLLayer->x < 0) openGLLayer->x = 0;
+        if (-openGLLayer->x > longest_line_x) openGLLayer->x = -longest_line_x;
 
         size_t line_count = openGLLayer->buffer->lineCount();
         line_count -= 1;  // TODO: Merge this with CursorRenderer.

@@ -1,5 +1,6 @@
 ; sort : list-of-numbers => sorted-list-of-numbers
 ; long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line long line
+; 😳😳😳😳😳😳😳
 (define (sort nums)
   (local [(define (insert-in-order newnum sorted-nums)
             (cond [(empty? sorted-nums) (list newnum)]

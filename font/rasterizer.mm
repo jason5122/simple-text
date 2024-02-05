@@ -40,13 +40,6 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
     this->descent = -descent;
 }
 
-RasterizedGlyph Rasterizer::rasterizeChar(char ch, bool emoji) {
-    CGGlyph glyph_index = emoji ? CTFontGetEmojiGlyphIndex(pimpl->emojiFont)
-                                : CTFontGetGlyphIndex(pimpl->mainFont, ch);
-    CTFontRef fontRef = emoji ? pimpl->emojiFont : pimpl->mainFont;
-    return pimpl->rasterizeGlyph(glyph_index, fontRef, descent);
-}
-
 RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
     CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
     return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);

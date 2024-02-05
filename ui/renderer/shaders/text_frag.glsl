@@ -1,7 +1,7 @@
 #version 330 core
 
 in vec2 tex_coords;
-flat in vec4 text_color;
+in vec4 text_color;
 flat in vec4 background_color;
 
 layout(location = 0, index = 0) out vec4 color;
@@ -20,7 +20,8 @@ void main() {
     } else {
         vec4 texel = texture(mask, tex_coords);
 
-        int colored = int(text_color.a);
+        int colored = 0;
+        // int colored = int(text_color.a);
         if (colored == 1) {
             // Revert alpha premultiplication.
             if (texel.a != 0.0) {

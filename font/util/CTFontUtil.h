@@ -4,19 +4,6 @@
 #import "util/log_util.h"
 #import <Cocoa/Cocoa.h>
 
-static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, char ch) {
-    NSString* chString = [NSString stringWithFormat:@"%c", ch];
-    UniChar characters[1] = {};
-    [chString getCharacters:characters range:NSMakeRange(0, 1)];
-    CGGlyph glyphs[1] = {};
-    if (CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, 1)) {
-        // LogDefault(@"CTFontUtil", @"got glyphs! %d", glyphs[0]);
-    } else {
-        LogDefault(@"CTFontUtil", @"could not get glyphs for char: %c, value: %d", ch, ch);
-    }
-    return glyphs[0];
-}
-
 static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, const char* utf8_str) {
     NSString* chString = [NSString stringWithUTF8String:utf8_str];
     UniChar characters[1] = {};

@@ -37,7 +37,7 @@
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         // openGLLayer.needsDisplayOnBoundsChange = true;
-        // openGLLayer.asynchronous = true;
+        openGLLayer.asynchronous = true;
         self.layer = openGLLayer;
 
         // Fixes blurriness on HiDPI displays.
@@ -285,7 +285,7 @@ const char* hex(char c) {
     float height = self.frame.size.height * self.contentsScale;
 
     renderer->resize(width, height);
-    renderer->renderText(*buffer, scroll_x, scroll_y);
+    renderer->renderText(*buffer, scroll_x, scroll_y, timeInterval);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

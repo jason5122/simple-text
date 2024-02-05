@@ -9,13 +9,14 @@ layout(location = 5) in vec4 in_background_color;
 layout(location = 6) in float advance;
 
 out vec2 tex_coords;
-flat out vec4 text_color;
+out vec4 text_color;
 flat out vec4 background_color;
 
 uniform vec2 resolution;
 uniform float line_height;
 uniform vec2 scroll_offset;
 uniform int rendering_pass;
+uniform float time_interval;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
@@ -48,6 +49,22 @@ void main() {
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         tex_coords = uv_offset + uv_size * position;
-        text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
+        // text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
+
+        float r = clamp(abs(sin(time_interval)), 0.0, 1.0);
+        float g = clamp(abs(cos(time_interval)), 0.0, 1.0);
+        float b = clamp(abs(sin(time_interval)), 0.0, 1.0);
+        if (gl_VertexID == 0) {
+            text_color = vec4(b, g, r, in_text_color.a);
+        }
+        if (gl_VertexID == 1) {
+            text_color = vec4(g, r, b, in_text_color.a);
+        }
+        if (gl_VertexID == 2) {
+            text_color = vec4(b, g, r, in_text_color.a);
+        }
+        if (gl_VertexID == 3) {
+            text_color = vec4(g, b, r, in_text_color.a);
+        }
     }
 }

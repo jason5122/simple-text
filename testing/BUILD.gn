@@ -1,7 +1,10 @@
-executable("testing") {
+executable("test_runner") {
   testonly = true
 
   sources = [ "empty_main.cc" ]
 
-  deps = [ "//third_party/googletest:gtest_main" ]
+  deps = [
+    "//base/tests",
+    "//third_party/googletest:gtest_main",
+  ]
 }

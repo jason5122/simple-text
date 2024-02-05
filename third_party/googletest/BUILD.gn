@@ -1,10 +1,6 @@
 source_set("gtest_main") {
   testonly = true
-
   sources = [ "src/googletest/src/gtest_main.cc" ]
-
-  include_dirs = [ "src/googletest/include" ]
-
   deps = [ ":gtest" ]
 }
 
@@ -23,8 +19,12 @@ source_set("gtest") {
     "src/googletest/src/gtest.cc",
   ]
 
-  include_dirs = [
-    "src/googletest/include",
-    "src/googletest",
-  ]
+  public_configs = [ ":gtest_includes" ]
+
+  # Some files include "src/gtest-internal-inl.h".
+  include_dirs = [ "src/googletest" ]
+}
+
+config("gtest_includes") {
+  include_dirs = [ "src/googletest/include" ]
 }

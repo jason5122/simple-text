@@ -1,19 +1,8 @@
 group("all") {
-  deps = [
-    # GN expands something like "//app" to "//app:app".
-    "//app",
-    # "//base",
-    # "//font",
-    # "//ui",
-    # "//util",
-  ]
+  deps = [ "//app" ]
 }
 
 group("tests") {
   testonly = true
-
-  deps = [
-    "//testing",
-    # "//base/test:tree_sitter_test",
-  ]
+  deps = [ "//testing:test_runner" ]
 }

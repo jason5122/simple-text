@@ -1,11 +1,14 @@
-executable("tree_sitter_test") {
+source_set("tests") {
+  testonly = true
+
   sources = [
     # "tree_sitter_edit_test.cc",
     "tree_sitter_parse_test.cc",
   ]
 
-  deps = [
+  public_deps = [
     ":copy_test_files",
+    "//third_party/googletest:gtest",
     "//third_party/tree_sitter",
     "//util",
   ]

@@ -98,12 +98,14 @@
             if (!(openGLLayer->y == 0 && event.scrollingDeltaY > 0)) {
                 openGLLayer->dragPoint.y -= event.scrollingDeltaY;
 
+                float scroll_x = openGLLayer->x * openGLLayer.contentsScale;
+                float scroll_y = openGLLayer->y * openGLLayer.contentsScale;
                 float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
                 float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
                 float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
                 float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-                openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, cursor_x, cursor_y,
-                                                          drag_x, drag_y);
+                openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, scroll_x, scroll_y,
+                                                          cursor_x, cursor_y, drag_x, drag_y);
             }
         }
 
@@ -150,12 +152,14 @@ const char* hex(char c) {
     openGLLayer->cursorPoint.y = openGLLayer.frame.size.height - openGLLayer->cursorPoint.y;
     openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
 
+    float scroll_x = openGLLayer->x * openGLLayer.contentsScale;
+    float scroll_y = openGLLayer->y * openGLLayer.contentsScale;
     float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
     float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
     float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
     float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, cursor_x, cursor_y, drag_x,
-                                              drag_y);
+    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
+                                              cursor_y, drag_x, drag_y);
     [self.layer setNeedsDisplay];
 }
 
@@ -166,12 +170,14 @@ const char* hex(char c) {
 
     openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
 
+    float scroll_x = openGLLayer->x * openGLLayer.contentsScale;
+    float scroll_y = openGLLayer->y * openGLLayer.contentsScale;
     float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
     float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
     float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
     float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, cursor_x, cursor_y, drag_x,
-                                              drag_y);
+    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
+                                              cursor_y, drag_x, drag_y);
     [self.layer setNeedsDisplay];
 }
 

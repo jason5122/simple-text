@@ -37,6 +37,8 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
 }
 
 RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
+    // return pimpl->rasterizeGlyph(582, pimpl->emojiFont, descent);
+
     CGGlyph glyph_index;
 
     glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);

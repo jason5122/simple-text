@@ -216,7 +216,7 @@ std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line_str, flo
     size_t ret;
     float total_advance = 0;
     for (offset = 0; line_str[offset] != '\0'; offset += ret) {
-        ret = grapheme_decode_utf8(line_str + offset, SIZE_MAX, NULL);
+        ret = grapheme_next_character_break_utf8(line_str + offset, SIZE_MAX);
 
         std::string utf8_str;
         for (size_t i = 0; i < ret; i++) {
@@ -263,7 +263,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         size_t ret;
         float total_advance = 0;
         for (size_t offset = 0; line_str[offset] != '\0'; offset += ret, byte_offset += ret) {
-            ret = grapheme_decode_utf8(line_str + offset, SIZE_MAX, NULL);
+            ret = grapheme_next_character_break_utf8(line_str + offset, SIZE_MAX);
 
             Rgb text_color = BLACK;
 
@@ -341,12 +341,12 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glBindVertexArray(0);
     // glBindTexture(GL_TEXTURE_2D, 0);
 
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glDisable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glEnable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glDisable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glEnable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
     cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
@@ -428,6 +428,7 @@ void Renderer::setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y
 }
 
 void Renderer::loadGlyph(uint32_t scalar, const char* utf8_str) {
+    std::cout << "loading glyph: " << scalar << ' ' << utf8_str << '\n';
     RasterizedGlyph glyph = rasterizer->rasterizeUTF8(utf8_str);
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({scalar, atlas_glyph});

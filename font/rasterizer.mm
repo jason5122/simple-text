@@ -37,15 +37,15 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
 }
 
 RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
-    // return pimpl->rasterizeGlyph(582, pimpl->emojiFont, descent);
-
     CGGlyph glyph_index;
 
-    glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
-    if (glyph_index != 0) {
-        return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);
-    }
+    // glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+    // std::cout << "mainFont glyph index: " << glyph_index << '\n';
+    // if (glyph_index != 0) {
+    //     return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);
+    // }
     glyph_index = CTFontGetGlyphIndex(pimpl->emojiFont, utf8_str);
+    std::cout << "emojiFont glyph index: " << glyph_index << '\n';
     if (glyph_index != 0) {
         return pimpl->rasterizeGlyph(glyph_index, pimpl->emojiFont, descent);
     }

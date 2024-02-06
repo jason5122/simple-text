@@ -40,6 +40,7 @@ if (is_mac) {
   bundle_data("sample_files") {
     sources = [
       "resources/sample_files/10k_lines.json",
+      "resources/sample_files/emojis.txt",
       "resources/sample_files/example.cc",
       "resources/sample_files/example.glsl",
       "resources/sample_files/example.json",

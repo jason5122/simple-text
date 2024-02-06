@@ -428,7 +428,6 @@ void Renderer::setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y
 }
 
 void Renderer::loadGlyph(uint32_t scalar, const char* utf8_str) {
-    std::cout << "loading glyph: " << scalar << ' ' << utf8_str << '\n';
     RasterizedGlyph glyph = rasterizer->rasterizeUTF8(utf8_str);
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({scalar, atlas_glyph});

@@ -35,8 +35,6 @@ static inline CTRunResult CTFontGetGlyphIndex(CTFontRef fontRef, const char* utf
         CTFontRef runFont =
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTFontAttributeName);
 
-        LogDefault(@"CTFontUtil", (__bridge NSString*)CTFontCopyDisplayName(runFont));
-
         CFIndex runGlyphs = CTRunGetGlyphCount(run);
 
         std::vector<CGGlyph> glyphs(runGlyphs, 0);

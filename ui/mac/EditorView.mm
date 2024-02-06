@@ -234,10 +234,10 @@ const char* hex(char c) {
         CGLSetCurrentContext(glContext);
 
         CGFloat fontSize = 16 * self.contentsScale;
-        rasterizer = Rasterizer("Source Code Pro", "Apple Color Emoji", fontSize);
+        rasterizer = Rasterizer("Source Code Pro", fontSize);
         renderer = new Renderer(self.frame.size.width * self.contentsScale,
                                 self.frame.size.height * self.contentsScale, "Source Code Pro",
-                                "Apple Color Emoji", fontSize, rasterizer.line_height);
+                                fontSize, rasterizer.line_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));

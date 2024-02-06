@@ -42,10 +42,10 @@ extern "C" TSLanguage* tree_sitter_glsl();
 extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
-Renderer::Renderer(float width, float height, std::string main_font_name,
-                   std::string emoji_font_name, int font_size, float line_height)
+Renderer::Renderer(float width, float height, std::string main_font_name, int font_size,
+                   float line_height)
     : line_height(line_height) {
-    rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
+    rasterizer = new Rasterizer(main_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
     cursor_renderer = new CursorRenderer(width, height);
     highlighter.setLanguage("source.scheme");

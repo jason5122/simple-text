@@ -24,8 +24,8 @@ public:
     // TODO: Update this during insertion/deletion.
     float longest_line_x = 0;
 
-    Renderer(float width, float height, std::string main_font_name, std::string emoji_font_name,
-             int font_size, float line_height);
+    Renderer(float width, float height, std::string main_font_name, int font_size,
+             float line_height);
     void renderText(Buffer& buffer, float scroll_x, float scroll_y);
     void resize(int new_width, int new_height);
     void setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x,

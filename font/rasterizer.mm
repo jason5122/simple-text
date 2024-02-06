@@ -12,20 +12,15 @@ extern "C" {
 class Rasterizer::impl {
 public:
     CTFontRef mainFont;
-    CTFontRef emojiFont;
 
     RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef, float descent);
 };
 
-Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, int font_size)
-    : pimpl{new impl{}} {
+Rasterizer::Rasterizer(std::string main_font_name, int font_size) : pimpl{new impl{}} {
     CFStringRef mainFontName =
         CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
-    CFStringRef emojiFontName =
-        CFStringCreateWithCString(nullptr, emoji_font_name.c_str(), kCFStringEncodingUTF8);
 
     pimpl->mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
-    pimpl->emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
 
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
     // CTFontDescriptorRef descriptor =
@@ -69,13 +64,17 @@ bool Rasterizer::isFontMonospace() {
 }
 
 uint16_t Rasterizer::getGlyphIndex(const char* utf8_str) {
-    CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str).glyph;
-    if (glyph_index != 0) return glyph_index;
-    return CTFontGetGlyphIndex(pimpl->emojiFont, utf8_str).glyph;
+    return CTFontGetGlyphIndex(pimpl->mainFont, utf8_str).glyph;
 }
 
 RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,
                                                  float descent) {
+    CFStringRef fontFamily = CTFontCopyName(fontRef, kCTFontFamilyNameKey);
+    CFStringRef fontFace = CTFontCopyName(fontRef, kCTFontSubFamilyNameKey);
+    CGFloat fontSize = CTFontGetSize(fontRef);
+    unsigned int unitsPerEm = CTFontGetUnitsPerEm(fontRef);
+    LogDefault(@"Rasterizer", @"%@ %@ %f %d", fontFamily, fontFace, fontSize, unitsPerEm);
+
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
     LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
@@ -119,11 +118,6 @@ RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef 
     size_t bytesPerRow = CGBitmapContextGetBytesPerRow(context);
     size_t len = height * bytesPerRow;
 
-    CFStringRef fontFamily = CTFontCopyName(fontRef, kCTFontFamilyNameKey);
-    CFStringRef fontFace = CTFontCopyName(fontRef, kCTFontSubFamilyNameKey);
-    CGFloat fontSize = CTFontGetSize(fontRef);
-
-    // LogDefault(@"Rasterizer", @"%@ %@ %f", fontFamily, fontFace, fontSize);
     // LogDefault(@"Rasterizer", @"%dx%d", rasterizedWidth, rasterizedHeight);
     // LogDefault(@"Rasterizer", @"height = %d, bytesPerRow = %d, len = %d", height, bytesPerRow,
     //            len);

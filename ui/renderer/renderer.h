@@ -32,7 +32,7 @@ public:
                             float cursor_y, float drag_x, float drag_y);
     void parseBuffer(Buffer& buffer);
     void editBuffer(Buffer& buffer, size_t bytes);
-    float getGlyphAdvance(const char* utf8_str);
+    float getGlyphAdvance(std::string utf8_str);
     ~Renderer();
 
 private:
@@ -49,12 +49,12 @@ private:
     AtlasRenderer* atlas_renderer;
     CursorRenderer* cursor_renderer;
 
-    std::map<uint32_t, AtlasGlyph> glyph_cache;
+    std::map<std::string, AtlasGlyph> glyph_cache;
 
     SyntaxHighlighter highlighter;
 
     void linkShaders();
-    void loadGlyph(uint32_t scalar, const char* utf8_str);
+    void loadGlyph(std::string utf8_str);
     std::pair<float, size_t> closestBoundaryForX(const char* line, float x);
     bool isGlyphInSelection(int row, float glyph_center_x);
     void highlight();

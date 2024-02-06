@@ -312,7 +312,7 @@ const char* hex(char c) {
     float fps = 1000000.0 / microseconds;
     LogDefault("OpenGLLayer", "Tree-sitter edit and parse: %ld µs (%f fps)", microseconds, fps);
 
-    float advance = renderer->getGlyphAdvance(str);
+    float advance = renderer->getGlyphAdvance(std::string(str));
     renderer->cursor_start_col_offset += bytes;
     renderer->cursor_start_x += advance;
     renderer->cursor_end_col_offset += bytes;

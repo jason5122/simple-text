@@ -1,6 +1,5 @@
 #include "base/rgb.h"
 #include "renderer.h"
-#include "ui/util/utf8_util.h"
 #include "util/file_util.h"
 #include "util/log_util.h"
 #include "util/opengl_error_util.h"
@@ -201,13 +200,12 @@ void Renderer::editBuffer(Buffer& buffer, size_t bytes) {
     highlighter.edit(start_byte, old_end_byte, new_end_byte);
 }
 
-float Renderer::getGlyphAdvance(const char* utf8_str) {
-    uint32_t unicode_scalar = UTF8StringToScalar(utf8_str);
-    if (!glyph_cache.count(unicode_scalar)) {
-        this->loadGlyph(unicode_scalar, utf8_str);
+float Renderer::getGlyphAdvance(std::string utf8_str) {
+    if (!glyph_cache.count(utf8_str)) {
+        this->loadGlyph(utf8_str);
     }
 
-    AtlasGlyph glyph = glyph_cache[unicode_scalar];
+    AtlasGlyph glyph = glyph_cache[utf8_str];
     return std::round(glyph.advance);
 }
 
@@ -223,12 +221,11 @@ std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line_str, flo
             utf8_str += (line_str + offset)[i];
         }
 
-        uint32_t unicode_scalar = UTF8StringToScalar(utf8_str.c_str());
-        if (!glyph_cache.count(unicode_scalar)) {
-            this->loadGlyph(unicode_scalar, utf8_str.c_str());
+        if (!glyph_cache.count(utf8_str)) {
+            this->loadGlyph(utf8_str);
         }
 
-        AtlasGlyph glyph = glyph_cache[unicode_scalar];
+        AtlasGlyph glyph = glyph_cache[utf8_str];
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -283,12 +280,11 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
                 utf8_str += (line_str + offset)[i];
             }
 
-            uint32_t unicode_scalar = UTF8StringToScalar(utf8_str.c_str());
-            if (!glyph_cache.count(unicode_scalar)) {
-                this->loadGlyph(unicode_scalar, utf8_str.c_str());
+            if (!glyph_cache.count(utf8_str)) {
+                this->loadGlyph(utf8_str);
             }
 
-            AtlasGlyph glyph = glyph_cache[unicode_scalar];
+            AtlasGlyph glyph = glyph_cache[utf8_str];
 
             float glyph_center_x = total_advance + glyph.advance / 2;
             uint8_t bg_a = this->isGlyphInSelection(line, glyph_center_x) ? 255 : 0;
@@ -427,10 +423,10 @@ void Renderer::setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y
     cursor_end_x = x;
 }
 
-void Renderer::loadGlyph(uint32_t scalar, const char* utf8_str) {
-    RasterizedGlyph glyph = rasterizer->rasterizeUTF8(utf8_str);
+void Renderer::loadGlyph(std::string utf8_str) {
+    RasterizedGlyph glyph = rasterizer->rasterizeUTF8(utf8_str.c_str());
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
-    glyph_cache.insert({scalar, atlas_glyph});
+    glyph_cache.insert({utf8_str, atlas_glyph});
 }
 
 void Renderer::resize(int new_width, int new_height) {

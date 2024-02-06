@@ -239,11 +239,11 @@ const char* hex(char c) {
                                 self.frame.size.height * self.contentsScale, "Source Code Pro",
                                 "Apple Color Emoji", fontSize, rasterizer.line_height);
 
-        std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
+        // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
         // std::ifstream infile(ResourcePath("sample_files/example.json"));
         // std::ifstream infile(ResourcePath("sample_files/example.scm"));
-        // std::ifstream infile(ResourcePath("sample_files/sort.scm"));
+        std::ifstream infile(ResourcePath("sample_files/sort.scm"));
         // std::ifstream infile(ResourcePath("sample_files/sort_bugged.scm"));
         // std::ifstream infile(ResourcePath("sample_files/example.cc"));
         // std::ifstream infile(ResourcePath("sample_files/example.glsl"));

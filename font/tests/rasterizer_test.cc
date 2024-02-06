@@ -7,8 +7,8 @@ TEST(GlyphIndexTest, Alphabet) {
 
     std::cout << rasterizer.getGlyphIndex("\x61") << '\n';
     std::cout << rasterizer.getGlyphIndex("\xE2\x88\x86") << '\n';
-    std::cout << rasterizer.getEmojiGlyphIndex("\xF0\x9F\x98\x84") << '\n';
-    std::cout << rasterizer.getEmojiGlyphIndex("\xF0\x9F\xA5\xB2") << '\n';
+    std::cout << rasterizer.getGlyphIndex("\xF0\x9F\x98\x84") << '\n';
+    std::cout << rasterizer.getGlyphIndex("\xF0\x9F\xA5\xB2") << '\n';
 
-    std::cout << rasterizer.getEmojiGlyphIndex("\xEF\xA3\xBF") << '\n';
+    std::cout << rasterizer.getGlyphIndex("\xEF\xA3\xBF") << '\n';
 }

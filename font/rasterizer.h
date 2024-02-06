@@ -12,7 +12,6 @@ public:
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     bool isFontMonospace();
     uint16_t getGlyphIndex(const char* utf8_str);
-    uint16_t getEmojiGlyphIndex(const char* utf8_str);
 
 private:
     // https://herbsutter.com/gotw/_100/

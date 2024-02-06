@@ -37,7 +37,18 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
 }
 
 RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
-    CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+    CGGlyph glyph_index;
+
+    glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+    if (glyph_index != 0) {
+        return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);
+    }
+    glyph_index = CTFontGetGlyphIndex(pimpl->emojiFont, utf8_str);
+    if (glyph_index != 0) {
+        return pimpl->rasterizeGlyph(glyph_index, pimpl->emojiFont, descent);
+    }
+
+    std::cout << "no font has glyph index for: " << utf8_str << '\n';
     return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);
 }
 
@@ -46,11 +57,9 @@ bool Rasterizer::isFontMonospace() {
 }
 
 uint16_t Rasterizer::getGlyphIndex(const char* utf8_str) {
-    return CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
-}
-
-uint16_t Rasterizer::getEmojiGlyphIndex(const char* utf8_str) {
-    return CTFontGetEmojiGlyphIndex2(pimpl->emojiFont, utf8_str);
+    CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+    if (glyph_index != 0) return glyph_index;
+    return CTFontGetGlyphIndex(pimpl->emojiFont, utf8_str);
 }
 
 RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,

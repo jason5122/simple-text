@@ -49,7 +49,7 @@ Renderer::Renderer(float width, float height, std::string main_font_name,
     rasterizer = new Rasterizer(main_font_name, emoji_font_name, font_size);
     atlas_renderer = new AtlasRenderer(width, height);
     cursor_renderer = new CursorRenderer(width, height);
-    highlighter.setLanguage("source.json");
+    highlighter.setLanguage("source.scheme");
 
     this->linkShaders();
     this->resize(width, height);
@@ -203,7 +203,6 @@ void Renderer::editBuffer(Buffer& buffer, size_t bytes) {
 
 float Renderer::getGlyphAdvance(const char* utf8_str) {
     uint32_t unicode_scalar = UTF8StringToScalar(utf8_str);
-
     if (!glyph_cache.count(unicode_scalar)) {
         this->loadGlyph(unicode_scalar, utf8_str);
     }
@@ -212,18 +211,21 @@ float Renderer::getGlyphAdvance(const char* utf8_str) {
     return std::round(glyph.advance);
 }
 
-std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line, float x) {
+std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line_str, float x) {
     size_t offset;
     size_t ret;
     float total_advance = 0;
-    for (offset = 0; line[offset] != '\0'; offset += ret) {
-        ret = grapheme_decode_utf8(line + offset, SIZE_MAX, NULL);
+    for (offset = 0; line_str[offset] != '\0'; offset += ret) {
+        ret = grapheme_decode_utf8(line_str + offset, SIZE_MAX, NULL);
 
-        uint32_t unicode_scalar = UTF8StringToScalar(line + offset);
+        std::string utf8_str;
+        for (size_t i = 0; i < ret; i++) {
+            utf8_str += (line_str + offset)[i];
+        }
 
+        uint32_t unicode_scalar = UTF8StringToScalar(utf8_str.c_str());
         if (!glyph_cache.count(unicode_scalar)) {
-            this->loadGlyph(unicode_scalar, line + offset);
-            LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
+            this->loadGlyph(unicode_scalar, utf8_str.c_str());
         }
 
         AtlasGlyph glyph = glyph_cache[unicode_scalar];
@@ -276,11 +278,14 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
                 }
             }
 
-            uint32_t unicode_scalar = UTF8StringToScalar(line_str + offset);
+            std::string utf8_str;
+            for (size_t i = 0; i < ret; i++) {
+                utf8_str += (line_str + offset)[i];
+            }
 
+            uint32_t unicode_scalar = UTF8StringToScalar(utf8_str.c_str());
             if (!glyph_cache.count(unicode_scalar)) {
-                this->loadGlyph(unicode_scalar, line_str + offset);
-                LogDefault("Renderer", "new unicode_scalar: %d", unicode_scalar);
+                this->loadGlyph(unicode_scalar, utf8_str.c_str());
             }
 
             AtlasGlyph glyph = glyph_cache[unicode_scalar];

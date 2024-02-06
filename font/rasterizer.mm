@@ -27,6 +27,29 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
     pimpl->mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
     pimpl->emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
 
+    // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
+    // CTFontDescriptorRef descriptor =
+    //     CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
+    // CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
+    // CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
+    // CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor,
+    // NULL);
+
+    // for (int i = 0; i < CFArrayGetCount(fontDescriptors); i++) {
+    //     CTFontDescriptorRef descriptor =
+    //         (CTFontDescriptorRef)CFArrayGetValueAtIndex(fontDescriptors, i);
+    //     CFStringRef familyName =
+    //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
+    //     CFStringRef style =
+    //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
+
+    //     if (CFEqual(style, CFSTR("Regular"))) {
+    //         LogDefault("Renderer", "%@ %@", familyName, style);
+    //         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, font_size, nullptr);
+    //         pimpl->mainFont = tempFont;
+    //     }
+    // }
+
     CGFloat ascent = CGFloat_round(CTFontGetAscent(pimpl->mainFont));
     CGFloat descent = CGFloat_round(CTFontGetDescent(pimpl->mainFont));
     CGFloat leading = CGFloat_round(CTFontGetLeading(pimpl->mainFont));
@@ -37,21 +60,8 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
 }
 
 RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
-    CGGlyph glyph_index;
-
-    // glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
-    // std::cout << "mainFont glyph index: " << glyph_index << '\n';
-    // if (glyph_index != 0) {
-    //     return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);
-    // }
-    glyph_index = CTFontGetGlyphIndex(pimpl->emojiFont, utf8_str);
-    std::cout << "emojiFont glyph index: " << glyph_index << '\n';
-    if (glyph_index != 0) {
-        return pimpl->rasterizeGlyph(glyph_index, pimpl->emojiFont, descent);
-    }
-
-    std::cout << "no font has glyph index for: " << utf8_str << '\n';
-    return pimpl->rasterizeGlyph(glyph_index, pimpl->mainFont, descent);
+    CTRunResult runResult = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+    return pimpl->rasterizeGlyph(runResult.glyph, runResult.runFont, descent);
 }
 
 bool Rasterizer::isFontMonospace() {
@@ -59,9 +69,9 @@ bool Rasterizer::isFontMonospace() {
 }
 
 uint16_t Rasterizer::getGlyphIndex(const char* utf8_str) {
-    CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+    CGGlyph glyph_index = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str).glyph;
     if (glyph_index != 0) return glyph_index;
-    return CTFontGetGlyphIndex(pimpl->emojiFont, utf8_str);
+    return CTFontGetGlyphIndex(pimpl->emojiFont, utf8_str).glyph;
 }
 
 RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,

@@ -1,0 +1,10 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [ "rasterizer_test.cc" ]
+
+  deps = [
+    "//font",
+    "//third_party/googletest:gtest",
+  ]
+}

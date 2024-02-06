@@ -5,6 +5,7 @@ executable("test_runner") {
 
   deps = [
     "//base/tests",
+    "//font/tests",
     "//third_party/googletest:gtest_main",
   ]
 }

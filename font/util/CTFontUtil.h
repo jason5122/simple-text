@@ -8,12 +8,9 @@ static inline CGGlyph CTFontGetGlyphIndex(CTFontRef fontRef, const char* utf8_st
     NSString* chString = [NSString stringWithUTF8String:utf8_str];
     UniChar characters[1] = {};
     [chString getCharacters:characters range:NSMakeRange(0, 1)];
+
     CGGlyph glyphs[1] = {};
-    if (CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, 1)) {
-        // LogDefault(@"CTFontUtil", @"got glyphs! %d", glyphs[0]);
-    } else {
-        LogDefault(@"CTFontUtil", @"could not get glyphs for codepoint: %s", utf8_str);
-    }
+    CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, 1);
     return glyphs[0];
 }
 
@@ -26,13 +23,29 @@ static inline CGGlyph CTFontGetEmojiGlyphIndex(CTFontRef fontRef) {
     // http://stackoverflow.com/questions/13005091/how-to-tell-if-a-particular-font-has-a-specific-glyph-64k#
     UniChar characters[2] = {};
     CFIndex length = (CFStringGetSurrogatePairForLongCharacter(emojiValue, characters) ? 2 : 1);
+
     CGGlyph glyphs[2] = {};
-    bool ret = CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, length);
-    if (ret) {
-        LogDefault(@"Renderer", @"yo?????? ¬åß˚∆∂ƒˆøß∆∂");
-    } else {
-        LogDefault(@"Renderer", @"aw damn...");
-    }
+    CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, length);
+    return glyphs[0];
+}
+
+static inline CGGlyph CTFontGetEmojiGlyphIndex2(CTFontRef fontRef, const char* utf8_str) {
+    NSString* chString = [NSString stringWithUTF8String:utf8_str];
+    UTF32Char outputChar;
+    [chString getBytes:&outputChar
+             maxLength:4
+            usedLength:NULL
+              encoding:NSUTF32LittleEndianStringEncoding
+               options:0
+                 range:NSMakeRange(0, 2)
+        remainingRange:NULL];
+    outputChar = NSSwapLittleIntToHost(outputChar);
+
+    UniChar characters[2] = {};
+    CFIndex length = CFStringGetSurrogatePairForLongCharacter(outputChar, characters) ? 2 : 1;
+
+    CGGlyph glyphs[2] = {};
+    CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, length);
     return glyphs[0];
 }
 

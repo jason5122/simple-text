@@ -1,0 +1,14 @@
+#include "font/rasterizer.h"
+#include "gtest/gtest.h"
+#include <iostream>
+
+TEST(GlyphIndexTest, Alphabet) {
+    Rasterizer rasterizer = Rasterizer("Source Code Pro", "Apple Color Emoji", 16);
+
+    std::cout << rasterizer.getGlyphIndex("\x61") << '\n';
+    std::cout << rasterizer.getGlyphIndex("\xE2\x88\x86") << '\n';
+    std::cout << rasterizer.getEmojiGlyphIndex("\xF0\x9F\x98\x84") << '\n';
+    std::cout << rasterizer.getEmojiGlyphIndex("\xF0\x9F\xA5\xB2") << '\n';
+
+    std::cout << rasterizer.getEmojiGlyphIndex("\xEF\xA3\xBF") << '\n';
+}

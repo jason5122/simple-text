@@ -27,10 +27,6 @@ Rasterizer::Rasterizer(std::string main_font_name, std::string emoji_font_name, 
     pimpl->mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
     pimpl->emojiFont = CTFontCreateWithName(emojiFontName, font_size, nullptr);
 
-    if (CTFontIsMonospace(pimpl->mainFont)) {
-        LogDefault(@"Rasterizer", @"Using monospace font.");
-    }
-
     CGFloat ascent = CGFloat_round(CTFontGetAscent(pimpl->mainFont));
     CGFloat descent = CGFloat_round(CTFontGetDescent(pimpl->mainFont));
     CGFloat leading = CGFloat_round(CTFontGetLeading(pimpl->mainFont));
@@ -47,6 +43,14 @@ RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
 
 bool Rasterizer::isFontMonospace() {
     return CTFontIsMonospace(pimpl->mainFont);
+}
+
+uint16_t Rasterizer::getGlyphIndex(const char* utf8_str) {
+    return CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
+}
+
+uint16_t Rasterizer::getEmojiGlyphIndex(const char* utf8_str) {
+    return CTFontGetEmojiGlyphIndex2(pimpl->emojiFont, utf8_str);
 }
 
 RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,

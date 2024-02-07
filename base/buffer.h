@@ -25,6 +25,6 @@ public:
         return data.end();
     }
 
-    // private:
+private:
     BufferType data;
 };

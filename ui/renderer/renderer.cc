@@ -163,16 +163,18 @@ const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t*
     const size_t BUFSIZE = 256;
     static char buf[BUFSIZE];
 
-    const char* line_str = buffer->data[position.row].c_str();
-    size_t len = buffer->data[position.row].size();
-    size_t tocopy = std::min(len - position.column, BUFSIZE);
+    std::string line_str;
+    buffer->getLineContent(&line_str, position.row);
 
-    memcpy(buf, line_str + position.column, tocopy);
-    *bytes_read = (uint32_t)tocopy;
-    if (tocopy < BUFSIZE) {
+    size_t len = line_str.size();
+    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
+
+    memcpy(buf, &line_str[0] + position.column, bytes_copied);
+    *bytes_read = (uint32_t)bytes_copied;
+    if (bytes_copied < BUFSIZE) {
         // Add the final \n.
         // If it didn't fit, read() will be called again on the same line with the column advanced.
-        buf[tocopy] = '\n';
+        buf[bytes_copied] = '\n';
         (*bytes_read)++;
     }
     return buf;
@@ -200,16 +202,16 @@ float Renderer::getGlyphAdvance(std::string utf8_str) {
     return std::round(glyph.advance);
 }
 
-std::pair<float, size_t> Renderer::closestBoundaryForX(const char* line_str, float x) {
+std::pair<float, size_t> Renderer::closestBoundaryForX(std::string line_str, float x) {
     size_t offset;
     size_t ret;
     float total_advance = 0;
-    for (offset = 0; line_str[offset] != '\0'; offset += ret) {
-        ret = grapheme_next_character_break_utf8(line_str + offset, SIZE_MAX);
+    for (offset = 0; offset < line_str.size(); offset += ret) {
+        ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
         std::string utf8_str;
         for (size_t i = 0; i < ret; i++) {
-            utf8_str += (line_str + offset)[i];
+            utf8_str += line_str[offset + i];
         }
 
         if (!glyph_cache.count(utf8_str)) {
@@ -403,15 +405,19 @@ void Renderer::setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y
 
     cursor_start_line = cursor_y / line_height;
     if (cursor_start_line > buffer.lineCount()) cursor_start_line = buffer.lineCount();
-    std::tie(x, offset) =
-        this->closestBoundaryForX(buffer.data[cursor_start_line].c_str(), cursor_x + scroll_x);
+
+    std::string start_line_str;
+    buffer.getLineContent(&start_line_str, cursor_start_line);
+    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, cursor_x + scroll_x);
     cursor_start_col_offset = offset;
     cursor_start_x = x;
 
     cursor_end_line = drag_y / line_height;
     if (cursor_end_line > buffer.lineCount()) cursor_end_line = buffer.lineCount();
-    std::tie(x, offset) =
-        this->closestBoundaryForX(buffer.data[cursor_end_line].c_str(), drag_x + scroll_x);
+
+    std::string end_line_str;
+    buffer.getLineContent(&end_line_str, cursor_end_line);
+    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, drag_x + scroll_x);
     cursor_end_col_offset = offset;
     cursor_end_x = x;
 }

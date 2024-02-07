@@ -55,7 +55,7 @@ private:
 
     void linkShaders();
     void loadGlyph(std::string utf8_str);
-    std::pair<float, size_t> closestBoundaryForX(const char* line, float x);
+    std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);
     bool isGlyphInSelection(int row, float glyph_center_x);
     void highlight();
 };

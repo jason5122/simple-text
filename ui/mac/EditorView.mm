@@ -166,25 +166,18 @@ const char* hex(char c) {
 
     CGFloat mouse_x = event.locationInWindow.x;
     CGFloat mouse_y = event.locationInWindow.y;
+    mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    // Set origin at top left.
-    mouse_y = openGLLayer.frame.size.height - mouse_y;
-
-    CGFloat scroll_x = openGLLayer->scroll_x;
-    CGFloat scroll_y = openGLLayer->scroll_y;
-    CGFloat cursor_x = mouse_x + scroll_x;
-    CGFloat cursor_y = mouse_y + scroll_y;
-
-    scroll_x *= openGLLayer.contentsScale;
-    scroll_y *= openGLLayer.contentsScale;
+    CGFloat cursor_x = mouse_x + openGLLayer->scroll_x;
+    CGFloat cursor_y = mouse_y + openGLLayer->scroll_y;
     cursor_x *= openGLLayer.contentsScale;
     cursor_y *= openGLLayer.contentsScale;
 
     LogDefault("EditorView", "width = %f, height = %f", openGLLayer.frame.size.width,
                openGLLayer.frame.size.height);
 
-    openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
-                                              cursor_y, cursor_x, cursor_y);
+    openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, cursor_x, cursor_y, cursor_x,
+                                              cursor_y);
     [self.layer setNeedsDisplay];
 
     LogDefault("EditorView", "mouse_x = %f, mouse_y = %f", mouse_x, mouse_y);

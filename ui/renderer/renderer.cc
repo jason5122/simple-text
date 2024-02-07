@@ -395,17 +395,10 @@ bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {
     return false;
 }
 
-void Renderer::setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x,
-                                  float cursor_y, float drag_x, float drag_y) {
+void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
+                                  float drag_y) {
     float x;
     size_t offset;
-
-    // scroll_x = -scroll_x * 2;  // FIXME: Why do we need to multiply by content scale again?
-    // LogDefault("Renderer", "cursor_x = %f, scroll_x = %f, width = %f", cursor_x, scroll_x,
-    // width);
-
-    LogDefault("Renderer", "cursor_x = %f, cursor_y = %f", cursor_x, cursor_y);
-    LogDefault("Renderer", "scroll_x = %f, scroll_y = %f", scroll_x, scroll_y);
 
     cursor_start_line = cursor_y / line_height;
     if (cursor_start_line > buffer.lineCount()) cursor_start_line = buffer.lineCount();

@@ -28,8 +28,8 @@ public:
              float line_height);
     void renderText(Buffer& buffer, float scroll_x, float scroll_y);
     void resize(int new_width, int new_height);
-    void setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y, float cursor_x,
-                            float cursor_y, float drag_x, float drag_y);
+    void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
+                            float drag_y);
     void parseBuffer(Buffer& buffer);
     void editBuffer(Buffer& buffer, size_t bytes);
     float getGlyphAdvance(std::string utf8_str);

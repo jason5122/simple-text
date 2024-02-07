@@ -5,6 +5,7 @@
 #import "util/log_util.h"
 #import <fstream>
 #import <iostream>
+#import <limits>
 #import <sstream>
 #import <string>
 #import <vector>
@@ -81,47 +82,34 @@
         CGFloat dy = -event.scrollingDeltaY;
 
         // TODO: Formulate max_y without the need for division.
-        float longest_line_x = openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale;
+        CGFloat longest_line_x = openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale;
         longest_line_x -= openGLLayer.frame.size.width;
         if (longest_line_x < 0) longest_line_x = 0;
 
-        openGLLayer->scroll_x += dx;
-        if (openGLLayer->scroll_x < 0) openGLLayer->scroll_x = 0;
-        if (openGLLayer->scroll_x > longest_line_x) openGLLayer->scroll_x = longest_line_x;
-
         size_t line_count = openGLLayer->buffer.lineCount();
         line_count -= 1;  // TODO: Merge this with CursorRenderer.
-        float max_y = line_count * openGLLayer->rasterizer.line_height;
+        CGFloat max_y = line_count * openGLLayer->rasterizer.line_height;
         // TODO: Formulate max_y without the need for division.
         max_y /= openGLLayer.contentsScale;
 
-        openGLLayer->scroll_y += dy;
-        if (openGLLayer->scroll_y < 0) openGLLayer->scroll_y = 0;
-        if (openGLLayer->scroll_y > max_y) openGLLayer->scroll_y = max_y;
-
-        // https://developer.apple.com/documentation/appkit/nsevent/1527943-pressedmousebuttons?language=objc
-        // if (NSEvent.pressedMouseButtons & (1 << 0)) {
-        //     // Prevent scrolling cursor past top of buffer.
-        //     // FIXME: The behavior is still a little buggy near the top of buffer.
-        //     if (!(openGLLayer->scroll_y == 0 && event.scrollingDeltaY > 0)) {
-        //         openGLLayer->dragPoint.y -= event.scrollingDeltaY;
-
-        //         float scroll_x = openGLLayer->scroll_x * openGLLayer.contentsScale;
-        //         float scroll_y = openGLLayer->scroll_y * openGLLayer.contentsScale;
-        //         float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
-        //         float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
-        //         float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
-        //         float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-        //         openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x,
-        //         scroll_y,
-        //                                                   cursor_x, cursor_y, drag_x, drag_y);
-        //     }
-        // }
+        openGLLayer->scroll_x = std::clamp(openGLLayer->scroll_x + dx, 0.0, longest_line_x);
+        openGLLayer->scroll_y = std::clamp(openGLLayer->scroll_y + dy, 0.0, max_y);
 
         // https://developer.apple.com/documentation/appkit/nsevent/1527943-pressedmousebuttons?language=objc
         if (NSEvent.pressedMouseButtons & (1 << 0)) {
-            openGLLayer->cursor_end_x += dx;
-            openGLLayer->cursor_end_y += dy;
+            CGFloat mouse_x = event.locationInWindow.x;
+            CGFloat mouse_y = event.locationInWindow.y;
+            mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
+
+            CGFloat max_mouse_x =
+                (openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale) -
+                (openGLLayer.frame.size.width - mouse_x);
+
+            // TODO: Fix cursor_end_y scrolling past end by calculating max_mouse_y.
+            openGLLayer->cursor_end_x =
+                std::clamp(openGLLayer->cursor_end_x + dx, mouse_x, max_mouse_x);
+            openGLLayer->cursor_end_y = std::clamp(openGLLayer->cursor_end_y + dy, mouse_y,
+                                                   std::numeric_limits<CGFloat>::max());
 
             [openGLLayer setRendererCursorPositions];
         }

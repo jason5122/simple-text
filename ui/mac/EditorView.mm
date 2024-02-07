@@ -324,6 +324,30 @@ const char* hex(char c) {
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
+    // TODO: Formulate max_y without the need for division.
+    float longest_line_x = renderer->longest_line_x / self.contentsScale;
+    longest_line_x -= self.frame.size.width;
+    if (longest_line_x < 0) longest_line_x = 0;
+
+    if (-x < 0) x = 0;
+    if (-x > longest_line_x) x = -longest_line_x;
+
+    size_t line_count = buffer.lineCount();
+    line_count -= 1;  // TODO: Merge this with CursorRenderer.
+    float max_y = line_count * rasterizer.line_height;
+    // TODO: Formulate max_y without the need for division.
+    max_y /= self.contentsScale;
+
+    if (-y < 0) y = 0;
+    if (-y > max_y) y = -max_y;
+
+    float scroll_x = x * self.contentsScale;
+    float scroll_y = y * self.contentsScale;
+    float cursor_x = cursorPoint.x * self.contentsScale;
+    float cursor_y = cursorPoint.y * self.contentsScale;
+    float drag_x = dragPoint.x * self.contentsScale;
+    float drag_y = dragPoint.y * self.contentsScale;
+    renderer->setCursorPositions(buffer, scroll_x, scroll_y, cursor_x, cursor_y, drag_x, drag_y);
     [self setNeedsDisplay];
 }
 

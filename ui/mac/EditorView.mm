@@ -29,6 +29,10 @@
 
 - (void)setRendererCursorPositions;
 
+- (CGFloat)maxCursorX;
+
+- (CGFloat)maxCursorY;
+
 @end
 
 @interface EditorView () {
@@ -81,19 +85,10 @@
         CGFloat dx = -event.scrollingDeltaX;
         CGFloat dy = -event.scrollingDeltaY;
 
-        // TODO: Formulate max_y without the need for division.
-        CGFloat longest_line_x = openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale;
-        longest_line_x -= openGLLayer.frame.size.width;
-        if (longest_line_x < 0) longest_line_x = 0;
-
-        size_t line_count = openGLLayer->buffer.lineCount();
-        line_count -= 1;  // TODO: Merge this with CursorRenderer.
-        CGFloat max_y = line_count * openGLLayer->rasterizer.line_height;
-        // TODO: Formulate max_y without the need for division.
-        max_y /= openGLLayer.contentsScale;
-
-        openGLLayer->scroll_x = std::clamp(openGLLayer->scroll_x + dx, 0.0, longest_line_x);
-        openGLLayer->scroll_y = std::clamp(openGLLayer->scroll_y + dy, 0.0, max_y);
+        openGLLayer->scroll_x =
+            std::clamp(openGLLayer->scroll_x + dx, 0.0, [openGLLayer maxCursorX]);
+        openGLLayer->scroll_y =
+            std::clamp(openGLLayer->scroll_y + dy, 0.0, [openGLLayer maxCursorY]);
 
         // https://developer.apple.com/documentation/appkit/nsevent/1527943-pressedmousebuttons?language=objc
         if (NSEvent.pressedMouseButtons & (1 << 0)) {
@@ -319,20 +314,8 @@ const char* hex(char c) {
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-    // TODO: Formulate max_y without the need for division.
-    CGFloat longest_line_x = renderer->longest_line_x / self.contentsScale;
-    longest_line_x -= self.frame.size.width;
-    if (longest_line_x < 0) longest_line_x = 0;
-
-    size_t line_count = buffer.lineCount();
-    line_count -= 1;  // TODO: Merge this with CursorRenderer.
-    CGFloat max_y = line_count * rasterizer.line_height;
-    // TODO: Formulate max_y without the need for division.
-    max_y /= self.contentsScale;
-
-    scroll_x = std::clamp(scroll_x, 0.0, longest_line_x);
-    scroll_y = std::clamp(scroll_y, 0.0, max_y);
-
+    scroll_x = std::clamp(scroll_x, 0.0, [self maxCursorX]);
+    scroll_y = std::clamp(scroll_y, 0.0, [self maxCursorY]);
     [self setNeedsDisplay];
 }
 
@@ -341,6 +324,23 @@ const char* hex(char c) {
     renderer->setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
                                  cursor_end_x * scale, cursor_end_y * scale);
     [self setNeedsDisplay];
+}
+
+- (CGFloat)maxCursorX {
+    // TODO: Formulate max_cursor_x without the need for division.
+    CGFloat max_cursor_x = renderer->longest_line_x / self.contentsScale;
+    max_cursor_x -= self.frame.size.width;
+    if (max_cursor_x < 0) max_cursor_x = 0;
+    return max_cursor_x;
+}
+
+- (CGFloat)maxCursorY {
+    size_t line_count = buffer.lineCount();
+    line_count -= 1;  // TODO: Merge this with CursorRenderer.
+    CGFloat max_y = line_count * rasterizer.line_height;
+    // TODO: Formulate max_y without the need for division.
+    max_y /= self.contentsScale;
+    return max_y;
 }
 
 - (void)releaseCGLContext:(CGLContextObj)glContext {

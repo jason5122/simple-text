@@ -11,7 +11,8 @@
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
-    float x, y;
+    CGFloat scroll_x;
+    CGFloat scroll_y;
     CGPoint cursorPoint;
     CGPoint dragPoint;
 
@@ -77,9 +78,9 @@
         longest_line_x -= openGLLayer.frame.size.width;
         if (longest_line_x < 0) longest_line_x = 0;
 
-        openGLLayer->x += event.scrollingDeltaX;
-        if (-openGLLayer->x < 0) openGLLayer->x = 0;
-        if (-openGLLayer->x > longest_line_x) openGLLayer->x = -longest_line_x;
+        openGLLayer->scroll_x -= event.scrollingDeltaX;
+        if (openGLLayer->scroll_x < 0) openGLLayer->scroll_x = 0;
+        if (openGLLayer->scroll_x > longest_line_x) openGLLayer->scroll_x = longest_line_x;
 
         size_t line_count = openGLLayer->buffer.lineCount();
         line_count -= 1;  // TODO: Merge this with CursorRenderer.
@@ -87,28 +88,28 @@
         // TODO: Formulate max_y without the need for division.
         max_y /= openGLLayer.contentsScale;
 
-        openGLLayer->y += event.scrollingDeltaY;
-
-        if (-openGLLayer->y < 0) openGLLayer->y = 0;
-        if (-openGLLayer->y > max_y) openGLLayer->y = -max_y;
+        openGLLayer->scroll_y -= event.scrollingDeltaY;
+        if (openGLLayer->scroll_y < 0) openGLLayer->scroll_y = 0;
+        if (openGLLayer->scroll_y > max_y) openGLLayer->scroll_y = max_y;
 
         // https://developer.apple.com/documentation/appkit/nsevent/1527943-pressedmousebuttons?language=objc
-        if (NSEvent.pressedMouseButtons & (1 << 0)) {
-            // Prevent scrolling cursor past top of buffer.
-            // FIXME: The behavior is still a little buggy near the top of buffer.
-            if (!(openGLLayer->y == 0 && event.scrollingDeltaY > 0)) {
-                openGLLayer->dragPoint.y -= event.scrollingDeltaY;
+        // if (NSEvent.pressedMouseButtons & (1 << 0)) {
+        //     // Prevent scrolling cursor past top of buffer.
+        //     // FIXME: The behavior is still a little buggy near the top of buffer.
+        //     if (!(openGLLayer->scroll_y == 0 && event.scrollingDeltaY > 0)) {
+        //         openGLLayer->dragPoint.y -= event.scrollingDeltaY;
 
-                float scroll_x = openGLLayer->x * openGLLayer.contentsScale;
-                float scroll_y = openGLLayer->y * openGLLayer.contentsScale;
-                float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
-                float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
-                float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
-                float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-                openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y,
-                                                          cursor_x, cursor_y, drag_x, drag_y);
-            }
-        }
+        //         float scroll_x = openGLLayer->scroll_x * openGLLayer.contentsScale;
+        //         float scroll_y = openGLLayer->scroll_y * openGLLayer.contentsScale;
+        //         float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
+        //         float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
+        //         float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
+        //         float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
+        //         openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x,
+        //         scroll_y,
+        //                                                   cursor_x, cursor_y, drag_x, drag_y);
+        //     }
+        // }
 
         [self.layer setNeedsDisplay];
     }
@@ -142,44 +143,71 @@ const char* hex(char c) {
 }
 
 - (void)mouseDown:(NSEvent*)event {
-    openGLLayer->cursorPoint = event.locationInWindow;
-    openGLLayer->cursorPoint.x += openGLLayer->x;
-    openGLLayer->cursorPoint.y += openGLLayer->y;
+    // openGLLayer->cursorPoint = event.locationInWindow;
+    // openGLLayer->cursorPoint.x += openGLLayer->scroll_x;
+    // openGLLayer->cursorPoint.y += openGLLayer->scroll_y;
 
-    openGLLayer->dragPoint = event.locationInWindow;
-    openGLLayer->dragPoint.x += openGLLayer->x;
-    openGLLayer->dragPoint.y += openGLLayer->y;
+    // openGLLayer->dragPoint = event.locationInWindow;
+    // openGLLayer->dragPoint.x += openGLLayer->scroll_x;
+    // openGLLayer->dragPoint.y += openGLLayer->scroll_y;
 
-    openGLLayer->cursorPoint.y = openGLLayer.frame.size.height - openGLLayer->cursorPoint.y;
-    openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
+    // openGLLayer->cursorPoint.y = openGLLayer.frame.size.height - openGLLayer->cursorPoint.y;
+    // openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
 
-    float scroll_x = openGLLayer->x * openGLLayer.contentsScale;
-    float scroll_y = openGLLayer->y * openGLLayer.contentsScale;
-    float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
-    float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
-    float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
-    float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
+    // float scaled_scroll_x = openGLLayer->scroll_x * openGLLayer.contentsScale;
+    // float scaled_scroll_y = openGLLayer->scroll_y * openGLLayer.contentsScale;
+    // float scaled_cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
+    // float scaled_cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
+    // float scaled_drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
+    // float scaled_drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
+    // openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scaled_scroll_x,
+    //                                           scaled_scroll_y, scaled_cursor_x, scaled_cursor_y,
+    //                                           scaled_drag_x, scaled_drag_y);
+
+    CGFloat mouse_x = event.locationInWindow.x;
+    CGFloat mouse_y = event.locationInWindow.y;
+
+    // Set origin at top left.
+    mouse_y = openGLLayer.frame.size.height - mouse_y;
+
+    CGFloat scroll_x = openGLLayer->scroll_x;
+    CGFloat scroll_y = openGLLayer->scroll_y;
+    CGFloat cursor_x = mouse_x + scroll_x;
+    CGFloat cursor_y = mouse_y + scroll_y;
+
+    scroll_x *= openGLLayer.contentsScale;
+    scroll_y *= openGLLayer.contentsScale;
+    cursor_x *= openGLLayer.contentsScale;
+    cursor_y *= openGLLayer.contentsScale;
+
+    LogDefault("EditorView", "width = %f, height = %f", openGLLayer.frame.size.width,
+               openGLLayer.frame.size.height);
+
     openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
-                                              cursor_y, drag_x, drag_y);
+                                              cursor_y, cursor_x, cursor_y);
     [self.layer setNeedsDisplay];
+
+    LogDefault("EditorView", "mouse_x = %f, mouse_y = %f", mouse_x, mouse_y);
+    LogDefault("EditorView", "scroll_x = %f, scroll_y = %f", openGLLayer->scroll_x,
+               openGLLayer->scroll_y);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
-    openGLLayer->dragPoint = event.locationInWindow;
-    openGLLayer->dragPoint.x += openGLLayer->x;
-    openGLLayer->dragPoint.y += openGLLayer->y;
+    // openGLLayer->dragPoint = event.locationInWindow;
+    // openGLLayer->dragPoint.x += openGLLayer->scroll_x;
+    // openGLLayer->dragPoint.y += openGLLayer->scroll_y;
 
-    openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
+    // openGLLayer->dragPoint.y = openGLLayer.frame.size.height - openGLLayer->dragPoint.y;
 
-    float scroll_x = openGLLayer->x * openGLLayer.contentsScale;
-    float scroll_y = openGLLayer->y * openGLLayer.contentsScale;
-    float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
-    float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
-    float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
-    float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-    openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
-                                              cursor_y, drag_x, drag_y);
-    [self.layer setNeedsDisplay];
+    // float scroll_x = openGLLayer->scroll_x * openGLLayer.contentsScale;
+    // float scroll_y = openGLLayer->scroll_y * openGLLayer.contentsScale;
+    // float cursor_x = openGLLayer->cursorPoint.x * openGLLayer.contentsScale;
+    // float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
+    // float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
+    // float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
+    // openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
+    //                                           cursor_y, drag_x, drag_y);
+    // [self.layer setNeedsDisplay];
 }
 
 - (void)rightMouseUp:(NSEvent*)event {
@@ -282,13 +310,13 @@ const char* hex(char c) {
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
-    float scroll_x = x * self.contentsScale;
-    float scroll_y = y * self.contentsScale;
+    float scaled_scroll_x = scroll_x * self.contentsScale;
+    float scaled_scroll_y = scroll_y * self.contentsScale;
     float width = self.frame.size.width * self.contentsScale;
     float height = self.frame.size.height * self.contentsScale;
 
     renderer->resize(width, height);
-    renderer->renderText(buffer, scroll_x, scroll_y);
+    renderer->renderText(buffer, scaled_scroll_x, scaled_scroll_y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext
@@ -347,7 +375,8 @@ const char* hex(char c) {
     // float cursor_y = cursorPoint.y * self.contentsScale;
     // float drag_x = dragPoint.x * self.contentsScale;
     // float drag_y = dragPoint.y * self.contentsScale;
-    // renderer->setCursorPositions(buffer, scroll_x, scroll_y, cursor_x, cursor_y, drag_x, drag_y);
+    // renderer->setCursorPositions(buffer, scroll_x, scroll_y, cursor_x, cursor_y, drag_x,
+    // drag_y);
     [self setNeedsDisplay];
 }
 

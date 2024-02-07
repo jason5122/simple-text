@@ -243,7 +243,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     std::vector<InstanceData> instances;
     int range_idx = 0;
 
-    size_t scroll_line = -scroll_y / line_height;
+    size_t scroll_line = scroll_y / line_height;
 
     size_t visible_lines = std::ceil(height / line_height);
     size_t byte_offset = buffer.byteOfLine(scroll_line);
@@ -400,15 +400,19 @@ void Renderer::setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y
     float x;
     size_t offset;
 
-    scroll_x = -scroll_x * 2;  // FIXME: Why do we need to multiply by content scale again?
-    LogDefault("Renderer", "scroll_x = %f, width = %f", scroll_x, width);
+    // scroll_x = -scroll_x * 2;  // FIXME: Why do we need to multiply by content scale again?
+    // LogDefault("Renderer", "cursor_x = %f, scroll_x = %f, width = %f", cursor_x, scroll_x,
+    // width);
+
+    LogDefault("Renderer", "cursor_x = %f, cursor_y = %f", cursor_x, cursor_y);
+    LogDefault("Renderer", "scroll_x = %f, scroll_y = %f", scroll_x, scroll_y);
 
     cursor_start_line = cursor_y / line_height;
     if (cursor_start_line > buffer.lineCount()) cursor_start_line = buffer.lineCount();
 
     std::string start_line_str;
     buffer.getLineContent(&start_line_str, cursor_start_line);
-    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, cursor_x + scroll_x);
+    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, cursor_x);
     cursor_start_col_offset = offset;
     cursor_start_x = x;
 
@@ -417,7 +421,7 @@ void Renderer::setCursorPositions(Buffer& buffer, float scroll_x, float scroll_y
 
     std::string end_line_str;
     buffer.getLineContent(&end_line_str, cursor_end_line);
-    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, drag_x + scroll_x);
+    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, drag_x);
     cursor_end_col_offset = offset;
     cursor_end_x = x;
 }

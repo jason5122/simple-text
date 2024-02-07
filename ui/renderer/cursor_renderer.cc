@@ -85,8 +85,8 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
     std::vector<InstanceData> instances;
     instances.push_back(InstanceData{
         // Coordinates.
-        cursor_x + scroll_x,
-        cursor_y + scroll_y,
+        cursor_x - scroll_x,
+        cursor_y - scroll_y,
         // Rectangle size.
         rect_width,
         rect_height,
@@ -104,7 +104,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         float vertical_scroll_bar_width = 20;
         float total_y = (line_count + visible_lines) * line_height;
         float vertical_scroll_bar_height = height * (height / total_y);
-        float vertical_scroll_bar_position_percentage = -scroll_y / (line_count * line_height);
+        float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{
             // Coordinates.
             width - vertical_scroll_bar_width,
@@ -123,7 +123,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
     // Add horizontal scroll bar.
     float horizontal_scroll_bar_width = width * (width / longest_x);
     float horizontal_scroll_bar_height = 20;
-    float horizontal_scroll_bar_position_percentage = -scroll_x / longest_x;
+    float horizontal_scroll_bar_position_percentage = scroll_x / longest_x;
     if (horizontal_scroll_bar_width < width) {
         instances.push_back(InstanceData{
             // Coordinates.

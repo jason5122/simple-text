@@ -34,7 +34,7 @@ void main() {
     position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
 
     vec2 cell_position = vec2(total_advance, line_height * line);
-    cell_position += scroll_offset;
+    cell_position -= scroll_offset;
 
     if (rendering_pass == 0) {
         cell_position.x += advance * position.x;

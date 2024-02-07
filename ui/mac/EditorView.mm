@@ -104,12 +104,20 @@
             CGFloat max_mouse_x =
                 (openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale) -
                 (openGLLayer.frame.size.width - mouse_x);
+            CGFloat max_mouse_y =
+                (openGLLayer->buffer.lineCount() * openGLLayer->rasterizer.line_height) /
+                openGLLayer.contentsScale;
 
-            // TODO: Fix cursor_end_y scrolling past end by calculating max_mouse_y.
             openGLLayer->cursor_end_x =
                 std::clamp(openGLLayer->cursor_end_x + dx, mouse_x, max_mouse_x);
-            openGLLayer->cursor_end_y = std::clamp(openGLLayer->cursor_end_y + dy, mouse_y,
-                                                   std::numeric_limits<CGFloat>::max());
+
+            // Unlike cursor_end_x, our mouse could be well below the cursor.
+            // This is only possible if scrolling past the end is enabled.
+            // For upwards scrolling, don't actually scroll the cursor until our mouse meets it.
+            if (!(dy < 0 && mouse_y + openGLLayer->scroll_y > openGLLayer->cursor_end_y)) {
+                openGLLayer->cursor_end_y =
+                    std::clamp(openGLLayer->cursor_end_y + dy, mouse_y, max_mouse_y);
+            }
 
             [openGLLayer setRendererCursorPositions];
         }

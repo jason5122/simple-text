@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <sstream>
 
-Buffer::Buffer(std::string s) {
+void Buffer::setContents(std::string s) {
     std::stringstream ss(s);
     std::string line;
     while (std::getline(ss, line, '\n')) {
@@ -10,7 +10,7 @@ Buffer::Buffer(std::string s) {
     }
 }
 
-Buffer::Buffer(std::ifstream& istrm) {
+void Buffer::setContents(std::ifstream& istrm) {
     std::string line;
     while (std::getline(istrm, line, '\n')) {
         data.push_back(line);
@@ -30,8 +30,8 @@ size_t Buffer::byteCount() {
     return byte_count;
 }
 
-std::string Buffer::line(size_t line_index) {
-    return data[line_index];
+void Buffer::getLineContent(std::string* buf, size_t line_index) const {
+    *buf = data[line_index];
 }
 
 size_t Buffer::byteOfLine(size_t line_index) {
@@ -41,4 +41,8 @@ size_t Buffer::byteOfLine(size_t line_index) {
         byte_offset++;  // Include newline.
     }
     return byte_offset;
+}
+
+void Buffer::insert(size_t line_index, size_t line_offset, std::string_view txt) {
+    data[line_index].insert(line_offset, txt);
 }

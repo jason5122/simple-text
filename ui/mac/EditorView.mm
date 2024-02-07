@@ -17,7 +17,7 @@
 
     // @private
     Renderer* renderer;
-    std::unique_ptr<Buffer> buffer;
+    Buffer buffer;
     Rasterizer rasterizer;
 }
 
@@ -81,7 +81,7 @@
         if (-openGLLayer->x < 0) openGLLayer->x = 0;
         if (-openGLLayer->x > longest_line_x) openGLLayer->x = -longest_line_x;
 
-        size_t line_count = openGLLayer->buffer->lineCount();
+        size_t line_count = openGLLayer->buffer.lineCount();
         line_count -= 1;  // TODO: Merge this with CursorRenderer.
         float max_y = line_count * openGLLayer->rasterizer.line_height;
         // TODO: Formulate max_y without the need for division.
@@ -105,7 +105,7 @@
                 float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
                 float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
                 float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-                openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, scroll_x, scroll_y,
+                openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y,
                                                           cursor_x, cursor_y, drag_x, drag_y);
             }
         }
@@ -159,7 +159,7 @@ const char* hex(char c) {
     float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
     float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
     float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
+    openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
                                               cursor_y, drag_x, drag_y);
     [self.layer setNeedsDisplay];
 }
@@ -177,7 +177,7 @@ const char* hex(char c) {
     float cursor_y = openGLLayer->cursorPoint.y * openGLLayer.contentsScale;
     float drag_x = openGLLayer->dragPoint.x * openGLLayer.contentsScale;
     float drag_y = openGLLayer->dragPoint.y * openGLLayer.contentsScale;
-    openGLLayer->renderer->setCursorPositions(*openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
+    openGLLayer->renderer->setCursorPositions(openGLLayer->buffer, scroll_x, scroll_y, cursor_x,
                                               cursor_y, drag_x, drag_y);
     [self.layer setNeedsDisplay];
 }
@@ -243,18 +243,19 @@ const char* hex(char c) {
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
         // std::ifstream infile(ResourcePath("sample_files/example.json"));
         // std::ifstream infile(ResourcePath("sample_files/example.scm"));
-        // std::ifstream infile(ResourcePath("sample_files/sort.scm"));
+        std::ifstream infile(ResourcePath("sample_files/sort.scm"));
         // std::ifstream infile(ResourcePath("sample_files/sort_bugged.scm"));
         // std::ifstream infile(ResourcePath("sample_files/example.cc"));
         // std::ifstream infile(ResourcePath("sample_files/example.glsl"));
         // std::ifstream infile(ResourcePath("sample_files/strange.json"));
-        std::ifstream infile(ResourcePath("sample_files/emojis.txt"));
+        // std::ifstream infile(ResourcePath("sample_files/emojis.txt"));
 
         // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
-        buffer = std::unique_ptr<Buffer>(new Buffer(infile));
+        // buffer = std::unique_ptr<Buffer>(new Buffer(infile));
+        buffer.setContents(infile);
 
         uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-        renderer->parseBuffer(*buffer);
+        renderer->parseBuffer(buffer);
         uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         uint64_t microseconds = (end - start) / 1e3;
         float fps = 1000000.0 / microseconds;
@@ -287,7 +288,7 @@ const char* hex(char c) {
     float height = self.frame.size.height * self.contentsScale;
 
     renderer->resize(width, height);
-    renderer->renderText(*buffer, scroll_x, scroll_y);
+    renderer->renderText(buffer, scroll_x, scroll_y);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext
@@ -302,11 +303,11 @@ const char* hex(char c) {
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
-    (*buffer).data[renderer->cursor_end_line].insert(renderer->cursor_end_col_offset, str);
+    buffer.insert(renderer->cursor_end_line, renderer->cursor_end_col_offset, str);
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    renderer->editBuffer(*buffer, bytes);
-    renderer->parseBuffer(*buffer);
+    renderer->editBuffer(buffer, bytes);
+    renderer->parseBuffer(buffer);
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;

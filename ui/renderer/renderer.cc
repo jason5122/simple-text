@@ -153,14 +153,6 @@ Renderer::Renderer(float width, float height, std::string main_font_name, int fo
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void memchrsub(void* data, char c, char x, size_t len) {
-    char* p = (char*)data;
-    char* end = (char*)data + len;
-    while ((p = (char*)memchr(p, c, (size_t)(end - p)))) {
-        *p++ = x;
-    }
-}
-
 const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t* bytes_read) {
     Buffer* buffer = (Buffer*)payload;
     if (position.row >= buffer->lineCount()) {
@@ -176,7 +168,6 @@ const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t*
     size_t tocopy = std::min(len - position.column, BUFSIZE);
 
     memcpy(buf, line_str + position.column, tocopy);
-    memchrsub(buf, '\n', '\0', tocopy);  // Translate embedded \n to NUL.
     *bytes_read = (uint32_t)tocopy;
     if (tocopy < BUFSIZE) {
         // Add the final \n.
@@ -255,12 +246,14 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     size_t visible_lines = std::ceil(height / line_height);
     size_t byte_offset = buffer.byteOfLine(scroll_line);
     size_t size = std::min(static_cast<size_t>(scroll_line + visible_lines), buffer.lineCount());
-    for (size_t line = scroll_line; line < size; line++) {
-        const char* line_str = buffer.data[line].c_str();
+    for (size_t line_index = scroll_line; line_index < size; line_index++) {
+        std::string line_str;
+        buffer.getLineContent(&line_str, line_index);
+
         size_t ret;
         float total_advance = 0;
-        for (size_t offset = 0; line_str[offset] != '\0'; offset += ret, byte_offset += ret) {
-            ret = grapheme_next_character_break_utf8(line_str + offset, SIZE_MAX);
+        for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
+            ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
             Rgb text_color = BLACK;
 
@@ -277,7 +270,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
             std::string utf8_str;
             for (size_t i = 0; i < ret; i++) {
-                utf8_str += (line_str + offset)[i];
+                utf8_str += line_str[offset + i];
             }
 
             if (!glyph_cache.count(utf8_str)) {
@@ -287,10 +280,10 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             AtlasGlyph glyph = glyph_cache[utf8_str];
 
             float glyph_center_x = total_advance + glyph.advance / 2;
-            uint8_t bg_a = this->isGlyphInSelection(line, glyph_center_x) ? 255 : 0;
+            uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
             instances.push_back(InstanceData{
-                static_cast<uint32_t>(line),
+                static_cast<uint32_t>(line_index),
                 // Glyph properties.
                 glyph.left,
                 glyph.top,

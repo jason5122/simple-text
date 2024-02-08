@@ -3,16 +3,11 @@ import("//build/config/linux/pkg_config.gni")
 source_set("libdecor") {
   # Due to GN's ordering, we set C99 this way instead of through `cflags_c` directly.
   # This sets C99 *after* the default compiler config. Using cflags_c sets C99 before the default.
-  configs += [
-    "//build/config/compiler:c99",
-    # ":gtk_config",
-  ]
+  configs += [ "//build/config/compiler:c99" ]
 
   sources = [
     "src/libdecor-fallback.c",
     "src/libdecor.c",
-
-    # "src/plugins/gtk/libdecor-gtk.c",
   ]
 
   include_dirs = [
@@ -22,8 +17,34 @@ source_set("libdecor") {
   ]
 
   deps = [
+    ":libdecor_gtk_plugin",
     "//third_party/wayland:xdg_decoration_protocol",
     "//third_party/wayland:xdg_shell_protocol",
+  ]
+}
+
+loadable_module("libdecor_gtk_plugin") {
+  configs = [
+    "//build/config/compiler:c99",
+    ":gtk_config",
+  ]
+
+  # TODO: Why do these have to be defined here?
+  # It seems that configs placed in //build/config/compiler do not affect loadable_module().
+  defines = [ "_GNU_SOURCE" ]
+  cflags_c = [ "-fPIC" ]
+
+  sources = [
+    "src/cursor-settings.c",
+    "src/os-compatibility.c",
+    "src/plugins/common/libdecor-cairo-blur.c",
+    "src/plugins/gtk/libdecor-gtk.c",
+  ]
+
+  include_dirs = [
+    "custom-include",
+    "src",
+    "src/plugins",
   ]
 }
 
@@ -47,4 +68,12 @@ pkg_config("gtk_config") {
   #   "gtk4",
   #   "gtk4-unix-print",
   # ]
+
+  packages += [
+    "wayland-cursor",
+    # "wayland-client",
+    # "wayland-protocols",
+    # "egl",
+    # "opengl",
+  ]
 }

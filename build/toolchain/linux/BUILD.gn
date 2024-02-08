@@ -5,7 +5,7 @@ toolchain("clang") {
 
   tool("link") {
     rspfile = "{{output}}.rsp"
-    rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
+    rspfile_content = "{{inputs}} {{libs}} {{solibs}}"
 
     command = "$cxx {{ldflags}} -o {{output}} @$rspfile"
     description = "LINK {{output}}"
@@ -28,6 +28,19 @@ toolchain("clang") {
     outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
     default_output_dir = "{{target_out_dir}}"
     default_output_extension = ".a"
+    output_prefix = "lib"
+  }
+
+  tool("solink_module") {
+    rspfile = "{{output}}.rsp"
+    rspfile_content = "{{inputs}} {{libs}} {{solibs}}"
+
+    command = "$cxx -shared {{ldflags}} -o {{output}} @$rspfile"
+    description = "SOLINK_MODULE {{output}}"
+
+    outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
+    default_output_dir = "{{root_out_dir}}"
+    default_output_extension = ".so"
     output_prefix = "lib"
   }
 

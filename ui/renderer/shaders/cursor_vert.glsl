@@ -22,6 +22,7 @@ void main() {
 
     vec2 final_position = coords + rect_size * position;
     // final_position -= scroll_offset;
+    final_position += 100;
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
     color = vec4(in_color.rgb / 255.0, in_color.a);

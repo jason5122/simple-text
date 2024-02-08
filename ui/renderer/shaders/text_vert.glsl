@@ -35,6 +35,7 @@ void main() {
 
     vec2 cell_position = vec2(total_advance, line_height * line);
     cell_position -= scroll_offset;
+    cell_position += 100;
 
     if (rendering_pass == 0) {
         cell_position.x += advance * position.x;

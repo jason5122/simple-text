@@ -20,7 +20,7 @@
     CGFloat cursor_end_y;
 
     // @private
-    Renderer* renderer;
+    Renderer renderer;
     Buffer buffer;
     Rasterizer rasterizer;
 
@@ -103,7 +103,7 @@
             mouse_y -= 30;
 
             CGFloat max_mouse_x =
-                (openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale) -
+                (openGLLayer->renderer.longest_line_x / openGLLayer.contentsScale) -
                 (openGLLayer.frame.size.width - mouse_x);
             CGFloat max_mouse_y =
                 (openGLLayer->buffer.lineCount() * openGLLayer->rasterizer.line_height) /
@@ -237,8 +237,8 @@ const char* hex(char c) {
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
         rasterizer.setup("Source Code Pro", fontSize);
-        renderer = new Renderer(scaled_width, scaled_height, "Source Code Pro", fontSize,
-                                rasterizer.line_height);
+        renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
+                       rasterizer.line_height);
         cursor_renderer.setup(scaled_width, scaled_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
@@ -257,7 +257,7 @@ const char* hex(char c) {
         buffer.setContents(infile);
 
         uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-        renderer->parseBuffer(buffer);
+        renderer.parseBuffer(buffer);
         uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         uint64_t microseconds = (end - start) / 1e3;
         float fps = 1000000.0 / microseconds;
@@ -289,15 +289,15 @@ const char* hex(char c) {
     float width = self.frame.size.width * self.contentsScale;
     float height = self.frame.size.height * self.contentsScale;
 
-    renderer->resize(width, height);
-    renderer->renderText(buffer, scaled_scroll_x, scaled_scroll_y);
+    renderer.resize(width, height);
+    renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
 
     // size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
     // cursor_renderer.resize(width, height);
     // glDisable(GL_BLEND);
-    // cursor_renderer.draw(scaled_scroll_x, scaled_scroll_y, renderer->cursor_end_x,
-    //                      renderer->cursor_end_line, rasterizer.line_height, buffer.lineCount(),
-    //                      renderer->longest_line_x, visible_lines);
+    // cursor_renderer.draw(scaled_scroll_x, scaled_scroll_y, renderer.cursor_end_x,
+    //                      renderer.cursor_end_line, rasterizer.line_height, buffer.lineCount(),
+    //                      renderer.longest_line_x, visible_lines);
     // glEnable(GL_BLEND);
 
     // Calls glFlush() by default.
@@ -313,21 +313,21 @@ const char* hex(char c) {
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
-    buffer.insert(renderer->cursor_end_line, renderer->cursor_end_col_offset, str);
+    buffer.insert(renderer.cursor_end_line, renderer.cursor_end_col_offset, str);
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    renderer->editBuffer(buffer, bytes);
-    renderer->parseBuffer(buffer);
+    renderer.editBuffer(buffer, bytes);
+    renderer.parseBuffer(buffer);
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
     LogDefault("OpenGLLayer", "Tree-sitter edit and parse: %ld µs (%f fps)", microseconds, fps);
 
-    float advance = renderer->getGlyphAdvance(std::string(str));
-    renderer->cursor_start_col_offset += bytes;
-    renderer->cursor_start_x += advance;
-    renderer->cursor_end_col_offset += bytes;
-    renderer->cursor_end_x += advance;
+    float advance = renderer.getGlyphAdvance(std::string(str));
+    renderer.cursor_start_col_offset += bytes;
+    renderer.cursor_start_x += advance;
+    renderer.cursor_end_col_offset += bytes;
+    renderer.cursor_end_x += advance;
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath
@@ -341,14 +341,14 @@ const char* hex(char c) {
 
 - (void)setRendererCursorPositions {
     CGFloat scale = self.contentsScale;
-    renderer->setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
-                                 cursor_end_x * scale, cursor_end_y * scale);
+    renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
+                                cursor_end_x * scale, cursor_end_y * scale);
     [self setNeedsDisplay];
 }
 
 - (CGFloat)maxCursorX {
     // TODO: Formulate max_cursor_x without the need for division.
-    CGFloat max_cursor_x = renderer->longest_line_x / self.contentsScale;
+    CGFloat max_cursor_x = renderer.longest_line_x / self.contentsScale;
     max_cursor_x -= self.frame.size.width;
     if (max_cursor_x < 0) max_cursor_x = 0;
     return max_cursor_x;

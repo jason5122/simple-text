@@ -128,7 +128,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         instances.push_back(InstanceData{
             // Coordinates.
             width * horizontal_scroll_bar_position_percentage,
-            (height - 60) - horizontal_scroll_bar_height,
+            (height - 60 - 40) - horizontal_scroll_bar_height,
             // Rectangle size.
             horizontal_scroll_bar_width,
             horizontal_scroll_bar_height,
@@ -167,6 +167,21 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         228,
         228,
         228,
+        1.0,
+    });
+
+    // Add status bar.
+    instances.push_back(InstanceData{
+        // Coordinates.
+        0 - 400,
+        (height - 60) - 40,
+        // Rectangle size.
+        width,
+        40,
+        // Color.
+        207,
+        207,
+        207,
         1.0,
     });
 

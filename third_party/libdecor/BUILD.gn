@@ -5,16 +5,18 @@ source_set("libdecor") {
   # This sets C99 *after* the default compiler config. Using cflags_c sets C99 before the default.
   configs += [
     "//build/config/compiler:c99",
-    ":gtk_config",
+    # ":gtk_config",
   ]
 
   sources = [
     "src/libdecor-fallback.c",
     "src/libdecor.c",
-    "src/plugins/gtk/libdecor-gtk.c",
+
+    # "src/plugins/gtk/libdecor-gtk.c",
   ]
 
   include_dirs = [
+    "custom-include",
     "src",
     "src/plugins",
   ]

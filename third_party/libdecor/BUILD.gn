@@ -36,6 +36,8 @@ loadable_module("libdecor_gtk_plugin") {
 
   sources = [
     "src/cursor-settings.c",
+    "src/libdecor-fallback.c",
+    "src/libdecor.c",
     "src/os-compatibility.c",
     "src/plugins/common/libdecor-cairo-blur.c",
     "src/plugins/gtk/libdecor-gtk.c",
@@ -45,6 +47,8 @@ loadable_module("libdecor_gtk_plugin") {
     "custom-include",
     "src",
     "src/plugins",
+    "$root_gen_dir/third_party/wayland/src/stable/xdg-shell",
+    "$root_gen_dir/third_party/wayland/src/unstable/xdg-decoration",
   ]
 }
 

@@ -3,6 +3,7 @@
 
 /* Plugin directiory path */
 #define LIBDECOR_PLUGIN_DIR "/usr/local/lib64/libdecor/plugins-1"
+// #define LIBDECOR_PLUGIN_DIR "/home/jason/experiments/simple-text/out/Default"
 
 /* Plugin API version */
 #define LIBDECOR_PLUGIN_API_VERSION 1

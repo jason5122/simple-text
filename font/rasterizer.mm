@@ -1,6 +1,6 @@
 #import "font/util/CTFontUtil.h"
 #import "rasterizer.h"
-#import "util/log_util.h"
+#import "util/log_util_mac.h"
 #import <Cocoa/Cocoa.h>
 #import <iostream>
 

@@ -3,7 +3,7 @@
 #import "ui/renderer/cursor_renderer.h"
 #import "ui/renderer/renderer.h"
 #import "util/file_util.h"
-#import "util/log_util.h"
+#import "util/log_util_mac.h"
 #import <fstream>
 #import <iostream>
 #import <limits>

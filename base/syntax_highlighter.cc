@@ -1,6 +1,6 @@
 #include "syntax_highlighter.h"
 #include "util/file_util.h"
-#include "util/log_util.h"
+#include <cstdio>
 #include <vector>
 
 extern "C" TSLanguage* tree_sitter_cpp();
@@ -30,9 +30,8 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     query = ts_query_new(language, query_code, strlen(query_code), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        LogError("SyntaxHighlighter",
-                 "Error creating new TSQuery. error_offset: %d, error type: %d", error_offset,
-                 error_type);
+        std::printf("Error creating new TSQuery. error_offset: %d, error type: %d\n", error_offset,
+                    error_type);
     }
 
     std::vector<std::string> capture_names;
@@ -41,7 +40,7 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
         uint32_t length;
         const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
         capture_names.push_back(capture_name);
-        LogDefault("SyntaxHighlighter", "capture name %d: %s", i, capture_name);
+        std::printf("capture name %d: %s\n", i, capture_name);
     }
 }
 

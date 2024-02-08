@@ -1,8 +1,10 @@
 source_set("util") {
-  sources = [
-    "file_util.mm",
-    "log_util.mm",
-  ]
+  if (is_mac) {
+    sources = [
+      "file_util_mac.mm",
+      "log_util_mac.mm",
+    ]
 
-  frameworks = [ "Cocoa.framework" ]
+    frameworks = [ "Cocoa.framework" ]
+  }
 }

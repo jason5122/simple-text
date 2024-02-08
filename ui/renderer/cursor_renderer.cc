@@ -2,7 +2,6 @@
 #include "cursor_renderer.h"
 #include "ui/renderer/atlas.h"
 #include "util/file_util.h"
-#include "util/log_util.h"
 
 struct InstanceData {
     // Coordinates.

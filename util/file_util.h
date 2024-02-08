@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-const char* ResourcePath(const char* resourceName);
-char* ReadFile(const char* fileName);
+const char* ResourcePath(const char* resource_name);
+char* ReadFile(const char* file_name);
 
 #ifdef __cplusplus
 }

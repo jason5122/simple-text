@@ -1,7 +1,6 @@
 #include "base/rgb.h"
 #include "renderer.h"
 #include "util/file_util.h"
-#include "util/log_util.h"
 #include "util/opengl_error_util.h"
 #include <iostream>
 

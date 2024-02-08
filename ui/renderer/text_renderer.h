@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 
-class Renderer {
+class TextRenderer {
 public:
     size_t cursor_start_line = 0;
     size_t cursor_start_col_offset = 0;
@@ -23,7 +23,7 @@ public:
     // TODO: Update this during insertion/deletion.
     float longest_line_x = 0;
 
-    Renderer() = default;
+    TextRenderer() = default;
     void setup(float width, float height, std::string main_font_name, int font_size,
                float line_height);
     void renderText(Buffer& buffer, float scroll_x, float scroll_y);
@@ -33,7 +33,7 @@ public:
     void parseBuffer(Buffer& buffer);
     void editBuffer(Buffer& buffer, size_t bytes);
     float getGlyphAdvance(std::string utf8_str);
-    ~Renderer();
+    ~TextRenderer();
 
 private:
     static const int BATCH_MAX = 65536;

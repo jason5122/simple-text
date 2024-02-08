@@ -1,7 +1,7 @@
 #import "EditorView.h"
 #import "base/buffer.h"
 #import "ui/renderer/rect_renderer.h"
-#import "ui/renderer/renderer.h"
+#import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
 #import "util/log_util_mac.h"
 #import <fstream>
@@ -21,7 +21,7 @@
     CGFloat cursor_end_y;
 
     // @private
-    Renderer renderer;
+    TextRenderer renderer;
     Buffer buffer;
     Rasterizer rasterizer;
 

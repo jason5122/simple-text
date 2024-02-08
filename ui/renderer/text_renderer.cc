@@ -1,5 +1,5 @@
 #include "base/rgb.h"
-#include "renderer.h"
+#include "text_renderer.h"
 #include "util/file_util.h"
 #include "util/opengl_error_util.h"
 #include <iostream>
@@ -41,8 +41,8 @@ extern "C" TSLanguage* tree_sitter_glsl();
 extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
-void Renderer::setup(float width, float height, std::string main_font_name, int font_size,
-                     float line_height) {
+void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size,
+                         float line_height) {
     this->line_height = line_height;
 
     atlas.setup();
@@ -63,7 +63,7 @@ void Renderer::setup(float width, float height, std::string main_font_name, int 
     // uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     // uint64_t microseconds = (end - start) / 1e3;
     // float fps = 1000000.0 / microseconds;
-    // LogDefault("Renderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
+    // LogDefault("TextRenderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
 
     // Font experiments.
     // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
@@ -83,7 +83,7 @@ void Renderer::setup(float width, float height, std::string main_font_name, int 
     //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
 
     //     if (CFEqual(style, CFSTR("Italic"))) {
-    //         LogDefault("Renderer", "%@ %@", familyName, style);
+    //         LogDefault("TextRenderer", "%@ %@", familyName, style);
     //         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, font_size, nullptr);
     //         this->mainFont = tempFont;
     //     }
@@ -180,20 +180,20 @@ const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t*
     return buf;
 }
 
-void Renderer::parseBuffer(Buffer& buffer) {
+void TextRenderer::parseBuffer(Buffer& buffer) {
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
     highlighter.parse(input);
     highlighter.getHighlights();
 }
 
-void Renderer::editBuffer(Buffer& buffer, size_t bytes) {
+void TextRenderer::editBuffer(Buffer& buffer, size_t bytes) {
     size_t start_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
     size_t old_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
     size_t new_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset + bytes;
     highlighter.edit(start_byte, old_end_byte, new_end_byte);
 }
 
-float Renderer::getGlyphAdvance(std::string utf8_str) {
+float TextRenderer::getGlyphAdvance(std::string utf8_str) {
     if (!glyph_cache.count(utf8_str)) {
         this->loadGlyph(utf8_str);
     }
@@ -202,7 +202,7 @@ float Renderer::getGlyphAdvance(std::string utf8_str) {
     return std::round(glyph.advance);
 }
 
-std::pair<float, size_t> Renderer::closestBoundaryForX(std::string line_str, float x) {
+std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str, float x) {
     size_t offset;
     size_t ret;
     float total_advance = 0;
@@ -230,7 +230,7 @@ std::pair<float, size_t> Renderer::closestBoundaryForX(std::string line_str, flo
     return {total_advance, offset};
 }
 
-void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
+void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -345,7 +345,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glPrintError();
 }
 
-bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {
+bool TextRenderer::isGlyphInSelection(int row, float glyph_center_x) {
     int start_row, end_row;
     float start_x, end_x;
 
@@ -391,8 +391,8 @@ bool Renderer::isGlyphInSelection(int row, float glyph_center_x) {
     return false;
 }
 
-void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
-                                  float drag_y) {
+void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
+                                      float drag_y) {
     float x;
     size_t offset;
 
@@ -415,13 +415,13 @@ void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y
     cursor_end_x = x;
 }
 
-void Renderer::loadGlyph(std::string utf8_str) {
+void TextRenderer::loadGlyph(std::string utf8_str) {
     RasterizedGlyph glyph = rasterizer.rasterizeUTF8(utf8_str.c_str());
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({utf8_str, atlas_glyph});
 }
 
-void Renderer::resize(int new_width, int new_height) {
+void TextRenderer::resize(int new_width, int new_height) {
     width = new_width;
     height = new_height;
 
@@ -432,7 +432,7 @@ void Renderer::resize(int new_width, int new_height) {
     atlas_renderer.resize(width, height);
 }
 
-void Renderer::linkShaders() {
+void TextRenderer::linkShaders() {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     const GLchar* vert_source = ReadFile(ResourcePath("shaders/text_vert.glsl"));
@@ -451,7 +451,7 @@ void Renderer::linkShaders() {
     glDeleteShader(fragment_shader);
 }
 
-Renderer::~Renderer() {
+TextRenderer::~TextRenderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);

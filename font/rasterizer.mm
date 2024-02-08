@@ -1,6 +1,5 @@
 #import "font/util/CTFontUtil.h"
 #import "rasterizer.h"
-#import "util/CGFloatUtil.h"
 #import "util/log_util.h"
 #import <Cocoa/Cocoa.h>
 #import <iostream>
@@ -47,9 +46,9 @@ void Rasterizer::setup(std::string main_font_name, int font_size) {
     //     }
     // }
 
-    CGFloat ascent = CGFloat_round(CTFontGetAscent(pimpl->mainFont));
-    CGFloat descent = CGFloat_round(CTFontGetDescent(pimpl->mainFont));
-    CGFloat leading = CGFloat_round(CTFontGetLeading(pimpl->mainFont));
+    CGFloat ascent = std::round(CTFontGetAscent(pimpl->mainFont));
+    CGFloat descent = std::round(CTFontGetDescent(pimpl->mainFont));
+    CGFloat leading = std::round(CTFontGetLeading(pimpl->mainFont));
     CGFloat line_height = ascent + descent + leading;
 
     this->line_height = line_height + 2;
@@ -82,12 +81,12 @@ RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef 
     LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
                bounds.size.width, bounds.size.height);
 
-    int32_t rasterizedLeft = CGFloat_floor(bounds.origin.x);
-    uint32_t rasterizedWidth = CGFloat_ceil(bounds.origin.x - rasterizedLeft + bounds.size.width);
-    int32_t rasterizedDescent = CGFloat_ceil(-bounds.origin.y);
-    int32_t rasterizedAscent = CGFloat_ceil(bounds.size.height + bounds.origin.y);
+    int32_t rasterizedLeft = std::floor(bounds.origin.x);
+    uint32_t rasterizedWidth = std::ceil(bounds.origin.x - rasterizedLeft + bounds.size.width);
+    int32_t rasterizedDescent = std::ceil(-bounds.origin.y);
+    int32_t rasterizedAscent = std::ceil(bounds.size.height + bounds.origin.y);
     uint32_t rasterizedHeight = rasterizedDescent + rasterizedAscent;
-    int32_t top = CGFloat_ceil(bounds.size.height + bounds.origin.y);
+    int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
 
     top -= descent;
 

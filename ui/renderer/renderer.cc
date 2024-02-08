@@ -334,12 +334,12 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glBindTexture(GL_TEXTURE_2D, 0);
 
     // DEV: This slows down rendering by ~500 µs. Use only for debugging.
-    atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glDisable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    glEnable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glDisable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    // glEnable(GL_BLEND);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
     // // https://learnopengl.com/In-Practice/Debugging

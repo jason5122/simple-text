@@ -23,6 +23,9 @@
     Renderer* renderer;
     Buffer buffer;
     Rasterizer rasterizer;
+
+@private
+    CursorRenderer cursor_renderer;
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
@@ -231,10 +234,12 @@ const char* hex(char c) {
         CGLSetCurrentContext(glContext);
 
         CGFloat fontSize = 16 * self.contentsScale;
+        float scaled_width = self.frame.size.width * self.contentsScale;
+        float scaled_height = self.frame.size.height * self.contentsScale;
         rasterizer = Rasterizer("Source Code Pro", fontSize);
-        renderer = new Renderer(self.frame.size.width * self.contentsScale,
-                                self.frame.size.height * self.contentsScale, "Source Code Pro",
-                                fontSize, rasterizer.line_height);
+        renderer = new Renderer(scaled_width, scaled_height, "Source Code Pro", fontSize,
+                                rasterizer.line_height);
+        cursor_renderer = CursorRenderer(scaled_width, scaled_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
@@ -286,6 +291,14 @@ const char* hex(char c) {
 
     renderer->resize(width, height);
     renderer->renderText(buffer, scaled_scroll_x, scaled_scroll_y);
+
+    // size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
+    // cursor_renderer.resize(width, height);
+    // glDisable(GL_BLEND);
+    // cursor_renderer.draw(scaled_scroll_x, scaled_scroll_y, renderer->cursor_end_x,
+    //                      renderer->cursor_end_line, rasterizer.line_height, buffer.lineCount(),
+    //                      renderer->longest_line_x, visible_lines);
+    // glEnable(GL_BLEND);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

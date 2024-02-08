@@ -245,7 +245,7 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     size_t scroll_line = scroll_y / line_height;
 
-    size_t visible_lines = std::ceil((height - 100) / line_height);
+    size_t visible_lines = std::ceil((height - 60 - 40) / line_height);
     size_t byte_offset = buffer.byteOfLine(scroll_line);
     size_t size = std::min(static_cast<size_t>(scroll_line + visible_lines), buffer.lineCount());
     for (size_t line_index = scroll_line; line_index < size; line_index++) {

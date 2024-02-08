@@ -3,14 +3,14 @@
 #include <OpenGL/gl3.h>
 #include <cstddef>
 
-class CursorRenderer {
+class RectRenderer {
 public:
-    CursorRenderer() = default;
+    RectRenderer() = default;
     void setup(float width, float height);
     void draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
               float line_height, size_t line_count, float longest_x, size_t visible_lines);
     void resize(int new_width, int new_height);
-    ~CursorRenderer();
+    ~RectRenderer();
 
 private:
     static const int BATCH_MAX = 65536;

@@ -1,5 +1,5 @@
 #include "base/rgb.h"
-#include "cursor_renderer.h"
+#include "rect_renderer.h"
 #include "ui/renderer/atlas.h"
 #include "util/file_util.h"
 
@@ -17,7 +17,7 @@ struct InstanceData {
     float a;
 };
 
-void CursorRenderer::setup(float width, float height) {
+void RectRenderer::setup(float width, float height) {
     this->linkShaders();
     this->resize(width, height);
 
@@ -63,9 +63,9 @@ void CursorRenderer::setup(float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-                          float line_height, size_t line_count, float longest_x,
-                          size_t visible_lines) {
+void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
+                        float line_height, size_t line_count, float longest_x,
+                        size_t visible_lines) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
@@ -194,7 +194,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
     glBindVertexArray(0);
 }
 
-void CursorRenderer::resize(int new_width, int new_height) {
+void RectRenderer::resize(int new_width, int new_height) {
     width = new_width;
     height = new_height;
 
@@ -203,11 +203,11 @@ void CursorRenderer::resize(int new_width, int new_height) {
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
 }
 
-void CursorRenderer::linkShaders() {
+void RectRenderer::linkShaders() {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vert_source = ReadFile(ResourcePath("shaders/cursor_vert.glsl"));
-    const GLchar* frag_source = ReadFile(ResourcePath("shaders/cursor_frag.glsl"));
+    const GLchar* vert_source = ReadFile(ResourcePath("shaders/rect_vert.glsl"));
+    const GLchar* frag_source = ReadFile(ResourcePath("shaders/rect_frag.glsl"));
     glShaderSource(vertex_shader, 1, &vert_source, nullptr);
     glShaderSource(fragment_shader, 1, &frag_source, nullptr);
     glCompileShader(vertex_shader);
@@ -222,7 +222,7 @@ void CursorRenderer::linkShaders() {
     glDeleteShader(fragment_shader);
 }
 
-CursorRenderer::~CursorRenderer() {
+RectRenderer::~RectRenderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);

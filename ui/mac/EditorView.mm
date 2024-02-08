@@ -1,6 +1,6 @@
 #import "EditorView.h"
 #import "base/buffer.h"
-#import "ui/renderer/cursor_renderer.h"
+#import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/renderer.h"
 #import "util/file_util.h"
 #import "util/log_util_mac.h"
@@ -26,7 +26,7 @@
     Rasterizer rasterizer;
 
 @private
-    CursorRenderer cursor_renderer;
+    RectRenderer rect_renderer;
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
@@ -240,7 +240,7 @@ const char* hex(char c) {
         rasterizer.setup("Source Code Pro", fontSize);
         renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
                        rasterizer.line_height);
-        cursor_renderer.setup(scaled_width, scaled_height);
+        rect_renderer.setup(scaled_width, scaled_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
@@ -294,11 +294,11 @@ const char* hex(char c) {
     renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
 
     size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
-    cursor_renderer.resize(width, height);
+    rect_renderer.resize(width, height);
     glDisable(GL_BLEND);
-    cursor_renderer.draw(scaled_scroll_x, scaled_scroll_y, renderer.cursor_end_x,
-                         renderer.cursor_end_line, rasterizer.line_height, buffer.lineCount(),
-                         renderer.longest_line_x, visible_lines);
+    rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, renderer.cursor_end_x,
+                       renderer.cursor_end_line, rasterizer.line_height, buffer.lineCount(),
+                       renderer.longest_line_x, visible_lines);
     glEnable(GL_BLEND);
 
     // Calls glFlush() by default.
@@ -357,7 +357,7 @@ const char* hex(char c) {
 
 - (CGFloat)maxCursorY {
     size_t line_count = buffer.lineCount();
-    line_count -= 1;  // TODO: Merge this with CursorRenderer.
+    line_count -= 1;  // TODO: Merge this with RectRenderer.
     CGFloat max_y = line_count * rasterizer.line_height;
     // TODO: Formulate max_y without the need for division.
     max_y /= self.contentsScale;

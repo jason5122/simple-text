@@ -3,8 +3,8 @@ if (is_mac) {
     sources = [
       "shaders/atlas_frag.glsl",
       "shaders/atlas_vert.glsl",
-      "shaders/cursor_frag.glsl",
-      "shaders/cursor_vert.glsl",
+      "shaders/rect_frag.glsl",
+      "shaders/rect_vert.glsl",
       "shaders/text_frag.glsl",
       "shaders/text_vert.glsl",
     ]

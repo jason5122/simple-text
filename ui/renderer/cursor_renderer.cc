@@ -107,7 +107,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{
             // Coordinates.
-            width - vertical_scroll_bar_width,
+            (width - 400) - vertical_scroll_bar_width,
             (height - vertical_scroll_bar_height) * vertical_scroll_bar_position_percentage,
             // Rectangle size.
             vertical_scroll_bar_width,
@@ -128,7 +128,7 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
         instances.push_back(InstanceData{
             // Coordinates.
             width * horizontal_scroll_bar_position_percentage,
-            height - horizontal_scroll_bar_height,
+            (height - 60) - horizontal_scroll_bar_height,
             // Rectangle size.
             horizontal_scroll_bar_width,
             horizontal_scroll_bar_height,
@@ -139,6 +139,36 @@ void CursorRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t
             1.0,
         });
     }
+
+    // Add tab bar.
+    instances.push_back(InstanceData{
+        // Coordinates.
+        0,
+        0 - 60,
+        // Rectangle size.
+        width,
+        60,
+        // Color.
+        228,
+        228,
+        228,
+        1.0,
+    });
+
+    // Add side bar.
+    instances.push_back(InstanceData{
+        // Coordinates.
+        0 - 400,
+        0 - 60,
+        // Rectangle size.
+        400,
+        height,
+        // Color.
+        228,
+        228,
+        228,
+        1.0,
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

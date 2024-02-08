@@ -96,8 +96,8 @@
             CGFloat mouse_y = event.locationInWindow.y;
             mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-            mouse_x -= 50;
-            mouse_y -= 50;
+            mouse_x -= 200;
+            mouse_y -= 30;
 
             CGFloat max_mouse_x =
                 (openGLLayer->renderer->longest_line_x / openGLLayer.contentsScale) -
@@ -156,8 +156,8 @@ const char* hex(char c) {
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    mouse_x -= 50;
-    mouse_y -= 50;
+    mouse_x -= 200;
+    mouse_y -= 30;
 
     openGLLayer->cursor_start_x = mouse_x + openGLLayer->scroll_x;
     openGLLayer->cursor_start_y = mouse_y + openGLLayer->scroll_y;
@@ -171,8 +171,8 @@ const char* hex(char c) {
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    mouse_x -= 50;
-    mouse_y -= 50;
+    mouse_x -= 200;
+    mouse_y -= 30;
 
     openGLLayer->cursor_end_x = mouse_x + openGLLayer->scroll_x;
     openGLLayer->cursor_end_y = mouse_y + openGLLayer->scroll_y;

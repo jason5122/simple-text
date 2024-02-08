@@ -426,6 +426,9 @@ void Renderer::loadGlyph(std::string utf8_str) {
 }
 
 void Renderer::resize(int new_width, int new_height) {
+    // new_width -= 400;
+    // new_height -= 400;
+
     width = new_width;
     height = new_height;
 

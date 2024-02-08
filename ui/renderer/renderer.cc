@@ -49,7 +49,6 @@ void Renderer::setup(float width, float height, std::string main_font_name, int 
     atlas.setup();
     rasterizer.setup(main_font_name, font_size);
     atlas_renderer.setup(width, height);
-    cursor_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
     this->linkShaders();
@@ -342,11 +341,6 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glEnable(GL_BLEND);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    glDisable(GL_BLEND);
-    cursor_renderer.draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
-                         buffer.lineCount(), longest_line_x, visible_lines);
-    glEnable(GL_BLEND);
-
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
     // // https://learnopengl.com/In-Practice/Debugging
     // glPrintError();
@@ -429,9 +423,6 @@ void Renderer::loadGlyph(std::string utf8_str) {
 }
 
 void Renderer::resize(int new_width, int new_height) {
-    // new_width -= 400;
-    // new_height -= 400;
-
     width = new_width;
     height = new_height;
 
@@ -440,7 +431,6 @@ void Renderer::resize(int new_width, int new_height) {
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
 
     atlas_renderer.resize(width, height);
-    cursor_renderer.resize(width, height);
 }
 
 void Renderer::linkShaders() {

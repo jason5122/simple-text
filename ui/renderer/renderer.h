@@ -6,7 +6,6 @@
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/atlas_renderer.h"
-#include "ui/renderer/cursor_renderer.h"
 #include <OpenGL/gl3.h>
 #include <map>
 #include <string>
@@ -48,7 +47,6 @@ private:
     Atlas atlas;
     Rasterizer rasterizer;
     AtlasRenderer atlas_renderer;
-    CursorRenderer cursor_renderer;
 
     std::map<std::string, AtlasGlyph> glyph_cache;
 

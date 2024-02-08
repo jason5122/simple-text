@@ -45,9 +45,9 @@ private:
     GLuint vao, vbo_instance, ebo;
 
     Atlas atlas;
-    Rasterizer* rasterizer;
-    AtlasRenderer* atlas_renderer;
-    CursorRenderer* cursor_renderer;
+    Rasterizer rasterizer;
+    AtlasRenderer atlas_renderer;
+    CursorRenderer cursor_renderer;
 
     std::map<std::string, AtlasGlyph> glyph_cache;
 

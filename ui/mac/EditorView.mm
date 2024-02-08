@@ -236,10 +236,10 @@ const char* hex(char c) {
         CGFloat fontSize = 16 * self.contentsScale;
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
-        rasterizer = Rasterizer("Source Code Pro", fontSize);
+        rasterizer.setup("Source Code Pro", fontSize);
         renderer = new Renderer(scaled_width, scaled_height, "Source Code Pro", fontSize,
                                 rasterizer.line_height);
-        cursor_renderer = CursorRenderer(scaled_width, scaled_height);
+        cursor_renderer.setup(scaled_width, scaled_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));

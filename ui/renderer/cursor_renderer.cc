@@ -18,7 +18,7 @@ struct InstanceData {
     float a;
 };
 
-CursorRenderer::CursorRenderer(float width, float height) {
+void CursorRenderer::setup(float width, float height) {
     this->linkShaders();
     this->resize(width, height);
 

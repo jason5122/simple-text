@@ -2,7 +2,7 @@
 #import "ui/renderer/atlas.h"
 #import "util/file_util.h"
 
-AtlasRenderer::AtlasRenderer(float width, float height) {
+void AtlasRenderer::setup(float width, float height) {
     this->linkShaders();
     this->resize(width, height);
 

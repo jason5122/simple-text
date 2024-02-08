@@ -16,7 +16,9 @@ public:
     RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef, float descent);
 };
 
-Rasterizer::Rasterizer(std::string main_font_name, int font_size) : pimpl{new impl{}} {
+Rasterizer::Rasterizer() : pimpl{new impl{}} {}
+
+void Rasterizer::setup(std::string main_font_name, int font_size) {
     CFStringRef mainFontName =
         CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
 

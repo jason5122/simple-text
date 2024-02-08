@@ -45,9 +45,10 @@ extern "C" TSLanguage* tree_sitter_scheme();
 Renderer::Renderer(float width, float height, std::string main_font_name, int font_size,
                    float line_height)
     : line_height(line_height) {
-    rasterizer = new Rasterizer(main_font_name, font_size);
-    atlas_renderer = new AtlasRenderer(width, height);
-    cursor_renderer = new CursorRenderer(width, height);
+    atlas.setup();
+    rasterizer.setup(main_font_name, font_size);
+    atlas_renderer.setup(width, height);
+    cursor_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
     this->linkShaders();
@@ -332,16 +333,17 @@ void Renderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glBindVertexArray(0);
     // glBindTexture(GL_TEXTURE_2D, 0);
 
-    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glDisable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // atlas_renderer->draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glEnable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // DEV: This slows down rendering by ~500 µs. Use only for debugging.
+    atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glDisable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
+    glEnable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_BLEND);
-    cursor_renderer->draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
-                          buffer.lineCount(), longest_line_x, visible_lines);
+    cursor_renderer.draw(scroll_x, scroll_y, cursor_end_x, cursor_end_line, line_height,
+                         buffer.lineCount(), longest_line_x, visible_lines);
     glEnable(GL_BLEND);
 
     // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
@@ -420,7 +422,7 @@ void Renderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y
 }
 
 void Renderer::loadGlyph(std::string utf8_str) {
-    RasterizedGlyph glyph = rasterizer->rasterizeUTF8(utf8_str.c_str());
+    RasterizedGlyph glyph = rasterizer.rasterizeUTF8(utf8_str.c_str());
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({utf8_str, atlas_glyph});
 }
@@ -436,8 +438,8 @@ void Renderer::resize(int new_width, int new_height) {
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
 
-    atlas_renderer->resize(width, height);
-    cursor_renderer->resize(width, height);
+    atlas_renderer.resize(width, height);
+    cursor_renderer.resize(width, height);
 }
 
 void Renderer::linkShaders() {

@@ -6,7 +6,7 @@
 class CursorRenderer {
 public:
     CursorRenderer() = default;
-    CursorRenderer(float width, float height);
+    void setup(float width, float height);
     void draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
               float line_height, size_t line_count, float longest_x, size_t visible_lines);
     void resize(int new_width, int new_height);

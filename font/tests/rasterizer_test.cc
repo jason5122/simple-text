@@ -3,7 +3,8 @@
 #include <iostream>
 
 TEST(GlyphIndexTest, Alphabet) {
-    Rasterizer rasterizer = Rasterizer("Source Code Pro", 16);
+    Rasterizer rasterizer;
+    rasterizer.setup("Source Code Pro", 16);
 
     std::cout << rasterizer.getGlyphIndex("\x61") << '\n';
     std::cout << rasterizer.getGlyphIndex("\xE2\x88\x86") << '\n';

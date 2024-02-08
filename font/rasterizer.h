@@ -7,8 +7,8 @@ public:
     float line_height;
     float descent;
 
-    Rasterizer() = default;
-    Rasterizer(std::string main_font_name, int font_size);
+    Rasterizer();
+    void setup(std::string main_font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     bool isFontMonospace();
     uint16_t getGlyphIndex(const char* utf8_str);

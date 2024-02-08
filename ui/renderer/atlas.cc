@@ -1,6 +1,6 @@
 #include "atlas.h"
 
-Atlas::Atlas() {
+void Atlas::setup() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);

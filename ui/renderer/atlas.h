@@ -23,7 +23,8 @@ public:
 
     GLuint tex_id;
 
-    Atlas();
+    Atlas() = default;
+    void setup();
     AtlasGlyph insertGlyph(RasterizedGlyph& glyph);
 
 private:

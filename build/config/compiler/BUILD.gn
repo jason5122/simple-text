@@ -31,8 +31,9 @@ config("compiler") {
   cflags_objcc += cflags_cc
 
   cflags += [
-    "-flto=thin",
-    "-O2",
+    # "-flto=thin",
+    # "-O2",
+    "-fPIC",
   ]
   ldflags = cflags
 }

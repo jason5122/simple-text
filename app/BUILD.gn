@@ -82,6 +82,9 @@ if (is_mac) {
       "GL",
     ]
 
-    deps = [ "//third_party/libdecor" ]
+    deps = [
+      "//third_party/libdecor",
+      "//third_party/libdecor:libdecor_gtk_plugin",
+    ]
   }
 }

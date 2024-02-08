@@ -17,7 +17,6 @@ source_set("libdecor") {
   ]
 
   deps = [
-    ":libdecor_gtk_plugin",
     "//third_party/wayland:xdg_decoration_protocol",
     "//third_party/wayland:xdg_shell_protocol",
   ]
@@ -36,8 +35,6 @@ loadable_module("libdecor_gtk_plugin") {
 
   sources = [
     "src/cursor-settings.c",
-    "src/libdecor-fallback.c",
-    "src/libdecor.c",
     "src/os-compatibility.c",
     "src/plugins/common/libdecor-cairo-blur.c",
     "src/plugins/gtk/libdecor-gtk.c",
@@ -47,14 +44,14 @@ loadable_module("libdecor_gtk_plugin") {
     "custom-include",
     "src",
     "src/plugins",
-    "$root_gen_dir/third_party/wayland/src/stable/xdg-shell",
-    "$root_gen_dir/third_party/wayland/src/unstable/xdg-decoration",
   ]
+
+  deps = [ ":libdecor" ]
 }
 
 pkg_config("gtk_config") {
   # We dlopen() GTK, so make sure not to add a link-time dependency on it.
-  ignore_libs = true
+  # ignore_libs = true
 
   # Gtk requires gmodule, but it does not list it as a dependency in some
   # misconfigured systems.

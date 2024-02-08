@@ -3,9 +3,12 @@ executable("test_runner") {
 
   sources = [ "empty_main.cc" ]
 
-  deps = [
-    "//base/tests",
-    "//font/tests",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "//third_party/googletest:gtest_main" ]
+
+  if (is_mac) {
+    deps += [
+      "//base/tests",
+      "//font/tests",
+    ]
+  }
 }

@@ -4,6 +4,9 @@ source_set("libdecor") {
   # Due to GN's ordering, we set C99 this way instead of through `cflags_c` directly.
   # This sets C99 *after* the default compiler config. Using cflags_c sets C99 before the default.
   configs += [ "//build/config/compiler:c99" ]
+  configs -= [ "//build/config/compiler:optimizations" ]
+
+  cflags_c = [ "-fPIC" ]
 
   sources = [
     "src/libdecor-fallback.c",

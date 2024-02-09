@@ -72,7 +72,7 @@ if (is_mac) {
 
     sources = [
       "main.cc",
-      "main_linux.c",
+      "main_linux.cc",
     ]
 
     libs = [

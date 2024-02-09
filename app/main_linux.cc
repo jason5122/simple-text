@@ -38,7 +38,7 @@ struct window {
 
 static void frame_configure(struct libdecor_frame* frame,
                             struct libdecor_configuration* configuration, void* user_data) {
-    struct window* window = user_data;
+    window* window = static_cast<struct window*>(user_data);
     struct libdecor_state* state;
     int width, height;
 
@@ -66,13 +66,13 @@ static void frame_configure(struct libdecor_frame* frame,
 }
 
 static void frame_close(struct libdecor_frame* frame, void* user_data) {
-    struct window* window = user_data;
+    window* window = static_cast<struct window*>(user_data);
 
     window->open = false;
 }
 
 static void frame_commit(struct libdecor_frame* frame, void* user_data) {
-    struct window* window = user_data;
+    window* window = static_cast<struct window*>(user_data);
 
     eglSwapBuffers(window->client->display, window->egl_surface);
 }
@@ -108,7 +108,7 @@ static void keyboard_handle_leave(void* data, struct wl_keyboard* keyboard, uint
 
 static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard, uint32_t serial,
                                 uint32_t time, uint32_t key, uint32_t state) {
-    struct window* window = data;
+    window* window = static_cast<struct window*>(data);
 
     fprintf(stderr, "Key is %d state is %d\n", key, state);
     if (key == 1) {
@@ -128,8 +128,7 @@ static const struct wl_keyboard_listener keyboard_listener = {
     keyboard_handle_key,    keyboard_handle_modifiers,
 };
 
-static void seat_handle_capabilities(void* data, struct wl_seat* seat,
-                                     enum wl_seat_capability caps) {
+static void seat_handle_capabilities(void* data, struct wl_seat* seat, uint32_t caps) {
     if (caps & WL_SEAT_CAPABILITY_POINTER) {
         fprintf(stderr, "Display has a pointer\n");
     }
@@ -140,7 +139,7 @@ static void seat_handle_capabilities(void* data, struct wl_seat* seat,
         fprintf(stderr, "Display has a touch screen\n");
     }
 
-    struct window* window = data;
+    window* window = static_cast<struct window*>(data);
     struct client* client = window->client;
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
@@ -158,14 +157,16 @@ static const struct wl_seat_listener seat_listener = {
 
 static void registry_global(void* data, struct wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
-    struct window* window = data;
+    window* window = static_cast<struct window*>(data);
     struct client* client = window->client;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-        client->compositor = wl_registry_bind(wl_registry, name, &wl_compositor_interface, 1);
+        client->compositor = static_cast<struct wl_compositor*>(
+            wl_registry_bind(wl_registry, name, &wl_compositor_interface, 1));
     }
     if (strcmp(interface, wl_seat_interface.name) == 0) {
-        client->seat = wl_registry_bind(wl_registry, name, &wl_seat_interface, 1);
+        client->seat = static_cast<struct wl_seat*>(
+            wl_registry_bind(wl_registry, name, &wl_seat_interface, 1));
         wl_seat_add_listener(client->seat, &seat_listener, window);
     }
 }
@@ -294,7 +295,7 @@ int SimpleTextMain() {
     struct client* client;
     int ret = EXIT_SUCCESS;
 
-    client = calloc(1, sizeof(struct client));
+    client = static_cast<struct client*>(calloc(1, sizeof(struct client)));
 
     client->display = wl_display_connect(NULL);
     if (!client->display) {
@@ -303,7 +304,7 @@ int SimpleTextMain() {
         return EXIT_FAILURE;
     }
 
-    window = calloc(1, sizeof(struct window));
+    window = static_cast<struct window*>(calloc(1, sizeof(struct window)));
     window->client = client;
     window->open = true;
     window->configured = false;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <OpenGL/gl3.h>
 #include <cstddef>
+#include <glad/glad.h>
 
 class TriangleRenderer {
 public:

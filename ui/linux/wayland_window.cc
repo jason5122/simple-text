@@ -55,13 +55,13 @@ bool WaylandWindow::setup() {
     }
 
     std::cerr << glGetString(GL_VERSION) << '\n';
-    triangle_renderer.setup();
+    triangle_renderer.setup(content_width, content_height);
 
     return true;
 }
 
 void WaylandWindow::draw() {
-    glViewport(0, 0, content_width, content_height);
+    triangle_renderer.resize(content_width, content_height);
     triangle_renderer.draw();
 
     eglSwapBuffers(client.egl_display, egl_surface);

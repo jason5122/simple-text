@@ -42,5 +42,7 @@ if (is_linux) {
       "//third_party/libdecor",
       "//ui/renderer:shaders",
     ]
+
+    public_deps = [ "//third_party/glad" ]
   }
 }

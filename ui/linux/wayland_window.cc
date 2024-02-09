@@ -49,6 +49,11 @@ bool WaylandWindow::setup() {
 
     eglMakeCurrent(client.egl_display, egl_surface, egl_surface, client.egl_context);
 
+    if (!gladLoadGL()) {
+        std::cerr << "Failed to initialize GLAD\n";
+        return false;
+    }
+
     std::cerr << glGetString(GL_VERSION) << '\n';
 
     this->linkShaders();
@@ -85,14 +90,14 @@ void WaylandWindow::draw() {
 
     hue_to_rgb(&hue, &rgb);
 
-    glViewport(0, 0, content_width, content_height);
+    // glViewport(0, 0, content_width, content_height);
     glClearColor(rgb[0], rgb[1], rgb[2], 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    float vertices[] = {-0.5, -0.5, 0.0, 0.5, 0.5, -0.5};
-    glVertexPointer(2, GL_FLOAT, 0, vertices);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // float vertices[] = {-0.5, -0.5, 0.0, 0.5, 0.5, -0.5};
+    // glVertexPointer(2, GL_FLOAT, 0, vertices);
+    // glEnableClientState(GL_VERTEX_ARRAY);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
 
     eglSwapBuffers(client.egl_display, egl_surface);
 }
@@ -119,21 +124,21 @@ WaylandWindow::~WaylandWindow() {
 }
 
 void WaylandWindow::linkShaders() {
-    // GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    // GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     const GLchar* vert_source = ReadFileCpp("shaders/triangle_vert.glsl");
     const GLchar* frag_source = ReadFileCpp("shaders/triangle_frag.glsl");
 
-    // glShaderSource(vertex_shader, 1, &vert_source, nullptr);
-    // glShaderSource(fragment_shader, 1, &frag_source, nullptr);
-    // glCompileShader(vertex_shader);
-    // glCompileShader(fragment_shader);
+    glShaderSource(vertex_shader, 1, &vert_source, nullptr);
+    glShaderSource(fragment_shader, 1, &frag_source, nullptr);
+    glCompileShader(vertex_shader);
+    glCompileShader(fragment_shader);
 
-    // shader_program = glCreateProgram();
-    // glAttachShader(shader_program, vertex_shader);
-    // glAttachShader(shader_program, fragment_shader);
-    // glLinkProgram(shader_program);
+    shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
 
-    // glDeleteShader(vertex_shader);
-    // glDeleteShader(fragment_shader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 }

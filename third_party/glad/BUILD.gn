@@ -1,0 +1,9 @@
+source_set("glad") {
+  sources = [ "src/glad.c" ]
+
+  public_configs = [ ":glad_includes" ]
+}
+
+config("glad_includes") {
+  include_dirs = [ "include" ]
+}

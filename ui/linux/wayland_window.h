@@ -4,8 +4,8 @@
 #include "third_party/libdecor/src/utils.h"
 #include "ui/linux/wayland_client.h"
 #include <EGL/egl.h>
-#include <GL/gl.h>
 #include <fstream>
+#include <glad/glad.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
 

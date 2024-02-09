@@ -20,9 +20,9 @@ bool FreeTypeRasterizer::setup(const char* font_path) {
 
     FT_Set_Pixel_Sizes(face, 0, 32);
 
-    float ascent = static_cast<float>(face->ascender) / 64;
-    float descent = static_cast<float>(face->descender) / 64;
-    float glyph_height = static_cast<float>(face->height) / 64;
+    float ascent = std::round(static_cast<float>(face->ascender) / 64);
+    float descent = std::round(static_cast<float>(face->descender) / 64);
+    float glyph_height = std::round(static_cast<float>(face->height) / 64);
 
     // FIXME: This is a hack to match Core Text's metrics.
     ascent *= 2;
@@ -31,8 +31,7 @@ bool FreeTypeRasterizer::setup(const char* font_path) {
 
     float global_glyph_height = ascent - descent;
 
-    // TODO: Figure out why line height is incorrect compared to Core Text.
-    this->line_height = std::max(glyph_height, global_glyph_height);
+    this->line_height = std::max(glyph_height, global_glyph_height) + 2;
     this->descent = descent;
 
     return true;

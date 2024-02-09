@@ -48,9 +48,10 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
-    this->line_height = rasterizer.line_height;
+    this->line_height = freetype_rasterizer.line_height;
 
-    std::cerr << "line_height = " << line_height << '\n';
+    std::cerr << "rasterizer = " << rasterizer.line_height << '\n';
+    std::cerr << "freetype_rasterizer = " << freetype_rasterizer.line_height << '\n';
 
     this->linkShaders();
     this->resize(width, height);

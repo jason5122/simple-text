@@ -38,6 +38,9 @@ if (is_linux) {
       "GL",
     ]
 
-    deps = [ "//third_party/libdecor" ]
+    deps = [
+      "//third_party/libdecor",
+      "//ui/renderer:shaders",
+    ]
   }
 }

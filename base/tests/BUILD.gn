@@ -16,6 +16,5 @@ source_set("tests") {
 
 copy("copy_test_files") {
   sources = [ "//app/resources/sample_files/example.json" ]
-
   outputs = [ "$root_out_dir/{{source_file_part}}" ]
 }

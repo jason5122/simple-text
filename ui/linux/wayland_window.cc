@@ -1,5 +1,4 @@
 #include "wayland_window.h"
-#include <GL/gl.h>
 #include <iostream>
 #include <stdio.h>
 #include <time.h>
@@ -51,6 +50,8 @@ bool WaylandWindow::setup() {
     eglMakeCurrent(client.egl_display, egl_surface, egl_surface, client.egl_context);
 
     std::cerr << glGetString(GL_VERSION) << '\n';
+
+    this->linkShaders();
 
     return true;
 }
@@ -115,4 +116,24 @@ WaylandWindow::~WaylandWindow() {
     if (client.egl_display) {
         eglTerminate(client.egl_display);
     }
+}
+
+void WaylandWindow::linkShaders() {
+    // GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    // GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    const GLchar* vert_source = ReadFileCpp("shaders/triangle_vert.glsl");
+    const GLchar* frag_source = ReadFileCpp("shaders/triangle_frag.glsl");
+
+    // glShaderSource(vertex_shader, 1, &vert_source, nullptr);
+    // glShaderSource(fragment_shader, 1, &frag_source, nullptr);
+    // glCompileShader(vertex_shader);
+    // glCompileShader(fragment_shader);
+
+    // shader_program = glCreateProgram();
+    // glAttachShader(shader_program, vertex_shader);
+    // glAttachShader(shader_program, fragment_shader);
+    // glLinkProgram(shader_program);
+
+    // glDeleteShader(vertex_shader);
+    // glDeleteShader(fragment_shader);
 }

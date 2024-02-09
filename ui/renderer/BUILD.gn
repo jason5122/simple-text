@@ -11,3 +11,13 @@ if (is_mac) {
     outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
   }
 }
+
+if (is_linux) {
+  copy("shaders") {
+    sources = [
+      "shaders/triangle_frag.glsl",
+      "shaders/triangle_vert.glsl",
+    ]
+    outputs = [ "$root_out_dir/shaders/{{source_file_part}}" ]
+  }
+}

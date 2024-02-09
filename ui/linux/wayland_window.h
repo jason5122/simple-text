@@ -4,8 +4,17 @@
 #include "third_party/libdecor/src/utils.h"
 #include "ui/linux/wayland_client.h"
 #include <EGL/egl.h>
+#include <GL/gl.h>
+#include <fstream>
 #include <wayland-client.h>
 #include <wayland-egl.h>
+
+inline const char* ReadFileCpp(const char* file_name) {
+    std::ifstream in(file_name);
+    static std::string contents((std::istreambuf_iterator<char>(in)),
+                                std::istreambuf_iterator<char>());
+    return contents.c_str();
+}
 
 class WaylandWindow {
 public:
@@ -30,4 +39,8 @@ public:
 private:
     static const size_t DEFAULT_WIDTH = 1728;
     static const size_t DEFAULT_HEIGHT = 1041;
+
+    GLuint shader_program;
+
+    void linkShaders();
 };

@@ -126,13 +126,13 @@ static const struct wl_keyboard_listener keyboard_listener = {
 static void seat_handle_capabilities(void* data, struct wl_seat* seat,
                                      enum wl_seat_capability caps) {
     if (caps & WL_SEAT_CAPABILITY_POINTER) {
-        printf("Display has a pointer\n");
+        fprintf(stderr, "Display has a pointer\n");
     }
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
-        printf("Display has a keyboard\n");
+        fprintf(stderr, "Display has a keyboard\n");
     }
     if (caps & WL_SEAT_CAPABILITY_TOUCH) {
-        printf("Display has a touch screen\n");
+        fprintf(stderr, "Display has a touch screen\n");
     }
 
     struct client* client = data;

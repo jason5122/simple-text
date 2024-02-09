@@ -1,14 +1,14 @@
-#include "window.h"
+#include "wayland_window.h"
 #include <GL/gl.h>
 #include <iostream>
 #include <stdio.h>
 #include <time.h>
 
-Window::Window(Client client)
+WaylandWindow::WaylandWindow(Client client)
     : client(client), floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT), open(true),
       configured(false) {}
 
-bool Window::setup() {
+bool WaylandWindow::setup() {
     static const EGLint config_attribs[] = {
         EGL_SURFACE_TYPE,    EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE};
@@ -68,7 +68,7 @@ static void hue_to_rgb(const float* const hue, float (*rgb)[3]) {
     (*rgb)[2] = hue_to_channel(hue, 1);
 }
 
-void Window::draw() {
+void WaylandWindow::draw() {
     timespec tv;
     double time;
 
@@ -96,7 +96,7 @@ void Window::draw() {
     eglSwapBuffers(client.egl_display, egl_surface);
 }
 
-Window::~Window() {
+WaylandWindow::~WaylandWindow() {
     if (client.egl_display) {
         eglMakeCurrent(client.egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }

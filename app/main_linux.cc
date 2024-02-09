@@ -1,10 +1,10 @@
-#include "ui/linux/window.h"
+#include "ui/linux/wayland_window.h"
 #include <iostream>
 #include <string.h>
 
 static void frame_configure(libdecor_frame* frame, libdecor_configuration* configuration,
                             void* user_data) {
-    Window* window = static_cast<class Window*>(user_data);
+    WaylandWindow* window = static_cast<class WaylandWindow*>(user_data);
     libdecor_state* state;
     int width, height;
 
@@ -32,13 +32,13 @@ static void frame_configure(libdecor_frame* frame, libdecor_configuration* confi
 }
 
 static void frame_close(libdecor_frame* frame, void* user_data) {
-    Window* window = static_cast<class Window*>(user_data);
+    WaylandWindow* window = static_cast<class WaylandWindow*>(user_data);
 
     window->open = false;
 }
 
 static void frame_commit(libdecor_frame* frame, void* user_data) {
-    Window* window = static_cast<class Window*>(user_data);
+    WaylandWindow* window = static_cast<class WaylandWindow*>(user_data);
 
     eglSwapBuffers(window->client.display, window->egl_surface);
 }
@@ -73,7 +73,7 @@ static void keyboard_handle_leave(void* data, wl_keyboard* keyboard, uint32_t se
 
 static void keyboard_handle_key(void* data, wl_keyboard* keyboard, uint32_t serial, uint32_t time,
                                 uint32_t key, uint32_t state) {
-    Window* window = static_cast<class Window*>(data);
+    WaylandWindow* window = static_cast<class WaylandWindow*>(data);
 
     fprintf(stderr, "Key is %d state is %d\n", key, state);
     if (key == 1) {
@@ -104,7 +104,7 @@ static void seat_handle_capabilities(void* data, wl_seat* seat, uint32_t caps) {
         fprintf(stderr, "Display has a touch screen\n");
     }
 
-    Window* window = static_cast<class Window*>(data);
+    WaylandWindow* window = static_cast<class WaylandWindow*>(data);
     Client* client = &window->client;
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
@@ -122,7 +122,7 @@ static const wl_seat_listener seat_listener = {
 
 static void registry_global(void* data, wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
-    Window* window = static_cast<class Window*>(data);
+    WaylandWindow* window = static_cast<class WaylandWindow*>(data);
     Client* client = &window->client;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
@@ -148,7 +148,7 @@ int SimpleTextMain() {
         return EXIT_FAILURE;
     }
 
-    Window window = Window(client);
+    WaylandWindow window = WaylandWindow(client);
 
     wl_registry* wl_registry = wl_display_get_registry(client.display);
     wl_registry_add_listener(wl_registry, &registry_listener, &window);

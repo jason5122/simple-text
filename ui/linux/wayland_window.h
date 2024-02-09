@@ -7,12 +7,12 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-class Window {
+class WaylandWindow {
 public:
-    Window(Client client);
+    WaylandWindow(Client client);
     bool setup();
     void draw();
-    ~Window();
+    ~WaylandWindow();
 
     Client client;
 

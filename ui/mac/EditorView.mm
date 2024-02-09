@@ -245,6 +245,8 @@ const char* hex(char c) {
                             rasterizer.line_height);
         rect_renderer.setup(scaled_width, scaled_height);
 
+        freetype_rasterizer.rasterizeUTF8(u8"a");
+
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
         // std::ifstream infile(ResourcePath("sample_files/example.json"));

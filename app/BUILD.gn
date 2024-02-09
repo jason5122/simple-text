@@ -21,11 +21,7 @@ if (is_mac) {
       ":icon",
       ":sample_files",
       ":tree_sitter_queries",
-      "//font",
-      "//third_party/freetype",
-      "//third_party/tree_sitter",
       "//ui",
-      "//util",
     ]
   }
 

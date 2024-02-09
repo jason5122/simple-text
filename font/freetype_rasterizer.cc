@@ -2,9 +2,6 @@
 #include <iostream>
 #include <vector>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
 bool FreeTypeRasterizer::setup() {
     FT_Error error;
 
@@ -15,7 +12,6 @@ bool FreeTypeRasterizer::setup() {
         return false;
     }
 
-    FT_Face face;
     error = FT_New_Face(ft, "otf/SourceCodePro-Regular.ttf", 0, &face);
     if (error != FT_Err_Ok) {
         std::cerr << "FreeType error: " << FT_Error_String(error) << '\n';
@@ -23,18 +19,25 @@ bool FreeTypeRasterizer::setup() {
     }
 
     FT_Set_Pixel_Sizes(face, 0, 32);
+
+    return true;
+}
+
+void FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
+    FT_Error error;
+
     FT_UInt glyph_index = FT_Get_Char_Index(face, 'a');
 
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
     if (error != FT_Err_Ok) {
         std::cerr << "FreeType error: " << FT_Error_String(error) << '\n';
-        return false;
+        // return false;
     }
 
     error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
     if (error != FT_Err_Ok) {
         std::cerr << "FreeType error: " << FT_Error_String(error) << '\n';
-        return false;
+        // return false;
     }
 
     FT_Bitmap bitmap = face->glyph->bitmap;
@@ -72,6 +75,4 @@ bool FreeTypeRasterizer::setup() {
     }
 
     fprintf(stderr, "%zu\n", packed_buffer.size());
-
-    return true;
 }

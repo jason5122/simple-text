@@ -4,7 +4,7 @@ source_set("font") {
     "rasterizer.mm",
   ]
 
-  deps = [ "//third_party/freetype" ]
+  public_deps = [ "//third_party/freetype" ]
 }
 
 copy("copy_example_fonts") {

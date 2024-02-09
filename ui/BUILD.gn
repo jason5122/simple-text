@@ -19,6 +19,8 @@ if (is_mac) {
 
     deps = [
       "//base",
+      "//third_party/libgrapheme",
+      "//ui/renderer/shaders",
       "//util",
     ]
   }
@@ -41,7 +43,7 @@ if (is_linux) {
 
     deps = [
       "//third_party/libdecor",
-      "//ui/renderer:shaders",
+      "//ui/renderer/shaders",
     ]
 
     public_deps = [ "//third_party/glad" ]

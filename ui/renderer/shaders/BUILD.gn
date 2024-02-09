@@ -1,0 +1,25 @@
+if (is_mac) {
+  bundle_data("shaders") {
+    sources = [
+      "atlas_frag.glsl",
+      "atlas_vert.glsl",
+      "rect_frag.glsl",
+      "rect_vert.glsl",
+      "text_frag.glsl",
+      "text_vert.glsl",
+      "triangle_frag.glsl",
+      "triangle_vert.glsl",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
+  }
+}
+
+if (is_linux) {
+  copy("shaders") {
+    sources = [
+      "triangle_frag.glsl",
+      "triangle_vert.glsl",
+    ]
+    outputs = [ "$root_out_dir/shaders/{{source_file_part}}" ]
+  }
+}

@@ -27,10 +27,6 @@ if (is_mac) {
       "//ui",
       "//util",
     ]
-
-    if (is_mac) {
-      deps += [ "//ui/renderer:shaders" ]
-    }
   }
 
   icon("icon") {

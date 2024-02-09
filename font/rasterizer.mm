@@ -4,10 +4,6 @@
 #import <Cocoa/Cocoa.h>
 #import <iostream>
 
-extern "C" {
-#include "third_party/libgrapheme/grapheme.h"
-}
-
 class Rasterizer::impl {
 public:
     CTFontRef mainFont;

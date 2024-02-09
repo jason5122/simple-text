@@ -71,6 +71,7 @@ if (is_mac) {
     output_name = "simple_text"
 
     sources = [
+      "linux_window.cc",
       "main.cc",
       "main_linux.cc",
     ]

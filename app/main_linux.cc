@@ -1,7 +1,9 @@
+#include "app/linux_window.h"
 #include "third_party/libdecor/src/libdecor.h"
 #include "third_party/libdecor/src/utils.h"
 #include <EGL/egl.h>
 #include <GL/gl.h>
+#include <iostream>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,18 +11,6 @@
 #include <time.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
-
-static const size_t DEFAULT_WIDTH = 1728;
-static const size_t DEFAULT_HEIGHT = 1041;
-
-struct client {
-    struct wl_display* display;
-    struct wl_compositor* compositor;
-    struct wl_seat* seat;
-    struct wl_keyboard* keyboard;
-    EGLDisplay egl_display;
-    EGLContext egl_context;
-};
 
 struct window {
     struct client* client;
@@ -211,6 +201,8 @@ static bool setup(struct window* window) {
         return false;
     }
 
+    std::cout << "original: " << window->client->compositor << '\n';
+
     window->surface = wl_compositor_create_surface(window->client->compositor);
 
     window->egl_window = wl_egl_window_create(window->surface, DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -288,35 +280,6 @@ static void draw(struct window* window) {
     eglSwapBuffers(window->client->egl_display, window->egl_surface);
 }
 
-class Window {
-public:
-    Window(struct libdecor* context)
-        : floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT) {
-        client = static_cast<struct client*>(calloc(1, sizeof(struct client)));
-
-        client->display = wl_display_connect(NULL);
-        if (!client->display) {
-            fprintf(stderr, "No Wayland connection\n");
-            free(client);
-            // return EXIT_FAILURE;
-        }
-    }
-
-private:
-    struct client* client;
-
-    struct wl_surface* surface;
-    struct libdecor_frame* frame;
-    struct wl_egl_window* egl_window;
-    EGLSurface egl_surface;
-    int content_width;
-    int content_height;
-    int floating_width;
-    int floating_height;
-    bool open = true;
-    bool configured = false;
-};
-
 static Window* window_cpp;
 
 int SimpleTextMain() {
@@ -352,6 +315,7 @@ int SimpleTextMain() {
 
     context = libdecor_new(client->display, &libdecor_interface);
     window_cpp = new Window(context);
+    window_cpp->setup();
 
     window->frame = libdecor_decorate(context, window->surface, &frame_interface, window);
     libdecor_frame_set_app_id(window->frame, "simple-text");

@@ -1,5 +1,6 @@
 #include "freetype_rasterizer.h"
 #include <iostream>
+#include <vector>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -21,7 +22,7 @@ bool FreeTypeRasterizer::setup() {
         return false;
     }
 
-    FT_Set_Pixel_Sizes(face, 0, 48);
+    FT_Set_Pixel_Sizes(face, 0, 32);
     FT_UInt glyph_index = FT_Get_Char_Index(face, 'a');
 
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
@@ -36,11 +37,21 @@ bool FreeTypeRasterizer::setup() {
         return false;
     }
 
-    unsigned char* buffer = face->glyph->bitmap.buffer;
-    unsigned int rows = face->glyph->bitmap.rows;
-    unsigned int width = face->glyph->bitmap.width;
-    int pitch = face->glyph->bitmap.pitch;
+    FT_Bitmap bitmap = face->glyph->bitmap;
+    unsigned char* buffer = bitmap.buffer;
+    unsigned int rows = bitmap.rows;
+    unsigned int width = bitmap.width;
+    int pitch = bitmap.pitch;
+    FT_Pixel_Mode pixel_mode = static_cast<FT_Pixel_Mode>(bitmap.pixel_mode);
 
+    if (pixel_mode == FT_PIXEL_MODE_GRAY) {
+        std::cerr << "Pixel bitmap is gray (FT_PIXEL_MODE_GRAY).\n";
+    } else {
+        std::cerr << "Pixel bitmap is unsupported!\n";
+    }
+
+    std::vector<uint8_t> packed_buffer;
+    fprintf(stderr, "%ux%u = %u\n", rows, width, rows * width);
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < width; j++) {
             unsigned char pixel_brightness = buffer[i * pitch + j];
@@ -52,9 +63,15 @@ bool FreeTypeRasterizer::setup() {
             } else {
                 fprintf(stderr, " ");
             }
+
+            packed_buffer.push_back(pixel_brightness);
+            packed_buffer.push_back(pixel_brightness);
+            packed_buffer.push_back(pixel_brightness);
         }
         fprintf(stderr, "\n");
     }
+
+    fprintf(stderr, "%zu\n", packed_buffer.size());
 
     return true;
 }

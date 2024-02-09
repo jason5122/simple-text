@@ -70,12 +70,12 @@ RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef 
     CFStringRef fontFace = CTFontCopyName(fontRef, kCTFontSubFamilyNameKey);
     CGFloat fontSize = CTFontGetSize(fontRef);
     unsigned int unitsPerEm = CTFontGetUnitsPerEm(fontRef);
-    LogDefault(@"Rasterizer", @"%@ %@ %f %d", fontFamily, fontFace, fontSize, unitsPerEm);
+    // LogDefault(@"Rasterizer", @"%@ %@ %f %d", fontFamily, fontFace, fontSize, unitsPerEm);
 
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
-    LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
-               bounds.size.width, bounds.size.height);
+    // LogDefault(@"Rasterizer", @"(%f, %f) %fx%f", bounds.origin.x, bounds.origin.y,
+    //            bounds.size.width, bounds.size.height);
 
     int32_t rasterizedLeft = std::floor(bounds.origin.x);
     uint32_t rasterizedWidth = std::ceil(bounds.origin.x - rasterizedLeft + bounds.size.width);

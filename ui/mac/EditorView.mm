@@ -1,6 +1,5 @@
 #import "EditorView.h"
 #import "base/buffer.h"
-#import "font/freetype_rasterizer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
@@ -24,8 +23,6 @@
     // @private
     TextRenderer text_renderer;
     Buffer buffer;
-    Rasterizer rasterizer;
-    FreeTypeRasterizer freetype_rasterizer;
 
 @private
     RectRenderer rect_renderer;
@@ -109,7 +106,7 @@
                 (openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale) -
                 (openGLLayer.frame.size.width - mouse_x);
             CGFloat max_mouse_y =
-                (openGLLayer->buffer.lineCount() * openGLLayer->rasterizer.line_height) /
+                (openGLLayer->buffer.lineCount() * openGLLayer->text_renderer.line_height) /
                 openGLLayer.contentsScale;
 
             openGLLayer->cursor_end_x =
@@ -239,13 +236,8 @@ const char* hex(char c) {
         CGFloat fontSize = 16 * self.contentsScale;
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
-        rasterizer.setup("Source Code Pro", fontSize);
-        freetype_rasterizer.setup(ResourcePath("otf/SourceCodePro-Regular.ttf"));
-        text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
-                            rasterizer.line_height);
+        text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
-
-        freetype_rasterizer.rasterizeUTF8(u8"a");
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
@@ -298,12 +290,12 @@ const char* hex(char c) {
     text_renderer.resize(width, height);
     text_renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
 
-    size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
+    size_t visible_lines = std::ceil((height - 60 - 40) / text_renderer.line_height);
     rect_renderer.resize(width, height);
     glDisable(GL_BLEND);
     rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
-                       text_renderer.cursor_end_line, rasterizer.line_height, buffer.lineCount(),
-                       text_renderer.longest_line_x, visible_lines);
+                       text_renderer.cursor_end_line, text_renderer.line_height,
+                       buffer.lineCount(), text_renderer.longest_line_x, visible_lines);
     glEnable(GL_BLEND);
 
     // Calls glFlush() by default.
@@ -363,7 +355,7 @@ const char* hex(char c) {
 - (CGFloat)maxCursorY {
     size_t line_count = buffer.lineCount();
     line_count -= 1;  // TODO: Merge this with RectRenderer.
-    CGFloat max_y = line_count * rasterizer.line_height;
+    CGFloat max_y = line_count * text_renderer.line_height;
     // TODO: Formulate max_y without the need for division.
     max_y /= self.contentsScale;
     return max_y;

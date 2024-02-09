@@ -84,6 +84,7 @@ RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef 
     uint32_t rasterizedHeight = rasterizedDescent + rasterizedAscent;
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
 
+    // TODO: Apply this transformation in glyph atlas, not in rasterizer.
     top -= descent;
 
     bool colored = CTFontIsColored(fontRef);

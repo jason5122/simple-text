@@ -20,6 +20,21 @@ bool FreeTypeRasterizer::setup(const char* font_path) {
 
     FT_Set_Pixel_Sizes(face, 0, 32);
 
+    float ascent = static_cast<float>(face->ascender) / 64;
+    float descent = static_cast<float>(face->descender) / 64;
+    float glyph_height = static_cast<float>(face->height) / 64;
+
+    // FIXME: This is a hack to match Core Text's metrics.
+    ascent *= 2;
+    descent *= 2;
+    glyph_height *= 2;
+
+    float global_glyph_height = ascent - descent;
+
+    // TODO: Figure out why line height is incorrect compared to Core Text.
+    this->line_height = std::max(glyph_height, global_glyph_height);
+    this->descent = descent;
+
     return true;
 }
 
@@ -48,8 +63,6 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
 
     std::vector<uint8_t> packed_buffer;
     if (pixel_mode == FT_PIXEL_MODE_GRAY) {
-        std::cerr << "Pixel bitmap is gray (FT_PIXEL_MODE_GRAY).\n";
-
         for (size_t i = 0; i < rows; i++) {
             for (size_t j = 0; j < width; j++) {
                 unsigned char pixel_brightness = buffer[i * pitch + j];
@@ -65,11 +78,15 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     }
 
     float advance = static_cast<float>(face->glyph->advance.x) / 64;
+    int32_t top = face->glyph->bitmap_top;
+
+    // TODO: Apply this transformation in glyph atlas, not in rasterizer.
+    top -= descent;
 
     return RasterizedGlyph{
         false,
         face->glyph->bitmap_left,
-        face->glyph->bitmap_top,
+        top,
         static_cast<int32_t>(width),
         static_cast<int32_t>(rows),
         advance,

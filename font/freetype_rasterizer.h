@@ -7,6 +7,9 @@
 
 class FreeTypeRasterizer {
 public:
+    float line_height;
+    float descent;
+
     FreeTypeRasterizer() = default;
     bool setup(const char* font_path);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);

@@ -41,15 +41,16 @@ extern "C" TSLanguage* tree_sitter_glsl();
 extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
-void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size,
-                         float line_height) {
-    this->line_height = line_height;
-
+void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
     atlas.setup();
     rasterizer.setup(main_font_name, font_size);
     freetype_rasterizer.setup(ResourcePath("otf/SourceCodePro-Regular.ttf"));
     atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
+
+    this->line_height = rasterizer.line_height;
+
+    std::cerr << "line_height = " << line_height << '\n';
 
     this->linkShaders();
     this->resize(width, height);
@@ -417,8 +418,8 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str) {
-    RasterizedGlyph glyph = freetype_rasterizer.rasterizeUTF8(utf8_str.c_str());
     // RasterizedGlyph glyph = rasterizer.rasterizeUTF8(utf8_str.c_str());
+    RasterizedGlyph glyph = freetype_rasterizer.rasterizeUTF8(utf8_str.c_str());
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({utf8_str, atlas_glyph});
 }

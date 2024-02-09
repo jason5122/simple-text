@@ -10,7 +10,8 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-static const size_t default_size = 800;
+static const size_t default_width = 1728;
+static const size_t default_height = 1041;
 
 struct client {
     struct wl_display* display;
@@ -141,7 +142,7 @@ static bool setup(struct window* window) {
 
     window->surface = wl_compositor_create_surface(window->client->compositor);
 
-    window->egl_window = wl_egl_window_create(window->surface, default_size, default_size);
+    window->egl_window = wl_egl_window_create(window->surface, default_width, default_height);
 
     window->egl_surface = eglCreateWindowSurface(window->client->egl_display, config,
                                                  (EGLNativeWindowType)window->egl_window, NULL);
@@ -239,7 +240,8 @@ int SimpleTextMain() {
     window->client = client;
     window->open = true;
     window->configured = false;
-    window->floating_width = window->floating_height = default_size;
+    window->floating_width = default_width;
+    window->floating_height = default_height;
 
     if (!setup(window)) {
         goto out;
@@ -247,8 +249,8 @@ int SimpleTextMain() {
 
     context = libdecor_new(client->display, &libdecor_interface);
     window->frame = libdecor_decorate(context, window->surface, &frame_interface, window);
-    libdecor_frame_set_app_id(window->frame, "egl-demo");
-    libdecor_frame_set_title(window->frame, "EGL demo");
+    libdecor_frame_set_app_id(window->frame, "simple-text");
+    libdecor_frame_set_title(window->frame, "Simple Text");
     libdecor_frame_map(window->frame);
 
     wl_display_roundtrip(client->display);

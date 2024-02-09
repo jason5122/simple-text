@@ -4,10 +4,17 @@ source_set("font") {
     "rasterizer.mm",
   ]
 
+  deps = [ ":example_fonts" ]
+
   public_deps = [ "//third_party/freetype" ]
 }
 
 copy("copy_example_fonts") {
   sources = [ "otf/SourceCodePro-Regular.ttf" ]
   outputs = [ "$root_out_dir/otf/{{source_file_part}}" ]
+}
+
+bundle_data("example_fonts") {
+  sources = [ "otf/SourceCodePro-Regular.ttf" ]
+  outputs = [ "{{bundle_resources_dir}}/otf/{{source_file_part}}" ]
 }

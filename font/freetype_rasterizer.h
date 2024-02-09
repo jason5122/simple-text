@@ -6,7 +6,7 @@
 class FreeTypeRasterizer {
 public:
     FreeTypeRasterizer() = default;
-    bool setup();
+    bool setup(const char* font_path);
     void rasterizeUTF8(const char* utf8_str);
 
 private:

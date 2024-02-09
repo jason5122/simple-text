@@ -240,7 +240,7 @@ const char* hex(char c) {
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
         rasterizer.setup("Source Code Pro", fontSize);
-        freetype_rasterizer.setup();
+        freetype_rasterizer.setup(ResourcePath("otf/SourceCodePro-Regular.ttf"));
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
                             rasterizer.line_height);
         rect_renderer.setup(scaled_width, scaled_height);

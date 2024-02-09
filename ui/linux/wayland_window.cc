@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 
-WaylandWindow::WaylandWindow(Client client)
+WaylandWindow::WaylandWindow(WaylandClient client)
     : client(client), floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT), open(true),
       configured(false) {}
 

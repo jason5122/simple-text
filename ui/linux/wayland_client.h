@@ -4,9 +4,9 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-class Client {
+class WaylandClient {
 public:
-    Client() = default;
+    WaylandClient() = default;
     bool connectToDisplay();
 
     wl_display* display;

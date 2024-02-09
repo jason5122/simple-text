@@ -2,19 +2,19 @@
 
 #include "third_party/libdecor/src/libdecor.h"
 #include "third_party/libdecor/src/utils.h"
-#include "ui/linux/client.h"
+#include "ui/linux/wayland_client.h"
 #include <EGL/egl.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
 class WaylandWindow {
 public:
-    WaylandWindow(Client client);
+    WaylandWindow(WaylandClient client);
     bool setup();
     void draw();
     ~WaylandWindow();
 
-    Client client;
+    WaylandClient client;
 
     wl_surface* surface;
     libdecor_frame* frame;

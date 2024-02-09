@@ -105,7 +105,7 @@ static void seat_handle_capabilities(void* data, wl_seat* seat, uint32_t caps) {
     }
 
     WaylandWindow* window = static_cast<class WaylandWindow*>(data);
-    Client* client = &window->client;
+    WaylandClient* client = &window->client;
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
         client->keyboard = wl_seat_get_keyboard(seat);
@@ -123,7 +123,7 @@ static const wl_seat_listener seat_listener = {
 static void registry_global(void* data, wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
     WaylandWindow* window = static_cast<class WaylandWindow*>(data);
-    Client* client = &window->client;
+    WaylandClient* client = &window->client;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
         client->compositor = static_cast<class wl_compositor*>(
@@ -141,7 +141,7 @@ static void registry_global_remove(void* data, wl_registry* wl_registry, uint32_
 static const wl_registry_listener registry_listener = {registry_global, registry_global_remove};
 
 int SimpleTextMain() {
-    Client client = Client();
+    WaylandClient client = WaylandClient();
 
     if (!client.connectToDisplay()) {
         fprintf(stderr, "No Wayland connection\n");

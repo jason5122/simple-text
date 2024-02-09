@@ -27,7 +27,7 @@ if (is_mac) {
 if (is_linux) {
   source_set("ui_linux") {
     sources = [
-      "linux/client.cc",
+      "linux/wayland_client.cc",
       "linux/wayland_window.cc",
     ]
 

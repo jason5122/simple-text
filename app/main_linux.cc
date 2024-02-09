@@ -151,64 +151,52 @@ static void registry_global_remove(void* data, wl_registry* wl_registry, uint32_
 static const wl_registry_listener registry_listener = {registry_global, registry_global_remove};
 
 int SimpleTextMain() {
-    wl_registry* wl_registry;
-    libdecor* context = NULL;
-    int ret = EXIT_SUCCESS;
+    Client client = Client();
 
-    Client* client = new Client();
-
-    client->display = wl_display_connect(NULL);
-    if (!client->display) {
+    client.display = wl_display_connect(NULL);
+    if (!client.display) {
         fprintf(stderr, "No Wayland connection\n");
-        free(client);
         return EXIT_FAILURE;
     }
 
-    Window* window = new Window();
-    window->client = client;
+    Window window = Window();
+    window.client = &client;
 
-    wl_registry = wl_display_get_registry(client->display);
-    wl_registry_add_listener(wl_registry, &registry_listener, window);
-    wl_display_roundtrip(client->display);
+    wl_registry* wl_registry = wl_display_get_registry(client.display);
+    wl_registry_add_listener(wl_registry, &registry_listener, &window);
+    wl_display_roundtrip(client.display);
 
-    if (!window->setup()) {
-        goto out;
+    if (!window.setup()) {
+        return EXIT_FAILURE;
     }
 
-    context = libdecor_new(client->display, &libdecor_interface);
+    libdecor* context = libdecor_new(client.display, &libdecor_interface);
 
-    window->frame = libdecor_decorate(context, window->surface, &frame_interface, window);
-    libdecor_frame_set_app_id(window->frame, "simple-text");
-    libdecor_frame_set_title(window->frame, "Simple Text");
-    libdecor_frame_map(window->frame);
+    window.frame = libdecor_decorate(context, window.surface, &frame_interface, &window);
+    libdecor_frame_set_app_id(window.frame, "simple-text");
+    libdecor_frame_set_title(window.frame, "Simple Text");
+    libdecor_frame_map(window.frame);
 
-    wl_display_roundtrip(client->display);
-    wl_display_roundtrip(client->display);
+    wl_display_roundtrip(client.display);
+    wl_display_roundtrip(client.display);
 
     /* wait for the first configure event */
-    while (!window->configured) {
+    while (!window.configured) {
         if (libdecor_dispatch(context, 0) < 0) {
-            ret = EXIT_FAILURE;
-            goto out;
+            libdecor_unref(context);
+            return EXIT_FAILURE;
         }
     }
 
     std::cerr << glGetString(GL_VERSION) << '\n';
 
-    while (window->open) {
+    while (window.open) {
         if (libdecor_dispatch(context, 0) < 0) {
-            ret = EXIT_FAILURE;
-            goto out;
+            libdecor_unref(context);
+            return EXIT_FAILURE;
         }
-        window->draw();
+        window.draw();
     }
 
-out:
-    if (context) {
-        libdecor_unref(context);
-    }
-    delete window;
-    free(client);
-
-    return ret;
+    return EXIT_SUCCESS;
 }

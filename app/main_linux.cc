@@ -32,7 +32,7 @@ static void frame_configure(libdecor_frame* frame, libdecor_configuration* confi
     libdecor_frame_commit(frame, state, configuration);
     libdecor_state_free(state);
 
-    /* store floating dimensions */
+    // Store floating dimensions.
     if (libdecor_frame_is_floating(window->frame)) {
         window->floating_width = width;
         window->floating_height = height;
@@ -180,7 +180,7 @@ int SimpleTextMain() {
     wl_display_roundtrip(client.display);
     wl_display_roundtrip(client.display);
 
-    /* wait for the first configure event */
+    // Wait for the first configure event.
     while (!window.configured) {
         if (libdecor_dispatch(context, 0) < 0) {
             libdecor_unref(context);

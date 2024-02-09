@@ -25,6 +25,11 @@ public:
 
 class Window {
 public:
+    Window() = default;
+    bool setup();
+    void draw();
+    ~Window();
+
     Client* client;
 
     wl_surface* surface;

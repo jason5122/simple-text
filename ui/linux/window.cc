@@ -1,7 +1,11 @@
 #include "window.h"
+#include <GL/gl.h>
+#include <iostream>
+#include <stdio.h>
+#include <time.h>
 
-Window::Window()
-    : floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT), open(true),
+Window::Window(Client client)
+    : client(client), floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT), open(true),
       configured(false) {}
 
 bool Window::setup() {
@@ -13,9 +17,9 @@ bool Window::setup() {
     EGLint n;
     EGLConfig config;
 
-    client->egl_display = eglGetDisplay((EGLNativeDisplayType)client->display);
+    client.egl_display = eglGetDisplay((EGLNativeDisplayType)client.display);
 
-    if (eglInitialize(client->egl_display, &major, &minor) == EGL_FALSE) {
+    if (eglInitialize(client.egl_display, &major, &minor) == EGL_FALSE) {
         fprintf(stderr, "Cannot initialise EGL!\n");
         return false;
     }
@@ -25,26 +29,28 @@ bool Window::setup() {
         return false;
     }
 
-    if (eglChooseConfig(client->egl_display, config_attribs, &config, 1, &n) == EGL_FALSE) {
+    if (eglChooseConfig(client.egl_display, config_attribs, &config, 1, &n) == EGL_FALSE) {
         fprintf(stderr, "No matching EGL configurations!\n");
         return false;
     }
 
-    client->egl_context = eglCreateContext(client->egl_display, config, EGL_NO_CONTEXT, NULL);
+    client.egl_context = eglCreateContext(client.egl_display, config, EGL_NO_CONTEXT, NULL);
 
-    if (client->egl_context == EGL_NO_CONTEXT) {
+    if (client.egl_context == EGL_NO_CONTEXT) {
         fprintf(stderr, "No EGL context!\n");
         return false;
     }
 
-    surface = wl_compositor_create_surface(client->compositor);
+    surface = wl_compositor_create_surface(client.compositor);
 
     egl_window = wl_egl_window_create(surface, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
     egl_surface =
-        eglCreateWindowSurface(client->egl_display, config, (EGLNativeWindowType)egl_window, NULL);
+        eglCreateWindowSurface(client.egl_display, config, (EGLNativeWindowType)egl_window, NULL);
 
-    eglMakeCurrent(client->egl_display, egl_surface, egl_surface, client->egl_context);
+    eglMakeCurrent(client.egl_display, egl_surface, egl_surface, client.egl_context);
+
+    std::cerr << glGetString(GL_VERSION) << '\n';
 
     return true;
 }
@@ -87,15 +93,15 @@ void Window::draw() {
     glEnableClientState(GL_VERTEX_ARRAY);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    eglSwapBuffers(client->egl_display, egl_surface);
+    eglSwapBuffers(client.egl_display, egl_surface);
 }
 
 Window::~Window() {
-    if (client->egl_display) {
-        eglMakeCurrent(client->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (client.egl_display) {
+        eglMakeCurrent(client.egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
     if (egl_surface) {
-        eglDestroySurface(client->egl_display, egl_surface);
+        eglDestroySurface(client.egl_display, egl_surface);
     }
     if (egl_window) {
         wl_egl_window_destroy(egl_window);
@@ -103,10 +109,10 @@ Window::~Window() {
     if (surface) {
         wl_surface_destroy(surface);
     }
-    if (client->egl_context) {
-        eglDestroyContext(client->egl_display, client->egl_context);
+    if (client.egl_context) {
+        eglDestroyContext(client.egl_display, client.egl_context);
     }
-    if (client->egl_display) {
-        eglTerminate(client->egl_display);
+    if (client.egl_display) {
+        eglTerminate(client.egl_display);
     }
 }

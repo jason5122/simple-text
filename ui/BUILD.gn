@@ -26,7 +26,10 @@ if (is_mac) {
 
 if (is_linux) {
   source_set("ui_linux") {
-    sources = [ "linux/window.cc" ]
+    sources = [
+      "linux/client.cc",
+      "linux/window.cc",
+    ]
 
     libs = [
       "wayland-client",

@@ -1,5 +1,6 @@
 #include "ui/linux/window.h"
 #include <iostream>
+#include <string.h>
 
 static void frame_configure(libdecor_frame* frame, libdecor_configuration* configuration,
                             void* user_data) {
@@ -39,7 +40,7 @@ static void frame_close(libdecor_frame* frame, void* user_data) {
 static void frame_commit(libdecor_frame* frame, void* user_data) {
     Window* window = static_cast<class Window*>(user_data);
 
-    eglSwapBuffers(window->client->display, window->egl_surface);
+    eglSwapBuffers(window->client.display, window->egl_surface);
 }
 
 static libdecor_frame_interface frame_interface = {
@@ -104,7 +105,7 @@ static void seat_handle_capabilities(void* data, wl_seat* seat, uint32_t caps) {
     }
 
     Window* window = static_cast<class Window*>(data);
-    Client* client = window->client;
+    Client* client = &window->client;
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
         client->keyboard = wl_seat_get_keyboard(seat);
@@ -122,7 +123,7 @@ static const wl_seat_listener seat_listener = {
 static void registry_global(void* data, wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
     Window* window = static_cast<class Window*>(data);
-    Client* client = window->client;
+    Client* client = &window->client;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
         client->compositor = static_cast<class wl_compositor*>(
@@ -142,14 +143,12 @@ static const wl_registry_listener registry_listener = {registry_global, registry
 int SimpleTextMain() {
     Client client = Client();
 
-    client.display = wl_display_connect(NULL);
-    if (!client.display) {
+    if (!client.connectToDisplay()) {
         fprintf(stderr, "No Wayland connection\n");
         return EXIT_FAILURE;
     }
 
-    Window window = Window();
-    window.client = &client;
+    Window window = Window(client);
 
     wl_registry* wl_registry = wl_display_get_registry(client.display);
     wl_registry_add_listener(wl_registry, &registry_listener, &window);
@@ -176,8 +175,6 @@ int SimpleTextMain() {
             return EXIT_FAILURE;
         }
     }
-
-    std::cerr << glGetString(GL_VERSION) << '\n';
 
     while (window.open) {
         if (libdecor_dispatch(context, 0) < 0) {

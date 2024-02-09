@@ -2,7 +2,6 @@
 #import "base/buffer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
-#import "ui/renderer/triangle_renderer.h"
 #import "util/file_util.h"
 #import "util/log_util_mac.h"
 #import <fstream>
@@ -28,7 +27,6 @@
 
 @private
     RectRenderer rect_renderer;
-    TriangleRenderer triangle_renderer;
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
@@ -243,7 +241,6 @@ const char* hex(char c) {
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
                             rasterizer.line_height);
         rect_renderer.setup(scaled_width, scaled_height);
-        triangle_renderer.setup(scaled_width, scaled_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
@@ -293,20 +290,15 @@ const char* hex(char c) {
     float width = self.frame.size.width * self.contentsScale;
     float height = self.frame.size.height * self.contentsScale;
 
-    // text_renderer.resize(width, height);
-    // text_renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
+    text_renderer.resize(width, height);
+    text_renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
 
-    // size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
-    // rect_renderer.resize(width, height);
-    // glDisable(GL_BLEND);
-    // rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
-    //                    text_renderer.cursor_end_line, rasterizer.line_height,
-    //                    buffer.lineCount(), text_renderer.longest_line_x, visible_lines);
-    // glEnable(GL_BLEND);
-
+    size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
+    rect_renderer.resize(width, height);
     glDisable(GL_BLEND);
-    triangle_renderer.resize(width, height);
-    triangle_renderer.draw();
+    rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
+                       text_renderer.cursor_end_line, rasterizer.line_height, buffer.lineCount(),
+                       text_renderer.longest_line_x, visible_lines);
     glEnable(GL_BLEND);
 
     // Calls glFlush() by default.

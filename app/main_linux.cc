@@ -12,24 +12,9 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-class window {
-public:
-    client* client;
-    wl_surface* surface;
-    libdecor_frame* frame;
-    wl_egl_window* egl_window;
-    EGLSurface egl_surface;
-    int content_width;
-    int content_height;
-    int floating_width;
-    int floating_height;
-    bool open;
-    bool configured;
-};
-
 static void frame_configure(libdecor_frame* frame, libdecor_configuration* configuration,
                             void* user_data) {
-    window* window = static_cast<class window*>(user_data);
+    Window* window = static_cast<class Window*>(user_data);
     libdecor_state* state;
     int width, height;
 
@@ -57,13 +42,13 @@ static void frame_configure(libdecor_frame* frame, libdecor_configuration* confi
 }
 
 static void frame_close(libdecor_frame* frame, void* user_data) {
-    window* window = static_cast<class window*>(user_data);
+    Window* window = static_cast<class Window*>(user_data);
 
     window->open = false;
 }
 
 static void frame_commit(libdecor_frame* frame, void* user_data) {
-    window* window = static_cast<class window*>(user_data);
+    Window* window = static_cast<class Window*>(user_data);
 
     eglSwapBuffers(window->client->display, window->egl_surface);
 }
@@ -98,7 +83,7 @@ static void keyboard_handle_leave(void* data, wl_keyboard* keyboard, uint32_t se
 
 static void keyboard_handle_key(void* data, wl_keyboard* keyboard, uint32_t serial, uint32_t time,
                                 uint32_t key, uint32_t state) {
-    window* window = static_cast<class window*>(data);
+    Window* window = static_cast<class Window*>(data);
 
     fprintf(stderr, "Key is %d state is %d\n", key, state);
     if (key == 1) {
@@ -129,8 +114,8 @@ static void seat_handle_capabilities(void* data, wl_seat* seat, uint32_t caps) {
         fprintf(stderr, "Display has a touch screen\n");
     }
 
-    window* window = static_cast<class window*>(data);
-    client* client = window->client;
+    Window* window = static_cast<class Window*>(data);
+    Client* client = window->client;
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
         client->keyboard = wl_seat_get_keyboard(seat);
@@ -147,8 +132,8 @@ static const wl_seat_listener seat_listener = {
 
 static void registry_global(void* data, wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
-    window* window = static_cast<class window*>(data);
-    client* client = window->client;
+    Window* window = static_cast<class Window*>(data);
+    Client* client = window->client;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
         client->compositor = static_cast<class wl_compositor*>(
@@ -165,7 +150,7 @@ static void registry_global_remove(void* data, wl_registry* wl_registry, uint32_
 
 static const wl_registry_listener registry_listener = {registry_global, registry_global_remove};
 
-static bool setup(window* window) {
+static bool setup(Window* window) {
     static const EGLint config_attribs[] = {
         EGL_SURFACE_TYPE,    EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE};
@@ -215,7 +200,7 @@ static bool setup(window* window) {
     return true;
 }
 
-static void cleanup(window* window) {
+static void cleanup(Window* window) {
     if (window->client->egl_display) {
         eglMakeCurrent(window->client->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
                        EGL_NO_CONTEXT);
@@ -251,7 +236,7 @@ static void hue_to_rgb(const float* const hue, float (*rgb)[3]) {
     (*rgb)[2] = hue_to_channel(hue, 1);
 }
 
-static void draw(window* window) {
+static void draw(Window* window) {
     timespec tv;
     double time;
 
@@ -282,11 +267,11 @@ static void draw(window* window) {
 int SimpleTextMain() {
     wl_registry* wl_registry;
     libdecor* context = NULL;
-    window* window;
-    client* client;
+    Window* window;
+    Client* client;
     int ret = EXIT_SUCCESS;
 
-    client = static_cast<class client*>(calloc(1, sizeof(class client)));
+    client = static_cast<class Client*>(calloc(1, sizeof(class Client)));
 
     client->display = wl_display_connect(NULL);
     if (!client->display) {
@@ -295,7 +280,7 @@ int SimpleTextMain() {
         return EXIT_FAILURE;
     }
 
-    window = static_cast<class window*>(calloc(1, sizeof(class window)));
+    window = static_cast<class Window*>(calloc(1, sizeof(class Window)));
     window->client = client;
     window->open = true;
     window->configured = false;

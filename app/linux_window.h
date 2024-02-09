@@ -13,11 +13,28 @@
 static const size_t DEFAULT_WIDTH = 1728;
 static const size_t DEFAULT_HEIGHT = 1041;
 
-struct client {
-    struct wl_display* display;
-    struct wl_compositor* compositor;
-    struct wl_seat* seat;
-    struct wl_keyboard* keyboard;
+class Client {
+public:
+    wl_display* display;
+    wl_compositor* compositor;
+    wl_seat* seat;
+    wl_keyboard* keyboard;
     EGLDisplay egl_display;
     EGLContext egl_context;
+};
+
+class Window {
+public:
+    Client* client;
+
+    wl_surface* surface;
+    libdecor_frame* frame;
+    wl_egl_window* egl_window;
+    EGLSurface egl_surface;
+    int content_width;
+    int content_height;
+    int floating_width;
+    int floating_height;
+    bool open;
+    bool configured;
 };

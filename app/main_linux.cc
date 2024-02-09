@@ -292,76 +292,18 @@ class Window {
 public:
     Window(struct libdecor* context)
         : floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT) {
-        display = wl_display_connect(NULL);
-        if (!display) {
+        client = static_cast<struct client*>(calloc(1, sizeof(struct client)));
+
+        client->display = wl_display_connect(NULL);
+        if (!client->display) {
             fprintf(stderr, "No Wayland connection\n");
+            free(client);
             // return EXIT_FAILURE;
         }
-
-        static const EGLint config_attribs[] = {
-            EGL_SURFACE_TYPE,
-            EGL_WINDOW_BIT,
-            EGL_RED_SIZE,
-            8,
-            EGL_GREEN_SIZE,
-            8,
-            EGL_BLUE_SIZE,
-            8,
-            EGL_RENDERABLE_TYPE,
-            EGL_OPENGL_BIT,
-            EGL_NONE,
-        };
-
-        EGLint major, minor;
-        EGLint n;
-        EGLConfig config;
-
-        egl_display = eglGetDisplay((EGLNativeDisplayType)display);
-
-        if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE) {
-            fprintf(stderr, "Cannot initialise EGL!\n");
-            // return false;
-        }
-
-        if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE) {
-            fprintf(stderr, "Cannot bind EGL API!\n");
-            // return false;
-        }
-
-        if (eglChooseConfig(egl_display, config_attribs, &config, 1, &n) == EGL_FALSE) {
-            fprintf(stderr, "No matching EGL configurations!\n");
-            // return false;
-        }
-
-        egl_context = eglCreateContext(egl_display, config, EGL_NO_CONTEXT, NULL);
-
-        if (egl_context == EGL_NO_CONTEXT) {
-            fprintf(stderr, "No EGL context!\n");
-            // return false;
-        }
-
-        // surface = wl_compositor_create_surface(compositor);
-
-        // egl_window = wl_egl_window_create(surface, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-
-        // egl_surface =
-        //     eglCreateWindowSurface(egl_display, config, (EGLNativeWindowType)egl_window, NULL);
-
-        // eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
-
-        // this->frame = libdecor_decorate(context, this->surface, &frame_interface, this);
-        // libdecor_frame_set_app_id(this->frame, "simple-text");
-        // libdecor_frame_set_title(this->frame, "Simple Text");
-        // libdecor_frame_map(this->frame);
     }
 
 private:
-    struct wl_display* display;
-    struct wl_compositor* compositor;
-    struct wl_seat* seat;
-    struct wl_keyboard* keyboard;
-    EGLDisplay egl_display;
-    EGLContext egl_context;
+    struct client* client;
 
     struct wl_surface* surface;
     struct libdecor_frame* frame;
@@ -371,8 +313,8 @@ private:
     int content_height;
     int floating_width;
     int floating_height;
-    bool open;
-    bool configured;
+    bool open = true;
+    bool configured = false;
 };
 
 static Window* window_cpp;

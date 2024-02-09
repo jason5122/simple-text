@@ -153,11 +153,9 @@ static const wl_registry_listener registry_listener = {registry_global, registry
 int SimpleTextMain() {
     wl_registry* wl_registry;
     libdecor* context = NULL;
-    Window* window;
-    Client* client;
     int ret = EXIT_SUCCESS;
 
-    client = static_cast<class Client*>(calloc(1, sizeof(class Client)));
+    Client* client = new Client();
 
     client->display = wl_display_connect(NULL);
     if (!client->display) {
@@ -166,12 +164,8 @@ int SimpleTextMain() {
         return EXIT_FAILURE;
     }
 
-    window = static_cast<class Window*>(calloc(1, sizeof(class Window)));
+    Window* window = new Window();
     window->client = client;
-    window->open = true;
-    window->configured = false;
-    window->floating_width = DEFAULT_WIDTH;
-    window->floating_height = DEFAULT_HEIGHT;
 
     wl_registry = wl_display_get_registry(client->display);
     wl_registry_add_listener(wl_registry, &registry_listener, window);
@@ -213,7 +207,7 @@ out:
     if (context) {
         libdecor_unref(context);
     }
-    free(window);
+    delete window;
     free(client);
 
     return ret;

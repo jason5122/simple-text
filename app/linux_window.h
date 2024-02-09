@@ -15,6 +15,8 @@ static const size_t DEFAULT_HEIGHT = 1041;
 
 class Client {
 public:
+    Client() = default;
+
     wl_display* display;
     wl_compositor* compositor;
     wl_seat* seat;
@@ -25,7 +27,7 @@ public:
 
 class Window {
 public:
-    Window() = default;
+    Window();
     bool setup();
     void draw();
     ~Window();

@@ -1,5 +1,9 @@
 #include "linux_window.h"
 
+Window::Window()
+    : floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT), open(true),
+      configured(false) {}
+
 bool Window::setup() {
     static const EGLint config_attribs[] = {
         EGL_SURFACE_TYPE,    EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,

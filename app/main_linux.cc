@@ -12,11 +12,12 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-struct window {
-    struct client* client;
-    struct wl_surface* surface;
-    struct libdecor_frame* frame;
-    struct wl_egl_window* egl_window;
+class window {
+public:
+    client* client;
+    wl_surface* surface;
+    libdecor_frame* frame;
+    wl_egl_window* egl_window;
     EGLSurface egl_surface;
     int content_width;
     int content_height;
@@ -26,10 +27,10 @@ struct window {
     bool configured;
 };
 
-static void frame_configure(struct libdecor_frame* frame,
-                            struct libdecor_configuration* configuration, void* user_data) {
-    window* window = static_cast<struct window*>(user_data);
-    struct libdecor_state* state;
+static void frame_configure(libdecor_frame* frame, libdecor_configuration* configuration,
+                            void* user_data) {
+    window* window = static_cast<class window*>(user_data);
+    libdecor_state* state;
     int width, height;
 
     if (!libdecor_configuration_get_content_size(configuration, frame, &width, &height)) {
@@ -55,50 +56,49 @@ static void frame_configure(struct libdecor_frame* frame,
     window->configured = true;
 }
 
-static void frame_close(struct libdecor_frame* frame, void* user_data) {
-    window* window = static_cast<struct window*>(user_data);
+static void frame_close(libdecor_frame* frame, void* user_data) {
+    window* window = static_cast<class window*>(user_data);
 
     window->open = false;
 }
 
-static void frame_commit(struct libdecor_frame* frame, void* user_data) {
-    window* window = static_cast<struct window*>(user_data);
+static void frame_commit(libdecor_frame* frame, void* user_data) {
+    window* window = static_cast<class window*>(user_data);
 
     eglSwapBuffers(window->client->display, window->egl_surface);
 }
 
-static struct libdecor_frame_interface frame_interface = {
+static libdecor_frame_interface frame_interface = {
     frame_configure,
     frame_close,
     frame_commit,
 };
 
-static void libdecor_error(struct libdecor* context, enum libdecor_error error,
-                           const char* message) {
+static void libdecor_error(libdecor* context, enum libdecor_error error, const char* message) {
     fprintf(stderr, "Caught error (%d): %s\n", error, message);
     exit(EXIT_FAILURE);
 }
 
-static struct libdecor_interface libdecor_interface = {
+static libdecor_interface libdecor_interface = {
     libdecor_error,
 };
 
-static void keyboard_handle_keymap(void* data, struct wl_keyboard* keyboard, uint32_t format,
-                                   int fd, uint32_t size) {}
+static void keyboard_handle_keymap(void* data, wl_keyboard* keyboard, uint32_t format, int fd,
+                                   uint32_t size) {}
 
-static void keyboard_handle_enter(void* data, struct wl_keyboard* keyboard, uint32_t serial,
-                                  struct wl_surface* surface, struct wl_array* keys) {
+static void keyboard_handle_enter(void* data, wl_keyboard* keyboard, uint32_t serial,
+                                  wl_surface* surface, wl_array* keys) {
     fprintf(stderr, "Keyboard gained focus\n");
 }
 
-static void keyboard_handle_leave(void* data, struct wl_keyboard* keyboard, uint32_t serial,
-                                  struct wl_surface* surface) {
+static void keyboard_handle_leave(void* data, wl_keyboard* keyboard, uint32_t serial,
+                                  wl_surface* surface) {
     fprintf(stderr, "Keyboard lost focus\n");
 }
 
-static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard, uint32_t serial,
-                                uint32_t time, uint32_t key, uint32_t state) {
-    window* window = static_cast<struct window*>(data);
+static void keyboard_handle_key(void* data, wl_keyboard* keyboard, uint32_t serial, uint32_t time,
+                                uint32_t key, uint32_t state) {
+    window* window = static_cast<class window*>(data);
 
     fprintf(stderr, "Key is %d state is %d\n", key, state);
     if (key == 1) {
@@ -106,19 +106,19 @@ static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard, uint32
     }
 }
 
-static void keyboard_handle_modifiers(void* data, struct wl_keyboard* keyboard, uint32_t serial,
+static void keyboard_handle_modifiers(void* data, wl_keyboard* keyboard, uint32_t serial,
                                       uint32_t mods_depressed, uint32_t mods_latched,
                                       uint32_t mods_locked, uint32_t group) {
     fprintf(stderr, "Modifiers depressed %d, latched %d, locked %d, group %d\n", mods_depressed,
             mods_latched, mods_locked, group);
 }
 
-static const struct wl_keyboard_listener keyboard_listener = {
+static const wl_keyboard_listener keyboard_listener = {
     keyboard_handle_keymap, keyboard_handle_enter,     keyboard_handle_leave,
     keyboard_handle_key,    keyboard_handle_modifiers,
 };
 
-static void seat_handle_capabilities(void* data, struct wl_seat* seat, uint32_t caps) {
+static void seat_handle_capabilities(void* data, wl_seat* seat, uint32_t caps) {
     if (caps & WL_SEAT_CAPABILITY_POINTER) {
         fprintf(stderr, "Display has a pointer\n");
     }
@@ -129,8 +129,8 @@ static void seat_handle_capabilities(void* data, struct wl_seat* seat, uint32_t 
         fprintf(stderr, "Display has a touch screen\n");
     }
 
-    window* window = static_cast<struct window*>(data);
-    struct client* client = window->client;
+    window* window = static_cast<class window*>(data);
+    client* client = window->client;
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
         client->keyboard = wl_seat_get_keyboard(seat);
@@ -141,32 +141,31 @@ static void seat_handle_capabilities(void* data, struct wl_seat* seat, uint32_t 
     }
 }
 
-static const struct wl_seat_listener seat_listener = {
+static const wl_seat_listener seat_listener = {
     seat_handle_capabilities,
 };
 
-static void registry_global(void* data, struct wl_registry* wl_registry, uint32_t name,
+static void registry_global(void* data, wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
-    window* window = static_cast<struct window*>(data);
-    struct client* client = window->client;
+    window* window = static_cast<class window*>(data);
+    client* client = window->client;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-        client->compositor = static_cast<struct wl_compositor*>(
+        client->compositor = static_cast<class wl_compositor*>(
             wl_registry_bind(wl_registry, name, &wl_compositor_interface, 1));
     }
     if (strcmp(interface, wl_seat_interface.name) == 0) {
-        client->seat = static_cast<struct wl_seat*>(
+        client->seat = static_cast<class wl_seat*>(
             wl_registry_bind(wl_registry, name, &wl_seat_interface, 1));
         wl_seat_add_listener(client->seat, &seat_listener, window);
     }
 }
 
-static void registry_global_remove(void* data, struct wl_registry* wl_registry, uint32_t name) {}
+static void registry_global_remove(void* data, wl_registry* wl_registry, uint32_t name) {}
 
-static const struct wl_registry_listener registry_listener = {registry_global,
-                                                              registry_global_remove};
+static const wl_registry_listener registry_listener = {registry_global, registry_global_remove};
 
-static bool setup(struct window* window) {
+static bool setup(window* window) {
     static const EGLint config_attribs[] = {
         EGL_SURFACE_TYPE,    EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE};
@@ -216,7 +215,7 @@ static bool setup(struct window* window) {
     return true;
 }
 
-static void cleanup(struct window* window) {
+static void cleanup(window* window) {
     if (window->client->egl_display) {
         eglMakeCurrent(window->client->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
                        EGL_NO_CONTEXT);
@@ -252,8 +251,8 @@ static void hue_to_rgb(const float* const hue, float (*rgb)[3]) {
     (*rgb)[2] = hue_to_channel(hue, 1);
 }
 
-static void draw(struct window* window) {
-    struct timespec tv;
+static void draw(window* window) {
+    timespec tv;
     double time;
 
     /* change of colour hue (HSV space) in rad/sec */
@@ -280,16 +279,14 @@ static void draw(struct window* window) {
     eglSwapBuffers(window->client->egl_display, window->egl_surface);
 }
 
-static Window* window_cpp;
-
 int SimpleTextMain() {
-    struct wl_registry* wl_registry;
-    struct libdecor* context = NULL;
-    struct window* window;
-    struct client* client;
+    wl_registry* wl_registry;
+    libdecor* context = NULL;
+    window* window;
+    client* client;
     int ret = EXIT_SUCCESS;
 
-    client = static_cast<struct client*>(calloc(1, sizeof(struct client)));
+    client = static_cast<class client*>(calloc(1, sizeof(class client)));
 
     client->display = wl_display_connect(NULL);
     if (!client->display) {
@@ -298,7 +295,7 @@ int SimpleTextMain() {
         return EXIT_FAILURE;
     }
 
-    window = static_cast<struct window*>(calloc(1, sizeof(struct window)));
+    window = static_cast<class window*>(calloc(1, sizeof(class window)));
     window->client = client;
     window->open = true;
     window->configured = false;
@@ -314,8 +311,6 @@ int SimpleTextMain() {
     }
 
     context = libdecor_new(client->display, &libdecor_interface);
-    window_cpp = new Window(context);
-    window_cpp->setup();
 
     window->frame = libdecor_decorate(context, window->surface, &frame_interface, window);
     libdecor_frame_set_app_id(window->frame, "simple-text");

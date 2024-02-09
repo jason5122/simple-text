@@ -21,25 +21,3 @@ struct client {
     EGLDisplay egl_display;
     EGLContext egl_context;
 };
-
-class Window {
-public:
-    struct client* client;
-
-    Window(struct libdecor* context);
-    bool setup();
-
-private:
-    struct wl_registry* wl_registry;
-
-    struct wl_surface* surface;
-    struct libdecor_frame* frame;
-    struct wl_egl_window* egl_window;
-    EGLSurface egl_surface;
-    int content_width;
-    int content_height;
-    int floating_width;
-    int floating_height;
-    bool open = true;
-    bool configured = false;
-};

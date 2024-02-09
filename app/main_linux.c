@@ -108,7 +108,12 @@ static void keyboard_handle_leave(void* data, struct wl_keyboard* keyboard, uint
 
 static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard, uint32_t serial,
                                 uint32_t time, uint32_t key, uint32_t state) {
+    struct window* window = data;
+
     fprintf(stderr, "Key is %d state is %d\n", key, state);
+    if (key == 1) {
+        window->open = false;
+    }
 }
 
 static void keyboard_handle_modifiers(void* data, struct wl_keyboard* keyboard, uint32_t serial,
@@ -135,11 +140,12 @@ static void seat_handle_capabilities(void* data, struct wl_seat* seat,
         fprintf(stderr, "Display has a touch screen\n");
     }
 
-    struct client* client = data;
+    struct window* window = data;
+    struct client* client = window->client;
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
         client->keyboard = wl_seat_get_keyboard(seat);
-        wl_keyboard_add_listener(client->keyboard, &keyboard_listener, client);
+        wl_keyboard_add_listener(client->keyboard, &keyboard_listener, window);
     } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD)) {
         wl_keyboard_destroy(client->keyboard);
         client->keyboard = NULL;
@@ -152,14 +158,15 @@ static const struct wl_seat_listener seat_listener = {
 
 static void registry_global(void* data, struct wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
-    struct client* client = data;
+    struct window* window = data;
+    struct client* client = window->client;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
         client->compositor = wl_registry_bind(wl_registry, name, &wl_compositor_interface, 1);
     }
     if (strcmp(interface, wl_seat_interface.name) == 0) {
         client->seat = wl_registry_bind(wl_registry, name, &wl_seat_interface, 1);
-        wl_seat_add_listener(client->seat, &seat_listener, client);
+        wl_seat_add_listener(client->seat, &seat_listener, window);
     }
 }
 
@@ -296,16 +303,16 @@ int SimpleTextMain() {
         return EXIT_FAILURE;
     }
 
-    wl_registry = wl_display_get_registry(client->display);
-    wl_registry_add_listener(wl_registry, &registry_listener, client);
-    wl_display_roundtrip(client->display);
-
     window = calloc(1, sizeof(struct window));
     window->client = client;
     window->open = true;
     window->configured = false;
     window->floating_width = default_width;
     window->floating_height = default_height;
+
+    wl_registry = wl_display_get_registry(client->display);
+    wl_registry_add_listener(wl_registry, &registry_listener, window);
+    wl_display_roundtrip(client->display);
 
     if (!setup(window)) {
         goto out;

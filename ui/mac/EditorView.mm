@@ -2,6 +2,7 @@
 #import "base/buffer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
+#import "ui/renderer/triangle_renderer.h"
 #import "util/file_util.h"
 #import "util/log_util_mac.h"
 #import <fstream>
@@ -21,12 +22,13 @@
     CGFloat cursor_end_y;
 
     // @private
-    TextRenderer renderer;
+    TextRenderer text_renderer;
     Buffer buffer;
     Rasterizer rasterizer;
 
 @private
     RectRenderer rect_renderer;
+    TriangleRenderer triangle_renderer;
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
@@ -104,7 +106,7 @@
             mouse_y -= 30;
 
             CGFloat max_mouse_x =
-                (openGLLayer->renderer.longest_line_x / openGLLayer.contentsScale) -
+                (openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale) -
                 (openGLLayer.frame.size.width - mouse_x);
             CGFloat max_mouse_y =
                 (openGLLayer->buffer.lineCount() * openGLLayer->rasterizer.line_height) /
@@ -238,9 +240,10 @@ const char* hex(char c) {
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
         rasterizer.setup("Source Code Pro", fontSize);
-        renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
-                       rasterizer.line_height);
+        text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
+                            rasterizer.line_height);
         rect_renderer.setup(scaled_width, scaled_height);
+        triangle_renderer.setup(scaled_width, scaled_height);
 
         // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
         // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
@@ -258,7 +261,7 @@ const char* hex(char c) {
         buffer.setContents(infile);
 
         uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-        renderer.parseBuffer(buffer);
+        text_renderer.parseBuffer(buffer);
         uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         uint64_t microseconds = (end - start) / 1e3;
         float fps = 1000000.0 / microseconds;
@@ -290,15 +293,20 @@ const char* hex(char c) {
     float width = self.frame.size.width * self.contentsScale;
     float height = self.frame.size.height * self.contentsScale;
 
-    renderer.resize(width, height);
-    renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
+    // text_renderer.resize(width, height);
+    // text_renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
 
-    size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
-    rect_renderer.resize(width, height);
+    // size_t visible_lines = std::ceil((height - 60 - 40) / rasterizer.line_height);
+    // rect_renderer.resize(width, height);
+    // glDisable(GL_BLEND);
+    // rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
+    //                    text_renderer.cursor_end_line, rasterizer.line_height,
+    //                    buffer.lineCount(), text_renderer.longest_line_x, visible_lines);
+    // glEnable(GL_BLEND);
+
     glDisable(GL_BLEND);
-    rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, renderer.cursor_end_x,
-                       renderer.cursor_end_line, rasterizer.line_height, buffer.lineCount(),
-                       renderer.longest_line_x, visible_lines);
+    triangle_renderer.resize(width, height);
+    triangle_renderer.draw();
     glEnable(GL_BLEND);
 
     // Calls glFlush() by default.
@@ -314,21 +322,21 @@ const char* hex(char c) {
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
-    buffer.insert(renderer.cursor_end_line, renderer.cursor_end_col_offset, str);
+    buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
 
     uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    renderer.editBuffer(buffer, bytes);
-    renderer.parseBuffer(buffer);
+    text_renderer.editBuffer(buffer, bytes);
+    text_renderer.parseBuffer(buffer);
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
     LogDefault("OpenGLLayer", "Tree-sitter edit and parse: %ld µs (%f fps)", microseconds, fps);
 
-    float advance = renderer.getGlyphAdvance(std::string(str));
-    renderer.cursor_start_col_offset += bytes;
-    renderer.cursor_start_x += advance;
-    renderer.cursor_end_col_offset += bytes;
-    renderer.cursor_end_x += advance;
+    float advance = text_renderer.getGlyphAdvance(std::string(str));
+    text_renderer.cursor_start_col_offset += bytes;
+    text_renderer.cursor_start_x += advance;
+    text_renderer.cursor_end_col_offset += bytes;
+    text_renderer.cursor_end_x += advance;
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath
@@ -342,14 +350,14 @@ const char* hex(char c) {
 
 - (void)setRendererCursorPositions {
     CGFloat scale = self.contentsScale;
-    renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
-                                cursor_end_x * scale, cursor_end_y * scale);
+    text_renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
+                                     cursor_end_x * scale, cursor_end_y * scale);
     [self setNeedsDisplay];
 }
 
 - (CGFloat)maxCursorX {
     // TODO: Formulate max_cursor_x without the need for division.
-    CGFloat max_cursor_x = renderer.longest_line_x / self.contentsScale;
+    CGFloat max_cursor_x = text_renderer.longest_line_x / self.contentsScale;
     max_cursor_x -= self.frame.size.width;
     if (max_cursor_x < 0) max_cursor_x = 0;
     return max_cursor_x;

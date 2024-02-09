@@ -1,7 +1,7 @@
 #include "base/rgb.h"
 #include "rect_renderer.h"
-#include "ui/renderer/atlas.h"
 #include "util/file_util.h"
+#include <vector>
 
 struct InstanceData {
     // Coordinates.

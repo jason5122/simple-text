@@ -7,6 +7,8 @@ if (is_mac) {
       "shaders/rect_vert.glsl",
       "shaders/text_frag.glsl",
       "shaders/text_vert.glsl",
+      "shaders/triangle_frag.glsl",
+      "shaders/triangle_vert.glsl",
     ]
     outputs = [ "{{bundle_resources_dir}}/shaders/{{source_file_part}}" ]
   }

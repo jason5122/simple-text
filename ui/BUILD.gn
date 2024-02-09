@@ -7,6 +7,7 @@ if (is_mac) {
       "renderer/atlas_renderer.cc",
       "renderer/rect_renderer.cc",
       "renderer/text_renderer.cc",
+      "renderer/triangle_renderer.cc",
     ]
 
     frameworks = [

@@ -1,4 +1,4 @@
-#include "linux_window.h"
+#include "window.h"
 
 Window::Window()
     : floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT), open(true),
@@ -50,9 +50,8 @@ bool Window::setup() {
 }
 
 static float hue_to_channel(const float* const hue, const int n) {
-    /* convert hue to rgb channels with saturation and value equal to 1
-     * https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB_alternative
-     */
+    // Convert hue to rgb channels with saturation and value equal to 1.
+    // https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB_alternative
     const float k = fmod(n + ((*hue) * 3 / M_PI), 6);
     return 1 - MAX(0, MIN(MIN(k, 4 - k), 1));
 }
@@ -67,7 +66,7 @@ void Window::draw() {
     timespec tv;
     double time;
 
-    /* change of colour hue (HSV space) in rad/sec */
+    // Change of color hue (HSV space) in rad/sec.
     static const float hue_change = (2 * M_PI) / 10;
     float hue;
     float rgb[3] = {0, 0, 0};

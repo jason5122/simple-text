@@ -10,9 +10,6 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-static const size_t DEFAULT_WIDTH = 1728;
-static const size_t DEFAULT_HEIGHT = 1041;
-
 class Client {
 public:
     Client() = default;
@@ -44,4 +41,8 @@ public:
     int floating_height;
     bool open;
     bool configured;
+
+private:
+    static const size_t DEFAULT_WIDTH = 1728;
+    static const size_t DEFAULT_HEIGHT = 1041;
 };

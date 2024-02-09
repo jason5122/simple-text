@@ -1,16 +1,5 @@
-#include "app/linux_window.h"
-#include "third_party/libdecor/src/libdecor.h"
-#include "third_party/libdecor/src/utils.h"
-#include <EGL/egl.h>
-#include <GL/gl.h>
+#include "ui/linux/window.h"
 #include <iostream>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <wayland-client.h>
-#include <wayland-egl.h>
 
 static void frame_configure(libdecor_frame* frame, libdecor_configuration* configuration,
                             void* user_data) {

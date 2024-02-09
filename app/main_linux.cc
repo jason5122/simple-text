@@ -10,8 +10,8 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-static const size_t default_width = 1728;
-static const size_t default_height = 1041;
+static const size_t DEFAULT_WIDTH = 1728;
+static const size_t DEFAULT_HEIGHT = 1041;
 
 struct client {
     struct wl_display* display;
@@ -213,7 +213,7 @@ static bool setup(struct window* window) {
 
     window->surface = wl_compositor_create_surface(window->client->compositor);
 
-    window->egl_window = wl_egl_window_create(window->surface, default_width, default_height);
+    window->egl_window = wl_egl_window_create(window->surface, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
     window->egl_surface = eglCreateWindowSurface(window->client->egl_display, config,
                                                  (EGLNativeWindowType)window->egl_window, NULL);
@@ -288,6 +288,95 @@ static void draw(struct window* window) {
     eglSwapBuffers(window->client->egl_display, window->egl_surface);
 }
 
+class Window {
+public:
+    Window(struct libdecor* context)
+        : floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT) {
+        display = wl_display_connect(NULL);
+        if (!display) {
+            fprintf(stderr, "No Wayland connection\n");
+            // return EXIT_FAILURE;
+        }
+
+        static const EGLint config_attribs[] = {
+            EGL_SURFACE_TYPE,
+            EGL_WINDOW_BIT,
+            EGL_RED_SIZE,
+            8,
+            EGL_GREEN_SIZE,
+            8,
+            EGL_BLUE_SIZE,
+            8,
+            EGL_RENDERABLE_TYPE,
+            EGL_OPENGL_BIT,
+            EGL_NONE,
+        };
+
+        EGLint major, minor;
+        EGLint n;
+        EGLConfig config;
+
+        egl_display = eglGetDisplay((EGLNativeDisplayType)display);
+
+        if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE) {
+            fprintf(stderr, "Cannot initialise EGL!\n");
+            // return false;
+        }
+
+        if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE) {
+            fprintf(stderr, "Cannot bind EGL API!\n");
+            // return false;
+        }
+
+        if (eglChooseConfig(egl_display, config_attribs, &config, 1, &n) == EGL_FALSE) {
+            fprintf(stderr, "No matching EGL configurations!\n");
+            // return false;
+        }
+
+        egl_context = eglCreateContext(egl_display, config, EGL_NO_CONTEXT, NULL);
+
+        if (egl_context == EGL_NO_CONTEXT) {
+            fprintf(stderr, "No EGL context!\n");
+            // return false;
+        }
+
+        // surface = wl_compositor_create_surface(compositor);
+
+        // egl_window = wl_egl_window_create(surface, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+
+        // egl_surface =
+        //     eglCreateWindowSurface(egl_display, config, (EGLNativeWindowType)egl_window, NULL);
+
+        // eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+
+        // this->frame = libdecor_decorate(context, this->surface, &frame_interface, this);
+        // libdecor_frame_set_app_id(this->frame, "simple-text");
+        // libdecor_frame_set_title(this->frame, "Simple Text");
+        // libdecor_frame_map(this->frame);
+    }
+
+private:
+    struct wl_display* display;
+    struct wl_compositor* compositor;
+    struct wl_seat* seat;
+    struct wl_keyboard* keyboard;
+    EGLDisplay egl_display;
+    EGLContext egl_context;
+
+    struct wl_surface* surface;
+    struct libdecor_frame* frame;
+    struct wl_egl_window* egl_window;
+    EGLSurface egl_surface;
+    int content_width;
+    int content_height;
+    int floating_width;
+    int floating_height;
+    bool open;
+    bool configured;
+};
+
+static Window* window_cpp;
+
 int SimpleTextMain() {
     struct wl_registry* wl_registry;
     struct libdecor* context = NULL;
@@ -308,8 +397,8 @@ int SimpleTextMain() {
     window->client = client;
     window->open = true;
     window->configured = false;
-    window->floating_width = default_width;
-    window->floating_height = default_height;
+    window->floating_width = DEFAULT_WIDTH;
+    window->floating_height = DEFAULT_HEIGHT;
 
     wl_registry = wl_display_get_registry(client->display);
     wl_registry_add_listener(wl_registry, &registry_listener, window);
@@ -320,6 +409,8 @@ int SimpleTextMain() {
     }
 
     context = libdecor_new(client->display, &libdecor_interface);
+    window_cpp = new Window(context);
+
     window->frame = libdecor_decorate(context, window->surface, &frame_interface, window);
     libdecor_frame_set_app_id(window->frame, "simple-text");
     libdecor_frame_set_title(window->frame, "Simple Text");

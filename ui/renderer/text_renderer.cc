@@ -47,6 +47,7 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
 
     atlas.setup();
     rasterizer.setup(main_font_name, font_size);
+    freetype_rasterizer.setup(ResourcePath("otf/SourceCodePro-Regular.ttf"));
     atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
@@ -416,7 +417,8 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str) {
-    RasterizedGlyph glyph = rasterizer.rasterizeUTF8(utf8_str.c_str());
+    RasterizedGlyph glyph = freetype_rasterizer.rasterizeUTF8(utf8_str.c_str());
+    // RasterizedGlyph glyph = rasterizer.rasterizeUTF8(utf8_str.c_str());
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({utf8_str, atlas_glyph});
 }

@@ -23,10 +23,10 @@ bool FreeTypeRasterizer::setup(const char* font_path) {
     return true;
 }
 
-void FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
+RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     FT_Error error;
 
-    FT_UInt glyph_index = FT_Get_Char_Index(face, 'a');
+    FT_UInt glyph_index = FT_Get_Char_Index(face, utf8_str[0]);
 
     // TODO: Handle errors.
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
@@ -50,28 +50,29 @@ void FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     if (pixel_mode == FT_PIXEL_MODE_GRAY) {
         std::cerr << "Pixel bitmap is gray (FT_PIXEL_MODE_GRAY).\n";
 
-        fprintf(stderr, "%ux%u = %u\n", rows, width, rows * width);
         for (size_t i = 0; i < rows; i++) {
             for (size_t j = 0; j < width; j++) {
                 unsigned char pixel_brightness = buffer[i * pitch + j];
-
-                if (pixel_brightness > 169) {
-                    fprintf(stderr, "*");
-                } else if (pixel_brightness > 84) {
-                    fprintf(stderr, ".");
-                } else {
-                    fprintf(stderr, " ");
-                }
-
                 packed_buffer.push_back(pixel_brightness);
                 packed_buffer.push_back(pixel_brightness);
                 packed_buffer.push_back(pixel_brightness);
             }
-            fprintf(stderr, "\n");
         }
-
-        fprintf(stderr, "%zu\n", packed_buffer.size());
-    } else {
+    }
+    // TODO: Support more pixel bitmap modes.
+    else {
         std::cerr << "Pixel bitmap is unsupported!\n";
     }
+
+    float advance = static_cast<float>(face->glyph->advance.x) / 64;
+
+    return RasterizedGlyph{
+        false,
+        face->glyph->bitmap_left,
+        face->glyph->bitmap_top,
+        static_cast<int32_t>(width),
+        static_cast<int32_t>(rows),
+        advance,
+        packed_buffer,
+    };
 }

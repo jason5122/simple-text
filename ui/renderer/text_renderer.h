@@ -3,6 +3,7 @@
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
+#include "font/freetype_rasterizer.h"
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/atlas_renderer.h"
@@ -46,6 +47,7 @@ private:
 
     Atlas atlas;
     Rasterizer rasterizer;
+    FreeTypeRasterizer freetype_rasterizer;
     AtlasRenderer atlas_renderer;
 
     std::map<std::string, AtlasGlyph> glyph_cache;

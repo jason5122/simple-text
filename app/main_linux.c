@@ -16,6 +16,8 @@ static const size_t default_height = 1041;
 struct client {
     struct wl_display* display;
     struct wl_compositor* compositor;
+    struct wl_seat* seat;
+    struct wl_keyboard* keyboard;
     EGLDisplay egl_display;
     EGLContext egl_context;
 };
@@ -91,12 +93,73 @@ static struct libdecor_interface libdecor_interface = {
     libdecor_error,
 };
 
+static void keyboard_handle_keymap(void* data, struct wl_keyboard* keyboard, uint32_t format,
+                                   int fd, uint32_t size) {}
+
+static void keyboard_handle_enter(void* data, struct wl_keyboard* keyboard, uint32_t serial,
+                                  struct wl_surface* surface, struct wl_array* keys) {
+    fprintf(stderr, "Keyboard gained focus\n");
+}
+
+static void keyboard_handle_leave(void* data, struct wl_keyboard* keyboard, uint32_t serial,
+                                  struct wl_surface* surface) {
+    fprintf(stderr, "Keyboard lost focus\n");
+}
+
+static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard, uint32_t serial,
+                                uint32_t time, uint32_t key, uint32_t state) {
+    fprintf(stderr, "Key is %d state is %d\n", key, state);
+}
+
+static void keyboard_handle_modifiers(void* data, struct wl_keyboard* keyboard, uint32_t serial,
+                                      uint32_t mods_depressed, uint32_t mods_latched,
+                                      uint32_t mods_locked, uint32_t group) {
+    fprintf(stderr, "Modifiers depressed %d, latched %d, locked %d, group %d\n", mods_depressed,
+            mods_latched, mods_locked, group);
+}
+
+static const struct wl_keyboard_listener keyboard_listener = {
+    keyboard_handle_keymap, keyboard_handle_enter,     keyboard_handle_leave,
+    keyboard_handle_key,    keyboard_handle_modifiers,
+};
+
+static void seat_handle_capabilities(void* data, struct wl_seat* seat,
+                                     enum wl_seat_capability caps) {
+    if (caps & WL_SEAT_CAPABILITY_POINTER) {
+        printf("Display has a pointer\n");
+    }
+    if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
+        printf("Display has a keyboard\n");
+    }
+    if (caps & WL_SEAT_CAPABILITY_TOUCH) {
+        printf("Display has a touch screen\n");
+    }
+
+    struct client* client = data;
+
+    if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
+        client->keyboard = wl_seat_get_keyboard(seat);
+        wl_keyboard_add_listener(client->keyboard, &keyboard_listener, client);
+    } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD)) {
+        wl_keyboard_destroy(client->keyboard);
+        client->keyboard = NULL;
+    }
+}
+
+static const struct wl_seat_listener seat_listener = {
+    seat_handle_capabilities,
+};
+
 static void registry_global(void* data, struct wl_registry* wl_registry, uint32_t name,
                             const char* interface, uint32_t version) {
     struct client* client = data;
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
         client->compositor = wl_registry_bind(wl_registry, name, &wl_compositor_interface, 1);
+    }
+    if (strcmp(interface, wl_seat_interface.name) == 0) {
+        client->seat = wl_registry_bind(wl_registry, name, &wl_seat_interface, 1);
+        wl_seat_add_listener(client->seat, &seat_listener, client);
     }
 }
 
@@ -205,6 +268,7 @@ static void draw(struct window* window) {
 
     hue_to_rgb(&hue, &rgb);
 
+    glViewport(0, 0, window->content_width, window->content_height);
     glClearColor(rgb[0], rgb[1], rgb[2], 1);
     glClear(GL_COLOR_BUFFER_BIT);
 

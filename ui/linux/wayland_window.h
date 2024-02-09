@@ -3,18 +3,10 @@
 #include "third_party/libdecor/src/libdecor.h"
 #include "third_party/libdecor/src/utils.h"
 #include "ui/linux/wayland_client.h"
+#include "ui/renderer/triangle_renderer.h"
 #include <EGL/egl.h>
-#include <fstream>
-#include <glad/glad.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
-
-inline const char* ReadFileCpp(const char* file_name) {
-    std::ifstream in(file_name);
-    static std::string contents((std::istreambuf_iterator<char>(in)),
-                                std::istreambuf_iterator<char>());
-    return contents.c_str();
-}
 
 class WaylandWindow {
 public:
@@ -24,6 +16,7 @@ public:
     ~WaylandWindow();
 
     WaylandClient client;
+    TriangleRenderer triangle_renderer;
 
     wl_surface* surface;
     libdecor_frame* frame;
@@ -39,8 +32,4 @@ public:
 private:
     static const size_t DEFAULT_WIDTH = 1728;
     static const size_t DEFAULT_HEIGHT = 1041;
-
-    GLuint shader_program;
-
-    void linkShaders();
 };

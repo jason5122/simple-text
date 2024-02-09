@@ -1,7 +1,6 @@
 #include "wayland_window.h"
 #include <iostream>
 #include <stdio.h>
-#include <time.h>
 
 WaylandWindow::WaylandWindow(WaylandClient client)
     : client(client), floating_width(DEFAULT_WIDTH), floating_height(DEFAULT_HEIGHT), open(true),
@@ -10,7 +9,8 @@ WaylandWindow::WaylandWindow(WaylandClient client)
 bool WaylandWindow::setup() {
     static const EGLint config_attribs[] = {
         EGL_SURFACE_TYPE,    EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE};
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT, EGL_NONE,
+    };
 
     EGLint major, minor;
     EGLint n;
@@ -55,49 +55,14 @@ bool WaylandWindow::setup() {
     }
 
     std::cerr << glGetString(GL_VERSION) << '\n';
-
-    this->linkShaders();
+    triangle_renderer.setup();
 
     return true;
 }
 
-static float hue_to_channel(const float* const hue, const int n) {
-    // Convert hue to rgb channels with saturation and value equal to 1.
-    // https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB_alternative
-    const float k = fmod(n + ((*hue) * 3 / M_PI), 6);
-    return 1 - MAX(0, MIN(MIN(k, 4 - k), 1));
-}
-
-static void hue_to_rgb(const float* const hue, float (*rgb)[3]) {
-    (*rgb)[0] = hue_to_channel(hue, 5);
-    (*rgb)[1] = hue_to_channel(hue, 3);
-    (*rgb)[2] = hue_to_channel(hue, 1);
-}
-
 void WaylandWindow::draw() {
-    timespec tv;
-    double time;
-
-    // Change of color hue (HSV space) in rad/sec.
-    static const float hue_change = (2 * M_PI) / 10;
-    float hue;
-    float rgb[3] = {0, 0, 0};
-
-    clock_gettime(CLOCK_REALTIME, &tv);
-    time = tv.tv_sec + tv.tv_nsec * 1e-9;
-
-    hue = fmod(time * hue_change, 2 * M_PI);
-
-    hue_to_rgb(&hue, &rgb);
-
-    // glViewport(0, 0, content_width, content_height);
-    glClearColor(rgb[0], rgb[1], rgb[2], 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    // float vertices[] = {-0.5, -0.5, 0.0, 0.5, 0.5, -0.5};
-    // glVertexPointer(2, GL_FLOAT, 0, vertices);
-    // glEnableClientState(GL_VERTEX_ARRAY);
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
+    glViewport(0, 0, content_width, content_height);
+    triangle_renderer.draw();
 
     eglSwapBuffers(client.egl_display, egl_surface);
 }
@@ -121,24 +86,4 @@ WaylandWindow::~WaylandWindow() {
     if (client.egl_display) {
         eglTerminate(client.egl_display);
     }
-}
-
-void WaylandWindow::linkShaders() {
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vert_source = ReadFileCpp("shaders/triangle_vert.glsl");
-    const GLchar* frag_source = ReadFileCpp("shaders/triangle_frag.glsl");
-
-    glShaderSource(vertex_shader, 1, &vert_source, nullptr);
-    glShaderSource(fragment_shader, 1, &frag_source, nullptr);
-    glCompileShader(vertex_shader);
-    glCompileShader(fragment_shader);
-
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
 }

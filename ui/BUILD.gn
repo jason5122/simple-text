@@ -29,6 +29,7 @@ if (is_linux) {
     sources = [
       "linux/wayland_client.cc",
       "linux/wayland_window.cc",
+      "renderer/triangle_renderer.cc",
     ]
 
     libs = [

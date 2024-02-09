@@ -1,5 +1,6 @@
 #import "EditorView.h"
 #import "base/buffer.h"
+#import "font/freetype_rasterizer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
@@ -24,6 +25,7 @@
     TextRenderer text_renderer;
     Buffer buffer;
     Rasterizer rasterizer;
+    FreeTypeRasterizer freetype_rasterizer;
 
 @private
     RectRenderer rect_renderer;
@@ -238,6 +240,7 @@ const char* hex(char c) {
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
         rasterizer.setup("Source Code Pro", fontSize);
+        freetype_rasterizer.setup();
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize,
                             rasterizer.line_height);
         rect_renderer.setup(scaled_width, scaled_height);

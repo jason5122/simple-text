@@ -30,18 +30,18 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     query = ts_query_new(language, query_code, strlen(query_code), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        std::printf("Error creating new TSQuery. error_offset: %d, error type: %d\n", error_offset,
-                    error_type);
+        fprintf(stderr, "Error creating new TSQuery. error_offset: %d, error type: %d\n",
+                error_offset, error_type);
     }
 
-    std::vector<std::string> capture_names;
-    uint32_t capture_count = ts_query_capture_count(query);
-    for (int i = 0; i < capture_count; i++) {
-        uint32_t length;
-        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
-        capture_names.push_back(capture_name);
-        std::printf("capture name %d: %s\n", i, capture_name);
-    }
+    // std::vector<std::string> capture_names;
+    // uint32_t capture_count = ts_query_capture_count(query);
+    // for (int i = 0; i < capture_count; i++) {
+    //     uint32_t length;
+    //     const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
+    //     capture_names.push_back(capture_name);
+    //     fprintf(stderr, "capture name %d: %s\n", i, capture_name);
+    // }
 }
 
 void SyntaxHighlighter::parse(TSInput& input) {

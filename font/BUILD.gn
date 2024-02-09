@@ -3,4 +3,11 @@ source_set("font") {
     "freetype_rasterizer.cc",
     "rasterizer.mm",
   ]
+
+  deps = [ "//third_party/freetype" ]
+}
+
+copy("copy_example_fonts") {
+  sources = [ "otf/SourceCodePro-Regular.ttf" ]
+  outputs = [ "$root_out_dir/otf/{{source_file_part}}" ]
 }

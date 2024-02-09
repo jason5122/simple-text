@@ -1,7 +1,4 @@
 source_set("freetype") {
-  # TODO: Allow dependents to automatically include ft2build.h
-  # public = [ "include/ft2build.h" ]
-
   defines = [
     "FT2_BUILD_LIBRARY",
     "FT_CONFIG_OPTION_ERROR_STRINGS",
@@ -21,6 +18,10 @@ source_set("freetype") {
     "src/truetype/truetype.c",
   ]
 
+  public_configs = [ ":freetype_includes" ]
+}
+
+config("freetype_includes") {
   include_dirs = [
     "custom-include",  # This overrides include!
     "include",

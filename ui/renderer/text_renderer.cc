@@ -42,7 +42,7 @@ extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
-    fs::path font_path = ResourcePath() / "otf/SourceCodePro-Regular.ttf";
+    fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
     atlas.setup();
     rasterizer.setup(main_font_name, font_size);

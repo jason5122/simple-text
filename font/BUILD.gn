@@ -10,11 +10,11 @@ source_set("font") {
 }
 
 copy("copy_example_fonts") {
-  sources = [ "otf/SourceCodePro-Regular.ttf" ]
-  outputs = [ "$root_out_dir/otf/{{source_file_part}}" ]
+  sources = [ "fonts/SourceCodePro-Regular.ttf" ]
+  outputs = [ "$root_out_dir/fonts/{{source_file_part}}" ]
 }
 
 bundle_data("example_fonts") {
-  sources = [ "otf/SourceCodePro-Regular.ttf" ]
-  outputs = [ "{{bundle_resources_dir}}/otf/{{source_file_part}}" ]
+  sources = [ "fonts/SourceCodePro-Regular.ttf" ]
+  outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
 }

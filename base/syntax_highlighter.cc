@@ -1,4 +1,5 @@
 #include "syntax_highlighter.h"
+#include "util/file_util.h"
 #include "util/file_util_mac.h"
 #include <cstdio>
 #include <vector>
@@ -26,8 +27,8 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    const char* query_code = ReadFile(ResourcePath(highlights_query_filename));
-    query = ts_query_new(language, query_code, strlen(query_code), &error_offset, &error_type);
+    std::string query_code = ReadFileCpp(ResourcePath(highlights_query_filename));
+    query = ts_query_new(language, &query_code[0], query_code.size(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
         fprintf(stderr, "Error creating new TSQuery. error_offset: %d, error type: %d\n",

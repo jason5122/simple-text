@@ -1,4 +1,5 @@
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
+#include "util/file_util.h"
 #include "util/file_util_mac.h"
 #include "gtest/gtest.h"
 #include <iostream>
@@ -25,8 +26,8 @@ TEST(TreeSitterParserTest, Json) {
     TSParser* parser = ts_parser_new();
     ts_parser_set_language(parser, tree_sitter_json());
 
-    const char* source_code = ReadFile("example.json");
-    buffer buf = {source_code, strlen(source_code)};
+    std::string source_code = ReadFileCpp("example.json");
+    buffer buf = {&source_code[0], source_code.size()};
     TSInput input = {&buf, read, TSInputEncodingUTF8};
 
     TSTree* tree = ts_parser_parse(parser, NULL, input);

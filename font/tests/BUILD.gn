@@ -1,7 +1,11 @@
 source_set("tests") {
   testonly = true
 
-  sources = [ "rasterizer_test.cc" ]
+  sources = []
+
+  if (is_mac) {
+    sources += [ "core_text_rasterizer_test.cc" ]
+  }
 
   deps = [
     "//font",

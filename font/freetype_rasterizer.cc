@@ -71,6 +71,8 @@ hb_codepoint_t FreeTypeRasterizer::getGlyphIndex(const char* utf8_str) {
 }
 
 RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     FT_Error error;
 
     hb_codepoint_t glyph_index = this->getGlyphIndex(utf8_str);
@@ -136,6 +138,10 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
 
     fprintf(stderr, "%d %d %d %d\n", face->glyph->bitmap_left, top, static_cast<int32_t>(width),
             static_cast<int32_t>(rows));
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    fprintf(stderr, "FreeType rasterize: %lld µs\n", duration);
 
     return RasterizedGlyph{
         colored,

@@ -2,12 +2,12 @@
 
 #include "font/types/rasterized_glyph.h"
 
-class Rasterizer {
+class CoreTextRasterizer {
 public:
     float line_height;
     float descent;
 
-    Rasterizer();
+    CoreTextRasterizer();
     void setup(std::string main_font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     bool isFontMonospace();

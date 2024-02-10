@@ -1,18 +1,18 @@
+#import "core_text_rasterizer.h"
 #import "font/util/CTFontUtil.h"
-#import "rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <iostream>
 
-class Rasterizer::impl {
+class CoreTextRasterizer::impl {
 public:
     CTFontRef mainFont;
 
     RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef, float descent);
 };
 
-Rasterizer::Rasterizer() : pimpl{new impl{}} {}
+CoreTextRasterizer::CoreTextRasterizer() : pimpl{new impl{}} {}
 
-void Rasterizer::setup(std::string main_font_name, int font_size) {
+void CoreTextRasterizer::setup(std::string main_font_name, int font_size) {
     CFStringRef mainFontName =
         CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
 
@@ -27,21 +27,21 @@ void Rasterizer::setup(std::string main_font_name, int font_size) {
     this->descent = -descent;
 }
 
-RasterizedGlyph Rasterizer::rasterizeUTF8(const char* utf8_str) {
+RasterizedGlyph CoreTextRasterizer::rasterizeUTF8(const char* utf8_str) {
     CTRunResult runResult = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
     return pimpl->rasterizeGlyph(runResult.glyph, runResult.runFont, descent);
 }
 
-bool Rasterizer::isFontMonospace() {
+bool CoreTextRasterizer::isFontMonospace() {
     return CTFontIsMonospace(pimpl->mainFont);
 }
 
-uint16_t Rasterizer::getGlyphIndex(const char* utf8_str) {
+uint16_t CoreTextRasterizer::getGlyphIndex(const char* utf8_str) {
     return CTFontGetGlyphIndex(pimpl->mainFont, utf8_str).glyph;
 }
 
-RasterizedGlyph Rasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,
-                                                 float descent) {
+RasterizedGlyph CoreTextRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,
+                                                         float descent) {
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
 

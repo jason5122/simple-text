@@ -1,7 +1,7 @@
 source_set("font") {
   sources = [
+    "core_text_rasterizer.mm",
     "freetype_rasterizer.cc",
-    "rasterizer.mm",
   ]
 
   deps = [ ":example_fonts" ]

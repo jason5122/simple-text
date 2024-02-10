@@ -2,8 +2,8 @@
 
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
+#include "font/core_text_rasterizer.h"
 #include "font/freetype_rasterizer.h"
-#include "font/rasterizer.h"
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/atlas_renderer.h"
@@ -46,8 +46,8 @@ private:
     GLuint vao, vbo_instance, ebo;
 
     Atlas atlas;
-    Rasterizer rasterizer;
-    FreeTypeRasterizer freetype_rasterizer;
+    CoreTextRasterizer ct_rasterizer;
+    FreeTypeRasterizer ft_rasterizer;
     AtlasRenderer atlas_renderer;
 
     std::map<std::string, AtlasGlyph> glyph_cache;

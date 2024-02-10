@@ -139,10 +139,10 @@ const char* hex(char c) {
     size_t bytes = strlen(str);
 
     if (bytes > 0) {
-        for (size_t i = 0; str[i] != '\0'; i++) {
-            std::cerr << hex(str[i]) << " ";
-        }
-        std::cerr << '\n';
+        // for (size_t i = 0; str[i] != '\0'; i++) {
+        //     std::cerr << hex(str[i]) << " ";
+        // }
+        // std::cerr << '\n';
 
         if (str[0] == 0x0D) {
             std::cerr << "new line inserted\n";
@@ -246,7 +246,7 @@ const char* hex(char c) {
         uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         uint64_t microseconds = (end - start) / 1e3;
         float fps = 1000000.0 / microseconds;
-        fprintf(stderr, "Tree-sitter only parse: %llu µs (%f fps)\n", microseconds, fps);
+        // fprintf(stderr, "Tree-sitter only parse: %llu µs (%f fps)\n", microseconds, fps);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -294,7 +294,7 @@ const char* hex(char c) {
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
-    fprintf(stderr, "%llu µs (%f fps)\n", microseconds, fps);
+    // fprintf(stderr, "%llu µs (%f fps)\n", microseconds, fps);
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
@@ -306,7 +306,7 @@ const char* hex(char c) {
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
-    fprintf(stderr, "Tree-sitter edit and parse: %llu µs (%f fps)\n", microseconds, fps);
+    // fprintf(stderr, "Tree-sitter edit and parse: %llu µs (%f fps)\n", microseconds, fps);
 
     float advance = text_renderer.getGlyphAdvance(std::string(str));
     text_renderer.cursor_start_col_offset += bytes;

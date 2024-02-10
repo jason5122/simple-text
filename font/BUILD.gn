@@ -4,12 +4,12 @@ source_set("font") {
     "rasterizer.mm",
   ]
 
-  deps = [
-    ":example_fonts",
+  deps = [ ":example_fonts" ]
+
+  public_deps = [
+    "//third_party/freetype",
     "//third_party/harfbuzz",
   ]
-
-  public_deps = [ "//third_party/freetype" ]
 }
 
 copy("copy_example_fonts") {
@@ -18,6 +18,11 @@ copy("copy_example_fonts") {
 }
 
 bundle_data("example_fonts") {
-  sources = [ "fonts/SourceCodePro-Regular.ttf" ]
+  sources = [
+    "fonts/Myanmar MN.ttc",
+    "fonts/NotoColorEmoji.ttf",
+    "fonts/SourceCodePro-Regular.ttf",
+    "fonts/noto-untouchedsvg.ttf",
+  ]
   outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
 }

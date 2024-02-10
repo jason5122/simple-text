@@ -1,7 +1,8 @@
 #include "freetype_rasterizer.h"
-#include <hb.h>
 #include <iostream>
 #include <vector>
+
+#include <ft2build.h>
 
 bool FreeTypeRasterizer::setup(const char* font_path) {
     FT_Error error;
@@ -9,13 +10,13 @@ bool FreeTypeRasterizer::setup(const char* font_path) {
     FT_Library ft;
     error = FT_Init_FreeType(&ft);
     if (error != FT_Err_Ok) {
-        std::cerr << "FreeType error: " << FT_Error_String(error) << '\n';
+        std::cerr << "FT_Init_FreeType error: " << FT_Error_String(error) << '\n';
         return false;
     }
 
     error = FT_New_Face(ft, font_path, 0, &face);
     if (error != FT_Err_Ok) {
-        std::cerr << "FreeType error: " << FT_Error_String(error) << '\n';
+        std::cerr << "FT_New_Face error: " << FT_Error_String(error) << '\n';
         return false;
     }
 
@@ -35,66 +36,60 @@ bool FreeTypeRasterizer::setup(const char* font_path) {
     this->line_height = std::max(glyph_height, global_glyph_height) + 2;
     this->descent = descent;
 
-    hb_buffer_t* buf;
-    buf = hb_buffer_create();
-    hb_buffer_add_utf8(buf, "Hello world!", -1, 0, -1);
-
-    // If you know the direction, script, and language
-    hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
-    hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
-    hb_buffer_set_language(buf, hb_language_from_string("en", -1));
-
-    // If you don't know the direction, script, and language
-    // hb_buffer_guess_segment_properties(buffer);
-
-    hb_blob_t* blob =
-        hb_blob_create_from_file(font_path); /* or hb_blob_create_from_file_or_fail() */
+    hb_blob_t* blob = hb_blob_create_from_file(font_path);
     hb_face_t* face = hb_face_create(blob, 0);
-    hb_font_t* font = hb_font_create(face);
+    harfbuzz_font = hb_font_create(face);
 
-    hb_shape(font, buf, NULL, 0);
-
-    unsigned int glyph_count;
-    hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
-    hb_glyph_position_t* glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
-
-    hb_position_t cursor_x = 0;
-    hb_position_t cursor_y = 0;
-    for (unsigned int i = 0; i < glyph_count; i++) {
-        hb_codepoint_t glyphid = glyph_info[i].codepoint;
-        hb_position_t x_offset = glyph_pos[i].x_offset;
-        hb_position_t y_offset = glyph_pos[i].y_offset;
-        hb_position_t x_advance = glyph_pos[i].x_advance;
-        hb_position_t y_advance = glyph_pos[i].y_advance;
-        /* draw_glyph(glyphid, cursor_x + x_offset, cursor_y + y_offset); */
-        cursor_x += x_advance;
-        cursor_y += y_advance;
-
-        std::cerr << glyphid << '\n';
-    }
-
-    hb_buffer_destroy(buf);
-    hb_font_destroy(font);
     hb_face_destroy(face);
     hb_blob_destroy(blob);
 
     return true;
 }
 
+hb_codepoint_t FreeTypeRasterizer::getGlyphIndex(const char* utf8_str) {
+    hb_buffer_t* buf;
+    buf = hb_buffer_create();
+    hb_buffer_add_utf8(buf, utf8_str, -1, 0, -1);
+
+    hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
+    hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
+    hb_buffer_set_language(buf, hb_language_from_string("en", -1));
+
+    hb_shape(harfbuzz_font, buf, NULL, 0);
+
+    unsigned int glyph_count;
+    hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
+
+    hb_codepoint_t glyph_index = 0;
+    for (unsigned int i = 0; i < glyph_count; i++) {
+        glyph_index = glyph_info[i].codepoint;
+        break;
+    }
+
+    hb_buffer_destroy(buf);
+    return glyph_index;
+}
+
 RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     FT_Error error;
 
-    FT_UInt glyph_index = FT_Get_Char_Index(face, utf8_str[0]);
+    hb_codepoint_t glyph_index = this->getGlyphIndex(utf8_str);
+
+    if (glyph_index == 0) {
+        // std::cerr << "glyph_index is 0 for " << utf8_str << '\n';
+    } else {
+        std::cerr << "glyph_index is NOT 0 for " << utf8_str << '\n';
+    }
 
     // TODO: Handle errors.
-    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT | FT_LOAD_COLOR);
     if (error != FT_Err_Ok) {
-        std::cerr << "FreeType error: " << FT_Error_String(error) << '\n';
+        std::cerr << "FT_Load_Glyph error: " << FT_Error_String(error) << '\n';
     }
 
     error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
     if (error != FT_Err_Ok) {
-        std::cerr << "FreeType error: " << FT_Error_String(error) << '\n';
+        std::cerr << "FT_Render_Glyph error: " << FT_Error_String(error) << '\n';
     }
 
     FT_Bitmap bitmap = face->glyph->bitmap;
@@ -103,6 +98,8 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     unsigned int width = bitmap.width;
     int pitch = bitmap.pitch;
     FT_Pixel_Mode pixel_mode = static_cast<FT_Pixel_Mode>(bitmap.pixel_mode);
+
+    bool colored = false;
 
     std::vector<uint8_t> packed_buffer;
     if (pixel_mode == FT_PIXEL_MODE_GRAY) {
@@ -114,10 +111,21 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
                 packed_buffer.push_back(pixel_brightness);
             }
         }
+    } else if (pixel_mode == FT_PIXEL_MODE_BGRA) {
+        size_t pixels = rows * width * 4;
+        packed_buffer.reserve(pixels);
+        for (size_t i = 0; i < pixels; i += 4) {
+            packed_buffer.push_back(buffer[i + 2]);
+            packed_buffer.push_back(buffer[i + 1]);
+            packed_buffer.push_back(buffer[i]);
+            packed_buffer.push_back(buffer[i + 3]);
+        }
+
+        colored = true;
     }
     // TODO: Support more pixel bitmap modes.
     else {
-        std::cerr << "Pixel bitmap is unsupported!\n";
+        std::cerr << "Pixel bitmap is unsupported! " << pixel_mode << '\n';
     }
 
     float advance = static_cast<float>(face->glyph->advance.x) / 64;
@@ -126,8 +134,11 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     // TODO: Apply this transformation in glyph atlas, not in rasterizer.
     top -= descent;
 
+    fprintf(stderr, "%d %d %d %d\n", face->glyph->bitmap_left, top, static_cast<int32_t>(width),
+            static_cast<int32_t>(rows));
+
     return RasterizedGlyph{
-        false,
+        colored,
         face->glyph->bitmap_left,
         top,
         static_cast<int32_t>(width),
@@ -135,4 +146,8 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
         advance,
         packed_buffer,
     };
+}
+
+FreeTypeRasterizer::~FreeTypeRasterizer() {
+    hb_font_destroy(harfbuzz_font);
 }

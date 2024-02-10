@@ -42,7 +42,11 @@ extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
-    fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
+    fs::path font_path = "/System/Library/Fonts/Apple Color Emoji.ttc";
+    // fs::path font_path = ResourcePath() / "fonts/noto-untouchedsvg.ttf";
+    // fs::path font_path = ResourcePath() / "fonts/Myanmar MN.ttc";
+    // fs::path font_path = ResourcePath() / "fonts/NotoColorEmoji.ttf";
+    // fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
     atlas.setup();
     rasterizer.setup(main_font_name, font_size);
@@ -50,7 +54,8 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
-    this->line_height = freetype_rasterizer.line_height;
+    this->line_height = rasterizer.line_height;
+    // this->line_height = freetype_rasterizer.line_height;
 
     std::cerr << "rasterizer = " << rasterizer.line_height << '\n';
     std::cerr << "freetype_rasterizer = " << freetype_rasterizer.line_height << '\n';

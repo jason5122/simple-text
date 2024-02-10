@@ -2,6 +2,7 @@ source_set("freetype") {
   defines = [
     "FT2_BUILD_LIBRARY",
     "FT_CONFIG_OPTION_ERROR_STRINGS",
+    "FT_CONFIG_OPTION_USE_PNG",
   ]
 
   sources = [
@@ -16,9 +17,14 @@ source_set("freetype") {
     "src/sfnt/sfnt.c",
     "src/smooth/smooth.c",
     "src/truetype/truetype.c",
+
+    # Potentially unused.
+    # "src/svg/ftsvg.c",
   ]
 
   public_configs = [ ":freetype_includes" ]
+
+  deps = [ "//third_party/libpng" ]
 }
 
 config("freetype_includes") {

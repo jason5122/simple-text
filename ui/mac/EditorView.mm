@@ -3,6 +3,7 @@
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
+#import <chrono>
 #import <fstream>
 #import <iostream>
 #import <limits>
@@ -241,12 +242,11 @@ const char* hex(char c) {
         std::ifstream infile(ResourcePath() / "sample_files/sort.scm");
         buffer.setContents(infile);
 
-        uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
+        auto t1 = std::chrono::high_resolution_clock::now();
         text_renderer.parseBuffer(buffer);
-        uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-        uint64_t microseconds = (end - start) / 1e3;
-        float fps = 1000000.0 / microseconds;
-        // fprintf(stderr, "Tree-sitter only parse: %llu µs (%f fps)\n", microseconds, fps);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        fprintf(stderr, "Tree-sitter only parse: %lld µs\n", duration);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -266,7 +266,7 @@ const char* hex(char c) {
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(glContext);
 
-    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
+    auto t1 = std::chrono::high_resolution_clock::now();
     // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
     float scaled_scroll_x = scroll_x * self.contentsScale;
@@ -291,28 +291,28 @@ const char* hex(char c) {
                forLayerTime:timeInterval
                 displayTime:timeStamp];
 
-    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
-    uint64_t microseconds = (end - start) / 1e3;
-    float fps = 1000000.0 / microseconds;
-    // fprintf(stderr, "%llu µs (%f fps)\n", microseconds, fps);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    fprintf(stderr, "draw: %lld µs\n", duration);
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
 
-    uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     text_renderer.editBuffer(buffer, bytes);
     text_renderer.parseBuffer(buffer);
-    uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    uint64_t microseconds = (end - start) / 1e3;
-    float fps = 1000000.0 / microseconds;
-    // fprintf(stderr, "Tree-sitter edit and parse: %llu µs (%f fps)\n", microseconds, fps);
 
     float advance = text_renderer.getGlyphAdvance(std::string(str));
     text_renderer.cursor_start_col_offset += bytes;
     text_renderer.cursor_start_x += advance;
     text_renderer.cursor_end_col_offset += bytes;
     text_renderer.cursor_end_x += advance;
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    fprintf(stderr, "insert UTF-8 string: %lld µs\n", duration);
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

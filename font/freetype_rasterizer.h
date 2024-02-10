@@ -16,8 +16,7 @@ public:
     ~FreeTypeRasterizer();
 
 private:
-    FT_Face ft_main_face;
-    std::vector<hb_font_t*> font_fallback_list;
+    std::vector<std::pair<FT_Face, hb_font_t*>> font_fallback_list;
 
-    hb_codepoint_t getGlyphIndex(const char* utf8_str);
+    std::pair<hb_codepoint_t, size_t> getGlyphIndex(const char* utf8_str);
 };

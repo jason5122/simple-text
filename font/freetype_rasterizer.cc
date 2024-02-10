@@ -5,6 +5,11 @@
 #include <ft2build.h>
 
 bool FreeTypeRasterizer::setup(const char* main_font_path, int font_size) {
+    std::vector<const char*> font_paths;
+    const char* emoji_font_path = "/System/Library/Fonts/Apple Color Emoji.ttc";
+    font_paths.push_back(main_font_path);
+    font_paths.push_back(emoji_font_path);
+
     FT_Error error;
 
     FT_Library ft;
@@ -14,14 +19,25 @@ bool FreeTypeRasterizer::setup(const char* main_font_path, int font_size) {
         return false;
     }
 
-    error = FT_New_Face(ft, main_font_path, 0, &ft_main_face);
-    if (error != FT_Err_Ok) {
-        std::cerr << "FT_New_Face error: " << FT_Error_String(error) << '\n';
-        return false;
+    for (const auto& path : font_paths) {
+        FT_Face ft_face;
+        error = FT_New_Face(ft, path, 0, &ft_face);
+        if (error != FT_Err_Ok) {
+            std::cerr << "FT_New_Face error: " << FT_Error_String(error) << '\n';
+            return false;
+        }
+        FT_Set_Pixel_Sizes(ft_face, 0, font_size);
+
+        hb_blob_t* hb_blob = hb_blob_create_from_file(path);
+        hb_face_t* hb_face = hb_face_create(hb_blob, 0);
+        hb_font_t* hb_font = hb_font_create(hb_face);
+        hb_blob_destroy(hb_blob);
+        hb_face_destroy(hb_face);
+
+        font_fallback_list.push_back({ft_face, hb_font});
     }
 
-    FT_Set_Pixel_Sizes(ft_main_face, 0, font_size);
-
+    FT_Face ft_main_face = font_fallback_list[0].first;
     float ascent = std::round(static_cast<float>(ft_main_face->ascender) / 64);
     float descent = std::round(static_cast<float>(ft_main_face->descender) / 64);
     float glyph_height = std::round(static_cast<float>(ft_main_face->height) / 64);
@@ -36,78 +52,63 @@ bool FreeTypeRasterizer::setup(const char* main_font_path, int font_size) {
     this->line_height = std::max(glyph_height, global_glyph_height) + 2;
     this->descent = descent;
 
-    const char* emoji_font_path = "/System/Library/Fonts/Apple Color Emoji.ttc";
-    std::vector<const char*> font_paths;
-    // font_paths.push_back(main_font_path);
-    font_paths.push_back(emoji_font_path);
-
-    for (const auto& path : font_paths) {
-        hb_blob_t* blob = hb_blob_create_from_file(path);
-        hb_face_t* face = hb_face_create(blob, 0);
-        hb_font_t* font = hb_font_create(face);
-
-        font_fallback_list.push_back(font);
-
-        hb_blob_destroy(blob);
-        hb_face_destroy(face);
-    }
-
     return true;
 }
 
-hb_codepoint_t FreeTypeRasterizer::getGlyphIndex(const char* utf8_str) {
-    hb_buffer_t* buf;
-    buf = hb_buffer_create();
-    hb_buffer_add_utf8(buf, utf8_str, -1, 0, -1);
+std::pair<hb_codepoint_t, size_t> FreeTypeRasterizer::getGlyphIndex(const char* utf8_str) {
+    for (size_t font_index = 0; font_index < font_fallback_list.size(); font_index++) {
+        hb_font_t* hb_font = font_fallback_list[font_index].second;
 
-    hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
-    hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
-    hb_buffer_set_language(buf, hb_language_from_string("en", -1));
+        hb_buffer_t* buf;
+        buf = hb_buffer_create();
+        hb_buffer_add_utf8(buf, utf8_str, -1, 0, -1);
 
-    hb_codepoint_t glyph_index = 0;
-    for (const auto& font : font_fallback_list) {
-        hb_shape(font, buf, NULL, 0);
+        hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
+        hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
+        hb_buffer_set_language(buf, hb_language_from_string("en", -1));
+
+        hb_shape(hb_font, buf, NULL, 0);
 
         unsigned int glyph_count;
         hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
 
-        for (unsigned int i = 0; i < glyph_count; i++) {
-            hb_codepoint_t glyph_index = glyph_info[i].codepoint;
+        // for (unsigned int i = 0; i < glyph_count; i++) {
+        //     hb_codepoint_t glyph_index = glyph_info[i].codepoint;
+        //     fprintf(stderr, "{%d, %zu} %s\n", glyph_index, font_index, utf8_str);
+        // }
+
+        if (glyph_count > 0) {
+            hb_codepoint_t glyph_index = glyph_info[0].codepoint;
             if (glyph_index > 0) {
                 hb_buffer_destroy(buf);
-                return glyph_index;
+                return {glyph_index, font_index};
             }
         }
+
+        hb_buffer_destroy(buf);
     }
-    hb_buffer_destroy(buf);
-    return 0;
+    return {0, 0};
 }
 
 RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    FT_Error error;
-
-    hb_codepoint_t glyph_index = this->getGlyphIndex(utf8_str);
-
-    if (glyph_index == 0) {
-        // std::cerr << "glyph_index is 0 for " << utf8_str << '\n';
-    } else {
-        std::cerr << "glyph_index is NOT 0 for " << utf8_str << '\n';
-    }
+    auto [glyph_index, font_index] = this->getGlyphIndex(utf8_str);
+    FT_Face ft_face = font_fallback_list[font_index].first;
 
     // TODO: Handle errors.
-    error = FT_Load_Glyph(ft_main_face, glyph_index, FT_LOAD_DEFAULT | FT_LOAD_COLOR);
+    FT_Error error;
+    error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_DEFAULT | FT_LOAD_COLOR);
     if (error != FT_Err_Ok) {
         std::cerr << "FT_Load_Glyph error: " << FT_Error_String(error) << '\n';
     }
 
-    error = FT_Render_Glyph(ft_main_face->glyph, FT_RENDER_MODE_NORMAL);
+    error = FT_Render_Glyph(ft_face->glyph, FT_RENDER_MODE_NORMAL);
     if (error != FT_Err_Ok) {
         std::cerr << "FT_Render_Glyph error: " << FT_Error_String(error) << '\n';
     }
 
-    FT_Bitmap bitmap = ft_main_face->glyph->bitmap;
+    FT_Bitmap bitmap = ft_face->glyph->bitmap;
     unsigned char* buffer = bitmap.buffer;
     unsigned int rows = bitmap.rows;
     unsigned int width = bitmap.width;
@@ -143,14 +144,14 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
         std::cerr << "Pixel bitmap is unsupported! " << pixel_mode << '\n';
     }
 
-    float advance = static_cast<float>(ft_main_face->glyph->advance.x) / 64;
-    int32_t top = ft_main_face->glyph->bitmap_top;
+    float advance = static_cast<float>(ft_face->glyph->advance.x) / 64;
+    int32_t top = ft_face->glyph->bitmap_top;
 
     // TODO: Apply this transformation in glyph atlas, not in rasterizer.
     top -= descent;
 
-    fprintf(stderr, "%d %d %d %d\n", ft_main_face->glyph->bitmap_left, top,
-            static_cast<int32_t>(width), static_cast<int32_t>(rows));
+    fprintf(stderr, "%d %d %d %d\n", ft_face->glyph->bitmap_left, top, static_cast<int32_t>(width),
+            static_cast<int32_t>(rows));
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
@@ -158,7 +159,7 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
 
     return RasterizedGlyph{
         colored,
-        ft_main_face->glyph->bitmap_left,
+        ft_face->glyph->bitmap_left,
         top,
         static_cast<int32_t>(width),
         static_cast<int32_t>(rows),
@@ -168,7 +169,7 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
 }
 
 FreeTypeRasterizer::~FreeTypeRasterizer() {
-    for (const auto& font : font_fallback_list) {
-        hb_font_destroy(font);
+    for (const auto& [ft_font, hb_font] : font_fallback_list) {
+        hb_font_destroy(hb_font);
     }
 }

@@ -1,6 +1,6 @@
 #import "atlas_renderer.h"
 #import "ui/renderer/atlas.h"
-#import "util/file_util.h"
+#import "util/file_util_mac.h"
 
 void AtlasRenderer::setup(float width, float height) {
     this->linkShaders();
@@ -72,10 +72,10 @@ void AtlasRenderer::resize(int new_width, int new_height) {
 }
 
 void AtlasRenderer::linkShaders() {
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     const GLchar* vert_source = ReadFile(ResourcePath("shaders/atlas_vert.glsl"));
     const GLchar* frag_source = ReadFile(ResourcePath("shaders/atlas_frag.glsl"));
+    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(vertex_shader, 1, &vert_source, nullptr);
     glShaderSource(fragment_shader, 1, &frag_source, nullptr);
     glCompileShader(vertex_shader);

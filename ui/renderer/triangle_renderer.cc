@@ -1,5 +1,6 @@
 #include "base/rgb.h"
 #include "triangle_renderer.h"
+#include "util/file_util.h"
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -106,12 +107,6 @@ void TriangleRenderer::resize(int new_width, int new_height) {
     glViewport(0, 0, width, height);
     glUseProgram(shader_program);
     glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
-}
-
-std::string ReadFileCpp(const char* file_name) {
-    std::ifstream in(file_name);
-    std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    return std::move(contents);
 }
 
 void TriangleRenderer::linkShaders() {

@@ -1,6 +1,7 @@
 #include "base/rgb.h"
 #include "text_renderer.h"
 #include "util/file_util.h"
+#include "util/file_util_mac.h"
 #include "util/opengl_error_util.h"
 #include <iostream>
 
@@ -9,7 +10,7 @@ extern "C" {
 }
 
 struct InstanceData {
-    uint32_t line;
+    float line;
     // Glyph properties.
     int32_t left;
     int32_t top;
@@ -116,9 +117,9 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     size_t size = 0;
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(InstanceData), (void*)size);
+    glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)size);
     glVertexAttribDivisor(0, 1);
-    size += sizeof(uint32_t);
+    size += sizeof(float);
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 4, GL_INT, GL_FALSE, sizeof(InstanceData), (void*)size);
@@ -288,7 +289,7 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
             instances.push_back(InstanceData{
-                static_cast<uint32_t>(line_index),
+                static_cast<float>(line_index),
                 // Glyph properties.
                 glyph.left,
                 glyph.top,
@@ -425,7 +426,7 @@ void TextRenderer::loadGlyph(std::string utf8_str) {
     glyph_cache.insert({utf8_str, atlas_glyph});
 }
 
-void TextRenderer::resize(int new_width, int new_height) {
+void TextRenderer::resize(float new_width, float new_height) {
     width = new_width;
     height = new_height;
 
@@ -437,12 +438,15 @@ void TextRenderer::resize(int new_width, int new_height) {
 }
 
 void TextRenderer::linkShaders() {
+    std::string vert_source = ReadFileCpp(ResourcePath("shaders/text_vert.glsl"));
+    std::string frag_source = ReadFileCpp(ResourcePath("shaders/text_frag.glsl"));
+    const char* vert_source_c = vert_source.c_str();
+    const char* frag_source_c = frag_source.c_str();
+
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const GLchar* vert_source = ReadFile(ResourcePath("shaders/text_vert.glsl"));
-    const GLchar* frag_source = ReadFile(ResourcePath("shaders/text_frag.glsl"));
-    glShaderSource(vertex_shader, 1, &vert_source, nullptr);
-    glShaderSource(fragment_shader, 1, &frag_source, nullptr);
+    glShaderSource(vertex_shader, 1, &vert_source_c, nullptr);
+    glShaderSource(fragment_shader, 1, &frag_source_c, nullptr);
     glCompileShader(vertex_shader);
     glCompileShader(fragment_shader);
 

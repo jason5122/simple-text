@@ -1,5 +1,5 @@
 #include "syntax_highlighter.h"
-#include "util/file_util.h"
+#include "util/file_util_mac.h"
 #include <cstdio>
 #include <vector>
 

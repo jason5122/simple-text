@@ -1,5 +1,5 @@
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
-#include "util/file_util.h"
+#include "util/file_util_mac.h"
 #include "gtest/gtest.h"
 #include <iostream>
 

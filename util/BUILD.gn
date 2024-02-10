@@ -1,6 +1,8 @@
 source_set("util") {
+  sources = [ "file_util.cc" ]
+
   if (is_mac) {
-    sources = [
+    sources += [
       "file_util_mac.mm",
       "log_util_mac.mm",
     ]

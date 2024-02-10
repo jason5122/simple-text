@@ -2,7 +2,7 @@
 #import "base/buffer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
-#import "util/file_util.h"
+#import "util/file_util_mac.h"
 #import "util/log_util_mac.h"
 #import <fstream>
 #import <iostream>

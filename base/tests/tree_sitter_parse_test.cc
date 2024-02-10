@@ -31,5 +31,5 @@ TEST(TreeSitterParserTest, Json) {
 
     TSTree* tree = ts_parser_parse(parser, NULL, input);
     TSNode root_node = ts_tree_root_node(tree);
-    std::cout << ts_node_string(root_node) << '\n';
+    std::cerr << ts_node_string(root_node) << '\n';
 }

@@ -3,7 +3,6 @@
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
-#import "util/log_util_mac.h"
 #import <fstream>
 #import <iostream>
 #import <limits>
@@ -141,12 +140,12 @@ const char* hex(char c) {
 
     if (bytes > 0) {
         for (size_t i = 0; str[i] != '\0'; i++) {
-            std::cout << hex(str[i]) << " ";
+            std::cerr << hex(str[i]) << " ";
         }
-        std::cout << '\n';
+        std::cerr << '\n';
 
         if (str[0] == 0x0D) {
-            std::cout << "new line inserted\n";
+            std::cerr << "new line inserted\n";
         }
 
         [openGLLayer insertUTF8String:str bytes:bytes];
@@ -197,7 +196,7 @@ const char* hex(char c) {
 
 // TODO: Implement light/dark mode detection.
 - (void)viewDidChangeEffectiveAppearance {
-    LogDefault("EditorView", "viewDidChangeEffectiveAppearance");
+    std::cerr << "viewDidChangeEffectiveAppearance\n";
 }
 
 @end
@@ -247,7 +246,7 @@ const char* hex(char c) {
         uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         uint64_t microseconds = (end - start) / 1e3;
         float fps = 1000000.0 / microseconds;
-        LogDefault("OpenGLLayer", "Tree-sitter only parse: %ld µs (%f fps)", microseconds, fps);
+        fprintf(stderr, "Tree-sitter only parse: %llu µs (%f fps)\n", microseconds, fps);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -295,7 +294,7 @@ const char* hex(char c) {
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
-    LogDefault(@"OpenGLLayer", @"%ld µs (%f fps)", microseconds, fps);
+    fprintf(stderr, "%llu µs (%f fps)\n", microseconds, fps);
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
@@ -307,7 +306,7 @@ const char* hex(char c) {
     uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
     uint64_t microseconds = (end - start) / 1e3;
     float fps = 1000000.0 / microseconds;
-    LogDefault("OpenGLLayer", "Tree-sitter edit and parse: %ld µs (%f fps)", microseconds, fps);
+    fprintf(stderr, "Tree-sitter edit and parse: %llu µs (%f fps)\n", microseconds, fps);
 
     float advance = text_renderer.getGlyphAdvance(std::string(str));
     text_renderer.cursor_start_col_offset += bytes;

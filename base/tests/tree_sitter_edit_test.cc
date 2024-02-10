@@ -47,14 +47,14 @@ int main() {
 
     tree = ts_parser_parse(parser, NULL, input);
     root_node = ts_tree_root_node(tree);
-    std::cout << ts_node_string(root_node) << '\n';
+    std::cerr << ts_node_string(root_node) << '\n';
 
     TSInputEdit edit = {53, 55, 79, {3, 16}, {4, 0}, {5, 0}};
     ts_tree_edit(tree, &edit);
 
     tree = ts_parser_parse(parser, tree, input_edited);
     root_node = ts_tree_root_node(tree);
-    std::cout << ts_node_string(root_node) << '\n';
+    std::cerr << ts_node_string(root_node) << '\n';
 
     return 0;
 }

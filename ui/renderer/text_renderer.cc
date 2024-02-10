@@ -61,39 +61,6 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // DEBUG: Draw shapes as wireframes.
-
-    // uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    // this->treeSitterExperiment();
-    // uint64_t end = clock_gettime_nsec_np(CLOCK_MONOTONIC);
-    // uint64_t microseconds = (end - start) / 1e3;
-    // float fps = 1000000.0 / microseconds;
-    // LogDefault("TextRenderer", "Tree-sitter: %ld µs (%f fps)", microseconds, fps);
-
-    // Font experiments.
-    // NSDictionary* descriptorOptions = @{(id)kCTFontFamilyNameAttribute : @"Source Code Pro"};
-    // CTFontDescriptorRef descriptor =
-    //     CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
-    // CFTypeRef keys[] = {kCTFontFamilyNameAttribute};
-    // CFSetRef mandatoryAttrs = CFSetCreate(kCFAllocatorDefault, keys, 1, &kCFTypeSetCallBacks);
-    // CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor,
-    // NULL);
-
-    // for (int i = 0; i < CFArrayGetCount(fontDescriptors); i++) {
-    //     CTFontDescriptorRef descriptor =
-    //         (CTFontDescriptorRef)CFArrayGetValueAtIndex(fontDescriptors, i);
-    //     CFStringRef familyName =
-    //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute);
-    //     CFStringRef style =
-    //         (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontStyleNameAttribute);
-
-    //     if (CFEqual(style, CFSTR("Italic"))) {
-    //         LogDefault("TextRenderer", "%@ %@", familyName, style);
-    //         CTFontRef tempFont = CTFontCreateWithFontDescriptor(descriptor, font_size, nullptr);
-    //         this->mainFont = tempFont;
-    //     }
-    // }
-    // End of font experiments.
 
     glUseProgram(shader_program);
     glUniform1f(glGetUniformLocation(shader_program, "line_height"), line_height);

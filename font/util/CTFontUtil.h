@@ -1,6 +1,5 @@
 #pragma once
 
-#import "util/log_util_mac.h"
 #import <Cocoa/Cocoa.h>
 #import <iostream>
 #import <vector>

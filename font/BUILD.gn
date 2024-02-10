@@ -4,7 +4,10 @@ source_set("font") {
     "rasterizer.mm",
   ]
 
-  deps = [ ":example_fonts" ]
+  deps = [
+    ":example_fonts",
+    "//third_party/harfbuzz",
+  ]
 
   public_deps = [ "//third_party/freetype" ]
 }

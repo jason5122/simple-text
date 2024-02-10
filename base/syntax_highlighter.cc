@@ -14,7 +14,7 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     parser = ts_parser_new();
 
     TSLanguage* language;
-    std::filesystem::path highlights_query_filename;
+    fs::path highlights_query_filename;
     if (scope == "source.scheme") {
         language = tree_sitter_scheme();
         highlights_query_filename = "highlights_scheme.scm";

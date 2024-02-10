@@ -2,7 +2,8 @@
 
 #include <filesystem>
 #include <string>
+namespace fs = std::filesystem;
 
 std::string ReadFile(std::string file_name);
 
-std::filesystem::path ResourcePath();
+fs::path ResourcePath();

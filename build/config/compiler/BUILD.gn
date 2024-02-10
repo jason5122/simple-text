@@ -48,7 +48,7 @@ config("c99") {
 
 config("optimizations") {
   cflags = [
-    "-flto=thin",
+    # "-flto=thin",
     "-O2",
   ]
   ldflags = cflags

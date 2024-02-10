@@ -18,11 +18,6 @@ copy("copy_example_fonts") {
 }
 
 bundle_data("example_fonts") {
-  sources = [
-    "fonts/Myanmar MN.ttc",
-    "fonts/NotoColorEmoji.ttf",
-    "fonts/SourceCodePro-Regular.ttf",
-    "fonts/noto-untouchedsvg.ttf",
-  ]
+  sources = [ "fonts/SourceCodePro-Regular.ttf" ]
   outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
 }

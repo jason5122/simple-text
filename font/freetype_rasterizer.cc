@@ -6,9 +6,10 @@
 
 bool FreeTypeRasterizer::setup(const char* main_font_path, int font_size) {
     std::vector<const char*> font_paths;
-    const char* emoji_font_path = "/System/Library/Fonts/Apple Color Emoji.ttc";
     font_paths.push_back(main_font_path);
-    font_paths.push_back(emoji_font_path);
+    font_paths.push_back("/System/Library/Fonts/Apple Color Emoji.ttc");
+    font_paths.push_back("/System/Library/Fonts/Monaco.ttf");
+    font_paths.push_back("/System/Library/Fonts/NotoSansMyanmar.ttc");
 
     FT_Error error;
 

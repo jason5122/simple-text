@@ -42,9 +42,6 @@ extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
-    // fs::path font_path = ResourcePath() / "fonts/noto-untouchedsvg.ttf";
-    // fs::path font_path = ResourcePath() / "fonts/Myanmar MN.ttc";
-    // fs::path font_path = ResourcePath() / "fonts/NotoColorEmoji.ttf";
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
     atlas.setup();
@@ -53,8 +50,8 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
-    this->line_height = ct_rasterizer.line_height;
-    // this->line_height = ft_rasterizer.line_height;
+    // this->line_height = ct_rasterizer.line_height;
+    this->line_height = ft_rasterizer.line_height;
 
     std::cerr << "ct_rasterizer = " << ct_rasterizer.line_height << '\n';
     std::cerr << "ft_rasterizer = " << ft_rasterizer.line_height << '\n';

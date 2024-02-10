@@ -1,6 +1,5 @@
 #include "syntax_highlighter.h"
 #include "util/file_util.h"
-#include "util/file_util_mac.h"
 #include <cstdio>
 #include <vector>
 
@@ -15,7 +14,7 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     parser = ts_parser_new();
 
     TSLanguage* language;
-    const char* highlights_query_filename;
+    std::filesystem::path highlights_query_filename;
     if (scope == "source.scheme") {
         language = tree_sitter_scheme();
         highlights_query_filename = "highlights_scheme.scm";
@@ -27,7 +26,7 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    std::string query_code = ReadFileCpp(ResourcePath(highlights_query_filename));
+    std::string query_code = ReadFile(ResourcePath() / highlights_query_filename);
     query = ts_query_new(language, &query_code[0], query_code.size(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {

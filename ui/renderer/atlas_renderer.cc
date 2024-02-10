@@ -1,7 +1,6 @@
 #import "atlas_renderer.h"
 #import "ui/renderer/atlas.h"
 #import "util/file_util.h"
-#import "util/file_util_mac.h"
 
 void AtlasRenderer::setup(float width, float height) {
     this->linkShaders();
@@ -73,8 +72,8 @@ void AtlasRenderer::resize(int new_width, int new_height) {
 }
 
 void AtlasRenderer::linkShaders() {
-    std::string vert_source = ReadFileCpp("shaders/atlas_vert.glsl");
-    std::string frag_source = ReadFileCpp("shaders/atlas_frag.glsl");
+    std::string vert_source = ReadFile("shaders/atlas_vert.glsl");
+    std::string frag_source = ReadFile("shaders/atlas_frag.glsl");
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 

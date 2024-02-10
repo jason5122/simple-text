@@ -1,7 +1,6 @@
 #include "base/rgb.h"
 #include "rect_renderer.h"
 #include "util/file_util.h"
-#include "util/file_util_mac.h"
 #include <vector>
 
 struct InstanceData {
@@ -205,8 +204,8 @@ void RectRenderer::resize(int new_width, int new_height) {
 }
 
 void RectRenderer::linkShaders() {
-    std::string vert_source = ReadFileCpp(ResourcePath("shaders/rect_vert.glsl"));
-    std::string frag_source = ReadFileCpp(ResourcePath("shaders/rect_frag.glsl"));
+    std::string vert_source = ReadFile(ResourcePath() / "shaders/rect_vert.glsl");
+    std::string frag_source = ReadFile(ResourcePath() / "shaders/rect_frag.glsl");
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 

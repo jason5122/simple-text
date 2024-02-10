@@ -110,8 +110,8 @@ void TriangleRenderer::resize(int new_width, int new_height) {
 }
 
 void TriangleRenderer::linkShaders() {
-    std::string vert_source = ReadFileCpp("shaders/triangle_vert.glsl");
-    std::string frag_source = ReadFileCpp("shaders/triangle_frag.glsl");
+    std::string vert_source = ReadFile("shaders/triangle_vert.glsl");
+    std::string frag_source = ReadFile("shaders/triangle_frag.glsl");
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 

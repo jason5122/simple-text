@@ -1,5 +1,4 @@
 #include "third_party/tree_sitter/include/tree_sitter/api.h"
-#include "util/file_util_mac.h"
 #include <iostream>
 
 extern "C" TSLanguage* tree_sitter_json();

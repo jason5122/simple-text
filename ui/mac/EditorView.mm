@@ -2,7 +2,7 @@
 #import "base/buffer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
-#import "util/file_util_mac.h"
+#import "util/file_util.h"
 #import "util/log_util_mac.h"
 #import <fstream>
 #import <iostream>
@@ -239,19 +239,7 @@ const char* hex(char c) {
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
 
-        // std::ifstream infile(ResourcePath("sample_files/10k_lines.json"));
-        // std::ifstream infile(ResourcePath("sample_files/larger_example.json"));
-        // std::ifstream infile(ResourcePath("sample_files/example.json"));
-        // std::ifstream infile(ResourcePath("sample_files/example.scm"));
-        std::ifstream infile(ResourcePath("sample_files/sort.scm"));
-        // std::ifstream infile(ResourcePath("sample_files/sort_bugged.scm"));
-        // std::ifstream infile(ResourcePath("sample_files/example.cc"));
-        // std::ifstream infile(ResourcePath("sample_files/example.glsl"));
-        // std::ifstream infile(ResourcePath("sample_files/strange.json"));
-        // std::ifstream infile(ResourcePath("sample_files/emojis.txt"));
-
-        // buffer = std::unique_ptr<Buffer>(new Buffer("Hello world!\nthis is a new line"));
-        // buffer = std::unique_ptr<Buffer>(new Buffer(infile));
+        std::ifstream infile(ResourcePath() / "sample_files/sort.scm");
         buffer.setContents(infile);
 
         uint64_t start = clock_gettime_nsec_np(CLOCK_MONOTONIC);

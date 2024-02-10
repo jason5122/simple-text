@@ -1,7 +1,6 @@
 #include "base/rgb.h"
 #include "text_renderer.h"
 #include "util/file_util.h"
-#include "util/file_util_mac.h"
 #include "util/opengl_error_util.h"
 #include <iostream>
 
@@ -43,9 +42,11 @@ extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
+    std::filesystem::path font_path = ResourcePath() / "otf/SourceCodePro-Regular.ttf";
+
     atlas.setup();
     rasterizer.setup(main_font_name, font_size);
-    freetype_rasterizer.setup(ResourcePath("otf/SourceCodePro-Regular.ttf"));
+    freetype_rasterizer.setup(font_path.c_str());
     atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
@@ -438,8 +439,8 @@ void TextRenderer::resize(float new_width, float new_height) {
 }
 
 void TextRenderer::linkShaders() {
-    std::string vert_source = ReadFileCpp(ResourcePath("shaders/text_vert.glsl"));
-    std::string frag_source = ReadFileCpp(ResourcePath("shaders/text_frag.glsl"));
+    std::string vert_source = ReadFile(ResourcePath() / "shaders/text_vert.glsl");
+    std::string frag_source = ReadFile(ResourcePath() / "shaders/text_frag.glsl");
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 

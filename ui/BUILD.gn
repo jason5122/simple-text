@@ -34,7 +34,6 @@ if (is_linux) {
       "linux/wayland_client.cc",
       "linux/wayland_window.cc",
       "renderer/atlas.cc",
-      "renderer/atlas_renderer.cc",
       "renderer/shader.cc",
       "renderer/text_renderer.cc",
     ]

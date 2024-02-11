@@ -79,7 +79,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
         .rect_size = Vec2{rect_width, rect_height},
-        .color = Rgba{BLUE2.r, BLUE2.g, BLUE2.b, 255},
+        .color = Rgba::fromRgb(BLUE2, 255),
     });
 
     line_count -= 1;  // TODO: Merge this with EditorView.

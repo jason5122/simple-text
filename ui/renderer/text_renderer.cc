@@ -246,8 +246,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
                 .bg_size = Vec2{glyph.advance, line_height},
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
-                .color = Rgba{text_color.r, text_color.g, text_color.b, glyph.colored},
-                .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, bg_a},
+                .color = Rgba::fromRgb(text_color, glyph.colored),
+                .bg_color = Rgba::fromRgb(YELLOW, bg_a),
             });
 
             total_advance += std::round(glyph.advance);
@@ -261,8 +261,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .uv = Vec4{0, 0, 1.0, 1.0},
-        .color = Rgba{BLACK.r, BLACK.g, BLACK.b, false},
-        .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, 255},
+        .color = Rgba::fromRgb(BLACK, false),
+        .bg_color = Rgba::fromRgb(YELLOW, 255),
         .is_atlas = true,
     });
 

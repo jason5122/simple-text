@@ -10,7 +10,6 @@ if (is_mac) {
     # define `code_signing_identity` in args.gn
 
     sources = [
-      "AppDelegate.mm",
       "main.cc",
       "main_mac.mm",
     ]

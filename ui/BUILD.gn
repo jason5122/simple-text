@@ -1,13 +1,17 @@
+shared_sources = [
+  "renderer/atlas.cc",
+  "renderer/rect_renderer.cc",
+  "renderer/shader.cc",
+  "renderer/text_renderer.cc",
+]
+
 if (is_mac) {
   source_set("ui_mac") {
     sources = [
       "mac/EditorView.mm",
       "mac/WindowController.mm",
-      "renderer/atlas.cc",
-      "renderer/rect_renderer.cc",
-      "renderer/shader.cc",
-      "renderer/text_renderer.cc",
     ]
+    sources += shared_sources
 
     frameworks = [
       "Cocoa.framework",
@@ -33,10 +37,8 @@ if (is_linux) {
     sources = [
       "linux/wayland_client.cc",
       "linux/wayland_window.cc",
-      "renderer/atlas.cc",
-      "renderer/shader.cc",
-      "renderer/text_renderer.cc",
     ]
+    sources += shared_sources
 
     libs = [
       "wayland-client",

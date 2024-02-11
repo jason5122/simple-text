@@ -1,12 +1,8 @@
 shaders = [
-  "atlas_frag.glsl",
-  "atlas_vert.glsl",
   "rect_frag.glsl",
   "rect_vert.glsl",
   "text_frag.glsl",
   "text_vert.glsl",
-  "triangle_frag.glsl",
-  "triangle_vert.glsl",
 ]
 
 if (is_mac) {

@@ -315,9 +315,7 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glEnable(GL_BLEND);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
-    // https://learnopengl.com/In-Practice/Debugging
-    glPrintError();
+    glCheckError();
 }
 
 bool TextRenderer::isGlyphInSelection(int row, float glyph_center_x) {

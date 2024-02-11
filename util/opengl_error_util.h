@@ -1,16 +1,32 @@
 #pragma once
 
 #include <cstdio>
+#include <iostream>
 
-static inline void glPrintError() {
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        if (error == GL_INVALID_VALUE) {
-            fprintf(stderr, "OpenGL error: GL_INVALID_VALUE\n");
-        } else if (error == GL_INVALID_OPERATION) {
-            fprintf(stderr, "OpenGL error: GL_INVALID_OPERATION\n");
-        } else {
-            fprintf(stderr, "OpenGL unknown error: %d\n", error);
+// https://learnopengl.com/In-Practice/Debugging
+static inline GLenum glCheckError_(const char* file, int line) {
+    GLenum errorCode;
+    while ((errorCode = glGetError()) != GL_NO_ERROR) {
+        std::string error;
+        switch (errorCode) {
+        case GL_INVALID_ENUM:
+            error = "INVALID_ENUM";
+            break;
+        case GL_INVALID_VALUE:
+            error = "INVALID_VALUE";
+            break;
+        case GL_INVALID_OPERATION:
+            error = "INVALID_OPERATION";
+            break;
+        case GL_OUT_OF_MEMORY:
+            error = "OUT_OF_MEMORY";
+            break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            error = "INVALID_FRAMEBUFFER_OPERATION";
+            break;
         }
+        std::cerr << error << " | " << file << " (" << line << ")" << '\n';
     }
+    return errorCode;
 }
+#define glCheckError() glCheckError_(__FILE__, __LINE__)

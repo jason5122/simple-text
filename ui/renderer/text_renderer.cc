@@ -9,6 +9,16 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
+struct Rgba {
+    uint8_t r, g, b, a;
+};
+static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
+
+struct Vec2 {
+    float x, y;
+};
+static_assert(sizeof(Vec2) == sizeof(float) * 2);
+
 struct InstanceData {
     float line;
     // Glyph properties.
@@ -22,17 +32,11 @@ struct InstanceData {
     float uv_width;
     float uv_height;
     // Color, packed with colored flag.
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t colored;
+    Rgba color;
     // Total font advance.
     float total_advance;
     // Background color.
-    uint8_t bg_r;
-    uint8_t bg_g;
-    uint8_t bg_b;
-    uint8_t bg_a;
+    Rgba bg_color;
     // Glyph advance.
     float advance;
 };
@@ -259,31 +263,19 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
             instances.push_back(InstanceData{
-                static_cast<float>(line_index),
-                // Glyph properties.
-                glyph.left,
-                glyph.top,
-                glyph.width,
-                glyph.height,
-                // UV mapping.
-                glyph.uv_left,
-                glyph.uv_bot,
-                glyph.uv_width,
-                glyph.uv_height,
-                // Color, packed with colored flag.
-                text_color.r,
-                text_color.g,
-                text_color.b,
-                glyph.colored,
-                // Total font advance.
-                total_advance,
-                // Background color.
-                YELLOW.r,
-                YELLOW.g,
-                YELLOW.b,
-                bg_a,
-                // Glyph advance.
-                glyph.advance,
+                .line = static_cast<float>(line_index),
+                .left = glyph.left,
+                .top = glyph.top,
+                .width = glyph.width,
+                .height = glyph.height,
+                .uv_left = glyph.uv_left,
+                .uv_bot = glyph.uv_bot,
+                .uv_width = glyph.uv_width,
+                .uv_height = glyph.uv_height,
+                .color = Rgba{text_color.r, text_color.g, text_color.b, glyph.colored},
+                .total_advance = total_advance,
+                .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, bg_a},
+                .advance = glyph.advance,
             });
 
             total_advance += std::round(glyph.advance);
@@ -304,15 +296,9 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         .uv_bot = 0,
         .uv_width = 1.0,
         .uv_height = 1.0,
-        .r = BLACK.r,
-        .g = BLACK.g,
-        .b = BLACK.b,
-        .colored = false,
+        .color = Rgba{BLACK.r, BLACK.g, BLACK.b, false},
         .total_advance = width - Atlas::ATLAS_SIZE - 400,
-        .bg_r = YELLOW.r,
-        .bg_g = YELLOW.g,
-        .bg_b = YELLOW.b,
-        .bg_a = 255,
+        .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, 255},
         .advance = Atlas::ATLAS_SIZE,
     });
 

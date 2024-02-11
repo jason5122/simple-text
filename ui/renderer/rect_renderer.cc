@@ -7,7 +7,7 @@
 struct InstanceData {
     Vec2 coords;
     Vec2 rect_size;
-    Vec4 color;
+    Rgba color;
 };
 
 void RectRenderer::setup(float width, float height) {
@@ -47,7 +47,7 @@ void RectRenderer::setup(float width, float height) {
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, color));
     glVertexAttribDivisor(index++, 1);
 
@@ -79,7 +79,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
         .rect_size = Vec2{rect_width, rect_height},
-        .color = Vec4{BLUE2.r, BLUE2.g, BLUE2.b, 255},
+        .color = Rgba{BLUE2.r, BLUE2.g, BLUE2.b, 255},
     });
 
     line_count -= 1;  // TODO: Merge this with EditorView.
@@ -95,7 +95,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
                            (height - vertical_scroll_bar_height) *
                                vertical_scroll_bar_position_percentage},
             .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
-            .color = Vec4{182, 182, 182, 255},
+            .color = Rgba{182, 182, 182, 255},
         });
     }
 
@@ -108,7 +108,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
             .coords = Vec2{width * horizontal_scroll_bar_position_percentage,
                            (height - 60 - 40) - horizontal_scroll_bar_height},
             .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
-            .color = Vec4{182, 182, 182, 255},
+            .color = Rgba{182, 182, 182, 255},
         });
     }
 
@@ -116,21 +116,21 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = Vec2{0, 0 - 60},
         .rect_size = Vec2{width, 60},
-        .color = Vec4{228, 228, 228, 255},
+        .color = Rgba{228, 228, 228, 255},
     });
 
     // Add side bar.
     instances.push_back(InstanceData{
         .coords = {0 - 400, 0 - 60},
         .rect_size = {400, height},
-        .color = Vec4{228, 228, 228, 255},
+        .color = Rgba{228, 228, 228, 255},
     });
 
     // Add status bar.
     instances.push_back(InstanceData{
         .coords = Vec2{0 - 400, (height - 60) - 40},
         .rect_size = Vec2{width, 40},
-        .color = Vec4{207, 207, 207, 255},
+        .color = Rgba{207, 207, 207, 255},
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

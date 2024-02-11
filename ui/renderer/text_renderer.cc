@@ -17,6 +17,7 @@ struct InstanceData {
     Vec4 uv;
     Rgba color;
     Rgba bg_color;
+    uint8_t is_atlas = 0;
 };
 
 extern "C" TSLanguage* tree_sitter_cpp();
@@ -96,6 +97,11 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, bg_color));
+    glVertexAttribDivisor(index++, 1);
+
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, is_atlas));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -258,6 +264,7 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         .uv = Vec4{0, 0, 1.0, 1.0},
         .color = Rgba{BLACK.r, BLACK.g, BLACK.b, false},
         .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, 255},
+        .is_atlas = true,
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

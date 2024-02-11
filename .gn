@@ -1,5 +1,4 @@
 buildconfig = "//build/config/BUILDCONFIG.gn"
 
-# The build script are using `python3` which is the only version of
-# python installed by default on macOS Monterey and above.
+# Use `python3` for compatibility with the default Python on macOS.
 script_executable = "python3"

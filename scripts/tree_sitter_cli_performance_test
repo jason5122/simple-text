@@ -1,3 +1,5 @@
 #!/bin/bash
 
-tree-sitter highlight --scope source.json "app/resources/sample_files/larger_example.json" --time
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+tree-sitter highlight --scope source.json "$SCRIPT_DIR/larger_example.json" --time --quiet

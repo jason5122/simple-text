@@ -30,20 +30,10 @@ if (is_mac) {
 
   bundle_data("sample_files") {
     sources = [
-      "resources/sample_files/10k_lines.json",
       "resources/sample_files/emojis.txt",
-      "resources/sample_files/example.cc",
-      "resources/sample_files/example.glsl",
-      "resources/sample_files/example.json",
-      "resources/sample_files/example.scm",
-      "resources/sample_files/larger_example.json",
       "resources/sample_files/proportional_font_test.json",
       "resources/sample_files/sort.scm",
       "resources/sample_files/sort_bugged.scm",
-      "resources/sample_files/strange.json",
-
-      # "resources/sample_files/50k_lines.json",
-      # "resources/sample_files/26mb.json",
     ]
     outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
   }

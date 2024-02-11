@@ -8,13 +8,6 @@ sample_files = [
   "resources/sample_files/sort_bugged.scm",
 ]
 
-tree_sitter_queries = [
-  "resources/highlights_cpp.scm",
-  "resources/highlights_glsl.scm",
-  "resources/highlights_json.scm",
-  "resources/highlights_scheme.scm",
-]
-
 if (is_mac) {
   mac_app_bundle("app") {
     output_name = "Simple Text"
@@ -33,7 +26,6 @@ if (is_mac) {
     deps = [
       ":icon",
       ":sample_files",
-      ":tree_sitter_queries",
       "//ui:ui_mac",
     ]
   }
@@ -45,11 +37,6 @@ if (is_mac) {
   bundle_data("sample_files") {
     sources = sample_files
     outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
-  }
-
-  bundle_data("tree_sitter_queries") {
-    sources = tree_sitter_queries
-    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
   }
 }
 
@@ -64,7 +51,6 @@ if (is_linux) {
 
     deps = [
       ":sample_files",
-      ":tree_sitter_queries",
       "//ui:ui_linux",
     ]
   }
@@ -72,10 +58,5 @@ if (is_linux) {
   copy("sample_files") {
     sources = sample_files
     outputs = [ "$root_out_dir/sample_files/{{source_file_part}}" ]
-  }
-
-  copy("tree_sitter_queries") {
-    sources = tree_sitter_queries
-    outputs = [ "$root_out_dir/{{source_file_part}}" ]
   }
 }

@@ -17,10 +17,10 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     fs::path highlights_query_filename;
     if (scope == "source.scheme") {
         language = tree_sitter_scheme();
-        highlights_query_filename = "highlights_scheme.scm";
+        highlights_query_filename = "queries/highlights_scheme.scm";
     } else if (scope == "source.json") {
         language = tree_sitter_json();
-        highlights_query_filename = "highlights_json.scm";
+        highlights_query_filename = "queries/highlights_json.scm";
     }
     ts_parser_set_language(parser, language);
 

@@ -15,7 +15,6 @@ uniform vec2 resolution;
 uniform float line_height;
 uniform vec2 scroll_offset;
 uniform int rendering_pass;
-uniform float atlas_size;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].

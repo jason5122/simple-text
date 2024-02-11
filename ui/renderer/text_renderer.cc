@@ -1,5 +1,6 @@
 #include "base/rgb.h"
 #include "text_renderer.h"
+#include "ui/renderer/opengl_types.h"
 #include "util/file_util.h"
 #include "util/opengl_error_util.h"
 #include <cmath>
@@ -8,21 +9,6 @@
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
-
-struct Vec2 {
-    float x, y;
-};
-static_assert(sizeof(Vec2) == sizeof(float) * 2);
-
-struct Vec4 {
-    float x, y, z, w;
-};
-static_assert(sizeof(Vec4) == sizeof(float) * 4);
-
-struct Rgba {
-    uint8_t r, g, b, a;
-};
-static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
 
 struct InstanceData {
     Vec2 coords;
@@ -264,8 +250,6 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         byte_offset++;
         longest_line_x = std::max(total_advance, longest_line_x);
     }
-
-    glUniform1f(glGetUniformLocation(shader_program.id, "atlas_size"), Atlas::ATLAS_SIZE);
 
     instances.push_back(InstanceData{
         .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},

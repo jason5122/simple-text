@@ -1,5 +1,6 @@
 #include "base/rgb.h"
 #include "rect_renderer.h"
+#include "ui/renderer/opengl_types.h"
 #include "util/file_util.h"
 #include <vector>
 
@@ -10,11 +11,7 @@ struct InstanceData {
     // Rectangle size.
     float rect_width;
     float rect_height;
-    // Color.
-    float r;
-    float g;
-    float b;
-    float a;
+    Vec4 color;
 };
 
 void RectRenderer::setup(float width, float height) {
@@ -91,10 +88,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         rect_width,
         rect_height,
         // Color.
-        BLUE2.r,
-        BLUE2.g,
-        BLUE2.b,
-        1.0,
+        Vec4{BLUE2.r, BLUE2.g, BLUE2.b, 255},
     });
 
     line_count -= 1;  // TODO: Merge this with EditorView.
@@ -107,16 +101,14 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{
             // Coordinates.
-            (width - 400) - vertical_scroll_bar_width,
-            (height - vertical_scroll_bar_height) * vertical_scroll_bar_position_percentage,
+            .coord_x = (width - 400) - vertical_scroll_bar_width,
+            .coord_y =
+                (height - vertical_scroll_bar_height) * vertical_scroll_bar_position_percentage,
             // Rectangle size.
-            vertical_scroll_bar_width,
-            vertical_scroll_bar_height,
+            .rect_width = vertical_scroll_bar_width,
+            .rect_height = vertical_scroll_bar_height,
             // Color.
-            182,
-            182,
-            182,
-            1.0,
+            .color = Vec4{182, 182, 182, 255},
         });
     }
 
@@ -133,10 +125,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
             horizontal_scroll_bar_width,
             horizontal_scroll_bar_height,
             // Color.
-            182,
-            182,
-            182,
-            1.0,
+            Vec4{182, 182, 182, 255},
         });
     }
 
@@ -149,10 +138,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         width,
         60,
         // Color.
-        228,
-        228,
-        228,
-        1.0,
+        Vec4{228, 228, 228, 255},
     });
 
     // Add side bar.
@@ -164,10 +150,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         400,
         height,
         // Color.
-        228,
-        228,
-        228,
-        1.0,
+        Vec4{228, 228, 228, 255},
     });
 
     // Add status bar.
@@ -179,10 +162,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         width,
         40,
         // Color.
-        207,
-        207,
-        207,
-        1.0,
+        Vec4{207, 207, 207, 255},
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

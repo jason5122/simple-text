@@ -1,8 +1,14 @@
 #pragma once
 
 #include "ui/renderer/shader.h"
-#include <OpenGL/gl3.h>
 #include <cstddef>
+
+#include "build/buildflag.h"
+#if IS_MAC
+#include <OpenGL/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
 
 class RectRenderer {
 public:

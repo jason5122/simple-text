@@ -292,6 +292,37 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         byte_offset++;
         longest_line_x = std::max(total_advance, longest_line_x);
     }
+
+    glUniform1f(glGetUniformLocation(shader_program.id, "atlas_size"), Atlas::ATLAS_SIZE);
+
+    instances.push_back(InstanceData{
+        static_cast<float>(10),
+        // Glyph properties.
+        0,
+        0,
+        Atlas::ATLAS_SIZE,
+        Atlas::ATLAS_SIZE,
+        // UV mapping.
+        0,
+        0,
+        1.0,
+        1.0,
+        // Color, packed with colored flag.
+        BLACK.r,
+        BLACK.g,
+        BLACK.b,
+        false,
+        // Total font advance.
+        width - Atlas::ATLAS_SIZE - 400,
+        // Background color.
+        YELLOW.r,
+        YELLOW.g,
+        YELLOW.b,
+        255,
+        // Glyph advance.
+        Atlas::ATLAS_SIZE,
+    });
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 

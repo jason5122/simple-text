@@ -18,7 +18,8 @@ struct InstanceData {
 };
 
 void RectRenderer::setup(float width, float height) {
-    this->linkShaders();
+    shader_program.link(ResourcePath() / "shaders/rect_vert.glsl",
+                        ResourcePath() / "shaders/rect_frag.glsl");
     this->resize(width, height);
 
     glDepthMask(GL_FALSE);
@@ -66,8 +67,8 @@ void RectRenderer::setup(float width, float height) {
 void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
                         float line_height, size_t line_count, float longest_x,
                         size_t visible_lines) {
-    glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
+    glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
@@ -199,35 +200,12 @@ void RectRenderer::resize(int new_width, int new_height) {
     height = new_height;
 
     glViewport(0, 0, width, height);
-    glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
-}
-
-void RectRenderer::linkShaders() {
-    std::string vert_source = ReadFile(ResourcePath() / "shaders/rect_vert.glsl");
-    std::string frag_source = ReadFile(ResourcePath() / "shaders/rect_frag.glsl");
-    const char* vert_source_c = vert_source.c_str();
-    const char* frag_source_c = frag_source.c_str();
-
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(vertex_shader, 1, &vert_source_c, nullptr);
-    glShaderSource(fragment_shader, 1, &frag_source_c, nullptr);
-    glCompileShader(vertex_shader);
-    glCompileShader(fragment_shader);
-
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
 }
 
 RectRenderer::~RectRenderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
-    glDeleteProgram(shader_program);
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ui/renderer/shader.h"
 #include <OpenGL/gl3.h>
 #include <cstddef>
 
@@ -16,8 +17,6 @@ private:
     static const int BATCH_MAX = 65536;
     float width, height;
 
-    GLuint shader_program;
+    Shader shader_program;
     GLuint vao, vbo_instance, ebo;
-
-    void linkShaders();
 };

@@ -16,6 +16,7 @@ uniform vec2 resolution;
 uniform float line_height;
 uniform vec2 scroll_offset;
 uniform int rendering_pass;
+uniform float atlas_size;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
@@ -42,6 +43,9 @@ void main() {
         cell_position.x += advance * position.x;
         cell_position.y += line_height * position.y;
 
+        // TODO: Implement drawing the atlas texture itself for debugging.
+        // cell_position.y += atlas_size * position.y;
+
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         background_color = in_background_color / 255.0;
     } else {
@@ -50,7 +54,7 @@ void main() {
         vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
         vec2 uv_size = uv.zw;          // <uv_width, uv_height>
 
-        glyph_offset.y = line_height - glyph_offset.y;
+        glyph_offset.y = line_height - glyph_offset.y;  // Remove this step when rendering atlas.
         cell_position += glyph_offset + glyph_size * position;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);

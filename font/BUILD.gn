@@ -12,14 +12,18 @@ source_set("font") {
   ]
 }
 
+fonts = [ "fonts/SourceCodePro-Regular.ttf" ]
+
 if (is_mac) {
   bundle_data("example_fonts") {
-    sources = [ "fonts/SourceCodePro-Regular.ttf" ]
+    sources = fonts
     outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
   }
-} else {
+}
+
+if (is_linux) {
   copy("example_fonts") {
-    sources = [ "fonts/SourceCodePro-Regular.ttf" ]
+    sources = fonts
     outputs = [ "$root_out_dir/fonts/{{source_file_part}}" ]
   }
 }

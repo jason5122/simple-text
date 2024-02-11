@@ -1,5 +1,5 @@
 if (is_mac) {
-  source_set("ui") {
+  source_set("ui_mac") {
     sources = [
       "mac/EditorView.mm",
       "mac/WindowController.mm",

@@ -1,6 +1,20 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
+sample_files = [
+  "resources/sample_files/emojis.txt",
+  "resources/sample_files/proportional_font_test.json",
+  "resources/sample_files/sort.scm",
+  "resources/sample_files/sort_bugged.scm",
+]
+
+tree_sitter_queries = [
+  "resources/highlights_cpp.scm",
+  "resources/highlights_glsl.scm",
+  "resources/highlights_json.scm",
+  "resources/highlights_scheme.scm",
+]
+
 if (is_mac) {
   mac_app_bundle("app") {
     output_name = "Simple Text"
@@ -20,7 +34,7 @@ if (is_mac) {
       ":icon",
       ":sample_files",
       ":tree_sitter_queries",
-      "//ui",
+      "//ui:ui_mac",
     ]
   }
 
@@ -29,25 +43,17 @@ if (is_mac) {
   }
 
   bundle_data("sample_files") {
-    sources = [
-      "resources/sample_files/emojis.txt",
-      "resources/sample_files/proportional_font_test.json",
-      "resources/sample_files/sort.scm",
-      "resources/sample_files/sort_bugged.scm",
-    ]
+    sources = sample_files
     outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
   }
 
   bundle_data("tree_sitter_queries") {
-    sources = [
-      "resources/highlights_cpp.scm",
-      "resources/highlights_glsl.scm",
-      "resources/highlights_json.scm",
-      "resources/highlights_scheme.scm",
-    ]
+    sources = tree_sitter_queries
     outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
   }
-} else if (is_linux) {
+}
+
+if (is_linux) {
   executable("app") {
     output_name = "simple_text"
 
@@ -64,22 +70,12 @@ if (is_mac) {
   }
 
   copy("sample_files") {
-    sources = [
-      "resources/sample_files/emojis.txt",
-      "resources/sample_files/proportional_font_test.json",
-      "resources/sample_files/sort.scm",
-      "resources/sample_files/sort_bugged.scm",
-    ]
+    sources = sample_files
     outputs = [ "$root_out_dir/sample_files/{{source_file_part}}" ]
   }
 
   copy("tree_sitter_queries") {
-    sources = [
-      "resources/highlights_cpp.scm",
-      "resources/highlights_glsl.scm",
-      "resources/highlights_json.scm",
-      "resources/highlights_scheme.scm",
-    ]
+    sources = tree_sitter_queries
     outputs = [ "$root_out_dir/{{source_file_part}}" ]
   }
 }

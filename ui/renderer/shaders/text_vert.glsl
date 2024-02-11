@@ -1,7 +1,7 @@
 #version 330 core
 
 layout(location = 0) in vec2 coords;
-layout(location = 1) in float advance;
+layout(location = 1) in vec2 bg_size;
 layout(location = 2) in vec4 glyph;
 layout(location = 3) in vec4 uv;
 layout(location = 4) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
@@ -39,15 +39,13 @@ void main() {
     cell_position.y += 60;
 
     if (rendering_pass == 0) {
-        cell_position.x += advance * position.x;
-        cell_position.y += line_height * position.y;
-
-        // TODO: Implement drawing the atlas texture itself for debugging.
-        // cell_position.y += atlas_size * position.y;
+        cell_position += bg_size * position;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         background_color = in_background_color / 255.0;
-    } else if (rendering_pass == 1) {
+    }
+
+    if (rendering_pass == 1) {
         vec2 glyph_offset = glyph.xy;  // <left, top>
         vec2 glyph_size = glyph.zw;    // <width, height>
         vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>

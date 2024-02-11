@@ -26,7 +26,7 @@ static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
 
 struct InstanceData {
     Vec2 coords;
-    float advance;
+    Vec2 bg_size;
     Vec4 glyph;
     Vec4 uv;
     Rgba color;
@@ -88,8 +88,8 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, advance));
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, bg_size));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
@@ -251,7 +251,7 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
             instances.push_back(InstanceData{
                 .coords = Vec2{total_advance, line_index * line_height},
-                .advance = glyph.advance,
+                .bg_size = Vec2{glyph.advance, line_height},
                 .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
                               static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
                 .uv = Vec4{glyph.uv_left, glyph.uv_bot, glyph.uv_width, glyph.uv_height},
@@ -269,7 +269,7 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     instances.push_back(InstanceData{
         .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
-        .advance = Atlas::ATLAS_SIZE,
+        .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .uv = Vec4{0, 0, 1.0, 1.0},
         .color = Rgba{BLACK.r, BLACK.g, BLACK.b, false},

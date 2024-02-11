@@ -6,6 +6,7 @@
 #include "font/freetype_rasterizer.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/atlas_renderer.h"
+#include "ui/renderer/shader.h"
 #include <map>
 #include <string>
 #include <tree_sitter/api.h>
@@ -48,9 +49,9 @@ private:
 
     float width, height;
 
-    GLuint shader_program;
     GLuint vao, vbo_instance, ebo;
 
+    Shader shader_program;
     Atlas atlas;
     // CoreTextRasterizer ct_rasterizer;
     FreeTypeRasterizer ft_rasterizer;

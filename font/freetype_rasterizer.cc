@@ -96,8 +96,6 @@ std::pair<hb_codepoint_t, size_t> FreeTypeRasterizer::getGlyphIndex(const char* 
 }
 
 RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
-    auto t1 = std::chrono::high_resolution_clock::now();
-
     auto [glyph_index, font_index] = this->getGlyphIndex(utf8_str);
     FT_Face ft_face = font_fallback_list[font_index].first;
 
@@ -154,13 +152,6 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
 
     // TODO: Apply this transformation in glyph atlas, not in rasterizer.
     top -= descent;
-
-    fprintf(stderr, "%d %d %d %d\n", ft_face->glyph->bitmap_left, top, static_cast<int32_t>(width),
-            static_cast<int32_t>(rows));
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    fprintf(stderr, "FreeType rasterize: %ld µs\n", duration);
 
     return RasterizedGlyph{
         colored,

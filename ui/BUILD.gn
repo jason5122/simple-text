@@ -6,6 +6,7 @@ if (is_mac) {
       "renderer/atlas.cc",
       "renderer/atlas_renderer.cc",
       "renderer/rect_renderer.cc",
+      "renderer/shader.cc",
       "renderer/text_renderer.cc",
     ]
 
@@ -35,6 +36,7 @@ if (is_linux) {
       "linux/wayland_window.cc",
       "renderer/atlas.cc",
       "renderer/atlas_renderer.cc",
+      "renderer/shader.cc",
       "renderer/text_renderer.cc",
     ]
 

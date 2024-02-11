@@ -45,8 +45,6 @@ extern "C" TSLanguage* tree_sitter_scheme();
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
-    std::cerr << font_path << '\n';
-
     atlas.setup();
     // ct_rasterizer.setup(main_font_name, font_size);
     ft_rasterizer.setup(font_path.c_str(), font_size);
@@ -59,15 +57,16 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     // std::cerr << "ct_rasterizer = " << ct_rasterizer.line_height << '\n';
     std::cerr << "ft_rasterizer = " << ft_rasterizer.line_height << '\n';
 
-    this->linkShaders();
+    shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
+                        ResourcePath() / "shaders/text_frag.glsl");
     this->resize(width, height);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     glDepthMask(GL_FALSE);
 
-    glUseProgram(shader_program);
-    glUniform1f(glGetUniformLocation(shader_program, "line_height"), line_height);
+    glUseProgram(shader_program.id);
+    glUniform1f(glGetUniformLocation(shader_program.id, "line_height"), line_height);
 
     GLuint indices[] = {
         0, 1, 3,  // first triangle
@@ -210,8 +209,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "scroll_offset"), scroll_x, scroll_y);
+    glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -298,9 +297,9 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
-    glUniform1i(glGetUniformLocation(shader_program, "rendering_pass"), 0);
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-    glUniform1i(glGetUniformLocation(shader_program, "rendering_pass"), 1);
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // // Unbind.
@@ -316,9 +315,9 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     // glEnable(GL_BLEND);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    // // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
-    // // https://learnopengl.com/In-Practice/Debugging
-    // glPrintError();
+    // DEBUG: If this shows an error, keep moving this up until the problematic line is found.
+    // https://learnopengl.com/In-Practice/Debugging
+    glPrintError();
 }
 
 bool TextRenderer::isGlyphInSelection(int row, float glyph_center_x) {
@@ -403,37 +402,14 @@ void TextRenderer::resize(float new_width, float new_height) {
     height = new_height;
 
     glViewport(0, 0, width, height);
-    glUseProgram(shader_program);
-    glUniform2f(glGetUniformLocation(shader_program, "resolution"), width, height);
+    glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
 
     atlas_renderer.resize(width, height);
-}
-
-void TextRenderer::linkShaders() {
-    std::string vert_source = ReadFile(ResourcePath() / "shaders/text_vert.glsl");
-    std::string frag_source = ReadFile(ResourcePath() / "shaders/text_frag.glsl");
-    const char* vert_source_c = vert_source.c_str();
-    const char* frag_source_c = frag_source.c_str();
-
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(vertex_shader, 1, &vert_source_c, nullptr);
-    glShaderSource(fragment_shader, 1, &frag_source_c, nullptr);
-    glCompileShader(vertex_shader);
-    glCompileShader(fragment_shader);
-
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
 }
 
 TextRenderer::~TextRenderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
-    glDeleteProgram(shader_program);
 }

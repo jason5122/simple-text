@@ -9,6 +9,11 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
+struct Vec2 {
+    float x, y;
+};
+static_assert(sizeof(Vec2) == sizeof(float) * 2);
+
 struct Vec4 {
     float x, y, z, w;
 };
@@ -20,13 +25,12 @@ struct Rgba {
 static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
 
 struct InstanceData {
-    float total_advance;
-    float line;
+    Vec2 coords;
+    float advance;
     Vec4 glyph;
     Vec4 uv;
     Rgba color;
     Rgba bg_color;
-    float advance;
 };
 
 extern "C" TSLanguage* tree_sitter_cpp();
@@ -79,13 +83,13 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     GLuint index = 0;
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, total_advance));
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, coords));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, line));
+                          (void*)offsetof(InstanceData, advance));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
@@ -106,11 +110,6 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, bg_color));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, advance));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -251,14 +250,13 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
             instances.push_back(InstanceData{
-                .total_advance = total_advance,
-                .line = static_cast<float>(line_index),
+                .coords = Vec2{total_advance, line_index * line_height},
+                .advance = glyph.advance,
                 .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
                               static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
                 .uv = Vec4{glyph.uv_left, glyph.uv_bot, glyph.uv_width, glyph.uv_height},
                 .color = Rgba{text_color.r, text_color.g, text_color.b, glyph.colored},
                 .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, bg_a},
-                .advance = glyph.advance,
             });
 
             total_advance += std::round(glyph.advance);
@@ -270,13 +268,12 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glUniform1f(glGetUniformLocation(shader_program.id, "atlas_size"), Atlas::ATLAS_SIZE);
 
     instances.push_back(InstanceData{
-        .total_advance = width - Atlas::ATLAS_SIZE - 400,
-        .line = static_cast<float>(10),
+        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
+        .advance = Atlas::ATLAS_SIZE,
         .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .uv = Vec4{0, 0, 1.0, 1.0},
         .color = Rgba{BLACK.r, BLACK.g, BLACK.b, false},
         .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, 255},
-        .advance = Atlas::ATLAS_SIZE,
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

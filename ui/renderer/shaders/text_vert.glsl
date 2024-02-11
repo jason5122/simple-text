@@ -1,12 +1,11 @@
 #version 330 core
 
-layout(location = 0) in float total_advance;
-layout(location = 1) in float line_index;
+layout(location = 0) in vec2 coords;
+layout(location = 1) in float advance;
 layout(location = 2) in vec4 glyph;
 layout(location = 3) in vec4 uv;
 layout(location = 4) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
 layout(location = 5) in vec4 in_background_color;
-layout(location = 6) in float advance;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
@@ -34,7 +33,7 @@ void main() {
     position.x = (gl_VertexID == 0 || gl_VertexID == 1) ? 1. : 0.;
     position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
 
-    vec2 cell_position = vec2(total_advance, line_height * line_index);
+    vec2 cell_position = coords;
     cell_position -= scroll_offset;
     cell_position.x += 400;
     cell_position.y += 60;
@@ -42,6 +41,9 @@ void main() {
     if (rendering_pass == 0) {
         cell_position.x += advance * position.x;
         cell_position.y += line_height * position.y;
+
+        // TODO: Implement drawing the atlas texture itself for debugging.
+        // cell_position.y += atlas_size * position.y;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         background_color = in_background_color / 255.0;
@@ -57,14 +59,5 @@ void main() {
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         tex_coords = uv_offset + uv_size * position;
         text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
-    } else if (rendering_pass == 2) {
-        cell_position.x += advance * position.x;
-        cell_position.y += line_height * position.y;
-
-        // TODO: Implement drawing the atlas texture itself for debugging.
-        // cell_position.y += atlas_size * position.y;
-
-        gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
-        background_color = in_background_color / 255.0;
     }
 }

@@ -5,7 +5,6 @@
 // #include "font/core_text_rasterizer.h"
 #include "font/freetype_rasterizer.h"
 #include "ui/renderer/atlas.h"
-#include "ui/renderer/atlas_renderer.h"
 #include "ui/renderer/shader.h"
 #include <map>
 #include <string>
@@ -55,7 +54,6 @@ private:
     Atlas atlas;
     // CoreTextRasterizer ct_rasterizer;
     FreeTypeRasterizer ft_rasterizer;
-    AtlasRenderer atlas_renderer;
 
     std::map<std::string, AtlasGlyph> glyph_cache;
 

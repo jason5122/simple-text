@@ -293,7 +293,10 @@ const char* hex(char c) {
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    fprintf(stderr, "draw: %lld µs\n", duration);
+
+    if (duration >= 1000) {
+        fprintf(stderr, "draw: %lld µs\n", duration);
+    }
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {

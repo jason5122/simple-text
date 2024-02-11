@@ -48,7 +48,6 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     atlas.setup();
     // ct_rasterizer.setup(main_font_name, font_size);
     ft_rasterizer.setup(font_path.c_str(), font_size);
-    atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
 
     // this->line_height = ct_rasterizer.line_height;
@@ -296,31 +295,25 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glUniform1f(glGetUniformLocation(shader_program.id, "atlas_size"), Atlas::ATLAS_SIZE);
 
     instances.push_back(InstanceData{
-        static_cast<float>(10),
-        // Glyph properties.
-        0,
-        0,
-        Atlas::ATLAS_SIZE,
-        Atlas::ATLAS_SIZE,
-        // UV mapping.
-        0,
-        0,
-        1.0,
-        1.0,
-        // Color, packed with colored flag.
-        BLACK.r,
-        BLACK.g,
-        BLACK.b,
-        false,
-        // Total font advance.
-        width - Atlas::ATLAS_SIZE - 400,
-        // Background color.
-        YELLOW.r,
-        YELLOW.g,
-        YELLOW.b,
-        255,
-        // Glyph advance.
-        Atlas::ATLAS_SIZE,
+        .line = static_cast<float>(10),
+        .left = 0,
+        .top = 0,
+        .width = Atlas::ATLAS_SIZE,
+        .height = Atlas::ATLAS_SIZE,
+        .uv_left = 0,
+        .uv_bot = 0,
+        .uv_width = 1.0,
+        .uv_height = 1.0,
+        .r = BLACK.r,
+        .g = BLACK.g,
+        .b = BLACK.b,
+        .colored = false,
+        .total_advance = width - Atlas::ATLAS_SIZE - 400,
+        .bg_r = YELLOW.r,
+        .bg_g = YELLOW.g,
+        .bg_b = YELLOW.b,
+        .bg_a = 255,
+        .advance = Atlas::ATLAS_SIZE,
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
@@ -333,18 +326,10 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
-    // // Unbind.
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
-    // glBindVertexArray(0);
-    // glBindTexture(GL_TEXTURE_2D, 0);
-
-    // DEV: This slows down rendering by ~500 µs. Use only for debugging.
-    // atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glDisable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // atlas_renderer.draw(width - Atlas::ATLAS_SIZE, 500.0f, atlas.tex_id);
-    // glEnable(GL_BLEND);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // Unbind.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glCheckError();
 }
@@ -433,8 +418,6 @@ void TextRenderer::resize(float new_width, float new_height) {
     glViewport(0, 0, width, height);
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
-
-    atlas_renderer.resize(width, height);
 }
 
 TextRenderer::~TextRenderer() {

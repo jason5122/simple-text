@@ -4,7 +4,6 @@ if (is_mac) {
       "mac/EditorView.mm",
       "mac/WindowController.mm",
       "renderer/atlas.cc",
-      "renderer/atlas_renderer.cc",
       "renderer/rect_renderer.cc",
       "renderer/shader.cc",
       "renderer/text_renderer.cc",

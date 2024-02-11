@@ -17,7 +17,7 @@ void main() {
         alpha_mask = vec4(1.0);
         // color = vec4(background_color.rgb * background_color.a, background_color.a);
         color = vec4(0.89, 0.902, 0.91, background_color.a);
-    } else {
+    } else if (rendering_pass == 1) {
         vec4 texel = texture(mask, tex_coords);
 
         int colored = int(text_color.a);
@@ -33,5 +33,11 @@ void main() {
             alpha_mask = vec4(texel.rgb, texel.r);
             color = vec4(text_color.rgb, 1.0);
         }
+    } else if (rendering_pass == 2) {
+        if (background_color.a == 0.0) discard;
+
+        alpha_mask = vec4(1.0);
+        // color = vec4(background_color.rgb * background_color.a, background_color.a);
+        color = vec4(0.89, 0.902, 0.91, background_color.a);
     }
 }

@@ -43,12 +43,9 @@ void main() {
         cell_position.x += advance * position.x;
         cell_position.y += line_height * position.y;
 
-        // TODO: Implement drawing the atlas texture itself for debugging.
-        // cell_position.y += atlas_size * position.y;
-
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         background_color = in_background_color / 255.0;
-    } else {
+    } else if (rendering_pass == 1) {
         vec2 glyph_offset = glyph.xy;  // <left, top>
         vec2 glyph_size = glyph.zw;    // <width, height>
         vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
@@ -60,5 +57,14 @@ void main() {
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
         tex_coords = uv_offset + uv_size * position;
         text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
+    } else if (rendering_pass == 2) {
+        cell_position.x += advance * position.x;
+        cell_position.y += line_height * position.y;
+
+        // TODO: Implement drawing the atlas texture itself for debugging.
+        // cell_position.y += atlas_size * position.y;
+
+        gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
+        background_color = in_background_color / 255.0;
     }
 }

@@ -244,9 +244,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             instances.push_back(InstanceData{
                 .coords = Vec2{total_advance, line_index * line_height},
                 .bg_size = Vec2{glyph.advance, line_height},
-                .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
-                              static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
-                .uv = Vec4{glyph.uv_left, glyph.uv_bot, glyph.uv_width, glyph.uv_height},
+                .glyph = glyph.glyph,
+                .uv = glyph.uv,
                 .color = Rgba{text_color.r, text_color.g, text_color.b, glyph.colored},
                 .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, bg_a},
             });

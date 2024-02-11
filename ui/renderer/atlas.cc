@@ -39,7 +39,10 @@ AtlasGlyph Atlas::insertGlyph(RasterizedGlyph& glyph) {
     offset_x += glyph.width;
 
     return AtlasGlyph{
-        glyph.colored, glyph.left, glyph.top, glyph.width, glyph.height,
-        glyph.advance, uv_left,    uv_bot,    uv_width,    uv_height,
+        .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
+                      static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
+        .uv = Vec4{uv_left, uv_bot, uv_width, uv_height},
+        .advance = glyph.advance,
+        .colored = glyph.colored,
     };
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "font/types/rasterized_glyph.h"
+#include "ui/renderer/opengl_types.h"
 
 #include "build/buildflag.h"
 #if IS_MAC
@@ -10,16 +11,10 @@
 #endif
 
 struct AtlasGlyph {
-    bool colored;
-    int32_t left;
-    int32_t top;
-    int32_t width;
-    int32_t height;
+    Vec4 glyph;
+    Vec4 uv;
     float advance;
-    float uv_left;
-    float uv_bot;
-    float uv_width;
-    float uv_height;
+    bool colored;
 };
 
 class Atlas {

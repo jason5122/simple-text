@@ -1,8 +1,8 @@
 #pragma once
 
-#include "build/buildflag.h"
 #include "font/types/rasterized_glyph.h"
 
+#include "build/buildflag.h"
 #if IS_MAC
 #include <OpenGL/gl3.h>
 #else

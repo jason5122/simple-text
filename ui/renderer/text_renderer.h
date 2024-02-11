@@ -10,6 +10,7 @@
 #include <string>
 #include <tree_sitter/api.h>
 
+#include "build/buildflag.h"
 #if IS_MAC
 #include <OpenGL/gl3.h>
 #else

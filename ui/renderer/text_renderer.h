@@ -2,14 +2,19 @@
 
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
-#include "font/core_text_rasterizer.h"
+// #include "font/core_text_rasterizer.h"
 #include "font/freetype_rasterizer.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/atlas_renderer.h"
-#include <OpenGL/gl3.h>
 #include <map>
 #include <string>
 #include <tree_sitter/api.h>
+
+#if IS_MAC
+#include <OpenGL/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
 
 class TextRenderer {
 public:
@@ -46,7 +51,7 @@ private:
     GLuint vao, vbo_instance, ebo;
 
     Atlas atlas;
-    CoreTextRasterizer ct_rasterizer;
+    // CoreTextRasterizer ct_rasterizer;
     FreeTypeRasterizer ft_rasterizer;
     AtlasRenderer atlas_renderer;
 

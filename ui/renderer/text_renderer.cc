@@ -2,6 +2,7 @@
 #include "text_renderer.h"
 #include "util/file_util.h"
 #include "util/opengl_error_util.h"
+#include <cmath>
 #include <iostream>
 
 extern "C" {
@@ -44,8 +45,10 @@ extern "C" TSLanguage* tree_sitter_scheme();
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
+    std::cerr << font_path << '\n';
+
     atlas.setup();
-    ct_rasterizer.setup(main_font_name, font_size);
+    // ct_rasterizer.setup(main_font_name, font_size);
     ft_rasterizer.setup(font_path.c_str(), font_size);
     atlas_renderer.setup(width, height);
     highlighter.setLanguage("source.scheme");
@@ -53,7 +56,7 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     // this->line_height = ct_rasterizer.line_height;
     this->line_height = ft_rasterizer.line_height;
 
-    std::cerr << "ct_rasterizer = " << ct_rasterizer.line_height << '\n';
+    // std::cerr << "ct_rasterizer = " << ct_rasterizer.line_height << '\n';
     std::cerr << "ft_rasterizer = " << ft_rasterizer.line_height << '\n';
 
     this->linkShaders();

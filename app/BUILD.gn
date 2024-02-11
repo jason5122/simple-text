@@ -56,6 +56,30 @@ if (is_mac) {
       "main_linux.cc",
     ]
 
-    deps = [ "//ui:ui_linux" ]
+    deps = [
+      ":sample_files",
+      ":tree_sitter_queries",
+      "//ui:ui_linux",
+    ]
+  }
+
+  copy("sample_files") {
+    sources = [
+      "resources/sample_files/emojis.txt",
+      "resources/sample_files/proportional_font_test.json",
+      "resources/sample_files/sort.scm",
+      "resources/sample_files/sort_bugged.scm",
+    ]
+    outputs = [ "$root_out_dir/sample_files/{{source_file_part}}" ]
+  }
+
+  copy("tree_sitter_queries") {
+    sources = [
+      "resources/highlights_cpp.scm",
+      "resources/highlights_glsl.scm",
+      "resources/highlights_json.scm",
+      "resources/highlights_scheme.scm",
+    ]
+    outputs = [ "$root_out_dir/{{source_file_part}}" ]
   }
 }

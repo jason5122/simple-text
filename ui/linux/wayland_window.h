@@ -1,9 +1,10 @@
 #pragma once
 
+#include "base/buffer.h"
 #include "third_party/libdecor/src/libdecor.h"
 #include "third_party/libdecor/src/utils.h"
 #include "ui/linux/wayland_client.h"
-#include "ui/renderer/triangle_renderer.h"
+#include "ui/renderer/text_renderer.h"
 #include <EGL/egl.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
@@ -16,7 +17,6 @@ public:
     ~WaylandWindow();
 
     WaylandClient client;
-    TriangleRenderer triangle_renderer;
 
     wl_surface* surface;
     libdecor_frame* frame;
@@ -32,4 +32,7 @@ public:
 private:
     static const size_t DEFAULT_WIDTH = 1728;
     static const size_t DEFAULT_HEIGHT = 1041;
+
+    TextRenderer text_renderer;
+    Buffer buffer;
 };

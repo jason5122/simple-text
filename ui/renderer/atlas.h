@@ -1,7 +1,13 @@
 #pragma once
 
+#include "build/buildflag.h"
 #include "font/types/rasterized_glyph.h"
+
+#if IS_MAC
 #include <OpenGL/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
 
 struct AtlasGlyph {
     bool colored;

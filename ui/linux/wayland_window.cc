@@ -1,3 +1,4 @@
+#include "util/file_util.h"
 #include "wayland_window.h"
 #include <iostream>
 #include <stdio.h>
@@ -55,14 +56,19 @@ bool WaylandWindow::setup() {
     }
 
     std::cerr << glGetString(GL_VERSION) << '\n';
-    triangle_renderer.setup(content_width, content_height);
+    text_renderer.setup(content_width, content_height, "Source Code Pro", 16);
+
+    std::ifstream infile(ResourcePath() / "sample_files/sort.scm");
+    buffer.setContents(infile);
+
+    text_renderer.parseBuffer(buffer);
 
     return true;
 }
 
 void WaylandWindow::draw() {
-    triangle_renderer.resize(content_width, content_height);
-    triangle_renderer.draw();
+    text_renderer.resize(content_width, content_height);
+    text_renderer.renderText(buffer, 0, 0);
 
     eglSwapBuffers(client.egl_display, egl_surface);
 }

@@ -1,6 +1,10 @@
 #pragma once
 
-#import <OpenGL/gl3.h>
+#if IS_MAC
+#include <OpenGL/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
 
 class AtlasRenderer {
 public:

@@ -12,12 +12,14 @@ source_set("font") {
   ]
 }
 
-copy("copy_example_fonts") {
-  sources = [ "fonts/SourceCodePro-Regular.ttf" ]
-  outputs = [ "$root_out_dir/fonts/{{source_file_part}}" ]
-}
-
-bundle_data("example_fonts") {
-  sources = [ "fonts/SourceCodePro-Regular.ttf" ]
-  outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
+if (is_mac) {
+  bundle_data("example_fonts") {
+    sources = [ "fonts/SourceCodePro-Regular.ttf" ]
+    outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
+  }
+} else {
+  copy("example_fonts") {
+    sources = [ "fonts/SourceCodePro-Regular.ttf" ]
+    outputs = [ "$root_out_dir/fonts/{{source_file_part}}" ]
+  }
 }

@@ -33,7 +33,9 @@ if (is_linux) {
     sources = [
       "linux/wayland_client.cc",
       "linux/wayland_window.cc",
-      "renderer/triangle_renderer.cc",
+      "renderer/atlas.cc",
+      "renderer/atlas_renderer.cc",
+      "renderer/text_renderer.cc",
     ]
 
     libs = [
@@ -43,11 +45,14 @@ if (is_linux) {
       "GL",
     ]
 
-    deps = [
+    public_deps = [
+      "//base",
+      "//font",
+      "//third_party/glad",
       "//third_party/libdecor",
+      "//third_party/libgrapheme",
       "//ui/renderer/shaders",
+      "//util",
     ]
-
-    public_deps = [ "//third_party/glad" ]
   }
 }

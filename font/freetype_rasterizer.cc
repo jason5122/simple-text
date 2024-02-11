@@ -1,15 +1,17 @@
+#include "build/buildflag.h"
 #include "freetype_rasterizer.h"
+#include <chrono>
+#include <cmath>
 #include <iostream>
-#include <vector>
 
 #include <ft2build.h>
 
 bool FreeTypeRasterizer::setup(const char* main_font_path, int font_size) {
     std::vector<const char*> font_paths;
     font_paths.push_back(main_font_path);
-    font_paths.push_back("/System/Library/Fonts/Apple Color Emoji.ttc");
-    font_paths.push_back("/System/Library/Fonts/Monaco.ttf");
-    font_paths.push_back("/System/Library/Fonts/NotoSansMyanmar.ttc");
+    // font_paths.push_back("/System/Library/Fonts/Apple Color Emoji.ttc");
+    // font_paths.push_back("/System/Library/Fonts/Monaco.ttf");
+    // font_paths.push_back("/System/Library/Fonts/NotoSansMyanmar.ttc");
 
     FT_Error error;
 
@@ -43,10 +45,12 @@ bool FreeTypeRasterizer::setup(const char* main_font_path, int font_size) {
     float descent = std::round(static_cast<float>(ft_main_face->descender) / 64);
     float glyph_height = std::round(static_cast<float>(ft_main_face->height) / 64);
 
+#if IS_MAC
     // FIXME: This is a hack to match Core Text's metrics.
     ascent *= 2;
     descent *= 2;
     glyph_height *= 2;
+#endif
 
     float global_glyph_height = ascent - descent;
 
@@ -156,7 +160,7 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    fprintf(stderr, "FreeType rasterize: %lld µs\n", duration);
+    fprintf(stderr, "FreeType rasterize: %ld µs\n", duration);
 
     return RasterizedGlyph{
         colored,

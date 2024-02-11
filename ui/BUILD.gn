@@ -20,10 +20,11 @@ if (is_mac) {
     deps = [
       "//base",
       "//font",
-      "//third_party/libgrapheme",
       "//ui/renderer/shaders",
       "//util",
     ]
+
+    public_deps = [ "//third_party/libgrapheme" ]
   }
 }
 

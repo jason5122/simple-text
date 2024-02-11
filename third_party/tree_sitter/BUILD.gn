@@ -5,7 +5,7 @@ source_set("tree_sitter") {
 
   sources = [ "src/lib.c" ]
 
-  include_dirs = [ "include" ]
+  public_configs = [ ":tree_sitter_includes" ]
 
   deps = [
     ":tree_sitter_cpp",
@@ -13,6 +13,10 @@ source_set("tree_sitter") {
     ":tree_sitter_json",
     ":tree_sitter_scheme",
   ]
+}
+
+config("tree_sitter_includes") {
+  include_dirs = [ "include" ]
 }
 
 source_set("tree_sitter_cpp") {

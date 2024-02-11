@@ -6,7 +6,7 @@ source_set("tests") {
     "tree_sitter_parse_test.cc",
   ]
 
-  public_deps = [
+  deps = [
     ":copy_test_files",
     "//third_party/googletest:gtest",
     "//third_party/tree_sitter",

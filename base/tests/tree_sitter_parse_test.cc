@@ -1,7 +1,7 @@
-#include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "util/file_util.h"
 #include "gtest/gtest.h"
 #include <iostream>
+#include <tree_sitter/api.h>
 
 extern "C" TSLanguage* tree_sitter_json();
 

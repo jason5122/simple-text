@@ -1,5 +1,5 @@
-#include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include <iostream>
+#include <tree_sitter/api.h>
 
 extern "C" TSLanguage* tree_sitter_json();
 

@@ -1,5 +1,5 @@
 #include "base/rgb.h"
-#include "third_party/tree_sitter/include/tree_sitter/api.h"
+#include <tree_sitter/api.h>
 #include <vector>
 
 class SyntaxHighlighter {

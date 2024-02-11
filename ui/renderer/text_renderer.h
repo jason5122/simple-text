@@ -4,12 +4,12 @@
 #include "base/syntax_highlighter.h"
 #include "font/core_text_rasterizer.h"
 #include "font/freetype_rasterizer.h"
-#include "third_party/tree_sitter/include/tree_sitter/api.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/atlas_renderer.h"
 #include <OpenGL/gl3.h>
 #include <map>
 #include <string>
+#include <tree_sitter/api.h>
 
 class TextRenderer {
 public:

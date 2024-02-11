@@ -9,27 +9,21 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
+struct Vec4 {
+    float x, y, z, w;
+};
+static_assert(sizeof(Vec4) == sizeof(float) * 4);
+
 struct Rgba {
     uint8_t r, g, b, a;
 };
 static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
 
-struct Vec2 {
-    float x, y;
-};
-static_assert(sizeof(Vec2) == sizeof(float) * 2);
-
 struct InstanceData {
     float total_advance;
     float line;
-    int32_t left;
-    int32_t top;
-    int32_t width;
-    int32_t height;
-    float uv_left;
-    float uv_bot;
-    float uv_width;
-    float uv_height;
+    Vec4 glyph;
+    Vec4 uv;
     Rgba color;
     Rgba bg_color;
     float advance;
@@ -95,13 +89,13 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_INT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, left));
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, glyph));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, uv_left));
+                          (void*)offsetof(InstanceData, uv));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
@@ -259,14 +253,9 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             instances.push_back(InstanceData{
                 .total_advance = total_advance,
                 .line = static_cast<float>(line_index),
-                .left = glyph.left,
-                .top = glyph.top,
-                .width = glyph.width,
-                .height = glyph.height,
-                .uv_left = glyph.uv_left,
-                .uv_bot = glyph.uv_bot,
-                .uv_width = glyph.uv_width,
-                .uv_height = glyph.uv_height,
+                .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
+                              static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
+                .uv = Vec4{glyph.uv_left, glyph.uv_bot, glyph.uv_width, glyph.uv_height},
                 .color = Rgba{text_color.r, text_color.g, text_color.b, glyph.colored},
                 .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, bg_a},
                 .advance = glyph.advance,
@@ -283,14 +272,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     instances.push_back(InstanceData{
         .total_advance = width - Atlas::ATLAS_SIZE - 400,
         .line = static_cast<float>(10),
-        .left = 0,
-        .top = 0,
-        .width = Atlas::ATLAS_SIZE,
-        .height = Atlas::ATLAS_SIZE,
-        .uv_left = 0,
-        .uv_bot = 0,
-        .uv_width = 1.0,
-        .uv_height = 1.0,
+        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+        .uv = Vec4{0, 0, 1.0, 1.0},
         .color = Rgba{BLACK.r, BLACK.g, BLACK.b, false},
         .bg_color = Rgba{YELLOW.r, YELLOW.g, YELLOW.b, 255},
         .advance = Atlas::ATLAS_SIZE,

@@ -1,10 +1,10 @@
 #version 330 core
 
-layout(location = 0) in float line_index;
-layout(location = 1) in vec4 glyph;
-layout(location = 2) in vec4 uv;
-layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
-layout(location = 4) in float total_advance;
+layout(location = 0) in float total_advance;
+layout(location = 1) in float line_index;
+layout(location = 2) in vec4 glyph;
+layout(location = 3) in vec4 uv;
+layout(location = 4) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
 layout(location = 5) in vec4 in_background_color;
 layout(location = 6) in float advance;
 

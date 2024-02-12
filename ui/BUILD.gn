@@ -23,6 +23,11 @@ if (is_mac) {
 
     configs += [ "//build/config/compiler:optimizations" ]
 
+    cflags = [
+      "-Wall",
+      "-pedantic",
+    ]
+
     deps = [
       "//base",
       "//font",

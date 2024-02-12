@@ -241,16 +241,14 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             float glyph_center_x = total_advance + glyph.advance / 2;
             uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
-            std::cerr << "glyph: " << glyph.glyph << '\n';
-            std::cerr << "uv: " << glyph.uv << '\n';
-
             instances.push_back(InstanceData{
                 .coords = Vec2{total_advance, line_index * line_height},
                 .bg_size = Vec2{glyph.advance, line_height},
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
                 .color = Rgba::fromRgb(text_color, glyph.colored),
-                .bg_color = Rgba::fromRgb(YELLOW, bg_a),
+                // .bg_color = Rgba::fromRgb(YELLOW, bg_a),
+                .bg_color = Rgba::fromRgb(YELLOW, 255),
             });
 
             total_advance += std::round(glyph.advance);
@@ -276,8 +274,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    // glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
+    // glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

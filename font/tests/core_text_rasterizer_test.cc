@@ -8,15 +8,15 @@ TEST(GlyphIndexTest, Alphabet) {
     ct_rasterizer.setup("Arial", 32);
 
     std::vector<const char*> utf8_strs = {
-        u8"a",
-        u8"∆",
-        u8"😄",
-        u8"🥲",
-        u8"",
-        u8"👨‍👩‍👦",
-        u8"👩‍👩‍👧‍👦",
-        u8"🇺🇸",
-        u8"🏴‍☠️",
+        "a",
+        "∆",
+        "😄",
+        "🥲",
+        "",
+        "👨‍👩‍👦",
+        "👩‍👩‍👧‍👦",
+        "🇺🇸",
+        "🏴‍☠️",
     };
     for (const auto& str : utf8_strs) {
         EXPECT_GT(ct_rasterizer.getGlyphIndex(str), 0);
@@ -28,9 +28,9 @@ TEST(CoreTextRasterizerTest, Metrics) {
     ct_rasterizer.setup("Arial", 32);
 
     std::vector<const char*> utf8_strs = {
-        u8"a",
-        u8"∆",
-        u8"",
+        "a",
+        "∆",
+        "",
     };
     for (const auto& str : utf8_strs) {
         RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(str);
@@ -39,12 +39,7 @@ TEST(CoreTextRasterizerTest, Metrics) {
     }
 
     std::vector<const char*> utf8_emojis = {
-        u8"😄",
-        u8"🥲",
-        u8"👨‍👩‍👦",
-        u8"👩‍👩‍👧‍👦",
-        u8"🇺🇸",
-        u8"🏴‍☠️",
+        "😄", "🥲", "👨‍👩‍👦", "👩‍👩‍👧‍👦", "🇺🇸", "🏴‍☠️",
     };
     for (const auto& str : utf8_emojis) {
         RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(str);

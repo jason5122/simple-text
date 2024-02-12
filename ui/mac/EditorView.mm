@@ -191,7 +191,7 @@ const char* hex(char c) {
 }
 
 - (void)insertTestString {
-    [openGLLayer insertUTF8String:u8"∆" bytes:3];
+    [openGLLayer insertUTF8String:"∆" bytes:3];
     [self.layer setNeedsDisplay];
 }
 

@@ -241,6 +241,9 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             float glyph_center_x = total_advance + glyph.advance / 2;
             uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
+            std::cerr << "glyph: " << glyph.glyph << '\n';
+            std::cerr << "uv: " << glyph.uv << '\n';
+
             instances.push_back(InstanceData{
                 .coords = Vec2{total_advance, line_index * line_height},
                 .bg_size = Vec2{glyph.advance, line_height},
@@ -256,15 +259,15 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         longest_line_x = std::max(total_advance, longest_line_x);
     }
 
-    instances.push_back(InstanceData{
-        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
-        .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-        .uv = Vec4{0, 0, 1.0, 1.0},
-        .color = Rgba::fromRgb(BLACK, false),
-        .bg_color = Rgba::fromRgb(YELLOW, 255),
-        .is_atlas = true,
-    });
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
+    //     .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+    //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+    //     .uv = Vec4{0, 0, 1.0, 1.0},
+    //     .color = Rgba::fromRgb(BLACK, false),
+    //     .bg_color = Rgba::fromRgb(YELLOW, 255),
+    //     .is_atlas = true,
+    // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

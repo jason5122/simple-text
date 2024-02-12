@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/rgb.h"
+#include <ostream>
 
 struct Vec2 {
     float x, y;
@@ -20,3 +21,7 @@ struct Rgba {
     }
 };
 static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
+
+inline std::ostream& operator<<(std::ostream& out, const Vec4& vec) {
+    return out << '{' << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << '}';
+}

@@ -21,6 +21,8 @@ if (is_mac) {
 
     defines = [ "GL_SILENCE_DEPRECATION" ]
 
+    configs += [ "//build/config/compiler:optimizations" ]
+
     deps = [
       "//base",
       "//font",

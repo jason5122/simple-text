@@ -12,7 +12,6 @@ is_win = target_os == "win"
 default_compiler_configs = [
   "//build/config/compiler",
   "//build/config/compiler:default_include_dirs",
-  "//build/config/compiler:optimizations",
 ]
 
 if (is_mac) {

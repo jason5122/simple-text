@@ -5,11 +5,13 @@
 #include "util/opengl_error_util.h"
 #include <vector>
 
+namespace {
 struct InstanceData {
     Vec2 coords;
     Vec2 rect_size;
     Rgba color;
 };
+}
 
 void RectRenderer::setup(float width, float height) {
     shader_program.link(ResourcePath() / "shaders/rect_vert.glsl",

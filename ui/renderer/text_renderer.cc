@@ -10,6 +10,12 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
+extern "C" TSLanguage* tree_sitter_cpp();
+extern "C" TSLanguage* tree_sitter_glsl();
+extern "C" TSLanguage* tree_sitter_json();
+extern "C" TSLanguage* tree_sitter_scheme();
+
+namespace {
 struct InstanceData {
     Vec2 coords;
     Vec2 bg_size;
@@ -19,11 +25,7 @@ struct InstanceData {
     Rgba bg_color;
     uint8_t is_atlas = 0;
 };
-
-extern "C" TSLanguage* tree_sitter_cpp();
-extern "C" TSLanguage* tree_sitter_glsl();
-extern "C" TSLanguage* tree_sitter_json();
-extern "C" TSLanguage* tree_sitter_scheme();
+}
 
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
@@ -247,8 +249,7 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
                 .color = Rgba::fromRgb(text_color, glyph.colored),
-                // .bg_color = Rgba::fromRgb(YELLOW, bg_a),
-                .bg_color = Rgba::fromRgb(YELLOW, 255),
+                .bg_color = Rgba::fromRgb(YELLOW, bg_a),
             });
 
             total_advance += std::round(glyph.advance);
@@ -257,15 +258,15 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
         longest_line_x = std::max(total_advance, longest_line_x);
     }
 
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
-    //     .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-    //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-    //     .uv = Vec4{0, 0, 1.0, 1.0},
-    //     .color = Rgba::fromRgb(BLACK, false),
-    //     .bg_color = Rgba::fromRgb(YELLOW, 255),
-    //     .is_atlas = true,
-    // });
+    instances.push_back(InstanceData{
+        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
+        .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+        .uv = Vec4{0, 0, 1.0, 1.0},
+        .color = Rgba::fromRgb(BLACK, false),
+        .bg_color = Rgba::fromRgb(YELLOW, 255),
+        .is_atlas = true,
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
@@ -274,8 +275,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
 
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-    // glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
-    // glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

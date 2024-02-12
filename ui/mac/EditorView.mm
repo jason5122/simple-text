@@ -140,13 +140,14 @@ const char* hex(char c) {
     size_t bytes = strlen(str);
 
     if (bytes > 0) {
-        // for (size_t i = 0; str[i] != '\0'; i++) {
-        //     std::cerr << hex(str[i]) << " ";
-        // }
-        // std::cerr << '\n';
+        for (size_t i = 0; str[i] != '\0'; i++) {
+            std::cerr << hex(str[i]) << " ";
+        }
+        std::cerr << '\n';
 
         if (str[0] == 0x0D) {
             std::cerr << "new line inserted\n";
+            str = "\n";
         }
 
         [openGLLayer insertUTF8String:str bytes:bytes];
@@ -239,8 +240,7 @@ const char* hex(char c) {
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
 
-        std::ifstream infile(ResourcePath() / "sample_files/sort.scm");
-        buffer.setContents(infile);
+        buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
 
         auto t1 = std::chrono::high_resolution_clock::now();
         text_renderer.parseBuffer(buffer);
@@ -307,11 +307,21 @@ const char* hex(char c) {
     text_renderer.editBuffer(buffer, bytes);
     text_renderer.parseBuffer(buffer);
 
-    float advance = text_renderer.getGlyphAdvance(std::string(str));
-    text_renderer.cursor_start_col_offset += bytes;
-    text_renderer.cursor_start_x += advance;
-    text_renderer.cursor_end_col_offset += bytes;
-    text_renderer.cursor_end_x += advance;
+    if (strcmp(str, "\n") == 0) {
+        text_renderer.cursor_start_line++;
+        text_renderer.cursor_end_line++;
+
+        text_renderer.cursor_start_col_offset = 0;
+        text_renderer.cursor_start_x = 0;
+        text_renderer.cursor_end_col_offset = 0;
+        text_renderer.cursor_end_x = 0;
+    } else {
+        float advance = text_renderer.getGlyphAdvance(std::string(str));
+        text_renderer.cursor_start_col_offset += bytes;
+        text_renderer.cursor_start_x += advance;
+        text_renderer.cursor_end_col_offset += bytes;
+        text_renderer.cursor_end_x += advance;
+    }
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();

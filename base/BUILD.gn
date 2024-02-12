@@ -4,7 +4,10 @@ source_set("base") {
     "syntax_highlighter.cc",
   ]
 
-  deps = [ "//base/queries" ]
+  deps = [
+    "//base/queries",
+    "//third_party/fredbuf",
+  ]
 
   public_deps = [ "//third_party/tree_sitter" ]
 }

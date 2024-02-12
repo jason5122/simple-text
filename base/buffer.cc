@@ -2,47 +2,26 @@
 #include <cstdint>
 #include <sstream>
 
-void Buffer::setContents(std::string s) {
-    std::stringstream ss(s);
-    std::string line;
-    while (std::getline(ss, line, '\n')) {
-        data.push_back(line);
-    }
-}
-
-void Buffer::setContents(std::ifstream& istrm) {
-    std::string line;
-    while (std::getline(istrm, line, '\n')) {
-        data.push_back(line);
-    }
+void Buffer::setContents(std::string txt) {
+    TreeBuilder builder;
+    builder.accept(txt);
+    piece_tree = builder.create();
 }
 
 size_t Buffer::lineCount() {
-    return data.size();
-}
-
-size_t Buffer::byteCount() {
-    size_t byte_count = 0;
-    for (const std::string& line : data) {
-        byte_count += line.size();
-        byte_count += 1;  // Account for \n characters.
-    }
-    return byte_count;
+    return rep(piece_tree.line_count());
 }
 
 void Buffer::getLineContent(std::string* buf, size_t line_index) const {
-    *buf = data[line_index];
+    piece_tree.get_line_content(buf, Line{line_index + 1});
 }
 
 size_t Buffer::byteOfLine(size_t line_index) {
-    size_t byte_offset = 0;
-    for (uint16_t row = 0; row < line_index; row++) {
-        byte_offset += data[row].size();
-        byte_offset++;  // Include newline.
-    }
-    return byte_offset;
+    CharOffset line_start = piece_tree.get_line_range(Line{line_index + 1}).first;
+    return rep(line_start);
 }
 
 void Buffer::insert(size_t line_index, size_t line_offset, std::string_view txt) {
-    data[line_index].insert(line_offset, txt);
+    CharOffset line_start = piece_tree.get_line_range(Line{line_index + 1}).first;
+    piece_tree.insert(line_start + Length{line_offset}, txt);
 }

@@ -333,7 +333,10 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
     size_t offset;
 
     cursor_start_line = cursor_y / line_height;
-    if (cursor_start_line > buffer.lineCount()) cursor_start_line = buffer.lineCount();
+    if (cursor_start_line > buffer.lineCount()) {
+        std::cerr << "cursor went past last line\n";
+        cursor_start_line = buffer.lineCount() - 1;
+    }
 
     std::string start_line_str;
     buffer.getLineContent(&start_line_str, cursor_start_line);
@@ -342,7 +345,10 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
     cursor_start_x = x;
 
     cursor_end_line = drag_y / line_height;
-    if (cursor_end_line > buffer.lineCount()) cursor_end_line = buffer.lineCount();
+    if (cursor_end_line > buffer.lineCount()) {
+        std::cerr << "cursor went past last line\n";
+        cursor_end_line = buffer.lineCount() - 1;
+    }
 
     std::string end_line_str;
     buffer.getLineContent(&end_line_str, cursor_end_line);

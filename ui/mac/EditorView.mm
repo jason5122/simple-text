@@ -354,7 +354,7 @@ const char* hex(char c) {
 
 - (CGFloat)maxCursorY {
     size_t line_count = buffer.lineCount();
-    line_count -= 1;  // TODO: Merge this with RectRenderer.
+    // line_count -= 1;  // TODO: Merge this with RectRenderer.
     CGFloat max_y = line_count * text_renderer.line_height;
     // TODO: Formulate max_y without the need for division.
     max_y /= self.contentsScale;

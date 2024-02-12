@@ -1,4 +1,4 @@
-source_set("zlib") {
+static_library("zlib") {
   configs += [ ":c90" ]
 
   sources = [

@@ -31,15 +31,10 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
     atlas.setup();
-    // ct_rasterizer.setup(main_font_name, font_size);
-    ft_rasterizer.setup(font_path.c_str(), font_size);
+    ct_rasterizer.setup(main_font_name, font_size);
     highlighter.setLanguage("source.scheme");
 
-    // this->line_height = ct_rasterizer.line_height;
-    this->line_height = ft_rasterizer.line_height;
-
-    // std::cerr << "ct_rasterizer = " << ct_rasterizer.line_height << '\n';
-    std::cerr << "ft_rasterizer = " << ft_rasterizer.line_height << '\n';
+    this->line_height = ct_rasterizer.line_height;
 
     shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
                         ResourcePath() / "shaders/text_frag.glsl");
@@ -357,8 +352,7 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str) {
-    // RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(utf8_str.c_str());
-    RasterizedGlyph glyph = ft_rasterizer.rasterizeUTF8(utf8_str.c_str());
+    RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(utf8_str.c_str());
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
     glyph_cache.insert({utf8_str, atlas_glyph});
 }

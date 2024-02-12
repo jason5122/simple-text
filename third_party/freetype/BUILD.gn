@@ -1,4 +1,4 @@
-source_set("freetype") {
+static_library("freetype") {
   defines = [
     "FT2_BUILD_LIBRARY",
     "FT_CONFIG_OPTION_ERROR_STRINGS",

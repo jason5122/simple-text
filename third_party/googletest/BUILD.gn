@@ -4,7 +4,7 @@ source_set("gtest_main") {
   deps = [ ":gtest" ]
 }
 
-source_set("gtest") {
+static_library("gtest") {
   testonly = true
 
   sources = [

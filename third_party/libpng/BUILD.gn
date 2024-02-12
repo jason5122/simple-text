@@ -1,4 +1,4 @@
-source_set("libpng") {
+static_library("libpng") {
   configs += [ ":c89" ]
 
   sources = [

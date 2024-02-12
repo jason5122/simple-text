@@ -2,6 +2,7 @@
 #include "rect_renderer.h"
 #include "ui/renderer/opengl_types.h"
 #include "util/file_util.h"
+#include "util/opengl_error_util.h"
 #include <vector>
 
 struct InstanceData {
@@ -141,6 +142,8 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
     glBindVertexArray(0);
+
+    glCheckError();
 }
 
 void RectRenderer::resize(int new_width, int new_height) {

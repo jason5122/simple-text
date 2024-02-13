@@ -5,7 +5,7 @@
 
 class SyntaxHighlighter {
 public:
-    std::vector<std::pair<uint32_t, uint32_t>> highlight_ranges;
+    size_t idx = 0;
     std::vector<Rgb> highlight_colors;
 
     SyntaxHighlighter() = default;
@@ -13,6 +13,7 @@ public:
     void parse(TSInput& input);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
     void getHighlights();
+    bool isByteOffsetInRange(size_t byte_offset);
 
 private:
     TSParser* parser;
@@ -20,4 +21,6 @@ private:
     TSTree* tree = NULL;
 
     std::string scope;
+
+    std::vector<std::pair<uint32_t, uint32_t>> highlight_ranges;
 };

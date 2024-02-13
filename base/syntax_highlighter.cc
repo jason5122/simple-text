@@ -141,3 +141,17 @@ void SyntaxHighlighter::getHighlights() {
         prev_end = end_byte;
     }
 }
+
+bool SyntaxHighlighter::isByteOffsetInRange(size_t byte_offset) {
+    if (idx < highlight_ranges.size()) {
+        while (byte_offset >= highlight_ranges[idx].second) {
+            idx++;
+        }
+
+        if (highlight_ranges[idx].first <= byte_offset &&
+            byte_offset < highlight_ranges[idx].second) {
+            return true;
+        }
+    }
+    return false;
+}

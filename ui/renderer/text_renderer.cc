@@ -195,13 +195,14 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
     glBindVertexArray(vao);
 
     std::vector<InstanceData> instances;
-    int range_idx = 0;
 
     size_t scroll_line = scroll_y / line_height;
 
     size_t visible_lines = std::ceil((height - 60 - 40) / line_height);
     size_t byte_offset = buffer.byteOfLine(scroll_line);
     size_t size = std::min(static_cast<size_t>(scroll_line + visible_lines), buffer.lineCount());
+
+    highlighter.idx = 0;
     for (size_t line_index = scroll_line; line_index < size; line_index++) {
         std::string line_str;
         buffer.getLineContent(&line_str, line_index);
@@ -212,16 +213,8 @@ void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
             Rgb text_color = BLACK;
-
-            if (range_idx < highlighter.highlight_ranges.size()) {
-                while (byte_offset >= highlighter.highlight_ranges[range_idx].second) {
-                    range_idx++;
-                }
-
-                if (highlighter.highlight_ranges[range_idx].first <= byte_offset &&
-                    byte_offset < highlighter.highlight_ranges[range_idx].second) {
-                    text_color = highlighter.highlight_colors[range_idx];
-                }
+            if (highlighter.isByteOffsetInRange(byte_offset)) {
+                text_color = highlighter.highlight_colors[highlighter.idx];
             }
 
             std::string utf8_str;

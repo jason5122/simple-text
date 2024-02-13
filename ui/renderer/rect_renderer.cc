@@ -125,7 +125,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     // Add side bar.
     instances.push_back(InstanceData{
         .coords = {0 - 400, 0 - 60},
-        .rect_size = {400, height},
+        .rect_size = {800, height},
         .color = Rgba{228, 228, 228, 255},
     });
 

@@ -1,4 +1,20 @@
 static_library("harfbuzz") {
+  defines = [
+    "HB_NO_UNICODE_FUNCS",
+    "HB_NO_MMAP",
+    "HB_NO_PAINT",
+    "HB_NO_RESOURCE_FORK",
+    "HB_NO_SUBSET_LAYOUT",
+    "HB_NO_SUBSET_CFF",
+    "HB_NO_FALLBACK_SHAPE",
+    "HB_NO_UCD",
+    "HB_NO_WIN1256",
+    "HB_NO_BUFFER_VERIFY",
+    "HB_NO_DRAW",
+    "HB_NO_BORING_EXPANSION",
+    "HB_NO_AVAR2",
+  ]
+
   sources = [
     "src/src/hb-aat-layout.cc",
     "src/src/hb-aat-map.cc",

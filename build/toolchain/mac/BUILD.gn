@@ -1,7 +1,13 @@
 toolchain("clang") {
-  cc = "clang"
-  cxx = "clang++"
-  ar = "llvm-ar"
+  if (target_cpu == "arm64") {
+    prefix = "/opt/homebrew/opt/llvm/bin"
+  } else {
+    prefix = "/usr/local/opt/llvm/bin"
+  }
+
+  cc = "${prefix}/clang"
+  cxx = "${prefix}/clang++"
+  ar = "${prefix}/llvm-ar"
 
   tool("link") {
     rspfile = "{{output}}.rsp"

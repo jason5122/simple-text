@@ -29,6 +29,8 @@ config("compiler") {
   # Pass the same C/C++ flags to the Objective-C/C++ compiler.
   cflags_objc += cflags_c
   cflags_objcc += cflags_cc
+
+  ldflags = [ "-fuse-ld=lld" ]
 }
 
 if (is_mac) {
@@ -48,7 +50,7 @@ config("c99") {
 
 config("optimizations") {
   cflags = [
-    # "-flto=thin",
+    "-flto=thin",
     "-O2",
   ]
   ldflags = cflags

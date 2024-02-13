@@ -5,6 +5,17 @@
        src="docs/simple-text.png">
 </p>
 
+## Progress Chart
+
+| Feature              | macOS          | Linux         | Windows          |
+| -------------------- | -------------- | ------------- | ---------------- |
+| Text Rasterizer      | ✅ (Core Text) | ✅ (FreeType) | ❌ (DirectWrite) |
+| Text Shaper          | ✅ (Core Text) | ✅ (HarfBuzz) | ❌ (???)         |
+| OpenGL context       | ✅             | ✅            | ❌               |
+| Keyboard/mouse input | ✅             | ❌            | ❌               |
+| Tabs                 | ❌             | ❌            | ❌               |
+| Popups/Dialogs       | ❌             | ❌            | ❌               |
+
 ## Dependencies
 
 This project uses the GN meta-build system. Binaries are available [here](https://gn.googlesource.com/gn#getting-a-binary).

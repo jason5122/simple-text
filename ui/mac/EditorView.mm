@@ -1,5 +1,6 @@
 #import "EditorView.h"
 #import "base/buffer.h"
+#import "base/syntax_highlighter.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
@@ -26,9 +27,14 @@
 
 @private
     RectRenderer rect_renderer;
+    SyntaxHighlighter highlighter;
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
+
+- (void)parseBuffer;
+
+- (void)editBuffer:(size_t)bytes;
 
 - (void)setRendererCursorPositions;
 
@@ -228,6 +234,50 @@ const char* hex(char c) {
     return pixelFormat;
 }
 
+static const char* read(void* payload, uint32_t byte_index, TSPoint position,
+                        uint32_t* bytes_read) {
+    Buffer* buffer = (Buffer*)payload;
+    if (position.row >= buffer->lineCount()) {
+        *bytes_read = 0;
+        return "";
+    }
+
+    const size_t BUFSIZE = 256;
+    static char buf[BUFSIZE];
+
+    std::string line_str;
+    buffer->getLineContent(&line_str, position.row);
+
+    size_t len = line_str.size();
+    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
+
+    memcpy(buf, &line_str[0] + position.column, bytes_copied);
+    *bytes_read = (uint32_t)bytes_copied;
+    if (bytes_copied < BUFSIZE) {
+        // Add the final \n.
+        // If it didn't fit, read() will be called again on the same line with the column advanced.
+        buf[bytes_copied] = '\n';
+        (*bytes_read)++;
+    }
+    return buf;
+}
+
+- (void)parseBuffer {
+    TSInput input = {&buffer, read, TSInputEncodingUTF8};
+    highlighter.parse(input);
+    highlighter.getHighlights();
+}
+
+- (void)editBuffer:(size_t)bytes {
+    size_t start_byte =
+        buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
+    size_t old_end_byte =
+        buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
+    size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
+                          text_renderer.cursor_end_col_offset + bytes;
+    highlighter.edit(start_byte, old_end_byte, new_end_byte);
+}
+
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
     CGLContextObj glContext = nullptr;
     CGLCreateContext(pixelFormat, nullptr, &glContext);
@@ -239,11 +289,12 @@ const char* hex(char c) {
         float scaled_height = self.frame.size.height * self.contentsScale;
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
+        highlighter.setLanguage("source.scheme");
 
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
 
         auto t1 = std::chrono::high_resolution_clock::now();
-        text_renderer.parseBuffer(buffer);
+        [self parseBuffer];
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
         fprintf(stderr, "Tree-sitter only parse: %lld µs\n", duration);
@@ -275,7 +326,7 @@ const char* hex(char c) {
     float height = self.frame.size.height * self.contentsScale;
 
     text_renderer.resize(width, height);
-    text_renderer.renderText(buffer, scaled_scroll_x, scaled_scroll_y);
+    text_renderer.renderText(buffer, highlighter, scaled_scroll_x, scaled_scroll_y);
 
     size_t visible_lines = std::ceil((height - 60 - 40) / text_renderer.line_height);
     rect_renderer.resize(width, height);
@@ -304,8 +355,8 @@ const char* hex(char c) {
 
     buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
 
-    text_renderer.editBuffer(buffer, bytes);
-    text_renderer.parseBuffer(buffer);
+    [self editBuffer:bytes];
+    [self parseBuffer];
 
     if (strcmp(str, "\n") == 0) {
         text_renderer.cursor_start_line++;

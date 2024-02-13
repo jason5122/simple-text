@@ -32,7 +32,6 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
 
     atlas.setup();
     ct_rasterizer.setup(main_font_name, font_size);
-    highlighter.setLanguage("source.scheme");
 
     this->line_height = ct_rasterizer.line_height;
 
@@ -107,46 +106,6 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-const char* read(void* payload, uint32_t byte_index, TSPoint position, uint32_t* bytes_read) {
-    Buffer* buffer = (Buffer*)payload;
-    if (position.row >= buffer->lineCount()) {
-        *bytes_read = 0;
-        return "";
-    }
-
-    const size_t BUFSIZE = 256;
-    static char buf[BUFSIZE];
-
-    std::string line_str;
-    buffer->getLineContent(&line_str, position.row);
-
-    size_t len = line_str.size();
-    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
-
-    memcpy(buf, &line_str[0] + position.column, bytes_copied);
-    *bytes_read = (uint32_t)bytes_copied;
-    if (bytes_copied < BUFSIZE) {
-        // Add the final \n.
-        // If it didn't fit, read() will be called again on the same line with the column advanced.
-        buf[bytes_copied] = '\n';
-        (*bytes_read)++;
-    }
-    return buf;
-}
-
-void TextRenderer::parseBuffer(Buffer& buffer) {
-    TSInput input = {&buffer, read, TSInputEncodingUTF8};
-    highlighter.parse(input);
-    highlighter.getHighlights();
-}
-
-void TextRenderer::editBuffer(Buffer& buffer, size_t bytes) {
-    size_t start_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
-    size_t old_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
-    size_t new_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset + bytes;
-    highlighter.edit(start_byte, old_end_byte, new_end_byte);
-}
-
 float TextRenderer::getGlyphAdvance(std::string utf8_str) {
     if (!glyph_cache.count(utf8_str)) {
         this->loadGlyph(utf8_str);
@@ -184,7 +143,8 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
     return {total_advance, offset};
 }
 
-void TextRenderer::renderText(Buffer& buffer, float scroll_x, float scroll_y) {
+void TextRenderer::renderText(Buffer& buffer, SyntaxHighlighter& highlighter, float scroll_x,
+                              float scroll_y) {
     glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 

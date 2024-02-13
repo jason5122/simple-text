@@ -25,6 +25,10 @@ This project uses the GN meta-build system. Binaries are available [here](https:
 
 `brew install ninja llvm`
 
+### Fedora
+
+`dnf install gn ninja-build`
+
 ## Building
 
 ```

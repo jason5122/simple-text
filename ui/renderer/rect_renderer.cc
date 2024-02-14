@@ -95,7 +95,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
 
     // Add vertical scroll bar.
     if (line_count > 0) {
-        float vertical_scroll_bar_width = 20;
+        float vertical_scroll_bar_width = 15;
         float total_y = (line_count + visible_lines) * line_height;
         float vertical_scroll_bar_height = height * (height / total_y);
         float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
@@ -105,13 +105,13 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
                                vertical_scroll_bar_position_percentage},
             .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
             .color = Rgba{182, 182, 182, 255},
-            .corner_radius = 10,
+            .corner_radius = 5,
         });
     }
 
     // Add horizontal scroll bar.
     float horizontal_scroll_bar_width = width * (width / longest_x);
-    float horizontal_scroll_bar_height = 20;
+    float horizontal_scroll_bar_height = 15;
     float horizontal_scroll_bar_position_percentage = scroll_x / longest_x;
     if (horizontal_scroll_bar_width < width) {
         instances.push_back(InstanceData{
@@ -119,7 +119,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
                            (height - 60 - 40) - horizontal_scroll_bar_height},
             .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
             .color = Rgba{182, 182, 182, 255},
-            .corner_radius = 10,
+            .corner_radius = 5,
         });
     }
 
@@ -135,14 +135,6 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .coords = {0 - 400, 0 - 60},
         .rect_size = {400, height},
         .color = Rgba{228, 228, 228, 255},
-    });
-
-    // Temporary.
-    instances.push_back(InstanceData{
-        .coords = {400, 300},
-        .rect_size = {800, 400},
-        .color = Rgba{228, 228, 228, 255},
-        .corner_radius = 200,
     });
 
     // Add status bar.

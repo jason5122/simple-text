@@ -189,7 +189,7 @@ const char* hex(char c) {
     [openGLLayer setRendererCursorPositions];
 }
 
-- (void)rightMouseUp:(NSEvent*)event {
+- (void)rightMouseDown:(NSEvent*)event {
     NSMenu* contextMenu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
     [contextMenu addItemWithTitle:@"Insert test string"
                            action:@selector(insertTestString)

@@ -10,13 +10,6 @@ layout(location = 0, index = 1) out vec4 alpha_mask;
 uniform sampler2D mask;
 uniform int rendering_pass;
 
-float roundedRectangle(vec2 pos, vec2 size, float radius, float thickness) {
-    float d = length(max(abs(tex_coords - pos), size) - size) - radius;
-    return smoothstep(0.1, 0.0, d / thickness * 5.0);
-    // return smoothstep(-0.5, 0.5, d / thickness * 5.0);
-    // return smoothstep(0.66, 0.33, d / thickness * 5.0);
-}
-
 void main() {
     if (rendering_pass == 0) {
         if (background_color.a == 0.0) discard;
@@ -28,17 +21,6 @@ void main() {
 
     if (rendering_pass == 1) {
         vec4 texel = texture(mask, tex_coords);
-
-        vec2 pos = vec2(0.5, 0.5);
-        vec2 size = vec2(0.16, 0.02);
-        float intensity = 0.6 * roundedRectangle(pos, size, 0.1, 0.2);
-        // texel = mix(texel, vec4(0.2, 0.8, 0.5, 1.0), intensity);
-
-        float d = length(max(abs(tex_coords - pos), size) - size) - 0.05;
-        texel = mix(texel, vec4(0.2, 0.8, 0.5, 1.0), 1.0 - smoothstep(0.0, 0.002, d));
-        // if (d < 0) {
-        //     texel = mix(texel, vec4(0.2, 0.8, 0.5, 1.0), 1.0);
-        // }
 
         int colored = int(text_color.a);
         if (colored == 1) {

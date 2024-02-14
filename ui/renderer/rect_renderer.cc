@@ -10,6 +10,7 @@ struct InstanceData {
     Vec2 coords;
     Vec2 rect_size;
     Rgba color;
+    float corner_radius = 0;
 };
 }
 
@@ -52,6 +53,11 @@ void RectRenderer::setup(float width, float height) {
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, color));
+    glVertexAttribDivisor(index++, 1);
+
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, corner_radius));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -99,6 +105,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
                                vertical_scroll_bar_position_percentage},
             .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
             .color = Rgba{182, 182, 182, 255},
+            .corner_radius = 10,
         });
     }
 
@@ -112,20 +119,21 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
                            (height - 60 - 40) - horizontal_scroll_bar_height},
             .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
             .color = Rgba{182, 182, 182, 255},
+            .corner_radius = 10,
         });
     }
 
     // Add tab bar.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{0, 0 - 60},
-    //     .rect_size = Vec2{width, 60},
-    //     .color = Rgba{228, 228, 228, 255},
-    // });
+    instances.push_back(InstanceData{
+        .coords = Vec2{0, 0 - 60},
+        .rect_size = Vec2{width, 60},
+        .color = Rgba{228, 228, 228, 255},
+    });
 
     // Add side bar.
     instances.push_back(InstanceData{
         .coords = {0 - 400, 0 - 60},
-        .rect_size = {800, height},
+        .rect_size = {400, height},
         .color = Rgba{228, 228, 228, 255},
     });
 
@@ -134,14 +142,15 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .coords = {width - 800 - 400, 0 - 60},
         .rect_size = {800, height - 200},
         .color = Rgba{228, 228, 228, 255},
+        .corner_radius = 200,
     });
 
     // Add status bar.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{0 - 400, (height - 60) - 40},
-    //     .rect_size = Vec2{width, 40},
-    //     .color = Rgba{207, 207, 207, 255},
-    // });
+    instances.push_back(InstanceData{
+        .coords = Vec2{0 - 400, (height - 60) - 40},
+        .rect_size = Vec2{width, 40},
+        .color = Rgba{207, 207, 207, 255},
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

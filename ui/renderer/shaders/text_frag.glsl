@@ -35,9 +35,10 @@ void main() {
         // texel = mix(texel, vec4(0.2, 0.8, 0.5, 1.0), intensity);
 
         float d = length(max(abs(tex_coords - pos), size) - size) - 0.05;
-        if (d < 0) {
-            texel = mix(texel, vec4(0.2, 0.8, 0.5, 1.0), 1.0);
-        }
+        texel = mix(texel, vec4(0.2, 0.8, 0.5, 1.0), 1.0 - smoothstep(0.0, 0.002, d));
+        // if (d < 0) {
+        //     texel = mix(texel, vec4(0.2, 0.8, 0.5, 1.0), 1.0);
+        // }
 
         int colored = int(text_color.a);
         if (colored == 1) {

@@ -5,7 +5,7 @@ layout(location = 1) in vec2 rect_size;
 layout(location = 2) in vec4 in_color;
 layout(location = 3) in float in_corner_radius;
 
-flat out vec4 color;
+flat out vec4 rect_color;
 flat out vec2 center;
 flat out vec2 size;
 flat out float corner_radius;
@@ -30,7 +30,7 @@ void main() {
     final_position.y += 60;
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
-    color = in_color / 255.0;
+    rect_color = in_color / 255.0;
 
     vec2 rect_center = final_position + rect_size / 2;
 

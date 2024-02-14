@@ -5,9 +5,9 @@
 #include "font/core_text_rasterizer.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/shader.h"
-#include <map>
 #include <string>
 #include <tree_sitter/api.h>
+#include <unordered_map>
 
 #include "build/buildflag.h"
 #if IS_MAC
@@ -52,7 +52,7 @@ private:
     Atlas atlas;
     CoreTextRasterizer ct_rasterizer;
 
-    std::map<std::string, AtlasGlyph> glyph_cache;
+    std::unordered_map<std::string, AtlasGlyph> glyph_cache;
 
     void loadGlyph(std::string utf8_str);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);

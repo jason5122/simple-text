@@ -50,8 +50,16 @@ void main() {
     //     }
     // }
 
-    float distance = roundedBoxSDF(top_left, center, size, corner_radius);
-    if (distance < -400) {
+    // float distance = roundedBoxSDF(top_left, center, size, corner_radius);
+    // if (distance < -400) {
+    //     discard;
+    // }
+
+    pixel_pos /= resolution;
+    vec2 pos = vec2(0.5, 0.5);
+    vec2 size = vec2(0.16, 0.02);
+    float d = length(max(abs(pixel_pos - pos), size) - size) - 0.05;
+    if (d < 0.2) {
         discard;
     }
 

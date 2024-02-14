@@ -10,6 +10,6 @@
 
 ## Unordered
 
-- Add FreeType renderer.
-- Add HarfBuzz shaper.
 - Measure performance.
+- Consider switching to Bazel
+  - [Shaka Player discussion](https://github.com/shaka-project/shaka-player-embedded/issues/19) regarding this subject

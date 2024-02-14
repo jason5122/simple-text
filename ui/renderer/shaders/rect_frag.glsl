@@ -19,15 +19,15 @@ float roundedBoxSDF(vec2 pos, vec2 cen, vec2 cor, float radius) {
 void main() {
     vec2 pixel_pos = gl_FragCoord.xy;
 
-    vec2 bottom_left = center - size / 2;
-    vec2 bottom_right = center + vec2(size.x / 2, -size.y / 2);
-    vec2 top_left = center + vec2(-size.x / 2, size.y / 2);
-    vec2 top_right = center + size / 2;
+    // vec2 bottom_left = center - size / 2;
+    // vec2 bottom_right = center + vec2(size.x / 2, -size.y / 2);
+    // vec2 top_left = center + vec2(-size.x / 2, size.y / 2);
+    // vec2 top_right = center + size / 2;
 
-    bottom_left += corner_radius;
-    bottom_right += vec2(-corner_radius, corner_radius);
-    top_left += vec2(corner_radius, -corner_radius);
-    top_right -= corner_radius;
+    // bottom_left += corner_radius;
+    // bottom_right += vec2(-corner_radius, corner_radius);
+    // top_left += vec2(corner_radius, -corner_radius);
+    // top_right -= corner_radius;
 
     // if (pixel_pos.x < bottom_left.x && pixel_pos.y < bottom_left.y) {
     //     if (distance(pixel_pos, bottom_left) > corner_radius) {
@@ -55,11 +55,10 @@ void main() {
     //     discard;
     // }
 
-    pixel_pos /= resolution;
-    vec2 pos = vec2(0.5, 0.5);
-    vec2 size = vec2(0.16, 0.02);
-    float d = length(max(abs(pixel_pos - pos), size) - size) - 0.05;
-    if (d < 0.2) {
+    vec2 lower_left = center - size / 2;
+    vec2 cen = gl_FragCoord.xy - lower_left - size / 2;
+    float d = length(max(abs(cen) - size / 2 + corner_radius, 0)) - corner_radius;
+    if (d > 0) {
         discard;
     }
 

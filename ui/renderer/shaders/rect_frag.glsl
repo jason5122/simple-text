@@ -57,11 +57,8 @@ void main() {
 
     vec2 lower_left = center - size / 2;
     vec2 cen = gl_FragCoord.xy - lower_left - size / 2;
-    float d = length(max(abs(cen) - size / 2 + corner_radius, 0)) - corner_radius;
+    float distance = length(max(abs(cen) - size / 2 + corner_radius, 0)) - corner_radius;
 
-    float edgeSoftness = 0.5f;
-    float smoothedAlpha = 1.0f - smoothstep(0.0f, edgeSoftness * 2.0f, d);
-
-    vec4 bg = vec4(0.988, 0.992, 0.992, 1.0);
-    frag_color = mix(bg, color, smoothedAlpha);
+    float smoothedAlpha = 1.0 - smoothstep(0.0, 1.0, distance);
+    frag_color = vec4(color.rgb, smoothedAlpha);
 }

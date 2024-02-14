@@ -325,16 +325,18 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
     float width = self.frame.size.width * self.contentsScale;
     float height = self.frame.size.height * self.contentsScale;
 
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.resize(width, height);
     text_renderer.renderText(buffer, highlighter, scaled_scroll_x, scaled_scroll_y);
 
     size_t visible_lines = std::ceil((height - 60 - 40) / text_renderer.line_height);
     rect_renderer.resize(width, height);
-    glDisable(GL_BLEND);
+    // glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
                        text_renderer.cursor_end_line, text_renderer.line_height,
                        buffer.lineCount(), text_renderer.longest_line_x, visible_lines);
-    glEnable(GL_BLEND);
+    // glEnable(GL_BLEND);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

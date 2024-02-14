@@ -132,7 +132,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     // Temporary.
     instances.push_back(InstanceData{
         .coords = {width - 800 - 400, 0 - 60},
-        .rect_size = {800, height},
+        .rect_size = {800, height - 200},
         .color = Rgba{228, 228, 228, 255},
     });
 

@@ -104,6 +104,11 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    for (char ch = 'A'; ch < 'z'; ch++) {
+        std::string str(1, ch);
+        this->loadGlyph(str);
+    }
 }
 
 float TextRenderer::getGlyphAdvance(std::string utf8_str) {

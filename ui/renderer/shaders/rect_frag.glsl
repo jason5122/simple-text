@@ -4,13 +4,13 @@ flat in vec4 color;
 
 out vec4 frag_color;
 
-in vec2 upper_left;
+flat in vec2 upper_left;
 in vec2 size;
 
 uniform vec2 resolution;
 
 void main() {
-    vec2 loc = gl_FragCoord.xy / resolution;  // Normalize to [0.0, 1.0].
+    vec2 loc = gl_FragCoord.xy;
 
     // if (loc.x < 0.5 && loc.y < 0.5) {
     //     discard;
@@ -25,14 +25,14 @@ void main() {
     //     discard;
     // }
 
-    float x = 0.125;
-    float y = 0.4;
+    float x = upper_left.x;
+    float y = upper_left.y;
     // if (distance(loc.x, x) < 0.1 && distance(loc.y, y) < 0.1) {
     //     discard;
     // }
 
     vec2 r0 = vec2(x, y);
-    if (distance(loc, r0) < 0.1) {
+    if (distance(loc, r0) < 200) {
         discard;
     }
 

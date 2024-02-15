@@ -2,9 +2,8 @@ source_set("tests") {
   testonly = true
 
   sources = [
-    # "tree_sitter_edit_test.cc",
     "fredbuf_test.cc",
-    "tree_sitter_parse_test.cc",
+    "tree_sitter_test.cc",
   ]
 
   deps = [

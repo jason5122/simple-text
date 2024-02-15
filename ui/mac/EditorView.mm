@@ -4,6 +4,7 @@
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
+#import "util/profile_util.h"
 #import <chrono>
 #import <fstream>
 #import <iostream>
@@ -296,11 +297,10 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
 
-        auto t1 = std::chrono::high_resolution_clock::now();
-        [self parseBuffer];
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-        fprintf(stderr, "Tree-sitter only parse: %lld µs\n", duration);
+        {
+            PROFILE_BLOCK("Tree-sitter only parse");
+            [self parseBuffer];
+        }
 
         text_renderer.layoutText(buffer, highlighter);
 
@@ -322,69 +322,61 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(glContext);
 
-    auto t1 = std::chrono::high_resolution_clock::now();
-    // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
+    {
+        PROFILE_BLOCK("draw");
+        // [NSThread sleepForTimeInterval:0.02];  // Simulate lag.
 
-    float scaled_scroll_x = scroll_x * self.contentsScale;
-    float scaled_scroll_y = scroll_y * self.contentsScale;
-    float width = self.frame.size.width * self.contentsScale;
-    float height = self.frame.size.height * self.contentsScale;
+        float scaled_scroll_x = scroll_x * self.contentsScale;
+        float scaled_scroll_y = scroll_y * self.contentsScale;
+        float width = self.frame.size.width * self.contentsScale;
+        float height = self.frame.size.height * self.contentsScale;
 
-    glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.resize(width, height);
-    text_renderer.renderText(scaled_scroll_x, scaled_scroll_y);
+        glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+        text_renderer.resize(width, height);
+        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y);
 
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    size_t visible_lines = std::ceil((height - 60) / text_renderer.line_height);
-    rect_renderer.resize(width, height);
-    rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
-                       text_renderer.cursor_end_line, text_renderer.line_height,
-                       buffer.lineCount(), text_renderer.longest_line_x, visible_lines);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+        size_t visible_lines = std::ceil((height - 60) / text_renderer.line_height);
+        rect_renderer.resize(width, height);
+        rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
+                           text_renderer.cursor_end_line, text_renderer.line_height,
+                           buffer.lineCount(), text_renderer.longest_line_x, visible_lines);
 
-    // Calls glFlush() by default.
-    [super drawInCGLContext:glContext
-                pixelFormat:pixelFormat
-               forLayerTime:timeInterval
-                displayTime:timeStamp];
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-
-    if (duration >= 1000) {
-        fprintf(stderr, "draw: %lld µs\n", duration);
+        // Calls glFlush() by default.
+        [super drawInCGLContext:glContext
+                    pixelFormat:pixelFormat
+                   forLayerTime:timeInterval
+                    displayTime:timeStamp];
     }
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    {
+        PROFILE_BLOCK("insert UTF-8 string");
+        buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
 
-    buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
+        [self editBuffer:bytes];
+        [self parseBuffer];
 
-    [self editBuffer:bytes];
-    [self parseBuffer];
+        // if (strcmp(str, "\n") == 0) {
+        //     text_renderer.cursor_start_line++;
+        //     text_renderer.cursor_end_line++;
 
-    // if (strcmp(str, "\n") == 0) {
-    //     text_renderer.cursor_start_line++;
-    //     text_renderer.cursor_end_line++;
-
-    //     text_renderer.cursor_start_col_offset = 0;
-    //     text_renderer.cursor_start_x = 0;
-    //     text_renderer.cursor_end_col_offset = 0;
-    //     text_renderer.cursor_end_x = 0;
-    // } else {
-    //     float advance = text_renderer.getGlyphAdvance(std::string(str));
-    //     text_renderer.cursor_start_col_offset += bytes;
-    //     text_renderer.cursor_start_x += advance;
-    //     text_renderer.cursor_end_col_offset += bytes;
-    //     text_renderer.cursor_end_x += advance;
-    // }
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    fprintf(stderr, "insert UTF-8 string: %lld µs\n", duration);
+        //     text_renderer.cursor_start_col_offset = 0;
+        //     text_renderer.cursor_start_x = 0;
+        //     text_renderer.cursor_end_col_offset = 0;
+        //     text_renderer.cursor_end_x = 0;
+        // } else {
+        //     float advance = text_renderer.getGlyphAdvance(std::string(str));
+        //     text_renderer.cursor_start_col_offset += bytes;
+        //     text_renderer.cursor_start_x += advance;
+        //     text_renderer.cursor_end_col_offset += bytes;
+        //     text_renderer.cursor_end_x += advance;
+        // }
+    }
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

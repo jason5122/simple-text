@@ -8,6 +8,7 @@
 #include <string>
 #include <tree_sitter/api.h>
 #include <unordered_map>
+#include <vector>
 
 #include "build/buildflag.h"
 #if IS_MAC
@@ -33,8 +34,8 @@ public:
 
     TextRenderer() = default;
     void setup(float width, float height, std::string main_font_name, int font_size);
-    void renderText(Buffer& buffer, SyntaxHighlighter& highlighter, float scroll_x,
-                    float scroll_y);
+    void layoutText(Buffer& buffer, SyntaxHighlighter& highlighter, float scroll_y);
+    void renderText(float scroll_x, float scroll_y);
     void resize(float new_width, float new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
@@ -42,6 +43,16 @@ public:
     ~TextRenderer();
 
 private:
+    struct RendererInstanceData {
+        Vec2 coords;
+        Vec2 bg_size;
+        Vec4 glyph;
+        Vec4 uv;
+        Rgba color;
+        Rgba bg_color;
+        uint8_t is_atlas = 0;
+    };
+
     static const int BATCH_MAX = 65536;
 
     float width, height;
@@ -53,6 +64,8 @@ private:
     CoreTextRasterizer ct_rasterizer;
 
     std::unordered_map<std::string, AtlasGlyph> glyph_cache;
+
+    std::vector<RendererInstanceData> instances;
 
     void loadGlyph(std::string utf8_str);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);

@@ -66,6 +66,7 @@ private:
     std::unordered_map<std::string, AtlasGlyph> glyph_cache;
 
     std::vector<RendererInstanceData> instances;
+    std::vector<size_t> line_to_instance_mapping;
 
     void loadGlyph(std::string utf8_str);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);

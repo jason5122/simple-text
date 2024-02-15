@@ -135,12 +135,16 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
 
 void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
     instances.clear();
+    line_to_instance_mapping.clear();
 
     highlighter.idx = 0;
     size_t byte_offset = 0;
+    size_t instance = 0;
     for (size_t line_index = 0; line_index < buffer.lineCount(); line_index++) {
         std::string line_str;
         buffer.getLineContent(&line_str, line_index);
+
+        line_to_instance_mapping.push_back(instance);
 
         size_t ret;
         float total_advance = 0;
@@ -171,6 +175,7 @@ void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
                 .color = Rgba::fromRgb(text_color, glyph.colored),
                 .bg_color = Rgba::fromRgb(YELLOW, bg_a),
             });
+            instance++;
 
             total_advance += std::round(glyph.advance);
         }
@@ -187,6 +192,9 @@ void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
         .bg_color = Rgba::fromRgb(YELLOW, 255),
         .is_atlas = true,
     });
+
+    fprintf(stderr, "instances.size() = %zu\n", instances.size());
+    fprintf(stderr, "line_to_instance_mapping.size() = %zu\n", line_to_instance_mapping.size());
 }
 
 void TextRenderer::renderText(float scroll_x, float scroll_y) {
@@ -196,21 +204,27 @@ void TextRenderer::renderText(float scroll_x, float scroll_y) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    size_t scroll_line = scroll_y / line_height;
+    size_t start_line = scroll_y / line_height;
     size_t visible_lines = std::ceil((height - 60 - 40) / line_height);
+    size_t end_line = std::min(start_line + visible_lines, line_to_instance_mapping.size() - 1);
 
-    size_t offset = 0;
-    // size_t n = 500;
-    size_t n = instances.size();
+    size_t start_offset = line_to_instance_mapping.at(start_line);
+    size_t end_offset = line_to_instance_mapping.at(end_line);
+    size_t num_instances = end_offset - start_offset;
+
+    fprintf(stderr, "start_line = %zu, visible_lines = %zu\n", start_line, visible_lines);
+    fprintf(stderr, "num_instances = %zu\n", num_instances);
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * n, &instances[offset]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * num_instances,
+                    &instances[start_offset]);
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, n);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, num_instances);
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, n);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, num_instances);
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

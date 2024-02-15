@@ -133,17 +133,12 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
     return {total_advance, offset};
 }
 
-void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter, float scroll_y) {
+void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
     instances.clear();
 
-    size_t scroll_line = scroll_y / line_height;
-
-    size_t visible_lines = std::ceil((height - 60 - 40) / line_height);
-    size_t byte_offset = buffer.byteOfLine(scroll_line);
-    size_t size = std::min(static_cast<size_t>(scroll_line + visible_lines), buffer.lineCount());
-
     highlighter.idx = 0;
-    for (size_t line_index = scroll_line; line_index < size; line_index++) {
+    size_t byte_offset = 0;
+    for (size_t line_index = 0; line_index < buffer.lineCount(); line_index++) {
         std::string line_str;
         buffer.getLineContent(&line_str, line_index);
 
@@ -201,16 +196,21 @@ void TextRenderer::renderText(float scroll_x, float scroll_y) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
+    size_t scroll_line = scroll_y / line_height;
+    size_t visible_lines = std::ceil((height - 60 - 40) / line_height);
+
+    size_t offset = 0;
+    // size_t n = 500;
+    size_t n = instances.size();
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * instances.size(),
-                    &instances[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * n, &instances[offset]);
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, n);
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, n);
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

@@ -302,6 +302,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
         fprintf(stderr, "Tree-sitter only parse: %lld µs\n", duration);
 
+        text_renderer.layoutText(buffer, highlighter);
+
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
     return glContext;
@@ -333,7 +335,6 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.resize(width, height);
-    text_renderer.layoutText(buffer, highlighter, scaled_scroll_y);
     text_renderer.renderText(scaled_scroll_x, scaled_scroll_y);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);

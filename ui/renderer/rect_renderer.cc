@@ -124,11 +124,11 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     }
 
     // Add tab bar.
-    instances.push_back(InstanceData{
-        .coords = Vec2{0, 0 - 60},
-        .rect_size = Vec2{width, 60},
-        .color = Rgba{228, 228, 228, 255},
-    });
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{0, 0 - 60},
+    //     .rect_size = Vec2{width, 60},
+    //     .color = Rgba{228, 228, 228, 255},
+    // });
 
     // Add side bar.
     instances.push_back(InstanceData{
@@ -138,11 +138,11 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     });
 
     // Add status bar.
-    instances.push_back(InstanceData{
-        .coords = Vec2{0 - 400, (height - 60) - 40},
-        .rect_size = Vec2{width, 40},
-        .color = Rgba{207, 207, 207, 255},
-    });
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{0 - 400, (height - 60) - 40},
+    //     .rect_size = Vec2{width, 40},
+    //     .color = Rgba{207, 207, 207, 255},
+    // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

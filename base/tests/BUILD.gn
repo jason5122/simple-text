@@ -9,6 +9,7 @@ source_set("tests") {
 
   deps = [
     ":copy_test_files",
+    "//base",
     "//third_party/fredbuf",
     "//third_party/googletest:gtest",
     "//third_party/tree_sitter",
@@ -17,6 +18,10 @@ source_set("tests") {
 }
 
 copy("copy_test_files") {
-  sources = [ "example.json" ]
-  outputs = [ "$root_out_dir/{{source_file_part}}" ]
+  sources = [
+    "10mb.json",
+    "25mb.json",
+    "example.json",
+  ]
+  outputs = [ "$root_out_dir/test_files/{{source_file_part}}" ]
 }

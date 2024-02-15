@@ -178,10 +178,7 @@ void TextRenderer::renderText(Buffer& buffer, SyntaxHighlighter& highlighter, fl
                 text_color = highlighter.highlight_colors[highlighter.idx];
             }
 
-            std::string utf8_str;
-            for (size_t i = 0; i < ret; i++) {
-                utf8_str += line_str[offset + i];
-            }
+            std::string utf8_str(line_str.substr(offset, ret));
 
             if (!glyph_cache.count(utf8_str)) {
                 this->loadGlyph(utf8_str);

@@ -205,7 +205,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y) {
     glBindVertexArray(vao);
 
     size_t start_line = scroll_y / line_height;
-    size_t visible_lines = std::ceil((height - 60 - 40) / line_height);
+    size_t visible_lines = std::ceil((height - 60) / line_height);
     size_t end_line = std::min(start_line + visible_lines, line_to_instance_mapping.size() - 1);
 
     size_t start_offset = line_to_instance_mapping.at(start_line);

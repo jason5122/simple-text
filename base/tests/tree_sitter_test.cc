@@ -7,6 +7,34 @@
 
 extern "C" TSLanguage* tree_sitter_json();
 
+struct buffer {
+    const char* buf;
+    size_t len;
+};
+
+const char* read_string(void* payload, uint32_t byte_index, TSPoint position,
+                        uint32_t* bytes_read) {
+    buffer* buf = (buffer*)payload;
+    size_t len = buf->len;
+    *bytes_read = len - byte_index;
+    return buf->buf + byte_index;
+}
+
+TEST(TreeSitterStringTest, Json10Mb) {
+    TSParser* parser = ts_parser_new();
+    ts_parser_set_language(parser, tree_sitter_json());
+
+    std::string source_code = ReadFile("test_files/10mb.json");
+    buffer buf = {&source_code[0], source_code.size()};
+    TSInput input = {&buf, read_string, TSInputEncodingUTF8};
+
+    TSTree* tree;
+    {
+        PROFILE_BLOCK("Tree-sitter only parse");
+        tree = ts_parser_parse(parser, NULL, input);
+    }
+}
+
 static const char* read(void* payload, uint32_t byte_index, TSPoint position,
                         uint32_t* bytes_read) {
     Buffer* buffer = (Buffer*)payload;
@@ -36,7 +64,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 }
 
 // TODO: Add actual tests to this test case.
-TEST(TreeSitterTest, Json10Mb) {
+TEST(TreeSitterBufferTest, Json10Mb) {
     TSParser* parser = ts_parser_new();
     ts_parser_set_language(parser, tree_sitter_json());
 

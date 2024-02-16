@@ -1,5 +1,6 @@
 #include "syntax_highlighter.h"
 #include "util/file_util.h"
+#include "util/profile_util.h"
 #include <cstdio>
 #include <vector>
 
@@ -77,68 +78,71 @@ void SyntaxHighlighter::getHighlights() {
     highlight_ranges.clear();
     highlight_colors.clear();
 
-    while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
-        TSQueryCapture capture = match.captures[capture_index];
-        TSNode node = capture.node;
-        uint32_t start_byte = ts_node_start_byte(node);
-        uint32_t end_byte = ts_node_end_byte(node);
+    {
+        PROFILE_BLOCK("while loop of ts_query_cursor_next_capture()");
+        while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
+            TSQueryCapture capture = match.captures[capture_index];
+            TSNode node = capture.node;
+            uint32_t start_byte = ts_node_start_byte(node);
+            uint32_t end_byte = ts_node_end_byte(node);
 
-        if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
-            highlight_ranges.push_back({start_byte, end_byte});
+            if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
+                highlight_ranges.push_back({start_byte, end_byte});
 
-            if (scope == "source.scheme") {
-                if (capture.index == 1) {
-                    highlight_colors.push_back(YELLOW);
-                } else if (capture.index == 2) {
-                    highlight_colors.push_back(RED);
-                } else if (capture.index == 3) {
-                    highlight_colors.push_back(GREEN);
-                } else if (capture.index == 5) {
-                    highlight_colors.push_back(GREY2);
-                } else if (capture.index == 7) {
-                    highlight_colors.push_back(BLUE);
-                } else {
-                    highlight_colors.push_back(BLACK);
+                if (scope == "source.scheme") {
+                    if (capture.index == 1) {
+                        highlight_colors.push_back(YELLOW);
+                    } else if (capture.index == 2) {
+                        highlight_colors.push_back(RED);
+                    } else if (capture.index == 3) {
+                        highlight_colors.push_back(GREEN);
+                    } else if (capture.index == 5) {
+                        highlight_colors.push_back(GREY2);
+                    } else if (capture.index == 7) {
+                        highlight_colors.push_back(BLUE);
+                    } else {
+                        highlight_colors.push_back(BLACK);
+                    }
+                } else if (scope == "source.json") {
+                    if (capture.index == 0) {
+                        highlight_colors.push_back(PURPLE);
+                    } else if (capture.index == 1) {
+                        highlight_colors.push_back(GREEN);
+                    } else if (capture.index == 2) {
+                        highlight_colors.push_back(YELLOW);
+                    } else if (capture.index == 3) {
+                        highlight_colors.push_back(RED);
+                    } else if (capture.index == 5) {
+                        highlight_colors.push_back(GREY2);
+                    } else {
+                        highlight_colors.push_back(BLACK);
+                    }
                 }
-            } else if (scope == "source.json") {
-                if (capture.index == 0) {
-                    highlight_colors.push_back(PURPLE);
-                } else if (capture.index == 1) {
-                    highlight_colors.push_back(GREEN);
-                } else if (capture.index == 2) {
-                    highlight_colors.push_back(YELLOW);
-                } else if (capture.index == 3) {
-                    highlight_colors.push_back(RED);
-                } else if (capture.index == 5) {
-                    highlight_colors.push_back(GREY2);
-                } else {
-                    highlight_colors.push_back(BLACK);
-                }
+
+                // GLSL
+                // if (capture.index == 0) {
+                //     highlight_colors.push_back(PURPLE);
+                // } else if (capture.index == 1) {
+                //     highlight_colors.push_back(RED2);
+                // } else if (capture.index == 5) {
+                //     highlight_colors.push_back(YELLOW);
+                // } else if (capture.index == 6) {
+                //     highlight_colors.push_back(BLUE);
+                // } else if (capture.index == 10) {
+                //     highlight_colors.push_back(PURPLE);
+                // } else if (capture.index == 12) {
+                //     highlight_colors.push_back(GREY2);
+                // } else if (capture.index == 13) {
+                //     highlight_colors.push_back(RED);
+                // } else {
+                //     highlight_colors.push_back(BLACK);
+                // }
             }
 
-            // GLSL
-            // if (capture.index == 0) {
-            //     highlight_colors.push_back(PURPLE);
-            // } else if (capture.index == 1) {
-            //     highlight_colors.push_back(RED2);
-            // } else if (capture.index == 5) {
-            //     highlight_colors.push_back(YELLOW);
-            // } else if (capture.index == 6) {
-            //     highlight_colors.push_back(BLUE);
-            // } else if (capture.index == 10) {
-            //     highlight_colors.push_back(PURPLE);
-            // } else if (capture.index == 12) {
-            //     highlight_colors.push_back(GREY2);
-            // } else if (capture.index == 13) {
-            //     highlight_colors.push_back(RED);
-            // } else {
-            //     highlight_colors.push_back(BLACK);
-            // }
+            prev_id = node.id;
+            prev_start = start_byte;
+            prev_end = end_byte;
         }
-
-        prev_id = node.id;
-        prev_start = start_byte;
-        prev_end = end_byte;
     }
 }
 

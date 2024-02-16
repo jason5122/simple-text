@@ -266,7 +266,6 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 - (void)parseBuffer {
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
     highlighter.parse(input);
-    highlighter.getHighlights();
 }
 
 - (void)editBuffer:(size_t)bytes {
@@ -301,8 +300,14 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
             PROFILE_BLOCK("Tree-sitter only parse");
             [self parseBuffer];
         }
-
-        text_renderer.layoutText(buffer, highlighter);
+        {
+            PROFILE_BLOCK("highlighter.getHighlights()");
+            highlighter.getHighlights();
+        }
+        {
+            PROFILE_BLOCK("text_renderer.layoutText()");
+            text_renderer.layoutText(buffer, highlighter);
+        }
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -355,9 +360,12 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes {
     {
-        PROFILE_BLOCK("insert UTF-8 string");
+        PROFILE_BLOCK("buffer.insert()");
         buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
+    }
 
+    {
+        PROFILE_BLOCK("editBuffer + parseBuffer");
         [self editBuffer:bytes];
         [self parseBuffer];
 

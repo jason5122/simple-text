@@ -179,16 +179,6 @@ void TextRenderer::layoutText(Buffer& buffer) {
         longest_line_x = std::max(total_advance, longest_line_x);
     }
 
-    layout_instances.push_back(RendererInstanceData{
-        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
-        .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-        .uv = Vec4{0, 0, 1.0, 1.0},
-        .color = Rgba::fromRgb(BLACK, false),
-        .bg_color = Rgba::fromRgb(YELLOW, 255),
-        .is_atlas = true,
-    });
-
     fprintf(stderr, "layout_instances.size() = %zu\n", layout_instances.size());
     fprintf(stderr, "line_to_instance_mapping.size() = %zu\n", line_to_instance_mapping.size());
 }
@@ -220,6 +210,16 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, SyntaxHighlighter&
     for (size_t i = start_offset; i < end_offset; i++) {
         instances.push_back(layout_instances[i]);
     }
+
+    instances.push_back(RendererInstanceData{
+        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 * line_height + scroll_y},
+        .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+        .uv = Vec4{0, 0, 1.0, 1.0},
+        .color = Rgba::fromRgb(BLACK, false),
+        .bg_color = Rgba::fromRgb(YELLOW, 255),
+        .is_atlas = true,
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * instances.size(),

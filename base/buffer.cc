@@ -8,6 +8,10 @@ void Buffer::setContents(std::string txt) {
     piece_tree = builder.create();
 }
 
+size_t Buffer::size() {
+    return rep(piece_tree.length());
+}
+
 size_t Buffer::lineCount() {
     return rep(piece_tree.line_count());
 }

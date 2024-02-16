@@ -12,7 +12,7 @@ public:
     void setLanguage(std::string scope);
     void parse(TSInput& input);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
-    void getHighlights();
+    void getHighlights(size_t start_byte, size_t end_byte);
     bool isByteOffsetInRange(size_t byte_offset);
 
 private:

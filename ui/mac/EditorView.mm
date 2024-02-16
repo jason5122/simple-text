@@ -302,7 +302,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         }
         {
             PROFILE_BLOCK("highlighter.getHighlights()");
-            highlighter.getHighlights();
+            // highlighter.getHighlights(0, buffer.size());
+            highlighter.getHighlights(0, 1000);
         }
         {
             PROFILE_BLOCK("text_renderer.layoutText()");

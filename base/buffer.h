@@ -12,6 +12,7 @@ public:
 
     Buffer() = default;
     void setContents(std::string txt);
+    size_t size();
     size_t lineCount();
     void getLineContent(std::string* buf, size_t line_index) const;
     size_t byteOfLine(size_t line_index);

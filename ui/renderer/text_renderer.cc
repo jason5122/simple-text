@@ -133,11 +133,10 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
     return {total_advance, offset};
 }
 
-void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
-    instances.clear();
+void TextRenderer::layoutText(Buffer& buffer) {
+    layout_instances.clear();
     line_to_instance_mapping.clear();
 
-    highlighter.idx = 0;
     size_t byte_offset = 0;
     size_t instance = 0;
     for (size_t line_index = 0; line_index < buffer.lineCount(); line_index++) {
@@ -152,9 +151,6 @@ void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
             Rgb text_color = BLACK;
-            if (highlighter.isByteOffsetInRange(byte_offset)) {
-                text_color = highlighter.highlight_colors[highlighter.idx];
-            }
 
             std::string utf8_str(line_str.substr(offset, ret));
 
@@ -167,7 +163,7 @@ void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
             float glyph_center_x = total_advance + glyph.advance / 2;
             uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
-            instances.push_back(RendererInstanceData{
+            layout_instances.push_back(RendererInstanceData{
                 .coords = Vec2{total_advance, line_index * line_height},
                 .bg_size = Vec2{glyph.advance, line_height},
                 .glyph = glyph.glyph,
@@ -183,7 +179,7 @@ void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
         longest_line_x = std::max(total_advance, longest_line_x);
     }
 
-    instances.push_back(RendererInstanceData{
+    layout_instances.push_back(RendererInstanceData{
         .coords = Vec2{width - Atlas::ATLAS_SIZE - 400, 10 * line_height},
         .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
@@ -193,11 +189,11 @@ void TextRenderer::layoutText(Buffer& buffer, SyntaxHighlighter& highlighter) {
         .is_atlas = true,
     });
 
-    fprintf(stderr, "instances.size() = %zu\n", instances.size());
+    fprintf(stderr, "layout_instances.size() = %zu\n", layout_instances.size());
     fprintf(stderr, "line_to_instance_mapping.size() = %zu\n", line_to_instance_mapping.size());
 }
 
-void TextRenderer::renderText(float scroll_x, float scroll_y) {
+void TextRenderer::renderText(float scroll_x, float scroll_y, SyntaxHighlighter& highlighter) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
 
@@ -215,16 +211,26 @@ void TextRenderer::renderText(float scroll_x, float scroll_y) {
     fprintf(stderr, "start_line = %zu, visible_lines = %zu\n", start_line, visible_lines);
     fprintf(stderr, "num_instances = %zu\n", num_instances);
 
+    // highlighter.idx = 0;
+    // if (highlighter.isByteOffsetInRange(byte_offset)) {
+    //     text_color = highlighter.highlight_colors[highlighter.idx];
+    // }
+
+    std::vector<RendererInstanceData> instances;
+    for (size_t i = start_offset; i < end_offset; i++) {
+        instances.push_back(layout_instances[i]);
+    }
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * num_instances,
-                    &instances[start_offset]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * instances.size(),
+                    &instances[0]);
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, num_instances);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, num_instances);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

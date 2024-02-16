@@ -34,8 +34,8 @@ public:
 
     TextRenderer() = default;
     void setup(float width, float height, std::string main_font_name, int font_size);
-    void layoutText(Buffer& buffer, SyntaxHighlighter& highlighter);
-    void renderText(float scroll_x, float scroll_y);
+    void layoutText(Buffer& buffer);
+    void renderText(float scroll_x, float scroll_y, SyntaxHighlighter& highlighter);
     void resize(float new_width, float new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
@@ -65,7 +65,7 @@ private:
 
     std::unordered_map<std::string, AtlasGlyph> glyph_cache;
 
-    std::vector<RendererInstanceData> instances;
+    std::vector<RendererInstanceData> layout_instances;
     std::vector<size_t> line_to_instance_mapping;
 
     void loadGlyph(std::string utf8_str);

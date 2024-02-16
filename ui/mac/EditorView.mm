@@ -307,7 +307,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         }
         {
             PROFILE_BLOCK("text_renderer.layoutText()");
-            text_renderer.layoutText(buffer, highlighter);
+            text_renderer.layoutText(buffer);
         }
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
@@ -342,7 +342,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         text_renderer.resize(width, height);
-        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y);
+        highlighter.getHighlights(0, 1000);
+        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, highlighter);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         size_t visible_lines = std::ceil((height - 60) / text_renderer.line_height);

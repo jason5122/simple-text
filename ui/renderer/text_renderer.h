@@ -34,8 +34,8 @@ public:
 
     TextRenderer() = default;
     void setup(float width, float height, std::string main_font_name, int font_size);
-    void layoutText(Buffer& buffer);
-    void renderText(float scroll_x, float scroll_y, SyntaxHighlighter& highlighter);
+    void renderText(float scroll_x, float scroll_y, Buffer& buffer,
+                    SyntaxHighlighter& highlighter);
     void resize(float new_width, float new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
@@ -51,7 +51,6 @@ private:
         Rgba color;
         Rgba bg_color;
         uint8_t is_atlas = 0;
-        size_t offset;
     };
 
     static const int BATCH_MAX = 65536;
@@ -65,9 +64,6 @@ private:
     CoreTextRasterizer ct_rasterizer;
 
     std::unordered_map<uint_least32_t, AtlasGlyph> glyph_cache;
-
-    std::vector<RendererInstanceData> layout_instances;
-    std::vector<size_t> line_to_instance_mapping;
 
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);

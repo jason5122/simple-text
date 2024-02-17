@@ -297,17 +297,10 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
 
-        std::thread t1([&] {
-            {
-                PROFILE_BLOCK("Tree-sitter only parse");
-                [self parseBuffer];
-            }
-        });
         {
-            PROFILE_BLOCK("text_renderer.layoutText()");
-            text_renderer.layoutText(buffer);
+            PROFILE_BLOCK("Tree-sitter only parse");
+            [self parseBuffer];
         }
-        t1.join();
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -341,7 +334,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         text_renderer.resize(width, height);
-        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, highlighter);
+        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         size_t visible_lines = std::ceil((height - 60) / text_renderer.line_height);
@@ -366,8 +359,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
     {
         PROFILE_BLOCK("editBuffer + parseBuffer");
-        [self editBuffer:bytes];
-        [self parseBuffer];
+        // [self editBuffer:bytes];
+        // [self parseBuffer];
 
         // if (strcmp(str, "\n") == 0) {
         //     text_renderer.cursor_start_line++;

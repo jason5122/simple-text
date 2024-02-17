@@ -89,21 +89,16 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    for (char ch = 'A'; ch < 'z'; ch++) {
-        std::string str(1, ch);
-        this->loadGlyph(str);
-    }
 }
 
-float TextRenderer::getGlyphAdvance(std::string utf8_str) {
-    if (!glyph_cache.count(utf8_str)) {
-        this->loadGlyph(utf8_str);
-    }
+// float TextRenderer::getGlyphAdvance(std::string utf8_str) {
+//     if (!glyph_cache.count(utf8_str)) {
+//         this->loadGlyph(utf8_str);
+//     }
 
-    AtlasGlyph glyph = glyph_cache[utf8_str];
-    return std::round(glyph.advance);
-}
+//     AtlasGlyph glyph = glyph_cache[utf8_str];
+//     return std::round(glyph.advance);
+// }
 
 std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str, float x) {
     size_t offset;
@@ -112,16 +107,16 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
     for (offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
-        std::string utf8_str;
-        for (size_t i = 0; i < ret; i++) {
-            utf8_str += line_str[offset + i];
+        std::string utf8_str(line_str.substr(offset, ret));
+
+        uint_least32_t codepoint;
+        grapheme_decode_utf8(&line_str[0] + offset, SIZE_MAX, &codepoint);
+
+        if (!glyph_cache.count(codepoint)) {
+            this->loadGlyph(utf8_str, codepoint);
         }
 
-        if (!glyph_cache.count(utf8_str)) {
-            this->loadGlyph(utf8_str);
-        }
-
-        AtlasGlyph glyph = glyph_cache[utf8_str];
+        AtlasGlyph glyph = glyph_cache[codepoint];
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -154,11 +149,14 @@ void TextRenderer::layoutText(Buffer& buffer) {
 
             std::string utf8_str(line_str.substr(offset, ret));
 
-            if (!glyph_cache.count(utf8_str)) {
-                this->loadGlyph(utf8_str);
+            uint_least32_t codepoint;
+            grapheme_decode_utf8(&line_str[0] + offset, SIZE_MAX, &codepoint);
+
+            if (!glyph_cache.count(codepoint)) {
+                this->loadGlyph(utf8_str, codepoint);
             }
 
-            AtlasGlyph glyph = glyph_cache[utf8_str];
+            AtlasGlyph glyph = glyph_cache[codepoint];
 
             float glyph_center_x = total_advance + glyph.advance / 2;
             uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
@@ -320,10 +318,10 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
     cursor_end_x = x;
 }
 
-void TextRenderer::loadGlyph(std::string utf8_str) {
+void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint) {
     RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(utf8_str.c_str());
     AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
-    glyph_cache.insert({utf8_str, atlas_glyph});
+    glyph_cache.insert({codepoint, atlas_glyph});
 }
 
 void TextRenderer::resize(float new_width, float new_height) {

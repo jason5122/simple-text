@@ -11,6 +11,7 @@
 #import <limits>
 #import <sstream>
 #import <string>
+#import <thread>
 #import <vector>
 
 @interface OpenGLLayer : CAOpenGLLayer {
@@ -296,14 +297,17 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
 
-        {
-            PROFILE_BLOCK("Tree-sitter only parse");
-            [self parseBuffer];
-        }
+        std::thread t1([&] {
+            {
+                PROFILE_BLOCK("Tree-sitter only parse");
+                [self parseBuffer];
+            }
+        });
         {
             PROFILE_BLOCK("text_renderer.layoutText()");
             text_renderer.layoutText(buffer);
         }
+        t1.join();
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }

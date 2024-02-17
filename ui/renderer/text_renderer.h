@@ -43,16 +43,6 @@ public:
     ~TextRenderer();
 
 private:
-    struct RendererInstanceData {
-        Vec2 coords;
-        Vec2 bg_size;
-        Vec4 glyph;
-        Vec4 uv;
-        Rgba color;
-        Rgba bg_color;
-        uint8_t is_atlas = 0;
-    };
-
     static const int BATCH_MAX = 65536;
 
     float width, height;

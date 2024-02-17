@@ -1,21 +1,17 @@
 #version 330 core
 
 layout(location = 0) in vec2 coords;
-layout(location = 1) in vec2 bg_size;
-layout(location = 2) in vec4 glyph;
-layout(location = 3) in vec4 uv;
-layout(location = 4) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
-layout(location = 5) in vec4 in_background_color;
-layout(location = 6) in int is_atlas;
+layout(location = 1) in vec4 glyph;
+layout(location = 2) in vec4 uv;
+layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
+layout(location = 4) in int is_atlas;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
-flat out vec4 background_color;
 
 uniform vec2 resolution;
 uniform float line_height;
 uniform vec2 scroll_offset;
-uniform int rendering_pass;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
@@ -33,26 +29,17 @@ void main() {
     cell_position.x += 400;
     cell_position.y += 60;
 
-    if (rendering_pass == 0) {
-        cell_position += bg_size * position;
+    vec2 glyph_offset = glyph.xy;  // <left, top>
+    vec2 glyph_size = glyph.zw;    // <width, height>
+    vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
+    vec2 uv_size = uv.zw;          // <uv_width, uv_height>
 
-        gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
-        background_color = in_background_color / 255.0;
+    if (is_atlas == 0) {
+        glyph_offset.y = line_height - glyph_offset.y;
     }
+    cell_position += glyph_offset + glyph_size * position;
 
-    if (rendering_pass == 1) {
-        vec2 glyph_offset = glyph.xy;  // <left, top>
-        vec2 glyph_size = glyph.zw;    // <width, height>
-        vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
-        vec2 uv_size = uv.zw;          // <uv_width, uv_height>
-
-        if (is_atlas == 0) {
-            glyph_offset.y = line_height - glyph_offset.y;
-        }
-        cell_position += glyph_offset + glyph_size * position;
-
-        gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
-        tex_coords = uv_offset + uv_size * position;
-        text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
-    }
+    gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
+    tex_coords = uv_offset + uv_size * position;
+    text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
 }

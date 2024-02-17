@@ -15,6 +15,16 @@ extern "C" TSLanguage* tree_sitter_glsl();
 extern "C" TSLanguage* tree_sitter_json();
 extern "C" TSLanguage* tree_sitter_scheme();
 
+namespace {
+struct InstanceData {
+    Vec2 coords;
+    Vec4 glyph;
+    Vec4 uv;
+    Rgba color;
+    uint8_t is_atlas = 0;
+};
+}
+
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
@@ -45,44 +55,33 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(RendererInstanceData) * BATCH_MAX, nullptr,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
 
     GLuint index = 0;
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(RendererInstanceData),
-                          (void*)offsetof(RendererInstanceData, coords));
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, coords));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(RendererInstanceData),
-                          (void*)offsetof(RendererInstanceData, bg_size));
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, glyph));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(RendererInstanceData),
-                          (void*)offsetof(RendererInstanceData, glyph));
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, uv));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(RendererInstanceData),
-                          (void*)offsetof(RendererInstanceData, uv));
+    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, color));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(RendererInstanceData),
-                          (void*)offsetof(RendererInstanceData, color));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(RendererInstanceData),
-                          (void*)offsetof(RendererInstanceData, bg_color));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(RendererInstanceData),
-                          (void*)offsetof(RendererInstanceData, is_atlas));
+    glVertexAttribPointer(index, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, is_atlas));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -140,12 +139,12 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     size_t visible_lines = std::ceil((height - 60) / line_height);
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
-    // highlighter.idx = 0;
-    // highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
-    //                           {static_cast<uint32_t>(end_line), 0});
+    highlighter.idx = 0;
+    highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
+                              {static_cast<uint32_t>(end_line), 0});
 
     size_t byte_offset = buffer.byteOfLine(start_line);
-    std::vector<RendererInstanceData> instances;
+    std::vector<InstanceData> instances;
 
     for (size_t line_index = start_line; line_index < end_line; line_index++) {
         std::string line_str;
@@ -157,9 +156,9 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
             Rgb text_color = BLACK;
-            // if (highlighter.isByteOffsetInRange(byte_offset)) {
-            //     text_color = highlighter.highlight_colors[highlighter.idx];
-            // }
+            if (highlighter.isByteOffsetInRange(byte_offset)) {
+                text_color = highlighter.highlight_colors[highlighter.idx];
+            }
 
             std::string utf8_str(line_str.substr(offset, ret));
 
@@ -172,16 +171,11 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
             AtlasGlyph glyph = glyph_cache[codepoint];
 
-            float glyph_center_x = total_advance + glyph.advance / 2;
-            uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
-
-            instances.push_back(RendererInstanceData{
+            instances.push_back(InstanceData{
                 .coords = Vec2{total_advance, line_index * line_height},
-                .bg_size = Vec2{glyph.advance, line_height},
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
                 .color = Rgba::fromRgb(text_color, glyph.colored),
-                .bg_color = Rgba::fromRgb(YELLOW, bg_a),
             });
 
             total_advance += std::round(glyph.advance);
@@ -190,25 +184,19 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         longest_line_x = std::max(total_advance, longest_line_x);
     }
 
-    instances.push_back(RendererInstanceData{
+    instances.push_back(InstanceData{
         .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 * line_height + scroll_y},
-        .bg_size = Vec2{Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
         .uv = Vec4{0, 0, 1.0, 1.0},
         .color = Rgba::fromRgb(BLACK, false),
-        .bg_color = Rgba::fromRgb(YELLOW, 255),
         .is_atlas = true,
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RendererInstanceData) * instances.size(),
-                    &instances[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.

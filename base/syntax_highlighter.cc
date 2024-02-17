@@ -62,11 +62,11 @@ void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_
     ts_tree_edit(tree, &edit);
 }
 
-void SyntaxHighlighter::getHighlights(size_t start_byte, size_t end_byte) {
+void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
     TSNode root_node = ts_tree_root_node(tree);
     TSQueryCursor* query_cursor = ts_query_cursor_new();
     ts_query_cursor_exec(query_cursor, query, root_node);
-    ts_query_cursor_set_byte_range(query_cursor, start_byte, end_byte);
+    ts_query_cursor_set_point_range(query_cursor, start_point, end_point);
 
     const void* prev_id = 0;
     uint32_t prev_start = -1;

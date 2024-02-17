@@ -197,13 +197,10 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, SyntaxHighlighter&
 
     size_t start_offset = line_to_instance_mapping.at(start_line);
     size_t end_offset = line_to_instance_mapping.at(end_line);
-    size_t num_instances = end_offset - start_offset;
-
-    fprintf(stderr, "start_line = %zu, visible_lines = %zu\n", start_line, visible_lines);
-    fprintf(stderr, "num_instances = %zu\n", num_instances);
 
     highlighter.idx = 0;
-    highlighter.getHighlights(0, 1000);
+    highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
+                              {static_cast<uint32_t>(end_line), 0});
 
     std::vector<RendererInstanceData> instances;
     for (size_t i = start_offset; i < end_offset; i++) {
@@ -213,7 +210,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, SyntaxHighlighter&
         if (highlighter.isByteOffsetInRange(layout_instance.offset)) {
             text_color = highlighter.highlight_colors[highlighter.idx];
         }
-        layout_instance.color = Rgba::fromRgb(text_color, 0);
+        layout_instance.color = Rgba::fromRgb(text_color, layout_instance.color.a);
 
         instances.push_back(layout_instance);
     }

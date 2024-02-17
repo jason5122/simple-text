@@ -51,6 +51,7 @@ private:
         Rgba color;
         Rgba bg_color;
         uint8_t is_atlas = 0;
+        size_t offset;
     };
 
     static const int BATCH_MAX = 65536;

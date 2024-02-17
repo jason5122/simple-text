@@ -170,6 +170,7 @@ void TextRenderer::layoutText(Buffer& buffer) {
                 .uv = glyph.uv,
                 .color = Rgba::fromRgb(text_color, glyph.colored),
                 .bg_color = Rgba::fromRgb(YELLOW, bg_a),
+                .offset = byte_offset,
             });
             instance++;
 
@@ -201,14 +202,20 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, SyntaxHighlighter&
     fprintf(stderr, "start_line = %zu, visible_lines = %zu\n", start_line, visible_lines);
     fprintf(stderr, "num_instances = %zu\n", num_instances);
 
-    // highlighter.idx = 0;
-    // if (highlighter.isByteOffsetInRange(byte_offset)) {
-    //     text_color = highlighter.highlight_colors[highlighter.idx];
-    // }
+    highlighter.idx = 0;
+    highlighter.getHighlights(0, 1000);
 
     std::vector<RendererInstanceData> instances;
     for (size_t i = start_offset; i < end_offset; i++) {
-        instances.push_back(layout_instances[i]);
+        RendererInstanceData layout_instance = layout_instances[i];
+
+        Rgb text_color = BLACK;
+        if (highlighter.isByteOffsetInRange(layout_instance.offset)) {
+            text_color = highlighter.highlight_colors[highlighter.idx];
+        }
+        layout_instance.color = Rgba::fromRgb(text_color, 0);
+
+        instances.push_back(layout_instance);
     }
 
     instances.push_back(RendererInstanceData{

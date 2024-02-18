@@ -3,6 +3,7 @@
 #include "ui/renderer/opengl_types.h"
 #include "util/file_util.h"
 #include "util/opengl_error_util.h"
+#include "util/profile_util.h"
 #include <cmath>
 #include <iostream>
 
@@ -146,42 +147,50 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     size_t byte_offset = buffer.byteOfLine(start_line);
     std::vector<InstanceData> instances;
 
-    for (size_t line_index = start_line; line_index < end_line; line_index++) {
-        std::string line_str;
-        buffer.getLineContent(&line_str, line_index);
+    {
+        PROFILE_BLOCK("entire loop");
+        for (size_t line_index = start_line; line_index < end_line; line_index++) {
+            size_t ret = 1;
+            float total_advance = 0;
 
-        size_t ret;
-        float total_advance = 0;
-        for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
-            ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
-
-            Rgb text_color = BLACK;
-            if (highlighter.isByteOffsetInRange(byte_offset)) {
-                text_color = highlighter.highlight_colors[highlighter.idx];
+            std::string line_str;
+            {
+                PROFILE_BLOCK("buffer.getLineContent()");
+                buffer.getLineContent(&line_str, line_index);
             }
 
-            std::string utf8_str(line_str.substr(offset, ret));
+            for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
+                ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
-            uint_least32_t codepoint;
-            grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
+                Rgb text_color = BLACK;
+                if (highlighter.isByteOffsetInRange(byte_offset)) {
+                    text_color = highlighter.highlight_colors[highlighter.idx];
+                }
 
-            if (!glyph_cache.count(codepoint)) {
-                this->loadGlyph(utf8_str, codepoint);
+                std::string utf8_str(line_str.substr(offset, ret));
+
+                uint_least32_t codepoint;
+                grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
+
+                if (!glyph_cache.count(codepoint)) {
+                    this->loadGlyph(utf8_str, codepoint);
+                }
+
+                AtlasGlyph glyph = glyph_cache[codepoint];
+
+                instances.push_back(InstanceData{
+                    .coords = Vec2{total_advance, line_index * line_height},
+                    .glyph = glyph.glyph,
+                    .uv = glyph.uv,
+                    .color = Rgba::fromRgb(text_color, glyph.colored),
+                });
+
+                total_advance += std::round(glyph.advance);
             }
 
-            AtlasGlyph glyph = glyph_cache[codepoint];
-
-            instances.push_back(InstanceData{
-                .coords = Vec2{total_advance, line_index * line_height},
-                .glyph = glyph.glyph,
-                .uv = glyph.uv,
-                .color = Rgba::fromRgb(text_color, glyph.colored),
-            });
-
-            total_advance += std::round(glyph.advance);
+            byte_offset++;
+            longest_line_x = std::max(total_advance, longest_line_x);
         }
-        byte_offset++;
-        longest_line_x = std::max(total_advance, longest_line_x);
     }
 
     instances.push_back(InstanceData{

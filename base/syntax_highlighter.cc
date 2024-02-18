@@ -63,6 +63,8 @@ void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_
 }
 
 void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
+    if (tree == nullptr) return;
+
     TSNode root_node = ts_tree_root_node(tree);
     TSQueryCursor* query_cursor = ts_query_cursor_new();
     ts_query_cursor_exec(query_cursor, query, root_node);

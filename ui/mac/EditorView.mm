@@ -267,6 +267,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 - (void)parseBuffer {
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
     highlighter.parse(input);
+    [self setNeedsDisplay];
 }
 
 - (void)editBuffer:(size_t)bytes {
@@ -297,10 +298,13 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
 
-        {
-            PROFILE_BLOCK("Tree-sitter only parse");
-            [self parseBuffer];
-        }
+        std::thread parse_thread([&] {
+            {
+                PROFILE_BLOCK("Tree-sitter only parse");
+                [self parseBuffer];
+            }
+        });
+        parse_thread.detach();
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }

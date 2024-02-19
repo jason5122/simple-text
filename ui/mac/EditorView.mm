@@ -118,7 +118,7 @@
                 openGLLayer.contentsScale;
 
             openGLLayer->cursor_end_x =
-                std::clamp(openGLLayer->cursor_end_x + dx, mouse_x, max_mouse_x);
+                std::clamp(openGLLayer->cursor_end_x + dx, mouse_x, max_mouse_x + 200);
 
             // Unlike cursor_end_x, our mouse could be well below the cursor.
             // This is only possible if scrolling past the end is enabled.

@@ -85,11 +85,6 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     rect_height += extra_padding * 2;
 
     std::vector<InstanceData> instances;
-    instances.push_back(InstanceData{
-        .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
-        .rect_size = Vec2{rect_width, rect_height},
-        .color = Rgba::fromRgb(BLUE2, 255),
-    });
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
 
@@ -145,6 +140,13 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .coords = Vec2{0 - 400, (height - 60) - 40},
         .rect_size = Vec2{width, 40},
         .color = Rgba{207, 207, 207, 255},
+    });
+
+    // Add cursor.
+    instances.push_back(InstanceData{
+        .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
+        .rect_size = Vec2{rect_width, rect_height},
+        .color = Rgba::fromRgb(BLUE2, 255),
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

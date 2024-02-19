@@ -113,18 +113,18 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     }
 
     // Add horizontal scroll bar.
-    float horizontal_scroll_bar_width = width * (width / longest_x);
+    float horizontal_scroll_bar_width = (width - 400) * ((width - 400) / longest_x);
     float horizontal_scroll_bar_height = 15;
     float horizontal_scroll_bar_position_percentage = scroll_x / longest_x;
-    if (horizontal_scroll_bar_width < width) {
-        instances.push_back(InstanceData{
-            .coords = Vec2{width * horizontal_scroll_bar_position_percentage,
-                           (height - 60 - 40) - horizontal_scroll_bar_height},
-            .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
-            .color = Rgba{182, 182, 182, 255},
-            .corner_radius = 5,
-        });
-    }
+    // if (horizontal_scroll_bar_width < width) {
+    instances.push_back(InstanceData{
+        .coords = Vec2{(width - 400) * horizontal_scroll_bar_position_percentage,
+                       (height - 60 - 40) - horizontal_scroll_bar_height},
+        .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
+        .color = Rgba{182, 182, 182, 255},
+        .corner_radius = 5,
+    });
+    // }
 
     // Add tab bar.
     instances.push_back(InstanceData{

@@ -403,7 +403,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 - (CGFloat)maxScrollX {
     // TODO: Formulate max_cursor_x without the need for division.
     CGFloat max_cursor_x = text_renderer.longest_line_x / self.contentsScale;
-    max_cursor_x -= self.frame.size.width;
+    max_cursor_x -= self.frame.size.width - 200;
     if (max_cursor_x < 0) max_cursor_x = 0;
     return max_cursor_x;
 }

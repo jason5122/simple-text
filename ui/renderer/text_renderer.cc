@@ -190,13 +190,13 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         }
     }
 
-    instances.push_back(InstanceData{
-        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 * line_height + scroll_y},
-        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-        .uv = Vec4{0, 0, 1.0, 1.0},
-        .color = Rgba::fromRgb(BLACK, false),
-        .is_atlas = true,
-    });
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 * line_height + scroll_y},
+    //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+    //     .uv = Vec4{0, 0, 1.0, 1.0},
+    //     .color = Rgba::fromRgb(BLACK, false),
+    //     .is_atlas = true,
+    // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

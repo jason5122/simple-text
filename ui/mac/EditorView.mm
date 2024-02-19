@@ -346,7 +346,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         text_renderer.resize(width, height);
-        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter);
+        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
+                                 scaled_editor_offset_x, scaled_editor_offset_y);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         rect_renderer.resize(width, height);

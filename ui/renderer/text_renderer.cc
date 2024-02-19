@@ -129,9 +129,12 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
 }
 
 void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
-                              SyntaxHighlighter& highlighter) {
+                              SyntaxHighlighter& highlighter, float editor_offset_x,
+                              float editor_offset_y) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
+    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
+                editor_offset_y);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

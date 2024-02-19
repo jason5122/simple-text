@@ -34,8 +34,8 @@ public:
 
     TextRenderer() = default;
     void setup(float width, float height, std::string main_font_name, int font_size);
-    void renderText(float scroll_x, float scroll_y, Buffer& buffer,
-                    SyntaxHighlighter& highlighter);
+    void renderText(float scroll_x, float scroll_y, Buffer& buffer, SyntaxHighlighter& highlighter,
+                    float editor_offset_x, float editor_offset_y);
     void resize(float new_width, float new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);

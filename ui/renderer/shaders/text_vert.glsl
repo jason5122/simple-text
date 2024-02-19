@@ -12,6 +12,7 @@ flat out vec4 text_color;
 uniform vec2 resolution;
 uniform float line_height;
 uniform vec2 scroll_offset;
+uniform vec2 editor_offset;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
@@ -26,8 +27,7 @@ void main() {
 
     vec2 cell_position = coords;
     cell_position -= scroll_offset;
-    cell_position.x += 400;
-    cell_position.y += 60;
+    cell_position += editor_offset;
 
     vec2 glyph_offset = glyph.xy;  // <left, top>
     vec2 glyph_size = glyph.zw;    // <width, height>

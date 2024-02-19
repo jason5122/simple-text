@@ -50,7 +50,11 @@
 @end
 
 @interface EditorView () {
+@public
     OpenGLLayer* openGLLayer;
+
+@private
+    bool isDragging;
 }
 @end
 
@@ -74,6 +78,8 @@
                                                       owner:self
                                                    userInfo:nil];
         [self addTrackingArea:trackingArea];
+
+        isDragging = false;
     }
     return self;
 }
@@ -171,14 +177,22 @@ const char* hex(char c) {
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    mouse_x -= openGLLayer->editor_offset_x;
-    mouse_y -= openGLLayer->editor_offset_y;
+    if (mouse_x >= openGLLayer->editor_offset_x && mouse_y >= openGLLayer->editor_offset_y) {
+        mouse_x -= openGLLayer->editor_offset_x;
+        mouse_y -= openGLLayer->editor_offset_y;
 
-    openGLLayer->cursor_start_x = mouse_x + openGLLayer->scroll_x;
-    openGLLayer->cursor_start_y = mouse_y + openGLLayer->scroll_y;
-    openGLLayer->cursor_end_x = mouse_x + openGLLayer->scroll_x;
-    openGLLayer->cursor_end_y = mouse_y + openGLLayer->scroll_y;
-    [openGLLayer setRendererCursorPositions];
+        openGLLayer->cursor_start_x = mouse_x + openGLLayer->scroll_x;
+        openGLLayer->cursor_start_y = mouse_y + openGLLayer->scroll_y;
+        openGLLayer->cursor_end_x = mouse_x + openGLLayer->scroll_x;
+        openGLLayer->cursor_end_y = mouse_y + openGLLayer->scroll_y;
+        [openGLLayer setRendererCursorPositions];
+    } else {
+        isDragging = true;
+    }
+}
+
+- (void)mouseUp:(NSEvent*)event {
+    isDragging = false;
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -186,12 +200,18 @@ const char* hex(char c) {
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    mouse_x -= openGLLayer->editor_offset_x;
-    mouse_y -= openGLLayer->editor_offset_y;
+    if (isDragging) {
+        // DEBUG: Test smooth resizing of editor offset.
+        openGLLayer->editor_offset_x += event.deltaX;
+        [openGLLayer setNeedsDisplay];
+    } else if (mouse_x >= openGLLayer->editor_offset_x) {
+        mouse_x -= openGLLayer->editor_offset_x;
+        mouse_y -= openGLLayer->editor_offset_y;
 
-    openGLLayer->cursor_end_x = mouse_x + openGLLayer->scroll_x;
-    openGLLayer->cursor_end_y = mouse_y + openGLLayer->scroll_y;
-    [openGLLayer setRendererCursorPositions];
+        openGLLayer->cursor_end_x = mouse_x + openGLLayer->scroll_x;
+        openGLLayer->cursor_end_y = mouse_y + openGLLayer->scroll_y;
+        [openGLLayer setRendererCursorPositions];
+    }
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

@@ -91,8 +91,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     if (line_count > 0) {
         float vertical_scroll_bar_width = 15;
         float total_y = (line_count + ((height - 60 - 40) / line_height)) * line_height;
-        float vertical_scroll_bar_height = 225;
-        // float vertical_scroll_bar_height = height * (height / total_y);
+        float vertical_scroll_bar_height = (height - 60 - 40) * ((height - 60 - 40) / total_y);
         float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{
             .coords =
@@ -108,8 +107,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     }
 
     // Add horizontal scroll bar.
-    float horizontal_scroll_bar_width = 225;
-    // float horizontal_scroll_bar_width = (width - 400) * ((width - 400) / longest_x);
+    float horizontal_scroll_bar_width = (width - 400) * ((width - 400) / longest_x);
     float horizontal_scroll_bar_height = 15;
     float horizontal_scroll_bar_position_percentage = scroll_x / (longest_x - (width - 400));
     // if (horizontal_scroll_bar_width < width) {
@@ -130,47 +128,47 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .color = Rgba{100, 100, 100, 255},
     });
 
-    // Add tab 1.
-    instances.push_back(InstanceData{
-        .coords = Vec2{0, 0 - 60},
-        .rect_size = Vec2{200, 60},
-        .color = Rgba{255, 0, 0, 255},
-    });
+    // // Add tab 1.
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{0, 0 - 60},
+    //     .rect_size = Vec2{200, 60},
+    //     .color = Rgba{255, 0, 0, 255},
+    // });
 
-    // Add tab 2.
-    instances.push_back(InstanceData{
-        .coords = Vec2{200, 0 - 60},
-        .rect_size = Vec2{200, 60},
-        .color = Rgba{0, 255, 0, 255},
-    });
+    // // Add tab 2.
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{200, 0 - 60},
+    //     .rect_size = Vec2{200, 60},
+    //     .color = Rgba{0, 255, 0, 255},
+    // });
 
-    // Add tab 3.
-    instances.push_back(InstanceData{
-        .coords = Vec2{400, 0 - 60},
-        .rect_size = Vec2{200, 60},
-        .color = Rgba{0, 0, 255, 255},
-    });
+    // // Add tab 3.
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{400, 0 - 60},
+    //     .rect_size = Vec2{200, 60},
+    //     .color = Rgba{0, 0, 255, 255},
+    // });
 
-    // Add side bar.
-    instances.push_back(InstanceData{
-        .coords = {0 - 400, 0 - 60},
-        .rect_size = {400, height},
-        .color = Rgba{228, 228, 228, 255},
-    });
+    // // Add side bar.
+    // instances.push_back(InstanceData{
+    //     .coords = {0 - 400, 0 - 60},
+    //     .rect_size = {400, height},
+    //     .color = Rgba{228, 228, 228, 255},
+    // });
 
-    // Add status bar.
-    instances.push_back(InstanceData{
-        .coords = Vec2{0 - 400, (height - 60) - 40},
-        .rect_size = Vec2{width, 40},
-        .color = Rgba{207, 207, 207, 255},
-    });
+    // // Add status bar.
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{0 - 400, (height - 60) - 40},
+    //     .rect_size = Vec2{width, 40},
+    //     .color = Rgba{207, 207, 207, 255},
+    // });
 
-    // Add cursor.
-    instances.push_back(InstanceData{
-        .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
-        .rect_size = Vec2{rect_width, rect_height},
-        .color = Rgba::fromRgb(BLUE2, 255),
-    });
+    // // Add cursor.
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
+    //     .rect_size = Vec2{rect_width, rect_height},
+    //     .color = Rgba::fromRgb(BLUE2, 255),
+    // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

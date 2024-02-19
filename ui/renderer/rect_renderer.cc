@@ -110,16 +110,16 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     float horizontal_scroll_bar_width = (width - 400) * ((width - 400) / longest_x);
     float horizontal_scroll_bar_height = 15;
     float horizontal_scroll_bar_position_percentage = scroll_x / (longest_x - (width - 400));
-    // if (horizontal_scroll_bar_width < width) {
-    instances.push_back(InstanceData{
-        .coords = Vec2{(width - 400 - horizontal_scroll_bar_width) *
-                           horizontal_scroll_bar_position_percentage,
-                       (height - 60 - 40) - horizontal_scroll_bar_height},
-        .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
-        .color = Rgba{182, 182, 182, 255},
-        .corner_radius = 5,
-    });
-    // }
+    if (horizontal_scroll_bar_width < width - 400) {
+        instances.push_back(InstanceData{
+            .coords = Vec2{((width - 400) - horizontal_scroll_bar_width) *
+                               horizontal_scroll_bar_position_percentage,
+                           (height - 60 - 40) - horizontal_scroll_bar_height},
+            .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
+            .color = Rgba{182, 182, 182, 255},
+            .corner_radius = 5,
+        });
+    }
 
     // Add tab bar.
     instances.push_back(InstanceData{
@@ -128,47 +128,47 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .color = Rgba{100, 100, 100, 255},
     });
 
-    // // Add tab 1.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{0, 0 - 60},
-    //     .rect_size = Vec2{200, 60},
-    //     .color = Rgba{255, 0, 0, 255},
-    // });
+    // Add tab 1.
+    instances.push_back(InstanceData{
+        .coords = Vec2{0, 0 - 60},
+        .rect_size = Vec2{200, 60},
+        .color = Rgba{255, 0, 0, 255},
+    });
 
-    // // Add tab 2.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{200, 0 - 60},
-    //     .rect_size = Vec2{200, 60},
-    //     .color = Rgba{0, 255, 0, 255},
-    // });
+    // Add tab 2.
+    instances.push_back(InstanceData{
+        .coords = Vec2{200, 0 - 60},
+        .rect_size = Vec2{200, 60},
+        .color = Rgba{0, 255, 0, 255},
+    });
 
-    // // Add tab 3.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{400, 0 - 60},
-    //     .rect_size = Vec2{200, 60},
-    //     .color = Rgba{0, 0, 255, 255},
-    // });
+    // Add tab 3.
+    instances.push_back(InstanceData{
+        .coords = Vec2{400, 0 - 60},
+        .rect_size = Vec2{200, 60},
+        .color = Rgba{0, 0, 255, 255},
+    });
 
-    // // Add side bar.
-    // instances.push_back(InstanceData{
-    //     .coords = {0 - 400, 0 - 60},
-    //     .rect_size = {400, height},
-    //     .color = Rgba{228, 228, 228, 255},
-    // });
+    // Add side bar.
+    instances.push_back(InstanceData{
+        .coords = {0 - 400, 0 - 60},
+        .rect_size = {400, height},
+        .color = Rgba{228, 228, 228, 255},
+    });
 
-    // // Add status bar.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{0 - 400, (height - 60) - 40},
-    //     .rect_size = Vec2{width, 40},
-    //     .color = Rgba{207, 207, 207, 255},
-    // });
+    // Add status bar.
+    instances.push_back(InstanceData{
+        .coords = Vec2{0 - 400, (height - 60) - 40},
+        .rect_size = Vec2{width, 40},
+        .color = Rgba{207, 207, 207, 255},
+    });
 
-    // // Add cursor.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
-    //     .rect_size = Vec2{rect_width, rect_height},
-    //     .color = Rgba::fromRgb(BLUE2, 255),
-    // });
+    // Add cursor.
+    instances.push_back(InstanceData{
+        .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
+        .rect_size = Vec2{rect_width, rect_height},
+        .color = Rgba::fromRgb(BLUE2, 255),
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

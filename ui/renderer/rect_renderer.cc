@@ -87,17 +87,20 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
 
+    float editor_width = width - 400;
+    float editor_height = height - 60 - 40;
+
     // Add vertical scroll bar.
     if (line_count > 0) {
         float vertical_scroll_bar_width = 15;
-        float total_y = (line_count + ((height - 60 - 40) / line_height)) * line_height;
-        float vertical_scroll_bar_height = (height - 60 - 40) * ((height - 60 - 40) / total_y);
+        float total_y = (line_count + (editor_height / line_height)) * line_height;
+        float vertical_scroll_bar_height = editor_height * (editor_height / total_y);
         float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{
             .coords =
                 Vec2{
-                    (width - 400) - vertical_scroll_bar_width,
-                    (height - 60 - 40 - vertical_scroll_bar_height) *
+                    editor_width - vertical_scroll_bar_width,
+                    (editor_height - vertical_scroll_bar_height) *
                         vertical_scroll_bar_position_percentage,
                 },
             .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
@@ -107,14 +110,14 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     }
 
     // Add horizontal scroll bar.
-    float horizontal_scroll_bar_width = (width - 400) * ((width - 400) / longest_x);
+    float horizontal_scroll_bar_width = editor_width * (editor_width / longest_x);
     float horizontal_scroll_bar_height = 15;
-    float horizontal_scroll_bar_position_percentage = scroll_x / (longest_x - (width - 400));
-    if (horizontal_scroll_bar_width < width - 400) {
+    float horizontal_scroll_bar_position_percentage = scroll_x / (longest_x - editor_width);
+    if (horizontal_scroll_bar_width < editor_width) {
         instances.push_back(InstanceData{
-            .coords = Vec2{((width - 400) - horizontal_scroll_bar_width) *
+            .coords = Vec2{(editor_width - horizontal_scroll_bar_width) *
                                horizontal_scroll_bar_position_percentage,
-                           (height - 60 - 40) - horizontal_scroll_bar_height},
+                           editor_height - horizontal_scroll_bar_height},
             .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
             .color = Rgba{182, 182, 182, 255},
             .corner_radius = 5,

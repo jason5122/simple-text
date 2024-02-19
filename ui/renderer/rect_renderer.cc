@@ -67,9 +67,12 @@ void RectRenderer::setup(float width, float height) {
 }
 
 void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-                        float line_height, size_t line_count, float longest_x) {
+                        float line_height, size_t line_count, float longest_x,
+                        float editor_offset_x, float editor_offset_y) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
+    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
+                editor_offset_y);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
@@ -87,8 +90,9 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
 
-    float editor_width = width - 400;
-    float editor_height = height - 60 - 40;
+    float status_bar_height = 40;
+    float editor_width = width - editor_offset_x;
+    float editor_height = height - editor_offset_y - status_bar_height;
 
     // Add vertical scroll bar.
     if (line_count > 0) {
@@ -126,43 +130,45 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
 
     // Add tab bar.
     instances.push_back(InstanceData{
-        .coords = Vec2{0, 0 - 60},
-        .rect_size = Vec2{width, 60},
+        .coords = Vec2{0, 0 - editor_offset_y},
+        .rect_size = Vec2{width, editor_offset_y},
         .color = Rgba{100, 100, 100, 255},
     });
 
+    float tab_width = 350;
+
     // Add tab 1.
     instances.push_back(InstanceData{
-        .coords = Vec2{0, 0 - 60},
-        .rect_size = Vec2{200, 60},
+        .coords = Vec2{0, 0 - editor_offset_y},
+        .rect_size = Vec2{tab_width, editor_offset_y},
         .color = Rgba{255, 0, 0, 255},
     });
 
     // Add tab 2.
     instances.push_back(InstanceData{
-        .coords = Vec2{200, 0 - 60},
-        .rect_size = Vec2{200, 60},
+        .coords = Vec2{tab_width * 1, 0 - editor_offset_y},
+        .rect_size = Vec2{tab_width, editor_offset_y},
         .color = Rgba{0, 255, 0, 255},
     });
 
     // Add tab 3.
     instances.push_back(InstanceData{
-        .coords = Vec2{400, 0 - 60},
-        .rect_size = Vec2{200, 60},
+        .coords = Vec2{tab_width * 2, 0 - editor_offset_y},
+        .rect_size = Vec2{tab_width, editor_offset_y},
         .color = Rgba{0, 0, 255, 255},
     });
 
     // Add side bar.
     instances.push_back(InstanceData{
-        .coords = {0 - 400, 0 - 60},
-        .rect_size = {400, height},
+        .coords = {0 - editor_offset_x, 0 - editor_offset_y},
+        .rect_size = {editor_offset_x, height},
         .color = Rgba{228, 228, 228, 255},
     });
 
     // Add status bar.
     instances.push_back(InstanceData{
-        .coords = Vec2{0 - 400, (height - 60) - 40},
-        .rect_size = Vec2{width, 40},
+        .coords = Vec2{0 - editor_offset_x, editor_height},
+        .rect_size = Vec2{width, status_bar_height},
         .color = Rgba{207, 207, 207, 255},
     });
 

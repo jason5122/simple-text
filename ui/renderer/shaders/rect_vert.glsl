@@ -12,6 +12,7 @@ flat out float corner_radius;
 
 uniform vec2 resolution;
 uniform vec2 scroll_offset;
+uniform vec2 editor_offset;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
@@ -26,8 +27,7 @@ void main() {
 
     vec2 final_position = coords + rect_size * position;
     // final_position -= scroll_offset;
-    final_position.x += 400;
-    final_position.y += 60;
+    final_position += editor_offset;
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
     rect_color = in_color / 255.0;

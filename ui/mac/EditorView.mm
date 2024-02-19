@@ -23,6 +23,9 @@
     CGFloat cursor_end_x;
     CGFloat cursor_end_y;
 
+    float editor_offset_x;
+    float editor_offset_y;
+
     // @private
     TextRenderer text_renderer;
     Buffer buffer;
@@ -107,8 +110,8 @@
             CGFloat mouse_y = event.locationInWindow.y;
             mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-            mouse_x -= 200;
-            mouse_y -= 30;
+            mouse_x -= openGLLayer->editor_offset_x;
+            mouse_y -= openGLLayer->editor_offset_y;
 
             CGFloat max_mouse_x =
                 (openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale) -
@@ -117,8 +120,8 @@
                 (openGLLayer->buffer.lineCount() * openGLLayer->text_renderer.line_height) /
                 openGLLayer.contentsScale;
 
-            openGLLayer->cursor_end_x =
-                std::clamp(openGLLayer->cursor_end_x + dx, mouse_x, max_mouse_x + 200);
+            openGLLayer->cursor_end_x = std::clamp(openGLLayer->cursor_end_x + dx, mouse_x,
+                                                   max_mouse_x + openGLLayer->editor_offset_x);
 
             // Unlike cursor_end_x, our mouse could be well below the cursor.
             // This is only possible if scrolling past the end is enabled.
@@ -168,8 +171,8 @@ const char* hex(char c) {
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    mouse_x -= 200;
-    mouse_y -= 30;
+    mouse_x -= openGLLayer->editor_offset_x;
+    mouse_y -= openGLLayer->editor_offset_y;
 
     openGLLayer->cursor_start_x = mouse_x + openGLLayer->scroll_x;
     openGLLayer->cursor_start_y = mouse_y + openGLLayer->scroll_y;
@@ -183,8 +186,8 @@ const char* hex(char c) {
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    mouse_x -= 200;
-    mouse_y -= 30;
+    mouse_x -= openGLLayer->editor_offset_x;
+    mouse_y -= openGLLayer->editor_offset_y;
 
     openGLLayer->cursor_end_x = mouse_x + openGLLayer->scroll_x;
     openGLLayer->cursor_end_y = mouse_y + openGLLayer->scroll_y;
@@ -307,6 +310,9 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         parse_thread.detach();
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
+
+        editor_offset_x = 200;
+        editor_offset_y = 30;
     }
     return glContext;
 }
@@ -332,6 +338,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         float scaled_scroll_y = scroll_y * self.contentsScale;
         float width = self.frame.size.width * self.contentsScale;
         float height = self.frame.size.height * self.contentsScale;
+        float scaled_editor_offset_x = editor_offset_x * self.contentsScale;
+        float scaled_editor_offset_y = editor_offset_y * self.contentsScale;
 
         glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -344,7 +352,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         rect_renderer.resize(width, height);
         rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
                            text_renderer.cursor_end_line, text_renderer.line_height,
-                           buffer.lineCount(), text_renderer.longest_line_x);
+                           buffer.lineCount(), text_renderer.longest_line_x,
+                           scaled_editor_offset_x, scaled_editor_offset_y);
 
         // Calls glFlush() by default.
         [super drawInCGLContext:glContext
@@ -402,7 +411,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 - (CGFloat)maxScrollX {
     // TODO: Formulate max_cursor_x without the need for division.
     CGFloat max_cursor_x = text_renderer.longest_line_x / self.contentsScale;
-    max_cursor_x -= self.frame.size.width - 200;
+    max_cursor_x -= self.frame.size.width - self->editor_offset_x;
     if (max_cursor_x < 0) max_cursor_x = 0;
     return max_cursor_x;
 }

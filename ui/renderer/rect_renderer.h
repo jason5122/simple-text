@@ -15,7 +15,8 @@ public:
     RectRenderer() = default;
     void setup(float width, float height);
     void draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-              float line_height, size_t line_count, float longest_x);
+              float line_height, size_t line_count, float longest_x, float editor_offset_x,
+              float editor_offset_y);
     void resize(int new_width, int new_height);
     ~RectRenderer();
 

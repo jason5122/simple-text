@@ -72,7 +72,8 @@
         // https://bugzilla.gnome.org/show_bug.cgi?id=765194
         self.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
 
-        NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
+        NSTrackingAreaOptions options =
+            NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
         trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
                                                     options:options
                                                       owner:self
@@ -97,7 +98,10 @@
     [self addTrackingArea:trackingArea];
 }
 
-- (void)mouseMoved:(NSEvent*)event {
+// FIXME: Also set cursor style when clicking window to focus.
+// This can be reproduced by opening another window in front of this one, and clicking on this
+// without moving the mouse.
+- (void)setCursorStyle:(NSEvent*)event {
     CGFloat mouse_x = event.locationInWindow.x;
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
@@ -111,7 +115,21 @@
     }
 }
 
-- (void)mouseExited:(NSEvent*)theEvent {
+- (void)mouseMoved:(NSEvent*)event {
+    [self setCursorStyle:event];
+}
+
+- (void)mouseEntered:(NSEvent*)event {
+    [self setCursorStyle:event];
+}
+
+// We need to override `cursorUpdate` to stop the event from being passed up in the chain.
+// Without this, our `mouseEntered` NSCursor set will be overridden.
+// https://stackoverflow.com/a/20197686
+- (void)cursorUpdate:(NSEvent*)event {
+}
+
+- (void)mouseExited:(NSEvent*)event {
     [NSCursor.arrowCursor set];
 }
 
@@ -216,7 +234,6 @@ const char* hex(char c) {
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
     if (isDragging) {
-        // DEBUG: Test smooth resizing of editor offset.
         openGLLayer->editor_offset_x += event.deltaX;
         [openGLLayer setNeedsDisplay];
     } else if (mouse_x >= openGLLayer->editor_offset_x) {

@@ -67,8 +67,7 @@ void RectRenderer::setup(float width, float height) {
 }
 
 void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-                        float line_height, size_t line_count, float longest_x,
-                        size_t visible_lines) {
+                        float line_height, size_t line_count, float longest_x) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glActiveTexture(GL_TEXTURE0);
@@ -91,7 +90,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     // Add vertical scroll bar.
     if (line_count > 0) {
         float vertical_scroll_bar_width = 15;
-        float total_y = (line_count + visible_lines) * line_height;
+        float total_y = (line_count + ((height - 60) / line_height)) * line_height;
         float vertical_scroll_bar_height = height * (height / total_y);
         float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{

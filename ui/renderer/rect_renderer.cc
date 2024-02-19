@@ -91,7 +91,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .color = Rgba::fromRgb(BLUE2, 255),
     });
 
-    line_count -= 1;  // TODO: Merge this with EditorView.
+    // line_count -= 1;  // TODO: Merge this with EditorView.
 
     // Add vertical scroll bar.
     if (line_count > 0) {
@@ -100,9 +100,12 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         float vertical_scroll_bar_height = height * (height / total_y);
         float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
         instances.push_back(InstanceData{
-            .coords = Vec2{(width - 400) - vertical_scroll_bar_width,
-                           (height - vertical_scroll_bar_height) *
-                               vertical_scroll_bar_position_percentage},
+            .coords =
+                Vec2{
+                    (width - 400) - vertical_scroll_bar_width,
+                    (height - 60 - 40 - vertical_scroll_bar_height) *
+                        vertical_scroll_bar_position_percentage,
+                },
             .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
             .color = Rgba{182, 182, 182, 255},
             .corner_radius = 5,

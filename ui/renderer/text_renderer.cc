@@ -154,10 +154,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             float total_advance = 0;
 
             std::string line_str;
-            {
-                PROFILE_BLOCK("buffer.getLineContent()");
-                buffer.getLineContent(&line_str, line_index);
-            }
+            buffer.getLineContent(&line_str, line_index);
 
             for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);

@@ -40,9 +40,9 @@
 
 - (void)setRendererCursorPositions;
 
-- (CGFloat)maxCursorX;
+- (CGFloat)maxScrollX;
 
-- (CGFloat)maxCursorY;
+- (CGFloat)maxScrollY;
 
 @end
 
@@ -97,9 +97,9 @@
         CGFloat dy = -event.scrollingDeltaY;
 
         openGLLayer->scroll_x =
-            std::clamp(openGLLayer->scroll_x + dx, 0.0, [openGLLayer maxCursorX]);
+            std::clamp(openGLLayer->scroll_x + dx, 0.0, [openGLLayer maxScrollX]);
         openGLLayer->scroll_y =
-            std::clamp(openGLLayer->scroll_y + dy, 0.0, [openGLLayer maxCursorY]);
+            std::clamp(openGLLayer->scroll_y + dy, 0.0, [openGLLayer maxScrollY]);
 
         // https://developer.apple.com/documentation/appkit/nsevent/1527943-pressedmousebuttons?language=objc
         if (NSEvent.pressedMouseButtons & (1 << 0)) {
@@ -388,8 +388,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-    scroll_x = std::clamp(scroll_x, 0.0, [self maxCursorX]);
-    scroll_y = std::clamp(scroll_y, 0.0, [self maxCursorY]);
+    scroll_x = std::clamp(scroll_x, 0.0, [self maxScrollX]);
+    scroll_y = std::clamp(scroll_y, 0.0, [self maxScrollY]);
     [self setNeedsDisplay];
 }
 
@@ -400,7 +400,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
     [self setNeedsDisplay];
 }
 
-- (CGFloat)maxCursorX {
+- (CGFloat)maxScrollX {
     // TODO: Formulate max_cursor_x without the need for division.
     CGFloat max_cursor_x = text_renderer.longest_line_x / self.contentsScale;
     max_cursor_x -= self.frame.size.width;
@@ -408,7 +408,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
     return max_cursor_x;
 }
 
-- (CGFloat)maxCursorY {
+- (CGFloat)maxScrollY {
     size_t line_count = buffer.lineCount();
     // line_count -= 1;  // TODO: Merge this with RectRenderer.
     CGFloat max_y = line_count * text_renderer.line_height;

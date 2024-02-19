@@ -88,7 +88,8 @@
     [super updateTrackingAreas];
     [self removeTrackingArea:trackingArea];
 
-    NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingActiveInKeyWindow;
+    NSTrackingAreaOptions options =
+        NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
     trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
                                                 options:options
                                                   owner:self
@@ -97,7 +98,21 @@
 }
 
 - (void)mouseMoved:(NSEvent*)event {
-    [NSCursor.IBeamCursor set];
+    CGFloat mouse_x = event.locationInWindow.x;
+    CGFloat mouse_y = event.locationInWindow.y;
+    mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
+
+    if (mouse_x < openGLLayer->editor_offset_x) {
+        [NSCursor.resizeLeftRightCursor set];
+    } else if (mouse_y < openGLLayer->editor_offset_y) {
+        [NSCursor.arrowCursor set];
+    } else {
+        [NSCursor.IBeamCursor set];
+    }
+}
+
+- (void)mouseExited:(NSEvent*)theEvent {
+    [NSCursor.arrowCursor set];
 }
 
 - (void)scrollWheel:(NSEvent*)event {

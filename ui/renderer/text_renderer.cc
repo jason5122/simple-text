@@ -175,12 +175,14 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
                 AtlasGlyph glyph = glyph_cache[codepoint];
 
-                instances.push_back(InstanceData{
-                    .coords = Vec2{total_advance, line_index * line_height},
-                    .glyph = glyph.glyph,
-                    .uv = glyph.uv,
-                    .color = Rgba::fromRgb(text_color, glyph.colored),
-                });
+                if (total_advance + glyph.advance > scroll_x) {
+                    instances.push_back(InstanceData{
+                        .coords = Vec2{total_advance, line_index * line_height},
+                        .glyph = glyph.glyph,
+                        .uv = glyph.uv,
+                        .color = Rgba::fromRgb(text_color, glyph.colored),
+                    });
+                }
 
                 total_advance += std::round(glyph.advance);
             }

@@ -125,7 +125,28 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = Vec2{0, 0 - 60},
         .rect_size = Vec2{width, 60},
-        .color = Rgba{228, 228, 228, 255},
+        .color = Rgba{100, 100, 100, 255},
+    });
+
+    // Add tab 1.
+    instances.push_back(InstanceData{
+        .coords = Vec2{0, 0 - 60},
+        .rect_size = Vec2{200, 60},
+        .color = Rgba{255, 0, 0, 255},
+    });
+
+    // Add tab 2.
+    instances.push_back(InstanceData{
+        .coords = Vec2{200, 0 - 60},
+        .rect_size = Vec2{200, 60},
+        .color = Rgba{0, 255, 0, 255},
+    });
+
+    // Add tab 3.
+    instances.push_back(InstanceData{
+        .coords = Vec2{400, 0 - 60},
+        .rect_size = Vec2{200, 60},
+        .color = Rgba{0, 0, 255, 255},
     });
 
     // Add side bar.
@@ -155,7 +176,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
     glCheckError();

@@ -187,8 +187,8 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     });
 
     // Add cursor.
-    if (cursor_x + cursor_width >= scroll_x && cursor_y + cursor_height >= scroll_y) {
-        std::cerr << "cursor is being rendered\n";
+    if ((scroll_x < cursor_x + cursor_width && cursor_x < scroll_x + editor_width) &&
+        (scroll_y < cursor_y + cursor_height && cursor_y < scroll_y + editor_height)) {
         instances.push_back(InstanceData{
             .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
             .rect_size = Vec2{cursor_width, cursor_height},

@@ -12,11 +12,11 @@
                                                     backing:NSBackingStoreBuffered
                                                       defer:false];
         self.window.title = @"Simple Text";
-        self.window.titlebarAppearsTransparent = true;
-        self.window.backgroundColor = [NSColor colorWithSRGBRed:228 / 255.f
-                                                          green:228 / 255.f
-                                                           blue:228 / 255.f
-                                                          alpha:1.f];
+        // self.window.titlebarAppearsTransparent = true;
+        // self.window.backgroundColor = [NSColor colorWithSRGBRed:228 / 255.f
+        //                                                   green:228 / 255.f
+        //                                                    blue:228 / 255.f
+        //                                                   alpha:1.f];
 
         editorView = [[EditorView alloc] initWithFrame:frameRect];
         self.window.contentView = editorView;

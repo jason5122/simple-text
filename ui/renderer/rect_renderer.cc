@@ -92,6 +92,9 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     cursor_y -= extra_padding;
     rect_height += extra_padding * 2;
 
+    Rgba editor_bg_color = Rgba{253, 253, 253, 255};
+    Rgba ui_color = Rgba{228, 228, 228, 255};
+
     std::vector<InstanceData> instances;
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
@@ -138,35 +141,33 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = Vec2{0, 0 - editor_offset_y},
         .rect_size = Vec2{width, editor_offset_y},
-        .color = Rgba{228, 228, 228, 255},
+        .color = ui_color,
     });
 
     float tab_width = 350;
+    float tab_height = editor_offset_y - 5;  // Leave padding between window title bar and tab.
     float tab_corner_radius = 10;
-
-    Rgba editor_bg_color = Rgba{253, 253, 253, 255};
-    Rgba ui_color = Rgba{228, 228, 228, 255};
 
     // Add tab 1.
     instances.push_back(InstanceData{
-        .coords = Vec2{0, 0 - editor_offset_y},
-        .rect_size = Vec2{tab_width, editor_offset_y},
+        .coords = Vec2{0, 0 - tab_height},
+        .rect_size = Vec2{tab_width, tab_height},
         .color = editor_bg_color,
         .tab_corner_radius = tab_corner_radius,
     });
 
     // Add tab 2.
     instances.push_back(InstanceData{
-        .coords = Vec2{tab_width * 1, 0 - editor_offset_y},
-        .rect_size = Vec2{tab_width, editor_offset_y},
+        .coords = Vec2{tab_width * 1, 0 - tab_height},
+        .rect_size = Vec2{tab_width, tab_height},
         .color = editor_bg_color,
         .tab_corner_radius = tab_corner_radius,
     });
 
     // Add tab 3.
     instances.push_back(InstanceData{
-        .coords = Vec2{tab_width * 2, 0 - editor_offset_y},
-        .rect_size = Vec2{tab_width, editor_offset_y},
+        .coords = Vec2{tab_width * 2, 0 - tab_height},
+        .rect_size = Vec2{tab_width, tab_height},
         .color = editor_bg_color,
         .tab_corner_radius = tab_corner_radius,
     });
@@ -175,7 +176,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = {0 - editor_offset_x, 0 - editor_offset_y},
         .rect_size = {editor_offset_x, height},
-        .color = Rgba{228, 228, 228, 255},
+        .color = ui_color,
     });
 
     // Add status bar.

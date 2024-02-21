@@ -103,6 +103,16 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     float editor_width = width - editor_offset_x;
     float editor_height = height - editor_offset_y - status_bar_height;
 
+    // Add cursor.
+    if ((scroll_x < cursor_x + cursor_width && cursor_x < scroll_x + editor_width) &&
+        (scroll_y < cursor_y + cursor_height && cursor_y < scroll_y + editor_height)) {
+        instances.push_back(InstanceData{
+            .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
+            .rect_size = Vec2{cursor_width, cursor_height},
+            .color = Rgba::fromRgb(BLUE2, 255),
+        });
+    }
+
     // Add vertical scroll bar.
     if (line_count > 0) {
         float vertical_scroll_bar_width = 15;
@@ -156,21 +166,21 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .tab_corner_radius = tab_corner_radius,
     });
 
-    // Add tab 2.
-    instances.push_back(InstanceData{
-        .coords = Vec2{tab_width * 1, 0 - tab_height},
-        .rect_size = Vec2{tab_width, tab_height},
-        .color = editor_bg_color,
-        .tab_corner_radius = tab_corner_radius,
-    });
+    // // Add tab 2.
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{tab_width * 1, 0 - tab_height},
+    //     .rect_size = Vec2{tab_width, tab_height},
+    //     .color = editor_bg_color,
+    //     .tab_corner_radius = tab_corner_radius,
+    // });
 
-    // Add tab 3.
-    instances.push_back(InstanceData{
-        .coords = Vec2{tab_width * 2, 0 - tab_height},
-        .rect_size = Vec2{tab_width, tab_height},
-        .color = editor_bg_color,
-        .tab_corner_radius = tab_corner_radius,
-    });
+    // // Add tab 3.
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{tab_width * 2, 0 - tab_height},
+    //     .rect_size = Vec2{tab_width, tab_height},
+    //     .color = editor_bg_color,
+    //     .tab_corner_radius = tab_corner_radius,
+    // });
 
     // Add side bar.
     instances.push_back(InstanceData{
@@ -185,16 +195,6 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .rect_size = Vec2{width, status_bar_height},
         .color = Rgba{207, 207, 207, 255},
     });
-
-    // Add cursor.
-    if ((scroll_x < cursor_x + cursor_width && cursor_x < scroll_x + editor_width) &&
-        (scroll_y < cursor_y + cursor_height && cursor_y < scroll_y + editor_height)) {
-        instances.push_back(InstanceData{
-            .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
-            .rect_size = Vec2{cursor_width, cursor_height},
-            .color = Rgba::fromRgb(BLUE2, 255),
-        });
-    }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

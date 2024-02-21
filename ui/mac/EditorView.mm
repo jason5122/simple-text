@@ -138,6 +138,12 @@
         CGFloat dx = -event.scrollingDeltaX;
         CGFloat dy = -event.scrollingDeltaY;
 
+        // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
+        if (!event.hasPreciseScrollingDeltas) {
+            dx *= 16;
+            dy *= 16;
+        }
+
         openGLLayer->scroll_x =
             std::clamp(openGLLayer->scroll_x + dx, 0.0, [openGLLayer maxScrollX]);
         openGLLayer->scroll_y =
@@ -219,7 +225,7 @@ const char* hex(char c) {
         openGLLayer->cursor_end_x = mouse_x + openGLLayer->scroll_x;
         openGLLayer->cursor_end_y = mouse_y + openGLLayer->scroll_y;
         [openGLLayer setRendererCursorPositions];
-    } else {
+    } else if (mouse_x < openGLLayer->editor_offset_x) {
         isDragging = true;
     }
 }
@@ -236,7 +242,8 @@ const char* hex(char c) {
     if (isDragging) {
         openGLLayer->editor_offset_x += event.deltaX;
         [openGLLayer setNeedsDisplay];
-    } else if (mouse_x >= openGLLayer->editor_offset_x) {
+    } else if (mouse_x >= openGLLayer->editor_offset_x &&
+               mouse_y >= openGLLayer->editor_offset_y) {
         mouse_x -= openGLLayer->editor_offset_x;
         mouse_y -= openGLLayer->editor_offset_y;
 

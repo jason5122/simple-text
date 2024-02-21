@@ -82,15 +82,15 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    float rect_width = 4;
-    float rect_height = line_height;
+    float cursor_width = 4;
+    float cursor_height = line_height;
 
-    cursor_x -= rect_width / 2;
+    cursor_x -= cursor_width / 2;
 
     int extra_padding = 8;
     float cursor_y = cursor_line * line_height;
     cursor_y -= extra_padding;
-    rect_height += extra_padding * 2;
+    cursor_height += extra_padding * 2;
 
     Rgba editor_bg_color = Rgba{253, 253, 253, 255};
     Rgba ui_color = Rgba{228, 228, 228, 255};
@@ -187,11 +187,14 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     });
 
     // Add cursor.
-    instances.push_back(InstanceData{
-        .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
-        .rect_size = Vec2{rect_width, rect_height},
-        .color = Rgba::fromRgb(BLUE2, 255),
-    });
+    if (cursor_x + cursor_width >= scroll_x && cursor_y + cursor_height >= scroll_y) {
+        std::cerr << "cursor is being rendered\n";
+        instances.push_back(InstanceData{
+            .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
+            .rect_size = Vec2{cursor_width, cursor_height},
+            .color = Rgba::fromRgb(BLUE2, 255),
+        });
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

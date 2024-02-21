@@ -31,24 +31,38 @@ void main() {
 
     bottom_left += corner_radius;
     bottom_right += vec2(-corner_radius, corner_radius);
-    top_left += vec2(corner_radius, -corner_radius);
-    top_right -= corner_radius;
+    top_left += vec2(corner_radius * 2, -corner_radius);
+    top_right += vec2(-corner_radius * 2, -corner_radius);
 
-    if (pixel_pos.x < bottom_left.x && pixel_pos.y < bottom_left.y) {
-        if (distance(pixel_pos, bottom_left) > corner_radius) {
+    if (pixel_pos.x < bottom_left.x) {
+        if (pixel_pos.y > bottom_left.y) {
+            discard;
+        } else {
+            vec2 point = rect_center - size / 2;
+            point += vec2(0, corner_radius);
+
+            float distance = distance(pixel_pos, point) - corner_radius;
+            alpha -= smoothstep(-0.5, 0.5, 1.0 - distance);
+        }
+    }
+    if (pixel_pos.x > bottom_right.x) {
+        if (pixel_pos.y > bottom_right.y) {
+            discard;
+        } else {
+            vec2 point = rect_center + vec2(size.x / 2, -size.y / 2);
+            point += vec2(0, corner_radius);
+
+            float distance = distance(pixel_pos, point) - corner_radius;
+            alpha -= smoothstep(-0.5, 0.5, 1.0 - distance);
+        }
+    }
+    if (pixel_pos.x < top_left.x && pixel_pos.y > top_left.y) {
+        if (distance(pixel_pos, top_left) > corner_radius) {
             discard;
         }
     }
-
-    vec2 point = rect_center + vec2(size.x / 2, -size.y / 2);
-    point += vec2(-corner_radius, corner_radius);
-    if (pixel_pos.x > point.x && pixel_pos.y > point.y) {
-        discard;
-    }
-    vec2 point2 = rect_center + vec2(size.x / 2, -size.y / 2);
-    point2 += vec2(0, corner_radius);
-    if (pixel_pos.x > point.x && pixel_pos.y < point.y) {
-        if (distance(pixel_pos, point2) < corner_radius) {
+    if (pixel_pos.x > top_right.x && pixel_pos.y > top_right.y) {
+        if (distance(pixel_pos, top_right) > corner_radius) {
             discard;
         }
     }

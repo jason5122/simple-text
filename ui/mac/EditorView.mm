@@ -393,7 +393,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         float scaled_editor_offset_x = editor_offset_x * self.contentsScale;
         float scaled_editor_offset_y = editor_offset_y * self.contentsScale;
 
-        glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+        glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+        // glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);

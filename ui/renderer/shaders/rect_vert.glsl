@@ -4,11 +4,13 @@ layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
 layout(location = 2) in vec4 in_color;
 layout(location = 3) in float in_corner_radius;
+layout(location = 4) in float in_tab_corner_radius;
 
 flat out vec4 rect_color;
 flat out vec2 rect_center;
 flat out vec2 size;
 flat out float corner_radius;
+flat out float tab_corner_radius;
 
 uniform vec2 resolution;
 uniform vec2 scroll_offset;
@@ -40,4 +42,5 @@ void main() {
     rect_center = _rect_center;
     size = rect_size;
     corner_radius = in_corner_radius;
+    tab_corner_radius = in_tab_corner_radius;
 }

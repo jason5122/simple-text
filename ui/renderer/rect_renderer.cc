@@ -11,6 +11,7 @@ struct InstanceData {
     Vec2 rect_size;
     Rgba color;
     float corner_radius = 0;
+    float tab_corner_radius = 0;
 };
 }
 
@@ -60,6 +61,11 @@ void RectRenderer::setup(float width, float height) {
                           (void*)offsetof(InstanceData, corner_radius));
     glVertexAttribDivisor(index++, 1);
 
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, tab_corner_radius));
+    glVertexAttribDivisor(index++, 1);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -94,103 +100,97 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     float editor_width = width - editor_offset_x;
     float editor_height = height - editor_offset_y - status_bar_height;
 
-    // // Add vertical scroll bar.
-    // if (line_count > 0) {
-    //     float vertical_scroll_bar_width = 15;
-    //     float total_y = (line_count + (editor_height / line_height)) * line_height;
-    //     float vertical_scroll_bar_height = editor_height * (editor_height / total_y);
-    //     float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
-    //     instances.push_back(InstanceData{
-    //         .coords =
-    //             Vec2{
-    //                 editor_width - vertical_scroll_bar_width,
-    //                 (editor_height - vertical_scroll_bar_height) *
-    //                     vertical_scroll_bar_position_percentage,
-    //             },
-    //         .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
-    //         .color = Rgba{182, 182, 182, 255},
-    //         .corner_radius = 5,
-    //     });
-    // }
+    // Add vertical scroll bar.
+    if (line_count > 0) {
+        float vertical_scroll_bar_width = 15;
+        float total_y = (line_count + (editor_height / line_height)) * line_height;
+        float vertical_scroll_bar_height = editor_height * (editor_height / total_y);
+        float vertical_scroll_bar_position_percentage = scroll_y / (line_count * line_height);
+        instances.push_back(InstanceData{
+            .coords =
+                Vec2{
+                    editor_width - vertical_scroll_bar_width,
+                    (editor_height - vertical_scroll_bar_height) *
+                        vertical_scroll_bar_position_percentage,
+                },
+            .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
+            .color = Rgba{182, 182, 182, 255},
+            .corner_radius = 5,
+        });
+    }
 
-    // // Add horizontal scroll bar.
-    // float horizontal_scroll_bar_width = editor_width * (editor_width / longest_x);
-    // float horizontal_scroll_bar_height = 15;
-    // float horizontal_scroll_bar_position_percentage = scroll_x / (longest_x - editor_width);
-    // if (horizontal_scroll_bar_width < editor_width) {
-    //     instances.push_back(InstanceData{
-    //         .coords = Vec2{(editor_width - horizontal_scroll_bar_width) *
-    //                            horizontal_scroll_bar_position_percentage,
-    //                        editor_height - horizontal_scroll_bar_height},
-    //         .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
-    //         .color = Rgba{182, 182, 182, 255},
-    //         .corner_radius = 5,
-    //     });
-    // }
+    // Add horizontal scroll bar.
+    float horizontal_scroll_bar_width = editor_width * (editor_width / longest_x);
+    float horizontal_scroll_bar_height = 15;
+    float horizontal_scroll_bar_position_percentage = scroll_x / (longest_x - editor_width);
+    if (horizontal_scroll_bar_width < editor_width) {
+        instances.push_back(InstanceData{
+            .coords = Vec2{(editor_width - horizontal_scroll_bar_width) *
+                               horizontal_scroll_bar_position_percentage,
+                           editor_height - horizontal_scroll_bar_height},
+            .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
+            .color = Rgba{182, 182, 182, 255},
+            .corner_radius = 5,
+        });
+    }
 
     // Add tab bar.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{0, 0 - editor_offset_y},
-    //     .rect_size = Vec2{width, editor_offset_y},
-    //     .color = Rgba{228, 228, 228, 255},
-    // });
+    instances.push_back(InstanceData{
+        .coords = Vec2{0, 0 - editor_offset_y},
+        .rect_size = Vec2{width, editor_offset_y},
+        .color = Rgba{228, 228, 228, 255},
+    });
 
     float tab_width = 350;
+    float tab_corner_radius = 10;
 
     Rgba editor_bg_color = Rgba{253, 253, 253, 255};
     Rgba ui_color = Rgba{228, 228, 228, 255};
 
+    // Add tab 1.
     instances.push_back(InstanceData{
-        .coords = Vec2{200, 200},
-        .rect_size = Vec2{800, 400},
-        .color = ui_color,
-        .corner_radius = 50,
+        .coords = Vec2{0, 0 - editor_offset_y},
+        .rect_size = Vec2{tab_width, editor_offset_y},
+        .color = editor_bg_color,
+        .tab_corner_radius = tab_corner_radius,
     });
 
-    // // Add tab 1.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{0, 0 - editor_offset_y},
-    //     .rect_size = Vec2{tab_width, editor_offset_y},
-    //     .color = ui_color,
-    //     .corner_radius = 12,
-    // });
+    // Add tab 2.
+    instances.push_back(InstanceData{
+        .coords = Vec2{tab_width * 1, 0 - editor_offset_y},
+        .rect_size = Vec2{tab_width, editor_offset_y},
+        .color = editor_bg_color,
+        .tab_corner_radius = tab_corner_radius,
+    });
 
-    // // Add tab 2.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{tab_width * 1, 0 - editor_offset_y},
-    //     .rect_size = Vec2{tab_width, editor_offset_y},
-    //     .color = ui_color,
-    //     .corner_radius = 12,
-    // });
-
-    // // Add tab 3.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{tab_width * 2, 0 - editor_offset_y},
-    //     .rect_size = Vec2{tab_width, editor_offset_y},
-    //     .color = ui_color,
-    //     .corner_radius = 12,
-    // });
+    // Add tab 3.
+    instances.push_back(InstanceData{
+        .coords = Vec2{tab_width * 2, 0 - editor_offset_y},
+        .rect_size = Vec2{tab_width, editor_offset_y},
+        .color = editor_bg_color,
+        .tab_corner_radius = tab_corner_radius,
+    });
 
     // Add side bar.
-    // instances.push_back(InstanceData{
-    //     .coords = {0 - editor_offset_x, 0 - editor_offset_y},
-    //     .rect_size = {editor_offset_x, height},
-    //     .color = Rgba{228, 228, 228, 255},
-    // });
+    instances.push_back(InstanceData{
+        .coords = {0 - editor_offset_x, 0 - editor_offset_y},
+        .rect_size = {editor_offset_x, height},
+        .color = Rgba{228, 228, 228, 255},
+    });
 
     // Add status bar.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{0 - editor_offset_x, editor_height},
-    //     .rect_size = Vec2{width, status_bar_height},
-    //     .color = Rgba{207, 207, 207, 255},
-    // });
+    instances.push_back(InstanceData{
+        .coords = Vec2{0 - editor_offset_x, editor_height},
+        .rect_size = Vec2{width, status_bar_height},
+        .color = Rgba{207, 207, 207, 255},
+    });
 
     // Add cursor.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
-    //     .rect_size = Vec2{rect_width, rect_height},
-    //     .color = Rgba::fromRgb(BLUE2, 255),
-    // });
+    instances.push_back(InstanceData{
+        .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
+        .rect_size = Vec2{rect_width, rect_height},
+        .color = Rgba::fromRgb(BLUE2, 255),
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

@@ -109,7 +109,7 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
         grapheme_decode_utf8(&line_str[0] + offset, SIZE_MAX, &codepoint);
 
         if (!glyph_cache.count(codepoint)) {
-            std::string utf8_str(line_str.substr(offset, ret));
+            std::string utf8_str = line_str.substr(offset, ret);
             this->loadGlyph(utf8_str, codepoint);
         }
 
@@ -165,7 +165,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
                 if (!glyph_cache.count(codepoint)) {
-                    std::string utf8_str(line_str.substr(offset, ret));
+                    std::string utf8_str = line_str.substr(offset, ret);
                     this->loadGlyph(utf8_str, codepoint);
                 }
 

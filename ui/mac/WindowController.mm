@@ -19,9 +19,12 @@
         //                                                   alpha:1.f];
 
         editorView = [[EditorView alloc] initWithFrame:frameRect];
-        self.window.contentView = editorView;
+        editorViewNew = [[EditorViewNew alloc] initWithFrame:frameRect];
+        // self.window.contentView = editorView;
+        self.window.contentView = editorViewNew;
 
-        [self.window makeFirstResponder:editorView];
+        // [self.window makeFirstResponder:editorView];
+        [self.window makeFirstResponder:editorViewNew];
     }
     return self;
 }

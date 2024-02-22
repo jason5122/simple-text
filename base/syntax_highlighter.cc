@@ -120,15 +120,14 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
 }
 
 bool SyntaxHighlighter::isByteOffsetInRange(size_t byte_offset) {
-    if (idx < highlight_ranges.size()) {
-        while (byte_offset >= highlight_ranges[idx].second) {
-            idx++;
-        }
+    size_t size = highlight_ranges.size();
+    while (idx < size && byte_offset >= highlight_ranges.at(idx).second) {
+        idx++;
+    }
 
-        if (highlight_ranges[idx].first <= byte_offset &&
-            byte_offset < highlight_ranges[idx].second) {
-            return true;
-        }
+    if (idx < size && highlight_ranges.at(idx).first <= byte_offset &&
+        byte_offset < highlight_ranges.at(idx).second) {
+        return true;
     }
     return false;
 }

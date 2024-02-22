@@ -33,6 +33,8 @@
 @private
     RectRenderer rect_renderer;
     SyntaxHighlighter highlighter;
+
+    bool isSideBarExpanding;
 }
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
@@ -65,7 +67,7 @@
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         // openGLLayer.needsDisplayOnBoundsChange = true;
-        openGLLayer.asynchronous = true;
+        // openGLLayer.asynchronous = true;
         self.layer = openGLLayer;
 
         // Fixes blurriness on HiDPI displays.
@@ -213,7 +215,7 @@ const char* hex(char c) {
         }
 
         [openGLLayer insertUTF8String:str bytes:bytes];
-        // [self.layer setNeedsDisplay];
+        [self.layer setNeedsDisplay];
     }
 }
 
@@ -247,7 +249,7 @@ const char* hex(char c) {
 
     if (isDragging) {
         openGLLayer->editor_offset_x += event.deltaX;
-        // [openGLLayer setNeedsDisplay];
+        [openGLLayer setNeedsDisplay];
     } else if (mouse_x >= openGLLayer->editor_offset_x &&
                mouse_y >= openGLLayer->editor_offset_y) {
         mouse_x -= openGLLayer->editor_offset_x;
@@ -269,7 +271,7 @@ const char* hex(char c) {
 
 - (void)insertTestString {
     [openGLLayer insertUTF8String:"∆" bytes:3];
-    // [self.layer setNeedsDisplay];
+    [self.layer setNeedsDisplay];
 }
 
 // TODO: Implement light/dark mode detection.
@@ -291,7 +293,8 @@ const char* hex(char c) {
         static_cast<CGLPixelFormatAttribute>(8),
         kCGLPFAAccelerated,
         kCGLPFANoRecovery,
-        kCGLPFADoubleBuffer,
+        kCGLPFATripleBuffer,
+        // kCGLPFADoubleBuffer,
         kCGLPFAAllowOfflineRenderers,
         kCGLPFAOpenGLProfile,
         static_cast<CGLPixelFormatAttribute>(kCGLOGLPVersion_3_2_Core),
@@ -335,7 +338,6 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 - (void)parseBuffer {
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
     highlighter.parse(input);
-    // [self setNeedsDisplay];
 }
 
 - (void)editBuffer:(size_t)bytes {
@@ -413,6 +415,19 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         float scaled_editor_offset_x = editor_offset_x * self.contentsScale;
         float scaled_editor_offset_y = editor_offset_y * self.contentsScale;
 
+        // if (editor_offset_x > width / 4) {
+        //     isSideBarExpanding = false;
+        // }
+        // if (editor_offset_x < 0) {
+        //     isSideBarExpanding = true;
+        // }
+
+        // if (isSideBarExpanding) {
+        //     editor_offset_x += 1;
+        // } else {
+        //     editor_offset_x -= 1;
+        // }
+
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
         // glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -479,7 +494,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
     CGFloat scale = self.contentsScale;
     text_renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
                                      cursor_end_x * scale, cursor_end_y * scale);
-    // [self setNeedsDisplay];
+    [self setNeedsDisplay];
 }
 
 - (CGFloat)maxScrollX {

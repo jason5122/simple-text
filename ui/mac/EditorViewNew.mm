@@ -4,6 +4,18 @@
 #import "ui/renderer/text_renderer.h"
 
 @interface EditorViewNew () {
+@public
+    CGFloat scroll_x;
+    CGFloat scroll_y;
+    CGFloat cursor_start_x;
+    CGFloat cursor_start_y;
+    CGFloat cursor_end_x;
+    CGFloat cursor_end_y;
+
+    float editor_offset_x;
+    float editor_offset_y;
+
+@private
     Buffer buffer;
     TextRenderer text_renderer;
     SyntaxHighlighter highlighter;
@@ -115,6 +127,7 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
     CGLLockContext([[self openGLContext] CGLContextObj]);
 
     CGSize scaledSize = [self convertSizeToBacking:self.frame.size];
+    CGPoint scaledScroll = [self convertPointToBacking:CGPointMake(scroll_x, scroll_y)];
 
     glViewport(0, 0, scaledSize.width, scaledSize.height);
     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
@@ -122,11 +135,27 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.resize(scaledSize.width, scaledSize.height);
-    text_renderer.renderText(0, 0, buffer, highlighter, 0, 0);
+    text_renderer.renderText(scaledScroll.x, scaledScroll.y, buffer, highlighter, 0, 0);
 
     [[self openGLContext] flushBuffer];
 
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
+}
+
+- (void)scrollWheel:(NSEvent*)event {
+    if (event.type == NSEventTypeScrollWheel) {
+        CGFloat dx = -event.scrollingDeltaX;
+        CGFloat dy = -event.scrollingDeltaY;
+
+        // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
+        if (!event.hasPreciseScrollingDeltas) {
+            dx *= 16;
+            dy *= 16;
+        }
+
+        // scroll_x += dx;
+        scroll_y += dy;
+    }
 }
 
 - (void)dealloc {

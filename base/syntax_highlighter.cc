@@ -62,6 +62,10 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
             capture_index_color_table[i] = BLUE;
         } else if (capture_name == "operator") {
             capture_index_color_table[i] = RED2;
+        } else if (capture_name == "punctuation.delimiter") {
+            capture_index_color_table[i] = RED3;
+        } else if (capture_name == "punctuation.definition") {
+            capture_index_color_table[i] = BLUE2;
         }
     }
 }

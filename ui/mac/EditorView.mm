@@ -67,7 +67,7 @@
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         // openGLLayer.needsDisplayOnBoundsChange = true;
-        // openGLLayer.asynchronous = true;
+        openGLLayer.asynchronous = true;
         self.layer = openGLLayer;
 
         // Fixes blurriness on HiDPI displays.

@@ -15,5 +15,6 @@ constexpr Rgb BLUE2{95, 180, 180};
 constexpr Rgb GREEN{128, 185, 121};
 constexpr Rgb RED{236, 95, 102};
 constexpr Rgb RED2{249, 123, 88};
+constexpr Rgb RED3{172, 122, 104};
 constexpr Rgb GREY2{153, 153, 153};
 constexpr Rgb PURPLE{198, 149, 198};

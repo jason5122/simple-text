@@ -26,7 +26,7 @@
 
 (function_declarator
   declarator: (qualified_identifier
-    name: (identifier) @function))
+    name: (destructor_name) @function))
 
 (function_declarator
   declarator: (field_identifier) @function)
@@ -165,6 +165,9 @@
   ";"
 ] @punctuation.delimiter
 
+(template_argument_list
+  ["<" ">"] @punctuation.definition)
+
 [
   "{"
   "}"
@@ -189,9 +192,14 @@
   "++"
   "+="
   "<"
+  "<="
   "=="
   ">"
+  ">="
   "||"
   "/"
   "/="
+  "::"
+  "<<"
+  ">>"
 ] @operator

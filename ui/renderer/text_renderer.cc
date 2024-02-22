@@ -159,7 +159,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
                 Rgb text_color = BLACK;
                 if (highlighter.isByteOffsetInRange(byte_offset)) {
-                    text_color = highlighter.highlight_colors[highlighter.idx];
+                    size_t capture_index = highlighter.capture_indexes[highlighter.idx];
+                    text_color = highlighter.capture_index_color_table[capture_index];
                 }
 
                 std::string utf8_str(line_str.substr(offset, ret));

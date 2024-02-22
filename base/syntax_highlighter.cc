@@ -41,13 +41,12 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
                 error_offset, error_type);
     }
 
-    std::vector<std::string> capture_names;
     uint32_t capture_count = ts_query_capture_count(query);
-    for (int i = 0; i < capture_count; i++) {
+    capture_index_color_table = std::vector(capture_count, BLACK);
+    for (size_t i = 0; i < capture_count; i++) {
         uint32_t length;
         const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
-        capture_names.push_back(capture_name);
-        fprintf(stderr, "capture name %d: %s\n", i, capture_name);
+        fprintf(stderr, "capture name %zu: %s\n", i, capture_name);
     }
 }
 
@@ -85,7 +84,7 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
     uint32_t capture_index;
 
     highlight_ranges.clear();
-    highlight_colors.clear();
+    capture_indexes.clear();
 
     {
         PROFILE_BLOCK("while loop of ts_query_cursor_next_capture()");
@@ -97,57 +96,7 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
 
             if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
                 highlight_ranges.push_back({start_byte, end_byte});
-
-                if (scope == "source.scheme") {
-                    if (capture.index == 1) {
-                        highlight_colors.push_back(YELLOW);
-                    } else if (capture.index == 2) {
-                        highlight_colors.push_back(RED);
-                    } else if (capture.index == 3) {
-                        highlight_colors.push_back(GREEN);
-                    } else if (capture.index == 5) {
-                        highlight_colors.push_back(GREY2);
-                    } else if (capture.index == 7) {
-                        highlight_colors.push_back(BLUE);
-                    } else {
-                        highlight_colors.push_back(BLACK);
-                    }
-                } else if (scope == "source.json") {
-                    if (capture.index == 0) {
-                        highlight_colors.push_back(PURPLE);
-                    } else if (capture.index == 1) {
-                        highlight_colors.push_back(GREEN);
-                    } else if (capture.index == 2) {
-                        highlight_colors.push_back(YELLOW);
-                    } else if (capture.index == 3) {
-                        highlight_colors.push_back(RED);
-                    } else if (capture.index == 5) {
-                        highlight_colors.push_back(GREY2);
-                    } else {
-                        highlight_colors.push_back(BLACK);
-                    }
-                } else if (scope == "source.c++") {
-                    highlight_colors.push_back(RED);
-                }
-
-                // GLSL
-                // if (capture.index == 0) {
-                //     highlight_colors.push_back(PURPLE);
-                // } else if (capture.index == 1) {
-                //     highlight_colors.push_back(RED2);
-                // } else if (capture.index == 5) {
-                //     highlight_colors.push_back(YELLOW);
-                // } else if (capture.index == 6) {
-                //     highlight_colors.push_back(BLUE);
-                // } else if (capture.index == 10) {
-                //     highlight_colors.push_back(PURPLE);
-                // } else if (capture.index == 12) {
-                //     highlight_colors.push_back(GREY2);
-                // } else if (capture.index == 13) {
-                //     highlight_colors.push_back(RED);
-                // } else {
-                //     highlight_colors.push_back(BLACK);
-                // }
+                capture_indexes.push_back(capture.index);
             }
 
             prev_id = node.id;

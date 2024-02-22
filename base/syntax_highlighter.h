@@ -6,7 +6,8 @@
 class SyntaxHighlighter {
 public:
     size_t idx = 0;
-    std::vector<Rgb> highlight_colors;
+    std::vector<size_t> capture_indexes;
+    std::vector<Rgb> capture_index_color_table;
 
     SyntaxHighlighter() = default;
     void setLanguage(std::string scope);

@@ -360,13 +360,18 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/text_renderer.cc"));
 
-        std::thread parse_thread([&] {
-            {
-                PROFILE_BLOCK("Tree-sitter only parse");
-                [self parseBuffer];
-            }
-        });
-        parse_thread.detach();
+        // FIXME: Use locks to prevent race conditions.
+        // std::thread parse_thread([&] {
+        //     {
+        //         PROFILE_BLOCK("Tree-sitter only parse");
+        //         [self parseBuffer];
+        //     }
+        // });
+        // parse_thread.detach();
+        {
+            PROFILE_BLOCK("Tree-sitter only parse");
+            [self parseBuffer];
+        }
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
 

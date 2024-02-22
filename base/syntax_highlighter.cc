@@ -121,15 +121,30 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
 }
 
 Rgb SyntaxHighlighter::getColor(size_t byte_offset) {
-    size_t size = highlight_ranges.size();
-    while (idx < size && byte_offset >= highlight_ranges.at(idx).second) {
-        idx++;
+    int low = 1;
+    int high = 3;
+    int choice = low + std::rand() % (high - low);
+
+    switch (choice) {
+    case 1:
+        return YELLOW;
+    case 2:
+        return RED;
+    case 3:
+        return BLUE;
+    default:
+        return BLACK;
     }
 
-    if (idx < size && highlight_ranges.at(idx).first <= byte_offset &&
-        byte_offset < highlight_ranges.at(idx).second) {
-        size_t capture_index = capture_indexes[idx];
-        return capture_index_color_table[capture_index];
-    }
-    return BLACK;
+    // size_t size = highlight_ranges.size();
+    // while (idx < size && byte_offset >= highlight_ranges.at(idx).second) {
+    //     idx++;
+    // }
+
+    // if (idx < size && highlight_ranges.at(idx).first <= byte_offset &&
+    //     byte_offset < highlight_ranges.at(idx).second) {
+    //     size_t capture_index = capture_indexes[idx];
+    //     return capture_index_color_table[capture_index];
+    // }
+    // return BLACK;
 }

@@ -65,12 +65,18 @@
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         // openGLLayer.needsDisplayOnBoundsChange = true;
-        // openGLLayer.asynchronous = true;
+        openGLLayer.asynchronous = true;
         self.layer = openGLLayer;
 
         // Fixes blurriness on HiDPI displays.
         // https://bugzilla.gnome.org/show_bug.cgi?id=765194
         self.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
+
+        // This masks resizing glitches.
+        // Solutions involving waiting result in throttled frame rate.
+        // https://thume.ca/2019/06/19/glitchless-metal-window-resizing/
+        // https://zed.dev/blog/120fps
+        self.layerContentsPlacement = NSViewLayerContentsPlacementTopLeft;
 
         NSTrackingAreaOptions options =
             NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
@@ -207,7 +213,7 @@ const char* hex(char c) {
         }
 
         [openGLLayer insertUTF8String:str bytes:bytes];
-        [self.layer setNeedsDisplay];
+        // [self.layer setNeedsDisplay];
     }
 }
 
@@ -241,7 +247,7 @@ const char* hex(char c) {
 
     if (isDragging) {
         openGLLayer->editor_offset_x += event.deltaX;
-        [openGLLayer setNeedsDisplay];
+        // [openGLLayer setNeedsDisplay];
     } else if (mouse_x >= openGLLayer->editor_offset_x &&
                mouse_y >= openGLLayer->editor_offset_y) {
         mouse_x -= openGLLayer->editor_offset_x;
@@ -263,7 +269,7 @@ const char* hex(char c) {
 
 - (void)insertTestString {
     [openGLLayer insertUTF8String:"∆" bytes:3];
-    [self.layer setNeedsDisplay];
+    // [self.layer setNeedsDisplay];
 }
 
 // TODO: Implement light/dark mode detection.
@@ -329,7 +335,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 - (void)parseBuffer {
     TSInput input = {&buffer, read, TSInputEncodingUTF8};
     highlighter.parse(input);
-    [self setNeedsDisplay];
+    // [self setNeedsDisplay];
 }
 
 - (void)editBuffer:(size_t)bytes {
@@ -473,7 +479,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
     CGFloat scale = self.contentsScale;
     text_renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
                                      cursor_end_x * scale, cursor_end_y * scale);
-    [self setNeedsDisplay];
+    // [self setNeedsDisplay];
 }
 
 - (CGFloat)maxScrollX {

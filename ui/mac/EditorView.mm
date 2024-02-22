@@ -67,7 +67,7 @@
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         // openGLLayer.needsDisplayOnBoundsChange = true;
-        openGLLayer.asynchronous = true;
+        // openGLLayer.asynchronous = true;
         self.layer = openGLLayer;
 
         // Fixes blurriness on HiDPI displays.
@@ -143,6 +143,15 @@
 
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
+        if (event.momentumPhase & NSEventPhaseBegan) {
+            std::cerr << "NSEventPhaseBegan\n";
+            openGLLayer.asynchronous = true;
+        }
+        if (event.momentumPhase & NSEventPhaseEnded) {
+            std::cerr << "NSEventPhaseEnded\n";
+            // openGLLayer.asynchronous = false;
+        }
+
         CGFloat dx = -event.scrollingDeltaX;
         CGFloat dy = -event.scrollingDeltaY;
 
@@ -204,6 +213,8 @@ const char* hex(char c) {
     size_t bytes = strlen(str);
 
     if (bytes > 0) {
+        openGLLayer.asynchronous = false;  // DEBUG: Remove this.
+
         for (size_t i = 0; str[i] != '\0'; i++) {
             std::cerr << hex(str[i]) << " ";
         }
@@ -428,8 +439,11 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         //     editor_offset_x -= 1;
         // }
 
-        glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
-        // glClearColor(0.988f, 0.992f, 0.992f, 1.0f);
+        if (self.asynchronous) {
+            glClearColor(240 / 255.0, 240 / 255.0, 240 / 255.0, 1.0);
+        } else {
+            glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+        }
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);

@@ -193,7 +193,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 * line_height + scroll_y},
     //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
     //     .uv = Vec4{0, 0, 1.0, 1.0},
-    //     .color = Rgba::fromRgb(BLACK, false),
+    //     .color = Rgba::fromRgb(colors::black, false),
     //     .is_atlas = true,
     // });
 

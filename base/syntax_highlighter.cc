@@ -42,30 +42,30 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     }
 
     uint32_t capture_count = ts_query_capture_count(query);
-    capture_index_color_table = std::vector(capture_count, BLACK);
+    capture_index_color_table = std::vector(capture_count, colors::black);
     for (size_t i = 0; i < capture_count; i++) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
         std::cerr << "capture name " << i << ": " << capture_name << '\n';
 
         if (capture_name == "comment") {
-            capture_index_color_table[i] = GREY2;
+            capture_index_color_table[i] = colors::grey2;
         } else if (capture_name == "string") {
-            capture_index_color_table[i] = GREEN;
+            capture_index_color_table[i] = colors::green;
         } else if (capture_name == "number") {
-            capture_index_color_table[i] = YELLOW;
+            capture_index_color_table[i] = colors::yellow;
         } else if (capture_name == "constant") {
-            capture_index_color_table[i] = RED;
+            capture_index_color_table[i] = colors::red;
         } else if (capture_name == "keyword") {
-            capture_index_color_table[i] = PURPLE;
+            capture_index_color_table[i] = colors::purple;
         } else if (capture_name == "function") {
-            capture_index_color_table[i] = BLUE;
+            capture_index_color_table[i] = colors::blue;
         } else if (capture_name == "operator") {
-            capture_index_color_table[i] = RED2;
+            capture_index_color_table[i] = colors::red2;
         } else if (capture_name == "punctuation.delimiter") {
-            capture_index_color_table[i] = RED3;
+            capture_index_color_table[i] = colors::red3;
         } else if (capture_name == "punctuation.definition") {
-            capture_index_color_table[i] = BLUE2;
+            capture_index_color_table[i] = colors::blue2;
         }
     }
 }
@@ -135,5 +135,5 @@ Rgb SyntaxHighlighter::getColor(size_t byte_offset) {
         size_t capture_index = capture_indexes[idx];
         return capture_index_color_table[capture_index];
     }
-    return BLACK;
+    return colors::black;
 }

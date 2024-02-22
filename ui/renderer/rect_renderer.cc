@@ -109,7 +109,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         instances.push_back(InstanceData{
             .coords = Vec2{cursor_x - scroll_x, cursor_y - scroll_y},
             .rect_size = Vec2{cursor_width, cursor_height},
-            .color = Rgba::fromRgb(BLUE2, 255),
+            .color = Rgba::fromRgb(colors::blue2, 255),
         });
     }
 

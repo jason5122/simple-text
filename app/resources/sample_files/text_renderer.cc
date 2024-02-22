@@ -157,7 +157,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
-                Rgb text_color = BLACK;
+                Rgb text_color = colors::black;
                 if (highlighter.isByteOffsetInRange(byte_offset)) {
                     text_color = highlighter.highlight_colors[highlighter.idx];
                 }
@@ -194,7 +194,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 * line_height + scroll_y},
     //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
     //     .uv = Vec4{0, 0, 1.0, 1.0},
-    //     .color = Rgba::fromRgb(BLACK, false),
+    //     .color = Rgba::fromRgb(colors::black, false),
     //     .is_atlas = true,
     // });
 

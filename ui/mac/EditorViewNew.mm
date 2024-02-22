@@ -65,11 +65,10 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 - (void)initGL {
     [[self openGLContext] makeCurrentContext];
 
-    // Synchronize buffer swaps with vertical refresh rate
-    GLint one = 1;
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    // Synchronize buffer swaps with vertical refresh rate
+    GLint one = 1;
     [[self openGLContext] setValues:&one forParameter:NSOpenGLCPSwapInterval];
 #pragma clang diagnostic pop
 

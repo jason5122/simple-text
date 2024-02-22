@@ -45,8 +45,24 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     capture_index_color_table = std::vector(capture_count, BLACK);
     for (size_t i = 0; i < capture_count; i++) {
         uint32_t length;
-        const char* capture_name = ts_query_capture_name_for_id(query, i, &length);
-        fprintf(stderr, "capture name %zu: %s\n", i, capture_name);
+        std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
+        std::cerr << "capture name " << i << ": " << capture_name << '\n';
+
+        if (capture_name == "comment") {
+            capture_index_color_table[i] = GREY2;
+        } else if (capture_name == "string") {
+            capture_index_color_table[i] = GREEN;
+        } else if (capture_name == "number") {
+            capture_index_color_table[i] = YELLOW;
+        } else if (capture_name == "constant") {
+            capture_index_color_table[i] = RED;
+        } else if (capture_name == "keyword") {
+            capture_index_color_table[i] = PURPLE;
+        } else if (capture_name == "function") {
+            capture_index_color_table[i] = BLUE;
+        } else if (capture_name == "operator") {
+            capture_index_color_table[i] = RED2;
+        }
     }
 }
 
@@ -86,23 +102,20 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
     highlight_ranges.clear();
     capture_indexes.clear();
 
-    {
-        PROFILE_BLOCK("while loop of ts_query_cursor_next_capture()");
-        while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
-            TSQueryCapture capture = match.captures[capture_index];
-            TSNode node = capture.node;
-            uint32_t start_byte = ts_node_start_byte(node);
-            uint32_t end_byte = ts_node_end_byte(node);
+    while (ts_query_cursor_next_capture(query_cursor, &match, &capture_index)) {
+        TSQueryCapture capture = match.captures[capture_index];
+        TSNode node = capture.node;
+        uint32_t start_byte = ts_node_start_byte(node);
+        uint32_t end_byte = ts_node_end_byte(node);
 
-            if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
-                highlight_ranges.push_back({start_byte, end_byte});
-                capture_indexes.push_back(capture.index);
-            }
-
-            prev_id = node.id;
-            prev_start = start_byte;
-            prev_end = end_byte;
+        if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
+            highlight_ranges.push_back({start_byte, end_byte});
+            capture_indexes.push_back(capture.index);
         }
+
+        prev_id = node.id;
+        prev_start = start_byte;
+        prev_end = end_byte;
     }
 }
 

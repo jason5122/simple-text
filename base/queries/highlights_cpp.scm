@@ -4,6 +4,13 @@
   function: (qualified_identifier
     name: (identifier) @function))
 
+(call_expression
+  function: (identifier) @function)
+
+(call_expression
+  function: (field_expression
+    field: (field_identifier) @function))
+
 (template_function
   name: (identifier) @function)
 
@@ -30,6 +37,7 @@
  (#match? @type "^[A-Z]"))
 
 (auto) @type
+(type_identifier) @type
 
 ; Constants
 

@@ -356,8 +356,10 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         float scaled_height = self.frame.size.height * self.contentsScale;
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
+        // highlighter.setLanguage("source.scheme");
         highlighter.setLanguage("source.c++");
 
+        // buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/text_renderer.cc"));
 
         // FIXME: Use locks to prevent race conditions.
@@ -437,24 +439,24 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
     {
         PROFILE_BLOCK("editBuffer + parseBuffer");
-        // [self editBuffer:bytes];
-        // [self parseBuffer];
+        [self editBuffer:bytes];
+        [self parseBuffer];
 
-        // if (strcmp(str, "\n") == 0) {
-        //     text_renderer.cursor_start_line++;
-        //     text_renderer.cursor_end_line++;
+        if (strcmp(str, "\n") == 0) {
+            text_renderer.cursor_start_line++;
+            text_renderer.cursor_end_line++;
 
-        //     text_renderer.cursor_start_col_offset = 0;
-        //     text_renderer.cursor_start_x = 0;
-        //     text_renderer.cursor_end_col_offset = 0;
-        //     text_renderer.cursor_end_x = 0;
-        // } else {
-        //     float advance = text_renderer.getGlyphAdvance(std::string(str));
-        //     text_renderer.cursor_start_col_offset += bytes;
-        //     text_renderer.cursor_start_x += advance;
-        //     text_renderer.cursor_end_col_offset += bytes;
-        //     text_renderer.cursor_end_x += advance;
-        // }
+            text_renderer.cursor_start_col_offset = 0;
+            text_renderer.cursor_start_x = 0;
+            text_renderer.cursor_end_col_offset = 0;
+            text_renderer.cursor_end_x = 0;
+        } else {
+            float advance = text_renderer.getGlyphAdvance(std::string(str));
+            text_renderer.cursor_start_col_offset += bytes;
+            text_renderer.cursor_start_x += advance;
+            text_renderer.cursor_end_col_offset += bytes;
+            text_renderer.cursor_end_x += advance;
+        }
     }
 }
 

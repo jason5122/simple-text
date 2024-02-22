@@ -86,14 +86,17 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-// float TextRenderer::getGlyphAdvance(std::string utf8_str) {
-//     if (!glyph_cache.count(utf8_str)) {
-//         this->loadGlyph(utf8_str);
-//     }
+float TextRenderer::getGlyphAdvance(std::string utf8_str) {
+    uint_least32_t codepoint;
+    grapheme_decode_utf8(&utf8_str[0], SIZE_MAX, &codepoint);
 
-//     AtlasGlyph glyph = glyph_cache[utf8_str];
-//     return std::round(glyph.advance);
-// }
+    if (!glyph_cache.count(codepoint)) {
+        this->loadGlyph(utf8_str, codepoint);
+    }
+
+    AtlasGlyph glyph = glyph_cache[codepoint];
+    return std::round(glyph.advance);
+}
 
 std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str, float x) {
     size_t offset;
@@ -102,12 +105,11 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
     for (offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
-        std::string utf8_str(line_str.substr(offset, ret));
-
         uint_least32_t codepoint;
         grapheme_decode_utf8(&line_str[0] + offset, SIZE_MAX, &codepoint);
 
         if (!glyph_cache.count(codepoint)) {
+            std::string utf8_str(line_str.substr(offset, ret));
             this->loadGlyph(utf8_str, codepoint);
         }
 
@@ -139,14 +141,17 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
     highlighter.idx = 0;
-    highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
-                              {static_cast<uint32_t>(end_line), 0});
+    {
+        PROFILE_BLOCK("Tree-sitter highlight");
+        highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
+                                  {static_cast<uint32_t>(end_line), 0});
+    }
 
     size_t byte_offset = buffer.byteOfLine(start_line);
     std::vector<InstanceData> instances;
 
     {
-        PROFILE_BLOCK("entire loop");
+        PROFILE_BLOCK("layout text");
         for (size_t line_index = start_line; line_index < end_line; line_index++) {
             size_t ret = 1;
             float total_advance = 0;

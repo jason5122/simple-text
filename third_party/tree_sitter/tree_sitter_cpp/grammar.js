@@ -33,6 +33,23 @@ const FOLD_OPERATORS = [
   'or', 'and', 'bitor', 'xor', 'bitand', 'not_eq',
 ];
 
+const ASSIGNMENT_OPERATORS = [
+  '=',
+  '*=',
+  '/=',
+  '%=',
+  '+=',
+  '-=',
+  '<<=',
+  '>>=',
+  '&=',
+  '^=',
+  '|=',
+  'and_eq',
+  'or_eq',
+  'xor_eq',
+];
+
 module.exports = grammar(C, {
   name: 'cpp',
 
@@ -65,6 +82,10 @@ module.exports = grammar(C, {
     [$._declaration_specifiers, $._constructor_specifiers],
     [$._binary_fold_operator, $._fold_operator],
     [$._function_declarator_seq],
+    [$._type_specifier, $.sized_type_specifier],
+    [$.initializer_pair, $.comma_expression],
+    [$.expression_statement, $._for_statement_body],
+    [$.init_statement, $._for_statement_body],
   ],
 
   inline: ($, original) => original.concat([
@@ -205,6 +226,20 @@ module.exports = grammar(C, {
           field('body', choice(e.content, $.try_statement))),
     }),
 
+    declaration: $ => seq(
+      $._declaration_specifiers,
+      commaSep1(field('declarator', choice(
+        seq(
+          // C uses _declaration_declarator here for some nice macro parsing in function declarators,
+          // but this causes a world of pain for C++ so we'll just stick to the normal _declarator here.
+          $._declarator,
+          optional($.gnu_asm_expression),
+        ),
+        $.init_declarator,
+      ))),
+      ';',
+    ),
+
     virtual_specifier: _ => choice(
       'final', // the only legal value here for classes
       'override', // legal for functions in addition to final, plus permutations.
@@ -268,6 +303,7 @@ module.exports = grammar(C, {
       field('base', choice(
         alias($.qualified_type_identifier, $.qualified_identifier),
         $._type_identifier,
+        $.primitive_type,
         $.sized_type_specifier,
       )),
     )),
@@ -366,7 +402,7 @@ module.exports = grammar(C, {
 
     optional_parameter_declaration: $ => seq(
       $._declaration_specifiers,
-      field('declarator', optional($._declarator)),
+      field('declarator', optional(choice($._declarator, $.abstract_reference_declarator))),
       '=',
       field('default_value', $._expression),
     ),
@@ -787,7 +823,10 @@ module.exports = grammar(C, {
       optional(field('alternative', $.else_clause)),
     )),
 
-    _for_statement_body: ($, original) => prec(1, original),
+    // Using prec(1) instead of prec.dynamic(1) causes issues with the
+    // range loop's declaration specifiers if `int` is passed in, it'll
+    // always prefer the standard for loop and give us a parse error.
+    _for_statement_body: ($, original) => prec.dynamic(1, original),
     for_range_loop: $ => seq(
       'for',
       '(',
@@ -957,18 +996,19 @@ module.exports = grammar(C, {
       $._expression,
     ),
 
-    field_expression: $ => seq(
+    field_expression: $ => prec.right(seq(
       prec(PREC.FIELD, seq(
         field('argument', $._expression),
         field('operator', choice('.', '.*', '->')),
       )),
       field('field', choice(
         $._field_identifier,
+        alias($.qualified_field_identifier, $.qualified_identifier),
         $.destructor_name,
         $.template_method,
         alias($.dependent_field_identifier, $.dependent_name),
       )),
-    ),
+    )),
 
     type_requirement: $ => seq('typename', $._class_name),
 
@@ -1173,7 +1213,7 @@ module.exports = grammar(C, {
       '::',
     )),
 
-    qualified_field_identifier: $ => seq(
+    qualified_field_identifier: $ => prec.right(seq(
       $._scope_resolution,
       field('name', choice(
         alias($.dependent_field_identifier, $.dependent_name),
@@ -1181,7 +1221,7 @@ module.exports = grammar(C, {
         $.template_method,
         $._field_identifier,
       )),
-    ),
+    )),
 
     qualified_identifier: $ => seq(
       $._scope_resolution,
@@ -1222,25 +1262,22 @@ module.exports = grammar(C, {
 
     assignment_expression: $ => prec.right(PREC.ASSIGNMENT, seq(
       field('left', $._assignment_left_expression),
-      field('operator', choice(
-        '=',
-        '*=',
-        '/=',
-        '%=',
-        '+=',
-        '-=',
-        '<<=',
-        '>>=',
-        '&=',
-        '^=',
-        '|=',
-        'and_eq',
-        'or_eq',
-        'xor_eq',
-      )),
+      field('operator', choice(...ASSIGNMENT_OPERATORS)),
       field('right', choice($._expression, $.initializer_list)),
     )),
 
+    _assignment_expression_lhs: $ => seq(
+      field('left', $._expression),
+      field('operator', choice(...ASSIGNMENT_OPERATORS)),
+      field('right', choice($._expression, $.initializer_list)),
+    ),
+
+    // This prevents an ambiguity between fold expressions
+    // and assignment expressions within parentheses.
+    parenthesized_expression: ($, original) => choice(
+      original,
+      seq('(', alias($._assignment_expression_lhs, $.assignment_expression), ')'),
+    ),
 
     operator_name: $ => prec(1, seq(
       'operator',
@@ -1269,11 +1306,61 @@ module.exports = grammar(C, {
 
     this: _ => 'this',
 
-    concatenated_string: $ => seq(
+    concatenated_string: $ => prec.right(seq(
       choice($.identifier, $.string_literal, $.raw_string_literal),
       choice($.string_literal, $.raw_string_literal),
       repeat(choice($.identifier, $.string_literal, $.raw_string_literal)),
-    ),
+    )),
+
+    number_literal: $ => {
+      const sign = /[-\+]/;
+      const separator = '\'';
+      const binary = /[01]/;
+      const binaryDigits = seq(repeat1(binary), repeat(seq(separator, repeat1(binary))));
+      const decimal = /[0-9]/;
+      const firstDecimal = /[1-9]/;
+      const intDecimalDigits = seq(firstDecimal, repeat(decimal), repeat(seq(separator, repeat1(decimal))));
+      const floatDecimalDigits = seq(repeat1(decimal), repeat(seq(separator, repeat1(decimal))));
+      const hex = /[0-9a-fA-F]/;
+      const hexDigits = seq(repeat1(hex), repeat(seq(separator, repeat1(hex))));
+      const octal = /[0-7]/;
+      const octalDigits = seq('0', repeat(octal), repeat(seq(separator, repeat1(octal))));
+      const hexExponent = seq(/[pP]/, optional(sign), floatDecimalDigits);
+      const decimalExponent = seq(/[eE]/, optional(sign), floatDecimalDigits);
+      const intSuffix = /(ll|LL)[uU]?|[uU](ll|LL)?|[uU][lL]?|[uU][zZ]?|[lL][uU]?|[zZ][uU]?/;
+      const floatSuffix = /([fF](16|32|64|128)?)|[lL]|(bf16|BF16)/;
+
+      return token(seq(
+        optional(sign),
+        choice(
+          seq(
+            choice(
+              seq(choice('0b', '0B'), binaryDigits),
+              intDecimalDigits,
+              seq(choice('0x', '0X'), hexDigits),
+              octalDigits,
+            ),
+            optional(intSuffix),
+          ),
+          seq(
+            choice(
+              seq(floatDecimalDigits, decimalExponent),
+              seq(floatDecimalDigits, '.', optional(floatDecimalDigits), optional(decimalExponent)),
+              seq('.', floatDecimalDigits, optional(decimalExponent)),
+              seq(
+                choice('0x', '0X'),
+                choice(
+                  hexDigits,
+                  seq(hexDigits, '.', optional(hexDigits)),
+                  seq('.', hexDigits)),
+                hexExponent,
+              ),
+            ),
+            optional(floatSuffix),
+          ),
+        ),
+      ));
+    },
 
     literal_suffix: _ => token.immediate(/[a-zA-Z_]\w*/),
 

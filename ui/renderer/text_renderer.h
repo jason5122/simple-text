@@ -6,7 +6,6 @@
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/shader.h"
 #include <string>
-#include <tree_sitter/api.h>
 #include <unordered_map>
 #include <vector>
 

@@ -1,4 +1,5 @@
 tree_sitter_queries = [
+  "highlights_c.scm",
   "highlights_cpp.scm",
   "highlights_glsl.scm",
   "highlights_json.scm",

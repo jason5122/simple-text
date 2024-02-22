@@ -356,9 +356,9 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         float scaled_height = self.frame.size.height * self.contentsScale;
         text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
-        highlighter.setLanguage("source.scheme");
+        highlighter.setLanguage("source.c++");
 
-        buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
+        buffer.setContents(ReadFile(ResourcePath() / "sample_files/text_renderer.cc"));
 
         std::thread parse_thread([&] {
             {

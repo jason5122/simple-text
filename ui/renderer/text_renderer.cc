@@ -11,11 +11,6 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
-extern "C" TSLanguage* tree_sitter_cpp();
-extern "C" TSLanguage* tree_sitter_glsl();
-extern "C" TSLanguage* tree_sitter_json();
-extern "C" TSLanguage* tree_sitter_scheme();
-
 namespace {
 struct InstanceData {
     Vec2 coords;

@@ -6,6 +6,7 @@ sample_files = [
   "resources/sample_files/proportional_font_test.json",
   "resources/sample_files/sort.scm",
   "resources/sample_files/sort_bugged.scm",
+  "resources/sample_files/text_renderer.cc",
 ]
 
 if (is_mac) {

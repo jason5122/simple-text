@@ -20,6 +20,7 @@ copy("copy_test_files") {
   sources = [
     "test_files/10mb.json",
     "test_files/example.json",
+    "test_files/main.cc",
   ]
   outputs = [ "$root_out_dir/test_files/{{source_file_part}}" ]
 }

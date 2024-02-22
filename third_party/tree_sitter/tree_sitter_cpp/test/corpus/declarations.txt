@@ -1621,7 +1621,7 @@ class Foo {
 (translation_unit
   (enum_specifier
     (type_identifier)
-    (type_identifier)
+    (primitive_type)
     (enumerator_list))
   (enum_specifier
     (type_identifier)
@@ -1656,7 +1656,7 @@ class Foo {
     (type_identifier))
   (enum_specifier
     (type_identifier)
-    (type_identifier)
+    (primitive_type)
     (enumerator_list))
   (class_specifier
     (type_identifier)
@@ -2111,6 +2111,8 @@ int main() {
 
     (obj.*member_function_ptr)(42); // 84
 
+    this->Base::f();
+
     return 0;
 }
 
@@ -2170,8 +2172,40 @@ int main() {
           (argument_list
             (number_literal))))
       (comment)
+      (expression_statement
+        (call_expression
+          (field_expression
+            (this)
+            (qualified_identifier
+              (namespace_identifier)
+              (field_identifier)))
+          (argument_list)))
       (return_statement
         (number_literal)))))
+
+================================================================================
+Unnamed default parameter
+================================================================================
+
+class Foo {
+    void foo(Bar& = defaultBar);
+};
+
+--------------------------------------------------------------------------------
+
+(translation_unit
+  (class_specifier
+    (type_identifier)
+    (field_declaration_list
+      (field_declaration
+        (primitive_type)
+        (function_declarator
+          (field_identifier)
+          (parameter_list
+            (optional_parameter_declaration
+              (type_identifier)
+              (abstract_reference_declarator)
+              (identifier))))))))
 
 ================================================================================
 Alignas specifier and alignof expression

@@ -99,6 +99,7 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
     TSQueryMatch match;
     uint32_t capture_index;
 
+    idx = 0;
     highlight_ranges.clear();
     capture_indexes.clear();
 
@@ -119,7 +120,7 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
     }
 }
 
-bool SyntaxHighlighter::isByteOffsetInRange(size_t byte_offset) {
+Rgb SyntaxHighlighter::getColor(size_t byte_offset) {
     size_t size = highlight_ranges.size();
     while (idx < size && byte_offset >= highlight_ranges.at(idx).second) {
         idx++;
@@ -127,7 +128,8 @@ bool SyntaxHighlighter::isByteOffsetInRange(size_t byte_offset) {
 
     if (idx < size && highlight_ranges.at(idx).first <= byte_offset &&
         byte_offset < highlight_ranges.at(idx).second) {
-        return true;
+        size_t capture_index = capture_indexes[idx];
+        return capture_index_color_table[capture_index];
     }
-    return false;
+    return BLACK;
 }

@@ -140,7 +140,6 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     size_t visible_lines = std::ceil((height - 60) / line_height);
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
-    highlighter.idx = 0;
     {
         PROFILE_BLOCK("Tree-sitter highlight");
         highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
@@ -162,22 +161,16 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
-                Rgb text_color = BLACK;
-                if (highlighter.isByteOffsetInRange(byte_offset)) {
-                    size_t capture_index = highlighter.capture_indexes[highlighter.idx];
-                    text_color = highlighter.capture_index_color_table[capture_index];
-                }
-
-                std::string utf8_str(line_str.substr(offset, ret));
-
                 uint_least32_t codepoint;
                 grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
                 if (!glyph_cache.count(codepoint)) {
+                    std::string utf8_str(line_str.substr(offset, ret));
                     this->loadGlyph(utf8_str, codepoint);
                 }
 
                 AtlasGlyph glyph = glyph_cache[codepoint];
+                Rgb text_color = highlighter.getColor(byte_offset);
 
                 if (total_advance + glyph.advance > scroll_x) {
                     instances.push_back(InstanceData{

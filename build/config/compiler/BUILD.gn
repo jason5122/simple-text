@@ -31,6 +31,8 @@ config("compiler") {
   cflags_objcc += cflags_cc
 
   ldflags = [ "-fuse-ld=lld" ]
+
+  cflags += [ "-fno-exceptions" ]
 }
 
 if (is_mac) {

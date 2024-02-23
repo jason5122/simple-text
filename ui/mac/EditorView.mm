@@ -373,7 +373,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         CGFloat fontSize = 16 * self.contentsScale;
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
-        text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
+        text_renderer.setup(scaled_width, scaled_height, "Menlo", fontSize);
+        // text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
         // highlighter.setLanguage("source.scheme");
         highlighter.setLanguage("source.c++");
@@ -444,6 +445,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         } else {
             glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
         }
+        // glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);

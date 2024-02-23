@@ -20,8 +20,6 @@ void RectRenderer::setup(float width, float height) {
                         ResourcePath() / "shaders/rect_frag.glsl");
     this->resize(width, height);
 
-    glDepthMask(GL_FALSE);
-
     GLuint indices[] = {
         0, 1, 3,  // first triangle
         1, 2, 3,  // second triangle
@@ -93,7 +91,6 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     cursor_height += extra_padding * 2;
 
     Rgba editor_bg_color = Rgba{253, 253, 253, 255};
-    Rgba ui_color = Rgba{228, 228, 228, 255};
 
     std::vector<InstanceData> instances;
 
@@ -151,7 +148,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = Vec2{0, 0 - editor_offset_y},
         .rect_size = Vec2{width, editor_offset_y},
-        .color = ui_color,
+        .color = Rgba{190, 190, 190, 255},
     });
 
     float tab_width = 350;
@@ -186,14 +183,14 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = {0 - editor_offset_x, 0 - editor_offset_y},
         .rect_size = {editor_offset_x, height},
-        .color = ui_color,
+        .color = Rgba{235, 237, 239, 255},
     });
 
     // Add status bar.
     instances.push_back(InstanceData{
         .coords = Vec2{0 - editor_offset_x, editor_height},
         .rect_size = Vec2{width, status_bar_height},
-        .color = Rgba{207, 207, 207, 255},
+        .color = Rgba{199, 203, 209, 255},
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

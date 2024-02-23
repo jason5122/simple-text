@@ -22,16 +22,16 @@ struct InstanceData {
 }
 
 void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
+    shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
+                        ResourcePath() / "shaders/text_frag.glsl");
+    this->resize(width, height);
+
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
     atlas.setup();
     ct_rasterizer.setup(main_font_name, font_size);
 
     this->line_height = ct_rasterizer.line_height;
-
-    shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
-                        ResourcePath() / "shaders/text_frag.glsl");
-    this->resize(width, height);
 
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"), line_height);

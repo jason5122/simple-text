@@ -22,8 +22,8 @@ public:
 
 private:
     static const int BATCH_MAX = 65536;
-    float width, height;
 
+    float width, height;
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 };

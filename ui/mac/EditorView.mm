@@ -1,6 +1,7 @@
 #import "EditorView.h"
 #import "base/buffer.h"
 #import "base/syntax_highlighter.h"
+#import "ui/renderer/image_renderer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
 #import "util/file_util.h"
@@ -32,6 +33,7 @@
 
 @private
     RectRenderer rect_renderer;
+    ImageRenderer image_renderer;
     SyntaxHighlighter highlighter;
 
     bool isSideBarExpanding;
@@ -376,6 +378,7 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         text_renderer.setup(scaled_width, scaled_height, "Menlo", fontSize);
         // text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
         rect_renderer.setup(scaled_width, scaled_height);
+        image_renderer.setup(scaled_width, scaled_height);
         // highlighter.setLanguage("source.scheme");
         highlighter.setLanguage("source.c++");
 
@@ -459,6 +462,10 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
                            text_renderer.cursor_end_line, text_renderer.line_height,
                            buffer.lineCount(), text_renderer.longest_line_x,
                            scaled_editor_offset_x, scaled_editor_offset_y);
+
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+        image_renderer.resize(width, height);
+        image_renderer.draw(scaled_scroll_x, scaled_scroll_y);
 
         // Calls glFlush() by default.
         [super drawInCGLContext:glContext

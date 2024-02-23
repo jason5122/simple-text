@@ -3,6 +3,8 @@ shaders = [
   "rect_vert.glsl",
   "text_frag.glsl",
   "text_vert.glsl",
+  "image_vert.glsl",
+  "image_frag.glsl",
 ]
 
 if (is_mac) {

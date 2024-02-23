@@ -21,8 +21,8 @@ void RectRenderer::setup(float width, float height) {
     this->resize(width, height);
 
     GLuint indices[] = {
-        0, 1, 3,  // first triangle
-        1, 2, 3,  // second triangle
+        0, 1, 3,  // First triangle.
+        1, 2, 3,  // Second triangle.
     };
 
     glGenVertexArrays(1, &vao);
@@ -77,7 +77,6 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
                 editor_offset_y);
-    glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
     float cursor_width = 4;

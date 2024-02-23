@@ -45,10 +45,9 @@ private:
     static const int BATCH_MAX = 65536;
 
     float width, height;
-
+    Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 
-    Shader shader_program;
     Atlas atlas;
     CoreTextRasterizer ct_rasterizer;
 

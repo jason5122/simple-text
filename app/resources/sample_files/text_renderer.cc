@@ -37,8 +37,8 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"), line_height);
 
     GLuint indices[] = {
-        0, 1, 3,  // first triangle
-        1, 2, 3,  // second triangle
+        0, 1, 3,  // First triangle.
+        1, 2, 3,  // Second triangle.
     };
 
     glGenVertexArrays(1, &vao);

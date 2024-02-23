@@ -372,17 +372,17 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);
 
-        CGFloat fontSize = 16 * self.contentsScale;
+        int font_size = 16 * self.contentsScale;
+        std::string font_name = "Menlo";
+
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
-        text_renderer.setup(scaled_width, scaled_height, "Menlo", fontSize);
-        // text_renderer.setup(scaled_width, scaled_height, "Source Code Pro", fontSize);
+
+        text_renderer.setup(scaled_width, scaled_height, font_name, font_size);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
-        // highlighter.setLanguage("source.scheme");
         highlighter.setLanguage("source.c++");
 
-        // buffer.setContents(ReadFile(ResourcePath() / "sample_files/sort.scm"));
         buffer.setContents(ReadFile(ResourcePath() / "sample_files/text_renderer.cc"));
 
         // FIXME: Use locks to prevent race conditions.
@@ -443,12 +443,12 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         //     editor_offset_x -= 1;
         // }
 
-        if (self.asynchronous) {
-            glClearColor(240 / 255.0, 240 / 255.0, 240 / 255.0, 1.0);
-        } else {
-            glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
-        }
-        // glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+        // if (self.asynchronous) {
+        //     glClearColor(240 / 255.0, 240 / 255.0, 240 / 255.0, 1.0);
+        // } else {
+        //     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+        // }
+        glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);

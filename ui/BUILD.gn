@@ -31,9 +31,10 @@ if (is_mac) {
     ]
 
     deps = [
+      "icons",
+      "renderer/shaders",
       "//base",
       "//font",
-      "//ui/renderer/shaders",
       "//util",
     ]
 

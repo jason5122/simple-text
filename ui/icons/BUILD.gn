@@ -1,0 +1,15 @@
+icons = [ "wall.png" ]
+
+if (is_mac) {
+  bundle_data("icons") {
+    sources = icons
+    outputs = [ "{{bundle_resources_dir}}/icons/{{source_file_part}}" ]
+  }
+}
+
+if (is_linux) {
+  copy("icons") {
+    sources = icons
+    outputs = [ "$root_out_dir/icons/{{source_file_part}}" ]
+  }
+}

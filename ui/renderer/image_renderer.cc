@@ -54,7 +54,7 @@ void ImageRenderer::setup(float width, float height) {
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
-    fs::path image_path = ResourcePath() / "icons/wall.png";
+    fs::path image_path = ResourcePath() / "icons/tab_close@3x.png";
 
     // int image_width, image_height, num_channels;
     // uint8_t* data = stbi_load(image_path.c_str(), &image_width, &image_height, &num_channels,
@@ -90,7 +90,7 @@ void ImageRenderer::draw(float scroll_x, float scroll_y) {
 
     instances.push_back(InstanceData{
         .coords = Vec2{width / 2, 400},
-        .rect_size = Vec2{1024, 1024},
+        .rect_size = Vec2{360, 324},
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
@@ -168,6 +168,7 @@ bool ImageRenderer::loadPng(fs::path file_name, int& out_width, int& out_height,
                  NULL, NULL);
     out_width = width;
     out_height = height;
+    out_has_alpha = color_type == PNG_COLOR_TYPE_RGBA;
 
     unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
     *out_data = (unsigned char*)malloc(row_bytes * out_height);

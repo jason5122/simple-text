@@ -10,7 +10,6 @@ uniform vec2 scroll_offset;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
-    point.y = 1.0 - point.y;     // Set origin at top left instead of bottom left.
     return (point * 2.0) - 1.0;  // Convert to [-1.0, 1.0].
 }
 
@@ -20,7 +19,7 @@ void main() {
     position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
 
     vec2 final_position = coords + rect_size * position;
-    final_position -= scroll_offset;
+    final_position += scroll_offset;
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
     tex_coords = position;

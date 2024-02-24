@@ -11,5 +11,5 @@ void main() {
     vec4 texel = texture(mask, tex_coords);
 
     alpha_mask = vec4(1.0);
-    color = vec4(texel.rgb, 1.0);
+    color = vec4(texel.rgb, texel.a);
 }

@@ -24,4 +24,7 @@ private:
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
     GLuint tex_id;
+
+    bool loadPng(fs::path file_name, int& out_width, int& out_height, bool& out_has_alpha,
+                 GLubyte** out_data);
 };

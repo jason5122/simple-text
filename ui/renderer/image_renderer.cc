@@ -4,6 +4,9 @@
 #include <png.h>
 #include <vector>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 namespace {
 struct InstanceData {
     Vec2 coords;
@@ -86,8 +89,13 @@ void ImageRenderer::setup(float width, float height) {
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
-    std::vector<uint8_t> buffer = read_png(ResourcePath() / "icons/wall.png");
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, &buffer[0]);
+    int stbi_width, stbi_height, num_channels;
+    uint8_t* data = stbi_load((ResourcePath() / "icons/wall.png").c_str(), &stbi_width,
+                              &stbi_height, &num_channels, 0);
+
+    // std::vector<uint8_t> buffer = read_png(ResourcePath() / "icons/wall.png");
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, &buffer[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 512, 512, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -108,7 +116,7 @@ void ImageRenderer::draw(float scroll_x, float scroll_y) {
 
     instances.push_back(InstanceData{
         .coords = Vec2{width / 2, 400},
-        .rect_size = Vec2{512, 512},
+        .rect_size = Vec2{1024, 1024},
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

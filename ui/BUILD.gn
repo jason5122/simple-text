@@ -38,6 +38,7 @@ if (is_mac) {
       "//font",
       "//third_party/libgrapheme",
       "//third_party/libpng",
+      "//third_party/stb_image",
       "//util",
     ]
   }

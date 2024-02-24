@@ -1,0 +1,9 @@
+static_library("stb_image") {
+  sources = [ "src/stb_image.cc" ]
+
+  public_configs = [ ":stb_image_includes" ]
+}
+
+config("stb_image_includes") {
+  include_dirs = [ "src" ]
+}

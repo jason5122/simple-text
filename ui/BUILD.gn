@@ -10,7 +10,6 @@ if (is_mac) {
   source_set("ui_mac") {
     sources = [
       "mac/EditorView.mm",
-      "mac/EditorViewNew.mm",
       "mac/WindowController.mm",
     ]
     sources += shared_sources

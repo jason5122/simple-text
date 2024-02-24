@@ -84,14 +84,14 @@ RasterizedGlyph CoreTextRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CT
     size_t bytesPerRow = CGBitmapContextGetBytesPerRow(context);
     size_t len = height * bytesPerRow;
 
-    int pixels = len / 4;
+    size_t pixels = len / 4;
     std::vector<uint8_t> buffer;
-    int size = colored ? pixels * 4 : pixels * 3;
+    size_t size = colored ? pixels * 4 : pixels * 3;
 
     // TODO: This assumes little endian; detect and support big endian.
     buffer.reserve(size);
-    for (int i = 0; i < pixels; i++) {
-        int offset = i * 4;
+    for (size_t i = 0; i < pixels; i++) {
+        size_t offset = i * 4;
         buffer.push_back(bitmapData[offset + 2]);
         buffer.push_back(bitmapData[offset + 1]);
         buffer.push_back(bitmapData[offset]);

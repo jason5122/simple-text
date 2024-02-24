@@ -8,11 +8,11 @@ static_library("tree_sitter") {
   public_configs = [ ":tree_sitter_includes" ]
 
   deps = [
-    ":tree_sitter_c",
-    ":tree_sitter_cpp",
-    ":tree_sitter_glsl",
+    # ":tree_sitter_c",
+    # ":tree_sitter_cpp",
+    # ":tree_sitter_glsl",
     ":tree_sitter_json",
-    ":tree_sitter_scheme",
+    # ":tree_sitter_scheme",
   ]
 }
 

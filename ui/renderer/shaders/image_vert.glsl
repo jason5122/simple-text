@@ -3,6 +3,8 @@
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
 
+out vec2 tex_coords;
+
 uniform vec2 resolution;
 uniform vec2 scroll_offset;
 
@@ -21,4 +23,5 @@ void main() {
     final_position -= scroll_offset;
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
+    tex_coords = position;
 }

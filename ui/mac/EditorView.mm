@@ -373,7 +373,9 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         glDepthMask(GL_FALSE);
 
         int font_size = 16 * self.contentsScale;
-        std::string font_name = "Menlo";
+        std::string font_name = "Source Code Pro";
+        // fs::path file_path = ResourcePath() / "sample_files/text_renderer.cc";
+        fs::path file_path = ResourcePath() / "sample_files/example.json";
 
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
@@ -381,9 +383,10 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         text_renderer.setup(scaled_width, scaled_height, font_name, font_size);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
-        highlighter.setLanguage("source.c++");
+        // highlighter.setLanguage("source.c++");
+        highlighter.setLanguage("source.json");
 
-        buffer.setContents(ReadFile(ResourcePath() / "sample_files/text_renderer.cc"));
+        buffer.setContents(ReadFile(file_path));
 
         // FIXME: Use locks to prevent race conditions.
         // std::thread parse_thread([&] {

@@ -23,4 +23,5 @@ private:
     float width, height;
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
+    GLuint tex_id;
 };

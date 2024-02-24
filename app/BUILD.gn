@@ -1,14 +1,6 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
-sample_files = [
-  "resources/sample_files/emojis.txt",
-  "resources/sample_files/proportional_font_test.json",
-  "resources/sample_files/sort.scm",
-  "resources/sample_files/sort_bugged.scm",
-  "resources/sample_files/text_renderer.cc",
-]
-
 if (is_mac) {
   mac_app_bundle("app") {
     output_name = "Simple Text"
@@ -26,18 +18,12 @@ if (is_mac) {
 
     deps = [
       ":icon",
-      ":sample_files",
       "//ui:ui_mac",
     ]
   }
 
   icon("icon") {
     sources = [ "resources/app.iconset" ]
-  }
-
-  bundle_data("sample_files") {
-    sources = sample_files
-    outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
   }
 }
 
@@ -50,14 +36,6 @@ if (is_linux) {
       "main_linux.cc",
     ]
 
-    deps = [
-      ":sample_files",
-      "//ui:ui_linux",
-    ]
-  }
-
-  copy("sample_files") {
-    sources = sample_files
-    outputs = [ "$root_out_dir/sample_files/{{source_file_part}}" ]
+    deps = [ "//ui:ui_linux" ]
   }
 }

@@ -33,12 +33,13 @@ if (is_mac) {
     deps = [
       "icons",
       "renderer/shaders",
+      "sample_files",
       "//base",
       "//font",
+      "//third_party/libgrapheme",
+      "//third_party/libpng",
       "//util",
     ]
-
-    public_deps = [ "//third_party/libgrapheme" ]
   }
 }
 

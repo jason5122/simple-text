@@ -1,0 +1,86 @@
+{
+  // "theme": "Adaptive.sublime-theme",
+  "light_color_scheme": "Breakers.sublime-color-scheme",
+  "dark_color_scheme": "Mariana.sublime-color-scheme",
+  "color_scheme": "auto",
+  "font_face": "Source Code Pro",
+
+  // "theme": "Default Dark.sublime-theme",
+  // "color_scheme": "Mariana.sublime-color-scheme",
+
+  // Essential
+  "update_check": false,
+  "drag_text": false,
+  "shift_tab_unindent": true,
+  "ensure_newline_at_eof_on_save": true,
+  "auto_complete_commit_on_tab": true,
+  "open_files_in_new_window": false,
+  "scroll_past_end": true,
+  "close_windows_when_empty": false,
+  // "auto_complete_with_fields": true,
+  "preview_on_click": "only_left",
+  "spell_check": true,
+  "use_find_clipboard": false,
+  "bold_folder_labels": true,
+  "translate_tabs_to_spaces": true, // use spaces as default
+  "auto_complete_preserve_order": "none",
+  "find_selected_text": false,
+  "hot_exit": "only_on_quit",
+
+  // GUI
+  "hide_tab_scrolling_buttons": true,
+  "hide_new_tab_button": true,
+  "show_sidebar_button": false,
+  "animation_enabled": false,
+
+  // Distraction Free Mode simulator
+  // "draw_centered": true,
+  // "word_wrap": true,
+  // "wrap_width": 80,
+  // "rulers": [0, 80],
+
+  // Settings for SublimeLinter
+  "show_definitions": false,
+
+  // Experimental
+  "tab_size": 2,
+  "sublime_merge_path": null,
+  // "themed_title_bar": false,
+  // "native_tabs": "disabled",
+  // "gutter": false,
+  // "word_wrap": false,
+  "show_spelling_errors": false,
+  // "themed_title_bar": false,
+  // "rulers": [80],
+  "rulers": [100],
+  // "draw_indent_guides": false,
+  // "spelling_selector": "comment - (keyword | variable), text.plain, markup.heading, meta.paragraph.markdown",
+  "spelling_selector": "comment - (keyword | variable), markup.heading, meta.paragraph - meta.link",
+  // "open_files_in_new_window": "finder_only",
+  // "font_options": ["no_italic"],
+  // "native_tabs": "preferred",
+  "mini_diff": "auto",
+  "wrap_width": 100,
+  // "overlay_scroll_bars": "disabled",
+  "native_tabs": "disabled",
+
+  "find_in_files_max_result_size": 1073741824, // 1GiB
+
+  // LeetCode practice
+  // "auto_complete": false,
+
+  // Just for fun: regular editor settings (like Google Docs)
+  // "font_face": "Times New Roman",
+  // "font_size": 18,
+  // "wrap_width": 60,
+  // "rulers": [],
+
+  // Vim practice
+  // "ignored_packages": [],
+  // "vintage_start_in_command_mode": true,
+  // "relative_line_numbers": true,
+  // "vintage_ctrl_keys": true,
+
+  "ignored_packages": ["Vintage"],
+  "index_files": true
+}

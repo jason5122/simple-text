@@ -4,10 +4,11 @@
 #include <cstdio>
 #include <vector>
 
-extern "C" TSLanguage* tree_sitter_cpp();
-extern "C" TSLanguage* tree_sitter_glsl();
+// extern "C" TSLanguage* tree_sitter_c();
+// extern "C" TSLanguage* tree_sitter_cpp();
+// extern "C" TSLanguage* tree_sitter_glsl();
 extern "C" TSLanguage* tree_sitter_json();
-extern "C" TSLanguage* tree_sitter_scheme();
+// extern "C" TSLanguage* tree_sitter_scheme();
 
 void SyntaxHighlighter::setLanguage(std::string scope) {
     this->scope = scope;
@@ -16,19 +17,25 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
 
     TSLanguage* language;
     fs::path highlights_query_filename;
-    if (scope == "source.scheme") {
-        language = tree_sitter_scheme();
-        highlights_query_filename = "queries/highlights_scheme.scm";
-    } else if (scope == "source.json") {
-        language = tree_sitter_json();
-        highlights_query_filename = "queries/highlights_json.scm";
-    } else if (scope == "source.c++") {
-        language = tree_sitter_cpp();
-        highlights_query_filename = "queries/highlights_cpp.scm";
-    } else if (scope == "source.c") {
-        language = tree_sitter_cpp();
-        highlights_query_filename = "queries/highlights_c.scm";
-    }
+
+    language = tree_sitter_json();
+    highlights_query_filename = "queries/highlights_json.scm";
+
+    // if (scope == "source.scheme") {
+    //     language = tree_sitter_scheme();
+    //     highlights_query_filename = "queries/highlights_scheme.scm";
+    // }
+    // else if (scope == "source.json") {
+    //     language = tree_sitter_json();
+    //     highlights_query_filename = "queries/highlights_json.scm";
+    // }
+    // else if (scope == "source.c++") {
+    //     language = tree_sitter_cpp();
+    //     highlights_query_filename = "queries/highlights_cpp.scm";
+    // } else if (scope == "source.c") {
+    //     language = tree_sitter_c();
+    //     highlights_query_filename = "queries/highlights_c.scm";
+    // }
     ts_parser_set_language(parser, language);
 
     uint32_t error_offset = 0;

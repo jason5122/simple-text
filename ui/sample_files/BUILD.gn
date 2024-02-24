@@ -1,0 +1,22 @@
+sample_files = [
+  "emojis.txt",
+  "proportional_font_test.json",
+  "sort.scm",
+  "sort_bugged.scm",
+  "text_renderer.cc",
+  "example.json",
+]
+
+if (is_mac) {
+  bundle_data("sample_files") {
+    sources = sample_files
+    outputs = [ "{{bundle_resources_dir}}/sample_files/{{source_file_part}}" ]
+  }
+}
+
+if (is_linux) {
+  copy("sample_files") {
+    sources = sample_files
+    outputs = [ "$root_out_dir/sample_files/{{source_file_part}}" ]
+  }
+}

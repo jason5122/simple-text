@@ -16,9 +16,9 @@ void Atlas::setup() {
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
-Vec4 Atlas::insertGlyph(RasterizedGlyph& glyph) {
-    tallest = std::max(glyph.height, tallest);
-    if (offset_x + glyph.width > ATLAS_SIZE) {
+Vec4 Atlas::insertTexture(int width, int height, bool colored, std::vector<uint8_t>& data) {
+    tallest = std::max(height, tallest);
+    if (offset_x + width > ATLAS_SIZE) {
         offset_x = 0;
         offset_y += tallest;
         tallest = 0;
@@ -26,17 +26,17 @@ Vec4 Atlas::insertGlyph(RasterizedGlyph& glyph) {
 
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
-    GLenum format = glyph.colored ? GL_RGBA : GL_RGB;
-    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, glyph.width, glyph.height, format,
-                    GL_UNSIGNED_BYTE, &glyph.buffer[0]);
+    GLenum format = colored ? GL_RGBA : GL_RGB;
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, format, GL_UNSIGNED_BYTE,
+                    &data[0]);
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
     float uv_left = static_cast<float>(offset_x) / ATLAS_SIZE;
     float uv_bot = static_cast<float>(offset_y) / ATLAS_SIZE;
-    float uv_width = static_cast<float>(glyph.width) / ATLAS_SIZE;
-    float uv_height = static_cast<float>(glyph.height) / ATLAS_SIZE;
+    float uv_width = static_cast<float>(width) / ATLAS_SIZE;
+    float uv_height = static_cast<float>(height) / ATLAS_SIZE;
 
-    offset_x += glyph.width;
+    offset_x += width;
 
     return Vec4{uv_left, uv_bot, uv_width, uv_height};
 }

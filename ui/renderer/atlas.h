@@ -1,7 +1,7 @@
 #pragma once
 
-#include "font/types/rasterized_glyph.h"
 #include "ui/renderer/opengl_types.h"
+#include <vector>
 
 #include "build/buildflag.h"
 #if IS_MAC
@@ -19,7 +19,7 @@ public:
 
     Atlas() = default;
     void setup();
-    Vec4 insertGlyph(RasterizedGlyph& glyph);
+    Vec4 insertTexture(int width, int height, bool colored, std::vector<uint8_t>& data);
 
 private:
     int offset_x = 0;

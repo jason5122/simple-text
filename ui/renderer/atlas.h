@@ -18,8 +18,9 @@ public:
     GLuint tex_id;
 
     Atlas() = default;
+    ~Atlas();
     void setup();
-    Vec4 insertTexture(int width, int height, bool colored, std::vector<uint8_t>& data);
+    Vec4 insertTexture(int width, int height, bool colored, GLubyte* data);
 
 private:
     int offset_x = 0;

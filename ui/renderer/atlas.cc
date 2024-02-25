@@ -16,7 +16,7 @@ void Atlas::setup() {
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
-Vec4 Atlas::insertTexture(int width, int height, bool colored, std::vector<uint8_t>& data) {
+Vec4 Atlas::insertTexture(int width, int height, bool colored, GLubyte* data) {
     tallest = std::max(height, tallest);
     if (offset_x + width > ATLAS_SIZE) {
         offset_x = 0;
@@ -28,7 +28,7 @@ Vec4 Atlas::insertTexture(int width, int height, bool colored, std::vector<uint8
 
     GLenum format = colored ? GL_RGBA : GL_RGB;
     glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, format, GL_UNSIGNED_BYTE,
-                    &data[0]);
+                    data);
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
     float uv_left = static_cast<float>(offset_x) / ATLAS_SIZE;
@@ -39,4 +39,8 @@ Vec4 Atlas::insertTexture(int width, int height, bool colored, std::vector<uint8
     offset_x += width;
 
     return Vec4{uv_left, uv_bot, uv_width, uv_height};
+}
+
+Atlas::~Atlas() {
+    glDeleteTextures(1, &tex_id);
 }

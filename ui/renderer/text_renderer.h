@@ -48,9 +48,9 @@ private:
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 
-    Atlas atlas;
     CoreTextRasterizer ct_rasterizer;
 
+    Atlas atlas;
     struct AtlasGlyph {
         Vec4 glyph;
         Vec4 uv;

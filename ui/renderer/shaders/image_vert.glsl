@@ -2,6 +2,7 @@
 
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
+layout(location = 2) in vec4 uv;
 
 out vec2 tex_coords;
 
@@ -21,6 +22,9 @@ void main() {
     vec2 final_position = coords + rect_size * position;
     // final_position += scroll_offset;
 
+    vec2 uv_offset = uv.xy;  // <uv_left, uv_bot>
+    vec2 uv_size = uv.zw;    // <uv_width, uv_height>
+
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
-    tex_coords = position;
+    tex_coords = uv_offset + uv_size * position;
 }

@@ -2,12 +2,12 @@
 #include "ui/renderer/opengl_types.h"
 #include "util/opengl_error_util.h"
 #include <png.h>
-#include <vector>
 
 namespace {
 struct InstanceData {
     Vec2 coords;
     Vec2 rect_size;
+    Vec4 uv;
 };
 }
 
@@ -15,6 +15,7 @@ void ImageRenderer::setup(float width, float height) {
     shader_program.link(ResourcePath() / "shaders/image_vert.glsl",
                         ResourcePath() / "shaders/image_frag.glsl");
     this->resize(width, height);
+    atlas.setup();
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -45,14 +46,15 @@ void ImageRenderer::setup(float width, float height) {
                           (void*)offsetof(InstanceData, rect_size));
     glVertexAttribDivisor(index++, 1);
 
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, uv));
+    glVertexAttribDivisor(index++, 1);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glGenTextures(1, &tex_id);
-    glBindTexture(GL_TEXTURE_2D, tex_id);
 
     fs::path image_path = ResourcePath() / "icons/panel_close@3x.png";
 
@@ -61,16 +63,11 @@ void ImageRenderer::setup(float width, float height) {
     GLubyte* out_data;
     this->loadPng(image_path, out_width, out_height, out_has_alpha, &out_data);
 
-    GLenum format = out_has_alpha ? GL_RGBA : GL_RGB;
-    glTexImage2D(GL_TEXTURE_2D, 0, format, out_width, out_height, 0, format, GL_UNSIGNED_BYTE,
-                 out_data);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+    Vec4 uv = atlas.insertTexture(out_width, out_height, out_has_alpha, out_data);
+    image_atlas_entries.push_back(AtlasImage{
+        .rect_size = Vec2{static_cast<float>(out_width), static_cast<float>(out_height)},
+        .uv = uv,
+    });
 }
 
 void ImageRenderer::draw(float scroll_x, float scroll_y) {
@@ -82,15 +79,22 @@ void ImageRenderer::draw(float scroll_x, float scroll_y) {
 
     std::vector<InstanceData> instances;
 
+    AtlasImage atlas_entry = image_atlas_entries[0];
     instances.push_back(InstanceData{
-        .coords = Vec2{width / 2, height - 54},
-        .rect_size = Vec2{48, 48},
+        .coords = Vec2{width / 2, height - atlas_entry.rect_size.y},
+        .rect_size = atlas_entry.rect_size,
+        .uv = atlas_entry.uv,
+    });
+    instances.push_back(InstanceData{
+        .coords = Vec2{width / 3, height - atlas_entry.rect_size.y},
+        .rect_size = atlas_entry.rect_size,
+        .uv = atlas_entry.uv,
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    glBindTexture(GL_TEXTURE_2D, tex_id);
+    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 

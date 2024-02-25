@@ -12,4 +12,7 @@ void main() {
 
     alpha_mask = vec4(1.0);
     color = vec4(texel.rgb, texel.a);
+
+    // DEBUG: This colors the entire background of texture for easy locating.
+    color = mix(color, vec4(1.0, 0.0, 0.0, 1.0), 0.5);
 }

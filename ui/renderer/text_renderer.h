@@ -51,6 +51,13 @@ private:
     Atlas atlas;
     CoreTextRasterizer ct_rasterizer;
 
+    struct AtlasGlyph {
+        Vec4 glyph;
+        Vec4 uv;
+        float advance;
+        bool colored;
+    };
+
     std::unordered_map<uint_least32_t, AtlasGlyph> glyph_cache;
 
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint);

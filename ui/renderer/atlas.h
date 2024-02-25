@@ -10,13 +10,6 @@
 #include <glad/glad.h>
 #endif
 
-struct AtlasGlyph {
-    Vec4 glyph;
-    Vec4 uv;
-    float advance;
-    bool colored;
-};
-
 class Atlas {
 public:
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
@@ -26,7 +19,7 @@ public:
 
     Atlas() = default;
     void setup();
-    AtlasGlyph insertGlyph(RasterizedGlyph& glyph);
+    Vec4 insertGlyph(RasterizedGlyph& glyph);
 
 private:
     int offset_x = 0;

@@ -290,7 +290,15 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
 
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint) {
     RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(utf8_str.c_str());
-    AtlasGlyph atlas_glyph = atlas.insertGlyph(glyph);
+    Vec4 uv = atlas.insertGlyph(glyph);
+
+    AtlasGlyph atlas_glyph{
+        .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
+                      static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
+        .uv = uv,
+        .advance = glyph.advance,
+        .colored = glyph.colored,
+    };
     glyph_cache.insert({codepoint, atlas_glyph});
 }
 

@@ -16,7 +16,7 @@ void Atlas::setup() {
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
-AtlasGlyph Atlas::insertGlyph(RasterizedGlyph& glyph) {
+Vec4 Atlas::insertGlyph(RasterizedGlyph& glyph) {
     tallest = std::max(glyph.height, tallest);
     if (offset_x + glyph.width > ATLAS_SIZE) {
         offset_x = 0;
@@ -38,11 +38,5 @@ AtlasGlyph Atlas::insertGlyph(RasterizedGlyph& glyph) {
 
     offset_x += glyph.width;
 
-    return AtlasGlyph{
-        .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
-                      static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
-        .uv = Vec4{uv_left, uv_bot, uv_width, uv_height},
-        .advance = glyph.advance,
-        .colored = glyph.colored,
-    };
+    return Vec4{uv_left, uv_bot, uv_width, uv_height};
 }

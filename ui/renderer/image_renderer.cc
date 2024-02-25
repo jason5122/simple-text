@@ -54,13 +54,7 @@ void ImageRenderer::setup(float width, float height) {
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
-    fs::path image_path = ResourcePath() / "icons/tab_close@3x.png";
-
-    // int image_width, image_height, num_channels;
-    // uint8_t* data = stbi_load(image_path.c_str(), &image_width, &image_height, &num_channels,
-    // 0); glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGB,
-    // GL_UNSIGNED_BYTE,
-    //              data);
+    fs::path image_path = ResourcePath() / "icons/panel_close@3x.png";
 
     int out_width, out_height;
     bool out_has_alpha;
@@ -89,8 +83,8 @@ void ImageRenderer::draw(float scroll_x, float scroll_y) {
     std::vector<InstanceData> instances;
 
     instances.push_back(InstanceData{
-        .coords = Vec2{width / 2, 400},
-        .rect_size = Vec2{360, 324},
+        .coords = Vec2{width / 2, height - 54},
+        .rect_size = Vec2{48, 48},
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

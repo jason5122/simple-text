@@ -1,3 +1,4 @@
+import("//build/config/linux/pkg_config.gni")
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
@@ -16,6 +17,10 @@ if (is_mac) {
 
     frameworks = [ "Cocoa.framework" ]
 
+    public_configs = [ ":gtk_config" ]
+
+    cflags = [ "-I/opt/homebrew/Cellar/gtk4/4.12.5/include/gtk-4.0" ]
+
     deps = [
       ":icon",
       "//ui:ui_mac",
@@ -24,6 +29,10 @@ if (is_mac) {
 
   icon("icon") {
     sources = [ "resources/app.iconset" ]
+  }
+
+  pkg_config("gtk_config") {
+    packages = [ "gtk4" ]
   }
 }
 

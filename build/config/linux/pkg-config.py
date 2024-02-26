@@ -109,15 +109,13 @@ def main():
     # If this is run on non-Linux platforms, just return nothing and indicate
     # success. This allows us to "kind of emulate" a Linux build from other
     # platforms.
-    if 'linux' not in sys.platform:
-        print('[[],[],[],[],[]]')
-        return 0
+    # if 'linux' not in sys.platform:
+    #     print('[[],[],[],[],[]]')
+    #     return 0
 
     parser = OptionParser()
     parser.add_option('-d', '--debug', action='store_true')
-    parser.add_option(
-        '-p', action='store', dest='pkg_config', type='string', default='pkg-config'
-    )
+    parser.add_option('-p', action='store', dest='pkg_config', type='string', default='pkg-config')
     parser.add_option('-v', action='append', dest='strip_out', type='string')
     parser.add_option('-s', action='store', dest='sysroot', type='string')
     parser.add_option('-a', action='store', dest='arch', type='string')
@@ -128,14 +126,10 @@ def main():
         type='string',
         default='lib',
     )
-    parser.add_option(
-        '--atleast-version', action='store', dest='atleast_version', type='string'
-    )
+    parser.add_option('--atleast-version', action='store', dest='atleast_version', type='string')
     parser.add_option('--libdir', action='store_true', dest='libdir')
     parser.add_option('--dridriverdir', action='store_true', dest='dridriverdir')
-    parser.add_option(
-        '--version-as-components', action='store_true', dest='version_as_components'
-    )
+    parser.add_option('--version-as-components', action='store_true', dest='version_as_components')
     (options, args) = parser.parse_args()
 
     # Make a list of regular expressions to strip out.

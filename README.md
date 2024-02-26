@@ -27,7 +27,7 @@ This project uses the GN meta-build system. Binaries are available [here](https:
 
 ### Fedora
 
-`dnf install gn ninja-build`
+`dnf install gn ninja-build clang llvm lld`
 
 ## Building
 

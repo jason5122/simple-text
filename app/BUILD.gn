@@ -42,9 +42,15 @@ if (is_linux) {
 
     sources = [
       "main.cc",
-      "main_linux.cc",
+      # "main_linux.cc",
     ]
 
-    deps = [ "//ui:ui_linux" ]
+    public_configs = [ ":gtk_config" ]
+
+    # deps = [ "//ui:ui_linux" ]
+  }
+
+  pkg_config("gtk_config") {
+    packages = [ "gtk4" ]
   }
 }

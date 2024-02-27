@@ -140,7 +140,7 @@ static void registry_global_remove(void* data, wl_registry* wl_registry, uint32_
 
 static const wl_registry_listener registry_listener = {registry_global, registry_global_remove};
 
-int SimpleTextMain() {
+int SimpleTextMain(int argc, char* argv[]) {
     WaylandClient client = WaylandClient();
 
     if (!client.connectToDisplay()) {

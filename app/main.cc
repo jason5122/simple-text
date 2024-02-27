@@ -1,7 +1,7 @@
 #include "build/buildflag.h"
 
-int SimpleTextMain();
+int SimpleTextMain(int argc, char* argv[]);
 
-int main() {
-    return SimpleTextMain();
+int main(int argc, char* argv[]) {
+    return SimpleTextMain(argc, argv);
 }

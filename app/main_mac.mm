@@ -48,7 +48,7 @@
 
 @end
 
-int SimpleTextMain() {
+int SimpleTextMain(int argc, char* argv[]) {
     @autoreleasepool {
         NSApplication* app = NSApplication.sharedApplication;
         AppDelegate* appDelegate = [[AppDelegate alloc] init];

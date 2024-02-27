@@ -4,7 +4,7 @@
 
 class EditorWindowQt {
 public:
-    EditorWindowQt(int& argc);
+    EditorWindowQt(int argc, char* argv[]);
     int run();
 
 private:

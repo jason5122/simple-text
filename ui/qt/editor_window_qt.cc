@@ -1,6 +1,6 @@
 #include "editor_window_qt.h"
 
-EditorWindowQt::EditorWindowQt(int& argc) : app(argc, nullptr) {}
+EditorWindowQt::EditorWindowQt(int argc, char* argv[]) : app(argc, argv) {}
 
 int EditorWindowQt::run() {
     QWidget window;

@@ -196,6 +196,8 @@ def main():
         sys.stderr.write('Running: %s\n' % ' '.join(cmd))
 
     try:
+        # FIXME: Remove this pkg-config hack for Qt5.
+        os.environ['PKG_CONFIG_PATH'] = '/opt/homebrew/opt/qt@5/lib/pkgconfig'
         flag_string = subprocess.check_output(cmd).decode('utf-8')
     except:
         sys.stderr.write('Could not run pkg-config.\n')

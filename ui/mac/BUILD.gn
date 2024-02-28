@@ -1,0 +1,20 @@
+source_set("mac") {
+  sources = [
+    "EditorView.mm",
+    "WindowController.mm",
+  ]
+
+  frameworks = [
+    "Cocoa.framework",
+    "QuartzCore.framework",
+  ]
+
+  # TODO: Move all OpenGL code to //ui/renderer.
+  frameworks += [ "OpenGL.framework" ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
+
+  deps = [
+    "//base",
+    "//util",
+  ]
+}

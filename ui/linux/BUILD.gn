@@ -1,0 +1,19 @@
+source_set("linux") {
+  sources = [
+    "linux/wayland_client.cc",
+    "linux/wayland_window.cc",
+  ]
+
+  libs = [
+    "wayland-client",
+    "wayland-egl",
+    "EGL",
+    "GL",
+  ]
+
+  public_deps = [
+    "//base",
+    "//third_party/libdecor",
+    "//util",
+  ]
+}

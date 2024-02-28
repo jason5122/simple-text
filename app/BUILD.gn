@@ -11,8 +11,6 @@ if (is_mac) {
 
     sources = [
       "main.cc",
-
-      # "main_gtk.cc",
       "main_qt.cc",
 
       # "main_mac.mm",
@@ -22,7 +20,9 @@ if (is_mac) {
 
     deps = [
       ":icon",
-      "//ui:ui_mac",
+      "//ui/mac",
+      "//ui/qt",
+      "//ui/renderer",
     ]
   }
 
@@ -37,9 +37,9 @@ if (is_linux) {
 
     sources = [
       "main.cc",
-      # "main_linux.cc",
+      "main_linux.cc",
     ]
 
-    # deps = [ "//ui:ui_linux" ]
+    deps = [ "//ui/linux" ]
   }
 }

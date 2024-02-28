@@ -1,4 +1,10 @@
 #include "editor_window_qt.h"
+#include "ui/qt/openglwindow.h"
+#include <QGuiApplication>
+#include <QMatrix4x4>
+#include <QOpenGLShaderProgram>
+#include <QScreen>
+#include <QtMath>
 
 EditorWindowQt::EditorWindowQt(int argc, char* argv[]) : app(argc, argv) {}
 

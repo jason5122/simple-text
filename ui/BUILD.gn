@@ -14,7 +14,6 @@ if (is_mac) {
       # "mac/EditorView.mm",
       # "mac/WindowController.mm",
       # "gtk/editor_window.cc",
-      "qt/editor_window_qt.cc",
     ]
     sources += shared_sources
 
@@ -33,7 +32,6 @@ if (is_mac) {
 
     public_configs = [
       # ":gtk_config",
-      ":qt5_config",
     ]
 
     deps = [
@@ -46,19 +44,12 @@ if (is_mac) {
       "//third_party/libpng",
       "//util",
     ]
-  }
 
+    public_deps = [ "qt" ]
+  }
   # pkg_config("gtk_config") {
   #   packages = [ "gtk4" ]
   # }
-
-  pkg_config("qt5_config") {
-    packages = [
-      "Qt5Core",
-      "Qt5Widgets",
-      "Qt5Gui",
-    ]
-  }
 }
 
 if (is_linux) {

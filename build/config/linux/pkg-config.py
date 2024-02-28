@@ -217,6 +217,10 @@ def main():
     libs = []
     lib_dirs = []
 
+    frameworks = []
+    framework_dirs = []
+    is_framework = False
+
     for flag in all_flags[:]:
         if len(flag) == 0 or MatchesAnyRegexp(flag, strip_out):
             continue
@@ -236,13 +240,22 @@ def main():
             # this anyway. Removing it here prevents a bunch of duplicate inclusions
             # on the command line.
             pass
+        # Adds support for macOS frameworks.
+        elif is_framework:
+            frameworks.append(flag + '.framework')
+            is_framework = False
+        elif flag[:10] == '-framework':
+            is_framework = True
+        elif flag[:2] == '-F':
+            framework_dirs.append(RewritePath(flag[2:], prefix, sysroot))
+            cflags.append(flag)  # cflags also needs `-F` flags to find headers.
         else:
             cflags.append(flag)
 
     # Output a GN array, the first one is the cflags, the second are the libs. The
     # JSON formatter prints GN compatible lists when everything is a list of
     # strings.
-    print(json.dumps([includes, cflags, libs, lib_dirs]))
+    print(json.dumps([includes, cflags, libs, lib_dirs, frameworks, framework_dirs]))
     return 0
 
 

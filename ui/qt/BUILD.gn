@@ -1,0 +1,32 @@
+import("//build/config/linux/pkg_config.gni")
+
+action("generate_moc") {
+  script = "moc_wrapper.py"
+  inputs = [ "openglwindow.h" ]
+  outputs = [ "$root_gen_dir/qt5/qt_shim_moc.cc" ]
+  args = rebase_path(inputs + outputs, root_build_dir)
+  args += [
+    "--path",
+    "/opt/homebrew/Cellar/qt@5/5.15.12/bin/",
+  ]
+}
+
+source_set("qt") {
+  sources = [
+    "editor_window_qt.cc",
+    "openglwindow.cc",
+  ]
+
+  public_configs = [ ":qt5_config" ]
+
+  sources += get_target_outputs(":generate_moc")
+  deps = [ ":generate_moc" ]
+}
+
+pkg_config("qt5_config") {
+  packages = [
+    "Qt5Core",
+    "Qt5Widgets",
+    "Qt5Gui",
+  ]
+}

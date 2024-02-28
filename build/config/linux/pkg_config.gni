@@ -77,7 +77,6 @@ template("pkg_config") {
 
     pkgresult = exec_script(pkg_config_script, args, "json")
 
-    # FIXME: Remove `-framework` flags from cflags to suppress unused input warnings.
     cflags = pkgresult[1]
 
     foreach(include, pkgresult[0]) {
@@ -85,12 +84,12 @@ template("pkg_config") {
     }
 
     if (!defined(invoker.ignore_libs) || !invoker.ignore_libs) {
+      libs = pkgresult[2]
+      lib_dirs = pkgresult[3]
+
       if (is_mac) {
-        # Framework flags (`-F`, `-framework`) belong in ldflags.
-        ldflags = pkgresult[1]
-      } else {
-        libs = pkgresult[2]
-        lib_dirs = pkgresult[3]
+        frameworks = pkgresult[4]
+        framework_dirs = pkgresult[5]
       }
     }
 

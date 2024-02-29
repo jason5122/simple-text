@@ -8,6 +8,5 @@ public:
     int run();
 
 private:
-    QGuiApplication app;
-    // QApplication app;
+    QApplication app;
 };

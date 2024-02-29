@@ -5,6 +5,7 @@
 #include <QOpenGLShaderProgram>
 #include <QScreen>
 #include <QtMath>
+#include <iostream>
 
 class TriangleWindow : public OpenGLWindow {
 public:
@@ -50,6 +51,8 @@ void TriangleWindow::initialize() {
 }
 
 void TriangleWindow::render() {
+    std::cerr << glGetString(GL_VERSION) << '\n';
+
     const qreal retinaScale = devicePixelRatio();
     glViewport(0, 0, width() * retinaScale, height() * retinaScale);
 
@@ -98,4 +101,10 @@ int EditorWindowQt::run() {
     window.setAnimating(true);
 
     return app.exec();
+
+    // QWidget window;
+    // window.resize(320, 240);
+    // window.show();
+    // window.setWindowTitle(QApplication::translate("toplevel", "Top-level widget"));
+    // return app.exec();
 }

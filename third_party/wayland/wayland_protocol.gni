@@ -103,9 +103,6 @@ template("wayland_protocol") {
 
   # Source set which consists of the generated code.
   source_set(source_set_name) {
-    # TODO: Move this elsewhere, possibly to //third_party/wayland/BUILD.gn.
-    configs -= [ "//build/config/compiler:optimizations" ]
-
     sources = get_target_outputs(":$action_name")
 
     deps = [ ":$action_name" ]

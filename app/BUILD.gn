@@ -37,9 +37,12 @@ if (is_linux) {
 
     sources = [
       "main.cc",
-      "main_linux.cc",
+      "main_qt.cc",
     ]
 
-    deps = [ "//ui/linux" ]
+    deps = [
+      "//ui/qt",
+      # "//ui/renderer",
+    ]
   }
 }

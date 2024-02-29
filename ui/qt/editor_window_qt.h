@@ -9,4 +9,5 @@ public:
 
 private:
     QGuiApplication app;
+    // QApplication app;
 };

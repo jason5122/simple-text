@@ -1205,20 +1205,20 @@ ReferenceSnapshot::ReferenceSnapshot(const Tree* tree, const RedBlackTree& dt)
 }
 
 TreeWalker::TreeWalker(const Tree* tree, CharOffset offset)
-    : buffers{&tree->buffers}, root{tree->root}, meta{tree->meta}, stack{{root}},
-      total_offset{offset} {
+    : buffers{&tree->buffers}, root{tree->root}, meta{tree->meta}, stack{{root}}, total_offset{
+                                                                                      offset} {
     fast_forward_to(offset);
 }
 
 TreeWalker::TreeWalker(const OwningSnapshot* snap, CharOffset offset)
-    : buffers{&snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}},
-      total_offset{offset} {
+    : buffers{&snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}}, total_offset{
+                                                                                      offset} {
     fast_forward_to(offset);
 }
 
 TreeWalker::TreeWalker(const ReferenceSnapshot* snap, CharOffset offset)
-    : buffers{snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}},
-      total_offset{offset} {
+    : buffers{snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}}, total_offset{
+                                                                                     offset} {
     fast_forward_to(offset);
 }
 
@@ -1345,20 +1345,20 @@ void TreeWalker::fast_forward_to(CharOffset offset) {
 }
 
 ReverseTreeWalker::ReverseTreeWalker(const Tree* tree, CharOffset offset)
-    : buffers{&tree->buffers}, root{tree->root}, meta{tree->meta}, stack{{root}},
-      total_offset{offset} {
+    : buffers{&tree->buffers}, root{tree->root}, meta{tree->meta}, stack{{root}}, total_offset{
+                                                                                      offset} {
     fast_forward_to(offset);
 }
 
 ReverseTreeWalker::ReverseTreeWalker(const OwningSnapshot* snap, CharOffset offset)
-    : buffers{&snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}},
-      total_offset{offset} {
+    : buffers{&snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}}, total_offset{
+                                                                                      offset} {
     fast_forward_to(offset);
 }
 
 ReverseTreeWalker::ReverseTreeWalker(const ReferenceSnapshot* snap, CharOffset offset)
-    : buffers{snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}},
-      total_offset{offset} {
+    : buffers{snap->buffers}, root{snap->root}, meta{snap->meta}, stack{{root}}, total_offset{
+                                                                                     offset} {
     fast_forward_to(offset);
 }
 

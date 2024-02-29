@@ -5,9 +5,17 @@ action("generate_moc") {
   inputs = [ "openglwindow.h" ]
   outputs = [ "$root_gen_dir/qt5/qt_shim_moc.cc" ]
   args = rebase_path(inputs + outputs, root_build_dir)
+
+  moc_path = ""
+  if (is_mac) {
+    moc_path = "/opt/homebrew/opt/qt@5/bin"
+  }
+  if (is_linux) {
+    moc_path = "/usr/bin"
+  }
   args += [
     "--path",
-    "/opt/homebrew/opt/qt@5/bin/",
+    moc_path,
   ]
 }
 

@@ -11,12 +11,15 @@ action("generate_moc") {
     moc_path = "/opt/homebrew/share/qt/libexec"
   }
   if (is_linux) {
-    moc_path = "/usr/bin"
+    moc_path = "/usr/lib64/qt6/libexec"
   }
-  args += [
-    "--path",
-    moc_path,
-  ]
+
+  if (moc_path != "") {
+    args += [
+      "--path",
+      moc_path,
+    ]
+  }
 }
 
 source_set("qt") {
@@ -27,20 +30,25 @@ source_set("qt") {
   ]
   sources += get_target_outputs(":generate_moc")
 
-  frameworks = [
-    "QtWidgets.framework",
-    "QtCore.framework",
-    "QtGui.framework",
-    "QtOpenGL.framework",
-    "QtOpenGLWidgets.framework",
-  ]
-  framework_dirs = [ "/opt/homebrew/lib" ]
-
-  public_configs = [ ":qt_includes" ]
+  if (is_mac) {
+    frameworks = [
+      "QtWidgets.framework",
+      "QtCore.framework",
+      "QtGui.framework",
+      "QtOpenGL.framework",
+      "QtOpenGLWidgets.framework",
+    ]
+    framework_dirs = [ "/opt/homebrew/lib" ]
+    public_configs = [ ":qt_includes" ]
+  }
+  if (is_linux) {
+    public_configs = [ ":qt6_config" ]
+  }
 
   deps = [
     ":generate_moc",
     "qt_resources",
+    "//util",
   ]
 }
 
@@ -58,8 +66,11 @@ config("qt_includes") {
 if (is_linux) {
   pkg_config("qt6_config") {
     packages = [
-      "QtCore",
-      "QtWidgets",
+      "Qt6Core",
+      "Qt6Widgets",
+      "Qt6Gui",
+      "Qt6OpenGL",
+      "Qt6OpenGLWidgets",
     ]
   }
 }

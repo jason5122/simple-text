@@ -3,12 +3,12 @@ import("//build/config/linux/pkg_config.gni")
 action("generate_moc") {
   script = "moc_wrapper.py"
   inputs = [ "editor_window_qt.h" ]
-  outputs = [ "$root_gen_dir/qt5/qt_shim_moc.cc" ]
+  outputs = [ "$root_gen_dir/qt6/qt_shim_moc.cc" ]
   args = rebase_path(inputs + outputs, root_build_dir)
 
   moc_path = ""
   if (is_mac) {
-    moc_path = "/opt/homebrew/opt/qt@5/bin"
+    moc_path = "/opt/homebrew/share/qt/libexec"
   }
   if (is_linux) {
     moc_path = "/usr/bin"
@@ -26,7 +26,7 @@ source_set("qt") {
     "QtWidgets.framework",
     "QtCore.framework",
   ]
-  framework_dirs = [ "/opt/homebrew/Cellar/qt@5/5.15.12/lib" ]
+  framework_dirs = [ "/opt/homebrew/lib" ]
 
   public_configs = [ ":qt_includes" ]
 
@@ -35,10 +35,10 @@ source_set("qt") {
 }
 
 config("qt_includes") {
-  cflags = [ "-F/opt/homebrew/Cellar/qt@5/5.15.12/lib" ]
+  cflags = [ "-F/opt/homebrew/lib" ]
   include_dirs = [
-    "/opt/homebrew/Cellar/qt@5/5.15.12/lib/QtWidgets.framework/Headers",
-    "/opt/homebrew/Cellar/qt@5/5.15.12/lib/QtCore.framework/Headers",
+    "/opt/homebrew/include/QtWidgets",
+    "/opt/homebrew/include/QtCore",
   ]
 }
 

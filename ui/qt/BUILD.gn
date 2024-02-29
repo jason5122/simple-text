@@ -2,7 +2,7 @@ import("//build/config/linux/pkg_config.gni")
 
 action("generate_moc") {
   script = "moc_wrapper.py"
-  inputs = [ "editor_window_qt.h" ]
+  inputs = [ "mainwidget.h" ]
   outputs = [ "$root_gen_dir/qt6/qt_shim_moc.cc" ]
   args = rebase_path(inputs + outputs, root_build_dir)
 
@@ -20,26 +20,39 @@ action("generate_moc") {
 }
 
 source_set("qt") {
-  sources = [ "editor_window_qt.cc" ]
+  sources = [
+    "editor_window_qt.cc",
+    "geometryengine.cc",
+    "mainwidget.cc",
+  ]
+  sources += get_target_outputs(":generate_moc")
 
   frameworks = [
     "QtWidgets.framework",
     "QtCore.framework",
+    "QtGui.framework",
+    "QtOpenGL.framework",
+    "QtOpenGLWidgets.framework",
   ]
   framework_dirs = [ "/opt/homebrew/lib" ]
 
   public_configs = [ ":qt_includes" ]
 
-  # sources += get_target_outputs(":generate_moc")
-  # deps = [ ":generate_moc" ]
+  deps = [
+    ":generate_moc",
+    "qt_resources",
+  ]
 }
 
 config("qt_includes") {
-  cflags = [ "-F/opt/homebrew/lib" ]
   include_dirs = [
     "/opt/homebrew/include/QtWidgets",
     "/opt/homebrew/include/QtCore",
+    "/opt/homebrew/include/QtGui",
+    "/opt/homebrew/include/QtOpenGL",
+    "/opt/homebrew/include/QtOpenGLWidgets",
   ]
+  cflags = [ "-F/opt/homebrew/lib" ]
 }
 
 if (is_linux) {

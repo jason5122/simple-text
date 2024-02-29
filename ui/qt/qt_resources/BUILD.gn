@@ -1,0 +1,19 @@
+qt_resources = [
+  "cube.png",
+  "cube_frag.glsl",
+  "cube_vert.glsl",
+]
+
+if (is_mac) {
+  bundle_data("qt_resources") {
+    sources = qt_resources
+    outputs = [ "{{bundle_resources_dir}}/qt_resources/{{source_file_part}}" ]
+  }
+}
+
+if (is_linux) {
+  copy("qt_resources") {
+    sources = qt_resources
+    outputs = [ "$root_out_dir/qt_resources/{{source_file_part}}" ]
+  }
+}

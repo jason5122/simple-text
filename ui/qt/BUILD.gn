@@ -1,5 +1,8 @@
 import("//build/config/linux/pkg_config.gni")
 
+# Qt system paths taken from here:
+# https://github.com/Vertexwahn/rules_qt6/blob/main/qt_mac_aarch64.BUILD
+
 action("generate_moc") {
   script = "moc_wrapper.py"
   inputs = [ "main_widget.h" ]

@@ -6,7 +6,10 @@ EditorWindowQt::EditorWindowQt(int argc, char* argv[]) : app(argc, argv) {}
 
 int EditorWindowQt::run() {
     QSurfaceFormat format;
-    format.setDepthBufferSize(24);
+    // format.setDepthBufferSize(24);
+    format.setVersion(3, 3);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    // format.setRenderableType(QSurfaceFormat::OpenGL);
     QSurfaceFormat::setDefaultFormat(format);
 
     app.setApplicationName("cube");

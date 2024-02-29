@@ -372,6 +372,13 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);
 
+        // if (self.asynchronous) {
+        //     glClearColor(240 / 255.0, 240 / 255.0, 240 / 255.0, 1.0);
+        // } else {
+        //     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+        // }
+        glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+
         int font_size = 16 * self.contentsScale;
         std::string font_name = "Source Code Pro";
         // fs::path file_path = ResourcePath() / "sample_files/text_renderer.cc";
@@ -428,8 +435,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         float scaled_scroll_x = scroll_x * self.contentsScale;
         float scaled_scroll_y = scroll_y * self.contentsScale;
-        float width = self.frame.size.width * self.contentsScale;
-        float height = self.frame.size.height * self.contentsScale;
+        float scaled_width = self.frame.size.width * self.contentsScale;
+        float scaled_height = self.frame.size.height * self.contentsScale;
         float scaled_editor_offset_x = editor_offset_x * self.contentsScale;
         float scaled_editor_offset_y = editor_offset_y * self.contentsScale;
 
@@ -446,28 +453,22 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         //     editor_offset_x -= 1;
         // }
 
-        // if (self.asynchronous) {
-        //     glClearColor(240 / 255.0, 240 / 255.0, 240 / 255.0, 1.0);
-        // } else {
-        //     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
-        // }
-        glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        text_renderer.resize(width, height);
+        text_renderer.resize(scaled_width, scaled_height);
         text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
                                  scaled_editor_offset_x, scaled_editor_offset_y);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-        rect_renderer.resize(width, height);
+        rect_renderer.resize(scaled_width, scaled_height);
         rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
                            text_renderer.cursor_end_line, text_renderer.line_height,
                            buffer.lineCount(), text_renderer.longest_line_x,
                            scaled_editor_offset_x, scaled_editor_offset_y);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-        image_renderer.resize(width, height);
+        image_renderer.resize(scaled_width, scaled_height);
         image_renderer.draw(scaled_scroll_x, scaled_scroll_y);
 
         // Calls glFlush() by default.

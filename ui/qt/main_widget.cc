@@ -1,11 +1,7 @@
 #include "main_widget.h"
-#include "util/file_util.h"
-#include <QMouseEvent>
 #include <iostream>
 
 void MainWidget::initializeGL() {
-    initializeOpenGLFunctions();
-
     glDisable(GL_DEPTH_TEST);
     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 

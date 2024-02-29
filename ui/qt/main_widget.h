@@ -1,18 +1,10 @@
 #pragma once
 
 #include "ui/renderer/rect_renderer.h"
-#include <QBasicTimer>
-#include <QMatrix4x4>
-#include <QOpenGLFunctions>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLTexture>
+// FIXME: Suppress warnings caused by clashes when including <OpenGL/gl3.h> on macOS.
 #include <QOpenGLWidget>
-#include <QQuaternion>
-#include <QVector2D>
 
-class GeometryEngine;
-
-class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions {
+class MainWidget : public QOpenGLWidget {
     Q_OBJECT
 
 public:
@@ -24,15 +16,5 @@ protected:
     void paintGL() override;
 
 private:
-    QBasicTimer timer;
-    QOpenGLShaderProgram program;
-
-    QMatrix4x4 projection;
-
-    QVector2D mousePressPosition;
-    QVector3D rotationAxis;
-    qreal angularSpeed = 0;
-    QQuaternion rotation;
-
     RectRenderer rect_renderer;
 };

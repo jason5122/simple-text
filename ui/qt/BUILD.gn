@@ -25,17 +25,15 @@ action("generate_moc") {
 source_set("qt") {
   sources = [
     "editor_window_qt.cc",
-    "geometry_engine.cc",
     "main_widget.cc",
   ]
   sources += get_target_outputs(":generate_moc")
 
   if (is_mac) {
     frameworks = [
-      "QtWidgets.framework",
       "QtCore.framework",
       "QtGui.framework",
-      "QtOpenGL.framework",
+      "QtWidgets.framework",
       "QtOpenGLWidgets.framework",
     ]
     framework_dirs = [ "/opt/homebrew/lib" ]
@@ -54,10 +52,9 @@ source_set("qt") {
 
 config("qt_includes") {
   include_dirs = [
-    "/opt/homebrew/include/QtWidgets",
     "/opt/homebrew/include/QtCore",
     "/opt/homebrew/include/QtGui",
-    "/opt/homebrew/include/QtOpenGL",
+    "/opt/homebrew/include/QtWidgets",
     "/opt/homebrew/include/QtOpenGLWidgets",
   ]
   cflags = [ "-F/opt/homebrew/lib" ]
@@ -67,9 +64,8 @@ if (is_linux) {
   pkg_config("qt6_config") {
     packages = [
       "Qt6Core",
-      "Qt6Widgets",
       "Qt6Gui",
-      "Qt6OpenGL",
+      "Qt6Widgets",
       "Qt6OpenGLWidgets",
     ]
   }

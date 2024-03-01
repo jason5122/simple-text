@@ -42,11 +42,14 @@ if (is_linux) {
 
     sources = [
       "main.cc",
-      "main_qt.cc",
+      "main_gtk.cc",
+
+      # "main_qt.cc",
     ]
 
     deps = [
-      "//ui/qt",
+      "//ui/gtk",
+      # "//ui/qt",
       # "//ui/renderer",
     ]
   }

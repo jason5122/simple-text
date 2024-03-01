@@ -20,7 +20,7 @@ static void activate(GtkApplication* app, gpointer user_data) {
 }
 
 EditorWindow::EditorWindow() {
-    app = gtk_application_new("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
+    app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
 }
 

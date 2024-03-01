@@ -1,0 +1,11 @@
+import("//build/config/linux/pkg_config.gni")
+
+source_set("gtk") {
+  sources = [ "editor_window.cc" ]
+
+  public_configs = [ ":gtk_pkg_config" ]
+}
+
+pkg_config("gtk_pkg_config") {
+  packages = [ "gtk4" ]
+}

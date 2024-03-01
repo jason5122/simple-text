@@ -43,7 +43,7 @@ source_set("qt") {
     public_configs = [ ":qt_includes" ]
   }
   if (is_linux) {
-    public_configs = [ ":qt6_config" ]
+    public_configs = [ ":qt6_pkg_config" ]
   }
 
   deps = [
@@ -64,7 +64,7 @@ config("qt_includes") {
 }
 
 if (is_linux) {
-  pkg_config("qt6_config") {
+  pkg_config("qt6_pkg_config") {
     packages = [
       "Qt6Core",
       "Qt6Gui",

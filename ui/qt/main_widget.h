@@ -4,6 +4,9 @@
 // FIXME: Suppress warnings caused by clashes when including <OpenGL/gl3.h> on macOS.
 #include <QOpenGLWidget>
 
+// Look into QOpenGLFunctions_3_3_Core:
+// https://stackoverflow.com/a/28243012/14698275
+
 class MainWidget : public QOpenGLWidget {
     Q_OBJECT
 

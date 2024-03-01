@@ -1,5 +1,6 @@
 #include "util/file_util.h"
 #include "wayland_window.h"
+#include <glad/glad.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -56,19 +57,23 @@ bool WaylandWindow::setup() {
     }
 
     std::cerr << glGetString(GL_VERSION) << '\n';
-    text_renderer.setup(content_width, content_height, "Source Code Pro", 16);
 
-    std::ifstream infile(ResourcePath() / "sample_files/sort.scm");
-    buffer.setContents(infile);
+    fs::path file_path = ResourcePath() / "sample_files/example.json";
+    buffer.setContents(ReadFile(file_path));
 
-    text_renderer.parseBuffer(buffer);
+    rect_renderer.setup(content_width, content_height);
 
     return true;
 }
 
 void WaylandWindow::draw() {
-    text_renderer.resize(content_width, content_height);
-    text_renderer.renderText(buffer, 0, 0);
+    // glClear(GL_COLOR_BUFFER_BIT);
+
+    // std::cerr << content_width << "x" << content_height << '\n';
+
+    // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+    // rect_renderer.resize(content_width, content_height);
+    // rect_renderer.draw(0, 0, 0, 0, 0, 80, 500, 200, 30);
 
     eglSwapBuffers(client.egl_display, egl_surface);
 }

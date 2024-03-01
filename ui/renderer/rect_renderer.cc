@@ -95,7 +95,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
 
-    float status_bar_height = 40;
+    float status_bar_height = 40 / 2;
     float editor_width = width - editor_offset_x;
     float editor_height = height - editor_offset_y - status_bar_height;
 
@@ -150,7 +150,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
         .color = Rgba{190, 190, 190, 255},
     });
 
-    float tab_width = 350;
+    float tab_width = 350 / 2;
     float tab_height = editor_offset_y - 5;  // Leave padding between window title bar and tab.
     float tab_corner_radius = 10;
 

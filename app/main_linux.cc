@@ -1,34 +1,39 @@
 #include "ui/linux/wayland_window.h"
+#include "util/profile_util.h"
 #include <iostream>
 #include <string.h>
 
 static void frame_configure(libdecor_frame* frame, libdecor_configuration* configuration,
                             void* user_data) {
-    WaylandWindow* window = static_cast<class WaylandWindow*>(user_data);
-    libdecor_state* state;
-    int width, height;
+    {
+        PROFILE_BLOCK("resize");
+        WaylandWindow* window = static_cast<class WaylandWindow*>(user_data);
+        libdecor_state* state;
+        int width, height;
 
-    if (!libdecor_configuration_get_content_size(configuration, frame, &width, &height)) {
-        width = window->floating_width;
-        height = window->floating_height;
+        if (!libdecor_configuration_get_content_size(configuration, frame, &width, &height)) {
+            width = window->floating_width;
+            height = window->floating_height;
+        }
+
+        window->content_width = width;
+        window->content_height = height;
+
+        wl_egl_window_resize(window->egl_window, window->content_width, window->content_height, 0,
+                             0);
+
+        state = libdecor_state_new(width, height);
+        libdecor_frame_commit(frame, state, configuration);
+        libdecor_state_free(state);
+
+        // Store floating dimensions.
+        if (libdecor_frame_is_floating(window->frame)) {
+            window->floating_width = width;
+            window->floating_height = height;
+        }
+
+        window->configured = true;
     }
-
-    window->content_width = width;
-    window->content_height = height;
-
-    wl_egl_window_resize(window->egl_window, window->content_width, window->content_height, 0, 0);
-
-    state = libdecor_state_new(width, height);
-    libdecor_frame_commit(frame, state, configuration);
-    libdecor_state_free(state);
-
-    // Store floating dimensions.
-    if (libdecor_frame_is_floating(window->frame)) {
-        window->floating_width = width;
-        window->floating_height = height;
-    }
-
-    window->configured = true;
 }
 
 static void frame_close(libdecor_frame* frame, void* user_data) {

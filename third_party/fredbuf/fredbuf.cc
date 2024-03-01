@@ -1183,7 +1183,9 @@ void Tree::snap_to(const RedBlackTree& new_root) {
 
 void TreeBuilder::accept(std::string_view txt) {
     populate_line_starts(&scratch_starts, txt);
-    buffers.push_back(std::make_shared<CharBuffer>(std::string{txt}, scratch_starts));
+    // FIXME: Find out why this line compiles with Clang 17, but not with Clang 14.
+    // buffers.push_back(std::make_shared<CharBuffer>(std::string{txt}, scratch_starts));
+    buffers.push_back(std::make_shared<CharBuffer>(CharBuffer{std::string{txt}, scratch_starts}));
 }
 
 OwningSnapshot::OwningSnapshot(const Tree* tree)

@@ -7,5 +7,6 @@ source_set("gtk") {
 }
 
 pkg_config("gtk_pkg_config") {
-  packages = [ "gtk4" ]
+  # packages = [ "gtk4" ]
+  packages = [ "gtk+-3.0" ]
 }

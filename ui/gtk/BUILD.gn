@@ -4,10 +4,11 @@ source_set("gtk") {
   sources = [ "editor_window.cc" ]
 
   public_configs = [ ":gtk_pkg_config" ]
+
+  libs = [ "epoxy" ]
 }
 
 pkg_config("gtk_pkg_config") {
-  # packages = [ "gtk4" ]
   packages = [
     "gtk+-3.0",
     "glib-2.0",

@@ -6,6 +6,11 @@ source_set("gtk") {
   public_configs = [ ":gtk_pkg_config" ]
 
   libs = [ "epoxy" ]
+
+  deps = [
+    "//base",
+    "//util",
+  ]
 }
 
 pkg_config("gtk_pkg_config") {

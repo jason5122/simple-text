@@ -4,6 +4,7 @@ source_set("renderer") {
     "image_renderer.cc",
     "rect_renderer.cc",
     "shader.cc",
+
     # FIXME: Only link CoreTextRasterizer on macOS so Linux stays compatible.
     # "text_renderer.cc",
   ]
@@ -13,7 +14,7 @@ source_set("renderer") {
     defines = [ "GL_SILENCE_DEPRECATION" ]
   }
   if (is_linux) {
-    public_deps = [ "//third_party/glad" ]
+    libs = [ "epoxy" ]
   }
 
   deps = [

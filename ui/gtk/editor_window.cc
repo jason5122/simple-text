@@ -13,7 +13,7 @@ static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpoi
     return false;
 }
 
-static gboolean render(GtkGLArea* area, GdkGLContext* context) {
+static gboolean render(GtkWidget* widget, gpointer data) {
     // inside this function it's safe to use GL; the given
     // `GdkGLContext` has been made current to the drawable
     // surface used by the `GtkGLArea` and the viewport has
@@ -28,7 +28,12 @@ static gboolean render(GtkGLArea* area, GdkGLContext* context) {
     return true;
 }
 
-static void activate(GtkApplication* app, gpointer user_data) {
+static void realize(GtkWidget* widget, gpointer data) {
+    gtk_gl_area_make_current(GTK_GL_AREA(widget));
+    if (gtk_gl_area_get_error(GTK_GL_AREA(widget)) != nullptr) return;
+}
+
+static void activate(GtkApplication* app, gpointer data) {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Window");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 400);
@@ -42,6 +47,7 @@ static void activate(GtkApplication* app, gpointer user_data) {
     GtkWidget* gl_area = gtk_gl_area_new();
     gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), nullptr);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), nullptr);
 
     gtk_widget_show_all(window);
 }
@@ -53,7 +59,7 @@ EditorWindow::EditorWindow() {
     GApplicationFlags flags = G_APPLICATION_FLAGS_NONE;
 #endif
     app = gtk_application_new("com.jason.simple-text", flags);
-    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+    g_signal_connect(app, "activate", G_CALLBACK(activate), nullptr);
 }
 
 int EditorWindow::run() {

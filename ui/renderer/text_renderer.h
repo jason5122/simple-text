@@ -13,7 +13,7 @@
 #if IS_MAC
 #include <OpenGL/gl3.h>
 #else
-#include <glad/glad.h>
+#include <epoxy/gl.h>
 #endif
 
 class TextRenderer {

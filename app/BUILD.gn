@@ -24,7 +24,8 @@ if (is_mac) {
     deps = [
       ":icon",
       "//ui/gtk",
-      "//ui/mac",
+
+      # "//ui/mac",
       "//ui/renderer",
 
       # "//ui/qt",

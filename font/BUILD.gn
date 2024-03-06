@@ -1,3 +1,5 @@
+import("//build/config/linux/pkg_config.gni")
+
 source_set("font") {
   if (is_mac) {
     sources = [ "core_text_rasterizer.mm" ]
@@ -6,13 +8,22 @@ source_set("font") {
   if (is_linux) {
     sources = [ "freetype_rasterizer.cc" ]
 
+    public_configs = [ ":freetype2_and_harfbuzz" ]
+
     deps = [ ":example_fonts" ]
 
-    public_deps = [
-      "//third_party/freetype",
-      "//third_party/harfbuzz",
-    ]
+    # public_deps = [
+    #   "//third_party/freetype",
+    #   "//third_party/harfbuzz",
+    # ]
   }
+}
+
+pkg_config("freetype2_and_harfbuzz") {
+  packages = [
+    "freetype2",
+    "harfbuzz",
+  ]
 }
 
 fonts = [ "fonts/SourceCodePro-Regular.ttf" ]

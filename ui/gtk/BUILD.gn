@@ -3,7 +3,7 @@ import("//build/config/linux/pkg_config.gni")
 source_set("gtk") {
   sources = [ "editor_window.cc" ]
 
-  public_configs = [ ":gtk_pkg_config" ]
+  public_configs = [ ":gtk3" ]
 
   libs = [ "epoxy" ]
 
@@ -12,7 +12,7 @@ source_set("gtk") {
   public_deps = [ "//base" ]
 }
 
-pkg_config("gtk_pkg_config") {
+pkg_config("gtk3") {
   packages = [
     "gtk+-3.0",
     "glib-2.0",

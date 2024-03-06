@@ -18,6 +18,14 @@ static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpoi
 }
 
 static gboolean render(GtkWidget* widget) {
+    std::cerr << "render\n";
+
+    int scale_factor = gtk_widget_get_scale_factor(widget);
+    int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
+    int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
+    int scaled_editor_offset_x = 200 * scale_factor;
+    int scaled_editor_offset_y = 30 * scale_factor;
+
     // inside this function it's safe to use GL; the given
     // `GdkGLContext` has been made current to the drawable
     // surface used by the `GtkGLArea` and the viewport has
@@ -25,8 +33,8 @@ static gboolean render(GtkWidget* widget) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer->resize(800 * 2, 400 * 2);
-    rect_renderer->draw(0, 0, 0, 0, 40, 80, 1000, 200, 30);
+    rect_renderer->resize(scaled_width, scaled_height);
+    rect_renderer->draw(0, 0, 0, 0, 40, 80, 1000, scaled_editor_offset_x, scaled_editor_offset_y);
 
     // we completed our drawing; the draw commands will be
     // flushed at the end of the signal emission chain, and
@@ -43,8 +51,12 @@ static void realize(GtkWidget* widget) {
 
     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
+    int scale_factor = gtk_widget_get_scale_factor(widget);
+    int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
+    int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
+
     rect_renderer = new RectRenderer();
-    rect_renderer->setup(800 * 2, 400 * 2);
+    rect_renderer->setup(scaled_width, scaled_height);
 }
 
 static gboolean resize(GtkWidget* widget, GdkEvent* event, gpointer data) {

@@ -35,3 +35,14 @@ This project uses the GN meta-build system. Binaries are available [here](https:
 gn gen out/Default
 ninja -C out/Default
 ```
+
+## Why Simple Text?
+
+| Editor             | GUI? | Cross-platform? | Fast? | Open source? | Tree-sitter support? | LSP support? | Simple codebase? | Notes |
+| ------------------ | ---- | --------------- | ----- | ------------ | -------------------- | ------------ | ---------------- | ----- |
+| Simple Text        | ✅   | ✅              | ✅    | ✅           | ✅                   | ✅           | ✅               |       |
+| Sublime Text       | ✅   | ✅              | ✅    | ❌           | ❌                   | ✅           | N/A              |       |
+| Visual Studio Code | ✅   | ✅              | ❌    | ✅           | ❌                   | ✅           | ❌               |       |
+| Zed                | ✅   | ❌              | ✅    | ✅           | ✅                   | ✅           | ❌               |       |
+| Lapce              | ✅   | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               |       |
+| Neovim             | ❌   | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               |       |

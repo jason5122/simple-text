@@ -1,15 +1,18 @@
 source_set("font") {
-  sources = [
-    "core_text_rasterizer.mm",
-    # "freetype_rasterizer.cc",
-  ]
+  if (is_mac) {
+    sources = [ "core_text_rasterizer.mm" ]
+  }
 
-  deps = [ ":example_fonts" ]
+  if (is_linux) {
+    sources = [ "freetype_rasterizer.cc" ]
 
-  # public_deps = [
-  #   "//third_party/freetype",
-  #   "//third_party/harfbuzz",
-  # ]
+    deps = [ ":example_fonts" ]
+
+    public_deps = [
+      "//third_party/freetype",
+      "//third_party/harfbuzz",
+    ]
+  }
 }
 
 fonts = [ "fonts/SourceCodePro-Regular.ttf" ]

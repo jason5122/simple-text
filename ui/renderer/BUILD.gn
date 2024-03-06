@@ -4,9 +4,7 @@ source_set("renderer") {
     "image_renderer.cc",
     "rect_renderer.cc",
     "shader.cc",
-
-    # FIXME: Only link CoreTextRasterizer on macOS so Linux stays compatible.
-    # "text_renderer.cc",
+    "text_renderer.cc",
   ]
 
   if (is_mac) {

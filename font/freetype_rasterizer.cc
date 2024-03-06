@@ -45,12 +45,12 @@ bool FreeTypeRasterizer::setup(const char* main_font_path, int font_size) {
     float descent = std::round(static_cast<float>(ft_main_face->descender) / 64);
     float glyph_height = std::round(static_cast<float>(ft_main_face->height) / 64);
 
-#if IS_MAC
+    // #if IS_MAC
     // FIXME: This is a hack to match Core Text's metrics.
     ascent *= 2;
     descent *= 2;
     glyph_height *= 2;
-#endif
+    // #endif
 
     float global_glyph_height = ascent - descent;
 

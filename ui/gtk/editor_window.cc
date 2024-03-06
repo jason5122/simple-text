@@ -5,6 +5,9 @@
 // FIXME: Remove these global variables! Figure out how to use classes with GTK.
 RectRenderer* rect_renderer;
 ImageRenderer* image_renderer;
+TextRenderer* text_renderer;
+SyntaxHighlighter highlighter;
+Buffer buffer;
 
 static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpointer data) {
     if (event->keyval == GDK_KEY_q && event->state & GDK_META_MASK) {
@@ -31,6 +34,11 @@ static gboolean render(GtkWidget* widget) {
     // already been set to be the size of the allocation
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    text_renderer->resize(scaled_width, scaled_height);
+    text_renderer->renderText(0, 0, buffer, highlighter, scaled_editor_offset_x,
+                              scaled_editor_offset_y);
+
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer->resize(scaled_width, scaled_height);
     rect_renderer->draw(0, 0, 0, 0, 40, 80, 1000, scaled_editor_offset_x, scaled_editor_offset_y);
@@ -42,6 +50,34 @@ static gboolean render(GtkWidget* widget) {
     // flushed at the end of the signal emission chain, and
     // the buffers will be drawn on the window
     return true;
+}
+
+static const char* read(void* payload, uint32_t byte_index, TSPoint position,
+                        uint32_t* bytes_read) {
+    Buffer* buffer = (Buffer*)payload;
+    if (position.row >= buffer->lineCount()) {
+        *bytes_read = 0;
+        return "";
+    }
+
+    const size_t BUFSIZE = 256;
+    static char buf[BUFSIZE];
+
+    std::string line_str;
+    buffer->getLineContent(&line_str, position.row);
+
+    size_t len = line_str.size();
+    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
+
+    memcpy(buf, &line_str[0] + position.column, bytes_copied);
+    *bytes_read = (uint32_t)bytes_copied;
+    if (bytes_copied < BUFSIZE) {
+        // Add the final \n.
+        // If it didn't fit, read() will be called again on the same line with the column advanced.
+        buf[bytes_copied] = '\n';
+        (*bytes_read)++;
+    }
+    return buf;
 }
 
 static void realize(GtkWidget* widget) {
@@ -57,10 +93,22 @@ static void realize(GtkWidget* widget) {
     int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
 
+    int font_size = 16 * scale_factor;
+    std::string font_name = "Source Code Pro";
+
+    text_renderer = new TextRenderer();
     rect_renderer = new RectRenderer();
     image_renderer = new ImageRenderer();
+    text_renderer->setup(scaled_width, scaled_height, font_name, font_size);
     rect_renderer->setup(scaled_width, scaled_height);
     image_renderer->setup(scaled_width, scaled_height);
+
+    fs::path file_path = ResourcePath() / "sample_files/example.json";
+    highlighter.setLanguage("source.json");
+    buffer.setContents(ReadFile(file_path));
+
+    TSInput input = {&buffer, read, TSInputEncodingUTF8};
+    highlighter.parse(input);
 }
 
 static gboolean resize(GtkWidget* widget, GdkEvent* event, gpointer data) {

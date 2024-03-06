@@ -11,24 +11,15 @@ if (is_mac) {
 
     sources = [
       "main.cc",
-
-      # "main_mac.mm",
-
-      "main_gtk.cc",
-
-      # "main_qt.cc",
+      "main_mac.mm",
     ]
 
     frameworks = [ "Cocoa.framework" ]
 
     deps = [
       ":icon",
-      "//ui/gtk",
-
-      # "//ui/mac",
+      "//ui/mac",
       "//ui/renderer",
-
-      # "//ui/qt",
     ]
   }
 
@@ -43,21 +34,13 @@ if (is_linux) {
 
     sources = [
       "main.cc",
-
-      # "main_linux.cc",
-
       "main_gtk.cc",
-
-      # "main_qt.cc",
     ]
 
     deps = [
-      # "//ui/linux",
       "//ui/gtk",
       "//ui/renderer",
       "//util",
-
-      # "//ui/qt",
     ]
   }
 }

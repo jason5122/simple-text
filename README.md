@@ -11,9 +11,9 @@
 | -------------------- | -------------- | ------------- | ---------------- |
 | Text Rasterizer      | ✅ (Core Text) | ✅ (FreeType) | ❌ (DirectWrite) |
 | Text Shaper          | ✅ (Core Text) | ✅ (HarfBuzz) | ❌ (???)         |
-| Window creation      | ✅ (Cocoa)     | 🚧 (GTK)      | ❌ (Win32)       |
-| OpenGL context       | ✅             | ✅            | ❌               |
-| Keyboard/mouse input | ✅             | ❌            | ❌               |
+| Window creation      | ✅ (Cocoa)     | ✅ (GTK)      | ❌ (Win32)       |
+| OpenGL context       | ✅ (Cocoa)     | ✅ (libepoxy) | ❌               |
+| Keyboard/mouse input | ✅             | 🚧            | ❌               |
 | Tabs                 | ❌             | ❌            | ❌               |
 | Popups/Dialogs       | ❌             | ❌            | ❌               |
 

@@ -82,7 +82,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     float cursor_width = 4;
     float cursor_height = line_height;
 
-    cursor_x -= cursor_width;
+    cursor_x -= cursor_width / 2;
 
     int extra_padding = 8;
     float cursor_y = cursor_line * line_height;

@@ -38,11 +38,15 @@ ninja -C out/Default
 
 ## Why Simple Text?
 
-| Editor             | GUI? | Cross-platform? | Fast? | Open source? | Tree-sitter support? | LSP support? | Simple codebase? | Notes |
-| ------------------ | ---- | --------------- | ----- | ------------ | -------------------- | ------------ | ---------------- | ----- |
-| Simple Text        | ✅   | ✅              | ✅    | ✅           | ✅                   | ✅           | ✅               |       |
-| Sublime Text       | ✅   | ✅              | ✅    | ❌           | ❌                   | ✅           | N/A              |       |
-| Visual Studio Code | ✅   | ✅              | ❌    | ✅           | ❌                   | ✅           | ❌               |       |
-| Zed                | ✅   | ❌              | ✅    | ✅           | ✅                   | ✅           | ❌               |       |
-| Lapce              | ✅   | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               |       |
-| Neovim             | ❌   | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               |       |
+> [!NOTE]\
+> These are features that are important from _my point of view_!\
+> Someone who appreciates other features (e.g., AI integration, plugins) would have a different chart.
+
+| Editor             | GUI? | Native GUI? | Cross-platform? | Fast? | Open source? | Tree-sitter support? | LSP support? | Simple codebase? | Notes                                                                        |
+| ------------------ | ---- | ----------- | --------------- | ----- | ------------ | -------------------- | ------------ | ---------------- | ---------------------------------------------------------------------------- |
+| Simple Text        | ✅   | ✅          | ✅              | ✅    | ✅           | ✅                   | ✅           | ✅               |                                                                              |
+| Sublime Text       | ✅   | ✅          | ✅              | ✅    | ❌           | ❌                   | ✅           | N/A              | Very nearly perfect!                                                         |
+| Visual Studio Code | ✅   | ❌          | ✅              | ❌    | ✅           | ❌                   | ✅           | ❌               |                                                                              |
+| Zed                | ✅   | ❌          | ❌              | ✅    | ✅           | ✅                   | ✅           | ❌               | Contains a _lot_ of arguably unnecessary features, such as AI and voice chat |
+| Lapce              | ✅   | ❌          | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               | GUI doesn't feel super polished, at least on macOS (e.g., blurry fonts)      |
+| Neovim             | ❌   | N/A         | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               |                                                                              |

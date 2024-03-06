@@ -29,8 +29,12 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     fs::path font_path = ResourcePath() / "fonts/SourceCodePro-Regular.ttf";
 
     atlas.setup();
-    // ct_rasterizer.setup(main_font_name, font_size);
+
+#if IS_MAC
+    ct_rasterizer.setup(main_font_name, font_size);
+#else
     ct_rasterizer.setup(font_path.c_str(), font_size);
+#endif
 
     this->line_height = ct_rasterizer.line_height;
 

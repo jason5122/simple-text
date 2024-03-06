@@ -4,6 +4,7 @@
 
 // FIXME: Remove these global variables! Figure out how to use classes with GTK.
 RectRenderer* rect_renderer;
+ImageRenderer* image_renderer;
 
 static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpointer data) {
     if (event->keyval == GDK_KEY_q && event->state & GDK_META_MASK) {
@@ -18,8 +19,6 @@ static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpoi
 }
 
 static gboolean render(GtkWidget* widget) {
-    std::cerr << "render\n";
-
     int scale_factor = gtk_widget_get_scale_factor(widget);
     int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
@@ -35,6 +34,9 @@ static gboolean render(GtkWidget* widget) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer->resize(scaled_width, scaled_height);
     rect_renderer->draw(0, 0, 0, 0, 40, 80, 1000, scaled_editor_offset_x, scaled_editor_offset_y);
+
+    image_renderer->resize(scaled_width, scaled_height);
+    image_renderer->draw(0, 0);
 
     // we completed our drawing; the draw commands will be
     // flushed at the end of the signal emission chain, and
@@ -56,12 +58,13 @@ static void realize(GtkWidget* widget) {
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
 
     rect_renderer = new RectRenderer();
+    image_renderer = new ImageRenderer();
     rect_renderer->setup(scaled_width, scaled_height);
+    image_renderer->setup(scaled_width, scaled_height);
 }
 
 static gboolean resize(GtkWidget* widget, GdkEvent* event, gpointer data) {
     std::cerr << "resized\n";
-
     return false;
 }
 

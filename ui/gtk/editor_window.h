@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/buffer.h"
+#include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include <gtk/gtk.h>
 

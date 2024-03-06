@@ -6,8 +6,6 @@
 
 class EditorWindow {
 public:
-    RectRenderer rect_renderer;
-
     EditorWindow();
     ~EditorWindow();
     int run();

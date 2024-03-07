@@ -9,6 +9,9 @@ TextRenderer* text_renderer;
 SyntaxHighlighter highlighter;
 Buffer buffer;
 
+double scroll_x = 0;
+double scroll_y = 0;
+
 static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpointer data) {
     if (event->keyval == GDK_KEY_q && event->state & GDK_META_MASK) {
         g_application_quit(G_APPLICATION(data));
@@ -25,6 +28,8 @@ static gboolean render(GtkWidget* widget) {
     int scale_factor = gtk_widget_get_scale_factor(widget);
     int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
+    double scaled_scroll_x = scroll_x * scale_factor;
+    double scaled_scroll_y = scroll_y * scale_factor;
     int scaled_editor_offset_x = 200 * scale_factor;
     int scaled_editor_offset_y = 30 * scale_factor;
 
@@ -36,15 +41,16 @@ static gboolean render(GtkWidget* widget) {
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer->resize(scaled_width, scaled_height);
-    text_renderer->renderText(0, 0, buffer, highlighter, scaled_editor_offset_x,
-                              scaled_editor_offset_y);
+    text_renderer->renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
+                              scaled_editor_offset_x, scaled_editor_offset_y);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer->resize(scaled_width, scaled_height);
-    rect_renderer->draw(0, 0, 0, 0, 40, 80, 1000, scaled_editor_offset_x, scaled_editor_offset_y);
+    rect_renderer->draw(scaled_scroll_x, scaled_scroll_y, 0, 0, 40, 80, 1000,
+                        scaled_editor_offset_x, scaled_editor_offset_y);
 
     image_renderer->resize(scaled_width, scaled_height);
-    image_renderer->draw(0, 0);
+    image_renderer->draw(scaled_scroll_x, scaled_scroll_y);
 
     // we completed our drawing; the draw commands will be
     // flushed at the end of the signal emission chain, and
@@ -116,6 +122,25 @@ static gboolean resize(GtkWidget* widget, GdkEvent* event, gpointer data) {
     return false;
 }
 
+static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer data) {
+    double delta_x, delta_y;
+    gdk_event_get_scroll_deltas((GdkEvent*)event, &delta_x, &delta_y);
+    std::cerr << delta_x << ", " << delta_y << '\n';
+
+    if (gdk_device_get_source(event->device) == GDK_SOURCE_MOUSE) {
+        std::cerr << "mouse\n";
+        delta_x *= 32;
+        delta_y *= 32;
+    }
+
+    scroll_x += delta_x;
+    scroll_y += delta_y;
+
+    gtk_widget_queue_draw(widget);
+
+    return true;
+}
+
 static void activate(GtkApplication* app) {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
@@ -133,6 +158,9 @@ static void activate(GtkApplication* app) {
     gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), nullptr);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), nullptr);
+
+    gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
+    g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), nullptr);
 
     gtk_widget_show_all(window);
 }

@@ -144,7 +144,7 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
 static void activate(GtkApplication* app) {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
-    gtk_window_set_default_size(GTK_WINDOW(window), 800, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), 1600, 800);
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     gtk_widget_add_events(window, GDK_CONFIGURE);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function), app);
@@ -161,6 +161,8 @@ static void activate(GtkApplication* app) {
 
     gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
     g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), nullptr);
+
+    gtk_window_maximize(GTK_WINDOW(window));
 
     gtk_widget_show_all(window);
 }

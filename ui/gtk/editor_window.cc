@@ -11,6 +11,8 @@ Buffer buffer;
 
 double scroll_x = 0;
 double scroll_y = 0;
+float editor_offset_x = 200;
+float editor_offset_y = 30;
 
 static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpointer data) {
     if (event->keyval == GDK_KEY_q && event->state & GDK_META_MASK) {
@@ -30,8 +32,8 @@ static gboolean render(GtkWidget* widget) {
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
     double scaled_scroll_x = scroll_x * scale_factor;
     double scaled_scroll_y = scroll_y * scale_factor;
-    int scaled_editor_offset_x = 200 * scale_factor;
-    int scaled_editor_offset_y = 30 * scale_factor;
+    int scaled_editor_offset_x = editor_offset_x * scale_factor;
+    int scaled_editor_offset_y = editor_offset_y * scale_factor;
 
     std::cerr << "raw dimensions: " << gtk_widget_get_allocated_width(widget) << "x"
               << gtk_widget_get_allocated_height(widget) << '\n';
@@ -49,8 +51,10 @@ static gboolean render(GtkWidget* widget) {
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer->resize(scaled_width, scaled_height);
-    rect_renderer->draw(scaled_scroll_x, scaled_scroll_y, 0, 0, 40, 80, 1000,
-                        scaled_editor_offset_x, scaled_editor_offset_y);
+    rect_renderer->draw(scaled_scroll_x, scaled_scroll_y, text_renderer->cursor_end_x,
+                        text_renderer->cursor_end_line, text_renderer->line_height,
+                        buffer.lineCount(), text_renderer->longest_line_x, scaled_editor_offset_x,
+                        scaled_editor_offset_y);
 
     image_renderer->resize(scaled_width, scaled_height);
     image_renderer->draw(scaled_scroll_x, scaled_scroll_y);
@@ -138,6 +142,8 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
 
     scroll_x += delta_x;
     scroll_y += delta_y;
+    if (scroll_x < 0) scroll_x = 0;
+    if (scroll_y < 0) scroll_y = 0;
 
     gtk_widget_queue_draw(widget);
 

@@ -33,6 +33,9 @@ static gboolean render(GtkWidget* widget) {
     int scaled_editor_offset_x = 200 * scale_factor;
     int scaled_editor_offset_y = 30 * scale_factor;
 
+    std::cerr << "raw dimensions: " << gtk_widget_get_allocated_width(widget) << "x"
+              << gtk_widget_get_allocated_height(widget) << '\n';
+
     // inside this function it's safe to use GL; the given
     // `GdkGLContext` has been made current to the drawable
     // surface used by the `GtkGLArea` and the viewport has
@@ -146,12 +149,22 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
+static gboolean button_event(GtkWidget* self, GdkEventButton* event, gpointer data) {
+    if (event->type == GDK_BUTTON_PRESS) {
+        std::cerr << "press\n";
+    }
+    if (event->type == GDK_BUTTON_RELEASE) {
+        std::cerr << "release\n";
+    }
+    return true;
+}
+
 static void activate(GtkApplication* app) {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-    gtk_widget_add_events(window, GDK_CONFIGURE);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function), app);
+    gtk_widget_add_events(window, GDK_CONFIGURE);
     g_signal_connect(G_OBJECT(window), "configure_event", G_CALLBACK(resize), nullptr);
 
     GMenu* menu_bar = g_menu_new();
@@ -179,6 +192,10 @@ static void activate(GtkApplication* app) {
     gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
     g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), nullptr);
 
+    gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+    g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), nullptr);
+    g_signal_connect(G_OBJECT(gl_area), "button-release-event", G_CALLBACK(button_event), nullptr);
+
     // FIXME: Dragging a maximized window results in dragging the top left corner.
     //        Using a default window size greater than the screen size seems to maximize without
     //        this issue.
@@ -189,6 +206,9 @@ static void activate(GtkApplication* app) {
     GdkRectangle geometry;
     gdk_monitor_get_geometry(monitor, &geometry);
     gtk_window_set_default_size(GTK_WINDOW(window), geometry.width, geometry.height);
+    int scale_factor = gdk_monitor_get_scale_factor(monitor);
+    std::cerr << geometry.width << "x" << geometry.height << ", scale_factor: " << scale_factor
+              << '\n';
 
     gtk_widget_show_all(window);
 }

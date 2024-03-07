@@ -182,9 +182,25 @@ static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer 
     return true;
 }
 
+// https://stackoverflow.com/a/43721112
+static gboolean on_crossing(GtkWidget* widget, GdkEventCrossing* event) {
+    GdkDisplay* display = gtk_widget_get_display(widget);
+    GdkCursor* cursor;
+    if (event->type == GDK_ENTER_NOTIFY) {
+        cursor = gdk_cursor_new_from_name(display, "text");
+    }
+    if (event->type == GDK_LEAVE_NOTIFY) {
+        cursor = gdk_cursor_new_from_name(display, "default");
+    }
+    gdk_window_set_cursor(gtk_widget_get_window(widget), cursor);
+    g_object_unref(cursor);
+    return true;
+}
+
 static void activate(GtkApplication* app) {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
+
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function), app);
     gtk_widget_add_events(window, GDK_CONFIGURE);
@@ -218,6 +234,9 @@ static void activate(GtkApplication* app) {
     gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
     g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), nullptr);
     g_signal_connect(G_OBJECT(gl_area), "button-release-event", G_CALLBACK(button_event), nullptr);
+    gtk_widget_add_events(gl_area, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
+    g_signal_connect(G_OBJECT(gl_area), "enter-notify-event", G_CALLBACK(on_crossing), nullptr);
+    g_signal_connect(G_OBJECT(gl_area), "leave-notify-event", G_CALLBACK(on_crossing), nullptr);
 
     // FIXME: Dragging a maximized window results in dragging the top left corner.
     //        Using a default window size greater than the screen size seems to maximize without

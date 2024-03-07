@@ -141,6 +141,11 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
     return true;
 }
 
+// https://github.com/ToshioCP/Gtk4-tutorial/blob/main/gfm/sec17.md#menu-and-action
+static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
+    g_application_quit(G_APPLICATION(app));
+}
+
 static void activate(GtkApplication* app) {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
@@ -148,6 +153,19 @@ static void activate(GtkApplication* app) {
     gtk_widget_add_events(window, GDK_CONFIGURE);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function), app);
     g_signal_connect(G_OBJECT(window), "configure_event", G_CALLBACK(resize), nullptr);
+
+    GMenu* menu_bar = g_menu_new();
+    GMenu* file_menu = g_menu_new();
+    GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
+
+    g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
+    g_menu_append_item(file_menu, quit_menu_item);
+    gtk_application_set_menubar(GTK_APPLICATION(app), G_MENU_MODEL(menu_bar));
+    gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window), true);
+
+    GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
+    g_action_map_add_action(G_ACTION_MAP(app), G_ACTION(quit_action));
+    g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), app);
 
     GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
     gtk_box_set_spacing(GTK_BOX(box), 6);

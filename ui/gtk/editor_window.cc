@@ -11,6 +11,8 @@ Buffer buffer;
 
 double scroll_x = 0;
 double scroll_y = 0;
+double cursor_end_x = 0;
+double cursor_end_y = 0;
 float editor_offset_x = 200;
 float editor_offset_y = 30;
 
@@ -155,9 +157,24 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
-static gboolean button_event(GtkWidget* self, GdkEventButton* event, gpointer data) {
+static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer data) {
     if (event->type == GDK_BUTTON_PRESS) {
         std::cerr << "press\n";
+
+        gdouble mouse_x = event->x;
+        gdouble mouse_y = event->y;
+
+        mouse_x -= editor_offset_x;
+        mouse_y -= editor_offset_y;
+
+        mouse_x += scroll_x;
+        mouse_y += scroll_y;
+
+        int scale_factor = gtk_widget_get_scale_factor(widget);
+        text_renderer->setCursorPositions(buffer, 0, 0, mouse_x * scale_factor,
+                                          mouse_y * scale_factor);
+
+        gtk_widget_queue_draw(widget);
     }
     if (event->type == GDK_BUTTON_RELEASE) {
         std::cerr << "release\n";

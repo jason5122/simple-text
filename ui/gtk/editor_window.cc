@@ -25,6 +25,25 @@ static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpoi
         g_application_quit(G_APPLICATION(data));
         return true;
     }
+
+    // Ignore modifier-only key presses.
+    if (event->is_modifier) {
+        return false;
+    }
+
+    const gchar* str;
+    if (event->keyval == GDK_KEY_Return) {
+        str = "\n";
+    } else {
+        gunichar unicode = gdk_keyval_to_unicode(event->keyval);
+        str = g_ucs4_to_utf8(&unicode, 1, nullptr, nullptr, nullptr);
+        std::cerr << "str: " << str << " keyval: " << event->keyval << '\n';
+    }
+
+    buffer.insert(text_renderer->cursor_end_line, text_renderer->cursor_end_col_offset, str);
+
+    gtk_widget_queue_draw(widget);
+
     return false;
 }
 

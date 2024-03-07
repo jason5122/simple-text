@@ -16,6 +16,34 @@ double cursor_end_y = 0;
 float editor_offset_x = 200;
 float editor_offset_y = 30;
 
+static const char* read(void* payload, uint32_t byte_index, TSPoint position,
+                        uint32_t* bytes_read) {
+    Buffer* buffer = (Buffer*)payload;
+    if (position.row >= buffer->lineCount()) {
+        *bytes_read = 0;
+        return "";
+    }
+
+    const size_t BUFSIZE = 256;
+    static char buf[BUFSIZE];
+
+    std::string line_str;
+    buffer->getLineContent(&line_str, position.row);
+
+    size_t len = line_str.size();
+    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
+
+    memcpy(buf, &line_str[0] + position.column, bytes_copied);
+    *bytes_read = (uint32_t)bytes_copied;
+    if (bytes_copied < BUFSIZE) {
+        // Add the final \n.
+        // If it didn't fit, read() will be called again on the same line with the column advanced.
+        buf[bytes_copied] = '\n';
+        (*bytes_read)++;
+    }
+    return buf;
+}
+
 static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpointer data) {
     if (event->keyval == GDK_KEY_q && event->state & GDK_META_MASK) {
         g_application_quit(G_APPLICATION(data));
@@ -32,15 +60,47 @@ static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpoi
     }
 
     const gchar* str;
+    size_t bytes = 1;
     if (event->keyval == GDK_KEY_Return) {
         str = "\n";
     } else {
         gunichar unicode = gdk_keyval_to_unicode(event->keyval);
-        str = g_ucs4_to_utf8(&unicode, 1, nullptr, nullptr, nullptr);
+        str = g_ucs4_to_utf8(&unicode, bytes, nullptr, nullptr, nullptr);
         std::cerr << "str: " << str << " keyval: " << event->keyval << '\n';
     }
 
     buffer.insert(text_renderer->cursor_end_line, text_renderer->cursor_end_col_offset, str);
+
+    // TODO: Move this into an edit_buffer() method.
+    size_t start_byte =
+        buffer.byteOfLine(text_renderer->cursor_end_line) + text_renderer->cursor_end_col_offset;
+    size_t old_end_byte =
+        buffer.byteOfLine(text_renderer->cursor_end_line) + text_renderer->cursor_end_col_offset;
+    size_t new_end_byte = buffer.byteOfLine(text_renderer->cursor_end_line) +
+                          text_renderer->cursor_end_col_offset + bytes;
+    highlighter.edit(start_byte, old_end_byte, new_end_byte);
+
+    // TODO: Move this into a parse_buffer() method.
+    TSInput input = {&buffer, read, TSInputEncodingUTF8};
+    highlighter.parse(input);
+
+    // FIXME: Do this under an OpenGL context!
+    //        Without that step, glyphs are not loaded into the atlas correctly.
+    // if (strcmp(str, "\n") == 0) {
+    //     text_renderer->cursor_start_line++;
+    //     text_renderer->cursor_end_line++;
+
+    //     text_renderer->cursor_start_col_offset = 0;
+    //     text_renderer->cursor_start_x = 0;
+    //     text_renderer->cursor_end_col_offset = 0;
+    //     text_renderer->cursor_end_x = 0;
+    // } else {
+    //     float advance = text_renderer->getGlyphAdvance(std::string(str));
+    //     text_renderer->cursor_start_col_offset += bytes;
+    //     text_renderer->cursor_start_x += advance;
+    //     text_renderer->cursor_end_col_offset += bytes;
+    //     text_renderer->cursor_end_x += advance;
+    // }
 
     gtk_widget_queue_draw(widget);
 
@@ -84,34 +144,6 @@ static gboolean render(GtkWidget* widget) {
     // flushed at the end of the signal emission chain, and
     // the buffers will be drawn on the window
     return true;
-}
-
-static const char* read(void* payload, uint32_t byte_index, TSPoint position,
-                        uint32_t* bytes_read) {
-    Buffer* buffer = (Buffer*)payload;
-    if (position.row >= buffer->lineCount()) {
-        *bytes_read = 0;
-        return "";
-    }
-
-    const size_t BUFSIZE = 256;
-    static char buf[BUFSIZE];
-
-    std::string line_str;
-    buffer->getLineContent(&line_str, position.row);
-
-    size_t len = line_str.size();
-    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
-
-    memcpy(buf, &line_str[0] + position.column, bytes_copied);
-    *bytes_read = (uint32_t)bytes_copied;
-    if (bytes_copied < BUFSIZE) {
-        // Add the final \n.
-        // If it didn't fit, read() will be called again on the same line with the column advanced.
-        buf[bytes_copied] = '\n';
-        (*bytes_read)++;
-    }
-    return buf;
 }
 
 static void realize(GtkWidget* widget) {

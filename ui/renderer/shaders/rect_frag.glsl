@@ -23,6 +23,8 @@ void main() {
         alpha -= smoothstep(-0.5, 0.5, distance);
     }
 
+    vec3 temp = rect_color.rgb;
+
     if (tab_corner_radius > 0) {
         vec2 pixel_pos = gl_FragCoord.xy;
 
@@ -43,8 +45,8 @@ void main() {
                 vec2 point = rect_center - size / 2;
                 point += vec2(0, tab_corner_radius);
 
-                float distance = distance(pixel_pos, point) - tab_corner_radius;
-                alpha -= smoothstep(-0.5, 0.5, 1.0 - distance);
+                float d = distance(pixel_pos, point) - tab_corner_radius;
+                alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
             }
         }
         if (pixel_pos.x > bottom_right.x) {
@@ -54,20 +56,26 @@ void main() {
                 vec2 point = rect_center + vec2(size.x / 2, -size.y / 2);
                 point += vec2(0, tab_corner_radius);
 
-                float distance = distance(pixel_pos, point) - tab_corner_radius;
-                alpha -= smoothstep(-0.5, 0.5, 1.0 - distance);
+                float d = distance(pixel_pos, point) - tab_corner_radius;
+                alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
             }
         }
         if (pixel_pos.x < top_left.x && pixel_pos.y > top_left.y) {
-            float distance = distance(pixel_pos, top_left) - tab_corner_radius;
-            alpha -= smoothstep(-0.5, 0.5, distance);
+            float d = distance(pixel_pos, top_left) - tab_corner_radius;
+            alpha -= smoothstep(-0.5, 0.5, d);
         }
         if (pixel_pos.x > top_right.x && pixel_pos.y > top_right.y) {
-            float distance = distance(pixel_pos, top_right) - tab_corner_radius;
-            alpha -= smoothstep(-0.5, 0.5, distance);
+            float d = distance(pixel_pos, top_right) - tab_corner_radius;
+            // alpha -= smoothstep(-0.5, 0.5, d);
+
+            if (-1 < d && d < 0) {
+                temp = vec3(1.0, 0.0, 0.0);
+            } else if (d > 0) {
+                alpha = 0;
+            }
         }
     }
 
     alpha_mask = vec4(1.0);
-    color = vec4(rect_color.rgb, alpha);
+    color = vec4(temp, alpha);
 }

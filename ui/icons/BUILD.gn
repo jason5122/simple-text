@@ -1,6 +1,6 @@
 icons = [
-  "tab_close@3x.png",
-  "panel_close@3x.png",
+  "tab_close@2x.png",
+  "panel_close@2x.png",
 ]
 
 if (is_mac) {

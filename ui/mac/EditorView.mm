@@ -479,7 +479,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         image_renderer.resize(scaled_width, scaled_height);
-        image_renderer.draw(scaled_scroll_x, scaled_scroll_y);
+        image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
+                            scaled_editor_offset_y);
 
         // Calls glFlush() by default.
         [super drawInCGLContext:glContext

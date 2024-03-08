@@ -158,7 +158,8 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     instances.push_back(InstanceData{
         .coords = Vec2{0, 0 - tab_height},
         .rect_size = Vec2{tab_width, tab_height},
-        .color = editor_bg_color,
+        // .color = editor_bg_color,
+        .color = Rgba{211, 212, 212, 255},
         .tab_corner_radius = tab_corner_radius,
     });
 

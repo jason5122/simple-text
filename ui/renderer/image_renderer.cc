@@ -57,7 +57,7 @@ void ImageRenderer::setup(float width, float height) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    fs::path image_path = ResourcePath() / "icons/panel_close@3x.png";
+    fs::path image_path = ResourcePath() / "icons/panel_close@2x.png";
 
     int out_width, out_height;
     bool out_has_alpha;
@@ -71,7 +71,8 @@ void ImageRenderer::setup(float width, float height) {
     });
 }
 
-void ImageRenderer::draw(float scroll_x, float scroll_y) {
+void ImageRenderer::draw(float scroll_x, float scroll_y, float editor_offset_x,
+                         float editor_offset_y) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
 
@@ -81,13 +82,17 @@ void ImageRenderer::draw(float scroll_x, float scroll_y) {
     std::vector<InstanceData> instances;
 
     AtlasImage atlas_entry = image_atlas_entries[0];
+    float tab_width = 350;
+    float tab_offset_from_top = 5;
+    float tab_corner_radius = 10;
+
+    float close_button_offset = 10;
+    float pos_x = (editor_offset_x - close_button_offset) +
+                  ((tab_width - tab_corner_radius) - atlas_entry.rect_size.x);
+    float pos_y =
+        height - (atlas_entry.rect_size.y / 2) - ((editor_offset_y + tab_offset_from_top) / 2);
     instances.push_back(InstanceData{
-        .coords = Vec2{width / 2, height - atlas_entry.rect_size.y},
-        .rect_size = atlas_entry.rect_size,
-        .uv = atlas_entry.uv,
-    });
-    instances.push_back(InstanceData{
-        .coords = Vec2{width / 3, height - atlas_entry.rect_size.y},
+        .coords = Vec2{pos_x, pos_y},
         .rect_size = atlas_entry.rect_size,
         .uv = atlas_entry.uv,
     });

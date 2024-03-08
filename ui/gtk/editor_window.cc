@@ -138,7 +138,8 @@ static gboolean render(GtkWidget* widget) {
                         scaled_editor_offset_y);
 
     image_renderer->resize(scaled_width, scaled_height);
-    image_renderer->draw(scaled_scroll_x, scaled_scroll_y);
+    image_renderer->draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
+                         scaled_editor_offset_y);
 
     // we completed our drawing; the draw commands will be
     // flushed at the end of the signal emission chain, and

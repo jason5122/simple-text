@@ -9,6 +9,7 @@ struct InstanceData {
     Vec2 coords;
     Vec2 rect_size;
     Vec4 uv;
+    Vec3 color;
 };
 }
 
@@ -50,6 +51,11 @@ void ImageRenderer::setup(float width, float height) {
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, uv));
+    glVertexAttribDivisor(index++, 1);
+
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, color));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -96,6 +102,8 @@ void ImageRenderer::draw(float scroll_x, float scroll_y, float editor_offset_x,
         .coords = Vec2{pos_x, pos_y},
         .rect_size = atlas_entry.rect_size,
         .uv = atlas_entry.uv,
+        .color = Vec3{158, 158, 158},
+        // .color = Vec3{116, 116, 116},
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

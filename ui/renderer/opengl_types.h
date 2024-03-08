@@ -8,6 +8,11 @@ struct Vec2 {
 };
 static_assert(sizeof(Vec2) == sizeof(float) * 2);
 
+struct Vec3 {
+    float x, y, z;
+};
+static_assert(sizeof(Vec3) == sizeof(float) * 3);
+
 struct Vec4 {
     float x, y, z, w;
 };

@@ -3,8 +3,10 @@
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
 layout(location = 2) in vec4 uv;
+layout(location = 3) in vec3 in_color;
 
 out vec2 tex_coords;
+flat out vec3 image_color;
 
 uniform vec2 resolution;
 uniform vec2 scroll_offset;
@@ -27,4 +29,5 @@ void main() {
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
     tex_coords = uv_offset + uv_size * position;
+    image_color = in_color / 255.0;
 }

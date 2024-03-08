@@ -7,3 +7,5 @@ namespace fs = std::filesystem;
 std::string ReadFile(std::string file_name);
 
 fs::path ResourcePath();
+
+fs::path DataPath();

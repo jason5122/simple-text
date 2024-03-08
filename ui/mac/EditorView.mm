@@ -412,6 +412,16 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 
         editor_offset_x = 200;
         editor_offset_y = 30;
+
+        fs::create_directory(DataPath());
+        std::ofstream settings_file(DataPath() / "settings.json");
+        if (settings_file.is_open()) {
+            settings_file << "test";
+            settings_file.flush();
+            settings_file.close();
+        } else {
+            std::cerr << "Error writing to settings.json.\n";
+        }
     }
     return glContext;
 }

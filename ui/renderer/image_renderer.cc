@@ -16,7 +16,7 @@ void ImageRenderer::setup(float width, float height) {
     shader_program.link(ResourcePath() / "shaders/image_vert.glsl",
                         ResourcePath() / "shaders/image_frag.glsl");
     this->resize(width, height);
-    atlas.setup();
+    atlas.setup(false);  // Disable bilinear filtering.
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -57,7 +57,8 @@ void ImageRenderer::setup(float width, float height) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    fs::path image_path = ResourcePath() / "icons/panel_close@2x.png";
+    // fs::path image_path = ResourcePath() / "icons/panel_close@2x.png";
+    fs::path image_path = ResourcePath() / "icons/folder_open@2x.png";
 
     int out_width, out_height;
     bool out_has_alpha;

@@ -19,7 +19,7 @@ public:
 
     Atlas() = default;
     ~Atlas();
-    void setup();
+    void setup(bool use_bilinear_filtering = true);
     Vec4 insertTexture(int width, int height, bool colored, GLubyte* data);
 
 private:

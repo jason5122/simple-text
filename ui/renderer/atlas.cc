@@ -1,6 +1,6 @@
 #include "atlas.h"
 
-void Atlas::setup() {
+void Atlas::setup(bool use_bilinear_filtering) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
@@ -8,10 +8,11 @@ void Atlas::setup() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ATLAS_SIZE, ATLAS_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                  nullptr);
 
+    GLint param = use_bilinear_filtering ? GL_LINEAR : GL_NEAREST;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
 
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }

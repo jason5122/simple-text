@@ -19,8 +19,8 @@ void main() {
 
     if (corner_radius > 0) {
         vec2 center = gl_FragCoord.xy - rect_center;
-        float distance = roundedBoxSDF(center, size / 2, corner_radius);
-        alpha -= smoothstep(-0.5, 0.5, distance);
+        float d = roundedBoxSDF(center, size / 2, corner_radius);
+        alpha -= smoothstep(-0.5, 0.5, d);
     }
 
     vec3 temp = rect_color.rgb;
@@ -62,7 +62,13 @@ void main() {
         }
         if (pixel_pos.x < top_left.x && pixel_pos.y > top_left.y) {
             float d = distance(pixel_pos, top_left) - tab_corner_radius;
-            alpha -= smoothstep(-0.5, 0.5, d);
+            // alpha -= smoothstep(-0.5, 0.5, d);
+
+            if (-1 < d && d < 0) {
+                temp = vec3(1.0, 0.0, 0.0);
+            } else if (d > 0) {
+                alpha = 0;
+            }
         }
         if (pixel_pos.x > top_right.x && pixel_pos.y > top_right.y) {
             float d = distance(pixel_pos, top_right) - tab_corner_radius;
@@ -73,6 +79,24 @@ void main() {
             } else if (d > 0) {
                 alpha = 0;
             }
+        }
+
+        float border_thickness = 1;
+        float border_left = rect_center.x - size.x / 2 + tab_corner_radius + border_thickness;
+        float border_right = rect_center.x + size.x / 2 - tab_corner_radius - border_thickness;
+        float border_top = rect_center.y + size.y / 2 - border_thickness;
+        float border_bottom = rect_center.y - size.y / 2 + border_thickness;
+        if (pixel_pos.x < border_left) {
+            temp = vec3(1.0, 0.0, 0.0);
+        }
+        if (pixel_pos.x > border_right) {
+            temp = vec3(1.0, 0.0, 0.0);
+        }
+        if (pixel_pos.y > border_top) {
+            temp = vec3(1.0, 0.0, 0.0);
+        }
+        if (pixel_pos.y < border_bottom) {
+            temp = vec3(1.0, 0.0, 0.0);
         }
     }
 

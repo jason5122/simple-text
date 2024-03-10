@@ -57,7 +57,24 @@ void main() {
                 point += vec2(0, tab_corner_radius);
 
                 float d = distance(pixel_pos, point) - tab_corner_radius;
-                alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
+                // alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
+
+                // temp = vec3(1.0, 0.0, 0.0);
+
+                // if (d < 0) {
+                //     alpha = 0;
+                // }
+
+                if (d < -1 || d >= 0) {
+                    alpha = 0;
+                }
+
+                // if (-1 < d && d < 0) {
+                //     alpha = 0;
+                // }
+                // if (d < -1) {
+                //     alpha = 0;
+                // }
             }
         }
         if (pixel_pos.x < top_left.x && pixel_pos.y > top_left.y) {

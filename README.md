@@ -36,6 +36,12 @@ gn gen out/Default
 ninja -C out/Default
 ```
 
+## LSP
+
+```
+ninja -C out/Default -t compdb cc cxx objc objcxx > compile_commands.json
+```
+
 ## Why Simple Text?
 
 > [!NOTE]\

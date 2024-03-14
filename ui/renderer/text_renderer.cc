@@ -18,6 +18,8 @@ struct InstanceData {
     Vec4 uv;
     Rgba color;
     uint8_t is_atlas = 0;
+    Vec2 bg_size;
+    Rgba bg_color;
 };
 }
 
@@ -83,6 +85,16 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, is_atlas));
+    glVertexAttribDivisor(index++, 1);
+
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, bg_size));
+    glVertexAttribDivisor(index++, 1);
+
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, bg_color));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -177,12 +189,17 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 AtlasGlyph glyph = glyph_cache[codepoint];
                 Rgb text_color = highlighter.getColor(byte_offset);
 
+                float glyph_center_x = total_advance + glyph.advance / 2;
+                uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
+
                 if (total_advance + glyph.advance > scroll_x) {
                     instances.push_back(InstanceData{
                         .coords = Vec2{total_advance, line_index * line_height},
                         .glyph = glyph.glyph,
                         .uv = glyph.uv,
                         .color = Rgba::fromRgb(text_color, glyph.colored),
+                        .bg_size = Vec2{glyph.advance, line_height},
+                        .bg_color = Rgba::fromRgb(colors::yellow, bg_a),
                     });
                 }
 
@@ -207,6 +224,9 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.

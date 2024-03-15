@@ -290,19 +290,9 @@ static void activate(GtkApplication* app) {
     g_signal_connect(G_OBJECT(gl_area), "enter-notify-event", G_CALLBACK(on_crossing), nullptr);
     g_signal_connect(G_OBJECT(gl_area), "leave-notify-event", G_CALLBACK(on_crossing), nullptr);
 
-    // FIXME: Dragging a maximized window results in dragging the top left corner.
-    //        Using a default window size greater than the screen size seems to maximize without
-    //        this issue.
-    // gtk_window_maximize(GTK_WINDOW(window));
-
-    GdkDisplay* display = gdk_display_get_default();
-    GdkMonitor* monitor = gdk_display_get_monitor(display, 0);
-    GdkRectangle geometry;
-    gdk_monitor_get_geometry(monitor, &geometry);
-    gtk_window_set_default_size(GTK_WINDOW(window), geometry.width, geometry.height);
-    int scale_factor = gdk_monitor_get_scale_factor(monitor);
-    std::cerr << geometry.width << "x" << geometry.height << ", scale_factor: " << scale_factor
-              << '\n';
+    gtk_window_maximize(GTK_WINDOW(window));
+    // TODO: Set default window size without magic numbers.
+    gtk_window_set_default_size(GTK_WINDOW(window), 800, 400);
 
     gtk_widget_show_all(window);
 }

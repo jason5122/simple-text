@@ -140,7 +140,8 @@
 }
 
 - (void)mouseExited:(NSEvent*)event {
-    [NSCursor.arrowCursor set];
+    // TODO: Don't reset when cursor exits window while drag selecting text.
+    // [NSCursor.arrowCursor set];
 }
 
 - (void)scrollWheel:(NSEvent*)event {

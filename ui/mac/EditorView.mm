@@ -177,12 +177,18 @@
             mouse_x -= openGLLayer->editor_offset_x;
             mouse_y -= openGLLayer->editor_offset_y;
 
+            std::cerr << "openGLLayer->text_renderer.longest_line_x: "
+                      << openGLLayer->text_renderer.longest_line_x << '\n';
+
             CGFloat max_mouse_x =
                 (openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale) -
                 (openGLLayer.frame.size.width - mouse_x);
             CGFloat max_mouse_y =
                 (openGLLayer->buffer.lineCount() * openGLLayer->text_renderer.line_height) /
                 openGLLayer.contentsScale;
+
+            std::cerr << "max_mouse_x: " << max_mouse_x << '\n';
+            std::cerr << "max_mouse_y: " << max_mouse_y << '\n';
 
             openGLLayer->cursor_end_x = std::clamp(openGLLayer->cursor_end_x + dx, mouse_x,
                                                    max_mouse_x + openGLLayer->editor_offset_x);

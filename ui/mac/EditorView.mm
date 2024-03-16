@@ -41,6 +41,8 @@
 
 - (void)insertUTF8String:(const char*)str bytes:(size_t)bytes;
 
+- (void)removeBytes:(size_t)bytes;
+
 - (void)parseBuffer;
 
 - (void)editBuffer:(size_t)bytes;
@@ -232,6 +234,12 @@ const char* hex(char c) {
         if (str[0] == 0x0D) {
             std::cerr << "new line inserted\n";
             str = "\n";
+        }
+        if (str[0] == 0x7F) {
+            std::cerr << "backspace pressed\n";
+            [openGLLayer removeBytes:1];
+            [self.layer setNeedsDisplay];
+            return;
         }
 
         [openGLLayer insertUTF8String:str bytes:bytes];
@@ -522,6 +530,26 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
             text_renderer.cursor_end_col_offset += bytes;
             text_renderer.cursor_end_x += advance;
         }
+    }
+}
+
+- (void)removeBytes:(size_t)bytes {
+    {
+        PROFILE_BLOCK("buffer.remove()");
+        buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, bytes);
+    }
+
+    {
+        PROFILE_BLOCK("editBuffer + parseBuffer");
+        // [self editBuffer:bytes];
+        size_t start_byte =
+            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
+        size_t old_end_byte =
+            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
+        size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
+                              text_renderer.cursor_end_col_offset - bytes;
+        highlighter.edit(start_byte, old_end_byte, new_end_byte);
+        [self parseBuffer];
     }
 }
 

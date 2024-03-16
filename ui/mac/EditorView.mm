@@ -270,8 +270,7 @@ const char* hex(char c) {
     if (isDragging) {
         openGLLayer->editor_offset_x += event.deltaX;
         [openGLLayer setNeedsDisplay];
-    } else if (mouse_x >= openGLLayer->editor_offset_x &&
-               mouse_y >= openGLLayer->editor_offset_y) {
+    } else {
         mouse_x -= openGLLayer->editor_offset_x;
         mouse_y -= openGLLayer->editor_offset_y;
 

@@ -160,6 +160,12 @@
         CGFloat dx = -event.scrollingDeltaX;
         CGFloat dy = -event.scrollingDeltaY;
 
+        // TODO: Allow for easy pure vertical/horizontal scroll like Sublime Text.
+        //       Reject slight scrolling deviations in the orthogonal direction.
+        // if (abs(dx) <= 1) {
+        //     dx = 0;
+        // }
+
         // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
         if (!event.hasPreciseScrollingDeltas) {
             dx *= 16;
@@ -182,19 +188,28 @@
 
             std::cerr << "openGLLayer->text_renderer.longest_line_x: "
                       << openGLLayer->text_renderer.longest_line_x << '\n';
+            std::cerr << "temp1: "
+                      << openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale
+                      << '\n';
+            std::cerr << "temp2: " << openGLLayer.frame.size.width - mouse_x << '\n';
 
+            // CGFloat max_mouse_x =
+            //     (openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale) -
+            //     (openGLLayer.frame.size.width - mouse_x);
             CGFloat max_mouse_x =
-                (openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale) -
-                (openGLLayer.frame.size.width - mouse_x);
+                openGLLayer->text_renderer.longest_line_x / openGLLayer.contentsScale;
             CGFloat max_mouse_y =
                 (openGLLayer->buffer.lineCount() * openGLLayer->text_renderer.line_height) /
                 openGLLayer.contentsScale;
 
-            std::cerr << "max_mouse_x: " << max_mouse_x << '\n';
+            std::cerr << "max_mouse_x + offset: " << max_mouse_x + openGLLayer->editor_offset_x
+                      << '\n';
             std::cerr << "max_mouse_y: " << max_mouse_y << '\n';
 
-            openGLLayer->cursor_end_x = std::clamp(openGLLayer->cursor_end_x + dx, mouse_x,
-                                                   max_mouse_x + openGLLayer->editor_offset_x);
+            // openGLLayer->cursor_end_x = std::clamp(openGLLayer->cursor_end_x + dx, mouse_x,
+            //                                        max_mouse_x + openGLLayer->editor_offset_x);
+            openGLLayer->cursor_end_x =
+                std::clamp(openGLLayer->cursor_end_x + dx, mouse_x, mouse_x);
 
             // Unlike cursor_end_x, our mouse could be well below the cursor.
             // This is only possible if scrolling past the end is enabled.
@@ -237,6 +252,7 @@ const char* hex(char c) {
         }
         if (str[0] == 0x7F) {
             std::cerr << "backspace pressed\n";
+            // TODO: Don't hard code to 1 byte removal.
             [openGLLayer removeBytes:1];
             [self.layer setNeedsDisplay];
             return;

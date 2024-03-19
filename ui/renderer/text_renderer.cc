@@ -189,6 +189,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 AtlasGlyph glyph = glyph_cache[codepoint];
                 Rgb text_color = highlighter.getColor(byte_offset);
 
+                // TODO: Determine if we should always round `glyph.advance`.
                 float glyph_center_x = total_advance + glyph.advance / 2;
                 uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 

@@ -34,12 +34,10 @@ void main() {
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
     rect_color = in_color / 255.0;
 
-    vec2 _rect_center = final_position + rect_size / 2;
-
+    rect_center = final_position + rect_size / 2;
     // Set origin at top left instead of bottom left.
-    _rect_center.y = resolution.y - _rect_center.y;
+    rect_center.y = resolution.y - rect_center.y;
 
-    rect_center = _rect_center;
     size = rect_size;
     corner_radius = in_corner_radius;
     tab_corner_radius = in_tab_corner_radius;

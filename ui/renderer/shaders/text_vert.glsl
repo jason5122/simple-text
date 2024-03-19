@@ -5,12 +5,14 @@ layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
 layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
 layout(location = 4) in int is_atlas;
-layout(location = 5) in vec2 bg_size;
-layout(location = 6) in vec4 bg_color;
+layout(location = 5) in vec2 in_bg_size;
+layout(location = 6) in vec4 in_bg_color;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
-flat out vec4 background_color;
+flat out vec4 bg_color;
+flat out vec2 bg_center;
+flat out vec2 bg_size;
 
 uniform vec2 resolution;
 uniform float line_height;
@@ -34,10 +36,15 @@ void main() {
     cell_position += editor_offset;
 
     if (rendering_pass == 0) {
-        cell_position += bg_size * position;
+        cell_position += in_bg_size * position;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
-        background_color = bg_color / 255.0;
+        bg_color = in_bg_color / 255.0;
+
+        bg_center = cell_position + in_bg_size / 2;
+        // Set origin at top left instead of bottom left.
+        bg_center.y = resolution.y - bg_center.y;
+        bg_size = in_bg_size;
     }
 
     if (rendering_pass == 1) {

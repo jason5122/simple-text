@@ -478,6 +478,7 @@ const char* hex(char c) {
         [self editBuffer:bytes];
         [self parseBuffer];
 
+        // FIXME: This doesn't actually update the logical cursor position!
         if (strcmp(str, "\n") == 0) {
             text_renderer.cursor_start_line++;
             text_renderer.cursor_end_line++;
@@ -502,19 +503,21 @@ const char* hex(char c) {
         buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, bytes);
     }
 
-    // FIXME: Calculate Tree-sitter edits correctly.
-    {
-        PROFILE_BLOCK("editBuffer + parseBuffer");
-        // [self editBuffer:bytes];
-        size_t start_byte =
-            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-        size_t old_end_byte =
-            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-        size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
-                              text_renderer.cursor_end_col_offset - bytes;
-        highlighter.edit(start_byte, old_end_byte, new_end_byte);
-        [self parseBuffer];
-    }
+    // // FIXME: Calculate Tree-sitter edits correctly.
+    // {
+    //     PROFILE_BLOCK("editBuffer + parseBuffer");
+    //     // [self editBuffer:bytes];
+    //     size_t start_byte =
+    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //         text_renderer.cursor_end_col_offset;
+    //     size_t old_end_byte =
+    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //         text_renderer.cursor_end_col_offset;
+    //     size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //                           text_renderer.cursor_end_col_offset - bytes;
+    //     highlighter.edit(start_byte, old_end_byte, new_end_byte);
+    //     [self parseBuffer];
+    // }
 }
 
 - (void)backspaceBytes:(size_t)bytes {
@@ -542,19 +545,21 @@ const char* hex(char c) {
         }
     }
 
-    // FIXME: Calculate Tree-sitter edits correctly.
-    {
-        PROFILE_BLOCK("editBuffer + parseBuffer");
-        // [self editBuffer:bytes];
-        size_t start_byte =
-            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-        size_t old_end_byte =
-            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-        size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
-                              text_renderer.cursor_end_col_offset - bytes;
-        highlighter.edit(start_byte, old_end_byte, new_end_byte);
-        [self parseBuffer];
-    }
+    // // FIXME: Calculate Tree-sitter edits correctly.
+    // {
+    //     PROFILE_BLOCK("editBuffer + parseBuffer");
+    //     // [self editBuffer:bytes];
+    //     size_t start_byte =
+    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //         text_renderer.cursor_end_col_offset;
+    //     size_t old_end_byte =
+    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //         text_renderer.cursor_end_col_offset;
+    //     size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //                           text_renderer.cursor_end_col_offset - bytes;
+    //     highlighter.edit(start_byte, old_end_byte, new_end_byte);
+    //     [self parseBuffer];
+    // }
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

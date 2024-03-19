@@ -1,5 +1,5 @@
 #import "EditorView.h"
-#import "base/fredbuf_buffer.h"
+#import "base/buffer.h"
 #import "base/syntax_highlighter.h"
 #import "ui/renderer/image_renderer.h"
 #import "ui/renderer/rect_renderer.h"
@@ -315,36 +315,8 @@ const char* hex(char c) {
     return pixelFormat;
 }
 
-static const char* read(void* payload, uint32_t byte_index, TSPoint position,
-                        uint32_t* bytes_read) {
-    Buffer* buffer = (Buffer*)payload;
-    if (position.row >= buffer->lineCount()) {
-        *bytes_read = 0;
-        return "";
-    }
-
-    const size_t BUFSIZE = 256;
-    static char buf[BUFSIZE];
-
-    std::string line_str;
-    buffer->getLineContent(&line_str, position.row);
-
-    size_t len = line_str.size();
-    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
-
-    memcpy(buf, &line_str[0] + position.column, bytes_copied);
-    *bytes_read = (uint32_t)bytes_copied;
-    if (bytes_copied < BUFSIZE) {
-        // Add the final \n.
-        // If it didn't fit, read() will be called again on the same line with the column advanced.
-        buf[bytes_copied] = '\n';
-        (*bytes_read)++;
-    }
-    return buf;
-}
-
 - (void)parseBuffer {
-    TSInput input = {&buffer, read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);
 }
 
@@ -515,10 +487,11 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
 }
 
 - (void)removeBytes:(size_t)bytes {
-    {
-        PROFILE_BLOCK("buffer.remove()");
-        buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, bytes);
-    }
+    // {
+    //     PROFILE_BLOCK("buffer.remove()");
+    //     buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset,
+    //     bytes);
+    // }
 
     // {
     //     PROFILE_BLOCK("editBuffer + parseBuffer");

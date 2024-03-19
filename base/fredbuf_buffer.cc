@@ -1,4 +1,4 @@
-#include "fredbuf_buffer.h"
+#include "buffer.h"
 
 void Buffer::setContents(std::string txt) {
     TreeBuilder builder;

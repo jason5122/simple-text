@@ -1,4 +1,5 @@
-#include "base/fredbuf_buffer.h"
+#include "base/buffer.h"
+#include "base/syntax_highlighter.h"
 #include "util/file_util.h"
 #include "util/profile_util.h"
 #include "gtest/gtest.h"
@@ -59,34 +60,6 @@ TEST(TreeSitterStringTest, Json10Mb) {
 //     std::cerr << string << '\n';
 // }
 
-static const char* read(void* payload, uint32_t byte_index, TSPoint position,
-                        uint32_t* bytes_read) {
-    Buffer* buffer = (Buffer*)payload;
-    if (position.row >= buffer->lineCount()) {
-        *bytes_read = 0;
-        return "";
-    }
-
-    const size_t BUFSIZE = 256;
-    static char buf[BUFSIZE];
-
-    std::string line_str;
-    buffer->getLineContent(&line_str, position.row);
-
-    size_t len = line_str.size();
-    size_t bytes_copied = std::min(len - position.column, BUFSIZE);
-
-    memcpy(buf, &line_str[0] + position.column, bytes_copied);
-    *bytes_read = (uint32_t)bytes_copied;
-    if (bytes_copied < BUFSIZE) {
-        // Add the final \n.
-        // If it didn't fit, read() will be called again on the same line with the column advanced.
-        buf[bytes_copied] = '\n';
-        (*bytes_read)++;
-    }
-    return buf;
-}
-
 // TODO: Add actual tests to this test case.
 TEST(TreeSitterBufferTest, Json10Mb) {
     TSParser* parser = ts_parser_new();
@@ -94,7 +67,7 @@ TEST(TreeSitterBufferTest, Json10Mb) {
 
     Buffer buffer;
     buffer.setContents(ReadFile("test_files/10mb.json"));
-    TSInput input = {&buffer, read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
 
     TSTree* tree;
     {

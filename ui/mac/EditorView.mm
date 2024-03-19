@@ -487,11 +487,10 @@ const char* hex(char c) {
 }
 
 - (void)removeBytes:(size_t)bytes {
-    // {
-    //     PROFILE_BLOCK("buffer.remove()");
-    //     buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset,
-    //     bytes);
-    // }
+    {
+        PROFILE_BLOCK("buffer.remove()");
+        buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, bytes);
+    }
 
     // {
     //     PROFILE_BLOCK("editBuffer + parseBuffer");

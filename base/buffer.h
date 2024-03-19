@@ -1,6 +1,7 @@
 #pragma once
 
 #include "third_party/fredbuf/fredbuf.h"
+#include <cstdint>
 #include <string>
 #include <tree_sitter/api.h>
 using namespace PieceTree;

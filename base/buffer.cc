@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include <cstdint>
 
 void Buffer::setContents(std::string txt) {
     std::string line;
@@ -42,8 +41,16 @@ size_t Buffer::byteOfLine(size_t line_index) {
 
 void Buffer::insert(size_t line_index, size_t line_offset, std::string_view txt) {
     if (txt == "\n") {
-        data.insert(data.begin() + line_index + 1, "");
+        std::string before_lf = data[line_index].substr(0, line_offset);
+        std::string after_lf = data[line_index].substr(line_offset);
+
+        data.insert(data.begin() + line_index + 1, after_lf);
+        data[line_index] = before_lf;
     } else {
         data[line_index].insert(line_offset, txt);
     }
+}
+
+void Buffer::remove(size_t line_index, size_t line_offset, size_t bytes) {
+    data[line_index].erase(line_offset, bytes);
 }

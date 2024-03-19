@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer.h"
+#include "base/fredbuf_buffer.h"
 #include "base/rgb.h"
 #include "base/syntax_highlighter.h"
 #include "ui/renderer/atlas.h"

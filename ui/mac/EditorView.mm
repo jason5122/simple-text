@@ -1,5 +1,5 @@
 #import "EditorView.h"
-#import "base/buffer.h"
+#import "base/fredbuf_buffer.h"
 #import "base/syntax_highlighter.h"
 #import "ui/renderer/image_renderer.h"
 #import "ui/renderer/rect_renderer.h"
@@ -149,11 +149,9 @@
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         if (event.momentumPhase & NSEventPhaseBegan) {
-            std::cerr << "NSEventPhaseBegan\n";
             openGLLayer.asynchronous = true;
         }
         if (event.momentumPhase & NSEventPhaseEnded) {
-            std::cerr << "NSEventPhaseEnded\n";
             // openGLLayer.asynchronous = false;
         }
 
@@ -286,7 +284,7 @@ const char* hex(char c) {
 
 // TODO: Implement light/dark mode detection.
 - (void)viewDidChangeEffectiveAppearance {
-    std::cerr << "viewDidChangeEffectiveAppearance\n";
+    // std::cerr << "viewDidChangeEffectiveAppearance\n";
 }
 
 @end
@@ -522,18 +520,20 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
         buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, bytes);
     }
 
-    {
-        PROFILE_BLOCK("editBuffer + parseBuffer");
-        // [self editBuffer:bytes];
-        size_t start_byte =
-            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-        size_t old_end_byte =
-            buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-        size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
-                              text_renderer.cursor_end_col_offset - bytes;
-        highlighter.edit(start_byte, old_end_byte, new_end_byte);
-        [self parseBuffer];
-    }
+    // {
+    //     PROFILE_BLOCK("editBuffer + parseBuffer");
+    //     // [self editBuffer:bytes];
+    //     size_t start_byte =
+    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //         text_renderer.cursor_end_col_offset;
+    //     size_t old_end_byte =
+    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //         text_renderer.cursor_end_col_offset;
+    //     size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
+    //                           text_renderer.cursor_end_col_offset - bytes;
+    //     highlighter.edit(start_byte, old_end_byte, new_end_byte);
+    //     [self parseBuffer];
+    // }
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath
@@ -550,6 +550,8 @@ static const char* read(void* payload, uint32_t byte_index, TSPoint position,
     text_renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
                                      cursor_end_x * scale, cursor_end_y * scale);
     [self setNeedsDisplay];
+
+    buffer.debugInfo();
 }
 
 - (CGFloat)maxScrollX {

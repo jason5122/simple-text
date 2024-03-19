@@ -1,4 +1,4 @@
-#include "base/buffer.h"
+#include "base/fredbuf_buffer.h"
 #include "util/file_util.h"
 #include "util/profile_util.h"
 #include "gtest/gtest.h"

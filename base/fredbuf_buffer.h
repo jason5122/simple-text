@@ -1,7 +1,6 @@
 #pragma once
 
 #include "third_party/fredbuf/fredbuf.h"
-#include <fstream>
 #include <string>
 #include <vector>
 using namespace PieceTree;
@@ -18,6 +17,7 @@ public:
     size_t byteOfLine(size_t line_index);
     void insert(size_t line_index, size_t line_offset, std::string_view txt);
     void remove(size_t line_index, size_t line_offset, size_t bytes);
+    void debugInfo();
 
     BufferType::iterator begin() {
         return data.begin();

@@ -16,6 +16,7 @@ public:
     size_t byteOfLine(size_t line_index);
     void insert(size_t line_index, size_t line_offset, std::string_view txt);
     void remove(size_t line_index, size_t line_offset, size_t bytes);
+    void backspace(size_t line_index, size_t line_offset, size_t bytes);
     void debugInfo() {
         fprintf(stderr, "size = %zu, lineCount = %zu\n", size(), lineCount());
     }

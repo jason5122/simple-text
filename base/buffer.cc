@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include <iostream>
 
 void Buffer::setContents(std::string txt) {
     std::string line;
@@ -52,5 +53,23 @@ void Buffer::insert(size_t line_index, size_t line_offset, std::string_view txt)
 }
 
 void Buffer::remove(size_t line_index, size_t line_offset, size_t bytes) {
-    data[line_index].erase(line_offset, bytes);
+    if (line_offset == data[line_index].length()) {
+        if (line_index < lineCount() - 1) {
+            data[line_index] += data[line_index + 1];
+            data.erase(data.begin() + line_index + 1);
+        }
+    } else {
+        data[line_index].erase(line_offset, bytes);
+    }
+}
+
+void Buffer::backspace(size_t line_index, size_t line_offset, size_t bytes) {
+    if (line_offset == 0) {
+        if (line_index > 0) {
+            data[line_index - 1] += data[line_index];
+            data.erase(data.begin() + line_index);
+        }
+    } else {
+        data[line_index].erase(line_offset - bytes, bytes);
+    }
 }

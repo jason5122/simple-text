@@ -43,6 +43,8 @@
 
 - (void)removeBytes:(size_t)bytes;
 
+- (void)backspaceBytes:(size_t)bytes;
+
 - (void)parseBuffer;
 
 - (void)editBuffer:(size_t)bytes;
@@ -215,10 +217,18 @@ const char* hex(char c) {
             std::cerr << "new line inserted\n";
             str = "\n";
         }
+        // Delete key.
+        if (event.keyCode == 117) {
+            std::cerr << "delete pressed\n";
+            // TODO: Don't hard code to 1 byte removal.
+            [openGLLayer removeBytes:1];
+            [self.layer setNeedsDisplay];
+            return;
+        }
         if (str[0] == 0x7F) {
             std::cerr << "backspace pressed\n";
             // TODO: Don't hard code to 1 byte removal.
-            [openGLLayer removeBytes:1];
+            [openGLLayer backspaceBytes:1];
             [self.layer setNeedsDisplay];
             return;
         }
@@ -506,6 +516,32 @@ const char* hex(char c) {
     //     highlighter.edit(start_byte, old_end_byte, new_end_byte);
     //     [self parseBuffer];
     // }
+}
+
+- (void)backspaceBytes:(size_t)bytes {
+    {
+        PROFILE_BLOCK("buffer.backspace()");
+
+        buffer.backspace(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset,
+                         bytes);
+        if (text_renderer.cursor_end_col_offset != 0) {
+            // FIXME: Don't assume monospace font. Properly calculate advance or reimplement this.
+            float advance = text_renderer.getGlyphAdvance("m");
+            text_renderer.cursor_start_col_offset -= bytes;
+            text_renderer.cursor_start_x -= advance;
+            text_renderer.cursor_end_col_offset -= bytes;
+            text_renderer.cursor_end_x -= advance;
+        } else if (text_renderer.cursor_end_line > 0) {
+            // FIXME: Properly move cursor to previous line.
+            CGFloat scale = self.contentsScale;
+            cursor_start_x = 1000000;
+            cursor_end_x = 1000000;
+            cursor_start_y -= text_renderer.line_height / scale;
+            cursor_end_y -= text_renderer.line_height / scale;
+
+            [self setRendererCursorPositions];
+        }
+    }
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

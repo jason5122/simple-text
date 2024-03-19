@@ -1,13 +1,17 @@
 #include "buffer.h"
 #include <cstdint>
-#include <sstream>
 
 void Buffer::setContents(std::string txt) {
-    std::stringstream ss(txt);
     std::string line;
-    while (std::getline(ss, line, '\n')) {
-        data.push_back(line);
+    for (char ch : txt) {
+        if (ch == '\n') {
+            data.push_back(line);
+            line.clear();
+        } else {
+            line += ch;
+        }
     }
+    data.push_back("");
 }
 
 size_t Buffer::size() {
@@ -37,9 +41,9 @@ size_t Buffer::byteOfLine(size_t line_index) {
 }
 
 void Buffer::insert(size_t line_index, size_t line_offset, std::string_view txt) {
-    data[line_index].insert(line_offset, txt);
-}
-
-void Buffer::debugInfo() {
-    fprintf(stderr, "size = %zu, lineCount = %zu\n", size(), lineCount());
+    if (txt == "\n") {
+        data.insert(data.begin() + line_index + 1, "");
+    } else {
+        data[line_index].insert(line_offset, txt);
+    }
 }

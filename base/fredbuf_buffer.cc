@@ -42,7 +42,3 @@ void Buffer::remove(size_t line_index, size_t line_offset, size_t bytes) {
 
     debugInfo();
 }
-
-void Buffer::debugInfo() {
-    fprintf(stderr, "size = %zu, lineCount = %zu\n", size(), lineCount());
-}

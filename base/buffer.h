@@ -15,7 +15,9 @@ public:
     size_t byteOfLine(size_t line_index);
     void insert(size_t line_index, size_t line_offset, std::string_view txt);
     void remove(size_t line_index, size_t line_offset, size_t bytes);
-    void debugInfo();
+    void debugInfo() {
+        fprintf(stderr, "size = %zu, lineCount = %zu\n", size(), lineCount());
+    }
 
     static const char* read(void* payload, uint32_t byte_index, TSPoint position,
                             uint32_t* bytes_read) {

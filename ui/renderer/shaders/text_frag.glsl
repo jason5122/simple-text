@@ -55,7 +55,6 @@ void main() {
             }
             if (pixel_pos.x < top_left.x && pixel_pos.y > top_left.y) {
                 float d = distance(pixel_pos, top_left) - tab_corner_radius;
-                // alpha -= smoothstep(-0.5, 0.5, d);
 
                 if (-2 < d && d < 0) {
                     temp = vec3(1.0, 0.0, 0.0);
@@ -66,7 +65,6 @@ void main() {
             }
             if (pixel_pos.x > top_right.x && pixel_pos.y > top_right.y) {
                 float d = distance(pixel_pos, top_right) - tab_corner_radius;
-                // alpha -= smoothstep(-0.5, 0.5, d);
 
                 if (-2 < d && d < 0) {
                     temp = vec3(1.0, 0.0, 0.0);
@@ -76,23 +74,27 @@ void main() {
                 }
             }
 
-            // float border_thickness = 2;
-            // float border_left = bg_center.x - bg_size.x / 2 + border_thickness;
-            // float border_right = bg_center.x + bg_size.x / 2 - border_thickness;
-            // float border_top = bg_center.y + bg_size.y / 2 - border_thickness;
-            // float border_bottom = bg_center.y - bg_size.y / 2 + border_thickness;
-            // if (pixel_pos.x < border_left) {
-            //     temp = vec3(1.0, 0.0, 0.0);
-            // }
-            // if (pixel_pos.x > border_right) {
-            //     temp = vec3(1.0, 0.0, 0.0);
-            // }
-            // if (pixel_pos.y > border_top) {
-            //     temp = vec3(1.0, 0.0, 0.0);
-            // }
-            // if (pixel_pos.y < border_bottom) {
-            //     temp = vec3(1.0, 0.0, 0.0);
-            // }
+            float border_thickness = 2;
+            float border_left = bg_center.x - bg_size.x / 2 + border_thickness;
+            float border_right = bg_center.x + bg_size.x / 2 - border_thickness;
+            float border_top = bg_center.y + bg_size.y / 2 - border_thickness;
+            float border_bottom = bg_center.y - bg_size.y / 2 + border_thickness;
+            if (pixel_pos.x < border_left &&
+                (bottom_right.y < pixel_pos.y && pixel_pos.y < top_right.y)) {
+                temp = vec3(1.0, 0.0, 0.0);
+            }
+            if (pixel_pos.x > border_right &&
+                (bottom_right.y < pixel_pos.y && pixel_pos.y < top_right.y)) {
+                temp = vec3(1.0, 0.0, 0.0);
+            }
+            if (pixel_pos.y > border_top &&
+                (top_left.x < pixel_pos.x && pixel_pos.x < top_right.x)) {
+                temp = vec3(1.0, 0.0, 0.0);
+            }
+            if (pixel_pos.y < border_bottom &&
+                (bottom_left.x < pixel_pos.x && pixel_pos.x < bottom_right.x)) {
+                temp = vec3(1.0, 0.0, 0.0);
+            }
         }
 
         alpha_mask = vec4(1.0);

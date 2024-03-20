@@ -7,12 +7,14 @@ layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed alo
 layout(location = 4) in int is_atlas;
 layout(location = 5) in vec2 in_bg_size;
 layout(location = 6) in vec4 in_bg_color;
+layout(location = 7) in vec3 in_bg_border_color;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
-flat out vec4 bg_color;
 flat out vec2 bg_center;
 flat out vec2 bg_size;
+flat out vec4 bg_color;
+flat out vec3 bg_border_color;
 
 uniform vec2 resolution;
 uniform float line_height;
@@ -39,12 +41,13 @@ void main() {
         cell_position += in_bg_size * position;
 
         gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
-        bg_color = in_bg_color / 255.0;
 
         bg_center = cell_position + in_bg_size / 2;
         // Set origin at top left instead of bottom left.
         bg_center.y = resolution.y - bg_center.y;
         bg_size = in_bg_size;
+        bg_color = in_bg_color / 255.0;
+        bg_border_color = in_bg_border_color / 255.0;
     }
 
     if (rendering_pass == 1) {

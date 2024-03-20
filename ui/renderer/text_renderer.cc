@@ -20,6 +20,7 @@ struct InstanceData {
     uint8_t is_atlas = 0;
     Vec2 bg_size;
     Rgba bg_color;
+    Rgb bg_border_color;
 };
 }
 
@@ -95,6 +96,11 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, bg_color));
+    glVertexAttribDivisor(index++, 1);
+
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 3, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, bg_border_color));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -200,7 +206,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                         .uv = glyph.uv,
                         .color = Rgba::fromRgb(text_color, glyph.colored),
                         .bg_size = Vec2{round(glyph.advance), line_height},
-                        .bg_color = Rgba::fromRgb(colors::yellow, bg_a),
+                        .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
+                        .bg_border_color = colors::selection_border,
                     });
                 }
 

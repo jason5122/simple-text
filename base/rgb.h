@@ -19,4 +19,7 @@ constexpr Rgb red2{249, 123, 88};
 constexpr Rgb red3{172, 122, 104};
 constexpr Rgb grey2{153, 153, 153};
 constexpr Rgb purple{198, 149, 198};
+constexpr Rgb selection_focused{227, 230, 232};
+constexpr Rgb selection_unfocused{235, 238, 239};
+constexpr Rgb selection_border{212, 217, 221};
 }

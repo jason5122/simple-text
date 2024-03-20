@@ -7,14 +7,14 @@ layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed alo
 layout(location = 4) in int is_atlas;
 layout(location = 5) in vec2 in_bg_size;
 layout(location = 6) in vec4 in_bg_color;
-layout(location = 7) in vec3 in_bg_border_color;
+layout(location = 7) in vec4 in_bg_border_color;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
 flat out vec2 bg_center;
 flat out vec2 bg_size;
 flat out vec4 bg_color;
-flat out vec3 bg_border_color;
+flat out vec4 bg_border_color;
 
 uniform vec2 resolution;
 uniform float line_height;
@@ -47,7 +47,7 @@ void main() {
         bg_center.y = resolution.y - bg_center.y;
         bg_size = in_bg_size;
         bg_color = in_bg_color / 255.0;
-        bg_border_color = in_bg_border_color / 255.0;
+        bg_border_color = vec4(in_bg_border_color.rgb / 255.0, in_bg_border_color.a);
     }
 
     if (rendering_pass == 1) {

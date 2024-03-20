@@ -576,8 +576,6 @@ const char* hex(char c) {
     text_renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
                                      cursor_end_x * scale, cursor_end_y * scale);
     [self setNeedsDisplay];
-
-    buffer.debugInfo();
 }
 
 - (CGFloat)maxScrollX {

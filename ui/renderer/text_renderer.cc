@@ -11,6 +11,17 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
+// TODO: Rewrite this in a more idiomatic C++ way.
+// Border flags.
+#define LEFT 1
+#define RIGHT 2
+#define BOTTOM 4
+#define TOP 8
+#define BOTTOM_LEFT 16
+#define BOTTOM_RIGHT 32
+#define TOP_LEFT 64
+#define TOP_RIGHT 128
+
 namespace {
 struct InstanceData {
     Vec2 coords;
@@ -20,7 +31,7 @@ struct InstanceData {
     uint8_t is_atlas = 0;
     Vec2 bg_size;
     Rgba bg_color;
-    Rgb bg_border_color;
+    Rgba bg_border_color;
 };
 }
 
@@ -99,7 +110,7 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 3, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, bg_border_color));
     glVertexAttribDivisor(index++, 1);
 
@@ -199,6 +210,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 float glyph_center_x = total_advance + glyph.advance / 2;
                 uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
+                uint8_t border_flags = BOTTOM | TOP;
+
                 if (total_advance + glyph.advance > scroll_x) {
                     instances.push_back(InstanceData{
                         .coords = Vec2{total_advance, line_index * line_height},
@@ -207,7 +220,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                         .color = Rgba::fromRgb(text_color, glyph.colored),
                         .bg_size = Vec2{round(glyph.advance), line_height},
                         .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
-                        .bg_border_color = colors::selection_border,
+                        .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
                     });
                 }
 

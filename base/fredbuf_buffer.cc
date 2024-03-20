@@ -26,8 +26,6 @@ size_t Buffer::byteOfLine(size_t line_index) {
 void Buffer::insert(size_t line_index, size_t line_offset, std::string_view txt) {
     CharOffset line_start = piece_tree.get_line_range(Line{line_index + 1}).first;
     piece_tree.insert(line_start + Length{line_offset}, txt);
-
-    debugInfo();
 }
 
 void Buffer::remove(size_t line_index, size_t line_offset, size_t bytes) {
@@ -39,6 +37,4 @@ void Buffer::remove(size_t line_index, size_t line_offset, size_t bytes) {
     if (range.first < range.last) {
         piece_tree.remove(range.first + Length{line_offset}, Length{bytes});
     }
-
-    debugInfo();
 }

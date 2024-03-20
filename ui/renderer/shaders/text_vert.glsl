@@ -3,10 +3,12 @@
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
-layout(location = 3) in vec4 in_text_color;  // The `colored` flag is packed along with text color.
+// The `colored` flag is packed along with text color.
+layout(location = 3) in vec4 in_text_color;
 layout(location = 4) in int is_atlas;
 layout(location = 5) in vec2 in_bg_size;
 layout(location = 6) in vec4 in_bg_color;
+// The `border_flags` flag is packed along with background border color.
 layout(location = 7) in vec4 in_bg_border_color;
 
 out vec2 tex_coords;

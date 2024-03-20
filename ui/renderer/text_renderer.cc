@@ -5,6 +5,7 @@
 #include "util/opengl_error_util.h"
 #include "util/profile_util.h"
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 
 extern "C" {
@@ -210,8 +211,9 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 float glyph_center_x = total_advance + glyph.advance / 2;
                 uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
-                uint8_t border_flags = BOTTOM | TOP | RIGHT | TOP_RIGHT | TOP_LEFT | LEFT |
-                                       BOTTOM_RIGHT | BOTTOM_LEFT;
+                uint8_t border_flags = this->getBorderFlags(line_index, glyph_center_x);
+                border_flags |= BOTTOM_LEFT | BOTTOM_RIGHT | TOP_LEFT | TOP_RIGHT;
+                // border_flags |= LEFT | RIGHT | BOTTOM | TOP;
 
                 if (total_advance + glyph.advance > scroll_x) {
                     instances.push_back(InstanceData{
@@ -303,6 +305,46 @@ bool TextRenderer::isGlyphInSelection(int row, float glyph_center_x) {
         }
     }
     return false;
+}
+
+uint8_t TextRenderer::getBorderFlags(int row, float glyph_center_x) {
+    uint8_t border_flags = 0;
+
+    int start_row, end_row;
+    float start_x, end_x;
+
+    if (cursor_start_line == cursor_end_line) {
+        if (cursor_start_x <= cursor_end_x) {
+            start_row = cursor_start_line;
+            end_row = cursor_end_line;
+            start_x = cursor_start_x;
+            end_x = cursor_end_x;
+        } else {
+            start_row = cursor_end_line;
+            end_row = cursor_start_line;
+            start_x = cursor_end_x;
+            end_x = cursor_start_x;
+        }
+    } else if (cursor_start_line < cursor_end_line) {
+        start_row = cursor_start_line;
+        end_row = cursor_end_line;
+        start_x = cursor_start_x;
+        end_x = cursor_end_x;
+    } else {
+        start_row = cursor_end_line;
+        end_row = cursor_start_line;
+        start_x = cursor_end_x;
+        end_x = cursor_start_x;
+    }
+
+    if (row == start_row) {
+        border_flags |= TOP;
+    }
+    if (row == end_row) {
+        border_flags |= BOTTOM;
+    }
+
+    return border_flags;
 }
 
 void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,

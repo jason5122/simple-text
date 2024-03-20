@@ -357,7 +357,7 @@ const char* hex(char c) {
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
         int font_size = 16 * self.contentsScale;
-        std::string font_name = "Source Code Pro";
+        std::string font_name = "Arial";
         // fs::path file_path = ResourcePath() / "sample_files/text_renderer.cc";
         fs::path file_path = ResourcePath() / "sample_files/example.json";
 

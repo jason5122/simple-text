@@ -29,6 +29,7 @@ void main() {
 
         vec3 computed_color = bg_color.rgb;
         float computed_alpha = 1.0;
+        // TODO: Turn these into uniforms.
         float tab_corner_radius = 6;
         float border_thickness = 2;
 

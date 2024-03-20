@@ -210,7 +210,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 float glyph_center_x = total_advance + glyph.advance / 2;
                 uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
 
-                uint8_t border_flags = BOTTOM | TOP | BOTTOM_LEFT | TOP_LEFT | RIGHT;
+                uint8_t border_flags = BOTTOM | TOP | RIGHT | TOP_RIGHT;
 
                 if (total_advance + glyph.advance > scroll_x) {
                     instances.push_back(InstanceData{

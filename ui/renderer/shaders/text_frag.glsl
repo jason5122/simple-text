@@ -99,28 +99,16 @@ void main() {
         float border_top = top_left.y - border_thickness;
         float border_bottom = bottom_left.y + border_thickness;
         if (has_left_border && pixel_pos.x < border_left) {
-            if (!(has_bottom_left_border && pixel_pos.y < curve_bottom_left.y) &&
-                !(has_top_left_border && pixel_pos.y > curve_top_left.y)) {
-                computed_color = bg_border_color.rgb;
-            }
+            computed_color = bg_border_color.rgb;
         }
         if (has_right_border && pixel_pos.x > border_right) {
-            if (!(has_bottom_right_border && pixel_pos.y < curve_bottom_right.y) &&
-                !(has_top_right_border && pixel_pos.y > curve_top_right.y)) {
-                computed_color = bg_border_color.rgb;
-            }
+            computed_color = bg_border_color.rgb;
         }
         if (has_bottom_border && pixel_pos.y < border_bottom) {
-            if (!(has_bottom_left_border && pixel_pos.x < curve_bottom_left.x) &&
-                !(has_bottom_right_border && pixel_pos.x > curve_bottom_right.x)) {
-                computed_color = bg_border_color.rgb;
-            }
+            computed_color = bg_border_color.rgb;
         }
         if (has_top_border && pixel_pos.y > border_top) {
-            if (!(has_top_left_border && pixel_pos.x < curve_top_left.x) &&
-                !(has_top_right_border && pixel_pos.x > curve_top_right.x)) {
-                computed_color = bg_border_color.rgb;
-            }
+            computed_color = bg_border_color.rgb;
         }
 
         alpha_mask = vec4(1.0);

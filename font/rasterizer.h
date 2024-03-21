@@ -5,11 +5,12 @@
 
 class FontRasterizer {
 public:
+    int id;
     float line_height;
     float descent;
 
     FontRasterizer();
-    bool setup(std::string main_font_name, int font_size);
+    bool setup(int id, std::string main_font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     ~FontRasterizer();
 

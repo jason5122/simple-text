@@ -1,4 +1,5 @@
 #include "base/rgb.h"
+#include "font/rasterizer.h"
 #include "text_renderer.h"
 #include "ui/renderer/opengl_types.h"
 #include "util/file_util.h"
@@ -43,9 +44,9 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
 
     atlas.setup();
 
-    rasterizer.setup(main_font_name, font_size);
+    old_rasterizer.setup(0, main_font_name, font_size);
 
-    this->line_height = rasterizer.line_height;
+    this->line_height = old_rasterizer.line_height;
 
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"), line_height);
@@ -119,11 +120,11 @@ float TextRenderer::getGlyphAdvance(std::string utf8_str) {
     uint_least32_t codepoint;
     grapheme_decode_utf8(&utf8_str[0], SIZE_MAX, &codepoint);
 
-    if (!glyph_cache.count(codepoint)) {
-        this->loadGlyph(utf8_str, codepoint);
+    if (!glyph_cache[0].count(codepoint)) {
+        this->loadGlyph(utf8_str, codepoint, old_rasterizer);
     }
 
-    AtlasGlyph glyph = glyph_cache[codepoint];
+    AtlasGlyph glyph = glyph_cache[0][codepoint];
     return std::round(glyph.advance);
 }
 
@@ -137,12 +138,12 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
         uint_least32_t codepoint;
         grapheme_decode_utf8(&line_str[0] + offset, SIZE_MAX, &codepoint);
 
-        if (!glyph_cache.count(codepoint)) {
+        if (!glyph_cache[0].count(codepoint)) {
             std::string utf8_str = line_str.substr(offset, ret);
-            this->loadGlyph(utf8_str, codepoint);
+            this->loadGlyph(utf8_str, codepoint, old_rasterizer);
         }
 
-        AtlasGlyph glyph = glyph_cache[codepoint];
+        AtlasGlyph glyph = glyph_cache[0][codepoint];
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -193,12 +194,12 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 uint_least32_t codepoint;
                 grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
-                if (!glyph_cache.count(codepoint)) {
+                if (!glyph_cache[0].count(codepoint)) {
                     std::string utf8_str = line_str.substr(offset, ret);
-                    this->loadGlyph(utf8_str, codepoint);
+                    this->loadGlyph(utf8_str, codepoint, old_rasterizer);
                 }
 
-                AtlasGlyph glyph = glyph_cache[codepoint];
+                AtlasGlyph glyph = glyph_cache[0][codepoint];
                 Rgb text_color = highlighter.getColor(byte_offset);
 
                 // TODO: Determine if we should always round `glyph.advance`.
@@ -254,7 +255,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     glCheckError();
 }
 
-void TextRenderer::renderUiText() {
+void TextRenderer::renderUiText(FontRasterizer& font_rasterizer) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 0, 0);
@@ -273,12 +274,12 @@ void TextRenderer::renderUiText() {
         uint_least32_t codepoint;
         grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
-        if (!glyph_cache.count(codepoint)) {
+        if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
             std::string utf8_str = line_str.substr(offset, ret);
-            this->loadGlyph(utf8_str, codepoint);
+            this->loadGlyph(utf8_str, codepoint, font_rasterizer);
         }
 
-        AtlasGlyph glyph = glyph_cache[codepoint];
+        AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
 
         instances.push_back(InstanceData{
             .coords = Vec2{total_advance, height - line_height},
@@ -401,8 +402,9 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
     cursor_end_x = x;
 }
 
-void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint) {
-    RasterizedGlyph glyph = rasterizer.rasterizeUTF8(utf8_str.c_str());
+void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
+                             FontRasterizer& font_rasterizer) {
+    RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str.c_str());
     Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
 
     AtlasGlyph atlas_glyph{
@@ -412,7 +414,7 @@ void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint) {
         .advance = glyph.advance,
         .colored = glyph.colored,
     };
-    glyph_cache.insert({codepoint, atlas_glyph});
+    glyph_cache[font_rasterizer.id].insert({codepoint, atlas_glyph});
 }
 
 void TextRenderer::resize(float new_width, float new_height) {

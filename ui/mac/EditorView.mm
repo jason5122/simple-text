@@ -1,6 +1,7 @@
 #import "EditorView.h"
 #import "base/buffer.h"
 #import "base/syntax_highlighter.h"
+#import "font/rasterizer.h"
 #import "ui/renderer/image_renderer.h"
 #import "ui/renderer/rect_renderer.h"
 #import "ui/renderer/text_renderer.h"
@@ -35,6 +36,8 @@
     RectRenderer rect_renderer;
     ImageRenderer image_renderer;
     SyntaxHighlighter highlighter;
+    FontRasterizer main_font_rasterizer;
+    FontRasterizer ui_font_rasterizer;
 
     bool isSideBarExpanding;
 }
@@ -364,6 +367,8 @@ const char* hex(char c) {
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
 
+        main_font_rasterizer.setup(0, "Source Code Pro", 16 * self.contentsScale);
+        ui_font_rasterizer.setup(1, "Arial", 11 * self.contentsScale);
         text_renderer.setup(scaled_width, scaled_height, font_name, font_size);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
@@ -460,7 +465,7 @@ const char* hex(char c) {
                             scaled_editor_offset_y);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        text_renderer.renderUiText();
+        text_renderer.renderUiText(ui_font_rasterizer);
 
         // Calls glFlush() by default.
         [super drawInCGLContext:glContext

@@ -12,7 +12,9 @@ public:
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
-bool FontRasterizer::setup(std::string main_font_name, int font_size) {
+bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
+    this->id = id;
+
     CFStringRef mainFontName =
         CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
 

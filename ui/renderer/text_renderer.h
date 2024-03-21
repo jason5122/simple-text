@@ -36,7 +36,7 @@ public:
     void setup(float width, float height, std::string main_font_name, int font_size);
     void renderText(float scroll_x, float scroll_y, Buffer& buffer, SyntaxHighlighter& highlighter,
                     float editor_offset_x, float editor_offset_y);
-    void renderUiText();
+    void renderUiText(FontRasterizer& font_rasterizer);
     void resize(float new_width, float new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
                             float drag_y);
@@ -50,7 +50,7 @@ private:
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 
-    FontRasterizer rasterizer;
+    FontRasterizer old_rasterizer;
 
     Atlas atlas;
     struct AtlasGlyph {
@@ -60,9 +60,10 @@ private:
         bool colored;
     };
 
-    std::unordered_map<uint_least32_t, AtlasGlyph> glyph_cache;
+    std::unordered_map<int, std::unordered_map<uint_least32_t, AtlasGlyph>> glyph_cache;
 
-    void loadGlyph(std::string utf8_str, uint_least32_t codepoint);
+    void loadGlyph(std::string utf8_str, uint_least32_t codepoint,
+                   FontRasterizer& font_rasterizer);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);
     bool isGlyphInSelection(int row, float glyph_center_x);
     uint8_t getBorderFlags(float glyph_start_x, float glyph_end_x);

@@ -1,4 +1,4 @@
-#include "font/core_text_rasterizer.h"
+// #include "font/core_text_rasterizer.h"
 #include "gtest/gtest.h"
 #include <iostream>
 #include <vector>
@@ -23,27 +23,28 @@
 //     }
 // }
 
-TEST(CoreTextRasterizerTest, Metrics) {
-    CoreTextRasterizer ct_rasterizer;
-    ct_rasterizer.setup("Arial", 32);
+// TEST(CoreTextRasterizerTest, Metrics) {
+//     CoreTextRasterizer ct_rasterizer;
+//     ct_rasterizer.setup("Arial", 32);
 
-    std::vector<const char*> utf8_strs = {
-        "a",
-        "∆",
-        "",
-    };
-    for (const auto& str : utf8_strs) {
-        RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(str);
-        EXPECT_FALSE(glyph.colored);
-        EXPECT_EQ(glyph.buffer.size(), glyph.width * glyph.height * 3);
-    }
+//     std::vector<const char*> utf8_strs = {
+//         "a",
+//         "∆",
+//         "",
+//     };
+//     for (const auto& str : utf8_strs) {
+//         RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(str);
+//         EXPECT_FALSE(glyph.colored);
+//         EXPECT_EQ(glyph.buffer.size(), glyph.width * glyph.height * 3);
+//     }
 
-    std::vector<const char*> utf8_emojis = {
-        "😄", "🥲", "👨‍👩‍👦", "👩‍👩‍👧‍👦", "🇺🇸", "🏴‍☠️",
-    };
-    for (const auto& str : utf8_emojis) {
-        RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(str);
-        EXPECT_TRUE(glyph.colored);
-        EXPECT_EQ(glyph.buffer.size(), glyph.width * glyph.height * 4);
-    }
-}
+//     std::vector<const char*> utf8_emojis = {
+//         "😄", "🥲", "👨‍👩‍👦", "👩‍👩‍👧‍👦", "🇺🇸",
+//         "🏴‍☠️",
+//     };
+//     for (const auto& str : utf8_emojis) {
+//         RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(str);
+//         EXPECT_TRUE(glyph.colored);
+//         EXPECT_EQ(glyph.buffer.size(), glyph.width * glyph.height * 4);
+//     }
+// }

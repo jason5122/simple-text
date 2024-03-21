@@ -161,7 +161,7 @@ static void realize(GtkWidget* widget) {
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
 
     int font_size = 16 * scale_factor;
-    std::string font_name = "Source Code Pro";
+    std::string font_name = "SourceCodePro-Regular.ttf";
 
     text_renderer = new TextRenderer();
     rect_renderer = new RectRenderer();

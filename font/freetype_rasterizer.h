@@ -1,22 +1,23 @@
 #pragma once
 
 #include "font/rasterized_glyph.h"
-#include <freetype/freetype.h>
-#include <hb.h>
-#include <vector>
+#include <string>
 
 class FreeTypeRasterizer {
 public:
     float line_height;
     float descent;
 
-    FreeTypeRasterizer() = default;
-    bool setup(const char* font_path, int font_size);
+    FreeTypeRasterizer();
+    bool setup(std::string main_font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     ~FreeTypeRasterizer();
 
 private:
-    std::vector<std::pair<FT_Face, hb_font_t*>> font_fallback_list;
-
-    std::pair<hb_codepoint_t, size_t> getGlyphIndex(const char* utf8_str);
+    // https://herbsutter.com/gotw/_100/
+    class impl;
+    impl* pimpl;
+    // TODO: Learn and use std::unique_ptr instead.
+    // https://stackoverflow.com/questions/9954518/stdunique-ptr-with-an-incomplete-type-wont-compile
+    // std::unique_ptr<impl> pimpl;
 };

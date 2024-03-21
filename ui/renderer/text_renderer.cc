@@ -214,14 +214,9 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 uint8_t border_flags =
                     this->getBorderFlags(total_advance, total_advance + std::round(glyph.advance));
 
-                Vec2 coords{total_advance, line_index * line_height};
-                // TODO: Overload Vec2's minus operator to subtract both values at once.
-                coords.x -= scroll_x;
-                coords.y -= scroll_y;
-
                 if (total_advance + glyph.advance > scroll_x) {
                     instances.push_back(InstanceData{
-                        .coords = coords,
+                        .coords = Vec2{total_advance, line_index * line_height},
                         .glyph = glyph.glyph,
                         .uv = glyph.uv,
                         .color = Rgba::fromRgb(text_color, glyph.colored),
@@ -247,10 +242,38 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     //     .is_atlas = true,
     // });
 
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
+
+    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+
+    // Unbind.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glCheckError();
+}
+
+void TextRenderer::renderUiText() {
+    glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
+    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 0, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(vao);
+
+    std::vector<InstanceData> instances;
+
     std::string line_str = "Line 1, Column 1";
     size_t ret = 1;
     float total_advance = 0;
-    for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
+    for (size_t offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 
         uint_least32_t codepoint;
@@ -262,17 +285,12 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         }
 
         AtlasGlyph glyph = glyph_cache[codepoint];
-        Rgb text_color = highlighter.getColor(byte_offset);
-
-        Vec2 coords{total_advance, 0};
-        // coords.x -= editor_offset_x;
-        // coords.y -= editor_offset_y;
 
         instances.push_back(InstanceData{
-            .coords = coords,
+            .coords = Vec2{total_advance, 0},
             .glyph = glyph.glyph,
             .uv = glyph.uv,
-            .color = Rgba::fromRgb(text_color, glyph.colored),
+            .color = Rgba::fromRgb(colors::black, glyph.colored),
         });
 
         total_advance += std::round(glyph.advance);
@@ -283,8 +301,6 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 

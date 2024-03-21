@@ -1,5 +1,5 @@
 #include "build/buildflag.h"
-#include "freetype_rasterizer.h"
+#include "rasterizer.h"
 #include "util/file_util.h"
 #include <chrono>
 #include <cmath>
@@ -10,16 +10,16 @@
 
 #include <ft2build.h>
 
-class FreeTypeRasterizer::impl {
+class FontRasterizer::impl {
 public:
     std::vector<std::pair<FT_Face, hb_font_t*>> font_fallback_list;
 
     std::pair<hb_codepoint_t, size_t> getGlyphIndex(const char* utf8_str);
 };
 
-FreeTypeRasterizer::FreeTypeRasterizer() : pimpl{new impl{}} {}
+FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
-bool FreeTypeRasterizer::setup(std::string main_font_name, int font_size) {
+bool FontRasterizer::setup(std::string main_font_name, int font_size) {
     fs::path main_font_path = ResourcePath() / "fonts" / main_font_name;
 
     std::vector<const char*> font_paths;
@@ -75,7 +75,7 @@ bool FreeTypeRasterizer::setup(std::string main_font_name, int font_size) {
     return true;
 }
 
-std::pair<hb_codepoint_t, size_t> FreeTypeRasterizer::impl::getGlyphIndex(const char* utf8_str) {
+std::pair<hb_codepoint_t, size_t> FontRasterizer::impl::getGlyphIndex(const char* utf8_str) {
     for (size_t font_index = 0; font_index < font_fallback_list.size(); font_index++) {
         hb_font_t* hb_font = font_fallback_list[font_index].second;
 
@@ -110,7 +110,7 @@ std::pair<hb_codepoint_t, size_t> FreeTypeRasterizer::impl::getGlyphIndex(const 
     return {0, 0};
 }
 
-RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
     auto [glyph_index, font_index] = pimpl->getGlyphIndex(utf8_str);
     FT_Face ft_face = pimpl->font_fallback_list[font_index].first;
 
@@ -179,7 +179,7 @@ RasterizedGlyph FreeTypeRasterizer::rasterizeUTF8(const char* utf8_str) {
     };
 }
 
-FreeTypeRasterizer::~FreeTypeRasterizer() {
+FontRasterizer::~FontRasterizer() {
     for (const auto& [ft_font, hb_font] : pimpl->font_fallback_list) {
         hb_font_destroy(hb_font);
     }

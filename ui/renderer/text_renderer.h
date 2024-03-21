@@ -3,6 +3,7 @@
 #include "base/buffer.h"
 #include "base/rgb.h"
 #include "base/syntax_highlighter.h"
+#include "font/rasterizer.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/shader.h"
 #include <string>
@@ -11,10 +12,8 @@
 
 #include "build/buildflag.h"
 #if IS_MAC
-#include "font/core_text_rasterizer.h"
 #include <OpenGL/gl3.h>
 #else
-#include "font/freetype_rasterizer.h"
 #include <epoxy/gl.h>
 #endif
 
@@ -51,11 +50,7 @@ private:
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 
-#if IS_MAC
-    CoreTextRasterizer ct_rasterizer;
-#else
-    FreeTypeRasterizer ct_rasterizer;
-#endif
+    FontRasterizer rasterizer;
 
     Atlas atlas;
     struct AtlasGlyph {

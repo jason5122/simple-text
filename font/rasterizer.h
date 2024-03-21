@@ -3,15 +3,15 @@
 #include "font/rasterized_glyph.h"
 #include <string>
 
-class FreeTypeRasterizer {
+class FontRasterizer {
 public:
     float line_height;
     float descent;
 
-    FreeTypeRasterizer();
+    FontRasterizer();
     bool setup(std::string main_font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
-    ~FreeTypeRasterizer();
+    ~FontRasterizer();
 
 private:
     // https://herbsutter.com/gotw/_100/

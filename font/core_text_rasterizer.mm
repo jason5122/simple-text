@@ -1,5 +1,5 @@
-#import "core_text_rasterizer.h"
 #import "font/util/CTFontUtil.h"
+#import "rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <iostream>
 

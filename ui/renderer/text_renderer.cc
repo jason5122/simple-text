@@ -43,9 +43,9 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
 
     atlas.setup();
 
-    ct_rasterizer.setup(main_font_name, font_size);
+    rasterizer.setup(main_font_name, font_size);
 
-    this->line_height = ct_rasterizer.line_height;
+    this->line_height = rasterizer.line_height;
 
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"), line_height);
@@ -402,7 +402,7 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint) {
-    RasterizedGlyph glyph = ct_rasterizer.rasterizeUTF8(utf8_str.c_str());
+    RasterizedGlyph glyph = rasterizer.rasterizeUTF8(utf8_str.c_str());
     Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
 
     AtlasGlyph atlas_glyph{

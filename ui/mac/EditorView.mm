@@ -359,8 +359,6 @@ const char* hex(char c) {
         // }
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        int font_size = 16 * self.contentsScale;
-        std::string font_name = "Source Code Pro";
         // fs::path file_path = ResourcePath() / "sample_files/text_renderer.cc";
         fs::path file_path = ResourcePath() / "sample_files/example.json";
 
@@ -431,6 +429,7 @@ const char* hex(char c) {
         float scaled_height = self.frame.size.height * self.contentsScale;
         float scaled_editor_offset_x = editor_offset_x * self.contentsScale;
         float scaled_editor_offset_y = editor_offset_y * self.contentsScale;
+        float scaled_status_bar_height = ui_font_rasterizer.line_height;  // Already scaled.
 
         // if (editor_offset_x > width / 4) {
         //     isSideBarExpanding = false;
@@ -451,14 +450,15 @@ const char* hex(char c) {
         text_renderer.resize(scaled_width, scaled_height);
         text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
                                  scaled_editor_offset_x, scaled_editor_offset_y,
-                                 main_font_rasterizer);
+                                 main_font_rasterizer, scaled_status_bar_height);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         rect_renderer.resize(scaled_width, scaled_height);
         rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
                            text_renderer.cursor_end_line, main_font_rasterizer.line_height,
                            buffer.lineCount(), text_renderer.longest_line_x,
-                           scaled_editor_offset_x, scaled_editor_offset_y);
+                           scaled_editor_offset_x, scaled_editor_offset_y,
+                           scaled_status_bar_height);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         image_renderer.resize(scaled_width, scaled_height);
@@ -466,7 +466,7 @@ const char* hex(char c) {
                             scaled_editor_offset_y);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        text_renderer.renderUiText(ui_font_rasterizer);
+        text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
 
         // Calls glFlush() by default.
         [super drawInCGLContext:glContext

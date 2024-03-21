@@ -72,7 +72,7 @@ void RectRenderer::setup(float width, float height) {
 
 void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
                         float line_height, size_t line_count, float longest_x,
-                        float editor_offset_x, float editor_offset_y) {
+                        float editor_offset_x, float editor_offset_y, float status_bar_height) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
@@ -95,7 +95,6 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
 
-    float status_bar_height = 40;
     float editor_width = width - editor_offset_x;
     float editor_height = height - editor_offset_y - status_bar_height;
 

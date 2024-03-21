@@ -157,7 +157,8 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
 
 void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                               SyntaxHighlighter& highlighter, float editor_offset_x,
-                              float editor_offset_y, FontRasterizer& font_rasterizer) {
+                              float editor_offset_y, FontRasterizer& font_rasterizer,
+                              float status_bar_height) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
@@ -167,7 +168,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     glBindVertexArray(vao);
 
     size_t start_line = scroll_y / font_rasterizer.line_height;
-    size_t visible_lines = std::ceil((height - 60) / font_rasterizer.line_height);
+    size_t visible_lines = std::ceil((height - status_bar_height) / font_rasterizer.line_height);
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
     {
@@ -254,13 +255,16 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     glCheckError();
 }
 
-void TextRenderer::renderUiText(FontRasterizer& font_rasterizer) {
+void TextRenderer::renderUiText(FontRasterizer& main_font_rasterizer,
+                                FontRasterizer& ui_font_rasterizer) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
-    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 25, 0);
+    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 0, 0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
+
+    float status_text_offset = 25;  // TODO: Convert this magic number to actual code.
 
     std::vector<InstanceData> instances;
 
@@ -273,15 +277,16 @@ void TextRenderer::renderUiText(FontRasterizer& font_rasterizer) {
         uint_least32_t codepoint;
         grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
-        if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
+        if (!glyph_cache[ui_font_rasterizer.id].count(codepoint)) {
             std::string utf8_str = line_str.substr(offset, ret);
-            this->loadGlyph(utf8_str, codepoint, font_rasterizer);
+            this->loadGlyph(utf8_str, codepoint, ui_font_rasterizer);
         }
 
-        AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
+        AtlasGlyph glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
 
         instances.push_back(InstanceData{
-            .coords = Vec2{total_advance, (height - 60 / 2) - font_rasterizer.line_height / 2},
+            .coords = Vec2{total_advance + status_text_offset,
+                           height - main_font_rasterizer.line_height},
             .glyph = glyph.glyph,
             .uv = glyph.uv,
             .color = Rgba::fromRgb(colors::black, glyph.colored),

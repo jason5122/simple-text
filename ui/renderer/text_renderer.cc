@@ -287,7 +287,7 @@ void TextRenderer::renderUiText() {
         AtlasGlyph glyph = glyph_cache[codepoint];
 
         instances.push_back(InstanceData{
-            .coords = Vec2{total_advance, 0},
+            .coords = Vec2{total_advance, height - line_height},
             .glyph = glyph.glyph,
             .uv = glyph.uv,
             .color = Rgba::fromRgb(colors::black, glyph.colored),

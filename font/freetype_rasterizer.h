@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font/types/rasterized_glyph.h"
+#include "font/rasterized_glyph.h"
 #include <freetype/freetype.h>
 #include <hb.h>
 #include <vector>

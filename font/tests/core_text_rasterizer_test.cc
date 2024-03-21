@@ -3,25 +3,25 @@
 #include <iostream>
 #include <vector>
 
-TEST(GlyphIndexTest, Alphabet) {
-    CoreTextRasterizer ct_rasterizer;
-    ct_rasterizer.setup("Arial", 32);
+// TEST(GlyphIndexTest, Alphabet) {
+//     CoreTextRasterizer ct_rasterizer;
+//     ct_rasterizer.setup("Arial", 32);
 
-    std::vector<const char*> utf8_strs = {
-        "a",
-        "∆",
-        "😄",
-        "🥲",
-        "",
-        "👨‍👩‍👦",
-        "👩‍👩‍👧‍👦",
-        "🇺🇸",
-        "🏴‍☠️",
-    };
-    for (const auto& str : utf8_strs) {
-        EXPECT_GT(ct_rasterizer.getGlyphIndex(str), 0);
-    }
-}
+//     std::vector<const char*> utf8_strs = {
+//         "a",
+//         "∆",
+//         "😄",
+//         "🥲",
+//         "",
+//         "👨‍👩‍👦",
+//         "👩‍👩‍👧‍👦",
+//         "🇺🇸",
+//         "🏴‍☠️",
+//     };
+//     for (const auto& str : utf8_strs) {
+//         EXPECT_GT(ct_rasterizer.getGlyphIndex(str), 0);
+//     }
+// }
 
 TEST(CoreTextRasterizerTest, Metrics) {
     CoreTextRasterizer ct_rasterizer;

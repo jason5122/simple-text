@@ -33,14 +33,14 @@ public:
     float longest_line_x = 0;
 
     TextRenderer() = default;
-    void setup(float width, float height, std::string main_font_name, int font_size);
+    void setup(float width, float height, FontRasterizer& font_rasterizer);
     void renderText(float scroll_x, float scroll_y, Buffer& buffer, SyntaxHighlighter& highlighter,
-                    float editor_offset_x, float editor_offset_y);
+                    float editor_offset_x, float editor_offset_y, FontRasterizer& font_rasterizer);
     void renderUiText(FontRasterizer& font_rasterizer);
     void resize(float new_width, float new_height);
     void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
-                            float drag_y);
-    float getGlyphAdvance(std::string utf8_str);
+                            float drag_y, FontRasterizer& font_rasterizer);
+    float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
     ~TextRenderer();
 
 private:
@@ -49,8 +49,6 @@ private:
     float width, height;
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
-
-    FontRasterizer old_rasterizer;
 
     Atlas atlas;
     struct AtlasGlyph {
@@ -64,7 +62,8 @@ private:
 
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                    FontRasterizer& font_rasterizer);
-    std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);
+    std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x,
+                                                 FontRasterizer& font_rasterizer);
     bool isGlyphInSelection(int row, float glyph_center_x);
     uint8_t getBorderFlags(float glyph_start_x, float glyph_end_x);
     void highlight();

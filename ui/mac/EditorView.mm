@@ -369,7 +369,7 @@ const char* hex(char c) {
 
         main_font_rasterizer.setup(0, "Source Code Pro", 16 * self.contentsScale);
         ui_font_rasterizer.setup(1, "Arial", 11 * self.contentsScale);
-        text_renderer.setup(scaled_width, scaled_height, font_name, font_size);
+        text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
         // highlighter.setLanguage("source.c++");
@@ -450,7 +450,8 @@ const char* hex(char c) {
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         text_renderer.resize(scaled_width, scaled_height);
         text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
-                                 scaled_editor_offset_x, scaled_editor_offset_y);
+                                 scaled_editor_offset_x, scaled_editor_offset_y,
+                                 main_font_rasterizer);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         rect_renderer.resize(scaled_width, scaled_height);
@@ -496,7 +497,7 @@ const char* hex(char c) {
             text_renderer.cursor_end_col_offset = 0;
             text_renderer.cursor_end_x = 0;
         } else {
-            float advance = text_renderer.getGlyphAdvance(std::string(str));
+            float advance = text_renderer.getGlyphAdvance(std::string(str), main_font_rasterizer);
             text_renderer.cursor_start_col_offset += bytes;
             text_renderer.cursor_start_x += advance;
             text_renderer.cursor_end_col_offset += bytes;
@@ -536,7 +537,7 @@ const char* hex(char c) {
                          bytes);
         if (text_renderer.cursor_end_col_offset != 0) {
             // FIXME: Don't assume monospace font. Properly calculate advance or reimplement this.
-            float advance = text_renderer.getGlyphAdvance("m");
+            float advance = text_renderer.getGlyphAdvance("m", main_font_rasterizer);
             text_renderer.cursor_start_col_offset -= bytes;
             text_renderer.cursor_start_x -= advance;
             text_renderer.cursor_end_col_offset -= bytes;
@@ -582,7 +583,8 @@ const char* hex(char c) {
 - (void)setRendererCursorPositions {
     CGFloat scale = self.contentsScale;
     text_renderer.setCursorPositions(buffer, cursor_start_x * scale, cursor_start_y * scale,
-                                     cursor_end_x * scale, cursor_end_y * scale);
+                                     cursor_end_x * scale, cursor_end_y * scale,
+                                     main_font_rasterizer);
     [self setNeedsDisplay];
 }
 

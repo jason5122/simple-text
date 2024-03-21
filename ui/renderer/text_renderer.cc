@@ -37,16 +37,14 @@ struct InstanceData {
 };
 }
 
-void TextRenderer::setup(float width, float height, std::string main_font_name, int font_size) {
+void TextRenderer::setup(float width, float height, FontRasterizer& font_rasterizer) {
     shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
                         ResourcePath() / "shaders/text_frag.glsl");
     this->resize(width, height);
 
     atlas.setup();
 
-    old_rasterizer.setup(0, main_font_name, font_size);
-
-    this->line_height = old_rasterizer.line_height;
+    this->line_height = font_rasterizer.line_height;
 
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"), line_height);
@@ -116,19 +114,22 @@ void TextRenderer::setup(float width, float height, std::string main_font_name, 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-float TextRenderer::getGlyphAdvance(std::string utf8_str) {
+float TextRenderer::getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer) {
     uint_least32_t codepoint;
     grapheme_decode_utf8(&utf8_str[0], SIZE_MAX, &codepoint);
 
-    if (!glyph_cache[0].count(codepoint)) {
-        this->loadGlyph(utf8_str, codepoint, old_rasterizer);
+    if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
+        this->loadGlyph(utf8_str, codepoint, font_rasterizer);
     }
 
-    AtlasGlyph glyph = glyph_cache[0][codepoint];
+    AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
     return std::round(glyph.advance);
 }
 
-std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str, float x) {
+// TODO: Rewrite this so this operates on an already shaped line.
+//       We should remove any glyph cache/font rasterization from this method.
+std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str, float x,
+                                                           FontRasterizer& font_rasterizer) {
     size_t offset;
     size_t ret;
     float total_advance = 0;
@@ -138,12 +139,12 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
         uint_least32_t codepoint;
         grapheme_decode_utf8(&line_str[0] + offset, SIZE_MAX, &codepoint);
 
-        if (!glyph_cache[0].count(codepoint)) {
+        if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
             std::string utf8_str = line_str.substr(offset, ret);
-            this->loadGlyph(utf8_str, codepoint, old_rasterizer);
+            this->loadGlyph(utf8_str, codepoint, font_rasterizer);
         }
 
-        AtlasGlyph glyph = glyph_cache[0][codepoint];
+        AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -157,7 +158,7 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
 
 void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                               SyntaxHighlighter& highlighter, float editor_offset_x,
-                              float editor_offset_y) {
+                              float editor_offset_y, FontRasterizer& font_rasterizer) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
@@ -194,12 +195,12 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 uint_least32_t codepoint;
                 grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
-                if (!glyph_cache[0].count(codepoint)) {
+                if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
                     std::string utf8_str = line_str.substr(offset, ret);
-                    this->loadGlyph(utf8_str, codepoint, old_rasterizer);
+                    this->loadGlyph(utf8_str, codepoint, font_rasterizer);
                 }
 
-                AtlasGlyph glyph = glyph_cache[0][codepoint];
+                AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
                 Rgb text_color = highlighter.getColor(byte_offset);
 
                 // TODO: Determine if we should always round `glyph.advance`.
@@ -258,7 +259,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 void TextRenderer::renderUiText(FontRasterizer& font_rasterizer) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
-    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 0, 0);
+    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 25, 0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -375,7 +376,7 @@ uint8_t TextRenderer::getBorderFlags(float glyph_start_x, float glyph_end_x) {
 }
 
 void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
-                                      float drag_y) {
+                                      float drag_y, FontRasterizer& font_rasterizer) {
     float x;
     size_t offset;
 
@@ -386,7 +387,7 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
 
     std::string start_line_str;
     buffer.getLineContent(&start_line_str, cursor_start_line);
-    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, cursor_x);
+    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, cursor_x, font_rasterizer);
     cursor_start_col_offset = offset;
     cursor_start_x = x;
 
@@ -397,7 +398,7 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
 
     std::string end_line_str;
     buffer.getLineContent(&end_line_str, cursor_end_line);
-    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, drag_x);
+    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, drag_x, font_rasterizer);
     cursor_end_col_offset = offset;
     cursor_end_x = x;
 }

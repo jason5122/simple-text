@@ -10,7 +10,7 @@ public:
     CoreTextRasterizer();
     void setup(std::string main_font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
-    // bool isFontMonospace();
+    ~CoreTextRasterizer();
 
 private:
     // https://herbsutter.com/gotw/_100/
@@ -19,6 +19,4 @@ private:
     // TODO: Learn and use std::unique_ptr instead.
     // https://stackoverflow.com/questions/9954518/stdunique-ptr-with-an-incomplete-type-wont-compile
     // std::unique_ptr<impl> pimpl;
-
-    uint16_t getGlyphIndex(const char* utf8_str);
 };

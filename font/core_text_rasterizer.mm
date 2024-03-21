@@ -32,14 +32,6 @@ RasterizedGlyph CoreTextRasterizer::rasterizeUTF8(const char* utf8_str) {
     return pimpl->rasterizeGlyph(runResult.glyph, runResult.runFont, descent);
 }
 
-// bool CoreTextRasterizer::isFontMonospace() {
-//     return CTFontIsMonospace(pimpl->mainFont);
-// }
-
-// uint16_t CoreTextRasterizer::getGlyphIndex(const char* utf8_str) {
-//     return CTFontGetGlyphIndex(pimpl->mainFont, utf8_str).glyph;
-// }
-
 RasterizedGlyph CoreTextRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,
                                                          float descent) {
     CGRect bounds;
@@ -113,3 +105,5 @@ RasterizedGlyph CoreTextRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CT
         buffer,
     };
 }
+
+CoreTextRasterizer::~CoreTextRasterizer() {}

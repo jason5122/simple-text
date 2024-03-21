@@ -69,6 +69,6 @@ private:
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x);
     bool isGlyphInSelection(int row, float glyph_center_x);
-    uint8_t getBorderFlags(int row, float glyph_center_x);
+    uint8_t getBorderFlags(float glyph_start_x, float glyph_end_x);
     void highlight();
 };

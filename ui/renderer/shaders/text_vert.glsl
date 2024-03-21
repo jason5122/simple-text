@@ -36,7 +36,7 @@ void main() {
     position.y = (gl_VertexID == 0 || gl_VertexID == 3) ? 0. : 1.;
 
     vec2 cell_position = coords;
-    cell_position -= scroll_offset;
+    // cell_position -= scroll_offset;
     cell_position += editor_offset;
 
     if (rendering_pass == 0) {

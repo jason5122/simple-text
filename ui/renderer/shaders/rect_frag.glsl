@@ -54,57 +54,19 @@ void main() {
                 discard;
             } else {
                 vec2 point = rect_center + vec2(size.x / 2, -size.y / 2);
-                // point += vec2(0, tab_corner_radius);
+                point += vec2(0, tab_corner_radius);
 
                 float d = distance(pixel_pos, point) - tab_corner_radius;
-                // alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
-
-                if (d > 0) {
-                    alpha = 0;
-                }
-
-                // if (d < -1 || d >= 0) {
-                //     alpha = 0;
-                // }
+                alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
             }
         }
         if (pixel_pos.x < top_left.x && pixel_pos.y > top_left.y) {
             float d = distance(pixel_pos, top_left) - tab_corner_radius;
-            // alpha -= smoothstep(-0.5, 0.5, d);
-
-            if (-2 < d && d < 0) {
-                temp = vec3(1.0, 0.0, 0.0);
-            } else if (d > 0) {
-                alpha = 0;
-            }
+            alpha -= smoothstep(-0.5, 0.5, d);
         }
         if (pixel_pos.x > top_right.x && pixel_pos.y > top_right.y) {
             float d = distance(pixel_pos, top_right) - tab_corner_radius;
-            // alpha -= smoothstep(-0.5, 0.5, d);
-
-            if (-2 < d && d < 0) {
-                temp = vec3(1.0, 0.0, 0.0);
-            } else if (d > 0) {
-                alpha = 0;
-            }
-        }
-
-        float border_thickness = 2;
-        float border_left = rect_center.x - size.x / 2 + tab_corner_radius + border_thickness;
-        float border_right = rect_center.x + size.x / 2 - tab_corner_radius - border_thickness;
-        float border_top = rect_center.y + size.y / 2 - border_thickness;
-        float border_bottom = rect_center.y - size.y / 2 + border_thickness;
-        if (pixel_pos.x < border_left) {
-            temp = vec3(1.0, 0.0, 0.0);
-        }
-        if (pixel_pos.x > border_right) {
-            temp = vec3(1.0, 0.0, 0.0);
-        }
-        if (pixel_pos.y > border_top) {
-            temp = vec3(1.0, 0.0, 0.0);
-        }
-        if (pixel_pos.y < border_bottom) {
-            temp = vec3(1.0, 0.0, 0.0);
+            alpha -= smoothstep(-0.5, 0.5, d);
         }
     }
 

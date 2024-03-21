@@ -151,7 +151,7 @@
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         if (event.momentumPhase & NSEventPhaseBegan) {
-            openGLLayer.asynchronous = true;
+            // openGLLayer.asynchronous = true;
         }
         if (event.momentumPhase & NSEventPhaseEnded) {
             // openGLLayer.asynchronous = false;

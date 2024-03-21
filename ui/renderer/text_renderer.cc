@@ -44,10 +44,9 @@ void TextRenderer::setup(float width, float height, FontRasterizer& font_rasteri
 
     atlas.setup();
 
-    this->line_height = font_rasterizer.line_height;
-
     glUseProgram(shader_program.id);
-    glUniform1f(glGetUniformLocation(shader_program.id, "line_height"), line_height);
+    glUniform1f(glGetUniformLocation(shader_program.id, "line_height"),
+                font_rasterizer.line_height);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -167,8 +166,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    size_t start_line = scroll_y / line_height;
-    size_t visible_lines = std::ceil((height - 60) / line_height);
+    size_t start_line = scroll_y / font_rasterizer.line_height;
+    size_t visible_lines = std::ceil((height - 60) / font_rasterizer.line_height);
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
     {
@@ -212,11 +211,11 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
                 if (total_advance + glyph.advance > scroll_x) {
                     instances.push_back(InstanceData{
-                        .coords = Vec2{total_advance, line_index * line_height},
+                        .coords = Vec2{total_advance, line_index * font_rasterizer.line_height},
                         .glyph = glyph.glyph,
                         .uv = glyph.uv,
                         .color = Rgba::fromRgb(text_color, glyph.colored),
-                        .bg_size = Vec2{std::round(glyph.advance), line_height},
+                        .bg_size = Vec2{std::round(glyph.advance), font_rasterizer.line_height},
                         .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
                         .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
                     });
@@ -231,11 +230,10 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     }
 
     // instances.push_back(InstanceData{
-    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 * line_height + scroll_y},
-    //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-    //     .uv = Vec4{0, 0, 1.0, 1.0},
-    //     .color = Rgba::fromRgb(colors::black, false),
-    //     .is_atlas = true,
+    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 *
+    //     font_rasterizer.line_height + scroll_y}, .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE,
+    //     Atlas::ATLAS_SIZE}, .uv = Vec4{0, 0, 1.0, 1.0}, .color = Rgba::fromRgb(colors::black,
+    //     false), .is_atlas = true,
     // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
@@ -283,7 +281,7 @@ void TextRenderer::renderUiText(FontRasterizer& font_rasterizer) {
         AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
 
         instances.push_back(InstanceData{
-            .coords = Vec2{total_advance, height - line_height},
+            .coords = Vec2{total_advance, (height - 60 / 2) - font_rasterizer.line_height / 2},
             .glyph = glyph.glyph,
             .uv = glyph.uv,
             .color = Rgba::fromRgb(colors::black, glyph.colored),
@@ -380,7 +378,7 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
     float x;
     size_t offset;
 
-    cursor_start_line = cursor_y / line_height;
+    cursor_start_line = cursor_y / font_rasterizer.line_height;
     if (cursor_start_line > buffer.lineCount() - 1) {
         cursor_start_line = buffer.lineCount() - 1;
     }
@@ -391,7 +389,7 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float curs
     cursor_start_col_offset = offset;
     cursor_start_x = x;
 
-    cursor_end_line = drag_y / line_height;
+    cursor_end_line = drag_y / font_rasterizer.line_height;
     if (cursor_end_line > buffer.lineCount() - 1) {
         cursor_end_line = buffer.lineCount() - 1;
     }

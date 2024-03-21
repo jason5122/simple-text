@@ -368,7 +368,7 @@ const char* hex(char c) {
         float scaled_height = self.frame.size.height * self.contentsScale;
 
         main_font_rasterizer.setup(0, "Source Code Pro", 16 * self.contentsScale);
-        ui_font_rasterizer.setup(1, "Arial", 11 * self.contentsScale);
+        ui_font_rasterizer.setup(1, "SF Pro Text", 11 * self.contentsScale);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
@@ -456,7 +456,7 @@ const char* hex(char c) {
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         rect_renderer.resize(scaled_width, scaled_height);
         rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
-                           text_renderer.cursor_end_line, text_renderer.line_height,
+                           text_renderer.cursor_end_line, main_font_rasterizer.line_height,
                            buffer.lineCount(), text_renderer.longest_line_x,
                            scaled_editor_offset_x, scaled_editor_offset_y);
 
@@ -547,8 +547,8 @@ const char* hex(char c) {
             CGFloat scale = self.contentsScale;
             cursor_start_x = 1000000;
             cursor_end_x = 1000000;
-            cursor_start_y -= text_renderer.line_height / scale;
-            cursor_end_y -= text_renderer.line_height / scale;
+            cursor_start_y -= main_font_rasterizer.line_height / scale;
+            cursor_end_y -= main_font_rasterizer.line_height / scale;
 
             [self setRendererCursorPositions];
         }
@@ -599,7 +599,7 @@ const char* hex(char c) {
 - (CGFloat)maxScrollY {
     size_t line_count = buffer.lineCount();
     // line_count -= 1;  // TODO: Merge this with RectRenderer.
-    CGFloat max_y = line_count * text_renderer.line_height;
+    CGFloat max_y = line_count * main_font_rasterizer.line_height;
     // TODO: Formulate max_y without the need for division.
     max_y /= self.contentsScale;
     return max_y;

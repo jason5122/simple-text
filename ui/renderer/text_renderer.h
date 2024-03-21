@@ -19,8 +19,6 @@
 
 class TextRenderer {
 public:
-    float line_height;
-
     size_t cursor_start_line = 0;
     size_t cursor_start_col_offset = 0;
     float cursor_start_x = 0;

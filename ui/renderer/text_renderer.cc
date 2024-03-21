@@ -220,7 +220,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                         .glyph = glyph.glyph,
                         .uv = glyph.uv,
                         .color = Rgba::fromRgb(text_color, glyph.colored),
-                        .bg_size = Vec2{round(glyph.advance), line_height},
+                        .bg_size = Vec2{std::round(glyph.advance), line_height},
                         .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
                         .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
                     });

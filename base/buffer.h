@@ -2,6 +2,7 @@
 
 #include "third_party/fredbuf/fredbuf.h"
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <tree_sitter/api.h>
 using namespace PieceTree;

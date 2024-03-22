@@ -308,7 +308,7 @@ void TextRenderer::renderUiText(FontRasterizer& main_font_rasterizer,
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 

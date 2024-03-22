@@ -57,7 +57,7 @@ private:
         bool colored;
     };
 
-    std::unordered_map<int, std::unordered_map<uint_least32_t, AtlasGlyph>> glyph_cache;
+    std::vector<std::unordered_map<uint_least32_t, AtlasGlyph>> glyph_cache;
 
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                    FontRasterizer& font_rasterizer);

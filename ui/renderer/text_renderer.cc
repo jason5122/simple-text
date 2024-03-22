@@ -42,6 +42,10 @@ void TextRenderer::setup(float width, float height, FontRasterizer& font_rasteri
                         ResourcePath() / "shaders/text_frag.glsl");
     this->resize(width, height);
 
+    // TODO: Replace this with a more permanent solution.
+    glyph_cache.emplace_back();
+    glyph_cache.emplace_back();
+
     atlas.setup();
 
     glUseProgram(shader_program.id);
@@ -183,7 +187,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     {
         PROFILE_BLOCK("layout text");
         for (size_t line_index = start_line; line_index < end_line; line_index++) {
-            size_t ret = 1;
+            size_t ret;
             float total_advance = 0;
 
             std::string line_str;
@@ -269,7 +273,7 @@ void TextRenderer::renderUiText(FontRasterizer& main_font_rasterizer,
     std::vector<InstanceData> instances;
 
     std::string line_str = "Line 1, Column 1";
-    size_t ret = 1;
+    size_t ret;
     float total_advance = 0;
     for (size_t offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);

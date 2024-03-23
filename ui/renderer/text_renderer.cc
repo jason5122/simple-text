@@ -268,6 +268,10 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             next_line_end_x = 0;
         }
 
+        // if (i == selection_start_line) {
+        //     prev_line_end_x = 0;
+        // }
+
         for (size_t j = 0; j < line_layouts[i].size(); j++) {
             ShapedGlyph shaped_glyph = line_layouts[i][j];
 
@@ -340,7 +344,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 .uv = shaped_glyph.uv,
                 .color = Rgba::fromRgb(text_color, shaped_glyph.colored),
                 .bg_size = shaped_glyph.bg_size,
-                .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
+                // .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
+                .bg_color = Rgba::fromRgb(Rgb{253, 253, 253}, bg_a),
                 // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
                 .bg_border_color = Rgba::fromRgb(colors::red, border_flags),
             });
@@ -358,6 +363,10 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             prev_line_start_x = selection_start_x;
         } else {
             prev_line_start_x = 0;
+        }
+
+        if (line_layouts[i].empty()) {
+            prev_line_start_x = std::numeric_limits<float>::max();
         }
     }
 
@@ -399,7 +408,8 @@ void TextRenderer::renderUiText(FontRasterizer& main_font_rasterizer,
 
     std::vector<InstanceData> instances;
 
-    std::string line_str = "Line 1, Column 1";
+    std::string line_str = "Line " + std::to_string(cursor_end_line) + ", Column " +
+                           std::to_string(cursor_end_col_offset);
     size_t ret;
     float total_advance = 0;
     for (size_t offset = 0; offset < line_str.size(); offset += ret) {

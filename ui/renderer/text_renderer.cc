@@ -249,19 +249,23 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         std::swap(selection_start_line, selection_end_line);
         std::swap(selection_start_x, selection_end_x);
     }
-    fprintf(stderr, "selection: [%zu, %zu]\n", selection_start, selection_end);
 
-    float prev_line_x = 0;
-    float next_line_x = 0;
+    float prev_line_start_x = 0;
+    float prev_line_end_x = 0;
+    float next_line_end_x = 0;
 
     std::vector<InstanceData> instances;
     for (size_t i = 0; i < line_layouts.size(); i++) {
         if (i + 1 < line_layouts.size() && !line_layouts[i + 1].empty()) {
-            ShapedGlyph last_glyph = line_layouts[i + 1].back();
-            float glyph_end_x = last_glyph.coords.x + last_glyph.bg_size.x;
-            next_line_x = glyph_end_x;
+            if (i + 1 == selection_end_line) {
+                next_line_end_x = selection_end_x;
+            } else {
+                ShapedGlyph last_glyph = line_layouts[i + 1].back();
+                float glyph_end_x = last_glyph.coords.x + last_glyph.bg_size.x;
+                next_line_end_x = glyph_end_x;
+            }
         } else {
-            next_line_x = 0;
+            next_line_end_x = 0;
         }
 
         for (size_t j = 0; j < line_layouts[i].size(); j++) {
@@ -288,21 +292,38 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             }
             if (shaped_glyph.byte_offset == selection_start) {
                 border_flags |= LEFT;
+                border_flags |= TOP_LEFT;
             }
             if (shaped_glyph.byte_offset == selection_end - 1) {
                 border_flags |= RIGHT;
+                border_flags |= BOTTOM_RIGHT;
+                if (glyph_end_x > prev_line_end_x) {
+                    border_flags |= TOP_RIGHT;
+                }
             }
             if (j == 0) {
                 border_flags |= LEFT;
+                if (glyph_start_x < prev_line_start_x) {
+                    border_flags |= TOP_LEFT;
+                }
+                if (line_index == selection_end_line) {
+                    border_flags |= BOTTOM_LEFT;
+                }
             }
             if (j == line_layouts[i].size() - 1) {
                 border_flags |= RIGHT;
+                if (glyph_start_x >= prev_line_end_x) {
+                    border_flags |= TOP_RIGHT;
+                }
+                if (glyph_start_x >= next_line_end_x) {
+                    border_flags |= BOTTOM_RIGHT;
+                }
             }
 
-            if (glyph_start_x >= prev_line_x) {
+            if (glyph_start_x >= prev_line_end_x) {
                 border_flags |= TOP;
             }
-            if (glyph_start_x >= next_line_x) {
+            if (glyph_start_x >= next_line_end_x) {
                 border_flags |= BOTTOM;
             }
 
@@ -328,9 +349,15 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         if (!line_layouts[i].empty()) {
             ShapedGlyph last_glyph = line_layouts[i].back();
             float glyph_end_x = last_glyph.coords.x + last_glyph.bg_size.x;
-            prev_line_x = glyph_end_x;
+            prev_line_end_x = glyph_end_x;
         } else {
-            prev_line_x = 0;
+            prev_line_end_x = 0;
+        }
+
+        if (i == selection_start_line) {
+            prev_line_start_x = selection_start_x;
+        } else {
+            prev_line_start_x = 0;
         }
     }
 

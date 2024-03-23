@@ -66,6 +66,4 @@ private:
                    FontRasterizer& font_rasterizer);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x,
                                                  FontRasterizer& font_rasterizer);
-    uint8_t getBorderFlags(float glyph_start_x, float glyph_end_x);
-    void highlight();
 };

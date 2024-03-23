@@ -240,8 +240,11 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
     size_t selection_start = cursor_start_byte;
     size_t selection_end = cursor_end_byte;
+    size_t selection_start_line = cursor_start_line;
+    size_t selection_end_line = cursor_end_line;
     if (selection_start > selection_end) {
         std::swap(selection_start, selection_end);
+        std::swap(selection_start_line, selection_end_line);
     }
     fprintf(stderr, "selection: [%zu, %zu]\n", selection_start, selection_end);
 
@@ -260,7 +263,27 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
             Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset);
             uint8_t bg_a = is_glyph_in_selection ? 255 : 0;
-            uint8_t border_flags = this->getBorderFlags(glyph_start_x, glyph_end_x);
+
+            uint8_t border_flags = 0;
+            size_t line_index = start_line + i;
+            if (line_index == selection_start_line) {
+                border_flags |= TOP;
+            }
+            if (line_index == selection_end_line) {
+                border_flags |= BOTTOM;
+            }
+            if (shaped_glyph.byte_offset == selection_start) {
+                border_flags |= LEFT;
+            }
+            if (shaped_glyph.byte_offset == selection_end - 1) {
+                border_flags |= RIGHT;
+            }
+            if (j == 0) {
+                border_flags |= LEFT;
+            }
+            if (j == line_layouts[i].size() - 1) {
+                border_flags |= RIGHT;
+            }
 
             instances.push_back(InstanceData{
                 .coords = shaped_glyph.coords,
@@ -269,7 +292,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 .color = Rgba::fromRgb(text_color, shaped_glyph.colored),
                 .bg_size = shaped_glyph.bg_size,
                 .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
-                .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
+                // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
+                .bg_border_color = Rgba::fromRgb(colors::red, border_flags),
             });
         }
     }
@@ -353,27 +377,6 @@ void TextRenderer::renderUiText(FontRasterizer& main_font_rasterizer,
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glCheckError();
-}
-
-uint8_t TextRenderer::getBorderFlags(float glyph_start_x, float glyph_end_x) {
-    uint8_t border_flags = 0;
-
-    if (cursor_start_line == cursor_end_line) {
-        float start_x = cursor_start_x;
-        float end_x = cursor_end_x;
-        if (cursor_start_x > cursor_end_x) {
-            std::swap(start_x, end_x);
-        }
-
-        border_flags |= BOTTOM | TOP;
-        if (glyph_start_x == start_x) {
-            border_flags |= LEFT | BOTTOM_LEFT | TOP_LEFT;
-        }
-        if (glyph_end_x == end_x) {
-            border_flags |= RIGHT | BOTTOM_RIGHT | TOP_RIGHT;
-        }
-    }
-    return border_flags;
 }
 
 void TextRenderer::setCursorPositions(Buffer& buffer, float start_x, float start_y, float end_x,

@@ -35,6 +35,17 @@ struct InstanceData {
     Rgba bg_color;
     Rgba bg_border_color;
 };
+
+// Reference Zed's implementation in //crates/gpui/src/text_system/line_layout.rs.
+struct ShapedGlyph {
+    uint32_t codepoint;
+    size_t byte_offset;  // Byte offset within the line layout.
+    Vec2 coords;
+    Vec4 glyph;
+    Vec4 uv;
+    Vec2 bg_size;
+    bool colored;
+};
 }
 
 void TextRenderer::setup(float width, float height, FontRasterizer& font_rasterizer) {
@@ -182,11 +193,15 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     }
 
     size_t byte_offset = buffer.byteOfLine(start_line);
-    std::vector<InstanceData> instances;
+
+    std::vector<std::vector<ShapedGlyph>> line_layouts;
 
     {
         PROFILE_BLOCK("layout text");
-        for (size_t line_index = start_line; line_index < end_line; line_index++) {
+        for (size_t line_index = start_line, line_layout_index = 0; line_index < end_line;
+             line_index++, line_layout_index++) {
+            line_layouts.emplace_back();
+
             size_t ret;
             float total_advance = 0;
 
@@ -205,25 +220,14 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 }
 
                 AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
-                Rgb text_color = highlighter.getColor(byte_offset);
 
                 // TODO: Determine if we should always round `glyph.advance`.
-                float glyph_center_x = total_advance + glyph.advance / 2;
-                uint8_t bg_a = this->isGlyphInSelection(line_index, glyph_center_x) ? 255 : 0;
-
-                uint8_t border_flags =
-                    this->getBorderFlags(total_advance, total_advance + std::round(glyph.advance));
-
-                if (total_advance + glyph.advance > scroll_x) {
-                    instances.push_back(InstanceData{
-                        .coords = Vec2{total_advance, line_index * font_rasterizer.line_height},
-                        .glyph = glyph.glyph,
-                        .uv = glyph.uv,
-                        .color = Rgba::fromRgb(text_color, glyph.colored),
-                        .bg_size = Vec2{std::round(glyph.advance), font_rasterizer.line_height},
-                        .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
-                        .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
-                    });
+                Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
+                Vec2 bg_size{std::round(glyph.advance), font_rasterizer.line_height};
+                if (total_advance + std::round(glyph.advance) > scroll_x) {
+                    line_layouts[line_layout_index].emplace_back(codepoint, byte_offset, coords,
+                                                                 glyph.glyph, glyph.uv, bg_size,
+                                                                 glyph.colored);
                 }
 
                 total_advance += std::round(glyph.advance);
@@ -231,6 +235,32 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
             byte_offset++;
             longest_line_x = std::max(total_advance, longest_line_x);
+        }
+    }
+
+    std::vector<InstanceData> instances;
+    for (size_t i = 0; i < line_layouts.size(); i++) {
+        for (size_t j = 0; j < line_layouts[i].size(); j++) {
+            ShapedGlyph shaped_glyph = line_layouts[i][j];
+
+            float advance = shaped_glyph.bg_size.x;
+            float glyph_start_x = shaped_glyph.coords.x;
+            float glyph_center_x = glyph_start_x + advance / 2;
+            float glyph_end_x = glyph_start_x + advance;
+
+            Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset);
+            uint8_t bg_a = this->isGlyphInSelection(start_line + i, glyph_center_x) ? 255 : 0;
+            uint8_t border_flags = this->getBorderFlags(glyph_start_x, glyph_end_x);
+
+            instances.push_back(InstanceData{
+                .coords = shaped_glyph.coords,
+                .glyph = shaped_glyph.glyph,
+                .uv = shaped_glyph.uv,
+                .color = Rgba::fromRgb(text_color, shaped_glyph.colored),
+                .bg_size = shaped_glyph.bg_size,
+                .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
+                .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
+            });
         }
     }
 

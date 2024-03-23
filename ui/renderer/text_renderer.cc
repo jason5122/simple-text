@@ -238,6 +238,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         }
     }
 
+    fprintf(stderr, "selection: [%zu, %zu]\n", selection_start_byte, selection_end_byte);
+
     std::vector<InstanceData> instances;
     for (size_t i = 0; i < line_layouts.size(); i++) {
         for (size_t j = 0; j < line_layouts[i].size(); j++) {
@@ -412,32 +414,35 @@ uint8_t TextRenderer::getBorderFlags(float glyph_start_x, float glyph_end_x) {
     return border_flags;
 }
 
-void TextRenderer::setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
-                                      float drag_y, FontRasterizer& font_rasterizer) {
+void TextRenderer::setCursorPositions(Buffer& buffer, float start_x, float start_y, float end_x,
+                                      float end_y, FontRasterizer& font_rasterizer) {
     float x;
     size_t offset;
 
-    cursor_start_line = cursor_y / font_rasterizer.line_height;
+    cursor_start_line = start_y / font_rasterizer.line_height;
     if (cursor_start_line > buffer.lineCount() - 1) {
         cursor_start_line = buffer.lineCount() - 1;
     }
 
     std::string start_line_str;
     buffer.getLineContent(&start_line_str, cursor_start_line);
-    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, cursor_x, font_rasterizer);
+    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, start_x, font_rasterizer);
     cursor_start_col_offset = offset;
     cursor_start_x = x;
 
-    cursor_end_line = drag_y / font_rasterizer.line_height;
+    cursor_end_line = end_y / font_rasterizer.line_height;
     if (cursor_end_line > buffer.lineCount() - 1) {
         cursor_end_line = buffer.lineCount() - 1;
     }
 
     std::string end_line_str;
     buffer.getLineContent(&end_line_str, cursor_end_line);
-    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, drag_x, font_rasterizer);
+    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, end_x, font_rasterizer);
     cursor_end_col_offset = offset;
     cursor_end_x = x;
+
+    selection_start_byte = buffer.byteOfLine(cursor_start_line) + cursor_start_col_offset;
+    selection_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,

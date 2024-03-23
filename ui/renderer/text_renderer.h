@@ -30,6 +30,9 @@ public:
     // TODO: Update this during insertion/deletion.
     float longest_line_x = 0;
 
+    size_t selection_start_byte = 0;
+    size_t selection_end_byte = 0;
+
     TextRenderer() = default;
     void setup(float width, float height, FontRasterizer& font_rasterizer);
     void renderText(float scroll_x, float scroll_y, Buffer& buffer, SyntaxHighlighter& highlighter,
@@ -37,8 +40,8 @@ public:
                     float status_bar_height);
     void renderUiText(FontRasterizer& main_font_rasterizer, FontRasterizer& ui_font_rasterizer);
     void resize(float new_width, float new_height);
-    void setCursorPositions(Buffer& buffer, float cursor_x, float cursor_y, float drag_x,
-                            float drag_y, FontRasterizer& font_rasterizer);
+    void setCursorPositions(Buffer& buffer, float start_x, float start_y, float end_x, float end_y,
+                            FontRasterizer& font_rasterizer);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
     ~TextRenderer();
 

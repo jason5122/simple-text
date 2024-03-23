@@ -242,14 +242,28 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     size_t selection_end = cursor_end_byte;
     size_t selection_start_line = cursor_start_line;
     size_t selection_end_line = cursor_end_line;
+    float selection_start_x = cursor_start_x;
+    float selection_end_x = cursor_end_x;
     if (selection_start > selection_end) {
         std::swap(selection_start, selection_end);
         std::swap(selection_start_line, selection_end_line);
+        std::swap(selection_start_x, selection_end_x);
     }
     fprintf(stderr, "selection: [%zu, %zu]\n", selection_start, selection_end);
 
+    float prev_line_x = 0;
+    float next_line_x = 0;
+
     std::vector<InstanceData> instances;
     for (size_t i = 0; i < line_layouts.size(); i++) {
+        if (i + 1 < line_layouts.size() && !line_layouts[i + 1].empty()) {
+            ShapedGlyph last_glyph = line_layouts[i + 1].back();
+            float glyph_end_x = last_glyph.coords.x + last_glyph.bg_size.x;
+            next_line_x = glyph_end_x;
+        } else {
+            next_line_x = 0;
+        }
+
         for (size_t j = 0; j < line_layouts[i].size(); j++) {
             ShapedGlyph shaped_glyph = line_layouts[i][j];
 
@@ -285,6 +299,20 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 border_flags |= RIGHT;
             }
 
+            if (glyph_start_x >= prev_line_x) {
+                border_flags |= TOP;
+            }
+            if (glyph_start_x >= next_line_x) {
+                border_flags |= BOTTOM;
+            }
+
+            if (line_index == selection_start_line + 1 && glyph_end_x <= selection_start_x) {
+                border_flags |= TOP;
+            }
+            if (line_index == selection_end_line - 1 && glyph_start_x >= selection_end_x) {
+                border_flags |= BOTTOM;
+            }
+
             instances.push_back(InstanceData{
                 .coords = shaped_glyph.coords,
                 .glyph = shaped_glyph.glyph,
@@ -295,6 +323,14 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
                 .bg_border_color = Rgba::fromRgb(colors::red, border_flags),
             });
+        }
+
+        if (!line_layouts[i].empty()) {
+            ShapedGlyph last_glyph = line_layouts[i].back();
+            float glyph_end_x = last_glyph.coords.x + last_glyph.bg_size.x;
+            prev_line_x = glyph_end_x;
+        } else {
+            prev_line_x = 0;
         }
     }
 

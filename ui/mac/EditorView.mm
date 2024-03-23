@@ -334,13 +334,8 @@ const char* hex(char c) {
 }
 
 - (void)editBuffer:(size_t)bytes {
-    size_t start_byte =
-        buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-    size_t old_end_byte =
-        buffer.byteOfLine(text_renderer.cursor_end_line) + text_renderer.cursor_end_col_offset;
-    size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
-                          text_renderer.cursor_end_col_offset + bytes;
-    highlighter.edit(start_byte, old_end_byte, new_end_byte);
+    size_t start_byte = text_renderer.cursor_end_byte;
+    highlighter.edit(start_byte, start_byte, start_byte + bytes);
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
@@ -512,21 +507,7 @@ const char* hex(char c) {
         buffer.remove(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, bytes);
     }
 
-    // // FIXME: Calculate Tree-sitter edits correctly.
-    // {
-    //     PROFILE_BLOCK("editBuffer + parseBuffer");
-    //     // [self editBuffer:bytes];
-    //     size_t start_byte =
-    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
-    //         text_renderer.cursor_end_col_offset;
-    //     size_t old_end_byte =
-    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
-    //         text_renderer.cursor_end_col_offset;
-    //     size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
-    //                           text_renderer.cursor_end_col_offset - bytes;
-    //     highlighter.edit(start_byte, old_end_byte, new_end_byte);
-    //     [self parseBuffer];
-    // }
+    // FIXME: Calculate Tree-sitter edits correctly.
 }
 
 - (void)backspaceBytes:(size_t)bytes {
@@ -554,21 +535,7 @@ const char* hex(char c) {
         }
     }
 
-    // // FIXME: Calculate Tree-sitter edits correctly.
-    // {
-    //     PROFILE_BLOCK("editBuffer + parseBuffer");
-    //     // [self editBuffer:bytes];
-    //     size_t start_byte =
-    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
-    //         text_renderer.cursor_end_col_offset;
-    //     size_t old_end_byte =
-    //         buffer.byteOfLine(text_renderer.cursor_end_line) +
-    //         text_renderer.cursor_end_col_offset;
-    //     size_t new_end_byte = buffer.byteOfLine(text_renderer.cursor_end_line) +
-    //                           text_renderer.cursor_end_col_offset - bytes;
-    //     highlighter.edit(start_byte, old_end_byte, new_end_byte);
-    //     [self parseBuffer];
-    // }
+    // FIXME: Calculate Tree-sitter edits correctly.
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

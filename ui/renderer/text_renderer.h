@@ -30,8 +30,8 @@ public:
     // TODO: Update this during insertion/deletion.
     float longest_line_x = 0;
 
-    size_t selection_start_byte = 0;
-    size_t selection_end_byte = 0;
+    size_t cursor_start_byte = 0;
+    size_t cursor_end_byte = 0;
 
     TextRenderer() = default;
     void setup(float width, float height, FontRasterizer& font_rasterizer);
@@ -66,7 +66,6 @@ private:
                    FontRasterizer& font_rasterizer);
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x,
                                                  FontRasterizer& font_rasterizer);
-    bool isGlyphInSelection(int row, float glyph_center_x);
     uint8_t getBorderFlags(float glyph_start_x, float glyph_end_x);
     void highlight();
 };

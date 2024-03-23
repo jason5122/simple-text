@@ -238,7 +238,12 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         }
     }
 
-    fprintf(stderr, "selection: [%zu, %zu]\n", selection_start_byte, selection_end_byte);
+    size_t selection_start = cursor_start_byte;
+    size_t selection_end = cursor_end_byte;
+    if (selection_start > selection_end) {
+        std::swap(selection_start, selection_end);
+    }
+    fprintf(stderr, "selection: [%zu, %zu]\n", selection_start, selection_end);
 
     std::vector<InstanceData> instances;
     for (size_t i = 0; i < line_layouts.size(); i++) {
@@ -250,8 +255,11 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             float glyph_center_x = glyph_start_x + advance / 2;
             float glyph_end_x = glyph_start_x + advance;
 
+            bool is_glyph_in_selection = selection_start <= shaped_glyph.byte_offset &&
+                                         shaped_glyph.byte_offset < selection_end;
+
             Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset);
-            uint8_t bg_a = this->isGlyphInSelection(start_line + i, glyph_center_x) ? 255 : 0;
+            uint8_t bg_a = is_glyph_in_selection ? 255 : 0;
             uint8_t border_flags = this->getBorderFlags(glyph_start_x, glyph_end_x);
 
             instances.push_back(InstanceData{
@@ -347,52 +355,6 @@ void TextRenderer::renderUiText(FontRasterizer& main_font_rasterizer,
     glCheckError();
 }
 
-bool TextRenderer::isGlyphInSelection(int row, float glyph_center_x) {
-    int start_row, end_row;
-    float start_x, end_x;
-
-    if (cursor_start_line == cursor_end_line) {
-        if (cursor_start_x <= cursor_end_x) {
-            start_row = cursor_start_line;
-            end_row = cursor_end_line;
-            start_x = cursor_start_x;
-            end_x = cursor_end_x;
-        } else {
-            start_row = cursor_end_line;
-            end_row = cursor_start_line;
-            start_x = cursor_end_x;
-            end_x = cursor_start_x;
-        }
-    } else if (cursor_start_line < cursor_end_line) {
-        start_row = cursor_start_line;
-        end_row = cursor_end_line;
-        start_x = cursor_start_x;
-        end_x = cursor_end_x;
-    } else {
-        start_row = cursor_end_line;
-        end_row = cursor_start_line;
-        start_x = cursor_end_x;
-        end_x = cursor_start_x;
-    }
-
-    if (start_row < row && row < end_row) {
-        return true;
-    }
-    if (start_row == end_row) {
-        if (row == start_row && start_x <= glyph_center_x && glyph_center_x <= end_x) {
-            return true;
-        }
-    } else {
-        if (row == start_row && start_x <= glyph_center_x) {
-            return true;
-        }
-        if (row == end_row && glyph_center_x <= end_x) {
-            return true;
-        }
-    }
-    return false;
-}
-
 uint8_t TextRenderer::getBorderFlags(float glyph_start_x, float glyph_end_x) {
     uint8_t border_flags = 0;
 
@@ -441,8 +403,8 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float start_x, float start
     cursor_end_col_offset = offset;
     cursor_end_x = x;
 
-    selection_start_byte = buffer.byteOfLine(cursor_start_line) + cursor_start_col_offset;
-    selection_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
+    cursor_start_byte = buffer.byteOfLine(cursor_start_line) + cursor_start_col_offset;
+    cursor_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,

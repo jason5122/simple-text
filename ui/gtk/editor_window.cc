@@ -123,7 +123,7 @@ static gboolean render(GtkWidget* widget) {
     double scaled_scroll_y = scroll_y * scale_factor;
     int scaled_editor_offset_x = editor_offset_x * scale_factor;
     int scaled_editor_offset_y = editor_offset_y * scale_factor;
-    float scaled_status_bar_height = ui_font_rasterizer.line_height;  // Already scaled.
+    float scaled_status_bar_height = ui_font_rasterizer.line_height;
 
     std::cerr << "raw dimensions: " << gtk_widget_get_allocated_width(widget) << "x"
               << gtk_widget_get_allocated_height(widget) << '\n';
@@ -147,9 +147,13 @@ static gboolean render(GtkWidget* widget) {
                         buffer.lineCount(), text_renderer->longest_line_x, scaled_editor_offset_x,
                         scaled_editor_offset_y, scaled_status_bar_height);
 
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     image_renderer->resize(scaled_width, scaled_height);
     image_renderer->draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
                          scaled_editor_offset_y);
+
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    text_renderer->renderUiText(main_font_rasterizer, ui_font_rasterizer);
 
     // we completed our drawing; the draw commands will be
     // flushed at the end of the signal emission chain, and

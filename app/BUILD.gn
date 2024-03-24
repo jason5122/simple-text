@@ -18,7 +18,7 @@ if (is_mac) {
 
     deps = [
       ":icon",
-      "//ui/mac",
+      "//ui/cocoa",
       "//ui/renderer",
     ]
   }
@@ -34,13 +34,12 @@ if (is_linux) {
 
     sources = [
       "main.cc",
-      "main_gtk.cc",
+      "main_linux.cc",
     ]
 
     deps = [
       "//ui/gtk",
       "//ui/renderer",
-      "//util",
     ]
   }
 }

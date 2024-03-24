@@ -1,4 +1,4 @@
-source_set("mac") {
+source_set("cocoa") {
   sources = [
     "EditorView.mm",
     "WindowController.mm",

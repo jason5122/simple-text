@@ -5,6 +5,7 @@ sample_files = [
   "sort_bugged.scm",
   "text_renderer.cc",
   "example.json",
+  "worst_case.json",
 ]
 
 if (is_mac) {

@@ -19,6 +19,8 @@ FontRasterizer ui_font_rasterizer;
 
 double scroll_x = 0;
 double scroll_y = 0;
+double cursor_start_x = 0;
+double cursor_start_y = 0;
 double cursor_end_x = 0;
 double cursor_end_y = 0;
 float editor_offset_x = 200;
@@ -238,8 +240,12 @@ static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer 
         mouse_x += scroll_x;
         mouse_y += scroll_y;
 
+        cursor_start_x = mouse_x;
+        cursor_start_y = mouse_y;
+
         int scale_factor = gtk_widget_get_scale_factor(widget);
-        text_renderer->setCursorPositions(buffer, 0, 0, mouse_x * scale_factor,
+        text_renderer->setCursorPositions(buffer, cursor_start_x * scale_factor,
+                                          cursor_start_y * scale_factor, mouse_x * scale_factor,
                                           mouse_y * scale_factor, main_font_rasterizer);
 
         gtk_widget_queue_draw(widget);
@@ -262,6 +268,29 @@ static gboolean on_crossing(GtkWidget* widget, GdkEventCrossing* event) {
     }
     gdk_window_set_cursor(gtk_widget_get_window(widget), cursor);
     g_object_unref(cursor);
+    return true;
+}
+
+static gboolean motion_event(GtkWidget* widget, GdkEventMotion* event, gpointer data) {
+    if (event->type == GDK_MOTION_NOTIFY) {
+        std::cerr << "GDK_MOTION_NOTIFY\n";
+
+        gdouble mouse_x = event->x;
+        gdouble mouse_y = event->y;
+
+        mouse_x -= editor_offset_x;
+        mouse_y -= editor_offset_y;
+
+        mouse_x += scroll_x;
+        mouse_y += scroll_y;
+
+        int scale_factor = gtk_widget_get_scale_factor(widget);
+        text_renderer->setCursorPositions(buffer, cursor_start_x * scale_factor,
+                                          cursor_start_y * scale_factor, mouse_x * scale_factor,
+                                          mouse_y * scale_factor, main_font_rasterizer);
+
+        gtk_widget_queue_draw(widget);
+    }
     return true;
 }
 
@@ -305,6 +334,9 @@ static void activate(GtkApplication* app) {
     gtk_widget_add_events(gl_area, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
     g_signal_connect(G_OBJECT(gl_area), "enter-notify-event", G_CALLBACK(on_crossing), nullptr);
     g_signal_connect(G_OBJECT(gl_area), "leave-notify-event", G_CALLBACK(on_crossing), nullptr);
+
+    gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
+    g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), nullptr);
 
     gtk_window_maximize(GTK_WINDOW(window));
     // TODO: Set default window size without magic numbers.

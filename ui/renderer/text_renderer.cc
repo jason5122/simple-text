@@ -214,8 +214,28 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 uint_least32_t codepoint;
                 grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
+                // If a space character is in selection, draw it as a visible symbol.
+                // FIXME: Don't use magic numbers here.
+                size_t selection_start = cursor_start_byte;
+                size_t selection_end = cursor_end_byte;
+                if (selection_start > selection_end) {
+                    std::swap(selection_start, selection_end);
+                }
+
+                if (codepoint == 0x20 && selection_start <= byte_offset &&
+                    byte_offset < selection_end) {
+                    codepoint = 183;
+                }
+
                 if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
                     std::string utf8_str = line_str.substr(offset, ret);
+
+                    // FIXME: Don't use magic numbers here.
+                    if (codepoint == 183) {
+                        std::cerr << codepoint << '\n';
+                        utf8_str = "·";
+                    }
+
                     this->loadGlyph(utf8_str, codepoint, font_rasterizer);
                 }
 
@@ -284,6 +304,10 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                                          shaped_glyph.byte_offset < selection_end;
 
             Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset);
+            if (shaped_glyph.codepoint == 183) {
+                text_color = Rgb{182, 182, 182};
+            }
+
             uint8_t bg_a = is_glyph_in_selection ? 255 : 0;
 
             uint8_t border_flags = 0;

@@ -245,9 +245,9 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
                 Vec2 bg_size{std::round(glyph.advance), font_rasterizer.line_height};
                 if (total_advance + std::round(glyph.advance) > scroll_x) {
-                    line_layouts[line_layout_index].emplace_back(codepoint, byte_offset, coords,
-                                                                 glyph.glyph, glyph.uv, bg_size,
-                                                                 glyph.colored);
+                    line_layouts[line_layout_index].emplace_back(
+                        ShapedGlyph{codepoint, byte_offset, coords, glyph.glyph, glyph.uv, bg_size,
+                                    glyph.colored});
                 }
 
                 total_advance += std::round(glyph.advance);

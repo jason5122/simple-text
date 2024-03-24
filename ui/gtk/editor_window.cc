@@ -1,4 +1,10 @@
+#include "base/buffer.h"
+#import "base/syntax_highlighter.h"
 #include "editor_window.h"
+#import "font/rasterizer.h"
+#include "ui/renderer/image_renderer.h"
+#include "ui/renderer/rect_renderer.h"
+#include "ui/renderer/text_renderer.h"
 #include <epoxy/gl.h>
 #include <iostream>
 
@@ -8,6 +14,8 @@ ImageRenderer* image_renderer;
 TextRenderer* text_renderer;
 SyntaxHighlighter highlighter;
 Buffer buffer;
+FontRasterizer main_font_rasterizer;
+FontRasterizer ui_font_rasterizer;
 
 double scroll_x = 0;
 double scroll_y = 0;
@@ -115,6 +123,7 @@ static gboolean render(GtkWidget* widget) {
     double scaled_scroll_y = scroll_y * scale_factor;
     int scaled_editor_offset_x = editor_offset_x * scale_factor;
     int scaled_editor_offset_y = editor_offset_y * scale_factor;
+    float scaled_status_bar_height = ui_font_rasterizer.line_height;  // Already scaled.
 
     std::cerr << "raw dimensions: " << gtk_widget_get_allocated_width(widget) << "x"
               << gtk_widget_get_allocated_height(widget) << '\n';
@@ -128,14 +137,15 @@ static gboolean render(GtkWidget* widget) {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer->resize(scaled_width, scaled_height);
     text_renderer->renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
-                              scaled_editor_offset_x, scaled_editor_offset_y);
+                              scaled_editor_offset_x, scaled_editor_offset_y, main_font_rasterizer,
+                              scaled_status_bar_height);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer->resize(scaled_width, scaled_height);
     rect_renderer->draw(scaled_scroll_x, scaled_scroll_y, text_renderer->cursor_end_x,
-                        text_renderer->cursor_end_line, text_renderer->line_height,
+                        text_renderer->cursor_end_line, main_font_rasterizer.line_height,
                         buffer.lineCount(), text_renderer->longest_line_x, scaled_editor_offset_x,
-                        scaled_editor_offset_y);
+                        scaled_editor_offset_y, scaled_status_bar_height);
 
     image_renderer->resize(scaled_width, scaled_height);
     image_renderer->draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
@@ -166,7 +176,9 @@ static void realize(GtkWidget* widget) {
     text_renderer = new TextRenderer();
     rect_renderer = new RectRenderer();
     image_renderer = new ImageRenderer();
-    text_renderer->setup(scaled_width, scaled_height, font_name, font_size);
+    main_font_rasterizer.setup(0, "SourceCodePro-Regular.ttf", 16 * scale_factor);
+    ui_font_rasterizer.setup(1, "SourceCodePro-Regular.ttf", 11 * scale_factor);
+    text_renderer->setup(scaled_width, scaled_height, main_font_rasterizer);
     rect_renderer->setup(scaled_width, scaled_height);
     image_renderer->setup(scaled_width, scaled_height);
 
@@ -224,7 +236,7 @@ static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer 
 
         int scale_factor = gtk_widget_get_scale_factor(widget);
         text_renderer->setCursorPositions(buffer, 0, 0, mouse_x * scale_factor,
-                                          mouse_y * scale_factor);
+                                          mouse_y * scale_factor, main_font_rasterizer);
 
         gtk_widget_queue_draw(widget);
     }

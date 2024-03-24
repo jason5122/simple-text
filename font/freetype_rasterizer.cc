@@ -19,7 +19,9 @@ public:
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
-bool FontRasterizer::setup(std::string main_font_name, int font_size) {
+bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
+    this->id = id;
+
     fs::path main_font_path = ResourcePath() / "fonts" / main_font_name;
 
     std::vector<const char*> font_paths;

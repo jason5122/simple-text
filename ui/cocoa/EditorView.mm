@@ -360,7 +360,7 @@ const char* hex(char c) {
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
 
-        main_font_rasterizer.setup(0, "Source Code Pro", 16 * self.contentsScale);
+        main_font_rasterizer.setup(0, "Fira Code", 16 * self.contentsScale);
         ui_font_rasterizer.setup(1, "SF Pro Text", 11 * self.contentsScale);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);

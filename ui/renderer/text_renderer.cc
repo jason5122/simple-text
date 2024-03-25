@@ -208,6 +208,27 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             std::string line_str;
             buffer.getLineContent(&line_str, line_index);
 
+            std::vector<RasterizedGlyph> rasterized_glyphs =
+                font_rasterizer.layoutLine(&line_str[0]);
+
+            for (auto& glyph : rasterized_glyphs) {
+                Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored,
+                                              &glyph.buffer[0]);
+
+                AtlasGlyph atlas_glyph{
+                    .glyph =
+                        Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
+                             static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
+                    .uv = uv,
+                    .advance = glyph.advance,
+                    .colored = glyph.colored,
+                };
+
+                // line_layouts[line_layout_index].emplace_back(
+                //     codepoint, byte_offset, coords, glyph.glyph, glyph.uv, bg_size,
+                //     glyph.colored);
+            }
+
             for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
 

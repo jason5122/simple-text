@@ -12,6 +12,7 @@ public:
     FontRasterizer();
     bool setup(int id, std::string main_font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
+    std::vector<RasterizedGlyph> layoutLine(const char* utf8_str);
     ~FontRasterizer();
 
 private:

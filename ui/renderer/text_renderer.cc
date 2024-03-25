@@ -208,93 +208,102 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             std::string line_str;
             buffer.getLineContent(&line_str, line_index);
 
-            float total_advance_for_layout = 0;
+            // Debugging purposes.
+            bool use_new_line_layout_implementation = true;
+            bool disable_cache = true;
 
-            std::vector<RasterizedGlyph> rasterized_glyphs =
-                font_rasterizer.layoutLine(&line_str[0]);
+            if (use_new_line_layout_implementation) {
+                float total_advance_for_layout = 0;
 
-            for (auto& rasterized_glyph : rasterized_glyphs) {
-                if (!glyph_cache[font_rasterizer.id].count(rasterized_glyph.index)) {
-                    Vec4 uv =
-                        atlas.insertTexture(rasterized_glyph.width, rasterized_glyph.height,
-                                            rasterized_glyph.colored, &rasterized_glyph.buffer[0]);
+                std::vector<RasterizedGlyph> rasterized_glyphs =
+                    font_rasterizer.layoutLine(&line_str[0]);
 
-                    AtlasGlyph atlas_glyph{
-                        .glyph = Vec4{static_cast<float>(rasterized_glyph.left),
-                                      static_cast<float>(rasterized_glyph.top),
-                                      static_cast<float>(rasterized_glyph.width),
-                                      static_cast<float>(rasterized_glyph.height)},
-                        .uv = uv,
-                        .advance = rasterized_glyph.advance,
-                        .colored = rasterized_glyph.colored,
-                    };
-                    glyph_cache[font_rasterizer.id].insert({rasterized_glyph.index, atlas_glyph});
+                for (auto& rasterized_glyph : rasterized_glyphs) {
+                    if (!glyph_cache[font_rasterizer.id].count(rasterized_glyph.index)) {
+                        Vec4 uv = atlas.insertTexture(
+                            rasterized_glyph.width, rasterized_glyph.height,
+                            rasterized_glyph.colored, &rasterized_glyph.buffer[0]);
+
+                        AtlasGlyph atlas_glyph{
+                            .glyph = Vec4{static_cast<float>(rasterized_glyph.left),
+                                          static_cast<float>(rasterized_glyph.top),
+                                          static_cast<float>(rasterized_glyph.width),
+                                          static_cast<float>(rasterized_glyph.height)},
+                            .uv = uv,
+                            .advance = rasterized_glyph.advance,
+                            .colored = rasterized_glyph.colored,
+                        };
+                        glyph_cache[font_rasterizer.id].insert(
+                            {rasterized_glyph.index, atlas_glyph});
+                    }
+
+                    AtlasGlyph atlas_glyph =
+                        glyph_cache[font_rasterizer.id][rasterized_glyph.index];
+
+                    // TODO: Determine if we should always round `atlas_glyph.advance`.
+                    Vec2 coords{total_advance_for_layout,
+                                line_index * font_rasterizer.line_height};
+                    Vec2 bg_size{std::round(atlas_glyph.advance), font_rasterizer.line_height};
+                    if (total_advance_for_layout + std::round(atlas_glyph.advance) > scroll_x) {
+                        line_layouts[line_layout_index].emplace_back(
+                            ShapedGlyph{0, byte_offset, coords, atlas_glyph.glyph, atlas_glyph.uv,
+                                        bg_size, atlas_glyph.colored});
+                    }
+
+                    total_advance_for_layout += std::round(atlas_glyph.advance);
+                }
+            } else {
+                for (size_t offset = 0; offset < line_str.size();
+                     offset += ret, byte_offset += ret) {
+                    ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
+
+                    uint_least32_t codepoint;
+                    grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
+
+                    // If a space character is in selection, draw it as a visible symbol.
+                    // FIXME: Don't use magic numbers here.
+                    size_t selection_start = cursor_start_byte;
+                    size_t selection_end = cursor_end_byte;
+                    if (selection_start > selection_end) {
+                        std::swap(selection_start, selection_end);
+                    }
+
+                    // if (codepoint == 0x20 && selection_start <= byte_offset &&
+                    //     byte_offset < selection_end) {
+                    //     codepoint = 183;
+                    // }
+
+                    if (disable_cache || !glyph_cache[font_rasterizer.id].count(codepoint)) {
+                        std::string utf8_str = line_str.substr(offset, ret);
+
+                        // // FIXME: Don't use magic numbers here.
+                        // if (codepoint == 183) {
+                        //     std::cerr << codepoint << '\n';
+                        //     utf8_str = "·";
+                        // }
+
+                        this->loadGlyph(utf8_str, codepoint, font_rasterizer);
+                    }
+
+                    AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
+
+                    // TODO: Determine if we should always round `glyph.advance`.
+                    Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
+                    Vec2 bg_size{std::round(glyph.advance), font_rasterizer.line_height};
+                    if (total_advance + std::round(glyph.advance) > scroll_x) {
+                        line_layouts[line_layout_index].emplace_back(
+                            ShapedGlyph{codepoint, byte_offset, coords, glyph.glyph, glyph.uv,
+                                        bg_size, glyph.colored});
+                    }
+
+                    std::cerr << "total_advance: " << total_advance << '\n';
+
+                    total_advance += std::round(glyph.advance);
                 }
 
-                AtlasGlyph atlas_glyph = glyph_cache[font_rasterizer.id][rasterized_glyph.index];
-
-                // TODO: Determine if we should always round `atlas_glyph.advance`.
-                Vec2 coords{total_advance_for_layout, line_index * font_rasterizer.line_height};
-                Vec2 bg_size{std::round(atlas_glyph.advance), font_rasterizer.line_height};
-                if (total_advance_for_layout + std::round(atlas_glyph.advance) > scroll_x) {
-                    line_layouts[line_layout_index].emplace_back(
-                        ShapedGlyph{0, byte_offset, coords, atlas_glyph.glyph, atlas_glyph.uv,
-                                    bg_size, atlas_glyph.colored});
-                }
-
-                total_advance_for_layout += std::round(atlas_glyph.advance);
+                byte_offset++;
+                longest_line_x = std::max(total_advance, longest_line_x);
             }
-
-            for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
-                ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
-
-                // uint_least32_t codepoint;
-                // grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
-
-                // // If a space character is in selection, draw it as a visible symbol.
-                // // FIXME: Don't use magic numbers here.
-                // size_t selection_start = cursor_start_byte;
-                // size_t selection_end = cursor_end_byte;
-                // if (selection_start > selection_end) {
-                //     std::swap(selection_start, selection_end);
-                // }
-
-                // // if (codepoint == 0x20 && selection_start <= byte_offset &&
-                // //     byte_offset < selection_end) {
-                // //     codepoint = 183;
-                // // }
-
-                // if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
-                //     std::string utf8_str = line_str.substr(offset, ret);
-
-                //     // // FIXME: Don't use magic numbers here.
-                //     // if (codepoint == 183) {
-                //     //     std::cerr << codepoint << '\n';
-                //     //     utf8_str = "·";
-                //     // }
-
-                //     this->loadGlyph(utf8_str, codepoint, font_rasterizer);
-                // }
-
-                // AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
-
-                // // TODO: Determine if we should always round `glyph.advance`.
-                // Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
-                // Vec2 bg_size{std::round(glyph.advance), font_rasterizer.line_height};
-                // if (total_advance + std::round(glyph.advance) > scroll_x) {
-                //     line_layouts[line_layout_index].emplace_back(
-                //         ShapedGlyph{codepoint, byte_offset, coords, glyph.glyph, glyph.uv,
-                //         bg_size,
-                //                     glyph.colored});
-                // }
-
-                // std::cerr << "total_advance: " << total_advance << '\n';
-
-                // total_advance += std::round(glyph.advance);
-            }
-
-            byte_offset++;
-            longest_line_x = std::max(total_advance, longest_line_x);
         }
     }
 
@@ -434,12 +443,14 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         }
     }
 
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x, 10 *
-    //     font_rasterizer.line_height + scroll_y}, .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE,
-    //     Atlas::ATLAS_SIZE}, .uv = Vec4{0, 0, 1.0, 1.0}, .color = Rgba::fromRgb(colors::black,
-    //     false), .is_atlas = true,
-    // });
+    instances.push_back(InstanceData{
+        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x,
+                       10 * font_rasterizer.line_height + scroll_y},
+        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+        .uv = Vec4{0, 0, 1.0, 1.0},
+        .color = Rgba::fromRgb(colors::black, false),
+        .is_atlas = true,
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

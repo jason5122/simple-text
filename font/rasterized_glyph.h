@@ -11,4 +11,6 @@ struct RasterizedGlyph {
     int32_t height;
     float advance;
     std::vector<uint8_t> buffer;
+    // TODO: Either remove these debug fields, or evaluate if we should keep them.
+    unsigned short index;
 };

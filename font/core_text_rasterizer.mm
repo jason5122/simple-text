@@ -47,8 +47,8 @@ std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
 
     CFMutableDictionaryRef attr = CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    // CFDictionaryAddValue(attr, kCTFontAttributeName, fontRef);
-    // CFDictionaryAddValue(attr, kCTLigatureAttributeName, (CFNumberRef) @2);
+    CFDictionaryAddValue(attr, kCTFontAttributeName, fontRef);
+    // CFDictionaryAddValue(attr, kCTLigatureAttributeName, (CFNumberRef) @0);
 
     CFAttributedStringRef attrString =
         CFAttributedStringCreate(kCFAllocatorDefault, textString, attr);
@@ -65,23 +65,28 @@ std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTFontAttributeName);
 
         // CFNumberRef ligatureAttr =
-        //     (CFNumberRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTLigatureAttributeName);
+        //     (CFNumberRef)CFDictionaryGetValue(CTRunGetAttributes(run),
+        //     kCTLigatureAttributeName);
         // int ligature_value;
         // CFNumberGetValue(ligatureAttr, kCFNumberSInt64Type, &ligature_value);
         // std::cerr << ligature_value << '\n';
 
-        CFIndex runGlyphs = CTRunGetGlyphCount(run);
+        CFIndex count = CTRunGetGlyphCount(run);
+        std::cerr << count << " glyphs" << '\n';
 
-        std::vector<CGGlyph> glyphs(runGlyphs, 0);
-        CTRunGetGlyphs(run, {0, runGlyphs}, &glyphs[0]);
-
-        std::cerr << glyphs.size() << '\n';
-
+        std::vector<CGGlyph> glyphs(count, 0);
+        CTRunGetGlyphs(run, {0, count}, &glyphs[0]);
         for (CGGlyph glyph : glyphs) {
             NSString* runFontName = (__bridge NSString*)CTFontCopyDisplayName(runFont);
             fprintf(stderr, "glyph id: %d, %s\n", glyph, runFontName.UTF8String);
 
             rasterized_glyphs.emplace_back(pimpl->rasterizeGlyph(glyph, runFont, descent));
+        }
+
+        std::vector<CGPoint> positions(count);
+        CTRunGetPositions(run, {0, count}, &positions[0]);
+        for (CGPoint& position : positions) {
+            fprintf(stderr, "%f, %f\n", position.x, position.y);
         }
     }
     return rasterized_glyphs;
@@ -151,13 +156,14 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
         CTFontGetAdvancesForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
 
     return RasterizedGlyph{
-        colored,
-        rasterizedLeft,
-        top,
-        static_cast<int32_t>(rasterizedWidth),
-        static_cast<int32_t>(rasterizedHeight),
-        advance,
-        buffer,
+        .colored = colored,
+        .left = rasterizedLeft,
+        .top = top,
+        .width = static_cast<int32_t>(rasterizedWidth),
+        .height = static_cast<int32_t>(rasterizedHeight),
+        .advance = advance,
+        .buffer = buffer,
+        .index = glyph_index,
     };
 }
 

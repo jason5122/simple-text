@@ -64,15 +64,8 @@ std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
         CTFontRef runFont =
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTFontAttributeName);
 
-        // CFNumberRef ligatureAttr =
-        //     (CFNumberRef)CFDictionaryGetValue(CTRunGetAttributes(run),
-        //     kCTLigatureAttributeName);
-        // int ligature_value;
-        // CFNumberGetValue(ligatureAttr, kCFNumberSInt64Type, &ligature_value);
-        // std::cerr << ligature_value << '\n';
-
         CFIndex count = CTRunGetGlyphCount(run);
-        std::cerr << count << " glyphs" << '\n';
+        std::cerr << count << " glyphs in run" << '\n';
 
         std::vector<CGGlyph> glyphs(count, 0);
         CTRunGetGlyphs(run, {0, count}, &glyphs[0]);

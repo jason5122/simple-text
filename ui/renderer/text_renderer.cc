@@ -250,6 +250,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                                         bg_size, atlas_glyph.colored});
                     }
 
+                    std::cerr << "total_advance_for_layout: " << total_advance_for_layout << '\n';
                     total_advance_for_layout += std::round(atlas_glyph.advance);
                 }
             } else {
@@ -297,7 +298,6 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                     }
 
                     std::cerr << "total_advance: " << total_advance << '\n';
-
                     total_advance += std::round(glyph.advance);
                 }
 

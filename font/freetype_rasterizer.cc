@@ -13,12 +13,11 @@
 
 class FontRasterizer::impl {
 public:
-    std::vector<std::pair<FT_Face, hb_font_t*>> font_fallback_list;
-    std::pair<hb_codepoint_t, size_t> getGlyphIndex(const char* utf8_str);
-
+    hb_font_t* hb_font;
     PangoFont* pango_font;
     PangoContext* context;
-    PangoGlyph pangoGetGlyphIndex(const char* utf8_str);
+    hb_codepoint_t getGlyphIndex(const char* utf8_str);
+    PangoGlyph getPangoGlyph(const char* utf8_str);
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -45,12 +44,6 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     fs::path main_font_path = ResourcePath() / "fonts" / main_font_name;
 
-    std::vector<const char*> font_paths;
-    font_paths.push_back(main_font_path.c_str());
-    // font_paths.push_back("/System/Library/Fonts/Apple Color Emoji.ttc");
-    // font_paths.push_back("/System/Library/Fonts/Monaco.ttf");
-    // font_paths.push_back("/System/Library/Fonts/NotoSansMyanmar.ttc");
-
     FT_Error error;
 
     FT_Library ft;
@@ -60,38 +53,19 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
         return false;
     }
 
-    for (const auto& path : font_paths) {
-        FT_Face ft_face;
-        error = FT_New_Face(ft, path, 0, &ft_face);
-        if (error != FT_Err_Ok) {
-            std::cerr << "FT_New_Face error: " << FT_Error_String(error) << '\n';
-            return false;
-        }
-        FT_Set_Pixel_Sizes(ft_face, 0, font_size);
-
-        // hb_blob_t* hb_blob = hb_blob_create_from_file(path);
-        // hb_face_t* hb_face = hb_face_create(hb_blob, 0);
-        // hb_font_t* hb_font = hb_font_create(hb_face);
-        // hb_blob_destroy(hb_blob);
-        // hb_face_destroy(hb_face);
-
-        hb_font_t* hb_font = hb_ft_font_create(ft_face, nullptr);
-        // hb_font_t* hb_font = pango_font_get_hb_font(pimpl->pango_font);
-
-        FT_Face temp = hb_ft_font_get_face(hb_font);
-        if (temp) {
-            std::cerr << "hb_ft_font_get_face() success\n";
-        } else {
-            std::cerr << "Error: hb_ft_font_get_face() was not valid\n";
-        }
-
-        pimpl->font_fallback_list.push_back({ft_face, hb_font});
+    FT_Face ft_face;
+    error = FT_New_Face(ft, main_font_path.c_str(), 0, &ft_face);
+    if (error != FT_Err_Ok) {
+        std::cerr << "FT_New_Face error: " << FT_Error_String(error) << '\n';
+        return false;
     }
+    FT_Set_Pixel_Sizes(ft_face, 0, font_size);
 
-    FT_Face ft_main_face = pimpl->font_fallback_list[0].first;
-    float ascent = std::round(static_cast<float>(ft_main_face->ascender) / 64);
-    float descent = std::round(static_cast<float>(ft_main_face->descender) / 64);
-    float glyph_height = std::round(static_cast<float>(ft_main_face->height) / 64);
+    pimpl->hb_font = hb_ft_font_create(ft_face, nullptr);
+
+    float ascent = std::round(static_cast<float>(ft_face->ascender) / 64);
+    float descent = std::round(static_cast<float>(ft_face->descender) / 64);
+    float glyph_height = std::round(static_cast<float>(ft_face->height) / 64);
 
     // TODO: Multiply by scale factor instead of hard coding.
     ascent *= 2;
@@ -128,50 +102,38 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-std::pair<hb_codepoint_t, size_t> FontRasterizer::impl::getGlyphIndex(const char* utf8_str) {
-    for (size_t font_index = 0; font_index < font_fallback_list.size(); font_index++) {
-        hb_font_t* hb_font = font_fallback_list[font_index].second;
+hb_codepoint_t FontRasterizer::impl::getGlyphIndex(const char* utf8_str) {
+    hb_buffer_t* buf;
+    buf = hb_buffer_create();
+    hb_buffer_add_utf8(buf, utf8_str, -1, 0, -1);
 
-        hb_buffer_t* buf;
-        buf = hb_buffer_create();
-        hb_buffer_add_utf8(buf, utf8_str, -1, 0, -1);
+    hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
+    hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
+    hb_buffer_set_language(buf, hb_language_from_string("en", -1));
 
-        hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
-        hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
-        hb_buffer_set_language(buf, hb_language_from_string("en", -1));
+    hb_shape(hb_font, buf, NULL, 0);
 
-        hb_shape(hb_font, buf, NULL, 0);
+    unsigned int glyph_count;
+    hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
 
-        unsigned int glyph_count;
-        hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
+    // for (unsigned int i = 0; i < glyph_count; i++) {
+    //     hb_codepoint_t glyph_index = glyph_info[i].codepoint;
+    //     fprintf(stderr, "{%d, %zu} %s\n", glyph_index, font_index, utf8_str);
+    // }
 
-        // for (unsigned int i = 0; i < glyph_count; i++) {
-        //     hb_codepoint_t glyph_index = glyph_info[i].codepoint;
-        //     fprintf(stderr, "{%d, %zu} %s\n", glyph_index, font_index, utf8_str);
-        // }
-
-        if (glyph_count > 0) {
-            hb_codepoint_t glyph_index = glyph_info[0].codepoint;
-            if (glyph_index > 0) {
-                hb_buffer_destroy(buf);
-                return {glyph_index, font_index};
-            }
+    if (glyph_count > 0) {
+        hb_codepoint_t glyph_index = glyph_info[0].codepoint;
+        if (glyph_index > 0) {
+            hb_buffer_destroy(buf);
+            return glyph_index;
         }
-
-        hb_buffer_destroy(buf);
     }
-    return {0, 0};
+
+    hb_buffer_destroy(buf);
+    return 0;
 }
 
-PangoGlyph FontRasterizer::impl::pangoGetGlyphIndex(const char* utf8_str) {
-    // TODO: Debug use; remove this.
-    {
-        hb_font_t* pango_hb_font = pango_font_get_hb_font(pango_font);
-        hb_codepoint_t glyph;
-        hb_font_get_glyph(pango_hb_font, utf8_str[0], 0, &glyph);
-        return glyph;
-    }
-
+PangoGlyph FontRasterizer::impl::getPangoGlyph(const char* utf8_str) {
     PangoAttrList* attrs = pango_attr_list_new();
     GList* items = pango_itemize(context, utf8_str, 0, strlen(utf8_str), attrs, nullptr);
     PangoItem* item = static_cast<PangoItem*>(items->data);
@@ -183,22 +145,82 @@ PangoGlyph FontRasterizer::impl::pangoGetGlyphIndex(const char* utf8_str) {
     PangoGlyphInfo* glyphs = glyph_string->glyphs;
     for (int i = 0; i < glyph_string->num_glyphs; i++) {
         PangoGlyphInfo glyph_info = glyphs[i];
-        PangoGlyph glyph_index = glyph_info.glyph;
-        return glyph_index;
+        return glyph_info.glyph;
     }
     return 0;
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
-    auto [glyph_index, font_index] = pimpl->getGlyphIndex(utf8_str);
-    FT_Face ft_face = pimpl->font_fallback_list[font_index].first;
+cairo_t* create_layout_context() {
+    cairo_surface_t* temp_surface;
+    cairo_t* context;
 
-    PangoGlyph pango_glyph_index = pimpl->pangoGetGlyphIndex(utf8_str);
-    if (glyph_index != pango_glyph_index) {
-        fprintf(stderr, "DANGER: %d vs %d\n", glyph_index, pango_glyph_index);
-    } else {
-        fprintf(stderr, "GOOD! %d\n", glyph_index);
+    temp_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
+    context = cairo_create(temp_surface);
+    cairo_surface_destroy(temp_surface);
+
+    return context;
+}
+
+cairo_t* create_cairo_context(int width, int height, int channels, cairo_surface_t** surf,
+                              unsigned char** buffer) {
+    *buffer = (unsigned char*)calloc(channels * width * height, sizeof(unsigned char));
+    *surf = cairo_image_surface_create_for_data(*buffer, CAIRO_FORMAT_ARGB32, width, height,
+                                                channels * width);
+    return cairo_create(*surf);
+}
+
+void get_text_size(PangoLayout* layout, int* width, int* height) {
+    pango_layout_get_size(layout, width, height);
+    *width /= PANGO_SCALE;
+    *height /= PANGO_SCALE;
+}
+
+RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
+    FT_Face ft_face = hb_ft_font_get_face(pimpl->hb_font);
+    hb_codepoint_t glyph_index = pimpl->getGlyphIndex(utf8_str);
+
+    PangoGlyph pango_glyph_index = pimpl->getPangoGlyph(utf8_str);
+    fprintf(stderr, "%d vs %d\n", glyph_index, pango_glyph_index);
+
+    cairo_t* layout_context = create_layout_context();
+    PangoLayout* layout = pango_cairo_create_layout(layout_context);
+    pango_layout_set_text(layout, utf8_str, -1);
+
+    PangoFontDescription* desc = pango_font_describe(pimpl->pango_font);
+    pango_layout_set_font_description(layout, desc);
+    pango_font_description_free(desc);
+
+    int text_width, text_height, texture_id;
+    cairo_surface_t* temp_surface;
+    cairo_surface_t* surface;
+    unsigned char* surface_data = nullptr;
+    get_text_size(layout, &text_width, &text_height);
+    cairo_t* render_context =
+        create_cairo_context(text_width, text_height, 4, &surface, &surface_data);
+
+    cairo_set_source_rgba(render_context, 1, 1, 1, 1);
+    pango_cairo_show_layout(render_context, layout);
+
+    std::vector<uint8_t> temp_buffer;
+
+    size_t pixels = text_width * text_height * 4;
+    temp_buffer.reserve(pixels);
+    for (size_t i = 0; i < pixels; i += 4) {
+        temp_buffer.push_back(surface_data[i + 2]);
+        temp_buffer.push_back(surface_data[i + 1]);
+        temp_buffer.push_back(surface_data[i]);
+        // temp_buffer.push_back(surface_data[i + 3]);
     }
+
+    return RasterizedGlyph{
+        .colored = false,
+        .left = 0,
+        .top = 0,
+        .width = text_width,
+        .height = text_height,
+        .advance = static_cast<float>(text_width),
+        .buffer = temp_buffer,
+    };
 
     // TODO: Handle errors.
     FT_Error error;
@@ -255,13 +277,13 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
     top -= descent;
 
     return RasterizedGlyph{
-        colored,
-        ft_face->glyph->bitmap_left,
-        top,
-        static_cast<int32_t>(width),
-        static_cast<int32_t>(rows),
-        advance,
-        packed_buffer,
+        .colored = colored,
+        .left = ft_face->glyph->bitmap_left,
+        .top = top,
+        .width = static_cast<int32_t>(width),
+        .height = static_cast<int32_t>(rows),
+        .advance = advance,
+        .buffer = packed_buffer,
     };
 }
 
@@ -270,7 +292,5 @@ std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
 }
 
 FontRasterizer::~FontRasterizer() {
-    for (const auto& [ft_font, hb_font] : pimpl->font_fallback_list) {
-        hb_font_destroy(hb_font);
-    }
+    hb_font_destroy(pimpl->hb_font);
 }

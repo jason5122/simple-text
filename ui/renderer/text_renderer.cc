@@ -209,7 +209,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             buffer.getLineContent(&line_str, line_index);
 
             // Debugging purposes.
-            bool use_new_line_layout_implementation = true;
+            bool use_new_line_layout_implementation = false;
             bool disable_cache = false;
 
             if (use_new_line_layout_implementation) {
@@ -341,7 +341,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
         // }
 
         for (size_t j = 0; j < line_layouts[i].size(); j++) {
-            ShapedGlyph shaped_glyph = line_layouts[i][j];
+            ShapedGlyph& shaped_glyph = line_layouts[i][j];
 
             float advance = shaped_glyph.bg_size.x;
             float glyph_start_x = shaped_glyph.coords.x;

@@ -9,12 +9,11 @@
 
 | Feature              | macOS          | Linux         | Windows          |
 | -------------------- | -------------- | ------------- | ---------------- |
-| Text Rasterizer      | ✅ (Core Text) | ✅ (FreeType) | ❌ (DirectWrite) |
-| Text Shaper          | ✅ (Core Text) | ✅ (HarfBuzz) | ❌ (???)         |
-| Window creation      | ✅ (Cocoa)     | ✅ (GTK)      | ❌ (Win32)       |
-| OpenGL context       | ✅ (Cocoa)     | ✅ (libepoxy) | ❌               |
-| Keyboard/mouse input | ✅             | 🚧            | ❌               |
-| Tabs                 | ❌             | ❌            | ❌               |
+| Text System          | ✅ (Core Text) | ✅ (Pango)    | 🚧 (DirectWrite) |
+| Window creation      | ✅ (Cocoa)     | ✅ (GTK 3)    | 🚧 (Win32)       |
+| OpenGL context       | ✅ (Cocoa)     | ✅ (libepoxy) | 🚧               |
+| Keyboard/mouse input | ✅             | ✅            | 🚧               |
+| Tabs                 | 🚧             | 🚧            | 🚧               |
 | Popups/Dialogs       | ❌             | ❌            | ❌               |
 
 ## Dependencies

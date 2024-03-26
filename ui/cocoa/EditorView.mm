@@ -462,8 +462,8 @@ const char* hex(char c) {
         image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
                             scaled_editor_offset_y);
 
-        glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-        text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
+        // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+        // text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
 
         // Calls glFlush() by default.
         [super drawInCGLContext:glContext

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "third_party/fredbuf/fredbuf.h"
 #include <cstdint>
 #include <cstring>
 #include <string>
 #include <tree_sitter/api.h>
-using namespace PieceTree;
+#include <vector>
 
 class Buffer {
 public:
@@ -52,8 +51,6 @@ public:
     }
 
 private:
-    Tree piece_tree;
-
     using BufferType = std::vector<std::string>;
 
     BufferType::iterator begin() {

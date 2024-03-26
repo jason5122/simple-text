@@ -1,15 +1,11 @@
 source_set("tests") {
   testonly = true
 
-  sources = [
-    "fredbuf_test.cc",
-    "tree_sitter_test.cc",
-  ]
+  sources = [ "tree_sitter_test.cc" ]
 
   deps = [
     ":copy_test_files",
     "//base",
-    "//third_party/fredbuf",
     "//third_party/googletest:gtest",
     "//third_party/tree_sitter",
     "//util",

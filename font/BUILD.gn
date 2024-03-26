@@ -1,11 +1,11 @@
 import("//build/config/linux/pkg_config.gni")
 
 source_set("font") {
-  if (is_mac) {
-    sources = [ "core_text_rasterizer.mm" ]
-  }
+  # if (is_mac) {
+  #   sources = [ "core_text_rasterizer.mm" ]
+  # }
 
-  if (is_linux) {
+  if (is_linux || is_mac) {
     sources = [ "freetype_rasterizer.cc" ]
 
     public_configs = [ ":freetype2_and_harfbuzz" ]

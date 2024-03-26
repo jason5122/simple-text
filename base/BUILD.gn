@@ -1,14 +1,10 @@
 source_set("base") {
   sources = [
     "buffer.cc",
-    # "fredbuf_buffer.cc",
     "syntax_highlighter.cc",
   ]
 
-  deps = [
-    "//base/queries",
-    "//third_party/fredbuf",
-  ]
+  deps = [ "//base/queries" ]
 
   public_deps = [ "//third_party/tree_sitter" ]
 }

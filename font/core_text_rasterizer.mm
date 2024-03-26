@@ -27,6 +27,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     CGFloat leading = std::round(CTFontGetLeading(pimpl->mainFont));
     CGFloat line_height = ascent + descent + leading;
 
+    // TODO: Remove magic numbers that emulate Sublime Text.
     this->line_height = line_height + 2;
     this->descent = -descent;
 

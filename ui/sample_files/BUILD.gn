@@ -3,7 +3,6 @@ sample_files = [
   "proportional_font_test.json",
   "sort.scm",
   "sort_bugged.scm",
-  "text_renderer.cc",
   "example.json",
   "worst_case.json",
 ]

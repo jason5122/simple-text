@@ -6,11 +6,9 @@ source_set("font") {
   # }
 
   if (is_linux || is_mac) {
-    sources = [ "freetype_rasterizer.cc" ]
+    sources = [ "pango_rasterizer.cc" ]
 
     public_configs = [ ":linux_font_libs" ]
-
-    deps = [ ":example_fonts" ]
   }
 }
 
@@ -20,20 +18,4 @@ pkg_config("linux_font_libs") {
     "pango",
     "pangocairo",
   ]
-}
-
-fonts = [ "fonts/SourceCodePro-Regular.ttf" ]
-
-if (is_mac) {
-  bundle_data("example_fonts") {
-    sources = fonts
-    outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
-  }
-}
-
-if (is_linux) {
-  copy("example_fonts") {
-    sources = fonts
-    outputs = [ "$root_out_dir/fonts/{{source_file_part}}" ]
-  }
 }

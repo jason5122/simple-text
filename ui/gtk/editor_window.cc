@@ -176,14 +176,11 @@ static void realize(GtkWidget* widget) {
     int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
 
-    int font_size = 16 * scale_factor;
-    std::string font_name = "SourceCodePro-Regular.ttf";
-
     text_renderer = new TextRenderer();
     rect_renderer = new RectRenderer();
     image_renderer = new ImageRenderer();
-    main_font_rasterizer.setup(0, "SourceCodePro-Regular.ttf", 16 * scale_factor);
-    ui_font_rasterizer.setup(1, "SourceCodePro-Regular.ttf", 11 * scale_factor);
+    main_font_rasterizer.setup(0, "Source Code Pro", 16 * scale_factor);
+    ui_font_rasterizer.setup(1, "Noto Sans", 11 * scale_factor);
     text_renderer->setup(scaled_width, scaled_height, main_font_rasterizer);
     rect_renderer->setup(scaled_width, scaled_height);
     image_renderer->setup(scaled_width, scaled_height);

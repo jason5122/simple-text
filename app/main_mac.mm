@@ -1,5 +1,6 @@
-#import "ui/cocoa/WindowController.h"
 #import <Cocoa/Cocoa.h>
+
+#include "ui/cocoa/WindowController.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     WindowController* windowController;

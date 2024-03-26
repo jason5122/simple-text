@@ -1,5 +1,6 @@
-#import "file_util.h"
 #import <Foundation/Foundation.h>
+
+#include "file_util.h"
 
 fs::path ResourcePath() {
     return NSBundle.mainBundle.resourcePath.fileSystemRepresentation;

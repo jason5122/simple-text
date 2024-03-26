@@ -1,3 +1,5 @@
+#pragma once
+
 #include "base/rgb.h"
 #include <string>
 #include <tree_sitter/api.h>

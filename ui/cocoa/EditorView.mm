@@ -1,20 +1,20 @@
-#import "EditorView.h"
-#import "base/buffer.h"
-#import "base/syntax_highlighter.h"
-#import "font/rasterizer.h"
-#import "ui/renderer/image_renderer.h"
-#import "ui/renderer/rect_renderer.h"
-#import "ui/renderer/text_renderer.h"
-#import "util/file_util.h"
-#import "util/profile_util.h"
-#import <chrono>
-#import <fstream>
-#import <iostream>
-#import <limits>
-#import <sstream>
-#import <string>
-#import <thread>
-#import <vector>
+#include "EditorView.h"
+#include "base/buffer.h"
+#include "base/syntax_highlighter.h"
+#include "font/rasterizer.h"
+#include "ui/renderer/image_renderer.h"
+#include "ui/renderer/rect_renderer.h"
+#include "ui/renderer/text_renderer.h"
+#include "util/file_util.h"
+#include "util/profile_util.h"
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public

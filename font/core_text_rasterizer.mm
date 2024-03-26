@@ -1,15 +1,15 @@
-#include "font/rasterized_glyph.h"
-#import "font/util/CTFontUtil.h"
-#import "rasterizer.h"
 #import <Cocoa/Cocoa.h>
-#include <CoreText/CoreText.h>
-#import <iostream>
+#import <CoreText/CoreText.h>
+
+#include "font/rasterized_glyph.h"
+#include "rasterizer.h"
+#include <iostream>
 
 class FontRasterizer::impl {
 public:
-    CTFontRef mainFont;
+    CTFontRef ct_font;
 
-    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef fontRef, float descent);
+    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef font_ref, float descent);
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -17,14 +17,13 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
 
-    CFStringRef mainFontName =
+    CFStringRef ct_font_name =
         CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
+    pimpl->ct_font = CTFontCreateWithName(ct_font_name, font_size, nullptr);
 
-    pimpl->mainFont = CTFontCreateWithName(mainFontName, font_size, nullptr);
-
-    CGFloat ascent = std::round(CTFontGetAscent(pimpl->mainFont));
-    CGFloat descent = std::round(CTFontGetDescent(pimpl->mainFont));
-    CGFloat leading = std::round(CTFontGetLeading(pimpl->mainFont));
+    CGFloat ascent = std::round(CTFontGetAscent(pimpl->ct_font));
+    CGFloat descent = std::round(CTFontGetDescent(pimpl->ct_font));
+    CGFloat leading = std::round(CTFontGetLeading(pimpl->ct_font));
     CGFloat line_height = ascent + descent + leading;
 
     // TODO: Remove magic numbers that emulate Sublime Text.
@@ -35,33 +34,66 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 }
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
-    CTRunResult runResult = CTFontGetGlyphIndex(pimpl->mainFont, utf8_str);
-    return pimpl->rasterizeGlyph(runResult.glyph, runResult.runFont, descent);
-}
-
-std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
-    CTFontRef fontRef = pimpl->mainFont;
+    CGGlyph glyph = 0;
+    CTFontRef run_font = pimpl->ct_font;
 
     size_t bytes = strlen(utf8_str);
-    CFStringRef textString = CFStringCreateWithBytes(kCFAllocatorDefault, (const uint8_t*)utf8_str,
-                                                     bytes, kCFStringEncodingUTF8, false);
+    CFStringRef text_string = CFStringCreateWithBytes(
+        kCFAllocatorDefault, (const uint8_t*)utf8_str, bytes, kCFStringEncodingUTF8, false);
 
     CFMutableDictionaryRef attr = CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    CFDictionaryAddValue(attr, kCTFontAttributeName, fontRef);
+    CFDictionaryAddValue(attr, kCTFontAttributeName, pimpl->ct_font);
+
+    CFAttributedStringRef attr_string =
+        CFAttributedStringCreate(kCFAllocatorDefault, text_string, attr);
+
+    CTLineRef line = CTLineCreateWithAttributedString(attr_string);
+
+    CFArrayRef run_array = CTLineGetGlyphRuns(line);
+    CFIndex run_count = CFArrayGetCount(run_array);
+    for (CFIndex i = 0; i < run_count; i++) {
+        CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
+        CTFontRef font =
+            (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTFontAttributeName);
+
+        CFIndex run_glyphs = CTRunGetGlyphCount(run);
+
+        std::vector<CGGlyph> glyphs(run_glyphs, 0);
+        CTRunGetGlyphs(run, {0, run_glyphs}, &glyphs[0]);
+
+        if (!glyphs.empty()) {
+            glyph = glyphs[0];
+            run_font = font;
+            break;
+        }
+    }
+    return pimpl->rasterizeGlyph(glyph, run_font, descent);
+}
+
+std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
+    CTFontRef font_ref = pimpl->ct_font;
+
+    size_t bytes = strlen(utf8_str);
+    CFStringRef text_string = CFStringCreateWithBytes(
+        kCFAllocatorDefault, (const uint8_t*)utf8_str, bytes, kCFStringEncodingUTF8, false);
+
+    CFMutableDictionaryRef attr = CFDictionaryCreateMutable(
+        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFDictionaryAddValue(attr, kCTFontAttributeName, font_ref);
     // CFDictionaryAddValue(attr, kCTLigatureAttributeName, (CFNumberRef) @0);
 
-    CFAttributedStringRef attrString =
-        CFAttributedStringCreate(kCFAllocatorDefault, textString, attr);
+    CFAttributedStringRef attr_string =
+        CFAttributedStringCreate(kCFAllocatorDefault, text_string, attr);
 
-    CTLineRef line = CTLineCreateWithAttributedString(attrString);
+    CTLineRef line = CTLineCreateWithAttributedString(attr_string);
 
     std::vector<RasterizedGlyph> rasterized_glyphs;
 
-    CFArrayRef runArray = CTLineGetGlyphRuns(line);
-    CFIndex runCount = CFArrayGetCount(runArray);
-    for (CFIndex i = 0; i < runCount; i++) {
-        CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(runArray, i);
+    CFArrayRef run_array = CTLineGetGlyphRuns(line);
+    CFIndex count = CFArrayGetCount(run_array);
+    for (CFIndex i = 0; i < count; i++) {
+        CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
         CTFontRef runFont =
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTFontAttributeName);
 
@@ -86,31 +118,31 @@ std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
     return rasterized_glyphs;
 }
 
-RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef fontRef,
+RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef font_ref,
                                                      float descent) {
     CGRect bounds;
-    CTFontGetBoundingRectsForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
+    CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
 
-    int32_t rasterizedLeft = std::floor(bounds.origin.x);
-    uint32_t rasterizedWidth = std::ceil(bounds.origin.x - rasterizedLeft + bounds.size.width);
-    int32_t rasterizedDescent = std::ceil(-bounds.origin.y);
-    int32_t rasterizedAscent = std::ceil(bounds.size.height + bounds.origin.y);
-    uint32_t rasterizedHeight = rasterizedDescent + rasterizedAscent;
+    int32_t rasterized_left = std::floor(bounds.origin.x);
+    uint32_t rasterized_width = std::ceil(bounds.origin.x - rasterized_left + bounds.size.width);
+    int32_t rasterized_descent = std::ceil(-bounds.origin.y);
+    int32_t rasterized_ascent = std::ceil(bounds.size.height + bounds.origin.y);
+    uint32_t rasterized_height = rasterized_descent + rasterized_ascent;
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
 
     // TODO: Apply this transformation in glyph atlas, not in rasterizer.
     top -= descent;
 
-    bool colored = CTFontIsColored(fontRef);
+    bool colored = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
 
     CGContextRef context = CGBitmapContextCreate(
-        nullptr, rasterizedWidth, rasterizedHeight, 8, rasterizedWidth * 4,
+        nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4,
         CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
 
     CGFloat alpha = colored ? 0.0 : 1.0;
     CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, alpha);
 
-    CGContextFillRect(context, CGRectMake(0.0, 0.0, rasterizedWidth, rasterizedHeight));
+    CGContextFillRect(context, CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
     CGContextSetAllowsFontSmoothing(context, true);
     CGContextSetShouldSmoothFonts(context, false);
     CGContextSetAllowsFontSubpixelQuantization(context, true);
@@ -121,14 +153,14 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
     CGContextSetShouldAntialias(context, true);
 
     CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
-    CGPoint rasterizationOrigin = CGPointMake(-rasterizedLeft, rasterizedDescent);
+    CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
 
-    CTFontDrawGlyphs(fontRef, &glyph_index, &rasterizationOrigin, 1, context);
+    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context);
 
-    uint8_t* bitmapData = (uint8_t*)CGBitmapContextGetData(context);
+    uint8_t* bitmap_data = (uint8_t*)CGBitmapContextGetData(context);
     size_t height = CGBitmapContextGetHeight(context);
-    size_t bytesPerRow = CGBitmapContextGetBytesPerRow(context);
-    size_t len = height * bytesPerRow;
+    size_t bytes_per_row = CGBitmapContextGetBytesPerRow(context);
+    size_t len = height * bytes_per_row;
 
     size_t pixels = len / 4;
     std::vector<uint8_t> buffer;
@@ -138,23 +170,25 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
     buffer.reserve(size);
     for (size_t i = 0; i < pixels; i++) {
         size_t offset = i * 4;
-        buffer.push_back(bitmapData[offset + 2]);
-        buffer.push_back(bitmapData[offset + 1]);
-        buffer.push_back(bitmapData[offset]);
-        if (colored) buffer.push_back(bitmapData[offset + 3]);
+        buffer.push_back(bitmap_data[offset + 2]);
+        buffer.push_back(bitmap_data[offset + 1]);
+        buffer.push_back(bitmap_data[offset]);
+        if (colored) {
+            buffer.push_back(bitmap_data[offset + 3]);
+        }
     }
 
     // NOTE: Don't round here! Round after summing the total advance, right before passing to the
     // shader.
     float advance =
-        CTFontGetAdvancesForGlyphs(fontRef, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
+        CTFontGetAdvancesForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
 
     return RasterizedGlyph{
         .colored = colored,
-        .left = rasterizedLeft,
+        .left = rasterized_left,
         .top = top,
-        .width = static_cast<int32_t>(rasterizedWidth),
-        .height = static_cast<int32_t>(rasterizedHeight),
+        .width = static_cast<int32_t>(rasterized_width),
+        .height = static_cast<int32_t>(rasterized_height),
         .advance = advance,
         .buffer = buffer,
         .index = glyph_index,

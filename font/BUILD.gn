@@ -8,21 +8,17 @@ source_set("font") {
   if (is_linux || is_mac) {
     sources = [ "freetype_rasterizer.cc" ]
 
-    public_configs = [ ":freetype2_and_harfbuzz" ]
+    public_configs = [ ":linux_font_libs" ]
 
     deps = [ ":example_fonts" ]
-
-    # public_deps = [
-    #   "//third_party/freetype",
-    #   "//third_party/harfbuzz",
-    # ]
   }
 }
 
-pkg_config("freetype2_and_harfbuzz") {
+pkg_config("linux_font_libs") {
   packages = [
     "freetype2",
-    "harfbuzz",
+    "pango",
+    "pangocairo",
   ]
 }
 

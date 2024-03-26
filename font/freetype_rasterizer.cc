@@ -1,11 +1,12 @@
 #include "build/buildflag.h"
+#include "pango/pango-font.h"
 #include "rasterizer.h"
 #include "util/file_util.h"
-#include <chrono>
 #include <cmath>
 #include <freetype/freetype.h>
 #include <hb.h>
 #include <iostream>
+#include <pango/pangocairo.h>
 #include <vector>
 
 #include <ft2build.h>
@@ -73,6 +74,44 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     this->line_height = std::max(glyph_height, global_glyph_height) + 2;
     this->descent = descent;
+
+    PangoFontMap* font_map = pango_cairo_font_map_get_default();
+    PangoContext* context = pango_font_map_create_context(font_map);
+
+    PangoFontDescription* desc = pango_font_description_from_string("Helvetica Bold 12pt");
+    if (!desc) {
+        std::cerr << "pango_font_description_from_string() error.\n";
+        return false;
+    }
+
+    PangoFont* pango_font = pango_font_map_load_font(font_map, context, desc);
+    if (!pango_font) {
+        std::cerr << "pango_font_map_load_font() error.\n";
+        return false;
+    }
+
+    PangoFontMetrics* metrics = pango_font_get_metrics(pango_font, pango_language_get_default());
+    if (!metrics) {
+        std::cerr << "pango_font_get_metrics() error.\n";
+        return false;
+    }
+
+    int height = pango_font_metrics_get_height(metrics);
+    std::cerr << "height: " << height << '\n';
+
+    GList* glyphs = pango_itemize(context, "hello world!", 0, 12, nullptr, nullptr);
+    while (glyphs) {
+        glyphs = glyphs->next;
+    }
+
+    // PangoFontFamily** families = 0;
+    // int n_families = 0;
+    // pango_font_map_list_families(font_map, &families, &n_families);
+    // for (int i = 0; i < n_families; i++) {
+    //     std::cerr << pango_font_family_get_name(families[i]) << ' ';
+    // }
+    // std::cerr << '\n';
+    // g_free(families);
 
     return true;
 }

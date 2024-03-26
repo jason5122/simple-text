@@ -1,11 +1,9 @@
 #include "build/buildflag.h"
-#include "pango/pango-font.h"
-#include "pango/pango-item.h"
-#include "pango/pango-types.h"
 #include "rasterizer.h"
 #include "util/file_util.h"
 #include <cmath>
 #include <freetype/freetype.h>
+#include <hb-ft.h>
 #include <hb.h>
 #include <iostream>
 #include <pango/pangocairo.h>
@@ -20,13 +18,30 @@ public:
 
     PangoFont* pango_font;
     PangoContext* context;
-    std::pair<PangoGlyph, size_t> pangoGetGlyphIndex(const char* utf8_str);
+    PangoGlyph pangoGetGlyphIndex(const char* utf8_str);
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
+
+    PangoFontMap* font_map = pango_cairo_font_map_get_default();
+    pimpl->context = pango_font_map_create_context(font_map);
+
+    PangoFontDescription* desc = pango_font_description_new();
+    pango_font_description_set_family(desc, "Source Code Pro");
+    pango_font_description_set_size(desc, font_size * PANGO_SCALE);
+    if (!desc) {
+        std::cerr << "pango_font_description_from_string() error.\n";
+        return false;
+    }
+
+    pimpl->pango_font = pango_font_map_load_font(font_map, pimpl->context, desc);
+    if (!pimpl->pango_font) {
+        std::cerr << "pango_font_map_load_font() error.\n";
+        return false;
+    }
 
     fs::path main_font_path = ResourcePath() / "fonts" / main_font_name;
 
@@ -54,11 +69,21 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
         }
         FT_Set_Pixel_Sizes(ft_face, 0, font_size);
 
-        hb_blob_t* hb_blob = hb_blob_create_from_file(path);
-        hb_face_t* hb_face = hb_face_create(hb_blob, 0);
-        hb_font_t* hb_font = hb_font_create(hb_face);
-        hb_blob_destroy(hb_blob);
-        hb_face_destroy(hb_face);
+        // hb_blob_t* hb_blob = hb_blob_create_from_file(path);
+        // hb_face_t* hb_face = hb_face_create(hb_blob, 0);
+        // hb_font_t* hb_font = hb_font_create(hb_face);
+        // hb_blob_destroy(hb_blob);
+        // hb_face_destroy(hb_face);
+
+        hb_font_t* hb_font = hb_ft_font_create(ft_face, nullptr);
+        // hb_font_t* hb_font = pango_font_get_hb_font(pimpl->pango_font);
+
+        FT_Face temp = hb_ft_font_get_face(hb_font);
+        if (temp) {
+            std::cerr << "hb_ft_font_get_face() success\n";
+        } else {
+            std::cerr << "Error: hb_ft_font_get_face() was not valid\n";
+        }
 
         pimpl->font_fallback_list.push_back({ft_face, hb_font});
     }
@@ -77,23 +102,6 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     this->line_height = std::max(glyph_height, global_glyph_height) + 2;
     this->descent = descent;
-
-    PangoFontMap* font_map = pango_cairo_font_map_get_default();
-    pimpl->context = pango_font_map_create_context(font_map);
-
-    PangoFontDescription* desc = pango_font_description_new();
-    pango_font_description_set_family(desc, "Source Code Pro");
-    pango_font_description_set_size(desc, font_size * PANGO_SCALE);
-    if (!desc) {
-        std::cerr << "pango_font_description_from_string() error.\n";
-        return false;
-    }
-
-    pimpl->pango_font = pango_font_map_load_font(font_map, pimpl->context, desc);
-    if (!pimpl->pango_font) {
-        std::cerr << "pango_font_map_load_font() error.\n";
-        return false;
-    }
 
     // PangoFontMetrics* metrics = pango_font_get_metrics(pimpl->pango_font, nullptr);
     // if (!metrics) {
@@ -155,7 +163,15 @@ std::pair<hb_codepoint_t, size_t> FontRasterizer::impl::getGlyphIndex(const char
     return {0, 0};
 }
 
-std::pair<PangoGlyph, size_t> FontRasterizer::impl::pangoGetGlyphIndex(const char* utf8_str) {
+PangoGlyph FontRasterizer::impl::pangoGetGlyphIndex(const char* utf8_str) {
+    // TODO: Debug use; remove this.
+    {
+        hb_font_t* pango_hb_font = pango_font_get_hb_font(pango_font);
+        hb_codepoint_t glyph;
+        hb_font_get_glyph(pango_hb_font, utf8_str[0], 0, &glyph);
+        return glyph;
+    }
+
     PangoAttrList* attrs = pango_attr_list_new();
     GList* items = pango_itemize(context, utf8_str, 0, strlen(utf8_str), attrs, nullptr);
     PangoItem* item = static_cast<PangoItem*>(items->data);
@@ -168,18 +184,20 @@ std::pair<PangoGlyph, size_t> FontRasterizer::impl::pangoGetGlyphIndex(const cha
     for (int i = 0; i < glyph_string->num_glyphs; i++) {
         PangoGlyphInfo glyph_info = glyphs[i];
         PangoGlyph glyph_index = glyph_info.glyph;
-        return {glyph_index, 0};
+        return glyph_index;
     }
-    return {0, 0};
+    return 0;
 }
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
-    auto [glyph_index2, font_index2] = pimpl->pangoGetGlyphIndex(utf8_str);
     auto [glyph_index, font_index] = pimpl->getGlyphIndex(utf8_str);
     FT_Face ft_face = pimpl->font_fallback_list[font_index].first;
 
-    if (glyph_index != glyph_index2) {
-        fprintf(stderr, "DANGER: %d vs %d\n", glyph_index, glyph_index2);
+    PangoGlyph pango_glyph_index = pimpl->pangoGetGlyphIndex(utf8_str);
+    if (glyph_index != pango_glyph_index) {
+        fprintf(stderr, "DANGER: %d vs %d\n", glyph_index, pango_glyph_index);
+    } else {
+        fprintf(stderr, "GOOD! %d\n", glyph_index);
     }
 
     // TODO: Handle errors.

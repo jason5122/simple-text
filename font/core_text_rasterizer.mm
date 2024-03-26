@@ -65,13 +65,13 @@ std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTFontAttributeName);
 
         CFIndex count = CTRunGetGlyphCount(run);
-        std::cerr << count << " glyphs in run" << '\n';
+        // std::cerr << count << " glyphs in run" << '\n';
 
         std::vector<CGGlyph> glyphs(count, 0);
         CTRunGetGlyphs(run, {0, count}, &glyphs[0]);
         for (CGGlyph glyph : glyphs) {
             NSString* runFontName = (__bridge NSString*)CTFontCopyDisplayName(runFont);
-            fprintf(stderr, "glyph id: %d, %s\n", glyph, runFontName.UTF8String);
+            // fprintf(stderr, "glyph id: %d, %s\n", glyph, runFontName.UTF8String);
 
             rasterized_glyphs.emplace_back(pimpl->rasterizeGlyph(glyph, runFont, descent));
         }
@@ -79,7 +79,7 @@ std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
         std::vector<CGPoint> positions(count);
         CTRunGetPositions(run, {0, count}, &positions[0]);
         for (CGPoint& position : positions) {
-            fprintf(stderr, "%f, %f\n", position.x, position.y);
+            // fprintf(stderr, "%f, %f\n", position.x, position.y);
         }
     }
     return rasterized_glyphs;

@@ -218,9 +218,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                 if (disable_cache || !line_layout_cache.contains(line_str)) {
                     line_layout_cache.insert({line_str, font_rasterizer.layoutLine(&line_str[0])});
                 }
-                std::vector<RasterizedGlyph> rasterized_glyphs = line_layout_cache[line_str];
 
-                for (auto& rasterized_glyph : rasterized_glyphs) {
+                for (auto& rasterized_glyph : line_layout_cache[line_str]) {
                     if (!glyph_cache[font_rasterizer.id].count(rasterized_glyph.index)) {
                         Vec4 uv = atlas.insertTexture(
                             rasterized_glyph.width, rasterized_glyph.height,
@@ -239,7 +238,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                             {rasterized_glyph.index, atlas_glyph});
                     }
 
-                    AtlasGlyph atlas_glyph =
+                    AtlasGlyph& atlas_glyph =
                         glyph_cache[font_rasterizer.id][rasterized_glyph.index];
 
                     // TODO: Determine if we should always round `atlas_glyph.advance`.
@@ -252,8 +251,6 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                                         bg_size, atlas_glyph.colored});
                     }
 
-                    // std::cerr << "total_advance_for_layout: " << total_advance_for_layout <<
-                    // '\n';
                     total_advance_for_layout += std::round(atlas_glyph.advance);
                 }
             } else {
@@ -289,7 +286,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                         this->loadGlyph(utf8_str, codepoint, font_rasterizer);
                     }
 
-                    AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
+                    AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
 
                     // TODO: Determine if we should always round `glyph.advance`.
                     Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
@@ -300,7 +297,6 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                                         bg_size, glyph.colored});
                     }
 
-                    std::cerr << "total_advance: " << total_advance << '\n';
                     total_advance += std::round(glyph.advance);
                 }
 

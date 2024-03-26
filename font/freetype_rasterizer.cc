@@ -1,5 +1,6 @@
 #include "build/buildflag.h"
 #include "pango/pango-font.h"
+#include "pango/pango-item.h"
 #include "rasterizer.h"
 #include "util/file_util.h"
 #include <cmath>
@@ -99,9 +100,20 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     int height = pango_font_metrics_get_height(metrics);
     std::cerr << "height: " << height << '\n';
 
-    GList* glyphs = pango_itemize(context, "hello world!", 0, 12, nullptr, nullptr);
-    while (glyphs) {
-        glyphs = glyphs->next;
+    std::string text = "hello world!";
+
+    PangoAttrList* attrs = pango_attr_list_new();
+    GList* items = pango_itemize(context, &text[0], 0, text.length(), attrs, nullptr);
+    PangoItem* item = (PangoItem*)items->data;
+    PangoAnalysis analysis = item->analysis;
+
+    PangoGlyphString* glyph_string = pango_glyph_string_new();
+    pango_shape(&text[0], text.length(), &analysis, glyph_string);
+
+    PangoGlyphInfo* glyphs = glyph_string->glyphs;
+    for (int i = 0; i < glyph_string->num_glyphs; i++) {
+        PangoGlyphInfo glyph_info = glyphs[i];
+        std::cerr << "glyph index: " << glyph_info.glyph << '\n';
     }
 
     // PangoFontFamily** families = 0;

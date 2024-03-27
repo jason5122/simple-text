@@ -43,3 +43,14 @@ if (is_linux) {
     ]
   }
 }
+
+if (is_win) {
+  executable("app") {
+    output_name = "simple_text.exe"
+
+    sources = [
+      "main.cc",
+      "main_win.cc",
+    ]
+  }
+}

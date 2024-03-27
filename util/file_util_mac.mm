@@ -8,23 +8,17 @@ fs::path ResourcePath() {
 
 // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/AccessingFilesandDirectories/AccessingFilesandDirectories.html
 fs::path DataPath() {
-    NSFileManager* sharedFM = [NSFileManager defaultManager];
-    NSArray* possibleURLs = [sharedFM URLsForDirectory:NSApplicationSupportDirectory
-                                             inDomains:NSUserDomainMask];
-    NSURL* appSupportDir = nil;
-    NSURL* appDirectory = nil;
-
-    if ([possibleURLs count] >= 1) {
-        appSupportDir = [possibleURLs objectAtIndex:0];
+    NSFileManager* shared_fm = [NSFileManager defaultManager];
+    NSArray* possible_urls = [shared_fm URLsForDirectory:NSApplicationSupportDirectory
+                                               inDomains:NSUserDomainMask];
+    NSURL* app_support_dir = nil;
+    if ([possible_urls count] >= 1) {
+        app_support_dir = [possible_urls objectAtIndex:0];
     }
 
-    // If a valid app support directory exists, add the app's bundle ID to it to specify the final
-    // directory.
-    if (appSupportDir) {
-        NSString* appBundleID = [[NSBundle mainBundle] bundleIdentifier];
-        // appDirectory = [appSupportDir URLByAppendingPathComponent:appBundleID];
-        appDirectory = [appSupportDir URLByAppendingPathComponent:@"Simple Text"];
+    NSURL* app_dir = nil;
+    if (app_support_dir) {
+        app_dir = [app_support_dir URLByAppendingPathComponent:@"Simple Text"];
     }
-
-    return appDirectory.fileSystemRepresentation;
+    return app_dir.fileSystemRepresentation;
 }

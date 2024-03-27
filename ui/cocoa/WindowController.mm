@@ -1,12 +1,13 @@
 #include "WindowController.h"
+#include <AppKit/AppKit.h>
 
 @implementation WindowController
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
     self = [super init];
     if (self) {
-        unsigned int mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
-                            NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
+        NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
+                                 NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
         self.window = [[NSWindow alloc] initWithContentRect:frameRect
                                                   styleMask:mask
                                                     backing:NSBackingStoreBuffered
@@ -28,7 +29,7 @@
 
 - (void)showWindow {
     [self.window center];
-    [self.window setFrameAutosaveName:self.window.title];
+    [self.window setFrameAutosaveName:NSBundle.mainBundle.bundleIdentifier];
     [self.window makeKeyAndOrderFront:nil];
 }
 

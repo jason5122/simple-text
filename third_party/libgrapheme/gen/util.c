@@ -11,6 +11,9 @@
 
 #include "util.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 struct range {
 	uint_least32_t lower;
 	uint_least32_t upper;
@@ -860,3 +863,5 @@ break_test_list_free(struct break_test *test, size_t testlen)
 
 	free(test);
 }
+
+#pragma clang diagnostic pop

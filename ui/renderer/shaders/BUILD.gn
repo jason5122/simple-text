@@ -14,7 +14,7 @@ if (is_mac) {
   }
 }
 
-if (is_linux) {
+if (is_linux || is_win) {
   copy("shaders") {
     sources = shaders
     outputs = [ "$root_out_dir/shaders/{{source_file_part}}" ]

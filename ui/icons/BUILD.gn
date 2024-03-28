@@ -12,7 +12,7 @@ if (is_mac) {
   }
 }
 
-if (is_linux) {
+if (is_linux || is_win) {
   copy("icons") {
     sources = icons
     outputs = [ "$root_out_dir/icons/{{source_file_part}}" ]

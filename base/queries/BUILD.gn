@@ -13,7 +13,7 @@ if (is_mac) {
   }
 }
 
-if (is_linux) {
+if (is_linux || is_win) {
   copy("queries") {
     sources = tree_sitter_queries
     outputs = [ "$root_out_dir/queries/{{source_file_part}}" ]

@@ -12,10 +12,12 @@ source_set("font") {
   }
 }
 
-pkg_config("linux_font_libs") {
-  packages = [
-    "freetype2",
-    "pango",
-    "pangocairo",
-  ]
+if (is_linux) {
+  pkg_config("linux_font_libs") {
+    packages = [
+      "freetype2",
+      "pango",
+      "pangocairo",
+    ]
+  }
 }

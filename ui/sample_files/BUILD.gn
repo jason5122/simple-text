@@ -14,7 +14,7 @@ if (is_mac) {
   }
 }
 
-if (is_linux) {
+if (is_linux || is_win) {
   copy("sample_files") {
     sources = sample_files
     outputs = [ "$root_out_dir/sample_files/{{source_file_part}}" ]

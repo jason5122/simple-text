@@ -46,10 +46,19 @@ if (is_linux) {
 
 if (is_win) {
   executable("app") {
-    output_name = "simple_text.exe"
+    output_name = "simple_text"
 
     sources = [ "main_win.cc" ]
 
-    libs = [ "user32" ]
+    libs = [
+      "user32",
+      "opengl32",
+      "gdi32",
+    ]
+
+    deps = [
+      "//font",
+      "//third_party/libgrapheme",
+    ]
   }
 }

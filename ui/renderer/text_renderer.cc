@@ -269,19 +269,19 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                         std::swap(selection_start, selection_end);
                     }
 
-                    // if (codepoint == 0x20 && selection_start <= byte_offset &&
-                    //     byte_offset < selection_end) {
-                    //     codepoint = 183;
-                    // }
+                    if (codepoint == 0x20 && selection_start <= byte_offset &&
+                        byte_offset < selection_end) {
+                        codepoint = 183;
+                    }
 
                     if (disable_cache || !glyph_cache[font_rasterizer.id].count(codepoint)) {
                         std::string utf8_str = line_str.substr(offset, ret);
 
-                        // // FIXME: Don't use magic numbers here.
-                        // if (codepoint == 183) {
-                        //     std::cerr << codepoint << '\n';
-                        //     utf8_str = "·";
-                        // }
+                        // FIXME: Don't use magic numbers here.
+                        if (codepoint == 183) {
+                            std::cerr << codepoint << '\n';
+                            utf8_str = "·";
+                        }
 
                         this->loadGlyph(utf8_str, codepoint, font_rasterizer);
                     }

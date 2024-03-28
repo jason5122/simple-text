@@ -185,7 +185,8 @@ static void realize(GtkWidget* widget) {
     rect_renderer->setup(scaled_width, scaled_height);
     image_renderer->setup(scaled_width, scaled_height);
 
-    fs::path file_path = ResourcePath() / "sample_files/example.json";
+    // fs::path file_path = ResourcePath() / "sample_files/example.json";
+    fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
     highlighter.setLanguage("source.json");
     buffer.setContents(ReadFile(file_path));
 

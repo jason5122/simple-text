@@ -1,4 +1,8 @@
 #include "ui/win32/main_window.h"
+#include "ui/win32/resource.h"
+#include <iostream>
+#include <minwindef.h>
+#include <vector>
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
     MainWindow win;
@@ -20,10 +24,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
     placement.rcNormalPosition = RECT{0, 0, 1000, 500};
     SetWindowPlacement(win.Window(), &placement);
 
+    // We need to pass `key` as a virtual key in order to combine it with FCONTROL.
+    // https://stackoverflow.com/a/53657941
+    ACCEL accel = {0};
+    accel.fVirt = FCONTROL | FVIRTKEY;
+    accel.key = LOBYTE(VkKeyScan('q'));
+    accel.cmd = ID_QUIT;
+
+    std::vector<ACCEL> accels = {accel};
+    HACCEL hAccel = CreateAcceleratorTable(&accels[0], accels.size());
+
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!TranslateAccelerator(win.Window(), hAccel, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
     return 0;

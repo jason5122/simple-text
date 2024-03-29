@@ -28,11 +28,11 @@ public:
     BOOL Create(PCWSTR lpWindowName, DWORD dwStyle, DWORD dwExStyle = 0, int x = CW_USEDEFAULT,
                 int y = CW_USEDEFAULT, int nWidth = CW_USEDEFAULT, int nHeight = CW_USEDEFAULT,
                 HWND hWndParent = 0, HMENU hMenu = 0) {
-        WNDCLASS wc = {0};
-
-        wc.lpfnWndProc = DERIVED_TYPE::WindowProc;
-        wc.hInstance = GetModuleHandle(NULL);
-        wc.lpszClassName = ClassName();
+        WNDCLASS wc{
+            .lpfnWndProc = DERIVED_TYPE::WindowProc,
+            .hInstance = GetModuleHandle(NULL),
+            .lpszClassName = ClassName(),
+        };
 
         RegisterClass(&wc);
 

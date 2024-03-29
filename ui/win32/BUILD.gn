@@ -1,8 +1,5 @@
 source_set("win32") {
-  sources = [
-    "editor_window.cc",
-    "scene.cc",
-  ]
+  sources = [ "editor_window.cc" ]
 
   defines = [
     "UNICODE",

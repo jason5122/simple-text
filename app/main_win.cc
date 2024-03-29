@@ -36,6 +36,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     HCURSOR hCursor = LoadCursor(NULL, cursor);
     SetCursor(hCursor);
 
+    // https://stackoverflow.com/a/20624817
     // FIXME: This doesn't animate like ShowWindow().
     // TODO: Replace magic numbers with actual defaults and/or window size restoration.
     WINDOWPLACEMENT placement = {0};

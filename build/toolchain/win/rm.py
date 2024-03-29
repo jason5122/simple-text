@@ -4,8 +4,6 @@ import os
 import shutil
 import sys
 
-print(sys.argv[1:])
-
 dst, = sys.argv[1:]
 
 if os.path.exists(dst):

@@ -6,8 +6,8 @@
 
 #pragma comment(lib, "d2d1")
 
-#include "basewin.h"
-#include "scene.h"
+#include "ui/win32/basewin.h"
+#include "ui/win32/scene.h"
 
 class Scene : public GraphicsScene {
     CComPtr<ID2D1SolidColorBrush> m_pFill;
@@ -83,9 +83,11 @@ void Scene::RenderScene() {
 void Scene::CalculateLayout() {
     D2D1_SIZE_F fSize = m_pRenderTarget->GetSize();
 
-    const float x = fSize.width / 2.0f;
-    const float y = fSize.height / 2.0f;
-    const float radius = min(x, y);
+    // const float x = fSize.width / 2.0f;
+    // const float y = fSize.height / 2.0f;
+    const float x = 200;
+    const float y = 200;
+    const float radius = 200;
 
     m_ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), radius, radius);
 

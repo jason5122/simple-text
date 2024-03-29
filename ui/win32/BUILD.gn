@@ -1,0 +1,3 @@
+source_set("win32") {
+  sources = [ "scene.cc" ]
+}

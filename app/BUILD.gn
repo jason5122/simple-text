@@ -50,7 +50,7 @@ if (is_win) {
 
     sources = [
       # "main_win.cc",
-      "main.cpp",
+      "main_win_clock.cc",
     ]
 
     defines = [
@@ -67,6 +67,7 @@ if (is_win) {
     deps = [
       "//font",
       "//third_party/libgrapheme",
+      "//ui/win32",
     ]
   }
 }

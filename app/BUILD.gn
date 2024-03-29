@@ -48,10 +48,7 @@ if (is_win) {
   executable("app") {
     output_name = "simple_text"
 
-    sources = [
-      # "main_win.cc",
-      "main_win_basewindow.cc",
-    ]
+    sources = [ "main_win.cc" ]
 
     defines = [
       "UNICODE",

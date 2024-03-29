@@ -1,7 +1,3 @@
-#ifndef UNICODE
-#define UNICODE
-#endif
-
 #include <windows.h>
 
 HDC ghDC;
@@ -41,6 +37,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     if (hwnd == NULL) {
         return 0;
     }
+
+    LPCTSTR cursor = IDC_IBEAM;
+    HCURSOR hCursor = LoadCursor(NULL, cursor);
+    SetCursor(hCursor);
 
     // FIXME: This doesn't animate like ShowWindow().
     // TODO: Replace magic numbers with actual defaults and/or window size restoration.

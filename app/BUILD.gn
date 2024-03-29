@@ -48,7 +48,15 @@ if (is_win) {
   executable("app") {
     output_name = "simple_text"
 
-    sources = [ "main_win.cc" ]
+    sources = [
+      # "main_win.cc",
+      "main.cpp",
+    ]
+
+    defines = [
+      "UNICODE",
+      "_UNICODE",
+    ]
 
     libs = [
       "user32",

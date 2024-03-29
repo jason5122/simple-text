@@ -1,13 +1,6 @@
-#include <D2d1.h>
-#include <assert.h>
-#include <atlbase.h>
-#include <windows.h>
-#include <winuser.h>
-
-#pragma comment(lib, "d2d1")
-
 #include "ui/win32/basewin.h"
 #include "ui/win32/scene.h"
+#include <windows.h>
 
 class Scene : public GraphicsScene {
     CComPtr<ID2D1SolidColorBrush> m_pFill;
@@ -128,42 +121,6 @@ public:
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-// Constants
-const WCHAR WINDOW_NAME[] = L"Analog Clock";
-
-INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
-    if (FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE))) {
-        return 0;
-    }
-
-    MainWindow win;
-
-    if (!win.Create(WINDOW_NAME, WS_OVERLAPPEDWINDOW)) {
-        return 0;
-    }
-
-    LPCTSTR cursor = IDC_ARROW;
-    HCURSOR hCursor = LoadCursor(NULL, cursor);
-    SetCursor(hCursor);
-
-    ShowWindow(win.Window(), nCmdShow);
-
-    // Run the message loop.
-
-    MSG msg = {};
-    while (msg.message != WM_QUIT) {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-            continue;
-        }
-        win.WaitTimer();
-    }
-
-    CoUninitialize();
-    return 0;
-}
-
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     HWND hwnd = m_hwnd;
 
@@ -227,4 +184,40 @@ void MainWindow::WaitTimer() {
     if (MsgWaitForMultipleObjects(1, &m_hTimer, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0) {
         InvalidateRect(m_hwnd, NULL, FALSE);
     }
+}
+
+// Constants
+const WCHAR WINDOW_NAME[] = L"Analog Clock";
+
+INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
+    if (FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE))) {
+        return 0;
+    }
+
+    MainWindow win;
+
+    if (!win.Create(WINDOW_NAME, WS_OVERLAPPEDWINDOW)) {
+        return 0;
+    }
+
+    LPCTSTR cursor = IDC_ARROW;
+    HCURSOR hCursor = LoadCursor(NULL, cursor);
+    SetCursor(hCursor);
+
+    ShowWindow(win.Window(), nCmdShow);
+
+    // Run the message loop.
+
+    MSG msg = {};
+    while (msg.message != WM_QUIT) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            continue;
+        }
+        win.WaitTimer();
+    }
+
+    CoUninitialize();
+    return 0;
 }

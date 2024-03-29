@@ -1,3 +1,17 @@
 source_set("win32") {
-  sources = [ "scene.cc" ]
+  sources = [
+    "editor_window.cc",
+    "scene.cc",
+  ]
+
+  defines = [
+    "UNICODE",
+    "_UNICODE",
+  ]
+
+  libs = [
+    "user32",
+    "opengl32",
+    "gdi32",
+  ]
 }

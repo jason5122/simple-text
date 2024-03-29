@@ -20,10 +20,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
     placement.rcNormalPosition = RECT{0, 0, 1000, 500};
     SetWindowPlacement(win.Window(), &placement);
 
-    // ShowWindow(win.Window(), nCmdShow);
-
-    // Run the message loop.
-
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);

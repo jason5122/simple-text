@@ -42,7 +42,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         return 0;
     }
 
-    ShowWindow(hwnd, nCmdShow);
+    // FIXME: This doesn't animate like ShowWindow().
+    // TODO: Replace magic numbers with actual defaults and/or window size restoration.
+    WINDOWPLACEMENT placement = {0};
+    placement.length = sizeof(WINDOWPLACEMENT);
+    placement.showCmd = SW_SHOWMAXIMIZED;
+    placement.rcNormalPosition = RECT{0, 0, 1000, 500};
+    SetWindowPlacement(hwnd, &placement);
+
+    // FIXME: This is visually glitchy.
+    // ShowWindow(hwnd, SW_SHOWMAXIMIZED);
 
     // Run the message loop.
 

@@ -11,9 +11,9 @@ source_set("renderer") {
     frameworks = [ "OpenGL.framework" ]
     defines = [ "GL_SILENCE_DEPRECATION" ]
   }
-  if (is_linux) {
-    libs = [ "epoxy" ]
-  }
+  # if (is_linux) {
+  #   libs = [ "epoxy" ]
+  # }
 
   deps = [
     "shaders",

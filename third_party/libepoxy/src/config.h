@@ -5,12 +5,6 @@
 
 #pragma once
 
-#define ENABLE_EGL 0
-
-#define ENABLE_GLX 0
-
-#define ENABLE_X11 1
-
 #define EPOXY_PUBLIC __attribute__((visibility("default"))) extern
 
 #undef HAVE_KHRPLATFORM_H
@@ -28,4 +22,3 @@
 #define PACKAGE_STRING "libepoxy-1.5.10"
 
 #define PACKAGE_VERSION "1.5.10"
-

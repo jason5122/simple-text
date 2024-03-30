@@ -63,9 +63,16 @@ if (is_win) {
     ]
 
     deps = [
+      "//base",
       "//font",
       "//third_party/libgrapheme",
+      "//third_party/libpng",
+      "//ui/icons",
+      "//ui/sample_files",
       "//ui/win32",
+      "//util",
+
+      # "//ui/renderer",
     ]
   }
 }

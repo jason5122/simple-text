@@ -9,4 +9,8 @@ source_set("util") {
   if (is_linux) {
     sources += [ "file_util_linux.cc" ]
   }
+
+  if (is_win) {
+    sources += [ "file_util_win.cc" ]
+  }
 }

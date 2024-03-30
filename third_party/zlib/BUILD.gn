@@ -18,6 +18,12 @@ static_library("zlib") {
     "src/uncompr.c",
     "src/zutil.c",
   ]
+
+  public_configs = [ ":zlib_includes" ]
+}
+
+config("zlib_includes") {
+  include_dirs = [ "src" ]
 }
 
 config("c90") {

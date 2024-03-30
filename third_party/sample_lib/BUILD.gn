@@ -1,0 +1,9 @@
+static_library("sample_lib") {
+  sources = [ "src/sample.cc" ]
+
+  public_configs = [ ":sample_lib_includes" ]
+}
+
+config("sample_lib_includes") {
+  include_dirs = [ "include" ]
+}

@@ -19,6 +19,7 @@ source_set("renderer") {
     "shaders",
     "//base",
     "//font",
+    "//third_party/libepoxy",
     "//third_party/libgrapheme",
     "//third_party/libpng",
     "//ui/icons",

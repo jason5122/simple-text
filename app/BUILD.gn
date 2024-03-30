@@ -18,6 +18,8 @@ if (is_mac) {
 
     deps = [
       ":icon",
+
+      # "//third_party/libepoxy",
       "//ui/cocoa",
       "//ui/renderer",
     ]

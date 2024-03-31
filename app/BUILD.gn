@@ -51,24 +51,6 @@ if (is_win) {
       "_UNICODE",
     ]
 
-    libs = [
-      "user32",
-      "opengl32",
-      "gdi32",
-      "d2d1",
-    ]
-
-    deps = [
-      "//base",
-      "//font",
-      "//third_party/libgrapheme",
-      "//third_party/libpng",
-      "//ui/icons",
-      "//ui/sample_files",
-      "//ui/win32",
-      "//util",
-
-      # "//ui/renderer",
-    ]
+    deps = [ "//ui/win32" ]
   }
 }

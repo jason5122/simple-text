@@ -11,4 +11,10 @@ source_set("win32") {
     "opengl32",
     "gdi32",
   ]
+
+  deps = [
+    "//base",
+    "//ui/renderer",
+    "//util",
+  ]
 }

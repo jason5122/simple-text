@@ -72,7 +72,7 @@
 #endif
 
 #define KHRONOS_APIENTRY __stdcall
-#define KHRONOS_APICALL __declspec(dllimport) __stdcall
+#define KHRONOS_APICALL __stdcall
 
 #endif /* _WIN32 */
 

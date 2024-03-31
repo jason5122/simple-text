@@ -144,7 +144,7 @@ bool ImageRenderer::loadPng(fs::path file_name, int& out_width, int& out_height,
     int color_type, interlace_type;
     FILE* fp;
 
-    if ((fp = fopen(file_name.c_str(), "rb")) == NULL) {
+    if ((fp = fopen(file_name.string().c_str(), "rb")) == NULL) {
         return false;
     }
 

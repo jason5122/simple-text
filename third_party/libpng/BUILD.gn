@@ -19,11 +19,17 @@ static_library("libpng") {
     "src/pngwutil.c",
   ]
 
+  print(target_cpu)
+
   if (target_cpu == "arm64") {
     sources += [
       "src/arm/arm_init.c",
       "src/arm/filter_neon_intrinsics.c",
       "src/arm/palette_neon_intrinsics.c",
+    ]
+    defines = [
+      "PNG_ARM_NEON_OPT=2",
+      "PNG_ARM_NEON_IMPLEMENTATION=1",
     ]
   } else if (target_cpu == "x64") {
     # TODO: Verify this works on x64.

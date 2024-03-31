@@ -5,6 +5,7 @@
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/renderer/text_renderer.h"
+#include <glad/glad.h>
 #include <iostream>
 
 // FIXME: Remove these global variables! Figure out how to use classes with GTK.
@@ -165,6 +166,10 @@ static gboolean render(GtkWidget* widget) {
 static void realize(GtkWidget* widget) {
     gtk_gl_area_make_current(GTK_GL_AREA(widget));
     if (gtk_gl_area_get_error(GTK_GL_AREA(widget)) != nullptr) return;
+
+    if (!gladLoadGL()) {
+        std::cerr << "Failed to initialize GLAD\n";
+    }
 
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);

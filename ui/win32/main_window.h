@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ui/win32/base_window.h"
-#include <glad/glad.h>
 
 class MainWindow : public BaseWindow<MainWindow> {
 public:

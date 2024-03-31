@@ -1,37 +1,25 @@
 #include "main_window.h"
 #include "ui/win32/resource.h"
+#include <glad/glad.h>
 #include <iostream>
 #include <wingdi.h>
 
 BOOL bSetupPixelFormat(HDC hdc) {
-    PIXELFORMATDESCRIPTOR pfd, *ppfd;
-    int pixelformat;
+    PIXELFORMATDESCRIPTOR pfd = {
+        .nSize = sizeof(PIXELFORMATDESCRIPTOR),
+        .nVersion = 1,
+        .dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+        .iPixelType = PFD_TYPE_RGBA,
+        .cDepthBits = 24,
+        .cStencilBits = 0,
+        .cAuxBuffers = 0,
+    };
 
-    ppfd = &pfd;
-
-    ppfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    ppfd->nVersion = 1;
-    ppfd->dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    ppfd->dwLayerMask = PFD_MAIN_PLANE;
-    ppfd->iPixelType = PFD_TYPE_COLORINDEX;
-    ppfd->cColorBits = 8;
-    ppfd->cDepthBits = 16;
-    ppfd->cAccumBits = 0;
-    ppfd->cStencilBits = 0;
-
-    pixelformat = ChoosePixelFormat(hdc, ppfd);
-
-    if ((pixelformat = ChoosePixelFormat(hdc, ppfd)) == 0) {
-        // MessageBox(NULL, "ChoosePixelFormat failed", "Error", MB_OK);
-        return FALSE;
+    int pixelformat = ChoosePixelFormat(hdc, &pfd);
+    if (!pixelformat) {
+        return false;
     }
-
-    if (SetPixelFormat(hdc, pixelformat, ppfd) == FALSE) {
-        // MessageBox(NULL, "SetPixelFormat failed", "Error", MB_OK);
-        return FALSE;
-    }
-
-    return TRUE;
+    return SetPixelFormat(hdc, pixelformat, &pfd);
 }
 
 PCWSTR MainWindow::ClassName() const {
@@ -40,15 +28,24 @@ PCWSTR MainWindow::ClassName() const {
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-    case WM_CREATE:
+    case WM_CREATE: {
         std::cerr << "WM_CREATE\n";
-        ghDC = GetDC(m_hwnd);
-        if (!bSetupPixelFormat(ghDC)) PostQuitMessage(0);
 
-        // TODO: Fix "Attempting to dlopen() while in the dynamic linker" error.
-        // ghRC = wglCreateContext(ghDC);
-        // wglMakeCurrent(ghDC, ghRC);
+        ghDC = GetDC(m_hwnd);
+        if (!bSetupPixelFormat(ghDC)) {
+            PostQuitMessage(0);
+        }
+        ghRC = wglCreateContext(ghDC);
+        wglMakeCurrent(ghDC, ghRC);
+
+        if (!gladLoadGL()) {
+            std::cerr << "Failed to initialize GLAD\n";
+        }
+
+        std::cerr << glGetString(GL_VERSION) << '\n';
+
         return 0;
+    }
 
     case WM_DESTROY:
         PostQuitMessage(0);
@@ -74,5 +71,5 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     default:
         return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
     }
-    return TRUE;
+    return true;
 }

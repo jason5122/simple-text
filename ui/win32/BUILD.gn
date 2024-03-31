@@ -19,5 +19,5 @@ source_set("win32") {
     "//util",
   ]
 
-  public_deps = [ "//third_party/libepoxy" ]
+  public_deps = [ "//third_party/glad" ]
 }

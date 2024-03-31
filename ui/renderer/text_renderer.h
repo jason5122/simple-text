@@ -6,7 +6,7 @@
 #include "font/rasterizer.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/shader.h"
-#include <epoxy/gl.h>
+#include <glad/glad.h>
 #include <string>
 #include <unordered_map>
 #include <vector>

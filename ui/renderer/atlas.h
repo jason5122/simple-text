@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ui/renderer/opengl_types.h"
-#include <epoxy/gl.h>
+#include <glad/glad.h>
 #include <vector>
 
 class Atlas {

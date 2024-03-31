@@ -2,7 +2,7 @@
 
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/shader.h"
-#include <epoxy/gl.h>
+#include <glad/glad.h>
 #include <vector>
 
 class ImageRenderer {

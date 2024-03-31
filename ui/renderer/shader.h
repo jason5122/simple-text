@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util/file_util.h"
-#include <epoxy/gl.h>
+#include <glad/glad.h>
 
 class Shader {
 public:

@@ -9,6 +9,7 @@
 #include "util/profile_util.h"
 #include <chrono>
 #include <fstream>
+#include <glad/glad.h>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -343,6 +344,10 @@ const char* hex(char c) {
     CGLCreateContext(pixelFormat, nullptr, &glContext);
     if (glContext || (glContext = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(glContext);
+
+        if (!gladLoadGL()) {
+            std::cerr << "Failed to initialize GLAD\n";
+        }
 
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);

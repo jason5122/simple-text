@@ -4,7 +4,7 @@ source_set("renderer") {
     "image_renderer.cc",
     "rect_renderer.cc",
     "shader.cc",
-    # "text_renderer.cc",
+    "text_renderer.cc",
   ]
 
   deps = [
@@ -18,5 +18,5 @@ source_set("renderer") {
     "//util",
   ]
 
-  public_deps = [ "//third_party/libepoxy" ]
+  public_deps = [ "//third_party/glad" ]
 }

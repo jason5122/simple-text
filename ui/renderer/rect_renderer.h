@@ -2,7 +2,7 @@
 
 #include "ui/renderer/shader.h"
 #include <cstddef>
-#include <epoxy/gl.h>
+#include <glad/glad.h>
 
 class RectRenderer {
 public:

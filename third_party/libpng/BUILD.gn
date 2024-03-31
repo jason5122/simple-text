@@ -19,8 +19,6 @@ static_library("libpng") {
     "src/pngwutil.c",
   ]
 
-  print(target_cpu)
-
   if (target_cpu == "arm64") {
     sources += [
       "src/arm/arm_init.c",

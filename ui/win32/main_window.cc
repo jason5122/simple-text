@@ -48,8 +48,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         // TODO: Fix "Attempting to dlopen() while in the dynamic linker" error.
         // ghRC = wglCreateContext(ghDC);
         // wglMakeCurrent(ghDC, ghRC);
-        // epoxy_handle_external_wglMakeCurrent();
-        std::cerr << epoxy_gl_version() << '\n';
         return 0;
 
     case WM_DESTROY:

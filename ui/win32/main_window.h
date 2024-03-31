@@ -1,8 +1,7 @@
 #pragma once
 
 #include "ui/win32/base_window.h"
-#include <epoxy/gl.h>
-#include <epoxy/wgl.h>
+#include <glad/glad.h>
 
 class MainWindow : public BaseWindow<MainWindow> {
 public:

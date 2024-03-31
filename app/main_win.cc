@@ -1,5 +1,6 @@
 #include "ui/win32/main_window.h"
 #include "ui/win32/resource.h"
+#include <glad/glad.h>
 #include <iostream>
 #include <minwindef.h>
 #include <vector>

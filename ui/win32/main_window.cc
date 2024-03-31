@@ -29,8 +29,6 @@ PCWSTR MainWindow::ClassName() const {
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_CREATE: {
-        std::cerr << "WM_CREATE\n";
-
         ghDC = GetDC(m_hwnd);
         if (!bSetupPixelFormat(ghDC)) {
             PostQuitMessage(0);
@@ -54,7 +52,11 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_hwnd, &ps);
-        FillRect(hdc, &ps.rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+        glClearColor(1.0, 0, 0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        SwapBuffers(ghDC);
+
         EndPaint(m_hwnd, &ps);
         return 0;
     }

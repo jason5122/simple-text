@@ -5,7 +5,6 @@
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/renderer/text_renderer.h"
-#include <epoxy/gl.h>
 #include <iostream>
 
 // FIXME: Remove these global variables! Figure out how to use classes with GTK.

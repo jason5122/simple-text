@@ -5,20 +5,20 @@
 
 #pragma once
 
-#define EPOXY_PUBLIC __attribute__((visibility("default"))) extern
+// #define EPOXY_PUBLIC __attribute__((visibility("default"))) extern
 
-#undef HAVE_KHRPLATFORM_H
+// #undef HAVE_KHRPLATFORM_H
 
-#define PACKAGE_DATADIR "/opt/homebrew/share"
+// #define PACKAGE_DATADIR "/opt/homebrew/share"
 
-#define PACKAGE_LIBDIR "/opt/homebrew/lib"
+// #define PACKAGE_LIBDIR "/opt/homebrew/lib"
 
-#define PACKAGE_LIBEXECDIR "/opt/homebrew/libexec"
+// #define PACKAGE_LIBEXECDIR "/opt/homebrew/libexec"
 
-#define PACKAGE_LOCALEDIR "/opt/homebrew/share/locale"
+// #define PACKAGE_LOCALEDIR "/opt/homebrew/share/locale"
 
-#define PACKAGE_NAME "libepoxy"
+// #define PACKAGE_NAME "libepoxy"
 
-#define PACKAGE_STRING "libepoxy-1.5.10"
+// #define PACKAGE_STRING "libepoxy-1.5.10"
 
-#define PACKAGE_VERSION "1.5.10"
+// #define PACKAGE_VERSION "1.5.10"

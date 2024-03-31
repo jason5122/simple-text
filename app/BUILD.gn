@@ -37,10 +37,7 @@ if (is_linux) {
       "main_linux.cc",
     ]
 
-    deps = [
-      "//ui/gtk",
-      "//ui/renderer",
-    ]
+    deps = [ "//ui/gtk" ]
   }
 }
 

@@ -14,7 +14,10 @@ source_set("win32") {
 
   deps = [
     "//base",
-    "//ui/renderer",
+
+    # "//ui/renderer",
     "//util",
   ]
+
+  public_deps = [ "//third_party/libepoxy" ]
 }

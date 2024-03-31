@@ -50,6 +50,7 @@ struct ShapedGlyph {
 
 void TextRenderer::setup(float width, float height, FontRasterizer& font_rasterizer) {
     std::cerr << epoxy_gl_version() << '\n';
+    std::cerr << epoxy_glsl_version() << '\n';
 
     shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
                         ResourcePath() / "shaders/text_frag.glsl");

@@ -7,28 +7,16 @@ source_set("renderer") {
     "text_renderer.cc",
   ]
 
-  if (is_mac) {
-    frameworks = [ "OpenGL.framework" ]
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-  }
-
-  # if (is_linux) {
-  #   libs = [ "epoxy" ]
-  # }
-
   deps = [
     "shaders",
     "//base",
     "//font",
-
-    # "//third_party/libepoxy",
     "//third_party/libgrapheme",
     "//third_party/libpng",
-    "//third_party/sample_lib",
     "//ui/icons",
     "//ui/sample_files",
     "//util",
   ]
 
-  public_deps = [ "//third_party/sample_lib" ]
+  public_deps = [ "//third_party/libepoxy" ]
 }

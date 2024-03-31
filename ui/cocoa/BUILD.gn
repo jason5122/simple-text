@@ -13,6 +13,9 @@ source_set("cocoa") {
   frameworks += [ "OpenGL.framework" ]
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
+  # Why do we need this here, even though we don't use any libepoxy headers?
+  public_deps = [ "//third_party/libepoxy" ]
+
   deps = [
     "//base",
     "//util",

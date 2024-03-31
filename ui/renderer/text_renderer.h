@@ -6,16 +6,10 @@
 #include "font/rasterizer.h"
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/shader.h"
+#include <epoxy/gl.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "build/buildflag.h"
-#if IS_MAC
-#include <OpenGL/gl3.h>
-#else
-#include <epoxy/gl.h>
-#endif
 
 class TextRenderer {
 public:

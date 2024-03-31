@@ -1,89 +1,78 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
-executable("app") {
-  output_name = "simple_text"
+if (is_mac) {
+  mac_app_bundle("app") {
+    output_name = "Simple Text"
+    bundle_identifier = "com.jason5122.simple-text"
+    info_plist = "resources/Info.plist"
 
-  sources = [ "sample.cc" ]
+    # define `code_signing_identity` in args.gn
 
-  deps = [
-    "//third_party/sample_lib",
-    "//third_party/tree_sitter",
-  ]
+    sources = [
+      "main.cc",
+      "main_mac.mm",
+    ]
+
+    frameworks = [ "Cocoa.framework" ]
+
+    deps = [
+      ":icon",
+      "//ui/cocoa",
+      "//ui/renderer",
+    ]
+  }
+
+  icon("icon") {
+    sources = [ "resources/app.iconset" ]
+  }
 }
 
-# if (is_mac) {
-#   mac_app_bundle("app") {
-#     output_name = "Simple Text"
-#     bundle_identifier = "com.jason5122.simple-text"
-#     info_plist = "resources/Info.plist"
+if (is_linux) {
+  executable("app") {
+    output_name = "simple_text"
 
-#     # define `code_signing_identity` in args.gn
+    sources = [
+      "main.cc",
+      "main_linux.cc",
+    ]
 
-#     sources = [
-#       "main.cc",
-#       "main_mac.mm",
-#     ]
+    deps = [
+      "//ui/gtk",
+      "//ui/renderer",
+    ]
+  }
+}
 
-#     frameworks = [ "Cocoa.framework" ]
+if (is_win) {
+  executable("app") {
+    output_name = "simple_text"
 
-#     deps = [
-#       ":icon",
-#       "//ui/cocoa",
-#       "//ui/renderer",
-#     ]
-#   }
+    sources = [ "main_win.cc" ]
 
-#   icon("icon") {
-#     sources = [ "resources/app.iconset" ]
-#   }
-# }
+    defines = [
+      "UNICODE",
+      "_UNICODE",
+    ]
 
-# if (is_linux) {
-#   executable("app") {
-#     output_name = "simple_text"
+    libs = [
+      "user32",
+      "opengl32",
+      "gdi32",
+      "d2d1",
+    ]
 
-#     sources = [
-#       "main.cc",
-#       "main_linux.cc",
-#     ]
+    deps = [
+      "//base",
+      "//font",
+      "//third_party/libgrapheme",
+      "//third_party/libpng",
+      "//ui/icons",
+      "//ui/sample_files",
+      "//ui/win32",
+      "//util",
 
-#     deps = [
-#       "//ui/gtk",
-#       "//ui/renderer",
-#     ]
-#   }
-# }
-
-# if (is_win) {
-#   executable("app") {
-#     output_name = "simple_text"
-
-#     sources = [ "main_win.cc" ]
-
-#     defines = [
-#       "UNICODE",
-#       "_UNICODE",
-#     ]
-
-#     libs = [
-#       "user32",
-#       "opengl32",
-#       "gdi32",
-#       "d2d1",
-#     ]
-
-#     deps = [
-#       "//base",
-#       "//font",
-#       "//third_party/libgrapheme",
-#       "//third_party/libpng",
-#       "//ui/icons",
-#       "//ui/sample_files",
-#       "//ui/win32",
-#       "//util",
-
-#       # "//ui/renderer",
-#     ]
-#   }
-# }
+      # "//ui/renderer",
+    ]
+  }
+}

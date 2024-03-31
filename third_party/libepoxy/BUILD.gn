@@ -51,6 +51,8 @@ action_foreach("generate_dispatch_headers") {
 static_library("libepoxy") {
   configs += [ ":gnu99" ]
 
+  cflags = [ "-Wno-int-conversion" ]
+
   sources = [ "src/dispatch_common.c" ]
   defines = [ "ENABLE_X11=1" ]
 
@@ -73,7 +75,7 @@ static_library("libepoxy") {
     ]
   }
 
-  # sources += get_target_outputs(":generate_dispatch_sources")
+  sources += get_target_outputs(":generate_dispatch_sources")
 
   include_dirs = [
     "src",
@@ -82,18 +84,17 @@ static_library("libepoxy") {
 
   public_configs = [ ":libepoxy_includes" ]
 
-  # deps = [
-  #   ":generate_dispatch_headers",
-  #   ":generate_dispatch_sources",
-  # ]
+  deps = [
+    ":generate_dispatch_headers",
+    ":generate_dispatch_sources",
+  ]
 }
 
 config("libepoxy_includes") {
   include_dirs = [
     "src",
     "include",
-
-    # "$root_gen_dir/third_party/libepoxy/src",
+    "$root_gen_dir/third_party/libepoxy/src",
   ]
 }
 

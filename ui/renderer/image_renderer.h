@@ -2,14 +2,8 @@
 
 #include "ui/renderer/atlas.h"
 #include "ui/renderer/shader.h"
-#include <vector>
-
-#include "build/buildflag.h"
-#if IS_MAC
-#include <OpenGL/gl3.h>
-#else
 #include <epoxy/gl.h>
-#endif
+#include <vector>
 
 class ImageRenderer {
 public:

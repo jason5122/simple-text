@@ -7,17 +7,14 @@ source_set("cocoa") {
   frameworks = [
     "Cocoa.framework",
     "QuartzCore.framework",
+    "OpenGL.framework",
   ]
-
-  # TODO: Move all OpenGL code to //ui/renderer.
-  frameworks += [ "OpenGL.framework" ]
   defines = [ "GL_SILENCE_DEPRECATION" ]
-
-  # Why do we need this here, even though we don't use any libepoxy headers?
-  public_deps = [ "//third_party/libepoxy" ]
 
   deps = [
     "//base",
     "//util",
   ]
+
+  public_deps = [ "//ui/renderer" ]
 }

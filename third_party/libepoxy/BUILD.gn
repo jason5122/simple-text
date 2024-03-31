@@ -75,12 +75,14 @@ static_library("libepoxy") {
     ]
   }
 
+  if (is_win) {
+    sources += [ "src/dispatch_wgl.c" ]
+    # TODO: Add the proper Windows libraries.
+  }
+
   sources += get_target_outputs(":generate_dispatch_sources")
 
-  include_dirs = [
-    "src",
-    "include",
-  ]
+  include_dirs = [ "include" ]
 
   public_configs = [ ":libepoxy_includes" ]
 

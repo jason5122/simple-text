@@ -44,7 +44,9 @@ if (is_win) {
   executable("app") {
     output_name = "simple_text"
 
-    sources = [ "main_win.cc" ]
+    sources = [ "main.cpp" ]
+
+    # sources = [ "main_win.cc" ]
 
     defines = [
       "UNICODE",
@@ -53,6 +55,17 @@ if (is_win) {
 
     libs = [ "shcore" ]
 
-    deps = [ "//ui/win32" ]
+    libs += [
+      "user32",
+      "opengl32",
+      "gdi32",
+      "d2d1",
+    ]
+    deps = [
+      "//third_party/glad",
+      "//ui/renderer",
+    ]
+
+    # deps = [ "//ui/win32" ]
   }
 }

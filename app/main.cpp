@@ -277,12 +277,12 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (use_opengl) {
             {
                 PROFILE_BLOCK("OpenGL draw");
-                // RECT rect = {0};
-                // GetClientRect(m_hwnd, &rect);
+                RECT rect = {0};
+                GetClientRect(m_hwnd, &rect);
 
                 float line_height = 40;
-                // float scaled_width = rect.right;
-                // float scaled_height = rect.bottom;
+                float scaled_width = rect.right;
+                float scaled_height = rect.bottom;
                 float scaled_editor_offset_x = 200 * 2;
                 float scaled_editor_offset_y = 30 * 2;
                 float scaled_status_bar_height = line_height;
@@ -304,8 +304,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         }
 
         EndPaint(m_hwnd, &ps);
-    }
         return 0;
+    }
 
     case WM_SIZE: {
         std::cerr << "WM_SIZE\n";
@@ -313,9 +313,13 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int y = (int)(short)HIWORD(lParam);
         rect_renderer.resize(x, y);
         m_scene.Resize(x, y);
+
+        // FIXME: Window sometimes does not redraw correctly when maximizing/un-maximizing.
         InvalidateRect(m_hwnd, NULL, FALSE);
-    }
+        // RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+
         return 0;
+    }
 
     case WM_COMMAND: {
         switch (LOWORD(wParam)) {

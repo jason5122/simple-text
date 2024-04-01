@@ -31,7 +31,8 @@ public:
         WNDCLASS wc{
             .lpfnWndProc = DERIVED_TYPE::WindowProc,
             .hInstance = GetModuleHandle(NULL),
-            .hbrBackground = CreateSolidBrush(RGB(50, 238, 50)),
+            // .hbrBackground = CreateSolidBrush(RGB(50, 238, 50)),
+            .hbrBackground = nullptr,
             .lpszClassName = ClassName(),
         };
 

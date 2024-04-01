@@ -64,6 +64,7 @@ if (is_win) {
     deps = [
       "//third_party/glad",
       "//ui/renderer",
+      "//util",
     ]
 
     # deps = [ "//ui/win32" ]

@@ -7,10 +7,12 @@
 #include "ui/renderer/rect_renderer.h"
 #include "ui/win32/base_window.h"
 #include "ui/win32/resource.h"
+#include "util/profile_util.h"
 #include <glad/glad.h>
 #include <iostream>
 #include <shellscalingapi.h>
 #include <vector>
+#include <winuser.h>
 
 class Scene : public GraphicsScene {
     CComPtr<ID2D1SolidColorBrush> m_pFill;
@@ -87,7 +89,7 @@ void Scene::CalculateLayout() {
     D2D1_SIZE_F fSize = m_pRenderTarget->GetSize();
 
     const float x = 200;
-    const float y = 200;
+    const float y = fSize.height - 200;
     const float radius = 200;
 
     m_ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), radius, radius);
@@ -163,11 +165,21 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
         return 0;
     }
 
-    LPCTSTR cursor = IDC_ARROW;
+    LPCTSTR cursor = IDC_IBEAM;
     HCURSOR hCursor = LoadCursor(NULL, cursor);
     SetCursor(hCursor);
 
-    ShowWindow(win.Window(), nCmdShow);
+    // ShowWindow(win.Window(), nCmdShow);
+
+    // https://stackoverflow.com/a/20624817
+    // FIXME: This doesn't animate like ShowWindow().
+    // TODO: Replace magic numbers with actual defaults and/or window size restoration.
+    WINDOWPLACEMENT placement{
+        .length = sizeof(WINDOWPLACEMENT),
+        .showCmd = SW_SHOWMAXIMIZED,
+        .rcNormalPosition = RECT{0, 0, 1000 * 2, 500 * 2},
+    };
+    SetWindowPlacement(win.Window(), &placement);
 
     // We need to pass `key` as a virtual key in order to combine it with FCONTROL.
     // https://stackoverflow.com/a/53657941
@@ -184,12 +196,14 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
 
     MSG msg = {};
     while (msg.message != WM_QUIT) {
-        // if (TranslateAccelerator(win.Window(), hAccel, &msg)) {
+        // TODO: Investigate if this slows down the drawing loop.
+        // if (!TranslateAccelerator(win.Window(), hAccel, &msg)) {
+        //     TranslateMessage(&msg);
+        //     DispatchMessage(&msg);
         //     continue;
         // }
 
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) &&
-            !TranslateAccelerator(win.Window(), hAccel, &msg)) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
             continue;
@@ -210,9 +224,11 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     switch (uMsg) {
     case WM_CREATE: {
-        if (FAILED(m_scene.Initialize()) || !InitializeTimer()) {
-            return -1;
-        }
+        // if (FAILED(m_scene.Initialize()) || !InitializeTimer()) {
+        //     return -1;
+        // }
+
+        m_scene.Initialize();
 
         ghDC = GetDC(m_hwnd);
         if (!bSetupPixelFormat(ghDC)) {
@@ -251,31 +267,40 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
+        std::cerr << "WM_PAINT\n";
+        // Sleep(25);  // Add artificial lag for testing.
+
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
 
         bool use_opengl = false;
         if (use_opengl) {
-            RECT rect = {0};
-            GetClientRect(m_hwnd, &rect);
+            {
+                PROFILE_BLOCK("OpenGL draw");
+                // RECT rect = {0};
+                // GetClientRect(m_hwnd, &rect);
 
-            float line_height = 40;
-            float scaled_width = rect.right;
-            float scaled_height = rect.bottom;
-            float scaled_editor_offset_x = 200 * 2;
-            float scaled_editor_offset_y = 30 * 2;
-            float scaled_status_bar_height = line_height;
+                float line_height = 40;
+                // float scaled_width = rect.right;
+                // float scaled_height = rect.bottom;
+                float scaled_editor_offset_x = 200 * 2;
+                float scaled_editor_offset_y = 30 * 2;
+                float scaled_status_bar_height = line_height;
 
-            glClear(GL_COLOR_BUFFER_BIT);
+                glClear(GL_COLOR_BUFFER_BIT);
 
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-            rect_renderer.resize(scaled_width, scaled_height);
-            rect_renderer.draw(0, 0, 0, 0, line_height, 100, 500, scaled_editor_offset_x,
-                               scaled_editor_offset_y, scaled_status_bar_height);
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+                // rect_renderer.resize(scaled_width, scaled_height);
+                rect_renderer.draw(0, 0, 0, 0, line_height, 100, 500, scaled_editor_offset_x,
+                                   scaled_editor_offset_y, scaled_status_bar_height);
+            }
 
             SwapBuffers(ghDC);
         } else {
-            m_scene.Render(m_hwnd);
+            {
+                PROFILE_BLOCK("D2D1 draw");
+                m_scene.Render(m_hwnd);
+            }
         }
 
         EndPaint(m_hwnd, &ps);
@@ -283,8 +308,10 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
 
     case WM_SIZE: {
+        std::cerr << "WM_SIZE\n";
         int x = (int)(short)LOWORD(lParam);
         int y = (int)(short)HIWORD(lParam);
+        rect_renderer.resize(x, y);
         m_scene.Resize(x, y);
         InvalidateRect(m_hwnd, NULL, FALSE);
     }

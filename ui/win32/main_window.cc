@@ -42,6 +42,20 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         std::cerr << glGetString(GL_VERSION) << '\n';
 
+        glEnable(GL_BLEND);
+        glDepthMask(GL_FALSE);
+
+        glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+
+        RECT rect = {0};
+        GetClientRect(m_hwnd, &rect);
+
+        float scaled_width = rect.right;
+        float scaled_height = rect.bottom;
+
+        image_renderer.setup(scaled_width, scaled_height);
+        rect_renderer.setup(scaled_width, scaled_height);
+
         return 0;
     }
 
@@ -53,13 +67,39 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_hwnd, &ps);
 
-        glClearColor(1.0, 0, 0, 1.0);
+        RECT rect = {0};
+        GetClientRect(m_hwnd, &rect);
+
+        float line_height = 40;
+        float scaled_width = rect.right;
+        float scaled_height = rect.bottom;
+        float scaled_editor_offset_x = 200 * 2;
+        float scaled_editor_offset_y = 30 * 2;
+        float scaled_status_bar_height = line_height;
+
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+        rect_renderer.resize(scaled_width, scaled_height);
+        rect_renderer.draw(0, 0, 0, 0, line_height, 100, 500, scaled_editor_offset_x,
+                           scaled_editor_offset_y, scaled_status_bar_height);
+
+        // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+        // image_renderer.resize(scaled_width, scaled_height);
+        // image_renderer.draw(0, 0, 200, 30);
+
         SwapBuffers(ghDC);
 
         EndPaint(m_hwnd, &ps);
         return 0;
     }
+
+    case WM_SIZE:
+        // TODO: Reference Direct2DClock for smooth resizing.
+        // InvalidateRect(m_hwnd, NULL, FALSE);
+        // RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+        RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+        return 0;
 
     case WM_COMMAND: {
         switch (LOWORD(wParam)) {

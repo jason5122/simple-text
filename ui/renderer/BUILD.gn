@@ -4,8 +4,11 @@ source_set("renderer") {
     "image_renderer.cc",
     "rect_renderer.cc",
     "shader.cc",
-    "text_renderer.cc",
   ]
+
+  if (!is_win) {
+    sources += [ "text_renderer.cc" ]
+  }
 
   deps = [
     "shaders",

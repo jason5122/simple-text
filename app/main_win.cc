@@ -3,9 +3,12 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <minwindef.h>
+#include <shellscalingapi.h>
 #include <vector>
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
+    SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+
     MainWindow win;
 
     if (!win.Create(L"Learn to Program Windows", WS_OVERLAPPEDWINDOW)) {

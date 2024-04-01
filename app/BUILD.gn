@@ -51,6 +51,8 @@ if (is_win) {
       "_UNICODE",
     ]
 
+    libs = [ "shcore" ]
+
     deps = [ "//ui/win32" ]
   }
 }

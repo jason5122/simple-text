@@ -63,9 +63,13 @@ if (is_win) {
       "dwrite",
     ]
     deps = [
+      "//base",
+      "//util",
+    ]
+
+    public_deps = [
       "//third_party/glad",
       "//ui/renderer",
-      "//util",
     ]
 
     # deps = [ "//ui/win32" ]

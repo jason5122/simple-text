@@ -1,6 +1,8 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
+// https://stackoverflow.com/a/13420838/14698275
+#define NOMINMAX
 #include <windows.h>
 
 template <class DERIVED_TYPE> class BaseWindow {

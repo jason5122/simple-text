@@ -1,11 +1,19 @@
+#define WIN32_LEAN_AND_MEAN
+// https://stackoverflow.com/a/13420838/14698275
+#define NOMINMAX
+#include <windows.h>
+
 #include <D2d1.h>
 #include <assert.h>
 #include <atlbase.h>
-#include <windows.h>
 
+#include "base/buffer.h"
+#include "base/syntax_highlighter.h"
+#include "font/rasterizer.h"
 #include "scene.h"
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
+#include "ui/renderer/text_renderer.h"
 #include "ui/win32/base_window.h"
 #include "ui/win32/resource.h"
 #include "util/profile_util.h"
@@ -218,8 +226,14 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
 
 HDC ghDC;
 HGLRC ghRC;
+
 RectRenderer rect_renderer;
 ImageRenderer image_renderer;
+TextRenderer text_renderer;
+FontRasterizer main_font_rasterizer;
+Buffer buffer;
+SyntaxHighlighter highlighter;
+
 double scroll_x = 0;
 double scroll_y = 0;
 
@@ -252,103 +266,21 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
+        fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+
         RECT rect = {0};
         GetClientRect(m_hwnd, &rect);
 
         float scaled_width = rect.right;
         float scaled_height = rect.bottom;
 
+        main_font_rasterizer.setup(0, "Source Code Pro", 16 * scale_factor);
+        text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
+        highlighter.setLanguage("source.json");
 
-        DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
-                            reinterpret_cast<IUnknown**>(&dwrite_factory));
-
-        IDWriteFontCollection* font_collection;
-        dwrite_factory->GetSystemFontCollection(&font_collection);
-
-        // https://stackoverflow.com/q/40365439/14698275
-        UINT32 index;
-        BOOL exists;
-        font_collection->FindFamilyName(L"Source Code Pro", &index, &exists);
-
-        if (exists) {
-            std::cerr << "Font family found!\n";
-
-            IDWriteFontFamily* font_family;
-            font_collection->GetFontFamily(index, &font_family);
-
-            // IDWriteLocalizedStrings* family_names;
-            // font_family->GetFamilyNames(&family_names);
-
-            // UINT32 length = 0;
-            // family_names->GetStringLength(0, &length);
-
-            // wchar_t* name = new (std::nothrow) wchar_t[length + 1];
-            // family_names->GetString(0, name, length + 1);
-            // fwprintf(stderr, L"%s\n", name);
-
-            IDWriteFont* font;
-            font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR,
-                                              DWRITE_FONT_STRETCH_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-                                              &font);
-            IDWriteFontFace* font_face;
-            font->CreateFontFace(&font_face);
-
-            UINT32 codepoint = 'L';
-            UINT16* glyph_indices = new UINT16[1];
-            font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
-
-            std::cerr << glyph_indices[0] << '\n';
-
-            // TODO: Verify that this is correct.
-            FLOAT font_size = 32.0;
-            FLOAT em_size = font_size * 96 / 72;
-
-            FLOAT glyph_advances = 0;
-            DWRITE_GLYPH_OFFSET offset = {0};
-            DWRITE_GLYPH_RUN glyph_run{
-                .fontFace = font_face,
-                .fontEmSize = em_size,
-                .glyphCount = 1,
-                .glyphIndices = glyph_indices,
-                .glyphAdvances = &glyph_advances,
-                .glyphOffsets = &offset,
-                .isSideways = 0,
-                .bidiLevel = 0,
-            };
-
-            IDWriteRenderingParams* rendering_params;
-            dwrite_factory->CreateRenderingParams(&rendering_params);
-
-            DWRITE_RENDERING_MODE rendering_mode;
-            font_face->GetRecommendedRenderingMode(em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
-                                                   rendering_params, &rendering_mode);
-
-            IDWriteGlyphRunAnalysis* glyph_run_analysis;
-            dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
-                                                   DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
-                                                   &glyph_run_analysis);
-
-            RECT texture_bounds;
-            glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1,
-                                                      &texture_bounds);
-
-            LONG pixel_width = texture_bounds.right - texture_bounds.left;
-            LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
-            UINT32 pixels = pixel_width * pixel_height;
-            BYTE* alpha_values = new BYTE[pixel_width * pixel_height];
-            glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-                                                   alpha_values, pixel_width * pixel_height);
-
-            std::cerr << pixel_width << 'x' << pixel_height << '\n';
-            // for (size_t r = 0; r < pixel_height; r++) {
-            //     for (size_t c = 0; c < pixel_width; c++) {
-            //         std::cerr << +alpha_values[r * pixel_width + c] << ' ';
-            //     }
-            // }
-            // std::cerr << '\n';
-        }
+        buffer.setContents(ReadFile(file_path));
 
         return 0;
     }
@@ -373,7 +305,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 RECT rect = {0};
                 GetClientRect(m_hwnd, &rect);
 
-                float line_height = 40;
+                float line_height = main_font_rasterizer.line_height;
                 float scaled_width = rect.right;
                 float scaled_height = rect.bottom;
                 double scaled_scroll_x = scroll_x * scale_factor;
@@ -384,10 +316,17 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
                 glClear(GL_COLOR_BUFFER_BIT);
 
+                glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+                text_renderer.resize(scaled_width, scaled_height);
+                text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
+                                         scaled_editor_offset_x, scaled_editor_offset_y,
+                                         main_font_rasterizer, scaled_status_bar_height);
+
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-                rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, 0, 0, line_height, 100, 500,
-                                   scaled_editor_offset_x, scaled_editor_offset_y,
-                                   scaled_status_bar_height);
+                rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
+                                   text_renderer.cursor_end_line, line_height, buffer.lineCount(),
+                                   text_renderer.longest_line_x, scaled_editor_offset_x,
+                                   scaled_editor_offset_y, scaled_status_bar_height);
 
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
                 image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
@@ -439,13 +378,16 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
-        // TODO: Temporarily disable while debugging.
-        // case WM_MOUSEHWHEEL: {
-        //     float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
-        //     scroll_x += dx;
-        //     InvalidateRect(m_hwnd, NULL, FALSE);
-        //     return 0;
-        // }
+    // TODO: Temporarily disable while debugging.
+    case WM_MOUSEHWHEEL: {
+        float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+        scroll_x += dx;
+        if (scroll_x < 0) {
+            scroll_x = 0;
+        }
+        InvalidateRect(m_hwnd, NULL, FALSE);
+        return 0;
+    }
 
     case WM_ERASEBKGND:
         return 1;

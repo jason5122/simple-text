@@ -73,6 +73,8 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 }
 
 RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
+    // pimpl->dwrite_factory->GetSystemFontFallback();
+
     UINT16* glyph_indices = new UINT16[1];
     pimpl->font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 
@@ -91,6 +93,55 @@ RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
 
     IDWriteRenderingParams* rendering_params;
     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
+
+    // TODO: Experiment with CreateBitmapRenderTarget() and DrawGlyphRun().
+    // https://github.com/sublimehq/sublime_text/issues/2350#issuecomment-400367215
+    {
+        IDWriteTextFormat* text_format;
+        pimpl->dwrite_factory->CreateTextFormat(
+            L"Source Code Pro", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+            DWRITE_FONT_STRETCH_NORMAL, 32, L"en-us", &text_format);
+
+        IDWriteTextLayout* text_layout;
+        // TODO: Properly set `maxWidth`/`maxHeight`.
+        pimpl->dwrite_factory->CreateTextLayout(L"a", 1, text_format, 10000, 10000, &text_layout);
+
+        IDWriteGdiInterop* gdi_interop;
+        pimpl->dwrite_factory->GetGdiInterop(&gdi_interop);
+
+        IDWriteBitmapRenderTarget* render_target;
+        gdi_interop->CreateBitmapRenderTarget(nullptr, 128, 128, &render_target);
+
+        render_target->DrawGlyphRun(0, 0, DWRITE_MEASURING_MODE_NATURAL, &glyph_run,
+                                    rendering_params, RGB(0, 200, 255));
+
+        HDC memory_hdc = render_target->GetMemoryDC();
+        HBITMAP hbitmap = (HBITMAP)GetCurrentObject(memory_hdc, OBJ_BITMAP);
+
+        BITMAPINFO bm_info = {0};
+        GetDIBits(memory_hdc, hbitmap, 0, 0, nullptr, &bm_info, DIB_RGB_COLORS);
+
+        BYTE* pixels = new BYTE[bm_info.bmiHeader.biSizeImage];
+        bm_info.bmiHeader.biCompression = BI_RGB;
+
+        GetDIBits(memory_hdc, hbitmap, 0, bm_info.bmiHeader.biHeight, (LPVOID)pixels, &bm_info,
+                  DIB_RGB_COLORS);
+
+        for (size_t i = 0; i < 100; i++) {
+            std::cout << (int)pixels[i] << ' ';
+        }
+        std::cerr << '\n';
+
+        // BITMAP bitmap;
+        // GetObject(hbitmap, sizeof(bitmap), (LPVOID)&bitmap);
+
+        // std::cerr << bitmap.bmWidth << "x" << bitmap.bmHeight << '\n';
+
+        // for (size_t i = 0; i < bitmap.bmWidth * bitmap.bmHeight; i++) {
+        //     std::cerr << bitmap.bmBits[i] << ' ';
+        // }
+        // std::cerr << '\n';
+    }
 
     DWRITE_RENDERING_MODE rendering_mode;
     pimpl->font_face->GetRecommendedRenderingMode(

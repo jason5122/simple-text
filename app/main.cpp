@@ -271,8 +271,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-        // fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
+        // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+        fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
 
         RECT rect = {0};
         GetClientRect(m_hwnd, &rect);

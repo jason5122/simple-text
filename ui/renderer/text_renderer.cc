@@ -271,6 +271,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
                         std::swap(selection_start, selection_end);
                     }
 
+                    // TODO: Preserve the width of the space character when substituting.
+                    //       Otherwise, the line width changes when using proportional fonts.
                     if (codepoint == 0x20 && selection_start <= byte_offset &&
                         byte_offset < selection_end) {
                         codepoint = 183;

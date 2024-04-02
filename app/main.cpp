@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #include "scene.h"
+#include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/win32/base_window.h"
 #include "ui/win32/resource.h"
@@ -196,14 +197,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
 
     MSG msg = {};
     while (msg.message != WM_QUIT) {
-        // TODO: Investigate if this slows down the drawing loop.
-        // if (!TranslateAccelerator(win.Window(), hAccel, &msg)) {
-        //     TranslateMessage(&msg);
-        //     DispatchMessage(&msg);
-        //     continue;
-        // }
-
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        // TODO: Investigate if accelerator tables slow down the drawing loop.
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) &&
+            !TranslateAccelerator(win.Window(), hAccel, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
             continue;
@@ -218,6 +214,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
 HDC ghDC;
 HGLRC ghRC;
 RectRenderer rect_renderer;
+ImageRenderer image_renderer;
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     HWND hwnd = m_hwnd;
@@ -255,6 +252,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         float scaled_height = rect.bottom;
 
         rect_renderer.setup(scaled_width, scaled_height);
+        image_renderer.setup(scaled_width, scaled_height);
 
         return 0;
     }
@@ -273,7 +271,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
 
-        bool use_opengl = false;
+        bool use_opengl = true;
         if (use_opengl) {
             {
                 PROFILE_BLOCK("OpenGL draw");
@@ -290,9 +288,11 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 glClear(GL_COLOR_BUFFER_BIT);
 
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-                // rect_renderer.resize(scaled_width, scaled_height);
                 rect_renderer.draw(0, 0, 0, 0, line_height, 100, 500, scaled_editor_offset_x,
                                    scaled_editor_offset_y, scaled_status_bar_height);
+
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+                image_renderer.draw(0, 0, scaled_editor_offset_x, scaled_editor_offset_y);
             }
 
             SwapBuffers(ghDC);
@@ -312,6 +312,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int x = (int)(short)LOWORD(lParam);
         int y = (int)(short)HIWORD(lParam);
         rect_renderer.resize(x, y);
+        image_renderer.resize(x, y);
         m_scene.Resize(x, y);
 
         // FIXME: Window sometimes does not redraw correctly when maximizing/un-maximizing.

@@ -31,8 +31,8 @@ public:
         WNDCLASS wc{
             .lpfnWndProc = DERIVED_TYPE::WindowProc,
             .hInstance = GetModuleHandle(NULL),
-            // .hbrBackground = CreateSolidBrush(RGB(50, 238, 50)),
-            .hbrBackground = nullptr,
+            // TODO: Change this color based on the editor background color.
+            .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
             .lpszClassName = ClassName(),
         };
 

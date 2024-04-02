@@ -234,8 +234,12 @@ FontRasterizer main_font_rasterizer;
 Buffer buffer;
 SyntaxHighlighter highlighter;
 
+double cursor_start_x = 0;
+double cursor_start_y = 0;
 double scroll_x = 0;
 double scroll_y = 0;
+float editor_offset_x = 200;
+float editor_offset_y = 30;
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     HWND hwnd = m_hwnd;
@@ -313,8 +317,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 float scaled_height = rect.bottom;
                 double scaled_scroll_x = scroll_x * scale_factor;
                 double scaled_scroll_y = scroll_y * scale_factor;
-                float scaled_editor_offset_x = 200 * scale_factor;
-                float scaled_editor_offset_y = 30 * scale_factor;
+                float scaled_editor_offset_x = editor_offset_x * scale_factor;
+                float scaled_editor_offset_y = editor_offset_y * scale_factor;
                 float scaled_status_bar_height = line_height;
 
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -394,6 +398,45 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         //     InvalidateRect(m_hwnd, NULL, FALSE);
         //     return 0;
         // }
+
+    case WM_LBUTTONDOWN: {
+        int mouse_x = GET_X_LPARAM(lParam);
+        int mouse_y = GET_Y_LPARAM(lParam);
+
+        mouse_x -= editor_offset_x * scale_factor;
+        mouse_y -= editor_offset_y * scale_factor;
+
+        mouse_x += scroll_x * scale_factor;
+        mouse_y += scroll_y * scale_factor;
+
+        cursor_start_x = mouse_x;
+        cursor_start_y = mouse_y;
+
+        text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
+                                         main_font_rasterizer);
+
+        InvalidateRect(m_hwnd, NULL, FALSE);
+        return 0;
+    }
+
+    case WM_MOUSEMOVE: {
+        if (wParam == MK_LBUTTON) {
+            int mouse_x = GET_X_LPARAM(lParam);
+            int mouse_y = GET_Y_LPARAM(lParam);
+
+            mouse_x -= editor_offset_x * scale_factor;
+            mouse_y -= editor_offset_y * scale_factor;
+
+            mouse_x += scroll_x * scale_factor;
+            mouse_y += scroll_y * scale_factor;
+
+            text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x,
+                                             mouse_y, main_font_rasterizer);
+
+            InvalidateRect(m_hwnd, NULL, FALSE);
+        }
+        return 0;
+    }
 
     case WM_ERASEBKGND:
         return 1;

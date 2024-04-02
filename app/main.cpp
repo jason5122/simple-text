@@ -400,6 +400,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         // }
 
     case WM_LBUTTONDOWN: {
+        SetCapture(m_hwnd);
+
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
 
@@ -416,6 +418,11 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                                          main_font_rasterizer);
 
         InvalidateRect(m_hwnd, NULL, FALSE);
+        return 0;
+    }
+
+    case WM_LBUTTONUP: {
+        ReleaseCapture();
         return 0;
     }
 

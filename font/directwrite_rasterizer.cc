@@ -3,6 +3,23 @@
 #include <dwrite.h>
 #include <iostream>
 
+// https://stackoverflow.com/a/64471501/14698275
+std::wstring to_wide(const std::string& multi) {
+    std::wstring wide;
+    wchar_t w;
+    mbstate_t mb{};
+    size_t n = 0, len = multi.length() + 1;
+    while (auto res = mbrtowc(&w, multi.c_str() + n, len - n, &mb)) {
+        if (res == size_t(-1) || res == size_t(-2)) {
+            std::cerr << "to_wide(): invalid encoding\n";
+        }
+
+        n += res;
+        wide += w;
+    }
+    return wide;
+}
+
 class FontRasterizer::impl {
 public:
     IDWriteFactory* dwrite_factory;
@@ -24,7 +41,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     // https://stackoverflow.com/q/40365439/14698275
     UINT32 index;
     BOOL exists;
-    font_collection->FindFamilyName(L"Source Code Pro", &index, &exists);
+    font_collection->FindFamilyName(to_wide(main_font_name).c_str(), &index, &exists);
 
     IDWriteFontFamily* font_family;
     font_collection->GetFontFamily(index, &font_family);

@@ -231,6 +231,7 @@ RectRenderer rect_renderer;
 ImageRenderer image_renderer;
 TextRenderer text_renderer;
 FontRasterizer main_font_rasterizer;
+FontRasterizer ui_font_rasterizer;
 Buffer buffer;
 SyntaxHighlighter highlighter;
 
@@ -280,6 +281,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         float scaled_height = rect.bottom;
 
         main_font_rasterizer.setup(0, "Source Code Pro", 11 * scale_factor);
+        ui_font_rasterizer.setup(1, "Segoe UI", 8 * scale_factor);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
@@ -320,7 +322,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 double scaled_scroll_y = scroll_y * scale_factor;
                 float scaled_editor_offset_x = editor_offset_x * scale_factor;
                 float scaled_editor_offset_y = editor_offset_y * scale_factor;
-                float scaled_status_bar_height = line_height;
+                float scaled_status_bar_height = ui_font_rasterizer.line_height;
 
                 glClear(GL_COLOR_BUFFER_BIT);
 
@@ -339,6 +341,9 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
                 image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
                                     scaled_editor_offset_y);
+
+                glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+                text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
             }
 
             SwapBuffers(ghDC);

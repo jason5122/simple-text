@@ -13,6 +13,8 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
+#include "build/buildflag.h"
+
 // TODO: Rewrite this in a more idiomatic C++ way.
 // Border flags.
 #define LEFT 1
@@ -559,7 +561,12 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float start_x, float start
 
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                              FontRasterizer& font_rasterizer) {
+#if IS_WIN
+    RasterizedGlyph glyph = font_rasterizer.rasterizeUTF32(codepoint);
+#else
     RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str.c_str());
+#endif
+
     Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
 
     AtlasGlyph atlas_glyph{

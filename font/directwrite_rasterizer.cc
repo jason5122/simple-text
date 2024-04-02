@@ -1,4 +1,5 @@
 #include "rasterizer.h"
+#include "third_party/libgrapheme/grapheme.h"
 #include <dwrite.h>
 #include <iostream>
 
@@ -54,9 +55,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
-    // FIXME: Implement proper conversion of UTF-8 to UTF-32.
-    UINT32 codepoint = utf8_str[0];
+RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
     UINT16* glyph_indices = new UINT16[1];
     pimpl->font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 

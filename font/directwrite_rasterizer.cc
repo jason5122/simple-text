@@ -73,8 +73,6 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 }
 
 RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
-    // pimpl->dwrite_factory->GetSystemFontFallback();
-
     UINT16* glyph_indices = new UINT16[1];
     pimpl->font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 
@@ -94,6 +92,29 @@ RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
     IDWriteRenderingParams* rendering_params;
     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
 
+    // TODO: Experiment with IDWriteFontFallback for mapping characters to fonts.
+    //       This requires learning about Windows COM.
+    // https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
+    // https://chromium.googlesource.com/chromium/src/+/c1690d39c1e6875377f4685b53a5423cb69e2947/ui/gfx/win/text_analysis_source.cc
+    // https://chromium.googlesource.com/chromium/src/+/c1690d39c1e6875377f4685b53a5423cb69e2947/ui/gfx/win/text_analysis_source.h
+    {
+        // IDWriteFontFallback* fallback;
+        // pimpl->dwrite_factory->GetSystemFontFallback(&fallback);
+
+        // std::wstring wstr = L"H";
+        // UINT32 mapped_len;
+        // IDWriteFont* mapped_font;
+        // FLOAT mapped_scale;
+        // IDWriteTextAnalysisSource* text_analysis;
+        // Microsoft::WRL::MakeAndInitialize<IDWriteTextAnalysisSource>(
+        //     &text_analysis, wstr, L"en-us", DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE,
+        //     DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
+        // fallback->MapCharacters(text_analysis, 0, wstr.length(), nullptr, nullptr,
+        //                         DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+        //                         DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
+        //                         &mapped_scale);
+    }
+
     // TODO: Experiment with CreateBitmapRenderTarget() and DrawGlyphRun().
     // https://github.com/sublimehq/sublime_text/issues/2350#issuecomment-400367215
     {
@@ -104,13 +125,13 @@ RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
 
         IDWriteTextLayout* text_layout;
         // TODO: Properly set `maxWidth`/`maxHeight`.
-        pimpl->dwrite_factory->CreateTextLayout(L"a", 1, text_format, 10000, 10000, &text_layout);
+        pimpl->dwrite_factory->CreateTextLayout(L"L", 1, text_format, 10000, 10000, &text_layout);
 
         IDWriteGdiInterop* gdi_interop;
         pimpl->dwrite_factory->GetGdiInterop(&gdi_interop);
 
         IDWriteBitmapRenderTarget* render_target;
-        gdi_interop->CreateBitmapRenderTarget(nullptr, 128, 128, &render_target);
+        gdi_interop->CreateBitmapRenderTarget(nullptr, 64, 64, &render_target);
 
         render_target->DrawGlyphRun(0, 0, DWRITE_MEASURING_MODE_NATURAL, &glyph_run,
                                     rendering_params, RGB(0, 200, 255));
@@ -127,20 +148,30 @@ RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
         GetDIBits(memory_hdc, hbitmap, 0, bm_info.bmiHeader.biHeight, (LPVOID)pixels, &bm_info,
                   DIB_RGB_COLORS);
 
-        for (size_t i = 0; i < 100; i++) {
-            std::cout << (int)pixels[i] << ' ';
+        BITMAP bitmap;
+        GetObject(hbitmap, sizeof(bitmap), (LPVOID)&bitmap);
+
+        std::cerr << bitmap.bmWidth << "x" << bitmap.bmHeight << '\n';
+
+        size_t size = bitmap.bmWidth * bitmap.bmHeight;
+        std::vector<uint8_t> buffer;
+        buffer.reserve(size);
+        for (size_t i = 0; i < size; i++) {
+            // std::cerr << +pixels[i] << ' ';
+            buffer.push_back(pixels[i]);
         }
-        std::cerr << '\n';
-
-        // BITMAP bitmap;
-        // GetObject(hbitmap, sizeof(bitmap), (LPVOID)&bitmap);
-
-        // std::cerr << bitmap.bmWidth << "x" << bitmap.bmHeight << '\n';
-
-        // for (size_t i = 0; i < bitmap.bmWidth * bitmap.bmHeight; i++) {
-        //     std::cerr << bitmap.bmBits[i] << ' ';
-        // }
         // std::cerr << '\n';
+
+        return RasterizedGlyph{
+            .colored = false,
+            .left = 0,
+            .top = 0,
+            .width = static_cast<int32_t>(bitmap.bmWidth),
+            .height = static_cast<int32_t>(bitmap.bmHeight),
+            .advance = static_cast<float>(bitmap.bmWidth),
+            .buffer = buffer,
+            .index = glyph_indices[0],
+        };
     }
 
     DWRITE_RENDERING_MODE rendering_mode;

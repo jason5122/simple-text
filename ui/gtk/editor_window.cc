@@ -91,7 +91,7 @@ static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpoi
     highlighter.edit(start_byte, old_end_byte, new_end_byte);
 
     // TODO: Move this into a parse_buffer() method.
-    TSInput input = {&buffer, read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);
 
     // FIXME: Do this under an OpenGL context!
@@ -194,7 +194,7 @@ static void realize(GtkWidget* widget) {
     highlighter.setLanguage("source.json");
     buffer.setContents(ReadFile(file_path));
 
-    TSInput input = {&buffer, read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);
 }
 

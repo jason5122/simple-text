@@ -183,17 +183,17 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     HCURSOR hCursor = LoadCursor(NULL, cursor);
     SetCursor(hCursor);
 
-    ShowWindow(win.Window(), nCmdShow);
+    // ShowWindow(win.Window(), nCmdShow);
 
     // https://stackoverflow.com/a/20624817
     // FIXME: This doesn't animate like ShowWindow().
     // TODO: Replace magic numbers with actual defaults and/or window size restoration.
-    // WINDOWPLACEMENT placement{
-    //     .length = sizeof(WINDOWPLACEMENT),
-    //     .showCmd = SW_SHOWMAXIMIZED,
-    //     .rcNormalPosition = RECT{0, 0, 1000 * scale_factor, 500 * scale_factor},
-    // };
-    // SetWindowPlacement(win.Window(), &placement);
+    WINDOWPLACEMENT placement{
+        .length = sizeof(WINDOWPLACEMENT),
+        .showCmd = SW_SHOWMAXIMIZED,
+        .rcNormalPosition = RECT{0, 0, 1000 * scale_factor, 500 * scale_factor},
+    };
+    SetWindowPlacement(win.Window(), &placement);
 
     // We need to pass `key` as a virtual key in order to combine it with FCONTROL.
     // https://stackoverflow.com/a/53657941
@@ -274,13 +274,16 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         float scaled_width = rect.right;
         float scaled_height = rect.bottom;
 
-        main_font_rasterizer.setup(0, "Source Code Pro", 16 * scale_factor);
+        main_font_rasterizer.setup(0, "Source Code Pro", 11 * scale_factor);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
         highlighter.setLanguage("source.json");
 
         buffer.setContents(ReadFile(file_path));
+
+        TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
+        highlighter.parse(input);
 
         return 0;
     }
@@ -378,16 +381,16 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
-    // TODO: Temporarily disable while debugging.
-    case WM_MOUSEHWHEEL: {
-        float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
-        scroll_x += dx;
-        if (scroll_x < 0) {
-            scroll_x = 0;
-        }
-        InvalidateRect(m_hwnd, NULL, FALSE);
-        return 0;
-    }
+        // TODO: Temporarily disable while debugging.
+        // case WM_MOUSEHWHEEL: {
+        //     float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+        //     scroll_x += dx;
+        //     if (scroll_x < 0) {
+        //         scroll_x = 0;
+        //     }
+        //     InvalidateRect(m_hwnd, NULL, FALSE);
+        //     return 0;
+        // }
 
     case WM_ERASEBKGND:
         return 1;

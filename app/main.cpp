@@ -9,6 +9,7 @@
 #include "ui/win32/base_window.h"
 #include "ui/win32/resource.h"
 #include "util/profile_util.h"
+#include <dwrite.h>
 #include <glad/glad.h>
 #include <iostream>
 #include <shellscalingapi.h>
@@ -119,6 +120,7 @@ void Scene::DiscardDeviceDependentResources() {
 class MainWindow : public BaseWindow<MainWindow> {
     HANDLE m_hTimer;
     Scene m_scene;
+    IDWriteFactory* dwrite_factory;
 
     BOOL InitializeTimer();
 
@@ -173,17 +175,17 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     HCURSOR hCursor = LoadCursor(NULL, cursor);
     SetCursor(hCursor);
 
-    // ShowWindow(win.Window(), nCmdShow);
+    ShowWindow(win.Window(), nCmdShow);
 
     // https://stackoverflow.com/a/20624817
     // FIXME: This doesn't animate like ShowWindow().
     // TODO: Replace magic numbers with actual defaults and/or window size restoration.
-    WINDOWPLACEMENT placement{
-        .length = sizeof(WINDOWPLACEMENT),
-        .showCmd = SW_SHOWMAXIMIZED,
-        .rcNormalPosition = RECT{0, 0, 1000 * scale_factor, 500 * scale_factor},
-    };
-    SetWindowPlacement(win.Window(), &placement);
+    // WINDOWPLACEMENT placement{
+    //     .length = sizeof(WINDOWPLACEMENT),
+    //     .showCmd = SW_SHOWMAXIMIZED,
+    //     .rcNormalPosition = RECT{0, 0, 1000 * scale_factor, 500 * scale_factor},
+    // };
+    // SetWindowPlacement(win.Window(), &placement);
 
     // We need to pass `key` as a virtual key in order to combine it with FCONTROL.
     // https://stackoverflow.com/a/53657941
@@ -258,6 +260,95 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
+
+        DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+                            reinterpret_cast<IUnknown**>(&dwrite_factory));
+
+        IDWriteFontCollection* font_collection;
+        dwrite_factory->GetSystemFontCollection(&font_collection);
+
+        // https://stackoverflow.com/q/40365439/14698275
+        UINT32 index;
+        BOOL exists;
+        font_collection->FindFamilyName(L"Source Code Pro", &index, &exists);
+
+        if (exists) {
+            std::cerr << "Font family found!\n";
+
+            IDWriteFontFamily* font_family;
+            font_collection->GetFontFamily(index, &font_family);
+
+            // IDWriteLocalizedStrings* family_names;
+            // font_family->GetFamilyNames(&family_names);
+
+            // UINT32 length = 0;
+            // family_names->GetStringLength(0, &length);
+
+            // wchar_t* name = new (std::nothrow) wchar_t[length + 1];
+            // family_names->GetString(0, name, length + 1);
+            // fwprintf(stderr, L"%s\n", name);
+
+            IDWriteFont* font;
+            font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR,
+                                              DWRITE_FONT_STRETCH_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+                                              &font);
+            IDWriteFontFace* font_face;
+            font->CreateFontFace(&font_face);
+
+            UINT32 codepoint = 'L';
+            UINT16* glyph_indices = new UINT16[1];
+            font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
+
+            std::cerr << glyph_indices[0] << '\n';
+
+            // TODO: Verify that this is correct.
+            FLOAT font_size = 32.0;
+            FLOAT em_size = font_size * 96 / 72;
+
+            FLOAT glyph_advances = 0;
+            DWRITE_GLYPH_OFFSET offset = {0};
+            DWRITE_GLYPH_RUN glyph_run{
+                .fontFace = font_face,
+                .fontEmSize = em_size,
+                .glyphCount = 1,
+                .glyphIndices = glyph_indices,
+                .glyphAdvances = &glyph_advances,
+                .glyphOffsets = &offset,
+                .isSideways = 0,
+                .bidiLevel = 0,
+            };
+
+            IDWriteRenderingParams* rendering_params;
+            dwrite_factory->CreateRenderingParams(&rendering_params);
+
+            DWRITE_RENDERING_MODE rendering_mode;
+            font_face->GetRecommendedRenderingMode(em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
+                                                   rendering_params, &rendering_mode);
+
+            IDWriteGlyphRunAnalysis* glyph_run_analysis;
+            dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
+                                                   DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
+                                                   &glyph_run_analysis);
+
+            RECT texture_bounds;
+            glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1,
+                                                      &texture_bounds);
+
+            LONG pixel_width = texture_bounds.right - texture_bounds.left;
+            LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
+            UINT32 pixels = pixel_width * pixel_height;
+            BYTE* alpha_values = new BYTE[pixel_width * pixel_height];
+            glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
+                                                   alpha_values, pixel_width * pixel_height);
+
+            std::cerr << pixel_width << 'x' << pixel_height << '\n';
+            // for (size_t r = 0; r < pixel_height; r++) {
+            //     for (size_t c = 0; c < pixel_width; c++) {
+            //         std::cerr << +alpha_values[r * pixel_width + c] << ' ';
+            //     }
+            // }
+            // std::cerr << '\n';
+        }
 
         return 0;
     }

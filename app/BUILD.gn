@@ -60,6 +60,7 @@ if (is_win) {
       "opengl32",
       "gdi32",
       "d2d1",
+      "dwrite",
     ]
     deps = [
       "//third_party/glad",

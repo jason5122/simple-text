@@ -341,16 +341,20 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_MOUSEWHEEL: {
         float dy = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
         scroll_y -= dy;
+        if (scroll_y < 0) {
+            scroll_y = 0;
+        }
         InvalidateRect(m_hwnd, NULL, FALSE);
         return 0;
     }
 
-    case WM_MOUSEHWHEEL: {
-        float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
-        scroll_x += dx;
-        InvalidateRect(m_hwnd, NULL, FALSE);
-        return 0;
-    }
+        // TODO: Temporarily disable while debugging.
+        // case WM_MOUSEHWHEEL: {
+        //     float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+        //     scroll_x += dx;
+        //     InvalidateRect(m_hwnd, NULL, FALSE);
+        //     return 0;
+        // }
 
     case WM_ERASEBKGND:
         return 1;

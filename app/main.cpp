@@ -372,7 +372,10 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_MOUSEWHEEL: {
-        float dy = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+        float dy = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
+        // TODO: Replace this magic number.
+        dy *= 40;
+
         scroll_y -= dy;
         if (scroll_y < 0) {
             scroll_y = 0;

@@ -110,10 +110,13 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
     FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
     FLOAT advance = metrics.advanceWidth * scale;
 
+    int32_t top = -texture_bounds.top;
+    top -= descent;
+
     return RasterizedGlyph{
         .colored = false,
         .left = texture_bounds.left,
-        .top = -texture_bounds.top,
+        .top = top,
         .width = static_cast<int32_t>(pixel_width),
         .height = static_cast<int32_t>(pixel_height),
         .advance = advance,

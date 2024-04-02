@@ -10,6 +10,10 @@ source_set("font") {
 
     public_configs = [ ":linux_font_libs" ]
   }
+
+  if (is_win) {
+    sources = [ "directwrite_rasterizer.cc" ]
+  }
 }
 
 if (is_linux) {

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <shellscalingapi.h>
 #include <vector>
+#include <windowsx.h>
 #include <winuser.h>
 
 class Scene : public GraphicsScene {
@@ -153,6 +154,8 @@ BOOL bSetupPixelFormat(HDC hdc) {
 // Constants
 const WCHAR WINDOW_NAME[] = L"Analog Clock";
 
+int scale_factor = 2;
+
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     if (FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE))) {
         return 0;
@@ -178,7 +181,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     WINDOWPLACEMENT placement{
         .length = sizeof(WINDOWPLACEMENT),
         .showCmd = SW_SHOWMAXIMIZED,
-        .rcNormalPosition = RECT{0, 0, 1000 * 2, 500 * 2},
+        .rcNormalPosition = RECT{0, 0, 1000 * scale_factor, 500 * scale_factor},
     };
     SetWindowPlacement(win.Window(), &placement);
 
@@ -215,6 +218,8 @@ HDC ghDC;
 HGLRC ghRC;
 RectRenderer rect_renderer;
 ImageRenderer image_renderer;
+double scroll_x = 0;
+double scroll_y = 0;
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     HWND hwnd = m_hwnd;
@@ -265,7 +270,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
-        std::cerr << "WM_PAINT\n";
         // Sleep(25);  // Add artificial lag for testing.
 
         PAINTSTRUCT ps;
@@ -281,18 +285,22 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 float line_height = 40;
                 float scaled_width = rect.right;
                 float scaled_height = rect.bottom;
-                float scaled_editor_offset_x = 200 * 2;
-                float scaled_editor_offset_y = 30 * 2;
+                double scaled_scroll_x = scroll_x * scale_factor;
+                double scaled_scroll_y = scroll_y * scale_factor;
+                float scaled_editor_offset_x = 200 * scale_factor;
+                float scaled_editor_offset_y = 30 * scale_factor;
                 float scaled_status_bar_height = line_height;
 
                 glClear(GL_COLOR_BUFFER_BIT);
 
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-                rect_renderer.draw(0, 0, 0, 0, line_height, 100, 500, scaled_editor_offset_x,
-                                   scaled_editor_offset_y, scaled_status_bar_height);
+                rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, 0, 0, line_height, 100, 500,
+                                   scaled_editor_offset_x, scaled_editor_offset_y,
+                                   scaled_status_bar_height);
 
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-                image_renderer.draw(0, 0, scaled_editor_offset_x, scaled_editor_offset_y);
+                image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
+                                    scaled_editor_offset_y);
             }
 
             SwapBuffers(ghDC);
@@ -308,7 +316,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_SIZE: {
-        std::cerr << "WM_SIZE\n";
         int x = (int)(short)LOWORD(lParam);
         int y = (int)(short)HIWORD(lParam);
         rect_renderer.resize(x, y);
@@ -328,6 +335,20 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             PostQuitMessage(0);
             break;
         }
+        return 0;
+    }
+
+    case WM_MOUSEWHEEL: {
+        float dy = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+        scroll_y -= dy;
+        InvalidateRect(m_hwnd, NULL, FALSE);
+        return 0;
+    }
+
+    case WM_MOUSEHWHEEL: {
+        float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+        scroll_x += dx;
+        InvalidateRect(m_hwnd, NULL, FALSE);
         return 0;
     }
 

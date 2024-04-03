@@ -3,14 +3,12 @@
 #define NOMINMAX
 #include <windows.h>
 
-#include <D2d1.h>
 #include <assert.h>
 #include <atlbase.h>
 
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
-#include "scene.h"
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/renderer/text_renderer.h"
@@ -25,117 +23,11 @@
 #include <windowsx.h>
 #include <winuser.h>
 
-class Scene : public GraphicsScene {
-    CComPtr<ID2D1SolidColorBrush> m_pFill;
-    CComPtr<ID2D1SolidColorBrush> m_pStroke;
-
-    D2D1_ELLIPSE m_ellipse;
-    D2D_POINT_2F m_Ticks[24];
-
-    HRESULT CreateDeviceIndependentResources() {
-        return S_OK;
-    }
-    void DiscardDeviceIndependentResources() {}
-    HRESULT CreateDeviceDependentResources();
-    void DiscardDeviceDependentResources();
-    void CalculateLayout();
-    void RenderScene();
-
-    void DrawClockHand(float fHandLength, float fAngle, float fStrokeWidth);
-};
-
-HRESULT Scene::CreateDeviceDependentResources() {
-    HRESULT hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 0),
-                                                        D2D1::BrushProperties(), &m_pFill);
-
-    if (SUCCEEDED(hr)) {
-        hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0, 0, 0), D2D1::BrushProperties(),
-                                                    &m_pStroke);
-    }
-    return hr;
-}
-
-void Scene::DrawClockHand(float fHandLength, float fAngle, float fStrokeWidth) {
-    m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(fAngle, m_ellipse.point));
-
-    // endPoint defines one end of the hand.
-    D2D_POINT_2F endPoint =
-        D2D1::Point2F(m_ellipse.point.x, m_ellipse.point.y - (m_ellipse.radiusY * fHandLength));
-
-    // Draw a line from the center of the ellipse to endPoint.
-    m_pRenderTarget->DrawLine(m_ellipse.point, endPoint, m_pStroke, fStrokeWidth);
-}
-
-void Scene::RenderScene() {
-    m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
-
-    m_pRenderTarget->FillEllipse(m_ellipse, m_pFill);
-    m_pRenderTarget->DrawEllipse(m_ellipse, m_pStroke);
-
-    // Draw tick marks
-    for (DWORD i = 0; i < 12; i++) {
-        m_pRenderTarget->DrawLine(m_Ticks[i * 2], m_Ticks[i * 2 + 1], m_pStroke, 2.0f);
-    }
-
-    // Draw hands
-    SYSTEMTIME time;
-    GetLocalTime(&time);
-
-    // 60 minutes = 30 degrees, 1 minute = 0.5 degree
-    const float fHourAngle = (360.0f / 12) * (time.wHour) + (time.wMinute * 0.5f);
-    const float fMinuteAngle = (360.0f / 60) * (time.wMinute);
-
-    const float fSecondAngle =
-        (360.0f / 60) * (time.wSecond) + (360.0f / 60000) * (time.wMilliseconds);
-
-    DrawClockHand(0.6f, fHourAngle, 6);
-    DrawClockHand(0.85f, fMinuteAngle, 4);
-    DrawClockHand(0.85f, fSecondAngle, 1);
-
-    // Restore the identity transformation.
-    m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-}
-
-void Scene::CalculateLayout() {
-    D2D1_SIZE_F fSize = m_pRenderTarget->GetSize();
-
-    const float x = 200;
-    const float y = fSize.height - 200;
-    const float radius = 200;
-
-    m_ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), radius, radius);
-
-    // Calculate tick marks.
-
-    D2D_POINT_2F pt1 =
-        D2D1::Point2F(m_ellipse.point.x, m_ellipse.point.y - (m_ellipse.radiusY * 0.9f));
-
-    D2D_POINT_2F pt2 = D2D1::Point2F(m_ellipse.point.x, m_ellipse.point.y - m_ellipse.radiusY);
-
-    for (DWORD i = 0; i < 12; i++) {
-        D2D1::Matrix3x2F mat = D2D1::Matrix3x2F::Rotation((360.0f / 12) * i, m_ellipse.point);
-
-        m_Ticks[i * 2] = mat.TransformPoint(pt1);
-        m_Ticks[i * 2 + 1] = mat.TransformPoint(pt2);
-    }
-}
-
-void Scene::DiscardDeviceDependentResources() {
-    m_pFill.Release();
-    m_pStroke.Release();
-}
-
 class MainWindow : public BaseWindow<MainWindow> {
-    HANDLE m_hTimer;
-    Scene m_scene;
     IDWriteFactory* dwrite_factory;
 
-    BOOL InitializeTimer();
-
 public:
-    MainWindow() : m_hTimer(NULL) {}
-
-    void WaitTimer();
+    MainWindow() {}
 
     PCWSTR ClassName() const {
         return L"Clock Window Class";
@@ -164,6 +56,7 @@ BOOL bSetupPixelFormat(HDC hdc) {
 // Constants
 const WCHAR WINDOW_NAME[] = L"Simple Text";
 
+// TODO: Don't hard code this!
 int scale_factor = 2;
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
@@ -243,12 +136,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     switch (uMsg) {
     case WM_CREATE: {
-        // if (FAILED(m_scene.Initialize()) || !InitializeTimer()) {
-        //     return -1;
-        // }
-
-        m_scene.Initialize();
-
         ghDC = GetDC(m_hwnd);
         if (!bSetupPixelFormat(ghDC)) {
             PostQuitMessage(0);
@@ -293,8 +180,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_DESTROY:
-        CloseHandle(m_hTimer);
-        m_scene.CleanUp();
         PostQuitMessage(0);
         return 0;
 
@@ -305,51 +190,43 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
 
-        bool use_opengl = true;
-        if (use_opengl) {
-            {
-                PROFILE_BLOCK("OpenGL draw");
-                RECT rect = {0};
-                GetClientRect(m_hwnd, &rect);
+        {
+            PROFILE_BLOCK("OpenGL draw");
+            RECT rect = {0};
+            GetClientRect(m_hwnd, &rect);
 
-                float line_height = main_font_rasterizer.line_height;
-                float scaled_width = rect.right;
-                float scaled_height = rect.bottom;
-                double scaled_scroll_x = scroll_x * scale_factor;
-                double scaled_scroll_y = scroll_y * scale_factor;
-                float scaled_editor_offset_x = editor_offset_x * scale_factor;
-                float scaled_editor_offset_y = editor_offset_y * scale_factor;
-                float scaled_status_bar_height = ui_font_rasterizer.line_height;
+            float line_height = main_font_rasterizer.line_height;
+            float scaled_width = rect.right;
+            float scaled_height = rect.bottom;
+            double scaled_scroll_x = scroll_x * scale_factor;
+            double scaled_scroll_y = scroll_y * scale_factor;
+            float scaled_editor_offset_x = editor_offset_x * scale_factor;
+            float scaled_editor_offset_y = editor_offset_y * scale_factor;
+            float scaled_status_bar_height = ui_font_rasterizer.line_height;
 
-                glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-                glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-                text_renderer.resize(scaled_width, scaled_height);
-                text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
-                                         scaled_editor_offset_x, scaled_editor_offset_y,
-                                         main_font_rasterizer, scaled_status_bar_height);
+            glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+            text_renderer.resize(scaled_width, scaled_height);
+            text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
+                                     scaled_editor_offset_x, scaled_editor_offset_y,
+                                     main_font_rasterizer, scaled_status_bar_height);
 
-                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-                rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
-                                   text_renderer.cursor_end_line, line_height, buffer.lineCount(),
-                                   text_renderer.longest_line_x, scaled_editor_offset_x,
-                                   scaled_editor_offset_y, scaled_status_bar_height);
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+            rect_renderer.draw(scaled_scroll_x, scaled_scroll_y, text_renderer.cursor_end_x,
+                               text_renderer.cursor_end_line, line_height, buffer.lineCount(),
+                               text_renderer.longest_line_x, scaled_editor_offset_x,
+                               scaled_editor_offset_y, scaled_status_bar_height);
 
-                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-                image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
-                                    scaled_editor_offset_y);
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+            image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
+                                scaled_editor_offset_y);
 
-                glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-                text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
-            }
-
-            SwapBuffers(ghDC);
-        } else {
-            {
-                PROFILE_BLOCK("D2D1 draw");
-                m_scene.Render(m_hwnd);
-            }
+            glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+            text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
         }
+
+        SwapBuffers(ghDC);
 
         EndPaint(m_hwnd, &ps);
         return 0;
@@ -360,7 +237,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int y = (int)(short)HIWORD(lParam);
         rect_renderer.resize(x, y);
         image_renderer.resize(x, y);
-        m_scene.Resize(x, y);
 
         // FIXME: Window sometimes does not redraw correctly when maximizing/un-maximizing.
         InvalidateRect(m_hwnd, NULL, FALSE);
@@ -453,29 +329,5 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-}
-
-BOOL MainWindow::InitializeTimer() {
-    m_hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-    if (m_hTimer == NULL) {
-        return FALSE;
-    }
-
-    LARGE_INTEGER li = {0};
-
-    if (!SetWaitableTimer(m_hTimer, &li, (1000 / 60), NULL, NULL, FALSE)) {
-        CloseHandle(m_hTimer);
-        m_hTimer = NULL;
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-void MainWindow::WaitTimer() {
-    // Wait until the timer expires or any message is posted.
-    if (MsgWaitForMultipleObjects(1, &m_hTimer, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0) {
-        InvalidateRect(m_hwnd, NULL, FALSE);
     }
 }

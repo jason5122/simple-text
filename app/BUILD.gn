@@ -55,7 +55,6 @@ if (is_win) {
       "user32",
       "opengl32",
       "gdi32",
-      "d2d1",
       "dwrite",
       "shcore",
     ]

@@ -247,6 +247,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     switch (uMsg) {
     case WM_CREATE: {
+        HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
         // if (FAILED(m_scene.Initialize()) || !InitializeTimer()) {
         //     return -1;
         // }
@@ -280,7 +282,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         float scaled_width = rect.right;
         float scaled_height = rect.bottom;
 
-        main_font_rasterizer.setup(0, "Source Code Pro", 11 * scale_factor);
+        main_font_rasterizer.setup(0, "Segoe UI Emoji", 11 * scale_factor);
         ui_font_rasterizer.setup(1, "Segoe UI", 8 * scale_factor);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
@@ -296,6 +298,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_DESTROY:
+        CoUninitialize();
+
         CloseHandle(m_hTimer);
         m_scene.CleanUp();
         PostQuitMessage(0);

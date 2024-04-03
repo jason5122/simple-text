@@ -1,7 +1,13 @@
 #include "rasterizer.h"
 #include "third_party/libgrapheme/grapheme.h"
-#include <dwrite.h>
+#include <combaseapi.h>
+#include <cwchar>
+#include <dwrite_2.h>
 #include <iostream>
+#include <unknwnbase.h>
+#include <winerror.h>
+#include <wingdi.h>
+#include <winnt.h>
 
 // https://stackoverflow.com/a/64471501/14698275
 std::wstring to_wide(const std::string& multi) {
@@ -22,7 +28,7 @@ std::wstring to_wide(const std::string& multi) {
 
 class FontRasterizer::impl {
 public:
-    IDWriteFactory* dwrite_factory;
+    IDWriteFactory2* dwrite_factory;
     IDWriteFontFace* font_face;
     FLOAT em_size;
 };
@@ -32,7 +38,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
 
-    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory2),
                         reinterpret_cast<IUnknown**>(&pimpl->dwrite_factory));
 
     IDWriteFontCollection* font_collection;
@@ -72,6 +78,183 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
+// class FallbackTextAnalysisSource : public IDWriteTextAnalysisSource {
+//     LONG _cRef = 1;
+
+//     bool rtl = false;
+//     Char16String string;
+//     Char16String locale;
+//     IDWriteNumberSubstitution* n_sub = nullptr;
+
+// public:
+//     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface) override {
+//         if (IID_IUnknown == riid) {
+//             AddRef();
+//             *ppvInterface = (IUnknown*)this;
+//         } else if (__uuidof(IMMNotificationClient) == riid) {
+//             AddRef();
+//             *ppvInterface = (IMMNotificationClient*)this;
+//         } else {
+//             *ppvInterface = nullptr;
+//             return E_NOINTERFACE;
+//         }
+//         return S_OK;
+//     }
+
+//     ULONG STDMETHODCALLTYPE AddRef() override {
+//         return InterlockedIncrement(&_cRef);
+//     }
+
+//     ULONG STDMETHODCALLTYPE Release() override {
+//         ULONG ulRef = InterlockedDecrement(&_cRef);
+//         if (0 == ulRef) {
+//             delete this;
+//         }
+//         return ulRef;
+//     }
+
+//     HRESULT STDMETHODCALLTYPE GetTextAtPosition(UINT32 p_text_position,
+//                                                 WCHAR const** r_text_string,
+//                                                 UINT32* r_text_length) override {
+//         if (p_text_position >= (UINT32)string.length()) {
+//             *r_text_string = nullptr;
+//             *r_text_length = 0;
+//             return S_OK;
+//         }
+//         *r_text_string = reinterpret_cast<const wchar_t*>(string.get_data()) + p_text_position;
+//         *r_text_length = string.length() - p_text_position;
+//         return S_OK;
+//     }
+
+//     HRESULT STDMETHODCALLTYPE GetTextBeforePosition(UINT32 p_text_position,
+//                                                     WCHAR const** r_text_string,
+//                                                     UINT32* r_text_length) override {
+//         if (p_text_position < 1 || p_text_position >= (UINT32)string.length()) {
+//             *r_text_string = nullptr;
+//             *r_text_length = 0;
+//             return S_OK;
+//         }
+//         *r_text_string = reinterpret_cast<const wchar_t*>(string.get_data());
+//         *r_text_length = p_text_position;
+//         return S_OK;
+//     }
+
+//     DWRITE_READING_DIRECTION STDMETHODCALLTYPE GetParagraphReadingDirection() override {
+//         return (rtl) ? DWRITE_READING_DIRECTION_RIGHT_TO_LEFT
+//                      : DWRITE_READING_DIRECTION_LEFT_TO_RIGHT;
+//     }
+
+//     HRESULT STDMETHODCALLTYPE GetLocaleName(UINT32 p_text_position, UINT32* r_text_length,
+//                                             WCHAR const** r_locale_name) override {
+//         *r_locale_name = reinterpret_cast<const wchar_t*>(locale.get_data());
+//         return S_OK;
+//     }
+
+//     HRESULT STDMETHODCALLTYPE
+//     GetNumberSubstitution(UINT32 p_text_position, UINT32* r_text_length,
+//                           IDWriteNumberSubstitution** r_number_substitution) override {
+//         *r_number_substitution = n_sub;
+//         return S_OK;
+//     }
+
+//     FallbackTextAnalysisSource(const Char16String& p_text, const Char16String& p_locale,
+//                                bool p_rtl, IDWriteNumberSubstitution* p_nsub) {
+//         _cRef = 1;
+//         string = p_text;
+//         locale = p_locale;
+//         n_sub = p_nsub;
+//         rtl = p_rtl;
+//     };
+
+//     virtual ~FallbackTextAnalysisSource() {}
+// };
+
+class FontFallbackSource : public IDWriteTextAnalysisSource {
+public:
+    FontFallbackSource(const WCHAR* string, UINT32 length, const WCHAR* locale,
+                       IDWriteNumberSubstitution* numberSubstitution)
+        : fRefCount(1), fString(string), fLength(length), fLocale(locale),
+          fNumberSubstitution(numberSubstitution) {}
+
+    // IUnknown methods
+    COM_DECLSPEC_NOTHROW STDMETHODIMP QueryInterface(IID const& riid, void** ppvObject) override {
+        if (__uuidof(IUnknown) == riid || __uuidof(IDWriteTextAnalysisSource) == riid) {
+            *ppvObject = this;
+            this->AddRef();
+            return S_OK;
+        }
+        *ppvObject = nullptr;
+        return E_FAIL;
+    }
+
+    COM_DECLSPEC_NOTHROW STDMETHODIMP_(ULONG) AddRef() override {
+        return InterlockedIncrement(&fRefCount);
+    }
+
+    COM_DECLSPEC_NOTHROW STDMETHODIMP_(ULONG) Release() override {
+        ULONG newCount = InterlockedDecrement(&fRefCount);
+        if (0 == newCount) {
+            delete this;
+        }
+        return newCount;
+    }
+
+    // IDWriteTextAnalysisSource methods
+    COM_DECLSPEC_NOTHROW STDMETHODIMP GetTextAtPosition(UINT32 textPosition,
+                                                        WCHAR const** textString,
+                                                        UINT32* textLength) override {
+        if (fLength <= textPosition) {
+            *textString = nullptr;
+            *textLength = 0;
+            return S_OK;
+        }
+        *textString = fString + textPosition;
+        *textLength = fLength - textPosition;
+        return S_OK;
+    }
+
+    COM_DECLSPEC_NOTHROW STDMETHODIMP GetTextBeforePosition(UINT32 textPosition,
+                                                            WCHAR const** textString,
+                                                            UINT32* textLength) override {
+        if (textPosition < 1 || fLength <= textPosition) {
+            *textString = nullptr;
+            *textLength = 0;
+            return S_OK;
+        }
+        *textString = fString;
+        *textLength = textPosition;
+        return S_OK;
+    }
+
+    COM_DECLSPEC_NOTHROW STDMETHODIMP_(DWRITE_READING_DIRECTION)
+        GetParagraphReadingDirection() override {
+        // TODO: this is also interesting.
+        return DWRITE_READING_DIRECTION_LEFT_TO_RIGHT;
+    }
+
+    COM_DECLSPEC_NOTHROW STDMETHODIMP GetLocaleName(UINT32 textPosition, UINT32* textLength,
+                                                    WCHAR const** localeName) override {
+        *localeName = fLocale;
+        return S_OK;
+    }
+
+    COM_DECLSPEC_NOTHROW STDMETHODIMP
+    GetNumberSubstitution(UINT32 textPosition, UINT32* textLength,
+                          IDWriteNumberSubstitution** numberSubstitution) override {
+        *numberSubstitution = fNumberSubstitution;
+        return S_OK;
+    }
+
+private:
+    virtual ~FontFallbackSource() {}
+
+    ULONG fRefCount;
+    const WCHAR* fString;
+    UINT32 fLength;
+    const WCHAR* fLocale;
+    IDWriteNumberSubstitution* fNumberSubstitution;
+};
+
 RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
     UINT16* glyph_indices = new UINT16[1];
     pimpl->font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
@@ -98,80 +281,48 @@ RasterizedGlyph FontRasterizer::rasterizeUTF32(uint_least32_t codepoint) {
     // https://chromium.googlesource.com/chromium/src/+/c1690d39c1e6875377f4685b53a5423cb69e2947/ui/gfx/win/text_analysis_source.cc
     // https://chromium.googlesource.com/chromium/src/+/c1690d39c1e6875377f4685b53a5423cb69e2947/ui/gfx/win/text_analysis_source.h
     {
-        // IDWriteFontFallback* fallback;
-        // pimpl->dwrite_factory->GetSystemFontFallback(&fallback);
+        IDWriteNumberSubstitution* number_substitution;
+        pimpl->dwrite_factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE,
+                                                        L"en-us", true, &number_substitution);
 
-        // std::wstring wstr = L"H";
-        // UINT32 mapped_len;
-        // IDWriteFont* mapped_font;
-        // FLOAT mapped_scale;
-        // IDWriteTextAnalysisSource* text_analysis;
-        // Microsoft::WRL::MakeAndInitialize<IDWriteTextAnalysisSource>(
-        //     &text_analysis, wstr, L"en-us", DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE,
-        //     DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
-        // fallback->MapCharacters(text_analysis, 0, wstr.length(), nullptr, nullptr,
-        //                         DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-        //                         DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
-        //                         &mapped_scale);
-    }
+        IDWriteTextAnalysisSource* text_analysis;
+        text_analysis = new FontFallbackSource(L"a", 1, L"en-us", number_substitution);
 
-    // TODO: Experiment with CreateBitmapRenderTarget() and DrawGlyphRun().
-    // https://github.com/sublimehq/sublime_text/issues/2350#issuecomment-400367215
-    {
-        IDWriteTextFormat* text_format;
-        pimpl->dwrite_factory->CreateTextFormat(
-            L"Source Code Pro", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-            DWRITE_FONT_STRETCH_NORMAL, 32, L"en-us", &text_format);
+        IDWriteFontFallback* fallback;
+        pimpl->dwrite_factory->GetSystemFontFallback(&fallback);
 
-        IDWriteTextLayout* text_layout;
-        // TODO: Properly set `maxWidth`/`maxHeight`.
-        pimpl->dwrite_factory->CreateTextLayout(L"L", 1, text_format, 10000, 10000, &text_layout);
+        std::wstring wstr = L"a";
+        UINT32 mapped_len;
+        IDWriteFont* mapped_font;
+        FLOAT mapped_scale;
+        fallback->MapCharacters(text_analysis, 0, wstr.length(), nullptr, nullptr,
+                                DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+                                DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
+                                &mapped_scale);
 
-        IDWriteGdiInterop* gdi_interop;
-        pimpl->dwrite_factory->GetGdiInterop(&gdi_interop);
+        // TODO: Everything below is for debugging; remove this.
+        std::cerr << "mapped_len: " << mapped_len << '\n';
 
-        IDWriteBitmapRenderTarget* render_target;
-        gdi_interop->CreateBitmapRenderTarget(nullptr, 64, 64, &render_target);
+        IDWriteFontFamily* font_family;
+        mapped_font->GetFontFamily(&font_family);
 
-        render_target->DrawGlyphRun(0, 0, DWRITE_MEASURING_MODE_NATURAL, &glyph_run,
-                                    rendering_params, RGB(0, 200, 255));
+        IDWriteLocalizedStrings* family_names;
+        font_family->GetFamilyNames(&family_names);
 
-        HDC memory_hdc = render_target->GetMemoryDC();
-        HBITMAP hbitmap = (HBITMAP)GetCurrentObject(memory_hdc, OBJ_BITMAP);
+        wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
+        int defaultLocaleSuccess = GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
 
-        BITMAPINFO bm_info = {0};
-        GetDIBits(memory_hdc, hbitmap, 0, 0, nullptr, &bm_info, DIB_RGB_COLORS);
+        UINT32 index = 0;
+        BOOL exists = false;
+        family_names->FindLocaleName(localeName, &index, &exists);
 
-        BYTE* pixels = new BYTE[bm_info.bmiHeader.biSizeImage];
-        bm_info.bmiHeader.biCompression = BI_RGB;
+        UINT32 length = 0;
+        family_names->GetStringLength(index, &length);
 
-        GetDIBits(memory_hdc, hbitmap, 0, bm_info.bmiHeader.biHeight, (LPVOID)pixels, &bm_info,
-                  DIB_RGB_COLORS);
+        wchar_t* name = new (std::nothrow) wchar_t[length + 1];
+        family_names->GetString(index, name, length + 1);
 
-        BITMAP bitmap;
-        GetObject(hbitmap, sizeof(bitmap), (LPVOID)&bitmap);
-
-        std::cerr << bitmap.bmWidth << "x" << bitmap.bmHeight << '\n';
-
-        size_t size = bitmap.bmWidth * bitmap.bmHeight;
-        std::vector<uint8_t> buffer;
-        buffer.reserve(size);
-        for (size_t i = 0; i < size; i++) {
-            // std::cerr << +pixels[i] << ' ';
-            buffer.push_back(pixels[i]);
-        }
-        // std::cerr << '\n';
-
-        return RasterizedGlyph{
-            .colored = false,
-            .left = 0,
-            .top = 0,
-            .width = static_cast<int32_t>(bitmap.bmWidth),
-            .height = static_cast<int32_t>(bitmap.bmHeight),
-            .advance = static_cast<float>(bitmap.bmWidth),
-            .buffer = buffer,
-            .index = glyph_indices[0],
-        };
+        fwprintf(stderr, L"%s\n", name);
     }
 
     DWRITE_RENDERING_MODE rendering_mode;

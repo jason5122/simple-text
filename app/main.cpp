@@ -209,15 +209,11 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     // Run the message loop.
 
     MSG msg = {};
-    while (msg.message != WM_QUIT) {
-        // TODO: Investigate if accelerator tables slow down the drawing loop.
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) &&
-            !TranslateAccelerator(win.Window(), hAccel, &msg)) {
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        if (!TranslateAccelerator(win.Window(), hAccel, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-            continue;
         }
-        win.WaitTimer();
     }
 
     CoUninitialize();
@@ -247,8 +243,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     switch (uMsg) {
     case WM_CREATE: {
-        HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-
         // if (FAILED(m_scene.Initialize()) || !InitializeTimer()) {
         //     return -1;
         // }
@@ -273,8 +267,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-        fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
+        fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+        // fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
 
         RECT rect = {0};
         GetClientRect(m_hwnd, &rect);
@@ -298,8 +292,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_DESTROY:
-        CoUninitialize();
-
         CloseHandle(m_hTimer);
         m_scene.CleanUp();
         PostQuitMessage(0);

@@ -564,7 +564,7 @@ void TextRenderer::setCursorPositions(Buffer& buffer, float start_x, float start
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                              FontRasterizer& font_rasterizer) {
 #if IS_WIN
-    RasterizedGlyph glyph = font_rasterizer.rasterizeUTF32(codepoint);
+    RasterizedGlyph glyph = font_rasterizer.rasterizeTemp(utf8_str, codepoint);
 #else
     RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str.c_str());
 #endif

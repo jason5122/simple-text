@@ -3,18 +3,15 @@
 #define NOMINMAX
 #include <windows.h>
 
-#include <assert.h>
-#include <atlbase.h>
-
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
+#include "resource.h"
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/renderer/text_renderer.h"
-#include "ui/win32/base_window.h"
-#include "ui/win32/resource.h"
 #include "util/profile_util.h"
+#include <atlbase.h>
 #include <dwrite.h>
 #include <glad/glad.h>
 #include <iostream>
@@ -22,6 +19,59 @@
 #include <vector>
 #include <windowsx.h>
 #include <winuser.h>
+
+template <class DERIVED_TYPE> class BaseWindow {
+public:
+    static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+        DERIVED_TYPE* pThis = NULL;
+
+        if (uMsg == WM_NCCREATE) {
+            CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
+            pThis = (DERIVED_TYPE*)pCreate->lpCreateParams;
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+
+            pThis->m_hwnd = hwnd;
+        } else {
+            pThis = (DERIVED_TYPE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        }
+        if (pThis) {
+            return pThis->HandleMessage(uMsg, wParam, lParam);
+        } else {
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        }
+    }
+
+    BaseWindow() : m_hwnd(NULL) {}
+
+    BOOL Create(PCWSTR lpWindowName, DWORD dwStyle, DWORD dwExStyle = 0, int x = CW_USEDEFAULT,
+                int y = CW_USEDEFAULT, int nWidth = CW_USEDEFAULT, int nHeight = CW_USEDEFAULT,
+                HWND hWndParent = 0, HMENU hMenu = 0) {
+        WNDCLASS wc{
+            .lpfnWndProc = DERIVED_TYPE::WindowProc,
+            .hInstance = GetModuleHandle(NULL),
+            // TODO: Change this color based on the editor background color.
+            .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
+            .lpszClassName = ClassName(),
+        };
+
+        RegisterClass(&wc);
+
+        m_hwnd = CreateWindowEx(dwExStyle, ClassName(), lpWindowName, dwStyle, x, y, nWidth,
+                                nHeight, hWndParent, hMenu, GetModuleHandle(NULL), this);
+
+        return (m_hwnd ? TRUE : FALSE);
+    }
+
+    HWND Window() const {
+        return m_hwnd;
+    }
+
+protected:
+    virtual PCWSTR ClassName() const = 0;
+    virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
+
+    HWND m_hwnd;
+};
 
 class MainWindow : public BaseWindow<MainWindow> {
     IDWriteFactory* dwrite_factory;
@@ -154,9 +204,9 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+        // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
         // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-        // fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
+        fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
 
         RECT rect = {0};
         GetClientRect(m_hwnd, &rect);
@@ -164,7 +214,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         float scaled_width = rect.right;
         float scaled_height = rect.bottom;
 
-        main_font_rasterizer.setup(0, "Source Code Pro", 11 * scale_factor);
+        main_font_rasterizer.setup(0, "Segoe UI", 11 * scale_factor);
+        // main_font_rasterizer.setup(0, "Source Code Pro", 11 * scale_factor);
         ui_font_rasterizer.setup(1, "Segoe UI", 8 * scale_factor);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
@@ -222,8 +273,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
                                 scaled_editor_offset_y);
 
-            glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-            text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
+            // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+            // text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
         }
 
         SwapBuffers(ghDC);

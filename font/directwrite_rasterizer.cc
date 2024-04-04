@@ -1,5 +1,6 @@
 #include "rasterizer.h"
 #include "third_party/libgrapheme/grapheme.h"
+#include <cassert>
 #include <combaseapi.h>
 #include <cwchar>
 #include <dwrite.h>
@@ -80,7 +81,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-// https://github.com/google/skia/blob/main/src/ports/SkFontMgr_win_dw.cpp#L356
+// https://github.com/google/skia/blob/5fdc2b47dfa448b745545e897f3a70a238edf6d7/src/ports/SkFontMgr_win_dw.cpp#L356
 class FontFallbackSource : public IDWriteTextAnalysisSource {
 public:
     FontFallbackSource(const WCHAR* string, UINT32 length, const WCHAR* locale,
@@ -167,6 +168,237 @@ private:
     IDWriteNumberSubstitution* fNumberSubstitution;
 };
 
+// https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L283
+class TextAnalysis : public IDWriteTextAnalysisSource, public IDWriteTextAnalysisSink {
+public:
+    IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject) {
+        return S_OK;
+    }
+    IFACEMETHOD_(ULONG, AddRef)() {
+        return 1;
+    }
+    IFACEMETHOD_(ULONG, Release)() {
+        return 1;
+    }
+
+    // A single contiguous run of characters containing the same analysis
+    // results.
+    struct Run {
+        uint32_t mTextStart;   // starting text position of this run
+        uint32_t mTextLength;  // number of contiguous code units covered
+        uint32_t mGlyphStart;  // starting glyph in the glyphs array
+        uint32_t mGlyphCount;  // number of glyphs associated with this run
+        // text
+        DWRITE_SCRIPT_ANALYSIS mScript;
+        uint8_t mBidiLevel;
+        bool mIsSideways;
+
+        bool ContainsTextPosition(uint32_t aTextPosition) const {
+            return aTextPosition >= mTextStart && aTextPosition < mTextStart + mTextLength;
+        }
+
+        Run* nextRun;
+    };
+
+public:
+    TextAnalysis(const wchar_t* text, uint32_t textLength, const wchar_t* localeName,
+                 DWRITE_READING_DIRECTION readingDirection)
+        : mTextLength(textLength), mText(text), mLocaleName(localeName),
+          mReadingDirection(readingDirection), mCurrentRun(nullptr) {}
+    ~TextAnalysis() {
+        // delete runs, except mRunHead which is part of the TextAnalysis object
+        for (Run* run = mRunHead.nextRun; run;) {
+            Run* origRun = run;
+            run = run->nextRun;
+            delete origRun;
+        }
+    }
+
+    STDMETHODIMP
+    GenerateResults(IDWriteTextAnalyzer* textAnalyzer, Run** runHead) {
+        // Analyzes the text using the script analyzer and returns
+        // the result as a series of runs.
+
+        HRESULT hr = S_OK;
+
+        // Initially start out with one result that covers the entire range.
+        // This result will be subdivided by the analysis processes.
+        mRunHead.mTextStart = 0;
+        mRunHead.mTextLength = mTextLength;
+        mRunHead.mBidiLevel = (mReadingDirection == DWRITE_READING_DIRECTION_RIGHT_TO_LEFT);
+        mRunHead.nextRun = nullptr;
+        mCurrentRun = &mRunHead;
+
+        // Call each of the analyzers in sequence, recording their results.
+        if (SUCCEEDED(hr = textAnalyzer->AnalyzeScript(this, 0, mTextLength, this)))
+            *runHead = &mRunHead;
+
+        return hr;
+    }
+
+    // IDWriteTextAnalysisSource implementation
+
+    IFACEMETHODIMP
+    GetTextAtPosition(uint32_t textPosition, OUT wchar_t const** textString,
+                      OUT uint32_t* textLength) {
+        if (textPosition >= mTextLength) {
+            // No text at this position, valid query though.
+            *textString = nullptr;
+            *textLength = 0;
+        } else {
+            *textString = mText + textPosition;
+            *textLength = mTextLength - textPosition;
+        }
+        return S_OK;
+    }
+
+    IFACEMETHODIMP
+    GetTextBeforePosition(uint32_t textPosition, OUT wchar_t const** textString,
+                          OUT uint32_t* textLength) {
+        if (textPosition == 0 || textPosition > mTextLength) {
+            // Either there is no text before here (== 0), or this
+            // is an invalid position. The query is considered valid though.
+            *textString = nullptr;
+            *textLength = 0;
+        } else {
+            *textString = mText;
+            *textLength = textPosition;
+        }
+        return S_OK;
+    }
+
+    IFACEMETHODIMP_(DWRITE_READING_DIRECTION)
+    GetParagraphReadingDirection() {
+        return mReadingDirection;
+    }
+
+    IFACEMETHODIMP GetLocaleName(uint32_t textPosition, uint32_t* textLength,
+                                 wchar_t const** localeName) {
+        return S_OK;
+    }
+
+    IFACEMETHODIMP
+    GetNumberSubstitution(uint32_t textPosition, OUT uint32_t* textLength,
+                          OUT IDWriteNumberSubstitution** numberSubstitution) {
+        // We do not support number substitution.
+        *numberSubstitution = nullptr;
+        *textLength = mTextLength - textPosition;
+
+        return S_OK;
+    }
+
+    // IDWriteTextAnalysisSink implementation
+
+    IFACEMETHODIMP
+    SetScriptAnalysis(uint32_t textPosition, uint32_t textLength,
+                      DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis) {
+        SetCurrentRun(textPosition);
+        SplitCurrentRun(textPosition);
+        while (textLength > 0) {
+            Run* run = FetchNextRun(&textLength);
+            run->mScript = *scriptAnalysis;
+        }
+
+        return S_OK;
+    }
+
+    IFACEMETHODIMP
+    SetLineBreakpoints(uint32_t textPosition, uint32_t textLength,
+                       const DWRITE_LINE_BREAKPOINT* lineBreakpoints) {
+        return S_OK;
+    }
+
+    IFACEMETHODIMP SetBidiLevel(uint32_t textPosition, uint32_t textLength, uint8_t explicitLevel,
+                                uint8_t resolvedLevel) {
+        return S_OK;
+    }
+
+    IFACEMETHODIMP
+    SetNumberSubstitution(uint32_t textPosition, uint32_t textLength,
+                          IDWriteNumberSubstitution* numberSubstitution) {
+        return S_OK;
+    }
+
+protected:
+    Run* FetchNextRun(IN OUT uint32_t* textLength) {
+        // Used by the sink setters, this returns a reference to the next run.
+        // Position and length are adjusted to now point after the current run
+        // being returned.
+
+        Run* origRun = mCurrentRun;
+        // Split the tail if needed (the length remaining is less than the
+        // current run's size).
+        if (*textLength < mCurrentRun->mTextLength)
+            SplitCurrentRun(mCurrentRun->mTextStart + *textLength);
+        else
+            // Just advance the current run.
+            mCurrentRun = mCurrentRun->nextRun;
+        *textLength -= origRun->mTextLength;
+
+        // Return a reference to the run that was just current.
+        return origRun;
+    }
+
+    void SetCurrentRun(uint32_t textPosition) {
+        // Move the current run to the given position.
+        // Since the analyzers generally return results in a forward manner,
+        // this will usually just return early. If not, find the
+        // corresponding run for the text position.
+
+        if (mCurrentRun && mCurrentRun->ContainsTextPosition(textPosition)) return;
+
+        for (Run* run = &mRunHead; run; run = run->nextRun)
+            if (run->ContainsTextPosition(textPosition)) {
+                mCurrentRun = run;
+                return;
+            }
+        assert(0);  // We should always be able to find the text position in one of our runs
+    }
+
+    void SplitCurrentRun(uint32_t splitPosition) {
+        if (!mCurrentRun) {
+            assert(0);  // SplitCurrentRun called without current run
+            // Shouldn't be calling this when no current run is set!
+            return;
+        }
+        // Split the current run.
+        if (splitPosition <= mCurrentRun->mTextStart) {
+            // No need to split, already the start of a run
+            // or before it. Usually the first.
+            return;
+        }
+        Run* newRun = new Run;
+
+        *newRun = *mCurrentRun;
+
+        // Insert the new run in our linked list.
+        newRun->nextRun = mCurrentRun->nextRun;
+        mCurrentRun->nextRun = newRun;
+
+        // Adjust runs' text positions and lengths.
+        uint32_t splitPoint = splitPosition - mCurrentRun->mTextStart;
+        newRun->mTextStart += splitPoint;
+        newRun->mTextLength -= splitPoint;
+        mCurrentRun->mTextLength = splitPoint;
+        mCurrentRun = newRun;
+    }
+
+protected:
+    // Input
+    // (weak references are fine here, since this class is a transient
+    //  stack-based helper that doesn't need to copy data)
+    uint32_t mTextLength;
+    const wchar_t* mText;
+    const wchar_t* mLocaleName;
+    DWRITE_READING_DIRECTION mReadingDirection;
+
+    // Current processing state.
+    Run* mCurrentRun;
+
+    // Output is a list of runs starting here
+    Run mRunHead;
+};
+
 RasterizedGlyph FontRasterizer::rasterizeTemp(std::string& utf8_str, uint_least32_t codepoint) {
     IDWriteFontFace* selected_font_face = pimpl->font_face;
 
@@ -174,7 +406,8 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string& utf8_str, uint_least3
     selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 
     // https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
-    if (glyph_indices[0] == 0) {
+    if (true) {
+        // if (glyph_indices[0] == 0) {
         // https://stackoverflow.com/a/6693107/14698275
         int wchars_num = MultiByteToWideChar(CP_UTF8, 0, utf8_str.c_str(), -1, NULL, 0);
         wchar_t* wstr = new wchar_t[wchars_num];
@@ -222,12 +455,42 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string& utf8_str, uint_least3
 
         // fwprintf(stderr, L"%s, wstr: %s, mapped_len: %d\n", name, wstr, mapped_len);
 
-        delete[] wstr;
-
         IDWriteFontFace* fallback_font_face;
         mapped_font->CreateFontFace(&fallback_font_face);
         selected_font_face = fallback_font_face;
         selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
+
+        IDWriteTextAnalyzer* text_analyzer;
+        pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
+
+        TextAnalysis analysis(wstr, wchars_num, nullptr, DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
+        TextAnalysis::Run* runHead;
+        HRESULT hr;
+        hr = analysis.GenerateResults(text_analyzer, &runHead);
+
+        uint32_t max_glyph_count = 3 * wchars_num / 2 + 16;
+
+        uint16_t* clusterMap;
+        clusterMap = new uint16_t[wchars_num];
+        DWRITE_SHAPING_TEXT_PROPERTIES* textProperties;
+        textProperties = new DWRITE_SHAPING_TEXT_PROPERTIES[wchars_num];
+
+        uint16_t* glyphIndices = new uint16_t[max_glyph_count];
+        DWRITE_SHAPING_GLYPH_PROPERTIES* glyphProperties;
+        glyphProperties = new DWRITE_SHAPING_GLYPH_PROPERTIES[max_glyph_count];
+        uint32_t glyphCount;
+
+        // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L661
+        text_analyzer->GetGlyphs(wstr, wchars_num, selected_font_face, false, false,
+                                 &runHead->mScript, locale, nullptr, nullptr, nullptr, 0,
+                                 max_glyph_count, clusterMap, textProperties, glyphIndices,
+                                 glyphProperties, &glyphCount);
+
+        std::cerr << glyphIndices[0] << '\n';
+
+        glyph_indices[0] = glyphIndices[0];
+
+        delete[] wstr;
     }
 
     FLOAT glyph_advances = 0;

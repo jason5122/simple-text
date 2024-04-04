@@ -6,6 +6,7 @@ class App {
 public:
     App();
     void run();
+    void createNewWindow();
     ~App();
 
     virtual void onActivate() = 0;

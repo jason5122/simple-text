@@ -155,7 +155,7 @@
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         if (event.momentumPhase & NSEventPhaseBegan) {
-            // openGLLayer.asynchronous = true;
+            openGLLayer.asynchronous = true;
         }
         if (event.momentumPhase & NSEventPhaseEnded) {
             // openGLLayer.asynchronous = false;
@@ -484,6 +484,7 @@ const char* hex(char c) {
         buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
     }
 
+    // TODO: Make this asynchronous to minimize typing lag.
     {
         PROFILE_BLOCK("editBuffer + parseBuffer");
         [self editBuffer:bytes];

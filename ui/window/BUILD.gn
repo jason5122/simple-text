@@ -1,0 +1,5 @@
+source_set("window") {
+  if (is_mac) {
+    sources = [ "editor_window_mac.mm" ]
+  }
+}

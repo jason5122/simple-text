@@ -11,20 +11,22 @@ if (is_mac) {
 
     sources = [
       "main.cc",
-      "main_mac.mm",
+
+      # "main_mac.mm",
+      "main_mac2.mm",
     ]
 
     frameworks = [ "Cocoa.framework" ]
 
     deps = [
-      ":icon",
+      # ":icon",
       "//ui/cocoa",
+      "//ui/window",
     ]
   }
-
-  icon("icon") {
-    sources = [ "resources/app.iconset" ]
-  }
+  # icon("icon") {
+  #   sources = [ "resources/app.iconset" ]
+  # }
 }
 
 if (is_linux) {

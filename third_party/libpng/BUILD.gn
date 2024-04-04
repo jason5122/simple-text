@@ -35,7 +35,10 @@ static_library("libpng") {
       "src/intel/filter_sse2_intrinsics.c",
       "src/intel/intel_init.c",
     ]
-    defines = [ "PNG_INTEL_SSE_OPT=1" ]
+    defines = [
+      "PNG_ARM_NEON_OPT=0",
+      "PNG_INTEL_SSE_OPT=1",
+    ]
   }
 
   public_configs = [ ":libpng_includes" ]

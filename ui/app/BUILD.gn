@@ -1,0 +1,5 @@
+source_set("app") {
+  if (is_mac) {
+    sources = [ "app_mac.mm" ]
+  }
+}

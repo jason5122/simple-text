@@ -406,8 +406,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string& utf8_str, uint_least3
     selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 
     // https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
-    if (true) {
-        // if (glyph_indices[0] == 0) {
+    if (glyph_indices[0] == 0) {
         // https://stackoverflow.com/a/6693107/14698275
         int wchars_num = MultiByteToWideChar(CP_UTF8, 0, utf8_str.c_str(), -1, NULL, 0);
         wchar_t* wstr = new wchar_t[wchars_num];
@@ -458,37 +457,37 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string& utf8_str, uint_least3
         IDWriteFontFace* fallback_font_face;
         mapped_font->CreateFontFace(&fallback_font_face);
         selected_font_face = fallback_font_face;
-        selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
+        // selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 
+        // TODO: Fully replace above GetGlyphIndices() with this text analyzer implementation.
         IDWriteTextAnalyzer* text_analyzer;
         pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
 
         TextAnalysis analysis(wstr, wchars_num, nullptr, DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
-        TextAnalysis::Run* runHead;
-        HRESULT hr;
-        hr = analysis.GenerateResults(text_analyzer, &runHead);
+        TextAnalysis::Run* run_head;
+        analysis.GenerateResults(text_analyzer, &run_head);
 
         uint32_t max_glyph_count = 3 * wchars_num / 2 + 16;
 
-        uint16_t* clusterMap;
-        clusterMap = new uint16_t[wchars_num];
-        DWRITE_SHAPING_TEXT_PROPERTIES* textProperties;
-        textProperties = new DWRITE_SHAPING_TEXT_PROPERTIES[wchars_num];
+        uint16_t* cluster_map;
+        cluster_map = new uint16_t[wchars_num];
+        DWRITE_SHAPING_TEXT_PROPERTIES* text_properties;
+        text_properties = new DWRITE_SHAPING_TEXT_PROPERTIES[wchars_num];
 
-        uint16_t* glyphIndices = new uint16_t[max_glyph_count];
-        DWRITE_SHAPING_GLYPH_PROPERTIES* glyphProperties;
-        glyphProperties = new DWRITE_SHAPING_GLYPH_PROPERTIES[max_glyph_count];
-        uint32_t glyphCount;
+        uint16_t* out_glyph_indices = new uint16_t[max_glyph_count];
+        DWRITE_SHAPING_GLYPH_PROPERTIES* glyph_properties;
+        glyph_properties = new DWRITE_SHAPING_GLYPH_PROPERTIES[max_glyph_count];
+        uint32_t glyph_count;
 
         // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L661
         text_analyzer->GetGlyphs(wstr, wchars_num, selected_font_face, false, false,
-                                 &runHead->mScript, locale, nullptr, nullptr, nullptr, 0,
-                                 max_glyph_count, clusterMap, textProperties, glyphIndices,
-                                 glyphProperties, &glyphCount);
+                                 &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
+                                 max_glyph_count, cluster_map, text_properties, out_glyph_indices,
+                                 glyph_properties, &glyph_count);
 
-        std::cerr << glyphIndices[0] << '\n';
+        // std::cerr << out_glyph_indices[0] << '\n';
 
-        glyph_indices[0] = glyphIndices[0];
+        glyph_indices[0] = out_glyph_indices[0];
 
         delete[] wstr;
     }

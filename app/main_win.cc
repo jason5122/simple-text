@@ -204,9 +204,9 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+        fs::path file_path = ResourcePath() / "sample_files/sort.scm";
         // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-        fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
+        // fs::path file_path = ResourcePath() / "sample_files/emojis.txt";
 
         RECT rect = {0};
         GetClientRect(m_hwnd, &rect);
@@ -214,8 +214,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         float scaled_width = rect.right;
         float scaled_height = rect.bottom;
 
-        main_font_rasterizer.setup(0, "Segoe UI", 11 * scale_factor);
-        // main_font_rasterizer.setup(0, "Source Code Pro", 11 * scale_factor);
+        main_font_rasterizer.setup(0, "Source Code Pro", 11 * scale_factor);
         ui_font_rasterizer.setup(1, "Segoe UI", 8 * scale_factor);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
@@ -273,8 +272,8 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
                                 scaled_editor_offset_y);
 
-            // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-            // text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
+            glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+            text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
         }
 
         SwapBuffers(ghDC);

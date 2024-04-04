@@ -4,6 +4,7 @@ class App {
 public:
     App();
     void run();
+    ~App();
 
 private:
     // https://herbsutter.com/gotw/_100/

@@ -1,5 +1,21 @@
+import("//build/config/linux/pkg_config.gni")
+
 source_set("app") {
   if (is_mac) {
     sources = [ "app_mac.mm" ]
+  }
+  if (is_linux) {
+    sources = [ "app_linux.cc" ]
+
+    public_configs = [ ":gtk3" ]
+  }
+}
+
+if (is_linux) {
+  pkg_config("gtk3") {
+    packages = [
+      "gtk+-3.0",
+      "glib-2.0",
+    ]
   }
 }

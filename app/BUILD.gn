@@ -13,7 +13,7 @@ if (is_mac) {
       "main.cc",
 
       # "main_mac.mm",
-      "main_mac2.mm",
+      "main_mac2.cc",
     ]
 
     frameworks = [ "Cocoa.framework" ]
@@ -36,10 +36,15 @@ if (is_linux) {
 
     sources = [
       "main.cc",
-      "main_linux.cc",
+
+      # "main_linux.cc",
+      "main_mac2.cc",
     ]
 
-    deps = [ "//ui/gtk" ]
+    deps = [
+      "//ui/app",
+      "//ui/gtk",
+    ]
   }
 }
 

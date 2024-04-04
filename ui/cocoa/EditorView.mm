@@ -361,7 +361,8 @@ const char* hex(char c) {
 
         // fs::path file_path = ResourcePath() / "sample_files/text_renderer.cc";
         // fs::path file_path = ResourcePath() / "sample_files/example.json";
-        fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+        // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+        fs::path file_path = ResourcePath() / "sample_files/sort.scm";
 
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;

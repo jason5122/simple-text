@@ -1,9 +1,7 @@
 #include "shader.h"
 #include <vector>
 
-bool Shader::link(fs::path vert_path, fs::path frag_path) {
-    std::string vert_source = ReadFile(vert_path);
-    std::string frag_source = ReadFile(frag_path);
+bool Shader::link(std::string& vert_source, std::string& frag_source) {
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 

@@ -8,7 +8,6 @@ source_set("renderer") {
   ]
 
   deps = [
-    "shaders",
     "//base",
     "//font",
     "//third_party/libgrapheme",

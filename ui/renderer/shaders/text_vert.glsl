@@ -1,3 +1,5 @@
+R"(
+
 #version 330 core
 
 layout(location = 0) in vec2 coords;
@@ -68,3 +70,5 @@ void main() {
         text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
     }
 }
+
+)"

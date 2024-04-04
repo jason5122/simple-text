@@ -1,3 +1,5 @@
+R"(
+
 #version 330 core
 
 in vec2 tex_coords;
@@ -14,3 +16,5 @@ void main() {
     alpha_mask = vec4(1.0);
     color = vec4(image_color, texel.a);
 }
+
+)"

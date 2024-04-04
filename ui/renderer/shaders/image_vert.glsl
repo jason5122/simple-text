@@ -1,3 +1,5 @@
+R"(
+
 #version 330 core
 
 layout(location = 0) in vec2 coords;
@@ -31,3 +33,5 @@ void main() {
     tex_coords = uv_offset + uv_size * position;
     image_color = in_color / 255.0;
 }
+
+)"

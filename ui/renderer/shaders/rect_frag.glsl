@@ -1,3 +1,5 @@
+R"(
+
 #version 330 core
 
 flat in vec4 rect_color;
@@ -73,3 +75,5 @@ void main() {
     alpha_mask = vec4(1.0);
     color = vec4(temp, alpha);
 }
+
+)"

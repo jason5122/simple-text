@@ -11,9 +11,9 @@ if (is_mac) {
 
     sources = [
       "main.cc",
+      "main_app.cc",
 
       # "main_mac.mm",
-      "main_mac2.cc",
     ]
 
     frameworks = [ "Cocoa.framework" ]
@@ -36,9 +36,9 @@ if (is_linux) {
 
     sources = [
       "main.cc",
+      "main_app.cc",
 
       # "main_linux.cc",
-      "main_mac2.cc",
     ]
 
     deps = [

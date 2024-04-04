@@ -1,20 +1,19 @@
 #include "app.h"
-#include "ui/window/editor_window.h"
 #import <Cocoa/Cocoa.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
-    EditorWindow2 editor_window;
+    App* app;
 }
 
 @end
 
 @implementation AppDelegate
 
-- (instancetype)init {
+- (instancetype)initWithApp:(App*)theApp {
     self = [super init];
     if (self) {
-        // TODO: Initialize editor window here instead of hard coding window size.
+        self->app = theApp;
     }
     return self;
 }
@@ -34,7 +33,7 @@
     [menu addItem:appMenu];
     NSApplication.sharedApplication.mainMenu = menu;
 
-    editor_window.show();
+    app->onActivate();
 }
 
 - (void)showAboutPanel {
@@ -50,19 +49,21 @@
 
 class App::impl {
 public:
-    NSApplication* app;
+    NSApplication* ns_app;
 };
 
 App::App() : pimpl{new impl{}} {
-    pimpl->app = NSApplication.sharedApplication;
-    AppDelegate* appDelegate = [[AppDelegate alloc] init];
+    pimpl->ns_app = NSApplication.sharedApplication;
+    AppDelegate* appDelegate = [[AppDelegate alloc] initWithApp:this];
 
-    pimpl->app.activationPolicy = NSApplicationActivationPolicyRegular;
-    pimpl->app.delegate = appDelegate;
+    pimpl->ns_app.activationPolicy = NSApplicationActivationPolicyRegular;
+    pimpl->ns_app.delegate = appDelegate;
 }
 
 void App::run() {
     @autoreleasepool {
-        [pimpl->app run];
+        [pimpl->ns_app run];
     }
 }
+
+App::~App() {}

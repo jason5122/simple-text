@@ -1,10 +1,14 @@
 #pragma once
 
+#include <iostream>
+
 class App {
 public:
     App();
     void run();
     ~App();
+
+    virtual void onActivate() = 0;
 
 private:
     // https://herbsutter.com/gotw/_100/

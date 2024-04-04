@@ -2,7 +2,10 @@ import("//build/config/linux/pkg_config.gni")
 
 source_set("app") {
   if (is_mac) {
-    sources = [ "app_mac.mm" ]
+    sources = [
+      "cocoa/WindowController.mm",
+      "cocoa/app_mac.mm",
+    ]
   }
   if (is_linux) {
     sources = [ "app_linux.cc" ]

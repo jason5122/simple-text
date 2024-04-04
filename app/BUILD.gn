@@ -21,8 +21,7 @@ if (is_mac) {
     deps = [
       # ":icon",
       "//ui/app",
-      "//ui/cocoa",
-      "//ui/window",
+      # "//ui/cocoa",
     ]
   }
   # icon("icon") {

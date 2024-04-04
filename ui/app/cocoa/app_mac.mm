@@ -1,4 +1,7 @@
-#include "app.h"
+#include "ui/app/app.h"
+#include "ui/app/cocoa/WindowController.h"
+#include <vector>
+
 #import <Cocoa/Cocoa.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
@@ -50,6 +53,7 @@
 class App::impl {
 public:
     NSApplication* ns_app;
+    std::vector<WindowController*> window_controllers;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -64,6 +68,14 @@ void App::run() {
     @autoreleasepool {
         [pimpl->ns_app run];
     }
+}
+
+void App::createNewWindow() {
+    NSRect frame = NSMakeRect(0, 0, 1200, 800);
+    WindowController* window_controller = [[WindowController alloc] initWithFrame:frame];
+
+    [window_controller showWindow];
+    // pimpl->window_controllers.push_back(window_controller);
 }
 
 App::~App() {}

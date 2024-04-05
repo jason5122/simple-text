@@ -11,9 +11,6 @@
 #define ID_QUIT 0x70
 #define ID_CLOSE_WINDOW 0x71
 
-HDC ghDC;
-HGLRC ghRC;
-
 BOOL bSetupPixelFormat(HDC hdc) {
     PIXELFORMATDESCRIPTOR pfd = {
         .nSize = sizeof(PIXELFORMATDESCRIPTOR),
@@ -35,12 +32,14 @@ BOOL bSetupPixelFormat(HDC hdc) {
 static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_CREATE: {
-        ghDC = GetDC(hwnd);
+        HDC ghDC = GetDC(hwnd);
         if (!bSetupPixelFormat(ghDC)) {
             PostQuitMessage(0);
         }
-        ghRC = wglCreateContext(ghDC);
+        HGLRC ghRC = wglCreateContext(ghDC);
         wglMakeCurrent(ghDC, ghRC);
+
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)ghRC);
 
         if (!gladLoadGL()) {
             std::cerr << "Failed to initialize GLAD\n";
@@ -62,13 +61,17 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
         return 0;
     }
 
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
+        // case WM_DESTROY:
+        //     PostQuitMessage(0);
+        //     return 0;
 
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
         std::cerr << "WM_PAINT\n";
+
+        HDC ghDC = GetDC(hwnd);
+        HGLRC ghRC = (HGLRC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        wglMakeCurrent(ghDC, ghRC);
 
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
@@ -101,7 +104,7 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             break;
         case ID_CLOSE_WINDOW:
             std::cerr << "ID_CLOSE_WINDOW\n";
-            PostQuitMessage(0);
+            DestroyWindow(hwnd);
             break;
         }
         return 0;
@@ -170,7 +173,7 @@ int scale_factor = 2;
 
 class App::impl {
 public:
-    HWND hwnd;
+    // std::vector<HWND> hwnds;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -178,7 +181,7 @@ App::App() : pimpl{new impl{}} {
         .lpfnWndProc = WindowProc,
         .hInstance = GetModuleHandle(nullptr),
         // TODO: Change this color based on the editor background color.
-        .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
+        .hbrBackground = CreateSolidBrush(RGB(255, 0, 0)),
         // TODO: Change this.
         .lpszClassName = CLASS_NAME,
     };
@@ -210,7 +213,7 @@ void App::run() {
 
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0)) {
-        if (!TranslateAccelerator(pimpl->hwnd, hAccel, &msg)) {
+        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
@@ -218,9 +221,9 @@ void App::run() {
 }
 
 void App::createNewWindow() {
-    pimpl->hwnd = CreateWindowEx(0, CLASS_NAME, WINDOW_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-                                 CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr,
-                                 GetModuleHandle(nullptr), nullptr);
+    HWND hwnd = CreateWindowEx(0, CLASS_NAME, WINDOW_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+                               CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr,
+                               GetModuleHandle(nullptr), nullptr);
 
     // ShowWindow(win.Window(), nCmdShow);
 
@@ -229,10 +232,11 @@ void App::createNewWindow() {
     // TODO: Replace magic numbers with actual defaults and/or window size restoration.
     WINDOWPLACEMENT placement{
         .length = sizeof(WINDOWPLACEMENT),
-        .showCmd = SW_SHOWMAXIMIZED,
+        .showCmd = SW_SHOWNORMAL,
+        // .showCmd = SW_SHOWMAXIMIZED,
         .rcNormalPosition = RECT{0, 0, 1000 * scale_factor, 500 * scale_factor},
     };
-    SetWindowPlacement(pimpl->hwnd, &placement);
+    SetWindowPlacement(hwnd, &placement);
 }
 
 App::~App() {}

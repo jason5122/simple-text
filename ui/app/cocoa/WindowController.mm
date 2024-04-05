@@ -18,6 +18,11 @@
         // Bypasses the user's tabbing preference.
         // https://stackoverflow.com/a/40826761/14698275
         self.window.tabbingMode = NSWindowTabbingModeDisallowed;
+
+        openGLView = [[OpenGLView alloc] initWithFrame:frameRect];
+        self.window.contentView = openGLView;
+
+        [self.window makeFirstResponder:openGLView];
     }
     return self;
 }

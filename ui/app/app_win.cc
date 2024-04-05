@@ -11,6 +11,21 @@
 #define ID_QUIT 0x70
 #define ID_CLOSE_WINDOW 0x71
 
+class Win32Window {
+public:
+    HWND hwnd;
+
+    LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    void sayHi() {
+        std::cerr << "hi\n";
+    }
+
+private:
+    HDC ghDC;
+    HGLRC ghRC;
+};
+
 BOOL bSetupPixelFormat(HDC hdc) {
     PIXELFORMATDESCRIPTOR pfd = {
         .nSize = sizeof(PIXELFORMATDESCRIPTOR),
@@ -29,17 +44,17 @@ BOOL bSetupPixelFormat(HDC hdc) {
     return SetPixelFormat(hdc, pixelformat, &pfd);
 }
 
-static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT Win32Window::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_CREATE: {
-        HDC ghDC = GetDC(hwnd);
+        std::cerr << "WM_CREATE\n";
+
+        this->ghDC = GetDC(hwnd);
         if (!bSetupPixelFormat(ghDC)) {
             PostQuitMessage(0);
         }
-        HGLRC ghRC = wglCreateContext(ghDC);
+        this->ghRC = wglCreateContext(ghDC);
         wglMakeCurrent(ghDC, ghRC);
-
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)ghRC);
 
         if (!gladLoadGL()) {
             std::cerr << "Failed to initialize GLAD\n";
@@ -67,100 +82,123 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
-        std::cerr << "WM_PAINT\n";
+        // std::cerr << "WM_PAINT\n";
 
-        HDC ghDC = GetDC(hwnd);
-        HGLRC ghRC = (HGLRC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        wglMakeCurrent(ghDC, ghRC);
+        // wglMakeCurrent(ghDC, ghRC);
 
-        PAINTSTRUCT ps;
-        BeginPaint(hwnd, &ps);
+        // PAINTSTRUCT ps;
+        // BeginPaint(hwnd, &ps);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        // glClear(GL_COLOR_BUFFER_BIT);
 
-        SwapBuffers(ghDC);
+        // SwapBuffers(ghDC);
 
-        EndPaint(hwnd, &ps);
+        // EndPaint(hwnd, &ps);
         return 0;
     }
 
-    case WM_SIZE: {
-        int new_width = (int)(short)LOWORD(lParam);
-        int new_height = (int)(short)HIWORD(lParam);
+        // case WM_SIZE: {
+        //     int new_width = (int)(short)LOWORD(lParam);
+        //     int new_height = (int)(short)HIWORD(lParam);
 
-        std::cerr << "WM_SIZE\n";
+        //     std::cerr << "WM_SIZE\n";
 
-        // FIXME: Window sometimes does not redraw correctly when maximizing/un-maximizing.
-        InvalidateRect(hwnd, NULL, FALSE);
-        // RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+        //     // FIXME: Window sometimes does not redraw correctly when maximizing/un-maximizing.
+        //     InvalidateRect(hwnd, NULL, FALSE);
+        //     // RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 
-        return 0;
-    }
+        //     return 0;
+        // }
 
-    case WM_COMMAND: {
-        switch (LOWORD(wParam)) {
-        case ID_QUIT:
-            PostQuitMessage(0);
-            break;
-        case ID_CLOSE_WINDOW:
-            std::cerr << "ID_CLOSE_WINDOW\n";
-            DestroyWindow(hwnd);
-            break;
-        }
-        return 0;
-    }
+        // case WM_COMMAND: {
+        //     switch (LOWORD(wParam)) {
+        //     case ID_QUIT:
+        //         PostQuitMessage(0);
+        //         break;
+        //     case ID_CLOSE_WINDOW:
+        //         std::cerr << "ID_CLOSE_WINDOW\n";
+        //         DestroyWindow(hwnd);
+        //         break;
+        //     }
+        //     return 0;
+        // }
 
-    case WM_MOUSEWHEEL: {
-        float dy = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
+        // case WM_MOUSEWHEEL: {
+        //     float dy = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
 
-        std::cerr << "WM_MOUSEWHEEL\n";
+        //     std::cerr << "WM_MOUSEWHEEL\n";
 
-        InvalidateRect(hwnd, NULL, FALSE);
-        return 0;
-    }
+        //     InvalidateRect(hwnd, NULL, FALSE);
+        //     return 0;
+        // }
 
-    case WM_MOUSEHWHEEL: {
-        float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+        // case WM_MOUSEHWHEEL: {
+        //     float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
 
-        std::cerr << "WM_MOUSEHWHEEL\n";
+        //     std::cerr << "WM_MOUSEHWHEEL\n";
 
-        InvalidateRect(hwnd, NULL, FALSE);
-        return 0;
-    }
+        //     InvalidateRect(hwnd, NULL, FALSE);
+        //     return 0;
+        // }
 
-    case WM_LBUTTONDOWN: {
-        SetCapture(hwnd);
+        // case WM_LBUTTONDOWN: {
+        //     SetCapture(hwnd);
 
-        int mouse_x = GET_X_LPARAM(lParam);
-        int mouse_y = GET_Y_LPARAM(lParam);
+        //     int mouse_x = GET_X_LPARAM(lParam);
+        //     int mouse_y = GET_Y_LPARAM(lParam);
 
-        std::cerr << "WM_LBUTTONDOWN\n";
+        //     std::cerr << "WM_LBUTTONDOWN\n";
 
-        InvalidateRect(hwnd, NULL, FALSE);
-        return 0;
-    }
+        //     InvalidateRect(hwnd, NULL, FALSE);
+        //     return 0;
+        // }
 
-    case WM_LBUTTONUP: {
-        ReleaseCapture();
-        return 0;
-    }
+        // case WM_LBUTTONUP: {
+        //     ReleaseCapture();
+        //     return 0;
+        // }
 
-    case WM_MOUSEMOVE: {
-        if (wParam == MK_LBUTTON) {
-            int mouse_x = GET_X_LPARAM(lParam);
-            int mouse_y = GET_Y_LPARAM(lParam);
+        // case WM_MOUSEMOVE: {
+        //     if (wParam == MK_LBUTTON) {
+        //         int mouse_x = GET_X_LPARAM(lParam);
+        //         int mouse_y = GET_Y_LPARAM(lParam);
 
-            std::cerr << "WM_MOUSEMOVE\n";
+        //         std::cerr << "WM_MOUSEMOVE\n";
 
-            InvalidateRect(hwnd, NULL, FALSE);
-        }
-        return 0;
-    }
+        //         InvalidateRect(hwnd, NULL, FALSE);
+        //     }
+        //     return 0;
+        // }
 
     case WM_ERASEBKGND:
         return 1;
 
     default:
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+
+static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    Win32Window* pThis = NULL;
+
+    if (uMsg == WM_NCCREATE) {
+        CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
+        pThis = (Win32Window*)pCreate->lpCreateParams;
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+
+        pThis->hwnd = hwnd;
+    } else {
+        pThis = (Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    }
+
+    if (uMsg != WM_PAINT) std::cerr << uMsg << '\n';
+
+    if (pThis) {
+        return pThis->HandleMessage(uMsg, wParam, lParam);
+        // pThis->HandleMessage(uMsg, wParam, lParam);
+        // pThis->sayHi();
+        // return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    } else {
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 }
@@ -221,9 +259,10 @@ void App::run() {
 }
 
 void App::createNewWindow() {
+    Win32Window window;
     HWND hwnd = CreateWindowEx(0, CLASS_NAME, WINDOW_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr,
-                               GetModuleHandle(nullptr), nullptr);
+                               GetModuleHandle(nullptr), &window);
 
     // ShowWindow(win.Window(), nCmdShow);
 

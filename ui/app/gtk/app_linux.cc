@@ -1,6 +1,7 @@
 #include "ui/app/app.h"
 #include <glad/glad.h>
 #include <gtk/gtk.h>
+#include <iostream>
 
 class App::impl {
 public:
@@ -24,14 +25,18 @@ static void activate(GtkApplication* gtk_app, gpointer p_app) {
     app->onActivate();
 }
 
-static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
-    glClear(GL_COLOR_BUFFER_BIT);
+static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app) {
+    App* app = static_cast<App*>(p_app);
+
+    app->onDraw();
 
     // Draw commands are flushed after returning.
     return true;
 }
 
-static void realize(GtkWidget* widget) {
+static void realize(GtkWidget* widget, gpointer p_app) {
+    App* app = static_cast<App*>(p_app);
+
     gtk_gl_area_make_current(GTK_GL_AREA(widget));
     if (gtk_gl_area_get_error(GTK_GL_AREA(widget)) != nullptr) return;
 
@@ -39,10 +44,7 @@ static void realize(GtkWidget* widget) {
         std::cerr << "Failed to initialize GLAD\n";
     }
 
-    glEnable(GL_BLEND);
-    glDepthMask(GL_FALSE);
-
-    glClearColor(1.0, 0.0, 0.0, 1.0);
+    app->onOpenGLActivate();
 }
 
 App::App() : pimpl{new impl{}} {
@@ -69,8 +71,8 @@ void App::createNewWindow() {
 
     GtkWidget* gl_area = gtk_gl_area_new();
     gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), nullptr);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), nullptr);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function),

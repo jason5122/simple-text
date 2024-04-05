@@ -51,16 +51,22 @@ if (is_win) {
   executable("app") {
     output_name = "simple_text"
 
-    sources = [
-      "main.cc",
-      "main_app.cc",
-    ]
+    # sources = [
+    #   "main.cc",
+    #   "main_app.cc",
+    # ]
 
     # sources = [ "main_win.cc" ]
+
+    sources = [ "damn.cc" ]
 
     defines = [
       "UNICODE",
       "_UNICODE",
+      "WIN32_LEAN_AND_MEAN",
+
+      # // https://stackoverflow.com/a/13420838/14698275
+      "NOMINMAX",
     ]
 
     libs = [
@@ -72,7 +78,7 @@ if (is_win) {
     ]
     deps = [
       "//base",
-      "//ui/app",
+      # "//ui/app",
       "//util",
     ]
 

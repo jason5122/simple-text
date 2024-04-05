@@ -1,9 +1,6 @@
-#include <windows.h>
-
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
-#include "resource.h"
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/renderer/text_renderer.h"
@@ -14,8 +11,11 @@
 #include <iostream>
 #include <shellscalingapi.h>
 #include <vector>
+#include <windows.h>
 #include <windowsx.h>
 #include <winuser.h>
+
+#define ID_QUIT 0x70
 
 template <class DERIVED_TYPE> class BaseWindow {
 public:

@@ -27,6 +27,10 @@ source_set("app") {
     defines = [
       "UNICODE",
       "_UNICODE",
+      "WIN32_LEAN_AND_MEAN",
+
+      # // https://stackoverflow.com/a/13420838/14698275
+      "NOMINMAX",
     ]
   }
 

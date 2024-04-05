@@ -51,14 +51,14 @@ if (is_win) {
   executable("app") {
     output_name = "simple_text"
 
-    # sources = [
-    #   "main.cc",
-    #   "main_app.cc",
-    # ]
+    sources = [
+      "main.cc",
+      "main_app.cc",
+    ]
 
     # sources = [ "main_win.cc" ]
 
-    sources = [ "damn.cc" ]
+    # sources = [ "damn.cc" ]
 
     defines = [
       "UNICODE",
@@ -78,7 +78,7 @@ if (is_win) {
     ]
     deps = [
       "//base",
-      # "//ui/app",
+      "//ui/app",
       "//util",
     ]
 

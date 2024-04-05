@@ -23,7 +23,10 @@ source_set("app") {
   }
 
   if (is_win) {
-    sources = [ "app_win.cc" ]
+    sources = [
+      "app_win.cc",
+      "win32/main_window.cc",
+    ]
     defines = [
       "UNICODE",
       "_UNICODE",

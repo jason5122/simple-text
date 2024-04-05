@@ -1,4 +1,4 @@
-#include "app.h"
+#include "ui/app/app.h"
 #include <glad/glad.h>
 #include <gtk/gtk.h>
 
@@ -24,16 +24,10 @@ static void activate(GtkApplication* gtk_app, gpointer p_app) {
     app->onActivate();
 }
 
-static gboolean render(GtkWidget* widget) {
-    // inside this function it's safe to use GL; the given
-    // `GdkGLContext` has been made current to the drawable
-    // surface used by the `GtkGLArea` and the viewport has
-    // already been set to be the size of the allocation
+static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // we completed our drawing; the draw commands will be
-    // flushed at the end of the signal emission chain, and
-    // the buffers will be drawn on the window
+    // Draw commands are flushed after returning.
     return true;
 }
 

@@ -31,14 +31,9 @@ if (is_linux) {
     sources = [
       "main.cc",
       "main_app.cc",
-
-      # "main_linux.cc",
     ]
 
-    deps = [
-      "//ui/app",
-      "//ui/gtk",
-    ]
+    deps = [ "//ui/app" ]
   }
 }
 

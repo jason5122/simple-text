@@ -12,6 +12,7 @@ class MainWindow : public BaseWindow<MainWindow> {
 public:
     MainWindow() {}
 
+    // TODO: Change this.
     PCWSTR className() const {
         return L"Clock Window Class";
     }

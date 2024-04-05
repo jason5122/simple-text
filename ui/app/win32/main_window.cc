@@ -42,6 +42,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_DISPLAYCHANGE: {
         std::cerr << "WM_PAINT\n";
 
+        wglMakeCurrent(ghDC, ghRC);
+
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
 

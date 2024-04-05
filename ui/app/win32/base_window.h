@@ -44,7 +44,7 @@ public:
         return (hwnd ? TRUE : FALSE);
     }
 
-    HWND window() const {
+    HWND handle() const {
         return hwnd;
     }
 

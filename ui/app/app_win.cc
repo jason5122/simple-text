@@ -1,13 +1,13 @@
 #include "ui/app/app.h"
+#include "ui/app/win32/main_window.h"
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include <vector>
 #include <windows.h>
-#include <windowsx.h>
 
 class App::impl {
 public:
-    // std::vector<HWND> hwnds;
+    std::vector<std::unique_ptr<MainWindow>> windows;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -19,13 +19,40 @@ App::App() : pimpl{new impl{}} {
 void App::run() {
     this->onActivate();
 
+    // We need to pass `key` as a virtual key in order to combine it with FCONTROL.
+    // https://stackoverflow.com/a/53657941
+    ACCEL quit_accel{
+        .fVirt = FCONTROL | FVIRTKEY,
+        .key = LOBYTE(VkKeyScan('q')),
+        .cmd = ID_QUIT,
+    };
+
+    std::vector<ACCEL> accels = {quit_accel};
+    HACCEL hAccel = CreateAcceleratorTable(&accels[0], accels.size());
+
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 }
 
-void App::createNewWindow() {}
+void App::createNewWindow() {
+    std::unique_ptr<MainWindow> window = std::make_unique<MainWindow>();
+    window->create(L"Simple Text", WS_OVERLAPPEDWINDOW);
+
+    // FIXME: This doesn't animate like ShowWindow().
+    WINDOWPLACEMENT placement{
+        .length = sizeof(WINDOWPLACEMENT),
+        // .showCmd = SW_MAXIMIZE,
+        .showCmd = SW_NORMAL,
+        .rcNormalPosition = RECT{0, 0, 1000 * 2, 500 * 2},
+    };
+    SetWindowPlacement(window->handle(), &placement);
+
+    pimpl->windows.push_back(std::move(window));
+}
 
 App::~App() {}

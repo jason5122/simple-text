@@ -4,7 +4,7 @@
 
 @implementation WindowController
 
-- (instancetype)initWithFrame:(NSRect)frameRect {
+- (instancetype)initWithFrame:(NSRect)frameRect app:(App*)app {
     self = [super init];
     if (self) {
         NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
@@ -19,7 +19,7 @@
         // https://stackoverflow.com/a/40826761/14698275
         self.window.tabbingMode = NSWindowTabbingModeDisallowed;
 
-        openGLView = [[OpenGLView alloc] initWithFrame:frameRect];
+        openGLView = [[OpenGLView alloc] initWithFrame:frameRect app:app];
         self.window.contentView = openGLView;
 
         [self.window makeFirstResponder:openGLView];

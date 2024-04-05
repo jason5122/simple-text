@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-
 class App {
 public:
     App();
@@ -10,6 +8,8 @@ public:
     ~App();
 
     virtual void onActivate() = 0;
+    virtual void onOpenGLActivate() = 0;
+    virtual void onDraw() = 0;
 
 private:
     // https://herbsutter.com/gotw/_100/

@@ -2,7 +2,10 @@
 #include <glad/glad.h>
 #include <iostream>
 
-@interface OpenGLLayer : CAOpenGLLayer
+@interface OpenGLLayer : CAOpenGLLayer {
+@public
+    App* app;
+}
 @end
 
 @interface OpenGLView () {
@@ -14,10 +17,14 @@
 
 @implementation OpenGLView
 
-- (id)initWithFrame:(NSRect)frame {
+- (instancetype)initWithFrame:(NSRect)frame app:(App*)theApp {
     self = [super initWithFrame:frame];
     if (self) {
+        app = theApp;
+
         openGLLayer = [OpenGLLayer layer];
+        openGLLayer->app = theApp;
+
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
         self.layer = openGLLayer;
@@ -88,7 +95,7 @@
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         if (event.momentumPhase & NSEventPhaseBegan) {
-            openGLLayer.asynchronous = true;
+            // openGLLayer.asynchronous = true;
         }
         if (event.momentumPhase & NSEventPhaseEnded) {
             // openGLLayer.asynchronous = false;
@@ -183,10 +190,7 @@
             std::cerr << "Failed to initialize GLAD\n";
         }
 
-        glEnable(GL_BLEND);
-        glDepthMask(GL_FALSE);
-
-        glClearColor(1.0, 0.0, 0.0, 1.0);
+        app->onOpenGLActivate();
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -204,11 +208,9 @@
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    std::cerr << "redraw\n";
-
     CGLSetCurrentContext(glContext);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    app->onDraw();
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

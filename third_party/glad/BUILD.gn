@@ -1,8 +1,9 @@
 static_library("glad") {
-  sources = [
-    "src/glad.c",
-    "src/glad_wgl.c",
-  ]
+  sources = [ "src/glad.c" ]
+
+  if (is_win) {
+    sources += [ "src/glad_wgl.c" ]
+  }
 
   public_configs = [ ":glad_includes" ]
 }

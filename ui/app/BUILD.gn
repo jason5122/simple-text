@@ -15,10 +15,19 @@ source_set("app") {
     ]
     defines = [ "GL_SILENCE_DEPRECATION" ]
   }
+
   if (is_linux) {
     sources = [ "app_linux.cc" ]
 
     public_configs = [ ":gtk3" ]
+  }
+
+  if (is_win) {
+    sources = [ "app_win.cc" ]
+    defines = [
+      "UNICODE",
+      "_UNICODE",
+    ]
   }
 
   public_deps = [ "//third_party/glad" ]

@@ -50,7 +50,7 @@ void App::createNewWindow() {
         .showCmd = SW_NORMAL,
         .rcNormalPosition = RECT{0, 0, 1000 * 2, 500 * 2},
     };
-    SetWindowPlacement(window->handle(), &placement);
+    SetWindowPlacement(window->hwnd, &placement);
 
     pimpl->windows.push_back(std::move(window));
 }

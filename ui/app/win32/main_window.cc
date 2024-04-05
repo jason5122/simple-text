@@ -1,4 +1,5 @@
 #include "main_window.h"
+#include "util/profile_util.h"
 
 LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -74,4 +75,40 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
+}
+
+static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    MainWindow* pThis = NULL;
+
+    if (uMsg == WM_NCCREATE) {
+        CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
+        pThis = (MainWindow*)pCreate->lpCreateParams;
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+
+        pThis->hwnd = hwnd;
+    } else {
+        pThis = (MainWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    }
+    if (pThis) {
+        return pThis->handleMessage(uMsg, wParam, lParam);
+    } else {
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+
+BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle) {
+    WNDCLASS wc{
+        .lpfnWndProc = WindowProc,
+        .hInstance = GetModuleHandle(NULL),
+        // TODO: Change this color based on the editor background color.
+        .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
+        .lpszClassName = className(),
+    };
+
+    RegisterClass(&wc);
+
+    hwnd = CreateWindowEx(0, className(), lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+                          CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
+
+    return (hwnd ? TRUE : FALSE);
 }

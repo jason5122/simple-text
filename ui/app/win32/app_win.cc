@@ -2,6 +2,7 @@
 #include "ui/app/win32/main_window.h"
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
+#include <memory>
 #include <vector>
 #include <windows.h>
 
@@ -40,7 +41,7 @@ void App::run() {
 }
 
 void App::createNewWindow() {
-    std::unique_ptr<MainWindow> window = std::make_unique<MainWindow>();
+    std::unique_ptr<MainWindow> window = std::make_unique<MainWindow>(this);
     window->create(L"Simple Text", WS_OVERLAPPEDWINDOW);
 
     // FIXME: This doesn't animate like ShowWindow().

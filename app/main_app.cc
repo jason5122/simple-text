@@ -1,4 +1,5 @@
 #include "ui/app/app.h"
+#include "util/profile_util.h"
 #include <glad/glad.h>
 #include <iostream>
 
@@ -10,7 +11,7 @@ public:
     }
 
     void onOpenGLActivate() {
-        std::cerr << "hi\n";
+        std::cerr << glGetString(GL_VERSION) << '\n';
 
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);
@@ -19,9 +20,10 @@ public:
     }
 
     void onDraw() {
-        std::cerr << "redraw\n";
-
-        glClear(GL_COLOR_BUFFER_BIT);
+        {
+            PROFILE_BLOCK("redraw");
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
     }
 };
 

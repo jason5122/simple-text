@@ -1,8 +1,9 @@
 #include "main_window.h"
-#include "util/profile_util.h"
+#include <iostream>
 
 LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+
     case WM_CREATE: {
         ghDC = GetDC(hwnd);
 
@@ -26,35 +27,23 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             std::cerr << "Failed to initialize GLAD\n";
         }
 
-        std::cerr << glGetString(GL_VERSION) << '\n';
-
         wglSwapIntervalEXT(0);
 
-        std::cerr << wglGetSwapIntervalEXT() << '\n';
-
-        glEnable(GL_BLEND);
-        glDepthMask(GL_FALSE);
-
-        glClearColor(1.0, 0.0, 0.0, 1.0);
+        app->onOpenGLActivate();
 
         return 0;
     }
+
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
-        std::cerr << "WM_PAINT\n";
-
         wglMakeCurrent(ghDC, ghRC);
 
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
 
-        {
-            PROFILE_BLOCK("draw");
+        app->onDraw();
 
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            SwapBuffers(ghDC);
-        }
+        SwapBuffers(ghDC);
 
         EndPaint(hwnd, &ps);
         return 0;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ui/app/app.h"
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include <windows.h>
@@ -10,7 +11,7 @@ class MainWindow {
 public:
     HWND hwnd;
 
-    MainWindow() {}
+    MainWindow(App* app) : app{app} {}
 
     // TODO: Change this.
     PCWSTR className() const {
@@ -22,4 +23,5 @@ public:
 private:
     HDC ghDC;
     HGLRC ghRC;
+    App* app;
 };

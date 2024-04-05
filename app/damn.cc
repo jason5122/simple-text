@@ -7,13 +7,16 @@
 #include "util/profile_util.h"
 #include <atlbase.h>
 #include <dwrite.h>
-#include <glad/glad.h>
 #include <iostream>
 #include <shellscalingapi.h>
 #include <vector>
 #include <windows.h>
 #include <windowsx.h>
 #include <winuser.h>
+
+#include <KHR/khrplatform.h>
+#include <glad/glad.h>
+#include <glad/glad_wgl.h>
 
 #define ID_QUIT 0x70
 
@@ -176,11 +179,15 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         ghRC = wglCreateContext(ghDC);
         wglMakeCurrent(ghDC, ghRC);
 
-        if (!gladLoadGL()) {
+        if (!gladLoadGL() || !gladLoadWGL(ghDC)) {
             std::cerr << "Failed to initialize GLAD\n";
         }
 
         std::cerr << glGetString(GL_VERSION) << '\n';
+
+        wglSwapIntervalEXT(0);
+
+        std::cerr << wglGetSwapIntervalEXT() << '\n';
 
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);

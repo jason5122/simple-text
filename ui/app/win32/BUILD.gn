@@ -1,7 +1,7 @@
 source_set("win32") {
   sources = [
-    "win32/app_win.cc",
-    "win32/main_window.cc",
+    "app_win.cc",
+    "main_window.cc",
   ]
   defines = [
     "UNICODE",

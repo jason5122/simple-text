@@ -17,14 +17,14 @@ source_set("app") {
   }
 
   if (is_linux) {
-    sources = [ "app_linux.cc" ]
+    sources = [ "gtk/app_linux.cc" ]
 
     public_configs = [ ":gtk3" ]
   }
 
   if (is_win) {
     sources = [
-      "app_win.cc",
+      "win32/app_win.cc",
       "win32/main_window.cc",
     ]
     defines = [
@@ -34,6 +34,14 @@ source_set("app") {
 
       # // https://stackoverflow.com/a/13420838/14698275
       "NOMINMAX",
+    ]
+
+    libs = [
+      "user32",
+      "opengl32",
+      "gdi32",
+      "dwrite",
+      "shcore",
     ]
   }
 

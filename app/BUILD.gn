@@ -56,26 +56,6 @@ if (is_win) {
       "main_app.cc",
     ]
 
-    # sources = [ "main_win.cc" ]
-
-    # sources = [ "damn.cc" ]
-
-    defines = [
-      "UNICODE",
-      "_UNICODE",
-      "WIN32_LEAN_AND_MEAN",
-
-      # // https://stackoverflow.com/a/13420838/14698275
-      "NOMINMAX",
-    ]
-
-    libs = [
-      "user32",
-      "opengl32",
-      "gdi32",
-      "dwrite",
-      "shcore",
-    ]
     deps = [
       "//base",
       "//ui/app",
@@ -86,7 +66,5 @@ if (is_win) {
       "//third_party/glad",
       # "//ui/renderer",
     ]
-
-    # deps = [ "//ui/win32" ]
   }
 }

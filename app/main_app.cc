@@ -16,7 +16,7 @@ public:
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);
 
-        glClearColor(1.0, 0.0, 0.0, 1.0);
+        glClearColor(0.9, 0.9, 0.9, 1.0);
     }
 
     void onDraw() {

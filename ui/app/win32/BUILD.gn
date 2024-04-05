@@ -1,0 +1,24 @@
+source_set("win32") {
+  sources = [
+    "win32/app_win.cc",
+    "win32/main_window.cc",
+  ]
+  defines = [
+    "UNICODE",
+    "_UNICODE",
+    "WIN32_LEAN_AND_MEAN",
+
+    # // https://stackoverflow.com/a/13420838/14698275
+    "NOMINMAX",
+  ]
+
+  libs = [
+    "user32",
+    "opengl32",
+    "gdi32",
+    "dwrite",
+    "shcore",
+  ]
+
+  public_deps = [ "//third_party/glad" ]
+}

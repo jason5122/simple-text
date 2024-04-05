@@ -12,16 +12,11 @@ if (is_mac) {
     sources = [
       "main.cc",
       "main_app.cc",
-
-      # "main_mac.mm",
     ]
-
-    frameworks = [ "Cocoa.framework" ]
 
     deps = [
       # ":icon",
       "//ui/app",
-      # "//ui/cocoa",
     ]
   }
   # icon("icon") {

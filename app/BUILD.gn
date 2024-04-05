@@ -46,15 +46,6 @@ if (is_win) {
       "main_app.cc",
     ]
 
-    deps = [
-      "//base",
-      "//ui/app",
-      "//util",
-    ]
-
-    public_deps = [
-      "//third_party/glad",
-      # "//ui/renderer",
-    ]
+    deps = [ "//ui/app" ]
   }
 }

@@ -116,6 +116,12 @@
             dx *= 16;
             dy *= 16;
         }
+
+        float scaled_dx = dx * openGLLayer.contentsScale;
+        float scaled_dy = dy * openGLLayer.contentsScale;
+        openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
+
+        [openGLLayer setNeedsDisplay];
     }
 }
 

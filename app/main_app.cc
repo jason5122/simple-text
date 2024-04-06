@@ -63,16 +63,16 @@ public:
             glClear(GL_COLOR_BUFFER_BIT);
 
             glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-            text_renderer.renderText(0, 0, buffer, highlighter, editor_offset_x, editor_offset_y,
-                                     main_font_rasterizer, status_bar_height);
+            text_renderer.renderText(scroll_x, scroll_y, buffer, highlighter, editor_offset_x,
+                                     editor_offset_y, main_font_rasterizer, status_bar_height);
 
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-            rect_renderer.draw(0, 0, text_renderer.cursor_end_x, text_renderer.cursor_end_line,
-                               main_font_rasterizer.line_height, buffer.lineCount(),
-                               text_renderer.longest_line_x, editor_offset_x, editor_offset_y,
-                               status_bar_height);
+            rect_renderer.draw(scroll_x, scroll_y, text_renderer.cursor_end_x,
+                               text_renderer.cursor_end_line, main_font_rasterizer.line_height,
+                               buffer.lineCount(), text_renderer.longest_line_x, editor_offset_x,
+                               editor_offset_y, status_bar_height);
 
-            image_renderer.draw(0, 0, editor_offset_x, editor_offset_y);
+            image_renderer.draw(scroll_x, scroll_y, editor_offset_x, editor_offset_y);
 
             glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
             text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
@@ -86,8 +86,18 @@ public:
         image_renderer.resize(width, height);
     }
 
+    void onScroll(float dx, float dy) {
+        // TODO: Uncomment this while not testing.
+        // scroll_x += dx;
+        scroll_y += dy;
+    }
+
 private:
     int id;
+
+    float scroll_x = 0;
+    float scroll_y = 0;
+
     Buffer buffer;
     SyntaxHighlighter highlighter;
 

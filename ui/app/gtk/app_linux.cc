@@ -25,17 +25,17 @@ static void activate(GtkApplication* gtk_app, gpointer p_app) {
     app->onActivate();
 }
 
-static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app) {
-    App* app = static_cast<App*>(p_app);
+static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
 
-    app->onDraw();
+    app_window->onDraw();
 
     // Draw commands are flushed after returning.
     return true;
 }
 
-static void realize(GtkWidget* widget, gpointer p_app) {
-    App* app = static_cast<App*>(p_app);
+static void realize(GtkWidget* widget, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
 
     gtk_gl_area_make_current(GTK_GL_AREA(widget));
     if (gtk_gl_area_get_error(GTK_GL_AREA(widget)) != nullptr) return;
@@ -44,7 +44,7 @@ static void realize(GtkWidget* widget, gpointer p_app) {
         std::cerr << "Failed to initialize GLAD\n";
     }
 
-    app->onOpenGLActivate();
+    app_window->onOpenGLActivate();
 }
 
 App::App() : pimpl{new impl{}} {
@@ -61,7 +61,7 @@ void App::run() {
     g_application_run(G_APPLICATION(pimpl->app), 0, NULL);
 }
 
-void App::createNewWindow() {
+void App::createNewWindow(AppWindow* app_window) {
     GtkWidget* window = gtk_application_window_new(pimpl->app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
@@ -71,8 +71,8 @@ void App::createNewWindow() {
 
     GtkWidget* gl_area = gtk_gl_area_new();
     gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), app_window);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), app_window);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function),

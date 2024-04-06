@@ -17,6 +17,7 @@ if (is_mac) {
     deps = [
       # ":icon",
       "//ui/app",
+      "//ui/renderer",
     ]
   }
   # icon("icon") {

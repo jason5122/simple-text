@@ -5,6 +5,9 @@
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
     AppWindow* appWindow;
+
+@private
+    CGLContextObj mContext;
 }
 @end
 
@@ -179,20 +182,23 @@
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLContextObj glContext = nullptr;
-    CGLCreateContext(pixelFormat, nullptr, &glContext);
-    if (glContext || (glContext = [super copyCGLContextForPixelFormat:pixelFormat])) {
-        CGLSetCurrentContext(glContext);
+    CGLCreateContext(pixelFormat, nullptr, &mContext);
+
+    if (mContext || (mContext = [super copyCGLContextForPixelFormat:pixelFormat])) {
+        CGLSetCurrentContext(mContext);
 
         if (!gladLoadGL()) {
             std::cerr << "Failed to initialize GLAD\n";
         }
 
-        appWindow->onOpenGLActivate();
+        int scaled_width = self.frame.size.width * self.contentsScale;
+        int scaled_height = self.frame.size.height * self.contentsScale;
+
+        appWindow->onOpenGLActivate(scaled_width, scaled_height);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
-    return glContext;
+    return mContext;
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
@@ -206,12 +212,12 @@
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(glContext);
+    CGLSetCurrentContext(mContext);
 
     appWindow->onDraw();
 
     // Calls glFlush() by default.
-    [super drawInCGLContext:glContext
+    [super drawInCGLContext:mContext
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
@@ -221,9 +227,11 @@
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
+    CGLSetCurrentContext(mContext);
+
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;
-    glViewport(0, 0, scaled_width, scaled_height);
+    appWindow->onResize(scaled_width, scaled_height);
     [self setNeedsDisplay];
 }
 

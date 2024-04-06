@@ -78,6 +78,42 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
     return true;
 }
 
+static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+
+    if (event->type == GDK_BUTTON_PRESS) {
+        gdouble mouse_x = event->x;
+        gdouble mouse_y = event->y;
+
+        int scale_factor = gtk_widget_get_scale_factor(widget);
+        float scaled_mouse_x = mouse_x * scale_factor;
+        float scaled_mouse_y = mouse_y * scale_factor;
+
+        app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+
+        gtk_widget_queue_draw(widget);
+    }
+    return true;
+}
+
+static gboolean motion_event(GtkWidget* widget, GdkEventMotion* event, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+
+    if (event->type == GDK_MOTION_NOTIFY) {
+        gdouble mouse_x = event->x;
+        gdouble mouse_y = event->y;
+
+        int scale_factor = gtk_widget_get_scale_factor(widget);
+        float scaled_mouse_x = mouse_x * scale_factor;
+        float scaled_mouse_y = mouse_y * scale_factor;
+
+        app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+
+        gtk_widget_queue_draw(widget);
+    }
+    return true;
+}
+
 App::App() : pimpl{new impl{}} {
 #if GLIB_CHECK_VERSION(2, 74, 0)
     GApplicationFlags flags = G_APPLICATION_DEFAULT_FLAGS;
@@ -108,6 +144,14 @@ void App::createNewWindow(AppWindow& app_window) {
 
     gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
     g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), &app_window);
+
+    gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+    g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event),
+                     &app_window);
+
+    gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
+    g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event),
+                     &app_window);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function),

@@ -1,5 +1,6 @@
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
+#include "build/buildflag.h"
 #include "font/rasterizer.h"
 #include "ui/app/app.h"
 #include "ui/app/app_window.h"
@@ -30,8 +31,22 @@ public:
         highlighter.setLanguage("source.json");
 
         // TODO: Implement scale factor support.
-        main_font_rasterizer.setup(0, "Source Code Pro", 16 * 2);
-        ui_font_rasterizer.setup(1, "SF Pro Text", 11 * 2);
+        std::string main_font = "Source Code Pro";
+#if IS_MAC
+        std::string ui_font = "SF Pro Text";
+        int main_font_size = 16 * 2;
+        int ui_font_size = 11 * 2;
+#elif IS_LINUX
+        std::string ui_font = "Noto Sans";
+        int main_font_size = 16 * 2;
+        int ui_font_size = 11 * 2;
+#elif IS_WIN
+        std::string ui_font = "Segoe UI";
+        int main_font_size = 12 * 2;
+        int ui_font_size = 9 * 2;
+#endif
+        main_font_rasterizer.setup(0, main_font, main_font_size);
+        ui_font_rasterizer.setup(1, ui_font, ui_font_size);
 
         text_renderer.setup(width, height, main_font_rasterizer);
         rect_renderer.setup(width, height);

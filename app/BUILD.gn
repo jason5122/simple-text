@@ -53,6 +53,7 @@ if (is_win) {
     ]
 
     deps = [
+      "//base",
       "//ui/app",
       "//ui/renderer",
     ]

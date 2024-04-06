@@ -135,7 +135,11 @@
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    std::cerr << "mouseDown\n";
+    float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
+    float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
+    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+
+    [openGLLayer setNeedsDisplay];
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -143,7 +147,11 @@
     CGFloat mouse_y = event.locationInWindow.y;
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    std::cerr << "mouseDragged\n";
+    float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
+    float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
+    openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+
+    [openGLLayer setNeedsDisplay];
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

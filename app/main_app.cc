@@ -24,11 +24,14 @@ public:
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
         // fs::path file_path = ResourcePath() / "sample_files/example.json";
-        // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-        fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+        fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+        // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
 
         buffer.setContents(ReadFile(file_path));
         highlighter.setLanguage("source.json");
+
+        TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
+        highlighter.parse(input);
 
         // TODO: Implement scale factor support.
         std::string main_font = "Source Code Pro";
@@ -55,8 +58,6 @@ public:
 
     void onDraw() {
         {
-            int editor_offset_x = 200 * 2;
-            int editor_offset_y = 30 * 2;
             int status_bar_height = ui_font_rasterizer.line_height;
 
             PROFILE_BLOCK("id " + std::to_string(id) + ": redraw");
@@ -92,11 +93,40 @@ public:
         scroll_y += dy;
     }
 
+    void onLeftMouseDown(float mouse_x, float mouse_y) {
+        mouse_x -= editor_offset_x;
+        mouse_y -= editor_offset_y;
+        mouse_x += scroll_x;
+        mouse_y += scroll_y;
+
+        cursor_start_x = mouse_x;
+        cursor_start_y = mouse_y;
+
+        text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
+                                         main_font_rasterizer);
+    }
+
+    void onLeftMouseDrag(float mouse_x, float mouse_y) {
+        mouse_x -= editor_offset_x;
+        mouse_y -= editor_offset_y;
+        mouse_x += scroll_x;
+        mouse_y += scroll_y;
+
+        text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
+                                         main_font_rasterizer);
+    }
+
 private:
     int id;
 
     float scroll_x = 0;
     float scroll_y = 0;
+
+    float cursor_start_x = 0;
+    float cursor_start_y = 0;
+
+    int editor_offset_x = 200 * 2;
+    int editor_offset_y = 30 * 2;
 
     Buffer buffer;
     SyntaxHighlighter highlighter;

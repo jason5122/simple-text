@@ -128,7 +128,7 @@ void App::run() {
     g_application_run(G_APPLICATION(pimpl->app), 0, NULL);
 }
 
-void App::createNewWindow(AppWindow& app_window) {
+void App::createNewWindow(AppWindow& app_window, int width, int height) {
     GtkWidget* window = gtk_application_window_new(pimpl->app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
@@ -159,7 +159,7 @@ void App::createNewWindow(AppWindow& app_window) {
 
     // gtk_window_maximize(GTK_WINDOW(window));
     // TODO: Set default window size without magic numbers.
-    gtk_window_set_default_size(GTK_WINDOW(window), 800, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
 
     gtk_widget_show_all(window);
 }

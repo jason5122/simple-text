@@ -7,7 +7,7 @@ class App {
 public:
     App();
     void run();
-    void createNewWindow(AppWindow& app_window);
+    void createNewWindow(AppWindow& app_window, int width, int height);
     ~App();
 
     virtual void onActivate() = 0;

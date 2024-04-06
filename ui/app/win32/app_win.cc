@@ -40,7 +40,7 @@ void App::run() {
     }
 }
 
-void App::createNewWindow(AppWindow& app_window) {
+void App::createNewWindow(AppWindow& app_window, int width, int height) {
     std::unique_ptr<MainWindow> window = std::make_unique<MainWindow>(app_window);
     window->create(L"Simple Text", WS_OVERLAPPEDWINDOW);
 
@@ -49,7 +49,7 @@ void App::createNewWindow(AppWindow& app_window) {
         .length = sizeof(WINDOWPLACEMENT),
         // .showCmd = SW_MAXIMIZE,
         .showCmd = SW_NORMAL,
-        .rcNormalPosition = RECT{0, 0, 1000 * 2, 500 * 2},
+        .rcNormalPosition = RECT{0, 0, width * 2, height * 2},
     };
     SetWindowPlacement(window->hwnd, &placement);
 

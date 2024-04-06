@@ -70,8 +70,8 @@ void App::run() {
     }
 }
 
-void App::createNewWindow(AppWindow& app_window) {
-    NSRect frame = NSMakeRect(0, 0, 1200, 800);
+void App::createNewWindow(AppWindow& app_window, int width, int height) {
+    NSRect frame = NSMakeRect(0, 0, width, height);
     WindowController* window_controller = [[WindowController alloc] initWithFrame:frame
                                                                         appWindow:app_window];
 

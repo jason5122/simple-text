@@ -67,6 +67,29 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    case WM_MOUSEWHEEL: {
+        float dy = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
+        // Invert vertical scrolling.
+        dy *= -1;
+
+        // TODO: Replace this magic number.
+        dy *= 60;
+
+        app_window.onScroll(0, dy);
+
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
+
+    case WM_MOUSEHWHEEL: {
+        float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
+
+        app_window.onScroll(dx, 0);
+
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
+
     case WM_COMMAND: {
         switch (LOWORD(wParam)) {
         case ID_QUIT:

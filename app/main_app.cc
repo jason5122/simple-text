@@ -33,8 +33,8 @@ public:
     SimpleText() : editor_window1(0), editor_window2(1) {}
 
     void onActivate() {
-        createNewWindow(&editor_window1);
-        createNewWindow(&editor_window2);
+        createNewWindow(editor_window1);
+        createNewWindow(editor_window2);
     }
 
 private:

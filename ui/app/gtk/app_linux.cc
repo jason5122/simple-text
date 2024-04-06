@@ -61,7 +61,7 @@ void App::run() {
     g_application_run(G_APPLICATION(pimpl->app), 0, NULL);
 }
 
-void App::createNewWindow(AppWindow* app_window) {
+void App::createNewWindow(AppWindow& app_window) {
     GtkWidget* window = gtk_application_window_new(pimpl->app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
@@ -71,8 +71,8 @@ void App::createNewWindow(AppWindow* app_window) {
 
     GtkWidget* gl_area = gtk_gl_area_new();
     gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), app_window);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), app_window);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), &app_window);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), &app_window);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function),

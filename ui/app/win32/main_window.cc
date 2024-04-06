@@ -29,7 +29,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         wglSwapIntervalEXT(0);
 
-        app_window->onOpenGLActivate();
+        app_window.onOpenGLActivate();
 
         return 0;
     }
@@ -41,7 +41,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
 
-        app_window->onDraw();
+        app_window.onDraw();
 
         SwapBuffers(ghDC);
 

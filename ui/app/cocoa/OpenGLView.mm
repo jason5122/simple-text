@@ -17,11 +17,11 @@
 
 @implementation OpenGLView
 
-- (instancetype)initWithFrame:(NSRect)frame appWindow:(AppWindow*)theAppWindow {
+- (instancetype)initWithFrame:(NSRect)frame appWindow:(AppWindow&)theAppWindow {
     self = [super initWithFrame:frame];
     if (self) {
         openGLLayer = [OpenGLLayer layer];
-        openGLLayer->appWindow = theAppWindow;
+        openGLLayer->appWindow = &theAppWindow;
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;

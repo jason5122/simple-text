@@ -40,7 +40,7 @@ void App::run() {
     }
 }
 
-void App::createNewWindow(AppWindow* app_window) {
+void App::createNewWindow(AppWindow& app_window) {
     std::unique_ptr<MainWindow> window = std::make_unique<MainWindow>(app_window);
     window->create(L"Simple Text", WS_OVERLAPPEDWINDOW);
 

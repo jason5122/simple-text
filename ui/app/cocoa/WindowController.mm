@@ -4,7 +4,7 @@
 
 @implementation WindowController
 
-- (instancetype)initWithFrame:(NSRect)frameRect appWindow:(AppWindow*)theAppWindow {
+- (instancetype)initWithFrame:(NSRect)frameRect appWindow:(AppWindow&)theAppWindow {
     self = [super init];
     if (self) {
         NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |

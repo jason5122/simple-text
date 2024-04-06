@@ -6,7 +6,7 @@
     OpenGLView* openGLView;
 }
 
-- (instancetype)initWithFrame:(NSRect)frameRect appWindow:(AppWindow*)theAppWindow;
+- (instancetype)initWithFrame:(NSRect)frameRect appWindow:(AppWindow&)theAppWindow;
 
 - (void)showWindow;
 

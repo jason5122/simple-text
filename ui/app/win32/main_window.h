@@ -11,7 +11,7 @@ class MainWindow {
 public:
     HWND hwnd;
 
-    MainWindow(AppWindow* app_window) : app_window{app_window} {}
+    MainWindow(AppWindow& app_window) : app_window{app_window} {}
 
     // TODO: Change this.
     PCWSTR className() const {
@@ -23,5 +23,5 @@ public:
 private:
     HDC ghDC;
     HGLRC ghRC;
-    AppWindow* app_window;
+    AppWindow& app_window;
 };

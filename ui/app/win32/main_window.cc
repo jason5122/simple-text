@@ -1,5 +1,6 @@
 #include "main_window.h"
 #include <iostream>
+#include <windowsx.h>
 
 LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -87,6 +88,35 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         app_window.onScroll(dx, 0);
 
         InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
+
+    case WM_LBUTTONDOWN: {
+        SetCapture(hwnd);
+
+        int mouse_x = GET_X_LPARAM(lParam);
+        int mouse_y = GET_Y_LPARAM(lParam);
+
+        app_window.onLeftMouseDown(mouse_x, mouse_y);
+
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
+
+    case WM_LBUTTONUP: {
+        ReleaseCapture();
+        return 0;
+    }
+
+    case WM_MOUSEMOVE: {
+        if (wParam == MK_LBUTTON) {
+            int mouse_x = GET_X_LPARAM(lParam);
+            int mouse_y = GET_Y_LPARAM(lParam);
+
+            app_window.onLeftMouseDrag(mouse_x, mouse_y);
+
+            InvalidateRect(hwnd, NULL, FALSE);
+        }
         return 0;
     }
 

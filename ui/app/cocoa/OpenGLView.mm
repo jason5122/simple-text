@@ -4,7 +4,7 @@
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
-    App* app;
+    AppWindow* appWindow;
 }
 @end
 
@@ -17,13 +17,11 @@
 
 @implementation OpenGLView
 
-- (instancetype)initWithFrame:(NSRect)frame app:(App*)theApp {
+- (instancetype)initWithFrame:(NSRect)frame appWindow:(AppWindow*)theAppWindow {
     self = [super initWithFrame:frame];
     if (self) {
-        app = theApp;
-
         openGLLayer = [OpenGLLayer layer];
-        openGLLayer->app = theApp;
+        openGLLayer->appWindow = theAppWindow;
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
@@ -190,7 +188,7 @@
             std::cerr << "Failed to initialize GLAD\n";
         }
 
-        app->onOpenGLActivate();
+        appWindow->onOpenGLActivate();
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -210,7 +208,7 @@
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(glContext);
 
-    app->onDraw();
+    appWindow->onDraw();
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext

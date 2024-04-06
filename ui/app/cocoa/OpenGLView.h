@@ -1,10 +1,8 @@
-#include "ui/app/app.h"
+#include "ui/app/app_window.h"
 #import <Cocoa/Cocoa.h>
 
-@interface OpenGLView : NSView {
-    App* app;
-}
+@interface OpenGLView : NSView
 
-- (instancetype)initWithFrame:(NSRect)frame app:(App*)theApp;
+- (instancetype)initWithFrame:(NSRect)frame appWindow:(AppWindow*)theAppWindow;
 
 @end

@@ -70,9 +70,10 @@ void App::run() {
     }
 }
 
-void App::createNewWindow() {
+void App::createNewWindow(AppWindow* app_window) {
     NSRect frame = NSMakeRect(0, 0, 1200, 800);
-    WindowController* window_controller = [[WindowController alloc] initWithFrame:frame app:this];
+    WindowController* window_controller = [[WindowController alloc] initWithFrame:frame
+                                                                        appWindow:app_window];
 
     [window_controller showWindow];
     // pimpl->window_controllers.push_back(window_controller);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "font/rasterized_glyph.h"
+#include <memory>
 #include <string>
 
 class FontRasterizer {

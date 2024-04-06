@@ -25,15 +25,6 @@ static void activate(GtkApplication* gtk_app, gpointer p_app) {
     app->onActivate();
 }
 
-static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
-
-    app_window->onDraw();
-
-    // Draw commands are flushed after returning.
-    return true;
-}
-
 static void realize(GtkWidget* widget, gpointer p_app_window) {
     AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
 
@@ -44,7 +35,28 @@ static void realize(GtkWidget* widget, gpointer p_app_window) {
         std::cerr << "Failed to initialize GLAD\n";
     }
 
-    app_window->onOpenGLActivate();
+    int scale_factor = gtk_widget_get_scale_factor(widget);
+    int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
+    int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
+
+    app_window->onOpenGLActivate(scaled_width, scaled_height);
+}
+
+static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+
+    app_window->onDraw();
+
+    // Draw commands are flushed after returning.
+    return true;
+}
+
+static void resize(GtkGLArea* self, gint width, gint height, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+
+    gtk_gl_area_make_current(self);
+
+    app_window->onResize(width, height);
 }
 
 App::App() : pimpl{new impl{}} {
@@ -71,8 +83,9 @@ void App::createNewWindow(AppWindow& app_window) {
 
     GtkWidget* gl_area = gtk_gl_area_new();
     gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), &app_window);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), &app_window);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), &app_window);
+    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), &app_window);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function),

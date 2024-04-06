@@ -34,7 +34,10 @@ if (is_linux) {
       "main_app.cc",
     ]
 
-    deps = [ "//ui/app" ]
+    deps = [
+      "//ui/app",
+      "//ui/renderer",
+    ]
   }
 }
 

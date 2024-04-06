@@ -4,8 +4,7 @@
 
 ### UI Framework
 
-1. Implement `onResize(int new_width, int new_height)`.
-2. Implement `onKeyDown(...)`.
+1. Implement `onKeyDown(...)`.
    - Windows: Don't use accelerator tables (Chromium doesn't either).
 
 ### Linux

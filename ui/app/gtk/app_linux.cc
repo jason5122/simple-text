@@ -59,6 +59,25 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer p_app_wind
     app_window->onResize(width, height);
 }
 
+static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+
+    double dx, dy;
+    gdk_event_get_scroll_deltas((GdkEvent*)event, &dx, &dy);
+
+    if (gdk_device_get_source(event->device) == GDK_SOURCE_MOUSE) {
+        std::cerr << "mouse\n";
+        dx *= 32;
+        dy *= 32;
+    }
+
+    app_window->onScroll(dx, dy);
+
+    gtk_widget_queue_draw(widget);
+
+    return true;
+}
+
 App::App() : pimpl{new impl{}} {
 #if GLIB_CHECK_VERSION(2, 74, 0)
     GApplicationFlags flags = G_APPLICATION_DEFAULT_FLAGS;
@@ -86,6 +105,9 @@ void App::createNewWindow(AppWindow& app_window) {
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), &app_window);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), &app_window);
     g_signal_connect(gl_area, "resize", G_CALLBACK(resize), &app_window);
+
+    gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
+    g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), &app_window);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function),

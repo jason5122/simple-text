@@ -29,7 +29,13 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         wglSwapIntervalEXT(0);
 
-        app_window.onOpenGLActivate();
+        RECT rect = {0};
+        GetClientRect(hwnd, &rect);
+
+        int scaled_width = rect.right;
+        int scaled_height = rect.bottom;
+
+        app_window.onOpenGLActivate(scaled_width, scaled_height);
 
         return 0;
     }
@@ -46,6 +52,18 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         SwapBuffers(ghDC);
 
         EndPaint(hwnd, &ps);
+        return 0;
+    }
+
+    case WM_SIZE: {
+        wglMakeCurrent(ghDC, ghRC);
+
+        int width = (int)(short)LOWORD(lParam);
+        int height = (int)(short)HIWORD(lParam);
+
+        app_window.onResize(width, height);
+
+        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
     }
 

@@ -23,8 +23,8 @@ public:
 
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        // fs::path file_path = ResourcePath() / "sample_files/example.json";
-        fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+        fs::path file_path = ResourcePath() / "sample_files/example.json";
+        // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
         // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
 
         buffer.setContents(ReadFile(file_path));
@@ -114,6 +114,25 @@ public:
 
         text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
                                          main_font_rasterizer);
+    }
+
+    void onKeyDown(std::string chars, KeyModifierFlags modifiers) {
+        std::string s = chars;
+
+        std::cerr << modifiers << '\n';
+        if (modifiers & KeyModifierFlags::Shift) {
+            s += " + shift";
+        }
+        if (modifiers & KeyModifierFlags::Control) {
+            s += " + ctrl";
+        }
+        if (modifiers & KeyModifierFlags::Alt) {
+            s += " + alt";
+        }
+        if (modifiers & KeyModifierFlags::Super) {
+            s += " + super";
+        }
+        std::cerr << s << '\n';
     }
 
 private:

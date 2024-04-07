@@ -126,8 +126,25 @@
 }
 
 - (void)keyDown:(NSEvent*)event {
-    const char* str = event.characters.UTF8String;
-    size_t bytes = strlen(str);
+    NSString* characters = event.charactersIgnoringModifiers;
+
+    AppWindow::KeyModifierFlags modifiers{};
+    if (event.modifierFlags & NSEventModifierFlagShift) {
+        modifiers |= AppWindow::KeyModifierFlags::Shift;
+    }
+    if (event.modifierFlags & NSEventModifierFlagControl) {
+        modifiers |= AppWindow::KeyModifierFlags::Control;
+    }
+    if (event.modifierFlags & NSEventModifierFlagOption) {
+        modifiers |= AppWindow::KeyModifierFlags::Alt;
+    }
+    if (event.modifierFlags & NSEventModifierFlagCommand) {
+        modifiers |= AppWindow::KeyModifierFlags::Super;
+    }
+
+    openGLLayer->appWindow->onKeyDown(characters.UTF8String, modifiers);
+
+    [openGLLayer setNeedsDisplay];
 }
 
 - (void)mouseDown:(NSEvent*)event {

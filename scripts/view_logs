@@ -1,3 +1,0 @@
-#!/bin/bash
-
-log stream --predicate 'subsystem contains "com.jason5122.simple-text"' --style compact

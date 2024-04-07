@@ -1,9 +1,9 @@
 <h1 align="center">Simple Text - A GPU-accelerated, cross-platform text editor</h1>
 
-<p align="center">
+<!-- <p align="center">
   <img alt="Simple Text - A GPU-accelerated, cross-platform text editor"
        src="docs/simple-text.png">
-</p>
+</p> -->
 
 ## Progress Chart
 

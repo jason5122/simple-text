@@ -119,7 +119,6 @@ public:
     void onKeyDown(std::string chars, KeyModifierFlags modifiers) {
         std::string s = chars;
 
-        std::cerr << modifiers << '\n';
         if (modifiers & KeyModifierFlags::Shift) {
             s += " + shift";
         }

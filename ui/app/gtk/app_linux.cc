@@ -3,20 +3,50 @@
 #include <gtk/gtk.h>
 #include <iostream>
 
+extern "C" {
+#include "third_party/libgrapheme/grapheme.h"
+}
+
 class App::impl {
 public:
     GtkApplication* app;
 };
 
-static gboolean my_keypress_function(GtkWidget* widget, GdkEventKey* event, gpointer data) {
+static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer p_app_window) {
+    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+
+    uint32_t codepoint = gdk_keyval_to_unicode(event->keyval);
+    char* chars_utf8 = new char[2];
+    chars_utf8[1] = '\0';
+    grapheme_encode_utf8(codepoint, chars_utf8, 1);
+
+    AppWindow::KeyModifierFlags modifiers{};
+    if (event->state & GDK_SHIFT_MASK) {
+        modifiers |= AppWindow::KeyModifierFlags::Shift;
+    }
+    if (event->state & GDK_CONTROL_MASK) {
+        modifiers |= AppWindow::KeyModifierFlags::Control;
+    }
+    if (event->state & GDK_MOD1_MASK) {
+        modifiers |= AppWindow::KeyModifierFlags::Alt;
+    }
+    if (event->state & GDK_SUPER_MASK) {
+        modifiers |= AppWindow::KeyModifierFlags::Super;
+    }
+
     if (event->keyval == GDK_KEY_w && event->state & GDK_CONTROL_MASK) {
         gtk_window_close(GTK_WINDOW(widget));
         return true;
     }
-    if (event->keyval == GDK_KEY_q && event->state & GDK_CONTROL_MASK) {
-        g_application_quit(G_APPLICATION(data));
-        return true;
-    }
+
+    app_window->onKeyDown(chars_utf8, modifiers);
+    return true;
+
+    // TODO: Find a way to also pass the GtkApplication.
+    // if (event->keyval == GDK_KEY_q && event->state & GDK_CONTROL_MASK) {
+    //     g_application_quit(G_APPLICATION(data));
+    //     return true;
+    // }
     return false;
 }
 
@@ -132,6 +162,10 @@ void App::createNewWindow(AppWindow& app_window, int width, int height) {
     GtkWidget* window = gtk_application_window_new(pimpl->app);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
+    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
+    g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(key_press_event),
+                     &app_window);
+
     GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
     gtk_box_set_spacing(GTK_BOX(box), 6);
     gtk_container_add(GTK_CONTAINER(window), box);
@@ -152,10 +186,6 @@ void App::createNewWindow(AppWindow& app_window, int width, int height) {
     gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
     g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event),
                      &app_window);
-
-    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-    g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(my_keypress_function),
-                     pimpl->app);
 
     // gtk_window_maximize(GTK_WINDOW(window));
     // TODO: Set default window size without magic numbers.

@@ -1,8 +1,8 @@
 group("all") {
-  deps = [ "//app" ]
+  deps = [ "//simple_text" ]
 }
 
-# group("tests") {
-#   testonly = true
-#   deps = [ "//testing:test_runner" ]
-# }
+group("tests") {
+  testonly = true
+  deps = [ "//testing:test_runner" ]
+}

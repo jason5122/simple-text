@@ -2,7 +2,7 @@ import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
 if (is_mac) {
-  mac_app_bundle("app") {
+  mac_app_bundle("simple_text") {
     output_name = "Simple Text"
     bundle_identifier = "com.jason5122.simple-text"
     info_plist = "resources/Info.plist"
@@ -27,7 +27,7 @@ if (is_mac) {
 }
 
 if (is_linux) {
-  executable("app") {
+  executable("simple_text") {
     output_name = "simple_text"
 
     sources = [
@@ -44,7 +44,7 @@ if (is_linux) {
 }
 
 if (is_win) {
-  executable("app") {
+  executable("simple_text") {
     output_name = "simple_text"
 
     sources = [

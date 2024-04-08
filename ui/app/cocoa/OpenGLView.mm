@@ -7,6 +7,7 @@
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
     AppWindow* appWindow;
+    App::Window* window;
 
 @private
     CGLContextObj mContext;
@@ -27,6 +28,67 @@
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         openGLLayer->appWindow = &theAppWindow;
+
+        // openGLLayer.needsDisplayOnBoundsChange = true;
+        // openGLLayer.asynchronous = true;
+        self.layer = openGLLayer;
+
+        // Fixes blurriness on HiDPI displays.
+        // https://bugzilla.gnome.org/show_bug.cgi?id=765194
+        self.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
+
+        // This masks resizing glitches.
+        // Solutions involving waiting result in throttled frame rate.
+        // https://thume.ca/2019/06/19/glitchless-metal-window-resizing/
+        // https://zed.dev/blog/120fps
+        self.layerContentsPlacement = NSViewLayerContentsPlacementTopLeft;
+
+        NSTrackingAreaOptions options =
+            NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
+        trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                    options:options
+                                                      owner:self
+                                                   userInfo:nil];
+        [self addTrackingArea:trackingArea];
+    }
+    return self;
+}
+
+- (instancetype)initWithFrame:(NSRect)frame window:(App::Window&)theWindow {
+    self = [super initWithFrame:frame];
+    if (self) {
+        openGLLayer = [OpenGLLayer layer];
+        openGLLayer->window = &theWindow;
+
+        // openGLLayer.needsDisplayOnBoundsChange = true;
+        // openGLLayer.asynchronous = true;
+        self.layer = openGLLayer;
+
+        // Fixes blurriness on HiDPI displays.
+        // https://bugzilla.gnome.org/show_bug.cgi?id=765194
+        self.layer.contentsScale = NSScreen.mainScreen.backingScaleFactor;
+
+        // This masks resizing glitches.
+        // Solutions involving waiting result in throttled frame rate.
+        // https://thume.ca/2019/06/19/glitchless-metal-window-resizing/
+        // https://zed.dev/blog/120fps
+        self.layerContentsPlacement = NSViewLayerContentsPlacementTopLeft;
+
+        NSTrackingAreaOptions options =
+            NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
+        trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                    options:options
+                                                      owner:self
+                                                   userInfo:nil];
+        [self addTrackingArea:trackingArea];
+    }
+    return self;
+}
+
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        openGLLayer = [OpenGLLayer layer];
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
@@ -121,7 +183,7 @@
 
         float scaled_dx = dx * openGLLayer.contentsScale;
         float scaled_dy = dy * openGLLayer.contentsScale;
-        openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
+        // openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
 
         [openGLLayer setNeedsDisplay];
     }
@@ -166,7 +228,8 @@ static app::Key GetKey(unsigned short vk) {
         modifiers |= app::ModifierKey::kSuper;
     }
 
-    openGLLayer->appWindow->onKeyDown(key, modifiers);
+    // openGLLayer->appWindow->onKeyDown(key, modifiers);
+    openGLLayer->window->onKeyDown(key, modifiers);
 
     [openGLLayer setNeedsDisplay];
 }
@@ -178,7 +241,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+    // openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
 
     [openGLLayer setNeedsDisplay];
 }
@@ -190,7 +253,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+    // openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
 
     [openGLLayer setNeedsDisplay];
 }
@@ -249,7 +312,7 @@ static app::Key GetKey(unsigned short vk) {
         int scaled_width = self.frame.size.width * self.contentsScale;
         int scaled_height = self.frame.size.height * self.contentsScale;
 
-        appWindow->onOpenGLActivate(scaled_width, scaled_height);
+        // appWindow->onOpenGLActivate(scaled_width, scaled_height);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -269,7 +332,7 @@ static app::Key GetKey(unsigned short vk) {
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(mContext);
 
-    appWindow->onDraw();
+    // appWindow->onDraw();
 
     // Calls glFlush() by default.
     [super drawInCGLContext:mContext
@@ -286,7 +349,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onResize(scaled_width, scaled_height);
+    // appWindow->onResize(scaled_width, scaled_height);
     [self setNeedsDisplay];
 }
 

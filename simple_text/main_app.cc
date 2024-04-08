@@ -154,6 +154,26 @@ private:
     ImageRenderer image_renderer;
 };
 
+class EditorWindow2 : public App::Window {
+public:
+    EditorWindow2(App& app) : App::Window(app) {}
+
+    void onKeyDown(app::Key key, app::ModifierKey modifiers) {
+        using app::Any;
+
+        // Detect only `super+w` — no additional modifiers allowed.
+        if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kSuper) &&
+            !Any(modifiers & ~app::ModifierKey::kSuper)) {
+            this->close();
+        }
+        // Detect only `ctrl+w` — no additional modifiers allowed.
+        if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kControl) &&
+            !Any(modifiers & ~app::ModifierKey::kControl)) {
+            this->close();
+        }
+    }
+};
+
 class SimpleText : public App {
 public:
     SimpleText() : editor_window1(0), editor_window2(1), window(*this) {}
@@ -168,7 +188,7 @@ public:
 private:
     EditorWindow editor_window1;
     EditorWindow editor_window2;
-    Window window;
+    EditorWindow2 window;
 };
 
 int SimpleTextMain(int argc, char* argv[]) {

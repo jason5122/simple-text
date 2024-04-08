@@ -9,7 +9,10 @@ public:
     public:
         Window(App& app);
         void createWithSize(int width, int height);
+        void close();
         ~Window() = default;
+
+        virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) = 0;
 
     private:
         App& parent;

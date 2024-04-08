@@ -94,7 +94,10 @@ void App::createNewWindow(AppWindow& app_window, int width, int height) {
 
 App::~App() {}
 
-class App::Window::impl {};
+class App::Window::impl {
+public:
+    NSWindow* ns_window;
+};
 
 App::Window::Window(App& app) : parent(app), pimpl{new impl{}} {}
 
@@ -103,20 +106,24 @@ void App::Window::createWithSize(int width, int height) {
 
     NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                              NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
-    NSWindow* ns_window = [[NSWindow alloc] initWithContentRect:frame
-                                                      styleMask:mask
-                                                        backing:NSBackingStoreBuffered
-                                                          defer:false];
-    ns_window.title = @"Simple Text";
+    pimpl->ns_window = [[NSWindow alloc] initWithContentRect:frame
+                                                   styleMask:mask
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:false];
+    pimpl->ns_window.title = @"Simple Text";
 
     // Bypass the user's tabbing preference.
     // https://stackoverflow.com/a/40826761/14698275
-    ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
+    pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
 
-    // OpenGLView* opengl_view = [[OpenGLView alloc] initWithFrame:frame appWindow:app_window];
-    // ns_window.contentView = opengl_view;
-    // [ns_window makeFirstResponder:opengl_view];
+    OpenGLView* opengl_view = [[OpenGLView alloc] initWithFrame:frame window:*this];
+    pimpl->ns_window.contentView = opengl_view;
+    [pimpl->ns_window makeFirstResponder:opengl_view];
 
-    [ns_window center];
-    [ns_window makeKeyAndOrderFront:nil];
+    [pimpl->ns_window center];
+    [pimpl->ns_window makeKeyAndOrderFront:nil];
+}
+
+void App::Window::close() {
+    [pimpl->ns_window close];
 }

@@ -124,6 +124,11 @@ public:
             !Any(modifiers & ~app::ModifierKey::kSuper)) {
             std::cerr << "close window\n";
         }
+        // Detect only `ctrl+w` — no additional modifiers allowed.
+        if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kControl) &&
+            !Any(modifiers & ~app::ModifierKey::kControl)) {
+            std::cerr << "close window\n";
+        }
     }
 
 private:

@@ -1,7 +1,44 @@
 #include "main_window.h"
+#include "ui/app/modifier_key.h"
 #include <iostream>
 #include <windowsx.h>
 #include <winuser.h>
+
+static app::Key GetKey(WPARAM vk) {
+    static const struct {
+        WPARAM fVK;
+        app::Key fKey;
+    } gPair[] = {
+        {'A', app::Key::kA},
+        {'B', app::Key::kB},
+        {'C', app::Key::kC},
+        // TODO: Implement the rest.
+        {'W', app::Key::kW},
+    };
+    for (size_t i = 0; i < std::size(gPair); i++) {
+        if (gPair[i].fVK == vk) {
+            return gPair[i].fKey;
+        }
+    }
+    return app::Key::kNone;
+}
+
+static app::ModifierKey GetModifierKeys(void) {
+    app::ModifierKey modifiers = app::ModifierKey::kNone;
+    if (GetKeyState(VK_SHIFT) & 0x8000) {
+        modifiers |= app::ModifierKey::kShift;
+    }
+    if (GetKeyState(VK_CONTROL) & 0x8000) {
+        modifiers |= app::ModifierKey::kControl;
+    }
+    if (GetKeyState(VK_MENU) & 0x8000) {
+        modifiers |= app::ModifierKey::kAlt;
+    }
+    if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) {
+        modifiers |= app::ModifierKey::kSuper;
+    }
+    return modifiers;
+}
 
 LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -122,20 +159,12 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_KEYDOWN: {
-        WORD vkCode = LOWORD(wParam);
-        WORD keyFlags = HIWORD(lParam);
-        WORD scanCode = LOBYTE(keyFlags);
+        app::Key key = GetKey(wParam);
+        app::ModifierKey modifiers = GetModifierKeys();
 
-        BYTE lpKeyState[256];
-        GetKeyboardState(lpKeyState);
+        app_window.onKeyDown(key, modifiers);
 
-        std::wstring chars;
-        int ret = ToUnicode(vkCode, scanCode, lpKeyState, &chars[0], 4, 0);
-
-        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-tounicode#return-value
-        if (ret == 1) {
-            fwprintf(stderr, L"ret: %d, %s\n", ret, &chars[0]);
-        }
+        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
     }
 

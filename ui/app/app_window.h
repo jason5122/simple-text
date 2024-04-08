@@ -1,7 +1,7 @@
 #pragma once
 
+#include "ui/app/key.h"
 #include "ui/app/modifier_key.h"
-#include <string>
 
 class AppWindow {
 public:
@@ -11,5 +11,5 @@ public:
     virtual void onScroll(float dx, float dy) = 0;
     virtual void onLeftMouseDown(float mouse_x, float mouse_y) = 0;
     virtual void onLeftMouseDrag(float mouse_x, float mouse_y) = 0;
-    virtual void onKeyDown(std::string chars, app::ModifierKey modifiers) = 0;
+    virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) = 0;
 };

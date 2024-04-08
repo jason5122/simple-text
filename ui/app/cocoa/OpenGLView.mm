@@ -2,6 +2,8 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#import <Carbon/Carbon.h>
+
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
     AppWindow* appWindow;
@@ -125,8 +127,29 @@
     }
 }
 
+static app::Key GetKey(unsigned short vk) {
+    static const struct {
+        unsigned short fVK;
+        app::Key fKey;
+    } gPair[] = {
+        // These constants are located in the <Carbon/Carbon.h> header.
+        {kVK_ANSI_A, app::Key::kA},
+        {kVK_ANSI_B, app::Key::kB},
+        {kVK_ANSI_C, app::Key::kC},
+        {kVK_ANSI_W, app::Key::kW},
+    };
+
+    for (size_t i = 0; i < std::size(gPair); i++) {
+        if (gPair[i].fVK == vk) {
+            return gPair[i].fKey;
+        }
+    }
+
+    return app::Key::kNone;
+}
+
 - (void)keyDown:(NSEvent*)event {
-    NSString* characters = event.charactersIgnoringModifiers;
+    app::Key key = GetKey(event.keyCode);
 
     app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (event.modifierFlags & NSEventModifierFlagShift) {
@@ -142,7 +165,7 @@
         modifiers |= app::ModifierKey::kSuper;
     }
 
-    openGLLayer->appWindow->onKeyDown(characters.UTF8String, modifiers);
+    openGLLayer->appWindow->onKeyDown(key, modifiers);
 
     [openGLLayer setNeedsDisplay];
 }

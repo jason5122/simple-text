@@ -116,25 +116,12 @@ public:
                                          main_font_rasterizer);
     }
 
-    void onKeyDown(std::string chars, app::ModifierKey modifiers) {
-        std::string s = chars;
-
+    void onKeyDown(app::Key key, app::ModifierKey modifiers) {
         using app::Any;
-        if (Any(modifiers & app::ModifierKey::kShift)) {
-            s += " + shift";
-        }
-        if (Any(modifiers & app::ModifierKey::kControl)) {
-            s += " + ctrl";
-        }
-        if (Any(modifiers & app::ModifierKey::kAlt)) {
-            s += " + alt";
-        }
-        if (Any(modifiers & app::ModifierKey::kSuper)) {
-            s += " + super";
-        }
-        std::cerr << s << '\n';
 
-        if (chars == "w" && Any(modifiers & app::ModifierKey::kSuper)) {
+        // Detect only `super+w` — no additional modifiers allowed.
+        if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kSuper) &&
+            !Any(modifiers & ~app::ModifierKey::kSuper)) {
             std::cerr << "close window\n";
         }
     }

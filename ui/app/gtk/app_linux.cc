@@ -12,26 +12,44 @@ public:
     GtkApplication* app;
 };
 
+static app::Key GetKey(guint vk) {
+    static const struct {
+        guint fVK;
+        app::Key fKey;
+    } gPair[] = {
+        {GDK_KEY_a, app::Key::kA},
+        {GDK_KEY_b, app::Key::kB},
+        {GDK_KEY_c, app::Key::kC},
+        // TODO: Implement the rest.
+        {GDK_KEY_w, app::Key::kW},
+    };
+
+    for (size_t i = 0; i < std::size(gPair); i++) {
+        if (gPair[i].fVK == vk) {
+            return gPair[i].fKey;
+        }
+    }
+
+    return app::Key::kNone;
+}
+
 static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer p_app_window) {
     AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
 
-    uint32_t codepoint = gdk_keyval_to_unicode(event->keyval);
-    char* chars_utf8 = new char[2];
-    chars_utf8[1] = '\0';
-    grapheme_encode_utf8(codepoint, chars_utf8, 1);
+    app::Key key = GetKey(event->keyval);
 
-    AppWindow::KeyModifierFlags modifiers{};
+    app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (event->state & GDK_SHIFT_MASK) {
-        modifiers |= AppWindow::KeyModifierFlags::Shift;
+        modifiers |= app::ModifierKey::kShift;
     }
     if (event->state & GDK_CONTROL_MASK) {
-        modifiers |= AppWindow::KeyModifierFlags::Control;
+        modifiers |= app::ModifierKey::kControl;
     }
     if (event->state & GDK_MOD1_MASK) {
-        modifiers |= AppWindow::KeyModifierFlags::Alt;
+        modifiers |= app::ModifierKey::kAlt;
     }
     if (event->state & GDK_SUPER_MASK) {
-        modifiers |= AppWindow::KeyModifierFlags::Super;
+        modifiers |= app::ModifierKey::kSuper;
     }
 
     if (event->keyval == GDK_KEY_w && event->state & GDK_CONTROL_MASK) {
@@ -39,7 +57,7 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer 
         return true;
     }
 
-    app_window->onKeyDown(chars_utf8, modifiers);
+    app_window->onKeyDown(key, modifiers);
     return true;
 
     // TODO: Find a way to also pass the GtkApplication.

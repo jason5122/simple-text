@@ -128,18 +128,18 @@
 - (void)keyDown:(NSEvent*)event {
     NSString* characters = event.charactersIgnoringModifiers;
 
-    AppWindow::KeyModifierFlags modifiers{};
+    app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (event.modifierFlags & NSEventModifierFlagShift) {
-        modifiers |= AppWindow::KeyModifierFlags::Shift;
+        modifiers |= app::ModifierKey::kShift;
     }
     if (event.modifierFlags & NSEventModifierFlagControl) {
-        modifiers |= AppWindow::KeyModifierFlags::Control;
+        modifiers |= app::ModifierKey::kControl;
     }
     if (event.modifierFlags & NSEventModifierFlagOption) {
-        modifiers |= AppWindow::KeyModifierFlags::Alt;
+        modifiers |= app::ModifierKey::kAlt;
     }
     if (event.modifierFlags & NSEventModifierFlagCommand) {
-        modifiers |= AppWindow::KeyModifierFlags::Super;
+        modifiers |= app::ModifierKey::kSuper;
     }
 
     openGLLayer->appWindow->onKeyDown(characters.UTF8String, modifiers);

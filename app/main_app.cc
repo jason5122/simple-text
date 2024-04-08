@@ -23,9 +23,9 @@ public:
 
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        fs::path file_path = ResourcePath() / "sample_files/example.json";
+        // fs::path file_path = ResourcePath() / "sample_files/example.json";
         // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-        // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+        fs::path file_path = ResourcePath() / "sample_files/sort.scm";
 
         buffer.setContents(ReadFile(file_path));
         highlighter.setLanguage("source.json");
@@ -116,22 +116,27 @@ public:
                                          main_font_rasterizer);
     }
 
-    void onKeyDown(std::string chars, KeyModifierFlags modifiers) {
+    void onKeyDown(std::string chars, app::ModifierKey modifiers) {
         std::string s = chars;
 
-        if (modifiers & KeyModifierFlags::Shift) {
+        using app::Any;
+        if (Any(modifiers & app::ModifierKey::kShift)) {
             s += " + shift";
         }
-        if (modifiers & KeyModifierFlags::Control) {
+        if (Any(modifiers & app::ModifierKey::kControl)) {
             s += " + ctrl";
         }
-        if (modifiers & KeyModifierFlags::Alt) {
+        if (Any(modifiers & app::ModifierKey::kAlt)) {
             s += " + alt";
         }
-        if (modifiers & KeyModifierFlags::Super) {
+        if (Any(modifiers & app::ModifierKey::kSuper)) {
             s += " + super";
         }
         std::cerr << s << '\n';
+
+        if (chars == "w" && Any(modifiers & app::ModifierKey::kSuper)) {
+            std::cerr << "close window\n";
+        }
     }
 
 private:

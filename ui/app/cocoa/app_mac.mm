@@ -69,29 +69,6 @@ void App::run() {
     }
 }
 
-void App::createNewWindow(AppWindow& app_window, int width, int height) {
-    NSRect frame = NSMakeRect(0, 0, width, height);
-
-    NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
-                             NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
-    NSWindow* ns_window = [[NSWindow alloc] initWithContentRect:frame
-                                                      styleMask:mask
-                                                        backing:NSBackingStoreBuffered
-                                                          defer:false];
-    ns_window.title = @"Simple Text";
-
-    // Bypass the user's tabbing preference.
-    // https://stackoverflow.com/a/40826761/14698275
-    ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
-
-    OpenGLView* opengl_view = [[OpenGLView alloc] initWithFrame:frame appWindow:app_window];
-    ns_window.contentView = opengl_view;
-    [ns_window makeFirstResponder:opengl_view];
-
-    [ns_window center];
-    [ns_window makeKeyAndOrderFront:nil];
-}
-
 App::~App() {}
 
 class App::Window::impl {

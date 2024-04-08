@@ -3,7 +3,6 @@
 #include "build/buildflag.h"
 #include "font/rasterizer.h"
 #include "ui/app/app.h"
-#include "ui/app/app_window.h"
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/renderer/text_renderer.h"
@@ -11,9 +10,9 @@
 #include <glad/glad.h>
 #include <iostream>
 
-class EditorWindow : public AppWindow {
+class EditorWindow : public App::Window {
 public:
-    EditorWindow(int id) : id(id) {}
+    EditorWindow(App& app, int id) : App::Window(app), id(id) {}
 
     void onOpenGLActivate(int width, int height) {
         std::cerr << "id " << id << ": " << glGetString(GL_VERSION) << '\n';
@@ -122,12 +121,12 @@ public:
         // Detect only `super+w` — no additional modifiers allowed.
         if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kSuper) &&
             !Any(modifiers & ~app::ModifierKey::kSuper)) {
-            std::cerr << "close window\n";
+            this->close();
         }
         // Detect only `ctrl+w` — no additional modifiers allowed.
         if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kControl) &&
             !Any(modifiers & ~app::ModifierKey::kControl)) {
-            std::cerr << "close window\n";
+            this->close();
         }
     }
 
@@ -154,29 +153,9 @@ private:
     ImageRenderer image_renderer;
 };
 
-class EditorWindow2 : public App::Window {
-public:
-    EditorWindow2(App& app) : App::Window(app) {}
-
-    void onKeyDown(app::Key key, app::ModifierKey modifiers) {
-        using app::Any;
-
-        // Detect only `super+w` — no additional modifiers allowed.
-        if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kSuper) &&
-            !Any(modifiers & ~app::ModifierKey::kSuper)) {
-            this->close();
-        }
-        // Detect only `ctrl+w` — no additional modifiers allowed.
-        if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kControl) &&
-            !Any(modifiers & ~app::ModifierKey::kControl)) {
-            this->close();
-        }
-    }
-};
-
 class SimpleText : public App {
 public:
-    SimpleText() : editor_window1(0), editor_window2(1), window(*this) {}
+    SimpleText() : window(*this, 0) {}
 
     void onActivate() {
         // createNewWindow(editor_window1, 1200, 800);
@@ -186,9 +165,7 @@ public:
     }
 
 private:
-    EditorWindow editor_window1;
-    EditorWindow editor_window2;
-    EditorWindow2 window;
+    EditorWindow window;
 };
 
 int SimpleTextMain(int argc, char* argv[]) {

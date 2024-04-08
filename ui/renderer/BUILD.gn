@@ -9,12 +9,12 @@ source_set("renderer") {
 
   deps = [
     "//base",
+    "//base/filesystem",
     "//font",
     "//third_party/libgrapheme",
     "//third_party/libpng",
     "//ui/icons",
     "//ui/sample_files",
-    "//util",
   ]
 
   public_deps = [ "//third_party/glad" ]

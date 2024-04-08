@@ -1,8 +1,8 @@
+#include "base/filesystem/file_reader.h"
 #include "base/rgb.h"
 #include "font/rasterizer.h"
 #include "text_renderer.h"
 #include "ui/renderer/opengl_types.h"
-#include "util/file_util.h"
 #include "util/opengl_error_util.h"
 #include "util/profile_util.h"
 #include <cmath>

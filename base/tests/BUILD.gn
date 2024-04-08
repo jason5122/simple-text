@@ -6,9 +6,9 @@ source_set("tests") {
   deps = [
     ":copy_test_files",
     "//base",
+    "//base/filesystem",
     "//third_party/googletest:gtest",
     "//third_party/tree_sitter",
-    "//util",
   ]
 }
 

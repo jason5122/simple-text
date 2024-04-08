@@ -1,6 +1,6 @@
 #include "base/buffer.h"
+#include "base/filesystem/file_reader.h"
 #include "base/syntax_highlighter.h"
-#include "util/file_util.h"
 #include "util/profile_util.h"
 #include "gtest/gtest.h"
 #include <iostream>

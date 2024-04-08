@@ -1,0 +1,16 @@
+source_set("filesystem") {
+  sources = [ "file_reader.cc" ]
+
+  if (is_mac) {
+    sources += [ "file_reader_mac.mm" ]
+    frameworks = [ "Cocoa.framework" ]
+  }
+
+  if (is_linux) {
+    sources += [ "file_reader_linux.cc" ]
+  }
+
+  if (is_win) {
+    sources += [ "file_reader_win.cc" ]
+  }
+}

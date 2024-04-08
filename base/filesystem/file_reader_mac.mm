@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#include "file_util.h"
+#include "file_reader.h"
 
 fs::path ResourcePath() {
     return NSBundle.mainBundle.resourcePath.fileSystemRepresentation;

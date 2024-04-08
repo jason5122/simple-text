@@ -10,6 +10,7 @@ if (is_mac) {
     # define `code_signing_identity` in args.gn
 
     sources = [
+      "editor_window.cc",
       "main.cc",
       "main_app.cc",
     ]
@@ -31,6 +32,7 @@ if (is_linux) {
     output_name = "simple_text"
 
     sources = [
+      "editor_window.cc",
       "main.cc",
       "main_app.cc",
     ]
@@ -48,6 +50,7 @@ if (is_win) {
     output_name = "simple_text"
 
     sources = [
+      "editor_window.cc",
       "main.cc",
       "main_app.cc",
     ]

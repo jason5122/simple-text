@@ -7,14 +7,14 @@
 
 ## Progress Chart
 
-| Feature              | macOS          | Linux         | Windows          |
-| -------------------- | -------------- | ------------- | ---------------- |
-| Text System          | ✅ (Core Text) | ✅ (Pango)    | 🚧 (DirectWrite) |
-| Window creation      | ✅ (Cocoa)     | ✅ (GTK 3)    | 🚧 (Win32)       |
-| OpenGL context       | ✅ (Cocoa)     | ✅ (libepoxy) | 🚧               |
-| Keyboard/mouse input | ✅             | ✅            | 🚧               |
-| Tabs                 | 🚧             | 🚧            | 🚧               |
-| Popups/Dialogs       | ❌             | ❌            | ❌               |
+| Feature              | macOS          | Linux      | Windows          |
+| -------------------- | -------------- | ---------- | ---------------- |
+| Text System          | ✅ (Core Text) | ✅ (Pango) | ✅ (DirectWrite) |
+| Window creation      | ✅ (Cocoa)     | ✅ (GTK 3) | ✅ (Win32)       |
+| OpenGL context       | ✅ (GLAD)      | ✅ (GLAD)  | ✅ (GLAD)        |
+| Keyboard/mouse input | ✅             | ✅         | ✅               |
+| Tabs                 | 🚧             | 🚧         | 🚧               |
+| Popups/Dialogs       | ❌             | ❌         | ❌               |
 
 ## Dependencies
 

@@ -1,5 +1,5 @@
 #include "ui/app/app.h"
-#include "ui/app/cocoa/WindowController.h"
+#include "ui/app/cocoa/OpenGLView.h"
 #include <vector>
 
 #import <Cocoa/Cocoa.h>
@@ -53,7 +53,6 @@
 class App::impl {
 public:
     NSApplication* ns_app;
-    std::vector<WindowController*> window_controllers;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -72,11 +71,26 @@ void App::run() {
 
 void App::createNewWindow(AppWindow& app_window, int width, int height) {
     NSRect frame = NSMakeRect(0, 0, width, height);
-    WindowController* window_controller = [[WindowController alloc] initWithFrame:frame
-                                                                        appWindow:app_window];
 
-    [window_controller showWindow];
-    // pimpl->window_controllers.push_back(window_controller);
+    NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
+                             NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
+    NSWindow* ns_window = [[NSWindow alloc] initWithContentRect:frame
+                                                      styleMask:mask
+                                                        backing:NSBackingStoreBuffered
+                                                          defer:false];
+    ns_window.title = @"Simple Text";
+
+    // Bypass the user's tabbing preference.
+    // https://stackoverflow.com/a/40826761/14698275
+    ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
+
+    OpenGLView* opengl_view = [[OpenGLView alloc] initWithFrame:frame appWindow:app_window];
+    ns_window.contentView = opengl_view;
+
+    [ns_window makeFirstResponder:opengl_view];
+
+    [ns_window center];
+    [ns_window makeKeyAndOrderFront:nil];
 }
 
 App::~App() {}

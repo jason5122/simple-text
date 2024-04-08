@@ -1,6 +1,7 @@
 #include "main_window.h"
 #include <iostream>
 #include <windowsx.h>
+#include <winuser.h>
 
 LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -120,6 +121,25 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    case WM_KEYDOWN: {
+        WORD vkCode = LOWORD(wParam);
+        WORD keyFlags = HIWORD(lParam);
+        WORD scanCode = LOBYTE(keyFlags);
+
+        BYTE lpKeyState[256];
+        GetKeyboardState(lpKeyState);
+
+        std::wstring chars;
+        int ret = ToUnicode(vkCode, scanCode, lpKeyState, &chars[0], 4, 0);
+
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-tounicode#return-value
+        if (ret == 1) {
+            fwprintf(stderr, L"ret: %d, %s\n", ret, &chars[0]);
+        }
+        return 0;
+    }
+
+    // TODO: Replace this with manual processing, like Chromium does.
     case WM_COMMAND: {
         switch (LOWORD(wParam)) {
         case ID_QUIT:

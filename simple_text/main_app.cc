@@ -156,16 +156,19 @@ private:
 
 class SimpleText : public App {
 public:
-    SimpleText() : editor_window1(0), editor_window2(1) {}
+    SimpleText() : editor_window1(0), editor_window2(1), window(*this) {}
 
     void onActivate() {
-        createNewWindow(editor_window1, 1200, 800);
-        createNewWindow(editor_window2, 600, 400);
+        // createNewWindow(editor_window1, 1200, 800);
+        // createNewWindow(editor_window2, 600, 400);
+
+        window.createWithSize(1200, 800);
     }
 
 private:
     EditorWindow editor_window1;
     EditorWindow editor_window2;
+    Window window;
 };
 
 int SimpleTextMain(int argc, char* argv[]) {

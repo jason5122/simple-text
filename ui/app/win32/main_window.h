@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/app/app_window.h"
+#include "ui/app/app.h"
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include <windows.h>
@@ -11,7 +11,7 @@ class MainWindow {
 public:
     HWND hwnd;
 
-    MainWindow(AppWindow& app_window) : app_window{app_window} {}
+    MainWindow(App::Window& app_window) : app_window{app_window} {}
 
     // TODO: Change this.
     PCWSTR className() const {
@@ -19,9 +19,10 @@ public:
     }
     BOOL create(PCWSTR lpWindowName, DWORD dwStyle);
     LRESULT handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    BOOL destroy();
 
 private:
     HDC ghDC;
     HGLRC ghRC;
-    AppWindow& app_window;
+    App::Window& app_window;
 };

@@ -221,3 +221,7 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle) {
 
     return (hwnd ? TRUE : FALSE);
 }
+
+BOOL MainWindow::destroy() {
+    return DestroyWindow(hwnd);
+}

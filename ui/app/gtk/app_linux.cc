@@ -7,11 +7,6 @@ extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
 
-class App::impl {
-public:
-    GtkApplication* app;
-};
-
 static app::Key GetKey(guint vk) {
     static const struct {
         guint fVK;
@@ -156,6 +151,11 @@ static gboolean motion_event(GtkWidget* widget, GdkEventMotion* event, gpointer 
     }
     return true;
 }
+
+class App::impl {
+public:
+    GtkApplication* app;
+};
 
 App::App() : pimpl{new impl{}} {
 #if GLIB_CHECK_VERSION(2, 74, 0)

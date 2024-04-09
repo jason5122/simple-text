@@ -8,7 +8,6 @@
 
 class App::impl {
 public:
-    std::vector<std::unique_ptr<MainWindow>> windows;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -40,9 +39,19 @@ void App::run() {
     }
 }
 
-void App::createNewWindow(AppWindow& app_window, int width, int height) {
-    std::unique_ptr<MainWindow> window = std::make_unique<MainWindow>(app_window);
-    window->create(L"Simple Text", WS_OVERLAPPEDWINDOW);
+App::~App() {}
+
+class App::Window::impl {
+public:
+    impl(App::Window& app_window) : main_window(app_window) {}
+
+    MainWindow main_window;
+};
+
+App::Window::Window(App& app) : parent(app), pimpl{new impl{*this}} {}
+
+void App::Window::createWithSize(int width, int height) {
+    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW);
 
     // FIXME: This doesn't animate like ShowWindow().
     WINDOWPLACEMENT placement{
@@ -51,9 +60,9 @@ void App::createNewWindow(AppWindow& app_window, int width, int height) {
         .showCmd = SW_NORMAL,
         .rcNormalPosition = RECT{0, 0, width * 2, height * 2},
     };
-    SetWindowPlacement(window->hwnd, &placement);
-
-    pimpl->windows.push_back(std::move(window));
+    SetWindowPlacement(pimpl->main_window.hwnd, &placement);
 }
 
-App::~App() {}
+void App::Window::close() {
+    pimpl->main_window.destroy();
+}

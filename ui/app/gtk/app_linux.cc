@@ -34,7 +34,7 @@ static app::Key GetKey(guint vk) {
 }
 
 static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+    App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
     app::Key key = GetKey(event->keyval);
 
@@ -50,11 +50,6 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer 
     }
     if (event->state & GDK_SUPER_MASK) {
         modifiers |= app::ModifierKey::kSuper;
-    }
-
-    if (event->keyval == GDK_KEY_w && event->state & GDK_CONTROL_MASK) {
-        gtk_window_close(GTK_WINDOW(widget));
-        return true;
     }
 
     app_window->onKeyDown(key, modifiers);
@@ -74,7 +69,7 @@ static void activate(GtkApplication* gtk_app, gpointer p_app) {
 }
 
 static void realize(GtkWidget* widget, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+    App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
     gtk_gl_area_make_current(GTK_GL_AREA(widget));
     if (gtk_gl_area_get_error(GTK_GL_AREA(widget)) != nullptr) return;
@@ -91,7 +86,7 @@ static void realize(GtkWidget* widget, gpointer p_app_window) {
 }
 
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+    App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
     app_window->onDraw();
 
@@ -100,7 +95,7 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app_wi
 }
 
 static void resize(GtkGLArea* self, gint width, gint height, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+    App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
     gtk_gl_area_make_current(self);
 
@@ -108,7 +103,7 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer p_app_wind
 }
 
 static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+    App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
     double dx, dy;
     gdk_event_get_scroll_deltas((GdkEvent*)event, &dx, &dy);
@@ -127,7 +122,7 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
 }
 
 static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+    App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
     if (event->type == GDK_BUTTON_PRESS) {
         gdouble mouse_x = event->x;
@@ -145,7 +140,7 @@ static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer 
 }
 
 static gboolean motion_event(GtkWidget* widget, GdkEventMotion* event, gpointer p_app_window) {
-    AppWindow* app_window = static_cast<AppWindow*>(p_app_window);
+    App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
     if (event->type == GDK_MOTION_NOTIFY) {
         gdouble mouse_x = event->x;
@@ -176,42 +171,51 @@ void App::run() {
     g_application_run(G_APPLICATION(pimpl->app), 0, NULL);
 }
 
-void App::createNewWindow(AppWindow& app_window, int width, int height) {
-    GtkWidget* window = gtk_application_window_new(pimpl->app);
-    gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
+App::~App() {
+    g_object_unref(pimpl->app);
+}
 
-    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-    g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(key_press_event),
-                     &app_window);
+class App::Window::impl {
+public:
+    GtkWidget* window_widget;
+};
+
+App::Window::Window(App& app) : parent(app), pimpl{new impl{}} {}
+
+void App::Window::createWithSize(int width, int height) {
+    pimpl->window_widget = gtk_application_window_new(parent.pimpl->app);
+    gtk_window_set_title(GTK_WINDOW(pimpl->window_widget), "Simple Text");
+
+    gtk_widget_add_events(pimpl->window_widget, GDK_KEY_PRESS_MASK);
+    g_signal_connect(G_OBJECT(pimpl->window_widget), "key_press_event",
+                     G_CALLBACK(key_press_event), this);
 
     GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
     gtk_box_set_spacing(GTK_BOX(box), 6);
-    gtk_container_add(GTK_CONTAINER(window), box);
+    gtk_container_add(GTK_CONTAINER(pimpl->window_widget), box);
 
     GtkWidget* gl_area = gtk_gl_area_new();
     gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), &app_window);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), &app_window);
-    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), &app_window);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
+    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
 
     gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
-    g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), &app_window);
+    g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);
 
     gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
-    g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event),
-                     &app_window);
+    g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), this);
 
     gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
-    g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event),
-                     &app_window);
+    g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), this);
 
-    // gtk_window_maximize(GTK_WINDOW(window));
+    // gtk_window_maximize(GTK_WINDOW(pimpl->window_widget));
     // TODO: Set default window size without magic numbers.
-    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+    gtk_window_set_default_size(GTK_WINDOW(pimpl->window_widget), width, height);
 
-    gtk_widget_show_all(window);
+    gtk_widget_show_all(pimpl->window_widget);
 }
 
-App::~App() {
-    g_object_unref(pimpl->app);
+void App::Window::close() {
+    gtk_window_close(GTK_WINDOW(pimpl->window_widget));
 }

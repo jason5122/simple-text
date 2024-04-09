@@ -3,7 +3,7 @@
 #include "util/profile_util.h"
 #include <iostream>
 
-void EditorWindow::onOpenGLActivate(int width, int height) {
+void EditorWindow::onOpenGLActivateVirtual(int width, int height) {
     std::cerr << "id " << id << ": " << glGetString(GL_VERSION) << '\n';
 
     glEnable(GL_BLEND);
@@ -44,7 +44,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     image_renderer.setup(width, height);
 }
 
-void EditorWindow::onDraw() {
+void EditorWindow::onDrawVirtual() {
     {
         int status_bar_height = ui_font_rasterizer.line_height;
 
@@ -68,7 +68,7 @@ void EditorWindow::onDraw() {
     }
 }
 
-void EditorWindow::onResize(int width, int height) {
+void EditorWindow::onResizeVirtual(int width, int height) {
     glViewport(0, 0, width, height);
     text_renderer.resize(width, height);
     rect_renderer.resize(width, height);
@@ -77,7 +77,7 @@ void EditorWindow::onResize(int width, int height) {
     redraw();
 }
 
-void EditorWindow::onScroll(float dx, float dy) {
+void EditorWindow::onScrollVirtual(float dx, float dy) {
     // TODO: Uncomment this while not testing.
     // scroll_x += dx;
     scroll_y += dy;
@@ -85,7 +85,7 @@ void EditorWindow::onScroll(float dx, float dy) {
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
+void EditorWindow::onLeftMouseDownVirtual(float mouse_x, float mouse_y) {
     mouse_x -= editor_offset_x;
     mouse_y -= editor_offset_y;
     mouse_x += scroll_x;
@@ -100,7 +100,7 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     redraw();
 }
 
-void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
+void EditorWindow::onLeftMouseDragVirtual(float mouse_x, float mouse_y) {
     mouse_x -= editor_offset_x;
     mouse_y -= editor_offset_y;
     mouse_x += scroll_x;
@@ -112,7 +112,7 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     redraw();
 }
 
-void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
+void EditorWindow::onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) {
     using app::Any;
 
     if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {

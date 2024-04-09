@@ -12,14 +12,6 @@ class EditorWindow : public App::Window {
 public:
     EditorWindow(App& app, int id) : App::Window(app), id(id) {}
 
-    void onOpenGLActivate(int width, int height);
-    void onDraw();
-    void onResize(int width, int height);
-    void onScroll(float dx, float dy);
-    void onLeftMouseDown(float mouse_x, float mouse_y);
-    void onLeftMouseDrag(float mouse_x, float mouse_y);
-    void onKeyDown(app::Key key, app::ModifierKey modifiers);
-
 private:
     int id;
 
@@ -41,4 +33,12 @@ private:
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
     ImageRenderer image_renderer;
+
+    void onOpenGLActivateVirtual(int width, int height);
+    void onDrawVirtual();
+    void onResizeVirtual(int width, int height);
+    void onScrollVirtual(float dx, float dy);
+    void onLeftMouseDownVirtual(float mouse_x, float mouse_y);
+    void onLeftMouseDragVirtual(float mouse_x, float mouse_y);
+    void onKeyDownVirtual(app::Key key, app::ModifierKey modifiers);
 };

@@ -7,11 +7,11 @@ private:
     int window_id_counter = 0;
     std::vector<std::unique_ptr<EditorWindow>> windows;
 
-    void onActivate() {
+    void onActivateVirtual() {
         addWindow(600, 400);
     }
 
-    void addWindow(int width, int height) {
+    void addWindowVirtual(int width, int height) {
         std::unique_ptr<EditorWindow> window =
             std::make_unique<EditorWindow>(*this, window_id_counter++);
         window->createWithSize(width, height);

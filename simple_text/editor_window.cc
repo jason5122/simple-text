@@ -117,4 +117,15 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         !Any(modifiers & ~app::ModifierKey::kControl)) {
         this->close();
     }
+
+    // Detect only `super+q` — no additional modifiers allowed.
+    if (key == app::Key::kQ && Any(modifiers & app::ModifierKey::kSuper) &&
+        !Any(modifiers & ~app::ModifierKey::kSuper)) {
+        this->quit();
+    }
+    // Detect only `ctrl+q` — no additional modifiers allowed.
+    if (key == app::Key::kQ && Any(modifiers & app::ModifierKey::kControl) &&
+        !Any(modifiers & ~app::ModifierKey::kControl)) {
+        this->quit();
+    }
 }

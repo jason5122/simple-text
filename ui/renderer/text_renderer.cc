@@ -289,7 +289,6 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
 
                         // FIXME: Don't use magic numbers here.
                         if (codepoint == 183) {
-                            std::cerr << codepoint << '\n';
                             utf8_str = "·";
                         }
 

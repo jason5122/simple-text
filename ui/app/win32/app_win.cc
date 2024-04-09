@@ -3,7 +3,6 @@
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include <memory>
-#include <vector>
 #include <windows.h>
 
 class App::impl {
@@ -19,23 +18,10 @@ App::App() : pimpl{new impl{}} {
 void App::run() {
     this->onActivate();
 
-    // We need to pass `key` as a virtual key in order to combine it with FCONTROL.
-    // https://stackoverflow.com/a/53657941
-    ACCEL quit_accel{
-        .fVirt = FCONTROL | FVIRTKEY,
-        .key = LOBYTE(VkKeyScan('q')),
-        .cmd = ID_QUIT,
-    };
-
-    std::vector<ACCEL> accels = {quit_accel};
-    HACCEL hAccel = CreateAcceleratorTable(&accels[0], accels.size());
-
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 }
 
@@ -65,4 +51,8 @@ void App::Window::createWithSize(int width, int height) {
 
 void App::Window::close() {
     pimpl->main_window.destroy();
+}
+
+void App::Window::quit() {
+    pimpl->main_window.quit();
 }

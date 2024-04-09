@@ -11,6 +11,7 @@ public:
         Window(App& app);
         void createWithSize(int width, int height);
         void close();
+        void quit();
         ~Window() = default;
 
         virtual void onOpenGLActivate(int width, int height) = 0;

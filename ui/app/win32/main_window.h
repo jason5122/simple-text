@@ -5,8 +5,6 @@
 #include <glad/glad_wgl.h>
 #include <windows.h>
 
-#define ID_QUIT 0x70
-
 class MainWindow {
 public:
     HWND hwnd;
@@ -20,6 +18,7 @@ public:
     BOOL create(PCWSTR lpWindowName, DWORD dwStyle);
     LRESULT handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     BOOL destroy();
+    void quit();
 
 private:
     HDC ghDC;

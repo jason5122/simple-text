@@ -13,6 +13,7 @@ static app::Key GetKey(WPARAM vk) {
         {'B', app::Key::kB},
         {'C', app::Key::kC},
         // TODO: Implement the rest.
+        {'Q', app::Key::kQ},
         {'W', app::Key::kW},
     };
     for (size_t i = 0; i < std::size(gPair); i++) {
@@ -168,16 +169,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
-    // TODO: Replace this with manual processing, like Chromium does.
-    case WM_COMMAND: {
-        switch (LOWORD(wParam)) {
-        case ID_QUIT:
-            PostQuitMessage(0);
-            break;
-        }
-        return 0;
-    }
-
     case WM_ERASEBKGND:
         return 1;
 
@@ -224,4 +215,8 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle) {
 
 BOOL MainWindow::destroy() {
     return DestroyWindow(hwnd);
+}
+
+void MainWindow::quit() {
+    PostQuitMessage(0);
 }

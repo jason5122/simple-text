@@ -1,5 +1,6 @@
 #pragma once
 
+#include "build/buildflag.h"
 #include "ui/app/bitmask_enum.h"
 
 namespace app {
@@ -12,4 +13,10 @@ enum class ModifierKey {
 };
 
 template <> struct is_bitmask_enum<app::ModifierKey> : std::true_type {};
+
+#if IS_MAC
+constexpr ModifierKey kPrimaryModifier = ModifierKey::kSuper;
+#else
+constexpr ModifierKey kPrimaryModifier = ModifierKey::kControl;
+#endif
 }

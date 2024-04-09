@@ -23,9 +23,11 @@ public:
         virtual void onLeftMouseDrag(float mouse_x, float mouse_y) = 0;
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) = 0;
 
-    private:
+        // TODO: See if we can make `parent` private as well.
+        // private:
         App& parent;
 
+    private:
         class impl;
         std::unique_ptr<impl> pimpl;
     };
@@ -35,6 +37,7 @@ public:
     ~App();
 
     virtual void onActivate() = 0;
+    virtual void addWindow(int width, int height) = 0;
 
 private:
     // https://herbsutter.com/gotw/_100/

@@ -115,25 +115,13 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     using app::Any;
 
-    // Detect only `super+w` — no additional modifiers allowed.
-    if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kSuper) &&
-        !Any(modifiers & ~app::ModifierKey::kSuper)) {
+    if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+        parent.addWindow(1200, 600);
+    }
+    if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
         close();
     }
-    // Detect only `ctrl+w` — no additional modifiers allowed.
-    if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kControl) &&
-        !Any(modifiers & ~app::ModifierKey::kControl)) {
-        close();
-    }
-
-    // Detect only `super+q` — no additional modifiers allowed.
-    if (key == app::Key::kQ && Any(modifiers & app::ModifierKey::kSuper) &&
-        !Any(modifiers & ~app::ModifierKey::kSuper)) {
-        quit();
-    }
-    // Detect only `ctrl+q` — no additional modifiers allowed.
-    if (key == app::Key::kQ && Any(modifiers & app::ModifierKey::kControl) &&
-        !Any(modifiers & ~app::ModifierKey::kControl)) {
+    if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
         quit();
     }
 

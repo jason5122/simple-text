@@ -3,17 +3,20 @@
 #include <glad/glad.h>
 
 class SimpleText : public App {
-public:
-    SimpleText() : window1(*this, 0), window2(*this, 1) {}
+private:
+    int window_id_counter = 0;
+    std::vector<std::unique_ptr<EditorWindow>> windows;
 
     void onActivate() {
-        window1.createWithSize(1200, 800);
-        window2.createWithSize(600, 400);
+        addWindow(600, 400);
     }
 
-private:
-    EditorWindow window1;
-    EditorWindow window2;
+    void addWindow(int width, int height) {
+        std::unique_ptr<EditorWindow> window =
+            std::make_unique<EditorWindow>(*this, window_id_counter++);
+        window->createWithSize(width, height);
+        windows.push_back(std::move(window));
+    }
 };
 
 int SimpleTextMain(int argc, char* argv[]) {

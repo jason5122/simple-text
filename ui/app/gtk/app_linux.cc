@@ -16,6 +16,7 @@ static app::Key GetKey(guint vk) {
         {GDK_KEY_b, app::Key::kB},
         {GDK_KEY_c, app::Key::kC},
         // TODO: Implement the rest.
+        {GDK_KEY_q, app::Key::kQ},
         {GDK_KEY_w, app::Key::kW},
     };
 
@@ -48,14 +49,9 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer 
     }
 
     app_window->onKeyDown(key, modifiers);
-    return true;
 
-    // TODO: Find a way to also pass the GtkApplication.
-    // if (event->keyval == GDK_KEY_q && event->state & GDK_CONTROL_MASK) {
-    //     g_application_quit(G_APPLICATION(data));
-    //     return true;
-    // }
-    return false;
+    gtk_widget_queue_draw(widget);
+    return true;
 }
 
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
@@ -218,4 +214,8 @@ void App::Window::createWithSize(int width, int height) {
 
 void App::Window::close() {
     gtk_window_close(GTK_WINDOW(pimpl->window_widget));
+}
+
+void App::Window::quit() {
+    g_application_quit(G_APPLICATION(parent.pimpl->app));
 }

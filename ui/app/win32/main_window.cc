@@ -102,8 +102,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int height = (int)(short)HIWORD(lParam);
 
         app_window.onResize(width, height);
-
-        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
     }
 
@@ -116,8 +114,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         dy *= 60;
 
         app_window.onScroll(0, dy);
-
-        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
     }
 
@@ -125,8 +121,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
 
         app_window.onScroll(dx, 0);
-
-        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
     }
 
@@ -137,8 +131,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int mouse_y = GET_Y_LPARAM(lParam);
 
         app_window.onLeftMouseDown(mouse_x, mouse_y);
-
-        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
     }
 
@@ -153,8 +145,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             int mouse_y = GET_Y_LPARAM(lParam);
 
             app_window.onLeftMouseDrag(mouse_x, mouse_y);
-
-            InvalidateRect(hwnd, NULL, FALSE);
         }
         return 0;
     }
@@ -164,8 +154,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         app::ModifierKey modifiers = GetModifierKeys();
 
         app_window.onKeyDown(key, modifiers);
-
-        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
     }
 
@@ -194,6 +182,10 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
     } else {
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
+}
+
+void MainWindow::redraw() {
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle) {

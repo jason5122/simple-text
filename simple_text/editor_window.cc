@@ -73,6 +73,8 @@ void EditorWindow::onResize(int width, int height) {
     text_renderer.resize(width, height);
     rect_renderer.resize(width, height);
     image_renderer.resize(width, height);
+
+    redraw();
 }
 
 void EditorWindow::onScroll(float dx, float dy) {

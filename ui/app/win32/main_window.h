@@ -17,6 +17,7 @@ public:
     }
     BOOL create(PCWSTR lpWindowName, DWORD dwStyle);
     LRESULT handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void redraw();
     BOOL destroy();
     void quit();
 

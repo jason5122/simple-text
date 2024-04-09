@@ -284,7 +284,6 @@ static app::Key GetKey(unsigned short vk) {
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;
     window->onResize(scaled_width, scaled_height);
-    [self setNeedsDisplay];
 }
 
 - (void)releaseCGLContext:(CGLContextObj)glContext {

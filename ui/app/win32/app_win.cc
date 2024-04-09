@@ -49,6 +49,10 @@ void App::Window::createWithSize(int width, int height) {
     SetWindowPlacement(pimpl->main_window.hwnd, &placement);
 }
 
+void App::Window::redraw() {
+    pimpl->main_window.redraw();
+}
+
 void App::Window::close() {
     pimpl->main_window.destroy();
 }

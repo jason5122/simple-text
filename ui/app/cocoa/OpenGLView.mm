@@ -53,6 +53,10 @@
     return self;
 }
 
+- (void)redraw {
+    [openGLLayer setNeedsDisplay];
+}
+
 - (void)updateTrackingAreas {
     [super updateTrackingAreas];
     [self removeTrackingArea:trackingArea];
@@ -122,8 +126,6 @@
         float scaled_dx = dx * openGLLayer.contentsScale;
         float scaled_dy = dy * openGLLayer.contentsScale;
         openGLLayer->window->onScroll(scaled_dx, scaled_dy);
-
-        [openGLLayer setNeedsDisplay];
     }
 }
 
@@ -137,6 +139,7 @@ static app::Key GetKey(unsigned short vk) {
         {kVK_ANSI_B, app::Key::kB},
         {kVK_ANSI_C, app::Key::kC},
         // TODO: Implement the rest.
+        {kVK_ANSI_Q, app::Key::kQ},
         {kVK_ANSI_W, app::Key::kW},
     };
 
@@ -167,8 +170,6 @@ static app::Key GetKey(unsigned short vk) {
     }
 
     openGLLayer->window->onKeyDown(key, modifiers);
-
-    [openGLLayer setNeedsDisplay];
 }
 
 - (void)mouseDown:(NSEvent*)event {
@@ -179,8 +180,6 @@ static app::Key GetKey(unsigned short vk) {
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
     openGLLayer->window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
-
-    [openGLLayer setNeedsDisplay];
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -191,8 +190,6 @@ static app::Key GetKey(unsigned short vk) {
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
     openGLLayer->window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
-
-    [openGLLayer setNeedsDisplay];
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

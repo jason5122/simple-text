@@ -30,9 +30,12 @@
                                action:@selector(showAboutPanel)
                         keyEquivalent:@""];
     [appMenu.submenu addItem:[NSMenuItem separatorItem]];
+    // [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
+    //                            action:@selector(terminate:)
+    //                     keyEquivalent:@"q"];
     [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
                                action:@selector(terminate:)
-                        keyEquivalent:@"q"];
+                        keyEquivalent:@""];
     [menu addItem:appMenu];
     NSApplication.sharedApplication.mainMenu = menu;
 
@@ -74,6 +77,7 @@ App::~App() {}
 class App::Window::impl {
 public:
     NSWindow* ns_window;
+    OpenGLView* opengl_view;
 };
 
 App::Window::Window(App& app) : parent(app), pimpl{new impl{}} {}
@@ -93,14 +97,22 @@ void App::Window::createWithSize(int width, int height) {
     // https://stackoverflow.com/a/40826761/14698275
     pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
 
-    OpenGLView* opengl_view = [[OpenGLView alloc] initWithFrame:frame window:*this];
-    pimpl->ns_window.contentView = opengl_view;
-    [pimpl->ns_window makeFirstResponder:opengl_view];
+    pimpl->opengl_view = [[OpenGLView alloc] initWithFrame:frame window:*this];
+    pimpl->ns_window.contentView = pimpl->opengl_view;
+    [pimpl->ns_window makeFirstResponder:pimpl->opengl_view];
 
     [pimpl->ns_window center];
     [pimpl->ns_window makeKeyAndOrderFront:nil];
 }
 
+void App::Window::redraw() {
+    [pimpl->opengl_view redraw];
+}
+
 void App::Window::close() {
     [pimpl->ns_window close];
+}
+
+void App::Window::quit() {
+    [NSApp terminate:nil];
 }

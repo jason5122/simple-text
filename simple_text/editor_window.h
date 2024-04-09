@@ -10,10 +10,10 @@
 
 class EditorWindow : public App::Window {
 public:
-    EditorWindow(App& app, int id) : App::Window(app), id(id) {}
+    EditorWindow(App& app, int idx) : App::Window(app), idx(idx) {}
 
 private:
-    int id;
+    int idx;
 
     float scroll_x = 0;
     float scroll_y = 0;

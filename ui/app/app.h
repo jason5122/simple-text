@@ -64,6 +64,9 @@ public:
     void addWindow(int width, int height) {
         addWindowVirtual(width, height);
     };
+    void removeWindow(int idx) {
+        removeWindowVirtual(idx);
+    }
 
 private:
     // https://herbsutter.com/gotw/_100/
@@ -74,4 +77,5 @@ private:
     // http://www.gotw.ca/publications/mill18.htm
     virtual void onActivateVirtual() = 0;
     virtual void addWindowVirtual(int width, int height) = 0;
+    virtual void removeWindowVirtual(int idx) = 0;
 };

@@ -4,7 +4,7 @@
 #include <iostream>
 
 void EditorWindow::onOpenGLActivateVirtual(int width, int height) {
-    std::cerr << "id " << id << ": " << glGetString(GL_VERSION) << '\n';
+    std::cerr << "idx " << idx << ": " << glGetString(GL_VERSION) << '\n';
 
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
@@ -48,7 +48,7 @@ void EditorWindow::onDrawVirtual() {
     {
         int status_bar_height = ui_font_rasterizer.line_height;
 
-        PROFILE_BLOCK("id " + std::to_string(id) + ": redraw");
+        PROFILE_BLOCK("idx " + std::to_string(idx) + ": redraw");
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
@@ -120,6 +120,8 @@ void EditorWindow::onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) {
     }
     if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
         close();
+        parent.removeWindow(idx);
+        return;
     }
     if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
         quit();

@@ -4,8 +4,9 @@
 
 ### UI Framework
 
-1. Implement `onKeyDown(...)`.
-   - Windows: Don't use accelerator tables (Chromium doesn't either).
+1. Implement a robust way to close a window without:
+   - Memory leaks
+   - Segfaults
 
 ### Linux
 

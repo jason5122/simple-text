@@ -97,7 +97,7 @@ void App::Window::createWithSize(int width, int height) {
     // https://stackoverflow.com/a/40826761/14698275
     pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
 
-    pimpl->opengl_view = [[OpenGLView alloc] initWithFrame:frame window:*this];
+    pimpl->opengl_view = [[OpenGLView alloc] initWithFrame:frame appWindow:*this];
     pimpl->ns_window.contentView = pimpl->opengl_view;
     [pimpl->ns_window makeFirstResponder:pimpl->opengl_view];
 

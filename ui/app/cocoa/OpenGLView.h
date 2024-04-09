@@ -3,7 +3,7 @@
 
 @interface OpenGLView : NSView
 
-- (instancetype)initWithFrame:(NSRect)frame window:(App::Window&)theWindow;
+- (instancetype)initWithFrame:(NSRect)frame appWindow:(App::Window&)theAppWindow;
 
 - (void)redraw;
 

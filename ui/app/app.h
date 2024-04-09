@@ -13,7 +13,7 @@ public:
         void redraw();
         void close();
         void quit();
-        ~Window() = default;
+        ~Window();
 
         virtual void onOpenGLActivate(int width, int height) = 0;
         virtual void onDraw() = 0;
@@ -27,8 +27,7 @@ public:
         App& parent;
 
         class impl;
-        // TODO: Figure out how to use unique_ptr here.
-        impl* pimpl;
+        std::unique_ptr<impl> pimpl;
     };
 
     App();

@@ -216,3 +216,5 @@ void App::Window::close() {
 void App::Window::quit() {
     g_application_quit(G_APPLICATION(parent.pimpl->app));
 }
+
+App::Window::~Window() {}

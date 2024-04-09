@@ -116,3 +116,5 @@ void App::Window::close() {
 void App::Window::quit() {
     [NSApp terminate:nil];
 }
+
+App::Window::~Window() {}

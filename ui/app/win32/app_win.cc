@@ -60,3 +60,5 @@ void App::Window::close() {
 void App::Window::quit() {
     pimpl->main_window.quit();
 }
+
+App::Window::~Window() {}

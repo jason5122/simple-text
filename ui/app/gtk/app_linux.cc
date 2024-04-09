@@ -12,12 +12,13 @@ static app::Key GetKey(guint vk) {
         guint fVK;
         app::Key fKey;
     } gPair[] = {
-        {GDK_KEY_a, app::Key::kA},
-        {GDK_KEY_b, app::Key::kB},
-        {GDK_KEY_c, app::Key::kC},
+        {GDK_KEY_A, app::Key::kA},
+        {GDK_KEY_B, app::Key::kB},
+        {GDK_KEY_C, app::Key::kC},
         // TODO: Implement the rest.
-        {GDK_KEY_q, app::Key::kQ},
-        {GDK_KEY_w, app::Key::kW},
+        {GDK_KEY_N, app::Key::kN},
+        {GDK_KEY_Q, app::Key::kQ},
+        {GDK_KEY_W, app::Key::kW},
     };
 
     for (size_t i = 0; i < std::size(gPair); i++) {
@@ -32,7 +33,7 @@ static app::Key GetKey(guint vk) {
 static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer p_app_window) {
     App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
-    app::Key key = GetKey(event->keyval);
+    app::Key key = GetKey(gdk_keyval_to_upper(event->keyval));
 
     app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (event->state & GDK_SHIFT_MASK) {

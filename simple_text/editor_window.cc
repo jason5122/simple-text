@@ -79,6 +79,8 @@ void EditorWindow::onScroll(float dx, float dy) {
     // TODO: Uncomment this while not testing.
     // scroll_x += dx;
     scroll_y += dy;
+
+    redraw();
 }
 
 void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
@@ -92,6 +94,8 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
 
     text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
                                      main_font_rasterizer);
+
+    redraw();
 }
 
 void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
@@ -102,6 +106,8 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
 
     text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
                                      main_font_rasterizer);
+
+    redraw();
 }
 
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
@@ -110,22 +116,24 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     // Detect only `super+w` — no additional modifiers allowed.
     if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kSuper) &&
         !Any(modifiers & ~app::ModifierKey::kSuper)) {
-        this->close();
+        close();
     }
     // Detect only `ctrl+w` — no additional modifiers allowed.
     if (key == app::Key::kW && Any(modifiers & app::ModifierKey::kControl) &&
         !Any(modifiers & ~app::ModifierKey::kControl)) {
-        this->close();
+        close();
     }
 
     // Detect only `super+q` — no additional modifiers allowed.
     if (key == app::Key::kQ && Any(modifiers & app::ModifierKey::kSuper) &&
         !Any(modifiers & ~app::ModifierKey::kSuper)) {
-        this->quit();
+        quit();
     }
     // Detect only `ctrl+q` — no additional modifiers allowed.
     if (key == app::Key::kQ && Any(modifiers & app::ModifierKey::kControl) &&
         !Any(modifiers & ~app::ModifierKey::kControl)) {
-        this->quit();
+        quit();
     }
+
+    redraw();
 }

@@ -50,7 +50,6 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer 
 
     app_window->onKeyDown(key, modifiers);
 
-    gtk_widget_queue_draw(widget);
     return true;
 }
 
@@ -107,8 +106,6 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
 
     app_window->onScroll(dx, dy);
 
-    gtk_widget_queue_draw(widget);
-
     return true;
 }
 
@@ -124,8 +121,6 @@ static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer 
         float scaled_mouse_y = mouse_y * scale_factor;
 
         app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
-
-        gtk_widget_queue_draw(widget);
     }
     return true;
 }
@@ -142,8 +137,6 @@ static gboolean motion_event(GtkWidget* widget, GdkEventMotion* event, gpointer 
         float scaled_mouse_y = mouse_y * scale_factor;
 
         app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
-
-        gtk_widget_queue_draw(widget);
     }
     return true;
 }
@@ -210,6 +203,10 @@ void App::Window::createWithSize(int width, int height) {
     gtk_window_set_default_size(GTK_WINDOW(pimpl->window_widget), width, height);
 
     gtk_widget_show_all(pimpl->window_widget);
+}
+
+void App::Window::redraw() {
+    gtk_widget_queue_draw(pimpl->window_widget);
 }
 
 void App::Window::close() {

@@ -10,6 +10,7 @@ public:
     public:
         Window(App& app);
         void createWithSize(int width, int height);
+        void redraw();
         void close();
         void quit();
         ~Window() = default;

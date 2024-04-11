@@ -29,22 +29,28 @@ public:
         class impl;
         std::unique_ptr<impl> pimpl;
 
-        virtual void onKeyDownVirtual(app::Key key, app::ModifierKey modifiers);
+        virtual void onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) {}
     };
 
     Parent();
     ~Parent();
     void run();
-    Child* createChild();
-    void destroyChild(Child* child);
 
     void onActivate() {
         onActivateVirtual();
     };
+    void createChild() {
+        createChildVirtual();
+    }
+    void destroyChild(Child* child) {
+        destroyChildVirtual(child);
+    }
 
 protected:
     class impl;
     std::unique_ptr<impl> pimpl;
 
     virtual void onActivateVirtual() {}
+    virtual void createChildVirtual() {}
+    virtual void destroyChildVirtual(Child* child) {}
 };

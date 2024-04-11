@@ -75,20 +75,6 @@ void Parent::run() {
     }
 }
 
-Parent::Child* Parent::createChild() {
-    Child* child = new Child(*this);
-    child->create(600, 400);
-
-    return child;
-}
-
-void Parent::destroyChild(Child* child) {
-    if (!child) return;
-
-    child->destroy();
-    delete child;
-}
-
 class Parent::Child::impl {
 public:
     NSWindow* ns_window;
@@ -115,13 +101,4 @@ void Parent::Child::create(int width, int height) {
 
 void Parent::Child::destroy() {
     [pimpl->ns_window close];
-}
-
-void Parent::Child::onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) {
-    if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        parent.createChild();
-    }
-    if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        parent.destroyChild(this);
-    }
 }

@@ -4,8 +4,19 @@
 class SimpleText : public Parent {
 private:
     void onActivateVirtual() {
+        createChild();
+    }
+
+    void createChildVirtual() {
         EditorWindow* editor_window = new EditorWindow(*this);
         editor_window->create(600, 400);
+    }
+
+    void destroyChildVirtual(Child* child) {
+        if (!child) return;
+
+        child->destroy();
+        delete child;
     }
 };
 

@@ -6,7 +6,8 @@
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
-    App::Window* appWindow;
+    Parent::Child* appWindow;
+    std::vector<int> ram_waster;
 
 @private
     CGLContextObj mContext;
@@ -22,11 +23,13 @@
 
 @implementation OpenGLView
 
-- (instancetype)initWithFrame:(NSRect)frame appWindow:(App::Window*)theAppWindow {
+- (instancetype)initWithFrame:(NSRect)frame appWindow:(Parent::Child*)theAppWindow {
     self = [super initWithFrame:frame];
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         openGLLayer->appWindow = theAppWindow;
+
+        openGLLayer->ram_waster = std::vector(50000000, 1);
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
@@ -154,23 +157,29 @@ static app::Key GetKey(unsigned short vk) {
 }
 
 - (void)keyDown:(NSEvent*)event {
-    app::Key key = GetKey(event.keyCode);
+    // app::Key key = GetKey(event.keyCode);
 
-    app::ModifierKey modifiers = app::ModifierKey::kNone;
-    if (event.modifierFlags & NSEventModifierFlagShift) {
-        modifiers |= app::ModifierKey::kShift;
-    }
-    if (event.modifierFlags & NSEventModifierFlagControl) {
-        modifiers |= app::ModifierKey::kControl;
-    }
-    if (event.modifierFlags & NSEventModifierFlagOption) {
-        modifiers |= app::ModifierKey::kAlt;
-    }
-    if (event.modifierFlags & NSEventModifierFlagCommand) {
-        modifiers |= app::ModifierKey::kSuper;
-    }
+    // app::ModifierKey modifiers = app::ModifierKey::kNone;
+    // if (event.modifierFlags & NSEventModifierFlagShift) {
+    //     modifiers |= app::ModifierKey::kShift;
+    // }
+    // if (event.modifierFlags & NSEventModifierFlagControl) {
+    //     modifiers |= app::ModifierKey::kControl;
+    // }
+    // if (event.modifierFlags & NSEventModifierFlagOption) {
+    //     modifiers |= app::ModifierKey::kAlt;
+    // }
+    // if (event.modifierFlags & NSEventModifierFlagCommand) {
+    //     modifiers |= app::ModifierKey::kSuper;
+    // }
 
-    openGLLayer->appWindow->onKeyDown(key, modifiers);
+    // openGLLayer->appWindow->onKeyDown(key, modifiers);
+
+    if (event.keyCode == kVK_ANSI_N) {
+        openGLLayer->appWindow->onKeyDown(true);
+    } else if (event.keyCode == kVK_ANSI_W) {
+        openGLLayer->appWindow->onKeyDown(false);
+    }
 }
 
 - (void)mouseDown:(NSEvent*)event {

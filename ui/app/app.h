@@ -2,56 +2,37 @@
 
 #include "ui/app/key.h"
 #include "ui/app/modifier_key.h"
+#include <list>
 #include <memory>
 
-class App {
+class Parent {
 public:
-    class Window {
+    class Child {
     public:
-        Window(App& app);
-        void createWithSize(int width, int height);
-        // void redraw();
-        // void close();
-        void quit();
-        ~Window();
+        Child(Parent& parent);
+        void createWindow(int width, int height);
+        void closeWindow();
 
-        void onKeyDown(app::Key key, app::ModifierKey modifiers) {
-            onKeyDownVirtual(key, modifiers);
-        }
+        void onKeyDown(bool temp);
 
-        // TODO: See if we can make `parent` private as well.
-        // private:
-        App& parent;
+    protected:
+        Parent& m_parent;
+        std::vector<int> ram_waster;
 
     private:
         class impl;
         std::unique_ptr<impl> pimpl;
-
-        virtual void onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) = 0;
     };
 
-    App();
+    Parent();
+    ~Parent();
     void run();
-    ~App();
+    Child* createChild();
+    void removeChild(Child* child);
 
-    void onActivate() {
-        onActivateVirtual();
-    };
-    void createWindow(int width, int height) {
-        createWindowVirtual(width, height);
-    };
-    void destroyWindow(int idx) {
-        destroyWindowVirtual(idx);
-    }
+protected:
+    std::list<Child*> m_children;
 
-private:
-    // https://herbsutter.com/gotw/_100/
     class impl;
     std::unique_ptr<impl> pimpl;
-
-    // Non-virtual interface pattern.
-    // http://www.gotw.ca/publications/mill18.htm
-    virtual void onActivateVirtual() = 0;
-    virtual void createWindowVirtual(int width, int height) = 0;
-    virtual void destroyWindowVirtual(int idx) = 0;
 };

@@ -82,7 +82,9 @@ public:
 
 Parent::Child::Child(Parent& parent) : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {}
 
-Parent::Child::~Child() {}
+Parent::Child::~Child() {
+    std::cerr << "Child destructor\n";
+}
 
 void Parent::Child::create(int width, int height) {
     NSRect frame = NSMakeRect(0, 0, width, height);

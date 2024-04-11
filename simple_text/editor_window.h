@@ -5,6 +5,7 @@
 class EditorWindow : public Parent::Child {
 public:
     EditorWindow(Parent& parent);
+    ~EditorWindow();
 
 private:
     std::vector<int> ram_waster;

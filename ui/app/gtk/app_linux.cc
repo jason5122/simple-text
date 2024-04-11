@@ -170,8 +170,7 @@ public:
     GtkWidget* window_widget;
 };
 
-App::Window::Window(App& parent, int width, int height)
-    : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {
+App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
     pimpl->window_widget = gtk_application_window_new(parent.pimpl->app);
     gtk_window_set_title(GTK_WINDOW(pimpl->window_widget), "Simple Text");
 

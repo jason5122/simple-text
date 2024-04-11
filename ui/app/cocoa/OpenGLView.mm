@@ -7,7 +7,6 @@
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
     App::Window* appWindow;
-    std::vector<int> ram_waster;
 
 @private
     CGLContextObj mContext;
@@ -28,8 +27,6 @@
     if (self) {
         openGLLayer = [OpenGLLayer layer];
         openGLLayer->appWindow = theAppWindow;
-
-        openGLLayer->ram_waster = std::vector(5000000, 1);
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;

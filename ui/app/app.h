@@ -3,7 +3,6 @@
 #include "ui/app/key.h"
 #include "ui/app/modifier_key.h"
 #include <memory>
-#include <vector>
 
 class App {
 public:
@@ -18,7 +17,6 @@ public:
 
     private:
         App& parent;
-        std::vector<int> ram_waster;
 
         class impl;
         std::unique_ptr<impl> pimpl;

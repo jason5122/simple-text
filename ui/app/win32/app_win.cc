@@ -34,8 +34,7 @@ public:
     MainWindow main_window;
 };
 
-App::Window::Window(App& parent, int width, int height)
-    : pimpl{new impl{*this}}, parent(parent), ram_waster(5000000, 1) {
+App::Window::Window(App& parent, int width, int height) : pimpl{new impl{*this}}, parent(parent) {
     pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW);
 }
 

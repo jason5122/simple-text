@@ -10,5 +10,4 @@ public:
 
 private:
     SimpleText& parent;
-    std::vector<int> ram_waster;
 };

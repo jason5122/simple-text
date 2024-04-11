@@ -24,9 +24,9 @@
 
 - (void)applicationWillFinishLaunching:(NSNotification*)notification {
     NSString* appName = NSBundle.mainBundle.infoDictionary[@"CFBundleName"];
-    menu = [[NSMenu alloc] init];
-    NSMenuItem* appMenu = [[NSMenuItem alloc] init];
-    appMenu.submenu = [[NSMenu alloc] init];
+    menu = [[[NSMenu alloc] init] autorelease];
+    NSMenuItem* appMenu = [[[NSMenuItem alloc] init] autorelease];
+    appMenu.submenu = [[[NSMenu alloc] init] autorelease];
     [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"About %@", appName]
                                action:@selector(showAboutPanel)
                         keyEquivalent:@""];
@@ -80,8 +80,7 @@ public:
     NSWindow* ns_window;
 };
 
-App::Window::Window(App& parent, int width, int height)
-    : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {
+App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
     NSRect frame = NSMakeRect(0, 0, width, height);
     NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                              NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
@@ -93,6 +92,10 @@ App::Window::Window(App& parent, int width, int height)
     OpenGLView* view = [[[OpenGLView alloc] initWithFrame:frame appWindow:this] autorelease];
     pimpl->ns_window.contentView = view;
     [pimpl->ns_window makeFirstResponder:view];
+
+    // Bypass the user's tabbing preference.
+    // https://stackoverflow.com/a/40826761/14698275
+    pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
 }
 
 App::Window::~Window() {}

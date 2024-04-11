@@ -75,6 +75,9 @@ void App::run() {
     }
 }
 
+// This isn't required for Cocoa.
+void App::incrementWindowCount() {}
+
 class App::Window::impl {
 public:
     NSWindow* ns_window;

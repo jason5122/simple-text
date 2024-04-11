@@ -22,6 +22,7 @@ void App::run() {
     }
 }
 
+// TODO: Debug; remove this.
 void App::incrementWindowCount() {
     pimpl->window_count++;
 }
@@ -34,6 +35,7 @@ public:
 
     MainWindow main_window;
 
+    // TODO: Implement unique class name creation in a better way.
     int wid = 0;
 };
 
@@ -59,6 +61,7 @@ void App::Window::show() {
 void App::Window::close() {
     pimpl->main_window.destroy();
 
+    // TODO: Debug; remove this.
     parent.pimpl->window_count--;
     if (parent.pimpl->window_count <= 0) {
         pimpl->main_window.quit();

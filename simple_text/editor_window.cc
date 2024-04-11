@@ -6,7 +6,6 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height)
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
         parent.createChild();
-        parent.incrementWindowCount();
     }
     if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
         parent.destroyChild(this);

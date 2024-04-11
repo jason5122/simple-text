@@ -8,6 +8,9 @@ void SimpleText::onLaunch() {
 void SimpleText::createChild() {
     EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
     editor_window->show();
+
+    // TODO: Debug; remove this.
+    incrementWindowCount();
 }
 
 void SimpleText::destroyChild(EditorWindow* editor_window) {

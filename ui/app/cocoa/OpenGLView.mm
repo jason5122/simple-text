@@ -6,7 +6,7 @@
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
-    Parent::Child* appWindow;
+    App::Window* appWindow;
     std::vector<int> ram_waster;
 
 @private
@@ -23,7 +23,7 @@
 
 @implementation OpenGLView
 
-- (instancetype)initWithFrame:(NSRect)frame appWindow:(Parent::Child*)theAppWindow {
+- (instancetype)initWithFrame:(NSRect)frame appWindow:(App::Window*)theAppWindow {
     self = [super initWithFrame:frame];
     if (self) {
         openGLLayer = [OpenGLLayer layer];

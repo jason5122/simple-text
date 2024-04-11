@@ -7,14 +7,14 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
-    Parent* app;
+    App* app;
 }
 
 @end
 
 @implementation AppDelegate
 
-- (instancetype)initWithApp:(Parent*)theApp {
+- (instancetype)initWithApp:(App*)theApp {
     self = [super init];
     if (self) {
         self->app = theApp;
@@ -54,12 +54,12 @@
 
 @end
 
-class Parent::impl {
+class App::impl {
 public:
     NSApplication* ns_app;
 };
 
-Parent::Parent() : pimpl{new impl{}} {
+App::App() : pimpl{new impl{}} {
     pimpl->ns_app = NSApplication.sharedApplication;
     AppDelegate* appDelegate = [[AppDelegate alloc] initWithApp:this];
 
@@ -67,20 +67,20 @@ Parent::Parent() : pimpl{new impl{}} {
     pimpl->ns_app.delegate = appDelegate;
 }
 
-Parent::~Parent() {}
+App::~App() {}
 
-void Parent::run() {
+void App::run() {
     @autoreleasepool {
         [pimpl->ns_app run];
     }
 }
 
-class Parent::Child::impl {
+class App::Window::impl {
 public:
     NSWindow* ns_window;
 };
 
-Parent::Child::Child(Parent& parent, int width, int height)
+App::Window::Window(App& parent, int width, int height)
     : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {
     NSRect frame = NSMakeRect(0, 0, width, height);
     NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
@@ -95,12 +95,12 @@ Parent::Child::Child(Parent& parent, int width, int height)
     [pimpl->ns_window makeFirstResponder:view];
 }
 
-Parent::Child::~Child() {}
+App::Window::~Window() {}
 
-void Parent::Child::show() {
+void App::Window::show() {
     [pimpl->ns_window makeKeyAndOrderFront:nil];
 }
 
-void Parent::Child::close() {
+void App::Window::close() {
     [pimpl->ns_window close];
 }

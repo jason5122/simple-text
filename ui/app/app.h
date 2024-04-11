@@ -5,27 +5,27 @@
 #include <memory>
 #include <vector>
 
-class Parent {
+class App {
 public:
-    class Child {
+    class Window {
     public:
-        Child(Parent& parent, int width, int height);
-        ~Child();
+        Window(App& parent, int width, int height);
+        ~Window();
         void show();
         void close();
 
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
 
     private:
-        Parent& parent;
+        App& parent;
         std::vector<int> ram_waster;
 
         class impl;
         std::unique_ptr<impl> pimpl;
     };
 
-    Parent();
-    ~Parent();
+    App();
+    ~App();
     void run();
 
     virtual void onLaunch() {}

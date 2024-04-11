@@ -4,7 +4,7 @@
 
 class EditorWindow;
 
-class SimpleText : public Parent {
+class SimpleText : public App {
 public:
     void onLaunch() override;
     void createChild();

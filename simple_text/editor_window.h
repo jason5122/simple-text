@@ -3,7 +3,7 @@
 #include "simple_text/simple_text.h"
 #include "ui/app/app.h"
 
-class EditorWindow : public Parent::Child {
+class EditorWindow : public App::Window {
 public:
     EditorWindow(SimpleText& parent, int width, int height);
     void onKeyDown(app::Key key, app::ModifierKey modifiers) override;

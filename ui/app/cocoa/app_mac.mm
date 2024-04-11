@@ -85,10 +85,10 @@ Parent::Child* Parent::createChild() {
     return child;
 }
 
-void Parent::removeChild(Child* child) {
+void Parent::destroyChild(Child* child) {
     if (!child) return;
 
-    child->closeWindow();
+    child->destroyWindow();
     delete child;
     m_children.remove(child);
 
@@ -101,7 +101,7 @@ public:
 };
 
 Parent::Child::Child(Parent& parent)
-    : pimpl{new impl{}}, m_parent(parent), ram_waster(50000000, 1) {}
+    : pimpl{new impl{}}, m_parent(parent), ram_waster(5000000, 1) {}
 
 void Parent::Child::createWindow(int width, int height) {
     NSRect frame = NSMakeRect(0, 0, width, height);
@@ -118,14 +118,15 @@ void Parent::Child::createWindow(int width, int height) {
     [pimpl->ns_window makeKeyAndOrderFront:nil];
 }
 
-void Parent::Child::closeWindow() {
+void Parent::Child::destroyWindow() {
     [pimpl->ns_window close];
 }
 
-void Parent::Child::onKeyDown(bool temp) {
-    if (temp) {
+void Parent::Child::onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) {
+    if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
         m_parent.createChild();
-    } else {
-        m_parent.removeChild(this);
+    }
+    if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+        m_parent.destroyChild(this);
     }
 }

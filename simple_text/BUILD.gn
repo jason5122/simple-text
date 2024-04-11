@@ -10,11 +10,9 @@ if (is_mac) {
     # define `code_signing_identity` in args.gn
 
     sources = [
-      # "editor_window.cc",
+      "editor_window.cc",
       "main.cc",
-
-      # "main_app.cc",
-      "main_temp.cc",
+      "main_app.cc",
     ]
 
     deps = [

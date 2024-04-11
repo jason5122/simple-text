@@ -11,24 +11,29 @@ public:
     public:
         Child(Parent& parent);
         void createWindow(int width, int height);
-        void closeWindow();
+        void destroyWindow();
 
-        void onKeyDown(bool temp);
+        void onKeyDown(app::Key key, app::ModifierKey modifiers) {
+            onKeyDownVirtual(key, modifiers);
+        }
 
     protected:
         Parent& m_parent;
-        std::vector<int> ram_waster;
 
     private:
+        std::vector<int> ram_waster;
+
         class impl;
         std::unique_ptr<impl> pimpl;
+
+        virtual void onKeyDownVirtual(app::Key key, app::ModifierKey modifiers);
     };
 
     Parent();
     ~Parent();
     void run();
     Child* createChild();
-    void removeChild(Child* child);
+    void destroyChild(Child* child);
 
 protected:
     std::list<Child*> m_children;

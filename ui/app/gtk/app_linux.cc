@@ -56,7 +56,7 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event, gpointer 
 
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
-    app->onActivate();
+    app->onLaunch();
 }
 
 static void realize(GtkWidget* widget, gpointer p_app_window) {
@@ -73,13 +73,13 @@ static void realize(GtkWidget* widget, gpointer p_app_window) {
     int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
 
-    app_window->onOpenGLActivate(scaled_width, scaled_height);
+    // app_window->onOpenGLActivate(scaled_width, scaled_height);
 }
 
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app_window) {
     App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
-    app_window->onDraw();
+    // app_window->onDraw();
 
     // Draw commands are flushed after returning.
     return true;
@@ -90,7 +90,7 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer p_app_wind
 
     gtk_gl_area_make_current(self);
 
-    app_window->onResize(width, height);
+    // app_window->onResize(width, height);
 }
 
 static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer p_app_window) {
@@ -105,7 +105,7 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
         dy *= 32;
     }
 
-    app_window->onScroll(dx, dy);
+    // app_window->onScroll(dx, dy);
 
     return true;
 }
@@ -121,7 +121,7 @@ static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer 
         float scaled_mouse_x = mouse_x * scale_factor;
         float scaled_mouse_y = mouse_y * scale_factor;
 
-        app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+        // app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
     }
     return true;
 }
@@ -137,7 +137,7 @@ static gboolean motion_event(GtkWidget* widget, GdkEventMotion* event, gpointer 
         float scaled_mouse_x = mouse_x * scale_factor;
         float scaled_mouse_y = mouse_y * scale_factor;
 
-        app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+        // app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
     }
     return true;
 }
@@ -170,9 +170,8 @@ public:
     GtkWidget* window_widget;
 };
 
-App::Window::Window(App& app) : parent(app), pimpl{new impl{}} {}
-
-void App::Window::createWithSize(int width, int height) {
+App::Window::Window(App& parent, int width, int height)
+    : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {
     pimpl->window_widget = gtk_application_window_new(parent.pimpl->app);
     gtk_window_set_title(GTK_WINDOW(pimpl->window_widget), "Simple Text");
 
@@ -202,20 +201,14 @@ void App::Window::createWithSize(int width, int height) {
     // gtk_window_maximize(GTK_WINDOW(pimpl->window_widget));
     // TODO: Set default window size without magic numbers.
     gtk_window_set_default_size(GTK_WINDOW(pimpl->window_widget), width, height);
-
-    gtk_widget_show_all(pimpl->window_widget);
 }
 
-void App::Window::redraw() {
-    gtk_widget_queue_draw(pimpl->window_widget);
+void App::Window::show() {
+    gtk_widget_show_all(pimpl->window_widget);
 }
 
 void App::Window::close() {
     gtk_window_close(GTK_WINDOW(pimpl->window_widget));
-}
-
-void App::Window::quit() {
-    g_application_quit(G_APPLICATION(parent.pimpl->app));
 }
 
 App::Window::~Window() {}

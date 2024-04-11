@@ -36,6 +36,7 @@ if (is_linux) {
       "editor_window.cc",
       "main.cc",
       "main_app.cc",
+      "simple_text.cc",
     ]
 
     deps = [

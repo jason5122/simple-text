@@ -40,8 +40,7 @@
     [menu addItem:appMenu];
     NSApplication.sharedApplication.mainMenu = menu;
 
-    // app->onActivate();
-    app->createChild();
+    app->onActivate();
 }
 
 - (void)showAboutPanel {
@@ -78,9 +77,7 @@ void Parent::run() {
 
 Parent::Child* Parent::createChild() {
     Child* child = new Child(*this);
-    child->createWindow(600, 400);
-
-    m_children.push_back(child);
+    child->create(600, 400);
 
     return child;
 }
@@ -88,11 +85,8 @@ Parent::Child* Parent::createChild() {
 void Parent::destroyChild(Child* child) {
     if (!child) return;
 
-    child->destroyWindow();
+    child->destroy();
     delete child;
-    m_children.remove(child);
-
-    std::cerr << "size: " << m_children.size() << '\n';
 }
 
 class Parent::Child::impl {
@@ -100,10 +94,11 @@ public:
     NSWindow* ns_window;
 };
 
-Parent::Child::Child(Parent& parent)
-    : pimpl{new impl{}}, m_parent(parent), ram_waster(5000000, 1) {}
+Parent::Child::Child(Parent& parent) : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {}
 
-void Parent::Child::createWindow(int width, int height) {
+Parent::Child::~Child() {}
+
+void Parent::Child::create(int width, int height) {
     NSRect frame = NSMakeRect(0, 0, width, height);
     NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                              NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
@@ -118,15 +113,15 @@ void Parent::Child::createWindow(int width, int height) {
     [pimpl->ns_window makeKeyAndOrderFront:nil];
 }
 
-void Parent::Child::destroyWindow() {
+void Parent::Child::destroy() {
     [pimpl->ns_window close];
 }
 
 void Parent::Child::onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        m_parent.createChild();
+        parent.createChild();
     }
     if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        m_parent.destroyChild(this);
+        parent.destroyChild(this);
     }
 }

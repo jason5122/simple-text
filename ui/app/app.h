@@ -10,15 +10,18 @@ public:
     class Child {
     public:
         Child(Parent& parent);
-        void createWindow(int width, int height);
-        void destroyWindow();
+        ~Child();
+        void create(int width, int height);
+        void destroy();
 
+        // Non-virtual interface pattern.
+        // http://www.gotw.ca/publications/mill18.htm
         void onKeyDown(app::Key key, app::ModifierKey modifiers) {
             onKeyDownVirtual(key, modifiers);
         }
 
     protected:
-        Parent& m_parent;
+        Parent& parent;
 
     private:
         std::vector<int> ram_waster;
@@ -35,9 +38,13 @@ public:
     Child* createChild();
     void destroyChild(Child* child);
 
-protected:
-    std::list<Child*> m_children;
+    void onActivate() {
+        onActivateVirtual();
+    };
 
+protected:
     class impl;
     std::unique_ptr<impl> pimpl;
+
+    virtual void onActivateVirtual() {}
 };

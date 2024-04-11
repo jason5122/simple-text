@@ -16,10 +16,8 @@ public:
 
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
 
-    protected:
-        Parent& parent;
-
     private:
+        Parent& parent;
         std::vector<int> ram_waster;
 
         class impl;
@@ -30,9 +28,7 @@ public:
     ~Parent();
     void run();
 
-    virtual void onActivate() {}
-    virtual void createChild() {}
-    virtual void destroyChild(Child* child) {}
+    virtual void onLaunch() {}
 
 protected:
     class impl;

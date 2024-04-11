@@ -40,7 +40,7 @@
     [menu addItem:appMenu];
     NSApplication.sharedApplication.mainMenu = menu;
 
-    app->onActivate();
+    app->onLaunch();
 }
 
 - (void)showAboutPanel {

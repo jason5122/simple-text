@@ -76,7 +76,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
 
-        app_window.onOpenGLActivate(scaled_width, scaled_height);
+        // app_window.onOpenGLActivate(scaled_width, scaled_height);
 
         return 0;
     }
@@ -88,7 +88,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
 
-        app_window.onDraw();
+        // app_window.onDraw();
 
         SwapBuffers(ghDC);
 
@@ -102,7 +102,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int width = (int)(short)LOWORD(lParam);
         int height = (int)(short)HIWORD(lParam);
 
-        app_window.onResize(width, height);
+        // app_window.onResize(width, height);
         return 0;
     }
 
@@ -114,14 +114,14 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         // TODO: Replace this magic number.
         dy *= 60;
 
-        app_window.onScroll(0, dy);
+        // app_window.onScroll(0, dy);
         return 0;
     }
 
     case WM_MOUSEHWHEEL: {
         float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam));
 
-        app_window.onScroll(dx, 0);
+        // app_window.onScroll(dx, 0);
         return 0;
     }
 
@@ -131,7 +131,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
 
-        app_window.onLeftMouseDown(mouse_x, mouse_y);
+        // app_window.onLeftMouseDown(mouse_x, mouse_y);
         return 0;
     }
 
@@ -145,7 +145,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             int mouse_x = GET_X_LPARAM(lParam);
             int mouse_y = GET_Y_LPARAM(lParam);
 
-            app_window.onLeftMouseDrag(mouse_x, mouse_y);
+            // app_window.onLeftMouseDrag(mouse_x, mouse_y);
         }
         return 0;
     }

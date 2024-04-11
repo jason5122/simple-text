@@ -16,7 +16,7 @@ App::App() : pimpl{new impl{}} {
 }
 
 void App::run() {
-    this->onActivate();
+    this->onLaunch();
 
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0)) {
@@ -34,10 +34,15 @@ public:
     MainWindow main_window;
 };
 
-App::Window::Window(App& app) : parent(app), pimpl{new impl{*this}} {}
-
-void App::Window::createWithSize(int width, int height) {
+App::Window::Window(App& parent, int width, int height)
+    : pimpl{new impl{*this}}, parent(parent), ram_waster(5000000, 1) {
     pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW);
+}
+
+void App::Window::show() {
+    // TODO: Sync this with requested width/height.
+    int width = 1200;
+    int height = 600;
 
     // FIXME: This doesn't animate like ShowWindow().
     WINDOWPLACEMENT placement{
@@ -49,16 +54,8 @@ void App::Window::createWithSize(int width, int height) {
     SetWindowPlacement(pimpl->main_window.hwnd, &placement);
 }
 
-void App::Window::redraw() {
-    pimpl->main_window.redraw();
-}
-
 void App::Window::close() {
     pimpl->main_window.destroy();
-}
-
-void App::Window::quit() {
-    pimpl->main_window.quit();
 }
 
 App::Window::~Window() {}

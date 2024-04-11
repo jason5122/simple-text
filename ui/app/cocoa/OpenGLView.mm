@@ -22,11 +22,11 @@
 
 @implementation OpenGLView
 
-- (instancetype)initWithFrame:(NSRect)frame appWindow:(App::Window&)theAppWindow {
+- (instancetype)initWithFrame:(NSRect)frame appWindow:(App::Window*)theAppWindow {
     self = [super initWithFrame:frame];
     if (self) {
         openGLLayer = [OpenGLLayer layer];
-        openGLLayer->appWindow = &theAppWindow;
+        openGLLayer->appWindow = theAppWindow;
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
@@ -125,7 +125,7 @@
 
         float scaled_dx = dx * openGLLayer.contentsScale;
         float scaled_dy = dy * openGLLayer.contentsScale;
-        openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
+        // openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
     }
 }
 
@@ -180,7 +180,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+    // openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -190,7 +190,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+    // openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
@@ -247,7 +247,7 @@ static app::Key GetKey(unsigned short vk) {
         int scaled_width = self.frame.size.width * self.contentsScale;
         int scaled_height = self.frame.size.height * self.contentsScale;
 
-        appWindow->onOpenGLActivate(scaled_width, scaled_height);
+        // appWindow->onOpenGLActivate(scaled_width, scaled_height);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -267,7 +267,7 @@ static app::Key GetKey(unsigned short vk) {
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(mContext);
 
-    appWindow->onDraw();
+    // appWindow->onDraw();
 
     // Calls glFlush() by default.
     [super drawInCGLContext:mContext
@@ -284,7 +284,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onResize(scaled_width, scaled_height);
+    // appWindow->onResize(scaled_width, scaled_height);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)glContext {

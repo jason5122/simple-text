@@ -1,5 +1,6 @@
 #include "ui/app/app.h"
 #include "ui/app/cocoa/OpenGLView.h"
+#include <iostream>
 #include <vector>
 
 #import <Cocoa/Cocoa.h>
@@ -30,12 +31,12 @@
                                action:@selector(showAboutPanel)
                         keyEquivalent:@""];
     [appMenu.submenu addItem:[NSMenuItem separatorItem]];
-    // [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
-    //                            action:@selector(terminate:)
-    //                     keyEquivalent:@"q"];
     [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
                                action:@selector(terminate:)
-                        keyEquivalent:@""];
+                        keyEquivalent:@"q"];
+    // [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
+    //                            action:@selector(terminate:)
+    //                     keyEquivalent:@""];
     [menu addItem:appMenu];
     NSApplication.sharedApplication.mainMenu = menu;
 
@@ -97,21 +98,27 @@ void App::Window::createWithSize(int width, int height) {
     // https://stackoverflow.com/a/40826761/14698275
     pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
 
-    pimpl->opengl_view = [[OpenGLView alloc] initWithFrame:frame appWindow:*this];
+    pimpl->opengl_view = [[[OpenGLView alloc] initWithFrame:frame appWindow:this] autorelease];
     pimpl->ns_window.contentView = pimpl->opengl_view;
     [pimpl->ns_window makeFirstResponder:pimpl->opengl_view];
 
-    [pimpl->ns_window center];
+    // [pimpl->ns_window center];
     [pimpl->ns_window makeKeyAndOrderFront:nil];
 }
 
-void App::Window::redraw() {
-    [pimpl->opengl_view redraw];
-}
+// void App::Window::redraw() {
+//     [pimpl->opengl_view redraw];
+// }
 
-void App::Window::close() {
-    [pimpl->ns_window close];
-}
+// void App::Window::close() {
+//     if (!pimpl->ns_window) {
+//         std::cerr << "close(): ns_window IS NULL\n";
+//     } else {
+//         std::cerr << "close(): ns_window is fine\n";
+//     }
+
+//     [pimpl->ns_window close];
+// }
 
 void App::Window::quit() {
     [NSApp terminate:nil];

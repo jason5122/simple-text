@@ -16,10 +16,6 @@ default_compiler_configs = [
   # "//build/config/compiler:optimizations",
 ]
 
-if (is_mac) {
-  default_compiler_configs += [ "//build/config/compiler:enable_arc" ]
-}
-
 set_defaults("executable") {
   configs = default_compiler_configs
 }

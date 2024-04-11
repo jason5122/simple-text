@@ -80,13 +80,8 @@ public:
     NSWindow* ns_window;
 };
 
-Parent::Child::Child(Parent& parent) : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {}
-
-Parent::Child::~Child() {
-    std::cerr << "Child destructor\n";
-}
-
-void Parent::Child::create(int width, int height) {
+Parent::Child::Child(Parent& parent, int width, int height)
+    : pimpl{new impl{}}, parent(parent), ram_waster(5000000, 1) {
     NSRect frame = NSMakeRect(0, 0, width, height);
     NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                              NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
@@ -98,9 +93,14 @@ void Parent::Child::create(int width, int height) {
     OpenGLView* view = [[[OpenGLView alloc] initWithFrame:frame appWindow:this] autorelease];
     pimpl->ns_window.contentView = view;
     [pimpl->ns_window makeFirstResponder:view];
+}
+
+Parent::Child::~Child() {}
+
+void Parent::Child::show() {
     [pimpl->ns_window makeKeyAndOrderFront:nil];
 }
 
-void Parent::Child::destroy() {
+void Parent::Child::close() {
     [pimpl->ns_window close];
 }

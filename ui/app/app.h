@@ -2,23 +2,19 @@
 
 #include "ui/app/key.h"
 #include "ui/app/modifier_key.h"
-#include <list>
 #include <memory>
+#include <vector>
 
 class Parent {
 public:
     class Child {
     public:
-        Child(Parent& parent);
+        Child(Parent& parent, int width, int height);
         ~Child();
-        void create(int width, int height);
-        void destroy();
+        void show();
+        void close();
 
-        // Non-virtual interface pattern.
-        // http://www.gotw.ca/publications/mill18.htm
-        void onKeyDown(app::Key key, app::ModifierKey modifiers) {
-            onKeyDownVirtual(key, modifiers);
-        }
+        virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
 
     protected:
         Parent& parent;
@@ -28,29 +24,17 @@ public:
 
         class impl;
         std::unique_ptr<impl> pimpl;
-
-        virtual void onKeyDownVirtual(app::Key key, app::ModifierKey modifiers) {}
     };
 
     Parent();
     ~Parent();
     void run();
 
-    void onActivate() {
-        onActivateVirtual();
-    };
-    void createChild() {
-        createChildVirtual();
-    }
-    void destroyChild(Child* child) {
-        destroyChildVirtual(child);
-    }
+    virtual void onActivate() {}
+    virtual void createChild() {}
+    virtual void destroyChild(Child* child) {}
 
 protected:
     class impl;
     std::unique_ptr<impl> pimpl;
-
-    virtual void onActivateVirtual() {}
-    virtual void createChildVirtual() {}
-    virtual void destroyChildVirtual(Child* child) {}
 };

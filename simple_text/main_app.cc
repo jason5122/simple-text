@@ -3,21 +3,21 @@
 
 class SimpleText : public Parent {
 private:
-    void onActivateVirtual() {
+    void onActivate() override {
         createChild();
     }
 
-    void createChildVirtual() {
-        EditorWindow* editor_window = new EditorWindow(*this);
-        editor_window->create(600, 400);
+    void createChild() override {
+        EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
+        editor_window->show();
     }
 
     // Object slicing occurs here, preventing ~EditorWindow() from being called.
     // We need to cast back to EditorWindow*.
-    void destroyChildVirtual(Child* child) {
+    void destroyChild(Child* child) override {
         if (child != nullptr) {
             EditorWindow* editor_window = static_cast<EditorWindow*>(child);
-            editor_window->destroy();
+            editor_window->close();
             delete editor_window;
         }
     }

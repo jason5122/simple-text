@@ -35,17 +35,6 @@ config("compiler") {
   cflags += [ "-fno-exceptions" ]
 }
 
-if (is_mac) {
-  config("enable_arc") {
-    common_flags = [
-      "-fobjc-arc",
-      "-fno-objc-arc-exceptions",
-    ]
-    cflags_objc = common_flags
-    cflags_objcc = common_flags
-  }
-}
-
 config("c99") {
   cflags_c = [ "-std=c99" ]
 }

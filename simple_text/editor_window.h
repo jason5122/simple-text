@@ -4,11 +4,9 @@
 
 class EditorWindow : public Parent::Child {
 public:
-    EditorWindow(Parent& parent);
-    ~EditorWindow();
+    EditorWindow(Parent& parent, int width, int height);
+    void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
 
 private:
     std::vector<int> ram_waster;
-
-    void onKeyDownVirtual(app::Key key, app::ModifierKey modifiers);
 };

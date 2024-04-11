@@ -7,13 +7,10 @@
 
 class App::impl {
 public:
+    int window_count = 0;
 };
 
-App::App() : pimpl{new impl{}} {
-    LPCTSTR cursor = IDC_IBEAM;
-    HCURSOR hCursor = LoadCursor(NULL, cursor);
-    SetCursor(hCursor);
-}
+App::App() : pimpl{new impl{}} {}
 
 void App::run() {
     this->onLaunch();
@@ -25,6 +22,10 @@ void App::run() {
     }
 }
 
+void App::incrementWindowCount() {
+    pimpl->window_count++;
+}
+
 App::~App() {}
 
 class App::Window::impl {
@@ -32,10 +33,12 @@ public:
     impl(App::Window& app_window) : main_window(app_window) {}
 
     MainWindow main_window;
+
+    int wid = 0;
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{*this}}, parent(parent) {
-    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW);
+    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 }
 
 void App::Window::show() {
@@ -55,6 +58,11 @@ void App::Window::show() {
 
 void App::Window::close() {
     pimpl->main_window.destroy();
+
+    parent.pimpl->window_count--;
+    if (parent.pimpl->window_count <= 0) {
+        pimpl->main_window.quit();
+    }
 }
 
 App::Window::~Window() {}

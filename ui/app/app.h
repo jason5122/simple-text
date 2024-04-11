@@ -28,6 +28,9 @@ public:
 
     virtual void onLaunch() {}
 
+    // TODO: Debug; remove this.
+    void incrementWindowCount();
+
 protected:
     class impl;
     std::unique_ptr<impl> pimpl;

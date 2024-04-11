@@ -1,6 +1,7 @@
 #include "main_window.h"
 #include "ui/app/modifier_key.h"
 #include <iostream>
+#include <string>
 #include <windowsx.h>
 #include <winuser.h>
 
@@ -189,18 +190,22 @@ void MainWindow::redraw() {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
-BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle) {
+BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
+    std::wstring class_name = L"ClassName";
+    class_name += std::to_wstring(wid);
+
     WNDCLASS wc{
         .lpfnWndProc = WindowProc,
         .hInstance = GetModuleHandle(NULL),
+        .hCursor = LoadCursor(NULL, IDC_IBEAM),
         // TODO: Change this color based on the editor background color.
         .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
-        .lpszClassName = className(),
+        .lpszClassName = &class_name[0],
     };
 
     RegisterClass(&wc);
 
-    hwnd = CreateWindowEx(0, className(), lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+    hwnd = CreateWindowEx(0, &class_name[0], lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
                           CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
 
     return (hwnd ? TRUE : FALSE);

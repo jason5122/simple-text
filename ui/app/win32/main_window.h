@@ -10,12 +10,7 @@ public:
     HWND hwnd;
 
     MainWindow(App::Window& app_window) : app_window{app_window} {}
-
-    // TODO: Change this.
-    PCWSTR className() const {
-        return L"Clock Window Class";
-    }
-    BOOL create(PCWSTR lpWindowName, DWORD dwStyle);
+    BOOL create(PCWSTR lpWindowName, DWORD dwStyle, int wid);
     LRESULT handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     void redraw();
     BOOL destroy();

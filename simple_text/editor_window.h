@@ -5,7 +5,7 @@
 
 class EditorWindow : public App::Window {
 public:
-    EditorWindow(SimpleText& parent, int width, int height);
+    EditorWindow(SimpleText& parent, int x, int y, int width, int height);
     void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
 
 private:

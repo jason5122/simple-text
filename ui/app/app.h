@@ -8,10 +8,19 @@ class App {
 public:
     class Window {
     public:
-        Window(App& parent, int width, int height);
+        struct Frame {
+            int x;
+            int y;
+            int width;
+            int height;
+        };
+
+        Window(App& parent, int x, int y, int width, int height);
         ~Window();
         void show();
         void close();
+        Frame getFrame();
+        float getTitlebarHeight();
 
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
 

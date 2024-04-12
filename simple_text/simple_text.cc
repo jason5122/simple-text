@@ -2,11 +2,11 @@
 #include "simple_text/editor_window.h"
 
 void SimpleText::onLaunch() {
-    createChild(0, 1000);
+    createChild();
 }
 
-void SimpleText::createChild(int x, int y) {
-    EditorWindow* editor_window = new EditorWindow(*this, x, y, 600, 400);
+void SimpleText::createChild() {
+    EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
     editor_window->show();
 
     // TODO: Debug; remove this.

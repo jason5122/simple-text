@@ -7,6 +7,6 @@ class EditorWindow;
 class SimpleText : public App {
 public:
     void onLaunch() override;
-    void createChild(int x, int y);
+    void createChild();
     void destroyChild(EditorWindow* editor_window);
 };

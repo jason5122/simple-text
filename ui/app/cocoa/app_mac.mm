@@ -57,6 +57,7 @@
 class App::impl {
 public:
     NSApplication* ns_app;
+    NSPoint cascading_point = NSZeroPoint;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -83,9 +84,8 @@ public:
     NSWindow* ns_window;
 };
 
-App::Window::Window(App& parent, int x, int y, int width, int height)
-    : pimpl{new impl{}}, parent(parent) {
-    NSRect frame = NSMakeRect(x, y, width, height);
+App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
+    NSRect frame = NSMakeRect(0, 0, width, height);
     NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                              NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
     pimpl->ns_window = [[NSWindow alloc] initWithContentRect:frame
@@ -100,6 +100,10 @@ App::Window::Window(App& parent, int x, int y, int width, int height)
     // Bypass the user's tabbing preference.
     // https://stackoverflow.com/a/40826761/14698275
     pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
+
+    // Implement window cascading.
+    parent.pimpl->cascading_point =
+        [pimpl->ns_window cascadeTopLeftFromPoint:parent.pimpl->cascading_point];
 }
 
 App::Window::~Window() {}
@@ -110,19 +114,4 @@ void App::Window::show() {
 
 void App::Window::close() {
     [pimpl->ns_window close];
-}
-
-App::Window::Frame App::Window::getFrame() {
-    int x = pimpl->ns_window.frame.origin.x;
-    int y = pimpl->ns_window.frame.origin.y;
-    int width = pimpl->ns_window.frame.size.width;
-    int height = pimpl->ns_window.frame.size.height;
-    return {x, y, width, height};
-}
-
-float App::Window::getTitlebarHeight() {
-    float window_height = pimpl->ns_window.frame.size.height;
-    float content_height =
-        [pimpl->ns_window contentRectForFrameRect:pimpl->ns_window.frame].size.height;
-    return window_height - content_height;
 }

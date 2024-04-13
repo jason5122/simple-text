@@ -11,11 +11,11 @@ public:
     float descent;
 
     FontRasterizer();
+    ~FontRasterizer();
     bool setup(int id, std::string main_font_name, int font_size);
     // TODO: Unify rasterize() methods.
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);
     RasterizedGlyph rasterizeTemp(std::string& utf8_str, uint_least32_t codepoint);
-    ~FontRasterizer();
 
 private:
     // https://herbsutter.com/gotw/_100/

@@ -14,12 +14,18 @@ public:
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
+FontRasterizer::~FontRasterizer() {
+    CFRelease(pimpl->ct_font);
+}
+
 bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
 
     CFStringRef ct_font_name =
         CFStringCreateWithCString(nullptr, main_font_name.c_str(), kCFStringEncodingUTF8);
     pimpl->ct_font = CTFontCreateWithName(ct_font_name, font_size, nullptr);
+
+    CFRelease(ct_font_name);
 
     CGFloat ascent = std::round(CTFontGetAscent(pimpl->ct_font));
     CGFloat descent = std::round(CTFontGetDescent(pimpl->ct_font));
@@ -64,10 +70,17 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
 
         if (!glyphs.empty()) {
             glyph = glyphs[0];
+            CFRetain(font);
             run_font = font;
             break;
         }
     }
+
+    CFRelease(text_string);
+    CFRelease(attr);
+    CFRelease(attr_string);
+    CFRelease(line);
+
     return pimpl->rasterizeGlyph(glyph, run_font, descent);
 }
 
@@ -87,9 +100,12 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
 
     bool colored = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
 
+    CGColorSpaceRef color_space_ref = CGColorSpaceCreateDeviceRGB();
     CGContextRef context = CGBitmapContextCreate(
-        nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4,
-        CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+        nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4, color_space_ref,
+        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+
+    CGColorSpaceRelease(color_space_ref);
 
     CGFloat alpha = colored ? 0.0 : 1.0;
     CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, alpha);
@@ -146,5 +162,3 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
         .index = glyph_index,
     };
 }
-
-FontRasterizer::~FontRasterizer() {}

@@ -114,8 +114,4 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
     };
 }
 
-std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
-    return {};
-}
-
 FontRasterizer::~FontRasterizer() {}

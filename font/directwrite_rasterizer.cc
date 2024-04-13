@@ -557,8 +557,4 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string& utf8_str, uint_least3
     };
 }
 
-std::vector<RasterizedGlyph> FontRasterizer::layoutLine(const char* utf8_str) {
-    return {};
-}
-
 FontRasterizer::~FontRasterizer() {}

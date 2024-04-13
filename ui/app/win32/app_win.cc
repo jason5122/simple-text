@@ -68,4 +68,8 @@ void App::Window::close() {
     }
 }
 
+void App::Window::redraw() {
+    pimpl->main_window.redraw();
+}
+
 App::Window::~Window() {}

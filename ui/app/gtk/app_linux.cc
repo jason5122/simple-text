@@ -73,13 +73,15 @@ static void realize(GtkWidget* widget, gpointer p_app_window) {
     int scaled_width = gtk_widget_get_allocated_width(widget) * scale_factor;
     int scaled_height = gtk_widget_get_allocated_height(widget) * scale_factor;
 
-    // app_window->onOpenGLActivate(scaled_width, scaled_height);
+    app_window->onOpenGLActivate(scaled_width, scaled_height);
 }
 
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer p_app_window) {
     App::Window* app_window = static_cast<App::Window*>(p_app_window);
 
-    // app_window->onDraw();
+    gtk_gl_area_make_current(self);
+
+    app_window->onDraw();
 
     // Draw commands are flushed after returning.
     return true;
@@ -90,11 +92,13 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer p_app_wind
 
     gtk_gl_area_make_current(self);
 
-    // app_window->onResize(width, height);
+    app_window->onResize(width, height);
 }
 
 static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer p_app_window) {
     App::Window* app_window = static_cast<App::Window*>(p_app_window);
+
+    gtk_gl_area_make_current(GTK_GL_AREA(widget));
 
     double dx, dy;
     gdk_event_get_scroll_deltas((GdkEvent*)event, &dx, &dy);
@@ -105,7 +109,7 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event, gpointer 
         dy *= 32;
     }
 
-    // app_window->onScroll(dx, dy);
+    app_window->onScroll(dx, dy);
 
     return true;
 }
@@ -121,7 +125,7 @@ static gboolean button_event(GtkWidget* widget, GdkEventButton* event, gpointer 
         float scaled_mouse_x = mouse_x * scale_factor;
         float scaled_mouse_y = mouse_y * scale_factor;
 
-        // app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+        app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
     }
     return true;
 }
@@ -137,7 +141,7 @@ static gboolean motion_event(GtkWidget* widget, GdkEventMotion* event, gpointer 
         float scaled_mouse_x = mouse_x * scale_factor;
         float scaled_mouse_y = mouse_y * scale_factor;
 
-        // app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+        app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
     }
     return true;
 }
@@ -233,6 +237,10 @@ void App::Window::show() {
 
 void App::Window::close() {
     gtk_window_close(GTK_WINDOW(pimpl->window_widget));
+}
+
+void App::Window::redraw() {
+    gtk_widget_queue_draw(pimpl->window_widget);
 }
 
 App::Window::~Window() {}

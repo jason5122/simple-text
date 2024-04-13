@@ -44,10 +44,10 @@
 
         NSTrackingAreaOptions options =
             NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
-        trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
-                                                    options:options
-                                                      owner:self
-                                                   userInfo:nil];
+        trackingArea = [[[NSTrackingArea alloc] initWithRect:self.bounds
+                                                     options:options
+                                                       owner:self
+                                                    userInfo:nil] autorelease];
         [self addTrackingArea:trackingArea];
     }
     return self;
@@ -63,10 +63,10 @@
 
     NSTrackingAreaOptions options =
         NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
-    trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
-                                                options:options
-                                                  owner:self
-                                               userInfo:nil];
+    trackingArea = [[[NSTrackingArea alloc] initWithRect:self.bounds
+                                                 options:options
+                                                   owner:self
+                                                userInfo:nil] autorelease];
     [self addTrackingArea:trackingArea];
 }
 

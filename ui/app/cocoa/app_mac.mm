@@ -1,5 +1,6 @@
 #include "ui/app/app.h"
 #include "ui/app/cocoa/OpenGLView.h"
+#include <Foundation/Foundation.h>
 #include <iostream>
 #include <vector>
 
@@ -102,8 +103,15 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
 
     // Implement window cascading.
-    parent.pimpl->cascading_point =
-        [pimpl->ns_window cascadeTopLeftFromPoint:parent.pimpl->cascading_point];
+    if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {
+        NSPoint point = pimpl->ns_window.frame.origin;
+        parent.pimpl->cascading_point = [pimpl->ns_window cascadeTopLeftFromPoint:point];
+
+        [pimpl->ns_window center];
+    } else {
+        parent.pimpl->cascading_point =
+            [pimpl->ns_window cascadeTopLeftFromPoint:parent.pimpl->cascading_point];
+    }
 }
 
 App::Window::~Window() {}

@@ -40,10 +40,12 @@ public:
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{*this}}, parent(parent) {
-    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
+    // pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 }
 
 void App::Window::show() {
+    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
+
     // TODO: Sync this with requested width/height.
     int width = 1200;
     int height = 600;

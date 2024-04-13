@@ -190,7 +190,8 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    size_t start_line = scroll_y / font_rasterizer.line_height;
+    size_t start_line =
+        std::min(static_cast<size_t>(scroll_y / font_rasterizer.line_height), buffer.lineCount());
     size_t visible_lines = std::ceil((height - status_bar_height) / font_rasterizer.line_height);
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 

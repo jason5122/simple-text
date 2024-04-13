@@ -247,7 +247,7 @@ static app::Key GetKey(unsigned short vk) {
         int scaled_width = self.frame.size.width * self.contentsScale;
         int scaled_height = self.frame.size.height * self.contentsScale;
 
-        // appWindow->onOpenGLActivate(scaled_width, scaled_height);
+        appWindow->onOpenGLActivate(scaled_width, scaled_height);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
@@ -267,7 +267,7 @@ static app::Key GetKey(unsigned short vk) {
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(mContext);
 
-    // appWindow->onDraw();
+    appWindow->onDraw();
 
     // Calls glFlush() by default.
     [super drawInCGLContext:mContext
@@ -284,7 +284,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;
-    // appWindow->onResize(scaled_width, scaled_height);
+    appWindow->onResize(scaled_width, scaled_height);
 }
 
 - (void)releaseCGLContext:(CGLContextObj)glContext {

@@ -86,7 +86,7 @@ public:
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
-    NSRect frame = NSMakeRect(0, 0, width, height);
+    NSRect frame = NSMakeRect(500, 0, width, height);
     NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                              NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
     pimpl->ns_window = [[NSWindow alloc] initWithContentRect:frame
@@ -103,15 +103,15 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
 
     // Implement window cascading.
-    if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {
-        NSPoint point = pimpl->ns_window.frame.origin;
-        parent.pimpl->cascading_point = [pimpl->ns_window cascadeTopLeftFromPoint:point];
+    // if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {
+    //     NSPoint point = pimpl->ns_window.frame.origin;
+    //     parent.pimpl->cascading_point = [pimpl->ns_window cascadeTopLeftFromPoint:point];
 
-        [pimpl->ns_window center];
-    } else {
-        parent.pimpl->cascading_point =
-            [pimpl->ns_window cascadeTopLeftFromPoint:parent.pimpl->cascading_point];
-    }
+    //     [pimpl->ns_window center];
+    // } else {
+    //     parent.pimpl->cascading_point =
+    //         [pimpl->ns_window cascadeTopLeftFromPoint:parent.pimpl->cascading_point];
+    // }
 }
 
 App::Window::~Window() {}
@@ -122,4 +122,8 @@ void App::Window::show() {
 
 void App::Window::close() {
     [pimpl->ns_window close];
+}
+
+void App::Window::redraw() {
+    // [pimpl->opengl_view redraw];
 }

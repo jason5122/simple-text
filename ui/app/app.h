@@ -19,7 +19,11 @@ public:
         ~Window();
         void show();
         void close();
+        void redraw();
 
+        virtual void onOpenGLActivate(int width, int height) {}
+        virtual void onDraw() {}
+        virtual void onResize(int width, int height) {}
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
 
     private:

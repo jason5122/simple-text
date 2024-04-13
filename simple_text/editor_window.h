@@ -16,6 +16,9 @@ public:
     void onOpenGLActivate(int width, int height) override;
     void onDraw() override;
     void onResize(int width, int height) override;
+    void onScroll(float dx, float dy) override;
+    void onLeftMouseDown(float mouse_x, float mouse_y) override;
+    void onLeftMouseDrag(float mouse_x, float mouse_y) override;
     void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
 
 private:

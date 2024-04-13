@@ -52,23 +52,58 @@ void EditorWindow::onDraw() {
     text_renderer.renderText(scroll_x, scroll_y, buffer, highlighter, editor_offset_x,
                              editor_offset_y, main_font_rasterizer, status_bar_height);
 
-    // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    // rect_renderer.draw(scroll_x, scroll_y, text_renderer.cursor_end_x,
-    //                    text_renderer.cursor_end_line, main_font_rasterizer.line_height,
-    //                    buffer.lineCount(), text_renderer.longest_line_x, editor_offset_x,
-    //                    editor_offset_y, status_bar_height);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+    rect_renderer.draw(scroll_x, scroll_y, text_renderer.cursor_end_x,
+                       text_renderer.cursor_end_line, main_font_rasterizer.line_height,
+                       buffer.lineCount(), text_renderer.longest_line_x, editor_offset_x,
+                       editor_offset_y, status_bar_height);
 
-    // image_renderer.draw(scroll_x, scroll_y, editor_offset_x, editor_offset_y);
+    image_renderer.draw(scroll_x, scroll_y, editor_offset_x, editor_offset_y);
 
-    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    // text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);
 }
 
 void EditorWindow::onResize(int width, int height) {
     glViewport(0, 0, width, height);
-    // text_renderer.resize(width, height);
-    // rect_renderer.resize(width, height);
-    // image_renderer.resize(width, height);
+    text_renderer.resize(width, height);
+    rect_renderer.resize(width, height);
+    image_renderer.resize(width, height);
+
+    redraw();
+}
+
+void EditorWindow::onScroll(float dx, float dy) {
+    // TODO: Uncomment this while not testing.
+    // scroll_x += dx;
+    scroll_y += dy;
+
+    redraw();
+}
+
+void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
+    mouse_x -= editor_offset_x;
+    mouse_y -= editor_offset_y;
+    mouse_x += scroll_x;
+    mouse_y += scroll_y;
+
+    cursor_start_x = mouse_x;
+    cursor_start_y = mouse_y;
+
+    text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
+                                     main_font_rasterizer);
+
+    redraw();
+}
+
+void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
+    mouse_x -= editor_offset_x;
+    mouse_y -= editor_offset_y;
+    mouse_x += scroll_x;
+    mouse_y += scroll_y;
+
+    text_renderer.setCursorPositions(buffer, cursor_start_x, cursor_start_y, mouse_x, mouse_y,
+                                     main_font_rasterizer);
 
     redraw();
 }

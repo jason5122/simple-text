@@ -125,7 +125,7 @@
 
         float scaled_dx = dx * openGLLayer.contentsScale;
         float scaled_dy = dy * openGLLayer.contentsScale;
-        // openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
+        openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
     }
 }
 
@@ -180,7 +180,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    // openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -190,7 +190,7 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    // openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+    openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

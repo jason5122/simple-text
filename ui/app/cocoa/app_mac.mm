@@ -83,6 +83,7 @@ void App::incrementWindowCount() {}
 class App::Window::impl {
 public:
     NSWindow* ns_window;
+    OpenGLView* opengl_view;
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
@@ -94,9 +95,9 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
                                                      backing:NSBackingStoreBuffered
                                                        defer:false];
     pimpl->ns_window.title = @"Simple Text";
-    OpenGLView* view = [[[OpenGLView alloc] initWithFrame:frame appWindow:this] autorelease];
-    pimpl->ns_window.contentView = view;
-    [pimpl->ns_window makeFirstResponder:view];
+    pimpl->opengl_view = [[[OpenGLView alloc] initWithFrame:frame appWindow:this] autorelease];
+    pimpl->ns_window.contentView = pimpl->opengl_view;
+    [pimpl->ns_window makeFirstResponder:pimpl->opengl_view];
 
     // Bypass the user's tabbing preference.
     // https://stackoverflow.com/a/40826761/14698275
@@ -125,5 +126,5 @@ void App::Window::close() {
 }
 
 void App::Window::redraw() {
-    // [pimpl->opengl_view redraw];
+    [pimpl->opengl_view redraw];
 }

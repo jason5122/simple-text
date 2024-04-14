@@ -1,10 +1,13 @@
 #include "ui/app/app.h"
 #include "ui/app/cocoa/OpenGLView.h"
+#include "ui/app/cocoa/displaygl.h"
 #include <Foundation/Foundation.h>
 #include <iostream>
 #include <vector>
 
 #import <Cocoa/Cocoa.h>
+
+#include <glad/glad.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
@@ -59,6 +62,7 @@ class App::impl {
 public:
     NSApplication* ns_app;
     NSPoint cascading_point = NSZeroPoint;
+    DisplayGL* displaygl;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -67,9 +71,16 @@ App::App() : pimpl{new impl{}} {
 
     pimpl->ns_app.activationPolicy = NSApplicationActivationPolicyRegular;
     pimpl->ns_app.delegate = appDelegate;
+
+    pimpl->displaygl = new DisplayGL();
+    pimpl->displaygl->initialize();
+
+    glEnable(GL_BLEND);
 }
 
-App::~App() {}
+App::~App() {
+    delete pimpl->displaygl;
+}
 
 void App::run() {
     @autoreleasepool {
@@ -95,7 +106,9 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
                                                      backing:NSBackingStoreBuffered
                                                        defer:false];
     pimpl->ns_window.title = @"Simple Text";
-    pimpl->opengl_view = [[[OpenGLView alloc] initWithFrame:frame appWindow:this] autorelease];
+    pimpl->opengl_view = [[[OpenGLView alloc] initWithFrame:frame
+                                                  appWindow:this
+                                                  displaygl:parent.pimpl->displaygl] autorelease];
     pimpl->ns_window.contentView = pimpl->opengl_view;
     [pimpl->ns_window makeFirstResponder:pimpl->opengl_view];
 

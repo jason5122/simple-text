@@ -22,7 +22,9 @@
 
 @implementation OpenGLView
 
-- (instancetype)initWithFrame:(NSRect)frame appWindow:(App::Window*)theAppWindow {
+- (instancetype)initWithFrame:(NSRect)frame
+                    appWindow:(App::Window*)theAppWindow
+                    displaygl:(DisplayGL*)displaygl {
     self = [super initWithFrame:frame];
     if (self) {
         openGLLayer = [OpenGLLayer layer];

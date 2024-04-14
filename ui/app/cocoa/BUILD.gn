@@ -2,6 +2,7 @@ source_set("cocoa") {
   sources = [
     "OpenGLView.mm",
     "app_mac.mm",
+    "displaygl.mm",
   ]
 
   frameworks = [

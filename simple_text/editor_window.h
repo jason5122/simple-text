@@ -5,7 +5,6 @@
 
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
-#include "font/rasterizer.h"
 #include "ui/renderer/image_renderer.h"
 #include "ui/renderer/rect_renderer.h"
 #include "ui/renderer/text_renderer.h"
@@ -35,9 +34,6 @@ private:
 
     Buffer buffer;
     SyntaxHighlighter highlighter;
-
-    FontRasterizer main_font_rasterizer;
-    FontRasterizer ui_font_rasterizer;
 
     TextRenderer text_renderer;
     RectRenderer rect_renderer;

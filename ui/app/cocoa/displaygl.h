@@ -13,7 +13,7 @@ public:
 
     bool initialize();
 
-private:
+// private:
     CGLContextObj mContext;
     CGLPixelFormatObj mPixelFormat;
 };

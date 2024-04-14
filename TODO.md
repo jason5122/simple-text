@@ -4,9 +4,9 @@
 
 ### UI Framework
 
-1. Implement a robust way to close a window without:
-   - Memory leaks
-   - Segfaults
+- Reuse `//renderer` classes across windows.
+- Mac: Implement CGL context sharing.
+- Win: Keep track of windows being closed through `WM_DESTROY` instead of during keybinds.
 
 ### Linux
 

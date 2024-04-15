@@ -218,57 +218,16 @@ static app::Key GetKey(unsigned short vk) {
 - (instancetype)initWithDisplayGL:(DisplayGL*)theDisplaygl {
     self = [super init];
     if (self) {
-        std::cerr << "yo??\n";
         displaygl = theDisplaygl;
     }
     return self;
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    CGLPixelFormatAttribute attribs[] = {
-        kCGLPFADisplayMask,
-        static_cast<CGLPixelFormatAttribute>(mask),
-        kCGLPFAColorSize,
-        static_cast<CGLPixelFormatAttribute>(24),
-        kCGLPFAAlphaSize,
-        static_cast<CGLPixelFormatAttribute>(8),
-        kCGLPFAAccelerated,
-        kCGLPFANoRecovery,
-        kCGLPFATripleBuffer,
-        // kCGLPFADoubleBuffer,
-        kCGLPFAAllowOfflineRenderers,
-        kCGLPFAOpenGLProfile,
-        static_cast<CGLPixelFormatAttribute>(kCGLOGLPVersion_3_2_Core),
-        static_cast<CGLPixelFormatAttribute>(0),
-    };
-
-    CGLPixelFormatObj pixelFormat = nullptr;
-    GLint numFormats = 0;
-    CGLChoosePixelFormat(attribs, &pixelFormat, &numFormats);
-    // return pixelFormat;
-
     return displaygl->mPixelFormat;
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    // CGLCreateContext(pixelFormat, nullptr, &mContext);
-
-    // if (mContext || (mContext = [super copyCGLContextForPixelFormat:pixelFormat])) {
-    //     CGLSetCurrentContext(mContext);
-
-    //     if (!gladLoadGL()) {
-    //         std::cerr << "Failed to initialize GLAD\n";
-    //     }
-
-    //     int scaled_width = self.frame.size.width * self.contentsScale;
-    //     int scaled_height = self.frame.size.height * self.contentsScale;
-
-    //     appWindow->onOpenGLActivate(scaled_width, scaled_height);
-
-    //     [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
-    // }
-    // return mContext;
-
     CGLSetCurrentContext(displaygl->mContext);
 
     int scaled_width = self.frame.size.width * self.contentsScale;
@@ -292,8 +251,6 @@ static app::Key GetKey(unsigned short vk) {
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    // CGLSetCurrentContext(mContext);
-
     CGLSetCurrentContext(displaygl->mContext);
 
     appWindow->onDraw();
@@ -309,8 +266,6 @@ static app::Key GetKey(unsigned short vk) {
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-    // CGLSetCurrentContext(mContext);
-
     CGLSetCurrentContext(displaygl->mContext);
 
     float scaled_width = self.frame.size.width * self.contentsScale;
@@ -318,12 +273,12 @@ static app::Key GetKey(unsigned short vk) {
     appWindow->onResize(scaled_width, scaled_height);
 }
 
+// We shouldn't release the CGLContextObj since it isn't owned by this object.
 - (void)releaseCGLContext:(CGLContextObj)glContext {
-    [super releaseCGLContext:glContext];
 }
 
+// We shouldn't release the CGLPixelFormatObj since it isn't owned by this object.
 - (void)releaseCGLPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    [super releaseCGLPixelFormat:pixelFormat];
 }
 
 @end

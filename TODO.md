@@ -5,7 +5,8 @@
 ### UI Framework
 
 - Reuse `//renderer` classes across windows.
-- Mac: Implement CGL context sharing.
+- Delete `EditorWindow` resources on _any_ form of close, not just through keybinds.
+  - Specifically, keep track of closing via the close button or external programs.
 - Win: Keep track of windows being closed through `WM_DESTROY` instead of during keybinds.
 
 ### Linux

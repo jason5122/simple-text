@@ -1,4 +1,5 @@
 #include "ui/app/app.h"
+#include "ui/app/win32/dummy_context.h"
 #include "ui/app/win32/main_window.h"
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
@@ -7,12 +8,15 @@
 
 class App::impl {
 public:
+    DummyContext dummy_context;
     int window_count = 0;
 };
 
 App::App() : pimpl{new impl{}} {}
 
 void App::run() {
+    pimpl->dummy_context.initialize();
+
     this->onLaunch();
 
     MSG msg = {};
@@ -44,7 +48,8 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{*this}}
 }
 
 void App::Window::show() {
-    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
+    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++,
+                              parent.pimpl->dummy_context.m_context);
 
     // TODO: Sync this with requested width/height.
     int width = 1200;
@@ -57,7 +62,7 @@ void App::Window::show() {
         .showCmd = SW_NORMAL,
         .rcNormalPosition = RECT{0, 0, width * 2, height * 2},
     };
-    SetWindowPlacement(pimpl->main_window.hwnd, &placement);
+    SetWindowPlacement(pimpl->main_window.m_hwnd, &placement);
 }
 
 void App::Window::close() {

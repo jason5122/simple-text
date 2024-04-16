@@ -1,6 +1,7 @@
 source_set("win32") {
   sources = [
     "app_win.cc",
+    "dummy_context.cc",
     "main_window.cc",
   ]
   defines = [

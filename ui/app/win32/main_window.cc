@@ -1,6 +1,5 @@
 #include "main_window.h"
 #include "ui/app/modifier_key.h"
-#include <iostream>
 #include <string>
 #include <windowsx.h>
 #include <winuser.h>
@@ -47,7 +46,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
 
     case WM_CREATE: {
-        ghDC = GetDC(hwnd);
+        m_hdc = GetDC(m_hwnd);
 
         PIXELFORMATDESCRIPTOR pfd = {
             .nSize = sizeof(PIXELFORMATDESCRIPTOR),
@@ -59,20 +58,13 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             .cAuxBuffers = 0,
         };
 
-        int pixelformat = ChoosePixelFormat(ghDC, &pfd);
-        SetPixelFormat(ghDC, pixelformat, &pfd);
+        int pixelformat = ChoosePixelFormat(m_hdc, &pfd);
+        SetPixelFormat(m_hdc, pixelformat, &pfd);
 
-        ghRC = wglCreateContext(ghDC);
-        wglMakeCurrent(ghDC, ghRC);
-
-        if (!gladLoadGL() || !gladLoadWGL(ghDC)) {
-            std::cerr << "Failed to initialize GLAD\n";
-        }
-
-        wglSwapIntervalEXT(0);
+        wglMakeCurrent(m_hdc, m_context);
 
         RECT rect = {0};
-        GetClientRect(hwnd, &rect);
+        GetClientRect(m_hwnd, &rect);
 
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
@@ -84,21 +76,21 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
-        wglMakeCurrent(ghDC, ghRC);
+        wglMakeCurrent(m_hdc, m_context);
 
         PAINTSTRUCT ps;
-        BeginPaint(hwnd, &ps);
+        BeginPaint(m_hwnd, &ps);
 
         app_window.onDraw();
 
-        SwapBuffers(ghDC);
+        SwapBuffers(m_hdc);
 
-        EndPaint(hwnd, &ps);
+        EndPaint(m_hwnd, &ps);
         return 0;
     }
 
     case WM_SIZE: {
-        wglMakeCurrent(ghDC, ghRC);
+        wglMakeCurrent(m_hdc, m_context);
 
         int width = (int)(short)LOWORD(lParam);
         int height = (int)(short)HIWORD(lParam);
@@ -127,7 +119,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_LBUTTONDOWN: {
-        SetCapture(hwnd);
+        SetCapture(m_hwnd);
 
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
@@ -163,7 +155,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 1;
 
     default:
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
     }
 }
 
@@ -175,7 +167,7 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
         pThis = (MainWindow*)pCreate->lpCreateParams;
         SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
 
-        pThis->hwnd = hwnd;
+        pThis->m_hwnd = hwnd;
     } else {
         pThis = (MainWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     }
@@ -187,10 +179,10 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 }
 
 void MainWindow::redraw() {
-    InvalidateRect(hwnd, NULL, FALSE);
+    InvalidateRect(m_hwnd, NULL, FALSE);
 }
 
-BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
+BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid, HGLRC context) {
     std::wstring class_name = L"ClassName";
     class_name += std::to_wstring(wid);
 
@@ -205,14 +197,16 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
 
     RegisterClass(&wc);
 
-    hwnd = CreateWindowEx(0, &class_name[0], lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
-                          CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
+    m_hwnd = CreateWindowEx(0, &class_name[0], lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+                            CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
 
-    return (hwnd ? TRUE : FALSE);
+    m_context = context;
+
+    return (m_hwnd ? TRUE : FALSE);
 }
 
 BOOL MainWindow::destroy() {
-    return DestroyWindow(hwnd);
+    return DestroyWindow(m_hwnd);
 }
 
 void MainWindow::quit() {

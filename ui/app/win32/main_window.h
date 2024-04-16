@@ -1,23 +1,21 @@
 #pragma once
 
 #include "ui/app/app.h"
-#include <glad/glad.h>
-#include <glad/glad_wgl.h>
 #include <windows.h>
 
 class MainWindow {
 public:
-    HWND hwnd;
+    HWND m_hwnd;
 
     MainWindow(App::Window& app_window) : app_window{app_window} {}
-    BOOL create(PCWSTR lpWindowName, DWORD dwStyle, int wid);
+    BOOL create(PCWSTR lpWindowName, DWORD dwStyle, int wid, HGLRC context);
     LRESULT handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     void redraw();
     BOOL destroy();
     void quit();
 
 private:
-    HDC ghDC;
-    HGLRC ghRC;
+    HDC m_hdc;
+    HGLRC m_context;
     App::Window& app_window;
 };

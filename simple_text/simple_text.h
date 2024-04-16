@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ui/app/app.h"
-#include "ui/app/cocoa/displaygl.h"
 
 #include "font/rasterizer.h"
 
@@ -15,7 +14,4 @@ public:
     void onLaunch() override;
     void createChild();
     void destroyChild(EditorWindow* editor_window);
-
-private:
-    DisplayGL displaygl;
 };

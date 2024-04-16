@@ -2,8 +2,6 @@
 #include "simple_text/editor_window.h"
 
 void SimpleText::onLaunch() {
-    displaygl.initialize();
-
     // TODO: Implement scale factor support.
     std::string main_font = "Source Code Pro";
 #if IS_MAC

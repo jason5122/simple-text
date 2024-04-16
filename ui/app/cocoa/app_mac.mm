@@ -74,8 +74,6 @@ App::App() : pimpl{new impl{}} {
 
     pimpl->displaygl = new DisplayGL();
     pimpl->displaygl->initialize();
-
-    glEnable(GL_BLEND);
 }
 
 App::~App() {

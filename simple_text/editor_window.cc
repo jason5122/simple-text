@@ -17,8 +17,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     buffer.setContents(ReadFile(file_path));
     highlighter.setLanguage("source.json");
 
-    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
-    highlighter.parse(input);
+    // TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
+    // highlighter.parse(input);
 
     text_renderer.setup(width, height, parent.main_font_rasterizer);
     rect_renderer.setup(width, height);

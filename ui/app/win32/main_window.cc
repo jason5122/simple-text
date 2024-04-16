@@ -61,7 +61,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int pixelformat = ChoosePixelFormat(m_hdc, &pfd);
         SetPixelFormat(m_hdc, pixelformat, &pfd);
 
-        wglMakeCurrent(m_hdc, m_context);
+        // FIXME: Why does making the context current here break things?
+        // wglMakeCurrent(m_hdc, m_context);
 
         RECT rect = {0};
         GetClientRect(m_hwnd, &rect);

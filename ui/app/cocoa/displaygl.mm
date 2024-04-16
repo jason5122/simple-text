@@ -6,6 +6,7 @@
 DisplayGL::DisplayGL() : mContext(nullptr), mPixelFormat(nullptr) {}
 
 DisplayGL::~DisplayGL() {
+    CGLSetCurrentContext(nullptr);  // Ensure the context we delete is *not* current.
     CGLDestroyContext(mContext);
     CGLDestroyPixelFormat(mPixelFormat);
 }

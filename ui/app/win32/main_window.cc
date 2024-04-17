@@ -4,6 +4,8 @@
 #include <windowsx.h>
 #include <winuser.h>
 
+#include <iostream>
+
 static app::Key GetKey(WPARAM vk) {
     static const struct {
         WPARAM fVK;
@@ -61,8 +63,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int pixelformat = ChoosePixelFormat(m_hdc, &pfd);
         SetPixelFormat(m_hdc, pixelformat, &pfd);
 
-        // FIXME: Why does making the context current here break things?
-        // wglMakeCurrent(m_hdc, m_context);
+        wglMakeCurrent(m_hdc, dummy_context.m_context);
 
         RECT rect = {0};
         GetClientRect(m_hwnd, &rect);
@@ -77,7 +78,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
-        wglMakeCurrent(m_hdc, m_context);
+        wglMakeCurrent(m_hdc, dummy_context.m_context);
 
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
@@ -91,7 +92,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_SIZE: {
-        wglMakeCurrent(m_hdc, m_context);
+        wglMakeCurrent(m_hdc, dummy_context.m_context);
 
         int width = (int)(short)LOWORD(lParam);
         int height = (int)(short)HIWORD(lParam);
@@ -183,7 +184,7 @@ void MainWindow::redraw() {
     InvalidateRect(m_hwnd, NULL, FALSE);
 }
 
-BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid, HGLRC context) {
+BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
     std::wstring class_name = L"ClassName";
     class_name += std::to_wstring(wid);
 
@@ -200,8 +201,6 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid, HGLRC conte
 
     m_hwnd = CreateWindowEx(0, &class_name[0], lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
                             CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
-
-    m_context = context;
 
     return (m_hwnd ? TRUE : FALSE);
 }

@@ -35,7 +35,8 @@ App::~App() {}
 
 class App::Window::impl {
 public:
-    impl(App::Window& app_window) : main_window(app_window) {}
+    impl(App::Window& app_window, DummyContext& dummy_context)
+        : main_window(app_window, dummy_context) {}
 
     MainWindow main_window;
 
@@ -43,13 +44,13 @@ public:
     int wid = 0;
 };
 
-App::Window::Window(App& parent, int width, int height) : pimpl{new impl{*this}}, parent(parent) {
+App::Window::Window(App& parent, int width, int height)
+    : pimpl{new impl{*this, parent.pimpl->dummy_context}}, parent(parent) {
     // pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 }
 
 void App::Window::show() {
-    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++,
-                              parent.pimpl->dummy_context.m_context);
+    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 
     // TODO: Sync this with requested width/height.
     int width = 1200;

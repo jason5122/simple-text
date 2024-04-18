@@ -200,31 +200,31 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
     g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
 
-    gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
-    g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);
+    // gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
+    // g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);
 
-    gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
-    g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), this);
+    // gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+    // g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), this);
 
-    gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
-    g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), this);
+    // gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
+    // g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), this);
 
     // Add menu bar.
-    {
-        GMenu* menu_bar = g_menu_new();
-        GMenu* file_menu = g_menu_new();
-        GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
+    // {
+    //     GMenu* menu_bar = g_menu_new();
+    //     GMenu* file_menu = g_menu_new();
+    //     GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
 
-        g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
-        g_menu_append_item(file_menu, quit_menu_item);
-        gtk_application_set_menubar(GTK_APPLICATION(parent.pimpl->app), G_MENU_MODEL(menu_bar));
-        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(pimpl->window_widget),
-                                                true);
+    //     g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
+    //     g_menu_append_item(file_menu, quit_menu_item);
+    //     gtk_application_set_menubar(GTK_APPLICATION(parent.pimpl->app), G_MENU_MODEL(menu_bar));
+    //     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(pimpl->window_widget),
+    //                                             true);
 
-        GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
-        g_action_map_add_action(G_ACTION_MAP(parent.pimpl->app), G_ACTION(quit_action));
-        g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), parent.pimpl->app);
-    }
+    //     GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
+    //     g_action_map_add_action(G_ACTION_MAP(parent.pimpl->app), G_ACTION(quit_action));
+    //     g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), parent.pimpl->app);
+    // }
 
     // gtk_window_maximize(GTK_WINDOW(pimpl->window_widget));
     // TODO: Set default window size without magic numbers.

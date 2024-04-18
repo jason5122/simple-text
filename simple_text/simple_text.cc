@@ -33,5 +33,5 @@ void SimpleText::createChild() {
 
 void SimpleText::destroyChild(EditorWindow* editor_window) {
     editor_window->close();
-    delete editor_window;
+    // delete editor_window;
 }

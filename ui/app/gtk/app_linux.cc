@@ -190,15 +190,36 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     g_signal_connect(G_OBJECT(pimpl->window_widget), "key_press_event",
                      G_CALLBACK(key_press_event), this);
 
-    GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
-    gtk_box_set_spacing(GTK_BOX(box), 6);
-    gtk_container_add(GTK_CONTAINER(pimpl->window_widget), box);
+    gtk_widget_realize(pimpl->window_widget);
 
-    GtkWidget* gl_area = gtk_gl_area_new();
-    gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
-    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
+    GdkWindow* gdk_window = gtk_widget_get_window(pimpl->window_widget);
+
+    if (gdk_window) {
+        std::cerr << "that's a window alright\n";
+
+        GError* err = nullptr;
+        GdkGLContext* gl_context = gdk_window_create_gl_context(gdk_window, &err);
+
+        gdk_gl_context_make_current(gl_context);
+
+        if (!gladLoadGL()) {
+            std::cerr << "Failed to initialize GLAD\n";
+        }
+
+        glClearColor(1.0, 0.0, 0.0, 1.0);
+
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    // GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
+    // gtk_box_set_spacing(GTK_BOX(box), 6);
+    // gtk_container_add(GTK_CONTAINER(pimpl->window_widget), box);
+
+    // GtkWidget* gl_area = gtk_gl_area_new();
+    // gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
+    // g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
+    // g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
+    // g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
 
     // gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
     // g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);

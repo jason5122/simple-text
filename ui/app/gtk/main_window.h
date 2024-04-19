@@ -10,6 +10,7 @@ public:
     MainWindow(GtkApplication* gtk_app, App::Window* app_window);
     void show();
     void close();
+    void redraw();
 
 private:
     GtkWidget* window;

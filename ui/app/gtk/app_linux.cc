@@ -151,6 +151,10 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
+static GdkGLContext* create_context(GtkGLArea* self, gpointer p_context) {
+    return static_cast<GdkGLContext*>(p_context);
+}
+
 class App::impl {
 public:
     GtkApplication* app;
@@ -190,62 +194,49 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     g_signal_connect(G_OBJECT(pimpl->window_widget), "key_press_event",
                      G_CALLBACK(key_press_event), this);
 
-    gtk_widget_realize(pimpl->window_widget);
+    // FIXME: Test out realizing widget after attaching it to a window.
+    {
+        GtkWidget* dummy_gl_area = gtk_gl_area_new();
+        // gtk_widget_realize(dummy_gl_area);
+        GdkGLContext* context = gtk_gl_area_get_context(GTK_GL_AREA(dummy_gl_area));
 
-    GdkWindow* gdk_window = gtk_widget_get_window(pimpl->window_widget);
-
-    if (gdk_window) {
-        std::cerr << "that's a window alright\n";
-
-        GError* err = nullptr;
-        GdkGLContext* gl_context = gdk_window_create_gl_context(gdk_window, &err);
-
-        gdk_gl_context_make_current(gl_context);
-
-        if (!gladLoadGL()) {
-            std::cerr << "Failed to initialize GLAD\n";
+        if (context == nullptr) {
+            std::cerr << "GdkGLContext is nullptr\n";
         }
-
-        glClearColor(1.0, 0.0, 0.0, 1.0);
-
-        glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    // GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
-    // gtk_box_set_spacing(GTK_BOX(box), 6);
-    // gtk_container_add(GTK_CONTAINER(pimpl->window_widget), box);
+    GtkWidget* gl_area = gtk_gl_area_new();
+    // g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
+    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
+    gtk_container_add(GTK_CONTAINER(pimpl->window_widget), gl_area);
 
-    // GtkWidget* gl_area = gtk_gl_area_new();
-    // gtk_box_pack_start(GTK_BOX(box), gl_area, 1, 1, 0);
-    // g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
-    // g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
-    // g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
+    gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
+    g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);
 
-    // gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
-    // g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);
+    gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+    g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), this);
 
-    // gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
-    // g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), this);
-
-    // gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
-    // g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), this);
+    gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
+    g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), this);
 
     // Add menu bar.
-    // {
-    //     GMenu* menu_bar = g_menu_new();
-    //     GMenu* file_menu = g_menu_new();
-    //     GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
+    {
+        GMenu* menu_bar = g_menu_new();
+        GMenu* file_menu = g_menu_new();
+        GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
 
-    //     g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
-    //     g_menu_append_item(file_menu, quit_menu_item);
-    //     gtk_application_set_menubar(GTK_APPLICATION(parent.pimpl->app), G_MENU_MODEL(menu_bar));
-    //     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(pimpl->window_widget),
-    //                                             true);
+        g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
+        g_menu_append_item(file_menu, quit_menu_item);
+        gtk_application_set_menubar(GTK_APPLICATION(parent.pimpl->app), G_MENU_MODEL(menu_bar));
+        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(pimpl->window_widget),
+                                                true);
 
-    //     GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
-    //     g_action_map_add_action(G_ACTION_MAP(parent.pimpl->app), G_ACTION(quit_action));
-    //     g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), parent.pimpl->app);
-    // }
+        GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
+        g_action_map_add_action(G_ACTION_MAP(parent.pimpl->app), G_ACTION(quit_action));
+        g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), parent.pimpl->app);
+    }
 
     // gtk_window_maximize(GTK_WINDOW(pimpl->window_widget));
     // TODO: Set default window size without magic numbers.

@@ -1,5 +1,6 @@
 #include "ui/app/app.h"
 #include "ui/app/cocoa/OpenGLView.h"
+#include "ui/app/cocoa/WindowController.h"
 #include "ui/app/cocoa/displaygl.h"
 #include <Foundation/Foundation.h>
 #include <iostream>
@@ -67,7 +68,7 @@ public:
 
 App::App() : pimpl{new impl{}} {
     pimpl->ns_app = NSApplication.sharedApplication;
-    AppDelegate* appDelegate = [[AppDelegate alloc] initWithApp:this];
+    AppDelegate* appDelegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
 
     pimpl->ns_app.activationPolicy = NSApplicationActivationPolicyRegular;
     pimpl->ns_app.delegate = appDelegate;
@@ -91,28 +92,14 @@ void App::incrementWindowCount() {}
 
 class App::Window::impl {
 public:
-    NSWindow* ns_window;
-    OpenGLView* opengl_view;
+    WindowController* window_controller;
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
     NSRect frame = NSMakeRect(500, 0, width, height);
-    NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
-                             NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
-    pimpl->ns_window = [[NSWindow alloc] initWithContentRect:frame
-                                                   styleMask:mask
-                                                     backing:NSBackingStoreBuffered
-                                                       defer:false];
-    pimpl->ns_window.title = @"Simple Text";
-    pimpl->opengl_view = [[[OpenGLView alloc] initWithFrame:frame
-                                                  appWindow:this
-                                                  displaygl:parent.pimpl->displaygl] autorelease];
-    pimpl->ns_window.contentView = pimpl->opengl_view;
-    [pimpl->ns_window makeFirstResponder:pimpl->opengl_view];
-
-    // Bypass the user's tabbing preference.
-    // https://stackoverflow.com/a/40826761/14698275
-    pimpl->ns_window.tabbingMode = NSWindowTabbingModeDisallowed;
+    pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
+                                                             appWindow:this
+                                                             displayGl:parent.pimpl->displaygl];
 
     // Implement window cascading.
     // if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {
@@ -126,16 +113,18 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     // }
 }
 
-App::Window::~Window() {}
+App::Window::~Window() {
+    [pimpl->window_controller release];
+}
 
 void App::Window::show() {
-    [pimpl->ns_window makeKeyAndOrderFront:nil];
+    [pimpl->window_controller show];
 }
 
 void App::Window::close() {
-    [pimpl->ns_window close];
+    [pimpl->window_controller close];
 }
 
 void App::Window::redraw() {
-    [pimpl->opengl_view redraw];
+    [pimpl->window_controller redraw];
 }

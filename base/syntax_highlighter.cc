@@ -1,6 +1,5 @@
 #include "base/filesystem/file_reader.h"
 #include "syntax_highlighter.h"
-#include "util/profile_util.h"
 #include <cstdio>
 #include <vector>
 
@@ -10,10 +9,18 @@
 extern "C" TSLanguage* tree_sitter_json();
 // extern "C" TSLanguage* tree_sitter_scheme();
 
+SyntaxHighlighter::SyntaxHighlighter() {
+    parser = ts_parser_new();
+}
+
+SyntaxHighlighter::~SyntaxHighlighter() {
+    ts_parser_delete(parser);
+    ts_query_delete(query);
+    ts_tree_delete(tree);
+}
+
 void SyntaxHighlighter::setLanguage(std::string scope) {
     this->scope = scope;
-
-    parser = ts_parser_new();
 
     TSLanguage* language;
     fs::path highlights_query_filename;

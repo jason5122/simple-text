@@ -14,4 +14,9 @@ public:
     void onLaunch() override;
     void createChild();
     void destroyChild(EditorWindow* editor_window);
+    void createAllWindows();
+    void destroyAllWindows();
+
+private:
+    std::vector<EditorWindow*> editor_windows;
 };

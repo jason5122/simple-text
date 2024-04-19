@@ -7,7 +7,8 @@
 
 class SyntaxHighlighter {
 public:
-    SyntaxHighlighter() = default;
+    SyntaxHighlighter();
+    ~SyntaxHighlighter();
     void setLanguage(std::string scope);
     void parse(TSInput& input);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);

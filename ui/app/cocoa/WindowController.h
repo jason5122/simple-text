@@ -2,7 +2,7 @@
 #include "ui/app/cocoa/displaygl.h"
 #import <Cocoa/Cocoa.h>
 
-@interface WindowController : NSWindowController
+@interface WindowController : NSWindowController <NSWindowDelegate>
 
 - (instancetype)initWithFrame:(NSRect)frameRect
                     appWindow:(App::Window*)appWindow

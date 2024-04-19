@@ -21,6 +21,7 @@ public:
         virtual void onLeftMouseDown(float mouse_x, float mouse_y) {}
         virtual void onLeftMouseDrag(float mouse_x, float mouse_y) {}
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
+        virtual void onClose() {}
 
     private:
         App& parent;

@@ -19,6 +19,7 @@ public:
     void onLeftMouseDown(float mouse_x, float mouse_y) override;
     void onLeftMouseDrag(float mouse_x, float mouse_y) override;
     void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
+    void onClose() override;
 
 private:
     SimpleText& parent;

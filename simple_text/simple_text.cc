@@ -20,10 +20,10 @@ void SimpleText::onLaunch() {
     main_font_rasterizer.setup(0, main_font, main_font_size);
     ui_font_rasterizer.setup(1, ui_font, ui_font_size);
 
-    createChild();
+    createWindow();
 }
 
-void SimpleText::createChild() {
+void SimpleText::createWindow() {
     EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
     editor_window->show();
 
@@ -31,8 +31,7 @@ void SimpleText::createChild() {
     incrementWindowCount();
 }
 
-void SimpleText::destroyChild(EditorWindow* editor_window) {
-    editor_window->close();
+void SimpleText::destroyWindow(EditorWindow* editor_window) {
     // FIXME: Make this work properly for GTK.
     delete editor_window;
 }
@@ -48,7 +47,6 @@ void SimpleText::createAllWindows() {
 void SimpleText::destroyAllWindows() {
     for (const auto& editor_window : editor_windows) {
         editor_window->close();
-        delete editor_window;
     }
     editor_windows.clear();
 }

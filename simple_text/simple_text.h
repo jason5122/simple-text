@@ -12,8 +12,8 @@ public:
     FontRasterizer ui_font_rasterizer;
 
     void onLaunch() override;
-    void createChild();
-    void destroyChild(EditorWindow* editor_window);
+    void createWindow();
+    void destroyWindow(EditorWindow* editor_window);
     void createAllWindows();
     void destroyAllWindows();
 

@@ -3,6 +3,7 @@
 
 @interface WindowController () {
     OpenGLView* opengl_view;
+    App::Window* app_window;
 }
 @end
 
@@ -13,6 +14,8 @@
                     displayGl:(DisplayGL*)displayGl {
     self = [super init];
     if (self) {
+        app_window = appWindow;
+
         NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                                  NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
         self.window = [[[NSWindow alloc] initWithContentRect:frameRect
@@ -29,6 +32,8 @@
         // Bypass the user's tabbing preference.
         // https://stackoverflow.com/a/40826761/14698275
         self.window.tabbingMode = NSWindowTabbingModeDisallowed;
+
+        self.window.delegate = self;
     }
     return self;
 }
@@ -43,6 +48,10 @@
 
 - (void)redraw {
     [opengl_view redraw];
+}
+
+- (void)windowWillClose:(NSNotification*)notification {
+    app_window->onClose();
 }
 
 @end

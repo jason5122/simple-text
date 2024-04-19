@@ -92,10 +92,10 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
 
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        parent.createChild();
+        parent.createWindow();
     }
     if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        parent.destroyChild(this);
+        close();
     }
 
     if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
@@ -104,4 +104,8 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kB && modifiers == app::kPrimaryModifier) {
         parent.destroyAllWindows();
     }
+}
+
+void EditorWindow::onClose() {
+    parent.destroyWindow(this);
 }

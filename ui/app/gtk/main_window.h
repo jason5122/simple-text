@@ -14,4 +14,5 @@ public:
 
 private:
     GtkWidget* window;
+    GtkWidget* gl_area;
 };

@@ -5,7 +5,6 @@
 // GtkWindow callbacks.
 static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer user_data);
 // GLArea callbacks.
-static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
 static void realize(GtkWidget* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
@@ -19,16 +18,14 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
 }
 
 MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
-    : window{gtk_application_window_new(gtk_app)}, app_window{app_window} {
+    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()}, app_window{
+                                                                                   app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
-
-    GtkWidget* gl_area = gtk_gl_area_new();
     gtk_container_add(GTK_CONTAINER(window), gl_area);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(key_press_event), this);
 
-    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
     g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
@@ -115,10 +112,6 @@ static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer us
     main_window->app_window->onKeyDown(key, modifiers);
 
     return true;
-}
-
-static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
-    return nullptr;
 }
 
 static void realize(GtkWidget* self, gpointer user_data) {

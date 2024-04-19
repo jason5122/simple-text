@@ -42,22 +42,10 @@ App::~App() {
 class App::Window::impl {
 public:
     MainWindow* main_window;
-    GtkWidget* window_widget;
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
     pimpl->main_window = new MainWindow(parent.pimpl->app, this);
-
-    // // FIXME: Test out realizing widget after attaching it to a window.
-    // {
-    //     GtkWidget* dummy_gl_area = gtk_gl_area_new();
-    //     // gtk_widget_realize(dummy_gl_area);
-    //     GdkGLContext* context = gtk_gl_area_get_context(GTK_GL_AREA(dummy_gl_area));
-
-    //     if (context == nullptr) {
-    //         std::cerr << "GdkGLContext is nullptr\n";
-    //     }
-    // }
 }
 
 void App::Window::show() {
@@ -72,4 +60,6 @@ void App::Window::redraw() {
     pimpl->main_window->redraw();
 }
 
-App::Window::~Window() {}
+App::Window::~Window() {
+    std::cerr << "App::Window destructor\n";
+}

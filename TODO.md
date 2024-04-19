@@ -2,6 +2,11 @@
 
 ## Priority
 
+### GN
+
+- Fix Windows compilation not detecting changes in header files.
+  - Look into `precompiled_header_type` variable.
+
 ### UI Framework
 
 - Reuse `//renderer` classes across windows.

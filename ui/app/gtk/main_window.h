@@ -1,0 +1,16 @@
+#pragma once
+
+#include "ui/app/app.h"
+#include <gtk/gtk.h>
+
+class MainWindow {
+public:
+    App::Window* app_window;
+
+    MainWindow(GtkApplication* gtk_app, App::Window* app_window);
+    void show();
+    void close();
+
+private:
+    GtkWidget* window;
+};

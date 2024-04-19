@@ -1,4 +1,5 @@
 #include "ui/app/app.h"
+#include "ui/app/gtk/main_window.h"
 #include <glad/glad.h>
 #include <gtk/gtk.h>
 #include <iostream>
@@ -183,76 +184,80 @@ App::~App() {
 
 class App::Window::impl {
 public:
+    MainWindow* main_window;
     GtkWidget* window_widget;
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
-    pimpl->window_widget = gtk_application_window_new(parent.pimpl->app);
-    gtk_window_set_title(GTK_WINDOW(pimpl->window_widget), "Simple Text");
+    pimpl->main_window = new MainWindow(parent.pimpl->app, this);
 
-    gtk_widget_add_events(pimpl->window_widget, GDK_KEY_PRESS_MASK);
-    g_signal_connect(G_OBJECT(pimpl->window_widget), "key_press_event",
-                     G_CALLBACK(key_press_event), this);
+    // pimpl->window_widget = gtk_application_window_new(parent.pimpl->app);
+    // gtk_window_set_title(GTK_WINDOW(pimpl->window_widget), "Simple Text");
 
-    // FIXME: Test out realizing widget after attaching it to a window.
-    {
-        GtkWidget* dummy_gl_area = gtk_gl_area_new();
-        // gtk_widget_realize(dummy_gl_area);
-        GdkGLContext* context = gtk_gl_area_get_context(GTK_GL_AREA(dummy_gl_area));
+    // gtk_widget_add_events(pimpl->window_widget, GDK_KEY_PRESS_MASK);
+    // g_signal_connect(G_OBJECT(pimpl->window_widget), "key_press_event",
+    //                  G_CALLBACK(key_press_event), this);
 
-        if (context == nullptr) {
-            std::cerr << "GdkGLContext is nullptr\n";
-        }
-    }
+    // // FIXME: Test out realizing widget after attaching it to a window.
+    // {
+    //     GtkWidget* dummy_gl_area = gtk_gl_area_new();
+    //     // gtk_widget_realize(dummy_gl_area);
+    //     GdkGLContext* context = gtk_gl_area_get_context(GTK_GL_AREA(dummy_gl_area));
 
-    GtkWidget* gl_area = gtk_gl_area_new();
-    // g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
-    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
-    gtk_container_add(GTK_CONTAINER(pimpl->window_widget), gl_area);
+    //     if (context == nullptr) {
+    //         std::cerr << "GdkGLContext is nullptr\n";
+    //     }
+    // }
 
-    gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
-    g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);
+    // GtkWidget* gl_area = gtk_gl_area_new();
+    // // g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
+    // g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
+    // g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
+    // g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
+    // gtk_container_add(GTK_CONTAINER(pimpl->window_widget), gl_area);
 
-    gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
-    g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), this);
+    // gtk_widget_add_events(gl_area, GDK_SMOOTH_SCROLL_MASK);
+    // g_signal_connect(gl_area, "scroll-event", G_CALLBACK(scroll_event), this);
 
-    gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
-    g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), this);
+    // gtk_widget_add_events(gl_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+    // g_signal_connect(G_OBJECT(gl_area), "button-press-event", G_CALLBACK(button_event), this);
 
-    // Add menu bar.
-    {
-        GMenu* menu_bar = g_menu_new();
-        GMenu* file_menu = g_menu_new();
-        GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
+    // gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
+    // g_signal_connect(G_OBJECT(gl_area), "motion-notify-event", G_CALLBACK(motion_event), this);
 
-        g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
-        g_menu_append_item(file_menu, quit_menu_item);
-        gtk_application_set_menubar(GTK_APPLICATION(parent.pimpl->app), G_MENU_MODEL(menu_bar));
-        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(pimpl->window_widget),
-                                                true);
+    // // Add menu bar.
+    // {
+    //     GMenu* menu_bar = g_menu_new();
+    //     GMenu* file_menu = g_menu_new();
+    //     GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
 
-        GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
-        g_action_map_add_action(G_ACTION_MAP(parent.pimpl->app), G_ACTION(quit_action));
-        g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), parent.pimpl->app);
-    }
+    //     g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
+    //     g_menu_append_item(file_menu, quit_menu_item);
+    //     gtk_application_set_menubar(GTK_APPLICATION(parent.pimpl->app), G_MENU_MODEL(menu_bar));
+    //     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(pimpl->window_widget),
+    //                                             true);
 
-    // gtk_window_maximize(GTK_WINDOW(pimpl->window_widget));
-    // TODO: Set default window size without magic numbers.
-    gtk_window_set_default_size(GTK_WINDOW(pimpl->window_widget), width, height);
+    //     GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
+    //     g_action_map_add_action(G_ACTION_MAP(parent.pimpl->app), G_ACTION(quit_action));
+    //     g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), parent.pimpl->app);
+    // }
+
+    // // gtk_window_maximize(GTK_WINDOW(pimpl->window_widget));
+    // gtk_window_set_default_size(GTK_WINDOW(pimpl->window_widget), width, height);
 }
 
 void App::Window::show() {
-    gtk_widget_show_all(pimpl->window_widget);
+    // gtk_widget_show_all(pimpl->window_widget);
+    pimpl->main_window->show();
 }
 
 void App::Window::close() {
-    gtk_window_close(GTK_WINDOW(pimpl->window_widget));
+    // gtk_window_close(GTK_WINDOW(pimpl->window_widget));
+    pimpl->main_window->close();
 }
 
 void App::Window::redraw() {
-    gtk_widget_queue_draw(pimpl->window_widget);
+    // gtk_widget_queue_draw(pimpl->window_widget);
 }
 
 App::Window::~Window() {}

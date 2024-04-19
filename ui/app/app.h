@@ -8,13 +8,6 @@ class App {
 public:
     class Window {
     public:
-        struct Frame {
-            int x;
-            int y;
-            int width;
-            int height;
-        };
-
         Window(App& parent, int width, int height);
         ~Window();
         void show();

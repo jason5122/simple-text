@@ -33,5 +33,6 @@ void SimpleText::createChild() {
 
 void SimpleText::destroyChild(EditorWindow* editor_window) {
     editor_window->close();
+    // FIXME: Make this work properly for GTK.
     // delete editor_window;
 }

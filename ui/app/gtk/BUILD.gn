@@ -1,7 +1,10 @@
 import("//build/config/linux/pkg_config.gni")
 
 source_set("gtk") {
-  sources = [ "app_linux.cc" ]
+  sources = [
+    "app_linux.cc",
+    "main_window.cc",
+  ]
 
   public_configs = [ ":gtk3" ]
 

@@ -30,7 +30,7 @@ void SimpleText::createWindow() {
 
 void SimpleText::destroyWindow(EditorWindow* editor_window) {
     // FIXME: Make this work properly for GTK.
-    delete editor_window;
+    // delete editor_window;
 }
 
 #include <iostream>

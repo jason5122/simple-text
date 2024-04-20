@@ -1,10 +1,17 @@
 source_set("renderer") {
   sources = [
     "atlas.cc",
+    "atlas.h",
     "image_renderer.cc",
+    "image_renderer.h",
+    "opengl_error_util.h",
+    "opengl_types.h",
     "rect_renderer.cc",
+    "rect_renderer.h",
     "shader.cc",
+    "shader.h",
     "text_renderer.cc",
+    "text_renderer.h",
   ]
 
   deps = [

@@ -1,6 +1,21 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
+common_sources = [
+  "editor_window.cc",
+  "editor_window.h",
+  "main.cc",
+  "main_app.cc",
+  "simple_text.cc",
+  "simple_text.h",
+]
+
+common_deps = [
+  "//base",
+  "//ui/app",
+  "//ui/renderer",
+]
+
 if (is_mac) {
   mac_app_bundle("simple_text") {
     output_name = "Simple Text"
@@ -9,18 +24,12 @@ if (is_mac) {
 
     # define `code_signing_identity` in args.gn
 
-    sources = [
-      "editor_window.cc",
-      "main.cc",
-      "main_app.cc",
-      "simple_text.cc",
-    ]
+    sources = common_sources
 
-    deps = [
-      # ":icon",
-      "//base",
-      "//ui/app",
-      "//ui/renderer",
+    deps = common_deps
+
+    deps += [
+      # ":icon"
     ]
   }
   # icon("icon") {
@@ -30,38 +39,16 @@ if (is_mac) {
 
 if (is_linux) {
   executable("simple_text") {
-    output_name = "simple_text"
+    sources = common_sources
 
-    sources = [
-      "editor_window.cc",
-      "main.cc",
-      "main_app.cc",
-      "simple_text.cc",
-    ]
-
-    deps = [
-      "//base",
-      "//ui/app",
-      "//ui/renderer",
-    ]
+    deps = common_deps
   }
 }
 
 if (is_win) {
   executable("simple_text") {
-    output_name = "simple_text"
+    sources = common_sources
 
-    sources = [
-      "editor_window.cc",
-      "main.cc",
-      "main_app.cc",
-      "simple_text.cc",
-    ]
-
-    deps = [
-      "//base",
-      "//ui/app",
-      "//ui/renderer",
-    ]
+    deps = common_deps
   }
 }

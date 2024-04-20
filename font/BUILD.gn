@@ -1,18 +1,23 @@
 import("//build/config/linux/pkg_config.gni")
 
 source_set("font") {
+  sources = [
+    "rasterized_glyph.h",
+    "rasterizer.h",
+  ]
+
   if (is_mac) {
-    sources = [ "core_text_rasterizer.mm" ]
+    sources += [ "core_text_rasterizer.mm" ]
   }
 
   if (is_linux) {
-    sources = [ "pango_rasterizer.cc" ]
+    sources += [ "pango_rasterizer.cc" ]
 
     public_configs = [ ":linux_font_libs" ]
   }
 
   if (is_win) {
-    sources = [ "directwrite_rasterizer.cc" ]
+    sources += [ "directwrite_rasterizer.cc" ]
   }
 }
 

@@ -166,6 +166,11 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    case WM_DESTROY: {
+        app_window.onClose();
+        return 0;
+    }
+
     case WM_ERASEBKGND:
         return 1;
 

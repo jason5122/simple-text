@@ -9,7 +9,6 @@
 class App::impl {
 public:
     DummyContext dummy_context;
-    int window_count = 0;
 };
 
 App::App() : pimpl{new impl{}} {}
@@ -26,12 +25,15 @@ void App::run() {
     }
 }
 
-// TODO: Debug; remove this.
-void App::incrementWindowCount() {
-    pimpl->window_count++;
+void App::quit() {
+    PostQuitMessage(0);
 }
 
-App::~App() {}
+#include <iostream>
+
+App::~App() {
+    std::cerr << "WHAT NO WAY\n";
+}
 
 class App::Window::impl {
 public:
@@ -68,12 +70,6 @@ void App::Window::show() {
 
 void App::Window::close() {
     pimpl->main_window.destroy();
-
-    // TODO: Debug; remove this.
-    parent.pimpl->window_count--;
-    if (parent.pimpl->window_count <= 0) {
-        pimpl->main_window.quit();
-    }
 }
 
 void App::Window::redraw() {

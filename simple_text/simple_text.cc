@@ -26,9 +26,6 @@ void SimpleText::onLaunch() {
 void SimpleText::createWindow() {
     EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
     editor_window->show();
-
-    // TODO: Debug; remove this.
-    incrementWindowCount();
 }
 
 void SimpleText::destroyWindow(EditorWindow* editor_window) {
@@ -36,11 +33,15 @@ void SimpleText::destroyWindow(EditorWindow* editor_window) {
     delete editor_window;
 }
 
+#include <iostream>
+
 void SimpleText::createAllWindows() {
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 1; i++) {
         EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
         editor_window->show();
         editor_windows.push_back(editor_window);
+
+        std::cerr << editor_windows.size() << '\n';
     }
 }
 

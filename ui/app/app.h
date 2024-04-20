@@ -33,11 +33,9 @@ public:
     App();
     ~App();
     void run();
+    void quit();
 
     virtual void onLaunch() {}
-
-    // TODO: Debug; remove this.
-    void incrementWindowCount();
 
 protected:
     class impl;

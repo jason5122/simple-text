@@ -106,6 +106,9 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
 }
 
+#include <iostream>
+
 void EditorWindow::onClose() {
+    std::cerr << "onClose\n";
     parent.destroyWindow(this);
 }

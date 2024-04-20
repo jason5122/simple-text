@@ -17,6 +17,7 @@ public:
     void createAllWindows();
     void destroyAllWindows();
 
-private:
+    // private:
     std::vector<EditorWindow*> editor_windows;
+    int window_count = 0;
 };

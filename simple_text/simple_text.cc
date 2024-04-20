@@ -36,7 +36,7 @@ void SimpleText::destroyWindow(EditorWindow* editor_window) {
 #include <iostream>
 
 void SimpleText::createAllWindows() {
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 20; i++) {
         EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
         editor_window->show();
         editor_windows.push_back(editor_window);

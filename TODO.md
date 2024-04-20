@@ -6,6 +6,8 @@
 
 - Fix Windows compilation not detecting changes in header files.
   - Look into `precompiled_header_type` variable.
+- Track header files in GN sources for `//third_party` too
+  - Also evaluate if this makes a difference.
 
 ### UI Framework
 

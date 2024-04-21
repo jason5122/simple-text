@@ -3,12 +3,12 @@
 #include <glad/glad.h>
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height)
-    : Window(parent, width, height), parent(parent) {}
+    : Window(parent, width, height), parent(parent), memory_waster(1000000, 1) {}
 
 #include <iostream>
 
-void EditorWindow::customDelete() {
-    std::cerr << "hi\n";
+EditorWindow::~EditorWindow() {
+    std::cerr << "~EditorWindow\n";
 }
 
 void EditorWindow::onOpenGLActivate(int width, int height) {

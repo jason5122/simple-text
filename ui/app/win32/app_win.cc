@@ -51,6 +51,10 @@ App::Window::Window(App& parent, int width, int height)
     // pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 }
 
+App::Window::~Window() {
+    std::cerr << "App::Window::~Window\n";
+}
+
 void App::Window::show() {
     pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 
@@ -75,5 +79,3 @@ void App::Window::close() {
 void App::Window::redraw() {
     pimpl->main_window.redraw();
 }
-
-App::Window::~Window() {}

@@ -6,7 +6,7 @@
 class EditorWindow : public App::Window {
 public:
     EditorWindow(SimpleText& parent, int width, int height);
-    void customDelete();
+    ~EditorWindow();
 
     void onOpenGLActivate(int width, int height) override;
     void onDraw() override;
@@ -16,4 +16,5 @@ public:
 
 private:
     SimpleText& parent;
+    std::vector<int> memory_waster;
 };

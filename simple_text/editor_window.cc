@@ -4,7 +4,7 @@
 using EditorWindow = SimpleText::EditorWindow;
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window(parent, width, height), parent(parent), memory_waster(1000000, 1), wid(wid) {}
+    : Window(parent, width, height), parent(parent), wid(wid) {}
 
 EditorWindow::~EditorWindow() {}
 

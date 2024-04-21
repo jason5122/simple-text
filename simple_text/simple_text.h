@@ -30,7 +30,6 @@ public:
 
     private:
         SimpleText& parent;
-        std::vector<int> memory_waster;
 
         float scroll_x = 0;
         float scroll_y = 0;

@@ -23,6 +23,8 @@ void SimpleText::onLaunch() {
     createWindow();
 }
 
+#include <iostream>
+
 void SimpleText::createWindow() {
     EditorWindow* editor_window = new EditorWindow(*this, 600, 400);
     editor_window->show();
@@ -30,10 +32,9 @@ void SimpleText::createWindow() {
 
 void SimpleText::destroyWindow(EditorWindow* editor_window) {
     // FIXME: Make this work properly for GTK.
-    // delete editor_window;
+    delete editor_window;
+    // editor_window->customDelete();
 }
-
-#include <iostream>
 
 void SimpleText::createAllWindows() {
     for (int i = 0; i < 20; i++) {

@@ -18,7 +18,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
     fs::path file_path = ResourcePath() / "sample_files/sort.scm";
 
-    buffer.setContents(ReadFile(file_path));
+    // buffer.setContents(ReadFile(file_path));
+    buffer.setContents("hello world!\n");
     highlighter.setLanguage("source.json");
 
     TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};

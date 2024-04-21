@@ -32,9 +32,6 @@ void App::run() {
     g_application_run(G_APPLICATION(pimpl->app), 0, NULL);
 }
 
-// This isn't required for GTK 3.
-void App::incrementWindowCount() {}
-
 App::~App() {
     g_object_unref(pimpl->app);
 }

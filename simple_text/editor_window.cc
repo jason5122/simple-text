@@ -1,6 +1,9 @@
 #include "build/buildflag.h"
-#include "editor_window.h"
+// #include "editor_window.h"
+#include "simple_text.h"
 #include <glad/glad.h>
+
+using EditorWindow = SimpleText::EditorWindow;
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height)
     : Window(parent, width, height), parent(parent), memory_waster(1000000, 1) {}
@@ -46,6 +49,6 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 #include <iostream>
 
 void EditorWindow::onClose() {
-    std::cerr << "onClose\n";
-    parent.destroyWindow(this);
+    // std::cerr << "onClose\n";
+    // parent.destroyWindow(this);
 }

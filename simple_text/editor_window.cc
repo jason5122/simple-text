@@ -15,11 +15,10 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
     // fs::path file_path = ResourcePath() / "sample_files/example.json";
-    // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-    fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+    fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+    // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
 
-    // buffer.setContents(ReadFile(file_path));
-    buffer.setContents("hello world!\n");
+    buffer.setContents(ReadFile(file_path));
     highlighter.setLanguage("source.json");
 
     TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};

@@ -11,9 +11,9 @@ common_sources = [
 ]
 
 common_deps = [
-  # "//base",
+  "//base",
   "//ui/app",
-  # "//ui/renderer",
+  "//ui/renderer",
 ]
 
 if (is_mac) {

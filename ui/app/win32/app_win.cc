@@ -29,11 +29,7 @@ void App::quit() {
     PostQuitMessage(0);
 }
 
-#include <iostream>
-
-App::~App() {
-    std::cerr << "WHAT NO WAY\n";
-}
+App::~App() {}
 
 class App::Window::impl {
 public:
@@ -51,9 +47,7 @@ App::Window::Window(App& parent, int width, int height)
     // pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 }
 
-App::Window::~Window() {
-    std::cerr << "App::Window::~Window\n";
-}
+App::Window::~Window() {}
 
 void App::Window::show() {
     pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);

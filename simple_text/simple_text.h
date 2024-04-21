@@ -3,13 +3,13 @@
 #include "ui/app/app.h"
 #include <vector>
 
-// class EditorWindow;
-
 class SimpleText : public App {
 public:
     class EditorWindow : public App::Window {
     public:
-        EditorWindow(SimpleText& parent, int width, int height);
+        int wid;
+
+        EditorWindow(SimpleText& parent, int width, int height, int wid);
         ~EditorWindow();
 
         void onOpenGLActivate(int width, int height) override;
@@ -23,17 +23,15 @@ public:
         std::vector<int> memory_waster;
     };
 
-    SimpleText() {}
-    ~SimpleText() {}
-
-    void onLaunch() override;
+    SimpleText();
+    ~SimpleText();
     void createWindow();
-    void destroyWindow(EditorWindow* editor_window);
-    void createAllWindows();
+    void destroyWindow(int wid);
+    void createNWindows(int n);
     void destroyAllWindows();
 
+    void onLaunch() override;
+
 private:
-    std::vector<EditorWindow*> editor_windows;
-    std::vector<std::unique_ptr<EditorWindow>> editor_windows_unique;
-    int window_count = 0;
+    std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 };

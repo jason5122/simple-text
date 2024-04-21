@@ -2,11 +2,6 @@
 #include "ui/app/gtk/main_window.h"
 #include <glad/glad.h>
 #include <gtk/gtk.h>
-#include <iostream>
-
-extern "C" {
-#include "third_party/libgrapheme/grapheme.h"
-}
 
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
@@ -45,6 +40,8 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     pimpl->main_window = new MainWindow(parent.pimpl->app, this);
 }
 
+App::Window::~Window() {}
+
 void App::Window::show() {
     pimpl->main_window->show();
 }
@@ -55,8 +52,4 @@ void App::Window::close() {
 
 void App::Window::redraw() {
     pimpl->main_window->redraw();
-}
-
-App::Window::~Window() {
-    std::cerr << "App::Window destructor\n";
 }

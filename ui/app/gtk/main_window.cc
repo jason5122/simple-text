@@ -4,6 +4,7 @@
 
 // GtkWindow callbacks.
 static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer user_data);
+static void destroy(GtkWidget* self, gpointer user_data);
 // GLArea callbacks.
 static void realize(GtkWidget* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
@@ -25,6 +26,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(key_press_event), this);
+    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), this);
 
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
@@ -112,6 +114,11 @@ static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer us
     main_window->app_window->onKeyDown(key, modifiers);
 
     return true;
+}
+
+static void destroy(GtkWidget* self, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+    main_window->app_window->onClose();
 }
 
 static void realize(GtkWidget* self, gpointer user_data) {

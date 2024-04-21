@@ -28,7 +28,7 @@ void SimpleText::createNWindows(int n) {
 
 void SimpleText::destroyAllWindows() {
     for (const auto& editor_window : editor_windows) {
-        if (editor_window != nullptr) {
+        if (editor_window) {
             editor_window->close();
         }
     }

@@ -1,10 +1,15 @@
 #include "gui/app.h"
+#include "gui/gtk/dummy_window.h"
 #include "gui/gtk/main_window.h"
 #include <glad/glad.h>
 #include <gtk/gtk.h>
 
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
+
+    DummyWindow* dummy_window = new DummyWindow();
+    dummy_window->show();
+
     app->onLaunch();
 }
 

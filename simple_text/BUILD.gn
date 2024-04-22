@@ -2,18 +2,20 @@ import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
 common_sources = [
-  "editor_window.cc",
-  "editor_window.h",
-  "main.cc",
-  "main_app.cc",
-  "simple_text.cc",
-  "simple_text.h",
+  # "editor_window.cc",
+  # "editor_window.h",
+  # "main.cc",
+  # "main_app.cc",
+  # "simple_text.cc",
+  # "simple_text.h",
+
+  "testy.cc",
 ]
 
 common_deps = [
-  "//base",
-  "//ui/app",
-  "//ui/renderer",
+  # "//base",
+  # "//ui/app",
+  # "//ui/renderer",
 ]
 
 if (is_mac) {

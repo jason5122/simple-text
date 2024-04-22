@@ -1,40 +1,46 @@
 toolchain("clang") {
-  cc = "clang"
-  cxx = "clang++"
-  ar = "llvm-ar"
+  # cc = "clang-cl"
+  cl = "clang-cl"
+  link = "lld-link"
+
+  # ar = "$link /lib"
 
   _tool_wrapper_path =
       rebase_path("//build/toolchain/win/tool_wrapper.py", root_build_dir)
-  _rm_path = rebase_path("//build/toolchain/win/rm.py", root_build_dir)
+
+  # _rm_path = rebase_path("//build/toolchain/win/rm.py", root_build_dir)
 
   tool("link") {
-    rspfile = "{{output}}.rsp"
+    exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+
+    rspfile = "$exename.rsp"
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
 
-    command = "$cxx {{ldflags}} -o {{output}} @$rspfile"
+    command = "$link {{ldflags}} \"/OUT:$exename\" \"@$rspfile\""
     description = "LINK {{output}}"
 
-    outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
+    outputs = [ exename ]
     default_output_dir = "{{root_out_dir}}"
     default_output_extension = ".exe"
     output_prefix = ""
   }
 
-  tool("alink") {
-    rspfile = "{{output}}.rsp"
-    rspfile_content = "{{inputs}}"
+  # TODO: Implement static library, shared library, and C compilation.
+  # tool("alink") {
+  #   rspfile = "{{output}}.rsp"
+  #   rspfile_content = "{{inputs}}"
 
-    # TODO: Don't hard code `python`.
-    # Remove the output file first so that ar doesn't try to modify the existing file.
-    command = "$ar {{arflags}} -r -c -s -D {{output}} @$rspfile"
-    command = "cmd /c python $_rm_path \"{{output}}\" && $command"
-    description = "AR {{output}}"
+  #   # TODO: Don't hard code `python`.
+  #   # Remove the output file first so that ar doesn't try to modify the existing file.
+  #   command = "$ar {{arflags}} -r -c -s -D {{output}} @$rspfile"
+  #   command = "cmd /c python $_rm_path \"{{output}}\" && $command"
+  #   description = "AR {{output}}"
 
-    outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
-    default_output_dir = "{{target_out_dir}}"
-    default_output_extension = ".a"
-    output_prefix = "lib"
-  }
+  #   outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
+  #   default_output_dir = "{{target_out_dir}}"
+  #   default_output_extension = ".a"
+  #   output_prefix = "lib"
+  # }
 
   # tool("solink") {
   #   rspfile = "{{output}}.rsp"
@@ -49,22 +55,24 @@ toolchain("clang") {
   #   output_prefix = "lib"
   # }
 
-  tool("cc") {
-    depfile = "{{output}}.d"
-    depsformat = "msvc"
-    precompiled_header_type = "msvc"
-    command = "$cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
-    description = "CC {{output}}"
-    outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.o" ]
-  }
+  # tool("cc") {
+  #   depfile = "{{output}}.d"
+  #   depsformat = "msvc"
+  #   precompiled_header_type = "msvc"
+  #   command = "$cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
+  #   description = "CC {{output}}"
+  #   outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.obj" ]
+  # }
 
   tool("cxx") {
-    depfile = "{{output}}.d"
+    # depfile = "{{output}}.d"
     depsformat = "msvc"
     precompiled_header_type = "msvc"
-    command = "$cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -c {{source}} -o {{output}}"
+
+    # command = "$cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -c {{source}} -o {{output}}"
+    command = "$cl /c {{source}} /Fo{{output}} /nologo /showIncludes:user {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}}"
     description = "CXX {{output}}"
-    outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.o" ]
+    outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.obj" ]
   }
 
   tool("stamp") {

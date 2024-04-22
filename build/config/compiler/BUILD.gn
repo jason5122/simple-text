@@ -23,16 +23,30 @@ config("compiler") {
     defines += [ "_GNU_SOURCE" ]
   }
 
-  cflags_c += [ "-std=c17" ]
-  cflags_cc += [ "-std=c++20" ]
+  if (is_win) {
+    cflags_c += [ "/std:c17" ]
+    cflags_cc += [ "/std:c++20" ]
+  } else {
+    cflags_c += [ "-std=c17" ]
+    cflags_cc += [ "-std=c++20" ]
+  }
 
   # Pass the same C/C++ flags to the Objective-C/C++ compiler.
   cflags_objc += cflags_c
   cflags_objcc += cflags_cc
 
-  ldflags = [ "-fuse-ld=lld" ]
+  if (!is_win) {
+    ldflags = [ "-fuse-ld=lld" ]
+  }
+}
 
-  cflags += [ "-fno-exceptions" ]
+config("no_exceptions") {
+  if (is_win) {
+    defines = [ "_HAS_EXCEPTIONS=0" ]
+  } else {
+    cflags_cc = [ "-fno-exceptions" ]
+    cflags_objcc = cflags_cc
+  }
 }
 
 config("c99") {

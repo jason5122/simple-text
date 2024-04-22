@@ -52,6 +52,4 @@ void SimpleText::destroyAllWindows() {
             editor_windows[i]->close();
         }
     }
-
-    createWindow();
 }

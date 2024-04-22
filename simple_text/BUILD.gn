@@ -1,77 +1,54 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
-static_library("example_lib") {
-  sources = [ "example_lib.cc" ]
+common_sources = [
+  "editor_window.cc",
+  "editor_window.h",
+  "main.cc",
+  "main_app.cc",
+  "simple_text.cc",
+  "simple_text.h",
+]
+
+common_deps = [
+  "//base",
+  "//ui/app",
+  "//ui/renderer",
+]
+
+if (is_mac) {
+  mac_app_bundle("simple_text") {
+    output_name = "Simple Text"
+    bundle_identifier = "com.jason5122.simple-text"
+    info_plist = "resources/Info.plist"
+
+    # define `code_signing_identity` in args.gn
+
+    sources = common_sources
+
+    deps = common_deps
+
+    deps += [
+      # ":icon"
+    ]
+  }
+  # icon("icon") {
+  #   sources = [ "resources/app.iconset" ]
+  # }
 }
 
-shared_library("example_dll") {
-  sources = [ "example_dll.cc" ]
+if (is_linux) {
+  executable("simple_text") {
+    sources = common_sources
+
+    deps = common_deps
+  }
 }
 
-executable("simple_text") {
-  sources = [
-    "testy.cc",
-    "testy2.c",
-  ]
+if (is_win) {
+  executable("simple_text") {
+    sources = common_sources
 
-  deps = [
-    ":example_dll",
-    ":example_lib",
-  ]
+    deps = common_deps
+  }
 }
-
-# common_sources = [
-#   # "editor_window.cc",
-#   # "editor_window.h",
-#   # "main.cc",
-#   # "main_app.cc",
-#   # "simple_text.cc",
-#   # "simple_text.h",
-
-#   "testy.cc",
-#   "testy2.c",
-# ]
-
-# common_deps = [
-#   # "//base",
-#   # "//ui/app",
-#   # "//ui/renderer",
-# ]
-
-# if (is_mac) {
-#   mac_app_bundle("simple_text") {
-#     output_name = "Simple Text"
-#     bundle_identifier = "com.jason5122.simple-text"
-#     info_plist = "resources/Info.plist"
-
-#     # define `code_signing_identity` in args.gn
-
-#     sources = common_sources
-
-#     deps = common_deps
-
-#     deps += [
-#       # ":icon"
-#     ]
-#   }
-#   # icon("icon") {
-#   #   sources = [ "resources/app.iconset" ]
-#   # }
-# }
-
-# if (is_linux) {
-#   executable("simple_text") {
-#     sources = common_sources
-
-#     deps = common_deps
-#   }
-# }
-
-# if (is_win) {
-#   executable("simple_text") {
-#     sources = common_sources
-
-#     deps = common_deps
-#   }
-# }

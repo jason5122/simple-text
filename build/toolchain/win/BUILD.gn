@@ -1,10 +1,12 @@
 toolchain("clang") {
+  # Taken from //chromium/src/build/toolchain/win/toolchain.gni.
   cl = "clang-cl"
   link = "lld-link"
   lib = "$link /lib"
 
-  _tool_wrapper_path =
-      rebase_path("//build/toolchain/win/tool_wrapper.py", root_build_dir)
+  # Make these apply to all tools below.
+  lib_switch = ""
+  lib_dir_switch = "/LIBPATH:"
 
   tool("link") {
     exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
@@ -15,6 +17,7 @@ toolchain("clang") {
     description = "LINK {{output}}"
 
     outputs = [ exename ]
+    runtime_outputs = outputs
     default_output_dir = "{{root_out_dir}}"
     default_output_extension = ".exe"
   }
@@ -80,8 +83,10 @@ toolchain("clang") {
     description = "STAMP {{output}}"
   }
 
+  # Taken from //chromium/src/third_party/perfetto/gn/standalone/toolchain/BUILD.gn.
   tool("copy") {
-    command = "\"$python_path\" $_tool_wrapper_path recursive-mirror {{source}} {{output}}"
+    cp_py = rebase_path("cp.py")
+    command = "cmd.exe /c python \"$cp_py\" {{source}} {{output}}"
     description = "COPY {{source}} {{output}}"
   }
 }

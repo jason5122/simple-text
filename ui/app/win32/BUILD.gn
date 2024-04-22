@@ -16,11 +16,11 @@ source_set("win32") {
   ]
 
   libs = [
-    "user32",
-    "opengl32",
-    "gdi32",
-    "dwrite",
-    "shcore",
+    "user32.lib",
+    "opengl32.lib",
+    "gdi32.lib",
+    "dwrite.lib",
+    "shcore.lib",
   ]
 
   public_deps = [ "//third_party/glad" ]

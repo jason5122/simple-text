@@ -2,9 +2,7 @@ source_set("win32") {
   sources = [
     "app_win.cc",
     "dummy_context.cc",
-    "dummy_context.h",
     "main_window.cc",
-    "main_window.h",
   ]
   defines = [
     "UNICODE",

@@ -1,5 +1,5 @@
-#include "ui/app/app.h"
-#include "ui/app/cocoa/displaygl.h"
+#include "ui/app.h"
+#include "ui/cocoa/displaygl.h"
 #import <Cocoa/Cocoa.h>
 
 @interface WindowController : NSWindowController <NSWindowDelegate>

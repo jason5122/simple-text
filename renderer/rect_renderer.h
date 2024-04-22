@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/renderer/shader.h"
+#include "renderer/shader.h"
 #include <cstddef>
 #include <glad/glad.h>
 

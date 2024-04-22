@@ -1,10 +1,7 @@
 import("//build/config/linux/pkg_config.gni")
 
 source_set("font") {
-  sources = [
-    "rasterized_glyph.h",
-    "rasterizer.h",
-  ]
+  sources = []
 
   if (is_mac) {
     sources += [ "core_text_rasterizer.mm" ]

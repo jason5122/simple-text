@@ -1,10 +1,7 @@
 source_set("base") {
   sources = [
     "buffer.cc",
-    "buffer.h",
-    "rgb.h",
     "syntax_highlighter.cc",
-    "syntax_highlighter.h",
   ]
 
   deps = [ "//base/queries" ]

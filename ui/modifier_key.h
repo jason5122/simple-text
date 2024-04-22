@@ -1,7 +1,7 @@
 #pragma once
 
 #include "build/buildflag.h"
-#include "ui/app/bitmask_enum.h"
+#include "ui/bitmask_enum.h"
 
 namespace app {
 enum class ModifierKey {

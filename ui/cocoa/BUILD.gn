@@ -1,11 +1,8 @@
 source_set("cocoa") {
   sources = [
-    "OpenGLView.h",
     "OpenGLView.mm",
-    "WindowController.h",
     "WindowController.mm",
     "app_mac.mm",
-    "displaygl.h",
     "displaygl.mm",
   ]
 

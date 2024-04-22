@@ -1,4 +1,4 @@
-group("app") {
+group("ui") {
   if (is_mac) {
     public_deps = [ "cocoa" ]
   }

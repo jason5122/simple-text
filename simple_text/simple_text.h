@@ -1,14 +1,14 @@
 #pragma once
 
-#include "ui/app/app.h"
+#include "ui/app.h"
 #include <vector>
 
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
-#include "ui/renderer/image_renderer.h"
-#include "ui/renderer/rect_renderer.h"
-#include "ui/renderer/text_renderer.h"
+#include "renderer/image_renderer.h"
+#include "renderer/rect_renderer.h"
+#include "renderer/text_renderer.h"
 
 class SimpleText : public App {
 public:

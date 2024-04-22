@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include <glad/glad.h>
 #include <iostream>
 
 // https://learnopengl.com/In-Practice/Debugging

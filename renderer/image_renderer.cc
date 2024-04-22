@@ -1,6 +1,6 @@
 #include "image_renderer.h"
-#include "ui/renderer/opengl_error_util.h"
-#include "ui/renderer/opengl_types.h"
+#include "renderer/opengl_error_util.h"
+#include "renderer/opengl_types.h"
 #include <cstring>
 #include <png.h>
 

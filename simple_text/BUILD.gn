@@ -3,17 +3,16 @@ import("//build/config/mac/mac_app_bundle.gni")
 
 common_sources = [
   "editor_window.cc",
-  "editor_window.h",
   "main.cc",
   "main_app.cc",
   "simple_text.cc",
-  "simple_text.h",
 ]
 
 common_deps = [
+  "sample_files",
   "//base",
-  "//ui/app",
-  "//ui/renderer",
+  "//renderer",
+  "//ui",
 ]
 
 if (is_mac) {
@@ -37,15 +36,7 @@ if (is_mac) {
   # }
 }
 
-if (is_linux) {
-  executable("simple_text") {
-    sources = common_sources
-
-    deps = common_deps
-  }
-}
-
-if (is_win) {
+if (is_linux || is_win) {
   executable("simple_text") {
     sources = common_sources
 

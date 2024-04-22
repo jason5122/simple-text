@@ -1,7 +1,7 @@
-#include "ui/app/app.h"
-#include "ui/app/cocoa/OpenGLView.h"
-#include "ui/app/cocoa/WindowController.h"
-#include "ui/app/cocoa/displaygl.h"
+#include "ui/app.h"
+#include "ui/cocoa/OpenGLView.h"
+#include "ui/cocoa/WindowController.h"
+#include "ui/cocoa/displaygl.h"
 #include <Foundation/Foundation.h>
 #include <iostream>
 #include <vector>

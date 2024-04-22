@@ -1,8 +1,8 @@
 #include "base/filesystem/file_reader.h"
 #include "base/rgb.h"
 #include "rect_renderer.h"
-#include "ui/renderer/opengl_error_util.h"
-#include "ui/renderer/opengl_types.h"
+#include "renderer/opengl_error_util.h"
+#include "renderer/opengl_types.h"
 #include <vector>
 
 namespace {

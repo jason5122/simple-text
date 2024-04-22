@@ -30,13 +30,16 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     text_renderer.setup(width, height, parent.main_font_rasterizer);
     rect_renderer.setup(width, height);
-    image_renderer.setup(width, height);
 }
 
 void EditorWindow::onDraw() {
-    int status_bar_height = parent.ui_font_rasterizer.line_height;
+    int scaled_width = width() * scaleFactor();
+    int scaled_height = height() * scaleFactor();
 
+    glViewport(0, 0, scaled_width, scaled_height);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    int status_bar_height = parent.ui_font_rasterizer.line_height;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(scroll_x, scroll_y, buffer, highlighter, editor_offset_x,
@@ -48,7 +51,8 @@ void EditorWindow::onDraw() {
                        buffer.lineCount(), text_renderer.longest_line_x, editor_offset_x,
                        editor_offset_y, status_bar_height);
 
-    image_renderer.draw(scroll_x, scroll_y, editor_offset_x, editor_offset_y);
+    parent.image_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, editor_offset_x,
+                               editor_offset_y);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderUiText(parent.main_font_rasterizer, parent.ui_font_rasterizer);
@@ -58,7 +62,6 @@ void EditorWindow::onResize(int width, int height) {
     glViewport(0, 0, width, height);
     text_renderer.resize(width, height);
     rect_renderer.resize(width, height);
-    image_renderer.resize(width, height);
 
     redraw();
 }

@@ -45,11 +45,11 @@ public:
 
         TextRenderer text_renderer;
         RectRenderer rect_renderer;
-        ImageRenderer image_renderer;
     };
 
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
+    ImageRenderer image_renderer;
 
     SimpleText();
     ~SimpleText();

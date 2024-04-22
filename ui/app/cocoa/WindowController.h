@@ -11,5 +11,8 @@
 - (void)show;
 - (void)close;
 - (void)redraw;
+- (int)getWidth;
+- (int)getHeight;
+- (int)getScaleFactor;
 
 @end

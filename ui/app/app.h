@@ -14,6 +14,10 @@ public:
         void close();
         void redraw();
 
+        int width();
+        int height();
+        int scaleFactor();
+
         virtual void onOpenGLActivate(int width, int height) {}
         virtual void onDraw() {}
         virtual void onResize(int width, int height) {}

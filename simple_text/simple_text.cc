@@ -25,6 +25,8 @@ void SimpleText::onLaunch() {
     main_font_rasterizer.setup(0, main_font, main_font_size);
     ui_font_rasterizer.setup(1, ui_font, ui_font_size);
 
+    image_renderer.setup(0, 0);
+
     createWindow();
 }
 

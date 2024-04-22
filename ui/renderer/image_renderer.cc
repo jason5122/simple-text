@@ -22,7 +22,6 @@ void ImageRenderer::setup(float width, float height) {
         ;
 
     shader_program.link(vert_source, frag_source);
-    this->resize(width, height);
     atlas.setup(false);  // Disable bilinear filtering.
 
     GLuint indices[] = {
@@ -84,9 +83,10 @@ void ImageRenderer::setup(float width, float height) {
     });
 }
 
-void ImageRenderer::draw(float scroll_x, float scroll_y, float editor_offset_x,
-                         float editor_offset_y) {
+void ImageRenderer::draw(int width, int height, float scroll_x, float scroll_y,
+                         float editor_offset_x, float editor_offset_y) {
     glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
 
     glActiveTexture(GL_TEXTURE0);
@@ -124,15 +124,6 @@ void ImageRenderer::draw(float scroll_x, float scroll_y, float editor_offset_x,
     glBindVertexArray(0);
 
     glCheckError();
-}
-
-void ImageRenderer::resize(float new_width, float new_height) {
-    width = new_width;
-    height = new_height;
-
-    glViewport(0, 0, width, height);
-    glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
 }
 
 ImageRenderer::~ImageRenderer() {

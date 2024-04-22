@@ -125,3 +125,15 @@ void App::Window::close() {
 void App::Window::redraw() {
     [pimpl->window_controller redraw];
 }
+
+int App::Window::width() {
+    return [pimpl->window_controller getWidth];
+}
+
+int App::Window::height() {
+    return [pimpl->window_controller getHeight];
+}
+
+int App::Window::scaleFactor() {
+    return [pimpl->window_controller getScaleFactor];
+}

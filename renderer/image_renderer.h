@@ -3,6 +3,7 @@
 #include "base/filesystem/file_reader.h"
 #include "renderer/atlas.h"
 #include "renderer/shader.h"
+#include "renderer/types.h"
 #include <glad/glad.h>
 #include <vector>
 
@@ -12,8 +13,7 @@ public:
     ImageRenderer();
     ~ImageRenderer();
     void setup();
-    void draw(int width, int height, float scroll_x, float scroll_y, float editor_offset_x,
-              float editor_offset_y);
+    void draw(Size& size, Point& scroll, Point& editor_offset);
 
 private:
     static const int BATCH_MAX = 65536;

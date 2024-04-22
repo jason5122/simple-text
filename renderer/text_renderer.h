@@ -18,14 +18,13 @@ public:
     TextRenderer();
     ~TextRenderer();
     void setup(FontRasterizer& font_rasterizer);
-    void renderText(int width, int height, float scroll_x, float scroll_y, Buffer& buffer,
-                    SyntaxHighlighter& highlighter, float editor_offset_x, float editor_offset_y,
-                    FontRasterizer& font_rasterizer, float status_bar_height,
+    void renderText(Size& size, Point& scroll, Buffer& buffer, SyntaxHighlighter& highlighter,
+                    Point& editor_offset, FontRasterizer& font_rasterizer, float status_bar_height,
                     CursorInfo& start_cursor, CursorInfo& end_cursor, float& longest_line_x);
-    void renderUiText(int width, int height, FontRasterizer& main_font_rasterizer,
+    void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor);
-    void setCursorPositions(Buffer& buffer, FontRasterizer& font_rasterizer, float mouse_x,
-                            float mouse_y, CursorInfo& cursor);
+    void setCursorInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
+                       CursorInfo& cursor);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
 
 private:

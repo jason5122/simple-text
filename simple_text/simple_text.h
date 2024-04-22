@@ -31,11 +31,12 @@ public:
     private:
         SimpleText& parent;
 
-        float scroll_x = 0;
-        float scroll_y = 0;
+        renderer::Point scroll{};
 
-        int editor_offset_x = 200 * 2;
-        int editor_offset_y = 30 * 2;
+        renderer::Point editor_offset{
+            .x = 200 * 2,
+            .y = 30 * 2,
+        };
 
         renderer::CursorInfo start_cursor{};
         renderer::CursorInfo end_cursor{};

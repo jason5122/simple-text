@@ -186,24 +186,24 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
     return {total_advance, offset};
 }
 
-void TextRenderer::renderText(int width, int height, float scroll_x, float scroll_y,
-                              Buffer& buffer, SyntaxHighlighter& highlighter,
-                              float editor_offset_x, float editor_offset_y,
+void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
+                              SyntaxHighlighter& highlighter, Point& editor_offset,
                               FontRasterizer& font_rasterizer, float status_bar_height,
                               CursorInfo& start_cursor, CursorInfo& end_cursor,
                               float& longest_line_x) {
     glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
-    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
-    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
-                editor_offset_y);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
+    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset.x,
+                editor_offset.y);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
     size_t start_line =
-        std::min(static_cast<size_t>(scroll_y / font_rasterizer.line_height), buffer.lineCount());
-    size_t visible_lines = std::ceil((height - status_bar_height) / font_rasterizer.line_height);
+        std::min(static_cast<size_t>(scroll.y / font_rasterizer.line_height), buffer.lineCount());
+    size_t visible_lines =
+        std::ceil((size.height - status_bar_height) / font_rasterizer.line_height);
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
     {
@@ -268,7 +268,7 @@ void TextRenderer::renderText(int width, int height, float scroll_x, float scrol
                 // TODO: Determine if we should always round `glyph.advance`.
                 Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
                 Vec2 bg_size{std::round(glyph.advance), font_rasterizer.line_height};
-                if (total_advance + std::round(glyph.advance) > scroll_x) {
+                if (total_advance + std::round(glyph.advance) > scroll.x) {
                     line_layouts[line_layout_index].emplace_back(
                         ShapedGlyph{codepoint, byte_offset, coords, glyph.glyph, glyph.uv, bg_size,
                                     glyph.colored});
@@ -445,10 +445,10 @@ void TextRenderer::renderText(int width, int height, float scroll_x, float scrol
     glCheckError();
 }
 
-void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font_rasterizer,
+void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                                 FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor) {
     glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 0, 0);
 
@@ -478,7 +478,7 @@ void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font
 
         instances.push_back(InstanceData{
             .coords = Vec2{total_advance + status_text_offset,
-                           height - main_font_rasterizer.line_height},
+                           size.height - main_font_rasterizer.line_height},
             .glyph = glyph.glyph,
             .uv = glyph.uv,
             .color = Rgba::fromRgb(colors::black, glyph.colored),
@@ -503,19 +503,19 @@ void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font
     glCheckError();
 }
 
-void TextRenderer::setCursorPositions(Buffer& buffer, FontRasterizer& font_rasterizer,
-                                      float mouse_x, float mouse_y, CursorInfo& cursor) {
+void TextRenderer::setCursorInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
+                                 CursorInfo& cursor) {
     float x;
     size_t offset;
 
-    cursor.line = mouse_y / font_rasterizer.line_height;
+    cursor.line = mouse.y / font_rasterizer.line_height;
     if (cursor.line > buffer.lineCount() - 1) {
         cursor.line = buffer.lineCount() - 1;
     }
 
     std::string start_line_str;
     buffer.getLineContent(&start_line_str, cursor.line);
-    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, mouse_x, font_rasterizer);
+    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, mouse.x, font_rasterizer);
     cursor.column = offset;
     cursor.x = x;
 

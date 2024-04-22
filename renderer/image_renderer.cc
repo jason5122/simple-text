@@ -92,11 +92,10 @@ void ImageRenderer::setup() {
     });
 }
 
-void ImageRenderer::draw(int width, int height, float scroll_x, float scroll_y,
-                         float editor_offset_x, float editor_offset_y) {
+void ImageRenderer::draw(Size& size, Point& scroll, Point& editor_offset) {
     glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
-    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -109,10 +108,10 @@ void ImageRenderer::draw(int width, int height, float scroll_x, float scroll_y,
     float tab_corner_radius = 10;
 
     float close_button_offset = 10;
-    float pos_x = (editor_offset_x - close_button_offset) +
+    float pos_x = (editor_offset.x - close_button_offset) +
                   ((tab_width - tab_corner_radius) - atlas_entry.rect_size.x);
     float pos_y =
-        height - (atlas_entry.rect_size.y / 2) - ((editor_offset_y + tab_offset_from_top) / 2);
+        height - (atlas_entry.rect_size.y / 2) - ((editor_offset.y + tab_offset_from_top) / 2);
     instances.push_back(InstanceData{
         .coords = Vec2{pos_x, pos_y},
         .rect_size = atlas_entry.rect_size,

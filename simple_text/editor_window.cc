@@ -33,31 +33,31 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw() {
-    int scaled_width = width() * scaleFactor();
-    int scaled_height = height() * scaleFactor();
+    renderer::Size size{
+        .width = width() * scaleFactor(),
+        .height = height() * scaleFactor(),
+    };
 
-    glViewport(0, 0, scaled_width, scaled_height);
+    glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     int status_bar_height = parent.ui_font_rasterizer.line_height;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    parent.text_renderer.renderText(scaled_width, scaled_height, scroll_x, scroll_y, buffer,
-                                    highlighter, editor_offset_x, editor_offset_y,
+    parent.text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
                                     parent.main_font_rasterizer, status_bar_height, start_cursor,
                                     end_cursor, longest_line_x);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    parent.rect_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, end_cursor,
-                              parent.main_font_rasterizer.line_height, buffer.lineCount(),
-                              longest_line_x, editor_offset_x, editor_offset_y, status_bar_height);
+    parent.rect_renderer.draw(size, scroll, end_cursor, parent.main_font_rasterizer.line_height,
+                              buffer.lineCount(), longest_line_x, editor_offset,
+                              status_bar_height);
 
-    parent.image_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, editor_offset_x,
-                               editor_offset_y);
+    parent.image_renderer.draw(size, scroll, editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    parent.text_renderer.renderUiText(scaled_width, scaled_height, parent.main_font_rasterizer,
-                                      parent.ui_font_rasterizer, end_cursor);
+    parent.text_renderer.renderUiText(size, parent.main_font_rasterizer, parent.ui_font_rasterizer,
+                                      end_cursor);
 }
 
 void EditorWindow::onResize(int width, int height) {
@@ -66,34 +66,31 @@ void EditorWindow::onResize(int width, int height) {
 
 void EditorWindow::onScroll(float dx, float dy) {
     // TODO: Uncomment this while not testing.
-    // scroll_x += dx;
-    scroll_y += dy;
+    // scroll.x += dx;
+    scroll.y += dy;
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
-    mouse_x -= editor_offset_x;
-    mouse_y -= editor_offset_y;
-    mouse_x += scroll_x;
-    mouse_y += scroll_y;
+    renderer::Point mouse{
+        .x = mouse_x - editor_offset.x + scroll.x,
+        .y = mouse_y - editor_offset.y + scroll.y,
+    };
 
-    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, mouse_x, mouse_y,
-                                            start_cursor);
-
+    parent.text_renderer.setCursorInfo(buffer, parent.main_font_rasterizer, mouse, start_cursor);
     end_cursor = start_cursor;
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
-    mouse_x -= editor_offset_x;
-    mouse_y -= editor_offset_y;
-    mouse_x += scroll_x;
-    mouse_y += scroll_y;
+    renderer::Point mouse{
+        .x = mouse_x - editor_offset.x + scroll.x,
+        .y = mouse_y - editor_offset.y + scroll.y,
+    };
 
-    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, mouse_x, mouse_y,
-                                            end_cursor);
+    parent.text_renderer.setCursorInfo(buffer, parent.main_font_rasterizer, mouse, end_cursor);
 
     redraw();
 }

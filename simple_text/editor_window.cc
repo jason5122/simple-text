@@ -29,7 +29,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     highlighter.parse(input);
 
     text_renderer.setup(width, height, parent.main_font_rasterizer);
-    rect_renderer.setup(width, height);
 }
 
 void EditorWindow::onDraw() {
@@ -46,10 +45,10 @@ void EditorWindow::onDraw() {
                              editor_offset_y, parent.main_font_rasterizer, status_bar_height);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(scroll_x, scroll_y, text_renderer.cursor_end_x,
-                       text_renderer.cursor_end_line, parent.main_font_rasterizer.line_height,
-                       buffer.lineCount(), text_renderer.longest_line_x, editor_offset_x,
-                       editor_offset_y, status_bar_height);
+    parent.rect_renderer.draw(
+        scaled_width, scaled_height, scroll_x, scroll_y, text_renderer.cursor_end_x,
+        text_renderer.cursor_end_line, parent.main_font_rasterizer.line_height, buffer.lineCount(),
+        text_renderer.longest_line_x, editor_offset_x, editor_offset_y, status_bar_height);
 
     parent.image_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, editor_offset_x,
                                editor_offset_y);
@@ -61,7 +60,6 @@ void EditorWindow::onDraw() {
 void EditorWindow::onResize(int width, int height) {
     glViewport(0, 0, width, height);
     text_renderer.resize(width, height);
-    rect_renderer.resize(width, height);
 
     redraw();
 }

@@ -8,7 +8,7 @@
 class ImageRenderer {
 public:
     ImageRenderer() = default;
-    void setup(float width, float height);
+    void setup();
     void draw(int width, int height, float scroll_x, float scroll_y, float editor_offset_x,
               float editor_offset_y);
     ~ImageRenderer();

@@ -13,7 +13,7 @@ struct InstanceData {
 };
 }
 
-void ImageRenderer::setup(float width, float height) {
+void ImageRenderer::setup() {
     std::string vert_source =
 #include "shaders/image_vert.glsl"
         ;

@@ -44,11 +44,11 @@ public:
         SyntaxHighlighter highlighter;
 
         TextRenderer text_renderer;
-        RectRenderer rect_renderer;
     };
 
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
+    RectRenderer rect_renderer;
     ImageRenderer image_renderer;
 
     SimpleText();

@@ -15,7 +15,7 @@ struct InstanceData {
 };
 }
 
-void RectRenderer::setup(float width, float height) {
+void RectRenderer::setup() {
     std::string vert_source =
 #include "shaders/rect_vert.glsl"
         ;
@@ -24,7 +24,6 @@ void RectRenderer::setup(float width, float height) {
         ;
 
     shader_program.link(vert_source, frag_source);
-    this->resize(width, height);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -76,10 +75,11 @@ void RectRenderer::setup(float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t cursor_line,
-                        float line_height, size_t line_count, float longest_x,
+void RectRenderer::draw(int width, int height, float scroll_x, float scroll_y, float cursor_x,
+                        size_t cursor_line, float line_height, size_t line_count, float longest_x,
                         float editor_offset_x, float editor_offset_y, float status_bar_height) {
     glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
                 editor_offset_y);
@@ -151,7 +151,7 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     // Add tab bar.
     instances.push_back(InstanceData{
         .coords = Vec2{0, 0 - editor_offset_y},
-        .rect_size = Vec2{width, editor_offset_y},
+        .rect_size = Vec2{static_cast<float>(width), editor_offset_y},
         .color = Rgba{190, 190, 190, 255},
     });
 
@@ -186,14 +186,14 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     // Add side bar.
     instances.push_back(InstanceData{
         .coords = {0 - editor_offset_x, 0 - editor_offset_y},
-        .rect_size = {editor_offset_x, height},
+        .rect_size = {editor_offset_x, static_cast<float>(height)},
         .color = Rgba{235, 237, 239, 255},
     });
 
     // Add status bar.
     instances.push_back(InstanceData{
         .coords = Vec2{0 - editor_offset_x, editor_height},
-        .rect_size = Vec2{width, status_bar_height},
+        .rect_size = Vec2{static_cast<float>(width), status_bar_height},
         .color = Rgba{199, 203, 209, 255},
     });
 
@@ -207,15 +207,6 @@ void RectRenderer::draw(float scroll_x, float scroll_y, float cursor_x, size_t c
     glBindVertexArray(0);
 
     glCheckError();
-}
-
-void RectRenderer::resize(int new_width, int new_height) {
-    width = new_width;
-    height = new_height;
-
-    glViewport(0, 0, width, height);
-    glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
 }
 
 RectRenderer::~RectRenderer() {

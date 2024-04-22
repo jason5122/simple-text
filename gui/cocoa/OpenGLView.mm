@@ -113,20 +113,27 @@
             openGLLayer.asynchronous = false;
         }
 
-        CGFloat dx = -event.scrollingDeltaX;
-        CGFloat dy = -event.scrollingDeltaY;
+        CGFloat dx = 0;
+        CGFloat dy = 0;
+        if (event.hasPreciseScrollingDeltas) {
+            dx = -event.scrollingDeltaX;
+            dy = -event.scrollingDeltaY;
+        } else {
+            // Taken from ///chromium/src/ui/events/cocoa/events_mac.mm.
+            // static constexpr double kScrollbarPixelsPerCocoaTick = 40.0;
+            // dx = -event.deltaX * kScrollbarPixelsPerCocoaTick;
+            // dy = -event.deltaY * kScrollbarPixelsPerCocoaTick;
+
+            // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
+            dx = -event.scrollingDeltaX * 16;
+            dy = -event.scrollingDeltaY * 16;
+        }
 
         // TODO: Allow for easy pure vertical/horizontal scroll like Sublime Text.
         //       Reject slight scrolling deviations in the orthogonal direction.
         // if (abs(dx) <= 1) {
         //     dx = 0;
         // }
-
-        // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
-        if (!event.hasPreciseScrollingDeltas) {
-            dx *= 16;
-            dy *= 16;
-        }
 
         float scaled_dx = dx * openGLLayer.contentsScale;
         float scaled_dy = dy * openGLLayer.contentsScale;

@@ -1,10 +1,10 @@
-#include "base/filesystem/file_reader.h"
 #include "base/rgb.h"
 #include "rect_renderer.h"
 #include "renderer/opengl_error_util.h"
 #include "renderer/opengl_types.h"
 #include <vector>
 
+namespace renderer {
 namespace {
 struct InstanceData {
     Vec2 coords;
@@ -13,6 +13,14 @@ struct InstanceData {
     float corner_radius = 0;
     float tab_corner_radius = 0;
 };
+}
+
+RectRenderer::RectRenderer() {}
+
+RectRenderer::~RectRenderer() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo_instance);
+    glDeleteBuffers(1, &ebo);
 }
 
 void RectRenderer::setup() {
@@ -75,9 +83,10 @@ void RectRenderer::setup() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void RectRenderer::draw(int width, int height, float scroll_x, float scroll_y, float cursor_x,
-                        size_t cursor_line, float line_height, size_t line_count, float longest_x,
-                        float editor_offset_x, float editor_offset_y, float status_bar_height) {
+void RectRenderer::draw(int width, int height, float scroll_x, float scroll_y,
+                        CursorInfo& end_cursor, float line_height, size_t line_count,
+                        float longest_x, float editor_offset_x, float editor_offset_y,
+                        float status_bar_height) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
@@ -88,10 +97,10 @@ void RectRenderer::draw(int width, int height, float scroll_x, float scroll_y, f
     float cursor_width = 4;
     float cursor_height = line_height;
 
-    cursor_x -= cursor_width / 2;
+    float cursor_x = end_cursor.x - cursor_width / 2;
 
     int extra_padding = 8;
-    float cursor_y = cursor_line * line_height;
+    float cursor_y = end_cursor.line * line_height;
     cursor_y -= extra_padding;
     cursor_height += extra_padding * 2;
 
@@ -208,9 +217,4 @@ void RectRenderer::draw(int width, int height, float scroll_x, float scroll_y, f
 
     glCheckError();
 }
-
-RectRenderer::~RectRenderer() {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo_instance);
-    glDeleteBuffers(1, &ebo);
 }

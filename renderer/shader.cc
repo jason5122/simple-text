@@ -1,6 +1,13 @@
 #include "shader.h"
 #include <vector>
 
+namespace renderer {
+Shader::Shader() {}
+
+Shader::~Shader() {
+    glDeleteProgram(id);
+}
+
 bool Shader::link(std::string& vert_source, std::string& frag_source) {
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
@@ -48,7 +55,4 @@ bool Shader::link(std::string& vert_source, std::string& frag_source) {
     glDeleteShader(fragment_shader);
     return true;
 }
-
-Shader::~Shader() {
-    glDeleteProgram(id);
 }

@@ -48,10 +48,9 @@ void EditorWindow::onDraw() {
                                     end_cursor, longest_line_x);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    parent.rect_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, end_cursor.x,
-                              end_cursor.line, parent.main_font_rasterizer.line_height,
-                              buffer.lineCount(), longest_line_x, editor_offset_x, editor_offset_y,
-                              status_bar_height);
+    parent.rect_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, end_cursor,
+                              parent.main_font_rasterizer.line_height, buffer.lineCount(),
+                              longest_line_x, editor_offset_x, editor_offset_y, status_bar_height);
 
     parent.image_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, editor_offset_x,
                                editor_offset_y);

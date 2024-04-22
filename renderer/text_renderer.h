@@ -6,19 +6,13 @@
 #include "font/rasterizer.h"
 #include "renderer/atlas.h"
 #include "renderer/shader.h"
+#include "renderer/types.h"
 #include <glad/glad.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-struct CursorInfo {
-    size_t byte;
-    size_t line;
-    size_t column;
-    float x;
-    float y;
-};
-
+namespace renderer {
 class TextRenderer {
 public:
     TextRenderer();
@@ -56,3 +50,4 @@ private:
     std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x,
                                                  FontRasterizer& font_rasterizer);
 };
+}

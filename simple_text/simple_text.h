@@ -37,8 +37,8 @@ public:
         int editor_offset_x = 200 * 2;
         int editor_offset_y = 30 * 2;
 
-        CursorInfo start_cursor{};
-        CursorInfo end_cursor{};
+        renderer::CursorInfo start_cursor{};
+        renderer::CursorInfo end_cursor{};
 
         // TODO: Update this during insertion/deletion.
         float longest_line_x = 0;
@@ -49,9 +49,9 @@ public:
 
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
-    TextRenderer text_renderer;
-    RectRenderer rect_renderer;
-    ImageRenderer image_renderer;
+    renderer::TextRenderer text_renderer;
+    renderer::RectRenderer rect_renderer;
+    renderer::ImageRenderer image_renderer;
 
     SimpleText();
     ~SimpleText();

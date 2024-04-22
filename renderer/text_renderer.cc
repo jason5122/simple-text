@@ -15,6 +15,7 @@ extern "C" {
 
 #include "build/buildflag.h"
 
+namespace renderer {
 // TODO: Rewrite this in a more idiomatic C++ way.
 // Border flags.
 #define LEFT 1
@@ -539,4 +540,5 @@ void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
         .colored = glyph.colored,
     };
     glyph_cache[font_rasterizer.id].insert({codepoint, atlas_glyph});
+}
 }

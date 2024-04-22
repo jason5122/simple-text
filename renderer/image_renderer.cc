@@ -4,6 +4,7 @@
 #include <cstring>
 #include <png.h>
 
+namespace renderer {
 namespace {
 struct InstanceData {
     Vec2 coords;
@@ -11,6 +12,14 @@ struct InstanceData {
     Vec4 uv;
     Vec3 color;
 };
+}
+
+ImageRenderer::ImageRenderer() {}
+
+ImageRenderer::~ImageRenderer() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo_instance);
+    glDeleteBuffers(1, &ebo);
 }
 
 void ImageRenderer::setup() {
@@ -126,12 +135,6 @@ void ImageRenderer::draw(int width, int height, float scroll_x, float scroll_y,
     glCheckError();
 }
 
-ImageRenderer::~ImageRenderer() {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo_instance);
-    glDeleteBuffers(1, &ebo);
-}
-
 // https://blog.nobel-joergensen.com/2010/11/07/loading-a-png-as-texture-in-opengl-using-libpng/
 bool ImageRenderer::loadPng(fs::path file_name, int& out_width, int& out_height,
                             bool& out_has_alpha, GLubyte** out_data) {
@@ -194,4 +197,5 @@ bool ImageRenderer::loadPng(fs::path file_name, int& out_width, int& out_height,
     fclose(fp);
 
     return true;
+}
 }

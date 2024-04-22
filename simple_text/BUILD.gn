@@ -1,8 +1,12 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
-static_library("test_lib") {
-  sources = [ "lib.cc" ]
+static_library("example_lib") {
+  sources = [ "example_lib.cc" ]
+}
+
+shared_library("example_dll") {
+  sources = [ "example_dll.cc" ]
 }
 
 executable("simple_text") {
@@ -11,7 +15,10 @@ executable("simple_text") {
     "testy2.c",
   ]
 
-  deps = [ ":test_lib" ]
+  deps = [
+    ":example_dll",
+    ":example_lib",
+  ]
 }
 
 # common_sources = [

@@ -9,7 +9,7 @@ toolchain("clang") {
   tool("link") {
     exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
     rspfile = "$exename.rsp"
-    rspfile_content = "{{inputs}} {{libs}} {{solibs}}"
+    rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{ldflags}}"
 
     command = "$link {{ldflags}} \"/OUT:$exename\" /nologo \"@$rspfile\""
     description = "LINK {{output}}"
@@ -33,18 +33,29 @@ toolchain("clang") {
     default_output_extension = ".lib"
   }
 
-  # tool("solink") {
-  #   rspfile = "{{output}}.rsp"
-  #   rspfile_content = "{{inputs}} {{libs}} {{solibs}}"
+  tool("solink") {
+    dllname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    libname = "${dllname}.lib"
+    rspfile = "${dllname}.rsp"
+    rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{ldflags}}"
 
-  #   command = "$cxx -dynamiclib {{ldflags}} -o {{output}} @$rspfile"
-  #   description = "SOLINK {{output}}"
+    command = "$link /DLL \"/OUT:$dllname\" /nologo \"/IMPLIB:$libname\" \"@$rspfile\""
+    description = "LINK(DLL) {{output}}"
 
-  #   outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
-  #   default_output_dir = "{{root_out_dir}}"
-  #   default_output_extension = ".dylib"
-  #   output_prefix = "lib"
-  # }
+    outputs = [
+      dllname,
+      libname,
+    ]
+    link_output = libname
+    depend_output = libname
+    runtime_outputs = [ dllname ]
+    default_output_dir = "{{root_out_dir}}"
+    default_output_extension = ".dll"
+
+    # Since the above commands only updates the .lib file when it changes, ask Ninja to check if
+    # the timestamp actually changed to know if downstream dependencies should be recompiled.
+    restat = true
+  }
 
   tool("cc") {
     depsformat = "msvc"

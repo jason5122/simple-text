@@ -11,6 +11,9 @@ public:
     void show();
     void close();
     void redraw();
+    int width();
+    int height();
+    int scaleFactor();
 
 private:
     GtkWidget* window;

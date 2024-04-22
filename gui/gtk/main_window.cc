@@ -70,6 +70,22 @@ void MainWindow::redraw() {
     gtk_widget_queue_draw(window);
 }
 
+int MainWindow::width() {
+    gint width = 0, height = 0;
+    gtk_window_get_size(GTK_WINDOW(window), &width, &height);
+    return width;
+}
+
+int MainWindow::height() {
+    gint width = 0, height = 0;
+    gtk_window_get_size(GTK_WINDOW(window), &width, &height);
+    return height;
+}
+
+int MainWindow::scaleFactor() {
+    return gtk_widget_get_scale_factor(window);
+}
+
 static app::Key GetKey(guint vk) {
     static const struct {
         guint fVK;

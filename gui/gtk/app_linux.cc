@@ -1,5 +1,5 @@
-#include "ui/app.h"
-#include "ui/gtk/main_window.h"
+#include "gui/app.h"
+#include "gui/gtk/main_window.h"
 #include <glad/glad.h>
 #include <gtk/gtk.h>
 

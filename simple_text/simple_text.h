@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/app.h"
+#include "gui/app.h"
 #include <vector>
 
 #include "base/buffer.h"

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ui/key.h"
-#include "ui/modifier_key.h"
+#include "gui/key.h"
+#include "gui/modifier_key.h"
 #include <memory>
 
 class App {

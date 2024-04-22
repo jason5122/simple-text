@@ -1,6 +1,6 @@
-#include "ui/app.h"
-#include "ui/win32/dummy_context.h"
-#include "ui/win32/main_window.h"
+#include "gui/app.h"
+#include "gui/win32/dummy_context.h"
+#include "gui/win32/main_window.h"
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include <memory>

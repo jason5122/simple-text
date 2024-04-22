@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ui/app.h"
-#include "ui/win32/dummy_context.h"
+#include "gui/app.h"
+#include "gui/win32/dummy_context.h"
 #include <windows.h>
 
 class MainWindow {

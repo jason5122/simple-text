@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/app.h"
+#include "gui/app.h"
 #include <gtk/gtk.h>
 
 class MainWindow {

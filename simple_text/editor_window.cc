@@ -30,8 +30,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);
-
-    text_renderer.setup(parent.main_font_rasterizer);
 }
 
 void EditorWindow::onDraw() {
@@ -44,9 +42,10 @@ void EditorWindow::onDraw() {
     int status_bar_height = parent.ui_font_rasterizer.line_height;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(scaled_width, scaled_height, scroll_x, scroll_y, buffer, highlighter,
-                             editor_offset_x, editor_offset_y, parent.main_font_rasterizer,
-                             status_bar_height, start_cursor, end_cursor, longest_line_x);
+    parent.text_renderer.renderText(scaled_width, scaled_height, scroll_x, scroll_y, buffer,
+                                    highlighter, editor_offset_x, editor_offset_y,
+                                    parent.main_font_rasterizer, status_bar_height, start_cursor,
+                                    end_cursor, longest_line_x);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     parent.rect_renderer.draw(scaled_width, scaled_height, scroll_x, scroll_y, end_cursor.x,
@@ -58,8 +57,8 @@ void EditorWindow::onDraw() {
                                editor_offset_y);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(scaled_width, scaled_height, parent.main_font_rasterizer,
-                               parent.ui_font_rasterizer, end_cursor);
+    parent.text_renderer.renderUiText(scaled_width, scaled_height, parent.main_font_rasterizer,
+                                      parent.ui_font_rasterizer, end_cursor);
 }
 
 void EditorWindow::onResize(int width, int height) {
@@ -83,8 +82,9 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     start_cursor.x = mouse_x;
     start_cursor.y = mouse_y;
 
-    text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, start_cursor.x,
-                                     start_cursor.y, mouse_x, mouse_y, start_cursor, end_cursor);
+    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, start_cursor.x,
+                                            start_cursor.y, mouse_x, mouse_y, start_cursor,
+                                            end_cursor);
 
     redraw();
 }
@@ -95,8 +95,9 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     mouse_x += scroll_x;
     mouse_y += scroll_y;
 
-    text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, start_cursor.x,
-                                     start_cursor.y, mouse_x, mouse_y, start_cursor, end_cursor);
+    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, start_cursor.x,
+                                            start_cursor.y, mouse_x, mouse_y, start_cursor,
+                                            end_cursor);
 
     redraw();
 }

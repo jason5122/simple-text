@@ -45,12 +45,11 @@ public:
 
         Buffer buffer;
         SyntaxHighlighter highlighter;
-
-        TextRenderer text_renderer;
     };
 
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
+    TextRenderer text_renderer;
     RectRenderer rect_renderer;
     ImageRenderer image_renderer;
 

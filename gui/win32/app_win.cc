@@ -73,3 +73,15 @@ void App::Window::close() {
 void App::Window::redraw() {
     pimpl->main_window.redraw();
 }
+
+int App::Window::width() {
+    return pimpl->main_window.width();
+}
+
+int App::Window::height() {
+    return pimpl->main_window.height();
+}
+
+int App::Window::scaleFactor() {
+    return pimpl->main_window.scaleFactor();
+}

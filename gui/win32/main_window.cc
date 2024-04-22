@@ -1,5 +1,7 @@
 #include "gui/modifier_key.h"
 #include "main_window.h"
+#include <shellscalingapi.h>
+#include <shtypes.h>
 #include <string>
 #include <windowsx.h>
 #include <winuser.h>
@@ -229,4 +231,25 @@ BOOL MainWindow::destroy() {
 
 void MainWindow::quit() {
     PostQuitMessage(0);
+}
+
+int MainWindow::width() {
+    RECT size;
+    GetClientRect(m_hwnd, &size);
+    return size.right;
+}
+
+int MainWindow::height() {
+    RECT size;
+    GetClientRect(m_hwnd, &size);
+    return size.bottom;
+}
+
+int MainWindow::scaleFactor() {
+    HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
+    DEVICE_SCALE_FACTOR scale_factor;
+    GetScaleFactorForMonitor(hmon, &scale_factor);
+    std::cerr << "scale_factor: " << scale_factor << '\n';
+    // TODO: Don't hard code this.
+    return 1;
 }

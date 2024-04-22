@@ -15,6 +15,9 @@ public:
     void redraw();
     BOOL destroy();
     void quit();
+    int width();
+    int height();
+    int scaleFactor();
 
 private:
     HDC m_hdc;

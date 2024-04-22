@@ -1,56 +1,70 @@
 import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
-common_sources = [
-  # "editor_window.cc",
-  # "editor_window.h",
-  # "main.cc",
-  # "main_app.cc",
-  # "simple_text.cc",
-  # "simple_text.h",
-
-  "testy.cc",
-]
-
-common_deps = [
-  # "//base",
-  # "//ui/app",
-  # "//ui/renderer",
-]
-
-if (is_mac) {
-  mac_app_bundle("simple_text") {
-    output_name = "Simple Text"
-    bundle_identifier = "com.jason5122.simple-text"
-    info_plist = "resources/Info.plist"
-
-    # define `code_signing_identity` in args.gn
-
-    sources = common_sources
-
-    deps = common_deps
-
-    deps += [
-      # ":icon"
-    ]
-  }
-  # icon("icon") {
-  #   sources = [ "resources/app.iconset" ]
-  # }
+static_library("test_lib") {
+  sources = [ "lib.cc" ]
 }
 
-if (is_linux) {
-  executable("simple_text") {
-    sources = common_sources
+executable("simple_text") {
+  sources = [
+    "testy.cc",
+    "testy2.c",
+  ]
 
-    deps = common_deps
-  }
+  deps = [ ":test_lib" ]
 }
 
-if (is_win) {
-  executable("simple_text") {
-    sources = common_sources
+# common_sources = [
+#   # "editor_window.cc",
+#   # "editor_window.h",
+#   # "main.cc",
+#   # "main_app.cc",
+#   # "simple_text.cc",
+#   # "simple_text.h",
 
-    deps = common_deps
-  }
-}
+#   "testy.cc",
+#   "testy2.c",
+# ]
+
+# common_deps = [
+#   # "//base",
+#   # "//ui/app",
+#   # "//ui/renderer",
+# ]
+
+# if (is_mac) {
+#   mac_app_bundle("simple_text") {
+#     output_name = "Simple Text"
+#     bundle_identifier = "com.jason5122.simple-text"
+#     info_plist = "resources/Info.plist"
+
+#     # define `code_signing_identity` in args.gn
+
+#     sources = common_sources
+
+#     deps = common_deps
+
+#     deps += [
+#       # ":icon"
+#     ]
+#   }
+#   # icon("icon") {
+#   #   sources = [ "resources/app.iconset" ]
+#   # }
+# }
+
+# if (is_linux) {
+#   executable("simple_text") {
+#     sources = common_sources
+
+#     deps = common_deps
+#   }
+# }
+
+# if (is_win) {
+#   executable("simple_text") {
+#     sources = common_sources
+
+#     deps = common_deps
+#   }
+# }

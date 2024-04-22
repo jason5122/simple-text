@@ -34,11 +34,14 @@ public:
         float scroll_x = 0;
         float scroll_y = 0;
 
-        float cursor_start_x = 0;
-        float cursor_start_y = 0;
-
         int editor_offset_x = 200 * 2;
         int editor_offset_y = 30 * 2;
+
+        CursorInfo start_cursor{};
+        CursorInfo end_cursor{};
+
+        // TODO: Update this during insertion/deletion.
+        float longest_line_x = 0;
 
         Buffer buffer;
         SyntaxHighlighter highlighter;

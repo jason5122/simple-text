@@ -188,7 +188,9 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
 void TextRenderer::renderText(int width, int height, float scroll_x, float scroll_y,
                               Buffer& buffer, SyntaxHighlighter& highlighter,
                               float editor_offset_x, float editor_offset_y,
-                              FontRasterizer& font_rasterizer, float status_bar_height) {
+                              FontRasterizer& font_rasterizer, float status_bar_height,
+                              CursorInfo& start_cursor, CursorInfo& end_cursor,
+                              float& longest_line_x) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
@@ -236,8 +238,8 @@ void TextRenderer::renderText(int width, int height, float scroll_x, float scrol
 
                 // If a space character is in selection, draw it as a visible symbol.
                 // FIXME: Don't use magic numbers here.
-                size_t selection_start = cursor_start_byte;
-                size_t selection_end = cursor_end_byte;
+                size_t selection_start = start_cursor.byte;
+                size_t selection_end = end_cursor.byte;
                 if (selection_start > selection_end) {
                     std::swap(selection_start, selection_end);
                 }
@@ -279,12 +281,12 @@ void TextRenderer::renderText(int width, int height, float scroll_x, float scrol
         }
     }
 
-    size_t selection_start = cursor_start_byte;
-    size_t selection_end = cursor_end_byte;
-    size_t selection_start_line = cursor_start_line;
-    size_t selection_end_line = cursor_end_line;
-    float selection_start_x = cursor_start_x;
-    float selection_end_x = cursor_end_x;
+    size_t selection_start = start_cursor.byte;
+    size_t selection_end = end_cursor.byte;
+    size_t selection_start_line = start_cursor.line;
+    size_t selection_end_line = end_cursor.line;
+    float selection_start_x = start_cursor.x;
+    float selection_end_x = end_cursor.x;
     if (selection_start > selection_end) {
         std::swap(selection_start, selection_end);
         std::swap(selection_start_line, selection_end_line);
@@ -415,14 +417,14 @@ void TextRenderer::renderText(int width, int height, float scroll_x, float scrol
         }
     }
 
-    instances.push_back(InstanceData{
-        .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x,
-                       10 * font_rasterizer.line_height + scroll_y},
-        .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
-        .uv = Vec4{0, 0, 1.0, 1.0},
-        .color = Rgba::fromRgb(colors::black, false),
-        .is_atlas = true,
-    });
+    // instances.push_back(InstanceData{
+    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x,
+    //                    10 * font_rasterizer.line_height + scroll_y},
+    //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+    //     .uv = Vec4{0, 0, 1.0, 1.0},
+    //     .color = Rgba::fromRgb(colors::black, false),
+    //     .is_atlas = true,
+    // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
@@ -443,7 +445,7 @@ void TextRenderer::renderText(int width, int height, float scroll_x, float scrol
 }
 
 void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font_rasterizer,
-                                FontRasterizer& ui_font_rasterizer) {
+                                FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
@@ -456,8 +458,8 @@ void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font
 
     std::vector<InstanceData> instances;
 
-    std::string line_str = "Line " + std::to_string(cursor_end_line) + ", Column " +
-                           std::to_string(cursor_end_col_offset);
+    std::string line_str = "Line " + std::to_string(end_cursor.line) + ", Column " +
+                           std::to_string(end_cursor.column);
     size_t ret;
     float total_advance = 0;
     for (size_t offset = 0; offset < line_str.size(); offset += ret) {
@@ -500,35 +502,36 @@ void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font
     glCheckError();
 }
 
-void TextRenderer::setCursorPositions(Buffer& buffer, float start_x, float start_y, float end_x,
-                                      float end_y, FontRasterizer& font_rasterizer) {
+void TextRenderer::setCursorPositions(Buffer& buffer, FontRasterizer& font_rasterizer,
+                                      float start_x, float start_y, float end_x, float end_y,
+                                      CursorInfo& start_cursor, CursorInfo& end_cursor) {
     float x;
     size_t offset;
 
-    cursor_start_line = start_y / font_rasterizer.line_height;
-    if (cursor_start_line > buffer.lineCount() - 1) {
-        cursor_start_line = buffer.lineCount() - 1;
+    start_cursor.line = start_y / font_rasterizer.line_height;
+    if (start_cursor.line > buffer.lineCount() - 1) {
+        start_cursor.line = buffer.lineCount() - 1;
     }
 
     std::string start_line_str;
-    buffer.getLineContent(&start_line_str, cursor_start_line);
+    buffer.getLineContent(&start_line_str, start_cursor.line);
     std::tie(x, offset) = this->closestBoundaryForX(start_line_str, start_x, font_rasterizer);
-    cursor_start_col_offset = offset;
-    cursor_start_x = x;
+    start_cursor.column = offset;
+    start_cursor.x = x;
 
-    cursor_end_line = end_y / font_rasterizer.line_height;
-    if (cursor_end_line > buffer.lineCount() - 1) {
-        cursor_end_line = buffer.lineCount() - 1;
+    end_cursor.line = end_y / font_rasterizer.line_height;
+    if (end_cursor.line > buffer.lineCount() - 1) {
+        end_cursor.line = buffer.lineCount() - 1;
     }
 
     std::string end_line_str;
-    buffer.getLineContent(&end_line_str, cursor_end_line);
+    buffer.getLineContent(&end_line_str, end_cursor.line);
     std::tie(x, offset) = this->closestBoundaryForX(end_line_str, end_x, font_rasterizer);
-    cursor_end_col_offset = offset;
-    cursor_end_x = x;
+    end_cursor.column = offset;
+    end_cursor.x = x;
 
-    cursor_start_byte = buffer.byteOfLine(cursor_start_line) + cursor_start_col_offset;
-    cursor_end_byte = buffer.byteOfLine(cursor_end_line) + cursor_end_col_offset;
+    start_cursor.byte = buffer.byteOfLine(start_cursor.line) + start_cursor.column;
+    end_cursor.byte = buffer.byteOfLine(end_cursor.line) + end_cursor.column;
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,

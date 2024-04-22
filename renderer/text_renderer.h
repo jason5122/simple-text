@@ -11,32 +11,28 @@
 #include <unordered_map>
 #include <vector>
 
+struct CursorInfo {
+    size_t byte;
+    size_t line;
+    size_t column;
+    float x;
+    float y;
+};
+
 class TextRenderer {
 public:
-    size_t cursor_start_line = 0;
-    size_t cursor_start_col_offset = 0;
-    float cursor_start_x = 0;
-
-    size_t cursor_end_line = 0;
-    size_t cursor_end_col_offset = 0;
-    float cursor_end_x = 0;
-
-    // TODO: Update this during insertion/deletion.
-    float longest_line_x = 0;
-
-    size_t cursor_start_byte = 0;
-    size_t cursor_end_byte = 0;
-
     TextRenderer();
     ~TextRenderer();
     void setup(FontRasterizer& font_rasterizer);
     void renderText(int width, int height, float scroll_x, float scroll_y, Buffer& buffer,
                     SyntaxHighlighter& highlighter, float editor_offset_x, float editor_offset_y,
-                    FontRasterizer& font_rasterizer, float status_bar_height);
+                    FontRasterizer& font_rasterizer, float status_bar_height,
+                    CursorInfo& start_cursor, CursorInfo& end_cursor, float& longest_line_x);
     void renderUiText(int width, int height, FontRasterizer& main_font_rasterizer,
-                      FontRasterizer& ui_font_rasterizer);
-    void setCursorPositions(Buffer& buffer, float start_x, float start_y, float end_x, float end_y,
-                            FontRasterizer& font_rasterizer);
+                      FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor);
+    void setCursorPositions(Buffer& buffer, FontRasterizer& font_rasterizer, float start_x,
+                            float start_y, float end_x, float end_y, CursorInfo& start_cursor,
+                            CursorInfo& end_cursor);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
 
 private:

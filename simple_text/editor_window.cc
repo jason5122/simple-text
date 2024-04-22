@@ -79,12 +79,10 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     mouse_x += scroll_x;
     mouse_y += scroll_y;
 
-    start_cursor.x = mouse_x;
-    start_cursor.y = mouse_y;
+    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, mouse_x, mouse_y,
+                                            start_cursor);
 
-    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, start_cursor.x,
-                                            start_cursor.y, mouse_x, mouse_y, start_cursor,
-                                            end_cursor);
+    end_cursor = start_cursor;
 
     redraw();
 }
@@ -95,8 +93,7 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     mouse_x += scroll_x;
     mouse_y += scroll_y;
 
-    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, start_cursor.x,
-                                            start_cursor.y, mouse_x, mouse_y, start_cursor,
+    parent.text_renderer.setCursorPositions(buffer, parent.main_font_rasterizer, mouse_x, mouse_y,
                                             end_cursor);
 
     redraw();

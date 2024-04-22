@@ -503,35 +503,22 @@ void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font
 }
 
 void TextRenderer::setCursorPositions(Buffer& buffer, FontRasterizer& font_rasterizer,
-                                      float start_x, float start_y, float end_x, float end_y,
-                                      CursorInfo& start_cursor, CursorInfo& end_cursor) {
+                                      float mouse_x, float mouse_y, CursorInfo& cursor) {
     float x;
     size_t offset;
 
-    start_cursor.line = start_y / font_rasterizer.line_height;
-    if (start_cursor.line > buffer.lineCount() - 1) {
-        start_cursor.line = buffer.lineCount() - 1;
+    cursor.line = mouse_y / font_rasterizer.line_height;
+    if (cursor.line > buffer.lineCount() - 1) {
+        cursor.line = buffer.lineCount() - 1;
     }
 
     std::string start_line_str;
-    buffer.getLineContent(&start_line_str, start_cursor.line);
-    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, start_x, font_rasterizer);
-    start_cursor.column = offset;
-    start_cursor.x = x;
+    buffer.getLineContent(&start_line_str, cursor.line);
+    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, mouse_x, font_rasterizer);
+    cursor.column = offset;
+    cursor.x = x;
 
-    end_cursor.line = end_y / font_rasterizer.line_height;
-    if (end_cursor.line > buffer.lineCount() - 1) {
-        end_cursor.line = buffer.lineCount() - 1;
-    }
-
-    std::string end_line_str;
-    buffer.getLineContent(&end_line_str, end_cursor.line);
-    std::tie(x, offset) = this->closestBoundaryForX(end_line_str, end_x, font_rasterizer);
-    end_cursor.column = offset;
-    end_cursor.x = x;
-
-    start_cursor.byte = buffer.byteOfLine(start_cursor.line) + start_cursor.column;
-    end_cursor.byte = buffer.byteOfLine(end_cursor.line) + end_cursor.column;
+    cursor.byte = buffer.byteOfLine(cursor.line) + cursor.column;
 }
 
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,

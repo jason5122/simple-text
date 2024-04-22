@@ -30,9 +30,8 @@ public:
                     CursorInfo& start_cursor, CursorInfo& end_cursor, float& longest_line_x);
     void renderUiText(int width, int height, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor);
-    void setCursorPositions(Buffer& buffer, FontRasterizer& font_rasterizer, float start_x,
-                            float start_y, float end_x, float end_y, CursorInfo& start_cursor,
-                            CursorInfo& end_cursor);
+    void setCursorPositions(Buffer& buffer, FontRasterizer& font_rasterizer, float mouse_x,
+                            float mouse_y, CursorInfo& cursor);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
 
 private:

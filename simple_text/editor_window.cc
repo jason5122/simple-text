@@ -16,7 +16,10 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
-    glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
+    GLfloat red = colors::background.r / 255.0;
+    GLfloat green = colors::background.g / 255.0;
+    GLfloat blue = colors::background.b / 255.0;
+    glClearColor(red, green, blue, 1.0);
 
     // fs::path file_path = ResourcePath() / "sample_files/example.json";
     // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";

@@ -50,6 +50,14 @@ struct ShapedGlyph {
 };
 }
 
+TextRenderer::TextRenderer() {}
+
+TextRenderer::~TextRenderer() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo_instance);
+    glDeleteBuffers(1, &ebo);
+}
+
 void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     std::string vert_source =
 #include "shaders/text_vert.glsl"
@@ -382,7 +390,7 @@ void TextRenderer::renderText(int width, int height, float scroll_x, float scrol
                 .color = Rgba::fromRgb(text_color, shaped_glyph.colored),
                 .bg_size = shaped_glyph.bg_size,
                 // .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
-                .bg_color = Rgba::fromRgb(Rgb{253, 253, 253}, bg_a),
+                .bg_color = Rgba::fromRgb(colors::background, bg_a),
                 // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
                 .bg_border_color = Rgba::fromRgb(colors::red, border_flags),
             });
@@ -541,10 +549,4 @@ void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
         .colored = glyph.colored,
     };
     glyph_cache[font_rasterizer.id].insert({codepoint, atlas_glyph});
-}
-
-TextRenderer::~TextRenderer() {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo_instance);
-    glDeleteBuffers(1, &ebo);
 }

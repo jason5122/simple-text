@@ -27,7 +27,8 @@ public:
     size_t cursor_start_byte = 0;
     size_t cursor_end_byte = 0;
 
-    TextRenderer() = default;
+    TextRenderer();
+    ~TextRenderer();
     void setup(FontRasterizer& font_rasterizer);
     void renderText(int width, int height, float scroll_x, float scroll_y, Buffer& buffer,
                     SyntaxHighlighter& highlighter, float editor_offset_x, float editor_offset_y,
@@ -37,7 +38,6 @@ public:
     void setCursorPositions(Buffer& buffer, float start_x, float start_y, float end_x, float end_y,
                             FontRasterizer& font_rasterizer);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
-    ~TextRenderer();
 
 private:
     static const int BATCH_MAX = 65536;

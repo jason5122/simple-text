@@ -6,7 +6,11 @@ using EditorWindow = SimpleText::EditorWindow;
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
     : Window(parent, width, height), parent(parent), wid(wid) {}
 
-EditorWindow::~EditorWindow() {}
+#include <iostream>
+
+EditorWindow::~EditorWindow() {
+    std::cerr << "~EditorWindow " << wid << '\n';
+}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
@@ -15,8 +19,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
     // fs::path file_path = ResourcePath() / "sample_files/example.json";
-    fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-    // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+    // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+    fs::path file_path = ResourcePath() / "sample_files/sort.scm";
 
     buffer.setContents(ReadFile(file_path));
     highlighter.setLanguage("source.json");
@@ -103,10 +107,14 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
 
     if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
-        parent.createNWindows(20);
+        parent.createNWindows(25);
     }
     if (key == app::Key::kB && modifiers == app::kPrimaryModifier) {
         parent.destroyAllWindows();
+    }
+
+    if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {
+        close();
     }
 }
 

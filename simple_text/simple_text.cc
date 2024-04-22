@@ -46,9 +46,10 @@ void SimpleText::createNWindows(int n) {
 }
 
 void SimpleText::destroyAllWindows() {
-    for (const auto& editor_window : editor_windows) {
-        if (editor_window) {
-            editor_window->close();
+    // FIXME: Why does this crash when iterating over *all* windows?
+    for (size_t i = editor_windows.size() - 1; i >= 1; i--) {
+        if (editor_windows[i]) {
+            editor_windows[i]->close();
         }
     }
 

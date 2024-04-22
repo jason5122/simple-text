@@ -28,12 +28,12 @@ public:
     size_t cursor_end_byte = 0;
 
     TextRenderer() = default;
-    void setup(float width, float height, FontRasterizer& font_rasterizer);
-    void renderText(float scroll_x, float scroll_y, Buffer& buffer, SyntaxHighlighter& highlighter,
-                    float editor_offset_x, float editor_offset_y, FontRasterizer& font_rasterizer,
-                    float status_bar_height);
-    void renderUiText(FontRasterizer& main_font_rasterizer, FontRasterizer& ui_font_rasterizer);
-    void resize(float new_width, float new_height);
+    void setup(FontRasterizer& font_rasterizer);
+    void renderText(int width, int height, float scroll_x, float scroll_y, Buffer& buffer,
+                    SyntaxHighlighter& highlighter, float editor_offset_x, float editor_offset_y,
+                    FontRasterizer& font_rasterizer, float status_bar_height);
+    void renderUiText(int width, int height, FontRasterizer& main_font_rasterizer,
+                      FontRasterizer& ui_font_rasterizer);
     void setCursorPositions(Buffer& buffer, float start_x, float start_y, float end_x, float end_y,
                             FontRasterizer& font_rasterizer);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
@@ -42,7 +42,6 @@ public:
 private:
     static const int BATCH_MAX = 65536;
 
-    float width, height;
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 

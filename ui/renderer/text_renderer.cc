@@ -50,7 +50,7 @@ struct ShapedGlyph {
 };
 }
 
-void TextRenderer::setup(float width, float height, FontRasterizer& font_rasterizer) {
+void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     std::string vert_source =
 #include "shaders/text_vert.glsl"
         ;
@@ -59,7 +59,6 @@ void TextRenderer::setup(float width, float height, FontRasterizer& font_rasteri
         ;
 
     shader_program.link(vert_source, frag_source);
-    this->resize(width, height);
 
     // TODO: Replace this with a more permanent solution.
     glyph_cache.emplace_back();
@@ -178,11 +177,12 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
     return {total_advance, offset};
 }
 
-void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
-                              SyntaxHighlighter& highlighter, float editor_offset_x,
-                              float editor_offset_y, FontRasterizer& font_rasterizer,
-                              float status_bar_height) {
+void TextRenderer::renderText(int width, int height, float scroll_x, float scroll_y,
+                              Buffer& buffer, SyntaxHighlighter& highlighter,
+                              float editor_offset_x, float editor_offset_y,
+                              FontRasterizer& font_rasterizer, float status_bar_height) {
     glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
                 editor_offset_y);
@@ -434,9 +434,10 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     glCheckError();
 }
 
-void TextRenderer::renderUiText(FontRasterizer& main_font_rasterizer,
+void TextRenderer::renderUiText(int width, int height, FontRasterizer& main_font_rasterizer,
                                 FontRasterizer& ui_font_rasterizer) {
     glUseProgram(shader_program.id);
+    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 0, 0);
 
@@ -540,15 +541,6 @@ void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
         .colored = glyph.colored,
     };
     glyph_cache[font_rasterizer.id].insert({codepoint, atlas_glyph});
-}
-
-void TextRenderer::resize(float new_width, float new_height) {
-    width = new_width;
-    height = new_height;
-
-    glViewport(0, 0, width, height);
-    glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), width, height);
 }
 
 TextRenderer::~TextRenderer() {

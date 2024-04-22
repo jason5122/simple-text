@@ -28,7 +28,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);
 
-    text_renderer.setup(width, height, parent.main_font_rasterizer);
+    text_renderer.setup(parent.main_font_rasterizer);
 }
 
 void EditorWindow::onDraw() {
@@ -41,8 +41,9 @@ void EditorWindow::onDraw() {
     int status_bar_height = parent.ui_font_rasterizer.line_height;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(scroll_x, scroll_y, buffer, highlighter, editor_offset_x,
-                             editor_offset_y, parent.main_font_rasterizer, status_bar_height);
+    text_renderer.renderText(scaled_width, scaled_height, scroll_x, scroll_y, buffer, highlighter,
+                             editor_offset_x, editor_offset_y, parent.main_font_rasterizer,
+                             status_bar_height);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     parent.rect_renderer.draw(
@@ -54,13 +55,11 @@ void EditorWindow::onDraw() {
                                editor_offset_y);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(parent.main_font_rasterizer, parent.ui_font_rasterizer);
+    text_renderer.renderUiText(scaled_width, scaled_height, parent.main_font_rasterizer,
+                               parent.ui_font_rasterizer);
 }
 
 void EditorWindow::onResize(int width, int height) {
-    glViewport(0, 0, width, height);
-    text_renderer.resize(width, height);
-
     redraw();
 }
 

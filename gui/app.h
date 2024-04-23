@@ -4,8 +4,12 @@
 #include "gui/modifier_key.h"
 #include <memory>
 
+#include "gui/gtk/dummy_window.h"
+
 class App {
 public:
+    DummyWindow* dummy_window;
+
     class Window {
     public:
         Window(App& parent, int width, int height);

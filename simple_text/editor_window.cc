@@ -20,6 +20,16 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     GLfloat green = colors::background.g / 255.0;
     GLfloat blue = colors::background.b / 255.0;
     glClearColor(red, green, blue, 1.0);
+
+    // fs::path file_path = ResourcePath() / "sample_files/example.json";
+    // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
+    fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+
+    buffer.setContents(ReadFile(file_path));
+    highlighter.setLanguage("source.json");
+
+    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
+    highlighter.parse(input);
 }
 
 void EditorWindow::onDraw() {
@@ -30,6 +40,25 @@ void EditorWindow::onDraw() {
 
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    int status_bar_height = parent.ui_font_rasterizer.line_height;
+
+    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    // parent.text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
+    //                                 parent.main_font_rasterizer, status_bar_height,
+    //                                 start_cursor, end_cursor, longest_line_x);
+
+    // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+    // parent.rect_renderer.draw(size, scroll, end_cursor, parent.main_font_rasterizer.line_height,
+    //                           buffer.lineCount(), longest_line_x, editor_offset,
+    //                           status_bar_height);
+
+    // parent.image_renderer.draw(size, scroll, editor_offset);
+
+    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    // parent.text_renderer.renderUiText(size, parent.main_font_rasterizer,
+    // parent.ui_font_rasterizer,
+    //                                   end_cursor);
 }
 
 void EditorWindow::onResize(int width, int height) {

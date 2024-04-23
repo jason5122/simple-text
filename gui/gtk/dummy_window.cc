@@ -1,25 +1,29 @@
 #include "dummy_window.h"
+#include <EGL/egl.h>
 #include <glad/glad.h>
-
 #include <iostream>
 
+static void realize_window(GtkWidget* self, gpointer user_data);
 static void realize(GtkWidget* self, gpointer user_data);
-static gboolean draw(GtkWidget* widget, cairo_t* cr, gpointer user_data);
+static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 
-DummyWindow::DummyWindow() {
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    g_signal_connect(window, "realize", G_CALLBACK(realize), this);
-    g_signal_connect(window, "draw", G_CALLBACK(draw), this);
+DummyWindow::DummyWindow()
+    : window(gtk_window_new(GTK_WINDOW_TOPLEVEL)), gl_area(gtk_gl_area_new()) {
+    gtk_container_add(GTK_CONTAINER(window), gl_area);
+
+    g_signal_connect(window, "realize", G_CALLBACK(realize_window), this);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
 }
 
 void DummyWindow::show() {
     gtk_widget_show_all(window);
 }
 
-static void realize(GtkWidget* self, gpointer user_data) {
+static void realize_window(GtkWidget* self, gpointer user_data) {
     DummyWindow* dummy_window = static_cast<DummyWindow*>(user_data);
 
-    std::cerr << "realize\n";
+    std::cerr << "realize_window\n";
 
     EGLConfig egl_config;
     EGLint n_config;
@@ -39,6 +43,24 @@ static void realize(GtkWidget* self, gpointer user_data) {
     eglMakeCurrent(dummy_window->egl_display, dummy_window->egl_surface, dummy_window->egl_surface,
                    dummy_window->egl_context);
 
+    if (dummy_window->egl_context == EGL_NO_CONTEXT) {
+        std::cerr << "Failed to create EGL context\n";
+    }
+
+    // dummy_window->egl_context = nullptr;
+    // dummy_window->egl_context = (EGLContext*)eglGetCurrentContext();
+}
+
+static void realize(GtkWidget* self, gpointer user_data) {
+    DummyWindow* dummy_window = static_cast<DummyWindow*>(user_data);
+
+    gtk_gl_area_make_current(GTK_GL_AREA(self));
+    if (gtk_gl_area_get_error(GTK_GL_AREA(self)) != nullptr) return;
+
+    dummy_window->gl_context = gtk_gl_area_get_context(GTK_GL_AREA(self));
+
+    std::cerr << "realize\n";
+
     if (!gladLoadGL()) {
         std::cerr << "Failed to initialize GLAD.\n";
     }
@@ -46,35 +68,16 @@ static void realize(GtkWidget* self, gpointer user_data) {
     glClearColor(0, 1, 0, 1);
 }
 
-static gboolean draw(GtkWidget* widget, cairo_t* cr, gpointer user_data) {
+static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     DummyWindow* dummy_window = static_cast<DummyWindow*>(user_data);
 
     // eglMakeCurrent(dummy_window->egl_display, dummy_window->egl_surface,
     // dummy_window->egl_surface,
     //                dummy_window->egl_context);
 
-    // glClear(GL_COLOR_BUFFER_BIT);
-    // std::cerr << "draw " << dummy_window->temp << '\n';
+    glClear(GL_COLOR_BUFFER_BIT);
+    std::cerr << "draw " << dummy_window->temp << '\n';
 
-    // eglSwapBuffers(dummy_window->egl_display, dummy_window->egl_surface);
-
-    guint width, height;
-    GdkRGBA color;
-    GtkStyleContext* context;
-
-    context = gtk_widget_get_style_context(widget);
-
-    width = gtk_widget_get_allocated_width(widget);
-    height = gtk_widget_get_allocated_height(widget);
-
-    gtk_render_background(context, cr, 0, 0, width, height);
-
-    cairo_arc(cr, width / 2.0, height / 2.0, MIN(width, height) / 2.0, 0, 2 * G_PI);
-
-    gtk_style_context_get_color(context, gtk_style_context_get_state(context), &color);
-    gdk_cairo_set_source_rgba(cr, &color);
-
-    cairo_fill(cr);
-
+    eglSwapBuffers(dummy_window->egl_display, dummy_window->egl_surface);
     return false;
 }

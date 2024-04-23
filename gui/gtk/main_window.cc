@@ -6,6 +6,7 @@
 static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer user_data);
 static void destroy(GtkWidget* self, gpointer user_data);
 // GLArea callbacks.
+static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
 static void realize(GtkWidget* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
@@ -18,9 +19,9 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
-MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
-    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()}, app_window{
-                                                                                   app_window} {
+MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window, GdkGLContext* gl_context)
+    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
+      app_window{app_window}, gl_context{gl_context} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
     gtk_container_add(GTK_CONTAINER(window), gl_area);
 
@@ -28,6 +29,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
     g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(key_press_event), this);
     g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), this);
 
+    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
     g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
@@ -135,6 +137,29 @@ static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer us
 static void destroy(GtkWidget* self, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onClose();
+}
+
+static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+
+    GError* error = nullptr;
+    GdkGLContext* context =
+        gdk_window_create_gl_context(gtk_widget_get_window(main_window->window), &error);
+
+    if (context == nullptr) {
+        std::cerr << "EPIC FAIL\n";
+    } else {
+        std::cerr << "hmm: " << context << '\n';
+    }
+
+    GdkGLContext* shared_context = gdk_gl_context_get_shared_context(context);
+    std::cerr << "sharing: " << shared_context << '\n';
+    std::cerr << "sharing2: " << gdk_gl_context_get_shared_context(main_window->gl_context)
+              << '\n';
+    std::cerr << "member: " << main_window->gl_context << '\n';
+
+    // return shared_context;
+    return context;
 }
 
 static void realize(GtkWidget* self, gpointer user_data) {

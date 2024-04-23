@@ -1,14 +1,15 @@
 #include "gui/app.h"
-#include "gui/gtk/dummy_window.h"
 #include "gui/gtk/main_window.h"
 #include <glad/glad.h>
 #include <gtk/gtk.h>
 
+#include <iostream>
+
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
 
-    DummyWindow* dummy_window = new DummyWindow();
-    dummy_window->show();
+    app->dummy_window = new DummyWindow();
+    app->dummy_window->show();
 
     app->onLaunch();
 }
@@ -42,7 +43,8 @@ public:
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
-    pimpl->main_window = new MainWindow(parent.pimpl->app, this);
+    std::cerr << parent.dummy_window->gl_context << '\n';
+    pimpl->main_window = new MainWindow(parent.pimpl->app, this, parent.dummy_window->gl_context);
 }
 
 App::Window::~Window() {}

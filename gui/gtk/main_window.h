@@ -7,7 +7,7 @@ class MainWindow {
 public:
     App::Window* app_window;
 
-    MainWindow(GtkApplication* gtk_app, App::Window* app_window);
+    MainWindow(GtkApplication* gtk_app, App::Window* app_window, GdkGLContext* gl_context);
     void show();
     void close();
     void redraw();
@@ -15,7 +15,8 @@ public:
     int height();
     int scaleFactor();
 
-private:
+    // private:
     GtkWidget* window;
     GtkWidget* gl_area;
+    GdkGLContext* gl_context;
 };

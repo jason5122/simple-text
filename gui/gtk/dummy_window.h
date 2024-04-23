@@ -6,6 +6,7 @@
 
 class DummyWindow {
 public:
+    GdkGLContext* gl_context;
     EGLDisplay* egl_display;
     EGLSurface* egl_surface;
     EGLContext* egl_context;
@@ -16,4 +17,5 @@ public:
 
 private:
     GtkWidget* window;
+    GtkWidget* gl_area;
 };

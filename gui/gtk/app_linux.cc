@@ -8,8 +8,8 @@
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
 
-    app->dummy_window = new DummyWindow();
-    app->dummy_window->show();
+    // app->dummy_window = new DummyWindow();
+    // app->dummy_window->show();
 
     app->onLaunch();
 }
@@ -43,8 +43,7 @@ public:
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
-    std::cerr << parent.dummy_window->gl_context << '\n';
-    pimpl->main_window = new MainWindow(parent.pimpl->app, this, parent.dummy_window->gl_context);
+    pimpl->main_window = new MainWindow(parent.pimpl->app, this, &parent);
 }
 
 App::Window::~Window() {}

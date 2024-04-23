@@ -19,9 +19,9 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
-MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window, GdkGLContext* gl_context)
+MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window, App* app)
     : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
-      app_window{app_window}, gl_context{gl_context} {
+      app_window{app_window}, app{app} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
     gtk_container_add(GTK_CONTAINER(window), gl_area);
 
@@ -73,15 +73,11 @@ void MainWindow::redraw() {
 }
 
 int MainWindow::width() {
-    gint width = 0, height = 0;
-    gtk_window_get_size(GTK_WINDOW(window), &width, &height);
-    return width;
+    return gtk_widget_get_allocated_width(gl_area);
 }
 
 int MainWindow::height() {
-    gint width = 0, height = 0;
-    gtk_window_get_size(GTK_WINDOW(window), &width, &height);
-    return height;
+    return gtk_widget_get_allocated_height(gl_area);
 }
 
 int MainWindow::scaleFactor() {
@@ -142,24 +138,13 @@ static void destroy(GtkWidget* self, gpointer user_data) {
 static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
 
-    GError* error = nullptr;
-    GdkGLContext* context =
-        gdk_window_create_gl_context(gtk_widget_get_window(main_window->window), &error);
-
-    if (context == nullptr) {
-        std::cerr << "EPIC FAIL\n";
-    } else {
-        std::cerr << "hmm: " << context << '\n';
+    if (main_window->app->gl_context == nullptr) {
+        GError* error = nullptr;
+        GdkGLContext* context =
+            gdk_window_create_gl_context(gtk_widget_get_window(main_window->window), &error);
+        main_window->app->gl_context = context;
     }
-
-    GdkGLContext* shared_context = gdk_gl_context_get_shared_context(context);
-    std::cerr << "sharing: " << shared_context << '\n';
-    std::cerr << "sharing2: " << gdk_gl_context_get_shared_context(main_window->gl_context)
-              << '\n';
-    std::cerr << "member: " << main_window->gl_context << '\n';
-
-    // return shared_context;
-    return context;
+    return main_window->app->gl_context;
 }
 
 static void realize(GtkWidget* self, gpointer user_data) {

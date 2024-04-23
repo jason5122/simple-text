@@ -8,7 +8,8 @@
 
 class App {
 public:
-    DummyWindow* dummy_window;
+    // DummyWindow* dummy_window;
+    GdkGLContext* gl_context = nullptr;
 
     class Window {
     public:

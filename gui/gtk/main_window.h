@@ -6,8 +6,9 @@
 class MainWindow {
 public:
     App::Window* app_window;
+    App* app;
 
-    MainWindow(GtkApplication* gtk_app, App::Window* app_window, GdkGLContext* gl_context);
+    MainWindow(GtkApplication* gtk_app, App::Window* app_window, App* app);
     void show();
     void close();
     void redraw();
@@ -18,5 +19,4 @@ public:
     // private:
     GtkWidget* window;
     GtkWidget* gl_area;
-    GdkGLContext* gl_context;
 };

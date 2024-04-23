@@ -48,6 +48,7 @@ public:
         SyntaxHighlighter highlighter;
     };
 
+    bool gl_initialized = false;
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
     renderer::TextRenderer text_renderer;

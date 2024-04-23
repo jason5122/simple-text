@@ -30,6 +30,32 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);
+
+    if (!parent.gl_initialized) {
+        // parent.gl_initialized = true;
+
+        // TODO: Implement scale factor support.
+        std::string main_font = "Source Code Pro";
+#if IS_MAC
+        std::string ui_font = "SF Pro Text";
+        int main_font_size = 16 * 2;
+        int ui_font_size = 11 * 2;
+#elif IS_LINUX
+        std::string ui_font = "Noto Sans";
+        int main_font_size = 16 * 2;
+        int ui_font_size = 11 * 2;
+#elif IS_WIN
+        std::string ui_font = "Segoe UI";
+        int main_font_size = 12 * 2;
+        int ui_font_size = 9 * 2;
+#endif
+        parent.main_font_rasterizer.setup(0, main_font, main_font_size);
+        parent.ui_font_rasterizer.setup(1, ui_font, ui_font_size);
+
+        parent.text_renderer.setup(parent.main_font_rasterizer);
+        parent.rect_renderer.setup();
+        parent.image_renderer.setup();
+    }
 }
 
 void EditorWindow::onDraw() {
@@ -43,22 +69,21 @@ void EditorWindow::onDraw() {
 
     int status_bar_height = parent.ui_font_rasterizer.line_height;
 
-    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    // parent.text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
-    //                                 parent.main_font_rasterizer, status_bar_height,
-    //                                 start_cursor, end_cursor, longest_line_x);
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    parent.text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
+                                    parent.main_font_rasterizer, status_bar_height, start_cursor,
+                                    end_cursor, longest_line_x);
 
-    // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    // parent.rect_renderer.draw(size, scroll, end_cursor, parent.main_font_rasterizer.line_height,
-    //                           buffer.lineCount(), longest_line_x, editor_offset,
-    //                           status_bar_height);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+    parent.rect_renderer.draw(size, scroll, end_cursor, parent.main_font_rasterizer.line_height,
+                              buffer.lineCount(), longest_line_x, editor_offset,
+                              status_bar_height);
 
-    // parent.image_renderer.draw(size, scroll, editor_offset);
+    parent.image_renderer.draw(size, scroll, editor_offset);
 
-    // glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    // parent.text_renderer.renderUiText(size, parent.main_font_rasterizer,
-    // parent.ui_font_rasterizer,
-    //                                   end_cursor);
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    parent.text_renderer.renderUiText(size, parent.main_font_rasterizer, parent.ui_font_rasterizer,
+                                      end_cursor);
 }
 
 void EditorWindow::onResize(int width, int height) {

@@ -57,6 +57,14 @@ void EditorWindow::onDraw() {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
+#if IS_MAC || IS_WIN
+    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
+    FontRasterizer& ui_font_rasterizer = parent.ui_font_rasterizer;
+    renderer::TextRenderer& text_renderer = parent.text_renderer;
+    renderer::RectRenderer& rect_renderer = parent.rect_renderer;
+    renderer::ImageRenderer& image_renderer = parent.image_renderer;
+#endif
+
     int status_bar_height = ui_font_rasterizer.line_height;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
@@ -92,6 +100,11 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
         .y = mouse_y - editor_offset.y + scroll.y,
     };
 
+#if IS_MAC || IS_WIN
+    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
+    renderer::TextRenderer& text_renderer = parent.text_renderer;
+#endif
+
     text_renderer.setCursorInfo(buffer, main_font_rasterizer, mouse, start_cursor);
     end_cursor = start_cursor;
 
@@ -103,6 +116,11 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
         .x = mouse_x - editor_offset.x + scroll.x,
         .y = mouse_y - editor_offset.y + scroll.y,
     };
+
+#if IS_MAC || IS_WIN
+    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
+    renderer::TextRenderer& text_renderer = parent.text_renderer;
+#endif
 
     text_renderer.setCursorInfo(buffer, main_font_rasterizer, mouse, end_cursor);
 

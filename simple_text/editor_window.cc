@@ -78,6 +78,37 @@ void EditorWindow::onResize(int width, int height) {
     redraw();
 }
 
+void EditorWindow::onScroll(float dx, float dy) {
+    // TODO: Uncomment this while not testing.
+    // scroll.x += dx;
+    scroll.y += dy;
+
+    redraw();
+}
+
+void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
+    renderer::Point mouse{
+        .x = mouse_x - editor_offset.x + scroll.x,
+        .y = mouse_y - editor_offset.y + scroll.y,
+    };
+
+    text_renderer.setCursorInfo(buffer, main_font_rasterizer, mouse, start_cursor);
+    end_cursor = start_cursor;
+
+    redraw();
+}
+
+void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
+    renderer::Point mouse{
+        .x = mouse_x - editor_offset.x + scroll.x,
+        .y = mouse_y - editor_offset.y + scroll.y,
+    };
+
+    text_renderer.setCursorInfo(buffer, main_font_rasterizer, mouse, end_cursor);
+
+    redraw();
+}
+
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
         parent.createWindow();

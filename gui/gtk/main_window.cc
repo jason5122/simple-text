@@ -142,6 +142,7 @@ static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
         GError* error = nullptr;
         GdkGLContext* context =
             gdk_window_create_gl_context(gtk_widget_get_window(main_window->window), &error);
+        gdk_gl_context_realize(context, &error);
         main_window->app->gl_context = context;
     }
     return main_window->app->gl_context;

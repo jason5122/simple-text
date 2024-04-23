@@ -3,13 +3,12 @@ import("//build/config/linux/pkg_config.gni")
 source_set("gtk") {
   sources = [
     "app_linux.cc",
+    "custom_gl_window.cc",
     "dummy_window.cc",
     "main_window.cc",
   ]
 
   libs = [
-    "wayland-client",
-    "wayland-egl",
     "EGL",
     "GL",
   ]

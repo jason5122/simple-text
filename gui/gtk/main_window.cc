@@ -19,9 +19,9 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
-MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window, App* app)
-    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
-      app_window{app_window}, app{app} {
+MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
+    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()}, app_window{
+                                                                                   app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
     gtk_container_add(GTK_CONTAINER(window), gl_area);
 
@@ -29,7 +29,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window, App* ap
     g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(key_press_event), this);
     g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), this);
 
-    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
+    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), nullptr);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
     g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
@@ -136,16 +136,10 @@ static void destroy(GtkWidget* self, gpointer user_data) {
 }
 
 static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
-    MainWindow* main_window = static_cast<MainWindow*>(user_data);
-
-    if (main_window->app->gl_context == nullptr) {
-        GError* error = nullptr;
-        GdkGLContext* context =
-            gdk_window_create_gl_context(gtk_widget_get_window(main_window->window), &error);
-        gdk_gl_context_realize(context, &error);
-        main_window->app->gl_context = context;
-    }
-    return main_window->app->gl_context;
+    GError* error = nullptr;
+    GdkGLContext* context =
+        gdk_window_create_gl_context(gtk_widget_get_parent_window(GTK_WIDGET(self)), &error);
+    return context;
 }
 
 static void realize(GtkWidget* self, gpointer user_data) {

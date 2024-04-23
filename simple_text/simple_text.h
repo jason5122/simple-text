@@ -46,14 +46,24 @@ public:
 
         Buffer buffer;
         SyntaxHighlighter highlighter;
+
+// TODO: Figure out OpenGL context reuse on Linux.
+#if IS_LINUX
+        FontRasterizer main_font_rasterizer;
+        FontRasterizer ui_font_rasterizer;
+        renderer::TextRenderer text_renderer;
+        renderer::RectRenderer rect_renderer;
+        renderer::ImageRenderer image_renderer;
+#endif
     };
 
-    bool gl_initialized = false;
+#if IS_MAC || IS_WIN
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
     renderer::TextRenderer text_renderer;
     renderer::RectRenderer rect_renderer;
     renderer::ImageRenderer image_renderer;
+#endif
 
     SimpleText();
     ~SimpleText();

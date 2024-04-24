@@ -120,10 +120,17 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     std::vector<InstanceData> instances;
 
     instances.push_back(InstanceData{
+        .coords = Vec2{0, font_rasterizer.line_height * 0},
+        .bg_size = Vec2{19 * 10, font_rasterizer.line_height + 2},
+        .bg_color = Rgba::fromRgb(colors::red, 255),
+        .bg_border_color = Rgba::fromRgb(colors::red, TOP | BOTTOM | LEFT | RIGHT | TOP_RIGHT),
+    });
+
+    instances.push_back(InstanceData{
         .coords = Vec2{0, font_rasterizer.line_height * 1},
         .bg_size = Vec2{19 * 2, font_rasterizer.line_height + 2},
         .bg_color = Rgba::fromRgb(colors::red, 255),
-        .bg_border_color = Rgba::fromRgb(colors::red, TOP | LEFT | RIGHT | TOP_RIGHT),
+        .bg_border_color = Rgba::fromRgb(colors::red, BOTTOM | LEFT | BOTTOM_RIGHT),
     });
 
     instances.push_back(InstanceData{

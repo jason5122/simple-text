@@ -25,10 +25,11 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     // fs::path file_path = ResourcePath() / "sample_files/example.json";
     // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-    fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+    // fs::path file_path = ResourcePath() / "sample_files/sort.scm";
+    fs::path file_path = ResourcePath() / "sample_files/proportional_font_test.json";
 
     buffer.setContents(ReadFile(file_path));
-    highlighter.setLanguage("source.json");
+    highlighter.setLanguage("source.json", parent.color_scheme);
 
     TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);

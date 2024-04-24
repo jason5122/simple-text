@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <vector>
 
+#include <iostream>
+
 // extern "C" TSLanguage* tree_sitter_c();
 // extern "C" TSLanguage* tree_sitter_cpp();
 // extern "C" TSLanguage* tree_sitter_glsl();
@@ -19,7 +21,7 @@ SyntaxHighlighter::~SyntaxHighlighter() {
     ts_tree_delete(tree);
 }
 
-void SyntaxHighlighter::setLanguage(std::string scope) {
+void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& color_scheme) {
     this->scope = scope;
 
     TSLanguage* language;
@@ -56,15 +58,15 @@ void SyntaxHighlighter::setLanguage(std::string scope) {
     }
 
     uint32_t capture_count = ts_query_capture_count(query);
-    capture_index_color_table = std::vector(capture_count, colors::black);
+    capture_index_color_table = std::vector(capture_count, color_scheme.foreground);
     for (size_t i = 0; i < capture_count; i++) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
-        // std::cerr << "capture name " << i << ": " << capture_name << '\n';
+        std::cerr << "capture name " << i << ": " << capture_name << '\n';
 
         if (capture_name == "comment") {
             capture_index_color_table[i] = colors::grey2;
-        } else if (capture_name == "string") {
+        } else if (capture_name == "string" || capture_name == "string.special.key") {
             capture_index_color_table[i] = colors::green;
         } else if (capture_name == "number") {
             capture_index_color_table[i] = colors::yellow;

@@ -10,7 +10,7 @@ class SyntaxHighlighter {
 public:
     SyntaxHighlighter();
     ~SyntaxHighlighter();
-    void setLanguage(std::string scope);
+    void setLanguage(std::string scope, config::ColorScheme& color_scheme);
     void parse(TSInput& input);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
     void getHighlights(TSPoint start_point, TSPoint end_point);

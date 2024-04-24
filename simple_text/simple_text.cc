@@ -10,6 +10,7 @@ void SimpleText::onLaunch() {
 #if IS_MAC || IS_WIN
 
     // TODO: Implement scale factor support.
+    // std::string main_font = "Arial";
     std::string main_font = "Source Code Pro";
 #if IS_MAC
     std::string ui_font = "SF Pro Text";

@@ -249,7 +249,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 //       Otherwise, the line width changes when using proportional fonts.
                 if (codepoint == 0x20 && selection_start <= byte_offset &&
                     byte_offset < selection_end) {
-                    // codepoint = 183;
+                    codepoint = 183;
                 }
 
                 if (disable_cache || !glyph_cache[font_rasterizer.id].count(codepoint)) {

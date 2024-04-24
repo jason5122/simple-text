@@ -45,7 +45,6 @@ private:
     };
 
     std::vector<std::unordered_map<uint_least32_t, AtlasGlyph>> glyph_cache;
-    std::unordered_map<std::string, std::vector<RasterizedGlyph>> line_layout_cache;
 
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                    FontRasterizer& font_rasterizer);

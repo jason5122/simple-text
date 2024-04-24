@@ -3,6 +3,7 @@ source_set("renderer") {
     "atlas.cc",
     "image_renderer.cc",
     "rect_renderer.cc",
+    "selection_renderer.cc",
     "shader.cc",
     "text_renderer.cc",
   ]

@@ -47,6 +47,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     text_renderer.setup(main_font_rasterizer);
     rect_renderer.setup();
     image_renderer.setup();
+    selection_renderer.setup(main_font_rasterizer);
 #endif
 }
 
@@ -65,11 +66,14 @@ void EditorWindow::onDraw() {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
     renderer::RectRenderer& rect_renderer = parent.rect_renderer;
     renderer::ImageRenderer& image_renderer = parent.image_renderer;
+    renderer::SelectionRenderer& selection_renderer = parent.selection_renderer;
 #endif
 
     int status_bar_height = ui_font_rasterizer.line_height;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer);
+
     text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, start_cursor, end_cursor,
                              longest_line_x, parent.color_scheme);

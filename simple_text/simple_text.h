@@ -9,6 +9,7 @@
 #include "font/rasterizer.h"
 #include "renderer/image_renderer.h"
 #include "renderer/rect_renderer.h"
+#include "renderer/selection_renderer.h"
 #include "renderer/text_renderer.h"
 
 class SimpleText : public App {
@@ -55,6 +56,7 @@ public:
         renderer::TextRenderer text_renderer;
         renderer::RectRenderer rect_renderer;
         renderer::ImageRenderer image_renderer;
+        renderer::SelectionRenderer selection_renderer;
 #endif
     };
 
@@ -64,6 +66,7 @@ public:
     renderer::TextRenderer text_renderer;
     renderer::RectRenderer rect_renderer;
     renderer::ImageRenderer image_renderer;
+    renderer::SelectionRenderer selection_renderer;
 #endif
 
     config::ColorScheme color_scheme;

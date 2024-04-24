@@ -25,7 +25,9 @@ void main() {
 
     bool should_discard = true;
     
-    vec3 computed_color = bg_color.rgb;
+    vec3 computed_color = vec3(0);
+    // vec3 computed_color = bg_color.rgb;
+    // float computed_alpha = 0.0;
     float computed_alpha = 1.0;
     // TODO: Turn these into uniforms.
     float tab_corner_radius = 6;
@@ -48,31 +50,44 @@ void main() {
     vec2 top_left = bg_center + vec2(-bg_size.x / 2, bg_size.y / 2);
     vec2 top_right = bg_center + bg_size / 2;
 
+    top_right.x -= tab_corner_radius;
+
     vec2 curve_bottom_left = bottom_left + tab_corner_radius;
     vec2 curve_bottom_right = bottom_right + vec2(-tab_corner_radius, tab_corner_radius);
     vec2 curve_top_left = top_left + vec2(tab_corner_radius, -tab_corner_radius);
     vec2 curve_top_right = top_right + vec2(-tab_corner_radius, -tab_corner_radius);
 
     float d = 0;
-    if (has_bottom_left_border && pixel_pos.x < curve_bottom_left.x &&
-        pixel_pos.y < curve_bottom_left.y) {
-        d = distance(pixel_pos, curve_bottom_left) - tab_corner_radius;
-    }
-    if (has_bottom_right_border && pixel_pos.x > curve_bottom_right.x &&
-        pixel_pos.y < curve_bottom_right.y) {
-        d = distance(pixel_pos, curve_bottom_right) - tab_corner_radius;
-    }
-    if (has_top_left_border && pixel_pos.x < curve_top_left.x &&
-        pixel_pos.y > curve_top_left.y) {
-        d = distance(pixel_pos, curve_top_left) - tab_corner_radius;
-    }
+    // if (has_bottom_left_border && pixel_pos.x < curve_bottom_left.x &&
+    //     pixel_pos.y < curve_bottom_left.y) {
+    //     d = distance(pixel_pos, curve_bottom_left) - tab_corner_radius;
+    // }
+    // if (has_bottom_right_border && pixel_pos.x > curve_bottom_right.x &&
+    //     pixel_pos.y < curve_bottom_right.y) {
+    //     d = distance(pixel_pos, curve_bottom_right) - tab_corner_radius;
+    // }
+    // if (has_top_left_border && pixel_pos.x < curve_top_left.x &&
+    //     pixel_pos.y > curve_top_left.y) {
+    //     d = distance(pixel_pos, curve_top_left) - tab_corner_radius;
+    // }
     if (has_top_right_border && pixel_pos.x > curve_top_right.x &&
         pixel_pos.y > curve_top_right.y) {
         d = distance(pixel_pos, curve_top_right) - tab_corner_radius;
     }
     if (-border_thickness < d && d < 0) {
         computed_color = bg_border_color.rgb;
-        should_discard = false;
+        computed_alpha = 1.0;
+    }
+
+    // Temporary.
+    vec2 curve_temp = top_right + vec2(tab_corner_radius, -tab_corner_radius);
+    if (pixel_pos.x > curve_temp.x - tab_corner_radius && pixel_pos.y > curve_temp.y) {
+        d = distance(pixel_pos, curve_temp) - tab_corner_radius;
+
+        if (-border_thickness < d && d < 0) {
+            computed_color = bg_border_color.rgb;
+            computed_alpha = 1.0;
+        }
     }
 
     float border_left = bottom_left.x + border_thickness;
@@ -88,38 +103,34 @@ void main() {
     //     computed_color = bg_border_color.rgb;
     // }
 
-    if (has_left_border && pixel_pos.x < border_left) {
-        if (!(has_bottom_left_border && pixel_pos.y < curve_bottom_left.y) &&
-            !(has_top_left_border && pixel_pos.y > curve_top_left.y)) {
-            computed_color = bg_border_color.rgb;
-            should_discard = false;
-        }
-    }
-    if (has_right_border && pixel_pos.x > border_right) {
-        if (!(has_bottom_right_border && pixel_pos.y < curve_bottom_right.y) &&
-            !(has_top_right_border && pixel_pos.y > curve_top_right.y)) {
-            computed_color = bg_border_color.rgb;
-            should_discard = false;
-        }
-    }
-    if (has_bottom_border && pixel_pos.y < border_bottom) {
-        if (!(has_bottom_left_border && pixel_pos.x < curve_bottom_left.x) &&
-            !(has_bottom_right_border && pixel_pos.x > curve_bottom_right.x)) {
-            computed_color = bg_border_color.rgb;
-            should_discard = false;
-        }
-    }
-    if (has_top_border && pixel_pos.y > border_top) {
-        if (!(has_top_left_border && pixel_pos.x < curve_top_left.x) &&
-            !(has_top_right_border && pixel_pos.x > curve_top_right.x)) {
-            computed_color = bg_border_color.rgb;
-            should_discard = false;
-        }
-    }
-
-    if (should_discard) {
-        discard;
-    }
+    // if (has_left_border && border_left - border_thickness < pixel_pos.x && pixel_pos.x < border_left) {
+    //     if (!(has_bottom_left_border && pixel_pos.y < curve_bottom_left.y) &&
+    //         !(has_top_left_border && pixel_pos.y > curve_top_left.y)) {
+    //         computed_color = bg_border_color.rgb;
+    //         computed_alpha = 1.0;
+    //     }
+    // }
+    // if (has_right_border && pixel_pos.x > border_right) {
+    //     if (!(has_bottom_right_border && pixel_pos.y < curve_bottom_right.y) &&
+    //         !(has_top_right_border && pixel_pos.y > curve_top_right.y)) {
+    //         computed_color = bg_border_color.rgb;
+    //         computed_alpha = 1.0;
+    //     }
+    // }
+    // if (has_bottom_border && pixel_pos.y < border_bottom) {
+    //     if (!(has_bottom_left_border && pixel_pos.x < curve_bottom_left.x) &&
+    //         !(has_bottom_right_border && pixel_pos.x > curve_bottom_right.x)) {
+    //         computed_color = bg_border_color.rgb;
+    //         computed_alpha = 1.0;
+    //     }
+    // }
+    // if (has_top_border && pixel_pos.y > border_top) {
+    //     if (!(has_top_left_border && pixel_pos.x < curve_top_left.x) &&
+    //         !(has_top_right_border && pixel_pos.x > curve_top_right.x)) {
+    //         computed_color = bg_border_color.rgb;
+    //         computed_alpha = 1.0;
+    //     }
+    // }
 
     alpha_mask = vec4(1.0);
     // FIXME: A `computed_alpha` of 0 still doesn't blend properly into the background color.

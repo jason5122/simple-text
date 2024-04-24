@@ -10,14 +10,18 @@
 namespace renderer {
 // TODO: Rewrite this in a more idiomatic C++ way.
 // Border flags.
-#define BOTTOM_LEFT_INWARDS 1
-#define BOTTOM_RIGHT_INWARDS 2
-#define TOP_LEFT_INWARDS 4
-#define TOP_RIGHT_INWARDS 8
-#define BOTTOM_LEFT_OUTWARDS 16
-#define BOTTOM_RIGHT_OUTWARDS 32
-#define TOP_LEFT_OUTWARDS 64
-#define TOP_RIGHT_OUTWARDS 128
+#define LEFT 1
+#define RIGHT 2
+#define BOTTOM 4
+#define TOP 8
+#define BOTTOM_LEFT_INWARDS 16
+#define BOTTOM_RIGHT_INWARDS 32
+#define TOP_LEFT_INWARDS 64
+#define TOP_RIGHT_INWARDS 128
+#define BOTTOM_LEFT_OUTWARDS 256
+#define BOTTOM_RIGHT_OUTWARDS 512
+#define TOP_LEFT_OUTWARDS 1024
+#define TOP_RIGHT_OUTWARDS 2048
 
 namespace {
 struct InstanceData {
@@ -25,17 +29,7 @@ struct InstanceData {
     Vec2 bg_size;
     Rgba bg_color;
     Rgba bg_border_color;
-};
-
-// Reference Zed's implementation in //crates/gpui/src/text_system/line_layout.rs.
-struct ShapedGlyph {
-    uint32_t codepoint;
-    size_t byte_offset;  // Byte offset within the line layout.
-    Vec2 coords;
-    Vec4 glyph;
-    Vec4 uv;
-    Vec2 bg_size;
-    bool colored;
+    uint32_t border_flags;
 };
 }
 
@@ -100,6 +94,11 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
                           (void*)offsetof(InstanceData, bg_border_color));
     glVertexAttribDivisor(index++, 1);
 
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_INT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, border_flags));
+    glVertexAttribDivisor(index++, 1);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -120,20 +119,30 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     std::vector<InstanceData> instances;
 
     float tab_corner_radius = 6;
+
     instances.push_back(InstanceData{
         .coords = Vec2{19 * 10 - tab_corner_radius, font_rasterizer.line_height * 3},
         .bg_size = Vec2{19 * 10 - tab_corner_radius, font_rasterizer.line_height + 2},
         .bg_color = Rgba::fromRgb(colors::red, 255),
-        .bg_border_color = Rgba::fromRgb(colors::red, BOTTOM_RIGHT_INWARDS | TOP_LEFT_INWARDS |
-                                                          TOP_RIGHT_INWARDS),
+        .bg_border_color = Rgba::fromRgb(colors::red, 0),
+        .border_flags = LEFT | RIGHT | TOP | TOP_LEFT_INWARDS,
+    });
+
+    instances.push_back(InstanceData{
+        .coords = Vec2{19 * 14 - tab_corner_radius, font_rasterizer.line_height * 3},
+        .bg_size = Vec2{19 * 6 - tab_corner_radius, font_rasterizer.line_height + 2},
+        .bg_color = Rgba::fromRgb(colors::red, 255),
+        .bg_border_color = Rgba::fromRgb(colors::red, 0),
+        .border_flags = BOTTOM | TOP | RIGHT | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_INWARDS,
     });
 
     instances.push_back(InstanceData{
         .coords = Vec2{19 * 10 - tab_corner_radius, font_rasterizer.line_height * 4},
         .bg_size = Vec2{19 * 5 - tab_corner_radius, font_rasterizer.line_height + 2},
         .bg_color = Rgba::fromRgb(colors::red, 255),
-        .bg_border_color = Rgba::fromRgb(colors::red, BOTTOM_LEFT_INWARDS | TOP_RIGHT_OUTWARDS |
-                                                          BOTTOM_RIGHT_INWARDS),
+        .bg_border_color = Rgba::fromRgb(colors::red, 0),
+        .border_flags = LEFT | RIGHT | BOTTOM | BOTTOM_LEFT_INWARDS | TOP_RIGHT_OUTWARDS |
+                        BOTTOM_RIGHT_INWARDS,
     });
 
     // instances.push_back(InstanceData{

@@ -7,11 +7,13 @@ layout(location = 1) in vec2 in_bg_size;
 layout(location = 2) in vec4 in_bg_color;
 // The `border_flags` flag is packed along with background border color.
 layout(location = 3) in vec4 in_bg_border_color;
+layout(location = 4) in int in_border_flags;
 
 flat out vec2 bg_center;
 flat out vec2 bg_size;
 flat out vec4 bg_color;
 flat out vec4 bg_border_color;
+flat out int border_flags;
 
 uniform vec2 resolution;
 uniform vec2 scroll_offset;
@@ -42,6 +44,7 @@ void main() {
     bg_size = in_bg_size;
     bg_color = in_bg_color / 255.0;
     bg_border_color = vec4(in_bg_border_color.rgb / 255.0, in_bg_border_color.a);
+    border_flags = in_border_flags;
 }
 
 )"

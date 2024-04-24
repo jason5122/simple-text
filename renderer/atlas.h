@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <vector>
 
+namespace renderer {
 class Atlas {
 public:
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
@@ -21,3 +22,4 @@ private:
     int offset_y = 0;
     int tallest = 0;
 };
+}

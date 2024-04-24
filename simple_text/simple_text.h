@@ -5,6 +5,7 @@
 
 #include "base/buffer.h"
 #include "base/syntax_highlighter.h"
+#include "config/color_scheme.h"
 #include "font/rasterizer.h"
 #include "renderer/image_renderer.h"
 #include "renderer/rect_renderer.h"
@@ -64,6 +65,8 @@ public:
     renderer::RectRenderer rect_renderer;
     renderer::ImageRenderer image_renderer;
 #endif
+
+    config::ColorScheme color_scheme;
 
     SimpleText();
     ~SimpleText();

@@ -3,6 +3,7 @@
 #include "base/rgb.h"
 #include <ostream>
 
+namespace renderer {
 struct Vec2 {
     float x, y;
 };
@@ -40,4 +41,5 @@ inline std::ostream& operator<<(std::ostream& out, const Rgba& color) {
     // https://stackoverflow.com/a/28414758/14698275
     return out << '{' << +color.r << ", " << +color.g << ", " << +color.b << ", " << +color.a
                << '}';
+}
 }

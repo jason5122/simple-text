@@ -1,5 +1,6 @@
 #include "atlas.h"
 
+namespace renderer {
 void Atlas::setup(bool use_bilinear_filtering) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex_id);
@@ -44,4 +45,5 @@ Vec4 Atlas::insertTexture(int width, int height, bool colored, GLubyte* data) {
 
 Atlas::~Atlas() {
     glDeleteTextures(1, &tex_id);
+}
 }

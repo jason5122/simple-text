@@ -11,6 +11,7 @@ common_sources = [
 common_deps = [
   "sample_files",
   "//base",
+  "//config",
   "//gui",
   "//renderer",
 ]

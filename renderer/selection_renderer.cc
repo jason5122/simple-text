@@ -10,14 +10,14 @@
 namespace renderer {
 // TODO: Rewrite this in a more idiomatic C++ way.
 // Border flags.
-#define LEFT 1
-#define RIGHT 2
-#define BOTTOM 4
-#define TOP 8
-#define BOTTOM_LEFT 16
-#define BOTTOM_RIGHT 32
-#define TOP_LEFT 64
-#define TOP_RIGHT 128
+#define BOTTOM_LEFT_INWARDS 1
+#define BOTTOM_RIGHT_INWARDS 2
+#define TOP_LEFT_INWARDS 4
+#define TOP_RIGHT_INWARDS 8
+#define BOTTOM_LEFT_OUTWARDS 16
+#define BOTTOM_RIGHT_OUTWARDS 32
+#define TOP_LEFT_OUTWARDS 64
+#define TOP_RIGHT_OUTWARDS 128
 
 namespace {
 struct InstanceData {
@@ -120,24 +120,26 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     std::vector<InstanceData> instances;
 
     instances.push_back(InstanceData{
-        .coords = Vec2{0, font_rasterizer.line_height * 0},
+        .coords = Vec2{19 * 2, font_rasterizer.line_height * 0},
         .bg_size = Vec2{19 * 10, font_rasterizer.line_height + 2},
         .bg_color = Rgba::fromRgb(colors::red, 255),
-        .bg_border_color = Rgba::fromRgb(colors::red, TOP | BOTTOM | LEFT | RIGHT | TOP_RIGHT),
+        .bg_border_color = Rgba::fromRgb(colors::red, TOP_LEFT_INWARDS | BOTTOM_LEFT_OUTWARDS),
     });
 
     instances.push_back(InstanceData{
         .coords = Vec2{0, font_rasterizer.line_height * 1},
         .bg_size = Vec2{19 * 2, font_rasterizer.line_height + 2},
         .bg_color = Rgba::fromRgb(colors::red, 255),
-        .bg_border_color = Rgba::fromRgb(colors::red, BOTTOM | LEFT | BOTTOM_RIGHT),
+        .bg_border_color =
+            Rgba::fromRgb(colors::red, BOTTOM_LEFT_INWARDS | TOP_LEFT_INWARDS |
+                                           TOP_RIGHT_OUTWARDS | BOTTOM_RIGHT_INWARDS),
     });
 
     instances.push_back(InstanceData{
         .coords = Vec2{19 * 2, font_rasterizer.line_height * 2},
         .bg_size = Vec2{100, font_rasterizer.line_height + 2},
         .bg_color = Rgba::fromRgb(colors::red, 255),
-        .bg_border_color = Rgba::fromRgb(colors::red, BOTTOM | LEFT | RIGHT),
+        .bg_border_color = Rgba::fromRgb(colors::red, 0),
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

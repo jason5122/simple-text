@@ -29,7 +29,9 @@ void main() {
     if (rendering_pass == 0) {
         if (bg_color.a == 0.0) discard;
 
-        vec3 computed_color = bg_color.rgb;
+        bool should_discard = true;
+        
+        vec3 computed_color = vec3(0);
         float computed_alpha = 1.0;
         // TODO: Turn these into uniforms.
         float tab_corner_radius = 6;
@@ -76,8 +78,7 @@ void main() {
         }
         if (-border_thickness < d && d < 0) {
             computed_color = bg_border_color.rgb;
-        } else if (d > 0) {
-            computed_alpha = 0;
+            should_discard = false;
         }
 
         float border_left = bottom_left.x + border_thickness;
@@ -97,25 +98,33 @@ void main() {
             if (!(has_bottom_left_border && pixel_pos.y < curve_bottom_left.y) &&
                 !(has_top_left_border && pixel_pos.y > curve_top_left.y)) {
                 computed_color = bg_border_color.rgb;
+                should_discard = false;
             }
         }
         if (has_right_border && pixel_pos.x > border_right) {
             if (!(has_bottom_right_border && pixel_pos.y < curve_bottom_right.y) &&
                 !(has_top_right_border && pixel_pos.y > curve_top_right.y)) {
                 computed_color = bg_border_color.rgb;
+                should_discard = false;
             }
         }
         if (has_bottom_border && pixel_pos.y < border_bottom) {
             if (!(has_bottom_left_border && pixel_pos.x < curve_bottom_left.x) &&
                 !(has_bottom_right_border && pixel_pos.x > curve_bottom_right.x)) {
                 computed_color = bg_border_color.rgb;
+                should_discard = false;
             }
         }
         if (has_top_border && pixel_pos.y > border_top) {
             if (!(has_top_left_border && pixel_pos.x < curve_top_left.x) &&
                 !(has_top_right_border && pixel_pos.x > curve_top_right.x)) {
                 computed_color = bg_border_color.rgb;
+                should_discard = false;
             }
+        }
+
+        if (should_discard) {
+            discard;
         }
 
         alpha_mask = vec4(1.0);

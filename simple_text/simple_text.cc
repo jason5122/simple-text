@@ -14,7 +14,7 @@ void SimpleText::onLaunch() {
     // std::string main_font = "Source Code Pro";
 #if IS_MAC
     std::string ui_font = "SF Pro Text";
-    int main_font_size = 32 * 2;
+    int main_font_size = 16 * 2;
     int ui_font_size = 11 * 2;
 #elif IS_WIN
     std::string ui_font = "Segoe UI";

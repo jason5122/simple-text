@@ -119,14 +119,18 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
     std::vector<InstanceData> instances;
 
-    uint8_t border_flags = TOP | BOTTOM | LEFT | RIGHT;
+    instances.push_back(InstanceData{
+        .coords = Vec2{0, font_rasterizer.line_height * 1},
+        .bg_size = Vec2{19 * 2, font_rasterizer.line_height + 2},
+        .bg_color = Rgba::fromRgb(colors::red, 255),
+        .bg_border_color = Rgba::fromRgb(colors::red, TOP | LEFT | RIGHT | TOP_RIGHT),
+    });
 
     instances.push_back(InstanceData{
-        .coords = Vec2{0, font_rasterizer.line_height * 4},
-        .bg_size = Vec2{100, font_rasterizer.line_height},
+        .coords = Vec2{19 * 2, font_rasterizer.line_height * 2},
+        .bg_size = Vec2{100, font_rasterizer.line_height + 2},
         .bg_color = Rgba::fromRgb(colors::red, 255),
-        // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
-        .bg_border_color = Rgba::fromRgb(colors::red, border_flags),
+        .bg_border_color = Rgba::fromRgb(colors::red, BOTTOM | LEFT | RIGHT),
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

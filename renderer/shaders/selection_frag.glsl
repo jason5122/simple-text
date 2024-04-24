@@ -151,8 +151,20 @@ void main() {
             computed_alpha = 1.0;
         }
     }
+    // if (has_top_border && pixel_pos.y > border_top) {
+    //     if (curve_top_left.x < pixel_pos.x && pixel_pos.x < curve_top_right.x) {
+    //         computed_color = bg_border_color.rgb;
+    //         computed_alpha = 1.0;
+    //     }
+    // }
+
+    float min_top_left_edge = left_edge;
+    if (has_top_left_inwards_border || has_top_left_outwards_border) {
+        min_top_left_edge = curve_top_left.x;
+    }
+    
     if (has_top_border && pixel_pos.y > border_top) {
-        if (curve_top_left.x < pixel_pos.x && pixel_pos.x < curve_top_right.x) {
+        if (min_top_left_edge < pixel_pos.x && pixel_pos.x < curve_top_right.x) {
             computed_color = bg_border_color.rgb;
             computed_alpha = 1.0;
         }

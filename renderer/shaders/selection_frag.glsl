@@ -30,10 +30,9 @@ void main() {
 
     bool should_discard = true;
     
-    vec3 computed_color = vec3(0);
-    // vec3 computed_color = bg_color.rgb;
-    float computed_alpha = 0.0;
-    // float computed_alpha = 1.0;
+    vec3 computed_color = bg_color.rgb;
+    // float computed_alpha = 0.0;
+    float computed_alpha = 1.0;
     // TODO: Turn these into uniforms.
     float tab_corner_radius = 6;
     float border_thickness = 2;
@@ -51,6 +50,11 @@ void main() {
     bool has_bottom_right_outwards_border = (border_flags & BOTTOM_RIGHT_OUTWARDS) == BOTTOM_RIGHT_OUTWARDS;
     bool has_top_left_outwards_border = (border_flags & TOP_LEFT_OUTWARDS) == TOP_LEFT_OUTWARDS;
     bool has_top_right_outwards_border = (border_flags & TOP_RIGHT_OUTWARDS) == TOP_RIGHT_OUTWARDS;
+
+    bool has_bottom_left_border = has_bottom_left_inwards_border || has_bottom_left_outwards_border;
+    bool has_bottom_right_border = has_bottom_right_inwards_border || has_bottom_right_outwards_border;
+    bool has_top_left_border = has_top_left_inwards_border || has_top_left_outwards_border;
+    bool has_top_right_border = has_top_right_inwards_border || has_top_right_outwards_border;
 
     vec2 pixel_pos = gl_FragCoord.xy;
 
@@ -134,37 +138,29 @@ void main() {
     border_right -= tab_corner_radius;
 
     if (has_left_border && border_left - border_thickness < pixel_pos.x && pixel_pos.x < border_left) {
-        if (curve_bottom_left.y < pixel_pos.y && pixel_pos.y < curve_top_left.y) {
+        if (!(has_bottom_left_border && pixel_pos.y < curve_bottom_left.y) &&
+            !(has_top_left_border && pixel_pos.y > curve_top_left.y)) {
             computed_color = bg_border_color.rgb;
             computed_alpha = 1.0;
         }
     }
     if (has_right_border && border_right < pixel_pos.x && pixel_pos.x < border_right + border_thickness) {
-        if (curve_bottom_right.y < pixel_pos.y && pixel_pos.y < curve_top_right.y) {
+        if (!(has_bottom_right_border && pixel_pos.y < curve_bottom_right.y) &&
+            !(has_top_right_border && pixel_pos.y > curve_top_right.y)) {
             computed_color = bg_border_color.rgb;
             computed_alpha = 1.0;
         }
     }
     if (has_bottom_border && pixel_pos.y < border_bottom) {
-        if (curve_bottom_left.x < pixel_pos.x && pixel_pos.x < curve_bottom_right.x) {
+        if (!(has_bottom_left_border && pixel_pos.x < curve_bottom_left.x) &&
+            !(has_bottom_right_border && pixel_pos.x > curve_bottom_right.x)) {
             computed_color = bg_border_color.rgb;
             computed_alpha = 1.0;
         }
     }
-    // if (has_top_border && pixel_pos.y > border_top) {
-    //     if (curve_top_left.x < pixel_pos.x && pixel_pos.x < curve_top_right.x) {
-    //         computed_color = bg_border_color.rgb;
-    //         computed_alpha = 1.0;
-    //     }
-    // }
-
-    float min_top_left_edge = left_edge;
-    if (has_top_left_inwards_border || has_top_left_outwards_border) {
-        min_top_left_edge = curve_top_left.x;
-    }
-    
     if (has_top_border && pixel_pos.y > border_top) {
-        if (min_top_left_edge < pixel_pos.x && pixel_pos.x < curve_top_right.x) {
+        if (!(has_top_left_border && pixel_pos.x < curve_top_left.x) &&
+            !(has_top_right_border && pixel_pos.x > curve_top_right.x)) {
             computed_color = bg_border_color.rgb;
             computed_alpha = 1.0;
         }

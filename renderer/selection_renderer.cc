@@ -123,7 +123,7 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     instances.push_back(InstanceData{
         .coords = Vec2{19 * 10 - tab_corner_radius, font_rasterizer.line_height * 3},
         .bg_size = Vec2{19 * 10 - tab_corner_radius, font_rasterizer.line_height + 2},
-        .bg_color = Rgba::fromRgb(colors::red, 255),
+        .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
         .bg_border_color = Rgba::fromRgb(colors::red, 0),
         .border_flags = LEFT | RIGHT | TOP | TOP_LEFT_INWARDS,
     });
@@ -131,7 +131,7 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     instances.push_back(InstanceData{
         .coords = Vec2{19 * 14 - tab_corner_radius, font_rasterizer.line_height * 3},
         .bg_size = Vec2{19 * 6 - tab_corner_radius, font_rasterizer.line_height + 2},
-        .bg_color = Rgba::fromRgb(colors::red, 255),
+        .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
         .bg_border_color = Rgba::fromRgb(colors::red, 0),
         .border_flags = BOTTOM | TOP | RIGHT | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_INWARDS,
     });
@@ -139,18 +139,11 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     instances.push_back(InstanceData{
         .coords = Vec2{19 * 10 - tab_corner_radius, font_rasterizer.line_height * 4},
         .bg_size = Vec2{19 * 5 - tab_corner_radius, font_rasterizer.line_height + 2},
-        .bg_color = Rgba::fromRgb(colors::red, 255),
+        .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
         .bg_border_color = Rgba::fromRgb(colors::red, 0),
         .border_flags = LEFT | RIGHT | BOTTOM | BOTTOM_LEFT_INWARDS | TOP_RIGHT_OUTWARDS |
                         BOTTOM_RIGHT_INWARDS,
     });
-
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{19 * 10, font_rasterizer.line_height * 5},
-    //     .bg_size = Vec2{100, font_rasterizer.line_height + 2},
-    //     .bg_color = Rgba::fromRgb(colors::red, 255),
-    //     .bg_border_color = Rgba::fromRgb(colors::red, 0),
-    // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/rgb.h"
+#include "config/color_scheme.h"
 #include <string>
 #include <tree_sitter/api.h>
 #include <vector>
@@ -13,7 +14,7 @@ public:
     void parse(TSInput& input);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
     void getHighlights(TSPoint start_point, TSPoint end_point);
-    Rgb getColor(size_t byte_offset);
+    Rgb getColor(size_t byte_offset, config::ColorScheme& color_scheme);
 
 private:
     TSParser* parser;

@@ -1,12 +1,20 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 struct Rgb {
     uint8_t r;
     uint8_t g;
     uint8_t b;
 };
+
+inline Rgb ParseHexCode(std::string& hex) {
+    uint8_t r = std::stoi(hex.substr(1, 2), nullptr, 16);
+    uint8_t g = std::stoi(hex.substr(3, 2), nullptr, 16);
+    uint8_t b = std::stoi(hex.substr(5, 2), nullptr, 16);
+    return Rgb{r, g, b};
+}
 
 #define IS_DARK_MODE
 
@@ -25,13 +33,6 @@ constexpr Rgb purple{198, 149, 198};
 constexpr Rgb selection_focused{227, 230, 232};
 constexpr Rgb selection_unfocused{235, 238, 239};
 constexpr Rgb selection_border{212, 217, 221};
-
-constexpr Rgb background{48, 56, 65};
-constexpr Rgb cursor{yellow};
-constexpr Rgb tab_bar{79, 86, 94};
-constexpr Rgb side_bar{34, 38, 42};
-constexpr Rgb status_bar{46, 50, 56};
-constexpr Rgb scroll_bar{106, 112, 118};
 #else
 constexpr Rgb black{51, 51, 51};
 constexpr Rgb yellow{249, 174, 88};
@@ -46,12 +47,5 @@ constexpr Rgb purple{198, 149, 198};
 constexpr Rgb selection_focused{227, 230, 232};
 constexpr Rgb selection_unfocused{235, 238, 239};
 constexpr Rgb selection_border{212, 217, 221};
-
-constexpr Rgb background{253, 253, 253};
-constexpr Rgb cursor{blue2};
-constexpr Rgb tab_bar{190, 190, 190};
-constexpr Rgb side_bar{235, 237, 239};
-constexpr Rgb status_bar{199, 203, 209};
-constexpr Rgb scroll_bar{182, 182, 182};
 #endif
 }

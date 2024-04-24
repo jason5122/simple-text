@@ -138,7 +138,7 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
     }
 }
 
-Rgb SyntaxHighlighter::getColor(size_t byte_offset) {
+Rgb SyntaxHighlighter::getColor(size_t byte_offset, config::ColorScheme& color_scheme) {
     size_t size = highlight_ranges.size();
     while (idx < size && byte_offset >= highlight_ranges.at(idx).second) {
         idx++;
@@ -149,5 +149,5 @@ Rgb SyntaxHighlighter::getColor(size_t byte_offset) {
         size_t capture_index = capture_indexes[idx];
         return capture_index_color_table[capture_index];
     }
-    return colors::black;
+    return color_scheme.foreground;
 }

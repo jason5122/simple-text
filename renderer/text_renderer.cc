@@ -190,7 +190,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                               SyntaxHighlighter& highlighter, Point& editor_offset,
                               FontRasterizer& font_rasterizer, float status_bar_height,
                               CursorInfo& start_cursor, CursorInfo& end_cursor,
-                              float& longest_line_x) {
+                              float& longest_line_x, config::ColorScheme& color_scheme) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -327,7 +327,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
             bool is_glyph_in_selection = selection_start <= shaped_glyph.byte_offset &&
                                          shaped_glyph.byte_offset < selection_end;
 
-            Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset);
+            Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset, color_scheme);
             if (shaped_glyph.codepoint == 183) {
                 text_color = Rgb{182, 182, 182};
             }
@@ -393,7 +393,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 .color = Rgba::fromRgb(text_color, shaped_glyph.colored),
                 .bg_size = shaped_glyph.bg_size,
                 // .bg_color = Rgba::fromRgb(colors::selection_focused, bg_a),
-                .bg_color = Rgba::fromRgb(colors::background, bg_a),
+                .bg_color = Rgba::fromRgb(color_scheme.background, bg_a),
                 // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
                 .bg_border_color = Rgba::fromRgb(colors::red, border_flags),
             });
@@ -423,7 +423,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     //                    10 * font_rasterizer.line_height + scroll_y},
     //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
     //     .uv = Vec4{0, 0, 1.0, 1.0},
-    //     .color = Rgba::fromRgb(colors::black, false),
+    //     .color = Rgba::fromRgb(color_scheme.foreground, false),
     //     .is_atlas = true,
     // });
 
@@ -446,7 +446,8 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 }
 
 void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
-                                FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor) {
+                                FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor,
+                                config::ColorScheme& color_scheme) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
@@ -481,7 +482,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
                            size.height - main_font_rasterizer.line_height},
             .glyph = glyph.glyph,
             .uv = glyph.uv,
-            .color = Rgba::fromRgb(colors::black, glyph.colored),
+            .color = Rgba::fromRgb(color_scheme.foreground, glyph.colored),
         });
 
         total_advance += std::round(glyph.advance);

@@ -1,46 +1,56 @@
 #include "base/filesystem/file_reader.h"
+#include "base/rgb.h"
 #include "color_scheme.h"
 #include "glaze/glaze.hpp"
 #include <iostream>
 
 namespace config {
-struct person {
-    std::string first_name;
-    std::string last_name;
-    uint32_t age{};
+struct Schema {
+    std::string foreground;
+    std::string background;
+    std::string caret;
+    std::string tab_bar;
+    std::string side_bar;
+    std::string status_bar;
+    std::string scroll_bar;
 };
 
 ColorScheme::ColorScheme() {
-    fs::path color_scheme_path = DataPath() / "color_scheme.json";
+    // fs::path color_scheme_path = DataPath() / "color_scheme_light.json";
+    fs::path color_scheme_path = DataPath() / "color_scheme_dark.json";
 
-    // TODO: Handle errors.
     glz::parse_error error;
 
-    person p;
-    error = glz::read_file_json(p, color_scheme_path.string(), std::string{});
-
-    std::cerr << "person: " << p.first_name << ' ' << p.last_name << '\n';
-
-    std::vector<person> directory;
-    directory.emplace_back(person{"John", "Doe", 33});
-    directory.emplace_back(person{"Alice", "Right", 22});
-
+    Schema schema;
     std::string buffer;
-    glz::write_json(directory, buffer);
 
-    std::cout << buffer << "\n\n";
-
-    std::array<person, 2> another_directory;
-    error = glz::read_json(another_directory, buffer);
+    // TODO: Handle errors in a better way.
+    error = glz::read_file_json(schema, color_scheme_path.string(), buffer);
     if (error) {
         std::cerr << glz::format_error(error, buffer) << '\n';
     }
 
-    std::string another_buffer;
-    glz::write_json(another_directory, another_buffer);
-
-    if (buffer == another_buffer) {
-        std::cout << "Directories are the same!\n";
+    // TODO: Is there a better way to do this?
+    if (!schema.foreground.empty()) {
+        foreground = ParseHexCode(schema.foreground);
+    }
+    if (!schema.background.empty()) {
+        background = ParseHexCode(schema.background);
+    }
+    if (!schema.caret.empty()) {
+        caret = ParseHexCode(schema.caret);
+    }
+    if (!schema.tab_bar.empty()) {
+        tab_bar = ParseHexCode(schema.tab_bar);
+    }
+    if (!schema.side_bar.empty()) {
+        side_bar = ParseHexCode(schema.side_bar);
+    }
+    if (!schema.status_bar.empty()) {
+        status_bar = ParseHexCode(schema.status_bar);
+    }
+    if (!schema.scroll_bar.empty()) {
+        scroll_bar = ParseHexCode(schema.scroll_bar);
     }
 }
 }

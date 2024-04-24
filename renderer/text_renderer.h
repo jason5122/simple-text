@@ -3,6 +3,7 @@
 #include "base/buffer.h"
 #include "base/rgb.h"
 #include "base/syntax_highlighter.h"
+#include "config/color_scheme.h"
 #include "font/rasterizer.h"
 #include "renderer/atlas.h"
 #include "renderer/shader.h"
@@ -20,9 +21,11 @@ public:
     void setup(FontRasterizer& font_rasterizer);
     void renderText(Size& size, Point& scroll, Buffer& buffer, SyntaxHighlighter& highlighter,
                     Point& editor_offset, FontRasterizer& font_rasterizer, float status_bar_height,
-                    CursorInfo& start_cursor, CursorInfo& end_cursor, float& longest_line_x);
+                    CursorInfo& start_cursor, CursorInfo& end_cursor, float& longest_line_x,
+                    config::ColorScheme& color_scheme);
     void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
-                      FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor);
+                      FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor,
+                      config::ColorScheme& color_scheme);
     void setCursorInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
                        CursorInfo& cursor);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);

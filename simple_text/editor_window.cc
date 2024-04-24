@@ -17,9 +17,10 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
-    GLfloat red = colors::background.r / 255.0;
-    GLfloat green = colors::background.g / 255.0;
-    GLfloat blue = colors::background.b / 255.0;
+    Rgb& background = parent.color_scheme.background;
+    GLfloat red = background.r / 255.0;
+    GLfloat green = background.g / 255.0;
+    GLfloat blue = background.b / 255.0;
     glClearColor(red, green, blue, 1.0);
 
     // fs::path file_path = ResourcePath() / "sample_files/example.json";
@@ -70,16 +71,18 @@ void EditorWindow::onDraw() {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, start_cursor, end_cursor,
-                             longest_line_x);
+                             longest_line_x, parent.color_scheme);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, scroll, end_cursor, main_font_rasterizer.line_height,
-                       buffer.lineCount(), longest_line_x, editor_offset, status_bar_height);
+                       buffer.lineCount(), longest_line_x, editor_offset, status_bar_height,
+                       parent.color_scheme);
 
     image_renderer.draw(size, scroll, editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, end_cursor);
+    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, end_cursor,
+                               parent.color_scheme);
 }
 
 void EditorWindow::onResize(int width, int height) {

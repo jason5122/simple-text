@@ -85,7 +85,7 @@ void RectRenderer::setup() {
 
 void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float line_height,
                         size_t line_count, float longest_x, Point& editor_offset,
-                        float status_bar_height) {
+                        float status_bar_height, config::ColorScheme& color_scheme) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -103,7 +103,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
     cursor_y -= extra_padding;
     cursor_height += extra_padding * 2;
 
-    Rgba editor_bg_color = Rgba::fromRgb(colors::background, 255);
+    Rgba editor_bg_color = Rgba::fromRgb(color_scheme.background, 255);
 
     std::vector<InstanceData> instances;
 
@@ -118,7 +118,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
         instances.push_back(InstanceData{
             .coords = Vec2{cursor_x - scroll.x, cursor_y - scroll.y},
             .rect_size = Vec2{cursor_width, cursor_height},
-            .color = Rgba::fromRgb(colors::cursor, 255),
+            .color = Rgba::fromRgb(color_scheme.caret, 255),
         });
     }
 
@@ -136,7 +136,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
                         vertical_scroll_bar_position_percentage,
                 },
             .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
-            .color = Rgba::fromRgb(colors::scroll_bar, 255),
+            .color = Rgba::fromRgb(color_scheme.scroll_bar, 255),
             .corner_radius = 5,
         });
     }
@@ -151,7 +151,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
                                horizontal_scroll_bar_position_percentage,
                            editor_height - horizontal_scroll_bar_height},
             .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
-            .color = Rgba::fromRgb(colors::scroll_bar, 255),
+            .color = Rgba::fromRgb(color_scheme.scroll_bar, 255),
             .corner_radius = 5,
         });
     }
@@ -160,7 +160,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
     instances.push_back(InstanceData{
         .coords = Vec2{0, 0 - editor_offset.y},
         .rect_size = Vec2{static_cast<float>(size.width), editor_offset.y},
-        .color = Rgba::fromRgb(colors::tab_bar, 255),
+        .color = Rgba::fromRgb(color_scheme.tab_bar, 255),
     });
 
     float tab_width = 350;
@@ -195,14 +195,14 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
     instances.push_back(InstanceData{
         .coords = {0 - editor_offset.x, 0 - editor_offset.y},
         .rect_size = {editor_offset.x, static_cast<float>(size.height)},
-        .color = Rgba::fromRgb(colors::side_bar, 255),
+        .color = Rgba::fromRgb(color_scheme.side_bar, 255),
     });
 
     // Add status bar.
     instances.push_back(InstanceData{
         .coords = Vec2{0 - editor_offset.x, editor_height},
         .rect_size = Vec2{static_cast<float>(size.width), status_bar_height},
-        .color = Rgba::fromRgb(colors::status_bar, 255),
+        .color = Rgba::fromRgb(color_scheme.status_bar, 255),
     });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

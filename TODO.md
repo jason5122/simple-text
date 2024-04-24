@@ -2,14 +2,12 @@
 
 ## Priority
 
-### UI Framework
-
-- Reuse `//renderer` classes across windows.
+## Unordered
 
 ### Linux
 
 1. Load GTK 3 using `dlopen()` instead of adding it as a link-time dependency.
 
-## Unordered
+### General
 
 - Measure performance.

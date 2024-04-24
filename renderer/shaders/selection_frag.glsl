@@ -27,8 +27,8 @@ void main() {
     
     vec3 computed_color = vec3(0);
     // vec3 computed_color = bg_color.rgb;
-    // float computed_alpha = 0.0;
-    float computed_alpha = 1.0;
+    float computed_alpha = 0.0;
+    // float computed_alpha = 1.0;
     // TODO: Turn these into uniforms.
     float tab_corner_radius = 6;
     float border_thickness = 2;
@@ -142,12 +142,12 @@ void main() {
             computed_alpha = 1.0;
         }
     }
-    if (pixel_pos.y > border_top) {
-        if (curve_top_left.x < pixel_pos.x && pixel_pos.x < curve_top_right.x) {
-            computed_color = bg_border_color.rgb;
-            computed_alpha = 1.0;
-        }
-    }
+    // if (pixel_pos.y > border_top) {
+    //     if (curve_top_left.x < pixel_pos.x && pixel_pos.x < curve_top_right.x) {
+    //         computed_color = bg_border_color.rgb;
+    //         computed_alpha = 1.0;
+    //     }
+    // }
 
     alpha_mask = vec4(1.0);
     // FIXME: A `computed_alpha` of 0 still doesn't blend properly into the background color.

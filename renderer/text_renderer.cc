@@ -94,7 +94,7 @@ void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * BATCH_MAX, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STATIC_DRAW);
 
     GLuint index = 0;
 

@@ -8,7 +8,7 @@ namespace renderer {
 class Atlas {
 public:
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
-    static const int ATLAS_SIZE = 1024;  // 1024 is a conservative size.
+    static constexpr int kAtlasSize = 1024;  // 1024 is a conservative size.
 
     GLuint tex_id;
 

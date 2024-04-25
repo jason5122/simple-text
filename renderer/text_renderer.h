@@ -31,7 +31,7 @@ public:
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
 
 private:
-    static const int BATCH_MAX = 65536;
+    static constexpr int kBatchMax = 65536;
 
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;

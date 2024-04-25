@@ -16,7 +16,7 @@ public:
     void draw(Size& size, Point& scroll, Point& editor_offset);
 
 private:
-    static const int BATCH_MAX = 65536;
+    static constexpr int kBatchMax = 65536;
 
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;

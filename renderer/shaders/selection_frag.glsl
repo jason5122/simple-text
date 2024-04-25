@@ -8,7 +8,7 @@ flat in vec4 bg_color;
 flat in vec4 bg_border_color;
 flat in int border_flags;
 
-uniform int tab_corner_radius;
+uniform int corner_radius;
 
 layout(location = 0, index = 0) out vec4 color;
 layout(location = 0, index = 1) out vec4 alpha_mask;
@@ -64,15 +64,15 @@ void main() {
     vec2 top_left = bg_center + vec2(-bg_size.x / 2, bg_size.y / 2);
     vec2 top_right = bg_center + bg_size / 2;
 
-    bottom_left.x += tab_corner_radius + border_thickness;
-    bottom_right.x -= tab_corner_radius + border_thickness;
-    top_left.x += tab_corner_radius + border_thickness;
-    top_right.x -= tab_corner_radius + border_thickness;
+    bottom_left.x += corner_radius + border_thickness;
+    bottom_right.x -= corner_radius + border_thickness;
+    top_left.x += corner_radius + border_thickness;
+    top_right.x -= corner_radius + border_thickness;
 
-    vec2 curve_bottom_left = bottom_left + tab_corner_radius;
-    vec2 curve_bottom_right = bottom_right + vec2(-tab_corner_radius, tab_corner_radius);
-    vec2 curve_top_left = top_left + vec2(tab_corner_radius, -tab_corner_radius);
-    vec2 curve_top_right = top_right + vec2(-tab_corner_radius, -tab_corner_radius);
+    vec2 curve_bottom_left = bottom_left + corner_radius;
+    vec2 curve_bottom_right = bottom_right + vec2(-corner_radius, corner_radius);
+    vec2 curve_top_left = top_left + vec2(corner_radius, -corner_radius);
+    vec2 curve_top_right = top_right + vec2(-corner_radius, -corner_radius);
 
     curve_bottom_left.x -= border_thickness;
     curve_bottom_right.x += border_thickness;
@@ -82,19 +82,19 @@ void main() {
     float d = 0;
     if (has_bottom_left_inwards_border && pixel_pos.x < curve_bottom_left.x &&
         pixel_pos.y < curve_bottom_left.y) {
-        d = distance(pixel_pos, curve_bottom_left) - tab_corner_radius;
+        d = distance(pixel_pos, curve_bottom_left) - corner_radius;
     }
     if (has_bottom_right_inwards_border && pixel_pos.x > curve_bottom_right.x &&
         pixel_pos.y < curve_bottom_right.y) {
-        d = distance(pixel_pos, curve_bottom_right) - tab_corner_radius;
+        d = distance(pixel_pos, curve_bottom_right) - corner_radius;
     }
     if (has_top_left_inwards_border && pixel_pos.x < curve_top_left.x &&
         pixel_pos.y > curve_top_left.y) {
-        d = distance(pixel_pos, curve_top_left) - tab_corner_radius;
+        d = distance(pixel_pos, curve_top_left) - corner_radius;
     }
     if (has_top_right_inwards_border && pixel_pos.x > curve_top_right.x &&
         pixel_pos.y > curve_top_right.y) {
-        d = distance(pixel_pos, curve_top_right) - tab_corner_radius;
+        d = distance(pixel_pos, curve_top_right) - corner_radius;
     }
     if (-border_thickness < d && d < 0) {
         computed_color = bg_border_color.rgb;
@@ -102,23 +102,23 @@ void main() {
     }
 
     // Temporary.
-    vec2 curve_bottom_left_outwards = bottom_left + vec2(-tab_corner_radius, tab_corner_radius);
-    vec2 curve_bottom_right_outwards = bottom_right + vec2(tab_corner_radius, tab_corner_radius);
-    vec2 curve_top_left_outwards = top_left + vec2(-tab_corner_radius, -tab_corner_radius);
-    vec2 curve_top_right_outwards = top_right + vec2(tab_corner_radius, -tab_corner_radius);
+    vec2 curve_bottom_left_outwards = bottom_left + vec2(-corner_radius, corner_radius);
+    vec2 curve_bottom_right_outwards = bottom_right + vec2(corner_radius, corner_radius);
+    vec2 curve_top_left_outwards = top_left + vec2(-corner_radius, -corner_radius);
+    vec2 curve_top_right_outwards = top_right + vec2(corner_radius, -corner_radius);
 
     d = 0;
-    if (has_bottom_left_outwards_border && pixel_pos.x < curve_bottom_left_outwards.x + tab_corner_radius && pixel_pos.y < curve_bottom_left_outwards.y) {
-        d = distance(pixel_pos, curve_bottom_left_outwards) - tab_corner_radius;
+    if (has_bottom_left_outwards_border && pixel_pos.x < curve_bottom_left_outwards.x + corner_radius && pixel_pos.y < curve_bottom_left_outwards.y) {
+        d = distance(pixel_pos, curve_bottom_left_outwards) - corner_radius;
     }
-    if (has_bottom_right_outwards_border && pixel_pos.x > curve_bottom_right_outwards.x - tab_corner_radius && pixel_pos.y < curve_bottom_right_outwards.y) {
-        d = distance(pixel_pos, curve_bottom_right_outwards) - tab_corner_radius;
+    if (has_bottom_right_outwards_border && pixel_pos.x > curve_bottom_right_outwards.x - corner_radius && pixel_pos.y < curve_bottom_right_outwards.y) {
+        d = distance(pixel_pos, curve_bottom_right_outwards) - corner_radius;
     }
-    if (has_top_left_outwards_border && pixel_pos.x < curve_top_left_outwards.x + tab_corner_radius && pixel_pos.y > curve_top_left_outwards.y) {
-        d = distance(pixel_pos, curve_top_left_outwards) - tab_corner_radius;
+    if (has_top_left_outwards_border && pixel_pos.x < curve_top_left_outwards.x + corner_radius && pixel_pos.y > curve_top_left_outwards.y) {
+        d = distance(pixel_pos, curve_top_left_outwards) - corner_radius;
     }
-    if (has_top_right_outwards_border && pixel_pos.x > curve_top_right_outwards.x - tab_corner_radius && pixel_pos.y > curve_top_right_outwards.y) {
-        d = distance(pixel_pos, curve_top_right_outwards) - tab_corner_radius;
+    if (has_top_right_outwards_border && pixel_pos.x > curve_top_right_outwards.x - corner_radius && pixel_pos.y > curve_top_right_outwards.y) {
+        d = distance(pixel_pos, curve_top_right_outwards) - corner_radius;
     }
     if (-border_thickness < d && d < 0) {
         computed_color = bg_border_color.rgb;
@@ -135,8 +135,8 @@ void main() {
     float border_top = top_edge - border_thickness;
     float border_bottom = bottom_edge + border_thickness;
 
-    border_left += tab_corner_radius;
-    border_right -= tab_corner_radius;
+    border_left += corner_radius;
+    border_right -= corner_radius;
 
     if (has_left_border && border_left - border_thickness < pixel_pos.x && pixel_pos.x < border_left) {
         if (!(has_bottom_left_border && pixel_pos.y < curve_bottom_left.y) &&

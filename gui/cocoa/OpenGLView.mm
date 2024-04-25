@@ -142,7 +142,7 @@
 }
 
 static app::Key GetKey(unsigned short vk) {
-    static const struct {
+    static constexpr struct {
         unsigned short fVK;
         app::Key fKey;
     } gPair[] = {

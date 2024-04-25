@@ -20,8 +20,8 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
 }
 
 MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
-    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()}, app_window{
-                                                                                   app_window} {
+    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
+      app_window{app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
     gtk_container_add(GTK_CONTAINER(window), gl_area);
 
@@ -85,7 +85,7 @@ int MainWindow::scaleFactor() {
 }
 
 static app::Key GetKey(guint vk) {
-    static const struct {
+    static constexpr struct {
         guint fVK;
         app::Key fKey;
     } gPair[] = {

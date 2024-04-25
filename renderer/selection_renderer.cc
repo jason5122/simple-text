@@ -52,7 +52,7 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
     shader_program.link(vert_source, frag_source);
 
     glUseProgram(shader_program.id);
-    glUniform1i(glGetUniformLocation(shader_program.id, "tab_corner_radius"), kTabCornerRadius);
+    glUniform1i(glGetUniformLocation(shader_program.id, "corner_radius"), kCornerRadius);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -154,7 +154,7 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             if (temps[i].end > temps[i - 1].end) {
                 border_flags |= TOP_RIGHT_INWARDS | TOP;
                 start_x = temps[i - 1].end;
-                start_x += kTabCornerRadius;
+                start_x += kCornerRadius;
             } else if (temps[i].end < temps[i - 1].end) {
                 border_flags |= TOP_RIGHT_OUTWARDS;
             }
@@ -163,15 +163,15 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             if (temps[i].end > temps[i + 1].end) {
                 border_flags |= BOTTOM_RIGHT_INWARDS | BOTTOM;
                 start_x = temps[i + 1].end;
-                start_x += kTabCornerRadius + border_thickness;
+                start_x += kCornerRadius + border_thickness;
             } else if (temps[i].end < temps[i + 1].end) {
                 border_flags |= BOTTOM_RIGHT_OUTWARDS;
             }
         }
 
-        Vec2 coords{static_cast<float>(start_x - kTabCornerRadius),
+        Vec2 coords{static_cast<float>(start_x - kCornerRadius),
                     font_rasterizer.line_height * temps[i].line};
-        Vec2 bg_size{static_cast<float>(temps[i].end - start_x) + kTabCornerRadius * 2,
+        Vec2 bg_size{static_cast<float>(temps[i].end - start_x) + kCornerRadius * 2,
                      font_rasterizer.line_height + border_thickness};
 
         instances.insert(instances.begin(),
@@ -190,9 +190,9 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                 border_flags |= BOTTOM | BOTTOM_LEFT_INWARDS;
             }
 
-            coords = {static_cast<float>(temps[i].start - kTabCornerRadius),
+            coords = {static_cast<float>(temps[i].start - kCornerRadius),
                       font_rasterizer.line_height * temps[i].line};
-            bg_size = {static_cast<float>(start_x) + kTabCornerRadius * 2,
+            bg_size = {static_cast<float>(start_x) + kCornerRadius * 2,
                        font_rasterizer.line_height + border_thickness};
             instances.insert(instances.begin(),
                              InstanceData{

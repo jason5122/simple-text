@@ -14,8 +14,8 @@ public:
     void render(Size& size, Point& scroll, Point& editor_offset, FontRasterizer& font_rasterizer);
 
 private:
-    static const int kBatchMax = 65536;
-    static const int kTabCornerRadius = 6;
+    static constexpr int kBatchMax = 65536;
+    static constexpr int kCornerRadius = 6;
 
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;

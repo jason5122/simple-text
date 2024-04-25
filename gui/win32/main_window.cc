@@ -9,7 +9,7 @@
 #include <iostream>
 
 static app::Key GetKey(WPARAM vk) {
-    static const struct {
+    static constexpr struct {
         WPARAM fVK;
         app::Key fKey;
     } gPair[] = {
@@ -108,12 +108,12 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         // Invert vertical scrolling.
         dy *= -1;
 
-        static const unsigned long kDefaultScrollLinesPerWheelDelta = 3;
+        static constexpr unsigned long kDefaultScrollLinesPerWheelDelta = 3;
         unsigned long scroll_lines = kDefaultScrollLinesPerWheelDelta;
         SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &scroll_lines, 0);
         dy *= scroll_lines;
 
-        static const float kScrollbarPixelsPerLine = 100.0f / 3.0f;
+        static constexpr float kScrollbarPixelsPerLine = 100.0f / 3.0f;
         dy *= kScrollbarPixelsPerLine;
 
         app_window.onScroll(0, dy);
@@ -123,12 +123,12 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_MOUSEHWHEEL: {
         float dx = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
 
-        static const unsigned long kDefaultScrollCharsPerWheelDelta = 1;
+        static constexpr unsigned long kDefaultScrollCharsPerWheelDelta = 1;
         unsigned long scroll_chars = kDefaultScrollCharsPerWheelDelta;
         SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &scroll_chars, 0);
         dx *= scroll_chars;
 
-        static const float kScrollbarPixelsPerLine = 100.0f / 3.0f;
+        static constexpr float kScrollbarPixelsPerLine = 100.0f / 3.0f;
         dx *= kScrollbarPixelsPerLine;
 
         app_window.onScroll(dx, 0);

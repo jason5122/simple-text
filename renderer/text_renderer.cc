@@ -394,7 +394,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 .bg_size = shaped_glyph.bg_size,
                 .bg_color = Rgba::fromRgb(colors::selection_unfocused, bg_a),
                 // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
-                .bg_border_color = Rgba::fromRgb(colors::red, border_flags),
+                .bg_border_color = Rgba::fromRgb(colors::purple, border_flags),
             });
         }
 

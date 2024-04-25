@@ -112,6 +112,26 @@ struct Temp {
 };
 }
 
+static InstanceData CreateInstance(int start, int end, int line, uint32_t border_flags,
+                                   FontRasterizer& font_rasterizer, Rgb color) {
+    int border_thickness = 2;
+    return {
+        .coords =
+            {
+                .x = static_cast<float>(start),
+                .y = font_rasterizer.line_height * line,
+            },
+        .bg_size =
+            {
+                .x = static_cast<float>(end - start),
+                .y = font_rasterizer.line_height + border_thickness,
+            },
+        .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
+        .bg_border_color = Rgba::fromRgb(color, 0),
+        .border_flags = border_flags,
+    };
+}
+
 void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                                FontRasterizer& font_rasterizer) {
     glUseProgram(shader_program.id);
@@ -125,125 +145,45 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
     std::vector<InstanceData> instances;
 
-    // std::vector<Temp> temps = {{19, 0},   {255, 1}, {424, 2}, {1558, 3},
-    //                            {1558, 4}, {376, 5}, {19, 6}};
     std::vector<Temp> temps = {
-        {.line = 2, .start = 19 * 4, .end = 424},
-        {.line = 3, .end = 1558},
-        {.line = 4, .end = 1558 - 19 * 4},
+        {.line = 2, .start = 19 * 10, .end = 424},
+        {.line = 3, .start = 19 * 4, .end = 1558},
+        {.line = 4, .end = 1558 + 19 * 4},
     };
     // std::vector<Temp> temps = {
     //     {.line = 3, .start = 19 * 50, .end = 1558},
     //     {.line = 4, .start = 0, .end = 19 * 5},
     // };
 
-    int border_thickness = 2;
+    uint32_t border_flags = 0;
 
     for (size_t i = 0; i < temps.size(); i++) {
-        int start_x = temps[i].start;
-
-        uint32_t border_flags = RIGHT;
-        if (i == 0) {
-            border_flags |= TOP | TOP_RIGHT_INWARDS | TOP_LEFT_INWARDS;
-        }
-        if (i == temps.size() - 1) {
-            border_flags |= BOTTOM | BOTTOM_RIGHT_INWARDS;
-        }
-
         if (i > 0) {
-            if (temps[i].end > temps[i - 1].end) {
-                border_flags |= TOP_RIGHT_INWARDS | TOP;
-                start_x = temps[i - 1].end;
-                start_x += kCornerRadius;
-            } else if (temps[i].end < temps[i - 1].end) {
-                border_flags |= TOP_RIGHT_OUTWARDS;
-            }
-        }
-        if (i < temps.size() - 1) {
-            if (temps[i].end > temps[i + 1].end) {
-                border_flags |= BOTTOM_RIGHT_INWARDS | BOTTOM;
-                start_x = temps[i + 1].end;
-                start_x += kCornerRadius + border_thickness;
-            } else if (temps[i].end < temps[i + 1].end) {
-                border_flags |= BOTTOM_RIGHT_OUTWARDS;
-            }
-        }
-
-        instances.insert(instances.begin(),
-                         InstanceData{
-                             .coords =
-                                 {
-                                     .x = static_cast<float>(start_x),
-                                     .y = font_rasterizer.line_height * temps[i].line,
-                                 },
-                             .bg_size =
-                                 {
-                                     .x = static_cast<float>(temps[i].end - start_x),
-                                     .y = font_rasterizer.line_height + border_thickness,
-                                 },
-                             .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
-                             .bg_border_color = Rgba::fromRgb(colors::red, 0),
-                             .border_flags = border_flags,
-                         });
-
-        if (start_x > temps[i].start) {
-            border_flags = LEFT;
-
-            if (i == temps.size() - 1) {
-                border_flags |= BOTTOM | BOTTOM_LEFT_INWARDS;
+            if (temps[i].start < temps[i - 1].start) {
+                border_flags = LEFT | RIGHT | TOP | BOTTOM;
+                instances.insert(instances.begin(),
+                                 CreateInstance(temps[i].start, temps[i - 1].start, temps[i].line,
+                                                border_flags, font_rasterizer, colors::red));
             }
 
+            border_flags = LEFT | RIGHT | TOP | BOTTOM;
             instances.insert(instances.begin(),
-                             InstanceData{
-                                 .coords =
-                                     {
-                                         .x = static_cast<float>(temps[i].start),
-                                         .y = font_rasterizer.line_height * temps[i].line,
-                                     },
-                                 .bg_size =
-                                     {
-                                         .x = static_cast<float>(start_x),
-                                         .y = font_rasterizer.line_height + border_thickness,
-                                     },
-                                 .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
-                                 .bg_border_color = Rgba::fromRgb(colors::red, 0),
-                                 .border_flags = border_flags,
-                             });
-        } else {
-            instances[0].border_flags |= LEFT;
-            if (i == 0) {
-                instances[0].border_flags |= TOP_LEFT_INWARDS;
+                             CreateInstance(temps[i].start, temps[i - 1].end, temps[i].line,
+                                            border_flags, font_rasterizer, colors::blue));
+
+            if (temps[i].end >= temps[i - 1].end) {
+                border_flags = LEFT | RIGHT | TOP | BOTTOM;
+                instances.insert(instances.begin(),
+                                 CreateInstance(temps[i - 1].end, temps[i].end, temps[i].line,
+                                                border_flags, font_rasterizer, colors::green));
             }
-            if (i == temps.size() - 1) {
-                instances[0].border_flags |= BOTTOM_LEFT_INWARDS;
-            }
+        } else if (i == 0) {
+            border_flags = LEFT | RIGHT | TOP | BOTTOM;
+            instances.insert(instances.begin(),
+                             CreateInstance(temps[i].start, temps[i].end, temps[i].line,
+                                            border_flags, font_rasterizer, colors::purple));
         }
     }
-
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{19 * 10 - kTabCornerRadius, font_rasterizer.line_height * 3},
-    //     .bg_size = Vec2{19 * 10 - kTabCornerRadius, font_rasterizer.line_height + 2},
-    //     .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
-    //     .bg_border_color = Rgba::fromRgb(colors::red, 0),
-    //     .border_flags = LEFT | RIGHT | TOP | TOP_LEFT_INWARDS,
-    // });
-
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{19 * 14 - kTabCornerRadius, font_rasterizer.line_height * 3},
-    //     .bg_size = Vec2{19 * 6 - kTabCornerRadius, font_rasterizer.line_height + 2},
-    //     .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
-    //     .bg_border_color = Rgba::fromRgb(colors::red, 0),
-    //     .border_flags = BOTTOM | TOP | RIGHT | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_INWARDS,
-    // });
-
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{19 * 10 - kTabCornerRadius, font_rasterizer.line_height * 4},
-    //     .bg_size = Vec2{19 * 5 - kTabCornerRadius, font_rasterizer.line_height + 2},
-    //     .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
-    //     .bg_border_color = Rgba::fromRgb(colors::red, 0),
-    //     .border_flags = LEFT | RIGHT | BOTTOM | BOTTOM_LEFT_INWARDS | TOP_RIGHT_OUTWARDS |
-    //                     BOTTOM_RIGHT_INWARDS,
-    // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

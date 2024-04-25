@@ -169,15 +169,18 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             }
         }
 
-        Vec2 coords{static_cast<float>(start_x - kCornerRadius),
-                    font_rasterizer.line_height * temps[i].line};
-        Vec2 bg_size{static_cast<float>(temps[i].end - start_x) + kCornerRadius * 2,
-                     font_rasterizer.line_height + border_thickness};
-
         instances.insert(instances.begin(),
                          InstanceData{
-                             .coords = coords,
-                             .bg_size = bg_size,
+                             .coords =
+                                 {
+                                     .x = static_cast<float>(start_x),
+                                     .y = font_rasterizer.line_height * temps[i].line,
+                                 },
+                             .bg_size =
+                                 {
+                                     .x = static_cast<float>(temps[i].end - start_x),
+                                     .y = font_rasterizer.line_height + border_thickness,
+                                 },
                              .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
                              .bg_border_color = Rgba::fromRgb(colors::red, 0),
                              .border_flags = border_flags,
@@ -190,14 +193,18 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                 border_flags |= BOTTOM | BOTTOM_LEFT_INWARDS;
             }
 
-            coords = {static_cast<float>(temps[i].start - kCornerRadius),
-                      font_rasterizer.line_height * temps[i].line};
-            bg_size = {static_cast<float>(start_x) + kCornerRadius * 2,
-                       font_rasterizer.line_height + border_thickness};
             instances.insert(instances.begin(),
                              InstanceData{
-                                 .coords = coords,
-                                 .bg_size = bg_size,
+                                 .coords =
+                                     {
+                                         .x = static_cast<float>(temps[i].start),
+                                         .y = font_rasterizer.line_height * temps[i].line,
+                                     },
+                                 .bg_size =
+                                     {
+                                         .x = static_cast<float>(start_x),
+                                         .y = font_rasterizer.line_height + border_thickness,
+                                     },
                                  .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
                                  .bg_border_color = Rgba::fromRgb(colors::red, 0),
                                  .border_flags = border_flags,

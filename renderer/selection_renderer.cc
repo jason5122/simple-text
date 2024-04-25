@@ -128,20 +128,52 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     std::vector<Temp> temps = {{19, 0},   {255, 1}, {424, 2}, {1558, 3},
                                {1558, 4}, {376, 5}, {19, 6}};
 
-    float tab_corner_radius = 6;
+    int tab_corner_radius = 6;
+    int border_thickness = 2;
 
-    for (const auto& temp : temps) {
-        Vec2 coords{0 - tab_corner_radius, font_rasterizer.line_height * temp.line};
-        Vec2 bg_size{static_cast<float>(temp.total_advance) + tab_corner_radius * 2,
-                     font_rasterizer.line_height + 2};
+    for (size_t i = 0; i < temps.size(); i++) {
+        int start_x = 0;
 
-        instances.push_back(InstanceData{
-            .coords = coords,
-            .bg_size = bg_size,
-            .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
-            .bg_border_color = Rgba::fromRgb(colors::red, 0),
-            .border_flags = LEFT | RIGHT,
-        });
+        uint32_t border_flags = RIGHT;
+        if (i == 0) {
+            border_flags |= TOP | TOP_RIGHT_INWARDS | TOP_LEFT_INWARDS;
+        }
+        if (i == temps.size() - 1) {
+            border_flags |= BOTTOM | BOTTOM_RIGHT_INWARDS | BOTTOM_LEFT_INWARDS;
+        }
+
+        if (i > 0) {
+            if (temps[i].total_advance > temps[i - 1].total_advance) {
+                border_flags |= TOP_RIGHT_INWARDS | TOP;
+                start_x = temps[i - 1].total_advance;
+                start_x += tab_corner_radius;
+            } else if (temps[i].total_advance < temps[i - 1].total_advance) {
+                border_flags |= TOP_RIGHT_OUTWARDS;
+            }
+        }
+        if (i < temps.size() - 1) {
+            if (temps[i].total_advance > temps[i + 1].total_advance) {
+                border_flags |= BOTTOM_RIGHT_INWARDS | BOTTOM;
+                start_x = temps[i + 1].total_advance;
+                start_x += tab_corner_radius + border_thickness;
+            } else if (temps[i].total_advance < temps[i + 1].total_advance) {
+                border_flags |= BOTTOM_RIGHT_OUTWARDS;
+            }
+        }
+
+        Vec2 coords{static_cast<float>(start_x - tab_corner_radius),
+                    font_rasterizer.line_height * temps[i].line};
+        Vec2 bg_size{static_cast<float>(temps[i].total_advance - start_x) + tab_corner_radius * 2,
+                     font_rasterizer.line_height + border_thickness};
+
+        instances.insert(instances.begin(),
+                         InstanceData{
+                             .coords = coords,
+                             .bg_size = bg_size,
+                             .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
+                             .bg_border_color = Rgba::fromRgb(colors::red, 0),
+                             .border_flags = border_flags,
+                         });
     }
 
     // instances.push_back(InstanceData{

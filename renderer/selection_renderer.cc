@@ -127,6 +127,7 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
     std::vector<Temp> temps = {{19, 0},   {255, 1}, {424, 2}, {1558, 3},
                                {1558, 4}, {376, 5}, {19, 6}};
+    // std::vector<Temp> temps = {{19, 0}, {255, 1}, {424, 2}, {1558, 3}};
 
     int tab_corner_radius = 6;
     int border_thickness = 2;
@@ -139,7 +140,7 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             border_flags |= TOP | TOP_RIGHT_INWARDS | TOP_LEFT_INWARDS;
         }
         if (i == temps.size() - 1) {
-            border_flags |= BOTTOM | BOTTOM_RIGHT_INWARDS | BOTTOM_LEFT_INWARDS;
+            border_flags |= BOTTOM | BOTTOM_RIGHT_INWARDS;
         }
 
         if (i > 0) {
@@ -174,6 +175,35 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                              .bg_border_color = Rgba::fromRgb(colors::red, 0),
                              .border_flags = border_flags,
                          });
+
+        if (start_x > 0) {
+            border_flags = LEFT;
+
+            if (i == temps.size() - 1) {
+                border_flags |= BOTTOM | BOTTOM_LEFT_INWARDS;
+            }
+
+            coords = {static_cast<float>(0 - tab_corner_radius),
+                      font_rasterizer.line_height * temps[i].line};
+            bg_size = {static_cast<float>(start_x) + tab_corner_radius * 2,
+                       font_rasterizer.line_height + border_thickness};
+            instances.insert(instances.begin(),
+                             InstanceData{
+                                 .coords = coords,
+                                 .bg_size = bg_size,
+                                 .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
+                                 .bg_border_color = Rgba::fromRgb(colors::red, 0),
+                                 .border_flags = border_flags,
+                             });
+        } else {
+            instances[0].border_flags |= LEFT;
+            if (i == 0) {
+                instances[0].border_flags |= TOP_LEFT_INWARDS;
+            }
+            if (i == temps.size() - 1) {
+                instances[0].border_flags |= BOTTOM_LEFT_INWARDS;
+            }
+        }
     }
 
     // instances.push_back(InstanceData{

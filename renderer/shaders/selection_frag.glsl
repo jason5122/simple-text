@@ -8,6 +8,8 @@ flat in vec4 bg_color;
 flat in vec4 bg_border_color;
 flat in int border_flags;
 
+uniform int tab_corner_radius;
+
 layout(location = 0, index = 0) out vec4 color;
 layout(location = 0, index = 1) out vec4 alpha_mask;
 
@@ -34,7 +36,6 @@ void main() {
     // float computed_alpha = 0.0;
     float computed_alpha = 1.0;
     // TODO: Turn these into uniforms.
-    float tab_corner_radius = 6;
     float border_thickness = 2;
 
     // int border_flags = int(bg_border_color.a);

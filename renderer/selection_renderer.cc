@@ -153,11 +153,19 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             flags |= BOTTOM | BOTTOM_LEFT_INWARDS | BOTTOM_RIGHT_INWARDS;
         }
 
-        if (i > 0 && selections[i].end > selections[i - 1].end) {
-            flags |= TOP_RIGHT_INWARDS;
+        if (i > 0) {
+            if (selections[i].end > selections[i - 1].end) {
+                flags |= TOP_RIGHT_INWARDS;
+            } else if (selections[i].end < selections[i - 1].end) {
+                flags |= TOP_RIGHT_OUTWARDS;
+            }
         }
-        if (i + 1 < selections_size && selections[i].end > selections[i + 1].end) {
-            flags |= BOTTOM_RIGHT_INWARDS;
+        if (i + 1) {
+            if (selections_size && selections[i].end > selections[i + 1].end) {
+                flags |= BOTTOM_RIGHT_INWARDS;
+            } else if (selections_size && selections[i].end < selections[i + 1].end) {
+                flags |= BOTTOM_RIGHT_OUTWARDS;
+            }
         }
 
         create(selections[i].start, selections[i].end, selections[i].line, flags);

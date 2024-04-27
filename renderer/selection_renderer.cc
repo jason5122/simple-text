@@ -145,13 +145,13 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     glBindVertexArray(vao);
 
     std::vector<InstanceData> instances;
-    std::vector<InstanceData> instances_after;
 
     std::vector<Selection> selections = {
         {.line = 2, .start = 195, .end = 424},
         {.line = 3, .start = 19 * 4, .end = 1558},
         {.line = 4, .start = 0, .end = 1558 - 19 * 4},
-        {.line = 5, .start = 19 * 2, .end = 376},
+        // {.line = 5, .start = 19 * 2, .end = 376},
+        {.line = 5, .start = 19 * 6, .end = 376},
     };
     // std::vector<Selection> selections = {
     //     {.line = 2, .start = 195, .end = 424},
@@ -169,9 +169,15 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
         border_flags |= BOTTOM;
     }
 
-    instances_after.emplace_back(CreateInstance(selections[0].start, selections[0].end,
-                                                selections[0].line, border_flags, font_rasterizer,
-                                                colors::purple));
+    auto create = [&instances,
+                   &font_rasterizer](int start, int end, int line,
+                                     uint32_t border_flags = LEFT | RIGHT | TOP | BOTTOM,
+                                     Rgb color = colors::red) {
+        instances.emplace_back(
+            CreateInstance(start, end, line, border_flags, font_rasterizer, color));
+    };
+
+    create(selections[0].start, selections[0].end, selections[0].line, border_flags);
 
     for (size_t i = 1; i < selections_size - 1; i++) {
         int p1 = selections[i].start;
@@ -186,28 +192,62 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
         // Middle.
         border_flags = LEFT | RIGHT | TOP | BOTTOM;
-        if (selections[i].start < selections[i - 1].start) {
-            border_flags |= TOP_LEFT_INWARDS;
-        } else if (selections[i].start > selections[i - 1].start) {
-            border_flags |= TOP_LEFT_OUTWARDS;
+        // if (selections[i].start < selections[i - 1].start) {
+        //     border_flags |= TOP_LEFT_INWARDS;
+        // } else if (selections[i].start > selections[i - 1].start) {
+        //     border_flags |= TOP_LEFT_OUTWARDS;
+        // }
+        // if (selections[i].end > selections[i - 1].end) {
+        //     border_flags |= TOP_RIGHT_INWARDS;
+        // } else if (selections[i].end < selections[i - 1].end) {
+        //     border_flags |= TOP_RIGHT_OUTWARDS;
+        // }
+        // if (selections[i].start < selections[i + 1].start) {
+        //     border_flags |= BOTTOM_LEFT_INWARDS;
+        // } else if (selections[i].start > selections[i + 1].start) {
+        //     border_flags |= BOTTOM_LEFT_OUTWARDS;
+        // }
+        // if (selections[i].end > selections[i + 1].end) {
+        //     border_flags |= BOTTOM_RIGHT_INWARDS;
+        // } else if (selections[i].end > selections[i + 1].end) {
+        //     border_flags |= BOTTOM_RIGHT_OUTWARDS;
+        // }
+
+        int curr_start = selections[i].start;
+        int prev_start = selections[i - 1].start;
+        int next_start = selections[i + 1].start;
+
+        int start = curr_start;
+        int end = selections[i].end;
+
+        if (curr_start < prev_start && curr_start < next_start) {
+            if (prev_start < next_start) {
+                start = next_start;
+                create(curr_start, prev_start, selections[i].line);
+                create(prev_start, next_start, selections[i].line);
+            } else {
+                start = prev_start;
+                create(curr_start, next_start, selections[i].line);
+                create(next_start, prev_start, selections[i].line);
+            }
         }
-        if (selections[i].end > selections[i - 1].end) {
-            border_flags |= TOP_RIGHT_INWARDS;
-        } else if (selections[i].end < selections[i - 1].end) {
-            border_flags |= TOP_RIGHT_OUTWARDS;
+
+        int curr_end = selections[i].end;
+        int prev_end = selections[i - 1].end;
+        int next_end = selections[i + 1].end;
+
+        if (curr_end > prev_end) {
+            end = prev_end;
+            create(prev_end, curr_end, selections[i].line);
+        } else if (curr_end > next_end) {
+            end = next_end;
+            create(next_end, curr_end, selections[i].line);
         }
-        if (selections[i].start < selections[i + 1].start) {
-            border_flags |= BOTTOM_LEFT_INWARDS;
-        } else if (selections[i].start > selections[i + 1].start) {
-            border_flags |= BOTTOM_LEFT_OUTWARDS;
-        }
-        if (selections[i].end > selections[i + 1].end) {
-            border_flags |= BOTTOM_RIGHT_INWARDS;
-        } else if (selections[i].end > selections[i + 1].end) {
-            border_flags |= BOTTOM_RIGHT_OUTWARDS;
-        }
-        instances.emplace_back(CreateInstance(p2, p3, selections[i].line, border_flags,
-                                              font_rasterizer, colors::blue));
+
+        create(start, end, selections[i].line, LEFT | RIGHT);
+
+        // instances.emplace_back(CreateInstance(p2, p3, selections[i].line, border_flags,
+        //                                       font_rasterizer, colors::blue));
 
         // Right.
         // border_flags = LEFT | RIGHT | TOP | BOTTOM;
@@ -215,17 +255,12 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
         //                                       font_rasterizer, colors::green));
     }
 
-    border_flags = LEFT | RIGHT | BOTTOM | BOTTOM_LEFT_INWARDS | BOTTOM_RIGHT_INWARDS |
-                   TOP_LEFT_OUTWARDS | TOP_RIGHT_OUTWARDS;
-    if (selections_size == 1) {
-        border_flags |= TOP;
-    }
-    instances.emplace_back(CreateInstance(
-        selections[selections_size - 1].start, selections[selections_size - 1].end,
-        selections[selections_size - 1].line, border_flags, font_rasterizer, colors::purple));
-
-    for (const auto& instance : instances_after) {
-        instances.push_back(instance);
+    if (selections_size > 1) {
+        border_flags = LEFT | RIGHT | BOTTOM | BOTTOM_LEFT_INWARDS | BOTTOM_RIGHT_INWARDS |
+                       TOP_LEFT_OUTWARDS | TOP_RIGHT_OUTWARDS;
+        instances.emplace_back(CreateInstance(
+            selections[selections_size - 1].start, selections[selections_size - 1].end,
+            selections[selections_size - 1].line, border_flags, font_rasterizer, colors::purple));
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

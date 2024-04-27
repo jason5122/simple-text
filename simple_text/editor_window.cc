@@ -52,6 +52,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw() {
+    using Selection = renderer::SelectionRenderer::Selection;
+
     renderer::Size size{
         .width = width() * scaleFactor(),
         .height = height() * scaleFactor(),
@@ -71,8 +73,10 @@ void EditorWindow::onDraw() {
 
     int status_bar_height = ui_font_rasterizer.line_height;
 
+    std::vector<Selection> selections = text_renderer.getSelections();
+
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer);
+    selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer, selections);
 
     text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, start_cursor, end_cursor,

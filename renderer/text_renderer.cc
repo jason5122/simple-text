@@ -444,6 +444,26 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     glCheckError();
 }
 
+std::vector<SelectionRenderer::Selection> TextRenderer::getSelections() {
+    std::vector<SelectionRenderer::Selection> selections = {
+        {.line = 2, .start = 0, .end = 2000},
+        // {.line = 2, .start = 0, .end = 424},
+        // {.line = 2, .start = 195, .end = 424},
+        {.line = 3, .start = 19 * 4, .end = 1558},
+        {.line = 4, .start = 0, .end = 1558 - 19 * 4},
+        // {.line = 5, .start = 19 * 2, .end = 376},
+        // {.line = 5, .start = 19 * 6, .end = 376},
+        {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
+    };
+    // std::vector<Selection> selections = {
+    //     {.line = 2, .start = 195, .end = 424},
+    //     {.line = 3, .start = 19 * 50, .end = 1558},
+    //     {.line = 4, .start = 0, .end = 19 * 5},
+    //     {.line = 5, .start = 19 * 2, .end = 376},
+    // };
+    return selections;
+}
+
 void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                                 FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor,
                                 config::ColorScheme& color_scheme) {

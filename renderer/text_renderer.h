@@ -6,6 +6,7 @@
 #include "config/color_scheme.h"
 #include "font/rasterizer.h"
 #include "renderer/atlas.h"
+#include "renderer/selection_renderer.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include <glad/glad.h>
@@ -23,6 +24,7 @@ public:
                     Point& editor_offset, FontRasterizer& font_rasterizer, float status_bar_height,
                     CursorInfo& start_cursor, CursorInfo& end_cursor, float& longest_line_x,
                     config::ColorScheme& color_scheme);
+    std::vector<SelectionRenderer::Selection> getSelections();
     void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor,
                       config::ColorScheme& color_scheme);

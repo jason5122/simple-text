@@ -105,16 +105,9 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-namespace {
-struct Selection {
-    int line;
-    int start;
-    int end;
-};
-}
-
 void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
-                               FontRasterizer& font_rasterizer) {
+                               FontRasterizer& font_rasterizer,
+                               std::vector<Selection>& selections) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -149,32 +142,7 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
         });
     };
 
-    std::vector<Selection> selections = {
-        {.line = 2, .start = 195, .end = 424},
-        {.line = 3, .start = 19 * 4, .end = 1558},
-        {.line = 4, .start = 0, .end = 1558 - 19 * 4},
-        // {.line = 5, .start = 19 * 2, .end = 376},
-        // {.line = 5, .start = 19 * 6, .end = 376},
-        {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
-    };
-    // std::vector<Selection> selections = {
-    //     {.line = 2, .start = 195, .end = 424},
-    //     {.line = 3, .start = 19 * 50, .end = 1558},
-    //     {.line = 4, .start = 0, .end = 19 * 5},
-    //     {.line = 5, .start = 19 * 2, .end = 376},
-    // };
-
     size_t selections_size = selections.size();
-    uint32_t border_flags = 0;
-
-    // border_flags = LEFT | RIGHT | TOP | BOTTOM_LEFT_OUTWARDS | BOTTOM_RIGHT_OUTWARDS |
-    //                TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
-    // if (selections_size == 1) {
-    //     border_flags |= BOTTOM;
-    // }
-
-    // create(selections[0].start, selections[0].end, selections[0].line, border_flags);
-
     for (size_t i = 0; i < selections_size; i++) {
         uint32_t middle_flags = 0;
 
@@ -204,6 +172,8 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                    LEFT | TOP | BOTTOM_LEFT_OUTWARDS | TOP_LEFT_INWARDS);
         } else if (curr_start < next_start) {
             start = next_start;
+            create(curr_start, next_start, selections[i].line,
+                   LEFT | BOTTOM | BOTTOM_LEFT_INWARDS);
         } else {
             middle_flags |= LEFT;
             if (i > 0) middle_flags |= TOP_LEFT_OUTWARDS;
@@ -232,15 +202,14 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             create(prev_end, curr_end, selections[i].line, RIGHT | TOP | TOP_RIGHT_INWARDS);
         } else if (next_end < curr_end) {
             end = next_end;
-            create(next_end, curr_end, selections[i].line,
-                   RIGHT | BOTTOM | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_OUTWARDS);
+            create(next_end, curr_end, selections[i].line, RIGHT | BOTTOM | BOTTOM_RIGHT_INWARDS);
         } else {
             middle_flags |= RIGHT;
             if (i > 0) middle_flags |= TOP_RIGHT_OUTWARDS;
             if (i < selections_size - 1) middle_flags |= BOTTOM_RIGHT_OUTWARDS;
         }
 
-        create(start, end, selections[i].line, middle_flags, colors::purple);
+        create(start, end, selections[i].line, middle_flags, Rgb{200, 200, 200});
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

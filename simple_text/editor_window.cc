@@ -73,7 +73,8 @@ void EditorWindow::onDraw() {
 
     int status_bar_height = ui_font_rasterizer.line_height;
 
-    std::vector<Selection> selections = text_renderer.getSelections();
+    std::vector<Selection> selections =
+        text_renderer.getSelections(buffer, main_font_rasterizer, start_cursor, end_cursor);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer, selections);

@@ -3,6 +3,7 @@
 #include "font/rasterizer.h"
 #include "renderer/opengl_error_util.h"
 #include "renderer/opengl_types.h"
+#include "renderer/selection_renderer.h"
 #include "text_renderer.h"
 #include "util/profile_util.h"
 #include <cmath>
@@ -431,8 +432,8 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    // glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
+    // glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
     glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
@@ -444,17 +445,71 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     glCheckError();
 }
 
-std::vector<SelectionRenderer::Selection> TextRenderer::getSelections() {
-    std::vector<SelectionRenderer::Selection> selections = {
-        {.line = 2, .start = 0, .end = 2000},
-        // {.line = 2, .start = 0, .end = 424},
-        // {.line = 2, .start = 195, .end = 424},
-        {.line = 3, .start = 19 * 4, .end = 1558},
-        {.line = 4, .start = 0, .end = 1558 - 19 * 4},
-        // {.line = 5, .start = 19 * 2, .end = 376},
-        // {.line = 5, .start = 19 * 6, .end = 376},
-        {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
-    };
+std::vector<SelectionRenderer::Selection>
+TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
+                            CursorInfo& start_cursor, CursorInfo& end_cursor) {
+    std::vector<SelectionRenderer::Selection> selections;
+
+    size_t byte_offset = buffer.byteOfLine(start_cursor.line);
+    for (size_t line_index = start_cursor.line; line_index <= end_cursor.line; line_index++) {
+
+        std::string line_str;
+        buffer.getLineContent(&line_str, line_index);
+
+        float total_advance = 0;
+        int start = 0;
+        int end = 0;
+
+        size_t ret;
+        for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
+            ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
+
+            uint_least32_t codepoint;
+            grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
+
+            if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
+                std::string utf8_str = line_str.substr(offset, ret);
+                this->loadGlyph(utf8_str, codepoint, font_rasterizer);
+            }
+
+            AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
+
+            if (byte_offset == start_cursor.byte) {
+                start = total_advance;
+            }
+            if (byte_offset == end_cursor.byte) {
+                end = total_advance;
+            }
+
+            total_advance += std::round(glyph.advance);
+        }
+        byte_offset++;
+
+        if (line_index != end_cursor.line) {
+            end = static_cast<int>(total_advance);
+        }
+
+        selections.push_back({
+            .line = static_cast<int>(line_index),
+            .start = start,
+            .end = end,
+        });
+    }
+
+    for (const auto& selection : selections) {
+        fprintf(stderr, "line: %d, [%d, %d]\n", selection.line, selection.start, selection.end);
+    }
+
+    // std::vector<SelectionRenderer::Selection> selections = {
+    //     {.line = 2, .start = 0, .end = 2000},
+    //     // {.line = 2, .start = 0, .end = 424},
+    //     // {.line = 2, .start = 195, .end = 424},
+    //     {.line = 3, .start = 19 * 4, .end = 1558},
+    //     {.line = 4, .start = 0, .end = 1558 - 19 * 4},
+    //     // {.line = 5, .start = 19 * 2, .end = 376},
+    //     // {.line = 5, .start = 19 * 6, .end = 376},
+    //     {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
+    // };
     // std::vector<Selection> selections = {
     //     {.line = 2, .start = 195, .end = 424},
     //     {.line = 3, .start = 19 * 50, .end = 1558},

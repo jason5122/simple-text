@@ -24,7 +24,10 @@ public:
                     Point& editor_offset, FontRasterizer& font_rasterizer, float status_bar_height,
                     CursorInfo& start_cursor, CursorInfo& end_cursor, float& longest_line_x,
                     config::ColorScheme& color_scheme);
-    std::vector<SelectionRenderer::Selection> getSelections();
+    std::vector<SelectionRenderer::Selection> getSelections(Buffer& buffer,
+                                                            FontRasterizer& font_rasterizer,
+                                                            CursorInfo& start_cursor,
+                                                            CursorInfo& end_cursor);
     void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CursorInfo& end_cursor,
                       config::ColorScheme& color_scheme);

@@ -144,72 +144,23 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {
-        uint32_t middle_flags = 0;
+        uint32_t flags = LEFT | RIGHT;
 
-        int start = selections[i].start;
-        int end = selections[i].end;
-
-        int curr_start = selections[i].start;
-        int prev_start = i > 0 ? selections[i - 1].start : std::numeric_limits<int>::min();
-        int next_start =
-            i + 1 < selections_size ? selections[i + 1].start : std::numeric_limits<int>::min();
-
-        if (curr_start < prev_start && curr_start < next_start) {
-            if (prev_start < next_start) {
-                start = next_start;
-                create(curr_start, prev_start, selections[i].line,
-                       LEFT | BOTTOM | TOP | BOTTOM_LEFT_INWARDS | TOP_LEFT_INWARDS);
-                create(prev_start, next_start, selections[i].line, BOTTOM);
-            } else {
-                start = prev_start;
-                create(curr_start, next_start, selections[i].line,
-                       LEFT | BOTTOM | TOP | BOTTOM_LEFT_INWARDS | TOP_LEFT_INWARDS);
-                create(next_start, prev_start, selections[i].line, TOP);
-            }
-        } else if (curr_start < prev_start) {
-            start = prev_start;
-            create(curr_start, prev_start, selections[i].line,
-                   LEFT | TOP | BOTTOM_LEFT_OUTWARDS | TOP_LEFT_INWARDS);
-        } else if (curr_start < next_start) {
-            start = next_start;
-            create(curr_start, next_start, selections[i].line,
-                   LEFT | BOTTOM | BOTTOM_LEFT_INWARDS);
-        } else {
-            middle_flags |= LEFT;
-            if (i > 0) middle_flags |= TOP_LEFT_OUTWARDS;
-            if (i < selections_size - 1) middle_flags |= BOTTOM_LEFT_OUTWARDS;
+        if (i == 0) {
+            flags |= TOP | TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
+        }
+        if (i == selections_size - 1) {
+            flags |= BOTTOM | BOTTOM_LEFT_INWARDS | BOTTOM_RIGHT_INWARDS;
         }
 
-        int curr_end = selections[i].end;
-        int prev_end = i > 0 ? selections[i - 1].end : std::numeric_limits<int>::max();
-        int next_end =
-            i + 1 < selections_size ? selections[i + 1].end : std::numeric_limits<int>::max();
-
-        if (prev_end < curr_end && next_end < curr_end) {
-            if (prev_end < next_end) {
-                end = prev_end;
-                create(prev_end, next_end, selections[i].line, TOP);
-                create(next_end, curr_end, selections[i].line,
-                       RIGHT | BOTTOM | TOP | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_INWARDS);
-            } else {
-                end = next_end;
-                create(next_end, prev_end, selections[i].line, BOTTOM);
-                create(prev_end, next_end, selections[i].line,
-                       RIGHT | BOTTOM | TOP | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_INWARDS);
-            }
-        } else if (prev_end < curr_end) {
-            end = prev_end;
-            create(prev_end, curr_end, selections[i].line, RIGHT | TOP | TOP_RIGHT_INWARDS);
-        } else if (next_end < curr_end) {
-            end = next_end;
-            create(next_end, curr_end, selections[i].line, RIGHT | BOTTOM | BOTTOM_RIGHT_INWARDS);
-        } else {
-            middle_flags |= RIGHT;
-            if (i > 0) middle_flags |= TOP_RIGHT_OUTWARDS;
-            if (i < selections_size - 1) middle_flags |= BOTTOM_RIGHT_OUTWARDS;
+        if (i > 0 && selections[i].end > selections[i - 1].end) {
+            flags |= TOP_RIGHT_INWARDS;
+        }
+        if (i + 1 < selections_size && selections[i].end > selections[i + 1].end) {
+            flags |= BOTTOM_RIGHT_INWARDS;
         }
 
-        create(start, end, selections[i].line, middle_flags, Rgb{200, 200, 200});
+        create(selections[i].start, selections[i].end, selections[i].line, flags);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

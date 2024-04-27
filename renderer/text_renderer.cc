@@ -450,6 +450,12 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
                             CursorInfo& start_cursor, CursorInfo& end_cursor) {
     std::vector<SelectionRenderer::Selection> selections;
 
+    // TODO: Define equality operator for CursorInfo.
+    if (start_cursor.byte == end_cursor.byte && start_cursor.line == end_cursor.line &&
+        start_cursor.column == end_cursor.column) {
+        return selections;
+    }
+
     size_t byte_offset = buffer.byteOfLine(start_cursor.line);
     for (size_t line_index = start_cursor.line; line_index <= end_cursor.line; line_index++) {
 
@@ -483,10 +489,14 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 
             total_advance += std::round(glyph.advance);
         }
+        if (byte_offset == end_cursor.byte) {
+            end = total_advance;
+        }
         byte_offset++;
 
         if (line_index != end_cursor.line) {
-            end = static_cast<int>(total_advance);
+            AtlasGlyph& space_glyph = glyph_cache[font_rasterizer.id][0x20];
+            end = static_cast<int>(total_advance) + std::round(space_glyph.advance);
         }
 
         selections.push_back({
@@ -500,7 +510,14 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
         fprintf(stderr, "line: %d, [%d, %d]\n", selection.line, selection.start, selection.end);
     }
 
-    // std::vector<SelectionRenderer::Selection> selections = {
+    // selections = {
+    //     {.line = 2, .start = 19 * 5, .end = 424},
+    //     {.line = 3, .start = 0, .end = 1558},
+    //     {.line = 4, .start = 0, .end = 1558 + 19 * 6},
+    //     {.line = 5, .start = 0, .end = 19 * 6},
+    // };
+
+    // selections = {
     //     {.line = 2, .start = 0, .end = 2000},
     //     // {.line = 2, .start = 0, .end = 424},
     //     // {.line = 2, .start = 195, .end = 424},
@@ -510,7 +527,7 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
     //     // {.line = 5, .start = 19 * 6, .end = 376},
     //     {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
     // };
-    // std::vector<Selection> selections = {
+    // selections = {
     //     {.line = 2, .start = 195, .end = 424},
     //     {.line = 3, .start = 19 * 50, .end = 1558},
     //     {.line = 4, .start = 0, .end = 19 * 5},

@@ -105,7 +105,7 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 }
 
 namespace {
-struct Temp {
+struct Selection {
     int line;
     int start;
     int end;
@@ -124,7 +124,8 @@ static InstanceData CreateInstance(int start, int end, int line, uint32_t border
         .bg_size =
             {
                 .x = static_cast<float>(end - start),
-                .y = font_rasterizer.line_height + border_thickness,
+                // .y = font_rasterizer.line_height + border_thickness,
+                .y = font_rasterizer.line_height,
             },
         .bg_color = Rgba::fromRgb(colors::selection_unfocused, 255),
         .bg_border_color = Rgba::fromRgb(color, 0),
@@ -144,45 +145,87 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     glBindVertexArray(vao);
 
     std::vector<InstanceData> instances;
+    std::vector<InstanceData> instances_after;
 
-    std::vector<Temp> temps = {
-        {.line = 2, .start = 19 * 10, .end = 424},
+    std::vector<Selection> selections = {
+        {.line = 2, .start = 195, .end = 424},
         {.line = 3, .start = 19 * 4, .end = 1558},
-        {.line = 4, .end = 1558 + 19 * 4},
+        {.line = 4, .start = 0, .end = 1558 - 19 * 4},
+        {.line = 5, .start = 19 * 2, .end = 376},
     };
-    // std::vector<Temp> temps = {
+    // std::vector<Selection> selections = {
+    //     {.line = 2, .start = 195, .end = 424},
     //     {.line = 3, .start = 19 * 50, .end = 1558},
     //     {.line = 4, .start = 0, .end = 19 * 5},
+    //     {.line = 5, .start = 19 * 2, .end = 376},
     // };
 
+    size_t selections_size = selections.size();
     uint32_t border_flags = 0;
 
-    for (size_t i = 0; i < temps.size(); i++) {
-        if (i > 0) {
-            if (temps[i].start < temps[i - 1].start) {
-                border_flags = LEFT | RIGHT | TOP | BOTTOM;
-                instances.insert(instances.begin(),
-                                 CreateInstance(temps[i].start, temps[i - 1].start, temps[i].line,
-                                                border_flags, font_rasterizer, colors::red));
-            }
+    border_flags = LEFT | RIGHT | TOP | BOTTOM_LEFT_OUTWARDS | BOTTOM_RIGHT_OUTWARDS |
+                   TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
+    if (selections_size == 1) {
+        border_flags |= BOTTOM;
+    }
 
-            border_flags = LEFT | RIGHT | TOP | BOTTOM;
-            instances.insert(instances.begin(),
-                             CreateInstance(temps[i].start, temps[i - 1].end, temps[i].line,
-                                            border_flags, font_rasterizer, colors::blue));
+    instances_after.emplace_back(CreateInstance(selections[0].start, selections[0].end,
+                                                selections[0].line, border_flags, font_rasterizer,
+                                                colors::purple));
 
-            if (temps[i].end >= temps[i - 1].end) {
-                border_flags = LEFT | RIGHT | TOP | BOTTOM;
-                instances.insert(instances.begin(),
-                                 CreateInstance(temps[i - 1].end, temps[i].end, temps[i].line,
-                                                border_flags, font_rasterizer, colors::green));
-            }
-        } else if (i == 0) {
-            border_flags = LEFT | RIGHT | TOP | BOTTOM;
-            instances.insert(instances.begin(),
-                             CreateInstance(temps[i].start, temps[i].end, temps[i].line,
-                                            border_flags, font_rasterizer, colors::purple));
+    for (size_t i = 1; i < selections_size - 1; i++) {
+        int p1 = selections[i].start;
+        int p2 = selections[i].start;
+        int p3 = selections[i].end;
+        int p4 = selections[i].end;
+
+        // Left.
+        // border_flags = LEFT | RIGHT | TOP | BOTTOM;
+        // instances.emplace_back(CreateInstance(p1, p2, selections[i].line, border_flags,
+        //                                       font_rasterizer, colors::red));
+
+        // Middle.
+        border_flags = LEFT | RIGHT | TOP | BOTTOM;
+        if (selections[i].start < selections[i - 1].start) {
+            border_flags |= TOP_LEFT_INWARDS;
+        } else if (selections[i].start > selections[i - 1].start) {
+            border_flags |= TOP_LEFT_OUTWARDS;
         }
+        if (selections[i].end > selections[i - 1].end) {
+            border_flags |= TOP_RIGHT_INWARDS;
+        } else if (selections[i].end < selections[i - 1].end) {
+            border_flags |= TOP_RIGHT_OUTWARDS;
+        }
+        if (selections[i].start < selections[i + 1].start) {
+            border_flags |= BOTTOM_LEFT_INWARDS;
+        } else if (selections[i].start > selections[i + 1].start) {
+            border_flags |= BOTTOM_LEFT_OUTWARDS;
+        }
+        if (selections[i].end > selections[i + 1].end) {
+            border_flags |= BOTTOM_RIGHT_INWARDS;
+        } else if (selections[i].end > selections[i + 1].end) {
+            border_flags |= BOTTOM_RIGHT_OUTWARDS;
+        }
+        instances.emplace_back(CreateInstance(p2, p3, selections[i].line, border_flags,
+                                              font_rasterizer, colors::blue));
+
+        // Right.
+        // border_flags = LEFT | RIGHT | TOP | BOTTOM;
+        // instances.emplace_back(CreateInstance(p3, p4, selections[i].line, border_flags,
+        //                                       font_rasterizer, colors::green));
+    }
+
+    border_flags = LEFT | RIGHT | BOTTOM | BOTTOM_LEFT_INWARDS | BOTTOM_RIGHT_INWARDS |
+                   TOP_LEFT_OUTWARDS | TOP_RIGHT_OUTWARDS;
+    if (selections_size == 1) {
+        border_flags |= TOP;
+    }
+    instances.emplace_back(CreateInstance(
+        selections[selections_size - 1].start, selections[selections_size - 1].end,
+        selections[selections_size - 1].line, border_flags, font_rasterizer, colors::purple));
+
+    for (const auto& instance : instances_after) {
+        instances.push_back(instance);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

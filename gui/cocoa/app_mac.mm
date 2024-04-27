@@ -93,7 +93,11 @@ public:
 };
 
 App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
-    NSRect frame = NSMakeRect(500, 0, width, height);
+    // NSRect frame = NSMakeRect(500, 0, width, height);
+    NSRect frame = NSScreen.mainScreen.visibleFrame;
+
+    std::cerr << "scale factor: " << NSScreen.mainScreen.backingScaleFactor << '\n';
+
     pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
                                                              appWindow:this
                                                              displayGl:parent.pimpl->displaygl];

@@ -160,10 +160,14 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                 flags |= TOP_RIGHT_OUTWARDS;
             }
         }
-        if (i + 1) {
-            if (selections_size && selections[i].end > selections[i + 1].end) {
+        if (i + 1 < selections_size) {
+            if (selections[i].start > selections[i + 1].start) {
+                flags |= BOTTOM_LEFT_OUTWARDS;
+            }
+
+            if (selections[i].end > selections[i + 1].end) {
                 flags |= BOTTOM_RIGHT_INWARDS;
-            } else if (selections_size && selections[i].end < selections[i + 1].end) {
+            } else if (selections[i].end < selections[i + 1].end) {
                 flags |= BOTTOM_RIGHT_OUTWARDS;
             }
         }

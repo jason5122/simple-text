@@ -4,6 +4,7 @@
 #include "renderer/opengl_types.h"
 #include "selection_renderer.h"
 #include <cstdint>
+#include <limits>
 
 #include "build/buildflag.h"
 
@@ -153,8 +154,8 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
         {.line = 3, .start = 19 * 4, .end = 1558},
         {.line = 4, .start = 0, .end = 1558 - 19 * 4},
         // {.line = 5, .start = 19 * 2, .end = 376},
-        {.line = 5, .start = 19 * 6, .end = 376},
-        // {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
+        // {.line = 5, .start = 19 * 6, .end = 376},
+        {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
     };
     // std::vector<Selection> selections = {
     //     {.line = 2, .start = 195, .end = 424},
@@ -166,21 +167,24 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     size_t selections_size = selections.size();
     uint32_t border_flags = 0;
 
-    border_flags = LEFT | RIGHT | TOP | BOTTOM_LEFT_OUTWARDS | BOTTOM_RIGHT_OUTWARDS |
-                   TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
-    if (selections_size == 1) {
-        border_flags |= BOTTOM;
-    }
+    // border_flags = LEFT | RIGHT | TOP | BOTTOM_LEFT_OUTWARDS | BOTTOM_RIGHT_OUTWARDS |
+    //                TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
+    // if (selections_size == 1) {
+    //     border_flags |= BOTTOM;
+    // }
 
-    create(selections[0].start, selections[0].end, selections[0].line, border_flags);
+    // create(selections[0].start, selections[0].end, selections[0].line, border_flags);
 
-    for (size_t i = 1; i < selections_size - 1; i++) {
+    for (size_t i = 0; i < selections_size; i++) {
+        uint32_t middle_flags = 0;
+
         int start = selections[i].start;
         int end = selections[i].end;
 
         int curr_start = selections[i].start;
-        int prev_start = selections[i - 1].start;
-        int next_start = selections[i + 1].start;
+        int prev_start = i > 0 ? selections[i - 1].start : std::numeric_limits<int>::min();
+        int next_start =
+            i + 1 < selections_size ? selections[i + 1].start : std::numeric_limits<int>::min();
 
         if (curr_start < prev_start && curr_start < next_start) {
             if (prev_start < next_start) {
@@ -199,11 +203,17 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             create(curr_start, prev_start, selections[i].line,
                    LEFT | TOP | BOTTOM_LEFT_OUTWARDS | TOP_LEFT_INWARDS);
         } else if (curr_start < next_start) {
+            start = next_start;
+        } else {
+            middle_flags |= LEFT;
+            if (i > 0) middle_flags |= TOP_LEFT_OUTWARDS;
+            if (i < selections_size - 1) middle_flags |= BOTTOM_LEFT_OUTWARDS;
         }
 
         int curr_end = selections[i].end;
-        int prev_end = selections[i - 1].end;
-        int next_end = selections[i + 1].end;
+        int prev_end = i > 0 ? selections[i - 1].end : std::numeric_limits<int>::max();
+        int next_end =
+            i + 1 < selections_size ? selections[i + 1].end : std::numeric_limits<int>::max();
 
         if (prev_end < curr_end && next_end < curr_end) {
             if (prev_end < next_end) {
@@ -218,21 +228,19 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                        RIGHT | BOTTOM | TOP | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_INWARDS);
             }
         } else if (prev_end < curr_end) {
-
+            end = prev_end;
+            create(prev_end, curr_end, selections[i].line, RIGHT | TOP | TOP_RIGHT_INWARDS);
         } else if (next_end < curr_end) {
             end = next_end;
             create(next_end, curr_end, selections[i].line,
                    RIGHT | BOTTOM | BOTTOM_RIGHT_INWARDS | TOP_RIGHT_OUTWARDS);
+        } else {
+            middle_flags |= RIGHT;
+            if (i > 0) middle_flags |= TOP_RIGHT_OUTWARDS;
+            if (i < selections_size - 1) middle_flags |= BOTTOM_RIGHT_OUTWARDS;
         }
 
-        // create(start, end, selections[i].line, 0, colors::purple);
-    }
-
-    if (selections_size > 1) {
-        uint32_t border_flags = LEFT | RIGHT | BOTTOM | BOTTOM_LEFT_INWARDS |
-                                BOTTOM_RIGHT_INWARDS | TOP_LEFT_OUTWARDS | TOP_RIGHT_OUTWARDS;
-        create(selections[selections_size - 1].start, selections[selections_size - 1].end,
-               selections[selections_size - 1].line, border_flags);
+        create(start, end, selections[i].line, middle_flags, colors::purple);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

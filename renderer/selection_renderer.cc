@@ -31,6 +31,8 @@ struct InstanceData {
     Rgba bg_color;
     Rgba bg_border_color;
     uint32_t border_flags;
+    uint32_t bottom_border_offset;
+    uint32_t top_border_offset;
 };
 }
 
@@ -99,6 +101,16 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
                           (void*)offsetof(InstanceData, border_flags));
     glVertexAttribDivisor(index++, 1);
 
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_INT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, bottom_border_offset));
+    glVertexAttribDivisor(index++, 1);
+
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_INT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, top_border_offset));
+    glVertexAttribDivisor(index++, 1);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -119,10 +131,11 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
     std::vector<InstanceData> instances;
 
-    auto create = [&instances,
-                   &font_rasterizer](int start, int end, int line,
-                                     uint32_t border_flags = LEFT | RIGHT | TOP | BOTTOM,
-                                     Rgb bg_color = colors::selection_unfocused) {
+    auto create = [&instances, &font_rasterizer](
+                      int start, int end, int line,
+                      uint32_t border_flags = LEFT | RIGHT | TOP | BOTTOM,
+                      uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
+                      Rgb bg_color = colors::selection_unfocused) {
         constexpr int border_thickness = 2;
         instances.emplace_back(InstanceData{
             .coords =
@@ -139,13 +152,17 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             .bg_color = Rgba::fromRgb(bg_color, 255),
             .bg_border_color = Rgba::fromRgb(colors::red, 0),
             .border_flags = border_flags,
+            .bottom_border_offset = bottom_border_offset,
+            .top_border_offset = top_border_offset,
         });
     };
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {
-        // uint32_t flags = LEFT | RIGHT;
-        uint32_t flags = LEFT | RIGHT | BOTTOM | TOP;
+        uint32_t flags = LEFT | RIGHT;
+        // uint32_t flags = LEFT | RIGHT | BOTTOM | TOP;
+        uint32_t bottom_border_offset = 0;
+        uint32_t top_border_offset = 0;
 
         if (i == 0) {
             flags |= TOP | TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
@@ -157,6 +174,9 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
         if (i > 0) {
             if (selections[i].end > selections[i - 1].end) {
                 flags |= TOP_RIGHT_INWARDS;
+
+                flags |= TOP;
+                top_border_offset = selections[i - 1].end;
             } else if (selections[i].end < selections[i - 1].end) {
                 flags |= TOP_RIGHT_OUTWARDS;
             }
@@ -168,12 +188,16 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
             if (selections[i].end > selections[i + 1].end) {
                 flags |= BOTTOM_RIGHT_INWARDS;
+
+                flags |= BOTTOM;
+                bottom_border_offset = selections[i + 1].end;
             } else if (selections[i].end < selections[i + 1].end) {
                 flags |= BOTTOM_RIGHT_OUTWARDS;
             }
         }
 
-        create(selections[i].start, selections[i].end, selections[i].line, flags);
+        create(selections[i].start, selections[i].end, selections[i].line, flags,
+               bottom_border_offset, top_border_offset);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

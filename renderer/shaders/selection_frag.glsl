@@ -7,6 +7,8 @@ flat in vec2 bg_size;
 flat in vec4 bg_color;
 flat in vec4 bg_border_color;
 flat in int border_flags;
+flat in int bottom_border_offset;
+flat in int top_border_offset;
 
 uniform int corner_radius;
 
@@ -152,14 +154,18 @@ void main() {
             computed_alpha = 1.0;
         }
     }
-    if (has_bottom_border && pixel_pos.y < border_bottom) {
+
+    bool is_past_bottom_offset = pixel_pos.x > border_left + bottom_border_offset;
+    bool is_past_top_offset = pixel_pos.x > border_left + top_border_offset;
+
+    if (has_bottom_border && pixel_pos.y < border_bottom && is_past_bottom_offset) {
         if (!(has_bottom_left_border && pixel_pos.x < curve_bottom_left.x) &&
             !(has_bottom_right_border && pixel_pos.x > curve_bottom_right.x)) {
             computed_color = bg_border_color.rgb;
             computed_alpha = 1.0;
         }
     }
-    if (has_top_border && pixel_pos.y > border_top) {
+    if (has_top_border && pixel_pos.y > border_top && is_past_top_offset) {
         if (!(has_top_left_border && pixel_pos.x < curve_top_left.x) &&
             !(has_top_right_border && pixel_pos.x > curve_top_right.x)) {
             computed_color = bg_border_color.rgb;

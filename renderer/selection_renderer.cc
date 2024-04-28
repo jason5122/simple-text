@@ -160,7 +160,6 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {
         uint32_t flags = LEFT | RIGHT;
-        // uint32_t flags = LEFT | RIGHT | BOTTOM | TOP;
         uint32_t bottom_border_offset = 0;
         uint32_t top_border_offset = 0;
 

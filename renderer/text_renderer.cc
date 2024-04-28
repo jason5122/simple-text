@@ -450,8 +450,18 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
                             CursorInfo& start_cursor, CursorInfo& end_cursor) {
     std::vector<SelectionRenderer::Selection> selections;
 
-    size_t byte_offset = buffer.byteOfLine(start_cursor.line);
-    for (size_t line_index = start_cursor.line; line_index <= end_cursor.line; line_index++) {
+    int start_byte = start_cursor.byte, end_byte = end_cursor.byte;
+    int start_line = start_cursor.line, end_line = end_cursor.line;
+    if (start_byte == end_byte) {
+        return selections;
+    }
+    if (start_byte > end_byte) {
+        std::swap(start_byte, end_byte);
+        std::swap(start_line, end_line);
+    }
+
+    size_t byte_offset = buffer.byteOfLine(start_line);
+    for (size_t line_index = start_line; line_index <= end_line; line_index++) {
 
         std::string line_str;
         buffer.getLineContent(&line_str, line_index);
@@ -474,21 +484,21 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 
             AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
 
-            if (byte_offset == start_cursor.byte) {
+            if (byte_offset == start_byte) {
                 start = total_advance;
             }
-            if (byte_offset == end_cursor.byte) {
+            if (byte_offset == end_byte) {
                 end = total_advance;
             }
 
             total_advance += std::round(glyph.advance);
         }
-        if (byte_offset == end_cursor.byte) {
+        if (byte_offset == end_byte) {
             end = total_advance;
         }
         byte_offset++;
 
-        if (line_index != end_cursor.line) {
+        if (line_index != end_line) {
             AtlasGlyph& space_glyph = glyph_cache[font_rasterizer.id][0x20];
             end = static_cast<int>(total_advance) + std::round(space_glyph.advance);
         }

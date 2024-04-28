@@ -450,12 +450,6 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
                             CursorInfo& start_cursor, CursorInfo& end_cursor) {
     std::vector<SelectionRenderer::Selection> selections;
 
-    // TODO: Define equality operator for CursorInfo.
-    if (start_cursor.byte == end_cursor.byte && start_cursor.line == end_cursor.line &&
-        start_cursor.column == end_cursor.column) {
-        return selections;
-    }
-
     size_t byte_offset = buffer.byteOfLine(start_cursor.line);
     for (size_t line_index = start_cursor.line; line_index <= end_cursor.line; line_index++) {
 
@@ -499,40 +493,19 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
             end = static_cast<int>(total_advance) + std::round(space_glyph.advance);
         }
 
-        selections.push_back({
-            .line = static_cast<int>(line_index),
-            .start = start,
-            .end = end,
-        });
+        if (start != end) {
+            selections.push_back({
+                .line = static_cast<int>(line_index),
+                .start = start,
+                .end = end,
+            });
+        }
     }
 
     for (const auto& selection : selections) {
         fprintf(stderr, "line: %d, [%d, %d]\n", selection.line, selection.start, selection.end);
     }
 
-    // selections = {
-    //     {.line = 2, .start = 19 * 5, .end = 424},
-    //     {.line = 3, .start = 0, .end = 1558},
-    //     {.line = 4, .start = 0, .end = 1558 + 19 * 6},
-    //     {.line = 5, .start = 0, .end = 19 * 6},
-    // };
-
-    // selections = {
-    //     {.line = 2, .start = 0, .end = 2000},
-    //     // {.line = 2, .start = 0, .end = 424},
-    //     // {.line = 2, .start = 195, .end = 424},
-    //     {.line = 3, .start = 19 * 4, .end = 1558},
-    //     {.line = 4, .start = 0, .end = 1558 - 19 * 4},
-    //     // {.line = 5, .start = 19 * 2, .end = 376},
-    //     // {.line = 5, .start = 19 * 6, .end = 376},
-    //     {.line = 5, .start = 19 * 6, .end = 376 + 19 * 100},
-    // };
-    // selections = {
-    //     {.line = 2, .start = 195, .end = 424},
-    //     {.line = 3, .start = 19 * 50, .end = 1558},
-    //     {.line = 4, .start = 0, .end = 19 * 5},
-    //     {.line = 5, .start = 19 * 2, .end = 376},
-    // };
     return selections;
 }
 

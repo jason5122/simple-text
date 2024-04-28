@@ -77,11 +77,10 @@ void EditorWindow::onDraw() {
         text_renderer.getSelections(buffer, main_font_rasterizer, start_cursor, end_cursor);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer, selections);
-
     text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, start_cursor, end_cursor,
                              longest_line_x, parent.color_scheme);
+    selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer, selections);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, scroll, end_cursor, main_font_rasterizer.line_height,

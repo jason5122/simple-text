@@ -133,8 +133,8 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
             .bg_size =
                 {
                     .x = static_cast<float>(end - start),
-                    // .y = font_rasterizer.line_height + border_thickness,
-                    .y = font_rasterizer.line_height,
+                    .y = font_rasterizer.line_height + border_thickness,
+                    // .y = font_rasterizer.line_height,
                 },
             .bg_color = Rgba::fromRgb(bg_color, 255),
             .bg_border_color = Rgba::fromRgb(colors::red, 0),
@@ -144,7 +144,8 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {
-        uint32_t flags = LEFT | RIGHT;
+        // uint32_t flags = LEFT | RIGHT;
+        uint32_t flags = LEFT | RIGHT | BOTTOM | TOP;
 
         if (i == 0) {
             flags |= TOP | TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;

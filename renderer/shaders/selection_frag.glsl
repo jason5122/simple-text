@@ -33,8 +33,8 @@ void main() {
     bool should_discard = true;
     
     vec3 computed_color = bg_color.rgb;
-    // float computed_alpha = 0.0;
-    float computed_alpha = 1.0;
+    float computed_alpha = 0.0;
+    // float computed_alpha = 1.0;
     // TODO: Turn these into uniforms.
     float border_thickness = 2;
 
@@ -165,6 +165,10 @@ void main() {
             computed_color = bg_border_color.rgb;
             computed_alpha = 1.0;
         }
+    }
+
+    if (computed_alpha == 0.0) {
+        discard;
     }
 
     alpha_mask = vec4(1.0);

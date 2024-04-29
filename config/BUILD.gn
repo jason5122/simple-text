@@ -1,5 +1,5 @@
 source_set("config") {
   sources = [ "color_scheme.cc" ]
 
-  deps = [ "//third_party/glaze" ]
+  # deps = [ "//third_party/glaze" ]
 }

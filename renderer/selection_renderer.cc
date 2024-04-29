@@ -165,12 +165,24 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
 
         if (i == 0) {
             flags |= TOP | TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
+
+            if (selections_size > 1 && selections[i].start > 0) {
+                int end = selections[i].start;
+                if (selections[i + 1].end >= selections[i].start) {
+                    end -= kCornerRadius + 2;
+                }
+                create(2, end, selections[i].line, BOTTOM);
+            }
         }
         if (i == selections_size - 1) {
             flags |= BOTTOM | BOTTOM_LEFT_INWARDS | BOTTOM_RIGHT_INWARDS;
         }
 
         if (i > 0) {
+            if (selections[i - 1].start > 0) {
+                flags |= TOP_LEFT_INWARDS;
+            }
+
             if (selections[i].end > selections[i - 1].end) {
                 flags |= TOP_RIGHT_INWARDS;
 
@@ -189,7 +201,7 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                 flags |= BOTTOM_RIGHT_INWARDS;
 
                 flags |= BOTTOM;
-                bottom_border_offset = selections[i + 1].end;
+                bottom_border_offset = selections[i + 1].end - selections[i].start;
             } else if (selections[i].end < selections[i + 1].end) {
                 flags |= BOTTOM_RIGHT_OUTWARDS;
             }

@@ -1,8 +1,7 @@
 #include "base/filesystem/file_reader.h"
 #include "base/rgb.h"
 #include "color_scheme.h"
-#include "glaze/glaze.hpp"
-#include "glaze/json/write.hpp"
+// #include "glaze/glaze.hpp"
 #include <iostream>
 
 namespace config {
@@ -45,18 +44,18 @@ ColorScheme::ColorScheme() {
     std::string buffer;
     if (fs::exists(color_scheme_path)) {
         // TODO: Handle errors in a better way.
-        glz::parse_error error = glz::read_file_json(schema, color_scheme_path.string(), buffer);
-        if (error) {
-            std::cerr << glz::format_error(error, buffer) << '\n';
-        }
+        // glz::parse_error error = glz::read_file_json(schema, color_scheme_path.string(),
+        // buffer); if (error) {
+        //     std::cerr << glz::format_error(error, buffer) << '\n';
+        // }
     } else {
         schema = kDefaultLightSchema;
         // schema = kDefaultDarkSchema;
 
-        glz::write_error error = glz::write_file_json(schema, color_scheme_path.string(), buffer);
-        if (error) {
-            std::cerr << "Could not write color scheme to " << color_scheme_path << ".\n";
-        }
+        // glz::write_error error = glz::write_file_json(schema, color_scheme_path.string(),
+        // buffer); if (error) {
+        //     std::cerr << "Could not write color scheme to " << color_scheme_path << ".\n";
+        // }
     }
 
     // TODO: Is there a better way to do this?

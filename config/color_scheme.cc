@@ -1,7 +1,7 @@
 #include "base/filesystem/file_reader.h"
 #include "base/rgb.h"
 #include "color_scheme.h"
-// #include "glaze/glaze.hpp"
+#include "glaze/glaze.hpp"
 #include <iostream>
 
 namespace config {

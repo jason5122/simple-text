@@ -1,4 +1,4 @@
-static_library("glaze") {
+source_set("glaze") {
   public_configs = [ ":glaze_includes" ]
 }
 

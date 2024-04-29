@@ -23,10 +23,10 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     GLfloat blue = background.b / 255.0;
     glClearColor(red, green, blue, 1.0);
 
-    // fs::path file_path = ResourcePath() / "sample_files/example.json";
-    // fs::path file_path = ResourcePath() / "sample_files/worst_case.json";
-    fs::path file_path = ResourcePath() / "sample_files/sort.scm";
-    // fs::path file_path = ResourcePath() / "sample_files/proportional_font_test.json";
+    // fs::path file_path = ResourceDir() / "sample_files/example.json";
+    // fs::path file_path = ResourceDir() / "sample_files/worst_case.json";
+    fs::path file_path = ResourceDir() / "sample_files/sort.scm";
+    // fs::path file_path = ResourceDir() / "sample_files/proportional_font_test.json";
 
     buffer.setContents(ReadFile(file_path));
     highlighter.setLanguage("source.json", parent.color_scheme);

@@ -6,6 +6,6 @@ namespace fs = std::filesystem;
 
 std::string ReadFile(fs::path file_name);
 
-fs::path ResourcePath();
+fs::path ResourceDir();
 
-fs::path DataPath();
+fs::path DataDir();

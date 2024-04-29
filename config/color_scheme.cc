@@ -37,8 +37,8 @@ static const Schema kDefaultDarkSchema{
 };
 
 ColorScheme::ColorScheme() {
-    fs::path color_scheme_path = DataPath() / "color_scheme_light.json";
-    // fs::path color_scheme_path = DataPath() / "color_scheme_dark.json";
+    fs::path color_scheme_path = DataDir() / "color_scheme_light.json";
+    // fs::path color_scheme_path = DataDir() / "color_scheme_dark.json";
 
     Schema schema;
 

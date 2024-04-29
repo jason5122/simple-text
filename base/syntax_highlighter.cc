@@ -49,7 +49,7 @@ void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& colo
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    std::string query_code = ReadFile(ResourcePath() / highlights_query_filename);
+    std::string query_code = ReadFile(ResourceDir() / highlights_query_filename);
     query = ts_query_new(language, &query_code[0], query_code.size(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {

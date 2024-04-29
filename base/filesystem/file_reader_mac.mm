@@ -2,12 +2,12 @@
 
 #include "file_reader.h"
 
-fs::path ResourcePath() {
+fs::path ResourceDir() {
     return NSBundle.mainBundle.resourcePath.fileSystemRepresentation;
 }
 
 // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/AccessingFilesandDirectories/AccessingFilesandDirectories.html
-fs::path DataPath() {
+fs::path DataDir() {
     NSFileManager* shared_fm = [NSFileManager defaultManager];
     NSArray* possible_urls = [shared_fm URLsForDirectory:NSApplicationSupportDirectory
                                                inDomains:NSUserDomainMask];

@@ -35,20 +35,6 @@ struct InstanceData {
     Vec4 uv;
     Rgba color;
     uint8_t is_atlas = 0;
-    Vec2 bg_size;
-    Rgba bg_color;
-    Rgba bg_border_color;
-};
-
-// Reference Zed's implementation in //crates/gpui/src/text_system/line_layout.rs.
-struct ShapedGlyph {
-    uint32_t codepoint;
-    size_t byte_offset;  // Byte offset within the line layout.
-    Vec2 coords;
-    Vec4 glyph;
-    Vec4 uv;
-    Vec2 bg_size;
-    bool colored;
 };
 }
 
@@ -122,21 +108,6 @@ void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, is_atlas));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, bg_size));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, bg_color));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, bg_border_color));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -215,14 +186,18 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
     size_t byte_offset = buffer.byteOfLine(start_line);
 
-    std::vector<std::vector<ShapedGlyph>> line_layouts;
+    std::vector<InstanceData> instances;
 
     {
         PROFILE_BLOCK("layout text");
-        for (size_t line_index = start_line, line_layout_index = 0; line_index < end_line;
-             line_index++, line_layout_index++) {
-            line_layouts.emplace_back();
 
+        size_t selection_start = start_cursor.byte;
+        size_t selection_end = end_cursor.byte;
+        if (selection_start > selection_end) {
+            std::swap(selection_start, selection_end);
+        }
+
+        for (size_t line_index = start_line; line_index < end_line; line_index++) {
             size_t ret;
             float total_advance = 0;
 
@@ -238,19 +213,11 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 uint_least32_t codepoint;
                 grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
 
-                // If a space character is in selection, draw it as a visible symbol.
-                // FIXME: Don't use magic numbers here.
-                size_t selection_start = start_cursor.byte;
-                size_t selection_end = end_cursor.byte;
-                if (selection_start > selection_end) {
-                    std::swap(selection_start, selection_end);
-                }
-
                 // TODO: Preserve the width of the space character when substituting.
                 //       Otherwise, the line width changes when using proportional fonts.
                 if (codepoint == 0x20 && selection_start <= byte_offset &&
                     byte_offset < selection_end) {
-                    // codepoint = 183;
+                    codepoint = 183;
                 }
 
                 if (disable_cache || !glyph_cache[font_rasterizer.id].count(codepoint)) {
@@ -266,14 +233,21 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
                 AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
 
-                // TODO: Determine if we should always round `glyph.advance`.
-                Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
-                Vec2 bg_size{std::round(glyph.advance), font_rasterizer.line_height};
-                if (total_advance + std::round(glyph.advance) > scroll.x) {
-                    line_layouts[line_layout_index].emplace_back(
-                        ShapedGlyph{codepoint, byte_offset, coords, glyph.glyph, glyph.uv, bg_size,
-                                    glyph.colored});
+                bool is_glyph_in_selection =
+                    selection_start <= byte_offset && byte_offset < selection_end;
+
+                Rgb text_color = highlighter.getColor(byte_offset, color_scheme);
+                if (codepoint == 183) {
+                    text_color = Rgb{182, 182, 182};
                 }
+
+                Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
+                instances.push_back(InstanceData{
+                    .coords = coords,
+                    .glyph = glyph.glyph,
+                    .uv = glyph.uv,
+                    .color = Rgba::fromRgb(text_color, glyph.colored),
+                });
 
                 total_advance += std::round(glyph.advance);
             }
@@ -283,145 +257,10 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         }
     }
 
-    size_t selection_start = start_cursor.byte;
-    size_t selection_end = end_cursor.byte;
-    size_t selection_start_line = start_cursor.line;
-    size_t selection_end_line = end_cursor.line;
-    float selection_start_x = start_cursor.x;
-    float selection_end_x = end_cursor.x;
-    if (selection_start > selection_end) {
-        std::swap(selection_start, selection_end);
-        std::swap(selection_start_line, selection_end_line);
-        std::swap(selection_start_x, selection_end_x);
-    }
-
-    float prev_line_start_x = 0;
-    float prev_line_end_x = 0;
-    float next_line_end_x = 0;
-
-    std::vector<InstanceData> instances;
-    for (size_t i = 0; i < line_layouts.size(); i++) {
-        if (i + 1 < line_layouts.size() && !line_layouts[i + 1].empty()) {
-            if (i + 1 == selection_end_line) {
-                next_line_end_x = selection_end_x;
-            } else {
-                ShapedGlyph last_glyph = line_layouts[i + 1].back();
-                float glyph_end_x = last_glyph.coords.x + last_glyph.bg_size.x;
-                next_line_end_x = glyph_end_x;
-            }
-        } else {
-            next_line_end_x = 0;
-        }
-
-        // if (i == selection_start_line) {
-        //     prev_line_end_x = 0;
-        // }
-
-        for (size_t j = 0; j < line_layouts[i].size(); j++) {
-            ShapedGlyph& shaped_glyph = line_layouts[i][j];
-
-            float advance = shaped_glyph.bg_size.x;
-            float glyph_start_x = shaped_glyph.coords.x;
-            float glyph_center_x = glyph_start_x + advance / 2;
-            float glyph_end_x = glyph_start_x + advance;
-
-            bool is_glyph_in_selection = selection_start <= shaped_glyph.byte_offset &&
-                                         shaped_glyph.byte_offset < selection_end;
-
-            Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset, color_scheme);
-            if (shaped_glyph.codepoint == 183) {
-                text_color = Rgb{182, 182, 182};
-            }
-
-            uint8_t bg_a = is_glyph_in_selection ? 255 : 0;
-
-            uint8_t border_flags = 0;
-            size_t line_index = start_line + i;
-            if (line_index == selection_start_line) {
-                border_flags |= TOP;
-            }
-            if (line_index == selection_end_line) {
-                border_flags |= BOTTOM;
-            }
-            if (shaped_glyph.byte_offset == selection_start) {
-                border_flags |= LEFT;
-                border_flags |= TOP_LEFT;
-            }
-            if (shaped_glyph.byte_offset == selection_end - 1) {
-                border_flags |= RIGHT;
-                border_flags |= BOTTOM_RIGHT;
-                if (glyph_end_x > prev_line_end_x) {
-                    border_flags |= TOP_RIGHT;
-                }
-            }
-            if (j == 0) {
-                border_flags |= LEFT;
-                if (glyph_start_x < prev_line_start_x) {
-                    border_flags |= TOP_LEFT;
-                }
-                if (line_index == selection_end_line) {
-                    border_flags |= BOTTOM_LEFT;
-                }
-            }
-            if (j == line_layouts[i].size() - 1) {
-                border_flags |= RIGHT;
-                if (glyph_start_x >= prev_line_end_x) {
-                    border_flags |= TOP_RIGHT;
-                }
-                if (glyph_start_x >= next_line_end_x) {
-                    border_flags |= BOTTOM_RIGHT;
-                }
-            }
-
-            if (glyph_start_x >= prev_line_end_x) {
-                border_flags |= TOP;
-            }
-            if (glyph_start_x >= next_line_end_x) {
-                border_flags |= BOTTOM;
-            }
-
-            if (line_index == selection_start_line + 1 && glyph_end_x <= selection_start_x) {
-                border_flags |= TOP;
-            }
-            if (line_index == selection_end_line - 1 && glyph_start_x >= selection_end_x) {
-                border_flags |= BOTTOM;
-            }
-
-            instances.push_back(InstanceData{
-                .coords = shaped_glyph.coords,
-                .glyph = shaped_glyph.glyph,
-                .uv = shaped_glyph.uv,
-                .color = Rgba::fromRgb(text_color, shaped_glyph.colored),
-                .bg_size = shaped_glyph.bg_size,
-                .bg_color = Rgba::fromRgb(colors::selection_unfocused, bg_a),
-                // .bg_border_color = Rgba::fromRgb(colors::selection_border, border_flags),
-                .bg_border_color = Rgba::fromRgb(colors::purple, border_flags),
-            });
-        }
-
-        if (!line_layouts[i].empty()) {
-            ShapedGlyph last_glyph = line_layouts[i].back();
-            float glyph_end_x = last_glyph.coords.x + last_glyph.bg_size.x;
-            prev_line_end_x = glyph_end_x;
-        } else {
-            prev_line_end_x = 0;
-        }
-
-        if (i == selection_start_line) {
-            prev_line_start_x = selection_start_x;
-        } else {
-            prev_line_start_x = 0;
-        }
-
-        if (line_layouts[i].empty()) {
-            prev_line_start_x = std::numeric_limits<float>::max();
-        }
-    }
-
     // instances.push_back(InstanceData{
-    //     .coords = Vec2{width - Atlas::ATLAS_SIZE - 400 + scroll_x,
-    //                    10 * font_rasterizer.line_height + scroll_y},
-    //     .glyph = Vec4{0, 0, Atlas::ATLAS_SIZE, Atlas::ATLAS_SIZE},
+    //     .coords = Vec2{size.width - Atlas::kAtlasSize - 400 + scroll.x,
+    //                    10 * font_rasterizer.line_height + scroll.y},
+    //     .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
     //     .uv = Vec4{0, 0, 1.0, 1.0},
     //     .color = Rgba::fromRgb(color_scheme.foreground, false),
     //     .is_atlas = true,
@@ -432,9 +271,6 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
-    // glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 0);
-    // glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
@@ -567,7 +403,6 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
 
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.

@@ -96,19 +96,22 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
                           (void*)offsetof(InstanceData, bg_border_color));
     glVertexAttribDivisor(index++, 1);
 
+    // To prevent OpenGL from casting our ints to floats, we need to use either GL_FLOAT or
+    // glVertexAttribIPointer().
+    // https://stackoverflow.com/a/55972160
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_INT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, border_flags));
+    glVertexAttribIPointer(index, 1, GL_INT, sizeof(InstanceData),
+                           (void*)offsetof(InstanceData, border_flags));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_INT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, bottom_border_offset));
+    glVertexAttribIPointer(index, 1, GL_INT, sizeof(InstanceData),
+                           (void*)offsetof(InstanceData, bottom_border_offset));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 4, GL_INT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, top_border_offset));
+    glVertexAttribIPointer(index, 1, GL_INT, sizeof(InstanceData),
+                           (void*)offsetof(InstanceData, top_border_offset));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.

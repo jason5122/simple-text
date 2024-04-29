@@ -39,7 +39,7 @@ ColorScheme::ColorScheme() {
     fs::path color_scheme_path = DataDir() / "color_scheme_light.json";
     // fs::path color_scheme_path = DataDir() / "color_scheme_dark.json";
 
-    Schema schema;
+    Schema schema = kDefaultLightSchema;
 
     std::string buffer;
     if (fs::exists(color_scheme_path)) {
@@ -49,9 +49,6 @@ ColorScheme::ColorScheme() {
         //     std::cerr << glz::format_error(error, buffer) << '\n';
         // }
     } else {
-        schema = kDefaultLightSchema;
-        // schema = kDefaultDarkSchema;
-
         // glz::write_error error = glz::write_file_json(schema, color_scheme_path.string(),
         // buffer); if (error) {
         //     std::cerr << "Could not write color scheme to " << color_scheme_path << ".\n";

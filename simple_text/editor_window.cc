@@ -1,4 +1,5 @@
 #include "build/buildflag.h"
+#include "gui/key.h"
 #include "simple_text.h"
 #include <glad/glad.h>
 
@@ -27,12 +28,17 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     // fs::path file_path = ResourceDir() / "sample_files/worst_case.json";
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";
     // fs::path file_path = ResourceDir() / "sample_files/proportional_font_test.json";
+    fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
 
     buffer.setContents(ReadFile(file_path));
     highlighter.setLanguage("source.json", parent.color_scheme);
+    buffer2.setContents(ReadFile(file_path2));
+    highlighter2.setLanguage("source.json", parent.color_scheme);
 
     TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
     highlighter.parse(input);
+    TSInput input2 = {&buffer2, Buffer::read, TSInputEncodingUTF8};
+    highlighter2.parse(input2);
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -73,19 +79,22 @@ void EditorWindow::onDraw() {
 
     int status_bar_height = ui_font_rasterizer.line_height;
 
+    Buffer& selected_buffer = use_buffer2 ? buffer2 : buffer;
+    SyntaxHighlighter& selected_highlighter = use_buffer2 ? highlighter2 : highlighter;
+
     std::vector<Selection> selections =
-        text_renderer.getSelections(buffer, main_font_rasterizer, start_caret, end_caret);
+        text_renderer.getSelections(selected_buffer, main_font_rasterizer, start_caret, end_caret);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
+    text_renderer.renderText(size, scroll, selected_buffer, selected_highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, start_caret, end_caret,
                              longest_line_x, parent.color_scheme);
     selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer, selections);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, scroll, end_caret, main_font_rasterizer.line_height,
-                       buffer.lineCount(), longest_line_x, editor_offset, status_bar_height,
-                       parent.color_scheme);
+                       selected_buffer.lineCount(), longest_line_x, editor_offset,
+                       status_bar_height, parent.color_scheme);
 
     image_renderer.draw(size, scroll, editor_offset);
 
@@ -156,6 +165,15 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {
         close();
+    }
+
+    if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {
+        use_buffer2 = !use_buffer2;
+        redraw();
+    }
+    if (key == app::Key::kK && modifiers == app::kPrimaryModifier) {
+        use_buffer2 = !use_buffer2;
+        redraw();
     }
 }
 

@@ -17,6 +17,8 @@ static app::Key GetKey(WPARAM vk) {
         {'B', app::Key::kB},
         {'C', app::Key::kC},
         // TODO: Implement the rest.
+        {'J', app::Key::kJ},
+        {'K', app::Key::kK},
         {'N', app::Key::kN},
         {'Q', app::Key::kQ},
         {'W', app::Key::kW},

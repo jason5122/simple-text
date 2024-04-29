@@ -46,8 +46,11 @@ public:
         // TODO: Update this during insertion/deletion.
         float longest_line_x = 0;
 
+        bool use_buffer2 = false;
         Buffer buffer;
         SyntaxHighlighter highlighter;
+        Buffer buffer2;
+        SyntaxHighlighter highlighter2;
 
 // TODO: Figure out OpenGL context reuse on Linux.
 #if IS_LINUX

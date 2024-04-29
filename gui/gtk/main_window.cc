@@ -93,6 +93,8 @@ static app::Key GetKey(guint vk) {
         {GDK_KEY_B, app::Key::kB},
         {GDK_KEY_C, app::Key::kC},
         // TODO: Implement the rest.
+        {GDK_KEY_J, app::Key::kJ},
+        {GDK_KEY_K, app::Key::kK},
         {GDK_KEY_N, app::Key::kN},
         {GDK_KEY_Q, app::Key::kQ},
         {GDK_KEY_W, app::Key::kW},

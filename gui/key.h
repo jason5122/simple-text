@@ -7,6 +7,8 @@ enum class Key {
     kB,
     kC,
     // TODO: Implement the rest.
+    kJ,
+    kK,
     kN,
     kQ,
     kW,

@@ -151,6 +151,8 @@ static app::Key GetKey(unsigned short vk) {
         {kVK_ANSI_B, app::Key::kB},
         {kVK_ANSI_C, app::Key::kC},
         // TODO: Implement the rest.
+        {kVK_ANSI_J, app::Key::kJ},
+        {kVK_ANSI_K, app::Key::kK},
         {kVK_ANSI_N, app::Key::kN},
         {kVK_ANSI_Q, app::Key::kQ},
         {kVK_ANSI_W, app::Key::kW},

@@ -113,14 +113,14 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
     float editor_height = size.height - editor_offset.y - status_bar_height;
 
     // Add cursor.
-    // if ((scroll.x < cursor_x + cursor_width && cursor_x < scroll.x + editor_width) &&
-    //     (scroll.y < cursor_y + cursor_height && cursor_y < scroll.y + editor_height)) {
-    //     instances.push_back(InstanceData{
-    //         .coords = Vec2{cursor_x - scroll.x, cursor_y - scroll.y},
-    //         .rect_size = Vec2{cursor_width, cursor_height},
-    //         .color = Rgba::fromRgb(color_scheme.caret, 255),
-    //     });
-    // }
+    if ((scroll.x < cursor_x + cursor_width && cursor_x < scroll.x + editor_width) &&
+        (scroll.y < cursor_y + cursor_height && cursor_y < scroll.y + editor_height)) {
+        instances.push_back(InstanceData{
+            .coords = Vec2{cursor_x - scroll.x, cursor_y - scroll.y},
+            .rect_size = Vec2{cursor_width, cursor_height},
+            .color = Rgba::fromRgb(color_scheme.caret, 255),
+        });
+    }
 
     // Add vertical scroll bar.
     if (line_count > 0) {

@@ -452,6 +452,7 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 
     int start_byte = start_cursor.byte, end_byte = end_cursor.byte;
     int start_line = start_cursor.line, end_line = end_cursor.line;
+
     if (start_byte == end_byte) {
         return selections;
     }
@@ -493,6 +494,9 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 
             total_advance += std::round(glyph.advance);
         }
+        if (byte_offset == start_byte) {
+            start = total_advance;
+        }
         if (byte_offset == end_byte) {
             end = total_advance;
         }
@@ -510,10 +514,6 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
                 .end = end,
             });
         }
-    }
-
-    for (const auto& selection : selections) {
-        fprintf(stderr, "line: %d, [%d, %d]\n", selection.line, selection.start, selection.end);
     }
 
     return selections;

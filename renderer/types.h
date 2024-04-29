@@ -13,7 +13,7 @@ struct Point {
     float y;
 };
 
-struct CursorInfo {
+struct CaretInfo {
     size_t byte;
     size_t line;
     size_t column;

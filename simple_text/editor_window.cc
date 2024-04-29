@@ -74,23 +74,23 @@ void EditorWindow::onDraw() {
     int status_bar_height = ui_font_rasterizer.line_height;
 
     std::vector<Selection> selections =
-        text_renderer.getSelections(buffer, main_font_rasterizer, start_cursor, end_cursor);
+        text_renderer.getSelections(buffer, main_font_rasterizer, start_caret, end_caret);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(size, scroll, buffer, highlighter, editor_offset,
-                             main_font_rasterizer, status_bar_height, start_cursor, end_cursor,
+                             main_font_rasterizer, status_bar_height, start_caret, end_caret,
                              longest_line_x, parent.color_scheme);
     selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer, selections);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, scroll, end_cursor, main_font_rasterizer.line_height,
+    rect_renderer.draw(size, scroll, end_caret, main_font_rasterizer.line_height,
                        buffer.lineCount(), longest_line_x, editor_offset, status_bar_height,
                        parent.color_scheme);
 
     image_renderer.draw(size, scroll, editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, end_cursor,
+    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, end_caret,
                                parent.color_scheme);
 }
 
@@ -117,8 +117,8 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
-    text_renderer.setCursorInfo(buffer, main_font_rasterizer, mouse, start_cursor);
-    end_cursor = start_cursor;
+    text_renderer.setCaretInfo(buffer, main_font_rasterizer, mouse, start_caret);
+    end_caret = start_caret;
 
     redraw();
 }
@@ -134,7 +134,7 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
-    text_renderer.setCursorInfo(buffer, main_font_rasterizer, mouse, end_cursor);
+    text_renderer.setCaretInfo(buffer, main_font_rasterizer, mouse, end_caret);
 
     redraw();
 }

@@ -83,7 +83,7 @@ void RectRenderer::setup() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float line_height,
+void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
                         size_t line_count, float longest_x, Point& editor_offset,
                         float status_bar_height, config::ColorScheme& color_scheme) {
     glUseProgram(shader_program.id);
@@ -93,15 +93,15 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
                 editor_offset.y);
     glBindVertexArray(vao);
 
-    float cursor_width = 4;
-    float cursor_height = line_height;
+    float caret_width = 4;
+    float caret_height = line_height;
 
-    float cursor_x = end_cursor.x - cursor_width / 2;
+    float caret_x = end_caret.x - caret_width / 2;
 
     int extra_padding = 8;
-    float cursor_y = end_cursor.line * line_height;
-    cursor_y -= extra_padding;
-    cursor_height += extra_padding * 2;
+    float caret_y = end_caret.line * line_height;
+    caret_y -= extra_padding;
+    caret_height += extra_padding * 2;
 
     Rgba editor_bg_color = Rgba::fromRgb(color_scheme.background, 255);
 
@@ -112,12 +112,12 @@ void RectRenderer::draw(Size& size, Point& scroll, CursorInfo& end_cursor, float
     float editor_width = size.width - editor_offset.x;
     float editor_height = size.height - editor_offset.y - status_bar_height;
 
-    // Add cursor.
-    if ((scroll.x < cursor_x + cursor_width && cursor_x < scroll.x + editor_width) &&
-        (scroll.y < cursor_y + cursor_height && cursor_y < scroll.y + editor_height)) {
+    // Add caret.
+    if ((scroll.x < caret_x + caret_width && caret_x < scroll.x + editor_width) &&
+        (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
         instances.push_back(InstanceData{
-            .coords = Vec2{cursor_x - scroll.x, cursor_y - scroll.y},
-            .rect_size = Vec2{cursor_width, cursor_height},
+            .coords = Vec2{caret_x - scroll.x, caret_y - scroll.y},
+            .rect_size = Vec2{caret_width, caret_height},
             .color = Rgba::fromRgb(color_scheme.caret, 255),
         });
     }

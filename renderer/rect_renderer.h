@@ -12,7 +12,7 @@ public:
     RectRenderer();
     ~RectRenderer();
     void setup();
-    void draw(Size& size, Point& scroll, CursorInfo& end_cursor, float line_height,
+    void draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
               size_t line_count, float longest_x, Point& editor_offset, float status_bar_height,
               config::ColorScheme& color_scheme);
 

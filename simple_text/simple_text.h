@@ -40,8 +40,8 @@ public:
             .y = 30 * 2,
         };
 
-        renderer::CursorInfo start_cursor{};
-        renderer::CursorInfo end_cursor{};
+        renderer::CaretInfo start_caret{};
+        renderer::CaretInfo end_caret{};
 
         // TODO: Update this during insertion/deletion.
         float longest_line_x = 0;

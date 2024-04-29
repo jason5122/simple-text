@@ -34,7 +34,6 @@ struct InstanceData {
     Vec4 glyph;
     Vec4 uv;
     Rgba color;
-    uint8_t is_atlas = 0;
 };
 }
 
@@ -103,11 +102,6 @@ void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, color));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, is_atlas));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -263,7 +257,6 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     //     .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
     //     .uv = Vec4{0, 0, 1.0, 1.0},
     //     .color = Rgba::fromRgb(color_scheme.foreground, false),
-    //     .is_atlas = true,
     // });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

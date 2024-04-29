@@ -7,7 +7,6 @@ layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
 // The `colored` flag is packed along with text color.
 layout(location = 3) in vec4 in_text_color;
-layout(location = 4) in int is_atlas;
 
 out vec2 tex_coords;
 flat out vec4 text_color;
@@ -37,9 +36,7 @@ void main() {
     vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
     vec2 uv_size = uv.zw;          // <uv_width, uv_height>
 
-    if (is_atlas == 0) {
-        glyph_offset.y = line_height - glyph_offset.y;
-    }
+    glyph_offset.y = line_height - glyph_offset.y;
     cell_position += glyph_offset + glyph_size * position;
 
     gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);

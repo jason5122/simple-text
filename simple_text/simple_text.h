@@ -3,14 +3,13 @@
 #include "gui/app.h"
 #include <vector>
 
-#include "base/buffer.h"
-#include "base/syntax_highlighter.h"
 #include "config/color_scheme.h"
 #include "font/rasterizer.h"
 #include "renderer/image_renderer.h"
 #include "renderer/rect_renderer.h"
 #include "renderer/selection_renderer.h"
 #include "renderer/text_renderer.h"
+#include "simple_text/editor_tab.h"
 
 class SimpleText : public App {
 public:
@@ -33,24 +32,8 @@ public:
     private:
         SimpleText& parent;
 
-        renderer::Point scroll{};
-
-        renderer::Point editor_offset{
-            .x = 200 * 2,
-            .y = 30 * 2,
-        };
-
-        renderer::CaretInfo start_caret{};
-        renderer::CaretInfo end_caret{};
-
-        // TODO: Update this during insertion/deletion.
-        float longest_line_x = 0;
-
-        bool use_buffer2 = false;
-        Buffer buffer;
-        SyntaxHighlighter highlighter;
-        Buffer buffer2;
-        SyntaxHighlighter highlighter2;
+        int tab_index = 0;
+        std::vector<EditorTab> tabs;
 
 // TODO: Figure out OpenGL context reuse on Linux.
 #if IS_LINUX

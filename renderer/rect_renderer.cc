@@ -85,7 +85,8 @@ void RectRenderer::setup() {
 
 void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
                         size_t line_count, float longest_x, Point& editor_offset,
-                        float status_bar_height, config::ColorScheme& color_scheme) {
+                        float status_bar_height, config::ColorScheme& color_scheme,
+                        int tab_index) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -169,7 +170,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
 
     // Add tab 1.
     instances.push_back(InstanceData{
-        .coords = Vec2{0, 0 - tab_height},
+        .coords = Vec2{tab_width * tab_index, 0 - tab_height},
         .rect_size = Vec2{tab_width, tab_height},
         .color = editor_bg_color,
         .tab_corner_radius = tab_corner_radius,

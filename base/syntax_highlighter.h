@@ -17,9 +17,9 @@ public:
     Rgb getColor(size_t byte_offset, config::ColorScheme& color_scheme);
 
 private:
-    TSParser* parser;
-    TSQuery* query;
-    TSTree* tree = NULL;
+    TSParser* parser = nullptr;
+    TSQuery* query = nullptr;
+    TSTree* tree = nullptr;
 
     std::string scope;
 

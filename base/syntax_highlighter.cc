@@ -16,9 +16,10 @@ SyntaxHighlighter::SyntaxHighlighter() {
 }
 
 SyntaxHighlighter::~SyntaxHighlighter() {
-    ts_parser_delete(parser);
-    ts_query_delete(query);
-    ts_tree_delete(tree);
+    // TODO: Find out why this causes segfaults.
+    // if (parser) ts_parser_delete(parser);
+    // if (query) ts_query_delete(query);
+    // if (tree) ts_tree_delete(tree);
 }
 
 void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& color_scheme) {

@@ -1,6 +1,7 @@
 #include "build/buildflag.h"
 #include "gui/key.h"
 #include "simple_text.h"
+#include <algorithm>
 #include <glad/glad.h>
 
 using EditorWindow = SimpleText::EditorWindow;
@@ -25,20 +26,16 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glClearColor(red, green, blue, 1.0);
 
     // fs::path file_path = ResourceDir() / "sample_files/example.json";
-    // fs::path file_path = ResourceDir() / "sample_files/worst_case.json";
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";
-    // fs::path file_path = ResourceDir() / "sample_files/proportional_font_test.json";
     fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
+    fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
 
-    buffer.setContents(ReadFile(file_path));
-    highlighter.setLanguage("source.json", parent.color_scheme);
-    buffer2.setContents(ReadFile(file_path2));
-    highlighter2.setLanguage("source.json", parent.color_scheme);
-
-    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
-    highlighter.parse(input);
-    TSInput input2 = {&buffer2, Buffer::read, TSInputEncodingUTF8};
-    highlighter2.parse(input2);
+    tabs.emplace_back();
+    tabs.back().setup(file_path, parent.color_scheme);
+    tabs.emplace_back();
+    tabs.back().setup(file_path2, parent.color_scheme);
+    tabs.emplace_back();
+    tabs.back().setup(file_path3, parent.color_scheme);
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -79,27 +76,27 @@ void EditorWindow::onDraw() {
 
     int status_bar_height = ui_font_rasterizer.line_height;
 
-    Buffer& selected_buffer = use_buffer2 ? buffer2 : buffer;
-    SyntaxHighlighter& selected_highlighter = use_buffer2 ? highlighter2 : highlighter;
+    EditorTab& tab = tabs[tab_index];
 
-    std::vector<Selection> selections =
-        text_renderer.getSelections(selected_buffer, main_font_rasterizer, start_caret, end_caret);
+    std::vector<Selection> selections = text_renderer.getSelections(
+        tab.buffer, main_font_rasterizer, tab.start_caret, tab.end_caret);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(size, scroll, selected_buffer, selected_highlighter, editor_offset,
-                             main_font_rasterizer, status_bar_height, start_caret, end_caret,
-                             longest_line_x, parent.color_scheme);
-    selection_renderer.render(size, scroll, editor_offset, main_font_rasterizer, selections);
+    text_renderer.renderText(size, tab.scroll, tab.buffer, tab.highlighter, tab.editor_offset,
+                             main_font_rasterizer, status_bar_height, tab.start_caret,
+                             tab.end_caret, tab.longest_line_x, parent.color_scheme);
+    selection_renderer.render(size, tab.scroll, tab.editor_offset, main_font_rasterizer,
+                              selections);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, scroll, end_caret, main_font_rasterizer.line_height,
-                       selected_buffer.lineCount(), longest_line_x, editor_offset,
-                       status_bar_height, parent.color_scheme);
+    rect_renderer.draw(size, tab.scroll, tab.end_caret, main_font_rasterizer.line_height,
+                       tab.buffer.lineCount(), tab.longest_line_x, tab.editor_offset,
+                       status_bar_height, parent.color_scheme, tab_index);
 
-    image_renderer.draw(size, scroll, editor_offset);
+    image_renderer.draw(size, tab.scroll, tab.editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, end_caret,
+    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab.end_caret,
                                parent.color_scheme);
 }
 
@@ -108,17 +105,21 @@ void EditorWindow::onResize(int width, int height) {
 }
 
 void EditorWindow::onScroll(float dx, float dy) {
+    EditorTab& tab = tabs[tab_index];
+
     // TODO: Uncomment this while not testing.
     // scroll.x += dx;
-    scroll.y += dy;
+    tab.scroll.y += dy;
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
+    EditorTab& tab = tabs[tab_index];
+
     renderer::Point mouse{
-        .x = mouse_x - editor_offset.x + scroll.x,
-        .y = mouse_y - editor_offset.y + scroll.y,
+        .x = mouse_x - tab.editor_offset.x + tab.scroll.x,
+        .y = mouse_y - tab.editor_offset.y + tab.scroll.y,
     };
 
 #if IS_MAC || IS_WIN
@@ -126,16 +127,18 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
-    text_renderer.setCaretInfo(buffer, main_font_rasterizer, mouse, start_caret);
-    end_caret = start_caret;
+    text_renderer.setCaretInfo(tab.buffer, main_font_rasterizer, mouse, tab.start_caret);
+    tab.end_caret = tab.start_caret;
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
+    EditorTab& tab = tabs[tab_index];
+
     renderer::Point mouse{
-        .x = mouse_x - editor_offset.x + scroll.x,
-        .y = mouse_y - editor_offset.y + scroll.y,
+        .x = mouse_x - tab.editor_offset.x + tab.scroll.x,
+        .y = mouse_y - tab.editor_offset.y + tab.scroll.y,
     };
 
 #if IS_MAC || IS_WIN
@@ -143,9 +146,13 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
-    text_renderer.setCaretInfo(buffer, main_font_rasterizer, mouse, end_caret);
+    text_renderer.setCaretInfo(tab.buffer, main_font_rasterizer, mouse, tab.end_caret);
 
     redraw();
+}
+
+static inline int positive_modulo(int i, int n) {
+    return (i % n + n) % n;
 }
 
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
@@ -168,11 +175,11 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
 
     if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {
-        use_buffer2 = !use_buffer2;
+        tab_index = positive_modulo(tab_index - 1, tabs.size());
         redraw();
     }
     if (key == app::Key::kK && modifiers == app::kPrimaryModifier) {
-        use_buffer2 = !use_buffer2;
+        tab_index = positive_modulo(tab_index + 1, tabs.size());
         redraw();
     }
 }

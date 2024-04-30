@@ -8,7 +8,12 @@ fs::path ResourceDir() {
     return std::filesystem::canonical("/proc/self/exe").parent_path();
 }
 
-// TODO: Implement this.
 fs::path DataDir() {
-    return fs::path{};
+    if (const char* env_p = std::getenv("XDG_CONFIG_HOME")) {
+        fs::path xdg_config_dir = env_p;
+        return xdg_config_dir / "simple-text";
+    } else {
+        fs::path home_dir = std::getenv("HOME");
+        return home_dir / ".config" / "simple-text";
+    }
 }

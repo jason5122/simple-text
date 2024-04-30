@@ -1,7 +1,6 @@
 #include "build/buildflag.h"
 #include "gui/key.h"
 #include "simple_text.h"
-#include <algorithm>
 #include <glad/glad.h>
 
 using EditorWindow = SimpleText::EditorWindow;
@@ -36,9 +35,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
     fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
 
-    // createTab(file_path);
+    createTab(file_path);
     createTab(file_path2);
-    // createTab(file_path3);
+    createTab(file_path3);
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -94,7 +93,7 @@ void EditorWindow::onDraw() {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, tab->scroll, tab->end_caret, main_font_rasterizer.line_height,
                        tab->buffer.lineCount(), tab->longest_line_x, tab->editor_offset,
-                       status_bar_height, parent.color_scheme, tab_index);
+                       status_bar_height, parent.color_scheme, tab_index, tabs.size());
 
     image_renderer.draw(size, tab->scroll, tab->editor_offset);
 
@@ -183,6 +182,14 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
     if (key == app::Key::kK && modifiers == app::kPrimaryModifier) {
         tab_index = positive_modulo(tab_index + 1, tabs.size());
+        redraw();
+    }
+    if (key == app::Key::kW && modifiers == app::kPrimaryModifier) {
+        tabs.erase(tabs.begin() + tab_index);
+        tab_index--;
+        if (tab_index < 0) {
+            tab_index = 0;
+        }
         redraw();
     }
 }

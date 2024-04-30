@@ -85,8 +85,8 @@ void RectRenderer::setup() {
 
 void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
                         size_t line_count, float longest_x, Point& editor_offset,
-                        float status_bar_height, config::ColorScheme& color_scheme,
-                        int tab_index) {
+                        float status_bar_height, config::ColorScheme& color_scheme, int tab_index,
+                        int tab_count) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -168,29 +168,15 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     float tab_height = editor_offset.y - 5;  // Leave padding between window title bar and tab.
     float tab_corner_radius = 10;
 
-    // Add tab 1.
-    instances.push_back(InstanceData{
-        .coords = Vec2{tab_width * tab_index, 0 - tab_height},
-        .rect_size = Vec2{tab_width, tab_height},
-        .color = editor_bg_color,
-        .tab_corner_radius = tab_corner_radius,
-    });
-
-    // // Add tab 2.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{tab_width * 1, 0 - tab_height},
-    //     .rect_size = Vec2{tab_width, tab_height},
-    //     .color = editor_bg_color,
-    //     .tab_corner_radius = tab_corner_radius,
-    // });
-
-    // // Add tab 3.
-    // instances.push_back(InstanceData{
-    //     .coords = Vec2{tab_width * 2, 0 - tab_height},
-    //     .rect_size = Vec2{tab_width, tab_height},
-    //     .color = editor_bg_color,
-    //     .tab_corner_radius = tab_corner_radius,
-    // });
+    for (int i = 0; i < tab_count; i++) {
+        Rgba color = i == tab_index ? editor_bg_color : Rgba{100, 100, 100, 255};
+        instances.push_back(InstanceData{
+            .coords = Vec2{tab_width * i, 0 - tab_height},
+            .rect_size = Vec2{tab_width, tab_height},
+            .color = color,
+            .tab_corner_radius = tab_corner_radius,
+        });
+    }
 
     // Add side bar.
     instances.push_back(InstanceData{

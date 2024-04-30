@@ -16,10 +16,13 @@ SyntaxHighlighter::SyntaxHighlighter() {
 }
 
 SyntaxHighlighter::~SyntaxHighlighter() {
-    // TODO: Find out why this causes segfaults.
-    // if (parser) ts_parser_delete(parser);
-    // if (query) ts_query_delete(query);
-    // if (tree) ts_tree_delete(tree);
+    // This causes segfaults for some reason if SyntaxHighlighter is stored in a std::vector
+    // without using std::unique_ptr.
+    // https://stackoverflow.com/a/36928283/14698275
+    // https://stackoverflow.com/a/21646965/14698275
+    ts_parser_delete(parser);
+    ts_query_delete(query);
+    ts_tree_delete(tree);
 }
 
 void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& color_scheme) {

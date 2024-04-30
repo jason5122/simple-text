@@ -19,6 +19,7 @@ public:
 
         EditorWindow(SimpleText& parent, int width, int height, int wid);
         ~EditorWindow();
+        void createTab(fs::path file_path);
 
         void onOpenGLActivate(int width, int height) override;
         void onDraw() override;
@@ -33,7 +34,7 @@ public:
         SimpleText& parent;
 
         int tab_index = 0;
-        std::vector<EditorTab> tabs;
+        std::vector<std::unique_ptr<EditorTab>> tabs;
 
 // TODO: Figure out OpenGL context reuse on Linux.
 #if IS_LINUX

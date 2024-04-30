@@ -15,6 +15,12 @@ EditorWindow::~EditorWindow() {
     std::cerr << "~EditorWindow " << wid << '\n';
 }
 
+void EditorWindow::createTab(fs::path file_path) {
+    std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>();
+    editor_tab->setup(file_path, parent.color_scheme);
+    tabs.push_back(std::move(editor_tab));
+}
+
 void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
@@ -30,12 +36,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
     fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
 
-    tabs.emplace_back();
-    tabs.back().setup(file_path, parent.color_scheme);
-    tabs.emplace_back();
-    tabs.back().setup(file_path2, parent.color_scheme);
-    tabs.emplace_back();
-    tabs.back().setup(file_path3, parent.color_scheme);
+    createTab(file_path);
+    createTab(file_path2);
+    createTab(file_path3);
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -76,27 +79,27 @@ void EditorWindow::onDraw() {
 
     int status_bar_height = ui_font_rasterizer.line_height;
 
-    EditorTab& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     std::vector<Selection> selections = text_renderer.getSelections(
-        tab.buffer, main_font_rasterizer, tab.start_caret, tab.end_caret);
+        tab->buffer, main_font_rasterizer, tab->start_caret, tab->end_caret);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(size, tab.scroll, tab.buffer, tab.highlighter, tab.editor_offset,
-                             main_font_rasterizer, status_bar_height, tab.start_caret,
-                             tab.end_caret, tab.longest_line_x, parent.color_scheme);
-    selection_renderer.render(size, tab.scroll, tab.editor_offset, main_font_rasterizer,
+    text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, tab->editor_offset,
+                             main_font_rasterizer, status_bar_height, tab->start_caret,
+                             tab->end_caret, tab->longest_line_x, parent.color_scheme);
+    selection_renderer.render(size, tab->scroll, tab->editor_offset, main_font_rasterizer,
                               selections);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, tab.scroll, tab.end_caret, main_font_rasterizer.line_height,
-                       tab.buffer.lineCount(), tab.longest_line_x, tab.editor_offset,
+    rect_renderer.draw(size, tab->scroll, tab->end_caret, main_font_rasterizer.line_height,
+                       tab->buffer.lineCount(), tab->longest_line_x, tab->editor_offset,
                        status_bar_height, parent.color_scheme, tab_index);
 
-    image_renderer.draw(size, tab.scroll, tab.editor_offset);
+    image_renderer.draw(size, tab->scroll, tab->editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab.end_caret,
+    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
                                parent.color_scheme);
 }
 
@@ -105,21 +108,21 @@ void EditorWindow::onResize(int width, int height) {
 }
 
 void EditorWindow::onScroll(float dx, float dy) {
-    EditorTab& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     // TODO: Uncomment this while not testing.
-    // scroll.x += dx;
-    tab.scroll.y += dy;
+    // tab->scroll.x += dx;
+    tab->scroll.y += dy;
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
-    EditorTab& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - tab.editor_offset.x + tab.scroll.x,
-        .y = mouse_y - tab.editor_offset.y + tab.scroll.y,
+        .x = mouse_x - tab->editor_offset.x + tab->scroll.x,
+        .y = mouse_y - tab->editor_offset.y + tab->scroll.y,
     };
 
 #if IS_MAC || IS_WIN
@@ -127,18 +130,18 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
-    text_renderer.setCaretInfo(tab.buffer, main_font_rasterizer, mouse, tab.start_caret);
-    tab.end_caret = tab.start_caret;
+    text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->start_caret);
+    tab->end_caret = tab->start_caret;
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
-    EditorTab& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - tab.editor_offset.x + tab.scroll.x,
-        .y = mouse_y - tab.editor_offset.y + tab.scroll.y,
+        .x = mouse_x - tab->editor_offset.x + tab->scroll.x,
+        .y = mouse_y - tab->editor_offset.y + tab->scroll.y,
     };
 
 #if IS_MAC || IS_WIN
@@ -146,7 +149,7 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
-    text_renderer.setCaretInfo(tab.buffer, main_font_rasterizer, mouse, tab.end_caret);
+    text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->end_caret);
 
     redraw();
 }

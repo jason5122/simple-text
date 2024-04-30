@@ -89,15 +89,18 @@ static app::Key GetKey(guint vk) {
         guint fVK;
         app::Key fKey;
     } gPair[] = {
-        {GDK_KEY_A, app::Key::kA},
-        {GDK_KEY_B, app::Key::kB},
-        {GDK_KEY_C, app::Key::kC},
-        // TODO: Implement the rest.
-        {GDK_KEY_J, app::Key::kJ},
-        {GDK_KEY_K, app::Key::kK},
-        {GDK_KEY_N, app::Key::kN},
-        {GDK_KEY_Q, app::Key::kQ},
-        {GDK_KEY_W, app::Key::kW},
+        {GDK_KEY_A, app::Key::kA}, {GDK_KEY_B, app::Key::kB}, {GDK_KEY_C, app::Key::kC},
+        {GDK_KEY_D, app::Key::kD}, {GDK_KEY_E, app::Key::kE}, {GDK_KEY_F, app::Key::kF},
+        {GDK_KEY_G, app::Key::kG}, {GDK_KEY_H, app::Key::kH}, {GDK_KEY_I, app::Key::kI},
+        {GDK_KEY_J, app::Key::kJ}, {GDK_KEY_K, app::Key::kK}, {GDK_KEY_L, app::Key::kL},
+        {GDK_KEY_M, app::Key::kM}, {GDK_KEY_N, app::Key::kN}, {GDK_KEY_O, app::Key::kO},
+        {GDK_KEY_P, app::Key::kP}, {GDK_KEY_Q, app::Key::kQ}, {GDK_KEY_R, app::Key::kR},
+        {GDK_KEY_S, app::Key::kS}, {GDK_KEY_T, app::Key::kT}, {GDK_KEY_U, app::Key::kU},
+        {GDK_KEY_V, app::Key::kV}, {GDK_KEY_W, app::Key::kW}, {GDK_KEY_X, app::Key::kX},
+        {GDK_KEY_Y, app::Key::kY}, {GDK_KEY_Z, app::Key::kZ}, {GDK_KEY_0, app::Key::k0},
+        {GDK_KEY_1, app::Key::k1}, {GDK_KEY_2, app::Key::k2}, {GDK_KEY_3, app::Key::k3},
+        {GDK_KEY_4, app::Key::k4}, {GDK_KEY_5, app::Key::k5}, {GDK_KEY_6, app::Key::k6},
+        {GDK_KEY_7, app::Key::k7}, {GDK_KEY_8, app::Key::k8}, {GDK_KEY_9, app::Key::k9},
     };
 
     for (size_t i = 0; i < std::size(gPair); i++) {

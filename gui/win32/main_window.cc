@@ -13,15 +13,15 @@ static app::Key GetKey(WPARAM vk) {
         WPARAM fVK;
         app::Key fKey;
     } gPair[] = {
-        {'A', app::Key::kA},
-        {'B', app::Key::kB},
-        {'C', app::Key::kC},
-        // TODO: Implement the rest.
-        {'J', app::Key::kJ},
-        {'K', app::Key::kK},
-        {'N', app::Key::kN},
-        {'Q', app::Key::kQ},
-        {'W', app::Key::kW},
+        {'A', app::Key::kA}, {'B', app::Key::kB}, {'C', app::Key::kC}, {'D', app::Key::kD},
+        {'E', app::Key::kE}, {'F', app::Key::kF}, {'G', app::Key::kG}, {'H', app::Key::kH},
+        {'I', app::Key::kI}, {'J', app::Key::kJ}, {'K', app::Key::kK}, {'L', app::Key::kL},
+        {'M', app::Key::kM}, {'N', app::Key::kN}, {'O', app::Key::kO}, {'P', app::Key::kP},
+        {'Q', app::Key::kQ}, {'R', app::Key::kR}, {'S', app::Key::kS}, {'T', app::Key::kT},
+        {'U', app::Key::kU}, {'V', app::Key::kV}, {'W', app::Key::kW}, {'X', app::Key::kX},
+        {'Y', app::Key::kY}, {'Z', app::Key::kZ}, {'0', app::Key::k0}, {'1', app::Key::k1},
+        {'2', app::Key::k2}, {'3', app::Key::k3}, {'4', app::Key::k4}, {'5', app::Key::k5},
+        {'6', app::Key::k6}, {'7', app::Key::k7}, {'8', app::Key::k8}, {'9', app::Key::k9},
     };
     for (size_t i = 0; i < std::size(gPair); i++) {
         if (gPair[i].fVK == vk) {

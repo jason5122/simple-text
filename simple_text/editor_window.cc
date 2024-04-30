@@ -192,6 +192,19 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         }
         redraw();
     }
+
+    if (key == app::Key::k1 && modifiers == app::kPrimaryModifier) {
+        tab_index = 0;
+        redraw();
+    }
+    if (key == app::Key::k2 && modifiers == app::kPrimaryModifier) {
+        tab_index = 1;
+        redraw();
+    }
+    if (key == app::Key::k3 && modifiers == app::kPrimaryModifier) {
+        tab_index = 2;
+        redraw();
+    }
 }
 
 void EditorWindow::onClose() {

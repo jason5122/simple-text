@@ -36,23 +36,25 @@ static const Schema kDefaultDarkSchema{
 };
 
 ColorScheme::ColorScheme() {
-    fs::path color_scheme_path = DataDir() / "color_scheme_light.json";
-    // fs::path color_scheme_path = DataDir() / "color_scheme_dark.json";
+    fs::path data_dir = DataDir();
+    fs::path color_scheme_path = data_dir / "color_scheme_light.json";
+    // fs::path color_scheme_path = data_dir / "color_scheme_dark.json";
 
     Schema schema = kDefaultLightSchema;
 
     std::string buffer;
     if (fs::exists(color_scheme_path)) {
         // TODO: Handle errors in a better way.
-        // glz::parse_error error = glz::read_file_json(schema, color_scheme_path.string(),
-        // buffer); if (error) {
-        //     std::cerr << glz::format_error(error, buffer) << '\n';
-        // }
+        glz::parse_error error = glz::read_file_json(schema, color_scheme_path.string(), buffer);
+        if (error) {
+            std::cerr << glz::format_error(error, buffer) << '\n';
+        }
     } else {
-        // glz::write_error error = glz::write_file_json(schema, color_scheme_path.string(),
-        // buffer); if (error) {
-        //     std::cerr << "Could not write color scheme to " << color_scheme_path << ".\n";
-        // }
+        std::filesystem::create_directory(data_dir);
+        glz::write_error error = glz::write_file_json(schema, color_scheme_path.string(), buffer);
+        if (error) {
+            std::cerr << "Could not write color scheme to " << color_scheme_path << ".\n";
+        }
     }
 
     // TODO: Is there a better way to do this?

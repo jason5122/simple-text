@@ -12,5 +12,6 @@ source_set("filesystem") {
 
   if (is_win) {
     sources += [ "file_reader_win.cc" ]
+    libs = [ "shell32.lib" ]
   }
 }

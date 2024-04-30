@@ -36,9 +36,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
     fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
 
-    createTab(file_path);
+    // createTab(file_path);
     createTab(file_path2);
-    createTab(file_path3);
+    // createTab(file_path3);
 
 #if IS_LINUX
     // TODO: Implement scale factor support.

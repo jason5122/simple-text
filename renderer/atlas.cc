@@ -6,8 +6,19 @@ void Atlas::setup(bool use_bilinear_filtering) {
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
+    uint8_t data[kAtlasSize * kAtlasSize * 4] = {0};
+
+    size_t pixels = kAtlasSize * kAtlasSize;
+    for (int i = 0; i < pixels; i++) {
+        size_t offset = i * 4;
+        data[offset + 2] = 0;
+        data[offset + 1] = 255;
+        data[offset] = 0;
+        data[offset + 3] = 255;
+    }
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kAtlasSize, kAtlasSize, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 nullptr);
+                 data);
 
     GLint param = use_bilinear_filtering ? GL_LINEAR : GL_NEAREST;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

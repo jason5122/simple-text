@@ -283,13 +283,13 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         }
     }
 
-    // instances.emplace_back(InstanceData{
-    //     .coords = Vec2{size.width - Atlas::kAtlasSize - 400 + scroll.x,
-    //                    10 * font_rasterizer.line_height + scroll.y},
-    //     .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-    //     .uv = Vec4{0, 0, 1.0, 1.0},
-    //     .color = Rgba::fromRgb(color_scheme.foreground, false),
-    // });
+    instances.emplace_back(InstanceData{
+        .coords = Vec2{size.width - Atlas::kAtlasSize - 400 + scroll.x,
+                       10 * font_rasterizer.line_height + scroll.y},
+        .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+        .uv = Vec4{0, 0, 1.0, 1.0},
+        .color = Rgba::fromRgb(color_scheme.foreground, false),
+    });
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
@@ -387,6 +387,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), 0, 0);
+    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), 0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

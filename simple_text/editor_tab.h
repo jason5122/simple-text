@@ -11,11 +11,6 @@ public:
 
     renderer::Point scroll{};
 
-    renderer::Point editor_offset{
-        .x = 200 * 2,
-        .y = 30 * 2,
-    };
-
     renderer::CaretInfo start_caret{};
     renderer::CaretInfo end_caret{};
 

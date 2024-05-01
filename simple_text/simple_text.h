@@ -33,6 +33,12 @@ public:
     private:
         SimpleText& parent;
 
+        bool side_bar_visible = true;
+        renderer::Point editor_offset{
+            .x = 200 * 2,
+            .y = 30 * 2,
+        };
+
         int tab_index = 0;
         std::vector<std::unique_ptr<EditorTab>> tabs;
 

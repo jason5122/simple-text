@@ -17,7 +17,7 @@ EditorWindow::~EditorWindow() {
 void EditorWindow::createTab(fs::path file_path) {
     std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>();
     editor_tab->setup(file_path, parent.color_scheme);
-    tabs.push_back(std::move(editor_tab));
+    tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
 }
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
@@ -84,18 +84,17 @@ void EditorWindow::onDraw() {
         tab->buffer, main_font_rasterizer, tab->start_caret, tab->end_caret);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, tab->editor_offset,
+    text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, tab->start_caret,
                              tab->end_caret, tab->longest_line_x, parent.color_scheme);
-    selection_renderer.render(size, tab->scroll, tab->editor_offset, main_font_rasterizer,
-                              selections);
+    selection_renderer.render(size, tab->scroll, editor_offset, main_font_rasterizer, selections);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, tab->scroll, tab->end_caret, main_font_rasterizer.line_height,
-                       tab->buffer.lineCount(), tab->longest_line_x, tab->editor_offset,
+                       tab->buffer.lineCount(), tab->longest_line_x, editor_offset,
                        status_bar_height, parent.color_scheme, tab_index, tabs.size());
 
-    image_renderer.draw(size, tab->scroll, tab->editor_offset);
+    image_renderer.draw(size, tab->scroll, editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
@@ -120,8 +119,8 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - tab->editor_offset.x + tab->scroll.x,
-        .y = mouse_y - tab->editor_offset.y + tab->scroll.y,
+        .x = mouse_x - editor_offset.x + tab->scroll.x,
+        .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
 #if IS_MAC || IS_WIN
@@ -139,8 +138,8 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - tab->editor_offset.x + tab->scroll.x,
-        .y = mouse_y - tab->editor_offset.y + tab->scroll.y,
+        .x = mouse_x - editor_offset.x + tab->scroll.x,
+        .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
 #if IS_MAC || IS_WIN
@@ -193,6 +192,12 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         redraw();
     }
 
+    if (key == app::Key::kN && modifiers == app::kPrimaryModifier) {
+        fs::path file_path = ResourceDir() / "sample_files/sort.scm";
+        createTab(file_path);
+        redraw();
+    }
+
     if (key == app::Key::k1 && modifiers == app::kPrimaryModifier) {
         tab_index = 0;
         redraw();
@@ -203,6 +208,16 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
     if (key == app::Key::k3 && modifiers == app::kPrimaryModifier) {
         tab_index = 2;
+        redraw();
+    }
+
+    if (key == app::Key::k0 && modifiers == app::kPrimaryModifier) {
+        if (side_bar_visible) {
+            editor_offset.x = 0;
+        } else {
+            editor_offset.x = 200 * 2;
+        }
+        side_bar_visible = !side_bar_visible;
         redraw();
     }
 }

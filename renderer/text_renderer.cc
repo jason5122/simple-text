@@ -119,7 +119,7 @@ float TextRenderer::getGlyphAdvance(std::string utf8_str, FontRasterizer& font_r
         this->loadGlyph(utf8_str, codepoint, font_rasterizer);
     }
 
-    AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
+    AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
     return std::round(glyph.advance);
 }
 
@@ -141,7 +141,7 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
             this->loadGlyph(utf8_str, codepoint, font_rasterizer);
         }
 
-        AtlasGlyph glyph = glyph_cache[font_rasterizer.id][codepoint];
+        AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -407,7 +407,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
             this->loadGlyph(utf8_str, codepoint, ui_font_rasterizer);
         }
 
-        AtlasGlyph glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
+        AtlasGlyph& glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
 
         instances.push_back(InstanceData{
             .coords = Vec2{total_advance + status_text_offset,
@@ -471,6 +471,6 @@ void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
         .advance = glyph.advance,
         .colored = glyph.colored,
     };
-    glyph_cache[font_rasterizer.id].insert({codepoint, atlas_glyph});
+    glyph_cache[font_rasterizer.id].insert({codepoint, std::move(atlas_glyph)});
 }
 }

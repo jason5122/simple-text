@@ -1,6 +1,7 @@
 #include "build/buildflag.h"
 #include "gui/key.h"
 #include "simple_text.h"
+#include <cmath>
 #include <glad/glad.h>
 
 using EditorWindow = SimpleText::EditorWindow;
@@ -110,6 +111,11 @@ void EditorWindow::onResize(int width, int height) {
 
 void EditorWindow::onScroll(float dx, float dy) {
     std::unique_ptr<EditorTab>& tab = tabs[tab_index];
+
+    // TODO: This solves glitchy artifacts when scrolling, but stops scrolling from feeling
+    // natural. Find out how to have our cake and eat it too.
+    dy = std::round(dy);
+    std::cerr << "dy = " << dy << '\n';
 
     // TODO: Uncomment this while not testing.
     // tab->scroll.x += dx;

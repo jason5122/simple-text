@@ -56,6 +56,7 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 
     glUseProgram(shader_program.id);
     glUniform1i(glGetUniformLocation(shader_program.id, "corner_radius"), kCornerRadius);
+    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), 100);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.

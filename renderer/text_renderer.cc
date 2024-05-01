@@ -64,6 +64,7 @@ void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"),
                 font_rasterizer.line_height);
+    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), 100);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -194,6 +195,34 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         for (size_t line_index = start_line; line_index < end_line; line_index++) {
             size_t ret;
             float total_advance = 0;
+
+            // Draw line number.
+            std::string line_number_str = std::to_string(line_index + 1);
+            for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
+                ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
+
+                uint_least32_t codepoint;
+                grapheme_decode_utf8(&line_number_str[0] + offset, ret, &codepoint);
+
+                if (!glyph_cache[font_rasterizer.id].count(codepoint)) {
+                    std::string utf8_str = line_number_str.substr(offset, ret);
+                    this->loadGlyph(utf8_str, codepoint, font_rasterizer);
+                }
+
+                AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
+
+                Vec2 coords{total_advance - 100, line_index * font_rasterizer.line_height};
+                instances.push_back(InstanceData{
+                    .coords = coords,
+                    .glyph = glyph.glyph,
+                    .uv = glyph.uv,
+                    .color = Rgba::fromRgb(Rgb{150, 150, 150}, glyph.colored),
+                });
+
+                total_advance += std::round(glyph.advance);
+            }
+
+            total_advance = 0;
 
             std::string line_str;
             buffer.getLineContent(&line_str, line_index);

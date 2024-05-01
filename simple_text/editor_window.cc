@@ -119,7 +119,7 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - editor_offset.x + tab->scroll.x,
+        .x = mouse_x - editor_offset.x - 100 + tab->scroll.x,
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
@@ -138,7 +138,7 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - editor_offset.x + tab->scroll.x,
+        .x = mouse_x - editor_offset.x - 100 + tab->scroll.x,
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 

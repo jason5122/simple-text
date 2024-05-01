@@ -86,7 +86,7 @@ void RectRenderer::setup() {
 void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
                         size_t line_count, float longest_x, Point& editor_offset,
                         float status_bar_height, config::ColorScheme& color_scheme, int tab_index,
-                        int tab_count) {
+                        int tab_count, float line_number_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -117,7 +117,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     if ((scroll.x < caret_x + caret_width && caret_x < scroll.x + editor_width) &&
         (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
         instances.push_back(InstanceData{
-            .coords = Vec2{caret_x - scroll.x + 100, caret_y - scroll.y},
+            .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
             .rect_size = Vec2{caret_width, caret_height},
             .color = Rgba::fromRgb(color_scheme.caret, 255),
         });

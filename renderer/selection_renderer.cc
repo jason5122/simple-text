@@ -56,7 +56,6 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 
     glUseProgram(shader_program.id);
     glUniform1i(glGetUniformLocation(shader_program.id, "corner_radius"), kCornerRadius);
-    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), 100);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -122,13 +121,14 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 }
 
 void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
-                               FontRasterizer& font_rasterizer,
-                               std::vector<Selection>& selections) {
+                               FontRasterizer& font_rasterizer, std::vector<Selection>& selections,
+                               float line_number_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset.x,
                 editor_offset.y);
+    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), line_number_offset);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

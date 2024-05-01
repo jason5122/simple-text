@@ -23,7 +23,7 @@ public:
     void renderText(Size& size, Point& scroll, Buffer& buffer, SyntaxHighlighter& highlighter,
                     Point& editor_offset, FontRasterizer& font_rasterizer, float status_bar_height,
                     CaretInfo& start_caret, CaretInfo& end_caret, float& longest_line_x,
-                    config::ColorScheme& color_scheme);
+                    config::ColorScheme& color_scheme, float line_number_offset);
     std::vector<SelectionRenderer::Selection> getSelections(Buffer& buffer,
                                                             FontRasterizer& font_rasterizer,
                                                             CaretInfo& start_caret,

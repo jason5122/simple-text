@@ -64,7 +64,6 @@ void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"),
                 font_rasterizer.line_height);
-    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), 100);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -157,12 +156,13 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                               SyntaxHighlighter& highlighter, Point& editor_offset,
                               FontRasterizer& font_rasterizer, float status_bar_height,
                               CaretInfo& start_caret, CaretInfo& end_caret, float& longest_line_x,
-                              config::ColorScheme& color_scheme) {
+                              config::ColorScheme& color_scheme, float line_number_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset.x,
                 editor_offset.y);
+    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), line_number_offset);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -198,6 +198,8 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
             // Draw line number.
             std::string line_number_str = std::to_string(line_index + 1);
+            std::reverse(line_number_str.begin(), line_number_str.end());
+
             for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
 
@@ -211,8 +213,9 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
                 AtlasGlyph& glyph = glyph_cache[font_rasterizer.id][codepoint];
 
-                Vec2 coords{total_advance - 100, line_index * font_rasterizer.line_height};
-                instances.push_back(InstanceData{
+                Vec2 coords{-total_advance - line_number_offset / 2,
+                            line_index * font_rasterizer.line_height};
+                instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
@@ -265,7 +268,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 }
 
                 Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
-                instances.push_back(InstanceData{
+                instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
@@ -280,7 +283,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         }
     }
 
-    // instances.push_back(InstanceData{
+    // instances.emplace_back(InstanceData{
     //     .coords = Vec2{size.width - Atlas::kAtlasSize - 400 + scroll.x,
     //                    10 * font_rasterizer.line_height + scroll.y},
     //     .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
@@ -366,7 +369,7 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
         }
 
         if (start != end) {
-            selections.push_back({
+            selections.emplace_back(SelectionRenderer::Selection{
                 .line = static_cast<int>(line_index),
                 .start = start,
                 .end = end,
@@ -409,7 +412,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
 
         AtlasGlyph& glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
 
-        instances.push_back(InstanceData{
+        instances.emplace_back(InstanceData{
             .coords = Vec2{total_advance + status_text_offset,
                            size.height - main_font_rasterizer.line_height},
             .glyph = glyph.glyph,

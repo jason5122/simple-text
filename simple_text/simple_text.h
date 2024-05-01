@@ -39,6 +39,8 @@ public:
             .y = 30 * 2,
         };
 
+        static constexpr float kLineNumberOffset = 120;
+
         int tab_index = 0;
         std::vector<std::unique_ptr<EditorTab>> tabs;
 

@@ -86,13 +86,16 @@ void EditorWindow::onDraw() {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, tab->start_caret,
-                             tab->end_caret, tab->longest_line_x, parent.color_scheme);
-    selection_renderer.render(size, tab->scroll, editor_offset, main_font_rasterizer, selections);
+                             tab->end_caret, tab->longest_line_x, parent.color_scheme,
+                             kLineNumberOffset);
+    selection_renderer.render(size, tab->scroll, editor_offset, main_font_rasterizer, selections,
+                              kLineNumberOffset);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, tab->scroll, tab->end_caret, main_font_rasterizer.line_height,
                        tab->buffer.lineCount(), tab->longest_line_x, editor_offset,
-                       status_bar_height, parent.color_scheme, tab_index, tabs.size());
+                       status_bar_height, parent.color_scheme, tab_index, tabs.size(),
+                       kLineNumberOffset);
 
     image_renderer.draw(size, tab->scroll, editor_offset);
 
@@ -119,7 +122,7 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - editor_offset.x - 100 + tab->scroll.x,
+        .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
@@ -138,7 +141,7 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
     std::unique_ptr<EditorTab>& tab = tabs[tab_index];
 
     renderer::Point mouse{
-        .x = mouse_x - editor_offset.x - 100 + tab->scroll.x,
+        .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 

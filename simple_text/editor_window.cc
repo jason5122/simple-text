@@ -129,8 +129,8 @@ void EditorWindow::onScroll(float dx, float dy) {
     FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
 #endif
 
-    float visible_width = width() * scaleFactor() - editor_offset.x;
-    float max_scroll_x = std::max(0.0f, tab->longest_line_x - visible_width);
+    float buffer_width = width() * scaleFactor() - editor_offset.x;
+    float max_scroll_x = std::max(0.0f, tab->longest_line_x - buffer_width);
     // TODO: Subtract one from line count to leave the last line visible.
     float max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
 
@@ -240,6 +240,42 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::k3 && modifiers == app::kPrimaryModifier) {
         if (tabs.size() > 2) {
             tab_index = 2;
+        }
+        redraw();
+    }
+    if (key == app::Key::k4 && modifiers == app::kPrimaryModifier) {
+        if (tabs.size() > 3) {
+            tab_index = 3;
+        }
+        redraw();
+    }
+    if (key == app::Key::k5 && modifiers == app::kPrimaryModifier) {
+        if (tabs.size() > 4) {
+            tab_index = 4;
+        }
+        redraw();
+    }
+    if (key == app::Key::k6 && modifiers == app::kPrimaryModifier) {
+        if (tabs.size() > 5) {
+            tab_index = 5;
+        }
+        redraw();
+    }
+    if (key == app::Key::k7 && modifiers == app::kPrimaryModifier) {
+        if (tabs.size() > 6) {
+            tab_index = 6;
+        }
+        redraw();
+    }
+    if (key == app::Key::k8 && modifiers == app::kPrimaryModifier) {
+        if (tabs.size() > 7) {
+            tab_index = 7;
+        }
+        redraw();
+    }
+    if (key == app::Key::k9 && modifiers == app::kPrimaryModifier) {
+        if (tabs.size() > 0) {
+            tab_index = tabs.size() - 1;
         }
         redraw();
     }

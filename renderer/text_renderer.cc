@@ -382,7 +382,7 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 
 void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                                 FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
-                                config::ColorScheme& color_scheme) {
+                                config::ColorScheme& color_scheme, Point& editor_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
@@ -392,37 +392,64 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    float status_text_offset = 25;  // TODO: Convert this magic number to actual code.
-
     std::vector<InstanceData> instances;
 
+    auto create_instances = [&](std::string& str, float coord_x_offset,
+                                bool bottom_of_screen = false) {
+        size_t ret;
+        float total_advance = 0;
+        for (size_t offset = 0; offset < str.size(); offset += ret) {
+            ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
+
+            uint_least32_t codepoint;
+            grapheme_decode_utf8(&str[0] + offset, ret, &codepoint);
+
+            if (!glyph_cache[ui_font_rasterizer.id].count(codepoint)) {
+                std::string utf8_str = str.substr(offset, ret);
+                this->loadGlyph(utf8_str, codepoint, ui_font_rasterizer);
+            }
+
+            AtlasGlyph& glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
+
+            float y;
+            if (bottom_of_screen) {
+                y = size.height - main_font_rasterizer.line_height;
+            } else {
+                y = editor_offset.y / 2 + ui_font_rasterizer.line_height / 2 -
+                    main_font_rasterizer.line_height;
+            }
+
+            instances.emplace_back(InstanceData{
+                .coords = Vec2{total_advance + coord_x_offset, y},
+                .glyph = glyph.glyph,
+                .uv = glyph.uv,
+                .color = Rgba::fromRgb(color_scheme.foreground, glyph.colored),
+            });
+
+            total_advance += std::round(glyph.advance);
+        }
+    };
+
+    float status_text_offset = 25;  // TODO: Convert this magic number to actual code.
     std::string line_str =
         "Line " + std::to_string(end_caret.line) + ", Column " + std::to_string(end_caret.column);
-    size_t ret;
-    float total_advance = 0;
-    for (size_t offset = 0; offset < line_str.size(); offset += ret) {
-        ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
+    std::string language_str = "JSON";
+    std::string indentation_str = "Spaces: 4";
+    std::string tab1_str = "untitled";
+    std::string tab2_str = "editor_window.cc";
+    std::string tab3_str = "rect_renderer.cc";
 
-        uint_least32_t codepoint;
-        grapheme_decode_utf8(&line_str[0] + offset, ret, &codepoint);
+    float tab_width = 350;
 
-        if (!glyph_cache[ui_font_rasterizer.id].count(codepoint)) {
-            std::string utf8_str = line_str.substr(offset, ret);
-            this->loadGlyph(utf8_str, codepoint, ui_font_rasterizer);
-        }
-
-        AtlasGlyph& glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
-
-        instances.emplace_back(InstanceData{
-            .coords = Vec2{total_advance + status_text_offset,
-                           size.height - main_font_rasterizer.line_height},
-            .glyph = glyph.glyph,
-            .uv = glyph.uv,
-            .color = Rgba::fromRgb(color_scheme.foreground, glyph.colored),
-        });
-
-        total_advance += std::round(glyph.advance);
-    }
+    create_instances(line_str, status_text_offset, true);
+    create_instances(language_str, size.width - 150, true);     // TODO: Replace magic number.
+    create_instances(indentation_str, size.width - 350, true);  // TODO: Replace magic number.
+    create_instances(tab1_str,
+                     editor_offset.x + tab_width * 0 + 35);  // TODO: Replace magic number.
+    create_instances(tab2_str,
+                     editor_offset.x + tab_width * 1 + 35);  // TODO: Replace magic number.
+    create_instances(tab3_str,
+                     editor_offset.x + tab_width * 2 + 35);  // TODO: Replace magic number.
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

@@ -109,7 +109,7 @@ void EditorWindow::onDraw() {
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
-                               parent.color_scheme);
+                               parent.color_scheme, editor_offset);
 }
 
 void EditorWindow::onResize(int width, int height) {

@@ -30,7 +30,7 @@ public:
                                                             CaretInfo& end_caret);
     void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
-                      config::ColorScheme& color_scheme);
+                      config::ColorScheme& color_scheme, Point& editor_offset);
     void setCaretInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
                       CaretInfo& caret);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);

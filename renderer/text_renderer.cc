@@ -394,8 +394,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
 
     std::vector<InstanceData> instances;
 
-    auto create_instances = [&](std::string& str, float coord_x_offset,
-                                bool bottom_of_screen = false) {
+    auto create_instances = [&](std::string&& str, float x_offset, float y_offset) {
         size_t ret;
         float total_advance = 0;
         for (size_t offset = 0; offset < str.size(); offset += ret) {
@@ -411,16 +410,8 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
 
             AtlasGlyph& glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
 
-            float y;
-            if (bottom_of_screen) {
-                y = size.height - main_font_rasterizer.line_height;
-            } else {
-                y = editor_offset.y / 2 + ui_font_rasterizer.line_height / 2 -
-                    main_font_rasterizer.line_height;
-            }
-
             instances.emplace_back(InstanceData{
-                .coords = Vec2{total_advance + coord_x_offset, y},
+                .coords = Vec2{total_advance + x_offset, y_offset},
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
                 .color = Rgba::fromRgb(color_scheme.foreground, glyph.colored),
@@ -433,23 +424,19 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     float status_text_offset = 25;  // TODO: Convert this magic number to actual code.
     std::string line_str =
         "Line " + std::to_string(end_caret.line) + ", Column " + std::to_string(end_caret.column);
-    std::string language_str = "JSON";
-    std::string indentation_str = "Spaces: 4";
-    std::string tab1_str = "untitled";
-    std::string tab2_str = "editor_window.cc";
-    std::string tab3_str = "rect_renderer.cc";
 
     float tab_width = 350;
+    float y_bottom_of_screen = size.height - main_font_rasterizer.line_height;
+    float y_top_of_screen = editor_offset.y / 2 + ui_font_rasterizer.line_height / 2 -
+                            main_font_rasterizer.line_height;
 
-    create_instances(line_str, status_text_offset, true);
-    create_instances(language_str, size.width - 150, true);     // TODO: Replace magic number.
-    create_instances(indentation_str, size.width - 350, true);  // TODO: Replace magic number.
-    create_instances(tab1_str,
-                     editor_offset.x + tab_width * 0 + 35);  // TODO: Replace magic number.
-    create_instances(tab2_str,
-                     editor_offset.x + tab_width * 1 + 35);  // TODO: Replace magic number.
-    create_instances(tab3_str,
-                     editor_offset.x + tab_width * 2 + 35);  // TODO: Replace magic number.
+    // TODO: Replace magic numbers.
+    create_instances(std::move(line_str), status_text_offset, y_bottom_of_screen);
+    create_instances("JSON", size.width - 150, y_bottom_of_screen);
+    create_instances("Spaces: 4", size.width - 350, y_bottom_of_screen);
+    create_instances("untitled", editor_offset.x + tab_width * 0 + 35, y_top_of_screen);
+    create_instances("editor_window.cc", editor_offset.x + tab_width * 1 + 35, y_top_of_screen);
+    create_instances("rect_renderer.cc", editor_offset.x + tab_width * 2 + 35, y_top_of_screen);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

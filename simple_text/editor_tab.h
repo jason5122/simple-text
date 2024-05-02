@@ -18,4 +18,5 @@ public:
     float longest_line_x = 0;
 
     void setup(fs::path file_path, config::ColorScheme& color_scheme);
+    void setup(config::ColorScheme& color_scheme);
 };

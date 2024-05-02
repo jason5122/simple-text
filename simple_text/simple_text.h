@@ -20,6 +20,7 @@ public:
         EditorWindow(SimpleText& parent, int width, int height, int wid);
         ~EditorWindow();
         void createTab(fs::path file_path);
+        void createTab();
 
         void onOpenGLActivate(int width, int height) override;
         void onDraw() override;

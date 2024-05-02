@@ -21,6 +21,12 @@ void EditorWindow::createTab(fs::path file_path) {
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
 }
 
+void EditorWindow::createTab() {
+    std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>();
+    editor_tab->setup(parent.color_scheme);
+    tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
+}
+
 void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
@@ -38,7 +44,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     createTab(file_path);
     createTab(file_path2);
-    createTab(file_path3);
+    // createTab(file_path3);
+    createTab();
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -79,7 +86,7 @@ void EditorWindow::onDraw() {
 
     int status_bar_height = ui_font_rasterizer.line_height;
 
-    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     std::vector<Selection> selections = text_renderer.getSelections(
         tab->buffer, main_font_rasterizer, tab->start_caret, tab->end_caret);
@@ -110,22 +117,31 @@ void EditorWindow::onResize(int width, int height) {
 }
 
 void EditorWindow::onScroll(float dx, float dy) {
-    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
-    // TODO: This solves glitchy artifacts when scrolling, but stops scrolling from feeling
-    // natural. Find out how to have our cake and eat it too.
+    // TODO: Stopping at fractional pixels causes glitchy artifacts, so we round to prevent this.
+    // However, this stops scrolling from feeling natural. This is an issue for GTK.
+    // Consider changing onScroll() signature to only accept integers.
+    dx = std::round(dx);
     dy = std::round(dy);
-    std::cerr << "dy = " << dy << '\n';
 
-    // TODO: Uncomment this while not testing.
-    // tab->scroll.x += dx;
-    tab->scroll.y += dy;
+#if IS_MAC || IS_WIN
+    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
+#endif
+
+    float visible_width = width() * scaleFactor() - editor_offset.x;
+    float max_scroll_x = std::max(0.0f, tab->longest_line_x - visible_width);
+    // TODO: Subtract one from line count to leave the last line visible.
+    float max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
+
+    tab->scroll.x = std::clamp(tab->scroll.x + dx, 0.0f, max_scroll_x);
+    tab->scroll.y = std::clamp(tab->scroll.y + dy, 0.0f, max_scroll_y);
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
-    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     renderer::Point mouse{
         .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
@@ -144,7 +160,7 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
 }
 
 void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
-    std::unique_ptr<EditorTab>& tab = tabs[tab_index];
+    std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     renderer::Point mouse{
         .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
@@ -198,12 +214,16 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         if (tab_index < 0) {
             tab_index = 0;
         }
+
+        if (tabs.empty()) {
+            createTab();
+        }
+
         redraw();
     }
 
     if (key == app::Key::kN && modifiers == app::kPrimaryModifier) {
-        fs::path file_path = ResourceDir() / "sample_files/sort.scm";
-        createTab(file_path);
+        createTab();
         redraw();
     }
 
@@ -212,11 +232,15 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         redraw();
     }
     if (key == app::Key::k2 && modifiers == app::kPrimaryModifier) {
-        tab_index = 1;
+        if (tabs.size() > 1) {
+            tab_index = 1;
+        }
         redraw();
     }
     if (key == app::Key::k3 && modifiers == app::kPrimaryModifier) {
-        tab_index = 2;
+        if (tabs.size() > 2) {
+            tab_index = 2;
+        }
         redraw();
     }
 

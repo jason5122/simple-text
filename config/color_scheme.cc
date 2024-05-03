@@ -29,8 +29,6 @@ ColorScheme::ColorScheme() {
 }
 
 void ColorScheme::reload() {
-    std::cerr << "ColorScheme::reload()\n";
-
     fs::path data_dir = DataDir();
     // fs::path color_scheme_path = data_dir / "color_scheme_light.json";
     // fs::path color_scheme_path = data_dir / "color_scheme_dark.json";

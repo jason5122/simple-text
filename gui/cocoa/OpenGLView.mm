@@ -3,6 +3,7 @@
 #include <iostream>
 
 #import <Carbon/Carbon.h>
+#import <QuartzCore/QuartzCore.h>
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
@@ -60,6 +61,11 @@
 
 - (void)redraw {
     [openGLLayer setNeedsDisplay];
+
+    // TODO: Investigate how this affects performance. This is needed to trigger redraws in the
+    // background, but we do not normally need this. Consider disabling normally.
+    // https://stackoverflow.com/a/4740299/14698275
+    [CATransaction flush];
 }
 
 - (void)updateTrackingAreas {

@@ -4,13 +4,13 @@
 static void FSEventsCallback(ConstFSEventStreamRef stream, void* client_info, size_t num_events,
                              void* event_paths, const FSEventStreamEventFlags event_flags[],
                              const FSEventStreamEventId event_ids[]) {
-    config::ColorScheme* color_scheme = reinterpret_cast<config::ColorScheme*>(client_info);
+    FileWatcherCallback* callback = reinterpret_cast<FileWatcherCallback*>(client_info);
 
     char** paths = reinterpret_cast<char**>(event_paths);
     for (int i = 0; i < num_events; i++) {
         fprintf(stderr, "Change %llu in %s, flags %u\n", event_ids[i], paths[i], event_flags[i]);
 
-        color_scheme->reload();
+        callback->onFileEvent();
     }
 }
 
@@ -20,13 +20,12 @@ public:
     dispatch_queue_t queue;
 };
 
-FileWatcher::FileWatcher(fs::path directory, config::ColorScheme* color_scheme)
-    : pimpl{new impl{}} {
+FileWatcher::FileWatcher(fs::path directory, FileWatcherCallback* callback) : pimpl{new impl{}} {
     CFStringRef path =
         CFStringCreateWithCString(nullptr, directory.c_str(), kCFStringEncodingUTF8);
     CFArrayRef pathsToWatch = CFArrayCreate(nullptr, (const void**)&path, 1, nullptr);
 
-    FSEventStreamContext context{.info = color_scheme};
+    FSEventStreamContext context{.info = callback};
     pimpl->stream = FSEventStreamCreate(nullptr, &FSEventsCallback, &context, pathsToWatch,
                                         kFSEventStreamEventIdSinceNow, (CFAbsoluteTime)0.1,
                                         kFSEventStreamCreateFlagNone);

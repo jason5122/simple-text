@@ -3,15 +3,16 @@
 #include <filesystem>
 #include <memory>
 
-#include "config/color_scheme.h"
-
 namespace fs = std::filesystem;
+
+class FileWatcherCallback {
+public:
+    virtual void onFileEvent() {}
+};
 
 class FileWatcher {
 public:
-    void (*callback)(void);
-
-    FileWatcher(fs::path directory, config::ColorScheme* color_scheme);
+    FileWatcher(fs::path directory, FileWatcherCallback* callback);
     ~FileWatcher();
     bool start();
 

@@ -13,7 +13,7 @@
 
 #include "base/filesystem/file_watcher.h"
 
-class SimpleText : public App {
+class SimpleText : public App, public FileWatcherCallback {
 public:
     class EditorWindow : public App::Window {
     public:
@@ -78,6 +78,7 @@ public:
     void destroyAllWindows();
 
     void onLaunch() override;
+    void onFileEvent() override;
 
 private:
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;

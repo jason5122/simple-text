@@ -16,6 +16,8 @@ public:
     ColorScheme();
     void reload();
 
+    bool toggle = false;
+
 private:
     struct JsonSchema {
         std::string foreground;

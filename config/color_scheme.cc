@@ -25,9 +25,22 @@ ColorScheme::ColorScheme() {
         .scroll_bar = "#6a7076",
     };
 
+    reload();
+}
+
+void ColorScheme::reload() {
+    std::cerr << "ColorScheme::reload()\n";
+
     fs::path data_dir = DataDir();
     // fs::path color_scheme_path = data_dir / "color_scheme_light.json";
-    fs::path color_scheme_path = data_dir / "color_scheme_dark.json";
+    // fs::path color_scheme_path = data_dir / "color_scheme_dark.json";
+    fs::path color_scheme_path;
+    if (toggle) {
+        color_scheme_path = data_dir / "color_scheme_light.json";
+    } else {
+        color_scheme_path = data_dir / "color_scheme_dark.json";
+    }
+    toggle = !toggle;
 
     // JsonSchema schema = kDefaultLightSchema;
     JsonSchema schema = kDefaultDarkSchema;
@@ -55,9 +68,5 @@ ColorScheme::ColorScheme() {
     if (!schema.side_bar.empty()) side_bar = ParseHexCode(schema.side_bar);
     if (!schema.status_bar.empty()) status_bar = ParseHexCode(schema.status_bar);
     if (!schema.scroll_bar.empty()) scroll_bar = ParseHexCode(schema.scroll_bar);
-}
-
-void ColorScheme::reload() {
-    std::cerr << "ColorScheme::reload()\n";
 }
 }

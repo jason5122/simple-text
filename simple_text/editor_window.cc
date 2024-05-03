@@ -31,11 +31,11 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
-    Rgb& background = parent.color_scheme.background;
-    GLfloat red = background.r / 255.0;
-    GLfloat green = background.g / 255.0;
-    GLfloat blue = background.b / 255.0;
-    glClearColor(red, green, blue, 1.0);
+    // Rgb& background = parent.color_scheme.background;
+    // GLfloat red = background.r / 255.0;
+    // GLfloat green = background.g / 255.0;
+    // GLfloat blue = background.b / 255.0;
+    // glClearColor(red, green, blue, 1.0);
 
     // fs::path file_path = ResourceDir() / "sample_files/example.json";
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";
@@ -73,6 +73,12 @@ void EditorWindow::onDraw() {
     };
 
     glViewport(0, 0, size.width, size.height);
+
+    Rgb& background = parent.color_scheme.background;
+    GLfloat red = background.r / 255.0;
+    GLfloat green = background.g / 255.0;
+    GLfloat blue = background.b / 255.0;
+    glClearColor(red, green, blue, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
 #if IS_MAC || IS_WIN

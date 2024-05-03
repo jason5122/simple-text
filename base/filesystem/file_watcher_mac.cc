@@ -26,7 +26,6 @@ FileWatcher::FileWatcher(fs::path directory, config::ColorScheme* color_scheme)
         CFStringCreateWithCString(nullptr, directory.c_str(), kCFStringEncodingUTF8);
     CFArrayRef pathsToWatch = CFArrayCreate(nullptr, (const void**)&path, 1, nullptr);
 
-    // FSEventStreamContext context{.info = this};
     FSEventStreamContext context{.info = color_scheme};
     pimpl->stream = FSEventStreamCreate(nullptr, &FSEventsCallback, &context, pathsToWatch,
                                         kFSEventStreamEventIdSinceNow, (CFAbsoluteTime)0.1,

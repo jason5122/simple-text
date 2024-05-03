@@ -2,12 +2,6 @@
 #include "simple_text.h"
 #include <memory>
 
-#include <iostream>
-
-static void FileWatcherCallback() {
-    std::cerr << "hi\n";
-}
-
 SimpleText::SimpleText() : color_scheme(), file_watcher(DataDir(), &color_scheme) {}
 
 SimpleText::~SimpleText() {}

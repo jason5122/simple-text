@@ -7,7 +7,7 @@
 using EditorWindow = SimpleText::EditorWindow;
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window(parent, width, height), parent(parent), wid(wid) {}
+    : Window(parent, width, height), parent(parent), wid(wid), color_scheme(isDarkMode()) {}
 
 #include <iostream>
 
@@ -17,14 +17,19 @@ EditorWindow::~EditorWindow() {
 
 void EditorWindow::createTab(fs::path file_path) {
     std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>();
-    editor_tab->setup(file_path, parent.color_scheme);
+    editor_tab->setup(file_path, color_scheme);
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
 }
 
 void EditorWindow::createTab() {
     std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>();
-    editor_tab->setup(parent.color_scheme);
+    editor_tab->setup(color_scheme);
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
+}
+
+void EditorWindow::reloadColorScheme() {
+    color_scheme.reload(isDarkMode());
+    redraw();
 }
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
@@ -68,7 +73,7 @@ void EditorWindow::onDraw() {
 
     glViewport(0, 0, size.width, size.height);
 
-    Rgb& background = parent.color_scheme.background;
+    Rgb& background = color_scheme.background;
     GLfloat red = background.r / 255.0;
     GLfloat green = background.g / 255.0;
     GLfloat blue = background.b / 255.0;
@@ -94,22 +99,20 @@ void EditorWindow::onDraw() {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, tab->start_caret,
-                             tab->end_caret, tab->longest_line_x, parent.color_scheme,
-                             kLineNumberOffset);
+                             tab->end_caret, tab->longest_line_x, color_scheme, kLineNumberOffset);
     selection_renderer.render(size, tab->scroll, editor_offset, main_font_rasterizer, selections,
                               kLineNumberOffset);
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, tab->scroll, tab->end_caret, main_font_rasterizer.line_height,
                        tab->buffer.lineCount(), tab->longest_line_x, editor_offset,
-                       status_bar_height, parent.color_scheme, tab_index, tabs.size(),
-                       kLineNumberOffset);
+                       status_bar_height, color_scheme, tab_index, tabs.size(), kLineNumberOffset);
 
     image_renderer.draw(size, tab->scroll, editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
-                               parent.color_scheme, editor_offset);
+                               color_scheme, editor_offset);
 }
 
 void EditorWindow::onResize(int width, int height) {
@@ -293,4 +296,8 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
 void EditorWindow::onClose() {
     parent.destroyWindow(wid);
+}
+
+void EditorWindow::onDarkModeToggle() {
+    reloadColorScheme();
 }

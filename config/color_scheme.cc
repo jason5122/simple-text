@@ -5,7 +5,7 @@
 #include <iostream>
 
 namespace config {
-ColorScheme::ColorScheme() {
+ColorScheme::ColorScheme(bool dark_mode) {
     kDefaultLightSchema = {
         .foreground = "#333333",
         .background = "#fdfdfd",
@@ -25,23 +25,21 @@ ColorScheme::ColorScheme() {
         .scroll_bar = "#6a7076",
     };
 
-    reload();
+    reload(dark_mode);
 }
 
-void ColorScheme::reload() {
+void ColorScheme::reload(bool dark_mode) {
     fs::path data_dir = DataDir();
     // fs::path color_scheme_path = data_dir / "color_scheme_light.json";
     // fs::path color_scheme_path = data_dir / "color_scheme_dark.json";
     fs::path color_scheme_path;
-    if (toggle) {
-        color_scheme_path = data_dir / "color_scheme_light.json";
-    } else {
+    if (dark_mode) {
         color_scheme_path = data_dir / "color_scheme_dark.json";
+    } else {
+        color_scheme_path = data_dir / "color_scheme_light.json";
     }
-    toggle = !toggle;
 
-    // JsonSchema schema = kDefaultLightSchema;
-    JsonSchema schema = kDefaultDarkSchema;
+    JsonSchema schema = dark_mode ? kDefaultDarkSchema : kDefaultLightSchema;
 
     std::string buffer;
     if (fs::exists(color_scheme_path)) {

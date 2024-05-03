@@ -224,9 +224,8 @@ static app::Key GetKey(unsigned short vk) {
     [contextMenu popUpMenuPositioningItem:nil atLocation:event.locationInWindow inView:self];
 }
 
-// TODO: Implement light/dark mode detection.
 - (void)viewDidChangeEffectiveAppearance {
-    // std::cerr << "viewDidChangeEffectiveAppearance\n";
+    openGLLayer->appWindow->onDarkModeToggle();
 }
 
 @end

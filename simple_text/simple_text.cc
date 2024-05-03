@@ -2,7 +2,7 @@
 #include "simple_text.h"
 #include <memory>
 
-SimpleText::SimpleText() : color_scheme(), file_watcher(DataDir(), this) {}
+SimpleText::SimpleText() : file_watcher(DataDir(), this) {}
 
 SimpleText::~SimpleText() {}
 
@@ -38,11 +38,9 @@ void SimpleText::onLaunch() {
 }
 
 void SimpleText::onFileEvent() {
-    color_scheme.reload();
-
     // TODO: Investigate if redrawing *all* windows is ever a performance problem.
     for (const auto& editor_window : editor_windows) {
-        editor_window->redraw();
+        editor_window->reloadColorScheme();
     }
 }
 

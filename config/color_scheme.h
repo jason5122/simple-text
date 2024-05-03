@@ -13,10 +13,8 @@ public:
     Rgb status_bar{};
     Rgb scroll_bar{};
 
-    ColorScheme();
-    void reload();
-
-    bool toggle = false;
+    ColorScheme(bool dark_mode);
+    void reload(bool dark_mode);
 
 private:
     struct JsonSchema {

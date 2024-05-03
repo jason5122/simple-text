@@ -23,6 +23,7 @@ public:
         ~EditorWindow();
         void createTab(fs::path file_path);
         void createTab();
+        void reloadColorScheme();
 
         void onOpenGLActivate(int width, int height) override;
         void onDraw() override;
@@ -32,6 +33,7 @@ public:
         void onLeftMouseDrag(float mouse_x, float mouse_y) override;
         void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
         void onClose() override;
+        void onDarkModeToggle() override;
 
     private:
         SimpleText& parent;
@@ -46,6 +48,8 @@ public:
 
         int tab_index = 0;
         std::vector<std::unique_ptr<EditorTab>> tabs;
+
+        config::ColorScheme color_scheme;
 
 // TODO: Figure out OpenGL context reuse on Linux.
 #if IS_LINUX
@@ -67,7 +71,6 @@ public:
     renderer::SelectionRenderer selection_renderer;
 #endif
 
-    config::ColorScheme color_scheme;
     FileWatcher file_watcher;
 
     SimpleText();

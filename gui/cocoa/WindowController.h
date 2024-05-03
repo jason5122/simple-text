@@ -14,5 +14,6 @@
 - (int)getWidth;
 - (int)getHeight;
 - (int)getScaleFactor;
+- (bool)isDarkMode;
 
 @end

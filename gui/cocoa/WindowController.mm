@@ -38,6 +38,10 @@
     return self;
 }
 
+- (void)windowWillClose:(NSNotification*)notification {
+    app_window->onClose();
+}
+
 - (void)show {
     [self.window makeKeyAndOrderFront:nil];
 }
@@ -62,8 +66,8 @@
     return opengl_view.layer.contentsScale;
 }
 
-- (void)windowWillClose:(NSNotification*)notification {
-    app_window->onClose();
+- (bool)isDarkMode {
+    return opengl_view.effectiveAppearance.name == NSAppearanceNameDarkAqua;
 }
 
 @end

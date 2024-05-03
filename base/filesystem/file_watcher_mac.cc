@@ -34,7 +34,11 @@ FileWatcher::FileWatcher(fs::path directory, FileWatcherCallback* callback) : pi
     FSEventStreamSetDispatchQueue(pimpl->stream, pimpl->queue);
 }
 
-FileWatcher::~FileWatcher() {}
+FileWatcher::~FileWatcher() {
+    FSEventStreamStop(pimpl->stream);
+    FSEventStreamInvalidate(pimpl->stream);
+    FSEventStreamRelease(pimpl->stream);
+}
 
 bool FileWatcher::start() {
     return FSEventStreamStart(pimpl->stream);

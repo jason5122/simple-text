@@ -141,3 +141,7 @@ int App::Window::height() {
 int App::Window::scaleFactor() {
     return [pimpl->window_controller getScaleFactor];
 }
+
+bool App::Window::isDarkMode() {
+    return [pimpl->window_controller isDarkMode];
+}

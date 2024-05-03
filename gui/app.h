@@ -17,6 +17,7 @@ public:
         int width();
         int height();
         int scaleFactor();
+        bool isDarkMode();
 
         virtual void onOpenGLActivate(int width, int height) {}
         virtual void onDraw() {}
@@ -26,6 +27,7 @@ public:
         virtual void onLeftMouseDrag(float mouse_x, float mouse_y) {}
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
         virtual void onClose() {}
+        virtual void onDarkModeToggle() {}
 
     private:
         App& parent;

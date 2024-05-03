@@ -7,7 +7,9 @@ namespace fs = std::filesystem;
 
 class FileWatcher {
 public:
-    FileWatcher(fs::path directory);
+    void (*callback)(void);
+
+    FileWatcher(fs::path directory, void (*callback)(void));
     ~FileWatcher();
     bool start();
 

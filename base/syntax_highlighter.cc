@@ -66,7 +66,7 @@ void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& colo
     for (size_t i = 0; i < capture_count; i++) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
-        std::cerr << "capture name " << i << ": " << capture_name << '\n';
+        // std::cerr << "capture name " << i << ": " << capture_name << '\n';
 
         if (capture_name == "comment") {
             capture_index_color_table[i] = colors::grey2;

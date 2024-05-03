@@ -2,7 +2,13 @@
 #include "simple_text.h"
 #include <memory>
 
-SimpleText::SimpleText() : file_watcher(DataDir()) {}
+#include <iostream>
+
+static void FileWatcherCallback() {
+    std::cerr << "hi\n";
+}
+
+SimpleText::SimpleText() : file_watcher(DataDir(), &FileWatcherCallback) {}
 
 SimpleText::~SimpleText() {}
 

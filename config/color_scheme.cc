@@ -56,4 +56,8 @@ ColorScheme::ColorScheme() {
     if (!schema.status_bar.empty()) status_bar = ParseHexCode(schema.status_bar);
     if (!schema.scroll_bar.empty()) scroll_bar = ParseHexCode(schema.scroll_bar);
 }
+
+void ColorScheme::reload() {
+    std::cerr << "ColorScheme::reload()\n";
+}
 }

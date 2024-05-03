@@ -20,4 +20,7 @@ source_set("filesystem") {
     sources += [ "file_reader_win.cc" ]
     libs = [ "shell32.lib" ]
   }
+
+  # TODO: Move FileWatcher to //config since it belongs there (eliminating this dependency).
+  deps = [ "//config" ]
 }

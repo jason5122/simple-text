@@ -14,6 +14,7 @@ public:
     Rgb scroll_bar{};
 
     ColorScheme();
+    void reload();
 
 private:
     struct JsonSchema {

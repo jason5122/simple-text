@@ -8,7 +8,7 @@ static void FileWatcherCallback() {
     std::cerr << "hi\n";
 }
 
-SimpleText::SimpleText() : file_watcher(DataDir(), &FileWatcherCallback) {}
+SimpleText::SimpleText() : color_scheme(), file_watcher(DataDir(), &color_scheme) {}
 
 SimpleText::~SimpleText() {}
 

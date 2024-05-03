@@ -11,6 +11,8 @@
 #include "renderer/text_renderer.h"
 #include "simple_text/editor_tab.h"
 
+#include "base/filesystem/file_watcher.h"
+
 class SimpleText : public App {
 public:
     class EditorWindow : public App::Window {
@@ -66,6 +68,7 @@ public:
 #endif
 
     config::ColorScheme color_scheme;
+    FileWatcher file_watcher;
 
     SimpleText();
     ~SimpleText();

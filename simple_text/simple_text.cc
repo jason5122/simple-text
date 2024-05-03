@@ -2,7 +2,7 @@
 #include "simple_text.h"
 #include <memory>
 
-SimpleText::SimpleText() {}
+SimpleText::SimpleText() : file_watcher(DataDir()) {}
 
 SimpleText::~SimpleText() {}
 
@@ -33,6 +33,8 @@ void SimpleText::onLaunch() {
 #endif
 
     createWindow();
+
+    file_watcher.start();
 }
 
 void SimpleText::createWindow() {

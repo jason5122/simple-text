@@ -5,42 +5,32 @@
 #include <iostream>
 
 namespace config {
-struct Schema {
-    std::string foreground;
-    std::string background;
-    std::string caret;
-    std::string tab_bar;
-    std::string side_bar;
-    std::string status_bar;
-    std::string scroll_bar;
-};
-
-static const Schema kDefaultLightSchema{
-    .foreground = "#333333",
-    .background = "#fdfdfd",
-    .caret = "#5fb4b4",
-    .tab_bar = "#bebebe",
-    .side_bar = "#ebedef",
-    .status_bar = "#c7cbd1",
-    .scroll_bar = "#b6b6b6",
-};
-
-static const Schema kDefaultDarkSchema{
-    .foreground = "#d8dee9",
-    .background = "#303841",
-    .caret = "#f9ae58",
-    .tab_bar = "#4f565e",
-    .side_bar = "#22262a",
-    .status_bar = "#2e3238",
-    .scroll_bar = "#6a7076",
-};
-
 ColorScheme::ColorScheme() {
-    fs::path data_dir = DataDir();
-    fs::path color_scheme_path = data_dir / "color_scheme_light.json";
-    // fs::path color_scheme_path = data_dir / "color_scheme_dark.json";
+    kDefaultLightSchema = {
+        .foreground = "#333333",
+        .background = "#fdfdfd",
+        .caret = "#5fb4b4",
+        .tab_bar = "#bebebe",
+        .side_bar = "#ebedef",
+        .status_bar = "#c7cbd1",
+        .scroll_bar = "#b6b6b6",
+    };
+    kDefaultDarkSchema = {
+        .foreground = "#d8dee9",
+        .background = "#303841",
+        .caret = "#f9ae58",
+        .tab_bar = "#4f565e",
+        .side_bar = "#22262a",
+        .status_bar = "#2e3238",
+        .scroll_bar = "#6a7076",
+    };
 
-    Schema schema = kDefaultLightSchema;
+    fs::path data_dir = DataDir();
+    // fs::path color_scheme_path = data_dir / "color_scheme_light.json";
+    fs::path color_scheme_path = data_dir / "color_scheme_dark.json";
+
+    // JsonSchema schema = kDefaultLightSchema;
+    JsonSchema schema = kDefaultDarkSchema;
 
     std::string buffer;
     if (fs::exists(color_scheme_path)) {

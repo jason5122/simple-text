@@ -9,6 +9,7 @@
 #include "renderer/selection_renderer.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
+#include "simple_text/editor_tab.h"
 #include <glad/glad.h>
 #include <string>
 #include <unordered_map>
@@ -30,7 +31,8 @@ public:
                                                             CaretInfo& end_caret);
     void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
-                      config::ColorScheme& color_scheme, Point& editor_offset);
+                      config::ColorScheme& color_scheme, Point& editor_offset,
+                      std::vector<std::unique_ptr<EditorTab>>& editor_tabs);
     void setCaretInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
                       CaretInfo& caret);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);

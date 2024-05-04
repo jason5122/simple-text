@@ -16,13 +16,7 @@ EditorWindow::~EditorWindow() {
 }
 
 void EditorWindow::createTab(fs::path file_path) {
-    std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>();
-    editor_tab->setup(file_path, color_scheme);
-    tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
-}
-
-void EditorWindow::createTab() {
-    std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>();
+    std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>(file_path);
     editor_tab->setup(color_scheme);
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
 }
@@ -44,7 +38,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     createTab(file_path);
     createTab(file_path2);
     // createTab(file_path3);
-    createTab();
+    createTab(fs::path{});
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -112,7 +106,7 @@ void EditorWindow::onDraw() {
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
-                               color_scheme, editor_offset);
+                               color_scheme, editor_offset, tabs);
 }
 
 void EditorWindow::onResize(int width, int height) {
@@ -219,14 +213,14 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         }
 
         if (tabs.empty()) {
-            createTab();
+            createTab(fs::path{});
         }
 
         redraw();
     }
 
     if (key == app::Key::kN && modifiers == app::kPrimaryModifier) {
-        createTab();
+        createTab(fs::path{});
         redraw();
     }
 

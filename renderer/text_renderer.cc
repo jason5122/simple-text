@@ -382,7 +382,8 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 
 void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                                 FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
-                                config::ColorScheme& color_scheme, Point& editor_offset) {
+                                config::ColorScheme& color_scheme, Point& editor_offset,
+                                std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
@@ -434,9 +435,14 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     create_instances(std::move(line_str), status_text_offset, y_bottom_of_screen);
     create_instances("JSON", size.width - 150, y_bottom_of_screen);
     create_instances("Spaces: 4", size.width - 350, y_bottom_of_screen);
-    create_instances("untitled", editor_offset.x + tab_width * 0 + 35, y_top_of_screen);
-    create_instances("editor_window.cc", editor_offset.x + tab_width * 1 + 35, y_top_of_screen);
-    create_instances("rect_renderer.cc", editor_offset.x + tab_width * 2 + 35, y_top_of_screen);
+
+    for (size_t i = 0; i < editor_tabs.size(); i++) {
+        fs::path&& tab_name = editor_tabs[i]->file_path.filename();
+        if (editor_tabs[i]->file_path.empty()) {
+            tab_name = "untitled";
+        }
+        create_instances(tab_name, editor_offset.x + tab_width * i + 35, y_top_of_screen);
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);

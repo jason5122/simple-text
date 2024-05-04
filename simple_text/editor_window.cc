@@ -304,6 +304,11 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
         tab->buffer.erase(start_byte, end_byte);
 
+        // TODO: Move this into EditorTab.
+        tab->highlighter.edit(start_byte, end_byte, start_byte);
+        TSInput input = {&tab->buffer, Buffer::read, TSInputEncodingUTF8};
+        tab->highlighter.parse(input);
+
         if (tab->start_caret.byte > tab->end_caret.byte) {
             tab->start_caret = tab->end_caret;
         } else {

@@ -17,16 +17,13 @@ float roundedBoxSDF(vec2 center, vec2 size, float radius) {
 }
 
 void main() {
-    float alpha = 1.0;
+    float computed_alpha = 1.0;
 
     if (corner_radius > 0) {
         vec2 center = gl_FragCoord.xy - rect_center;
         float d = roundedBoxSDF(center, size / 2, corner_radius);
-        alpha -= smoothstep(-0.5, 0.5, d);
+        computed_alpha -= smoothstep(-0.5, 0.5, d);
     }
-
-    vec3 temp = rect_color.rgb;
-
     if (tab_corner_radius > 0) {
         vec2 pixel_pos = gl_FragCoord.xy;
 
@@ -35,45 +32,42 @@ void main() {
         vec2 top_left = rect_center + vec2(-size.x / 2, size.y / 2);
         vec2 top_right = rect_center + size / 2;
 
-        bottom_left += tab_corner_radius;
-        bottom_right += vec2(-tab_corner_radius, tab_corner_radius);
-        top_left += vec2(tab_corner_radius * 2, -tab_corner_radius);
-        top_right += vec2(-tab_corner_radius * 2, -tab_corner_radius);
+        bottom_left.x += tab_corner_radius;
+        bottom_right.x -= tab_corner_radius;
+        top_left.x += tab_corner_radius;
+        top_right.x -= tab_corner_radius;
 
-        if (pixel_pos.x < bottom_left.x) {
-            if (pixel_pos.y > bottom_left.y) {
-                discard;
-            } else {
-                vec2 point = rect_center - size / 2;
-                point += vec2(0, tab_corner_radius);
+        vec2 curve_top_left = top_left + vec2(tab_corner_radius, -tab_corner_radius);
+        vec2 curve_top_right = top_right + vec2(-tab_corner_radius, -tab_corner_radius);
+        if (pixel_pos.x < curve_top_left.x && pixel_pos.y > curve_top_left.y) {
+            float d = distance(pixel_pos, curve_top_left) - tab_corner_radius;
+            computed_alpha = 1.0 - smoothstep(-0.5, 0.5, d);
+        }
+        if (pixel_pos.x > curve_top_right.x && pixel_pos.y > curve_top_right.y) {
+            float d = distance(pixel_pos, curve_top_right) - tab_corner_radius;
+            computed_alpha = 1.0 - smoothstep(-0.5, 0.5, d);
+        }
 
-                float d = distance(pixel_pos, point) - tab_corner_radius;
-                alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
+        vec2 curve_bottom_left_outwards = bottom_left + vec2(-tab_corner_radius, tab_corner_radius);
+        vec2 curve_bottom_right_outwards = bottom_right + vec2(tab_corner_radius, tab_corner_radius);
+        if (pixel_pos.x < curve_bottom_left_outwards.x + tab_corner_radius) {
+            computed_alpha = 0.0;
+            if (pixel_pos.y < curve_bottom_left_outwards.y) {
+                float d = distance(pixel_pos, curve_bottom_left_outwards) - tab_corner_radius;
+                computed_alpha = smoothstep(-0.5, 0.5, d);
             }
         }
-        if (pixel_pos.x > bottom_right.x) {
-            if (pixel_pos.y > bottom_right.y) {
-                discard;
-            } else {
-                vec2 point = rect_center + vec2(size.x / 2, -size.y / 2);
-                point += vec2(0, tab_corner_radius);
-
-                float d = distance(pixel_pos, point) - tab_corner_radius;
-                alpha -= smoothstep(-0.5, 0.5, 1.0 - d);
+        if (pixel_pos.x > curve_bottom_right_outwards.x - tab_corner_radius) {
+            computed_alpha = 0.0;
+            if (pixel_pos.y < curve_bottom_right_outwards.y) {
+                float d = distance(pixel_pos, curve_bottom_right_outwards) - tab_corner_radius;
+                computed_alpha = smoothstep(-0.5, 0.5, d);
             }
-        }
-        if (pixel_pos.x < top_left.x && pixel_pos.y > top_left.y) {
-            float d = distance(pixel_pos, top_left) - tab_corner_radius;
-            alpha -= smoothstep(-0.5, 0.5, d);
-        }
-        if (pixel_pos.x > top_right.x && pixel_pos.y > top_right.y) {
-            float d = distance(pixel_pos, top_right) - tab_corner_radius;
-            alpha -= smoothstep(-0.5, 0.5, d);
         }
     }
 
     alpha_mask = vec4(1.0);
-    color = vec4(temp, alpha);
+    color = vec4(rect_color.rgb, computed_alpha);
 }
 
 )"

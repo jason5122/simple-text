@@ -519,6 +519,33 @@ void TextRenderer::setCaretInfo(Buffer& buffer, FontRasterizer& font_rasterizer,
     caret.byte = buffer.byteOfLine(caret.line) + caret.column;
 }
 
+void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
+                                        FontRasterizer& main_font_rasterizer) {
+    std::string line_str;
+    buffer.getLineContent(&line_str, caret.line);
+
+    size_t ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
+
+    if (ret > 0) {
+        uint_least32_t codepoint;
+        grapheme_decode_utf8(&line_str[0] + caret.column, ret, &codepoint);
+
+        std::string utf8_str = line_str.substr(caret.column, ret);
+        std::cerr << "utf8_str = " << utf8_str << ", ret = " << ret << '\n';
+
+        if (!glyph_cache[main_font_rasterizer.id].count(codepoint)) {
+            std::string utf8_str = line_str.substr(caret.column, ret);
+            this->loadGlyph(utf8_str, codepoint, main_font_rasterizer);
+        }
+
+        AtlasGlyph& glyph = glyph_cache[main_font_rasterizer.id][codepoint];
+
+        caret.byte += ret;
+        caret.column += ret;
+        caret.x += std::round(glyph.advance);
+    }
+}
+
 void TextRenderer::loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                              FontRasterizer& font_rasterizer) {
 #if IS_WIN

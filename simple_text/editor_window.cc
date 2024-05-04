@@ -193,16 +193,16 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         close();
     }
 
-    if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
-        parent.createNWindows(25);
-    }
-    if (key == app::Key::kB && modifiers == app::kPrimaryModifier) {
-        parent.destroyAllWindows();
-    }
+    // if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
+    //     parent.createNWindows(25);
+    // }
+    // if (key == app::Key::kB && modifiers == app::kPrimaryModifier) {
+    //     parent.destroyAllWindows();
+    // }
 
-    if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {
-        close();
-    }
+    // if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {
+    //     close();
+    // }
 
     if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {
         tab_index = positive_modulo(tab_index - 1, tabs.size());
@@ -315,6 +315,18 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
             tab->end_caret = tab->start_caret;
         }
 
+        redraw();
+    }
+
+    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+
+#if IS_MAC || IS_WIN
+        FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
+        renderer::TextRenderer& text_renderer = parent.text_renderer;
+#endif
+
+        text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret, main_font_rasterizer);
         redraw();
     }
 }

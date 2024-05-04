@@ -40,5 +40,9 @@ enum class Key {
     k8,
     k9,
     kBackspace,
+    kLeftArrow,
+    kRightArrow,
+    kDownArrow,
+    kUpArrow,
 };
 }

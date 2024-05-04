@@ -38,6 +38,8 @@ public:
                       std::vector<int>& tab_title_x_coords);
     void setCaretInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
                       CaretInfo& caret);
+    void moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
+                              FontRasterizer& main_font_rasterizer);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
 
 private:

@@ -153,18 +153,19 @@ static app::Key GetKey(unsigned short vk) {
         app::Key fKey;
     } gPair[] = {
         // These constants are located in the <Carbon/Carbon.h> header.
-        {kVK_ANSI_A, app::Key::kA}, {kVK_ANSI_B, app::Key::kB}, {kVK_ANSI_C, app::Key::kC},
-        {kVK_ANSI_D, app::Key::kD}, {kVK_ANSI_E, app::Key::kE}, {kVK_ANSI_F, app::Key::kF},
-        {kVK_ANSI_G, app::Key::kG}, {kVK_ANSI_H, app::Key::kH}, {kVK_ANSI_I, app::Key::kI},
-        {kVK_ANSI_J, app::Key::kJ}, {kVK_ANSI_K, app::Key::kK}, {kVK_ANSI_L, app::Key::kL},
-        {kVK_ANSI_M, app::Key::kM}, {kVK_ANSI_N, app::Key::kN}, {kVK_ANSI_O, app::Key::kO},
-        {kVK_ANSI_P, app::Key::kP}, {kVK_ANSI_Q, app::Key::kQ}, {kVK_ANSI_R, app::Key::kR},
-        {kVK_ANSI_S, app::Key::kS}, {kVK_ANSI_T, app::Key::kT}, {kVK_ANSI_U, app::Key::kU},
-        {kVK_ANSI_V, app::Key::kV}, {kVK_ANSI_W, app::Key::kW}, {kVK_ANSI_X, app::Key::kX},
-        {kVK_ANSI_Y, app::Key::kY}, {kVK_ANSI_Z, app::Key::kZ}, {kVK_ANSI_0, app::Key::k0},
-        {kVK_ANSI_1, app::Key::k1}, {kVK_ANSI_2, app::Key::k2}, {kVK_ANSI_3, app::Key::k3},
-        {kVK_ANSI_4, app::Key::k4}, {kVK_ANSI_5, app::Key::k5}, {kVK_ANSI_6, app::Key::k6},
-        {kVK_ANSI_7, app::Key::k7}, {kVK_ANSI_8, app::Key::k8}, {kVK_ANSI_9, app::Key::k9},
+        {kVK_ANSI_A, app::Key::kA},         {kVK_ANSI_B, app::Key::kB}, {kVK_ANSI_C, app::Key::kC},
+        {kVK_ANSI_D, app::Key::kD},         {kVK_ANSI_E, app::Key::kE}, {kVK_ANSI_F, app::Key::kF},
+        {kVK_ANSI_G, app::Key::kG},         {kVK_ANSI_H, app::Key::kH}, {kVK_ANSI_I, app::Key::kI},
+        {kVK_ANSI_J, app::Key::kJ},         {kVK_ANSI_K, app::Key::kK}, {kVK_ANSI_L, app::Key::kL},
+        {kVK_ANSI_M, app::Key::kM},         {kVK_ANSI_N, app::Key::kN}, {kVK_ANSI_O, app::Key::kO},
+        {kVK_ANSI_P, app::Key::kP},         {kVK_ANSI_Q, app::Key::kQ}, {kVK_ANSI_R, app::Key::kR},
+        {kVK_ANSI_S, app::Key::kS},         {kVK_ANSI_T, app::Key::kT}, {kVK_ANSI_U, app::Key::kU},
+        {kVK_ANSI_V, app::Key::kV},         {kVK_ANSI_W, app::Key::kW}, {kVK_ANSI_X, app::Key::kX},
+        {kVK_ANSI_Y, app::Key::kY},         {kVK_ANSI_Z, app::Key::kZ}, {kVK_ANSI_0, app::Key::k0},
+        {kVK_ANSI_1, app::Key::k1},         {kVK_ANSI_2, app::Key::k2}, {kVK_ANSI_3, app::Key::k3},
+        {kVK_ANSI_4, app::Key::k4},         {kVK_ANSI_5, app::Key::k5}, {kVK_ANSI_6, app::Key::k6},
+        {kVK_ANSI_7, app::Key::k7},         {kVK_ANSI_8, app::Key::k8}, {kVK_ANSI_9, app::Key::k9},
+        {kVK_Delete, app::Key::kBackspace},
     };
 
     for (size_t i = 0; i < std::size(gPair); i++) {

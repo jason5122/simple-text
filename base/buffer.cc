@@ -2,6 +2,8 @@
 #include <iostream>
 
 void Buffer::setContents(std::string txt) {
+    data.clear();
+
     std::string line;
     for (char ch : txt) {
         if (ch == '\n') {
@@ -11,7 +13,9 @@ void Buffer::setContents(std::string txt) {
             line += ch;
         }
     }
-    data.push_back("");
+    data.push_back(line);
+
+    flat_string = txt;
 }
 
 size_t Buffer::size() {
@@ -72,4 +76,9 @@ void Buffer::backspace(size_t line_index, size_t line_offset, size_t bytes) {
     } else {
         data.at(line_index).erase(line_offset - bytes, bytes);
     }
+}
+
+void Buffer::erase(size_t start_byte, size_t end_byte) {
+    flat_string.erase(flat_string.begin() + start_byte, flat_string.begin() + end_byte);
+    setContents(flat_string);
 }

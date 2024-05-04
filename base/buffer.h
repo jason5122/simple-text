@@ -20,6 +20,7 @@ public:
     void debugInfo() {
         fprintf(stderr, "size = %zu, lineCount = %zu\n", size(), lineCount());
     }
+    void erase(size_t start_byte, size_t end_byte);
 
     static const char* read(void* payload, uint32_t byte_index, TSPoint position,
                             uint32_t* bytes_read) {
@@ -61,4 +62,6 @@ private:
         return data.end();
     }
     BufferType data;
+
+    std::string flat_string;
 };

@@ -39,5 +39,6 @@ enum class Key {
     k7,
     k8,
     k9,
+    kBackspace,
 };
 }

@@ -38,7 +38,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     createTab(file_path);
     createTab(file_path2);
     // createTab(file_path3);
-    createTab(fs::path{});
+    // createTab(fs::path{});
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -291,6 +291,25 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
             editor_offset.x = 200 * 2;
         }
         side_bar_visible = !side_bar_visible;
+        redraw();
+    }
+
+    if (key == app::Key::kBackspace && modifiers == app::ModifierKey::kNone) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+
+        size_t start_byte = tab->start_caret.byte, end_byte = tab->end_caret.byte;
+        if (tab->start_caret.byte > tab->end_caret.byte) {
+            std::swap(start_byte, end_byte);
+        }
+
+        tab->buffer.erase(start_byte, end_byte);
+
+        if (tab->start_caret.byte > tab->end_caret.byte) {
+            tab->start_caret = tab->end_caret;
+        } else {
+            tab->end_caret = tab->start_caret;
+        }
+
         redraw();
     }
 }

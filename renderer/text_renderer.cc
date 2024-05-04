@@ -380,10 +380,10 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
     return selections;
 }
 
-std::vector<float>
+std::vector<int>
 TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasterizer,
                                 std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
-    std::vector<float> tab_title_widths;
+    std::vector<int> tab_title_widths;
 
     auto add_width = [&](std::string&& str) {
         size_t ret;

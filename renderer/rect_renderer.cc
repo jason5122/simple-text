@@ -86,7 +86,7 @@ void RectRenderer::setup() {
 void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
                         size_t line_count, float longest_x, Point& editor_offset,
                         float status_bar_height, config::ColorScheme& color_scheme, int tab_index,
-                        std::vector<float>& tab_title_widths, float line_number_offset,
+                        std::vector<int>& tab_title_widths, float line_number_offset,
                         std::vector<int>& tab_title_x_coords) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
@@ -117,7 +117,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     // Add caret.
     if ((scroll.x < caret_x + caret_width && caret_x < scroll.x + editor_width) &&
         (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
-        instances.push_back(InstanceData{
+        instances.emplace_back(InstanceData{
             .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
             .rect_size = Vec2{caret_width, caret_height},
             .color = Rgba::fromRgb(color_scheme.caret, 255),
@@ -130,7 +130,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
         float total_y = (line_count + (editor_height / line_height)) * line_height;
         float vertical_scroll_bar_height = editor_height * (editor_height / total_y);
         float vertical_scroll_bar_position_percentage = scroll.y / (line_count * line_height);
-        instances.push_back(InstanceData{
+        instances.emplace_back(InstanceData{
             .coords =
                 Vec2{
                     editor_width - vertical_scroll_bar_width,
@@ -148,7 +148,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     float horizontal_scroll_bar_height = 15;
     float horizontal_scroll_bar_position_percentage = scroll.x / (longest_x - editor_width);
     if (horizontal_scroll_bar_width < editor_width) {
-        instances.push_back(InstanceData{
+        instances.emplace_back(InstanceData{
             .coords = Vec2{(editor_width - horizontal_scroll_bar_width) *
                                horizontal_scroll_bar_position_percentage,
                            editor_height - horizontal_scroll_bar_height},
@@ -159,7 +159,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     }
 
     // Add tab bar.
-    instances.push_back(InstanceData{
+    instances.emplace_back(InstanceData{
         .coords = Vec2{0, 0 - editor_offset.y},
         .rect_size = Vec2{static_cast<float>(size.width), editor_offset.y},
         .color = Rgba::fromRgb(color_scheme.tab_bar, 255),
@@ -177,7 +177,10 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
         int tab_width = tab_title_widths[i] + tab_corner_radius * 2;
         // tab_width = std::max(kMinTabWidth, tab_width);
 
-        instances.push_back(InstanceData{
+        // TODO: Replace this magic number with the width of the close button.
+        tab_width += 32;
+
+        instances.emplace_back(InstanceData{
             .coords = Vec2{static_cast<float>(total_x), 0 - tab_height},
             .rect_size = Vec2{static_cast<float>(tab_width), tab_height},
             .color = color,
@@ -188,14 +191,14 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     }
 
     // Add side bar.
-    instances.push_back(InstanceData{
+    instances.emplace_back(InstanceData{
         .coords = {0 - editor_offset.x, 0 - editor_offset.y},
         .rect_size = {editor_offset.x, static_cast<float>(size.height)},
         .color = Rgba::fromRgb(color_scheme.side_bar, 255),
     });
 
     // Add status bar.
-    instances.push_back(InstanceData{
+    instances.emplace_back(InstanceData{
         .coords = Vec2{0 - editor_offset.x, editor_height},
         .rect_size = Vec2{static_cast<float>(size.width), status_bar_height},
         .color = Rgba::fromRgb(color_scheme.status_bar, 255),

@@ -29,8 +29,8 @@ public:
                                                             FontRasterizer& font_rasterizer,
                                                             CaretInfo& start_caret,
                                                             CaretInfo& end_caret);
-    std::vector<float> getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasterizer,
-                                         std::vector<std::unique_ptr<EditorTab>>& editor_tabs);
+    std::vector<int> getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasterizer,
+                                       std::vector<std::unique_ptr<EditorTab>>& editor_tabs);
     void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
                       config::ColorScheme& color_scheme, Point& editor_offset,

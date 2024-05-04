@@ -86,7 +86,8 @@ void RectRenderer::setup() {
 void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
                         size_t line_count, float longest_x, Point& editor_offset,
                         float status_bar_height, config::ColorScheme& color_scheme, int tab_index,
-                        std::vector<float>& tab_title_widths, float line_number_offset) {
+                        std::vector<float>& tab_title_widths, float line_number_offset,
+                        std::vector<int>& tab_title_x_coords) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -164,18 +165,26 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
         .color = Rgba::fromRgb(color_scheme.tab_bar, 255),
     });
 
-    float tab_width = 350;
     float tab_height = editor_offset.y - 5;  // Leave padding between window title bar and tab.
     float tab_corner_radius = 10;
 
+    int total_x = 0;
+
     for (size_t i = 0; i < tab_title_widths.size(); i++) {
         Rgba color = i == tab_index ? editor_bg_color : Rgba{100, 100, 100, 255};
+        tab_title_x_coords.emplace_back(total_x + tab_corner_radius);
+
+        int tab_width = tab_title_widths[i] + tab_corner_radius * 2;
+        // tab_width = std::max(kMinTabWidth, tab_width);
+
         instances.push_back(InstanceData{
-            .coords = Vec2{tab_width * i, 0 - tab_height},
-            .rect_size = Vec2{tab_title_widths[i], tab_height},
+            .coords = Vec2{static_cast<float>(total_x), 0 - tab_height},
+            .rect_size = Vec2{static_cast<float>(tab_width), tab_height},
             .color = color,
             .tab_corner_radius = tab_corner_radius,
         });
+
+        total_x += tab_width;
     }
 
     // Add side bar.

@@ -34,7 +34,8 @@ public:
     void renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                       FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
                       config::ColorScheme& color_scheme, Point& editor_offset,
-                      std::vector<std::unique_ptr<EditorTab>>& editor_tabs);
+                      std::vector<std::unique_ptr<EditorTab>>& editor_tabs,
+                      std::vector<int>& tab_title_x_coords);
     void setCaretInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
                       CaretInfo& caret);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);

@@ -99,23 +99,19 @@ void EditorWindow::onDraw() {
 
     std::vector<float> tab_title_widths =
         text_renderer.getTabTitleWidths(tab->buffer, ui_font_rasterizer, tabs);
-
-    for (const auto& width : tab_title_widths) {
-        std::cerr << width << ' ';
-    }
-    std::cerr << '\n';
+    std::vector<int> tab_title_x_coords;
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, tab->scroll, tab->end_caret, main_font_rasterizer.line_height,
                        tab->buffer.lineCount(), tab->longest_line_x, editor_offset,
                        status_bar_height, color_scheme, tab_index, tab_title_widths,
-                       kLineNumberOffset);
+                       kLineNumberOffset, tab_title_x_coords);
 
     image_renderer.draw(size, tab->scroll, editor_offset);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
-                               color_scheme, editor_offset, tabs);
+                               color_scheme, editor_offset, tabs, tab_title_x_coords);
 }
 
 void EditorWindow::onResize(int width, int height) {

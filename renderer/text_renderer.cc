@@ -421,7 +421,8 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasteriz
 void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                                 FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
                                 config::ColorScheme& color_scheme, Point& editor_offset,
-                                std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
+                                std::vector<std::unique_ptr<EditorTab>>& editor_tabs,
+                                std::vector<int>& tab_title_x_coords) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), 0, 0);
@@ -464,7 +465,6 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     std::string line_str =
         "Line " + std::to_string(end_caret.line) + ", Column " + std::to_string(end_caret.column);
 
-    float tab_width = 350;
     float y_bottom_of_screen = size.height - main_font_rasterizer.line_height;
     float y_top_of_screen = editor_offset.y / 2 + ui_font_rasterizer.line_height / 2 -
                             main_font_rasterizer.line_height;
@@ -479,8 +479,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
         if (editor_tabs[i]->file_path.empty()) {
             tab_name = "untitled";
         }
-        // create_instances(tab_name, editor_offset.x + tab_width * i + 35, y_top_of_screen);
-        create_instances(tab_name, editor_offset.x + tab_width * i, y_top_of_screen);
+        create_instances(tab_name, editor_offset.x + tab_title_x_coords[i], y_top_of_screen);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

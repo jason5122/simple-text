@@ -15,7 +15,8 @@ public:
     void draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
               size_t line_count, float longest_x, Point& editor_offset, float status_bar_height,
               config::ColorScheme& color_scheme, int tab_index, std::vector<int>& tab_title_widths,
-              float line_number_offset, std::vector<int>& tab_title_x_coords);
+              float line_number_offset, std::vector<int>& tab_title_x_coords,
+              std::vector<int>& actual_tab_title_widths);
 
 private:
     static constexpr int kBatchMax = 65536;

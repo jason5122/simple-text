@@ -404,6 +404,9 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasteriz
             total_advance += std::round(glyph.advance);
         }
 
+        // TODO: Replace this magic number with the width of the close button.
+        total_advance += 32;
+
         tab_title_widths.emplace_back(total_advance);
     };
 

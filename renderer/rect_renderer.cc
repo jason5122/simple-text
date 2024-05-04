@@ -87,7 +87,8 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
                         size_t line_count, float longest_x, Point& editor_offset,
                         float status_bar_height, config::ColorScheme& color_scheme, int tab_index,
                         std::vector<int>& tab_title_widths, float line_number_offset,
-                        std::vector<int>& tab_title_x_coords) {
+                        std::vector<int>& tab_title_x_coords,
+                        std::vector<int>& actual_tab_title_widths) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -175,10 +176,9 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
         tab_title_x_coords.emplace_back(total_x + tab_corner_radius);
 
         int tab_width = tab_title_widths[i] + tab_corner_radius * 2;
-        // tab_width = std::max(kMinTabWidth, tab_width);
+        tab_width = std::max(kMinTabWidth, tab_width);
 
-        // TODO: Replace this magic number with the width of the close button.
-        tab_width += 32;
+        actual_tab_title_widths.emplace_back(tab_width - tab_corner_radius * 2);
 
         instances.emplace_back(InstanceData{
             .coords = Vec2{static_cast<float>(total_x), 0 - tab_height},

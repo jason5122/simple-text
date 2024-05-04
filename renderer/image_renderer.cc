@@ -94,7 +94,7 @@ void ImageRenderer::setup() {
 
 void ImageRenderer::draw(Size& size, Point& scroll, Point& editor_offset,
                          std::vector<int>& tab_title_x_coords,
-                         std::vector<int>& tab_title_widths) {
+                         std::vector<int>& actual_tab_title_widths) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -120,7 +120,8 @@ void ImageRenderer::draw(Size& size, Point& scroll, Point& editor_offset,
             .coords =
                 Vec2{
                     .x = editor_offset.x +
-                         static_cast<float>(tab_title_x_coords[i] + tab_title_widths[i]),
+                         static_cast<float>(tab_title_x_coords[i] + (actual_tab_title_widths[i] -
+                                                                     atlas_entry.rect_size.x)),
                     .y = pos_y,
                 },
             // .coords = Vec2{pos_x, pos_y},

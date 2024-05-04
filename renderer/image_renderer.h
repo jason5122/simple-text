@@ -14,7 +14,7 @@ public:
     ~ImageRenderer();
     void setup();
     void draw(Size& size, Point& scroll, Point& editor_offset,
-              std::vector<int>& tab_title_x_coords, std::vector<int>& tab_title_widths);
+              std::vector<int>& tab_title_x_coords, std::vector<int>& actual_tab_title_widths);
 
 private:
     static constexpr int kBatchMax = 65536;

@@ -380,6 +380,44 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
     return selections;
 }
 
+std::vector<float>
+TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasterizer,
+                                std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
+    std::vector<float> tab_title_widths;
+
+    auto add_width = [&](std::string&& str) {
+        size_t ret;
+        float total_advance = 0;
+        for (size_t offset = 0; offset < str.size(); offset += ret) {
+            ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
+
+            uint_least32_t codepoint;
+            grapheme_decode_utf8(&str[0] + offset, ret, &codepoint);
+
+            if (!glyph_cache[ui_font_rasterizer.id].count(codepoint)) {
+                std::string utf8_str = str.substr(offset, ret);
+                this->loadGlyph(utf8_str, codepoint, ui_font_rasterizer);
+            }
+
+            AtlasGlyph& glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
+
+            total_advance += std::round(glyph.advance);
+        }
+
+        tab_title_widths.emplace_back(total_advance);
+    };
+
+    for (const auto& editor_tab : editor_tabs) {
+        fs::path&& tab_name = editor_tab->file_path.filename();
+        if (editor_tab->file_path.empty()) {
+            tab_name = "untitled";
+        }
+        add_width(tab_name);
+    }
+
+    return tab_title_widths;
+}
+
 void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
                                 FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
                                 config::ColorScheme& color_scheme, Point& editor_offset,
@@ -441,7 +479,8 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
         if (editor_tabs[i]->file_path.empty()) {
             tab_name = "untitled";
         }
-        create_instances(tab_name, editor_offset.x + tab_width * i + 35, y_top_of_screen);
+        // create_instances(tab_name, editor_offset.x + tab_width * i + 35, y_top_of_screen);
+        create_instances(tab_name, editor_offset.x + tab_width * i, y_top_of_screen);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

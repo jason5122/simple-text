@@ -42,7 +42,9 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
     pimpl->main_window = new MainWindow(parent.pimpl->app, this);
 }
 
-App::Window::~Window() {}
+App::Window::~Window() {
+    delete pimpl->main_window;
+}
 
 void App::Window::show() {
     pimpl->main_window->show();

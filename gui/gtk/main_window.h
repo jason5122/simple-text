@@ -8,6 +8,7 @@ public:
     App::Window* app_window;
 
     MainWindow(GtkApplication* gtk_app, App::Window* app_window);
+    ~MainWindow();
     void show();
     void close();
     void redraw();

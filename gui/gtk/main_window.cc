@@ -77,6 +77,11 @@ MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
     }
 }
 
+MainWindow::~MainWindow() {
+    // TODO: See if we need `g_object_unref` for any other object.
+    g_object_unref(dbus_settings_proxy);
+}
+
 void MainWindow::show() {
     gtk_widget_show_all(window);
 }

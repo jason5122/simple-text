@@ -40,6 +40,8 @@ public:
                       CaretInfo& caret);
     void moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
                               FontRasterizer& main_font_rasterizer);
+    void moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
+                              FontRasterizer& main_font_rasterizer);
     float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
 
 private:

@@ -296,7 +296,6 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kBackspace && modifiers == app::ModifierKey::kNone) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-
         size_t start_byte = tab->start_caret.byte, end_byte = tab->end_caret.byte;
         if (tab->start_caret.byte > tab->end_caret.byte) {
             std::swap(start_byte, end_byte);
@@ -320,13 +319,22 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-
 #if IS_MAC || IS_WIN
         FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
         renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
         text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret, main_font_rasterizer);
+        redraw();
+    }
+    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+#if IS_MAC || IS_WIN
+        FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
+        renderer::TextRenderer& text_renderer = parent.text_renderer;
+#endif
+
+        text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret, main_font_rasterizer);
         redraw();
     }
 }

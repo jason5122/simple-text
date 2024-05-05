@@ -70,6 +70,11 @@ MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
 
     g_signal_connect(dbus_settings_proxy, "g-signal", G_CALLBACK(settings_changed_signal_cb),
                      this);
+
+    if (isDarkMode()) {
+        g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", true,
+                     nullptr);
+    }
 }
 
 void MainWindow::show() {
@@ -298,5 +303,24 @@ static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpoi
 static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gchar* signal_name,
                                        GVariant* parameters, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    main_window->app_window->onDarkModeToggle();
+
+    GVariant* ns = g_variant_get_child_value(parameters, 0);
+    GVariant* key = g_variant_get_child_value(parameters, 1);
+
+    gsize len = 0;
+    std::string ns_str = g_variant_get_string(ns, &len);
+    std::string key_str = g_variant_get_string(key, &len);
+    if (ns_str == "org.freedesktop.appearance" && key_str == "color-scheme") {
+        // TODO: See if this is optimal. Also consider combining this with the other check during
+        // initialization.
+        if (main_window->isDarkMode()) {
+            g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", true,
+                         nullptr);
+        } else {
+            g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", false,
+                         nullptr);
+        }
+
+        main_window->app_window->onDarkModeToggle();
+    }
 }

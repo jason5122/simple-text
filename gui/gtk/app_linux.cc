@@ -67,3 +67,7 @@ int App::Window::height() {
 int App::Window::scaleFactor() {
     return pimpl->main_window->scaleFactor();
 }
+
+bool App::Window::isDarkMode() {
+    return pimpl->main_window->isDarkMode();
+}

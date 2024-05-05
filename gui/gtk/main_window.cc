@@ -1,3 +1,4 @@
+#include "gdk/gdkkeysyms.h"
 #include "main_window.h"
 #include <glad/glad.h>
 #include <iostream>
@@ -13,6 +14,8 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data)
 static gboolean scroll_event(GtkWidget* self, GdkEventScroll* event, gpointer user_data);
 static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpointer user_data);
 static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpointer user_data);
+static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gchar* signal_name,
+                                       GVariant* parameters, gpointer user_data);
 
 // https://github.com/ToshioCP/Gtk4-tutorial/blob/main/gfm/sec17.md#menu-and-action
 static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
@@ -58,6 +61,15 @@ MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
 
     // gtk_window_maximize(GTK_WINDOW(window));
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
+
+    // Use DBus to query and listen for light/dark theme changes.
+    GError* error = nullptr;
+    dbus_settings_proxy = g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr, "org.freedesktop.portal.Desktop",
+        "/org/freedesktop/portal/desktop", "org.freedesktop.portal.Settings", nullptr, &error);
+
+    g_signal_connect(dbus_settings_proxy, "g-signal", G_CALLBACK(settings_changed_signal_cb),
+                     this);
 }
 
 void MainWindow::show() {
@@ -84,23 +96,79 @@ int MainWindow::scaleFactor() {
     return gtk_widget_get_scale_factor(window);
 }
 
+bool MainWindow::isDarkMode() {
+    GError* error = nullptr;
+    GVariant* variant =
+        g_dbus_proxy_call_sync(dbus_settings_proxy, "Read",
+                               g_variant_new("(ss)", "org.freedesktop.appearance", "color-scheme"),
+                               G_DBUS_CALL_FLAGS_NONE, 3000, nullptr, &error);
+
+    variant = g_variant_get_child_value(variant, 0);
+    while (variant && g_variant_is_of_type(variant, G_VARIANT_TYPE_VARIANT)) {
+        // Unbox the return value.
+        variant = g_variant_get_variant(variant);
+    }
+
+    switch (g_variant_get_uint32(variant)) {
+    case 0:
+        std::cerr << "default\n";
+        break;
+    case 1:
+        std::cerr << "dark!\n";
+        break;
+    case 2:
+        std::cerr << "light!\n";
+        break;
+    }
+    return g_variant_get_uint32(variant) == 1;
+}
+
 static app::Key GetKey(guint vk) {
     static constexpr struct {
         guint fVK;
         app::Key fKey;
     } gPair[] = {
-        {GDK_KEY_A, app::Key::kA}, {GDK_KEY_B, app::Key::kB}, {GDK_KEY_C, app::Key::kC},
-        {GDK_KEY_D, app::Key::kD}, {GDK_KEY_E, app::Key::kE}, {GDK_KEY_F, app::Key::kF},
-        {GDK_KEY_G, app::Key::kG}, {GDK_KEY_H, app::Key::kH}, {GDK_KEY_I, app::Key::kI},
-        {GDK_KEY_J, app::Key::kJ}, {GDK_KEY_K, app::Key::kK}, {GDK_KEY_L, app::Key::kL},
-        {GDK_KEY_M, app::Key::kM}, {GDK_KEY_N, app::Key::kN}, {GDK_KEY_O, app::Key::kO},
-        {GDK_KEY_P, app::Key::kP}, {GDK_KEY_Q, app::Key::kQ}, {GDK_KEY_R, app::Key::kR},
-        {GDK_KEY_S, app::Key::kS}, {GDK_KEY_T, app::Key::kT}, {GDK_KEY_U, app::Key::kU},
-        {GDK_KEY_V, app::Key::kV}, {GDK_KEY_W, app::Key::kW}, {GDK_KEY_X, app::Key::kX},
-        {GDK_KEY_Y, app::Key::kY}, {GDK_KEY_Z, app::Key::kZ}, {GDK_KEY_0, app::Key::k0},
-        {GDK_KEY_1, app::Key::k1}, {GDK_KEY_2, app::Key::k2}, {GDK_KEY_3, app::Key::k3},
-        {GDK_KEY_4, app::Key::k4}, {GDK_KEY_5, app::Key::k5}, {GDK_KEY_6, app::Key::k6},
-        {GDK_KEY_7, app::Key::k7}, {GDK_KEY_8, app::Key::k8}, {GDK_KEY_9, app::Key::k9},
+        {GDK_KEY_A, app::Key::kA},
+        {GDK_KEY_B, app::Key::kB},
+        {GDK_KEY_C, app::Key::kC},
+        {GDK_KEY_D, app::Key::kD},
+        {GDK_KEY_E, app::Key::kE},
+        {GDK_KEY_F, app::Key::kF},
+        {GDK_KEY_G, app::Key::kG},
+        {GDK_KEY_H, app::Key::kH},
+        {GDK_KEY_I, app::Key::kI},
+        {GDK_KEY_J, app::Key::kJ},
+        {GDK_KEY_K, app::Key::kK},
+        {GDK_KEY_L, app::Key::kL},
+        {GDK_KEY_M, app::Key::kM},
+        {GDK_KEY_N, app::Key::kN},
+        {GDK_KEY_O, app::Key::kO},
+        {GDK_KEY_P, app::Key::kP},
+        {GDK_KEY_Q, app::Key::kQ},
+        {GDK_KEY_R, app::Key::kR},
+        {GDK_KEY_S, app::Key::kS},
+        {GDK_KEY_T, app::Key::kT},
+        {GDK_KEY_U, app::Key::kU},
+        {GDK_KEY_V, app::Key::kV},
+        {GDK_KEY_W, app::Key::kW},
+        {GDK_KEY_X, app::Key::kX},
+        {GDK_KEY_Y, app::Key::kY},
+        {GDK_KEY_Z, app::Key::kZ},
+        {GDK_KEY_0, app::Key::k0},
+        {GDK_KEY_1, app::Key::k1},
+        {GDK_KEY_2, app::Key::k2},
+        {GDK_KEY_3, app::Key::k3},
+        {GDK_KEY_4, app::Key::k4},
+        {GDK_KEY_5, app::Key::k5},
+        {GDK_KEY_6, app::Key::k6},
+        {GDK_KEY_7, app::Key::k7},
+        {GDK_KEY_8, app::Key::k8},
+        {GDK_KEY_9, app::Key::k9},
+        {GDK_KEY_BackSpace, app::Key::kBackspace},
+        {GDK_KEY_Left, app::Key::kLeftArrow},
+        {GDK_KEY_Right, app::Key::kRightArrow},
+        {GDK_KEY_Down, app::Key::kDownArrow},
+        {GDK_KEY_Up, app::Key::kUpArrow},
     };
 
     for (size_t i = 0; i < std::size(gPair); i++) {
@@ -225,4 +293,10 @@ static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpoi
         main_window->app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
     }
     return true;
+}
+
+static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gchar* signal_name,
+                                       GVariant* parameters, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+    main_window->app_window->onDarkModeToggle();
 }

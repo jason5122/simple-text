@@ -5,6 +5,7 @@
 #include "renderer/types.h"
 #include <cstddef>
 #include <glad/glad.h>
+#include <vector>
 
 namespace renderer {
 class RectRenderer {

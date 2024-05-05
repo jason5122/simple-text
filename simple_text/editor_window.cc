@@ -1,6 +1,7 @@
 #include "build/buildflag.h"
 #include "gui/key.h"
 #include "simple_text.h"
+#include <algorithm>
 #include <cmath>
 #include <glad/glad.h>
 

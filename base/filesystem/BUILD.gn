@@ -13,7 +13,10 @@ source_set("filesystem") {
   }
 
   if (is_linux) {
-    sources += [ "file_reader_linux.cc" ]
+    sources += [
+      "file_reader_linux.cc",
+      "file_watcher_linux.cc",
+    ]
   }
 
   if (is_win) {

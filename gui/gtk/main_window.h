@@ -14,8 +14,10 @@ public:
     int width();
     int height();
     int scaleFactor();
+    bool isDarkMode();
 
 private:
     GtkWidget* window;
     GtkWidget* gl_area;
+    GDBusProxy* dbus_settings_proxy;
 };

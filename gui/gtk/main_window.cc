@@ -78,6 +78,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
 }
 
 MainWindow::~MainWindow() {
+    std::cerr << "~MainWindow\n";
     // TODO: See if we need `g_object_unref` for any other object.
     g_object_unref(dbus_settings_proxy);
 }

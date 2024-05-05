@@ -3,8 +3,6 @@
 #include <glad/glad.h>
 #include <gtk/gtk.h>
 
-#include <iostream>
-
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
     app->onLaunch();
@@ -35,41 +33,40 @@ App::~App() {
 
 class App::Window::impl {
 public:
-    MainWindow* main_window;
+    impl(GtkApplication* app, App::Window* app_window) : main_window(app, app_window) {}
+
+    MainWindow main_window;
 };
 
-App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
-    pimpl->main_window = new MainWindow(parent.pimpl->app, this);
-}
+App::Window::Window(App& parent, int width, int height)
+    : pimpl{new impl{parent.pimpl->app, this}}, parent(parent) {}
 
-App::Window::~Window() {
-    delete pimpl->main_window;
-}
+App::Window::~Window() {}
 
 void App::Window::show() {
-    pimpl->main_window->show();
+    pimpl->main_window.show();
 }
 
 void App::Window::close() {
-    pimpl->main_window->close();
+    pimpl->main_window.close();
 }
 
 void App::Window::redraw() {
-    pimpl->main_window->redraw();
+    pimpl->main_window.redraw();
 }
 
 int App::Window::width() {
-    return pimpl->main_window->width();
+    return pimpl->main_window.width();
 }
 
 int App::Window::height() {
-    return pimpl->main_window->height();
+    return pimpl->main_window.height();
 }
 
 int App::Window::scaleFactor() {
-    return pimpl->main_window->scaleFactor();
+    return pimpl->main_window.scaleFactor();
 }
 
 bool App::Window::isDarkMode() {
-    return pimpl->main_window->isDarkMode();
+    return pimpl->main_window.isDarkMode();
 }

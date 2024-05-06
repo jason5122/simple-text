@@ -31,7 +31,7 @@ void ImageRenderer::setup() {
         ;
 
     shader_program.link(vert_source, frag_source);
-    atlas.setup(false);  // Disable bilinear filtering.
+    atlas.setup();
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.

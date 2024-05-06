@@ -128,10 +128,11 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
                     .x = static_cast<float>(end - start),
                     .y = font_rasterizer.line_height + kBorderThickness,
                 },
-            // .color = Rgba::fromRgb(colors::selection_unfocused, 0),
+            .color = Rgba::fromRgb(colors::selection_focused, 0),
+            .border_color = Rgba::fromRgb(colors::selection_border, 0),
             // .border_color = Rgba::fromRgb(colors::red, 0),
-            .color = Rgba::fromRgb(colors::yellow, 0),
-            .border_color = Rgba::fromRgb(Rgb{0, 0, 0}, 0),
+            // .color = Rgba::fromRgb(colors::yellow, 0),
+            // .border_color = Rgba::fromRgb(Rgb{0, 0, 0}, 0),
             .border_info =
                 IVec4{
                     .x = border_flags,

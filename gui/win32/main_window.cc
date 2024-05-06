@@ -207,6 +207,16 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    // TODO: Test light/dark mode switching on an activated Windows license.
+    case WM_SETTINGCHANGE: {
+        if (!lstrcmp(LPCTSTR(lParam), L"ImmersiveColorSet")) {
+            std::cerr << "ImmersiveColorSet\n";
+        } else {
+            std::cerr << "WM_SETTINGCHANGE, but theme was not changed.\n";
+        }
+        return 0;
+    }
+
     case WM_ERASEBKGND:
         return 1;
 

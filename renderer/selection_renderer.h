@@ -34,9 +34,9 @@ private:
 
     struct InstanceData {
         Vec2 coords;
-        Vec2 bg_size;
-        Rgba bg_color;
-        Rgba bg_border_color;
+        Vec2 size;
+        Rgba color;
+        Rgba border_color;
         uint32_t border_flags;
         uint32_t bottom_border_offset;
         uint32_t top_border_offset;

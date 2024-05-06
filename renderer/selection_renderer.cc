@@ -42,7 +42,7 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
     shader_program.link(vert_source, frag_source);
 
     glUseProgram(shader_program.id);
-    glUniform1i(glGetUniformLocation(shader_program.id, "corner_radius"), kCornerRadius);
+    glUniform1i(glGetUniformLocation(shader_program.id, "r"), kCornerRadius);
     glUniform1i(glGetUniformLocation(shader_program.id, "border_thickness"), kBorderThickness);
 
     GLuint indices[] = {
@@ -71,17 +71,17 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, bg_size));
+                          (void*)offsetof(InstanceData, size));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, bg_color));
+                          (void*)offsetof(InstanceData, color));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, bg_border_color));
+                          (void*)offsetof(InstanceData, border_color));
     glVertexAttribDivisor(index++, 1);
 
     // To prevent OpenGL from casting our ints to floats, we need to use either GL_FLOAT or
@@ -133,13 +133,13 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
                     .x = static_cast<float>(start),
                     .y = font_rasterizer.line_height * line,
                 },
-            .bg_size =
+            .size =
                 {
                     .x = static_cast<float>(end - start),
                     .y = font_rasterizer.line_height + border_thickness,
                 },
-            .bg_color = Rgba::fromRgb(colors::selection_unfocused, 0),
-            .bg_border_color = Rgba::fromRgb(colors::red, 0),
+            .color = Rgba::fromRgb(colors::selection_unfocused, 0),
+            .border_color = Rgba::fromRgb(colors::red, 0),
             .border_flags = border_flags,
             .bottom_border_offset = bottom_border_offset,
             .top_border_offset = top_border_offset,

@@ -437,7 +437,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
 
     std::vector<InstanceData> instances;
 
-    auto create_instances = [&](std::string&& str, float x_offset, float y_offset) {
+    auto create_instances = [&](std::string&& str, int x_offset, int y_offset) {
         size_t ret;
         float total_advance = 0;
         for (size_t offset = 0; offset < str.size(); offset += ret) {
@@ -454,7 +454,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
             AtlasGlyph& glyph = glyph_cache[ui_font_rasterizer.id][codepoint];
 
             instances.emplace_back(InstanceData{
-                .coords = Vec2{total_advance + x_offset, y_offset},
+                .coords = Vec2{total_advance + x_offset, static_cast<float>(y_offset)},
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
                 .color = Rgba::fromRgb(color_scheme.foreground, glyph.colored),

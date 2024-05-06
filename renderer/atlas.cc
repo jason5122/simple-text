@@ -8,6 +8,7 @@ void Atlas::setup(bool use_bilinear_filtering) {
 
     // DEBUG: Color atlas background to spot incorrect shaders easier.
     // This helped with debugging the fractional pixel scrolling bug.
+    // TODO: Creating the `data` vector is quite slow, so disable during release.
     data = std::vector<uint8_t>(kAtlasSize * kAtlasSize * 4, 0);
     size_t pixels = kAtlasSize * kAtlasSize;
     for (int i = 0; i < pixels; i++) {

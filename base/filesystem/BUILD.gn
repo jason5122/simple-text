@@ -20,7 +20,10 @@ source_set("filesystem") {
   }
 
   if (is_win) {
-    sources += [ "file_reader_win.cc" ]
+    sources += [
+      "file_reader_win.cc",
+      "file_watcher_win.cc",
+    ]
     libs = [ "shell32.lib" ]
   }
 }

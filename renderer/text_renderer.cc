@@ -415,7 +415,7 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasteriz
         if (editor_tab->file_path.empty()) {
             tab_name = "untitled";
         }
-        add_width(tab_name);
+        add_width(tab_name.string());
     }
 
     return tab_title_widths;
@@ -482,7 +482,8 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
         if (editor_tabs[i]->file_path.empty()) {
             tab_name = "untitled";
         }
-        create_instances(tab_name, editor_offset.x + tab_title_x_coords[i], y_top_of_screen);
+        create_instances(tab_name.string(), editor_offset.x + tab_title_x_coords[i],
+                         y_top_of_screen);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

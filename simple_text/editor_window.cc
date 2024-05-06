@@ -88,15 +88,20 @@ void EditorWindow::onDraw() {
 
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
+    // Setup.
     std::vector<Selection> selections = text_renderer.getSelections(
         tab->buffer, main_font_rasterizer, tab->start_caret, tab->end_caret);
 
+    selection_renderer.createInstances(size, tab->scroll, editor_offset, main_font_rasterizer,
+                                       selections, kLineNumberOffset);
+
+    // Render.
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    selection_renderer.render(0);
     text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
                              main_font_rasterizer, status_bar_height, tab->start_caret,
                              tab->end_caret, tab->longest_line_x, color_scheme, kLineNumberOffset);
-    selection_renderer.render(size, tab->scroll, editor_offset, main_font_rasterizer, selections,
-                              kLineNumberOffset);
+    selection_renderer.render(1);
 
     std::vector<int> tab_title_widths =
         text_renderer.getTabTitleWidths(tab->buffer, ui_font_rasterizer, tabs);
@@ -115,6 +120,9 @@ void EditorWindow::onDraw() {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
                                color_scheme, editor_offset, tabs, tab_title_x_coords);
+
+    // Cleanup.
+    selection_renderer.destroyInstances();
 }
 
 void EditorWindow::onResize(int width, int height) {

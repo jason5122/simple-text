@@ -1,7 +1,6 @@
 #include "base/rgb.h"
 #include "font/rasterizer.h"
 #include "renderer/opengl_error_util.h"
-#include "renderer/opengl_types.h"
 #include "selection_renderer.h"
 #include <cstdint>
 #include <limits>
@@ -24,18 +23,6 @@ namespace renderer {
 #define TOP_LEFT_OUTWARDS 1024
 #define TOP_RIGHT_OUTWARDS 2048
 
-namespace {
-struct InstanceData {
-    Vec2 coords;
-    Vec2 bg_size;
-    Rgba bg_color;
-    Rgba bg_border_color;
-    uint32_t border_flags;
-    uint32_t bottom_border_offset;
-    uint32_t top_border_offset;
-};
-}
-
 SelectionRenderer::SelectionRenderer() {}
 
 SelectionRenderer::~SelectionRenderer() {
@@ -56,6 +43,7 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 
     glUseProgram(shader_program.id);
     glUniform1i(glGetUniformLocation(shader_program.id, "corner_radius"), kCornerRadius);
+    glUniform1i(glGetUniformLocation(shader_program.id, "border_thickness"), kBorderThickness);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -120,9 +108,10 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
-                               FontRasterizer& font_rasterizer, std::vector<Selection>& selections,
-                               float line_number_offset) {
+void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor_offset,
+                                        FontRasterizer& font_rasterizer,
+                                        std::vector<Selection>& selections,
+                                        float line_number_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -133,13 +122,10 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    std::vector<InstanceData> instances;
-
-    auto create = [&instances, &font_rasterizer](
-                      int start, int end, int line,
-                      uint32_t border_flags = LEFT | RIGHT | TOP | BOTTOM,
-                      uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
-                      Rgb bg_color = colors::selection_unfocused) {
+    auto create = [this, &font_rasterizer](int start, int end, int line,
+                                           uint32_t border_flags = LEFT | RIGHT | TOP | BOTTOM,
+                                           uint32_t bottom_border_offset = 0,
+                                           uint32_t top_border_offset = 0) {
         constexpr int border_thickness = 2;
         instances.emplace_back(InstanceData{
             .coords =
@@ -151,9 +137,8 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
                 {
                     .x = static_cast<float>(end - start),
                     .y = font_rasterizer.line_height + border_thickness,
-                    // .y = font_rasterizer.line_height,
                 },
-            .bg_color = Rgba::fromRgb(bg_color, 255),
+            .bg_color = Rgba::fromRgb(colors::selection_unfocused, 0),
             .bg_border_color = Rgba::fromRgb(colors::red, 0),
             .border_flags = border_flags,
             .bottom_border_offset = bottom_border_offset,
@@ -218,13 +203,26 @@ void SelectionRenderer::render(Size& size, Point& scroll, Point& editor_offset,
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-
     // Unbind.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glCheckError();
+}
+
+void SelectionRenderer::render(int rendering_pass) {
+    glUseProgram(shader_program.id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(vao);
+
+    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), rendering_pass);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+
+    glCheckError();
+}
+
+void SelectionRenderer::destroyInstances() {
+    instances.clear();
 }
 }

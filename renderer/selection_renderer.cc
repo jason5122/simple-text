@@ -115,7 +115,8 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
     auto create = [this, &font_rasterizer](int start, int end, int line,
                                            uint32_t border_flags = LEFT | RIGHT | TOP | BOTTOM,
                                            uint32_t bottom_border_offset = 0,
-                                           uint32_t top_border_offset = 0) {
+                                           uint32_t top_border_offset = 0,
+                                           uint32_t hide_background = 0) {
         constexpr int border_thickness = 2;
         instances.emplace_back(InstanceData{
             .coords =
@@ -135,7 +136,7 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
                     .x = border_flags,
                     .y = bottom_border_offset,
                     .z = top_border_offset,
-                    .w = 0,
+                    .w = hide_background,
                 },
         });
     };
@@ -154,7 +155,7 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
                 if (selections[i + 1].end >= selections[i].start) {
                     end -= kCornerRadius + 2;
                 }
-                create(2, end, selections[i].line, BOTTOM);
+                create(2, end, selections[i].line, BOTTOM, 0, 0, 1);
             }
         }
         if (i == selections_size - 1) {

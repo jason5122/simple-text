@@ -9,6 +9,7 @@ flat in vec4 border_color;
 flat in int border_flags;
 flat in int bottom_border_offset;
 flat in int top_border_offset;
+flat in int hide_background;
 
 uniform int rendering_pass;
 uniform int r;
@@ -36,6 +37,10 @@ void main() {
     float computed_alpha;
 
     if (rendering_pass == 0) {
+        if (hide_background == 1) {
+            discard;
+        }
+        
         computed_color = color.rgb;
         computed_alpha = 1.0;
     }

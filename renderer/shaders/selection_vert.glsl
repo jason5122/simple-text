@@ -16,6 +16,7 @@ flat out vec4 border_color;
 flat out int border_flags;
 flat out int bottom_border_offset;
 flat out int top_border_offset;
+flat out int hide_background;
 
 uniform vec2 resolution;
 uniform vec2 scroll_offset;
@@ -57,6 +58,7 @@ void main() {
     border_flags = border_info.x;
     bottom_border_offset = border_info.y;
     top_border_offset = border_info.z;
+    hide_background = border_info.w;
 }
 
 )"

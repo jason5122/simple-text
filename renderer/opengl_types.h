@@ -28,6 +28,11 @@ struct Rgba {
 };
 static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
 
+struct IVec4 {
+    uint32_t x, y, z, w;
+};
+static_assert(sizeof(IVec4) == sizeof(uint32_t) * 4);
+
 inline std::ostream& operator<<(std::ostream& out, const Vec2& vec) {
     return out << '{' << vec.x << ", " << vec.y << '}';
 }

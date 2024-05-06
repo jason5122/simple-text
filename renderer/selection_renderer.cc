@@ -88,18 +88,8 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
     // glVertexAttribIPointer().
     // https://stackoverflow.com/a/55972160
     glEnableVertexAttribArray(index);
-    glVertexAttribIPointer(index, 1, GL_INT, sizeof(InstanceData),
-                           (void*)offsetof(InstanceData, border_flags));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribIPointer(index, 1, GL_INT, sizeof(InstanceData),
-                           (void*)offsetof(InstanceData, bottom_border_offset));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribIPointer(index, 1, GL_INT, sizeof(InstanceData),
-                           (void*)offsetof(InstanceData, top_border_offset));
+    glVertexAttribIPointer(index, 4, GL_INT, sizeof(InstanceData),
+                           (void*)offsetof(InstanceData, border_info));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -140,9 +130,13 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
                 },
             .color = Rgba::fromRgb(colors::selection_unfocused, 0),
             .border_color = Rgba::fromRgb(colors::red, 0),
-            .border_flags = border_flags,
-            .bottom_border_offset = bottom_border_offset,
-            .top_border_offset = top_border_offset,
+            .border_info =
+                IVec4{
+                    .x = border_flags,
+                    .y = bottom_border_offset,
+                    .z = top_border_offset,
+                    .w = 0,
+                },
         });
     };
 

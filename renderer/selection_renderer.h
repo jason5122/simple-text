@@ -37,9 +37,8 @@ private:
         Vec2 size;
         Rgba color;
         Rgba border_color;
-        uint32_t border_flags;
-        uint32_t bottom_border_offset;
-        uint32_t top_border_offset;
+        // <border_flags, bottom_border_offset, top_border_offset, draw_background>
+        IVec4 border_info;
     };
     std::vector<InstanceData> instances;
 };

@@ -13,7 +13,7 @@ flat in int hide_background;
 
 uniform int rendering_pass;
 uniform int r;
-uniform int border_thickness;
+uniform int thickness;
 
 layout(location = 0, index = 0) out vec4 out_color;
 layout(location = 0, index = 1) out vec4 out_alpha_mask;
@@ -33,6 +33,92 @@ layout(location = 0, index = 1) out vec4 out_alpha_mask;
 #define TOP_RIGHT_OUTWARDS 2048
 
 void main() {
+    vec2 coord = gl_FragCoord.xy;
+    
+    bool has_l = (border_flags & LEFT) == LEFT;
+    bool has_r = (border_flags & RIGHT) == RIGHT;
+    bool has_b = (border_flags & BOTTOM) == BOTTOM;
+    bool has_t = (border_flags & TOP) == TOP;
+    bool has_bl_in = (border_flags & BOTTOM_LEFT_INWARDS) == BOTTOM_LEFT_INWARDS;
+    bool has_br_in = (border_flags & BOTTOM_RIGHT_INWARDS) == BOTTOM_RIGHT_INWARDS;
+    bool has_tl_in = (border_flags & TOP_LEFT_INWARDS) == TOP_LEFT_INWARDS;
+    bool has_tr_in = (border_flags & TOP_RIGHT_INWARDS) == TOP_RIGHT_INWARDS;
+    bool has_bl_out = (border_flags & BOTTOM_LEFT_OUTWARDS) == BOTTOM_LEFT_OUTWARDS;
+    bool has_br_out = (border_flags & BOTTOM_RIGHT_OUTWARDS) == BOTTOM_RIGHT_OUTWARDS;
+    bool has_tl_out = (border_flags & TOP_LEFT_OUTWARDS) == TOP_LEFT_OUTWARDS;
+    bool has_tr_out = (border_flags & TOP_RIGHT_OUTWARDS) == TOP_RIGHT_OUTWARDS;
+
+    bool has_bl = has_bl_in || has_bl_out;
+    bool has_br = has_br_in || has_br_out;
+    bool has_tl = has_tl_in || has_tl_out;
+    bool has_tr = has_tr_in || has_tr_out;
+
+    vec2 bl = center - size / 2;
+    vec2 br = center + vec2(size.x / 2, -size.y / 2);
+    vec2 tl = center + vec2(-size.x / 2, size.y / 2);
+    vec2 tr = center + size / 2;
+
+    bl.x += r + thickness;
+    br.x -= r + thickness;
+    tl.x += r + thickness;
+    tr.x -= r + thickness;
+
+    vec2 bl_in = bl + r;
+    vec2 br_in = br + vec2(-r, r);
+    vec2 tl_in = tl + vec2(r, -r);
+    vec2 tr_in = tr + vec2(-r, -r);
+
+    bl_in.x -= thickness;
+    br_in.x += thickness;
+    tl_in.x -= thickness;
+    tr_in.x += thickness;
+
+    vec2 bl_out = bl + vec2(-r, r);
+    vec2 br_out = br + vec2(r, r);
+    vec2 tl_out = tl + vec2(-r, -r);
+    vec2 tr_out = tr + vec2(r, -r);
+
+    float l_edge = center.x - size.x / 2;
+    float r_edge = center.x + size.x / 2;
+    float b_edge = center.y - size.y / 2;
+    float t_edge = center.y + size.y / 2;
+
+    float l_border = l_edge + thickness;
+    float r_border = r_edge - thickness;
+    float t_border = t_edge - thickness;
+    float b_border = b_edge + thickness;
+
+    l_border += r;
+    r_border -= r;
+
+    float d_in = 0;
+    if (has_bl_in && coord.x < bl_in.x && coord.y < bl_in.y) {
+        d_in = distance(coord, bl_in) - r;
+    }
+    if (has_br_in && coord.x > br_in.x && coord.y < br_in.y) {
+        d_in = distance(coord, br_in) - r;
+    }
+    if (has_tl_in && coord.x < tl_in.x && coord.y > tl_in.y) {
+        d_in = distance(coord, tl_in) - r;
+    }
+    if (has_tr_in && coord.x > tr_in.x && coord.y > tr_in.y) {
+        d_in = distance(coord, tr_in) - r;
+    }
+
+    float d_out = 0;
+    if (has_bl_out && coord.x < bl_out.x + r && coord.y < bl_out.y) {
+        d_out = distance(coord, bl_out) - r;
+    }
+    if (has_br_out && coord.x > br_out.x - r && coord.y < br_out.y) {
+        d_out = distance(coord, br_out) - r;
+    }
+    if (has_tl_out && coord.x < tl_out.x + r && coord.y > tl_out.y) {
+        d_out = distance(coord, tl_out) - r;
+    }
+    if (has_tr_out && coord.x > tr_out.x - r && coord.y > tr_out.y) {
+        d_out = distance(coord, tr_out) - r;
+    }
+    
     vec3 computed_color;
     float computed_alpha;
 
@@ -43,146 +129,65 @@ void main() {
         
         computed_color = color.rgb;
         computed_alpha = 1.0;
+
+        if (d_in > 0) {
+            computed_alpha = 0.0;
+        }
+        if (d_out < -thickness) {
+            computed_alpha = 0.0;
+        }
+
+        if (has_l && coord.x < l_border - thickness) {
+            if (!(has_bl && coord.y < bl_in.y) && !(has_tl && coord.y > tl_in.y)) {
+                computed_alpha = 0.0;
+            }
+        }
+        if (has_r && coord.x > r_border + thickness) {
+            if (!(has_br && coord.y < br_in.y) && !(has_tr && coord.y > tr_in.y)) {
+                computed_alpha = 0.0;
+            }
+        }
     }
 
     if (rendering_pass == 1) {
         computed_color = border_color.rgb;
         computed_alpha = 0.0;
 
-        bool has_left_border = (border_flags & LEFT) == LEFT;
-        bool has_right_border = (border_flags & RIGHT) == RIGHT;
-        bool has_bottom_border = (border_flags & BOTTOM) == BOTTOM;
-        bool has_top_border = (border_flags & TOP) == TOP;
-        bool has_bottom_left_inwards_border = (border_flags & BOTTOM_LEFT_INWARDS) == BOTTOM_LEFT_INWARDS;
-        bool has_bottom_right_inwards_border = (border_flags & BOTTOM_RIGHT_INWARDS) == BOTTOM_RIGHT_INWARDS;
-        bool has_top_left_inwards_border = (border_flags & TOP_LEFT_INWARDS) == TOP_LEFT_INWARDS;
-        bool has_top_right_inwards_border = (border_flags & TOP_RIGHT_INWARDS) == TOP_RIGHT_INWARDS;
-        bool has_bottom_left_outwards_border = (border_flags & BOTTOM_LEFT_OUTWARDS) == BOTTOM_LEFT_OUTWARDS;
-        bool has_bottom_right_outwards_border = (border_flags & BOTTOM_RIGHT_OUTWARDS) == BOTTOM_RIGHT_OUTWARDS;
-        bool has_top_left_outwards_border = (border_flags & TOP_LEFT_OUTWARDS) == TOP_LEFT_OUTWARDS;
-        bool has_top_right_outwards_border = (border_flags & TOP_RIGHT_OUTWARDS) == TOP_RIGHT_OUTWARDS;
-
-        bool has_bottom_left_border = has_bottom_left_inwards_border || has_bottom_left_outwards_border;
-        bool has_bottom_right_border = has_bottom_right_inwards_border || has_bottom_right_outwards_border;
-        bool has_top_left_border = has_top_left_inwards_border || has_top_left_outwards_border;
-        bool has_top_right_border = has_top_right_inwards_border || has_top_right_outwards_border;
-
-        vec2 pixel_pos = gl_FragCoord.xy;
-
-        vec2 bottom_left = center - size / 2;
-        vec2 bottom_right = center + vec2(size.x / 2, -size.y / 2);
-        vec2 top_left = center + vec2(-size.x / 2, size.y / 2);
-        vec2 top_right = center + size / 2;
-
-        bottom_left.x += r + border_thickness;
-        bottom_right.x -= r + border_thickness;
-        top_left.x += r + border_thickness;
-        top_right.x -= r + border_thickness;
-
-        vec2 curve_bottom_left = bottom_left + r;
-        vec2 curve_bottom_right = bottom_right + vec2(-r, r);
-        vec2 curve_top_left = top_left + vec2(r, -r);
-        vec2 curve_top_right = top_right + vec2(-r, -r);
-
-        curve_bottom_left.x -= border_thickness;
-        curve_bottom_right.x += border_thickness;
-        curve_top_left.x -= border_thickness;
-        curve_top_right.x += border_thickness;
-
-        float d = 0;
-        if (has_bottom_left_inwards_border && pixel_pos.x < curve_bottom_left.x &&
-            pixel_pos.y < curve_bottom_left.y) {
-            d = distance(pixel_pos, curve_bottom_left) - r;
+        if (-thickness < d_in && d_in < 0) {
+            computed_alpha = 1.0;
         }
-        if (has_bottom_right_inwards_border && pixel_pos.x > curve_bottom_right.x &&
-            pixel_pos.y < curve_bottom_right.y) {
-            d = distance(pixel_pos, curve_bottom_right) - r;
-        }
-        if (has_top_left_inwards_border && pixel_pos.x < curve_top_left.x &&
-            pixel_pos.y > curve_top_left.y) {
-            d = distance(pixel_pos, curve_top_left) - r;
-        }
-        if (has_top_right_inwards_border && pixel_pos.x > curve_top_right.x &&
-            pixel_pos.y > curve_top_right.y) {
-            d = distance(pixel_pos, curve_top_right) - r;
-        }
-        if (-border_thickness < d && d < 0) {
-            computed_color = border_color.rgb;
+        if (-thickness < d_out && d_out < 0) {
             computed_alpha = 1.0;
         }
 
-        vec2 curve_bottom_left_outwards = bottom_left + vec2(-r, r);
-        vec2 curve_bottom_right_outwards = bottom_right + vec2(r, r);
-        vec2 curve_top_left_outwards = top_left + vec2(-r, -r);
-        vec2 curve_top_right_outwards = top_right + vec2(r, -r);
-
-        d = 0;
-        if (has_bottom_left_outwards_border && pixel_pos.x < curve_bottom_left_outwards.x + r && pixel_pos.y < curve_bottom_left_outwards.y) {
-            d = distance(pixel_pos, curve_bottom_left_outwards) - r;
-        }
-        if (has_bottom_right_outwards_border && pixel_pos.x > curve_bottom_right_outwards.x - r && pixel_pos.y < curve_bottom_right_outwards.y) {
-            d = distance(pixel_pos, curve_bottom_right_outwards) - r;
-        }
-        if (has_top_left_outwards_border && pixel_pos.x < curve_top_left_outwards.x + r && pixel_pos.y > curve_top_left_outwards.y) {
-            d = distance(pixel_pos, curve_top_left_outwards) - r;
-        }
-        if (has_top_right_outwards_border && pixel_pos.x > curve_top_right_outwards.x - r && pixel_pos.y > curve_top_right_outwards.y) {
-            d = distance(pixel_pos, curve_top_right_outwards) - r;
-        }
-        if (-border_thickness < d && d < 0) {
-            computed_color = border_color.rgb;
-            computed_alpha = 1.0;
-        }
-
-        float left_edge = center.x - size.x / 2;
-        float right_edge = center.x + size.x / 2;
-        float bottom_edge = center.y - size.y / 2;
-        float top_edge = center.y + size.y / 2;
-
-        float border_left = left_edge + border_thickness;
-        float border_right = right_edge - border_thickness;
-        float border_top = top_edge - border_thickness;
-        float border_bottom = bottom_edge + border_thickness;
-
-        border_left += r;
-        border_right -= r;
-
-        if (has_left_border && border_left - border_thickness < pixel_pos.x && pixel_pos.x < border_left) {
-            if (!(has_bottom_left_border && pixel_pos.y < curve_bottom_left.y) &&
-                !(has_top_left_border && pixel_pos.y > curve_top_left.y)) {
-                computed_color = border_color.rgb;
+        if (has_l && l_border - thickness < coord.x && coord.x < l_border) {
+            if (!(has_bl && coord.y < bl_in.y) && !(has_tl && coord.y > tl_in.y)) {
                 computed_alpha = 1.0;
             }
         }
-        if (has_right_border && border_right < pixel_pos.x && pixel_pos.x < border_right + border_thickness) {
-            if (!(has_bottom_right_border && pixel_pos.y < curve_bottom_right.y) &&
-                !(has_top_right_border && pixel_pos.y > curve_top_right.y)) {
-                computed_color = border_color.rgb;
+        if (has_r && r_border < coord.x && coord.x < r_border + thickness) {
+            if (!(has_br && coord.y < br_in.y) && !(has_tr && coord.y > tr_in.y)) {
                 computed_alpha = 1.0;
             }
         }
 
-        bool is_past_bottom_offset = pixel_pos.x > border_left + bottom_border_offset;
-        bool is_past_top_offset = pixel_pos.x > border_left + top_border_offset;
+        bool is_past_bottom_offset = coord.x > l_border + bottom_border_offset;
+        bool is_past_top_offset = coord.x > l_border + top_border_offset;
 
-        if (has_bottom_border && pixel_pos.y < border_bottom && is_past_bottom_offset) {
-            if (!(has_bottom_left_border && pixel_pos.x < curve_bottom_left.x) &&
-                !(has_bottom_right_border && pixel_pos.x > curve_bottom_right.x)) {
-                computed_color = border_color.rgb;
+        if (has_b && coord.y < b_border && is_past_bottom_offset) {
+            if (!(has_bl && coord.x < bl_in.x) && !(has_br && coord.x > br_in.x)) {
                 computed_alpha = 1.0;
             }
         }
-        if (has_top_border && pixel_pos.y > border_top && is_past_top_offset) {
-            if (!(has_top_left_border && pixel_pos.x < curve_top_left.x) &&
-                !(has_top_right_border && pixel_pos.x > curve_top_right.x)) {
-                computed_color = border_color.rgb;
+        if (has_t && coord.y > t_border && is_past_top_offset) {
+            if (!(has_tl && coord.x < tl_in.x) && !(has_tr && coord.x > tr_in.x)) {
                 computed_alpha = 1.0;
             }
         }
+    }
 
-        if (computed_alpha == 0.0) {
-            discard;
-        }
+    if (computed_alpha == 0.0) {
+        discard;
     }
 
     out_alpha_mask = vec4(1.0);

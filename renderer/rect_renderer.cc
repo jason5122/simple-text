@@ -116,15 +116,15 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     float editor_height = size.height - editor_offset.y - status_bar_height;
 
     // Add caret.
-    if ((scroll.x < caret_x + caret_width + line_number_offset &&
-         caret_x < scroll.x + editor_width - line_number_offset) &&
-        (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
-        instances.emplace_back(InstanceData{
-            .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
-            .rect_size = Vec2{caret_width, caret_height},
-            .color = Rgba::fromRgb(color_scheme.caret, 255),
-        });
-    }
+    // if ((scroll.x < caret_x + caret_width + line_number_offset &&
+    //      caret_x < scroll.x + editor_width - line_number_offset) &&
+    //     (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
+    //     instances.emplace_back(InstanceData{
+    //         .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
+    //         .rect_size = Vec2{caret_width, caret_height},
+    //         .color = Rgba::fromRgb(color_scheme.caret, 255),
+    //     });
+    // }
 
     // Add vertical scroll bar.
     if (line_count > 0) {

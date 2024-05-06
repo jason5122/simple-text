@@ -43,7 +43,7 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 
     glUseProgram(shader_program.id);
     glUniform1i(glGetUniformLocation(shader_program.id, "r"), kCornerRadius);
-    glUniform1i(glGetUniformLocation(shader_program.id, "border_thickness"), kBorderThickness);
+    glUniform1i(glGetUniformLocation(shader_program.id, "thickness"), kBorderThickness);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -117,7 +117,6 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
                                            uint32_t bottom_border_offset = 0,
                                            uint32_t top_border_offset = 0,
                                            uint32_t hide_background = 0) {
-        constexpr int border_thickness = 2;
         instances.emplace_back(InstanceData{
             .coords =
                 {
@@ -127,10 +126,12 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
             .size =
                 {
                     .x = static_cast<float>(end - start),
-                    .y = font_rasterizer.line_height + border_thickness,
+                    .y = font_rasterizer.line_height + kBorderThickness,
                 },
-            .color = Rgba::fromRgb(colors::selection_unfocused, 0),
-            .border_color = Rgba::fromRgb(colors::red, 0),
+            // .color = Rgba::fromRgb(colors::selection_unfocused, 0),
+            // .border_color = Rgba::fromRgb(colors::red, 0),
+            .color = Rgba::fromRgb(colors::yellow, 0),
+            .border_color = Rgba::fromRgb(Rgb{0, 0, 0}, 0),
             .border_info =
                 IVec4{
                     .x = border_flags,

@@ -87,6 +87,10 @@ void App::run() {
     }
 }
 
+void App::quit() {
+    [pimpl->ns_app terminate:nil];
+}
+
 class App::Window::impl {
 public:
     WindowController* window_controller;

@@ -23,6 +23,6 @@ private:
     int tallest = 0;
 
     // DEBUG: Color atlas background to spot incorrect shaders easier.
-    std::vector<uint8_t> data;
+    std::vector<uint8_t> atlas_background;
 };
 }

@@ -38,8 +38,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     createTab(file_path);
     createTab(file_path2);
-    // createTab(file_path3);
-    // createTab(fs::path{});
+    createTab(file_path3);
+    createTab(fs::path{});
 
 #if IS_LINUX
     // TODO: Implement scale factor support.
@@ -147,8 +147,7 @@ void EditorWindow::onScroll(float dx, float dy) {
     // TODO: Subtract one from line count to leave the last line visible.
     float max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
 
-    tab->scroll.x = std::clamp(tab->scroll.x + dx, 0.0f, max_scroll_x);
-    tab->scroll.y = std::clamp(tab->scroll.y + dy, 0.0f, max_scroll_y);
+    tab->scrollBuffer({dx, dy}, {max_scroll_x, max_scroll_y});
 
     redraw();
 }

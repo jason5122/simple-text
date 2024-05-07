@@ -6,21 +6,31 @@ void Atlas::setup() {
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
-    // DEBUG: Color atlas background to spot incorrect shaders easier.
-    // This helped with debugging the fractional pixel scrolling bug.
-    // TODO: Creating the `data` vector is quite slow, so disable during release.
-    data = std::vector<uint8_t>(kAtlasSize * kAtlasSize * 4, 0);
-    size_t pixels = kAtlasSize * kAtlasSize;
-    for (int i = 0; i < pixels; i++) {
-        size_t offset = i * 4;
-        data[offset + 2] = 0;
-        data[offset + 1] = 255;
-        data[offset] = 0;
-        data[offset + 3] = 255;
+    // TODO: Incorporate this into the build system.
+    const void* data;
+
+    bool is_release_build = true;
+    if (is_release_build) {
+        data = nullptr;
+    } else {
+        // DEBUG: Color atlas background to spot incorrect shaders easier.
+        // This helped with debugging the fractional pixel scrolling bug.
+        // TODO: Creating this` vector is quite slow, so disable during release.
+        atlas_background = std::vector<uint8_t>(kAtlasSize * kAtlasSize * 4, 0);
+        size_t pixels = kAtlasSize * kAtlasSize;
+        for (int i = 0; i < pixels; i++) {
+            size_t offset = i * 4;
+            atlas_background[offset + 2] = 0;
+            atlas_background[offset + 1] = 255;
+            atlas_background[offset] = 0;
+            atlas_background[offset + 3] = 255;
+        }
+
+        data = &atlas_background[0];
     }
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kAtlasSize, kAtlasSize, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 &data[0]);
+                 data);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

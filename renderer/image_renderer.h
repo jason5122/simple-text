@@ -4,12 +4,15 @@
 #include "renderer/atlas.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
+#include "util/not_copyable_or_movable.h"
 #include <glad/glad.h>
 #include <vector>
 
 namespace renderer {
 class ImageRenderer {
 public:
+    NOT_COPYABLE(ImageRenderer)
+    NOT_MOVABLE(ImageRenderer)
     ImageRenderer();
     ~ImageRenderer();
     void setup();

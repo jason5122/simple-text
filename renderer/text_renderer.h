@@ -18,6 +18,8 @@
 namespace renderer {
 class TextRenderer {
 public:
+    NOT_COPYABLE(TextRenderer)
+    NOT_MOVABLE(TextRenderer)
     TextRenderer();
     ~TextRenderer();
     void setup(FontRasterizer& font_rasterizer);

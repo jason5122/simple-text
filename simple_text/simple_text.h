@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/app.h"
+#include "util/not_copyable_or_movable.h"
 #include <vector>
 
 #include "config/color_scheme.h"
@@ -19,8 +20,10 @@ public:
     public:
         int wid;
 
+        NOT_COPYABLE(EditorWindow)
+        NOT_MOVABLE(EditorWindow)
         EditorWindow(SimpleText& parent, int width, int height, int wid);
-        ~EditorWindow();
+        ~EditorWindow() override;
         void createTab(fs::path file_path);
         void reloadColorScheme();
 
@@ -72,8 +75,10 @@ public:
 
     FileWatcher file_watcher;
 
+    NOT_COPYABLE(SimpleText)
+    NOT_MOVABLE(SimpleText)
     SimpleText();
-    ~SimpleText();
+    ~SimpleText() override;
     void createWindow();
     void destroyWindow(int wid);
     void createNWindows(int n);

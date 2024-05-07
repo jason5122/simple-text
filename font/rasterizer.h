@@ -1,6 +1,7 @@
 #pragma once
 
 #include "font/rasterized_glyph.h"
+#include "util/not_copyable_or_movable.h"
 #include <memory>
 #include <string>
 
@@ -10,8 +11,11 @@ public:
     float line_height;
     float descent;
 
+    NOT_COPYABLE(FontRasterizer)
+    NOT_MOVABLE(FontRasterizer)
     FontRasterizer();
     ~FontRasterizer();
+
     bool setup(int id, std::string main_font_name, int font_size);
     // TODO: Unify rasterize() methods.
     RasterizedGlyph rasterizeUTF8(const char* utf8_str);

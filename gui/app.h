@@ -2,14 +2,17 @@
 
 #include "gui/key.h"
 #include "gui/modifier_key.h"
+#include "util/not_copyable_or_movable.h"
 #include <memory>
 
 class App {
 public:
     class Window {
     public:
+        NOT_COPYABLE(Window)
+        NOT_MOVABLE(Window)
         Window(App& parent, int width, int height);
-        ~Window();
+        virtual ~Window();
         void show();
         void close();
         void redraw();
@@ -36,8 +39,10 @@ public:
         std::unique_ptr<impl> pimpl;
     };
 
+    NOT_COPYABLE(App)
+    NOT_MOVABLE(App)
     App();
-    ~App();
+    virtual ~App();
     void run();
     void quit();
 

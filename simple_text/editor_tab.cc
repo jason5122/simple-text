@@ -13,7 +13,7 @@ void EditorTab::setup(config::ColorScheme& color_scheme) {
     buffer.setContents(file_contents);
     highlighter.setLanguage("source.json", color_scheme);
 
-    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, SyntaxHighlighter::read, TSInputEncodingUTF8};
     highlighter.parse(input);
 }
 

@@ -3,6 +3,7 @@
 #include "config/color_scheme.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
+#include "util/not_copyable_or_movable.h"
 #include <cstddef>
 #include <glad/glad.h>
 #include <vector>
@@ -10,6 +11,8 @@
 namespace renderer {
 class RectRenderer {
 public:
+    NOT_COPYABLE(RectRenderer)
+    NOT_MOVABLE(RectRenderer)
     RectRenderer();
     ~RectRenderer();
     void setup();

@@ -11,9 +11,7 @@
 extern "C" TSLanguage* tree_sitter_json();
 // extern "C" TSLanguage* tree_sitter_scheme();
 
-SyntaxHighlighter::SyntaxHighlighter() {
-    parser = ts_parser_new();
-}
+SyntaxHighlighter::SyntaxHighlighter() : parser(ts_parser_new()) {}
 
 SyntaxHighlighter::~SyntaxHighlighter() {
     // This causes segfaults for some reason if SyntaxHighlighter is stored in a std::vector

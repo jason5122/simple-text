@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer/opengl_types.h"
+#include "util/not_copyable_or_movable.h"
 #include <glad/glad.h>
 #include <vector>
 
@@ -12,6 +13,8 @@ public:
 
     GLuint tex_id;
 
+    NOT_COPYABLE(Atlas)
+    NOT_MOVABLE(Atlas)
     Atlas() = default;
     ~Atlas();
     void setup();

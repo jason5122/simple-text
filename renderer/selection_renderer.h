@@ -4,6 +4,7 @@
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
+#include "util/not_copyable_or_movable.h"
 #include <glad/glad.h>
 
 namespace renderer {
@@ -15,6 +16,8 @@ public:
         int end;
     };
 
+    NOT_COPYABLE(SelectionRenderer)
+    NOT_MOVABLE(SelectionRenderer)
     SelectionRenderer();
     ~SelectionRenderer();
     void setup(FontRasterizer& font_rasterizer);

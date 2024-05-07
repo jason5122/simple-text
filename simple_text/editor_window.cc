@@ -313,7 +313,7 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
         // TODO: Move this into EditorTab.
         tab->highlighter.edit(start_byte, end_byte, start_byte);
-        TSInput input = {&tab->buffer, Buffer::read, TSInputEncodingUTF8};
+        TSInput input = {&tab->buffer, SyntaxHighlighter::read, TSInputEncodingUTF8};
         tab->highlighter.parse(input);
 
         if (tab->start_caret.byte > tab->end_caret.byte) {

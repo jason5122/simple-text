@@ -3,7 +3,6 @@
 #include "renderer/opengl_error_util.h"
 #include "selection_renderer.h"
 #include <cstdint>
-#include <limits>
 
 #include "build/buildflag.h"
 

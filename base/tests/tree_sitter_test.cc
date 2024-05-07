@@ -67,7 +67,7 @@ TEST(TreeSitterBufferTest, Json10Mb) {
 
     Buffer buffer;
     buffer.setContents(ReadFile("test_files/10mb.json"));
-    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
+    TSInput input = {&buffer, SyntaxHighlighter::read, TSInputEncodingUTF8};
 
     TSTree* tree;
     {

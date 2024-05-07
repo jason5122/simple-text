@@ -27,6 +27,10 @@ void App::run() {
     g_application_run(G_APPLICATION(pimpl->app), 0, NULL);
 }
 
+void App::quit() {
+    g_application_quit(G_APPLICATION(pimpl->app));
+}
+
 App::~App() {
     g_object_unref(pimpl->app);
 }

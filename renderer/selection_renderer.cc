@@ -7,20 +7,19 @@
 #include "build/buildflag.h"
 
 namespace renderer {
-// TODO: Rewrite this in a more idiomatic C++ way.
 // Border flags.
-#define LEFT 1
-#define RIGHT 2
-#define BOTTOM 4
-#define TOP 8
-#define BOTTOM_LEFT_INWARDS 16
-#define BOTTOM_RIGHT_INWARDS 32
-#define TOP_LEFT_INWARDS 64
-#define TOP_RIGHT_INWARDS 128
-#define BOTTOM_LEFT_OUTWARDS 256
-#define BOTTOM_RIGHT_OUTWARDS 512
-#define TOP_LEFT_OUTWARDS 1024
-#define TOP_RIGHT_OUTWARDS 2048
+const int kLeft = 1;
+const int kRight = 1 << 1;
+const int kBottom = 1 << 2;
+const int kTop = 1 << 3;
+const int kBottomLeftInwards = 1 << 4;
+const int kBottomRightInwards = 1 << 5;
+const int kTopLeftInwards = 1 << 6;
+const int kTopRightInwards = 1 << 7;
+const int kBottomLeftOutwards = 1 << 8;
+const int kBottomRightOutwards = 1 << 9;
+const int kTopLeftOutwards = 1 << 10;
+const int kTopRightOutwards = 1 << 11;
 
 SelectionRenderer::SelectionRenderer() {}
 
@@ -112,7 +111,7 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
     glBindVertexArray(vao);
 
     auto create = [this, &font_rasterizer](int start, int end, int line,
-                                           uint32_t border_flags = LEFT | RIGHT | TOP | BOTTOM,
+                                           uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                                            uint32_t bottom_border_offset = 0,
                                            uint32_t top_border_offset = 0,
                                            uint32_t hide_background = 0) {
@@ -128,8 +127,8 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
                     .y = font_rasterizer.line_height + kBorderThickness,
                 },
             .color = Rgba::fromRgb(colors::selection_focused, 0),
-            .border_color = Rgba::fromRgb(colors::selection_border, 0),
-            // .border_color = Rgba::fromRgb(colors::red, 0),
+            // .border_color = Rgba::fromRgb(colors::selection_border, 0),
+            .border_color = Rgba::fromRgb(colors::red, 0),
             // .color = Rgba::fromRgb(colors::yellow, 0),
             // .border_color = Rgba::fromRgb(Rgb{0, 0, 0}, 0),
             .border_info =
@@ -144,51 +143,51 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {
-        uint32_t flags = LEFT | RIGHT;
+        uint32_t flags = kLeft | kRight;
         uint32_t bottom_border_offset = 0;
         uint32_t top_border_offset = 0;
 
         if (i == 0) {
-            flags |= TOP | TOP_LEFT_INWARDS | TOP_RIGHT_INWARDS;
+            flags |= kTop | kTopLeftInwards | kTopRightInwards;
 
             if (selections_size > 1 && selections[i].start > 0) {
                 int end = selections[i].start;
                 if (selections[i + 1].end >= selections[i].start) {
                     end -= kCornerRadius + 2;
                 }
-                create(2, end, selections[i].line, BOTTOM, 0, 0, 1);
+                create(2, end, selections[i].line, kBottom, 0, 0, 1);
             }
         }
         if (i == selections_size - 1) {
-            flags |= BOTTOM | BOTTOM_LEFT_INWARDS | BOTTOM_RIGHT_INWARDS;
+            flags |= kBottom | kBottomLeftInwards | kBottomRightInwards;
         }
 
         if (i > 0) {
             if (selections[i - 1].start > 0) {
-                flags |= TOP_LEFT_INWARDS;
+                flags |= kTopLeftInwards;
             }
 
             if (selections[i].end > selections[i - 1].end) {
-                flags |= TOP_RIGHT_INWARDS;
+                flags |= kTopRightInwards;
 
-                flags |= TOP;
+                flags |= kTop;
                 top_border_offset = selections[i - 1].end;
             } else if (selections[i].end < selections[i - 1].end) {
-                flags |= TOP_RIGHT_OUTWARDS;
+                flags |= kTopRightOutwards;
             }
         }
         if (i + 1 < selections_size) {
             if (selections[i].start > selections[i + 1].start) {
-                flags |= BOTTOM_LEFT_OUTWARDS;
+                flags |= kBottomLeftOutwards;
             }
 
             if (selections[i].end > selections[i + 1].end) {
-                flags |= BOTTOM_RIGHT_INWARDS;
+                flags |= kBottomRightInwards;
 
-                flags |= BOTTOM;
+                flags |= kBottom;
                 bottom_border_offset = selections[i + 1].end - selections[i].start;
             } else if (selections[i].end < selections[i + 1].end) {
-                flags |= BOTTOM_RIGHT_OUTWARDS;
+                flags |= kBottomRightOutwards;
             }
         }
 

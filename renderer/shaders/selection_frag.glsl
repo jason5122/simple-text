@@ -19,34 +19,34 @@ layout(location = 0, index = 0) out vec4 out_color;
 layout(location = 0, index = 1) out vec4 out_alpha_mask;
 
 // Border flags.
-#define LEFT 1
-#define RIGHT 2
-#define BOTTOM 4
-#define TOP 8
-#define BOTTOM_LEFT_INWARDS 16
-#define BOTTOM_RIGHT_INWARDS 32
-#define TOP_LEFT_INWARDS 64
-#define TOP_RIGHT_INWARDS 128
-#define BOTTOM_LEFT_OUTWARDS 256
-#define BOTTOM_RIGHT_OUTWARDS 512
-#define TOP_LEFT_OUTWARDS 1024
-#define TOP_RIGHT_OUTWARDS 2048
+const int kLeft = 1;
+const int kRight = 1 << 1;
+const int kBottom = 1 << 2;
+const int kTop = 1 << 3;
+const int kBottomLeftInwards = 1 << 4;
+const int kBottomRightInwards = 1 << 5;
+const int kTopLeftInwards = 1 << 6;
+const int kTopRightInwards = 1 << 7;
+const int kBottomLeftOutwards = 1 << 8;
+const int kBottomRightOutwards = 1 << 9;
+const int kTopLeftOutwards = 1 << 10;
+const int kTopRightOutwards = 1 << 11;
 
 void main() {
     vec2 coord = gl_FragCoord.xy;
     
-    bool has_l = (border_flags & LEFT) == LEFT;
-    bool has_r = (border_flags & RIGHT) == RIGHT;
-    bool has_b = (border_flags & BOTTOM) == BOTTOM;
-    bool has_t = (border_flags & TOP) == TOP;
-    bool has_bl_in = (border_flags & BOTTOM_LEFT_INWARDS) == BOTTOM_LEFT_INWARDS;
-    bool has_br_in = (border_flags & BOTTOM_RIGHT_INWARDS) == BOTTOM_RIGHT_INWARDS;
-    bool has_tl_in = (border_flags & TOP_LEFT_INWARDS) == TOP_LEFT_INWARDS;
-    bool has_tr_in = (border_flags & TOP_RIGHT_INWARDS) == TOP_RIGHT_INWARDS;
-    bool has_bl_out = (border_flags & BOTTOM_LEFT_OUTWARDS) == BOTTOM_LEFT_OUTWARDS;
-    bool has_br_out = (border_flags & BOTTOM_RIGHT_OUTWARDS) == BOTTOM_RIGHT_OUTWARDS;
-    bool has_tl_out = (border_flags & TOP_LEFT_OUTWARDS) == TOP_LEFT_OUTWARDS;
-    bool has_tr_out = (border_flags & TOP_RIGHT_OUTWARDS) == TOP_RIGHT_OUTWARDS;
+    bool has_l = (border_flags & kLeft) == kLeft;
+    bool has_r = (border_flags & kRight) == kRight;
+    bool has_b = (border_flags & kBottom) == kBottom;
+    bool has_t = (border_flags & kTop) == kTop;
+    bool has_bl_in = (border_flags & kBottomLeftInwards) == kBottomLeftInwards;
+    bool has_br_in = (border_flags & kBottomRightInwards) == kBottomRightInwards;
+    bool has_tl_in = (border_flags & kTopLeftInwards) == kTopLeftInwards;
+    bool has_tr_in = (border_flags & kTopRightInwards) == kTopRightInwards;
+    bool has_bl_out = (border_flags & kBottomLeftOutwards) == kBottomLeftOutwards;
+    bool has_br_out = (border_flags & kBottomRightOutwards) == kBottomRightOutwards;
+    bool has_tl_out = (border_flags & kTopLeftOutwards) == kTopLeftOutwards;
+    bool has_tr_out = (border_flags & kTopRightOutwards) == kTopRightOutwards;
 
     bool has_bl = has_bl_in || has_bl_out;
     bool has_br = has_br_in || has_br_out;

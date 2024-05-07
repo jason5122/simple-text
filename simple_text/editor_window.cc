@@ -345,6 +345,10 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret, main_font_rasterizer);
         redraw();
     }
+
+    if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
+        parent.quit();
+    }
 }
 
 void EditorWindow::onClose() {

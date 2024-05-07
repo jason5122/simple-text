@@ -1,4 +1,5 @@
 #include "dummy_context.h"
+#include "util/profile_util.h"
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include <iostream>
@@ -19,8 +20,12 @@ void DummyContext::initialize() {
         .cAuxBuffers = 0,
     };
 
-    int pixelformat = ChoosePixelFormat(m_hdc, &pfd);
-    SetPixelFormat(m_hdc, pixelformat, &pfd);
+    int pixelformat;
+    {
+        PROFILE_BLOCK("ChoosePixelFormat() + SetPixelFormat()");
+        pixelformat = ChoosePixelFormat(m_hdc, &pfd);
+        SetPixelFormat(m_hdc, pixelformat, &pfd);
+    }
 
     m_context = wglCreateContext(m_hdc);
 

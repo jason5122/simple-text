@@ -32,15 +32,15 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
-    // fs::path file_path = ResourceDir() / "sample_files/example.json";
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";
     fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
     fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
+    fs::path file_path4 = ResourceDir() / "sample_files/example.json";
 
     createTab(file_path);
     createTab(file_path2);
     createTab(file_path3);
-    createTab(fs::path{});
+    createTab(file_path4);
 
 #if IS_LINUX
     // TODO: Implement scale factor support.

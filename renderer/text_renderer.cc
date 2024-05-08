@@ -364,7 +364,13 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
         byte_offset++;
 
         if (line_index != end_line) {
-            AtlasGlyph& space_glyph = glyph_cache[font_rasterizer.id][0x20];
+            uint_least32_t space_codepoint = 0x20;
+            if (!glyph_cache[font_rasterizer.id].count(space_codepoint)) {
+                std::string utf8_str = " ";
+                this->loadGlyph(utf8_str, space_codepoint, font_rasterizer);
+            }
+
+            AtlasGlyph& space_glyph = glyph_cache[font_rasterizer.id][space_codepoint];
             end = static_cast<int>(total_advance) + std::round(space_glyph.advance);
         }
 

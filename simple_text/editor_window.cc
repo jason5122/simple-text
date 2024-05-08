@@ -240,49 +240,12 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         redraw();
     }
 
-    if (key == app::Key::k1 && modifiers == app::kPrimaryModifier) {
-        tab_index = 0;
-        redraw();
-    }
-    if (key == app::Key::k2 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 1) {
-            tab_index = 1;
-        }
-        redraw();
-    }
-    if (key == app::Key::k3 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 2) {
-            tab_index = 2;
-        }
-        redraw();
-    }
-    if (key == app::Key::k4 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 3) {
-            tab_index = 3;
-        }
-        redraw();
-    }
-    if (key == app::Key::k5 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 4) {
-            tab_index = 4;
-        }
-        redraw();
-    }
-    if (key == app::Key::k6 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 5) {
-            tab_index = 5;
-        }
-        redraw();
-    }
-    if (key == app::Key::k7 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 6) {
-            tab_index = 6;
-        }
-        redraw();
-    }
-    if (key == app::Key::k8 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 7) {
-            tab_index = 7;
+    if (app::Key::k1 <= key && key <= app::Key::k8 && modifiers == app::kPrimaryModifier) {
+        using U = std::underlying_type_t<app::Key>;
+        int index = static_cast<U>(key) - static_cast<U>(app::Key::k1);
+
+        if (tabs.size() > index) {
+            tab_index = index;
         }
         redraw();
     }
@@ -292,7 +255,6 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         }
         redraw();
     }
-
     if (key == app::Key::k0 && modifiers == app::kPrimaryModifier) {
         if (side_bar_visible) {
             editor_offset.x = 0;

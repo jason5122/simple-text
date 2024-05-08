@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include <cstdint>
 
 void Buffer::setContents(std::string txt) {
     data.clear();

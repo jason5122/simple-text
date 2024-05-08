@@ -175,7 +175,7 @@ static app::Key GetKey(guint vk) {
         {GDK_KEY_7, app::Key::k7},
         {GDK_KEY_8, app::Key::k8},
         {GDK_KEY_9, app::Key::k9},
-        {GDK_KEY_Enter, app::Key::kEnter},
+        {GDK_KEY_Return, app::Key::kEnter},
         {GDK_KEY_BackSpace, app::Key::kBackspace},
         {GDK_KEY_Left, app::Key::kLeftArrow},
         {GDK_KEY_Right, app::Key::kRightArrow},

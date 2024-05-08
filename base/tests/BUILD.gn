@@ -1,7 +1,10 @@
 source_set("tests") {
   testonly = true
 
-  sources = [ "tree_sitter_test.cc" ]
+  sources = [
+    "piece_table_test.cc",
+    "tree_sitter_test.cc",
+  ]
 
   deps = [
     ":copy_test_files",

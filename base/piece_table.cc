@@ -2,10 +2,10 @@
 #include <iostream>
 
 PieceTable::PieceTable(std::string_view str) : original(str) {
-    pieces.emplace_back(PieceDescriptor{
+    pieces.emplace_front(Piece{
+        .source = PieceSource::Original,
         .start = 0,
         .length = str.length(),
-        .source = PieceSource::Original,
     });
 }
 
@@ -13,27 +13,41 @@ void PieceTable::insert(size_t start, std::string_view str) {
     size_t add_start = add.size();
     add += str;
 
-    for (size_t i = 0; i < pieces.size(); i++) {
-        auto& piece = pieces[i];
-
+    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+        // Split piece into three pieces.
+        auto& piece = *it;
         if (start < piece.start + piece.length) {
-            // Split piece into three pieces.
             size_t old_length = piece.length;
             piece.length = start;
 
-            pieces.insert(pieces.begin() + i + 1, {
-                                                      .start = add_start,
-                                                      .length = add_start + str.length(),
-                                                      .source = PieceSource::Add,
-                                                  });
-
-            pieces.insert(pieces.begin() + i + 2, {
-                                                      .start = start,
-                                                      .length = old_length - start,
-                                                      .source = PieceSource::Original,
-                                                  });
-
+            pieces.emplace_after(it, Piece{
+                                         .source = PieceSource::Add,
+                                         .start = add_start,
+                                         .length = add_start + str.length(),
+                                     });
+            pieces.emplace_after(std::next(it), Piece{
+                                                    .source = PieceSource::Original,
+                                                    .start = start,
+                                                    .length = old_length - start,
+                                                });
             break;
+        }
+    }
+}
+
+void PieceTable::erase(size_t pos, size_t count) {
+    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+        // Split piece into two pieces.
+        auto& piece = *it;
+        if (pos >= piece.start && pos + count < piece.start + piece.length) {
+            size_t old_length = piece.length;
+            piece.length = pos - piece.start;
+
+            pieces.emplace_after(it, Piece{
+                                         .source = piece.source,
+                                         .start = pos + count,
+                                         .length = old_length - count,
+                                     });
         }
     }
 }

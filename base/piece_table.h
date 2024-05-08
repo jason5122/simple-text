@@ -1,8 +1,8 @@
 #pragma once
 
+#include <forward_list>
 #include <string>
 #include <string_view>
-#include <vector>
 
 // https://darrenburns.net/posts/piece-table/
 class PieceTable {
@@ -10,6 +10,7 @@ public:
     PieceTable(std::string_view str);
 
     void insert(size_t start, std::string_view str);
+    void erase(size_t pos, size_t count);
     std::string string();
 
     // DEBUG: Visualizes pieces.
@@ -21,13 +22,14 @@ private:
         Add,
     };
 
-    struct PieceDescriptor {
+    struct Piece {
+        PieceSource source;
         size_t start;
         size_t length;
-        PieceSource source;
+        std::forward_list<size_t> line_starts;
     };
 
     std::string original;
     std::string add;
-    std::vector<PieceDescriptor> pieces;
+    std::forward_list<Piece> pieces;
 };

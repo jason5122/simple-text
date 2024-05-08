@@ -49,6 +49,7 @@ static app::Key GetKey(WPARAM vk) {
         {'7', app::Key::k7},
         {'8', app::Key::k8},
         {'9', app::Key::k9},
+        {VK_RETURN, app::Key::kEnter},
         {VK_BACK, app::Key::kBackspace},
         {VK_LEFT, app::Key::kLeftArrow},
         {VK_RIGHT, app::Key::kRightArrow},

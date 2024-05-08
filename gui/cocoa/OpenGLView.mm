@@ -189,6 +189,7 @@ static app::Key GetKey(unsigned short vk) {
         {kVK_ANSI_7, app::Key::k7},
         {kVK_ANSI_8, app::Key::k8},
         {kVK_ANSI_9, app::Key::k9},
+        {kVK_Return, app::Key::kEnter},
         {kVK_Delete, app::Key::kBackspace},
         {kVK_LeftArrow, app::Key::kLeftArrow},
         {kVK_RightArrow, app::Key::kRightArrow},

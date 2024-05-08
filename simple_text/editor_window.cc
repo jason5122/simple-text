@@ -2,6 +2,7 @@
 #include "gui/key.h"
 #include "simple_text.h"
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <glad/glad.h>
 
@@ -348,6 +349,31 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
         parent.quit();
+    }
+
+    if (app::Key::kA <= key && key <= app::Key::kZ && modifiers == app::ModifierKey::kNone) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+
+        using U = std::underlying_type_t<app::Key>;
+        char ch = static_cast<char>('a' + (static_cast<U>(key) - static_cast<U>(app::Key::kA)));
+
+        tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, std::string(1, ch));
+        redraw();
+    }
+    if (app::Key::kA <= key && key <= app::Key::kZ && modifiers == app::ModifierKey::kShift) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+
+        using U = std::underlying_type_t<app::Key>;
+        char ch = static_cast<char>('a' + (static_cast<U>(key) - static_cast<U>(app::Key::kA)));
+        ch = static_cast<char>(std::toupper(ch));
+
+        tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, std::string(1, ch));
+        redraw();
+    }
+    if (key == app::Key::kEnter && modifiers == app::ModifierKey::kNone) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, "\n");
+        redraw();
     }
 }
 

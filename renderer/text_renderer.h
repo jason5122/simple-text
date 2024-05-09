@@ -69,8 +69,7 @@ private:
 
     std::pair<float, size_t> closestBoundaryForX(std::string& line_str, float x,
                                                  FontRasterizer& font_rasterizer);
-    AtlasGlyph& getAtlasGlyph(std::string& key, uint32_t codepoint,
-                              FontRasterizer& font_rasterizer);
+    AtlasGlyph& getAtlasGlyph(std::string& key, FontRasterizer& font_rasterizer);
     AtlasGlyph createAtlasGlyph(std::string& utf8_str, FontRasterizer& font_rasterizer);
 };
 }

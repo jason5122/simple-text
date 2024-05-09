@@ -69,10 +69,10 @@ cairo_t* create_cairo_context(int width, int height, int channels, cairo_surface
 }
 
 // https://dthompson.us/posts/font-rendering-in-opengl-with-pango-and-cairo.html
-RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string& utf8_str) {
     cairo_t* layout_context = create_layout_context();
     PangoLayout* layout = pango_cairo_create_layout(layout_context);
-    pango_layout_set_text(layout, utf8_str, -1);
+    pango_layout_set_text(layout, &utf8_str[0], -1);
 
     PangoFontDescription* desc = pango_font_describe(pimpl->pango_font);
     pango_layout_set_font_description(layout, desc);

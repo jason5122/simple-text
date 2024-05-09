@@ -6,7 +6,7 @@ source_set("tests") {
   configs += [ ":optimizations" ]
 
   deps = [
-    "//third_party/abseil-cpp",
+    # "//third_party/abseil-cpp",
     "//third_party/googletest:gtest",
   ]
 }

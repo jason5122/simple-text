@@ -10,13 +10,10 @@
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "simple_text/editor_tab.h"
-#include "third_party/unordered_dense/ankerl/unordered_dense.h"
 #include <glad/glad.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "absl/container/flat_hash_map.h"
 
 namespace renderer {
 class TextRenderer {
@@ -64,12 +61,15 @@ private:
     };
 
     std::vector<std::unordered_map<std::string, AtlasGlyph>> glyph_cache;
-    // std::vector<ankerl::unordered_dense::map<std::string, AtlasGlyph>> glyph_cache;
-    // std::vector<absl::flat_hash_map<std::string, AtlasGlyph>> glyph_cache;
 
-    void loadGlyph(std::string utf8_str, uint_least32_t codepoint,
-                   FontRasterizer& font_rasterizer);
+    static constexpr size_t ascii_size = 0x7e - 0x20 + 1;
+    std::vector<std::array<std::optional<AtlasGlyph>, ascii_size>> ascii_cache;
+
     std::pair<float, size_t> closestBoundaryForX(std::string& line_str, float x,
                                                  FontRasterizer& font_rasterizer);
+    AtlasGlyph& getAtlasGlyph(std::string& key, uint32_t codepoint,
+                              FontRasterizer& font_rasterizer);
+    AtlasGlyph createAtlasGlyph(std::string& utf8_str, uint_least32_t codepoint,
+                                FontRasterizer& font_rasterizer);
 };
 }

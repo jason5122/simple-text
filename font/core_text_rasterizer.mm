@@ -39,13 +39,14 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(const char* utf8_str) {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string& utf8_str) {
     CGGlyph glyph = 0;
     CTFontRef run_font = pimpl->ct_font;
 
-    size_t bytes = strlen(utf8_str);
-    CFStringRef text_string = CFStringCreateWithBytes(
-        kCFAllocatorDefault, (const uint8_t*)utf8_str, bytes, kCFStringEncodingUTF8, false);
+    size_t num_bytes = utf8_str.size();
+    CFStringRef text_string =
+        CFStringCreateWithBytes(kCFAllocatorDefault, (const uint8_t*)&utf8_str[0], num_bytes,
+                                kCFStringEncodingUTF8, false);
 
     CFMutableDictionaryRef attr = CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);

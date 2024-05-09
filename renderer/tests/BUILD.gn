@@ -1,0 +1,12 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [ "hash_map_test.cc" ]
+
+  configs += [ "//build/config/compiler:optimizations" ]
+
+  deps = [
+    "//third_party/abseil-cpp",
+    "//third_party/googletest:gtest",
+  ]
+}

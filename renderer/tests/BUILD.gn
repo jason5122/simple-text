@@ -3,10 +3,18 @@ source_set("tests") {
 
   sources = [ "hash_map_test.cc" ]
 
-  configs += [ "//build/config/compiler:optimizations" ]
+  configs += [ ":optimizations" ]
 
   deps = [
     "//third_party/abseil-cpp",
     "//third_party/googletest:gtest",
   ]
+}
+
+config("optimizations") {
+  cflags = [
+    "-flto=thin",
+    "-O2",
+  ]
+  ldflags = cflags
 }

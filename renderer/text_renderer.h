@@ -16,6 +16,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
+
 namespace renderer {
 class TextRenderer {
 public:
@@ -61,8 +63,9 @@ private:
         bool colored;
     };
 
-    std::vector<std::unordered_map<uint_least32_t, AtlasGlyph>> glyph_cache;
-    // std::vector<ankerl::unordered_dense::map<uint_least32_t, AtlasGlyph>> glyph_cache;
+    std::vector<std::unordered_map<std::string, AtlasGlyph>> glyph_cache;
+    // std::vector<ankerl::unordered_dense::map<std::string, AtlasGlyph>> glyph_cache;
+    // std::vector<absl::flat_hash_map<std::string, AtlasGlyph>> glyph_cache;
 
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                    FontRasterizer& font_rasterizer);

@@ -17,5 +17,10 @@ source_set("renderer") {
     "//third_party/libpng",
   ]
 
-  public_deps = [ "//third_party/glad" ]
+  public_deps = [
+    "//third_party/glad",
+
+    # TODO: Temporary; replace with a better alternative.
+    "//third_party/abseil-cpp",
+  ]
 }

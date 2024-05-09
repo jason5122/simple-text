@@ -10,7 +10,9 @@
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "simple_text/editor_tab.h"
+#include <array>
 #include <glad/glad.h>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>

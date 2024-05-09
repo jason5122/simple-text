@@ -32,8 +32,7 @@ public:
         const size_t BUFSIZE = 256;
         static char buf[BUFSIZE];
 
-        std::string line_str;
-        buffer->getLineContent(&line_str, position.row);
+        std::string line_str = buffer->getLineContent(position.row);
 
         size_t len = line_str.size();
         size_t bytes_copied = std::min(len - position.column, BUFSIZE);

@@ -31,8 +31,8 @@ size_t Buffer::lineCount() {
     return data.size();
 }
 
-void Buffer::getLineContent(std::string* buf, size_t line_index) const {
-    *buf = data.at(line_index);
+std::string Buffer::getLineContent(size_t line_index) const {
+    return data.at(line_index);
 }
 
 size_t Buffer::byteOfLine(size_t line_index) {

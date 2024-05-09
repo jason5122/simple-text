@@ -10,6 +10,7 @@
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "simple_text/editor_tab.h"
+#include "third_party/unordered_dense/ankerl/unordered_dense.h"
 #include <glad/glad.h>
 #include <string>
 #include <unordered_map>
@@ -44,7 +45,7 @@ public:
                               FontRasterizer& main_font_rasterizer);
     void moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
                               FontRasterizer& main_font_rasterizer);
-    float getGlyphAdvance(std::string utf8_str, FontRasterizer& font_rasterizer);
+    float getGlyphAdvance(std::string& utf8_str, FontRasterizer& font_rasterizer);
 
 private:
     static constexpr int kBatchMax = 65536;
@@ -61,10 +62,11 @@ private:
     };
 
     std::vector<std::unordered_map<uint_least32_t, AtlasGlyph>> glyph_cache;
+    // std::vector<ankerl::unordered_dense::map<uint_least32_t, AtlasGlyph>> glyph_cache;
 
     void loadGlyph(std::string utf8_str, uint_least32_t codepoint,
                    FontRasterizer& font_rasterizer);
-    std::pair<float, size_t> closestBoundaryForX(std::string line_str, float x,
+    std::pair<float, size_t> closestBoundaryForX(std::string& line_str, float x,
                                                  FontRasterizer& font_rasterizer);
 };
 }

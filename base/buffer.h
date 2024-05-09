@@ -9,7 +9,7 @@ public:
     void setContents(std::string txt);
     size_t size();
     size_t lineCount();
-    void getLineContent(std::string* buf, size_t line_index) const;
+    std::string getLineContent(size_t line_index) const;
     size_t byteOfLine(size_t line_index);
     void insert(size_t line_index, size_t line_offset, std::string_view txt);
     void remove(size_t line_index, size_t line_offset, size_t bytes);

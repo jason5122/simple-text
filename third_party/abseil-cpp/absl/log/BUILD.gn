@@ -1,0 +1,129 @@
+# Copyright 2022 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//third_party/abseil-cpp/absl.gni")
+
+absl_source_set("absl_check") {
+  public = [ "absl_check.h" ]
+  deps = [ "//third_party/abseil-cpp/absl/log/internal:check_impl" ]
+}
+
+absl_source_set("absl_log") {
+  public = [ "absl_log.h" ]
+  deps = [ "//third_party/abseil-cpp/absl/log/internal:log_impl" ]
+}
+
+absl_source_set("check") {
+  public = [ "check.h" ]
+  deps = [
+    "//third_party/abseil-cpp/absl/log/internal:check_impl",
+    "//third_party/abseil-cpp/absl/log/internal:check_op",
+    "//third_party/abseil-cpp/absl/log/internal:conditions",
+    "//third_party/abseil-cpp/absl/log/internal:log_message",
+    "//third_party/abseil-cpp/absl/log/internal:strip",
+  ]
+}
+
+absl_source_set("die_if_null") {
+  sources = [ "die_if_null.cc" ]
+  public = [ "die_if_null.h" ]
+  deps = [
+    ":log",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
+}
+
+absl_source_set("flags") {
+  sources = [ "flags.cc" ]
+  public = [ "flags.h" ]
+  deps = [
+    ":globals",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/flags:flag",
+    "//third_party/abseil-cpp/absl/flags:marshalling",
+    "//third_party/abseil-cpp/absl/log/internal:config",
+    "//third_party/abseil-cpp/absl/log/internal:flags",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+  ]
+}
+
+absl_source_set("globals") {
+  sources = [ "globals.cc" ]
+  public = [ "globals.h" ]
+  deps = [
+    "//third_party/abseil-cpp/absl/base:atomic_hook",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/base:raw_logging_internal",
+    "//third_party/abseil-cpp/absl/hash",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+  ]
+}
+
+absl_source_set("initialize") {
+  sources = [ "initialize.cc" ]
+  public = [ "initialize.h" ]
+  deps = [
+    ":globals",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/log/internal:globals",
+    "//third_party/abseil-cpp/absl/time",
+  ]
+}
+
+absl_source_set("log") {
+  public = [ "log.h" ]
+  deps = [ "//third_party/abseil-cpp/absl/log/internal:log_impl" ]
+}
+
+absl_source_set("log_entry") {
+  sources = [ "log_entry.cc" ]
+  public = [ "log_entry.h" ]
+  deps = [
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/log/internal:config",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/time",
+    "//third_party/abseil-cpp/absl/types:span",
+  ]
+}
+
+absl_source_set("log_sink") {
+  sources = [ "log_sink.cc" ]
+  public = [ "log_sink.h" ]
+  deps = [
+    ":log_entry",
+    "//third_party/abseil-cpp/absl/base:config",
+  ]
+}
+
+absl_source_set("log_sink_registry") {
+  public = [ "log_sink_registry.h" ]
+  deps = [
+    ":log_sink",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/log/internal:log_sink_set",
+  ]
+}
+
+absl_source_set("log_streamer") {
+  public = [ "log_streamer.h" ]
+  deps = [
+    ":absl_log",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/strings:internal",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/types:optional",
+    "//third_party/abseil-cpp/absl/utility",
+  ]
+}

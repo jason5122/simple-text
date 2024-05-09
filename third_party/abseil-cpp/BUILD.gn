@@ -1,0 +1,83 @@
+# Copyright 2018 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Flags specified here must not impact ABI. Code compiled with and without these
+# opts will be linked together, and in some cases headers compiled with and
+# without these options will be part of the same program.
+
+import("//third_party/abseil-cpp/absl.gni")
+
+group("abseil-cpp") {
+  public_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/base",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/base:nullability",
+    "//third_party/abseil-cpp/absl/base:prefetch",
+    "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/container:btree",
+    "//third_party/abseil-cpp/absl/container:fixed_array",
+    "//third_party/abseil-cpp/absl/container:flat_hash_map",
+    "//third_party/abseil-cpp/absl/container:flat_hash_set",
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
+    "//third_party/abseil-cpp/absl/container:node_hash_map",
+    "//third_party/abseil-cpp/absl/container:node_hash_set",
+    "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
+    "//third_party/abseil-cpp/absl/debugging:stacktrace",
+    "//third_party/abseil-cpp/absl/debugging:symbolize",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/functional:bind_front",
+    "//third_party/abseil-cpp/absl/functional:function_ref",
+    "//third_party/abseil-cpp/absl/functional:overload",
+    "//third_party/abseil-cpp/absl/hash",
+    "//third_party/abseil-cpp/absl/log:absl_check",
+    "//third_party/abseil-cpp/absl/log:absl_log",
+    "//third_party/abseil-cpp/absl/log:die_if_null",
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/meta:type_traits",
+    "//third_party/abseil-cpp/absl/numeric:bits",
+    "//third_party/abseil-cpp/absl/numeric:int128",
+    "//third_party/abseil-cpp/absl/random",
+    "//third_party/abseil-cpp/absl/random:distributions",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:cord",
+    "//third_party/abseil-cpp/absl/strings:has_ostream_operator",
+    "//third_party/abseil-cpp/absl/strings:str_format",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "//third_party/abseil-cpp/absl/time",
+    "//third_party/abseil-cpp/absl/types:optional",
+    "//third_party/abseil-cpp/absl/types:span",
+    "//third_party/abseil-cpp/absl/types:variant",
+    "//third_party/abseil-cpp/absl/utility",
+  ]
+}
+
+config("absl_include_config") {
+  include_dirs = [ "." ]
+}
+
+config("absl_define_config") {
+  defines = [ "ABSL_ALLOCATOR_NOTHROW=1" ]
+}
+
+config("absl_default_cflags_cc") {
+  cflags_cc = [
+    # TODO(crbug.com/588506): Explicitly enable conversion warnings.
+    "-Wbool-conversion",
+    "-Wconstant-conversion",
+    "-Wenum-conversion",
+    "-Wint-conversion",
+    "-Wliteral-conversion",
+    "-Wnon-literal-null-conversion",
+    "-Wnull-conversion",
+    "-Wobjc-literal-conversion",
+    "-Wstring-conversion",
+  ]
+
+  cflags_cc += [ "-Wbitfield-enum-conversion" ]
+}

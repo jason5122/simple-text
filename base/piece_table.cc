@@ -48,6 +48,7 @@ void PieceTable::erase(size_t pos, size_t count) {
                                          .start = pos + count,
                                          .length = old_length - count,
                                      });
+            break;
         }
     }
 }

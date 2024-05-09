@@ -13,6 +13,7 @@ source_set("renderer") {
     "//base",
     "//base/filesystem",
     "//font",
+    "//third_party/abseil-cpp",
     "//third_party/libgrapheme",
     "//third_party/libpng",
   ]

@@ -187,7 +187,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_MOUSEMOVE: {
-        if (wParam == MK_LBUTTON) {
+        if (wParam & MK_LBUTTON) {
             int mouse_x = GET_X_LPARAM(lParam);
             int mouse_y = GET_Y_LPARAM(lParam);
             app::ModifierKey modifiers = GetModifiers();

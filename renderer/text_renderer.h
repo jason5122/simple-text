@@ -71,7 +71,6 @@ private:
                                                  FontRasterizer& font_rasterizer);
     AtlasGlyph& getAtlasGlyph(std::string& key, uint32_t codepoint,
                               FontRasterizer& font_rasterizer);
-    AtlasGlyph createAtlasGlyph(std::string& utf8_str, uint_least32_t codepoint,
-                                FontRasterizer& font_rasterizer);
+    AtlasGlyph createAtlasGlyph(std::string& utf8_str, FontRasterizer& font_rasterizer);
 };
 }

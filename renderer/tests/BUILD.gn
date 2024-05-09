@@ -3,12 +3,9 @@ source_set("tests") {
 
   sources = [ "hash_map_test.cc" ]
 
-  configs += [ ":optimizations" ]
+  # configs += [ ":optimizations" ]
 
-  deps = [
-    # "//third_party/abseil-cpp",
-    "//third_party/googletest:gtest",
-  ]
+  deps = [ "//third_party/googletest:gtest" ]
 }
 
 config("optimizations") {

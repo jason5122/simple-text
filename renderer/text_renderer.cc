@@ -108,15 +108,13 @@ TextRenderer::AtlasGlyph& TextRenderer::getAtlasGlyph(std::string& key, uint32_t
     if (key.length() == 1 && 0x20 <= key[0] && key[0] <= 0x7e) {
         size_t i = key[0] - 0x20;
         if (ascii_cache.at(font_rasterizer.id).at(i) == std::nullopt) {
-            ascii_cache.at(font_rasterizer.id).at(i) =
-                createAtlasGlyph(key, codepoint, font_rasterizer);
+            ascii_cache.at(font_rasterizer.id).at(i) = createAtlasGlyph(key, font_rasterizer);
         }
         return ascii_cache.at(font_rasterizer.id).at(i).value();
     }
 
     if (!glyph_cache.at(font_rasterizer.id).contains(key)) {
-        glyph_cache.at(font_rasterizer.id)
-            .insert({key, createAtlasGlyph(key, codepoint, font_rasterizer)});
+        glyph_cache.at(font_rasterizer.id).insert({key, createAtlasGlyph(key, font_rasterizer)});
     }
     return glyph_cache.at(font_rasterizer.id).at(key);
 }
@@ -545,9 +543,10 @@ void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
 }
 
 TextRenderer::AtlasGlyph TextRenderer::createAtlasGlyph(std::string& utf8_str,
-                                                        uint_least32_t codepoint,
                                                         FontRasterizer& font_rasterizer) {
 #if IS_WIN
+    uint_least32_t codepoint = 0;
+    grapheme_decode_utf8(&utf8_str[0], SIZE_MAX, &codepoint);
     RasterizedGlyph glyph = font_rasterizer.rasterizeTemp(utf8_str, codepoint);
 #else
     RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str);

@@ -134,7 +134,7 @@ bool MainWindow::isDarkMode() {
     return g_variant_get_uint32(variant) == 1;
 }
 
-static app::Key GetKey(guint vk) {
+static inline app::Key GetKey(guint vk) {
     static constexpr struct {
         guint fVK;
         app::Key fKey;
@@ -192,22 +192,26 @@ static app::Key GetKey(guint vk) {
     return app::Key::kNone;
 }
 
-static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer user_data) {
-    app::Key key = GetKey(gdk_keyval_to_upper(event->keyval));
-
+static inline app::ModifierKey GetModifiers(GdkModifierType* state) {
     app::ModifierKey modifiers = app::ModifierKey::kNone;
-    if (event->state & GDK_SHIFT_MASK) {
+    if (state & GDK_SHIFT_MASK) {
         modifiers |= app::ModifierKey::kShift;
     }
-    if (event->state & GDK_CONTROL_MASK) {
+    if (state & GDK_CONTROL_MASK) {
         modifiers |= app::ModifierKey::kControl;
     }
-    if (event->state & GDK_MOD1_MASK) {
+    if (state & GDK_MOD1_MASK) {
         modifiers |= app::ModifierKey::kAlt;
     }
-    if (event->state & GDK_SUPER_MASK) {
+    if (state & GDK_SUPER_MASK) {
         modifiers |= app::ModifierKey::kSuper;
     }
+    return modifiers;
+}
+
+static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer user_data) {
+    app::Key key = GetKey(gdk_keyval_to_upper(event->keyval));
+    app::ModifierKey modifiers = GetModifiers(event->state);
 
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onKeyDown(key, modifiers);
@@ -286,8 +290,10 @@ static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpoin
         float scaled_mouse_x = mouse_x * scale_factor;
         float scaled_mouse_y = mouse_y * scale_factor;
 
+        app::ModifierKey modifiers = GetModifiers(event->state);
+
         MainWindow* main_window = static_cast<MainWindow*>(user_data);
-        main_window->app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+        main_window->app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers);
     }
     return true;
 }
@@ -301,8 +307,10 @@ static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpoi
         float scaled_mouse_x = mouse_x * scale_factor;
         float scaled_mouse_y = mouse_y * scale_factor;
 
+        app::ModifierKey modifiers = GetModifiers(event->state);
+
         MainWindow* main_window = static_cast<MainWindow*>(user_data);
-        main_window->app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+        main_window->app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
     }
     return true;
 }

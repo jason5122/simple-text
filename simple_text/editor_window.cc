@@ -1,5 +1,6 @@
 #include "build/buildflag.h"
 #include "gui/key.h"
+#include "gui/modifier_key.h"
 #include "simple_text.h"
 #include <algorithm>
 #include <cctype>
@@ -153,7 +154,7 @@ void EditorWindow::onScroll(float dx, float dy) {
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
+void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     renderer::Point mouse{
@@ -166,13 +167,15 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y) {
     renderer::TextRenderer& text_renderer = parent.text_renderer;
 #endif
 
-    text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->start_caret);
-    tab->end_caret = tab->start_caret;
+    text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->end_caret);
+    if (!Any(modifiers & app::ModifierKey::kShift)) {
+        tab->start_caret = tab->end_caret;
+    }
 
     redraw();
 }
 
-void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y) {
+void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     renderer::Point mouse{

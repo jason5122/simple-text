@@ -147,7 +147,7 @@
     }
 }
 
-static app::Key GetKey(unsigned short vk) {
+static inline app::Key GetKey(unsigned short vk) {
     static constexpr struct {
         unsigned short fVK;
         app::Key fKey;
@@ -206,23 +206,26 @@ static app::Key GetKey(unsigned short vk) {
     return app::Key::kNone;
 }
 
-- (void)keyDown:(NSEvent*)event {
-    app::Key key = GetKey(event.keyCode);
-
+static inline app::ModifierKey GetModifiers(unsigned long flags) {
     app::ModifierKey modifiers = app::ModifierKey::kNone;
-    if (event.modifierFlags & NSEventModifierFlagShift) {
+    if (flags & NSEventModifierFlagShift) {
         modifiers |= app::ModifierKey::kShift;
     }
-    if (event.modifierFlags & NSEventModifierFlagControl) {
+    if (flags & NSEventModifierFlagControl) {
         modifiers |= app::ModifierKey::kControl;
     }
-    if (event.modifierFlags & NSEventModifierFlagOption) {
+    if (flags & NSEventModifierFlagOption) {
         modifiers |= app::ModifierKey::kAlt;
     }
-    if (event.modifierFlags & NSEventModifierFlagCommand) {
+    if (flags & NSEventModifierFlagCommand) {
         modifiers |= app::ModifierKey::kSuper;
     }
+    return modifiers;
+}
 
+- (void)keyDown:(NSEvent*)event {
+    app::Key key = GetKey(event.keyCode);
+    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
     openGLLayer->appWindow->onKeyDown(key, modifiers);
 }
 
@@ -233,7 +236,9 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y);
+
+    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -243,7 +248,9 @@ static app::Key GetKey(unsigned short vk) {
 
     float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
     float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
-    openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y);
+
+    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

@@ -26,8 +26,8 @@ public:
         virtual void onDraw() {}
         virtual void onResize(int width, int height) {}
         virtual void onScroll(float dx, float dy) {}
-        virtual void onLeftMouseDown(float mouse_x, float mouse_y) {}
-        virtual void onLeftMouseDrag(float mouse_x, float mouse_y) {}
+        virtual void onLeftMouseDown(float mouse_x, float mouse_y, app::ModifierKey modifiers) {}
+        virtual void onLeftMouseDrag(float mouse_x, float mouse_y, app::ModifierKey modifiers) {}
         virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
         virtual void onClose() {}
         virtual void onDarkModeToggle() {}

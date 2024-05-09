@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-static app::Key GetKey(WPARAM vk) {
+static inline app::Key GetKey(WPARAM vk) {
     static constexpr struct {
         WPARAM fVK;
         app::Key fKey;
@@ -64,7 +64,7 @@ static app::Key GetKey(WPARAM vk) {
     return app::Key::kNone;
 }
 
-static app::ModifierKey GetModifierKeys(void) {
+static inline app::ModifierKey GetModifiers(void) {
     app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (GetKeyState(VK_SHIFT) & 0x8000) {
         modifiers |= app::ModifierKey::kShift;
@@ -175,8 +175,9 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
+        app::ModifierKey modifiers = GetModifiers();
 
-        app_window.onLeftMouseDown(mouse_x, mouse_y);
+        app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers);
         return 0;
     }
 
@@ -189,15 +190,16 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (wParam == MK_LBUTTON) {
             int mouse_x = GET_X_LPARAM(lParam);
             int mouse_y = GET_Y_LPARAM(lParam);
+            app::ModifierKey modifiers = GetModifiers();
 
-            app_window.onLeftMouseDrag(mouse_x, mouse_y);
+            app_window.onLeftMouseDrag(mouse_x, mouse_y, modifiers);
         }
         return 0;
     }
 
     case WM_KEYDOWN: {
         app::Key key = GetKey(wParam);
-        app::ModifierKey modifiers = GetModifierKeys();
+        app::ModifierKey modifiers = GetModifiers();
 
         app_window.onKeyDown(key, modifiers);
         return 0;

@@ -192,7 +192,7 @@ static inline app::Key GetKey(guint vk) {
     return app::Key::kNone;
 }
 
-static inline app::ModifierKey GetModifiers(GdkModifierType* state) {
+static inline app::ModifierKey GetModifiers(guint state) {
     app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (state & GDK_SHIFT_MASK) {
         modifiers |= app::ModifierKey::kShift;

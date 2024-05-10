@@ -1,5 +1,6 @@
 #include "build/buildflag.h"
 #include "simple_text.h"
+#include "util/profile_util.h"
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -200,26 +201,31 @@ static inline int positive_modulo(int i, int n) {
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     using config::Action;
 
-    Action action = parent.key_bindings.parseKeyPress(key, modifiers);
+    // Action action = parent.key_bindings.parseKeyPress(key, modifiers);
+    Action action;
+    {
+        PROFILE_BLOCK("KeyBindings::parseKeyPress()");
+        action = parent.key_bindings.parseKeyPress(key, modifiers);
+    }
 
     switch (action) {
-    case Action::Invalid:
+    case Action::kNone:
         break;
 
-    case Action::NewWindow:
+    case Action::kNewWindow:
         parent.createWindow();
         break;
 
-    case Action::CloseWindow:
+    case Action::kCloseWindow:
         close();
         break;
 
-    case Action::NewTab:
+    case Action::kNewTab:
         createTab(fs::path{});
         redraw();
         break;
 
-    case Action::CloseTab:
+    case Action::kCloseTab:
         tabs.erase(tabs.begin() + tab_index);
         tab_index--;
         if (tab_index < 0) {
@@ -234,24 +240,24 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         }
         break;
 
-    case Action::PreviousTab:
+    case Action::kPreviousTab:
         tab_index = positive_modulo(tab_index - 1, tabs.size());
         redraw();
         break;
 
-    case Action::NextTab:
+    case Action::kNextTab:
         tab_index = positive_modulo(tab_index + 1, tabs.size());
         redraw();
         break;
 
-    case Action::SelectTab1:
-    case Action::SelectTab2:
-    case Action::SelectTab3:
-    case Action::SelectTab4:
-    case Action::SelectTab5:
-    case Action::SelectTab6:
-    case Action::SelectTab7:
-    case Action::SelectTab8: {
+    case Action::kSelectTab1:
+    case Action::kSelectTab2:
+    case Action::kSelectTab3:
+    case Action::kSelectTab4:
+    case Action::kSelectTab5:
+    case Action::kSelectTab6:
+    case Action::kSelectTab7:
+    case Action::kSelectTab8: {
         using U = std::underlying_type_t<app::Key>;
         int index = static_cast<U>(key) - static_cast<U>(app::Key::k1);
 
@@ -262,14 +268,14 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         break;
     }
 
-    case Action::SelectLastTab:
+    case Action::kSelectLastTab:
         if (tabs.size() > 0) {
             tab_index = tabs.size() - 1;
         }
         redraw();
         break;
 
-    case Action::ToggleSideBar:
+    case Action::kToggleSideBar:
         if (side_bar_visible) {
             editor_offset.x = 0;
         } else {

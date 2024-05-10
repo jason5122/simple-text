@@ -42,6 +42,7 @@ void SimpleText::onFileEvent() {
     for (const auto& editor_window : editor_windows) {
         editor_window->reloadColorScheme();
     }
+    key_bindings.reload();
 }
 
 void SimpleText::createWindow() {

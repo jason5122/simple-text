@@ -176,6 +176,19 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     size_t byte_offset = buffer.byteOfLine(start_line);
 
     std::vector<InstanceData> instances;
+    instances.reserve(kBatchMax);
+
+    auto render_batch = [this, &instances]() {
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
+                        &instances[0]);
+
+        glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+
+        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+
+        instances.clear();
+    };
 
     {
         PROFILE_BLOCK("layout text");
@@ -239,8 +252,16 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(text_color, glyph.colored),
                 });
+                if (instances.size() == kBatchMax) {
+                    render_batch();
+                }
 
                 total_advance += std::round(glyph.advance);
+
+                // TODO: Properly implement this culling idea!
+                // if (total_advance > size.width) {
+                //     break;
+                // }
             }
 
             byte_offset++;
@@ -256,12 +277,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         .color = Rgba::fromRgb(color_scheme.foreground, false),
     });
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
-
-    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
-
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    render_batch();
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

@@ -1,8 +1,10 @@
-#include "base/filesystem/file_reader.h"
 #include "base/rgb.h"
 #include "color_scheme.h"
-#include "glaze/glaze.hpp"
 #include <iostream>
+
+#include "glaze/glaze.hpp"
+
+static constexpr glz::opts kDefaultOptions{.prettify = true, .indentation_width = 2};
 
 namespace config {
 ColorScheme::ColorScheme(bool dark_mode) {
@@ -29,17 +31,9 @@ ColorScheme::ColorScheme(bool dark_mode) {
 }
 
 void ColorScheme::reload(bool dark_mode) {
-    fs::path data_dir = DataDir();
-    // fs::path color_scheme_path = data_dir / "color_scheme_light.json";
-    // fs::path color_scheme_path = data_dir / "color_scheme_dark.json";
-    fs::path color_scheme_path;
-    if (dark_mode) {
-        color_scheme_path = data_dir / "color_scheme_dark.json";
-    } else {
-        color_scheme_path = data_dir / "color_scheme_light.json";
-    }
+    fs::path color_scheme_path = dark_mode ? dark_color_scheme_path : light_color_scheme_path;
 
-    JsonSchema schema = dark_mode ? kDefaultDarkSchema : kDefaultLightSchema;
+    JsonSchema& schema = dark_mode ? kDefaultDarkSchema : kDefaultLightSchema;
 
     std::string buffer;
     if (fs::exists(color_scheme_path)) {
@@ -49,8 +43,9 @@ void ColorScheme::reload(bool dark_mode) {
             std::cerr << glz::format_error(error, buffer) << '\n';
         }
     } else {
-        std::filesystem::create_directory(data_dir);
-        glz::write_error error = glz::write_file_json(schema, color_scheme_path.string(), buffer);
+        std::filesystem::create_directory(color_scheme_path.parent_path());
+        glz::write_error error =
+            glz::write_file_json<kDefaultOptions>(schema, color_scheme_path.string(), buffer);
         if (error) {
             std::cerr << "Could not write color scheme to " << color_scheme_path << ".\n";
         }

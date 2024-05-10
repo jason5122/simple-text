@@ -1,7 +1,39 @@
 #include "key_bindings.h"
+#include <iostream>
 
 namespace config {
-KeyBindings::KeyBindings() {}
+KeyBindings::KeyBindings() {
+    reload();
+}
+
+void KeyBindings::reload() {
+    std::vector<JsonSchema> schema = {{
+        .keys = "primary+,",
+        .command = "edit_settings",
+    }};
+
+    std::string buffer;
+    if (fs::exists(kKeyBindingsPath)) {
+        // TODO: Handle errors in a better way.
+        glz::parse_error error = glz::read_file_json(schema, kKeyBindingsPath.string(), buffer);
+        if (error) {
+            std::cerr << glz::format_error(error, buffer) << '\n';
+        }
+    } else {
+        std::filesystem::create_directory(kKeyBindingsPath.parent_path());
+        glz::write_error error =
+            glz::write_file_json<kDefaultOptions>(schema, kKeyBindingsPath.string(), buffer);
+
+        if (error) {
+            std::cerr << "Could not write color scheme to " << kKeyBindingsPath << ".\n";
+        }
+    }
+
+    for (const auto& binding : schema) {
+        fprintf(stderr, "key: \"%s\", command: \"%s\"\n", &binding.keys[0], &binding.command[0]);
+        addBinding(binding.keys, binding.command);
+    }
+}
 
 Action KeyBindings::parseKeyPress(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
@@ -53,5 +85,15 @@ Action KeyBindings::parseKeyPress(app::Key key, app::ModifierKey modifiers) {
         return Action::ToggleSideBar;
     }
     return Action::Invalid;
+}
+
+void KeyBindings::addBinding(const std::string& keys, const std::string& command) {
+    size_t last = 0;
+    size_t next = 0;
+    while ((next = keys.find(kDelimiter, last)) != std::string::npos) {
+        std::cerr << keys.substr(last, next - last) << '\n';
+        last = next + 1;
+    }
+    std::cerr << keys.substr(last) << '\n';
 }
 }

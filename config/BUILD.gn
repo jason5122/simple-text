@@ -4,5 +4,5 @@ source_set("config") {
     "key_bindings.cc",
   ]
 
-  deps = [ "//third_party/glaze" ]
+  public_deps = [ "//third_party/glaze" ]
 }

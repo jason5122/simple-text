@@ -9,22 +9,22 @@ KeyBindings::KeyBindings() {
 
 void KeyBindings::reload() {
     std::vector<JsonSchema> schema = {
-        {
-            .keys = "primary+shift+n",
-            .command = "new_window",
-        },
-        {
-            .keys = "primary+shift+w",
-            .command = "close_window",
-        },
-        {
-            .keys = "primary+n",
-            .command = "new_tab",
-        },
-        {
-            .keys = "primary+w",
-            .command = "close_tab",
-        },
+        {.keys = "primary+shift+n", .command = "new_window"},
+        {.keys = "primary+shift+w", .command = "close_window"},
+        {.keys = "primary+n", .command = "new_tab"},
+        {.keys = "primary+w", .command = "close_tab"},
+        {.keys = "primary+j", .command = "previous_tab"},
+        {.keys = "primary+k", .command = "next_tab"},
+        {.keys = "primary+1", .command = "select_tab_1"},
+        {.keys = "primary+2", .command = "select_tab_2"},
+        {.keys = "primary+3", .command = "select_tab_3"},
+        {.keys = "primary+4", .command = "select_tab_4"},
+        {.keys = "primary+5", .command = "select_tab_5"},
+        {.keys = "primary+6", .command = "select_tab_6"},
+        {.keys = "primary+7", .command = "select_tab_7"},
+        {.keys = "primary+8", .command = "select_tab_8"},
+        {.keys = "primary+9", .command = "select_last_tab"},
+        {.keys = "primary+0", .command = "toggle_side_bar"},
     };
 
     std::string buffer;
@@ -40,7 +40,7 @@ void KeyBindings::reload() {
             glz::write_file_json<kDefaultOptions>(schema, kKeyBindingsPath.string(), buffer);
 
         if (error) {
-            std::cerr << "Could not write color scheme to " << kKeyBindingsPath << ".\n";
+            std::cerr << "Could not write key bindings to " << kKeyBindingsPath << ".\n";
         }
     }
 
@@ -56,57 +56,6 @@ Action KeyBindings::parseKeyPress(app::Key key, app::ModifierKey modifiers) {
             return binding.action;
         }
     }
-
-    // if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift))
-    // {
-    //     return Action::kNewWindow;
-    // }
-    // if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift))
-    // {
-    //     return Action::kCloseWindow;
-    // }
-    // if (key == app::Key::kN && modifiers == app::kPrimaryModifier) {
-    //     return Action::kNewTab;
-    // }
-    // if (key == app::Key::kW && modifiers == app::kPrimaryModifier) {
-    //     return Action::kCloseTab;
-    // }
-    // if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {
-    //     return Action::kPreviousTab;
-    // }
-    // if (key == app::Key::kK && modifiers == app::kPrimaryModifier) {
-    //     return Action::kNextTab;
-    // }
-    // if (key == app::Key::k1 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab1;
-    // }
-    // if (key == app::Key::k2 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab2;
-    // }
-    // if (key == app::Key::k3 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab3;
-    // }
-    // if (key == app::Key::k4 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab4;
-    // }
-    // if (key == app::Key::k5 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab5;
-    // }
-    // if (key == app::Key::k6 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab6;
-    // }
-    // if (key == app::Key::k7 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab7;
-    // }
-    // if (key == app::Key::k8 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectTab8;
-    // }
-    // if (key == app::Key::k9 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kSelectLastTab;
-    // }
-    // if (key == app::Key::k0 && modifiers == app::kPrimaryModifier) {
-    //     return Action::kToggleSideBar;
-    // }
     return Action::kNone;
 }
 
@@ -119,6 +68,9 @@ void KeyBindings::addBinding(const std::string& keys, const std::string& command
         if (substr.length() == 1 && 'a' <= substr[0] && substr[0] <= 'z') {
             int offset = substr[0] - 'a';
             key = static_cast<app::Key>(static_cast<int>(app::Key::kA) + offset);
+        } else if (substr.length() == 1 && '0' <= substr[0] && substr[0] <= '9') {
+            int offset = substr[0] - '0';
+            key = static_cast<app::Key>(static_cast<int>(app::Key::k0) + offset);
         } else if (modifier_map.contains(substr)) {
             modifiers |= modifier_map.at(substr);
         } else {

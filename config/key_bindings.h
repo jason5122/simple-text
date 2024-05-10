@@ -59,9 +59,22 @@ private:
         {"primary", app::kPrimaryModifier},
     };
     static inline const std::unordered_map<std::string, Action> action_map{
-        {"new_window", Action::kNewWindow},     {"close_window", Action::kCloseWindow},
-        {"new_tab", Action::kNewTab},           {"close_tab", Action::kCloseTab},
-        {"previous_tab", Action::kPreviousTab}, {"next_tab", Action::kNextTab},
+        {"new_window", Action::kNewWindow},
+        {"close_window", Action::kCloseWindow},
+        {"new_tab", Action::kNewTab},
+        {"close_tab", Action::kCloseTab},
+        {"previous_tab", Action::kPreviousTab},
+        {"next_tab", Action::kNextTab},
+        {"select_tab_1", Action::kSelectTab1},
+        {"select_tab_2", Action::kSelectTab2},
+        {"select_tab_3", Action::kSelectTab3},
+        {"select_tab_4", Action::kSelectTab4},
+        {"select_tab_5", Action::kSelectTab5},
+        {"select_tab_6", Action::kSelectTab6},
+        {"select_tab_7", Action::kSelectTab7},
+        {"select_tab_8", Action::kSelectTab8},
+        {"select_last_tab", Action::kSelectLastTab},
+        {"toggle_side_bar", Action::kToggleSideBar},
     };
 };
 }

@@ -18,8 +18,5 @@ source_set("renderer") {
     "//third_party/libpng",
   ]
 
-  public_deps = [
-    "//third_party/glad",
-    "//third_party/glaze",
-  ]
+  public_deps = [ "//third_party/glad" ]
 }

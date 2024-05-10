@@ -2,7 +2,7 @@
 
 #include "base/filesystem/file_reader.h"
 #include "base/rgb.h"
-// #include "glaze/glaze.hpp"
+#include "glaze/glaze.hpp"
 
 namespace config {
 class ColorScheme {
@@ -21,7 +21,7 @@ public:
 private:
     inline static const fs::path light_color_scheme_path = DataDir() / "color_scheme_light.json";
     inline static const fs::path dark_color_scheme_path = DataDir() / "color_scheme_dark.json";
-    // static constexpr glz::opts kDefaultOptions{.prettify = true, .indentation_width = 2};
+    static constexpr glz::opts kDefaultOptions{.prettify = true, .indentation_width = 2};
 
     struct JsonSchema {
         std::string foreground;

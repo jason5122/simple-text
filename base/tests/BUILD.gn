@@ -6,10 +6,12 @@ source_set("tests") {
     "tree_sitter_test.cc",
   ]
 
+  # TODO: Find a way to share deps between //base and //base/tests (do this for other modules too).
   deps = [
     ":copy_test_files",
     "//base",
     "//base/filesystem",
+    "//config",
     "//third_party/googletest:gtest",
     "//third_party/tree_sitter",
   ]

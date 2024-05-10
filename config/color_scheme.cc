@@ -2,10 +2,6 @@
 #include "color_scheme.h"
 #include <iostream>
 
-#include "glaze/glaze.hpp"
-
-static constexpr glz::opts kDefaultOptions{.prettify = true, .indentation_width = 2};
-
 namespace config {
 ColorScheme::ColorScheme(bool dark_mode) {
     kDefaultLightSchema = {

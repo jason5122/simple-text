@@ -4,9 +4,9 @@
 static void FSEventsCallback(ConstFSEventStreamRef stream, void* client_info, size_t num_events,
                              void* event_paths, const FSEventStreamEventFlags event_flags[],
                              const FSEventStreamEventId event_ids[]) {
-    FileWatcherCallback* callback = reinterpret_cast<FileWatcherCallback*>(client_info);
+    FileWatcherCallback* callback = static_cast<FileWatcherCallback*>(client_info);
 
-    char** paths = reinterpret_cast<char**>(event_paths);
+    char** paths = static_cast<char**>(event_paths);
     for (int i = 0; i < num_events; i++) {
         fprintf(stderr, "Change %llu in %s, flags %u\n", event_ids[i], paths[i], event_flags[i]);
 

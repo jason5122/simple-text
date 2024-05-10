@@ -42,7 +42,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory2),
-                        reinterpret_cast<IUnknown**>(&pimpl->dwrite_factory));
+                        static_cast<IUnknown**>(&pimpl->dwrite_factory));
 
     IDWriteFontCollection* font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);

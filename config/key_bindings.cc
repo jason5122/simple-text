@@ -4,11 +4,7 @@
 
 namespace config {
 KeyBindings::KeyBindings() {
-    reload();
-}
-
-void KeyBindings::reload() {
-    std::vector<JsonSchema> schema = {
+    kDefaultKeyBindingsSchema = {
         {.keys = "primary+shift+n", .command = "new_window"},
         {.keys = "primary+shift+w", .command = "close_window"},
         {.keys = "primary+n", .command = "new_tab"},
@@ -26,6 +22,12 @@ void KeyBindings::reload() {
         {.keys = "primary+9", .command = "select_last_tab"},
         {.keys = "primary+0", .command = "toggle_side_bar"},
     };
+
+    reload();
+}
+
+void KeyBindings::reload() {
+    std::vector<JsonSchema>& schema = kDefaultKeyBindingsSchema;
 
     std::string buffer;
     if (fs::exists(kKeyBindingsPath)) {

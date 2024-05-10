@@ -44,6 +44,8 @@ private:
         std::string command;
     };
 
+    std::vector<JsonSchema> kDefaultKeyBindingsSchema;
+
     struct Binding {
         app::Key key;
         app::ModifierKey modifiers;

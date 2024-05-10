@@ -9,7 +9,16 @@
 using EditorWindow = SimpleText::EditorWindow;
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window(parent, width, height), parent(parent), wid(wid), color_scheme(isDarkMode()) {}
+    : Window(parent, width, height), parent(parent), wid(wid), color_scheme(isDarkMode())
+#if IS_MAC || IS_WIN
+      ,
+      main_font_rasterizer(parent.main_font_rasterizer),
+      ui_font_rasterizer(parent.ui_font_rasterizer), text_renderer(parent.text_renderer),
+      rect_renderer(parent.rect_renderer), image_renderer(parent.image_renderer),
+      selection_renderer(parent.selection_renderer)
+#endif
+{
+}
 
 #include <iostream>
 
@@ -78,15 +87,6 @@ void EditorWindow::onDraw() {
     glClearColor(red, green, blue, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-#if IS_MAC || IS_WIN
-    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
-    FontRasterizer& ui_font_rasterizer = parent.ui_font_rasterizer;
-    renderer::TextRenderer& text_renderer = parent.text_renderer;
-    renderer::RectRenderer& rect_renderer = parent.rect_renderer;
-    renderer::ImageRenderer& image_renderer = parent.image_renderer;
-    renderer::SelectionRenderer& selection_renderer = parent.selection_renderer;
-#endif
-
     int status_bar_height = ui_font_rasterizer.line_height;
 
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
@@ -141,10 +141,6 @@ void EditorWindow::onScroll(float dx, float dy) {
     dx = std::round(dx);
     dy = std::round(dy);
 
-#if IS_MAC || IS_WIN
-    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
-#endif
-
     float buffer_width = width() * scaleFactor() - editor_offset.x;
     float max_scroll_x = std::max(0.0f, tab->longest_line_x - buffer_width);
     // TODO: Subtract one from line count to leave the last line visible.
@@ -163,11 +159,6 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y, app::ModifierKe
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
-#if IS_MAC || IS_WIN
-    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
-    renderer::TextRenderer& text_renderer = parent.text_renderer;
-#endif
-
     text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->end_caret);
     if (!Any(modifiers & app::ModifierKey::kShift)) {
         tab->start_caret = tab->end_caret;
@@ -183,11 +174,6 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y, app::ModifierKe
         .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
-
-#if IS_MAC || IS_WIN
-    FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
-    renderer::TextRenderer& text_renderer = parent.text_renderer;
-#endif
 
     text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->end_caret);
 
@@ -322,21 +308,11 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-#if IS_MAC || IS_WIN
-        FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
-        renderer::TextRenderer& text_renderer = parent.text_renderer;
-#endif
-
         text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret, main_font_rasterizer);
         redraw();
     }
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-#if IS_MAC || IS_WIN
-        FontRasterizer& main_font_rasterizer = parent.main_font_rasterizer;
-        renderer::TextRenderer& text_renderer = parent.text_renderer;
-#endif
-
         text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret, main_font_rasterizer);
         redraw();
     }

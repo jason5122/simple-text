@@ -54,8 +54,15 @@ public:
 
         config::ColorScheme color_scheme;
 
+#if IS_MAC || IS_WIN
+        FontRasterizer& main_font_rasterizer;
+        FontRasterizer& ui_font_rasterizer;
+        renderer::TextRenderer& text_renderer;
+        renderer::RectRenderer& rect_renderer;
+        renderer::ImageRenderer& image_renderer;
+        renderer::SelectionRenderer& selection_renderer;
 // TODO: Figure out OpenGL context reuse on Linux.
-#if IS_LINUX
+#elif IS_LINUX
         FontRasterizer main_font_rasterizer;
         FontRasterizer ui_font_rasterizer;
         renderer::TextRenderer text_renderer;

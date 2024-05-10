@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config/key_bindings.h"
 #include "gui/app.h"
 #include "util/not_copyable_or_movable.h"
 #include <vector>
@@ -64,17 +65,6 @@ public:
 #endif
     };
 
-#if IS_MAC || IS_WIN
-    FontRasterizer main_font_rasterizer;
-    FontRasterizer ui_font_rasterizer;
-    renderer::TextRenderer text_renderer;
-    renderer::RectRenderer rect_renderer;
-    renderer::ImageRenderer image_renderer;
-    renderer::SelectionRenderer selection_renderer;
-#endif
-
-    FileWatcher file_watcher;
-
     NOT_COPYABLE(SimpleText)
     NOT_MOVABLE(SimpleText)
     SimpleText();
@@ -89,4 +79,16 @@ public:
 
 private:
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
+
+#if IS_MAC || IS_WIN
+    FontRasterizer main_font_rasterizer;
+    FontRasterizer ui_font_rasterizer;
+    renderer::TextRenderer text_renderer;
+    renderer::RectRenderer rect_renderer;
+    renderer::ImageRenderer image_renderer;
+    renderer::SelectionRenderer selection_renderer;
+#endif
+
+    config::KeyBindings key_bindings;
+    FileWatcher file_watcher;
 };

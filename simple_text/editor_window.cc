@@ -1,6 +1,4 @@
 #include "build/buildflag.h"
-#include "gui/key.h"
-#include "gui/modifier_key.h"
 #include "simple_text.h"
 #include <algorithm>
 #include <cctype>
@@ -200,11 +198,51 @@ static inline int positive_modulo(int i, int n) {
 }
 
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
-    if (key == app::Key::kN && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+    using config::Action;
+
+    Action action = parent.key_bindings.parseKeyPress(key, modifiers);
+
+    switch (action) {
+    case Action::NewWindow:
         parent.createWindow();
-    }
-    if (key == app::Key::kW && modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+        break;
+
+    case Action::CloseWindow:
         close();
+        break;
+
+    case Action::NewTab:
+        createTab(fs::path{});
+        redraw();
+        break;
+
+    case Action::CloseTab:
+        tabs.erase(tabs.begin() + tab_index);
+        tab_index--;
+        if (tab_index < 0) {
+            tab_index = 0;
+        }
+
+        if (tabs.empty()) {
+            // createTab(fs::path{});
+            close();
+        } else {
+            redraw();
+        }
+        break;
+
+    case Action::PreviousTab:
+        tab_index = positive_modulo(tab_index - 1, tabs.size());
+        redraw();
+        break;
+
+    case Action::NextTab:
+        tab_index = positive_modulo(tab_index + 1, tabs.size());
+        redraw();
+        break;
+
+    default:
+        std::cerr << "Invalid action.\n";
     }
 
     // if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
@@ -217,33 +255,6 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     // if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {
     //     close();
     // }
-
-    if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {
-        tab_index = positive_modulo(tab_index - 1, tabs.size());
-        redraw();
-    }
-    if (key == app::Key::kK && modifiers == app::kPrimaryModifier) {
-        tab_index = positive_modulo(tab_index + 1, tabs.size());
-        redraw();
-    }
-    if (key == app::Key::kW && modifiers == app::kPrimaryModifier) {
-        tabs.erase(tabs.begin() + tab_index);
-        tab_index--;
-        if (tab_index < 0) {
-            tab_index = 0;
-        }
-
-        if (tabs.empty()) {
-            createTab(fs::path{});
-        }
-
-        redraw();
-    }
-
-    if (key == app::Key::kN && modifiers == app::kPrimaryModifier) {
-        createTab(fs::path{});
-        redraw();
-    }
 
     if (app::Key::k1 <= key && key <= app::Key::k8 && modifiers == app::kPrimaryModifier) {
         using U = std::underlying_type_t<app::Key>;

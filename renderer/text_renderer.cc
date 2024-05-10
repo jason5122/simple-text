@@ -228,17 +228,19 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
             std::string line_str = buffer.getLineContent(line_index);
 
-            // Debugging purposes.
-            bool disable_cache = false;
-
             for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
-                Rgb text_color = highlighter.getColor(byte_offset, color_scheme);
-
                 ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
+
+                if (total_advance > size.width) {
+                    byte_offset += line_str.size() - offset;
+                    break;
+                }
+
                 std::string key = line_str.substr(offset, ret);
 
                 // TODO: Preserve the width of the space character when substituting.
                 //       Otherwise, the line width changes when using proportional fonts.
+                Rgb text_color = highlighter.getColor(byte_offset, color_scheme);
                 if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
                     key = "·";
                     text_color = Rgb{182, 182, 182};
@@ -257,11 +259,6 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 }
 
                 total_advance += std::round(glyph.advance);
-
-                // TODO: Properly implement this culling idea!
-                // if (total_advance > size.width) {
-                //     break;
-                // }
             }
 
             byte_offset++;

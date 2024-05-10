@@ -9,17 +9,31 @@
 
 extern "C" TSLanguage* tree_sitter_json();
 
-struct ReferenceBuffer {
-    const char* buffer;
-    size_t len;
-};
+// struct ReferenceBuffer {
+//     std::string data;
+//     size_t length;
+// };
 
-const char* ReadString(void* payload, uint32_t byte_index, TSPoint position,
-                       uint32_t* bytes_read) {
-    ReferenceBuffer* buf = static_cast<ReferenceBuffer*>(payload);
-    size_t len = buf->len;
-    *bytes_read = len - byte_index;
-    return buf->buffer + byte_index;
+// const char* ReferenceRead(void* payload, uint32_t byte_index, TSPoint position,
+//                           uint32_t* bytes_read) {
+//     ReferenceBuffer* buffer = static_cast<ReferenceBuffer*>(payload);
+//     *bytes_read = buffer->length - byte_index;
+//     return &buffer->data[byte_index];
+// }
+
+const char* ReferenceRead(void* payload, uint32_t byte_index, TSPoint position,
+                          uint32_t* bytes_read) {
+    std::string* buffer = static_cast<std::string*>(payload);
+    *bytes_read = buffer->size() - byte_index;
+    return &(*buffer)[byte_index];
+
+    // if (byte_index == buffer->size()) {
+    //     *bytes_read = 0;
+    //     return "";
+    // } else {
+    //     *bytes_read = 1;
+    //     return &(*buffer)[byte_index];
+    // }
 }
 
 TEST(TreeSitterStringTest, Json10Mb) {
@@ -27,21 +41,28 @@ TEST(TreeSitterStringTest, Json10Mb) {
     ts_parser_set_language(parser, tree_sitter_json());
 
     std::string source_code = ReadFile("test_files/10mb.json");
-    ReferenceBuffer buf = {
-        .buffer = &source_code[0],
-        .len = source_code.size(),
-    };
-    TSInput input = {&buf, ReadString, TSInputEncodingUTF8};
+
+    // size_t length = source_code.size();
+    // ReferenceBuffer buffer = {
+    //     .data = std::move(source_code),
+    //     .length = length,
+    // };
+
+    TSInput input = {&source_code, ReferenceRead, TSInputEncodingUTF8};
 
     TSTree* tree;
     {
-        PROFILE_BLOCK_WITH_DURATION("Tree-sitter only parse", std::chrono::milliseconds);
+        PROFILE_BLOCK_WITH_DURATION("ReferenceBuffer: parse", std::chrono::milliseconds);
         tree = ts_parser_parse(parser, NULL, input);
     }
 
-    // TSNode root_node = ts_tree_root_node(tree);
-    // char* string = ts_node_string(root_node);
-    // std::cerr << string << '\n';
+    {
+        volatile int i = 0;  // `volatile` prevents the variable from being optimized out.
+        PROFILE_BLOCK_WITH_DURATION("ReferenceBuffer: only read", std::chrono::milliseconds);
+        for (const char ch : source_code) {
+            i += ch;
+        }
+    }
 }
 
 // TODO: Add actual tests to this test case.

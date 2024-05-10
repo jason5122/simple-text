@@ -203,6 +203,9 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     Action action = parent.key_bindings.parseKeyPress(key, modifiers);
 
     switch (action) {
+    case Action::Invalid:
+        break;
+
     case Action::NewWindow:
         parent.createWindow();
         break;
@@ -241,8 +244,40 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         redraw();
         break;
 
-    default:
-        std::cerr << "Invalid action.\n";
+    case Action::SelectTab1:
+    case Action::SelectTab2:
+    case Action::SelectTab3:
+    case Action::SelectTab4:
+    case Action::SelectTab5:
+    case Action::SelectTab6:
+    case Action::SelectTab7:
+    case Action::SelectTab8: {
+        using U = std::underlying_type_t<app::Key>;
+        int index = static_cast<U>(key) - static_cast<U>(app::Key::k1);
+
+        if (tabs.size() > index) {
+            tab_index = index;
+        }
+        redraw();
+        break;
+    }
+
+    case Action::SelectLastTab:
+        if (tabs.size() > 0) {
+            tab_index = tabs.size() - 1;
+        }
+        redraw();
+        break;
+
+    case Action::ToggleSideBar:
+        if (side_bar_visible) {
+            editor_offset.x = 0;
+        } else {
+            editor_offset.x = 200 * 2;
+        }
+        side_bar_visible = !side_bar_visible;
+        redraw();
+        break;
     }
 
     // if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
@@ -255,31 +290,6 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     // if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {
     //     close();
     // }
-
-    if (app::Key::k1 <= key && key <= app::Key::k8 && modifiers == app::kPrimaryModifier) {
-        using U = std::underlying_type_t<app::Key>;
-        int index = static_cast<U>(key) - static_cast<U>(app::Key::k1);
-
-        if (tabs.size() > index) {
-            tab_index = index;
-        }
-        redraw();
-    }
-    if (key == app::Key::k9 && modifiers == app::kPrimaryModifier) {
-        if (tabs.size() > 0) {
-            tab_index = tabs.size() - 1;
-        }
-        redraw();
-    }
-    if (key == app::Key::k0 && modifiers == app::kPrimaryModifier) {
-        if (side_bar_visible) {
-            editor_offset.x = 0;
-        } else {
-            editor_offset.x = 200 * 2;
-        }
-        side_bar_visible = !side_bar_visible;
-        redraw();
-    }
 
     if (key == app::Key::kBackspace && modifiers == app::ModifierKey::kNone) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);

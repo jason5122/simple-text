@@ -41,18 +41,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
-    fs::path file_path = ResourceDir() / "sample_files/sort.scm";
-    fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
-    fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
-    fs::path file_path4 = ResourceDir() / "sample_files/example.json";
-    fs::path file_path5 = ResourceDir() / "sample_files/long_lines.json";
-
-    createTab(file_path);
-    createTab(file_path2);
-    createTab(file_path3);
-    createTab(file_path4);
-    createTab(file_path5);
-
 #if IS_LINUX
     // TODO: Implement scale factor support.
     std::string main_font = "Source Code Pro";
@@ -68,6 +56,18 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     image_renderer.setup();
     selection_renderer.setup(main_font_rasterizer);
 #endif
+
+    fs::path file_path = ResourceDir() / "sample_files/sort.scm";
+    fs::path file_path2 = ResourceDir() / "sample_files/proportional_font_test.json";
+    fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
+    fs::path file_path4 = ResourceDir() / "sample_files/example.json";
+    fs::path file_path5 = ResourceDir() / "sample_files/long_lines.json";
+
+    createTab(file_path);
+    createTab(file_path2);
+    createTab(file_path3);
+    createTab(file_path4);
+    createTab(file_path5);
 }
 
 void EditorWindow::onDraw() {
@@ -81,13 +81,13 @@ void EditorWindow::onDraw() {
     glViewport(0, 0, size.width, size.height);
 
     Rgb& background = color_scheme.background;
-    GLfloat red = background.r / 255.0;
-    GLfloat green = background.g / 255.0;
-    GLfloat blue = background.b / 255.0;
-    glClearColor(red, green, blue, 1.0);
+    GLfloat red = static_cast<float>(background.r) / 255.0f;
+    GLfloat green = static_cast<float>(background.g) / 255.0f;
+    GLfloat blue = static_cast<float>(background.b) / 255.0f;
+    glClearColor(red, green, blue, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int status_bar_height = ui_font_rasterizer.line_height;
+    float status_bar_height = ui_font_rasterizer.line_height;
 
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
@@ -146,7 +146,9 @@ void EditorWindow::onScroll(float dx, float dy) {
     // TODO: Subtract one from line count to leave the last line visible.
     float max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
 
-    tab->scrollBuffer({dx, dy}, {max_scroll_x, max_scroll_y});
+    renderer::Point delta{dx, dy};
+    renderer::Point max_scroll{max_scroll_x, max_scroll_y};
+    tab->scrollBuffer(delta, max_scroll);
 
     redraw();
 }

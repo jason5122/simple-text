@@ -25,7 +25,7 @@ public:
 
     EditorTab(fs::path file_path);
     void setup(config::ColorScheme& color_scheme);
-    void scrollBuffer(renderer::Point&& delta, renderer::Point&& max_scroll);
+    void scrollBuffer(renderer::Point& delta, renderer::Point& max_scroll);
 
 private:
     static constexpr long long kScrollEventSeparation = 28;

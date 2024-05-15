@@ -19,7 +19,7 @@ void EditorTab::setup(config::ColorScheme& color_scheme) {
 
 // Inspired by Zed's implementation:
 // //zed/crates/editor/src/scroll.rs
-void EditorTab::scrollBuffer(renderer::Point&& delta, renderer::Point&& max_scroll) {
+void EditorTab::scrollBuffer(renderer::Point& delta, renderer::Point& max_scroll) {
     float x = std::abs(delta.x);
     float y = std::abs(delta.y);
 

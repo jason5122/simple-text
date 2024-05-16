@@ -8,6 +8,9 @@
 
 #include <iostream>
 
+#define ID_FILE_ABOUT 1
+#define ID_FILE_EXIT 2
+
 static inline app::Key GetKey(WPARAM vk) {
     static constexpr struct {
         WPARAM fVK;
@@ -220,6 +223,17 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) {
+        case ID_FILE_ABOUT:
+            MessageBox(m_hwnd, L"About menu item clicked", L"Notice", MB_OK | MB_ICONINFORMATION);
+            break;
+        case ID_FILE_EXIT:
+            PostQuitMessage(0);
+            break;
+        }
+        return 0;
+
     case WM_ERASEBKGND:
         return 1;
 
@@ -251,6 +265,17 @@ void MainWindow::redraw() {
     InvalidateRect(m_hwnd, NULL, FALSE);
 }
 
+static void AddMenu(HWND hwnd) {
+    HMENU hMenubar = CreateMenu();
+    HMENU hMenu = CreateMenu();
+
+    AppendMenu(hMenu, MF_STRING, ID_FILE_ABOUT, L"About");
+    AppendMenu(hMenu, MF_STRING, ID_FILE_EXIT, L"Exit");
+    AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hMenu, L"File");
+
+    SetMenu(hwnd, hMenubar);
+}
+
 BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
     std::wstring class_name = L"ClassName";
     class_name += std::to_wstring(wid);
@@ -268,6 +293,8 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
 
     m_hwnd = CreateWindowEx(0, &class_name[0], lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
                             CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
+
+    AddMenu(m_hwnd);
 
     return (m_hwnd ? TRUE : FALSE);
 }

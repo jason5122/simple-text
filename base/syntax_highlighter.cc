@@ -1,6 +1,7 @@
 #include "base/filesystem/file_reader.h"
 #include "syntax_highlighter.h"
 #include <cstdio>
+#include <format>
 #include <vector>
 
 #include <iostream>
@@ -55,8 +56,9 @@ void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& colo
     query = ts_query_new(language, &query_code[0], query_code.size(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        fprintf(stderr, "Error creating new TSQuery. error_offset: %d, error type: %d\n",
-                error_offset, error_type);
+        std::cerr << std::format("Error creating new TSQuery. error_offset: {}, error type: {}\n",
+                                 error_offset,
+                                 static_cast<std::underlying_type_t<TSQueryError>>(error_type));
     }
 
     uint32_t capture_count = ts_query_capture_count(query);

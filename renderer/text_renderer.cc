@@ -355,7 +355,7 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasteriz
                                 std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
     std::vector<int> tab_title_widths;
 
-    auto add_width = [&](std::string&& str) {
+    auto add_width = [&](std::string& str) {
         size_t ret;
         float total_advance = 0;
         for (size_t offset = 0; offset < str.size(); offset += ret) {
@@ -377,7 +377,8 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasteriz
         if (editor_tab->file_path.empty()) {
             tab_name = "untitled";
         }
-        add_width(tab_name.string());
+        std::string tab_name_str = tab_name.string();
+        add_width(tab_name_str);
     }
 
     return tab_title_widths;
@@ -399,7 +400,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
 
     std::vector<InstanceData> instances;
 
-    auto create_instances = [&](std::string&& str, int x_offset, int y_offset) {
+    auto create_instances = [&](std::string& str, int x_offset, int y_offset) {
         size_t ret;
         float total_advance = 0;
         for (size_t offset = 0; offset < str.size(); offset += ret) {
@@ -419,24 +420,27 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     };
 
     float status_text_offset = 25;  // TODO: Convert this magic number to actual code.
-    std::string line_str =
-        "Line " + std::to_string(end_caret.line) + ", Column " + std::to_string(end_caret.column);
+    std::string line_str = std::format("Line {}, Column {}", end_caret.line, end_caret.column);
 
     float y_bottom_of_screen = size.height - main_font_rasterizer.line_height;
     float y_top_of_screen = editor_offset.y / 2 + ui_font_rasterizer.line_height / 2 -
                             main_font_rasterizer.line_height;
 
-    // TODO: Replace magic numbers.
-    create_instances(std::move(line_str), status_text_offset, y_bottom_of_screen);
-    create_instances("JSON", size.width - 150, y_bottom_of_screen);
-    create_instances("Spaces: 4", size.width - 350, y_bottom_of_screen);
+    // TODO: Replace magic numbers and strings.
+    std::string json = "JSON";
+    std::string indentation = "Spaces: 4";
+
+    create_instances(line_str, status_text_offset, y_bottom_of_screen);
+    create_instances(json, size.width - 150, y_bottom_of_screen);
+    create_instances(indentation, size.width - 350, y_bottom_of_screen);
 
     for (size_t i = 0; i < editor_tabs.size(); i++) {
         fs::path&& tab_name = editor_tabs.at(i)->file_path.filename();
         if (editor_tabs.at(i)->file_path.empty()) {
             tab_name = "untitled";
         }
-        create_instances(tab_name.string(), editor_offset.x + tab_title_x_coords.at(i),
+        std::string tab_name_str = tab_name.string();
+        create_instances(tab_name_str, editor_offset.x + tab_title_x_coords.at(i),
                          y_top_of_screen);
     }
 

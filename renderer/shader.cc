@@ -1,4 +1,6 @@
 #include "shader.h"
+#include <format>
+#include <iostream>
 #include <vector>
 
 namespace renderer {
@@ -24,9 +26,10 @@ bool Shader::link(std::string& vert_source, std::string& frag_source) {
         GLint log_size = 0;
         glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &log_size);
 
-        std::vector<GLchar> error_log(log_size);
-        glGetShaderInfoLog(vertex_shader, log_size, &log_size, &error_log[0]);
-        fprintf(stderr, "vertex shader: %s", &error_log[0]);
+        std::string error;
+        error.reserve(log_size);
+        glGetShaderInfoLog(vertex_shader, log_size, nullptr, &error[0]);
+        std::cerr << std::format("vertex shader: {}", error);
 
         glDeleteShader(vertex_shader);
         return false;
@@ -38,9 +41,10 @@ bool Shader::link(std::string& vert_source, std::string& frag_source) {
         GLint log_size = 0;
         glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &log_size);
 
-        std::vector<GLchar> error_log(log_size);
-        glGetShaderInfoLog(fragment_shader, log_size, &log_size, &error_log[0]);
-        fprintf(stderr, "fragment shader: %s", &error_log[0]);
+        std::string error;
+        error.reserve(log_size);
+        glGetShaderInfoLog(vertex_shader, log_size, nullptr, &error[0]);
+        std::cerr << std::format("fragment shader: {}", error);
 
         glDeleteShader(fragment_shader);
         return false;

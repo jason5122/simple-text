@@ -1,5 +1,7 @@
 #include "file_watcher.h"
 #include <CoreServices/CoreServices.h>
+#include <format>
+#include <iostream>
 
 static void FSEventsCallback(ConstFSEventStreamRef stream, void* client_info, size_t num_events,
                              void* event_paths, const FSEventStreamEventFlags event_flags[],
@@ -8,7 +10,8 @@ static void FSEventsCallback(ConstFSEventStreamRef stream, void* client_info, si
 
     char** paths = static_cast<char**>(event_paths);
     for (int i = 0; i < num_events; i++) {
-        fprintf(stderr, "Change %llu in %s, flags %u\n", event_ids[i], paths[i], event_flags[i]);
+        std::cerr << std::format("Change {} in {}, flags {}\n", event_ids[i], paths[i],
+                                 event_flags[i]);
 
         callback->onFileEvent();
     }

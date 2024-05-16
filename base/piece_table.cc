@@ -1,4 +1,5 @@
 #include "piece_table.h"
+#include <format>
 #include <iostream>
 
 PieceTable::PieceTable(std::string_view str) : original(str) {
@@ -90,7 +91,7 @@ void PieceTable::printPieces() {
 
     for (const auto& piece : pieces) {
         const char* source = piece.source == PieceSource::Original ? "original" : "add";
-        fprintf(stderr, "Piece(start=%zu, length=%zu, source=%s)\n", piece.start, piece.length,
-                source);
+        std::cerr << std::format("Piece(start={}, length={}, source={})\n", piece.start,
+                                 piece.length, source);
     }
 }

@@ -21,7 +21,7 @@ TEST(PieceTableTest, Insert) {
     piece_table.insert(9, " and nimble");
     EXPECT_EQ(str, piece_table.string());
 
-    // piece_table.printPieces();
+    piece_table.printPieces();
 }
 
 TEST(PieceTableTest, Erase) {
@@ -32,5 +32,5 @@ TEST(PieceTableTest, Erase) {
     piece_table.erase(3, 6);
     EXPECT_EQ(str, piece_table.string());
 
-    // piece_table.printPieces();
+    piece_table.printPieces();
 }

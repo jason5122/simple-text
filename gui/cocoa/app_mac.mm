@@ -63,7 +63,7 @@ class App::impl {
 public:
     NSApplication* ns_app;
     NSPoint cascading_point = NSZeroPoint;
-    DisplayGL* displaygl;
+    DisplayGL displaygl;
 };
 
 App::App() : pimpl{new impl{}} {
@@ -73,13 +73,10 @@ App::App() : pimpl{new impl{}} {
     pimpl->ns_app.activationPolicy = NSApplicationActivationPolicyRegular;
     pimpl->ns_app.delegate = appDelegate;
 
-    pimpl->displaygl = new DisplayGL();
-    pimpl->displaygl->initialize();
+    pimpl->displaygl.initialize();
 }
 
-App::~App() {
-    delete pimpl->displaygl;
-}
+App::~App() {}
 
 void App::run() {
     @autoreleasepool {
@@ -107,7 +104,7 @@ App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, par
 
     pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
                                                              appWindow:this
-                                                             displayGl:parent.pimpl->displaygl];
+                                                             displayGl:&parent.pimpl->displaygl];
 
     // Implement window cascading.
     // if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {

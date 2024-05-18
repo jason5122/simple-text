@@ -105,12 +105,12 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
             .coords =
                 {
                     .x = static_cast<uint32_t>(start),
-                    .y = static_cast<uint32_t>(font_rasterizer.line_height * line),
+                    .y = static_cast<uint32_t>(font_rasterizer.line_height) * line,
                 },
             .size =
                 {
                     .x = static_cast<uint32_t>(end - start),
-                    .y = static_cast<uint32_t>(font_rasterizer.line_height + kBorderThickness),
+                    .y = static_cast<uint32_t>(font_rasterizer.line_height) + kBorderThickness,
                 },
             .color = Rgba::fromRgb(colors::selection_focused, 0),
             .border_color = Rgba::fromRgb(colors::selection_border, 0),

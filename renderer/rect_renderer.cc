@@ -1,20 +1,9 @@
 #include "base/rgb.h"
 #include "rect_renderer.h"
 #include "renderer/opengl_error_util.h"
-#include "renderer/opengl_types.h"
 #include <vector>
 
 namespace renderer {
-namespace {
-struct InstanceData {
-    Vec2 coords;
-    Vec2 rect_size;
-    Rgba color;
-    float corner_radius = 0;
-    float tab_corner_radius = 0;
-};
-}
-
 RectRenderer::RectRenderer() {}
 
 RectRenderer::~RectRenderer() {

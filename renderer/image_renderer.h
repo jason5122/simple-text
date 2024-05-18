@@ -2,6 +2,7 @@
 
 #include "base/filesystem/file_reader.h"
 #include "renderer/atlas.h"
+#include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "util/not_copyable_or_movable.h"
@@ -34,5 +35,12 @@ private:
 
     bool loadPng(fs::path file_name, int& out_width, int& out_height, bool& out_has_alpha,
                  GLubyte** out_data);
+
+    struct InstanceData {
+        Vec2 coords;
+        Vec2 rect_size;
+        Vec4 uv;
+        Vec3 color;
+    };
 };
 }

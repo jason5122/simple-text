@@ -2,7 +2,6 @@
 #include "base/rgb.h"
 #include "font/rasterizer.h"
 #include "renderer/opengl_error_util.h"
-#include "renderer/opengl_types.h"
 #include "renderer/selection_renderer.h"
 #include "text_renderer.h"
 #include "util/profile_util.h"
@@ -18,15 +17,6 @@ extern "C" {
 #include "build/buildflag.h"
 
 namespace renderer {
-namespace {
-struct InstanceData {
-    Vec2 coords;
-    Vec4 glyph;
-    Vec4 uv;
-    Rgba color;
-};
-}
-
 TextRenderer::TextRenderer() {}
 
 TextRenderer::~TextRenderer() {

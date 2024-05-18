@@ -5,6 +5,7 @@
 #include "config/color_scheme.h"
 #include "font/rasterizer.h"
 #include "renderer/atlas.h"
+#include "renderer/opengl_types.h"
 #include "renderer/selection_renderer.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
@@ -59,6 +60,13 @@ private:
         Vec4 uv;
         float advance;
         bool colored;
+    };
+
+    struct InstanceData {
+        Vec2 coords;
+        Vec4 glyph;
+        Vec4 uv;
+        Rgba color;
     };
 
     struct string_hash {

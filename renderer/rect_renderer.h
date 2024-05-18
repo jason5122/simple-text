@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config/color_scheme.h"
+#include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "util/not_copyable_or_movable.h"
@@ -28,5 +29,13 @@ private:
 
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
+
+    struct InstanceData {
+        Vec2 coords;
+        Vec2 rect_size;
+        Rgba color;
+        float corner_radius = 0;
+        float tab_corner_radius = 0;
+    };
 };
 }

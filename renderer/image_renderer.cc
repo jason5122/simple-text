@@ -1,19 +1,9 @@
 #include "image_renderer.h"
 #include "renderer/opengl_error_util.h"
-#include "renderer/opengl_types.h"
 #include <cstring>
 #include <png.h>
 
 namespace renderer {
-namespace {
-struct InstanceData {
-    Vec2 coords;
-    Vec2 rect_size;
-    Vec4 uv;
-    Vec3 color;
-};
-}
-
 ImageRenderer::ImageRenderer() {}
 
 ImageRenderer::~ImageRenderer() {

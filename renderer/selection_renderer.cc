@@ -7,19 +7,20 @@
 #include "build/buildflag.h"
 
 namespace renderer {
-// Border flags.
-const int kLeft = 1;
-const int kRight = 1 << 1;
-const int kBottom = 1 << 2;
-const int kTop = 1 << 3;
-const int kBottomLeftInwards = 1 << 4;
-const int kBottomRightInwards = 1 << 5;
-const int kTopLeftInwards = 1 << 6;
-const int kTopRightInwards = 1 << 7;
-const int kBottomLeftOutwards = 1 << 8;
-const int kBottomRightOutwards = 1 << 9;
-const int kTopLeftOutwards = 1 << 10;
-const int kTopRightOutwards = 1 << 11;
+enum BorderFlags {
+    kLeft = 1,
+    kRight = 1 << 1,
+    kBottom = 1 << 2,
+    kTop = 1 << 3,
+    kBottomLeftInwards = 1 << 4,
+    kBottomRightInwards = 1 << 5,
+    kTopLeftInwards = 1 << 6,
+    kTopRightInwards = 1 << 7,
+    kBottomLeftOutwards = 1 << 8,
+    kBottomRightOutwards = 1 << 9,
+    kTopLeftOutwards = 1 << 10,
+    kTopRightOutwards = 1 << 11,
+};
 
 SelectionRenderer::SelectionRenderer() {}
 

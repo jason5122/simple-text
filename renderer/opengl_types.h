@@ -9,6 +9,7 @@ struct Vec2 {
 };
 static_assert(sizeof(Vec2) == sizeof(float) * 2);
 
+// TODO: Remove Vec3 since it isn't efficient with GLSL. Use Vec2 or Vec4 instead.
 struct Vec3 {
     float x, y, z;
 };
@@ -19,6 +20,16 @@ struct Vec4 {
 };
 static_assert(sizeof(Vec4) == sizeof(float) * 4);
 
+struct IVec2 {
+    uint32_t x, y;
+};
+static_assert(sizeof(IVec2) == sizeof(uint32_t) * 2);
+
+struct IVec4 {
+    uint32_t x, y, z, w;
+};
+static_assert(sizeof(IVec4) == sizeof(uint32_t) * 4);
+
 struct Rgba {
     uint8_t r, g, b, a;
 
@@ -27,11 +38,6 @@ struct Rgba {
     }
 };
 static_assert(sizeof(Rgba) == sizeof(uint8_t) * 4);
-
-struct IVec4 {
-    uint32_t x, y, z, w;
-};
-static_assert(sizeof(IVec4) == sizeof(uint32_t) * 4);
 
 inline std::ostream& operator<<(std::ostream& out, const Vec2& vec) {
     return out << '{' << vec.x << ", " << vec.y << '}';

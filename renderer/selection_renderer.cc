@@ -49,13 +49,13 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
     GLuint index = 0;
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, coords));
+    glVertexAttribIPointer(index, 2, GL_INT, sizeof(InstanceData),
+                           (void*)offsetof(InstanceData, coords));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, size));
+    glVertexAttribIPointer(index, 2, GL_INT, sizeof(InstanceData),
+                           (void*)offsetof(InstanceData, size));
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
@@ -104,13 +104,13 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
         instances.emplace_back(InstanceData{
             .coords =
                 {
-                    .x = static_cast<float>(start),
-                    .y = font_rasterizer.line_height * line,
+                    .x = static_cast<uint32_t>(start),
+                    .y = static_cast<uint32_t>(font_rasterizer.line_height * line),
                 },
             .size =
                 {
-                    .x = static_cast<float>(end - start),
-                    .y = font_rasterizer.line_height + kBorderThickness,
+                    .x = static_cast<uint32_t>(end - start),
+                    .y = static_cast<uint32_t>(font_rasterizer.line_height + kBorderThickness),
                 },
             .color = Rgba::fromRgb(colors::selection_focused, 0),
             .border_color = Rgba::fromRgb(colors::selection_border, 0),

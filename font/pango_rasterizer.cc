@@ -72,7 +72,7 @@ cairo_t* create_cairo_context(int width, int height, int channels, cairo_surface
 RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     cairo_t* layout_context = create_layout_context();
     PangoLayout* layout = pango_cairo_create_layout(layout_context);
-    pango_layout_set_text(layout, &utf8_str[0], -1);
+    pango_layout_set_text(layout, &utf8_str[0], utf8_str.length());
 
     PangoFontDescription* desc = pango_font_describe(pimpl->pango_font);
     pango_layout_set_font_description(layout, desc);

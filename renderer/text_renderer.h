@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/buffer.h"
-#include "base/rgb.h"
 #include "base/syntax_highlighter.h"
 #include "config/color_scheme.h"
 #include "font/rasterizer.h"
@@ -46,7 +45,7 @@ public:
                               FontRasterizer& main_font_rasterizer);
     void moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
                               FontRasterizer& main_font_rasterizer);
-    float getGlyphAdvance(std::string& utf8_str, FontRasterizer& font_rasterizer);
+    float getGlyphAdvance(std::string_view utf8_str, FontRasterizer& font_rasterizer);
 
 private:
     static constexpr int kBatchMax = 65536;
@@ -62,14 +61,32 @@ private:
         bool colored;
     };
 
-    std::vector<std::unordered_map<std::string, AtlasGlyph>> glyph_cache;
+    struct string_hash {
+        using hash_type = std::hash<std::string_view>;
+        using is_transparent = void;
+
+        size_t operator()(const char* str) const {
+            return hash_type{}(str);
+        }
+        size_t operator()(std::string_view str) const {
+            return hash_type{}(str);
+        }
+        size_t operator()(std::string const& str) const {
+            return hash_type{}(str);
+        }
+    };
+
+    // using cache_type = std::unordered_map<std::string, AtlasGlyph>;
+    using cache_type = std::unordered_map<std::string, AtlasGlyph, string_hash, std::equal_to<>>;
+    std::vector<cache_type> glyph_caches;
 
     static constexpr size_t ascii_size = 0x7e - 0x20 + 1;
-    std::vector<std::array<std::optional<AtlasGlyph>, ascii_size>> ascii_cache;
+    using ascii_cache_type = std::array<std::optional<AtlasGlyph>, ascii_size>;
+    std::vector<ascii_cache_type> ascii_caches;
 
-    std::pair<float, size_t> closestBoundaryForX(std::string& line_str, float x,
+    std::pair<float, size_t> closestBoundaryForX(std::string_view line_str, float x,
                                                  FontRasterizer& font_rasterizer);
-    AtlasGlyph& getAtlasGlyph(std::string& key, FontRasterizer& font_rasterizer);
-    AtlasGlyph createAtlasGlyph(std::string& utf8_str, FontRasterizer& font_rasterizer);
+    AtlasGlyph& getAtlasGlyph(std::string_view key, FontRasterizer& font_rasterizer);
+    AtlasGlyph createAtlasGlyph(std::string_view utf8_str, FontRasterizer& font_rasterizer);
 };
 }

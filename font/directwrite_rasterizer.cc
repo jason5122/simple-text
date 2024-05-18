@@ -399,7 +399,8 @@ protected:
     Run mRunHead;
 };
 
-RasterizedGlyph FontRasterizer::rasterizeTemp(std::string& utf8_str, uint_least32_t codepoint) {
+RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
+                                              uint_least32_t codepoint) {
     IDWriteFontFace* selected_font_face = pimpl->font_face;
 
     UINT16* glyph_indices = new UINT16[1];

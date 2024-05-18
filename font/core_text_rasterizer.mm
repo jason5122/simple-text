@@ -39,7 +39,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string& utf8_str) {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     CGGlyph glyph = 0;
     CTFontRef run_font = pimpl->ct_font;
 

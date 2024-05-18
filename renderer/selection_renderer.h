@@ -32,6 +32,21 @@ private:
     static constexpr int kCornerRadius = 6;
     static constexpr int kBorderThickness = 2;
 
+    enum BorderFlags {
+        kLeft = 1,
+        kRight = 1 << 1,
+        kBottom = 1 << 2,
+        kTop = 1 << 3,
+        kBottomLeftInwards = 1 << 4,
+        kBottomRightInwards = 1 << 5,
+        kTopLeftInwards = 1 << 6,
+        kTopRightInwards = 1 << 7,
+        kBottomLeftOutwards = 1 << 8,
+        kBottomRightOutwards = 1 << 9,
+        kTopLeftOutwards = 1 << 10,
+        kTopRightOutwards = 1 << 11,
+    };
+
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 

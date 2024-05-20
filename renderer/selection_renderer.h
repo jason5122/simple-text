@@ -51,8 +51,8 @@ private:
     GLuint vao, vbo_instance, ebo;
 
     struct InstanceData {
-        IVec2 coords;
-        IVec2 size;
+        Vec2 coords;
+        Vec2 size;
         Rgba color;
         Rgba border_color;
         // <border_flags, bottom_border_offset, top_border_offset, hide_background>

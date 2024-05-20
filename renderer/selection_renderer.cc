@@ -15,7 +15,7 @@ SelectionRenderer::~SelectionRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
+void SelectionRenderer::setup(font::FontRasterizer& font_rasterizer) {
     std::string vert_source =
 #include "shaders/selection_vert.glsl"
         ;
@@ -83,7 +83,7 @@ void SelectionRenderer::setup(FontRasterizer& font_rasterizer) {
 }
 
 void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor_offset,
-                                        FontRasterizer& font_rasterizer,
+                                        font::FontRasterizer& font_rasterizer,
                                         std::vector<Selection>& selections,
                                         float line_number_offset) {
     glUseProgram(shader_program.id);

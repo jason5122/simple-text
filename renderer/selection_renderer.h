@@ -20,9 +20,9 @@ public:
     NOT_MOVABLE(SelectionRenderer)
     SelectionRenderer();
     ~SelectionRenderer();
-    void setup(FontRasterizer& font_rasterizer);
+    void setup(font::FontRasterizer& font_rasterizer);
     void createInstances(Size& size, Point& scroll, Point& editor_offset,
-                         FontRasterizer& font_rasterizer, std::vector<Selection>& selections,
+                         font::FontRasterizer& font_rasterizer, std::vector<Selection>& selections,
                          float line_number_offset);
     void render(int rendering_pass);
     void destroyInstances();

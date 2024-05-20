@@ -18,13 +18,13 @@ struct AtlasGlyph {
 
 class GlyphCache {
 public:
-    GlyphCache(FontRasterizer& font_rasterizer);
+    GlyphCache(font::FontRasterizer& font_rasterizer);
     void setup();
     AtlasGlyph& getGlyph(std::string_view key);
     void bindTexture();
 
 private:
-    FontRasterizer& font_rasterizer;
+    font::FontRasterizer& font_rasterizer;
 
     Atlas atlas;
 

@@ -26,7 +26,7 @@ TextRenderer::~TextRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-void TextRenderer::setup(FontRasterizer& font_rasterizer) {
+void TextRenderer::setup(font::FontRasterizer& font_rasterizer) {
     std::string vert_source =
 #include "shaders/text_vert.glsl"
         ;
@@ -92,7 +92,7 @@ AtlasGlyph& TextRenderer::getAtlasGlyph(std::string_view key, bool use_main) {
 // TODO: Rewrite this so this operates on an already shaped line.
 //       We should remove any glyph cache/font rasterization from this method.
 std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string_view line_str, float x,
-                                                           FontRasterizer& font_rasterizer) {
+                                                           font::FontRasterizer& font_rasterizer) {
     size_t offset;
     size_t ret;
     float total_advance = 0;
@@ -113,7 +113,7 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string_view line
 
 void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                               SyntaxHighlighter& highlighter, Point& editor_offset,
-                              FontRasterizer& font_rasterizer, float status_bar_height,
+                              font::FontRasterizer& font_rasterizer, float status_bar_height,
                               CaretInfo& start_caret, CaretInfo& end_caret, float& longest_line_x,
                               config::ColorScheme& color_scheme, float line_number_offset) {
     glUseProgram(shader_program.id);
@@ -255,7 +255,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 }
 
 std::vector<SelectionRenderer::Selection>
-TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
+TextRenderer::getSelections(Buffer& buffer, font::FontRasterizer& font_rasterizer,
                             CaretInfo& start_caret, CaretInfo& end_caret) {
     std::vector<SelectionRenderer::Selection> selections;
 
@@ -321,7 +321,7 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 }
 
 std::vector<int>
-TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasterizer,
+TextRenderer::getTabTitleWidths(Buffer& buffer, font::FontRasterizer& ui_font_rasterizer,
                                 std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
     std::vector<int> tab_title_widths;
 
@@ -354,8 +354,8 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasteriz
     return tab_title_widths;
 }
 
-void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer,
-                                FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
+void TextRenderer::renderUiText(Size& size, font::FontRasterizer& main_font_rasterizer,
+                                font::FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
                                 config::ColorScheme& color_scheme, Point& editor_offset,
                                 std::vector<std::unique_ptr<EditorTab>>& editor_tabs,
                                 std::vector<int>& tab_title_x_coords) {
@@ -429,8 +429,8 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     glCheckError();
 }
 
-void TextRenderer::setCaretInfo(Buffer& buffer, FontRasterizer& font_rasterizer, Point& mouse,
-                                CaretInfo& caret) {
+void TextRenderer::setCaretInfo(Buffer& buffer, font::FontRasterizer& font_rasterizer,
+                                Point& mouse, CaretInfo& caret) {
     float x;
     size_t offset;
 
@@ -448,7 +448,7 @@ void TextRenderer::setCaretInfo(Buffer& buffer, FontRasterizer& font_rasterizer,
 }
 
 void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
-                                        FontRasterizer& main_font_rasterizer) {
+                                        font::FontRasterizer& main_font_rasterizer) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     size_t ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
@@ -465,7 +465,7 @@ void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
 // TODO: Do we really need a Unicode-accurate version of this? Sublime Text doesn't seem to follow
 // Unicode word boundaries the way libgrapheme does.
 void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
-                                        FontRasterizer& main_font_rasterizer) {
+                                        font::FontRasterizer& main_font_rasterizer) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     size_t word_offset = grapheme_next_word_break_utf8(&line_str[0] + caret.column, SIZE_MAX);

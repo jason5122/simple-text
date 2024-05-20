@@ -55,8 +55,8 @@ public:
 
         config::ColorScheme color_scheme;
 
-        FontRasterizer& main_font_rasterizer;
-        FontRasterizer& ui_font_rasterizer;
+        font::FontRasterizer& main_font_rasterizer;
+        font::FontRasterizer& ui_font_rasterizer;
 #if IS_MAC || IS_WIN
         renderer::GlyphCache& main_glyph_cache;
         renderer::GlyphCache& ui_glyph_cache;
@@ -90,8 +90,8 @@ public:
 private:
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 
-    FontRasterizer main_font_rasterizer;
-    FontRasterizer ui_font_rasterizer;
+    font::FontRasterizer main_font_rasterizer;
+    font::FontRasterizer ui_font_rasterizer;
 #if IS_MAC || IS_WIN
     renderer::GlyphCache main_glyph_cache;
     renderer::GlyphCache ui_glyph_cache;

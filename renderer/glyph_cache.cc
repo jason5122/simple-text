@@ -6,7 +6,7 @@ extern "C" {
 }
 
 namespace renderer {
-GlyphCache::GlyphCache(FontRasterizer& font_rasterizer) : font_rasterizer(font_rasterizer) {}
+GlyphCache::GlyphCache(font::FontRasterizer& font_rasterizer) : font_rasterizer(font_rasterizer) {}
 
 void GlyphCache::setup() {
     atlas.setup();
@@ -33,9 +33,9 @@ AtlasGlyph GlyphCache::createGlyph(std::string_view utf8_str) {
 #if IS_WIN
     uint_least32_t codepoint = 0;
     grapheme_decode_utf8(&utf8_str[0], SIZE_MAX, &codepoint);
-    RasterizedGlyph glyph = font_rasterizer.rasterizeTemp(utf8_str, codepoint);
+    font::RasterizedGlyph glyph = font_rasterizer.rasterizeTemp(utf8_str, codepoint);
 #else
-    RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str);
+    font::RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str);
 #endif
 
     Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);

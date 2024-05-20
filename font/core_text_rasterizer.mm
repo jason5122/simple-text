@@ -1,10 +1,10 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
 
-#include "font/rasterized_glyph.h"
 #include "rasterizer.h"
 #include <iostream>
 
+namespace font {
 class FontRasterizer::impl {
 public:
     CTFontRef ct_font;
@@ -162,4 +162,5 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
         .buffer = buffer,
         .index = glyph_index,
     };
+}
 }

@@ -4,6 +4,7 @@
 #include <pango/pangocairo.h>
 #include <vector>
 
+namespace font {
 class FontRasterizer::impl {
 public:
     PangoFont* pango_font;
@@ -115,3 +116,4 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
 }
 
 FontRasterizer::~FontRasterizer() {}
+}

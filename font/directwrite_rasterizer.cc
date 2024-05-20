@@ -11,6 +11,7 @@
 #include <wingdi.h>
 #include <winnt.h>
 
+namespace font {
 class FontRasterizer::impl {
 public:
     IDWriteFactory2* dwrite_factory;
@@ -547,3 +548,4 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
 }
 
 FontRasterizer::~FontRasterizer() {}
+}

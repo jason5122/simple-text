@@ -13,7 +13,8 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
 #if IS_MAC || IS_WIN
       ,
       main_font_rasterizer(parent.main_font_rasterizer),
-      ui_font_rasterizer(parent.ui_font_rasterizer), text_renderer(parent.text_renderer),
+      ui_font_rasterizer(parent.ui_font_rasterizer), main_glyph_cache(parent.main_glyph_cache),
+      ui_glyph_cache(parent.ui_glyph_cache), text_renderer(parent.text_renderer),
       rect_renderer(parent.rect_renderer), image_renderer(parent.image_renderer),
       selection_renderer(parent.selection_renderer)
 #endif

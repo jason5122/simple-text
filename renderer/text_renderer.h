@@ -54,19 +54,19 @@ private:
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;
 
+    struct InstanceData {
+        Vec2 coords;
+        Vec4 glyph;
+        Vec4 uv;
+        Rgba color;
+    };
+
     Atlas atlas;
     struct AtlasGlyph {
         Vec4 glyph;
         Vec4 uv;
         float advance;
         bool colored;
-    };
-
-    struct InstanceData {
-        Vec2 coords;
-        Vec4 glyph;
-        Vec4 uv;
-        Rgba color;
     };
 
     struct string_hash {

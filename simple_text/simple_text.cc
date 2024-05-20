@@ -2,7 +2,9 @@
 #include "simple_text.h"
 #include <memory>
 
-SimpleText::SimpleText() : file_watcher(DataDir(), this) {}
+SimpleText::SimpleText()
+    : file_watcher(DataDir(), this), main_glyph_cache(main_font_rasterizer),
+      ui_glyph_cache(ui_font_rasterizer) {}
 
 SimpleText::~SimpleText() {}
 

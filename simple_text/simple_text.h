@@ -7,6 +7,7 @@
 
 #include "config/color_scheme.h"
 #include "font/rasterizer.h"
+#include "renderer/glyph_cache.h"
 #include "renderer/image_renderer.h"
 #include "renderer/rect_renderer.h"
 #include "renderer/selection_renderer.h"
@@ -54,17 +55,19 @@ public:
 
         config::ColorScheme color_scheme;
 
-#if IS_MAC || IS_WIN
         FontRasterizer& main_font_rasterizer;
         FontRasterizer& ui_font_rasterizer;
+#if IS_MAC || IS_WIN
+        renderer::GlyphCache& main_glyph_cache;
+        renderer::GlyphCache& ui_glyph_cache;
         renderer::TextRenderer& text_renderer;
         renderer::RectRenderer& rect_renderer;
         renderer::ImageRenderer& image_renderer;
         renderer::SelectionRenderer& selection_renderer;
 // TODO: Figure out OpenGL context reuse on Linux.
 #elif IS_LINUX
-        FontRasterizer main_font_rasterizer;
-        FontRasterizer ui_font_rasterizer;
+        renderer::GlyphCache main_glyph_cache;
+        renderer::GlyphCache ui_glyph_cache;
         renderer::TextRenderer text_renderer;
         renderer::RectRenderer rect_renderer;
         renderer::ImageRenderer image_renderer;
@@ -87,9 +90,11 @@ public:
 private:
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 
-#if IS_MAC || IS_WIN
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
+#if IS_MAC || IS_WIN
+    renderer::GlyphCache main_glyph_cache;
+    renderer::GlyphCache ui_glyph_cache;
     renderer::TextRenderer text_renderer;
     renderer::RectRenderer rect_renderer;
     renderer::ImageRenderer image_renderer;

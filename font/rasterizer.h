@@ -1,9 +1,21 @@
 #pragma once
 
-#include "font/rasterized_glyph.h"
 #include "util/not_copyable_or_movable.h"
 #include <memory>
 #include <string>
+#include <vector>
+
+struct RasterizedGlyph {
+    bool colored;
+    int32_t left;
+    int32_t top;
+    int32_t width;
+    int32_t height;
+    float advance;
+    std::vector<uint8_t> buffer;
+    // TODO: Either remove these debug fields, or evaluate if we should keep them.
+    unsigned short index;
+};
 
 class FontRasterizer {
 public:

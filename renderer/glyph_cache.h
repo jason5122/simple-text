@@ -3,6 +3,7 @@
 #include "font/rasterizer.h"
 #include "renderer/atlas.h"
 #include "renderer/opengl_types.h"
+#include <array>
 #include <optional>
 #include <string>
 #include <unordered_map>

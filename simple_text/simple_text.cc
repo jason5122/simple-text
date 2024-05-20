@@ -4,7 +4,7 @@
 
 SimpleText::SimpleText()
     : file_watcher(DataDir(), this), main_glyph_cache(main_font_rasterizer),
-      ui_glyph_cache(ui_font_rasterizer) {}
+      ui_glyph_cache(ui_font_rasterizer), text_renderer(main_glyph_cache, ui_glyph_cache) {}
 
 SimpleText::~SimpleText() {}
 
@@ -27,6 +27,9 @@ void SimpleText::onLaunch() {
 
     main_font_rasterizer.setup(0, main_font, main_font_size);
     ui_font_rasterizer.setup(1, ui_font, ui_font_size);
+
+    main_glyph_cache.setup();
+    ui_glyph_cache.setup();
 
     text_renderer.setup(main_font_rasterizer);
     rect_renderer.setup();

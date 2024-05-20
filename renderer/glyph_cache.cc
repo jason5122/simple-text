@@ -44,4 +44,8 @@ AtlasGlyph GlyphCache::createGlyph(std::string_view utf8_str) {
     };
     return atlas_glyph;
 }
+
+void GlyphCache::bindTexture() {
+    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+}
 }

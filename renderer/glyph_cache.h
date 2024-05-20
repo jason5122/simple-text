@@ -20,6 +20,7 @@ public:
     GlyphCache(FontRasterizer& font_rasterizer);
     void setup();
     AtlasGlyph& getGlyph(std::string_view key);
+    void bindTexture();
 
 private:
     FontRasterizer& font_rasterizer;

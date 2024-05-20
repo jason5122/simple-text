@@ -17,7 +17,8 @@ extern "C" {
 #include "build/buildflag.h"
 
 namespace renderer {
-TextRenderer::TextRenderer() {}
+TextRenderer::TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
+    : main_glyph_cache(main_glyph_cache), ui_glyph_cache(ui_glyph_cache) {}
 
 TextRenderer::~TextRenderer() {
     glDeleteVertexArrays(1, &vao);
@@ -34,14 +35,6 @@ void TextRenderer::setup(FontRasterizer& font_rasterizer) {
         ;
 
     shader_program.link(vert_source, frag_source);
-
-    // TODO: Replace this with a more permanent solution.
-    glyph_caches.emplace_back();
-    glyph_caches.emplace_back();
-    ascii_caches.emplace_back();
-    ascii_caches.emplace_back();
-
-    atlas.setup();
 
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"),
@@ -92,31 +85,8 @@ void TextRenderer::setup(FontRasterizer& font_rasterizer) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-TextRenderer::AtlasGlyph& TextRenderer::getAtlasGlyph(std::string_view key,
-                                                      FontRasterizer& font_rasterizer) {
-    // If the input is ASCII (a very common occurrence), we can skip the overhead of a hash map.
-    if (key.length() == 1 && 0x20 <= key[0] && key[0] <= 0x7e) {
-        ascii_cache_type& ascii_cache = ascii_caches.at(font_rasterizer.id);
-
-        size_t i = key[0] - 0x20;
-        if (ascii_cache.at(i) == std::nullopt) {
-            ascii_cache.at(i) = createAtlasGlyph(key, font_rasterizer);
-        }
-        return ascii_cache.at(i).value();
-    }
-
-    cache_type& glyph_cache = glyph_caches.at(font_rasterizer.id);
-
-    auto it = glyph_cache.find(key);
-    if (it == glyph_cache.end()) {
-        it = glyph_cache.emplace(key, createAtlasGlyph(key, font_rasterizer)).first;
-    }
-    return it->second;
-}
-
-float TextRenderer::getGlyphAdvance(std::string_view utf8_str, FontRasterizer& font_rasterizer) {
-    AtlasGlyph& glyph = getAtlasGlyph(utf8_str, font_rasterizer);
-    return std::round(glyph.advance);
+AtlasGlyph& TextRenderer::getAtlasGlyph(std::string_view key, bool use_main) {
+    return use_main ? main_glyph_cache.getGlyph(key) : ui_glyph_cache.getGlyph(key);
 }
 
 // TODO: Rewrite this so this operates on an already shaped line.
@@ -129,7 +99,7 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string_view line
     for (offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
         std::string_view key = line_str.substr(offset, ret);
-        AtlasGlyph& glyph = getAtlasGlyph(key, font_rasterizer);
+        AtlasGlyph& glyph = getAtlasGlyph(key, true);
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -178,7 +148,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
                         &instances[0]);
 
-        glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+        main_glyph_cache.bindTexture();
 
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
@@ -205,7 +175,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
             for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
                 std::string_view key = std::string_view(line_number_str).substr(offset, ret);
-                AtlasGlyph& glyph = getAtlasGlyph(key, font_rasterizer);
+                AtlasGlyph& glyph = getAtlasGlyph(key, true);
 
                 Vec2 coords{
                     .x = -total_advance - line_number_offset / 2,
@@ -242,7 +212,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                     key = "·";
                     text_color = Rgb{182, 182, 182};
                 }
-                AtlasGlyph& glyph = getAtlasGlyph(key, font_rasterizer);
+                AtlasGlyph& glyph = getAtlasGlyph(key, true);
 
                 Vec2 coords{
                     .x = total_advance,
@@ -313,7 +283,7 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
         for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
             std::string_view key = std::string_view(line_str).substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, font_rasterizer);
+            AtlasGlyph& glyph = getAtlasGlyph(key, true);
 
             if (byte_offset == start_byte) {
                 start = total_advance;
@@ -334,7 +304,7 @@ TextRenderer::getSelections(Buffer& buffer, FontRasterizer& font_rasterizer,
 
         if (line_index != end_line) {
             std::string_view key = " ";
-            AtlasGlyph& space_glyph = getAtlasGlyph(key, font_rasterizer);
+            AtlasGlyph& space_glyph = getAtlasGlyph(key, true);
             end = static_cast<int>(total_advance) + std::round(space_glyph.advance);
         }
 
@@ -361,7 +331,7 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, FontRasterizer& ui_font_rasteriz
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, ui_font_rasterizer);
+            AtlasGlyph& glyph = getAtlasGlyph(key, false);
 
             total_advance += std::round(glyph.advance);
         }
@@ -406,7 +376,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, ui_font_rasterizer);
+            AtlasGlyph& glyph = getAtlasGlyph(key, false);
 
             instances.emplace_back(InstanceData{
                 .coords = Vec2{total_advance + x_offset, static_cast<float>(y_offset)},
@@ -447,7 +417,7 @@ void TextRenderer::renderUiText(Size& size, FontRasterizer& main_font_rasterizer
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+    ui_glyph_cache.bindTexture();
 
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
@@ -484,7 +454,7 @@ void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
     size_t ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
     if (ret > 0) {
         std::string_view key = std::string_view(line_str).substr(caret.column, ret);
-        AtlasGlyph& glyph = getAtlasGlyph(key, main_font_rasterizer);
+        AtlasGlyph& glyph = getAtlasGlyph(key, true);
 
         caret.byte += ret;
         caret.column += ret;
@@ -505,7 +475,7 @@ void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
         for (size_t offset = caret.column; offset < caret.column + word_offset; offset += ret) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
             std::string_view key = std::string_view(line_str).substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, main_font_rasterizer);
+            AtlasGlyph& glyph = getAtlasGlyph(key, true);
             total_advance += std::round(glyph.advance);
         }
 
@@ -513,27 +483,5 @@ void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
         caret.column += word_offset;
         caret.x += total_advance;
     }
-}
-
-TextRenderer::AtlasGlyph TextRenderer::createAtlasGlyph(std::string_view utf8_str,
-                                                        FontRasterizer& font_rasterizer) {
-#if IS_WIN
-    uint_least32_t codepoint = 0;
-    grapheme_decode_utf8(&utf8_str[0], SIZE_MAX, &codepoint);
-    RasterizedGlyph glyph = font_rasterizer.rasterizeTemp(utf8_str, codepoint);
-#else
-    RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str);
-#endif
-
-    Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
-
-    AtlasGlyph atlas_glyph{
-        .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
-                      static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
-        .uv = uv,
-        .advance = glyph.advance,
-        .colored = glyph.colored,
-    };
-    return atlas_glyph;
 }
 }

@@ -8,8 +8,8 @@
 class FontRasterizer {
 public:
     int id;
-    float line_height;
-    float descent;
+    int line_height;
+    int descent;
 
     NOT_COPYABLE(FontRasterizer)
     NOT_MOVABLE(FontRasterizer)

@@ -207,8 +207,10 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 std::string_view key = std::string_view(line_number_str).substr(offset, ret);
                 AtlasGlyph& glyph = getAtlasGlyph(key, font_rasterizer);
 
-                Vec2 coords{-total_advance - line_number_offset / 2,
-                            line_index * font_rasterizer.line_height};
+                Vec2 coords{
+                    .x = -total_advance - line_number_offset / 2,
+                    .y = static_cast<float>(line_index * font_rasterizer.line_height),
+                };
                 instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,
@@ -242,7 +244,10 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 }
                 AtlasGlyph& glyph = getAtlasGlyph(key, font_rasterizer);
 
-                Vec2 coords{total_advance, line_index * font_rasterizer.line_height};
+                Vec2 coords{
+                    .x = total_advance,
+                    .y = static_cast<float>(line_index * font_rasterizer.line_height),
+                };
                 instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,

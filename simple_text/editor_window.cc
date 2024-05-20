@@ -9,14 +9,18 @@
 using EditorWindow = SimpleText::EditorWindow;
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window(parent, width, height), parent(parent), wid(wid), color_scheme(isDarkMode())
+    : Window(parent, width, height), parent(parent), wid(wid), color_scheme(isDarkMode()),
+      main_font_rasterizer(parent.main_font_rasterizer),
+      ui_font_rasterizer(parent.ui_font_rasterizer)
 #if IS_MAC || IS_WIN
       ,
-      main_font_rasterizer(parent.main_font_rasterizer),
-      ui_font_rasterizer(parent.ui_font_rasterizer), main_glyph_cache(parent.main_glyph_cache),
-      ui_glyph_cache(parent.ui_glyph_cache), text_renderer(parent.text_renderer),
-      rect_renderer(parent.rect_renderer), image_renderer(parent.image_renderer),
-      selection_renderer(parent.selection_renderer)
+      main_glyph_cache(parent.main_glyph_cache), ui_glyph_cache(parent.ui_glyph_cache),
+      text_renderer(parent.text_renderer), rect_renderer(parent.rect_renderer),
+      image_renderer(parent.image_renderer), selection_renderer(parent.selection_renderer)
+#elif IS_LINUX
+      ,
+      main_glyph_cache(main_font_rasterizer), ui_glyph_cache(ui_font_rasterizer),
+      text_renderer(main_glyph_cache, ui_glyph_cache)
 #endif
 {
 }
@@ -51,6 +55,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     main_font_rasterizer.setup(0, main_font, main_font_size);
     ui_font_rasterizer.setup(1, ui_font, ui_font_size);
+
+    main_glyph_cache.setup();
+    ui_glyph_cache.setup();
 
     text_renderer.setup(main_font_rasterizer);
     rect_renderer.setup();

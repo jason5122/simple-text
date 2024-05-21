@@ -3,7 +3,13 @@
 #include <memory>
 
 SimpleText::SimpleText()
-    : file_watcher(DataDir(), this), renderer(main_font_rasterizer, ui_font_rasterizer) {}
+    : file_watcher(DataDir(), this)
+#if IS_MAC || IS_WIN
+      ,
+      renderer(main_font_rasterizer, ui_font_rasterizer)
+#endif
+{
+}
 
 SimpleText::~SimpleText() {}
 
@@ -27,7 +33,10 @@ void SimpleText::onLaunch() {
 #endif
     main_font_rasterizer.setup(0, main_font, main_font_size);
     ui_font_rasterizer.setup(1, ui_font, ui_font_size);
+
+#if IS_MAC || IS_WIN
     renderer.setup();
+#endif
 
     createWindow();
 

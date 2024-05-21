@@ -16,6 +16,9 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
 #if IS_MAC || IS_WIN
       ,
       renderer(parent.renderer)
+#elif IS_LINUX
+      ,
+      renderer(main_font_rasterizer, ui_font_rasterizer)
 #endif
 {
 }
@@ -40,14 +43,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glDepthMask(GL_FALSE);
 
 #if IS_LINUX
-    main_glyph_cache.setup();
-    ui_glyph_cache.setup();
     renderer.setup();
-
-    text_renderer.setup();
-    rect_renderer.setup();
-    image_renderer.setup();
-    selection_renderer.setup();
 #endif
 
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";

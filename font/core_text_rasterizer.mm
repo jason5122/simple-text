@@ -2,7 +2,6 @@
 #import <CoreText/CoreText.h>
 
 #include "rasterizer.h"
-#include <iostream>
 
 namespace font {
 class FontRasterizer::impl {
@@ -37,8 +36,6 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     this->line_height = line_height;
     this->descent = -descent;
-
-    std::cerr << this->line_height << '\n';
 
     return true;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font/rasterizer.h"
+#include "renderer/glyph_cache.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
@@ -20,10 +20,10 @@ public:
     NOT_MOVABLE(SelectionRenderer)
     SelectionRenderer();
     ~SelectionRenderer();
-    void setup(font::FontRasterizer& font_rasterizer);
+    void setup();
     void createInstances(Size& size, Point& scroll, Point& editor_offset,
-                         font::FontRasterizer& font_rasterizer, std::vector<Selection>& selections,
-                         float line_number_offset);
+                         renderer::GlyphCache& main_glyph_cache,
+                         std::vector<Selection>& selections, int line_number_offset);
     void render(int rendering_pass);
     void destroyInstances();
 

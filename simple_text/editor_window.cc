@@ -15,9 +15,10 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
       ui_font_rasterizer(parent.ui_font_rasterizer)
 #if IS_MAC || IS_WIN
       ,
-      main_glyph_cache(parent.main_glyph_cache), ui_glyph_cache(parent.ui_glyph_cache),
-      text_renderer(parent.text_renderer), rect_renderer(parent.rect_renderer),
-      image_renderer(parent.image_renderer), selection_renderer(parent.selection_renderer)
+      renderer(parent.renderer), main_glyph_cache(parent.main_glyph_cache),
+      ui_glyph_cache(parent.ui_glyph_cache), text_renderer(parent.text_renderer),
+      rect_renderer(parent.rect_renderer), image_renderer(parent.image_renderer),
+      selection_renderer(parent.selection_renderer)
 #elif IS_LINUX
       ,
       main_glyph_cache(main_font_rasterizer), ui_glyph_cache(ui_font_rasterizer),
@@ -48,11 +49,12 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 #if IS_LINUX
     main_glyph_cache.setup();
     ui_glyph_cache.setup();
+    renderer.setup();
 
     text_renderer.setup();
     rect_renderer.setup();
     image_renderer.setup();
-    selection_renderer.setup(main_font_rasterizer);
+    selection_renderer.setup();
 #endif
 
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";
@@ -69,60 +71,11 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw() {
-    using Selection = renderer::SelectionRenderer::Selection;
-
     renderer::Size size{
         .width = width() * scaleFactor(),
         .height = height() * scaleFactor(),
     };
-
-    glViewport(0, 0, size.width, size.height);
-
-    Rgb& background = color_scheme.background;
-    GLfloat red = static_cast<float>(background.r) / 255.0f;
-    GLfloat green = static_cast<float>(background.g) / 255.0f;
-    GLfloat blue = static_cast<float>(background.b) / 255.0f;
-    glClearColor(red, green, blue, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    float status_bar_height = ui_font_rasterizer.line_height;
-
-    std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-
-    // Setup.
-    std::vector<Selection> selections =
-        text_renderer.getSelections(tab->buffer, tab->start_caret, tab->end_caret);
-
-    selection_renderer.createInstances(size, tab->scroll, editor_offset, main_font_rasterizer,
-                                       selections, kLineNumberOffset);
-
-    // Render.
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    selection_renderer.render(0);
-    text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
-                             tab->start_caret, tab->end_caret, tab->longest_line_x, color_scheme,
-                             kLineNumberOffset);
-    selection_renderer.render(1);
-
-    std::vector<int> tab_title_widths = text_renderer.getTabTitleWidths(tab->buffer, tabs);
-    std::vector<int> tab_title_x_coords;
-    std::vector<int> actual_tab_title_widths;
-
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, tab->scroll, tab->end_caret, main_font_rasterizer.line_height,
-                       tab->buffer.lineCount(), tab->longest_line_x, editor_offset,
-                       status_bar_height, color_scheme, tab_index, tab_title_widths,
-                       kLineNumberOffset, tab_title_x_coords, actual_tab_title_widths);
-
-    image_renderer.draw(size, tab->scroll, editor_offset, tab_title_x_coords,
-                        actual_tab_title_widths);
-
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(size, tab->end_caret, color_scheme, editor_offset, tabs,
-                               tab_title_x_coords);
-
-    // Cleanup.
-    selection_renderer.destroyInstances();
+    renderer.render(size, color_scheme, tabs, tab_index);
 }
 
 void EditorWindow::onResize(int width, int height) {
@@ -173,7 +126,7 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
     redraw();
 }
 
-static inline int positive_modulo(int i, int n) {
+static inline int PositiveModulo(int i, int n) {
     return (i % n + n) % n;
 }
 
@@ -220,12 +173,12 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         break;
 
     case Action::kPreviousTab:
-        tab_index = positive_modulo(tab_index - 1, tabs.size());
+        tab_index = PositiveModulo(tab_index - 1, tabs.size());
         redraw();
         break;
 
     case Action::kNextTab:
-        tab_index = positive_modulo(tab_index + 1, tabs.size());
+        tab_index = PositiveModulo(tab_index + 1, tabs.size());
         redraw();
         break;
 

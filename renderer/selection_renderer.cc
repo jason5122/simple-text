@@ -1,5 +1,4 @@
 #include "base/rgb.h"
-#include "font/rasterizer.h"
 #include "renderer/opengl_error_util.h"
 #include "selection_renderer.h"
 #include <cstdint>
@@ -15,7 +14,7 @@ SelectionRenderer::~SelectionRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-void SelectionRenderer::setup(font::FontRasterizer& font_rasterizer) {
+void SelectionRenderer::setup() {
     std::string vert_source =
 #include "shaders/selection_vert.glsl"
         ;
@@ -83,9 +82,9 @@ void SelectionRenderer::setup(font::FontRasterizer& font_rasterizer) {
 }
 
 void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor_offset,
-                                        font::FontRasterizer& font_rasterizer,
+                                        renderer::GlyphCache& main_glyph_cache,
                                         std::vector<Selection>& selections,
-                                        float line_number_offset) {
+                                        int line_number_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -96,36 +95,36 @@ void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    auto create = [this, &font_rasterizer](int start, int end, int line,
-                                           uint32_t border_flags = kLeft | kRight | kTop | kBottom,
-                                           uint32_t bottom_border_offset = 0,
-                                           uint32_t top_border_offset = 0,
-                                           uint32_t hide_background = 0) {
-        instances.emplace_back(InstanceData{
-            .coords =
-                {
-                    .x = static_cast<float>(start),
-                    .y = static_cast<float>(font_rasterizer.line_height * line),
-                },
-            .size =
-                {
-                    .x = static_cast<float>(end - start),
-                    .y = static_cast<float>(font_rasterizer.line_height + kBorderThickness),
-                },
-            .color = Rgba::fromRgb(colors::selection_focused, 0),
-            .border_color = Rgba::fromRgb(colors::selection_border, 0),
-            // .border_color = Rgba::fromRgb(colors::red, 0),
-            // .color = Rgba::fromRgb(colors::yellow, 0),
-            // .border_color = Rgba::fromRgb(Rgb{0, 0, 0}, 0),
-            .border_info =
-                IVec4{
-                    .x = border_flags,
-                    .y = bottom_border_offset,
-                    .z = top_border_offset,
-                    .w = hide_background,
-                },
-        });
-    };
+    auto create =
+        [this, &main_glyph_cache](int start, int end, int line,
+                                  uint32_t border_flags = kLeft | kRight | kTop | kBottom,
+                                  uint32_t bottom_border_offset = 0,
+                                  uint32_t top_border_offset = 0, uint32_t hide_background = 0) {
+            instances.emplace_back(InstanceData{
+                .coords =
+                    {
+                        .x = static_cast<float>(start),
+                        .y = static_cast<float>(main_glyph_cache.lineHeight() * line),
+                    },
+                .size =
+                    {
+                        .x = static_cast<float>(end - start),
+                        .y = static_cast<float>(main_glyph_cache.lineHeight() + kBorderThickness),
+                    },
+                .color = Rgba::fromRgb(colors::selection_focused, 0),
+                .border_color = Rgba::fromRgb(colors::selection_border, 0),
+                // .border_color = Rgba::fromRgb(colors::red, 0),
+                // .color = Rgba::fromRgb(colors::yellow, 0),
+                // .border_color = Rgba::fromRgb(Rgb{0, 0, 0}, 0),
+                .border_info =
+                    IVec4{
+                        .x = border_flags,
+                        .y = bottom_border_offset,
+                        .z = top_border_offset,
+                        .w = hide_background,
+                    },
+            });
+        };
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {

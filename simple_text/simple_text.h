@@ -10,6 +10,7 @@
 #include "renderer/glyph_cache.h"
 #include "renderer/image_renderer.h"
 #include "renderer/rect_renderer.h"
+#include "renderer/renderer.h"
 #include "renderer/selection_renderer.h"
 #include "renderer/text_renderer.h"
 #include "simple_text/editor_tab.h"
@@ -50,7 +51,7 @@ public:
 
         static constexpr int kLineNumberOffset = 120;
 
-        int tab_index = 0;
+        size_t tab_index = 0;
         std::vector<std::unique_ptr<EditorTab>> tabs;
 
         config::ColorScheme color_scheme;
@@ -58,6 +59,8 @@ public:
         font::FontRasterizer& main_font_rasterizer;
         font::FontRasterizer& ui_font_rasterizer;
 #if IS_MAC || IS_WIN
+        renderer::Renderer& renderer;
+
         renderer::GlyphCache& main_glyph_cache;
         renderer::GlyphCache& ui_glyph_cache;
         renderer::TextRenderer& text_renderer;
@@ -66,6 +69,8 @@ public:
         renderer::SelectionRenderer& selection_renderer;
 // TODO: Figure out OpenGL context reuse on Linux.
 #elif IS_LINUX
+        renderer::Renderer renderer;
+
         renderer::GlyphCache main_glyph_cache;
         renderer::GlyphCache ui_glyph_cache;
         renderer::TextRenderer text_renderer;
@@ -93,6 +98,8 @@ private:
     font::FontRasterizer main_font_rasterizer;
     font::FontRasterizer ui_font_rasterizer;
 #if IS_MAC || IS_WIN
+    renderer::Renderer renderer;
+
     renderer::GlyphCache main_glyph_cache;
     renderer::GlyphCache ui_glyph_cache;
     renderer::TextRenderer text_renderer;

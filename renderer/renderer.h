@@ -15,16 +15,19 @@ public:
     // TODO: Split this up into smaller methods.
     void render(Size& size, config::ColorScheme& color_scheme,
                 std::vector<std::unique_ptr<EditorTab>>& tabs, size_t tab_index);
-    
+
+    // TODO: Make this private!
+    TextRenderer text_renderer;
 
 private:
     GlyphCache main_glyph_cache;
     GlyphCache ui_glyph_cache;
-    TextRenderer text_renderer;
+    // TextRenderer text_renderer;
     RectRenderer rect_renderer;
     ImageRenderer image_renderer;
     SelectionRenderer selection_renderer;
 
+private:
     static constexpr int kLineNumberOffset = 120;
 
     renderer::Point editor_offset{

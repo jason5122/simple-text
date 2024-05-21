@@ -15,14 +15,7 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
       ui_font_rasterizer(parent.ui_font_rasterizer)
 #if IS_MAC || IS_WIN
       ,
-      renderer(parent.renderer), main_glyph_cache(parent.main_glyph_cache),
-      ui_glyph_cache(parent.ui_glyph_cache), text_renderer(parent.text_renderer),
-      rect_renderer(parent.rect_renderer), image_renderer(parent.image_renderer),
-      selection_renderer(parent.selection_renderer)
-#elif IS_LINUX
-      ,
-      main_glyph_cache(main_font_rasterizer), ui_glyph_cache(ui_font_rasterizer),
-      text_renderer(main_glyph_cache, ui_glyph_cache)
+      renderer(parent.renderer)
 #endif
 {
 }
@@ -105,7 +98,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey mo
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
-    text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
+    renderer.text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
     if (!Any(modifiers & app::ModifierKey::kShift)) {
         tab->start_caret = tab->end_caret;
     }
@@ -121,7 +114,7 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
-    text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
+    renderer.text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
 
     redraw();
 }
@@ -254,12 +247,12 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret);
+        renderer.text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret);
         redraw();
     }
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret);
+        renderer.text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret);
         redraw();
     }
 

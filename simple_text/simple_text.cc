@@ -3,14 +3,7 @@
 #include <memory>
 
 SimpleText::SimpleText()
-    : file_watcher(DataDir(), this), renderer(main_font_rasterizer, ui_font_rasterizer)
-#if IS_MAC || IS_WIN
-      ,
-      main_glyph_cache(main_font_rasterizer), ui_glyph_cache(ui_font_rasterizer),
-      text_renderer(main_glyph_cache, ui_glyph_cache)
-#endif
-{
-}
+    : file_watcher(DataDir(), this), renderer(main_font_rasterizer, ui_font_rasterizer) {}
 
 SimpleText::~SimpleText() {}
 

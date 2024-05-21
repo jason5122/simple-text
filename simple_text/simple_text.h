@@ -7,12 +7,7 @@
 
 #include "config/color_scheme.h"
 #include "font/rasterizer.h"
-#include "renderer/glyph_cache.h"
-#include "renderer/image_renderer.h"
-#include "renderer/rect_renderer.h"
 #include "renderer/renderer.h"
-#include "renderer/selection_renderer.h"
-#include "renderer/text_renderer.h"
 #include "simple_text/editor_tab.h"
 
 #include "base/filesystem/file_watcher.h"
@@ -58,25 +53,12 @@ public:
 
         font::FontRasterizer& main_font_rasterizer;
         font::FontRasterizer& ui_font_rasterizer;
+
+// TODO: Figure out OpenGL context reuse on Linux.
 #if IS_MAC || IS_WIN
         renderer::Renderer& renderer;
-
-        renderer::GlyphCache& main_glyph_cache;
-        renderer::GlyphCache& ui_glyph_cache;
-        renderer::TextRenderer& text_renderer;
-        renderer::RectRenderer& rect_renderer;
-        renderer::ImageRenderer& image_renderer;
-        renderer::SelectionRenderer& selection_renderer;
-// TODO: Figure out OpenGL context reuse on Linux.
 #elif IS_LINUX
         renderer::Renderer renderer;
-
-        renderer::GlyphCache main_glyph_cache;
-        renderer::GlyphCache ui_glyph_cache;
-        renderer::TextRenderer text_renderer;
-        renderer::RectRenderer rect_renderer;
-        renderer::ImageRenderer image_renderer;
-        renderer::SelectionRenderer selection_renderer;
 #endif
     };
 
@@ -97,15 +79,9 @@ private:
 
     font::FontRasterizer main_font_rasterizer;
     font::FontRasterizer ui_font_rasterizer;
+
 #if IS_MAC || IS_WIN
     renderer::Renderer renderer;
-
-    renderer::GlyphCache main_glyph_cache;
-    renderer::GlyphCache ui_glyph_cache;
-    renderer::TextRenderer text_renderer;
-    renderer::RectRenderer rect_renderer;
-    renderer::ImageRenderer image_renderer;
-    renderer::SelectionRenderer selection_renderer;
 #endif
 
     config::KeyBindings key_bindings;

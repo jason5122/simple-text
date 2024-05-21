@@ -1,5 +1,6 @@
 #include "gdk/gdkkeysyms.h"
 #include "main_window.h"
+#include <cmath>
 #include <glad/glad.h>
 #include <iostream>
 

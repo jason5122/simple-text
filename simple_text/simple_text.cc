@@ -15,8 +15,6 @@ SimpleText::SimpleText()
 SimpleText::~SimpleText() {}
 
 void SimpleText::onLaunch() {
-#if IS_MAC || IS_WIN
-
     // TODO: Implement scale factor support.
     // std::string main_font = "Arial";
     // std::string main_font = "Menlo";
@@ -29,11 +27,15 @@ void SimpleText::onLaunch() {
     std::string ui_font = "Segoe UI";
     int main_font_size = 12 * 2;
     int ui_font_size = 9 * 2;
+#elif IS_LINUX
+    std::string ui_font = "Noto Sans";
+    int main_font_size = 16 * 2;
+    int ui_font_size = 11 * 2;
 #endif
-
     main_font_rasterizer.setup(0, main_font, main_font_size);
     ui_font_rasterizer.setup(1, ui_font, ui_font_size);
 
+#if IS_MAC || IS_WIN
     main_glyph_cache.setup();
     ui_glyph_cache.setup();
 

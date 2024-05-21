@@ -47,15 +47,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glDepthMask(GL_FALSE);
 
 #if IS_LINUX
-    // TODO: Implement scale factor support.
-    std::string main_font = "Source Code Pro";
-    std::string ui_font = "Noto Sans";
-    int main_font_size = 16 * 2;
-    int ui_font_size = 11 * 2;
-
-    main_font_rasterizer.setup(0, main_font, main_font_size);
-    ui_font_rasterizer.setup(1, ui_font, ui_font_size);
-
     main_glyph_cache.setup();
     ui_glyph_cache.setup();
 

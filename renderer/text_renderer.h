@@ -22,9 +22,9 @@ public:
     ~TextRenderer();
     void setup();
     void renderText(Size& size, Point& scroll, Buffer& buffer, SyntaxHighlighter& highlighter,
-                    Point& editor_offset, float status_bar_height, CaretInfo& start_caret,
-                    CaretInfo& end_caret, float& longest_line_x, config::ColorScheme& color_scheme,
-                    float line_number_offset);
+                    Point& editor_offset, CaretInfo& start_caret, CaretInfo& end_caret,
+                    int& longest_line_x, config::ColorScheme& color_scheme,
+                    int line_number_offset);
     std::vector<SelectionRenderer::Selection> getSelections(Buffer& buffer, CaretInfo& start_caret,
                                                             CaretInfo& end_caret);
     std::vector<int> getTabTitleWidths(Buffer& buffer,
@@ -52,6 +52,6 @@ private:
         Rgba color;
     };
 
-    std::pair<float, size_t> closestBoundaryForX(std::string_view line_str, float x);
+    std::pair<int, size_t> closestBoundaryForX(std::string_view line_str, int x);
 };
 }

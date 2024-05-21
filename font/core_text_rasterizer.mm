@@ -158,7 +158,7 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
         .top = top,
         .width = static_cast<int32_t>(rasterized_width),
         .height = static_cast<int32_t>(rasterized_height),
-        .advance = advance,
+        .advance = static_cast<int32_t>(std::ceil(advance)),
         .buffer = buffer,
         .index = glyph_index,
     };

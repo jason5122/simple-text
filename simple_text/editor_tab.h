@@ -21,7 +21,7 @@ public:
     renderer::CaretInfo end_caret{};
 
     // TODO: Update this during insertion/deletion.
-    float longest_line_x = 0;
+    int longest_line_x = 0;
 
     EditorTab(fs::path file_path);
     void setup(config::ColorScheme& color_scheme);

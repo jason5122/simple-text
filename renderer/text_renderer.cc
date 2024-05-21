@@ -87,30 +87,29 @@ void TextRenderer::setup() {
 
 // TODO: Rewrite this so this operates on an already shaped line.
 //       We should remove any glyph cache/font rasterization from this method.
-std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string_view line_str, float x) {
+std::pair<int, size_t> TextRenderer::closestBoundaryForX(std::string_view line_str, int x) {
     size_t offset;
     size_t ret;
-    float total_advance = 0;
+    int total_advance = 0;
     for (offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
         std::string_view key = line_str.substr(offset, ret);
         AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
-        float glyph_center = total_advance + glyph.advance / 2;
+        int glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
             return {total_advance, offset};
         }
 
-        total_advance += std::round(glyph.advance);
+        total_advance += glyph.advance;
     }
     return {total_advance, offset};
 }
 
 void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                               SyntaxHighlighter& highlighter, Point& editor_offset,
-                              float status_bar_height, CaretInfo& start_caret,
-                              CaretInfo& end_caret, float& longest_line_x,
-                              config::ColorScheme& color_scheme, float line_number_offset) {
+                              CaretInfo& start_caret, CaretInfo& end_caret, int& longest_line_x,
+                              config::ColorScheme& color_scheme, int line_number_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -124,7 +123,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     size_t start_line = std::min(static_cast<size_t>(scroll.y / main_glyph_cache.lineHeight()),
                                  buffer.lineCount());
     size_t visible_lines =
-        std::ceil((size.height - status_bar_height) / main_glyph_cache.lineHeight());
+        std::ceil((size.height - ui_glyph_cache.lineHeight()) / main_glyph_cache.lineHeight());
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
     {
@@ -161,7 +160,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
         for (size_t line_index = start_line; line_index < end_line; line_index++) {
             size_t ret;
-            float total_advance = 0;
+            int total_advance = 0;
 
             // Draw line number.
             std::string line_number_str = std::to_string(line_index + 1);
@@ -173,7 +172,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
                 Vec2 coords{
-                    .x = -total_advance - line_number_offset / 2,
+                    .x = static_cast<float>(-total_advance - line_number_offset / 2),
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
                 instances.emplace_back(InstanceData{
@@ -183,7 +182,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                     .color = Rgba::fromRgb(Rgb{150, 150, 150}, glyph.colored),
                 });
 
-                total_advance += std::round(glyph.advance);
+                total_advance += glyph.advance;
             }
 
             total_advance = 0;
@@ -210,7 +209,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
                 Vec2 coords{
-                    .x = total_advance,
+                    .x = static_cast<float>(total_advance),
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
                 instances.emplace_back(InstanceData{
@@ -223,7 +222,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                     render_batch();
                 }
 
-                total_advance += std::round(glyph.advance);
+                total_advance += glyph.advance;
             }
 
             byte_offset++;
@@ -272,7 +271,7 @@ TextRenderer::getSelections(Buffer& buffer, CaretInfo& start_caret, CaretInfo& e
 
         std::string line_str = buffer.getLineContent(line_index);
 
-        float total_advance = 0;
+        int total_advance = 0;
         int start = 0;
         int end = 0;
 
@@ -289,7 +288,7 @@ TextRenderer::getSelections(Buffer& buffer, CaretInfo& start_caret, CaretInfo& e
                 end = total_advance;
             }
 
-            total_advance += std::round(glyph.advance);
+            total_advance += glyph.advance;
         }
         if (byte_offset == start_byte) {
             start = total_advance;
@@ -302,7 +301,7 @@ TextRenderer::getSelections(Buffer& buffer, CaretInfo& start_caret, CaretInfo& e
         if (line_index != end_line) {
             std::string_view key = " ";
             AtlasGlyph& space_glyph = main_glyph_cache.getGlyph(key);
-            end = static_cast<int>(total_advance) + std::round(space_glyph.advance);
+            end = total_advance + space_glyph.advance;
         }
 
         if (start != end) {
@@ -324,13 +323,13 @@ TextRenderer::getTabTitleWidths(Buffer& buffer,
 
     auto add_width = [&](std::string_view str) {
         size_t ret;
-        float total_advance = 0;
+        int total_advance = 0;
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
             AtlasGlyph& glyph = ui_glyph_cache.getGlyph(key);
 
-            total_advance += std::round(glyph.advance);
+            total_advance += glyph.advance;
         }
 
         // TODO: Replace this magic number with the width of the close button.
@@ -368,28 +367,32 @@ void TextRenderer::renderUiText(Size& size, CaretInfo& end_caret,
 
     auto create_instances = [&](std::string_view str, int x_offset, int y_offset) {
         size_t ret;
-        float total_advance = 0;
+        int total_advance = 0;
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
             AtlasGlyph& glyph = ui_glyph_cache.getGlyph(key);
 
             instances.emplace_back(InstanceData{
-                .coords = Vec2{total_advance + x_offset, static_cast<float>(y_offset)},
+                .coords =
+                    Vec2{
+                        .x = static_cast<float>(total_advance + x_offset),
+                        .y = static_cast<float>(y_offset),
+                    },
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
                 .color = Rgba::fromRgb(color_scheme.foreground, glyph.colored),
             });
 
-            total_advance += std::round(glyph.advance);
+            total_advance += glyph.advance;
         }
     };
 
-    float status_text_offset = 25;  // TODO: Convert this magic number to actual code.
+    int status_text_offset = 25;  // TODO: Convert this magic number to actual code.
     std::string line_str = std::format("Line {}, Column {}", end_caret.line, end_caret.column);
 
-    float y_bottom_of_screen = size.height - main_glyph_cache.lineHeight();
-    float y_top_of_screen =
+    int y_bottom_of_screen = size.height - main_glyph_cache.lineHeight();
+    int y_top_of_screen =
         editor_offset.y / 2 + ui_glyph_cache.lineHeight() / 2 - main_glyph_cache.lineHeight();
 
     // TODO: Replace magic numbers and strings.
@@ -452,7 +455,7 @@ void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret) {
 
         caret.byte += ret;
         caret.column += ret;
-        caret.x += std::round(glyph.advance);
+        caret.x += glyph.advance;
     }
 }
 
@@ -463,13 +466,13 @@ void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret) {
 
     size_t word_offset = grapheme_next_word_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
     if (word_offset > 0) {
-        float total_advance = 0;
+        int total_advance = 0;
         size_t ret;
         for (size_t offset = caret.column; offset < caret.column + word_offset; offset += ret) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
             std::string_view key = std::string_view(line_str).substr(offset, ret);
             AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
-            total_advance += std::round(glyph.advance);
+            total_advance += glyph.advance;
         }
 
         caret.byte += word_offset;

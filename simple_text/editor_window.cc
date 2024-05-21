@@ -100,8 +100,8 @@ void EditorWindow::onDraw() {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     selection_renderer.render(0);
     text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
-                             status_bar_height, tab->start_caret, tab->end_caret,
-                             tab->longest_line_x, color_scheme, kLineNumberOffset);
+                             tab->start_caret, tab->end_caret, tab->longest_line_x, color_scheme,
+                             kLineNumberOffset);
     selection_renderer.render(1);
 
     std::vector<int> tab_title_widths = text_renderer.getTabTitleWidths(tab->buffer, tabs);
@@ -133,7 +133,7 @@ void EditorWindow::onScroll(int dx, int dy) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     int buffer_width = width() * scaleFactor() - editor_offset.x;
-    int max_scroll_x = std::max(0.0f, tab->longest_line_x - buffer_width);
+    int max_scroll_x = std::max(0, tab->longest_line_x - buffer_width);
     // TODO: Subtract one from line count to leave the last line visible.
     int max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
 

@@ -110,7 +110,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
         .top = text_height,
         .width = text_width,
         .height = text_height,
-        .advance = static_cast<float>(text_width),
+        .advance = text_width,
         .buffer = temp_buffer,
     };
 }

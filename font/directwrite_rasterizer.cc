@@ -541,7 +541,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         .top = top,
         .width = static_cast<int32_t>(pixel_width),
         .height = static_cast<int32_t>(pixel_height),
-        .advance = advance,
+        .advance = static_cast<int32_t>(std::ceil(advance)),
         .buffer = buffer,
         .index = glyph_indices[0],
     };

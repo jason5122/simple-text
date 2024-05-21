@@ -12,7 +12,7 @@ namespace renderer {
 struct AtlasGlyph {
     Vec4 glyph;
     Vec4 uv;
-    float advance;
+    int32_t advance;
     bool colored;
 };
 

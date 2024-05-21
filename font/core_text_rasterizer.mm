@@ -27,14 +27,18 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     CFRelease(ct_font_name);
 
-    CGFloat ascent = std::round(CTFontGetAscent(pimpl->ct_font));
-    CGFloat descent = std::round(CTFontGetDescent(pimpl->ct_font));
-    CGFloat leading = std::round(CTFontGetLeading(pimpl->ct_font));
-    CGFloat line_height = ascent + descent + leading;
+    int ascent = std::ceil(CTFontGetAscent(pimpl->ct_font));
+    int descent = std::ceil(CTFontGetDescent(pimpl->ct_font));
+    int leading = std::ceil(CTFontGetLeading(pimpl->ct_font));
+    int line_height = ascent + descent + leading;
 
     // TODO: Remove magic numbers that emulate Sublime Text.
-    this->line_height = line_height + 2;
+    line_height += 1;
+
+    this->line_height = line_height;
     this->descent = -descent;
+
+    std::cerr << this->line_height << '\n';
 
     return true;
 }

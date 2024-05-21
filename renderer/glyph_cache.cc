@@ -53,4 +53,8 @@ AtlasGlyph GlyphCache::createGlyph(std::string_view utf8_str) {
 void GlyphCache::bindTexture() {
     glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
 }
+
+int GlyphCache::lineHeight() {
+    return font_rasterizer.line_height;
+}
 }

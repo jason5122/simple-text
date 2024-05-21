@@ -26,7 +26,7 @@ TextRenderer::~TextRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-void TextRenderer::setup(font::FontRasterizer& font_rasterizer) {
+void TextRenderer::setup() {
     std::string vert_source =
 #include "shaders/text_vert.glsl"
         ;
@@ -38,7 +38,7 @@ void TextRenderer::setup(font::FontRasterizer& font_rasterizer) {
 
     glUseProgram(shader_program.id);
     glUniform1f(glGetUniformLocation(shader_program.id, "line_height"),
-                font_rasterizer.line_height);
+                main_glyph_cache.lineHeight());
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -85,21 +85,16 @@ void TextRenderer::setup(font::FontRasterizer& font_rasterizer) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-AtlasGlyph& TextRenderer::getAtlasGlyph(std::string_view key, bool use_main) {
-    return use_main ? main_glyph_cache.getGlyph(key) : ui_glyph_cache.getGlyph(key);
-}
-
 // TODO: Rewrite this so this operates on an already shaped line.
 //       We should remove any glyph cache/font rasterization from this method.
-std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string_view line_str, float x,
-                                                           font::FontRasterizer& font_rasterizer) {
+std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string_view line_str, float x) {
     size_t offset;
     size_t ret;
     float total_advance = 0;
     for (offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
         std::string_view key = line_str.substr(offset, ret);
-        AtlasGlyph& glyph = getAtlasGlyph(key, true);
+        AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
         float glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -113,8 +108,8 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string_view line
 
 void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                               SyntaxHighlighter& highlighter, Point& editor_offset,
-                              font::FontRasterizer& font_rasterizer, float status_bar_height,
-                              CaretInfo& start_caret, CaretInfo& end_caret, float& longest_line_x,
+                              float status_bar_height, CaretInfo& start_caret,
+                              CaretInfo& end_caret, float& longest_line_x,
                               config::ColorScheme& color_scheme, float line_number_offset) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
@@ -126,10 +121,10 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    size_t start_line =
-        std::min(static_cast<size_t>(scroll.y / font_rasterizer.line_height), buffer.lineCount());
+    size_t start_line = std::min(static_cast<size_t>(scroll.y / main_glyph_cache.lineHeight()),
+                                 buffer.lineCount());
     size_t visible_lines =
-        std::ceil((size.height - status_bar_height) / font_rasterizer.line_height);
+        std::ceil((size.height - status_bar_height) / main_glyph_cache.lineHeight());
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
     {
@@ -175,11 +170,11 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
             for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
                 std::string_view key = std::string_view(line_number_str).substr(offset, ret);
-                AtlasGlyph& glyph = getAtlasGlyph(key, true);
+                AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
                 Vec2 coords{
                     .x = -total_advance - line_number_offset / 2,
-                    .y = static_cast<float>(line_index * font_rasterizer.line_height),
+                    .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
                 instances.emplace_back(InstanceData{
                     .coords = coords,
@@ -212,11 +207,11 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                     key = "·";
                     text_color = Rgb{182, 182, 182};
                 }
-                AtlasGlyph& glyph = getAtlasGlyph(key, true);
+                AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
                 Vec2 coords{
                     .x = total_advance,
-                    .y = static_cast<float>(line_index * font_rasterizer.line_height),
+                    .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
                 instances.emplace_back(InstanceData{
                     .coords = coords,
@@ -238,7 +233,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
     instances.emplace_back(InstanceData{
         .coords = Vec2{size.width - Atlas::kAtlasSize - 400 + scroll.x,
-                       10 * font_rasterizer.line_height + scroll.y},
+                       10 * main_glyph_cache.lineHeight() + scroll.y},
         .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
         .uv = Vec4{0, 0, 1.0, 1.0},
         .color = Rgba::fromRgb(color_scheme.foreground, false),
@@ -255,8 +250,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 }
 
 std::vector<SelectionRenderer::Selection>
-TextRenderer::getSelections(Buffer& buffer, font::FontRasterizer& font_rasterizer,
-                            CaretInfo& start_caret, CaretInfo& end_caret) {
+TextRenderer::getSelections(Buffer& buffer, CaretInfo& start_caret, CaretInfo& end_caret) {
     std::vector<SelectionRenderer::Selection> selections;
 
     size_t start_byte = start_caret.byte, end_byte = end_caret.byte;
@@ -283,7 +277,7 @@ TextRenderer::getSelections(Buffer& buffer, font::FontRasterizer& font_rasterize
         for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
             std::string_view key = std::string_view(line_str).substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, true);
+            AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
             if (byte_offset == start_byte) {
                 start = total_advance;
@@ -304,7 +298,7 @@ TextRenderer::getSelections(Buffer& buffer, font::FontRasterizer& font_rasterize
 
         if (line_index != end_line) {
             std::string_view key = " ";
-            AtlasGlyph& space_glyph = getAtlasGlyph(key, true);
+            AtlasGlyph& space_glyph = main_glyph_cache.getGlyph(key);
             end = static_cast<int>(total_advance) + std::round(space_glyph.advance);
         }
 
@@ -321,7 +315,7 @@ TextRenderer::getSelections(Buffer& buffer, font::FontRasterizer& font_rasterize
 }
 
 std::vector<int>
-TextRenderer::getTabTitleWidths(Buffer& buffer, font::FontRasterizer& ui_font_rasterizer,
+TextRenderer::getTabTitleWidths(Buffer& buffer,
                                 std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
     std::vector<int> tab_title_widths;
 
@@ -331,7 +325,7 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, font::FontRasterizer& ui_font_ra
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, false);
+            AtlasGlyph& glyph = ui_glyph_cache.getGlyph(key);
 
             total_advance += std::round(glyph.advance);
         }
@@ -354,8 +348,7 @@ TextRenderer::getTabTitleWidths(Buffer& buffer, font::FontRasterizer& ui_font_ra
     return tab_title_widths;
 }
 
-void TextRenderer::renderUiText(Size& size, font::FontRasterizer& main_font_rasterizer,
-                                font::FontRasterizer& ui_font_rasterizer, CaretInfo& end_caret,
+void TextRenderer::renderUiText(Size& size, CaretInfo& end_caret,
                                 config::ColorScheme& color_scheme, Point& editor_offset,
                                 std::vector<std::unique_ptr<EditorTab>>& editor_tabs,
                                 std::vector<int>& tab_title_x_coords) {
@@ -376,7 +369,7 @@ void TextRenderer::renderUiText(Size& size, font::FontRasterizer& main_font_rast
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, false);
+            AtlasGlyph& glyph = ui_glyph_cache.getGlyph(key);
 
             instances.emplace_back(InstanceData{
                 .coords = Vec2{total_advance + x_offset, static_cast<float>(y_offset)},
@@ -392,9 +385,9 @@ void TextRenderer::renderUiText(Size& size, font::FontRasterizer& main_font_rast
     float status_text_offset = 25;  // TODO: Convert this magic number to actual code.
     std::string line_str = std::format("Line {}, Column {}", end_caret.line, end_caret.column);
 
-    float y_bottom_of_screen = size.height - main_font_rasterizer.line_height;
-    float y_top_of_screen = editor_offset.y / 2 + ui_font_rasterizer.line_height / 2 -
-                            main_font_rasterizer.line_height;
+    float y_bottom_of_screen = size.height - main_glyph_cache.lineHeight();
+    float y_top_of_screen =
+        editor_offset.y / 2 + ui_glyph_cache.lineHeight() / 2 - main_glyph_cache.lineHeight();
 
     // TODO: Replace magic numbers and strings.
     std::string json = "JSON";
@@ -429,32 +422,30 @@ void TextRenderer::renderUiText(Size& size, font::FontRasterizer& main_font_rast
     glCheckError();
 }
 
-void TextRenderer::setCaretInfo(Buffer& buffer, font::FontRasterizer& font_rasterizer,
-                                Point& mouse, CaretInfo& caret) {
+void TextRenderer::setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret) {
     float x;
     size_t offset;
 
-    caret.line = mouse.y / font_rasterizer.line_height;
+    caret.line = mouse.y / main_glyph_cache.lineHeight();
     if (caret.line > buffer.lineCount() - 1) {
         caret.line = buffer.lineCount() - 1;
     }
 
     std::string start_line_str = buffer.getLineContent(caret.line);
-    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, mouse.x, font_rasterizer);
+    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, mouse.x);
     caret.column = offset;
     caret.x = x;
 
     caret.byte = buffer.byteOfLine(caret.line) + caret.column;
 }
 
-void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
-                                        font::FontRasterizer& main_font_rasterizer) {
+void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     size_t ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
     if (ret > 0) {
         std::string_view key = std::string_view(line_str).substr(caret.column, ret);
-        AtlasGlyph& glyph = getAtlasGlyph(key, true);
+        AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
         caret.byte += ret;
         caret.column += ret;
@@ -464,8 +455,7 @@ void TextRenderer::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret,
 
 // TODO: Do we really need a Unicode-accurate version of this? Sublime Text doesn't seem to follow
 // Unicode word boundaries the way libgrapheme does.
-void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
-                                        font::FontRasterizer& main_font_rasterizer) {
+void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     size_t word_offset = grapheme_next_word_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
@@ -475,7 +465,7 @@ void TextRenderer::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret,
         for (size_t offset = caret.column; offset < caret.column + word_offset; offset += ret) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
             std::string_view key = std::string_view(line_str).substr(offset, ret);
-            AtlasGlyph& glyph = getAtlasGlyph(key, true);
+            AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
             total_advance += std::round(glyph.advance);
         }
 

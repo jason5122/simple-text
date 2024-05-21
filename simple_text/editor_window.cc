@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cmath>
 #include <glad/glad.h>
+#include <iostream>
 
 using EditorWindow = SimpleText::EditorWindow;
 
@@ -24,8 +25,6 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
 #endif
 {
 }
-
-#include <iostream>
 
 EditorWindow::~EditorWindow() {
     std::cerr << "~EditorWindow " << wid << '\n';
@@ -91,8 +90,8 @@ void EditorWindow::onDraw() {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     // Setup.
-    std::vector<Selection> selections = text_renderer.getSelections(
-        tab->buffer, main_font_rasterizer, tab->start_caret, tab->end_caret);
+    std::vector<Selection> selections =
+        text_renderer.getSelections(tab->buffer, tab->start_caret, tab->end_caret);
 
     selection_renderer.createInstances(size, tab->scroll, editor_offset, main_font_rasterizer,
                                        selections, kLineNumberOffset);
@@ -101,12 +100,11 @@ void EditorWindow::onDraw() {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     selection_renderer.render(0);
     text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
-                             main_font_rasterizer, status_bar_height, tab->start_caret,
-                             tab->end_caret, tab->longest_line_x, color_scheme, kLineNumberOffset);
+                             status_bar_height, tab->start_caret, tab->end_caret,
+                             tab->longest_line_x, color_scheme, kLineNumberOffset);
     selection_renderer.render(1);
 
-    std::vector<int> tab_title_widths =
-        text_renderer.getTabTitleWidths(tab->buffer, ui_font_rasterizer, tabs);
+    std::vector<int> tab_title_widths = text_renderer.getTabTitleWidths(tab->buffer, tabs);
     std::vector<int> tab_title_x_coords;
     std::vector<int> actual_tab_title_widths;
 
@@ -120,8 +118,8 @@ void EditorWindow::onDraw() {
                         actual_tab_title_widths);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(size, main_font_rasterizer, ui_font_rasterizer, tab->end_caret,
-                               color_scheme, editor_offset, tabs, tab_title_x_coords);
+    text_renderer.renderUiText(size, tab->end_caret, color_scheme, editor_offset, tabs,
+                               tab_title_x_coords);
 
     // Cleanup.
     selection_renderer.destroyInstances();
@@ -160,7 +158,7 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y, app::ModifierKe
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
-    text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->end_caret);
+    text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
     if (!Any(modifiers & app::ModifierKey::kShift)) {
         tab->start_caret = tab->end_caret;
     }
@@ -176,7 +174,7 @@ void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y, app::ModifierKe
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
-    text_renderer.setCaretInfo(tab->buffer, main_font_rasterizer, mouse, tab->end_caret);
+    text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
 
     redraw();
 }
@@ -309,12 +307,12 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret, main_font_rasterizer);
+        text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret);
         redraw();
     }
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret, main_font_rasterizer);
+        text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret);
         redraw();
     }
 

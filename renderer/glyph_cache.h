@@ -22,6 +22,7 @@ public:
     void setup();
     AtlasGlyph& getGlyph(std::string_view key);
     void bindTexture();
+    int lineHeight();
 
 private:
     font::FontRasterizer& font_rasterizer;

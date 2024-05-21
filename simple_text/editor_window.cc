@@ -49,7 +49,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_glyph_cache.setup();
     ui_glyph_cache.setup();
 
-    text_renderer.setup(main_font_rasterizer);
+    text_renderer.setup();
     rect_renderer.setup();
     image_renderer.setup();
     selection_renderer.setup(main_font_rasterizer);

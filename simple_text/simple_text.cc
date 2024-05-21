@@ -29,8 +29,8 @@ void SimpleText::onLaunch() {
     int ui_font_size = 9 * 2;
 #elif IS_LINUX
     std::string ui_font = "Noto Sans";
-    int main_font_size = 16 * 2;
-    int ui_font_size = 11 * 2;
+    int main_font_size = 12 * 2;
+    int ui_font_size = 9 * 2;
 #endif
     main_font_rasterizer.setup(0, main_font, main_font_size);
     ui_font_rasterizer.setup(1, ui_font, ui_font_size);

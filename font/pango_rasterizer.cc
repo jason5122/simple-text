@@ -20,7 +20,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     PangoFontDescription* desc = pango_font_description_new();
     pango_font_description_set_family(desc, main_font_name.c_str());
-    pango_font_description_set_absolute_size(desc, font_size * PANGO_SCALE);
+    pango_font_description_set_size(desc, font_size * PANGO_SCALE);
     if (!desc) {
         std::cerr << "pango_font_description_from_string() error.\n";
         return false;
@@ -44,7 +44,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     int line_height = std::max(ascent + descent, height);
 
     // TODO: Remove magic numbers that emulate Sublime Text.
-    this->line_height = line_height + 2;
+    this->line_height = line_height;
     this->descent = descent;
 
     return true;
@@ -84,6 +84,10 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     pango_layout_get_size(layout, &text_width, &text_height);
     text_width /= PANGO_SCALE;
     text_height /= PANGO_SCALE;
+
+    // TODO: Properly rasterize width like Sublime Text does (our widths are one pixel short).
+    //       This hack makes monospaced fonts perfect, but ruins proportional fonts.
+    // text_width += 1;
 
     cairo_surface_t* surface;
     unsigned char* surface_data = nullptr;

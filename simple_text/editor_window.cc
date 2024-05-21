@@ -129,19 +129,13 @@ void EditorWindow::onResize(int width, int height) {
     redraw();
 }
 
-void EditorWindow::onScroll(float dx, float dy) {
+void EditorWindow::onScroll(int dx, int dy) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
-    // TODO: Stopping at fractional pixels causes glitchy artifacts, so we round to prevent this.
-    // However, this stops scrolling from feeling natural. This is an issue for GTK.
-    // Consider changing onScroll() signature to only accept integers.
-    dx = std::round(dx);
-    dy = std::round(dy);
-
-    float buffer_width = width() * scaleFactor() - editor_offset.x;
-    float max_scroll_x = std::max(0.0f, tab->longest_line_x - buffer_width);
+    int buffer_width = width() * scaleFactor() - editor_offset.x;
+    int max_scroll_x = std::max(0.0f, tab->longest_line_x - buffer_width);
     // TODO: Subtract one from line count to leave the last line visible.
-    float max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
+    int max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
 
     renderer::Point delta{dx, dy};
     renderer::Point max_scroll{max_scroll_x, max_scroll_y};
@@ -150,7 +144,7 @@ void EditorWindow::onScroll(float dx, float dy) {
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y, app::ModifierKey modifiers) {
+void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     renderer::Point mouse{
@@ -166,7 +160,7 @@ void EditorWindow::onLeftMouseDown(float mouse_x, float mouse_y, app::ModifierKe
     redraw();
 }
 
-void EditorWindow::onLeftMouseDrag(float mouse_x, float mouse_y, app::ModifierKey modifiers) {
+void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
     renderer::Point mouse{

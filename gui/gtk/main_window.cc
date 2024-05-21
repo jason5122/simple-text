@@ -267,9 +267,11 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data)
 static gboolean scroll_event(GtkWidget* self, GdkEventScroll* event, gpointer user_data) {
     gtk_gl_area_make_current(GTK_GL_AREA(self));
 
-    double dx, dy;
-    gdk_event_get_scroll_deltas((GdkEvent*)event, &dx, &dy);
+    double delta_x, delta_y;
+    gdk_event_get_scroll_deltas((GdkEvent*)event, &delta_x, &delta_y);
 
+    int dx = std::round(delta_x);
+    int dy = std::round(delta_y);
     if (gdk_device_get_source(event->device) == GDK_SOURCE_MOUSE) {
         dx *= 32;
         dy *= 32;
@@ -283,12 +285,12 @@ static gboolean scroll_event(GtkWidget* self, GdkEventScroll* event, gpointer us
 
 static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpointer user_data) {
     if (event->type == GDK_BUTTON_PRESS) {
-        gdouble mouse_x = event->x;
-        gdouble mouse_y = event->y;
+        int mouse_x = std::round(event->x);
+        int mouse_y = std::round(event->y);
 
         int scale_factor = gtk_widget_get_scale_factor(self);
-        float scaled_mouse_x = mouse_x * scale_factor;
-        float scaled_mouse_y = mouse_y * scale_factor;
+        int scaled_mouse_x = mouse_x * scale_factor;
+        int scaled_mouse_y = mouse_y * scale_factor;
 
         app::ModifierKey modifiers = GetModifiers(event->state);
 
@@ -300,12 +302,12 @@ static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpoin
 
 static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpointer user_data) {
     if (event->type == GDK_MOTION_NOTIFY) {
-        gdouble mouse_x = event->x;
-        gdouble mouse_y = event->y;
+        int mouse_x = std::round(event->x);
+        int mouse_y = std::round(event->y);
 
         int scale_factor = gtk_widget_get_scale_factor(self);
-        float scaled_mouse_x = mouse_x * scale_factor;
-        float scaled_mouse_y = mouse_y * scale_factor;
+        int scaled_mouse_x = mouse_x * scale_factor;
+        int scaled_mouse_y = mouse_y * scale_factor;
 
         app::ModifierKey modifiers = GetModifiers(event->state);
 

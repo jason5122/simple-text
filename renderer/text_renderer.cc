@@ -232,8 +232,11 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
     }
 
     instances.emplace_back(InstanceData{
-        .coords = Vec2{size.width - Atlas::kAtlasSize - 400 + scroll.x,
-                       10 * main_glyph_cache.lineHeight() + scroll.y},
+        .coords =
+            Vec2{
+                .x = static_cast<float>(size.width - Atlas::kAtlasSize - 400 + scroll.x),
+                .y = static_cast<float>(10 * main_glyph_cache.lineHeight() + scroll.y),
+            },
         .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
         .uv = Vec4{0, 0, 1.0, 1.0},
         .color = Rgba::fromRgb(color_scheme.foreground, false),

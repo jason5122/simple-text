@@ -32,9 +32,9 @@ public:
         void onOpenGLActivate(int width, int height) override;
         void onDraw() override;
         void onResize(int width, int height) override;
-        void onScroll(float dx, float dy) override;
-        void onLeftMouseDown(float mouse_x, float mouse_y, app::ModifierKey modifiers) override;
-        void onLeftMouseDrag(float mouse_x, float mouse_y, app::ModifierKey modifiers) override;
+        void onScroll(int dx, int dy) override;
+        void onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
+        void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
         void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
         void onClose() override;
         void onDarkModeToggle() override;
@@ -48,7 +48,7 @@ public:
             .y = 30 * 2,
         };
 
-        static constexpr float kLineNumberOffset = 120;
+        static constexpr int kLineNumberOffset = 120;
 
         int tab_index = 0;
         std::vector<std::unique_ptr<EditorTab>> tabs;

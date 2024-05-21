@@ -119,11 +119,11 @@
             openGLLayer.asynchronous = false;
         }
 
-        CGFloat dx = 0;
-        CGFloat dy = 0;
+        int dx = 0;
+        int dy = 0;
         if (event.hasPreciseScrollingDeltas) {
-            dx = -event.scrollingDeltaX;
-            dy = -event.scrollingDeltaY;
+            dx = std::round(-event.scrollingDeltaX);
+            dy = std::round(-event.scrollingDeltaY);
         } else {
             // Taken from ///chromium/src/ui/events/cocoa/events_mac.mm.
             // static constexpr double kScrollbarPixelsPerCocoaTick = 40.0;
@@ -131,8 +131,8 @@
             // dy = -event.deltaY * kScrollbarPixelsPerCocoaTick;
 
             // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
-            dx = -event.scrollingDeltaX * 16;
-            dy = -event.scrollingDeltaY * 16;
+            dx = std::round(-event.scrollingDeltaX) * 16;
+            dy = std::round(-event.scrollingDeltaY) * 16;
         }
 
         // TODO: Allow for easy pure vertical/horizontal scroll like Sublime Text.
@@ -141,8 +141,9 @@
         //     dx = 0;
         // }
 
-        float scaled_dx = dx * openGLLayer.contentsScale;
-        float scaled_dy = dy * openGLLayer.contentsScale;
+        int scale = openGLLayer.contentsScale;
+        int scaled_dx = dx * openGLLayer.contentsScale;
+        int scaled_dy = dy * openGLLayer.contentsScale;
         openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
     }
 }
@@ -230,24 +231,26 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 }
 
 - (void)mouseDown:(NSEvent*)event {
-    CGFloat mouse_x = event.locationInWindow.x;
-    CGFloat mouse_y = event.locationInWindow.y;
+    int mouse_x = std::round(event.locationInWindow.x);
+    int mouse_y = std::round(event.locationInWindow.y);
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
-    float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
+    int scale = openGLLayer.contentsScale;
+    int scaled_mouse_x = mouse_x * scale;
+    int scaled_mouse_y = mouse_y * scale;
 
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
     openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
-    CGFloat mouse_x = event.locationInWindow.x;
-    CGFloat mouse_y = event.locationInWindow.y;
+    int mouse_x = std::round(event.locationInWindow.x);
+    int mouse_y = std::round(event.locationInWindow.y);
     mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    float scaled_mouse_x = mouse_x * openGLLayer.contentsScale;
-    float scaled_mouse_y = mouse_y * openGLLayer.contentsScale;
+    int scale = openGLLayer.contentsScale;
+    int scaled_mouse_x = mouse_x * scale;
+    int scaled_mouse_y = mouse_y * scale;
 
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
     openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);

@@ -151,8 +151,8 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
 
     // Add tab bar.
     instances.emplace_back(InstanceData{
-        .coords = Vec2{0, 0 - editor_offset.y},
-        .rect_size = Vec2{static_cast<float>(size.width), editor_offset.y},
+        .coords = Vec2{0, static_cast<float>(-editor_offset.y)},
+        .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(editor_offset.y)},
         .color = Rgba::fromRgb(color_scheme.tab_bar, 255),
     });
 
@@ -182,14 +182,14 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
 
     // Add side bar.
     instances.emplace_back(InstanceData{
-        .coords = {0 - editor_offset.x, 0 - editor_offset.y},
-        .rect_size = {editor_offset.x, static_cast<float>(size.height)},
+        .coords = {static_cast<float>(-editor_offset.x), static_cast<float>(-editor_offset.y)},
+        .rect_size = {static_cast<float>(editor_offset.x), static_cast<float>(size.height)},
         .color = Rgba::fromRgb(color_scheme.side_bar, 255),
     });
 
     // Add status bar.
     instances.emplace_back(InstanceData{
-        .coords = Vec2{0 - editor_offset.x, editor_height},
+        .coords = Vec2{static_cast<float>(-editor_offset.x), editor_height},
         .rect_size = Vec2{static_cast<float>(size.width), status_bar_height},
         .color = Rgba::fromRgb(color_scheme.status_bar, 255),
     });

@@ -9,15 +9,15 @@ struct Size {
 };
 
 struct Point {
-    float x;
-    float y;
+    int x;
+    int y;
 };
 
 struct CaretInfo {
     size_t byte;
     size_t line;
     size_t column;
-    float x;
-    float y;
+    int x;
+    int y;
 };
 }

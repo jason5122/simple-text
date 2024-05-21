@@ -46,8 +46,8 @@ void EditorTab::scrollBuffer(renderer::Point& delta, renderer::Point& max_scroll
     } else if (axis == ScrollAxis::Horizontal) {
         delta.y = 0;
     }
-    scroll.x = std::clamp(scroll.x + delta.x, 0.0f, max_scroll.x);
-    scroll.y = std::clamp(scroll.y + delta.y, 0.0f, max_scroll.y);
+    scroll.x = std::clamp(scroll.x + delta.x, 0, max_scroll.x);
+    scroll.y = std::clamp(scroll.y + delta.y, 0, max_scroll.y);
 
     last_scroll = now;
 }

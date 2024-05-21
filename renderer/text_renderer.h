@@ -25,9 +25,7 @@ public:
                     Point& editor_offset, float status_bar_height, CaretInfo& start_caret,
                     CaretInfo& end_caret, float& longest_line_x, config::ColorScheme& color_scheme,
                     float line_number_offset);
-    std::vector<SelectionRenderer::Selection> getSelections(Buffer& buffer,
-
-                                                            CaretInfo& start_caret,
+    std::vector<SelectionRenderer::Selection> getSelections(Buffer& buffer, CaretInfo& start_caret,
                                                             CaretInfo& end_caret);
     std::vector<int> getTabTitleWidths(Buffer& buffer,
                                        std::vector<std::unique_ptr<EditorTab>>& editor_tabs);

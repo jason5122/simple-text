@@ -46,7 +46,7 @@ public:
 
         static constexpr int kLineNumberOffset = 120;
 
-        size_t tab_index = 0;
+        int tab_index = 0;  // Use int instead of size_t to prevent wrap around when less than 0.
         std::vector<std::unique_ptr<EditorTab>> tabs;
 
         config::ColorScheme color_scheme;

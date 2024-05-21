@@ -25,7 +25,7 @@ void SimpleText::onLaunch() {
     int ui_font_size = 11 * 2;
 #elif IS_WIN
     std::string ui_font = "Segoe UI";
-    int main_font_size = 12 * 2;
+    int main_font_size = 11 * 2;
     int ui_font_size = 9 * 2;
 #elif IS_LINUX
     std::string ui_font = "Noto Sans";

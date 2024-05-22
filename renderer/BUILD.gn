@@ -19,6 +19,7 @@ source_set("renderer") {
     "//font",
     "//third_party/libgrapheme",
     "//third_party/libpng",
+    "//third_party/uni_algo",
   ]
 
   public_deps = [ "//third_party/glad" ]

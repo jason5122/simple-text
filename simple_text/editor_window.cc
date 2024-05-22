@@ -270,6 +270,13 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
         renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
+        tab->start_caret = tab->end_caret;
+        redraw();
+    }
+    if (key == app::Key::kRightArrow &&
+        modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
         redraw();
     }
 

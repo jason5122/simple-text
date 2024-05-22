@@ -16,6 +16,14 @@ public:
 private:
     GlyphCache& main_glyph_cache;
 
+    enum class CharKind {
+        kNone,
+        kAlphanumeric,
+        kWhitespace,
+        kOther,
+        // TODO: Maybe add more kinds.
+    };
+
     size_t closestBoundaryForX(std::string_view line_str, int x);
 };
 }

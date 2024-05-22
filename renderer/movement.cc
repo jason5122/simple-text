@@ -1,4 +1,7 @@
 #include "movement.h"
+#include "uni_algo/prop.h"
+#include <cassert>
+#include <iostream>
 
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
@@ -43,24 +46,36 @@ void Movement::moveCaretBackwardChar(Buffer& buffer, CaretInfo& caret) {
     caret.column = new_column;
 }
 
-// TODO: Do we really need a Unicode-accurate version of this? Sublime Text doesn't seem to follow
-// Unicode word boundaries the way libgrapheme does.
 void Movement::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
 
-    size_t word_offset = grapheme_next_word_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
-    if (word_offset > 0) {
-        int total_advance = 0;
-        size_t ret;
-        for (size_t offset = caret.column; offset < caret.column + word_offset; offset += ret) {
-            ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
-            std::string_view key = std::string_view(line_str).substr(offset, ret);
-            AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
-            total_advance += glyph.advance;
+    CharKind prev_kind = CharKind::kNone;
+    size_t ret = 0;
+    for (size_t offset = caret.column; offset < line_str.length(); offset += ret) {
+        uint_least32_t codepoint = 0;
+
+        ret = grapheme_decode_utf8(&line_str[0] + offset, SIZE_MAX, &codepoint);
+        if (ret == 0) [[unlikely]] {
+            break;
         }
 
-        caret.byte += word_offset;
-        caret.column += word_offset;
+        CharKind kind = CharKind::kNone;
+        if (una::codepoint::is_alphanumeric(codepoint) || codepoint == U'_') {
+            kind = CharKind::kAlphanumeric;
+        } else if (una::codepoint::is_whitespace(codepoint)) {
+            kind = CharKind::kWhitespace;
+        } else {
+            kind = CharKind::kOther;
+        }
+
+        if (prev_kind != CharKind::kNone && kind != prev_kind) {
+            break;
+        }
+
+        caret.byte += ret;
+        caret.column += ret;
+
+        prev_kind = kind;
     }
 }
 

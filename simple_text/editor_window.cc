@@ -94,7 +94,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey mo
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
-    renderer.text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
+    renderer.movement.setCaretInfo(tab->buffer, mouse, tab->end_caret);
     if (!Any(modifiers & app::ModifierKey::kShift)) {
         tab->start_caret = tab->end_caret;
     }
@@ -110,7 +110,7 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
 
-    renderer.text_renderer.setCaretInfo(tab->buffer, mouse, tab->end_caret);
+    renderer.movement.setCaretInfo(tab->buffer, mouse, tab->end_caret);
 
     redraw();
 }
@@ -243,12 +243,12 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.text_renderer.moveCaretForwardChar(tab->buffer, tab->end_caret);
+        renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
         redraw();
     }
     if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
         std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.text_renderer.moveCaretForwardWord(tab->buffer, tab->end_caret);
+        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
         redraw();
     }
 

@@ -32,9 +32,6 @@ public:
     void renderUiText(Size& size, CaretInfo& end_caret, config::ColorScheme& color_scheme,
                       Point& editor_offset, std::vector<std::unique_ptr<EditorTab>>& editor_tabs,
                       std::vector<int>& tab_title_x_coords);
-    void setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret);
-    void moveCaretForwardChar(Buffer& buffer, CaretInfo& caret);
-    void moveCaretForwardWord(Buffer& buffer, CaretInfo& caret);
 
 private:
     GlyphCache& main_glyph_cache;
@@ -51,7 +48,5 @@ private:
         Vec4 uv;
         Rgba color;
     };
-
-    std::pair<int, size_t> closestBoundaryForX(std::string_view line_str, int x);
 };
 }

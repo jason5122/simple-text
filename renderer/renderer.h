@@ -3,6 +3,7 @@
 #include "font/rasterizer.h"
 #include "renderer/glyph_cache.h"
 #include "renderer/image_renderer.h"
+#include "renderer/movement.h"
 #include "renderer/rect_renderer.h"
 #include "renderer/selection_renderer.h"
 #include "renderer/text_renderer.h"
@@ -17,12 +18,12 @@ public:
                 std::vector<std::unique_ptr<EditorTab>>& tabs, size_t tab_index);
 
     // TODO: Make this private!
-    TextRenderer text_renderer;
+    Movement movement;
 
 private:
     GlyphCache main_glyph_cache;
     GlyphCache ui_glyph_cache;
-    // TextRenderer text_renderer;
+    TextRenderer text_renderer;
     RectRenderer rect_renderer;
     ImageRenderer image_renderer;
     SelectionRenderer selection_renderer;

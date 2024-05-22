@@ -8,18 +8,14 @@ namespace renderer {
 Movement::Movement(GlyphCache& main_glyph_cache) : main_glyph_cache(main_glyph_cache) {}
 
 void Movement::setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret) {
-    int x;
-    size_t offset;
-
     caret.line = mouse.y / main_glyph_cache.lineHeight();
     if (caret.line > buffer.lineCount() - 1) {
         caret.line = buffer.lineCount() - 1;
     }
 
     std::string start_line_str = buffer.getLineContent(caret.line);
-    std::tie(x, offset) = this->closestBoundaryForX(start_line_str, mouse.x);
-    caret.column = offset;
 
+    caret.column = this->closestBoundaryForX(start_line_str, mouse.x);
     caret.byte = buffer.byteOfLine(caret.line) + caret.column;
 }
 
@@ -70,7 +66,7 @@ void Movement::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret) {
 
 // TODO: Rewrite this so this operates on an already shaped line.
 //       We should remove any glyph cache/font rasterization from this method.
-std::pair<int, size_t> Movement::closestBoundaryForX(std::string_view line_str, int x) {
+size_t Movement::closestBoundaryForX(std::string_view line_str, int x) {
     size_t offset;
     size_t ret;
     int total_advance = 0;
@@ -81,11 +77,11 @@ std::pair<int, size_t> Movement::closestBoundaryForX(std::string_view line_str, 
 
         int glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
-            return {total_advance, offset};
+            return offset;
         }
 
         total_advance += glyph.advance;
     }
-    return {total_advance, offset};
+    return offset;
 }
 }

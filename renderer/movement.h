@@ -12,6 +12,7 @@ public:
     void moveCaretForwardChar(Buffer& buffer, CaretInfo& caret);
     void moveCaretBackwardChar(Buffer& buffer, CaretInfo& caret);
     void moveCaretForwardWord(Buffer& buffer, CaretInfo& caret);
+    void moveCaretBackwardWord(Buffer& buffer, CaretInfo& caret);
 
 private:
     GlyphCache& main_glyph_cache;
@@ -25,5 +26,6 @@ private:
     };
 
     size_t closestBoundaryForX(std::string_view line_str, int x);
+    constexpr CharKind classifyChar(uint_least32_t codepoint);
 };
 }

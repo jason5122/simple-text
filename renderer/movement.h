@@ -10,6 +10,7 @@ public:
     Movement(GlyphCache& main_glyph_cache);
     void setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret);
     void moveCaretForwardChar(Buffer& buffer, CaretInfo& caret);
+    void moveCaretBackwardChar(Buffer& buffer, CaretInfo& caret);
     void moveCaretForwardWord(Buffer& buffer, CaretInfo& caret);
 
 private:

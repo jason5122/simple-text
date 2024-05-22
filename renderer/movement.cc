@@ -25,11 +25,26 @@ void Movement::setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret) {
 
 void Movement::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
+
     size_t ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
     if (ret > 0) {
         caret.byte += ret;
         caret.column += ret;
     }
+}
+
+void Movement::moveCaretBackwardChar(Buffer& buffer, CaretInfo& caret) {
+    std::string line_str = buffer.getLineContent(caret.line);
+
+    size_t new_column = 0;
+    size_t ret = 0;
+    for (new_column = 0; new_column < caret.column; new_column += ret) {
+        ret = grapheme_next_character_break_utf8(&line_str[0] + new_column, SIZE_MAX);
+    }
+    new_column -= ret;
+
+    caret.byte -= caret.column - new_column;
+    caret.column = new_column;
 }
 
 // TODO: Do we really need a Unicode-accurate version of this? Sublime Text doesn't seem to follow

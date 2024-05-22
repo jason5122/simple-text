@@ -19,22 +19,16 @@ void Movement::setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret) {
     std::string start_line_str = buffer.getLineContent(caret.line);
     std::tie(x, offset) = this->closestBoundaryForX(start_line_str, mouse.x);
     caret.column = offset;
-    caret.x = x;
 
     caret.byte = buffer.byteOfLine(caret.line) + caret.column;
 }
 
 void Movement::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
-
     size_t ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
     if (ret > 0) {
-        std::string_view key = std::string_view(line_str).substr(caret.column, ret);
-        AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
-
         caret.byte += ret;
         caret.column += ret;
-        caret.x += glyph.advance;
     }
 }
 
@@ -56,7 +50,6 @@ void Movement::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret) {
 
         caret.byte += word_offset;
         caret.column += word_offset;
-        caret.x += total_advance;
     }
 }
 

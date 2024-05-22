@@ -86,7 +86,8 @@ void TextRenderer::setup() {
 void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                               SyntaxHighlighter& highlighter, Point& editor_offset,
                               CaretInfo& start_caret, CaretInfo& end_caret, int& longest_line_x,
-                              config::ColorScheme& color_scheme, int line_number_offset) {
+                              config::ColorScheme& color_scheme, int line_number_offset,
+                              int& end_caret_x) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
@@ -108,8 +109,6 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
                                   {static_cast<uint32_t>(end_line), 0});
     }
-
-    size_t byte_offset = buffer.byteOfLine(start_line);
 
     std::vector<InstanceData> instances;
     instances.reserve(kBatchMax);
@@ -134,6 +133,8 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
         if (selection_start > selection_end) {
             std::swap(selection_start, selection_end);
         }
+
+        size_t byte_offset = buffer.byteOfLine(start_line);
 
         for (size_t line_index = start_line; line_index < end_line; line_index++) {
             size_t ret;
@@ -163,7 +164,6 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
             }
 
             total_advance = 0;
-
             std::string line_str = buffer.getLineContent(line_index);
 
             for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
@@ -172,6 +172,10 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 if (total_advance > size.width) {
                     byte_offset += line_str.size() - offset;
                     break;
+                }
+
+                if (byte_offset == end_caret.byte) {
+                    end_caret_x = total_advance;
                 }
 
                 std::string_view key = std::string_view(line_str).substr(offset, ret);
@@ -202,7 +206,11 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                 total_advance += glyph.advance;
             }
 
+            if (byte_offset == end_caret.byte) {
+                end_caret_x = total_advance;
+            }
             byte_offset++;
+
             longest_line_x = std::max(total_advance, longest_line_x);
         }
     }

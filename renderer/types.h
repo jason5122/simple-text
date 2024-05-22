@@ -17,7 +17,5 @@ struct CaretInfo {
     size_t byte;
     size_t line;
     size_t column;
-    int x;
-    int y;
 };
 }

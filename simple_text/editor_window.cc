@@ -207,6 +207,10 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         break;
     }
 
+    if (key == app::Key::kR && modifiers == app::kPrimaryModifier) {
+        redraw();
+    }
+
     // if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
     //     parent.createNWindows(25);
     // }

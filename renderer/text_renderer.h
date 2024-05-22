@@ -23,8 +23,8 @@ public:
     void setup();
     void renderText(Size& size, Point& scroll, Buffer& buffer, SyntaxHighlighter& highlighter,
                     Point& editor_offset, CaretInfo& start_caret, CaretInfo& end_caret,
-                    int& longest_line_x, config::ColorScheme& color_scheme,
-                    int line_number_offset);
+                    int& longest_line_x, config::ColorScheme& color_scheme, int line_number_offset,
+                    int& end_caret_x);
     std::vector<SelectionRenderer::Selection> getSelections(Buffer& buffer, CaretInfo& start_caret,
                                                             CaretInfo& end_caret);
     std::vector<int> getTabTitleWidths(Buffer& buffer,

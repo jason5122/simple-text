@@ -72,9 +72,10 @@ void RectRenderer::setup() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float line_height,
-                        size_t line_count, float longest_x, Point& editor_offset,
-                        float status_bar_height, config::ColorScheme& color_scheme, int tab_index,
+void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, int end_caret_x,
+                        float line_height, size_t line_count, float longest_x,
+                        Point& editor_offset, float status_bar_height,
+                        config::ColorScheme& color_scheme, int tab_index,
                         std::vector<int>& tab_title_widths, float line_number_offset,
                         std::vector<int>& tab_title_x_coords,
                         std::vector<int>& actual_tab_title_widths) {
@@ -88,7 +89,7 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     float caret_width = 4;
     float caret_height = line_height;
 
-    float caret_x = end_caret.x - caret_width / 2;
+    float caret_x = end_caret_x - caret_width / 2;
 
     int extra_padding = 8;
     float caret_y = end_caret.line * line_height;
@@ -105,8 +106,16 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, float l
     float editor_height = size.height - editor_offset.y - status_bar_height;
 
     // Add caret.
-    if ((scroll.x < caret_x + caret_width + line_number_offset &&
-         caret_x < scroll.x + editor_width - line_number_offset) &&
+    // if ((scroll.x < caret_x + caret_width + line_number_offset &&
+    //      caret_x < scroll.x + editor_width - line_number_offset) &&
+    //     (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
+    //     instances.emplace_back(InstanceData{
+    //         .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
+    //         .rect_size = Vec2{caret_width, caret_height},
+    //         .color = Rgba::fromRgb(color_scheme.caret, 255),
+    //     });
+    // }
+    if (end_caret_x != -1 &&
         (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
         instances.emplace_back(InstanceData{
             .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},

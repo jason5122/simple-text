@@ -146,8 +146,8 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
 
         ComPtr<IWICBitmap> wic_bitmap;
         // TODO: Implement without magic numbers. Properly find the right width/height.
-        UINT bitmap_width = pixel_width + 5;
-        UINT bitmap_height = pixel_height + 5;
+        UINT bitmap_width = pixel_width + 10;
+        UINT bitmap_height = pixel_height + 10;
         pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
                                          GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
                                          wic_bitmap.GetAddressOf());

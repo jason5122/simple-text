@@ -15,18 +15,17 @@ namespace font {
 inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* factory,
                                IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun,
                                UINT origin_y) {
-    bool isColor = false;
+    HRESULT hr = DWRITE_E_NOCOLOR;
+
     IDWriteColorGlyphRunEnumerator1* colorLayer;
 
     IDWriteFontFace2* fontFace2;
     fontFace->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(&fontFace2));
     if (fontFace2->IsColorFont()) {
         DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
-        if (SUCCEEDED(factory->TranslateColorGlyphRun({}, glyphRun, nullptr, image_formats,
-                                                      DWRITE_MEASURING_MODE_NATURAL, nullptr, 0,
-                                                      &colorLayer))) {
-            isColor = true;
-        }
+        hr = factory->TranslateColorGlyphRun({}, glyphRun, nullptr, image_formats,
+                                             DWRITE_MEASURING_MODE_NATURAL, nullptr, 0,
+                                             &colorLayer);
     }
 
     // TODO: Find a way to reuse render target and brushes.
@@ -41,7 +40,9 @@ inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* facto
     };
 
     target->BeginDraw();
-    if (isColor) {
+    if (hr == DWRITE_E_NOCOLOR) {
+        target->DrawGlyphRun(baseline_origin, glyphRun, black_brush.Get());
+    } else {
         BOOL hasRun;
         const DWRITE_COLOR_GLYPH_RUN1* colorRun;
 
@@ -83,8 +84,6 @@ inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* facto
             }
             }
         }
-    } else {
-        target->DrawGlyphRun(baseline_origin, glyphRun, black_brush.Get());
     }
     target->EndDraw();
 }

@@ -20,7 +20,6 @@ public:
 
     ID2D1Factory* d2d_factory;
     ComPtr<IWICImagingFactory2> wic_factory;
-    ComPtr<ID2D1SolidColorBrush> temp_brush;
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -125,6 +124,18 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     // std::cerr << std::format("pixel_width = {}, pixel_height = {}\n", pixel_width,
     // pixel_height);
 
+    DWRITE_GLYPH_METRICS metrics;
+    selected_font_face->GetDesignGlyphMetrics(glyph_indices, 1, &metrics, false);
+
+    DWRITE_FONT_METRICS font_metrics;
+    selected_font_face->GetMetrics(&font_metrics);
+
+    FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
+    FLOAT advance = metrics.advanceWidth * scale;
+
+    int32_t top = -texture_bounds.top;
+    top -= descent;
+
     // TODO: Fully implement this!
     if (pixel_width != 0 && pixel_height != 0) {
         // TODO: Move this up to setup() somehow.
@@ -134,29 +145,22 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         }
 
         ComPtr<IWICBitmap> wic_bitmap;
-        // UINT bitmap_width = 40;
-        // UINT bitmap_height = 40;
-        UINT bitmap_width = pixel_width;
-        UINT bitmap_height = pixel_height;
+        // TODO: Implement without magic numbers. Properly find the right width/height.
+        UINT bitmap_width = pixel_width + 5;
+        UINT bitmap_height = pixel_height + 5;
         pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
                                          GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
                                          wic_bitmap.GetAddressOf());
 
         D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
-        // props.dpiX = 96;
-        // props.dpiY = 96;
-        // props.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
-        // props.pixelFormat =
-        //     D2D1::PixelFormat(DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
-        // props.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
-        // props.usage = D2D1_RENDER_TARGET_USAGE_NONE;
 
+        // TODO: Find a way to reuse render target and brushes.
         ComPtr<ID2D1RenderTarget> target;
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
 
-        DrawGlyphRun(target.Get(), pimpl->dwrite_factory, selected_font_face, &glyph_run,
-                     bitmap_height);
+        DrawGlyphRunHelper(target.Get(), pimpl->dwrite_factory, selected_font_face, &glyph_run,
+                           -texture_bounds.top);
 
         IWICBitmapLock* bitmap_lock;
         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
@@ -181,62 +185,27 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
 
         bitmap_lock->Release();
 
-        DWRITE_GLYPH_METRICS metrics;
-        selected_font_face->GetDesignGlyphMetrics(glyph_indices, 1, &metrics, false);
-
-        DWRITE_FONT_METRICS font_metrics;
-        selected_font_face->GetMetrics(&font_metrics);
-
-        FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
-        FLOAT advance = metrics.advanceWidth * scale;
-
-        int32_t top = -texture_bounds.top;
-        top -= descent;
-
         return RasterizedGlyph{
-            // .colored = true,
-            // .left = static_cast<int32_t>(0),
-            // .top = static_cast<int32_t>(bh + descent),
-            // .width = static_cast<int32_t>(bw),
-            // .height = static_cast<int32_t>(bh),
-            // .advance = static_cast<int32_t>(bw),
-            // .buffer = std::move(temp_buffer),
-            // .index = 0,
             .colored = true,
-            .left = texture_bounds.left,
+            .left = 0,
             .top = top,
-            .width = static_cast<int32_t>(pixel_width),
-            .height = static_cast<int32_t>(pixel_height),
+            .width = static_cast<int32_t>(bw),
+            .height = static_cast<int32_t>(bh),
             .advance = static_cast<int32_t>(std::ceil(advance)),
             .buffer = std::move(temp_buffer),
             .index = glyph_indices[0],
         };
     }
 
-    // TODO: Use std::vector instead to prevent memory leak!
-    BYTE* alpha_values = new BYTE[size];
+    std::vector<BYTE> alpha_values(size);
     glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-                                           alpha_values, size);
+                                           &alpha_values[0], size);
 
     std::vector<uint8_t> buffer;
     buffer.reserve(size);
     for (size_t i = 0; i < size; i++) {
         buffer.emplace_back(alpha_values[i]);
     }
-
-    delete[] alpha_values;
-
-    DWRITE_GLYPH_METRICS metrics;
-    selected_font_face->GetDesignGlyphMetrics(glyph_indices, 1, &metrics, false);
-
-    DWRITE_FONT_METRICS font_metrics;
-    selected_font_face->GetMetrics(&font_metrics);
-
-    FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
-    FLOAT advance = metrics.advanceWidth * scale;
-
-    int32_t top = -texture_bounds.top;
-    top -= descent;
 
     return RasterizedGlyph{
         .colored = false,

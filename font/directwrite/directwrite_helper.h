@@ -12,9 +12,9 @@ using Microsoft::WRL::ComPtr;
 #include <iostream>
 
 namespace font {
-inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory4* factory,
-                         IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun,
-                         UINT bitmap_height) {
+inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* factory,
+                               IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun,
+                               UINT origin_y) {
     bool isColor = false;
     IDWriteColorGlyphRunEnumerator1* colorLayer;
 
@@ -29,14 +29,15 @@ inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory4* factory,
         }
     }
 
-    ID2D1SolidColorBrush* black_brush = nullptr;
+    // TODO: Find a way to reuse render target and brushes.
+    ComPtr<ID2D1SolidColorBrush> black_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
-    ID2D1SolidColorBrush* blue_brush = nullptr;
+    ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
 
     D2D1_POINT_2F baseline_origin{
         .x = 0,
-        .y = static_cast<FLOAT>(bitmap_height),
+        .y = static_cast<FLOAT>(origin_y),
     };
 
     target->BeginDraw();
@@ -70,20 +71,20 @@ inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory4* factory,
             default: {
                 // std::cerr << "DrawGlyphRun()\n";
 
-                ID2D1SolidColorBrush* layer_brush;
+                ComPtr<ID2D1SolidColorBrush> layer_brush;
                 if (colorRun->paletteIndex == 0xFFFF) {
                     layer_brush = blue_brush;
                 } else {
                     target->CreateSolidColorBrush(colorRun->runColor, &layer_brush);
                 }
 
-                target->DrawGlyphRun(baseline_origin, &colorRun->glyphRun, layer_brush);
+                target->DrawGlyphRun(baseline_origin, &colorRun->glyphRun, layer_brush.Get());
                 break;
             }
             }
         }
     } else {
-        target->DrawGlyphRun(baseline_origin, glyphRun, black_brush);
+        target->DrawGlyphRun(baseline_origin, glyphRun, black_brush.Get());
     }
     target->EndDraw();
 }
@@ -141,7 +142,8 @@ inline void GetFallbackFont(IDWriteFactory4* factory, std::string_view utf8_str,
     if (mapped_font == nullptr) {
         // If no fallback font is found, don't do anything and leave the glyph index as 0.
         // Let the glyph be rendered as the "tofu" glyph.
-        std::cerr << "IDWriteFontFallback::MapCharacters() error: No font can render the text.\n";
+        std::cerr
+            << "IDWriteFontFallback::MapCharacters() warning: No font can render the text.\n";
         return;
     }
 

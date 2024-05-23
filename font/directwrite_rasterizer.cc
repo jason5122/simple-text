@@ -4,8 +4,7 @@
 #include <combaseapi.h>
 #include <cwchar>
 #include <d2d1.h>
-#include <dwrite.h>
-#include <dwrite_2.h>
+#include <dwrite_3.h>
 #include <format>
 #include <iostream>
 #include <unknwnbase.h>
@@ -24,7 +23,7 @@ using Microsoft::WRL::ComPtr;
 namespace font {
 class FontRasterizer::impl {
 public:
-    IDWriteFactory2* dwrite_factory;
+    IDWriteFactory4* dwrite_factory;
     IDWriteFontFace* font_face;
     FLOAT em_size;
 
@@ -37,7 +36,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
 
-    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory2),
+    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
                         reinterpret_cast<IUnknown**>(&pimpl->dwrite_factory));
     D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pimpl->d2d_factory);
 
@@ -405,16 +404,17 @@ protected:
     Run mRunHead;
 };
 
-static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory2* factory2,
+static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory4* factory2,
                                 IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun,
                                 UINT bitmap_height) {
     bool isColor = false;
-    IDWriteColorGlyphRunEnumerator* colorLayer;
+    IDWriteColorGlyphRunEnumerator1* colorLayer;
 
     IDWriteFontFace2* fontFace2;
     fontFace->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(&fontFace2));
     if (fontFace2->IsColorFont()) {
-        if (SUCCEEDED(factory2->TranslateColorGlyphRun(0, 0, glyphRun, nullptr,
+        DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
+        if (SUCCEEDED(factory2->TranslateColorGlyphRun({}, glyphRun, nullptr, image_formats,
                                                        DWRITE_MEASURING_MODE_NATURAL, nullptr, 0,
                                                        &colorLayer))) {
             isColor = true;
@@ -422,20 +422,19 @@ static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory2* fact
     }
 
     ID2D1SolidColorBrush* black_brush = nullptr;
-    // target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
-    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &black_brush);
-
-    // target->BeginDraw();
-    // target->FillRectangle(D2D1::RectF(0, 10, 40, 20), black_brush);
-    // target->EndDraw();
+    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
+    ID2D1SolidColorBrush* blue_brush = nullptr;
+    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
 
     D2D1_POINT_2F baseline_origin{
         .x = 0,
         .y = static_cast<FLOAT>(bitmap_height),
     };
+
+    target->BeginDraw();
     if (isColor) {
         BOOL hasRun;
-        const DWRITE_COLOR_GLYPH_RUN* colorRun;
+        const DWRITE_COLOR_GLYPH_RUN1* colorRun;
 
         while (true) {
             if (FAILED(colorLayer->MoveNext(&hasRun)) || !hasRun) {
@@ -451,19 +450,55 @@ static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory2* fact
                 target->CreateSolidColorBrush(colorRun->runColor, &brush);
             }
 
-            target->BeginDraw();
-            target->DrawGlyphRun(baseline_origin, glyphRun, brush ? brush : black_brush);
-            target->EndDraw();
+            switch (colorRun->glyphImageFormat) {
+            case DWRITE_GLYPH_IMAGE_FORMATS_PNG:
+            case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
+            case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
+            case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
+                std::cerr << "DrawColorBitmapGlyphRun()\n";
+                break;
+
+            case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
+                std::cerr << "DrawSvgGlyphRun()\n";
+                break;
+
+            case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
+            case DWRITE_GLYPH_IMAGE_FORMATS_CFF:
+            case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
+            default: {
+                std::cerr << "DrawGlyphRun()\n";
+
+                ID2D1Brush* layer_brush;
+                if (colorRun->paletteIndex == 0xFFFF) {
+                    // This run uses the current text color.
+                    layer_brush = blue_brush;
+                } else {
+                    // This run specifies its own color.
+                    ID2D1SolidColorBrush* temp_brush;
+                    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &temp_brush);
+
+                    temp_brush->SetColor(colorRun->runColor);
+                    layer_brush = temp_brush;
+                }
+
+                target->DrawGlyphRun(baseline_origin, &colorRun->glyphRun, layer_brush,
+                                     DWRITE_MEASURING_MODE_NATURAL);
+                break;
+            }
+            }
+
+            // target->BeginDraw();
+            // target->DrawGlyphRun(baseline_origin, glyphRun, brush ? brush : blue_brush);
+            // target->EndDraw();
 
             if (brush) {
                 brush->Release();
             }
         }
     } else {
-        target->BeginDraw();
         target->DrawGlyphRun(baseline_origin, glyphRun, black_brush);
-        target->EndDraw();
     }
+    target->EndDraw();
 }
 
 RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,

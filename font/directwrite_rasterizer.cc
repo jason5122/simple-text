@@ -422,64 +422,73 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
                                 DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
                                 &mapped_scale);
 
-        // TODO: Everything below is for debugging; remove this.
-        IDWriteFontFamily* font_family;
-        mapped_font->GetFontFamily(&font_family);
+        if (mapped_font != nullptr) {
+            // TODO: Everything below is for debugging; remove this.
+            IDWriteFontFamily* font_family;
+            mapped_font->GetFontFamily(&font_family);
 
-        IDWriteLocalizedStrings* family_names;
-        font_family->GetFamilyNames(&family_names);
+            IDWriteLocalizedStrings* family_names;
+            font_family->GetFamilyNames(&family_names);
 
-        wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
-        int defaultLocaleSuccess = GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
+            wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
+            int defaultLocaleSuccess =
+                GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
 
-        UINT32 index = 0;
-        BOOL exists = false;
-        family_names->FindLocaleName(localeName, &index, &exists);
+            UINT32 index = 0;
+            BOOL exists = false;
+            family_names->FindLocaleName(localeName, &index, &exists);
 
-        UINT32 length = 0;
-        family_names->GetStringLength(index, &length);
+            UINT32 length = 0;
+            family_names->GetStringLength(index, &length);
 
-        wchar_t* name = new (std::nothrow) wchar_t[length + 1];
-        family_names->GetString(index, name, length + 1);
+            wchar_t* name = new (std::nothrow) wchar_t[length + 1];
+            family_names->GetString(index, name, length + 1);
 
-        // fwprintf(stderr, L"%s, wstr: %s, mapped_len: %d\n", name, wstr, mapped_len);
+            // fwprintf(stderr, L"%s, wstr: %s, mapped_len: %d\n", name, wstr, mapped_len);
 
-        IDWriteFontFace* fallback_font_face;
-        mapped_font->CreateFontFace(&fallback_font_face);
-        selected_font_face = fallback_font_face;
-        // selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
+            IDWriteFontFace* fallback_font_face;
+            mapped_font->CreateFontFace(&fallback_font_face);
+            selected_font_face = fallback_font_face;
+            // selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 
-        // TODO: Fully replace above GetGlyphIndices() with this text analyzer implementation.
-        IDWriteTextAnalyzer* text_analyzer;
-        pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
+            // TODO: Fully replace above GetGlyphIndices() with this text analyzer implementation.
+            IDWriteTextAnalyzer* text_analyzer;
+            pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
 
-        TextAnalysis analysis(wstr, wchars_num, nullptr, DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
-        TextAnalysis::Run* run_head;
-        analysis.GenerateResults(text_analyzer, &run_head);
+            TextAnalysis analysis(wstr, wchars_num, nullptr,
+                                  DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
+            TextAnalysis::Run* run_head;
+            analysis.GenerateResults(text_analyzer, &run_head);
 
-        uint32_t max_glyph_count = 3 * wchars_num / 2 + 16;
+            uint32_t max_glyph_count = 3 * wchars_num / 2 + 16;
 
-        uint16_t* cluster_map;
-        cluster_map = new uint16_t[wchars_num];
-        DWRITE_SHAPING_TEXT_PROPERTIES* text_properties;
-        text_properties = new DWRITE_SHAPING_TEXT_PROPERTIES[wchars_num];
+            uint16_t* cluster_map;
+            cluster_map = new uint16_t[wchars_num];
+            DWRITE_SHAPING_TEXT_PROPERTIES* text_properties;
+            text_properties = new DWRITE_SHAPING_TEXT_PROPERTIES[wchars_num];
 
-        uint16_t* out_glyph_indices = new uint16_t[max_glyph_count];
-        DWRITE_SHAPING_GLYPH_PROPERTIES* glyph_properties;
-        glyph_properties = new DWRITE_SHAPING_GLYPH_PROPERTIES[max_glyph_count];
-        uint32_t glyph_count;
+            uint16_t* out_glyph_indices = new uint16_t[max_glyph_count];
+            DWRITE_SHAPING_GLYPH_PROPERTIES* glyph_properties;
+            glyph_properties = new DWRITE_SHAPING_GLYPH_PROPERTIES[max_glyph_count];
+            uint32_t glyph_count;
 
-        // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L661
-        text_analyzer->GetGlyphs(wstr, wchars_num, selected_font_face, false, false,
-                                 &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
-                                 max_glyph_count, cluster_map, text_properties, out_glyph_indices,
-                                 glyph_properties, &glyph_count);
+            // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L661
+            text_analyzer->GetGlyphs(wstr, wchars_num, selected_font_face, false, false,
+                                     &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
+                                     max_glyph_count, cluster_map, text_properties,
+                                     out_glyph_indices, glyph_properties, &glyph_count);
 
-        // std::cerr << out_glyph_indices[0] << '\n';
+            // std::cerr << out_glyph_indices[0] << '\n';
 
-        glyph_indices[0] = out_glyph_indices[0];
+            glyph_indices[0] = out_glyph_indices[0];
 
-        delete[] wstr;
+            delete[] wstr;
+        } else {
+            // If no fallback font is found, don't do anything and leave the glyph index as 0.
+            // Let the glyph be rendered as the "tofu" glyph.
+            std::cerr
+                << "IDWriteFontFallback::MapCharacters() error: No font can render the text.\n";
+        }
     }
 
     FLOAT glyph_advances = 0;

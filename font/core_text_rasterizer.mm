@@ -140,11 +140,11 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
     buffer.reserve(size);
     for (size_t i = 0; i < pixels; i++) {
         size_t offset = i * 4;
-        buffer.push_back(bitmap_data[offset + 2]);
-        buffer.push_back(bitmap_data[offset + 1]);
-        buffer.push_back(bitmap_data[offset]);
+        buffer.emplace_back(bitmap_data[offset + 2]);
+        buffer.emplace_back(bitmap_data[offset + 1]);
+        buffer.emplace_back(bitmap_data[offset]);
         if (colored) {
-            buffer.push_back(bitmap_data[offset + 3]);
+            buffer.emplace_back(bitmap_data[offset + 3]);
         }
     }
 

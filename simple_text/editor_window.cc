@@ -106,8 +106,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     // createTab(file_path3);
     // createTab(file_path4);
     // createTab(file_path5);
-    // createTab(file_path6);
-    createTab(file_path7);
+    createTab(file_path6);
+    // createTab(file_path7);
 }
 
 void EditorWindow::onDraw() {

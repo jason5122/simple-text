@@ -11,8 +11,6 @@
 #include <wrl/client.h>
 using Microsoft::WRL::ComPtr;
 
-#include <iostream>
-
 namespace font {
 class FontRasterizer::impl {
 public:
@@ -84,6 +82,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
                                               uint_least32_t codepoint) {
     IDWriteFontFace* selected_font_face = pimpl->font_face;
 
+    // TODO: Consider replacing GetGlyphIndices() with TextAnalyzer approach.
     UINT16* glyph_indices = new UINT16[1];
     selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
 

@@ -1,9 +1,8 @@
 #include "build/buildflag.h"
 #include "simple_text.h"
-#include "util/profile_util.h"
+#include "simple_text/action_executer.h"
 #include <algorithm>
 #include <cctype>
-#include <cmath>
 #include <glad/glad.h>
 #include <iostream>
 
@@ -31,10 +30,58 @@ void EditorWindow::createTab(fs::path file_path) {
     std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>(file_path);
     editor_tab->setup(color_scheme);
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
+    redraw();
 }
 
 void EditorWindow::reloadColorScheme() {
     color_scheme.reload(isDarkMode());
+    redraw();
+}
+
+void EditorWindow::selectTabIndex(int index) {
+    if (tabs.size() > index) {
+        tab_index = index;
+    }
+    redraw();
+}
+
+static inline int PositiveModulo(int i, int n) {
+    return (i % n + n) % n;
+}
+
+void EditorWindow::selectPreviousTab() {
+    tab_index = PositiveModulo(tab_index - 1, tabs.size());
+    redraw();
+}
+
+void EditorWindow::selectNextTab() {
+    tab_index = PositiveModulo(tab_index + 1, tabs.size());
+    redraw();
+}
+
+void EditorWindow::selectLastTab() {
+    if (tabs.size() > 0) {
+        tab_index = tabs.size() - 1;
+    }
+    redraw();
+}
+
+void EditorWindow::closeCurrentTab() {
+    tabs.erase(tabs.begin() + tab_index);
+    tab_index--;
+    if (tab_index < 0) {
+        tab_index = 0;
+    }
+
+    if (tabs.empty()) {
+        close();
+    } else {
+        redraw();
+    }
+}
+
+void EditorWindow::toggleSideBar() {
+    renderer.toggleSideBar();
     redraw();
 }
 
@@ -51,12 +98,14 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path3 = ResourceDir() / "sample_files/worst_case.json";
     fs::path file_path4 = ResourceDir() / "sample_files/example.json";
     fs::path file_path5 = ResourceDir() / "sample_files/long_lines.json";
+    fs::path file_path6 = ResourceDir() / "sample_files/emoji-data.txt";
 
-    createTab(file_path);
-    createTab(file_path2);
-    createTab(file_path3);
-    createTab(file_path4);
-    createTab(file_path5);
+    // createTab(file_path);
+    // createTab(file_path2);
+    // createTab(file_path3);
+    // createTab(file_path4);
+    // createTab(file_path5);
+    createTab(file_path6);
 }
 
 void EditorWindow::onDraw() {
@@ -74,7 +123,10 @@ void EditorWindow::onResize(int width, int height) {
 void EditorWindow::onScroll(int dx, int dy) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
 
-    int buffer_width = width() * scaleFactor() - editor_offset.x;
+    // TODO: Move to Renderer and incorporate `editor_offset.x`.
+    int buffer_width = width() * scaleFactor();
+    // int buffer_width = width() * scaleFactor() - editor_offset.x;
+
     int max_scroll_x = std::max(0, tab->longest_line_x - buffer_width);
     // TODO: Subtract one from line count to leave the last line visible.
     int max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
@@ -88,13 +140,8 @@ void EditorWindow::onScroll(int dx, int dy) {
 
 void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    renderer.setCaretPosition(mouse_x, mouse_y, tab);
 
-    renderer::Point mouse{
-        .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
-        .y = mouse_y - editor_offset.y + tab->scroll.y,
-    };
-
-    renderer.movement.setCaretInfo(tab->buffer, mouse, tab->end_caret);
     if (!Any(modifiers & app::ModifierKey::kShift)) {
         tab->start_caret = tab->end_caret;
     }
@@ -104,112 +151,16 @@ void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey mo
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-
-    renderer::Point mouse{
-        .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
-        .y = mouse_y - editor_offset.y + tab->scroll.y,
-    };
-
-    renderer.movement.setCaretInfo(tab->buffer, mouse, tab->end_caret);
+    renderer.setCaretPosition(mouse_x, mouse_y, tab);
 
     redraw();
-}
-
-static inline int PositiveModulo(int i, int n) {
-    return (i % n + n) % n;
 }
 
 void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     using config::Action;
 
-    // Action action = parent.key_bindings.parseKeyPress(key, modifiers);
-    Action action;
-    {
-        PROFILE_BLOCK("KeyBindings::parseKeyPress()");
-        action = parent.key_bindings.parseKeyPress(key, modifiers);
-    }
-
-    switch (action) {
-    case Action::kNone:
-        break;
-
-    case Action::kNewWindow:
-        parent.createWindow();
-        break;
-
-    case Action::kCloseWindow:
-        close();
-        break;
-
-    case Action::kNewTab:
-        createTab(fs::path{});
-        redraw();
-        break;
-
-    case Action::kCloseTab:
-        tabs.erase(tabs.begin() + tab_index);
-        tab_index--;
-        if (tab_index < 0) {
-            tab_index = 0;
-        }
-
-        if (tabs.empty()) {
-            // createTab(fs::path{});
-            close();
-        } else {
-            redraw();
-        }
-        break;
-
-    case Action::kPreviousTab:
-        tab_index = PositiveModulo(tab_index - 1, tabs.size());
-        redraw();
-        break;
-
-    case Action::kNextTab:
-        tab_index = PositiveModulo(tab_index + 1, tabs.size());
-        redraw();
-        break;
-
-    case Action::kSelectTab1:
-    case Action::kSelectTab2:
-    case Action::kSelectTab3:
-    case Action::kSelectTab4:
-    case Action::kSelectTab5:
-    case Action::kSelectTab6:
-    case Action::kSelectTab7:
-    case Action::kSelectTab8: {
-        using U = std::underlying_type_t<app::Key>;
-        int index = static_cast<U>(key) - static_cast<U>(app::Key::k1);
-
-        if (tabs.size() > index) {
-            tab_index = index;
-        }
-        redraw();
-        break;
-    }
-
-    case Action::kSelectLastTab:
-        if (tabs.size() > 0) {
-            tab_index = tabs.size() - 1;
-        }
-        redraw();
-        break;
-
-    case Action::kToggleSideBar:
-        if (side_bar_visible) {
-            editor_offset.x = 0;
-        } else {
-            editor_offset.x = 200 * 2;
-        }
-        side_bar_visible = !side_bar_visible;
-        redraw();
-        break;
-    }
-
-    if (key == app::Key::kR && modifiers == app::kPrimaryModifier) {
-        redraw();
-    }
+    Action action = parent.key_bindings.parseKeyPress(key, modifiers);
+    ExecuteAction(action, parent, *this);
 
     // if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
     //     parent.createNWindows(25);
@@ -232,9 +183,9 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         tab->buffer.erase(start_byte, end_byte);
 
         // TODO: Move this into EditorTab.
-        tab->highlighter.edit(start_byte, end_byte, start_byte);
-        TSInput input = {&tab->buffer, SyntaxHighlighter::read, TSInputEncodingUTF8};
-        tab->highlighter.parse(input);
+        // tab->highlighter.edit(start_byte, end_byte, start_byte);
+        // TSInput input = {&tab->buffer, SyntaxHighlighter::read, TSInputEncodingUTF8};
+        // tab->highlighter.parse(input);
 
         if (tab->start_caret.byte > tab->end_caret.byte) {
             tab->start_caret = tab->end_caret;

@@ -69,4 +69,21 @@ void Renderer::render(Size& size, config::ColorScheme& color_scheme,
     // Cleanup.
     selection_renderer.destroyInstances();
 }
+
+void Renderer::toggleSideBar() {
+    if (side_bar_visible) {
+        editor_offset.x = 0;
+    } else {
+        editor_offset.x = 200 * 2;
+    }
+    side_bar_visible = !side_bar_visible;
+}
+
+void Renderer::setCaretPosition(int mouse_x, int mouse_y, std::unique_ptr<EditorTab>& tab) {
+    renderer::Point mouse{
+        .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
+        .y = mouse_y - editor_offset.y + tab->scroll.y,
+    };
+    movement.setCaretInfo(tab->buffer, mouse, tab->end_caret);
+}
 }

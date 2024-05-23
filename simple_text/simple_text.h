@@ -24,6 +24,12 @@ public:
         ~EditorWindow() override;
         void createTab(fs::path file_path);
         void reloadColorScheme();
+        void selectTabIndex(int index);
+        void selectPreviousTab();
+        void selectNextTab();
+        void selectLastTab();
+        void closeCurrentTab();
+        void toggleSideBar();
 
         void onOpenGLActivate(int width, int height) override;
         void onDraw() override;
@@ -37,14 +43,6 @@ public:
 
     private:
         SimpleText& parent;
-
-        bool side_bar_visible = true;
-        renderer::Point editor_offset{
-            .x = 200 * 2,
-            .y = 30 * 2,
-        };
-
-        static constexpr int kLineNumberOffset = 120;
 
         int tab_index = 0;  // Use int instead of size_t to prevent wrap around when less than 0.
         std::vector<std::unique_ptr<EditorTab>> tabs;

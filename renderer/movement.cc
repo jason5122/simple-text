@@ -1,7 +1,5 @@
 #include "movement.h"
 #include "uni_algo/prop.h"
-#include <cassert>
-#include <iostream>
 
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"

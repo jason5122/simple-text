@@ -6,6 +6,7 @@ sample_files = [
   "example.json",
   "worst_case.json",
   "long_lines.json",
+  "emoji-data.txt",
 ]
 
 if (is_mac) {

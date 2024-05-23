@@ -1,7 +1,6 @@
+#include "font/rasterizer.h"
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
-
-#include "rasterizer.h"
 
 namespace font {
 class FontRasterizer::impl {

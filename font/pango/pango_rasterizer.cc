@@ -1,5 +1,5 @@
 #include "build/buildflag.h"
-#include "rasterizer.h"
+#include "font/rasterizer.h"
 #include <iostream>
 #include <pango/pangocairo.h>
 #include <vector>

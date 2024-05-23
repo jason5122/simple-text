@@ -1,0 +1,12 @@
+source_set("directwrite") {
+  sources = [
+    "directwrite_rasterizer.cc",
+    "font_fallback_source.cc",
+    "text_analysis.cc",
+  ]
+
+  libs = [
+    "Ole32.lib",
+    "D2d1.lib",
+  ]
+}

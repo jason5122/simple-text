@@ -1,24 +1,20 @@
-#include "rasterizer.h"
-#include "third_party/libgrapheme/grapheme.h"
-#include <cassert>
+#include "font/directwrite/font_fallback_source.h"
+#include "font/directwrite/text_analysis.h"
+#include "font/rasterizer.h"
 #include <combaseapi.h>
 #include <cwchar>
 #include <d2d1.h>
 #include <dwrite_3.h>
-#include <format>
-#include <iostream>
 #include <unknwnbase.h>
+#include <wincodec.h>
 #include <winerror.h>
 #include <wingdi.h>
 #include <winnt.h>
 
-#include <Windows.Foundation.h>
-#include <wrl\client.h>
-#include <wrl\wrappers\corewrappers.h>
-
+#include <wrl/client.h>
 using Microsoft::WRL::ComPtr;
 
-#include <wincodec.h>
+#include <iostream>
 
 namespace font {
 class FontRasterizer::impl {
@@ -29,6 +25,7 @@ public:
 
     ID2D1Factory* d2d_factory;
     ComPtr<IWICImagingFactory2> wic_factory;
+    ComPtr<ID2D1SolidColorBrush> temp_brush;
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -86,324 +83,6 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-// https://github.com/google/skia/blob/5fdc2b47dfa448b745545e897f3a70a238edf6d7/src/ports/SkFontMgr_win_dw.cpp#L356
-class FontFallbackSource : public IDWriteTextAnalysisSource {
-public:
-    FontFallbackSource(const WCHAR* string, UINT32 length, const WCHAR* locale,
-                       IDWriteNumberSubstitution* numberSubstitution)
-        : fRefCount(1), fString(string), fLength(length), fLocale(locale),
-          fNumberSubstitution(numberSubstitution) {}
-
-    // IUnknown methods
-    COM_DECLSPEC_NOTHROW STDMETHODIMP QueryInterface(IID const& riid, void** ppvObject) override {
-        if (__uuidof(IUnknown) == riid || __uuidof(IDWriteTextAnalysisSource) == riid) {
-            *ppvObject = this;
-            this->AddRef();
-            return S_OK;
-        }
-        *ppvObject = nullptr;
-        return E_FAIL;
-    }
-
-    COM_DECLSPEC_NOTHROW STDMETHODIMP_(ULONG) AddRef() override {
-        return InterlockedIncrement(&fRefCount);
-    }
-
-    COM_DECLSPEC_NOTHROW STDMETHODIMP_(ULONG) Release() override {
-        ULONG newCount = InterlockedDecrement(&fRefCount);
-        if (0 == newCount) {
-            delete this;
-        }
-        return newCount;
-    }
-
-    // IDWriteTextAnalysisSource methods
-    COM_DECLSPEC_NOTHROW STDMETHODIMP GetTextAtPosition(UINT32 textPosition,
-                                                        WCHAR const** textString,
-                                                        UINT32* textLength) override {
-        if (fLength <= textPosition) {
-            *textString = nullptr;
-            *textLength = 0;
-            return S_OK;
-        }
-        *textString = fString + textPosition;
-        *textLength = fLength - textPosition;
-        return S_OK;
-    }
-
-    COM_DECLSPEC_NOTHROW STDMETHODIMP GetTextBeforePosition(UINT32 textPosition,
-                                                            WCHAR const** textString,
-                                                            UINT32* textLength) override {
-        if (textPosition < 1 || fLength <= textPosition) {
-            *textString = nullptr;
-            *textLength = 0;
-            return S_OK;
-        }
-        *textString = fString;
-        *textLength = textPosition;
-        return S_OK;
-    }
-
-    COM_DECLSPEC_NOTHROW STDMETHODIMP_(DWRITE_READING_DIRECTION)
-        GetParagraphReadingDirection() override {
-        // TODO: this is also interesting.
-        return DWRITE_READING_DIRECTION_LEFT_TO_RIGHT;
-    }
-
-    COM_DECLSPEC_NOTHROW STDMETHODIMP GetLocaleName(UINT32 textPosition, UINT32* textLength,
-                                                    WCHAR const** localeName) override {
-        *localeName = fLocale;
-        return S_OK;
-    }
-
-    COM_DECLSPEC_NOTHROW STDMETHODIMP
-    GetNumberSubstitution(UINT32 textPosition, UINT32* textLength,
-                          IDWriteNumberSubstitution** numberSubstitution) override {
-        *numberSubstitution = fNumberSubstitution;
-        return S_OK;
-    }
-
-private:
-    virtual ~FontFallbackSource() {}
-
-    ULONG fRefCount;
-    const WCHAR* fString;
-    UINT32 fLength;
-    const WCHAR* fLocale;
-    IDWriteNumberSubstitution* fNumberSubstitution;
-};
-
-// https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L283
-class TextAnalysis : public IDWriteTextAnalysisSource, public IDWriteTextAnalysisSink {
-public:
-    IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject) {
-        return S_OK;
-    }
-    IFACEMETHOD_(ULONG, AddRef)() {
-        return 1;
-    }
-    IFACEMETHOD_(ULONG, Release)() {
-        return 1;
-    }
-
-    // A single contiguous run of characters containing the same analysis
-    // results.
-    struct Run {
-        uint32_t mTextStart;   // starting text position of this run
-        uint32_t mTextLength;  // number of contiguous code units covered
-        uint32_t mGlyphStart;  // starting glyph in the glyphs array
-        uint32_t mGlyphCount;  // number of glyphs associated with this run
-        // text
-        DWRITE_SCRIPT_ANALYSIS mScript;
-        uint8_t mBidiLevel;
-        bool mIsSideways;
-
-        bool ContainsTextPosition(uint32_t aTextPosition) const {
-            return aTextPosition >= mTextStart && aTextPosition < mTextStart + mTextLength;
-        }
-
-        Run* nextRun;
-    };
-
-public:
-    TextAnalysis(const wchar_t* text, uint32_t textLength, const wchar_t* localeName,
-                 DWRITE_READING_DIRECTION readingDirection)
-        : mTextLength(textLength), mText(text), mLocaleName(localeName),
-          mReadingDirection(readingDirection), mCurrentRun(nullptr) {}
-    ~TextAnalysis() {
-        // delete runs, except mRunHead which is part of the TextAnalysis object
-        for (Run* run = mRunHead.nextRun; run;) {
-            Run* origRun = run;
-            run = run->nextRun;
-            delete origRun;
-        }
-    }
-
-    STDMETHODIMP
-    GenerateResults(IDWriteTextAnalyzer* textAnalyzer, Run** runHead) {
-        // Analyzes the text using the script analyzer and returns
-        // the result as a series of runs.
-
-        HRESULT hr = S_OK;
-
-        // Initially start out with one result that covers the entire range.
-        // This result will be subdivided by the analysis processes.
-        mRunHead.mTextStart = 0;
-        mRunHead.mTextLength = mTextLength;
-        mRunHead.mBidiLevel = (mReadingDirection == DWRITE_READING_DIRECTION_RIGHT_TO_LEFT);
-        mRunHead.nextRun = nullptr;
-        mCurrentRun = &mRunHead;
-
-        // Call each of the analyzers in sequence, recording their results.
-        if (SUCCEEDED(hr = textAnalyzer->AnalyzeScript(this, 0, mTextLength, this)))
-            *runHead = &mRunHead;
-
-        return hr;
-    }
-
-    // IDWriteTextAnalysisSource implementation
-
-    IFACEMETHODIMP
-    GetTextAtPosition(uint32_t textPosition, OUT wchar_t const** textString,
-                      OUT uint32_t* textLength) {
-        if (textPosition >= mTextLength) {
-            // No text at this position, valid query though.
-            *textString = nullptr;
-            *textLength = 0;
-        } else {
-            *textString = mText + textPosition;
-            *textLength = mTextLength - textPosition;
-        }
-        return S_OK;
-    }
-
-    IFACEMETHODIMP
-    GetTextBeforePosition(uint32_t textPosition, OUT wchar_t const** textString,
-                          OUT uint32_t* textLength) {
-        if (textPosition == 0 || textPosition > mTextLength) {
-            // Either there is no text before here (== 0), or this
-            // is an invalid position. The query is considered valid though.
-            *textString = nullptr;
-            *textLength = 0;
-        } else {
-            *textString = mText;
-            *textLength = textPosition;
-        }
-        return S_OK;
-    }
-
-    IFACEMETHODIMP_(DWRITE_READING_DIRECTION)
-    GetParagraphReadingDirection() {
-        return mReadingDirection;
-    }
-
-    IFACEMETHODIMP GetLocaleName(uint32_t textPosition, uint32_t* textLength,
-                                 wchar_t const** localeName) {
-        return S_OK;
-    }
-
-    IFACEMETHODIMP
-    GetNumberSubstitution(uint32_t textPosition, OUT uint32_t* textLength,
-                          OUT IDWriteNumberSubstitution** numberSubstitution) {
-        // We do not support number substitution.
-        *numberSubstitution = nullptr;
-        *textLength = mTextLength - textPosition;
-
-        return S_OK;
-    }
-
-    // IDWriteTextAnalysisSink implementation
-
-    IFACEMETHODIMP
-    SetScriptAnalysis(uint32_t textPosition, uint32_t textLength,
-                      DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis) {
-        SetCurrentRun(textPosition);
-        SplitCurrentRun(textPosition);
-        while (textLength > 0) {
-            Run* run = FetchNextRun(&textLength);
-            run->mScript = *scriptAnalysis;
-        }
-
-        return S_OK;
-    }
-
-    IFACEMETHODIMP
-    SetLineBreakpoints(uint32_t textPosition, uint32_t textLength,
-                       const DWRITE_LINE_BREAKPOINT* lineBreakpoints) {
-        return S_OK;
-    }
-
-    IFACEMETHODIMP SetBidiLevel(uint32_t textPosition, uint32_t textLength, uint8_t explicitLevel,
-                                uint8_t resolvedLevel) {
-        return S_OK;
-    }
-
-    IFACEMETHODIMP
-    SetNumberSubstitution(uint32_t textPosition, uint32_t textLength,
-                          IDWriteNumberSubstitution* numberSubstitution) {
-        return S_OK;
-    }
-
-protected:
-    Run* FetchNextRun(IN OUT uint32_t* textLength) {
-        // Used by the sink setters, this returns a reference to the next run.
-        // Position and length are adjusted to now point after the current run
-        // being returned.
-
-        Run* origRun = mCurrentRun;
-        // Split the tail if needed (the length remaining is less than the
-        // current run's size).
-        if (*textLength < mCurrentRun->mTextLength)
-            SplitCurrentRun(mCurrentRun->mTextStart + *textLength);
-        else
-            // Just advance the current run.
-            mCurrentRun = mCurrentRun->nextRun;
-        *textLength -= origRun->mTextLength;
-
-        // Return a reference to the run that was just current.
-        return origRun;
-    }
-
-    void SetCurrentRun(uint32_t textPosition) {
-        // Move the current run to the given position.
-        // Since the analyzers generally return results in a forward manner,
-        // this will usually just return early. If not, find the
-        // corresponding run for the text position.
-
-        if (mCurrentRun && mCurrentRun->ContainsTextPosition(textPosition)) return;
-
-        for (Run* run = &mRunHead; run; run = run->nextRun)
-            if (run->ContainsTextPosition(textPosition)) {
-                mCurrentRun = run;
-                return;
-            }
-        assert(0);  // We should always be able to find the text position in one of our runs
-    }
-
-    void SplitCurrentRun(uint32_t splitPosition) {
-        if (!mCurrentRun) {
-            assert(0);  // SplitCurrentRun called without current run
-            // Shouldn't be calling this when no current run is set!
-            return;
-        }
-        // Split the current run.
-        if (splitPosition <= mCurrentRun->mTextStart) {
-            // No need to split, already the start of a run
-            // or before it. Usually the first.
-            return;
-        }
-        Run* newRun = new Run;
-
-        *newRun = *mCurrentRun;
-
-        // Insert the new run in our linked list.
-        newRun->nextRun = mCurrentRun->nextRun;
-        mCurrentRun->nextRun = newRun;
-
-        // Adjust runs' text positions and lengths.
-        uint32_t splitPoint = splitPosition - mCurrentRun->mTextStart;
-        newRun->mTextStart += splitPoint;
-        newRun->mTextLength -= splitPoint;
-        mCurrentRun->mTextLength = splitPoint;
-        mCurrentRun = newRun;
-    }
-
-protected:
-    // Input
-    // (weak references are fine here, since this class is a transient
-    //  stack-based helper that doesn't need to copy data)
-    uint32_t mTextLength;
-    const wchar_t* mText;
-    const wchar_t* mLocaleName;
-    DWRITE_READING_DIRECTION mReadingDirection;
-
-    // Current processing state.
-    Run* mCurrentRun;
-
-    // Output is a list of runs starting here
-    Run mRunHead;
-};
-
 static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory4* factory2,
                                 IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun,
                                 UINT bitmap_height) {
@@ -444,12 +123,6 @@ static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory4* fact
                 break;
             }
 
-            ID2D1SolidColorBrush* brush = nullptr;
-            const DWRITE_COLOR_F& color = colorRun->runColor;
-            if (color.r == 0.0 && color.g == 0.0 && color.b == 0.0 && color.a == 0.0) {
-                target->CreateSolidColorBrush(colorRun->runColor, &brush);
-            }
-
             switch (colorRun->glyphImageFormat) {
             case DWRITE_GLYPH_IMAGE_FORMATS_PNG:
             case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
@@ -468,31 +141,16 @@ static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory4* fact
             default: {
                 std::cerr << "DrawGlyphRun()\n";
 
-                ID2D1Brush* layer_brush;
+                ID2D1SolidColorBrush* layer_brush;
                 if (colorRun->paletteIndex == 0xFFFF) {
-                    // This run uses the current text color.
                     layer_brush = blue_brush;
                 } else {
-                    // This run specifies its own color.
-                    ID2D1SolidColorBrush* temp_brush;
-                    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &temp_brush);
-
-                    temp_brush->SetColor(colorRun->runColor);
-                    layer_brush = temp_brush;
+                    target->CreateSolidColorBrush(colorRun->runColor, &layer_brush);
                 }
 
-                target->DrawGlyphRun(baseline_origin, &colorRun->glyphRun, layer_brush,
-                                     DWRITE_MEASURING_MODE_NATURAL);
+                target->DrawGlyphRun(baseline_origin, &colorRun->glyphRun, layer_brush);
                 break;
             }
-            }
-
-            // target->BeginDraw();
-            // target->DrawGlyphRun(baseline_origin, glyphRun, brush ? brush : blue_brush);
-            // target->EndDraw();
-
-            if (brush) {
-                brush->Release();
             }
         }
     } else {

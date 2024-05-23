@@ -1,0 +1,13 @@
+import("//build/config/linux/pkg_config.gni")
+
+source_set("pango") {
+  sources = [ "pango_rasterizer.cc" ]
+}
+
+pkg_config("linux_font_libs") {
+  packages = [
+    "freetype2",
+    "pango",
+    "pangocairo",
+  ]
+}

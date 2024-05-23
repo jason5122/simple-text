@@ -1,34 +1,11 @@
-import("//build/config/linux/pkg_config.gni")
-
-source_set("font") {
-  sources = []
-
+group("font") {
   if (is_mac) {
-    sources += [ "core_text_rasterizer.mm" ]
+    public_deps = [ "core_text" ]
   }
-
   if (is_linux) {
-    sources += [ "pango_rasterizer.cc" ]
-
-    public_configs = [ ":linux_font_libs" ]
+    public_deps = [ "pango" ]
   }
-
   if (is_win) {
-    sources += [ "directwrite_rasterizer.cc" ]
-
-    libs = [
-      "Ole32.lib",
-      "D2d1.lib",
-    ]
-  }
-}
-
-if (is_linux) {
-  pkg_config("linux_font_libs") {
-    packages = [
-      "freetype2",
-      "pango",
-      "pangocairo",
-    ]
+    public_deps = [ "directwrite" ]
   }
 }

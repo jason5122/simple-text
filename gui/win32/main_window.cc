@@ -88,6 +88,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
 
     case WM_CREATE: {
+        CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
         m_hdc = GetDC(m_hwnd);
 
         PIXELFORMATDESCRIPTOR pfd = {
@@ -210,6 +212,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_DESTROY: {
         app_window.onClose();
+        CoUninitialize();
         return 0;
     }
 
@@ -323,7 +326,7 @@ int MainWindow::scaleFactor() {
     HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
     DEVICE_SCALE_FACTOR scale_factor;
     GetScaleFactorForMonitor(hmon, &scale_factor);
-    std::cerr << "scale_factor: " << scale_factor << '\n';
+    // std::cerr << "scale_factor: " << scale_factor << '\n';
     // TODO: Don't hard code this.
     return 1;
 }

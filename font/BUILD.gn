@@ -15,6 +15,11 @@ source_set("font") {
 
   if (is_win) {
     sources += [ "directwrite_rasterizer.cc" ]
+
+    libs = [
+      "Ole32.lib",
+      "D2d1.lib",
+    ]
   }
 }
 

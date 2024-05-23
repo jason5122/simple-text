@@ -19,8 +19,8 @@ public:
     void reload(bool dark_mode);
 
 private:
-    inline static const fs::path light_color_scheme_path = DataDir() / "color_scheme_light.json";
-    inline static const fs::path dark_color_scheme_path = DataDir() / "color_scheme_dark.json";
+    static inline const fs::path light_color_scheme_path = DataDir() / "color_scheme_light.json";
+    static inline const fs::path dark_color_scheme_path = DataDir() / "color_scheme_dark.json";
     static constexpr glz::opts kDefaultOptions{.prettify = true, .indentation_width = 2};
 
     struct JsonSchema {

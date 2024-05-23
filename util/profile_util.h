@@ -20,7 +20,7 @@ public:
         } else if (std::is_same<Duration, std::chrono::milliseconds>::value) {
             unit = "ms";
         }
-        std::cerr << name << ": " << duration << ' ' << unit << '\n';
+        // std::cerr << name << ": " << duration << ' ' << unit << '\n';
     }
 
 private:

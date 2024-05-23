@@ -3,13 +3,23 @@
 #include <cassert>
 #include <combaseapi.h>
 #include <cwchar>
+#include <d2d1.h>
 #include <dwrite.h>
 #include <dwrite_2.h>
+#include <format>
 #include <iostream>
 #include <unknwnbase.h>
 #include <winerror.h>
 #include <wingdi.h>
 #include <winnt.h>
+
+#include <Windows.Foundation.h>
+#include <wrl\client.h>
+#include <wrl\wrappers\corewrappers.h>
+
+using Microsoft::WRL::ComPtr;
+
+#include <wincodec.h>
 
 namespace font {
 class FontRasterizer::impl {
@@ -17,6 +27,9 @@ public:
     IDWriteFactory2* dwrite_factory;
     IDWriteFontFace* font_face;
     FLOAT em_size;
+
+    ID2D1Factory* d2d_factory;
+    ComPtr<IWICImagingFactory2> wic_factory;
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -26,6 +39,11 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory2),
                         reinterpret_cast<IUnknown**>(&pimpl->dwrite_factory));
+    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pimpl->d2d_factory);
+
+    // TODO: Initialize here. COM is uninitialized here, so we currently can't.
+    // CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+    //                  IID_PPV_ARGS(&pimpl->wic_factory));
 
     IDWriteFontCollection* font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
@@ -387,6 +405,54 @@ protected:
     Run mRunHead;
 };
 
+static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory2* factory2,
+                                IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun) {
+    bool isColor = false;
+    IDWriteColorGlyphRunEnumerator* colorLayer;
+
+    IDWriteFontFace2* fontFace2;
+    fontFace->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(&fontFace2));
+    if (fontFace2->IsColorFont()) {
+        if (SUCCEEDED(factory2->TranslateColorGlyphRun(0, 0, glyphRun, nullptr,
+                                                       DWRITE_MEASURING_MODE_NATURAL, nullptr, 0,
+                                                       &colorLayer))) {
+            isColor = true;
+        }
+    }
+
+    ID2D1SolidColorBrush* black_brush = nullptr;
+    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
+
+    D2D1_POINT_2F baseline_origin{};
+    if (isColor) {
+        BOOL hasRun;
+        const DWRITE_COLOR_GLYPH_RUN* colorRun;
+
+        while (true) {
+            if (FAILED(colorLayer->MoveNext(&hasRun)) || !hasRun) {
+                break;
+            }
+            if (FAILED(colorLayer->GetCurrentRun(&colorRun))) {
+                break;
+            }
+
+            ID2D1SolidColorBrush* brush = nullptr;
+            const DWRITE_COLOR_F& color = colorRun->runColor;
+            if (color.r == 0.0 && color.g == 0.0 && color.b == 0.0 && color.a == 0.0) {
+                target->CreateSolidColorBrush(colorRun->runColor, &brush);
+            }
+
+            target->DrawGlyphRun(baseline_origin, glyphRun, brush ? brush : black_brush);
+
+            if (brush) {
+                brush->Release();
+            }
+        }
+    } else {
+        target->DrawGlyphRun(baseline_origin, glyphRun, black_brush);
+    }
+}
+
 RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
                                               uint_least32_t codepoint) {
     IDWriteFontFace* selected_font_face = pimpl->font_face;
@@ -399,6 +465,8 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         // https://stackoverflow.com/a/6693107/14698275
         size_t len = utf8_str.length();
         int wchars_num = MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, NULL, 0);
+
+        // TODO: Use std::wstring to prevent manual memory management!
         wchar_t* wstr = new wchar_t[wchars_num];
         MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, wstr, wchars_num);
 
@@ -441,10 +509,12 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
             UINT32 length = 0;
             family_names->GetStringLength(index, &length);
 
+            // TODO: Use std::wstring to prevent manual memory management!
             wchar_t* name = new (std::nothrow) wchar_t[length + 1];
             family_names->GetString(index, name, length + 1);
 
             // fwprintf(stderr, L"%s, wstr: %s, mapped_len: %d\n", name, wstr, mapped_len);
+            delete[] name;
 
             IDWriteFontFace* fallback_font_face;
             mapped_font->CreateFontFace(&fallback_font_face);
@@ -481,14 +551,13 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
             // std::cerr << out_glyph_indices[0] << '\n';
 
             glyph_indices[0] = out_glyph_indices[0];
-
-            delete[] wstr;
         } else {
             // If no fallback font is found, don't do anything and leave the glyph index as 0.
             // Let the glyph be rendered as the "tofu" glyph.
             std::cerr
                 << "IDWriteFontFallback::MapCharacters() error: No font can render the text.\n";
         }
+        delete[] wstr;
     }
 
     FLOAT glyph_advances = 0;
@@ -503,6 +572,62 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         .isSideways = 0,
         .bidiLevel = 0,
     };
+
+    // TODO: Move this up to setup() somehow.
+    if (pimpl->wic_factory == nullptr) {
+        CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                         IID_PPV_ARGS(&pimpl->wic_factory));
+    }
+
+    ComPtr<IWICBitmap> wic_bitmap;
+    pimpl->wic_factory->CreateBitmap(300, 300, GUID_WICPixelFormat32bppPRGBA,
+                                     WICBitmapCacheOnDemand, wic_bitmap.GetAddressOf());
+
+    D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
+    props.dpiX = 96;
+    props.dpiY = 96;
+    props.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
+    props.pixelFormat =
+        D2D1::PixelFormat(DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
+    props.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
+    props.usage = D2D1_RENDER_TARGET_USAGE_NONE;
+
+    ComPtr<ID2D1RenderTarget> target;
+    pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
+                                                    target.GetAddressOf());
+
+    // DrawGlyphRun(target.Get(), pimpl->dwrite_factory, selected_font_face, &glyph_run);
+
+    ID2D1SolidColorBrush* black_brush = nullptr;
+    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
+    target->BeginDraw();
+    target->FillRectangle(D2D1::RectF(0, 0, 1, 1), black_brush);
+    target->EndDraw();
+
+    IWICBitmapLock* bitmap_lock;
+    wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
+
+    UINT buffer_size = 0, stride = 0;
+    BYTE* pv = NULL;
+    bitmap_lock->GetStride(&stride);
+    bitmap_lock->GetDataPointer(&buffer_size, &pv);
+
+    // std::cerr << std::format("buffer_size = {}, stride = {}", buffer_size, stride) << '\n';
+
+    size_t pixels = buffer_size * stride;
+    for (size_t i = 0; i < buffer_size; i++) {
+        if (pv[i] != 0) {
+            std::cerr << "OMG\n";
+        }
+        // for (size_t i = 0; i < buffer_size; i += stride) {
+        // BYTE r = pv[i + 2];
+        // BYTE g = pv[i + 1];
+        // BYTE b = pv[i];
+        // BYTE a = pv[i + 3];
+        // std::cerr << std::format("r = {}, g = {}, b = {}, a = {}", r, g, b, a) << '\n';
+    }
+
+    bitmap_lock->Release();
 
     IDWriteRenderingParams* rendering_params;
     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
@@ -522,6 +647,8 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     LONG pixel_width = texture_bounds.right - texture_bounds.left;
     LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
     UINT32 size = pixel_width * pixel_height * 3;
+
+    // TODO: Use std::vector instead to prevent memory leak!
     BYTE* alpha_values = new BYTE[size];
     glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
                                            alpha_values, size);

@@ -406,7 +406,8 @@ protected:
 };
 
 static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory2* factory2,
-                                IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun) {
+                                IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun,
+                                UINT bitmap_height) {
     bool isColor = false;
     IDWriteColorGlyphRunEnumerator* colorLayer;
 
@@ -424,11 +425,14 @@ static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory2* fact
     // target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &black_brush);
 
-    target->BeginDraw();
-    target->FillRectangle(D2D1::RectF(0, 0, 300, 300), black_brush);
-    target->EndDraw();
+    // target->BeginDraw();
+    // target->FillRectangle(D2D1::RectF(0, 10, 40, 20), black_brush);
+    // target->EndDraw();
 
-    D2D1_POINT_2F baseline_origin{};
+    D2D1_POINT_2F baseline_origin{
+        .x = 0,
+        .y = static_cast<FLOAT>(bitmap_height),
+    };
     if (isColor) {
         BOOL hasRun;
         const DWRITE_COLOR_GLYPH_RUN* colorRun;
@@ -447,14 +451,18 @@ static inline void DrawGlyphRun(ID2D1RenderTarget* target, IDWriteFactory2* fact
                 target->CreateSolidColorBrush(colorRun->runColor, &brush);
             }
 
+            target->BeginDraw();
             target->DrawGlyphRun(baseline_origin, glyphRun, brush ? brush : black_brush);
+            target->EndDraw();
 
             if (brush) {
                 brush->Release();
             }
         }
     } else {
+        target->BeginDraw();
         target->DrawGlyphRun(baseline_origin, glyphRun, black_brush);
+        target->EndDraw();
     }
 }
 
@@ -578,67 +586,6 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         .bidiLevel = 0,
     };
 
-    // TODO: Move this up to setup() somehow.
-    if (pimpl->wic_factory == nullptr) {
-        CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
-                         IID_PPV_ARGS(&pimpl->wic_factory));
-    }
-
-    ComPtr<IWICBitmap> wic_bitmap;
-    UINT bitmap_width = 40;
-    UINT bitmap_height = 40;
-    pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height, GUID_WICPixelFormat32bppPRGBA,
-                                     WICBitmapCacheOnDemand, wic_bitmap.GetAddressOf());
-
-    D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
-    // props.dpiX = 96;
-    // props.dpiY = 96;
-    // props.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
-    // props.pixelFormat =
-    //     D2D1::PixelFormat(DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
-    // props.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
-    // props.usage = D2D1_RENDER_TARGET_USAGE_NONE;
-
-    ComPtr<ID2D1RenderTarget> target;
-    pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
-                                                    target.GetAddressOf());
-
-    DrawGlyphRun(target.Get(), pimpl->dwrite_factory, selected_font_face, &glyph_run);
-
-    IWICBitmapLock* bitmap_lock;
-    wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
-
-    UINT buffer_size = 0;
-    BYTE* pv = NULL;
-    bitmap_lock->GetDataPointer(&buffer_size, &pv);
-
-    UINT bw = 0, bh = 0;
-    bitmap_lock->GetSize(&bw, &bh);
-    size_t pixels = bw * bh;
-
-    std::vector<uint8_t> temp_buffer;
-    temp_buffer.reserve(pixels * 4);
-    for (size_t i = 0; i < pixels; i++) {
-        size_t offset = i * 4;
-        temp_buffer.emplace_back(pv[offset]);
-        temp_buffer.emplace_back(pv[offset + 1]);
-        temp_buffer.emplace_back(pv[offset + 2]);
-        temp_buffer.emplace_back(pv[offset + 3]);
-    }
-
-    bitmap_lock->Release();
-
-    return RasterizedGlyph{
-        .colored = true,
-        .left = static_cast<int32_t>(0),
-        .top = static_cast<int32_t>(bh + descent),
-        .width = static_cast<int32_t>(bw),
-        .height = static_cast<int32_t>(bh),
-        .advance = static_cast<int32_t>(bw),
-        .buffer = std::move(temp_buffer),
-        .index = 0,
-    };
-
     IDWriteRenderingParams* rendering_params;
     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
 
@@ -657,6 +604,97 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     LONG pixel_width = texture_bounds.right - texture_bounds.left;
     LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
     UINT32 size = pixel_width * pixel_height * 3;
+
+    // std::cerr << std::format("pixel_width = {}, pixel_height = {}\n", pixel_width,
+    // pixel_height);
+
+    // TODO: Fully implement this!
+    if (pixel_width != 0 && pixel_height != 0) {
+        // TODO: Move this up to setup() somehow.
+        if (pimpl->wic_factory == nullptr) {
+            CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                             IID_PPV_ARGS(&pimpl->wic_factory));
+        }
+
+        ComPtr<IWICBitmap> wic_bitmap;
+        // UINT bitmap_width = 40;
+        // UINT bitmap_height = 40;
+        UINT bitmap_width = pixel_width;
+        UINT bitmap_height = pixel_height;
+        pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
+                                         GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
+                                         wic_bitmap.GetAddressOf());
+
+        D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
+        // props.dpiX = 96;
+        // props.dpiY = 96;
+        // props.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
+        // props.pixelFormat =
+        //     D2D1::PixelFormat(DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
+        // props.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
+        // props.usage = D2D1_RENDER_TARGET_USAGE_NONE;
+
+        ComPtr<ID2D1RenderTarget> target;
+        pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
+                                                        target.GetAddressOf());
+
+        DrawGlyphRun(target.Get(), pimpl->dwrite_factory, selected_font_face, &glyph_run,
+                     bitmap_height);
+
+        IWICBitmapLock* bitmap_lock;
+        wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
+
+        UINT buffer_size = 0;
+        BYTE* pv = NULL;
+        bitmap_lock->GetDataPointer(&buffer_size, &pv);
+
+        UINT bw = 0, bh = 0;
+        bitmap_lock->GetSize(&bw, &bh);
+        size_t pixels = bw * bh;
+
+        std::vector<uint8_t> temp_buffer;
+        temp_buffer.reserve(pixels * 4);
+        for (size_t i = 0; i < pixels; i++) {
+            size_t offset = i * 4;
+            temp_buffer.emplace_back(pv[offset]);
+            temp_buffer.emplace_back(pv[offset + 1]);
+            temp_buffer.emplace_back(pv[offset + 2]);
+            temp_buffer.emplace_back(pv[offset + 3]);
+        }
+
+        bitmap_lock->Release();
+
+        DWRITE_GLYPH_METRICS metrics;
+        selected_font_face->GetDesignGlyphMetrics(glyph_indices, 1, &metrics, false);
+
+        DWRITE_FONT_METRICS font_metrics;
+        selected_font_face->GetMetrics(&font_metrics);
+
+        FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
+        FLOAT advance = metrics.advanceWidth * scale;
+
+        int32_t top = -texture_bounds.top;
+        top -= descent;
+
+        return RasterizedGlyph{
+            // .colored = true,
+            // .left = static_cast<int32_t>(0),
+            // .top = static_cast<int32_t>(bh + descent),
+            // .width = static_cast<int32_t>(bw),
+            // .height = static_cast<int32_t>(bh),
+            // .advance = static_cast<int32_t>(bw),
+            // .buffer = std::move(temp_buffer),
+            // .index = 0,
+            .colored = true,
+            .left = texture_bounds.left,
+            .top = top,
+            .width = static_cast<int32_t>(pixel_width),
+            .height = static_cast<int32_t>(pixel_height),
+            .advance = static_cast<int32_t>(std::ceil(advance)),
+            .buffer = std::move(temp_buffer),
+            .index = glyph_indices[0],
+        };
+    }
 
     // TODO: Use std::vector instead to prevent memory leak!
     BYTE* alpha_values = new BYTE[size];

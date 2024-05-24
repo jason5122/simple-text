@@ -50,7 +50,7 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-cairo_t* create_layout_context() {
+static inline cairo_t* CreateLayoutContext() {
     cairo_surface_t* temp_surface;
     cairo_t* context;
 
@@ -61,8 +61,8 @@ cairo_t* create_layout_context() {
     return context;
 }
 
-cairo_t* create_cairo_context(int width, int height, int channels, cairo_surface_t** surf,
-                              unsigned char** buffer) {
+static inline cairo_t* CreateCairoContext(int width, int height, int channels,
+                                          cairo_surface_t** surf, unsigned char** buffer) {
     *buffer = (unsigned char*)calloc(channels * width * height, sizeof(unsigned char));
     *surf = cairo_image_surface_create_for_data(*buffer, CAIRO_FORMAT_ARGB32, width, height,
                                                 channels * width);
@@ -71,7 +71,7 @@ cairo_t* create_cairo_context(int width, int height, int channels, cairo_surface
 
 // https://dthompson.us/posts/font-rendering-in-opengl-with-pango-and-cairo.html
 RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
-    cairo_t* layout_context = create_layout_context();
+    cairo_t* layout_context = CreateLayoutContext();
     PangoLayout* layout = pango_cairo_create_layout(layout_context);
     pango_layout_set_text(layout, &utf8_str[0], utf8_str.length());
 
@@ -93,9 +93,9 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     unsigned char* surface_data = nullptr;
 
     cairo_t* render_context =
-        create_cairo_context(text_width, text_height, 4, &surface, &surface_data);
+        CreateCairoContext(text_width, text_height, 4, &surface, &surface_data);
 
-    cairo_set_source_rgba(render_context, 1, 1, 1, 1);
+    cairo_set_source_rgba(render_context, 0, 0, 0, 1);
     pango_cairo_show_layout(render_context, layout);
 
     std::vector<uint8_t> temp_buffer;
@@ -105,11 +105,11 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
         temp_buffer.push_back(surface_data[i + 2]);
         temp_buffer.push_back(surface_data[i + 1]);
         temp_buffer.push_back(surface_data[i]);
-        // temp_buffer.push_back(surface_data[i + 3]);
+        temp_buffer.push_back(surface_data[i + 3]);
     }
 
     return RasterizedGlyph{
-        .colored = false,
+        .colored = true,
         .left = 0,
         .top = text_height,
         .width = text_width,

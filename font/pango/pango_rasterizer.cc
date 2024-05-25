@@ -12,6 +12,8 @@ public:
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
+FontRasterizer::~FontRasterizer() {}
+
 bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
 
@@ -118,6 +120,4 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
         .buffer = temp_buffer,
     };
 }
-
-FontRasterizer::~FontRasterizer() {}
 }

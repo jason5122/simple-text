@@ -16,8 +16,8 @@ SimpleText::~SimpleText() {}
 void SimpleText::onLaunch() {
     // TODO: Implement scale factor support.
     // std::string main_font = "Arial";
-    // std::string main_font = "Menlo";
-    std::string main_font = "Source Code Pro";
+    std::string main_font = "Menlo";
+    // std::string main_font = "Source Code Pro";
 #if IS_MAC
     std::string ui_font = "SF Pro Text";
     int main_font_size = 16 * 2;

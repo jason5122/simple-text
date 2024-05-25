@@ -12,6 +12,7 @@ config("compiler") {
   common_mac_flags = [
     "-arch",
     clang_arch,
+    "-mmacos-version-min=10.15",  # TODO: Don't hard code version here.
   ]
 
   asmflags = common_mac_flags

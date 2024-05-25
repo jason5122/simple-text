@@ -12,7 +12,9 @@ public:
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
-FontRasterizer::~FontRasterizer() {}
+FontRasterizer::~FontRasterizer() {
+    g_object_unref(pimpl->pango_font);
+}
 
 bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->id = id;
@@ -25,18 +27,27 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     pango_font_description_set_size(desc, font_size * PANGO_SCALE);
     if (!desc) {
         std::cerr << "pango_font_description_from_string() error.\n";
+        g_object_unref(context);
+        pango_font_description_free(desc);
         return false;
     }
 
     pimpl->pango_font = pango_font_map_load_font(font_map, context, desc);
     if (!pimpl->pango_font) {
         std::cerr << "pango_font_map_load_font() error.\n";
+        g_object_unref(context);
+        pango_font_description_free(desc);
+        g_object_unref(pimpl->pango_font);
         return false;
     }
 
     PangoFontMetrics* metrics = pango_font_get_metrics(pimpl->pango_font, nullptr);
     if (!metrics) {
         std::cerr << "pango_font_get_metrics() error.\n";
+        g_object_unref(context);
+        pango_font_description_free(desc);
+        g_object_unref(pimpl->pango_font);
+        pango_font_metrics_unref(metrics);
         return false;
     }
 
@@ -49,24 +60,24 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     this->line_height = line_height;
     this->descent = descent;
 
+    g_object_unref(context);
+    pango_font_description_free(desc);
+    g_object_unref(pimpl->pango_font);
+    pango_font_metrics_unref(metrics);
+
     return true;
 }
 
 static inline cairo_t* CreateLayoutContext() {
-    cairo_surface_t* temp_surface;
-    cairo_t* context;
-
-    temp_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
-    context = cairo_create(temp_surface);
+    cairo_surface_t* temp_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
+    cairo_t* context = cairo_create(temp_surface);
     cairo_surface_destroy(temp_surface);
-
     return context;
 }
 
-static inline cairo_t* CreateCairoContext(int width, int height, int channels,
-                                          cairo_surface_t** surf, unsigned char** buffer) {
-    *buffer = (unsigned char*)calloc(channels * width * height, sizeof(unsigned char));
-    *surf = cairo_image_surface_create_for_data(*buffer, CAIRO_FORMAT_ARGB32, width, height,
+static inline cairo_t* CreateRenderContext(int width, int height, int channels,
+                                           cairo_surface_t** surf, unsigned char* buffer) {
+    *surf = cairo_image_surface_create_for_data(buffer, CAIRO_FORMAT_ARGB32, width, height,
                                                 channels * width);
     return cairo_create(*surf);
 }
@@ -92,10 +103,10 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     // text_width += 1;
 
     cairo_surface_t* surface;
-    unsigned char* surface_data = nullptr;
+    std::vector<unsigned char> surface_data(text_width * text_height * 4);
 
     cairo_t* render_context =
-        CreateCairoContext(text_width, text_height, 4, &surface, &surface_data);
+        CreateRenderContext(text_width, text_height, 4, &surface, &surface_data[0]);
 
     cairo_set_source_rgba(render_context, 0, 0, 0, 1);
     pango_cairo_show_layout(render_context, layout);
@@ -104,11 +115,16 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     size_t pixels = text_width * text_height * 4;
     temp_buffer.reserve(pixels);
     for (size_t i = 0; i < pixels; i += 4) {
-        temp_buffer.push_back(surface_data[i + 2]);
-        temp_buffer.push_back(surface_data[i + 1]);
-        temp_buffer.push_back(surface_data[i]);
-        temp_buffer.push_back(surface_data[i + 3]);
+        temp_buffer.emplace_back(surface_data[i + 2]);
+        temp_buffer.emplace_back(surface_data[i + 1]);
+        temp_buffer.emplace_back(surface_data[i]);
+        temp_buffer.emplace_back(surface_data[i + 3]);
     }
+
+    cairo_destroy(layout_context);
+    cairo_destroy(render_context);
+    cairo_surface_destroy(surface);
+    g_object_unref(layout);
 
     return RasterizedGlyph{
         .colored = true,

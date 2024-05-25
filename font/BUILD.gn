@@ -1,7 +1,7 @@
 group("font") {
   if (is_mac) {
-    public_deps = [ "core_text" ]
-    # public_deps = [ "pango" ]
+    # public_deps = [ "core_text" ]
+    public_deps = [ "pango" ]
   }
   if (is_linux) {
     public_deps = [ "pango" ]

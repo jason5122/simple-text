@@ -10,7 +10,6 @@
     App::Window* appWindow;
 
 @private
-    CGLContextObj mContext;
     DisplayGL* displaygl;
 }
 
@@ -281,11 +280,11 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return displaygl->mPixelFormat;
+    return displaygl->pixelFormat();
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLSetCurrentContext(displaygl->mContext);
+    CGLSetCurrentContext(displaygl->context());
 
     int scaled_width = self.frame.size.width * self.contentsScale;
     int scaled_height = self.frame.size.height * self.contentsScale;
@@ -294,7 +293,7 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 
     [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
 
-    return displaygl->mContext;
+    return displaygl->context();
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
@@ -308,12 +307,12 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(displaygl->mContext);
+    CGLSetCurrentContext(displaygl->context());
 
     appWindow->onDraw();
 
     // Calls glFlush() by default.
-    [super drawInCGLContext:mContext
+    [super drawInCGLContext:displaygl->context()
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
@@ -323,7 +322,7 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-    CGLSetCurrentContext(displaygl->mContext);
+    CGLSetCurrentContext(displaygl->context());
 
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;

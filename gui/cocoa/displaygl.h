@@ -1,6 +1,8 @@
 #pragma once
 
+#include "base/apple/scoped_typeref.h"
 #include "util/not_copyable_or_movable.h"
+#include <memory>
 
 struct _CGLContextObject;
 typedef _CGLContextObject* CGLContextObj;
@@ -12,12 +14,15 @@ class DisplayGL {
 public:
     NOT_COPYABLE(DisplayGL)
     NOT_MOVABLE(DisplayGL)
-    DisplayGL();
     ~DisplayGL();
+    static std::unique_ptr<DisplayGL> Create();
 
-    bool initialize();
+    CGLPixelFormatObj pixelFormat();
+    CGLContextObj context();
 
-    // private:
-    CGLContextObj mContext;
-    CGLPixelFormatObj mPixelFormat;
+private:
+    base::apple::ScopedTypeRef<CGLPixelFormatObj> pixel_format_;
+    base::apple::ScopedTypeRef<CGLContextObj> context_;
+
+    DisplayGL(CGLPixelFormatObj pixel_format, CGLContextObj context);
 };

@@ -7,26 +7,13 @@
 #include <format>
 #include <iostream>
 
+using Microsoft::WRL::ComPtr;
+
 namespace font {
-inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* factory,
-                               IDWriteFontFace* fontFace, DWRITE_GLYPH_RUN* glyphRun,
+inline void DrawGlyphRunHelper(ID2D1RenderTarget* target,
+                               ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
                                UINT origin_y) {
-    HRESULT hr = DWRITE_E_NOCOLOR;
-
-    IDWriteColorGlyphRunEnumerator1* colorLayer;
-
-    IDWriteFontFace2* fontFace2;
-    fontFace->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(&fontFace2));
-    if (fontFace2->IsColorFont()) {
-        DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
-        hr = factory->TranslateColorGlyphRun({}, glyphRun, nullptr, image_formats,
-                                             DWRITE_MEASURING_MODE_NATURAL, nullptr, 0,
-                                             &colorLayer);
-    }
-
     // TODO: Find a way to reuse render target and brushes.
-    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> black_brush = nullptr;
-    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
     Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
 
@@ -36,49 +23,45 @@ inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* facto
     };
 
     target->BeginDraw();
-    if (hr == DWRITE_E_NOCOLOR) {
-        target->DrawGlyphRun(baseline_origin, glyphRun, black_brush.Get());
-    } else {
-        BOOL hasRun;
-        const DWRITE_COLOR_GLYPH_RUN1* colorRun;
+    BOOL has_run;
+    const DWRITE_COLOR_GLYPH_RUN1* color_run;
 
-        while (true) {
-            if (FAILED(colorLayer->MoveNext(&hasRun)) || !hasRun) {
-                break;
+    while (true) {
+        if (FAILED(color_run_enumerator->MoveNext(&has_run)) || !has_run) {
+            break;
+        }
+        if (FAILED(color_run_enumerator->GetCurrentRun(&color_run))) {
+            break;
+        }
+
+        switch (color_run->glyphImageFormat) {
+        case DWRITE_GLYPH_IMAGE_FORMATS_PNG:
+        case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
+        case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
+        case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
+            // std::cerr << "DrawColorBitmapGlyphRun()\n";
+            break;
+
+        case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
+            // std::cerr << "DrawSvgGlyphRun()\n";
+            break;
+
+        case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
+        case DWRITE_GLYPH_IMAGE_FORMATS_CFF:
+        case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
+        default: {
+            // std::cerr << "DrawGlyphRun()\n";
+
+            Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> layer_brush;
+            if (color_run->paletteIndex == 0xFFFF) {
+                layer_brush = blue_brush;
+            } else {
+                target->CreateSolidColorBrush(color_run->runColor, &layer_brush);
             }
-            if (FAILED(colorLayer->GetCurrentRun(&colorRun))) {
-                break;
-            }
 
-            switch (colorRun->glyphImageFormat) {
-            case DWRITE_GLYPH_IMAGE_FORMATS_PNG:
-            case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
-            case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
-            case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
-                // std::cerr << "DrawColorBitmapGlyphRun()\n";
-                break;
-
-            case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
-                // std::cerr << "DrawSvgGlyphRun()\n";
-                break;
-
-            case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
-            case DWRITE_GLYPH_IMAGE_FORMATS_CFF:
-            case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
-            default: {
-                // std::cerr << "DrawGlyphRun()\n";
-
-                Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> layer_brush;
-                if (colorRun->paletteIndex == 0xFFFF) {
-                    layer_brush = blue_brush;
-                } else {
-                    target->CreateSolidColorBrush(colorRun->runColor, &layer_brush);
-                }
-
-                target->DrawGlyphRun(baseline_origin, &colorRun->glyphRun, layer_brush.Get());
-                break;
-            }
-            }
+            target->DrawGlyphRun(baseline_origin, &color_run->glyphRun, layer_brush.Get());
+            break;
+        }
         }
     }
     target->EndDraw();

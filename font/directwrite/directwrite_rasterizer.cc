@@ -154,8 +154,39 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     int32_t top = -texture_bounds.top;
     top -= descent;
 
-    // TODO: Fully implement this!
-    if (pixel_width != 0 && pixel_height != 0) {
+    HRESULT hr = DWRITE_E_NOCOLOR;
+    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
+
+    IDWriteFontFace2* font_face_2;
+    font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(&font_face_2));
+    if (font_face_2->IsColorFont()) {
+        DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
+        hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr, image_formats,
+                                                           DWRITE_MEASURING_MODE_NATURAL, nullptr,
+                                                           0, &color_run_enumerator);
+    }
+
+    if (hr == DWRITE_E_NOCOLOR) {
+        std::vector<BYTE> alpha_values(size);
+        glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
+                                               &alpha_values[0], size);
+
+        std::vector<uint8_t> buffer;
+        buffer.reserve(size);
+        for (size_t i = 0; i < size; i++) {
+            buffer.emplace_back(alpha_values[i]);
+        }
+
+        return RasterizedGlyph{
+            .colored = false,
+            .left = texture_bounds.left,
+            .top = top,
+            .width = static_cast<int32_t>(pixel_width),
+            .height = static_cast<int32_t>(pixel_height),
+            .advance = static_cast<int32_t>(std::ceil(advance)),
+            .buffer = std::move(buffer),
+        };
+    } else {
         ComPtr<IWICBitmap> wic_bitmap;
         // TODO: Implement without magic numbers. Properly find the right width/height.
         UINT bitmap_width = pixel_width + 10;
@@ -171,8 +202,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
 
-        DrawGlyphRunHelper(target.Get(), pimpl->dwrite_factory.Get(), font_face.Get(), &glyph_run,
-                           -texture_bounds.top);
+        DrawGlyphRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
 
         IWICBitmapLock* bitmap_lock;
         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
@@ -207,26 +237,6 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
             .buffer = std::move(temp_buffer),
         };
     }
-
-    std::vector<BYTE> alpha_values(size);
-    glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-                                           &alpha_values[0], size);
-
-    std::vector<uint8_t> buffer;
-    buffer.reserve(size);
-    for (size_t i = 0; i < size; i++) {
-        buffer.emplace_back(alpha_values[i]);
-    }
-
-    return RasterizedGlyph{
-        .colored = false,
-        .left = texture_bounds.left,
-        .top = top,
-        .width = static_cast<int32_t>(pixel_width),
-        .height = static_cast<int32_t>(pixel_height),
-        .advance = static_cast<int32_t>(std::ceil(advance)),
-        .buffer = std::move(buffer),
-    };
 }
 
 // https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows

@@ -1,10 +1,7 @@
 #pragma once
 
-#include "font/directwrite/font_fallback_source.h"
-#include "font/directwrite/text_analysis.h"
 #include <d2d1.h>
 #include <dwrite_3.h>
-#include <vector>
 #include <wrl/client.h>
 
 #include <format>

@@ -1,9 +1,12 @@
 #include "font/directwrite/directwrite_helper.h"
+#include "font/directwrite/font_fallback_source.h"
+#include "font/directwrite/text_analysis.h"
 #include "font/rasterizer.h"
 #include <combaseapi.h>
 #include <comdef.h>
 #include <cwchar>
 #include <unknwnbase.h>
+#include <vector>
 #include <wincodec.h>
 #include <winerror.h>
 #include <wingdi.h>
@@ -25,8 +28,6 @@ public:
 
     ComPtr<IDWriteFontFace> mapCharacters(std::wstring_view utf16_str);
     UINT16 getGlyphIndex(std::wstring_view utf16_str, IDWriteFontFace* font_face);
-    void tempMethod(std::wstring_view utf16_str, IDWriteFontFace** font_face,
-                    std::vector<UINT16>& glyph_indices);
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -91,40 +92,24 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
                                               uint_least32_t codepoint) {
     std::wstring utf16_str = ConvertToUTF16(utf8_str);
 
-    // ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
-    // UINT16 glyph_index = pimpl->getGlyphIndex(utf16_str, font_face.Get());
-
-    // // If no fallback font is found, don't do anything and leave the glyph index as 0.
-    // // Let the glyph be rendered as the "tofu" glyph.
-    // if (glyph_index == 0) {
-    //     ComPtr<IDWriteFontFace> fallback_font_face = pimpl->mapCharacters(utf16_str);
-
-    //     if (fallback_font_face != nullptr) {
-    //         font_face = fallback_font_face;
-    //         glyph_index = pimpl->getGlyphIndex(utf16_str, font_face.Get());
-    //     }
-    // }
-
-    ComPtr<IDWriteFontFace> selected_font_face = pimpl->font_face.Get();
-
-    // TODO: Consider replacing GetGlyphIndices() with TextAnalyzer approach.
+    ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
     std::vector<UINT16> glyph_indices(1);
-    selected_font_face->GetGlyphIndices(&codepoint, 1, &glyph_indices[0]);
 
     if (glyph_indices[0] == 0) {
-        pimpl->tempMethod(utf16_str, &selected_font_face, glyph_indices);
-    }
+        ComPtr<IDWriteFontFace> mapped_font_face = pimpl->mapCharacters(utf16_str);
 
-    // if (glyph_indices[0] != glyph_index) {
-    //     std::cerr << std::format("str = {}\n", utf8_str);
-    //     std::cerr << std::format("glyph_indices[0] = {}, glyph_index = {}\n", glyph_indices[0],
-    //                              glyph_index);
-    // }
+        // If no fallback font is found, don't do anything and leave the glyph index as 0.
+        // Let the glyph be rendered as the "tofu" glyph.
+        if (mapped_font_face != nullptr) {
+            font_face = mapped_font_face;
+            glyph_indices[0] = pimpl->getGlyphIndex(utf16_str, mapped_font_face.Get());
+        }
+    }
 
     FLOAT glyph_advances = 0;
     DWRITE_GLYPH_OFFSET offset{};
     DWRITE_GLYPH_RUN glyph_run{
-        .fontFace = selected_font_face.Get(),
+        .fontFace = font_face.Get(),
         .fontEmSize = pimpl->em_size,
         .glyphCount = 1,
         .glyphIndices = &glyph_indices[0],
@@ -138,8 +123,8 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
 
     DWRITE_RENDERING_MODE rendering_mode;
-    selected_font_face->GetRecommendedRenderingMode(
-        pimpl->em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL, rendering_params, &rendering_mode);
+    font_face->GetRecommendedRenderingMode(pimpl->em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
+                                           rendering_params, &rendering_mode);
 
     IDWriteGlyphRunAnalysis* glyph_run_analysis;
     pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
@@ -157,10 +142,10 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     // pixel_height);
 
     DWRITE_GLYPH_METRICS metrics;
-    selected_font_face->GetDesignGlyphMetrics(&glyph_indices[0], 1, &metrics, false);
+    font_face->GetDesignGlyphMetrics(&glyph_indices[0], 1, &metrics, false);
 
     DWRITE_FONT_METRICS font_metrics;
-    selected_font_face->GetMetrics(&font_metrics);
+    font_face->GetMetrics(&font_metrics);
 
     FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
     FLOAT advance = metrics.advanceWidth * scale;
@@ -185,8 +170,8 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
 
-        DrawGlyphRunHelper(target.Get(), pimpl->dwrite_factory.Get(), selected_font_face.Get(),
-                           &glyph_run, -texture_bounds.top);
+        DrawGlyphRunHelper(target.Get(), pimpl->dwrite_factory.Get(), font_face.Get(), &glyph_run,
+                           -texture_bounds.top);
 
         IWICBitmapLock* bitmap_lock;
         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
@@ -245,6 +230,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     };
 }
 
+// https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
 // https://chromium.googlesource.com/chromium/src/+/refs/heads/main/content/browser/renderer_host/dwrite_font_proxy_impl_win.cc#389
 ComPtr<IDWriteFontFace> FontRasterizer::impl::mapCharacters(std::wstring_view utf16_str) {
     if (font_fallback_ == nullptr) {
@@ -307,66 +293,5 @@ UINT16 FontRasterizer::impl::getGlyphIndex(std::wstring_view utf16_str,
                              &out_glyph_indices[0], &glyph_properties[0], &glyph_count);
 
     return out_glyph_indices[0];
-}
-
-// https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
-void FontRasterizer::impl::tempMethod(std::wstring_view utf16_str, IDWriteFontFace** font_face,
-                                      std::vector<UINT16>& glyph_indices) {
-    static constexpr wchar_t locale[] = L"en-us";
-
-    Microsoft::WRL::ComPtr<IDWriteNumberSubstitution> number_substitution;
-    dwrite_factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE, locale, true,
-                                             &number_substitution);
-
-    Microsoft::WRL::ComPtr<IDWriteTextAnalysisSource> text_analysis = new FontFallbackSource(
-        &utf16_str[0], utf16_str.length(), locale, number_substitution.Get());
-
-    Microsoft::WRL::ComPtr<IDWriteFontFallback> fallback;
-    dwrite_factory->GetSystemFontFallback(&fallback);
-
-    UINT32 mapped_len;
-    IDWriteFont* mapped_font;
-    FLOAT mapped_scale;
-    fallback->MapCharacters(text_analysis.Get(), 0, utf16_str.length(), nullptr, nullptr,
-                            DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-                            DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font, &mapped_scale);
-
-    if (mapped_font == nullptr) {
-        // If no fallback font is found, don't do anything and leave the glyph index as 0.
-        // Let the glyph be rendered as the "tofu" glyph.
-        std::cerr
-            << "IDWriteFontFallback::MapCharacters() warning: No font can render the text.\n";
-        return;
-    }
-
-    // PrintFontFamilyName(mapped_font);
-
-    IDWriteFontFace* fallback_font_face;
-    mapped_font->CreateFontFace(&fallback_font_face);
-    *font_face = fallback_font_face;
-
-    IDWriteTextAnalyzer* text_analyzer;
-    dwrite_factory->CreateTextAnalyzer(&text_analyzer);
-
-    TextAnalysis analysis(&utf16_str[0], utf16_str.length(), nullptr,
-                          DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
-    TextAnalysis::Run* run_head;
-    analysis.GenerateResults(text_analyzer, &run_head);
-
-    uint32_t max_glyph_count = 3 * utf16_str.length() / 2 + 16;
-
-    std::vector<uint16_t> cluster_map(utf16_str.length());
-    std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_properties(utf16_str.length());
-    std::vector<uint16_t> out_glyph_indices(max_glyph_count);
-    std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_properties(max_glyph_count);
-    uint32_t glyph_count;
-
-    // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L661
-    text_analyzer->GetGlyphs(&utf16_str[0], utf16_str.length(), *font_face, false, false,
-                             &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
-                             max_glyph_count, &cluster_map[0], &text_properties[0],
-                             &out_glyph_indices[0], &glyph_properties[0], &glyph_count);
-
-    glyph_indices[0] = out_glyph_indices[0];
 }
 }

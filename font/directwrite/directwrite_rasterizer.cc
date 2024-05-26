@@ -1,7 +1,11 @@
+// https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
+#define NOMINMAX
+
 #include "font/directwrite/directwrite_helper.h"
 #include "font/directwrite/font_fallback_source.h"
 #include "font/directwrite/text_analysis.h"
 #include "font/rasterizer.h"
+#include <array>
 #include <combaseapi.h>
 #include <comdef.h>
 #include <cwchar>
@@ -34,7 +38,9 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-bool FontRasterizer::setup(int id, std::string font_name, int font_size) {
+bool FontRasterizer::setup(int id, std::string font_name_utf8, int font_size) {
+    std::wstring font_name_utf16 = ConvertToUTF16(font_name_utf8);
+
     this->id = id;
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
@@ -48,21 +54,37 @@ bool FontRasterizer::setup(int id, std::string font_name, int font_size) {
         std::cerr << err.ErrorMessage() << '\n';
     }
 
-    pimpl->dwrite_factory->GetSystemFontFallback(&pimpl->font_fallback_);
+    // Create custom font fallback.
+    {
+        ComPtr<IDWriteFontFallbackBuilder> font_fallback_builder;
+        pimpl->dwrite_factory->CreateFontFallbackBuilder(&font_fallback_builder);
+
+        ComPtr<IDWriteFontFallback> system_font_fallback;
+        pimpl->dwrite_factory->GetSystemFontFallback(&system_font_fallback);
+
+        DWRITE_UNICODE_RANGE unicode_range{
+            .first = std::numeric_limits<UINT32>::min(),
+            .last = std::numeric_limits<UINT32>::max(),
+        };
+        std::array<const wchar_t*, 1> family_names{&font_name_utf16[0]};
+        font_fallback_builder->AddMapping(&unicode_range, 1, &family_names[0],
+                                          family_names.size());
+        font_fallback_builder->AddMappings(system_font_fallback.Get());
+        font_fallback_builder->CreateFontFallback(&pimpl->font_fallback_);
+    }
 
     ComPtr<IDWriteFontCollection> font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
     // https://stackoverflow.com/q/40365439/14698275
-    std::wstring wstr = ConvertToUTF16(font_name);
     UINT32 index;
     BOOL exists;
-    font_collection->FindFamilyName(&wstr[0], &index, &exists);
+    font_collection->FindFamilyName(&font_name_utf16[0], &index, &exists);
 
-    IDWriteFontFamily* font_family;
+    ComPtr<IDWriteFontFamily> font_family;
     font_collection->GetFontFamily(index, &font_family);
 
-    IDWriteFont* font;
+    ComPtr<IDWriteFont> font;
     font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STRETCH_NORMAL,
                                       DWRITE_FONT_STYLE_NORMAL, &font);
 
@@ -90,21 +112,18 @@ bool FontRasterizer::setup(int id, std::string font_name, int font_size) {
     return true;
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
-    std::wstring utf16_str = ConvertToUTF16(utf8_str);
+RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str_utf8) {
+    std::wstring utf16_str = ConvertToUTF16(str_utf8);
 
     ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
     UINT16 glyph_index = 0;
 
-    if (glyph_index == 0) {
-        ComPtr<IDWriteFontFace> mapped_font_face = pimpl->mapCharacters(utf16_str);
-
-        // If no fallback font is found, don't do anything and leave the glyph index as 0.
-        // Let the glyph be rendered as the "tofu" glyph.
-        if (mapped_font_face != nullptr) {
-            font_face = mapped_font_face;
-            glyph_index = pimpl->getGlyphIndex(utf16_str, mapped_font_face.Get());
-        }
+    // If no fallback font is found, don't do anything and leave the glyph index as 0.
+    // Let the glyph be rendered as the "tofu" glyph by the default font.
+    ComPtr<IDWriteFontFace> mapped_font_face = pimpl->mapCharacters(utf16_str);
+    if (mapped_font_face != nullptr) {
+        font_face = mapped_font_face;
+        glyph_index = pimpl->getGlyphIndex(utf16_str, mapped_font_face.Get());
     }
 
     FLOAT glyph_advances = 0;
@@ -157,8 +176,8 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     HRESULT hr = DWRITE_E_NOCOLOR;
     ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
 
-    IDWriteFontFace2* font_face_2;
-    font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(&font_face_2));
+    ComPtr<IDWriteFontFace2> font_face_2;
+    font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(font_face_2.GetAddressOf()));
     if (font_face_2->IsColorFont()) {
         DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
         hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr, image_formats,
@@ -202,7 +221,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
 
-        DrawGlyphRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
+        ColorRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
 
         IWICBitmapLock* bitmap_lock;
         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);

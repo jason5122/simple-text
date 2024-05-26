@@ -10,9 +10,9 @@
 using Microsoft::WRL::ComPtr;
 
 namespace font {
-inline void DrawGlyphRunHelper(ID2D1RenderTarget* target,
-                               ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
-                               UINT origin_y) {
+inline void ColorRunHelper(ID2D1RenderTarget* target,
+                           ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+                           UINT origin_y) {
     // TODO: Find a way to reuse render target and brushes.
     Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
@@ -67,6 +67,17 @@ inline void DrawGlyphRunHelper(ID2D1RenderTarget* target,
     target->EndDraw();
 }
 
+inline std::wstring ConvertToUTF16(std::string_view utf8_str) {
+    // https://stackoverflow.com/a/6693107/14698275
+    size_t len = utf8_str.length();
+    int required_len = MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, nullptr, 0);
+
+    std::wstring wstr;
+    wstr.resize(required_len);
+    MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, &wstr[0], required_len);
+    return wstr;
+}
+
 inline void PrintFontFamilyName(IDWriteFont* font) {
     Microsoft::WRL::ComPtr<IDWriteFontFamily> font_family;
     font->GetFontFamily(&font_family);
@@ -88,16 +99,5 @@ inline void PrintFontFamilyName(IDWriteFont* font) {
     name.resize(length + 1);
     family_names->GetString(index, &name[0], length + 1);
     std::wcerr << std::format(L"family name: {}\n", &name[0]);
-}
-
-inline std::wstring ConvertToUTF16(std::string_view utf8_str) {
-    // https://stackoverflow.com/a/6693107/14698275
-    size_t len = utf8_str.length();
-    int required_len = MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, nullptr, 0);
-
-    std::wstring wstr;
-    wstr.resize(required_len);
-    MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, &wstr[0], required_len);
-    return wstr;
 }
 }

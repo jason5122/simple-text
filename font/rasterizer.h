@@ -27,8 +27,8 @@ public:
     FontRasterizer();
     ~FontRasterizer();
 
-    bool setup(int id, std::string font_name, int font_size);
-    RasterizedGlyph rasterizeUTF8(std::string_view utf8_str);
+    bool setup(int id, std::string font_name_utf8, int font_size);
+    RasterizedGlyph rasterizeUTF8(std::string_view str_utf8);
 
 private:
     // https://herbsutter.com/gotw/_100/

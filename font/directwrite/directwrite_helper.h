@@ -4,6 +4,7 @@
 #include "font/directwrite/text_analysis.h"
 #include <d2d1.h>
 #include <dwrite_3.h>
+#include <vector>
 
 #include <wrl/client.h>
 using Microsoft::WRL::ComPtr;
@@ -105,19 +106,28 @@ inline void PrintFontFamilyName(IDWriteFont* font) {
     UINT32 length = 0;
     family_names->GetStringLength(index, &length);
 
-    std::wstring name(length + 1, ' ');
+    std::wstring name;
+    name.resize(length + 1);
     family_names->GetString(index, &name[0], length + 1);
     std::wcerr << std::format(L"family name: {}\n", &name[0]);
 }
 
-// https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
-inline void GetFallbackFont(IDWriteFactory4* factory, std::string_view utf8_str,
-                            IDWriteFontFace** selected_font_face, UINT16* glyph_indices) {
+inline std::wstring ConvertToUTF16(std::string_view utf8_str) {
     // https://stackoverflow.com/a/6693107/14698275
     size_t len = utf8_str.length();
-    int wchars_num = MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, NULL, 0);
-    std::wstring wstr(wchars_num, ' ');
-    MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, &wstr[0], wchars_num);
+    int required_len = MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, nullptr, 0);
+
+    std::wstring wstr;
+    wstr.resize(required_len);
+    MultiByteToWideChar(CP_UTF8, 0, &utf8_str[0], len, &wstr[0], required_len);
+    return wstr;
+}
+
+// https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
+inline void GetFallbackFont(IDWriteFactory4* factory, std::string_view utf8_str,
+                            IDWriteFontFace** selected_font_face,
+                            std::vector<UINT16>& glyph_indices) {
+    std::wstring wstr = ConvertToUTF16(utf8_str);
 
     wchar_t locale[] = L"en-us";
 
@@ -126,7 +136,7 @@ inline void GetFallbackFont(IDWriteFactory4* factory, std::string_view utf8_str,
                                       &number_substitution);
 
     ComPtr<IDWriteTextAnalysisSource> text_analysis =
-        new FontFallbackSource(&wstr[0], wchars_num, locale, number_substitution);
+        new FontFallbackSource(&wstr[0], wstr.length(), locale, number_substitution);
 
     IDWriteFontFallback* fallback;
     factory->GetSystemFontFallback(&fallback);
@@ -134,7 +144,7 @@ inline void GetFallbackFont(IDWriteFactory4* factory, std::string_view utf8_str,
     UINT32 mapped_len;
     IDWriteFont* mapped_font;
     FLOAT mapped_scale;
-    fallback->MapCharacters(text_analysis.Get(), 0, wchars_num, nullptr, nullptr,
+    fallback->MapCharacters(text_analysis.Get(), 0, wstr.length(), nullptr, nullptr,
                             DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
                             DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font, &mapped_scale);
 
@@ -155,26 +165,24 @@ inline void GetFallbackFont(IDWriteFactory4* factory, std::string_view utf8_str,
     IDWriteTextAnalyzer* text_analyzer;
     factory->CreateTextAnalyzer(&text_analyzer);
 
-    TextAnalysis analysis(&wstr[0], wchars_num, nullptr, DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
+    TextAnalysis analysis(&wstr[0], wstr.length(), nullptr,
+                          DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
     TextAnalysis::Run* run_head;
     analysis.GenerateResults(text_analyzer, &run_head);
 
-    uint32_t max_glyph_count = 3 * wchars_num / 2 + 16;
+    uint32_t max_glyph_count = 3 * wstr.length() / 2 + 16;
 
-    uint16_t* cluster_map = new uint16_t[wchars_num];
-    DWRITE_SHAPING_TEXT_PROPERTIES* text_properties;
-    text_properties = new DWRITE_SHAPING_TEXT_PROPERTIES[wchars_num];
-
-    uint16_t* out_glyph_indices = new uint16_t[max_glyph_count];
-    DWRITE_SHAPING_GLYPH_PROPERTIES* glyph_properties =
-        new DWRITE_SHAPING_GLYPH_PROPERTIES[max_glyph_count];
+    std::vector<uint16_t> cluster_map(wstr.length());
+    std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_properties(wstr.length());
+    std::vector<uint16_t> out_glyph_indices(max_glyph_count);
+    std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_properties(max_glyph_count);
     uint32_t glyph_count;
 
     // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L661
-    text_analyzer->GetGlyphs(&wstr[0], wchars_num, *selected_font_face, false, false,
+    text_analyzer->GetGlyphs(&wstr[0], wstr.length(), *selected_font_face, false, false,
                              &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
-                             max_glyph_count, cluster_map, text_properties, out_glyph_indices,
-                             glyph_properties, &glyph_count);
+                             max_glyph_count, &cluster_map[0], &text_properties[0],
+                             &out_glyph_indices[0], &glyph_properties[0], &glyph_count);
 
     glyph_indices[0] = out_glyph_indices[0];
 }

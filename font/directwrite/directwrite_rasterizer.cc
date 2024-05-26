@@ -38,15 +38,11 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     IDWriteFontCollection* font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
-    // https://stackoverflow.com/a/6693107/14698275
-    int wchars_num = MultiByteToWideChar(CP_UTF8, 0, &main_font_name[0], -1, NULL, 0);
-    wchar_t* wstr = new wchar_t[wchars_num];
-    MultiByteToWideChar(CP_UTF8, 0, &main_font_name[0], -1, wstr, wchars_num);
-
     // https://stackoverflow.com/q/40365439/14698275
+    std::wstring wstr = ConvertToUTF16(main_font_name);
     UINT32 index;
     BOOL exists;
-    font_collection->FindFamilyName(wstr, &index, &exists);
+    font_collection->FindFamilyName(&wstr[0], &index, &exists);
 
     IDWriteFontFamily* font_family;
     font_collection->GetFontFamily(index, &font_family);
@@ -84,20 +80,20 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     IDWriteFontFace* selected_font_face = pimpl->font_face;
 
     // TODO: Consider replacing GetGlyphIndices() with TextAnalyzer approach.
-    UINT16* glyph_indices = new UINT16[1];
-    selected_font_face->GetGlyphIndices(&codepoint, 1, glyph_indices);
+    std::vector<UINT16> glyph_indices(1);
+    selected_font_face->GetGlyphIndices(&codepoint, 1, &glyph_indices[0]);
 
     if (glyph_indices[0] == 0) {
         GetFallbackFont(pimpl->dwrite_factory, utf8_str, &selected_font_face, glyph_indices);
     }
 
     FLOAT glyph_advances = 0;
-    DWRITE_GLYPH_OFFSET offset = {0};
+    DWRITE_GLYPH_OFFSET offset{};
     DWRITE_GLYPH_RUN glyph_run{
         .fontFace = selected_font_face,
         .fontEmSize = pimpl->em_size,
         .glyphCount = 1,
-        .glyphIndices = glyph_indices,
+        .glyphIndices = &glyph_indices[0],
         .glyphAdvances = &glyph_advances,
         .glyphOffsets = &offset,
         .isSideways = 0,
@@ -127,7 +123,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     // pixel_height);
 
     DWRITE_GLYPH_METRICS metrics;
-    selected_font_face->GetDesignGlyphMetrics(glyph_indices, 1, &metrics, false);
+    selected_font_face->GetDesignGlyphMetrics(&glyph_indices[0], 1, &metrics, false);
 
     DWRITE_FONT_METRICS font_metrics;
     selected_font_face->GetMetrics(&font_metrics);
@@ -138,7 +134,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     int32_t top = -texture_bounds.top;
     top -= descent;
 
-    // // TODO: Fully implement this!
+    // TODO: Fully implement this!
     // if (pixel_width != 0 && pixel_height != 0) {
     //     // TODO: Move this up to setup() somehow.
     //     if (pimpl->wic_factory == nullptr) {

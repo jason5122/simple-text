@@ -107,7 +107,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         wglMakeCurrent(m_hdc, dummy_context.m_context);
 
-        RECT rect = {0};
+        RECT rect{};
         GetClientRect(m_hwnd, &rect);
 
         int scaled_width = rect.right;

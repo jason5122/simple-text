@@ -34,7 +34,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
+bool FontRasterizer::setup(int id, std::string font_name, int font_size) {
     this->id = id;
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
@@ -48,11 +48,13 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
         std::cerr << err.ErrorMessage() << '\n';
     }
 
-    IDWriteFontCollection* font_collection;
+    pimpl->dwrite_factory->GetSystemFontFallback(&pimpl->font_fallback_);
+
+    ComPtr<IDWriteFontCollection> font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
     // https://stackoverflow.com/q/40365439/14698275
-    std::wstring wstr = ConvertToUTF16(main_font_name);
+    std::wstring wstr = ConvertToUTF16(font_name);
     UINT32 index;
     BOOL exists;
     font_collection->FindFamilyName(&wstr[0], &index, &exists);
@@ -88,21 +90,20 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
     return true;
 }
 
-RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
-                                              uint_least32_t codepoint) {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
     std::wstring utf16_str = ConvertToUTF16(utf8_str);
 
     ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
-    std::vector<UINT16> glyph_indices(1);
+    UINT16 glyph_index = 0;
 
-    if (glyph_indices[0] == 0) {
+    if (glyph_index == 0) {
         ComPtr<IDWriteFontFace> mapped_font_face = pimpl->mapCharacters(utf16_str);
 
         // If no fallback font is found, don't do anything and leave the glyph index as 0.
         // Let the glyph be rendered as the "tofu" glyph.
         if (mapped_font_face != nullptr) {
             font_face = mapped_font_face;
-            glyph_indices[0] = pimpl->getGlyphIndex(utf16_str, mapped_font_face.Get());
+            glyph_index = pimpl->getGlyphIndex(utf16_str, mapped_font_face.Get());
         }
     }
 
@@ -112,7 +113,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         .fontFace = font_face.Get(),
         .fontEmSize = pimpl->em_size,
         .glyphCount = 1,
-        .glyphIndices = &glyph_indices[0],
+        .glyphIndices = &glyph_index,
         .glyphAdvances = &glyph_advances,
         .glyphOffsets = &offset,
         .isSideways = 0,
@@ -142,7 +143,7 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     // pixel_height);
 
     DWRITE_GLYPH_METRICS metrics;
-    font_face->GetDesignGlyphMetrics(&glyph_indices[0], 1, &metrics, false);
+    font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
 
     DWRITE_FONT_METRICS font_metrics;
     font_face->GetMetrics(&font_metrics);
@@ -204,7 +205,6 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
             .height = static_cast<int32_t>(bh),
             .advance = static_cast<int32_t>(std::ceil(advance)),
             .buffer = std::move(temp_buffer),
-            .index = glyph_indices[0],
         };
     }
 
@@ -226,17 +226,12 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
         .height = static_cast<int32_t>(pixel_height),
         .advance = static_cast<int32_t>(std::ceil(advance)),
         .buffer = std::move(buffer),
-        .index = glyph_indices[0],
     };
 }
 
 // https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
 // https://chromium.googlesource.com/chromium/src/+/refs/heads/main/content/browser/renderer_host/dwrite_font_proxy_impl_win.cc#389
 ComPtr<IDWriteFontFace> FontRasterizer::impl::mapCharacters(std::wstring_view utf16_str) {
-    if (font_fallback_ == nullptr) {
-        dwrite_factory->GetSystemFontFallback(&font_fallback_);
-    }
-
     ComPtr<IDWriteFont> mapped_font;
 
     // TODO: Don't hard code locale.

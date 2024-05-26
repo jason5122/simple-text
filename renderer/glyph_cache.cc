@@ -30,13 +30,7 @@ AtlasGlyph& GlyphCache::getGlyph(std::string_view key) {
 }
 
 AtlasGlyph GlyphCache::createGlyph(std::string_view utf8_str) {
-#if IS_WIN
-    uint_least32_t codepoint = 0;
-    grapheme_decode_utf8(&utf8_str[0], SIZE_MAX, &codepoint);
-    font::RasterizedGlyph glyph = font_rasterizer.rasterizeTemp(utf8_str, codepoint);
-#else
     font::RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str);
-#endif
 
     Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
 

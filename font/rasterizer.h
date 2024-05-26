@@ -14,8 +14,6 @@ struct RasterizedGlyph {
     int32_t height;
     int32_t advance;
     std::vector<uint8_t> buffer;
-    // TODO: Either remove these debug fields, or evaluate if we should keep them.
-    unsigned short index;
 };
 
 class FontRasterizer {
@@ -29,10 +27,8 @@ public:
     FontRasterizer();
     ~FontRasterizer();
 
-    bool setup(int id, std::string main_font_name, int font_size);
-    // TODO: Unify rasterize() methods.
+    bool setup(int id, std::string font_name, int font_size);
     RasterizedGlyph rasterizeUTF8(std::string_view utf8_str);
-    RasterizedGlyph rasterizeTemp(std::string_view utf8_str, uint_least32_t codepoint);
 
 private:
     // https://herbsutter.com/gotw/_100/

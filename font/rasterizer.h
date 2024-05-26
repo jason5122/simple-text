@@ -18,7 +18,6 @@ struct RasterizedGlyph {
 
 class FontRasterizer {
 public:
-    int id;
     int line_height;
     int descent;
 
@@ -27,7 +26,7 @@ public:
     FontRasterizer();
     ~FontRasterizer();
 
-    bool setup(int id, std::string font_name_utf8, int font_size);
+    bool setup(std::string font_name_utf8, int font_size);
     RasterizedGlyph rasterizeUTF8(std::string_view str8);
 
 private:

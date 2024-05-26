@@ -13,9 +13,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-bool FontRasterizer::setup(int id, std::string font_name_utf8, int font_size) {
-    this->id = id;
-
+bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
     PangoFontMap* font_map = pango_cairo_font_map_get_default();
     PangoContextPtr context{pango_font_map_create_context(font_map)};
 

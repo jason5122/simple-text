@@ -16,9 +16,7 @@ FontRasterizer::~FontRasterizer() {
     CFRelease(pimpl->ct_font);
 }
 
-bool FontRasterizer::setup(int id, std::string font_name_utf8, int font_size) {
-    this->id = id;
-
+bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
     CFStringRef ct_font_name =
         CFStringCreateWithCString(nullptr, font_name_utf8.c_str(), kCFStringEncodingUTF8);
     pimpl->ct_font = CTFontCreateWithName(ct_font_name, font_size, nullptr);

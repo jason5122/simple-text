@@ -38,10 +38,8 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-bool FontRasterizer::setup(int id, std::string font_name_utf8, int font_size) {
+bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
     std::wstring font_name_utf16 = ConvertToUTF16(font_name_utf8);
-
-    this->id = id;
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
                         reinterpret_cast<IUnknown**>(pimpl->dwrite_factory.GetAddressOf()));

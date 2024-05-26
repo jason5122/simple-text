@@ -33,8 +33,8 @@ void SimpleText::onLaunch() {
     int main_font_size = 12 * 2;
     int ui_font_size = 9 * 2;
 #endif
-    main_font_rasterizer.setup(0, main_font, main_font_size);
-    ui_font_rasterizer.setup(1, ui_font, ui_font_size);
+    main_font_rasterizer.setup(main_font, main_font_size);
+    ui_font_rasterizer.setup(ui_font, ui_font_size);
 
 #if IS_MAC || IS_WIN
     renderer.setup();

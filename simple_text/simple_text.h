@@ -70,6 +70,7 @@ public:
     void destroyAllWindows();
 
     void onLaunch() override;
+    void onQuit() override;
     void onFileEvent() override;
 
 private:

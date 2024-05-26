@@ -47,6 +47,7 @@ public:
     void quit();
 
     virtual void onLaunch() {}
+    virtual void onQuit() {}
 
 protected:
     class impl;

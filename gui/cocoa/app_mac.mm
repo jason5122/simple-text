@@ -39,13 +39,14 @@
     [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
                                action:@selector(terminate:)
                         keyEquivalent:@"q"];
-    // [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
-    //                            action:@selector(terminate:)
-    //                     keyEquivalent:@""];
     [menu addItem:appMenu];
     NSApplication.sharedApplication.mainMenu = menu;
 
     app->onLaunch();
+}
+
+- (void)applicationWillTerminate:(NSNotification*)notification {
+    app->onQuit();
 }
 
 - (void)showAboutPanel {
@@ -76,9 +77,7 @@ App::App() : pimpl{new impl{}} {
     pimpl->ns_app.delegate = appDelegate;
 }
 
-App::~App() {
-    std::cerr << "~App()\n";
-}
+App::~App() {}
 
 void App::run() {
     @autoreleasepool {

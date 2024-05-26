@@ -1,5 +1,6 @@
 #include "build/buildflag.h"
 #include "simple_text.h"
+#include <iostream>
 #include <memory>
 
 SimpleText::SimpleText()
@@ -43,6 +44,10 @@ void SimpleText::onLaunch() {
     createWindow();
 
     file_watcher.start();
+}
+
+void SimpleText::onQuit() {
+    std::cerr << "SimpleText::onQuit()\n";
 }
 
 void SimpleText::onFileEvent() {

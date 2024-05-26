@@ -53,6 +53,6 @@ private:
     cache_type cache;
     ascii_cache_type ascii_cache;
 
-    AtlasGlyph createGlyph(std::string_view utf8_str);
+    AtlasGlyph createGlyph(std::string_view str8);
 };
 }

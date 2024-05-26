@@ -29,8 +29,8 @@ AtlasGlyph& GlyphCache::getGlyph(std::string_view key) {
     return it->second;
 }
 
-AtlasGlyph GlyphCache::createGlyph(std::string_view utf8_str) {
-    font::RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(utf8_str);
+AtlasGlyph GlyphCache::createGlyph(std::string_view str8) {
+    font::RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(str8);
 
     Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
 

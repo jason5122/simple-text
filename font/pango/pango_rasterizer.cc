@@ -13,14 +13,14 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
+bool FontRasterizer::setup(int id, std::string font_name_utf8, int font_size) {
     this->id = id;
 
     PangoFontMap* font_map = pango_cairo_font_map_get_default();
     PangoContextPtr context{pango_font_map_create_context(font_map)};
 
     PangoFontDescriptionPtr desc{pango_font_description_new()};
-    pango_font_description_set_family(desc.get(), main_font_name.c_str());
+    pango_font_description_set_family(desc.get(), font_name_utf8.c_str());
     pango_font_description_set_size(desc.get(), font_size * PANGO_SCALE);
     if (!desc) {
         std::cerr << "pango_font_description_from_string() error.\n";
@@ -65,10 +65,10 @@ static inline CairoContextPtr CreateRenderContext(int width, int height, int cha
 }
 
 // https://dthompson.us/posts/font-rendering-in-opengl-with-pango-and-cairo.html
-RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view utf8_str) {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     CairoContextPtr layout_context = CreateLayoutContext();
     PangoLayoutPtr layout{pango_cairo_create_layout(layout_context.get())};
-    pango_layout_set_text(layout.get(), &utf8_str[0], utf8_str.length());
+    pango_layout_set_text(layout.get(), &str8[0], str8.length());
 
     PangoFontDescriptionPtr desc{pango_font_describe(pimpl->pango_font.get())};
     pango_layout_set_font_description(layout.get(), desc.get());

@@ -5,9 +5,7 @@
 #include <d2d1.h>
 #include <dwrite_3.h>
 #include <vector>
-
 #include <wrl/client.h>
-using Microsoft::WRL::ComPtr;
 
 #include <format>
 #include <iostream>
@@ -30,9 +28,9 @@ inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* facto
     }
 
     // TODO: Find a way to reuse render target and brushes.
-    ComPtr<ID2D1SolidColorBrush> black_brush = nullptr;
+    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> black_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black, 1.0f), &black_brush);
-    ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
+    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
 
     D2D1_POINT_2F baseline_origin{
@@ -73,7 +71,7 @@ inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* facto
             default: {
                 // std::cerr << "DrawGlyphRun()\n";
 
-                ComPtr<ID2D1SolidColorBrush> layer_brush;
+                Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> layer_brush;
                 if (colorRun->paletteIndex == 0xFFFF) {
                     layer_brush = blue_brush;
                 } else {
@@ -90,10 +88,10 @@ inline void DrawGlyphRunHelper(ID2D1RenderTarget* target, IDWriteFactory4* facto
 }
 
 inline void PrintFontFamilyName(IDWriteFont* font) {
-    IDWriteFontFamily* font_family;
+    Microsoft::WRL::ComPtr<IDWriteFontFamily> font_family;
     font->GetFontFamily(&font_family);
 
-    IDWriteLocalizedStrings* family_names;
+    Microsoft::WRL::ComPtr<IDWriteLocalizedStrings> family_names;
     font_family->GetFamilyNames(&family_names);
 
     wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
@@ -131,14 +129,14 @@ inline void GetFallbackFont(IDWriteFactory4* factory, std::string_view utf8_str,
 
     wchar_t locale[] = L"en-us";
 
-    IDWriteNumberSubstitution* number_substitution;
+    Microsoft::WRL::ComPtr<IDWriteNumberSubstitution> number_substitution;
     factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE, locale, true,
                                       &number_substitution);
 
-    ComPtr<IDWriteTextAnalysisSource> text_analysis =
-        new FontFallbackSource(&wstr[0], wstr.length(), locale, number_substitution);
+    Microsoft::WRL::ComPtr<IDWriteTextAnalysisSource> text_analysis =
+        new FontFallbackSource(&wstr[0], wstr.length(), locale, number_substitution.Get());
 
-    IDWriteFontFallback* fallback;
+    Microsoft::WRL::ComPtr<IDWriteFontFallback> fallback;
     factory->GetSystemFontFallback(&fallback);
 
     UINT32 mapped_len;

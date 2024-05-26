@@ -16,17 +16,19 @@ SimpleText::~SimpleText() {}
 void SimpleText::onLaunch() {
     // TODO: Implement scale factor support.
     // std::string main_font = "Arial";
-    std::string main_font = "Menlo";
-    // std::string main_font = "Source Code Pro";
+    std::string main_font = "Source Code Pro";
 #if IS_MAC
+    main_font = "Menlo";
     std::string ui_font = "SF Pro Text";
     int main_font_size = 16 * 2;
     int ui_font_size = 11 * 2;
 #elif IS_WIN
+    // main_font = "Consolas";
     std::string ui_font = "Segoe UI";
     int main_font_size = 11 * 2;
     int ui_font_size = 9 * 2;
 #elif IS_LINUX
+    main_font = "Monospace";
     std::string ui_font = "Noto Sans";
     int main_font_size = 12 * 2;
     int ui_font_size = 9 * 2;

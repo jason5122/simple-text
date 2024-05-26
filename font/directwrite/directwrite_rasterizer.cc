@@ -65,11 +65,13 @@ bool FontRasterizer::setup(int id, std::string main_font_name, int font_size) {
 
     FLOAT scale = pimpl->em_size / metrics.designUnitsPerEm;
 
-    FLOAT ascent = metrics.ascent * scale;
-    FLOAT descent = -metrics.descent * scale;
-    FLOAT line_gap = metrics.lineGap * scale;
+    int ascent = std::ceil(metrics.ascent * scale);
+    int descent = std::ceil(-metrics.descent * scale);
+    int line_gap = std::ceil(metrics.lineGap * scale);
+    int line_height = ascent - descent + line_gap;
 
-    FLOAT line_height = ascent - descent + line_gap;
+    // TODO: Remove magic numbers that emulate Sublime Text.
+    line_height += 1;
 
     this->line_height = line_height;
     this->descent = descent;
@@ -136,66 +138,66 @@ RasterizedGlyph FontRasterizer::rasterizeTemp(std::string_view utf8_str,
     int32_t top = -texture_bounds.top;
     top -= descent;
 
-    // TODO: Fully implement this!
-    if (pixel_width != 0 && pixel_height != 0) {
-        // TODO: Move this up to setup() somehow.
-        if (pimpl->wic_factory == nullptr) {
-            CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
-                             IID_PPV_ARGS(&pimpl->wic_factory));
-        }
+    // // TODO: Fully implement this!
+    // if (pixel_width != 0 && pixel_height != 0) {
+    //     // TODO: Move this up to setup() somehow.
+    //     if (pimpl->wic_factory == nullptr) {
+    //         CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+    //                          IID_PPV_ARGS(&pimpl->wic_factory));
+    //     }
 
-        ComPtr<IWICBitmap> wic_bitmap;
-        // TODO: Implement without magic numbers. Properly find the right width/height.
-        UINT bitmap_width = pixel_width + 10;
-        UINT bitmap_height = pixel_height + 10;
-        pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
-                                         GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
-                                         wic_bitmap.GetAddressOf());
+    //     ComPtr<IWICBitmap> wic_bitmap;
+    //     // TODO: Implement without magic numbers. Properly find the right width/height.
+    //     UINT bitmap_width = pixel_width + 10;
+    //     UINT bitmap_height = pixel_height + 10;
+    //     pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
+    //                                      GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
+    //                                      wic_bitmap.GetAddressOf());
 
-        D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
+    //     D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
 
-        // TODO: Find a way to reuse render target and brushes.
-        ComPtr<ID2D1RenderTarget> target;
-        pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
-                                                        target.GetAddressOf());
+    //     // TODO: Find a way to reuse render target and brushes.
+    //     ComPtr<ID2D1RenderTarget> target;
+    //     pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
+    //                                                     target.GetAddressOf());
 
-        DrawGlyphRunHelper(target.Get(), pimpl->dwrite_factory, selected_font_face, &glyph_run,
-                           -texture_bounds.top);
+    //     DrawGlyphRunHelper(target.Get(), pimpl->dwrite_factory, selected_font_face, &glyph_run,
+    //                        -texture_bounds.top);
 
-        IWICBitmapLock* bitmap_lock;
-        wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
+    //     IWICBitmapLock* bitmap_lock;
+    //     wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
 
-        UINT buffer_size = 0;
-        BYTE* pv = NULL;
-        bitmap_lock->GetDataPointer(&buffer_size, &pv);
+    //     UINT buffer_size = 0;
+    //     BYTE* pv = NULL;
+    //     bitmap_lock->GetDataPointer(&buffer_size, &pv);
 
-        UINT bw = 0, bh = 0;
-        bitmap_lock->GetSize(&bw, &bh);
-        size_t pixels = bw * bh;
+    //     UINT bw = 0, bh = 0;
+    //     bitmap_lock->GetSize(&bw, &bh);
+    //     size_t pixels = bw * bh;
 
-        std::vector<uint8_t> temp_buffer;
-        temp_buffer.reserve(pixels * 4);
-        for (size_t i = 0; i < pixels; i++) {
-            size_t offset = i * 4;
-            temp_buffer.emplace_back(pv[offset]);
-            temp_buffer.emplace_back(pv[offset + 1]);
-            temp_buffer.emplace_back(pv[offset + 2]);
-            temp_buffer.emplace_back(pv[offset + 3]);
-        }
+    //     std::vector<uint8_t> temp_buffer;
+    //     temp_buffer.reserve(pixels * 4);
+    //     for (size_t i = 0; i < pixels; i++) {
+    //         size_t offset = i * 4;
+    //         temp_buffer.emplace_back(pv[offset]);
+    //         temp_buffer.emplace_back(pv[offset + 1]);
+    //         temp_buffer.emplace_back(pv[offset + 2]);
+    //         temp_buffer.emplace_back(pv[offset + 3]);
+    //     }
 
-        bitmap_lock->Release();
+    //     bitmap_lock->Release();
 
-        return RasterizedGlyph{
-            .colored = true,
-            .left = 0,
-            .top = top,
-            .width = static_cast<int32_t>(bw),
-            .height = static_cast<int32_t>(bh),
-            .advance = static_cast<int32_t>(std::ceil(advance)),
-            .buffer = std::move(temp_buffer),
-            .index = glyph_indices[0],
-        };
-    }
+    //     return RasterizedGlyph{
+    //         .colored = true,
+    //         .left = 0,
+    //         .top = top,
+    //         .width = static_cast<int32_t>(bw),
+    //         .height = static_cast<int32_t>(bh),
+    //         .advance = static_cast<int32_t>(std::ceil(advance)),
+    //         .buffer = std::move(temp_buffer),
+    //         .index = glyph_indices[0],
+    //     };
+    // }
 
     std::vector<BYTE> alpha_values(size);
     glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,

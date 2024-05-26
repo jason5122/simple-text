@@ -8,7 +8,11 @@ int SimpleTextMain(int argc, char* argv[]);
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-    return SimpleTextMain(0, nullptr);
+
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    int status_code = SimpleTextMain(0, nullptr);
+    CoUninitialize();
+    return status_code;
 }
 #else
 int main(int argc, char* argv[]) {

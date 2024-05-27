@@ -1,13 +1,17 @@
+#include "base/apple/scoped_cftyperef.h"
 #include "font/rasterizer.h"
+
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
+
+using base::apple::ScopedCFTypeRef;
 
 namespace font {
 class FontRasterizer::impl {
 public:
     CTFontRef ct_font;
 
-    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef font_ref, float descent);
+    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef font_ref, int descent);
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -41,20 +45,20 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     CGGlyph glyph = 0;
     CTFontRef run_font = pimpl->ct_font;
 
-    size_t num_bytes = str8.size();
-    CFStringRef text_string = CFStringCreateWithBytes(
-        kCFAllocatorDefault, (const uint8_t*)&str8[0], num_bytes, kCFStringEncodingUTF8, false);
+    ScopedCFTypeRef<CFStringRef> text_string{
+        CFStringCreateWithBytes(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
+                                kCFStringEncodingUTF8, false)};
 
-    CFMutableDictionaryRef attr = CFDictionaryCreateMutable(
-        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    CFDictionaryAddValue(attr, kCTFontAttributeName, pimpl->ct_font);
+    ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
+        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
+    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, pimpl->ct_font);
 
-    CFAttributedStringRef attr_string =
-        CFAttributedStringCreate(kCFAllocatorDefault, text_string, attr);
+    ScopedCFTypeRef<CFAttributedStringRef> attr_string{
+        CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
 
-    CTLineRef line = CTLineCreateWithAttributedString(attr_string);
+    ScopedCFTypeRef<CTLineRef> line{CTLineCreateWithAttributedString(attr_string.get())};
 
-    CFArrayRef run_array = CTLineGetGlyphRuns(line);
+    CFArrayRef run_array = CTLineGetGlyphRuns(line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
     for (CFIndex i = 0; i < run_count; i++) {
         CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
@@ -74,16 +78,11 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
         }
     }
 
-    CFRelease(text_string);
-    CFRelease(attr);
-    CFRelease(attr_string);
-    CFRelease(line);
-
     return pimpl->rasterizeGlyph(glyph, run_font, descent);
 }
 
 RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef font_ref,
-                                                     float descent) {
+                                                     int descent) {
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
 
@@ -148,6 +147,7 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
         CTFontGetAdvancesForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
 
     CGContextRelease(context);
+    CFRelease(font_ref);
 
     return RasterizedGlyph{
         .colored = colored,

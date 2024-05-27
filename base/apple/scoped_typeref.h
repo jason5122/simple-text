@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+
 namespace base::apple {
 template <typename T> struct ScopedTypeRefTraits;
 
@@ -12,7 +13,6 @@ public:
         : object_(object) {}
 
     // Copy construction
-
     ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) : object_(that.get()) {
         if (object_ != Traits::InvalidValue()) {
             object_ = Traits::Retain(object_);
@@ -27,7 +27,6 @@ public:
     }
 
     // Copy assignment
-
     ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) {
         reset(that.get());
         return *this;
@@ -40,14 +39,12 @@ public:
     }
 
     // Move construction
-
     ScopedTypeRef(ScopedTypeRef<T, Traits>&& that) : object_(that.release()) {}
 
     template <typename R, typename RTraits>
     ScopedTypeRef(ScopedTypeRef<R, RTraits>&& that) : object_(that.release()) {}
 
     // Move assignment
-
     ScopedTypeRef& operator=(ScopedTypeRef<T, Traits>&& that) {
         reset(that.release());
         return *this;

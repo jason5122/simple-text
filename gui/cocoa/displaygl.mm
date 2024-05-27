@@ -3,33 +3,6 @@
 #include <iostream>
 
 #import <Cocoa/Cocoa.h>
-#include <optional>
-
-namespace base::apple {
-template <> struct ScopedTypeRefTraits<CGLContextObj> {
-    static CGLContextObj InvalidValue() {
-        return nullptr;
-    }
-    static CGLContextObj Retain(CGLContextObj object) {
-        return CGLRetainContext(object);
-    }
-    static void Release(CGLContextObj object) {
-        CGLReleaseContext(object);
-    }
-};
-
-template <> struct ScopedTypeRefTraits<CGLPixelFormatObj> {
-    static CGLPixelFormatObj InvalidValue() {
-        return nullptr;
-    }
-    static CGLPixelFormatObj Retain(CGLPixelFormatObj object) {
-        return CGLRetainPixelFormat(object);
-    }
-    static void Release(CGLPixelFormatObj object) {
-        CGLReleasePixelFormat(object);
-    }
-};
-}
 
 DisplayGL::DisplayGL(CGLPixelFormatObj pixel_format, CGLContextObj context)
     : pixel_format_(pixel_format), context_(context) {}

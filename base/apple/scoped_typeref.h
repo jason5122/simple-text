@@ -3,14 +3,27 @@
 #include <cstddef>
 
 namespace base::apple {
+
+// Defines the ownership policy for a scoped object.
+enum class OwnershipPolicy {
+    // The scoped object takes ownership of an object by taking over an existing
+    // ownership claim.
+    ASSUME,
+
+    // The scoped object will retain the object and any initial ownership is
+    // not changed.
+    RETAIN
+};
+
 template <typename T> struct ScopedTypeRefTraits;
 
 template <typename T, typename Traits = ScopedTypeRefTraits<T>> class ScopedTypeRef {
 public:
     using element_type = T;
 
-    explicit constexpr ScopedTypeRef(element_type object = Traits::InvalidValue())
-        : object_(object) {}
+    // explicit constexpr ScopedTypeRef(element_type object = Traits::InvalidValue())
+    //     : object_(object) {}
+    constexpr ScopedTypeRef(element_type object = Traits::InvalidValue()) : object_(object) {}
 
     // Copy construction
     ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) : object_(that.get()) {
@@ -28,13 +41,13 @@ public:
 
     // Copy assignment
     ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) {
-        reset(that.get());
+        reset(that.get(), OwnershipPolicy::RETAIN);
         return *this;
     }
 
     template <typename R, typename RTraits>
     ScopedTypeRef& operator=(const ScopedTypeRef<R, RTraits>& that) {
-        reset(that.get());
+        reset(that.get(), OwnershipPolicy::RETAIN);
         return *this;
     }
 
@@ -46,17 +59,21 @@ public:
 
     // Move assignment
     ScopedTypeRef& operator=(ScopedTypeRef<T, Traits>&& that) {
-        reset(that.release());
+        reset(that.release(), OwnershipPolicy::ASSUME);
         return *this;
     }
 
     template <typename R, typename RTraits>
     ScopedTypeRef& operator=(ScopedTypeRef<R, RTraits>&& that) {
-        reset(that.release());
+        reset(that.release(), OwnershipPolicy::ASSUME);
         return *this;
     }
 
-    void reset(element_type object = Traits::InvalidValue()) {
+    void reset(element_type object = Traits::InvalidValue(),
+               OwnershipPolicy policy = OwnershipPolicy::RETAIN) {
+        if (object != Traits::InvalidValue() && policy == OwnershipPolicy::RETAIN) {
+            object = Traits::Retain(object);
+        }
         if (object_ != Traits::InvalidValue()) {
             Traits::Release(object_);
         }
@@ -97,4 +114,5 @@ template <typename T, typename Traits = ScopedTypeRefTraits<T>>
 bool operator==(const T& that, std::nullptr_t) {
     return false;
 }
+
 }

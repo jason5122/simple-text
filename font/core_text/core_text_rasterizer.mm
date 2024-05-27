@@ -1,35 +1,34 @@
 #include "base/apple/scoped_cftyperef.h"
+#include "base/apple/scoped_cgtyperef.h"
 #include "font/rasterizer.h"
 
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
 
 using base::apple::ScopedCFTypeRef;
+using base::apple::ScopedTypeRef;
 
 namespace font {
 class FontRasterizer::impl {
 public:
-    CTFontRef ct_font;
+    ScopedCFTypeRef<CTFontRef> ct_font;
 
-    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, CTFontRef font_ref, int descent);
+    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, ScopedCFTypeRef<CTFontRef> selected_font,
+                                   int descent);
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
-FontRasterizer::~FontRasterizer() {
-    CFRelease(pimpl->ct_font);
-}
+FontRasterizer::~FontRasterizer() {}
 
 bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
-    CFStringRef ct_font_name =
-        CFStringCreateWithCString(nullptr, font_name_utf8.c_str(), kCFStringEncodingUTF8);
-    pimpl->ct_font = CTFontCreateWithName(ct_font_name, font_size, nullptr);
+    ScopedCFTypeRef<CFStringRef> ct_font_name{
+        CFStringCreateWithCString(nullptr, font_name_utf8.c_str(), kCFStringEncodingUTF8)};
+    pimpl->ct_font.reset(CTFontCreateWithName(ct_font_name.get(), font_size, nullptr));
 
-    CFRelease(ct_font_name);
-
-    int ascent = std::ceil(CTFontGetAscent(pimpl->ct_font));
-    int descent = std::ceil(CTFontGetDescent(pimpl->ct_font));
-    int leading = std::ceil(CTFontGetLeading(pimpl->ct_font));
+    int ascent = std::ceil(CTFontGetAscent(pimpl->ct_font.get()));
+    int descent = std::ceil(CTFontGetDescent(pimpl->ct_font.get()));
+    int leading = std::ceil(CTFontGetLeading(pimpl->ct_font.get()));
     int line_height = ascent + descent + leading;
 
     // TODO: Remove magic numbers that emulate Sublime Text.
@@ -43,7 +42,7 @@ bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     CGGlyph glyph = 0;
-    CTFontRef run_font = pimpl->ct_font;
+    ScopedCFTypeRef<CTFontRef> run_font;
 
     ScopedCFTypeRef<CFStringRef> text_string{
         CFStringCreateWithBytes(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
@@ -51,7 +50,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
 
     ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
-    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, pimpl->ct_font);
+    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, pimpl->ct_font.get());
 
     ScopedCFTypeRef<CFAttributedStringRef> attr_string{
         CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
@@ -72,8 +71,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
 
         if (!glyphs.empty()) {
             glyph = glyphs[0];
-            CFRetain(font);
-            run_font = font;
+            run_font.reset(font);
             break;
         }
     }
@@ -81,8 +79,11 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     return pimpl->rasterizeGlyph(glyph, run_font, descent);
 }
 
-RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFontRef font_ref,
+RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index,
+                                                     ScopedCFTypeRef<CTFontRef> selected_font,
                                                      int descent) {
+    CTFontRef font_ref = selected_font ? selected_font.get() : ct_font.get();
+
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
 
@@ -97,34 +98,32 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
 
     bool colored = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
 
-    CGColorSpaceRef color_space_ref = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(
-        nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4, color_space_ref,
-        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-
-    CGColorSpaceRelease(color_space_ref);
+    ScopedTypeRef<CGColorSpaceRef> color_space_ref{CGColorSpaceCreateDeviceRGB()};
+    ScopedTypeRef<CGContextRef> context{CGBitmapContextCreate(
+        nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4,
+        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)};
 
     CGFloat alpha = colored ? 0.0 : 1.0;
-    CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, alpha);
+    CGContextSetRGBFillColor(context.get(), 0.0, 0.0, 0.0, alpha);
 
-    CGContextFillRect(context, CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
-    CGContextSetAllowsFontSmoothing(context, true);
-    CGContextSetShouldSmoothFonts(context, false);
-    CGContextSetAllowsFontSubpixelQuantization(context, true);
-    CGContextSetShouldSubpixelQuantizeFonts(context, true);
-    CGContextSetAllowsFontSubpixelPositioning(context, true);
-    CGContextSetShouldSubpixelPositionFonts(context, true);
-    CGContextSetAllowsAntialiasing(context, true);
-    CGContextSetShouldAntialias(context, true);
+    CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
+    CGContextSetAllowsFontSmoothing(context.get(), true);
+    CGContextSetShouldSmoothFonts(context.get(), false);
+    CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
+    CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
+    CGContextSetAllowsFontSubpixelPositioning(context.get(), true);
+    CGContextSetShouldSubpixelPositionFonts(context.get(), true);
+    CGContextSetAllowsAntialiasing(context.get(), true);
+    CGContextSetShouldAntialias(context.get(), true);
 
-    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
     CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
 
-    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context);
+    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
-    uint8_t* bitmap_data = (uint8_t*)CGBitmapContextGetData(context);
-    size_t height = CGBitmapContextGetHeight(context);
-    size_t bytes_per_row = CGBitmapContextGetBytesPerRow(context);
+    uint8_t* bitmap_data = (uint8_t*)CGBitmapContextGetData(context.get());
+    size_t height = CGBitmapContextGetHeight(context.get());
+    size_t bytes_per_row = CGBitmapContextGetBytesPerRow(context.get());
     size_t len = height * bytes_per_row;
 
     size_t pixels = len / 4;
@@ -145,9 +144,6 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index, CTFont
 
     float advance =
         CTFontGetAdvancesForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
-
-    CGContextRelease(context);
-    CFRelease(font_ref);
 
     return RasterizedGlyph{
         .colored = colored,

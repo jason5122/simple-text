@@ -2,7 +2,10 @@
 
 #include "base/apple/scoped_typeref.h"
 
+#import <CoreFoundation/CoreFoundation.h>
+
 namespace base::apple {
+
 template <typename CFT> struct ScopedCFTypeRefTraits {
     static CFT InvalidValue() {
         return nullptr;
@@ -17,4 +20,5 @@ template <typename CFT> struct ScopedCFTypeRefTraits {
 };
 
 template <typename CFT> using ScopedCFTypeRef = ScopedTypeRef<CFT, ScopedCFTypeRefTraits<CFT>>;
+
 }

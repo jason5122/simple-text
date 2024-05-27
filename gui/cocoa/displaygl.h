@@ -1,14 +1,10 @@
 #pragma once
 
-#include "base/apple/scoped_typeref.h"
+#include "base/apple/scoped_cgtyperef.h"
 #include "util/not_copyable_or_movable.h"
 #include <memory>
 
-struct _CGLContextObject;
-typedef _CGLContextObject* CGLContextObj;
-
-struct _CGLPixelFormatObject;
-typedef _CGLPixelFormatObject* CGLPixelFormatObj;
+using base::apple::ScopedTypeRef;
 
 class DisplayGL {
 public:
@@ -21,8 +17,8 @@ public:
     CGLContextObj context();
 
 private:
-    base::apple::ScopedTypeRef<CGLPixelFormatObj> pixel_format_;
-    base::apple::ScopedTypeRef<CGLContextObj> context_;
+    ScopedTypeRef<CGLPixelFormatObj> pixel_format_;
+    ScopedTypeRef<CGLContextObj> context_;
 
     DisplayGL(CGLPixelFormatObj pixel_format, CGLContextObj context);
 };

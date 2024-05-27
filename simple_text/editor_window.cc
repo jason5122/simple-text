@@ -81,7 +81,7 @@ void EditorWindow::closeCurrentTab() {
 }
 
 void EditorWindow::toggleSideBar() {
-    renderer.toggleSideBar();
+    // renderer.toggleSideBar();
     redraw();
 }
 
@@ -90,7 +90,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glDepthMask(GL_FALSE);
 
 #if IS_LINUX
-    renderer.setup();
+    // renderer.setup();
 #endif
 
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";
@@ -101,22 +101,31 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path6 = ResourceDir() / "sample_files/emoji-data.txt";
     fs::path file_path7 = ResourceDir() / "sample_files/emoji-test.txt";
 
-    // createTab({});
-    createTab(file_path);
+    // createTab(file_path);
     // createTab(file_path2);
     // createTab(file_path3);
     // createTab(file_path4);
     // createTab(file_path5);
     // createTab(file_path6);
     // createTab(file_path7);
+    createTab({});
 }
 
 void EditorWindow::onDraw() {
-    renderer::Size size{
-        .width = width() * scaleFactor(),
-        .height = height() * scaleFactor(),
-    };
-    renderer.render(size, color_scheme, tabs, tab_index);
+    // TODO: For debugging; remove this.
+    if (!has_drawn) {
+        auto draw_time = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(draw_time - parent.launch_time)
+                .count();
+        std::cerr << std::format("startup time: {} µs", duration) << '\n';
+    }
+
+    // renderer::Size size{
+    //     .width = width() * scaleFactor(),
+    //     .height = height() * scaleFactor(),
+    // };
+    // renderer.render(size, color_scheme, tabs, tab_index);
 }
 
 void EditorWindow::onResize(int width, int height) {
@@ -143,7 +152,7 @@ void EditorWindow::onScroll(int dx, int dy) {
 
 void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    renderer.setCaretPosition(mouse_x, mouse_y, tab);
+    // renderer.setCaretPosition(mouse_x, mouse_y, tab);
 
     if (!Any(modifiers & app::ModifierKey::kShift)) {
         tab->start_caret = tab->end_caret;
@@ -154,7 +163,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey mo
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    renderer.setCaretPosition(mouse_x, mouse_y, tab);
+    // renderer.setCaretPosition(mouse_x, mouse_y, tab);
 
     redraw();
 }
@@ -199,52 +208,52 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         redraw();
     }
 
-    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kNone) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kShift) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
-        redraw();
-    }
-    if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kShift) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
-        redraw();
-    }
-    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kAlt) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == app::Key::kRightArrow &&
-        modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
-        redraw();
-    }
-    if (key == app::Key::kLeftArrow &&
-        modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
-        redraw();
-    }
+    // if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
+    //     tab->start_caret = tab->end_caret;
+    //     redraw();
+    // }
+    // if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kNone) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
+    //     tab->start_caret = tab->end_caret;
+    //     redraw();
+    // }
+    // if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kShift) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
+    //     redraw();
+    // }
+    // if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kShift) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
+    //     redraw();
+    // }
+    // if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
+    //     tab->start_caret = tab->end_caret;
+    //     redraw();
+    // }
+    // if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kAlt) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
+    //     tab->start_caret = tab->end_caret;
+    //     redraw();
+    // }
+    // if (key == app::Key::kRightArrow &&
+    //     modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
+    //     redraw();
+    // }
+    // if (key == app::Key::kLeftArrow &&
+    //     modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
+    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    //     renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
+    //     redraw();
+    // }
 
     if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
         parent.quit();

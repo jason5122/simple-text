@@ -42,6 +42,8 @@ public:
         void onDarkModeToggle() override;
 
     private:
+        bool has_drawn = false;
+
         SimpleText& parent;
 
         int tab_index = 0;  // Use int instead of size_t to prevent wrap around when less than 0.
@@ -85,4 +87,7 @@ private:
 
     config::KeyBindings key_bindings;
     FileWatcher file_watcher;
+
+    // TODO: For debugging; remove this.
+    std::chrono::high_resolution_clock::time_point launch_time;
 };

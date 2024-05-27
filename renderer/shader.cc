@@ -1,7 +1,6 @@
 #include "shader.h"
 #include <format>
 #include <iostream>
-#include <vector>
 
 namespace renderer {
 Shader::Shader() {}
@@ -10,7 +9,7 @@ Shader::~Shader() {
     glDeleteProgram(id);
 }
 
-bool Shader::link(std::string& vert_source, std::string& frag_source) {
+bool Shader::link(const std::string& vert_source, const std::string& frag_source) {
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 

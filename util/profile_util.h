@@ -2,6 +2,7 @@
 
 #include "util/not_copyable_or_movable.h"
 #include <chrono>
+#include <format>
 #include <iostream>
 
 // https://stackoverflow.com/a/37607676
@@ -20,7 +21,7 @@ public:
         } else if (std::is_same<Duration, std::chrono::milliseconds>::value) {
             unit = "ms";
         }
-        std::cerr << name << ": " << duration << ' ' << unit << '\n';
+        std::cerr << std::format("{}: {} {}", name, duration, unit) << '\n';
     }
 
 private:

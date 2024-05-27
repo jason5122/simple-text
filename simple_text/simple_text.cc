@@ -1,5 +1,6 @@
 #include "build/buildflag.h"
 #include "simple_text.h"
+#include "util/profile_util.h"
 #include <iostream>
 #include <memory>
 
@@ -15,6 +16,9 @@ SimpleText::SimpleText()
 SimpleText::~SimpleText() {}
 
 void SimpleText::onLaunch() {
+    // TODO: For debugging; remove this.
+    launch_time = std::chrono::high_resolution_clock::now();
+
     // TODO: Implement scale factor support.
     // std::string main_font = "Arial";
     std::string main_font = "Source Code Pro";
@@ -38,7 +42,10 @@ void SimpleText::onLaunch() {
     ui_font_rasterizer.setup(ui_font, ui_font_size);
 
 #if IS_MAC || IS_WIN
-    renderer.setup();
+    {
+        PROFILE_BLOCK("renderer.setup()");
+        renderer.setup();
+    }
 #endif
 
     createWindow();

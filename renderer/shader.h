@@ -13,6 +13,6 @@ public:
     NOT_MOVABLE(Shader)
     Shader();
     ~Shader();
-    bool link(std::string& vert_source, std::string& frag_source);
+    bool link(const std::string& vert_source, const std::string& frag_source);
 };
 }

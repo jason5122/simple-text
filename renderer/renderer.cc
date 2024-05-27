@@ -10,10 +10,10 @@ void Renderer::setup() {
     main_glyph_cache.setup();
     ui_glyph_cache.setup();
 
-    text_renderer.setup();
-    rect_renderer.setup();
-    image_renderer.setup();
-    selection_renderer.setup();
+    // text_renderer.setup();
+    // rect_renderer.setup();
+    // image_renderer.setup();
+    // selection_renderer.setup();
 }
 
 void Renderer::render(Size& size, config::ColorScheme& color_scheme,

@@ -78,6 +78,10 @@ App::App() : pimpl{new impl{}} {
 
 App::~App() {}
 
+std::unique_ptr<Window2> App::createWindow() {
+    return std::unique_ptr<Window2>(new Window2(*this));
+}
+
 void App::run() {
     @autoreleasepool {
         [pimpl->ns_app run];

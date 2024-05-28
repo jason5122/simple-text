@@ -4,6 +4,7 @@ source_set("cocoa") {
     "WindowController.mm",
     "app.mm",
     "displaygl.mm",
+    "window.mm",
   ]
 
   frameworks = [

@@ -2,6 +2,7 @@
 
 #include "gui/key.h"
 #include "gui/modifier_key.h"
+#include "gui/window.h"
 #include "util/not_copyable_or_movable.h"
 #include <memory>
 
@@ -53,6 +54,7 @@ public:
     NOT_MOVABLE(App)
     App();
     virtual ~App();
+    std::unique_ptr<Window2> createWindow();
     void run();
     void quit();
 

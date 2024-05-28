@@ -90,7 +90,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glDepthMask(GL_FALSE);
 
 #if IS_LINUX
-    // renderer.setup();
+    renderer.setup();
 #endif
 
     fs::path file_path = ResourceDir() / "sample_files/sort.scm";
@@ -112,20 +112,22 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw() {
+    renderer::Size size{
+        .width = width() * scaleFactor(),
+        .height = height() * scaleFactor(),
+    };
+    renderer.render(size, color_scheme, tabs, tab_index);
+
     // TODO: For debugging; remove this.
     if (!has_drawn) {
+        has_drawn = true;
+
         auto draw_time = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(draw_time - parent.launch_time)
                 .count();
         std::cerr << std::format("startup time: {} µs", duration) << '\n';
     }
-
-    // renderer::Size size{
-    //     .width = width() * scaleFactor(),
-    //     .height = height() * scaleFactor(),
-    // };
-    // renderer.render(size, color_scheme, tabs, tab_index);
 }
 
 void EditorWindow::onResize(int width, int height) {

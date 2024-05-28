@@ -311,6 +311,9 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 
     appWindow->onDraw();
 
+    // TODO: For debugging; remove this.
+    appWindow->stopLaunchTimer();
+
     // Calls glFlush() by default.
     [super drawInCGLContext:displaygl->context()
                 pixelFormat:pixelFormat

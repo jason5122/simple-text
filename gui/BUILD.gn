@@ -1,11 +1,11 @@
 group("gui") {
   if (is_mac) {
-    public_deps = [ "cocoa" ]
+    deps = [ "cocoa" ]
   }
   if (is_linux) {
-    public_deps = [ "gtk" ]
+    deps = [ "gtk" ]
   }
   if (is_win) {
-    public_deps = [ "win32" ]
+    deps = [ "win32" ]
   }
 }

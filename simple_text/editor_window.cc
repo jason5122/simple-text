@@ -116,17 +116,6 @@ void EditorWindow::onDraw() {
         .height = height() * scaleFactor(),
     };
     renderer.render(size, color_scheme, tabs, tab_index);
-
-    // TODO: For debugging; remove this.
-    if (!has_drawn) {
-        has_drawn = true;
-
-        auto draw_time = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::microseconds>(draw_time - parent.launch_time)
-                .count();
-        std::cerr << std::format("startup time: {} µs", duration) << '\n';
-    }
 }
 
 void EditorWindow::onResize(int width, int height) {

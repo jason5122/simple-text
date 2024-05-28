@@ -254,6 +254,9 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_dat
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onDraw();
 
+    // TODO: For debugging; remove this.
+    main_window->app_window->stopLaunchTimer();
+
     // Draw commands are flushed after returning.
     return true;
 }

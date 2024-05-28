@@ -5,6 +5,10 @@
 #include "util/not_copyable_or_movable.h"
 #include <memory>
 
+// TODO: For debugging; remove this.
+#include <format>
+#include <iostream>
+
 class App {
 public:
     class Window {
@@ -32,6 +36,11 @@ public:
         virtual void onClose() {}
         virtual void onDarkModeToggle() {}
 
+        // TODO: For debugging; remove this.
+        void stopLaunchTimer() {
+            parent.stopLaunchTimer();
+        }
+
     private:
         App& parent;
 
@@ -49,7 +58,24 @@ public:
     virtual void onLaunch() {}
     virtual void onQuit() {}
 
-protected:
+private:
     class impl;
     std::unique_ptr<impl> pimpl;
+
+    // TODO: For debugging; remove this.
+    bool has_drawn = false;
+    std::chrono::high_resolution_clock::time_point launch_time;
+
+    void stopLaunchTimer() {
+        // TODO: For debugging; remove this.
+        if (!has_drawn) {
+            has_drawn = true;
+
+            auto draw_time = std::chrono::high_resolution_clock::now();
+            auto duration =
+                std::chrono::duration_cast<std::chrono::microseconds>(draw_time - launch_time)
+                    .count();
+            std::cerr << std::format("startup time: {} µs", duration) << '\n';
+        }
+    }
 };

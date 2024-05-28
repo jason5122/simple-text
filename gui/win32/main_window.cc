@@ -125,6 +125,9 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         app_window.onDraw();
 
+        // TODO: For debugging; remove this.
+        app_window.stopLaunchTimer();
+
         SwapBuffers(m_hdc);
 
         EndPaint(m_hwnd, &ps);

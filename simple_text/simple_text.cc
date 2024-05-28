@@ -16,9 +16,6 @@ SimpleText::SimpleText()
 SimpleText::~SimpleText() {}
 
 void SimpleText::onLaunch() {
-    // TODO: For debugging; remove this.
-    launch_time = std::chrono::high_resolution_clock::now();
-
     // TODO: Implement scale factor support.
     // std::string main_font = "Arial";
     std::string main_font = "Source Code Pro";

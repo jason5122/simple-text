@@ -87,7 +87,4 @@ private:
 
     config::KeyBindings key_bindings;
     FileWatcher file_watcher;
-
-    // TODO: For debugging; remove this.
-    std::chrono::high_resolution_clock::time_point launch_time;
 };

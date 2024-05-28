@@ -3,12 +3,11 @@
 #include "gui/cocoa/WindowController.h"
 #include "gui/cocoa/displaygl.h"
 #include <Foundation/Foundation.h>
+#include <format>
 #include <iostream>
 #include <vector>
 
 #import <Cocoa/Cocoa.h>
-
-#include <glad/glad.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
@@ -69,7 +68,7 @@ public:
     impl() : displaygl(DisplayGL::Create()) {}
 };
 
-App::App() : pimpl{new impl{}} {
+App::App() : pimpl{new impl{}}, launch_time(std::chrono::high_resolution_clock::now()) {
     pimpl->ns_app = NSApplication.sharedApplication;
     AppDelegate* appDelegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
 

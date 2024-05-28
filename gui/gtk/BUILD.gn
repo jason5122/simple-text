@@ -2,7 +2,7 @@ import("//build/config/linux/pkg_config.gni")
 
 source_set("gtk") {
   sources = [
-    "app_linux.cc",
+    "app.cc",
     "main_window.cc",
   ]
 

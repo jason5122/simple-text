@@ -1,8 +1,9 @@
 #include "gui/app.h"
 #include "gui/cocoa/displaygl.h"
+
 #import <Cocoa/Cocoa.h>
 
-@interface OpenGLView : NSView
+@interface OpenGLView : NSView <NSTextInputClient>
 
 - (instancetype)initWithFrame:(NSRect)frame
                     appWindow:(App::Window*)theAppWindow

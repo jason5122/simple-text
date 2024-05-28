@@ -224,9 +224,16 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 }
 
 - (void)keyDown:(NSEvent*)event {
-    app::Key key = GetKey(event.keyCode);
-    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    openGLLayer->appWindow->onKeyDown(key, modifiers);
+    NSTextInputContext* inputContext = [self inputContext];
+
+    bool handled = [inputContext handleEvent:event];
+    if (!handled) {
+        std::cerr << "keyDown was unhandled\n";
+    }
+
+    // app::Key key = GetKey(event.keyCode);
+    // app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    // openGLLayer->appWindow->onKeyDown(key, modifiers);
 }
 
 - (void)mouseDown:(NSEvent*)event {
@@ -265,6 +272,62 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 
 - (void)viewDidChangeEffectiveAppearance {
     openGLLayer->appWindow->onDarkModeToggle();
+}
+
+// NSTextInputClient protocol implementation.
+
+- (BOOL)hasMarkedText {
+    return false;
+}
+
+- (NSRange)markedRange {
+    return NSMakeRange(NSNotFound, 0);
+}
+
+- (NSRange)selectedRange {
+    return NSMakeRange(NSNotFound, 0);
+}
+
+- (void)setMarkedText:(id)string
+        selectedRange:(NSRange)selectedRange
+     replacementRange:(NSRange)replacementRange {
+}
+
+- (void)unmarkText {
+}
+
+- (NSArray*)validAttributesForMarkedText {
+    return @[];
+}
+
+- (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range
+                                               actualRange:(NSRangePointer)actualRange {
+    return nil;
+}
+
+- (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
+    BOOL isAttributedString = [string isKindOfClass:[NSAttributedString class]];
+    NSString* text = isAttributedString ? [string string] : string;
+
+    std::cerr << text.UTF8String << '\n';
+}
+
+- (NSUInteger)characterIndexForPoint:(NSPoint)point {
+    return 0;
+}
+
+- (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actualRange {
+    return NSZeroRect;
+}
+
+- (void)doCommandBySelector:(SEL)selector {
+    NSString* selector_str = NSStringFromSelector(selector);
+
+    // Remove the trailing colon.
+    int selector_len = [selector_str length];
+    selector_str = [selector_str substringToIndex:selector_len - 1];
+
+    std::cerr << selector_str.UTF8String << '\n';
 }
 
 @end

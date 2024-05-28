@@ -21,6 +21,7 @@ inline void ExecuteAction(config::Action& action, SimpleText& app,
 
     case Action::kNewTab:
         window.createTab(fs::path{});
+        window.redraw();
         break;
 
     case Action::kCloseTab:

@@ -30,7 +30,6 @@ void EditorWindow::createTab(fs::path file_path) {
     std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>(file_path);
     editor_tab->setup(color_scheme);
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
-    redraw();
 }
 
 void EditorWindow::reloadColorScheme() {
@@ -81,7 +80,7 @@ void EditorWindow::closeCurrentTab() {
 }
 
 void EditorWindow::toggleSideBar() {
-    // renderer.toggleSideBar();
+    renderer.toggleSideBar();
     redraw();
 }
 
@@ -154,7 +153,7 @@ void EditorWindow::onScroll(int dx, int dy) {
 
 void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    // renderer.setCaretPosition(mouse_x, mouse_y, tab);
+    renderer.setCaretPosition(mouse_x, mouse_y, tab);
 
     if (!Any(modifiers & app::ModifierKey::kShift)) {
         tab->start_caret = tab->end_caret;
@@ -165,7 +164,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey mo
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    // renderer.setCaretPosition(mouse_x, mouse_y, tab);
+    renderer.setCaretPosition(mouse_x, mouse_y, tab);
 
     redraw();
 }
@@ -210,52 +209,52 @@ void EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         redraw();
     }
 
-    // if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
-    //     tab->start_caret = tab->end_caret;
-    //     redraw();
-    // }
-    // if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kNone) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
-    //     tab->start_caret = tab->end_caret;
-    //     redraw();
-    // }
-    // if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kShift) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
-    //     redraw();
-    // }
-    // if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kShift) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
-    //     redraw();
-    // }
-    // if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
-    //     tab->start_caret = tab->end_caret;
-    //     redraw();
-    // }
-    // if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kAlt) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
-    //     tab->start_caret = tab->end_caret;
-    //     redraw();
-    // }
-    // if (key == app::Key::kRightArrow &&
-    //     modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
-    //     redraw();
-    // }
-    // if (key == app::Key::kLeftArrow &&
-    //     modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
-    //     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    //     renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
-    //     redraw();
-    // }
+    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kNone) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
+        tab->start_caret = tab->end_caret;
+        redraw();
+    }
+    if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kNone) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
+        tab->start_caret = tab->end_caret;
+        redraw();
+    }
+    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kShift) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
+        redraw();
+    }
+    if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kShift) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
+        redraw();
+    }
+    if (key == app::Key::kRightArrow && modifiers == app::ModifierKey::kAlt) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
+        tab->start_caret = tab->end_caret;
+        redraw();
+    }
+    if (key == app::Key::kLeftArrow && modifiers == app::ModifierKey::kAlt) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
+        tab->start_caret = tab->end_caret;
+        redraw();
+    }
+    if (key == app::Key::kRightArrow &&
+        modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
+        redraw();
+    }
+    if (key == app::Key::kLeftArrow &&
+        modifiers == (app::ModifierKey::kShift | app::ModifierKey::kAlt)) {
+        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+        renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
+        redraw();
+    }
 
     if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
         parent.quit();

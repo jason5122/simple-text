@@ -68,7 +68,7 @@ public:
     impl() : displaygl(DisplayGL::Create()) {}
 };
 
-App::App() : pimpl{new impl{}}, launch_time(std::chrono::high_resolution_clock::now()) {
+App::App() : pimpl{new impl{}} {
     pimpl->ns_app = NSApplication.sharedApplication;
     AppDelegate* appDelegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
 

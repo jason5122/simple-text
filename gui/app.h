@@ -6,6 +6,7 @@
 #include <memory>
 
 // TODO: For debugging; remove this.
+#include <chrono>
 #include <format>
 #include <iostream>
 
@@ -64,7 +65,8 @@ private:
 
     // TODO: For debugging; remove this.
     bool has_drawn = false;
-    std::chrono::high_resolution_clock::time_point launch_time;
+    std::chrono::high_resolution_clock::time_point launch_time =
+        std::chrono::high_resolution_clock::now();
 
     void stopLaunchTimer() {
         // TODO: For debugging; remove this.

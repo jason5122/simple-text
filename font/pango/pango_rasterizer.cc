@@ -9,11 +9,8 @@ public:
     GObjectPtr<PangoFont> pango_font;
 };
 
-FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
-
-FontRasterizer::~FontRasterizer() {}
-
-bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
+FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
+    : pimpl{new impl{}} {
     PangoFontMap* font_map = pango_cairo_font_map_get_default();
     GObjectPtr<PangoContext> context{pango_font_map_create_context(font_map)};
 
@@ -22,20 +19,20 @@ bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
     pango_font_description_set_size(desc.get(), font_size * PANGO_SCALE);
     if (!desc) {
         std::cerr << "pango_font_description_from_string() error.\n";
-        return false;
+        // return false;
     }
 
     pimpl->pango_font =
         GObjectPtr<PangoFont>{pango_font_map_load_font(font_map, context.get(), desc.get())};
     if (!pimpl->pango_font) {
         std::cerr << "pango_font_map_load_font() error.\n";
-        return false;
+        // return false;
     }
 
     PangoFontMetricsPtr metrics{pango_font_get_metrics(pimpl->pango_font.get(), nullptr)};
     if (!metrics) {
         std::cerr << "pango_font_get_metrics() error.\n";
-        return false;
+        // return false;
     }
 
     int ascent = pango_font_metrics_get_ascent(metrics.get()) / PANGO_SCALE;
@@ -46,9 +43,9 @@ bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
     // TODO: Remove magic numbers that emulate Sublime Text.
     this->line_height = line_height;
     this->descent = descent;
-
-    return true;
 }
+
+FontRasterizer::~FontRasterizer() {}
 
 static inline CairoContextPtr CreateLayoutContext() {
     CairoSurfacePtr temp_surface{cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0)};

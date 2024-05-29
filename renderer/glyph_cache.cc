@@ -1,9 +1,4 @@
-#include "build/buildflag.h"
 #include "glyph_cache.h"
-
-extern "C" {
-#include "third_party/libgrapheme/grapheme.h"
-}
 
 namespace renderer {
 GlyphCache::GlyphCache(font::FontRasterizer& font_rasterizer) : font_rasterizer(font_rasterizer) {}

@@ -7,15 +7,10 @@
 #include <iostream>
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window(parent), parent(parent), wid(wid), color_scheme(isDarkMode()),
-      main_font_rasterizer(parent.main_font_rasterizer),
-      ui_font_rasterizer(parent.ui_font_rasterizer)
+    : Window(parent), parent(parent), wid(wid), color_scheme(isDarkMode())
 #if IS_MAC || IS_WIN
       ,
       renderer(parent.renderer)
-#elif IS_LINUX
-      ,
-      renderer(main_font_rasterizer, ui_font_rasterizer)
 #endif
 {
 }

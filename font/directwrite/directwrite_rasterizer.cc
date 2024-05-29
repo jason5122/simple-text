@@ -34,11 +34,8 @@ public:
     UINT16 getGlyphIndex(std::wstring_view str16, IDWriteFontFace* font_face);
 };
 
-FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
-
-FontRasterizer::~FontRasterizer() {}
-
-bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
+FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
+    : pimpl{new impl{}} {
     std::wstring font_name_utf16 = ConvertToUTF16(font_name_utf8);
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
@@ -106,9 +103,9 @@ bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
 
     this->line_height = line_height;
     this->descent = descent;
-
-    return true;
 }
+
+FontRasterizer::~FontRasterizer() {}
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     std::wstring str16 = ConvertToUTF16(str8);

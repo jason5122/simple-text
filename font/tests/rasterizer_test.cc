@@ -3,8 +3,7 @@
 #include <vector>
 
 TEST(RasterizerTest, RasterizedGlyph) {
-    font::FontRasterizer rasterizer;
-    rasterizer.setup("Arial", 32);
+    font::FontRasterizer rasterizer{"Arial", 32};
 
     std::vector<const char*> utf8_strs = {
         "a",

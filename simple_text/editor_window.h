@@ -45,9 +45,6 @@ private:
 
     config::ColorScheme color_scheme;
 
-    font::FontRasterizer& main_font_rasterizer;
-    font::FontRasterizer& ui_font_rasterizer;
-
 // TODO: Figure out OpenGL context reuse on Linux.
 #if IS_MAC || IS_WIN
     renderer::Renderer& renderer;

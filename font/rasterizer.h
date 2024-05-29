@@ -23,10 +23,9 @@ public:
 
     NOT_COPYABLE(FontRasterizer)
     NOT_MOVABLE(FontRasterizer)
-    FontRasterizer();
+    FontRasterizer(const std::string& font_name_utf8, int font_size);
     ~FontRasterizer();
 
-    bool setup(std::string font_name_utf8, int font_size);
     RasterizedGlyph rasterizeUTF8(std::string_view str8);
 
 private:

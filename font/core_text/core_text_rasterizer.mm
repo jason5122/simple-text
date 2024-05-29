@@ -17,11 +17,8 @@ public:
                                    int descent);
 };
 
-FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
-
-FontRasterizer::~FontRasterizer() {}
-
-bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
+FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
+    : pimpl{new impl{}} {
     ScopedCFTypeRef<CFStringRef> ct_font_name{
         CFStringCreateWithCString(nullptr, font_name_utf8.c_str(), kCFStringEncodingUTF8)};
     pimpl->ct_font.reset(CTFontCreateWithName(ct_font_name.get(), font_size, nullptr));
@@ -36,9 +33,9 @@ bool FontRasterizer::setup(std::string font_name_utf8, int font_size) {
 
     this->line_height = line_height;
     this->descent = -descent;
-
-    return true;
 }
+
+FontRasterizer::~FontRasterizer() {}
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     CGGlyph glyph = 0;

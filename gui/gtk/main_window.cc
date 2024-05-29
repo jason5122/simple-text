@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 #include <iostream>
 
+namespace gui {
+
 // GtkWindow callbacks.
 static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer user_data);
 static void destroy(GtkWidget* self, gpointer user_data);
@@ -255,7 +257,7 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_dat
     main_window->app_window->onDraw();
 
     // TODO: For debugging; remove this.
-    main_window->app_window->stopLaunchTimer();
+    // main_window->app_window->stopLaunchTimer();
 
     // Draw commands are flushed after returning.
     return true;
@@ -344,4 +346,6 @@ static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gc
 
         main_window->app_window->onDarkModeToggle();
     }
+}
+
 }

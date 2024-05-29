@@ -4,6 +4,7 @@ source_set("gtk") {
   sources = [
     "app.cc",
     "main_window.cc",
+    "window.cc",
   ]
 
   libs = [

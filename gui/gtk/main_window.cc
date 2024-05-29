@@ -23,7 +23,7 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
-MainWindow::MainWindow(GtkApplication* gtk_app, App::Window* app_window)
+MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
       app_window{app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
@@ -135,53 +135,53 @@ bool MainWindow::isDarkMode() {
     return g_variant_get_uint32(variant) == 1;
 }
 
-static inline app::Key GetKey(guint vk) {
+static inline gui::Key GetKey(guint vk) {
     static constexpr struct {
         guint fVK;
-        app::Key fKey;
+        gui::Key fKey;
     } gPair[] = {
-        {GDK_KEY_A, app::Key::kA},
-        {GDK_KEY_B, app::Key::kB},
-        {GDK_KEY_C, app::Key::kC},
-        {GDK_KEY_D, app::Key::kD},
-        {GDK_KEY_E, app::Key::kE},
-        {GDK_KEY_F, app::Key::kF},
-        {GDK_KEY_G, app::Key::kG},
-        {GDK_KEY_H, app::Key::kH},
-        {GDK_KEY_I, app::Key::kI},
-        {GDK_KEY_J, app::Key::kJ},
-        {GDK_KEY_K, app::Key::kK},
-        {GDK_KEY_L, app::Key::kL},
-        {GDK_KEY_M, app::Key::kM},
-        {GDK_KEY_N, app::Key::kN},
-        {GDK_KEY_O, app::Key::kO},
-        {GDK_KEY_P, app::Key::kP},
-        {GDK_KEY_Q, app::Key::kQ},
-        {GDK_KEY_R, app::Key::kR},
-        {GDK_KEY_S, app::Key::kS},
-        {GDK_KEY_T, app::Key::kT},
-        {GDK_KEY_U, app::Key::kU},
-        {GDK_KEY_V, app::Key::kV},
-        {GDK_KEY_W, app::Key::kW},
-        {GDK_KEY_X, app::Key::kX},
-        {GDK_KEY_Y, app::Key::kY},
-        {GDK_KEY_Z, app::Key::kZ},
-        {GDK_KEY_0, app::Key::k0},
-        {GDK_KEY_1, app::Key::k1},
-        {GDK_KEY_2, app::Key::k2},
-        {GDK_KEY_3, app::Key::k3},
-        {GDK_KEY_4, app::Key::k4},
-        {GDK_KEY_5, app::Key::k5},
-        {GDK_KEY_6, app::Key::k6},
-        {GDK_KEY_7, app::Key::k7},
-        {GDK_KEY_8, app::Key::k8},
-        {GDK_KEY_9, app::Key::k9},
-        {GDK_KEY_Return, app::Key::kEnter},
-        {GDK_KEY_BackSpace, app::Key::kBackspace},
-        {GDK_KEY_Left, app::Key::kLeftArrow},
-        {GDK_KEY_Right, app::Key::kRightArrow},
-        {GDK_KEY_Down, app::Key::kDownArrow},
-        {GDK_KEY_Up, app::Key::kUpArrow},
+        {GDK_KEY_A, gui::Key::kA},
+        {GDK_KEY_B, gui::Key::kB},
+        {GDK_KEY_C, gui::Key::kC},
+        {GDK_KEY_D, gui::Key::kD},
+        {GDK_KEY_E, gui::Key::kE},
+        {GDK_KEY_F, gui::Key::kF},
+        {GDK_KEY_G, gui::Key::kG},
+        {GDK_KEY_H, gui::Key::kH},
+        {GDK_KEY_I, gui::Key::kI},
+        {GDK_KEY_J, gui::Key::kJ},
+        {GDK_KEY_K, gui::Key::kK},
+        {GDK_KEY_L, gui::Key::kL},
+        {GDK_KEY_M, gui::Key::kM},
+        {GDK_KEY_N, gui::Key::kN},
+        {GDK_KEY_O, gui::Key::kO},
+        {GDK_KEY_P, gui::Key::kP},
+        {GDK_KEY_Q, gui::Key::kQ},
+        {GDK_KEY_R, gui::Key::kR},
+        {GDK_KEY_S, gui::Key::kS},
+        {GDK_KEY_T, gui::Key::kT},
+        {GDK_KEY_U, gui::Key::kU},
+        {GDK_KEY_V, gui::Key::kV},
+        {GDK_KEY_W, gui::Key::kW},
+        {GDK_KEY_X, gui::Key::kX},
+        {GDK_KEY_Y, gui::Key::kY},
+        {GDK_KEY_Z, gui::Key::kZ},
+        {GDK_KEY_0, gui::Key::k0},
+        {GDK_KEY_1, gui::Key::k1},
+        {GDK_KEY_2, gui::Key::k2},
+        {GDK_KEY_3, gui::Key::k3},
+        {GDK_KEY_4, gui::Key::k4},
+        {GDK_KEY_5, gui::Key::k5},
+        {GDK_KEY_6, gui::Key::k6},
+        {GDK_KEY_7, gui::Key::k7},
+        {GDK_KEY_8, gui::Key::k8},
+        {GDK_KEY_9, gui::Key::k9},
+        {GDK_KEY_Return, gui::Key::kEnter},
+        {GDK_KEY_BackSpace, gui::Key::kBackspace},
+        {GDK_KEY_Left, gui::Key::kLeftArrow},
+        {GDK_KEY_Right, gui::Key::kRightArrow},
+        {GDK_KEY_Down, gui::Key::kDownArrow},
+        {GDK_KEY_Up, gui::Key::kUpArrow},
     };
 
     for (size_t i = 0; i < std::size(gPair); i++) {
@@ -190,29 +190,29 @@ static inline app::Key GetKey(guint vk) {
         }
     }
 
-    return app::Key::kNone;
+    return gui::Key::kNone;
 }
 
-static inline app::ModifierKey GetModifiers(guint state) {
-    app::ModifierKey modifiers = app::ModifierKey::kNone;
+static inline gui::ModifierKey GetModifiers(guint state) {
+    gui::ModifierKey modifiers = gui::ModifierKey::kNone;
     if (state & GDK_SHIFT_MASK) {
-        modifiers |= app::ModifierKey::kShift;
+        modifiers |= gui::ModifierKey::kShift;
     }
     if (state & GDK_CONTROL_MASK) {
-        modifiers |= app::ModifierKey::kControl;
+        modifiers |= gui::ModifierKey::kControl;
     }
     if (state & GDK_MOD1_MASK) {
-        modifiers |= app::ModifierKey::kAlt;
+        modifiers |= gui::ModifierKey::kAlt;
     }
     if (state & GDK_SUPER_MASK) {
-        modifiers |= app::ModifierKey::kSuper;
+        modifiers |= gui::ModifierKey::kSuper;
     }
     return modifiers;
 }
 
 static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer user_data) {
-    app::Key key = GetKey(gdk_keyval_to_upper(event->keyval));
-    app::ModifierKey modifiers = GetModifiers(event->state);
+    gui::Key key = GetKey(gdk_keyval_to_upper(event->keyval));
+    gui::ModifierKey modifiers = GetModifiers(event->state);
 
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onKeyDown(key, modifiers);
@@ -296,7 +296,7 @@ static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpoin
         int scaled_mouse_x = mouse_x * scale_factor;
         int scaled_mouse_y = mouse_y * scale_factor;
 
-        app::ModifierKey modifiers = GetModifiers(event->state);
+        gui::ModifierKey modifiers = GetModifiers(event->state);
 
         MainWindow* main_window = static_cast<MainWindow*>(user_data);
         main_window->app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers);
@@ -313,7 +313,7 @@ static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpoi
         int scaled_mouse_x = mouse_x * scale_factor;
         int scaled_mouse_y = mouse_y * scale_factor;
 
-        app::ModifierKey modifiers = GetModifiers(event->state);
+        gui::ModifierKey modifiers = GetModifiers(event->state);
 
         MainWindow* main_window = static_cast<MainWindow*>(user_data);
         main_window->app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);

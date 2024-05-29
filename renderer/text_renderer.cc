@@ -15,6 +15,7 @@ extern "C" {
 #include "build/buildflag.h"
 
 namespace renderer {
+
 TextRenderer::TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
     : main_glyph_cache(main_glyph_cache), ui_glyph_cache(ui_glyph_cache) {}
 
@@ -412,4 +413,5 @@ void TextRenderer::renderUiText(Size& size, CaretInfo& end_caret,
 
     glCheckError();
 }
+
 }

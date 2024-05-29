@@ -5,6 +5,7 @@
 #include <dwrite_3.h>
 
 namespace font {
+
 // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L283
 class TextAnalysis : public IDWriteTextAnalysisSource, public IDWriteTextAnalysisSink {
 public:
@@ -95,4 +96,5 @@ protected:
     // Output is a list of runs starting here
     Run mRunHead;
 };
+
 }

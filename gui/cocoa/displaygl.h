@@ -6,6 +6,8 @@
 
 using base::apple::ScopedTypeRef;
 
+namespace gui {
+
 class DisplayGL {
 public:
     NOT_COPYABLE(DisplayGL)
@@ -22,3 +24,5 @@ private:
 
     DisplayGL(CGLPixelFormatObj pixel_format, CGLContextObj context);
 };
+
+}

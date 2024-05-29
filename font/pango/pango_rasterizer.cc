@@ -4,6 +4,7 @@
 #include <vector>
 
 namespace font {
+
 class FontRasterizer::impl {
 public:
     GObjectPtr<PangoFont> pango_font;
@@ -104,4 +105,5 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
         .buffer = temp_buffer,
     };
 }
+
 }

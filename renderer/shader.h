@@ -5,6 +5,7 @@
 #include <string>
 
 namespace renderer {
+
 class Shader {
 public:
     GLuint id;
@@ -15,4 +16,5 @@ public:
     ~Shader();
     bool link(const std::string& vert_source, const std::string& frag_source);
 };
+
 }

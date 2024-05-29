@@ -11,14 +11,14 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
-    App* app;
+    gui::App* app;
 }
 
 @end
 
 @implementation AppDelegate
 
-- (instancetype)initWithApp:(App*)theApp {
+- (instancetype)initWithApp:(gui::App*)theApp {
     self = [super init];
     if (self) {
         self->app = theApp;
@@ -59,6 +59,8 @@
 
 @end
 
+namespace gui {
+
 App::App() : pimpl{new impl{}} {
     pimpl->ns_app = NSApplication.sharedApplication;
     AppDelegate* appDelegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
@@ -77,4 +79,6 @@ void App::run() {
 
 void App::quit() {
     [pimpl->ns_app terminate:nil];
+}
+
 }

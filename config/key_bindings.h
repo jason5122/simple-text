@@ -32,7 +32,7 @@ class KeyBindings {
 public:
     KeyBindings();
     void reload();
-    Action parseKeyPress(app::Key key, app::ModifierKey modifiers);
+    Action parseKeyPress(gui::Key key, gui::ModifierKey modifiers);
 
 private:
     static inline const fs::path kKeyBindingsPath = DataDir() / "key_bindings.json";
@@ -47,18 +47,18 @@ private:
     std::vector<JsonSchema> kDefaultKeyBindingsSchema;
 
     struct Binding {
-        app::Key key;
-        app::ModifierKey modifiers;
+        gui::Key key;
+        gui::ModifierKey modifiers;
         Action action;
     };
 
     std::vector<Binding> bindings;
     void addBinding(const std::string& keys, const std::string& command);
 
-    static inline const std::unordered_map<std::string, app::ModifierKey> modifier_map{
-        {"shift", app::ModifierKey::kShift}, {"ctrl", app::ModifierKey::kControl},
-        {"alt", app::ModifierKey::kAlt},     {"super", app::ModifierKey::kSuper},
-        {"primary", app::kPrimaryModifier},
+    static inline const std::unordered_map<std::string, gui::ModifierKey> modifier_map{
+        {"shift", gui::ModifierKey::kShift}, {"ctrl", gui::ModifierKey::kControl},
+        {"alt", gui::ModifierKey::kAlt},     {"super", gui::ModifierKey::kSuper},
+        {"primary", gui::kPrimaryModifier},
     };
     static inline const std::unordered_map<std::string, Action> action_map{
         {"new_window", Action::kNewWindow},

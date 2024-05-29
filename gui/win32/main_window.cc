@@ -11,75 +11,75 @@
 #define ID_FILE_ABOUT 1
 #define ID_FILE_EXIT 2
 
-static inline app::Key GetKey(WPARAM vk) {
+static inline gui::Key GetKey(WPARAM vk) {
     static constexpr struct {
         WPARAM fVK;
-        app::Key fKey;
+        gui::Key fKey;
     } gPair[] = {
-        {'A', app::Key::kA},
-        {'B', app::Key::kB},
-        {'C', app::Key::kC},
-        {'D', app::Key::kD},
-        {'E', app::Key::kE},
-        {'F', app::Key::kF},
-        {'G', app::Key::kG},
-        {'H', app::Key::kH},
-        {'I', app::Key::kI},
-        {'J', app::Key::kJ},
-        {'K', app::Key::kK},
-        {'L', app::Key::kL},
-        {'M', app::Key::kM},
-        {'N', app::Key::kN},
-        {'O', app::Key::kO},
-        {'P', app::Key::kP},
-        {'Q', app::Key::kQ},
-        {'R', app::Key::kR},
-        {'S', app::Key::kS},
-        {'T', app::Key::kT},
-        {'U', app::Key::kU},
-        {'V', app::Key::kV},
-        {'W', app::Key::kW},
-        {'X', app::Key::kX},
-        {'Y', app::Key::kY},
-        {'Z', app::Key::kZ},
-        {'0', app::Key::k0},
-        {'1', app::Key::k1},
-        {'2', app::Key::k2},
-        {'3', app::Key::k3},
-        {'4', app::Key::k4},
-        {'5', app::Key::k5},
-        {'6', app::Key::k6},
-        {'7', app::Key::k7},
-        {'8', app::Key::k8},
-        {'9', app::Key::k9},
-        {VK_RETURN, app::Key::kEnter},
-        {VK_BACK, app::Key::kBackspace},
-        {VK_LEFT, app::Key::kLeftArrow},
-        {VK_RIGHT, app::Key::kRightArrow},
-        {VK_DOWN, app::Key::kDownArrow},
-        {VK_UP, app::Key::kUpArrow},
+        {'A', gui::Key::kA},
+        {'B', gui::Key::kB},
+        {'C', gui::Key::kC},
+        {'D', gui::Key::kD},
+        {'E', gui::Key::kE},
+        {'F', gui::Key::kF},
+        {'G', gui::Key::kG},
+        {'H', gui::Key::kH},
+        {'I', gui::Key::kI},
+        {'J', gui::Key::kJ},
+        {'K', gui::Key::kK},
+        {'L', gui::Key::kL},
+        {'M', gui::Key::kM},
+        {'N', gui::Key::kN},
+        {'O', gui::Key::kO},
+        {'P', gui::Key::kP},
+        {'Q', gui::Key::kQ},
+        {'R', gui::Key::kR},
+        {'S', gui::Key::kS},
+        {'T', gui::Key::kT},
+        {'U', gui::Key::kU},
+        {'V', gui::Key::kV},
+        {'W', gui::Key::kW},
+        {'X', gui::Key::kX},
+        {'Y', gui::Key::kY},
+        {'Z', gui::Key::kZ},
+        {'0', gui::Key::k0},
+        {'1', gui::Key::k1},
+        {'2', gui::Key::k2},
+        {'3', gui::Key::k3},
+        {'4', gui::Key::k4},
+        {'5', gui::Key::k5},
+        {'6', gui::Key::k6},
+        {'7', gui::Key::k7},
+        {'8', gui::Key::k8},
+        {'9', gui::Key::k9},
+        {VK_RETURN, gui::Key::kEnter},
+        {VK_BACK, gui::Key::kBackspace},
+        {VK_LEFT, gui::Key::kLeftArrow},
+        {VK_RIGHT, gui::Key::kRightArrow},
+        {VK_DOWN, gui::Key::kDownArrow},
+        {VK_UP, gui::Key::kUpArrow},
     };
     for (size_t i = 0; i < std::size(gPair); i++) {
         if (gPair[i].fVK == vk) {
             return gPair[i].fKey;
         }
     }
-    return app::Key::kNone;
+    return gui::Key::kNone;
 }
 
-static inline app::ModifierKey GetModifiers(void) {
-    app::ModifierKey modifiers = app::ModifierKey::kNone;
+static inline gui::ModifierKey GetModifiers(void) {
+    gui::ModifierKey modifiers = gui::ModifierKey::kNone;
     if (GetKeyState(VK_SHIFT) & 0x8000) {
-        modifiers |= app::ModifierKey::kShift;
+        modifiers |= gui::ModifierKey::kShift;
     }
     if (GetKeyState(VK_CONTROL) & 0x8000) {
-        modifiers |= app::ModifierKey::kControl;
+        modifiers |= gui::ModifierKey::kControl;
     }
     if (GetKeyState(VK_MENU) & 0x8000) {
-        modifiers |= app::ModifierKey::kAlt;
+        modifiers |= gui::ModifierKey::kAlt;
     }
     if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) {
-        modifiers |= app::ModifierKey::kSuper;
+        modifiers |= gui::ModifierKey::kSuper;
     }
     return modifiers;
 }
@@ -181,7 +181,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
-        app::ModifierKey modifiers = GetModifiers();
+        gui::ModifierKey modifiers = GetModifiers();
 
         app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers);
         return 0;
@@ -196,7 +196,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (wParam & MK_LBUTTON) {
             int mouse_x = GET_X_LPARAM(lParam);
             int mouse_y = GET_Y_LPARAM(lParam);
-            app::ModifierKey modifiers = GetModifiers();
+            gui::ModifierKey modifiers = GetModifiers();
 
             app_window.onLeftMouseDrag(mouse_x, mouse_y, modifiers);
         }
@@ -204,8 +204,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_KEYDOWN: {
-        app::Key key = GetKey(wParam);
-        app::ModifierKey modifiers = GetModifiers();
+        gui::Key key = GetKey(wParam);
+        gui::ModifierKey modifiers = GetModifiers();
 
         app_window.onKeyDown(key, modifiers);
         return 0;

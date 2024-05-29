@@ -3,6 +3,7 @@
 #include <cstddef>
 
 namespace renderer {
+
 struct Size {
     int width;
     int height;
@@ -18,4 +19,5 @@ struct CaretInfo {
     size_t line;
     size_t column;
 };
+
 }

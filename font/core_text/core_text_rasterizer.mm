@@ -9,6 +9,7 @@ using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
 
 namespace font {
+
 class FontRasterizer::impl {
 public:
     ScopedCFTypeRef<CTFontRef> ct_font;
@@ -152,4 +153,5 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index,
         .buffer = buffer,
     };
 }
+
 }

@@ -6,6 +6,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+namespace gui {
+
 class App::impl {
 public:
     NSApplication* ns_app;
@@ -19,3 +21,5 @@ class Window::impl {
 public:
     WindowController* window_controller;
 };
+
+}

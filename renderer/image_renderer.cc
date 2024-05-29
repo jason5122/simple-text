@@ -4,6 +4,7 @@
 #include <png.h>
 
 namespace renderer {
+
 ImageRenderer::ImageRenderer() {}
 
 ImageRenderer::~ImageRenderer() {
@@ -199,4 +200,5 @@ bool ImageRenderer::loadPng(fs::path file_name, int& out_width, int& out_height,
 
     return true;
 }
+
 }

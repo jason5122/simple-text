@@ -6,6 +6,7 @@ extern "C" {
 }
 
 namespace renderer {
+
 Movement::Movement(GlyphCache& main_glyph_cache) : main_glyph_cache(main_glyph_cache) {}
 
 void Movement::setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret) {
@@ -136,4 +137,5 @@ constexpr Movement::CharKind Movement::classifyChar(uint_least32_t codepoint) {
     }
     return CharKind::kOther;
 }
+
 }

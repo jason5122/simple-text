@@ -5,6 +5,7 @@
 #include "renderer/types.h"
 
 namespace renderer {
+
 class Movement {
 public:
     Movement(GlyphCache& main_glyph_cache);
@@ -28,4 +29,5 @@ private:
     size_t closestBoundaryForX(std::string_view line_str, int x);
     constexpr CharKind classifyChar(uint_least32_t codepoint);
 };
+
 }

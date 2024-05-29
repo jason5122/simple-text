@@ -1,6 +1,7 @@
 #include "font_fallback_source.h"
 
 namespace font {
+
 FontFallbackSource::FontFallbackSource(const WCHAR* string, UINT32 length, const WCHAR* locale,
                                        IDWriteNumberSubstitution* numberSubstitution)
     : fRefCount(1), fString(string), fLength(length), fLocale(locale),
@@ -72,4 +73,5 @@ COM_DECLSPEC_NOTHROW STDMETHODIMP FontFallbackSource::GetNumberSubstitution(
     *numberSubstitution = fNumberSubstitution;
     return S_OK;
 }
+
 }

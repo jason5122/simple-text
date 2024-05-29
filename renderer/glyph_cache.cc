@@ -1,6 +1,7 @@
 #include "glyph_cache.h"
 
 namespace renderer {
+
 GlyphCache::GlyphCache(font::FontRasterizer& font_rasterizer) : font_rasterizer(font_rasterizer) {}
 
 void GlyphCache::setup() {
@@ -46,4 +47,5 @@ void GlyphCache::bindTexture() {
 int GlyphCache::lineHeight() {
     return font_rasterizer.line_height;
 }
+
 }

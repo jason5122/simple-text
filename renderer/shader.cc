@@ -3,6 +3,7 @@
 #include <iostream>
 
 namespace renderer {
+
 Shader::Shader() {}
 
 Shader::~Shader() {
@@ -58,4 +59,5 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
     glDeleteShader(fragment_shader);
     return true;
 }
+
 }

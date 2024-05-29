@@ -8,8 +8,8 @@
 @interface OpenGLView : NSView <NSTextInputClient>
 
 - (instancetype)initWithFrame:(NSRect)frame
-                    appWindow:(Window*)theAppWindow
-                    displaygl:(DisplayGL*)displaygl;
+                    appWindow:(gui::Window*)theAppWindow
+                    displaygl:(gui::DisplayGL*)displaygl;
 
 - (void)redraw;
 

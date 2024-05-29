@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace renderer {
+
 class RectRenderer {
 public:
     NOT_COPYABLE(RectRenderer)
@@ -38,4 +39,5 @@ private:
         float tab_corner_radius = 0;
     };
 };
+
 }

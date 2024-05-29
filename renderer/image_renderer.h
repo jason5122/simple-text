@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace renderer {
+
 class ImageRenderer {
 public:
     NOT_COPYABLE(ImageRenderer)
@@ -43,4 +44,5 @@ private:
         Vec3 color;
     };
 };
+
 }

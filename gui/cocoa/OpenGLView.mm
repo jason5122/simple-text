@@ -7,13 +7,13 @@
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
-    Window* appWindow;
+    gui::Window* appWindow;
 
 @private
-    DisplayGL* displaygl;
+    gui::DisplayGL* displaygl;
 }
 
-- (instancetype)initWithDisplayGL:(DisplayGL*)theDisplaygl;
+- (instancetype)initWithDisplayGL:(gui::DisplayGL*)theDisplaygl;
 @end
 
 @interface OpenGLView () {
@@ -26,8 +26,8 @@
 @implementation OpenGLView
 
 - (instancetype)initWithFrame:(NSRect)frame
-                    appWindow:(Window*)theAppWindow
-                    displaygl:(DisplayGL*)displaygl {
+                    appWindow:(gui::Window*)theAppWindow
+                    displaygl:(gui::DisplayGL*)displaygl {
     self = [super initWithFrame:frame];
     if (self) {
         openGLLayer = [[[OpenGLLayer alloc] initWithDisplayGL:displaygl] autorelease];
@@ -147,54 +147,54 @@
     }
 }
 
-static inline app::Key GetKey(unsigned short vk) {
+static inline gui::Key GetKey(unsigned short vk) {
     static constexpr struct {
         unsigned short fVK;
-        app::Key fKey;
+        gui::Key fKey;
     } gPair[] = {
         // These constants are located in the <Carbon/Carbon.h> header.
-        {kVK_ANSI_A, app::Key::kA},
-        {kVK_ANSI_B, app::Key::kB},
-        {kVK_ANSI_C, app::Key::kC},
-        {kVK_ANSI_D, app::Key::kD},
-        {kVK_ANSI_E, app::Key::kE},
-        {kVK_ANSI_F, app::Key::kF},
-        {kVK_ANSI_G, app::Key::kG},
-        {kVK_ANSI_H, app::Key::kH},
-        {kVK_ANSI_I, app::Key::kI},
-        {kVK_ANSI_J, app::Key::kJ},
-        {kVK_ANSI_K, app::Key::kK},
-        {kVK_ANSI_L, app::Key::kL},
-        {kVK_ANSI_M, app::Key::kM},
-        {kVK_ANSI_N, app::Key::kN},
-        {kVK_ANSI_O, app::Key::kO},
-        {kVK_ANSI_P, app::Key::kP},
-        {kVK_ANSI_Q, app::Key::kQ},
-        {kVK_ANSI_R, app::Key::kR},
-        {kVK_ANSI_S, app::Key::kS},
-        {kVK_ANSI_T, app::Key::kT},
-        {kVK_ANSI_U, app::Key::kU},
-        {kVK_ANSI_V, app::Key::kV},
-        {kVK_ANSI_W, app::Key::kW},
-        {kVK_ANSI_X, app::Key::kX},
-        {kVK_ANSI_Y, app::Key::kY},
-        {kVK_ANSI_Z, app::Key::kZ},
-        {kVK_ANSI_0, app::Key::k0},
-        {kVK_ANSI_1, app::Key::k1},
-        {kVK_ANSI_2, app::Key::k2},
-        {kVK_ANSI_3, app::Key::k3},
-        {kVK_ANSI_4, app::Key::k4},
-        {kVK_ANSI_5, app::Key::k5},
-        {kVK_ANSI_6, app::Key::k6},
-        {kVK_ANSI_7, app::Key::k7},
-        {kVK_ANSI_8, app::Key::k8},
-        {kVK_ANSI_9, app::Key::k9},
-        {kVK_Return, app::Key::kEnter},
-        {kVK_Delete, app::Key::kBackspace},
-        {kVK_LeftArrow, app::Key::kLeftArrow},
-        {kVK_RightArrow, app::Key::kRightArrow},
-        {kVK_DownArrow, app::Key::kDownArrow},
-        {kVK_UpArrow, app::Key::kUpArrow},
+        {kVK_ANSI_A, gui::Key::kA},
+        {kVK_ANSI_B, gui::Key::kB},
+        {kVK_ANSI_C, gui::Key::kC},
+        {kVK_ANSI_D, gui::Key::kD},
+        {kVK_ANSI_E, gui::Key::kE},
+        {kVK_ANSI_F, gui::Key::kF},
+        {kVK_ANSI_G, gui::Key::kG},
+        {kVK_ANSI_H, gui::Key::kH},
+        {kVK_ANSI_I, gui::Key::kI},
+        {kVK_ANSI_J, gui::Key::kJ},
+        {kVK_ANSI_K, gui::Key::kK},
+        {kVK_ANSI_L, gui::Key::kL},
+        {kVK_ANSI_M, gui::Key::kM},
+        {kVK_ANSI_N, gui::Key::kN},
+        {kVK_ANSI_O, gui::Key::kO},
+        {kVK_ANSI_P, gui::Key::kP},
+        {kVK_ANSI_Q, gui::Key::kQ},
+        {kVK_ANSI_R, gui::Key::kR},
+        {kVK_ANSI_S, gui::Key::kS},
+        {kVK_ANSI_T, gui::Key::kT},
+        {kVK_ANSI_U, gui::Key::kU},
+        {kVK_ANSI_V, gui::Key::kV},
+        {kVK_ANSI_W, gui::Key::kW},
+        {kVK_ANSI_X, gui::Key::kX},
+        {kVK_ANSI_Y, gui::Key::kY},
+        {kVK_ANSI_Z, gui::Key::kZ},
+        {kVK_ANSI_0, gui::Key::k0},
+        {kVK_ANSI_1, gui::Key::k1},
+        {kVK_ANSI_2, gui::Key::k2},
+        {kVK_ANSI_3, gui::Key::k3},
+        {kVK_ANSI_4, gui::Key::k4},
+        {kVK_ANSI_5, gui::Key::k5},
+        {kVK_ANSI_6, gui::Key::k6},
+        {kVK_ANSI_7, gui::Key::k7},
+        {kVK_ANSI_8, gui::Key::k8},
+        {kVK_ANSI_9, gui::Key::k9},
+        {kVK_Return, gui::Key::kEnter},
+        {kVK_Delete, gui::Key::kBackspace},
+        {kVK_LeftArrow, gui::Key::kLeftArrow},
+        {kVK_RightArrow, gui::Key::kRightArrow},
+        {kVK_DownArrow, gui::Key::kDownArrow},
+        {kVK_UpArrow, gui::Key::kUpArrow},
     };
 
     for (size_t i = 0; i < std::size(gPair); i++) {
@@ -203,22 +203,22 @@ static inline app::Key GetKey(unsigned short vk) {
         }
     }
 
-    return app::Key::kNone;
+    return gui::Key::kNone;
 }
 
-static inline app::ModifierKey GetModifiers(unsigned long flags) {
-    app::ModifierKey modifiers = app::ModifierKey::kNone;
+static inline gui::ModifierKey GetModifiers(unsigned long flags) {
+    gui::ModifierKey modifiers = gui::ModifierKey::kNone;
     if (flags & NSEventModifierFlagShift) {
-        modifiers |= app::ModifierKey::kShift;
+        modifiers |= gui::ModifierKey::kShift;
     }
     if (flags & NSEventModifierFlagControl) {
-        modifiers |= app::ModifierKey::kControl;
+        modifiers |= gui::ModifierKey::kControl;
     }
     if (flags & NSEventModifierFlagOption) {
-        modifiers |= app::ModifierKey::kAlt;
+        modifiers |= gui::ModifierKey::kAlt;
     }
     if (flags & NSEventModifierFlagCommand) {
-        modifiers |= app::ModifierKey::kSuper;
+        modifiers |= gui::ModifierKey::kSuper;
     }
     return modifiers;
 }
@@ -231,8 +231,8 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
         std::cerr << "keyDown was unhandled\n";
     }
 
-    // app::Key key = GetKey(event.keyCode);
-    // app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    // gui::Key key = GetKey(event.keyCode);
+    // gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
     // openGLLayer->appWindow->onKeyDown(key, modifiers);
 }
 
@@ -245,7 +245,7 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     int scaled_mouse_x = mouse_x * scale;
     int scaled_mouse_y = mouse_y * scale;
 
-    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
     openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers);
 }
 
@@ -258,7 +258,7 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     int scaled_mouse_x = mouse_x * scale;
     int scaled_mouse_y = mouse_y * scale;
 
-    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
     openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
 }
 
@@ -334,7 +334,7 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 
 @implementation OpenGLLayer
 
-- (instancetype)initWithDisplayGL:(DisplayGL*)theDisplaygl {
+- (instancetype)initWithDisplayGL:(gui::DisplayGL*)theDisplaygl {
     self = [super init];
     if (self) {
         displaygl = theDisplaygl;

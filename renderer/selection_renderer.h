@@ -8,6 +8,7 @@
 #include <glad/glad.h>
 
 namespace renderer {
+
 class SelectionRenderer {
 public:
     struct Selection {
@@ -60,4 +61,5 @@ private:
     };
     std::vector<InstanceData> instances;
 };
+
 }

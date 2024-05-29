@@ -1,6 +1,8 @@
 #include "gui/cocoa/pimpl_mac.h"
 #include "gui/window.h"
 
+namespace gui {
+
 Window::Window(App& app) : pimpl{new impl{}}, app(app) {
     // NSRect frame = NSMakeRect(500, 0, width, height);
     NSRect frame = NSScreen.mainScreen.visibleFrame;
@@ -11,8 +13,9 @@ Window::Window(App& app) : pimpl{new impl{}}, app(app) {
     std::cerr << "scale factor: " << NSScreen.mainScreen.backingScaleFactor << '\n';
 
     DisplayGL* displaygl = app.pimpl->displaygl.get();
-    pimpl->window_controller =
-        [[WindowController alloc] initWithFrame:frame appWindow:this displayGl:displaygl];
+    pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
+                                                             appWindow:this
+                                                             displayGl:displaygl];
 
     // Implement window cascading.
     // if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {
@@ -57,4 +60,6 @@ int Window::scaleFactor() {
 
 bool Window::isDarkMode() {
     return [pimpl->window_controller isDarkMode];
+}
+
 }

@@ -1,14 +1,13 @@
 #pragma once
 
 #include "config/color_scheme.h"
-#include "font/rasterizer.h"
 #include "gui/window.h"
 #include "renderer/renderer.h"
 #include "simple_text/editor_tab.h"
 
 class SimpleText;
 
-class EditorWindow : public Window {
+class EditorWindow : public gui::Window {
 public:
     int wid;
 
@@ -29,15 +28,13 @@ public:
     void onDraw() override;
     void onResize(int width, int height) override;
     void onScroll(int dx, int dy) override;
-    void onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
-    void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
-    void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
+    void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
+    void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
+    void onKeyDown(gui::Key key, gui::ModifierKey modifiers) override;
     void onClose() override;
     void onDarkModeToggle() override;
 
 private:
-    bool has_drawn = false;
-
     SimpleText& parent;
 
     int tab_index = 0;  // Use int instead of size_t to prevent wrap around when less than 0.

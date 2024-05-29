@@ -11,6 +11,8 @@
 #include <format>
 #include <iostream>
 
+namespace gui {
+
 class App {
 public:
     NOT_COPYABLE(App)
@@ -47,3 +49,5 @@ private:
         }
     }
 };
+
+}

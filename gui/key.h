@@ -1,6 +1,7 @@
 #pragma once
 
-namespace app {
+namespace gui {
+
 enum class Key {
     kNone,
     kA,
@@ -46,4 +47,5 @@ enum class Key {
     kDownArrow,
     kUpArrow,
 };
+
 }

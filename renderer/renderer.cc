@@ -1,6 +1,7 @@
 #include "renderer.h"
 
 namespace renderer {
+
 font::FontRasterizer Renderer::main_font_rasterizer{"Source Code Pro", 16 * 2};
 font::FontRasterizer Renderer::ui_font_rasterizer{"SF Pro Text", 11 * 2};
 
@@ -92,4 +93,5 @@ void Renderer::setCaretPosition(int mouse_x, int mouse_y, std::unique_ptr<Editor
 int Renderer::lineHeight() {
     return main_glyph_cache.lineHeight();
 }
+
 }

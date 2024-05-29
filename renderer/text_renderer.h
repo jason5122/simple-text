@@ -14,6 +14,7 @@
 #include <vector>
 
 namespace renderer {
+
 class TextRenderer {
 public:
     NOT_COPYABLE(TextRenderer)
@@ -49,4 +50,5 @@ private:
         Rgba color;
     };
 };
+
 }

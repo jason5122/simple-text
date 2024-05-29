@@ -3,6 +3,7 @@
 #include <dwrite_3.h>
 
 namespace font {
+
 // https://github.com/google/skia/blob/5fdc2b47dfa448b745545e897f3a70a238edf6d7/src/ports/SkFontMgr_win_dw.cpp#L356
 class FontFallbackSource : public IDWriteTextAnalysisSource {
 public:
@@ -38,4 +39,5 @@ private:
     const WCHAR* fLocale;
     IDWriteNumberSubstitution* fNumberSubstitution;
 };
+
 }

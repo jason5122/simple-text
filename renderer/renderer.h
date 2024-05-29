@@ -9,6 +9,7 @@
 #include "renderer/text_renderer.h"
 
 namespace renderer {
+
 class Renderer {
 public:
     Renderer();
@@ -42,4 +43,5 @@ private:
         .y = 30 * 2,
     };
 };
+
 }

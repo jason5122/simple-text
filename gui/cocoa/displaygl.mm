@@ -4,6 +4,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+namespace gui {
+
 DisplayGL::DisplayGL(CGLPixelFormatObj pixel_format, CGLContextObj context)
     : pixel_format_(pixel_format), context_(context) {}
 
@@ -53,4 +55,6 @@ CGLPixelFormatObj DisplayGL::pixelFormat() {
 
 CGLContextObj DisplayGL::context() {
     return context_.get();
+}
+
 }

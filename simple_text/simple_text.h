@@ -8,7 +8,7 @@
 #include "util/not_copyable_or_movable.h"
 #include <vector>
 
-class SimpleText : public App, public FileWatcherCallback {
+class SimpleText : public gui::App, public FileWatcherCallback {
 public:
 #if IS_MAC || IS_WIN
     renderer::Renderer renderer;

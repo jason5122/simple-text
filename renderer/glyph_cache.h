@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 namespace renderer {
+
 struct AtlasGlyph {
     Vec4 glyph;
     Vec4 uv;
@@ -55,4 +56,5 @@ private:
 
     AtlasGlyph createGlyph(std::string_view str8);
 };
+
 }

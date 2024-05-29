@@ -4,6 +4,7 @@
 #include <pango/pangocairo.h>
 
 namespace font {
+
 template <typename T, auto fn> struct Deleter {
     void operator()(T* ptr) {
         fn(ptr);
@@ -18,4 +19,5 @@ using PangoFontDescriptionPtr =
 using PangoFontMetricsPtr = UniquePtrDeleter<PangoFontMetrics, pango_font_metrics_unref>;
 using CairoSurfacePtr = UniquePtrDeleter<cairo_surface_t, cairo_surface_destroy>;
 using CairoContextPtr = UniquePtrDeleter<cairo_t, cairo_destroy>;
+
 }

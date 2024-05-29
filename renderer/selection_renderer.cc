@@ -6,6 +6,7 @@
 #include "build/buildflag.h"
 
 namespace renderer {
+
 SelectionRenderer::SelectionRenderer() {}
 
 SelectionRenderer::~SelectionRenderer() {
@@ -205,4 +206,5 @@ void SelectionRenderer::render(int rendering_pass) {
 void SelectionRenderer::destroyInstances() {
     instances.clear();
 }
+
 }

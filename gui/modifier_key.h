@@ -3,7 +3,8 @@
 #include "build/buildflag.h"
 #include "gui/bitmask_enum.h"
 
-namespace app {
+namespace gui {
+
 enum class ModifierKey {
     kNone = 0,
     kShift = 1 << 0,
@@ -12,11 +13,12 @@ enum class ModifierKey {
     kSuper = 1 << 3,
 };
 
-template <> struct is_bitmask_enum<app::ModifierKey> : std::true_type {};
+template <> struct is_bitmask_enum<gui::ModifierKey> : std::true_type {};
 
 #if IS_MAC
 constexpr ModifierKey kPrimaryModifier = ModifierKey::kSuper;
 #else
 constexpr ModifierKey kPrimaryModifier = ModifierKey::kControl;
 #endif
+
 }

@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace renderer {
+
 class Atlas {
 public:
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
@@ -28,4 +29,5 @@ private:
     // DEBUG: Color atlas background to spot incorrect shaders easier.
     std::vector<uint8_t> atlas_background;
 };
+
 }

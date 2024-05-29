@@ -10,6 +10,7 @@
 using Microsoft::WRL::ComPtr;
 
 namespace font {
+
 inline void ColorRunHelper(ID2D1RenderTarget* target,
                            ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
                            UINT origin_y) {
@@ -100,4 +101,5 @@ inline void PrintFontFamilyName(IDWriteFont* font) {
     family_names->GetString(index, &name[0], length + 1);
     std::wcerr << std::format(L"family name: {}\n", &name[0]);
 }
+
 }

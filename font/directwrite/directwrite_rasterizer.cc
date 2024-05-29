@@ -20,6 +20,7 @@
 using Microsoft::WRL::ComPtr;
 
 namespace font {
+
 class FontRasterizer::impl {
 public:
     ComPtr<IDWriteFactory4> dwrite_factory;
@@ -312,4 +313,5 @@ UINT16 FontRasterizer::impl::getGlyphIndex(std::wstring_view str16, IDWriteFontF
 
     return out_glyph_indices[0];
 }
+
 }

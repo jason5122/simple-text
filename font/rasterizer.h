@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace font {
+
 struct RasterizedGlyph {
     bool colored;
     int32_t left;
@@ -33,4 +34,5 @@ private:
     class impl;
     std::unique_ptr<impl> pimpl;
 };
+
 }

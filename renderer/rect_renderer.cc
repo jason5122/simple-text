@@ -4,6 +4,7 @@
 #include <vector>
 
 namespace renderer {
+
 RectRenderer::RectRenderer() {}
 
 RectRenderer::~RectRenderer() {
@@ -214,4 +215,5 @@ void RectRenderer::draw(Size& size, Point& scroll, CaretInfo& end_caret, int end
 
     glCheckError();
 }
+
 }

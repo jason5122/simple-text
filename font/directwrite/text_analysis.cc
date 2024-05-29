@@ -2,6 +2,7 @@
 #include <cassert>
 
 namespace font {
+
 TextAnalysis::TextAnalysis(const wchar_t* text, uint32_t textLength, const wchar_t* localeName,
                            DWRITE_READING_DIRECTION readingDirection)
     : mTextLength(textLength), mText(text), mLocaleName(localeName),
@@ -183,4 +184,5 @@ void TextAnalysis::SplitCurrentRun(uint32_t splitPosition) {
     mCurrentRun->mTextLength = splitPoint;
     mCurrentRun = newRun;
 }
+
 }

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "gui/action.h"
 #include "gui/key.h"
 #include "gui/modifier_key.h"
 #include "util/not_copyable_or_movable.h"
 #include <memory>
+#include <string_view>
 
 namespace gui {
 
@@ -31,6 +33,8 @@ public:
     virtual void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {}
     virtual void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {}
     virtual void onKeyDown(gui::Key key, gui::ModifierKey modifiers) {}
+    virtual void onInsertText(std::string_view text) {}
+    virtual void onAction(gui::Action action) {}
     virtual void onClose() {}
     virtual void onDarkModeToggle() {}
 

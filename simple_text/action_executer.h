@@ -71,3 +71,24 @@ inline void ExecuteAction(config::Action& action, SimpleText& app, EditorWindow&
         break;
     }
 }
+
+inline void ExecuteGuiAction(gui::Action action, EditorTab* tab) {
+    using gui::Action;
+
+    switch (action) {
+    case Action::kNone:
+        break;
+
+    case Action::kMoveForwardByCharacter:
+        tab->moveCaret(EditorTab::MovementType::kCharacters, true, false);
+        break;
+
+    case Action::kMoveBackwardByCharacter:
+        tab->moveCaret(EditorTab::MovementType::kCharacters, false, false);
+        break;
+
+    case Action::kLeftDelete:
+        tab->backspace();
+        break;
+    }
+}

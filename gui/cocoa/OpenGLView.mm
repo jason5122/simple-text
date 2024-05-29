@@ -308,8 +308,7 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
     BOOL isAttributedString = [string isKindOfClass:[NSAttributedString class]];
     NSString* text = isAttributedString ? [string string] : string;
-
-    std::cerr << text.UTF8String << '\n';
+    openGLLayer->appWindow->onInsertText(text.UTF8String);
 }
 
 - (NSUInteger)characterIndexForPoint:(NSPoint)point {
@@ -327,7 +326,17 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
     int selector_len = [selector_str length];
     selector_str = [selector_str substringToIndex:selector_len - 1];
 
-    std::cerr << selector_str.UTF8String << '\n';
+    std::string str = selector_str.UTF8String;
+    std::cerr << str << '\n';
+    if (str == "moveForward" || str == "moveRight") {
+        openGLLayer->appWindow->onAction(gui::Action::kMoveForwardByCharacter);
+    }
+    if (str == "moveBackward" || str == "moveLeft") {
+        openGLLayer->appWindow->onAction(gui::Action::kMoveBackwardByCharacter);
+    }
+    if (str == "deleteBackward") {
+        openGLLayer->appWindow->onAction(gui::Action::kLeftDelete);
+    }
 }
 
 @end

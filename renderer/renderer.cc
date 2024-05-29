@@ -80,12 +80,11 @@ void Renderer::toggleSideBar() {
     side_bar_visible = !side_bar_visible;
 }
 
-void Renderer::setCaretPosition(int mouse_x, int mouse_y, std::unique_ptr<EditorTab>& tab) {
-    renderer::Point mouse{
+Point Renderer::translateMousePosition(int mouse_x, int mouse_y, EditorTab* tab) {
+    return {
         .x = mouse_x - editor_offset.x - kLineNumberOffset + tab->scroll.x,
         .y = mouse_y - editor_offset.y + tab->scroll.y,
     };
-    movement.setCaretInfo(tab->buffer, mouse, tab->end_caret);
 }
 
 int Renderer::lineHeight() {

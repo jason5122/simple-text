@@ -7,6 +7,7 @@
 #include "renderer/rect_renderer.h"
 #include "renderer/selection_renderer.h"
 #include "renderer/text_renderer.h"
+#include "simple_text/editor_tab.h"
 
 namespace renderer {
 
@@ -18,7 +19,7 @@ public:
     void render(Size& size, config::ColorScheme& color_scheme,
                 std::vector<std::unique_ptr<EditorTab>>& tabs, size_t tab_index);
     void toggleSideBar();
-    void setCaretPosition(int mouse_x, int mouse_y, std::unique_ptr<EditorTab>& tab);
+    Point translateMousePosition(int mouse_x, int mouse_y, EditorTab* tab);
     int lineHeight();
 
     // TODO: Make this private!

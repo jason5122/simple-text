@@ -1,8 +1,8 @@
 #include "base/filesystem/file_reader.h"
 #include "editor_tab.h"
 
-EditorTab::EditorTab(fs::path file_path)
-    : file_path(file_path), last_scroll(std::chrono::system_clock::now()) {}
+EditorTab::EditorTab(fs::path file_path, renderer::Movement& movement)
+    : file_path(file_path), movement(movement), last_scroll(std::chrono::system_clock::now()) {}
 
 void EditorTab::setup(config::ColorScheme& color_scheme) {
     std::string file_contents;
@@ -50,4 +50,50 @@ void EditorTab::scrollBuffer(renderer::Point& delta, renderer::Point& max_scroll
     scroll.y = std::clamp(scroll.y + delta.y, 0, max_scroll.y);
 
     last_scroll = now;
+}
+
+void EditorTab::moveCaret(MovementType movement_type, bool forward, bool extend) {
+    switch (movement_type) {
+    case MovementType::kCharacters:
+        if (forward) {
+            movement.moveCaretForwardChar(buffer, end_caret);
+        } else {
+            movement.moveCaretBackwardChar(buffer, end_caret);
+        }
+        if (!extend) {
+            start_caret = end_caret;
+        }
+        break;
+
+    case MovementType::kLines:
+        break;
+    }
+}
+
+void EditorTab::setCaretPosition(renderer::Point pos, bool extend) {
+    movement.setCaretInfo(buffer, pos, end_caret);
+    if (!extend) {
+        start_caret = end_caret;
+    }
+}
+
+void EditorTab::backspace() {
+    size_t start_byte = start_caret.byte;
+    size_t end_byte = end_caret.byte;
+
+    if (start_caret.byte > end_caret.byte) {
+        std::swap(start_byte, end_byte);
+    }
+
+    buffer.erase(start_byte, end_byte);
+
+    // highlighter.edit(start_byte, end_byte, start_byte);
+    // TSInput input = {&buffer, base::SyntaxHighlighter::read, TSInputEncodingUTF8};
+    // highlighter.parse(input);
+
+    if (start_caret.byte > end_caret.byte) {
+        start_caret = end_caret;
+    } else {
+        end_caret = start_caret;
+    }
 }

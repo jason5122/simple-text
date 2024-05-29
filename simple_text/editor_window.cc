@@ -23,7 +23,8 @@ EditorWindow::~EditorWindow() {
 }
 
 void EditorWindow::createTab(fs::path file_path) {
-    std::unique_ptr<EditorTab> editor_tab = std::make_unique<EditorTab>(file_path);
+    std::unique_ptr<EditorTab> editor_tab =
+        std::make_unique<EditorTab>(file_path, renderer.movement);
     editor_tab->setup(color_scheme);
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
 }
@@ -96,14 +97,14 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path6 = ResourceDir() / "sample_files/emoji-data.txt";
     fs::path file_path7 = ResourceDir() / "sample_files/emoji-test.txt";
 
-    // createTab(file_path);
+    createTab(file_path);
     // createTab(file_path2);
     // createTab(file_path3);
     // createTab(file_path4);
     // createTab(file_path5);
     // createTab(file_path6);
     // createTab(file_path7);
-    createTab({});
+    // createTab({});
 }
 
 void EditorWindow::onDraw() {
@@ -138,18 +139,20 @@ void EditorWindow::onScroll(int dx, int dy) {
 
 void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    renderer.setCaretPosition(mouse_x, mouse_y, tab);
 
-    if (!Any(modifiers & gui::ModifierKey::kShift)) {
-        tab->start_caret = tab->end_caret;
-    }
+    renderer::Point pos = renderer.translateMousePosition(mouse_x, mouse_y, tab.get());
+
+    bool extend = Any(modifiers & gui::ModifierKey::kShift);
+    tab->setCaretPosition(pos, extend);
 
     redraw();
 }
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-    renderer.setCaretPosition(mouse_x, mouse_y, tab);
+
+    renderer::Point pos = renderer.translateMousePosition(mouse_x, mouse_y, tab.get());
+    tab->setCaretPosition(pos, true);
 
     redraw();
 }
@@ -171,104 +174,21 @@ void EditorWindow::onKeyDown(gui::Key key, gui::ModifierKey modifiers) {
     //     close();
     // }
 
-    if (key == gui::Key::kBackspace && modifiers == gui::ModifierKey::kNone) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        size_t start_byte = tab->start_caret.byte, end_byte = tab->end_caret.byte;
-        if (tab->start_caret.byte > tab->end_caret.byte) {
-            std::swap(start_byte, end_byte);
-        }
-
-        tab->buffer.erase(start_byte, end_byte);
-
-        // TODO: Move this into EditorTab.
-        // tab->highlighter.edit(start_byte, end_byte, start_byte);
-        // TSInput input = {&tab->buffer, SyntaxHighlighter::read, TSInputEncodingUTF8};
-        // tab->highlighter.parse(input);
-
-        if (tab->start_caret.byte > tab->end_caret.byte) {
-            tab->start_caret = tab->end_caret;
-        } else {
-            tab->end_caret = tab->start_caret;
-        }
-
-        redraw();
-    }
-
-    if (key == gui::Key::kRightArrow && modifiers == gui::ModifierKey::kNone) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == gui::Key::kLeftArrow && modifiers == gui::ModifierKey::kNone) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == gui::Key::kRightArrow && modifiers == gui::ModifierKey::kShift) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardChar(tab->buffer, tab->end_caret);
-        redraw();
-    }
-    if (key == gui::Key::kLeftArrow && modifiers == gui::ModifierKey::kShift) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardChar(tab->buffer, tab->end_caret);
-        redraw();
-    }
-    if (key == gui::Key::kRightArrow && modifiers == gui::ModifierKey::kAlt) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == gui::Key::kLeftArrow && modifiers == gui::ModifierKey::kAlt) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
-        tab->start_caret = tab->end_caret;
-        redraw();
-    }
-    if (key == gui::Key::kRightArrow &&
-        modifiers == (gui::ModifierKey::kShift | gui::ModifierKey::kAlt)) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretForwardWord(tab->buffer, tab->end_caret);
-        redraw();
-    }
-    if (key == gui::Key::kLeftArrow &&
-        modifiers == (gui::ModifierKey::kShift | gui::ModifierKey::kAlt)) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        renderer.movement.moveCaretBackwardWord(tab->buffer, tab->end_caret);
-        redraw();
-    }
-
     if (key == gui::Key::kQ && modifiers == gui::kPrimaryModifier) {
         parent.quit();
     }
+}
 
-    if (gui::Key::kA <= key && key <= gui::Key::kZ && modifiers == gui::ModifierKey::kNone) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+void EditorWindow::onInsertText(std::string_view text) {
+    std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, text);
+    redraw();
+}
 
-        using U = std::underlying_type_t<gui::Key>;
-        char ch = static_cast<char>('a' + (static_cast<U>(key) - static_cast<U>(gui::Key::kA)));
-
-        tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, std::string(1, ch));
-        redraw();
-    }
-    if (gui::Key::kA <= key && key <= gui::Key::kZ && modifiers == gui::ModifierKey::kShift) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-
-        using U = std::underlying_type_t<gui::Key>;
-        char ch = static_cast<char>('a' + (static_cast<U>(key) - static_cast<U>(gui::Key::kA)));
-        ch = static_cast<char>(std::toupper(ch));
-
-        tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, std::string(1, ch));
-        redraw();
-    }
-    if (key == gui::Key::kEnter && modifiers == gui::ModifierKey::kNone) {
-        std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
-        tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, "\n");
-        redraw();
-    }
+void EditorWindow::onAction(gui::Action action) {
+    std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+    ExecuteGuiAction(action, tab.get());
+    redraw();
 }
 
 void EditorWindow::onClose() {

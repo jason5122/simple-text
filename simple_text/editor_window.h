@@ -31,6 +31,8 @@ public:
     void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
     void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
     void onKeyDown(gui::Key key, gui::ModifierKey modifiers) override;
+    void onInsertText(std::string_view text) override;
+    void onAction(gui::Action action) override;
     void onClose() override;
     void onDarkModeToggle() override;
 

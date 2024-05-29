@@ -2,10 +2,8 @@
 
 namespace renderer {
 
-font::FontRasterizer Renderer::main_font_rasterizer{"Source Code Pro", 16 * 2};
-font::FontRasterizer Renderer::ui_font_rasterizer{"SF Pro Text", 11 * 2};
-
-Renderer::Renderer()
+Renderer::Renderer(font::FontRasterizer& main_font_rasterizer,
+                   font::FontRasterizer& ui_font_rasterizer)
     : main_glyph_cache(main_font_rasterizer), ui_glyph_cache(ui_font_rasterizer),
       text_renderer(main_glyph_cache, ui_glyph_cache), movement(main_glyph_cache) {}
 

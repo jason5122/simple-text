@@ -11,6 +11,8 @@
 #define ID_FILE_ABOUT 1
 #define ID_FILE_EXIT 2
 
+namespace gui {
+
 static inline gui::Key GetKey(WPARAM vk) {
     static constexpr struct {
         WPARAM fVK;
@@ -126,7 +128,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         app_window.onDraw();
 
         // TODO: For debugging; remove this.
-        app_window.stopLaunchTimer();
+        // app_window.stopLaunchTimer();
 
         SwapBuffers(m_hdc);
 
@@ -329,4 +331,6 @@ int MainWindow::scaleFactor() {
     // std::cerr << "scale_factor: " << scale_factor << '\n';
     // TODO: Don't hard code this.
     return 1;
+}
+
 }

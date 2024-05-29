@@ -4,30 +4,38 @@
 #include <iostream>
 #include <memory>
 
-SimpleText::SimpleText() : file_watcher(DataDir(), this) {}
+SimpleText::SimpleText()
+    : file_watcher(DataDir(), this), main_font_rasterizer("Source Code Pro", 16 * 2),
+      ui_font_rasterizer("Arial", 11 * 2)
+#if IS_MAC || IS_WIN
+      ,
+      renderer(main_font_rasterizer, ui_font_rasterizer)
+#endif
+{
+}
 
 SimpleText::~SimpleText() {}
 
 void SimpleText::onLaunch() {
     // TODO: Implement scale factor support.
     // std::string main_font = "Arial";
-//     std::string main_font = "Source Code Pro";
-// #if IS_MAC
-//     main_font = "Menlo";
-//     std::string ui_font = "SF Pro Text";
-//     int main_font_size = 16 * 2;
-//     int ui_font_size = 11 * 2;
-// #elif IS_WIN
-//     // main_font = "Consolas";
-//     std::string ui_font = "Segoe UI";
-//     int main_font_size = 11 * 2;
-//     int ui_font_size = 9 * 2;
-// #elif IS_LINUX
-//     main_font = "Monospace";
-//     std::string ui_font = "Noto Sans";
-//     int main_font_size = 12 * 2;
-//     int ui_font_size = 9 * 2;
-// #endif
+    //     std::string main_font = "Source Code Pro";
+    // #if IS_MAC
+    //     main_font = "Menlo";
+    //     std::string ui_font = "SF Pro Text";
+    //     int main_font_size = 16 * 2;
+    //     int ui_font_size = 11 * 2;
+    // #elif IS_WIN
+    //     // main_font = "Consolas";
+    //     std::string ui_font = "Segoe UI";
+    //     int main_font_size = 11 * 2;
+    //     int ui_font_size = 9 * 2;
+    // #elif IS_LINUX
+    //     main_font = "Monospace";
+    //     std::string ui_font = "Noto Sans";
+    //     int main_font_size = 12 * 2;
+    //     int ui_font_size = 9 * 2;
+    // #endif
     // main_font_rasterizer.setup(main_font, main_font_size);
     // ui_font_rasterizer.setup(ui_font, ui_font_size);
 

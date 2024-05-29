@@ -2,6 +2,7 @@
 
 #include "base/filesystem/file_watcher.h"
 #include "config/key_bindings.h"
+#include "font/rasterizer.h"
 #include "gui/app.h"
 #include "renderer/renderer.h"
 #include "simple_text/editor_window.h"
@@ -10,12 +11,6 @@
 
 class SimpleText : public gui::App, public FileWatcherCallback {
 public:
-#if IS_MAC || IS_WIN
-    renderer::Renderer renderer;
-#endif
-    config::KeyBindings key_bindings;
-    FileWatcher file_watcher;
-
     NOT_COPYABLE(SimpleText)
     NOT_MOVABLE(SimpleText)
     SimpleText();
@@ -30,5 +25,16 @@ public:
     void onFileEvent() override;
 
 private:
+    friend class EditorWindow;
+
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
+
+#if IS_MAC || IS_WIN
+    renderer::Renderer renderer;
+#endif
+    config::KeyBindings key_bindings;
+    FileWatcher file_watcher;
+
+    font::FontRasterizer main_font_rasterizer;
+    font::FontRasterizer ui_font_rasterizer;
 };

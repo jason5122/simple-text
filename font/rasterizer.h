@@ -1,6 +1,5 @@
 #pragma once
 
-#include "util/not_copyable_or_movable.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,10 +21,10 @@ public:
     int line_height;
     int descent;
 
-    NOT_COPYABLE(FontRasterizer)
-    NOT_MOVABLE(FontRasterizer)
     FontRasterizer(const std::string& font_name_utf8, int font_size);
     ~FontRasterizer();
+    FontRasterizer(FontRasterizer&& font_rasterizer);
+    FontRasterizer& operator=(FontRasterizer&& font_rasterizer);
 
     RasterizedGlyph rasterizeUTF8(std::string_view str8);
 

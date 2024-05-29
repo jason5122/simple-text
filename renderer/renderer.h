@@ -12,7 +12,7 @@ namespace renderer {
 
 class Renderer {
 public:
-    Renderer();
+    Renderer(font::FontRasterizer& main_font_rasterizer, font::FontRasterizer& ui_font_rasterizer);
     void setup();
     // TODO: Split this up into smaller methods.
     void render(Size& size, config::ColorScheme& color_scheme,
@@ -25,9 +25,6 @@ public:
     Movement movement;
 
 private:
-    static font::FontRasterizer main_font_rasterizer;
-    static font::FontRasterizer ui_font_rasterizer;
-
     GlyphCache main_glyph_cache;
     GlyphCache ui_glyph_cache;
     TextRenderer text_renderer;

@@ -23,8 +23,6 @@ public:
 
     FontRasterizer(const std::string& font_name_utf8, int font_size);
     ~FontRasterizer();
-    FontRasterizer(FontRasterizer&& font_rasterizer);
-    FontRasterizer& operator=(FontRasterizer&& font_rasterizer);
 
     RasterizedGlyph rasterizeUTF8(std::string_view str8);
 

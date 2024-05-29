@@ -108,14 +108,6 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-FontRasterizer::FontRasterizer(FontRasterizer&& font_rasterizer)
-    : pimpl(std::move(font_rasterizer.pimpl)) {}
-
-FontRasterizer& FontRasterizer::operator=(FontRasterizer&& font_rasterizer) {
-    pimpl = std::move(font_rasterizer.pimpl);
-    return *this;
-}
-
 RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     std::wstring str16 = ConvertToUTF16(str8);
 

@@ -4,6 +4,8 @@
 #include <string>
 #include <string_view>
 
+namespace base {
+
 // https://darrenburns.net/posts/piece-table/
 class PieceTable {
 public:
@@ -33,3 +35,5 @@ private:
     std::string add;
     std::forward_list<Piece> pieces;
 };
+
+}

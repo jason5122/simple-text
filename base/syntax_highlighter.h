@@ -8,6 +8,8 @@
 #include <tree_sitter/api.h>
 #include <vector>
 
+namespace base {
+
 class SyntaxHighlighter {
 public:
     NOT_COPYABLE(SyntaxHighlighter)
@@ -61,3 +63,5 @@ private:
     std::vector<Rgb> capture_index_color_table;
     std::vector<std::pair<uint32_t, uint32_t>> highlight_ranges;
 };
+
+}

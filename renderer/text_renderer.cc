@@ -84,8 +84,8 @@ void TextRenderer::setup() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
-                              SyntaxHighlighter& highlighter, Point& editor_offset,
+void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
+                              base::SyntaxHighlighter& highlighter, Point& editor_offset,
                               CaretInfo& start_caret, CaretInfo& end_caret, int& longest_line_x,
                               config::ColorScheme& color_scheme, int line_number_offset,
                               int& end_caret_x) {
@@ -158,7 +158,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
                     .coords = coords,
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
-                    .color = Rgba::fromRgb(Rgb{150, 150, 150}, glyph.colored),
+                    .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
                 });
 
                 total_advance += glyph.advance;
@@ -183,10 +183,10 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 
                 // TODO: Preserve the width of the space character when substituting.
                 //       Otherwise, the line width changes when using proportional fonts.
-                Rgb text_color = highlighter.getColor(byte_offset, color_scheme);
+                base::Rgb text_color = highlighter.getColor(byte_offset, color_scheme);
                 if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
                     key = "·";
-                    text_color = Rgb{182, 182, 182};
+                    text_color = base::Rgb{182, 182, 182};
                 }
                 AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
 
@@ -238,7 +238,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, Buffer& buffer,
 }
 
 std::vector<SelectionRenderer::Selection>
-TextRenderer::getSelections(Buffer& buffer, CaretInfo& start_caret, CaretInfo& end_caret) {
+TextRenderer::getSelections(base::Buffer& buffer, CaretInfo& start_caret, CaretInfo& end_caret) {
     std::vector<SelectionRenderer::Selection> selections;
 
     size_t start_byte = start_caret.byte, end_byte = end_caret.byte;
@@ -303,7 +303,7 @@ TextRenderer::getSelections(Buffer& buffer, CaretInfo& start_caret, CaretInfo& e
 }
 
 std::vector<int>
-TextRenderer::getTabTitleWidths(Buffer& buffer,
+TextRenderer::getTabTitleWidths(base::Buffer& buffer,
                                 std::vector<std::unique_ptr<EditorTab>>& editor_tabs) {
     std::vector<int> tab_title_widths;
 

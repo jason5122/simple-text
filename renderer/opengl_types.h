@@ -24,7 +24,7 @@ static_assert(sizeof(Vec4) == sizeof(float) * 4);
 struct Rgba {
     uint8_t r, g, b, a;
 
-    static inline Rgba fromRgb(Rgb rgb, uint8_t a) {
+    static inline Rgba fromRgb(base::Rgb rgb, uint8_t a) {
         return Rgba{rgb.r, rgb.g, rgb.b, a};
     }
 };

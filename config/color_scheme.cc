@@ -48,12 +48,12 @@ void ColorScheme::reload(bool dark_mode) {
     }
 
     // TODO: Is there a better way to do this?
-    if (!schema.foreground.empty()) foreground = ParseHexCode(schema.foreground);
-    if (!schema.background.empty()) background = ParseHexCode(schema.background);
-    if (!schema.caret.empty()) caret = ParseHexCode(schema.caret);
-    if (!schema.tab_bar.empty()) tab_bar = ParseHexCode(schema.tab_bar);
-    if (!schema.side_bar.empty()) side_bar = ParseHexCode(schema.side_bar);
-    if (!schema.status_bar.empty()) status_bar = ParseHexCode(schema.status_bar);
-    if (!schema.scroll_bar.empty()) scroll_bar = ParseHexCode(schema.scroll_bar);
+    if (!schema.foreground.empty()) foreground = base::ParseHexCode(schema.foreground);
+    if (!schema.background.empty()) background = base::ParseHexCode(schema.background);
+    if (!schema.caret.empty()) caret = base::ParseHexCode(schema.caret);
+    if (!schema.tab_bar.empty()) tab_bar = base::ParseHexCode(schema.tab_bar);
+    if (!schema.side_bar.empty()) side_bar = base::ParseHexCode(schema.side_bar);
+    if (!schema.status_bar.empty()) status_bar = base::ParseHexCode(schema.status_bar);
+    if (!schema.scroll_bar.empty()) scroll_bar = base::ParseHexCode(schema.scroll_bar);
 }
 }

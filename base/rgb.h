@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 
+namespace base {
+
 struct Rgb {
     uint8_t r;
     uint8_t g;
@@ -48,4 +50,6 @@ constexpr Rgb selection_focused{227, 230, 232};
 constexpr Rgb selection_unfocused{235, 238, 239};
 constexpr Rgb selection_border{212, 217, 221};
 #endif
+}
+
 }

@@ -12,8 +12,8 @@ class EditorTab {
 public:
     fs::path file_path;
 
-    Buffer buffer;
-    SyntaxHighlighter highlighter;
+    base::Buffer buffer;
+    base::SyntaxHighlighter highlighter;
 
     renderer::Point scroll{};
 

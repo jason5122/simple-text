@@ -9,7 +9,7 @@ namespace renderer {
 
 Movement::Movement(GlyphCache& main_glyph_cache) : main_glyph_cache(main_glyph_cache) {}
 
-void Movement::setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret) {
+void Movement::setCaretInfo(base::Buffer& buffer, Point& mouse, CaretInfo& caret) {
     caret.line = mouse.y / main_glyph_cache.lineHeight();
     if (caret.line > buffer.lineCount() - 1) {
         caret.line = buffer.lineCount() - 1;
@@ -21,7 +21,7 @@ void Movement::setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret) {
     caret.byte = buffer.byteOfLine(caret.line) + caret.column;
 }
 
-void Movement::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret) {
+void Movement::moveCaretForwardChar(base::Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     size_t ret = grapheme_next_character_break_utf8(&line_str[0] + caret.column, SIZE_MAX);
@@ -31,7 +31,7 @@ void Movement::moveCaretForwardChar(Buffer& buffer, CaretInfo& caret) {
     }
 }
 
-void Movement::moveCaretBackwardChar(Buffer& buffer, CaretInfo& caret) {
+void Movement::moveCaretBackwardChar(base::Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     size_t new_column = 0;
@@ -45,7 +45,7 @@ void Movement::moveCaretBackwardChar(Buffer& buffer, CaretInfo& caret) {
     caret.column = new_column;
 }
 
-void Movement::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret) {
+void Movement::moveCaretForwardWord(base::Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     CharKind prev_kind = CharKind::kNone;
@@ -71,7 +71,7 @@ void Movement::moveCaretForwardWord(Buffer& buffer, CaretInfo& caret) {
     }
 }
 
-void Movement::moveCaretBackwardWord(Buffer& buffer, CaretInfo& caret) {
+void Movement::moveCaretBackwardWord(base::Buffer& buffer, CaretInfo& caret) {
     std::string line_str = buffer.getLineContent(caret.line);
 
     std::vector<CharKind> kinds;

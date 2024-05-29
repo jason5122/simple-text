@@ -12,6 +12,8 @@
 extern "C" TSLanguage* tree_sitter_json();
 // extern "C" TSLanguage* tree_sitter_scheme();
 
+namespace base {
+
 SyntaxHighlighter::SyntaxHighlighter() : parser(ts_parser_new()) {}
 
 SyntaxHighlighter::~SyntaxHighlighter() {
@@ -156,4 +158,6 @@ Rgb SyntaxHighlighter::getColor(size_t byte_offset, config::ColorScheme& color_s
         return capture_index_color_table[capture_index];
     }
     return color_scheme.foreground;
+}
+
 }

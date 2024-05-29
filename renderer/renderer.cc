@@ -25,7 +25,7 @@ void Renderer::render(Size& size, config::ColorScheme& color_scheme,
 
     glViewport(0, 0, size.width, size.height);
 
-    Rgb& background = color_scheme.background;
+    base::Rgb& background = color_scheme.background;
     GLfloat red = static_cast<float>(background.r) / 255.0f;
     GLfloat green = static_cast<float>(background.g) / 255.0f;
     GLfloat blue = static_cast<float>(background.b) / 255.0f;

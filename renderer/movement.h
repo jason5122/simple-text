@@ -9,11 +9,11 @@ namespace renderer {
 class Movement {
 public:
     Movement(GlyphCache& main_glyph_cache);
-    void setCaretInfo(Buffer& buffer, Point& mouse, CaretInfo& caret);
-    void moveCaretForwardChar(Buffer& buffer, CaretInfo& caret);
-    void moveCaretBackwardChar(Buffer& buffer, CaretInfo& caret);
-    void moveCaretForwardWord(Buffer& buffer, CaretInfo& caret);
-    void moveCaretBackwardWord(Buffer& buffer, CaretInfo& caret);
+    void setCaretInfo(base::Buffer& buffer, Point& mouse, CaretInfo& caret);
+    void moveCaretForwardChar(base::Buffer& buffer, CaretInfo& caret);
+    void moveCaretBackwardChar(base::Buffer& buffer, CaretInfo& caret);
+    void moveCaretForwardWord(base::Buffer& buffer, CaretInfo& caret);
+    void moveCaretBackwardWord(base::Buffer& buffer, CaretInfo& caret);
 
 private:
     GlyphCache& main_glyph_cache;

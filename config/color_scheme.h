@@ -7,13 +7,13 @@
 namespace config {
 class ColorScheme {
 public:
-    Rgb foreground{};
-    Rgb background{};
-    Rgb caret{};
-    Rgb tab_bar{};
-    Rgb side_bar{};
-    Rgb status_bar{};
-    Rgb scroll_bar{};
+    base::Rgb foreground{};
+    base::Rgb background{};
+    base::Rgb caret{};
+    base::Rgb tab_bar{};
+    base::Rgb side_bar{};
+    base::Rgb status_bar{};
+    base::Rgb scroll_bar{};
 
     ColorScheme(bool dark_mode);
     void reload(bool dark_mode);

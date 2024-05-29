@@ -22,13 +22,13 @@ public:
     TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache);
     ~TextRenderer();
     void setup();
-    void renderText(Size& size, Point& scroll, Buffer& buffer, SyntaxHighlighter& highlighter,
-                    Point& editor_offset, CaretInfo& start_caret, CaretInfo& end_caret,
-                    int& longest_line_x, config::ColorScheme& color_scheme, int line_number_offset,
-                    int& end_caret_x);
-    std::vector<SelectionRenderer::Selection> getSelections(Buffer& buffer, CaretInfo& start_caret,
-                                                            CaretInfo& end_caret);
-    std::vector<int> getTabTitleWidths(Buffer& buffer,
+    void renderText(Size& size, Point& scroll, base::Buffer& buffer,
+                    base::SyntaxHighlighter& highlighter, Point& editor_offset,
+                    CaretInfo& start_caret, CaretInfo& end_caret, int& longest_line_x,
+                    config::ColorScheme& color_scheme, int line_number_offset, int& end_caret_x);
+    std::vector<SelectionRenderer::Selection>
+    getSelections(base::Buffer& buffer, CaretInfo& start_caret, CaretInfo& end_caret);
+    std::vector<int> getTabTitleWidths(base::Buffer& buffer,
                                        std::vector<std::unique_ptr<EditorTab>>& editor_tabs);
     void renderUiText(Size& size, CaretInfo& end_caret, config::ColorScheme& color_scheme,
                       Point& editor_offset, std::vector<std::unique_ptr<EditorTab>>& editor_tabs,

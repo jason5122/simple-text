@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace base {
+
 class Buffer {
 public:
     void setContents(std::string txt);
@@ -30,3 +32,5 @@ private:
 
     std::string flat_string;
 };
+
+}

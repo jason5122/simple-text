@@ -2,6 +2,8 @@
 #include <format>
 #include <iostream>
 
+namespace base {
+
 PieceTable::PieceTable(std::string_view str) : original(str) {
     pieces.emplace_front(Piece{
         .source = PieceSource::Original,
@@ -94,4 +96,6 @@ void PieceTable::printPieces() {
         std::cerr << std::format("Piece(start={}, length={}, source={})\n", piece.start,
                                  piece.length, source);
     }
+}
+
 }

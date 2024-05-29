@@ -7,7 +7,7 @@
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
-    App::Window* appWindow;
+    Window2* appWindow;
 
 @private
     DisplayGL* displaygl;
@@ -26,7 +26,7 @@
 @implementation OpenGLView
 
 - (instancetype)initWithFrame:(NSRect)frame
-                    appWindow:(App::Window*)theAppWindow
+                    appWindow:(Window2*)theAppWindow
                     displaygl:(DisplayGL*)displaygl {
     self = [super initWithFrame:frame];
     if (self) {
@@ -375,7 +375,7 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     appWindow->onDraw();
 
     // TODO: For debugging; remove this.
-    appWindow->stopLaunchTimer();
+    // appWindow->stopLaunchTimer();
 
     // Calls glFlush() by default.
     [super drawInCGLContext:displaygl->context()

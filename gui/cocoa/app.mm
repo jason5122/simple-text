@@ -1,7 +1,7 @@
 #include "gui/app.h"
 #include "gui/cocoa/OpenGLView.h"
 #include "gui/cocoa/WindowController.h"
-#include "gui/cocoa/displaygl.h"
+#include "gui/cocoa/pimpl_mac.h"
 #include <Foundation/Foundation.h>
 #include <format>
 #include <iostream>
@@ -59,15 +59,6 @@
 
 @end
 
-class App::impl {
-public:
-    NSApplication* ns_app;
-    NSPoint cascading_point = NSZeroPoint;
-    std::unique_ptr<DisplayGL> displaygl;
-
-    impl() : displaygl(DisplayGL::Create()) {}
-};
-
 App::App() : pimpl{new impl{}} {
     pimpl->ns_app = NSApplication.sharedApplication;
     AppDelegate* appDelegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
@@ -78,10 +69,6 @@ App::App() : pimpl{new impl{}} {
 
 App::~App() {}
 
-std::unique_ptr<Window2, Window2::WindowDeleter> App::createWindowTemp() {
-    return std::unique_ptr<Window2, Window2::WindowDeleter>(new Window2(*this));
-}
-
 void App::run() {
     @autoreleasepool {
         [pimpl->ns_app run];
@@ -90,67 +77,4 @@ void App::run() {
 
 void App::quit() {
     [pimpl->ns_app terminate:nil];
-}
-
-class App::Window::impl {
-public:
-    WindowController* window_controller;
-};
-
-App::Window::Window(App& parent, int width, int height) : pimpl{new impl{}}, parent(parent) {
-    // NSRect frame = NSMakeRect(500, 0, width, height);
-    NSRect frame = NSScreen.mainScreen.visibleFrame;
-
-    frame.origin.y = 300;
-    frame.size.height -= 300;
-
-    std::cerr << "scale factor: " << NSScreen.mainScreen.backingScaleFactor << '\n';
-
-    DisplayGL* displaygl = parent.pimpl->displaygl.get();
-    pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
-                                                             appWindow:this
-                                                             displayGl:displaygl];
-
-    // Implement window cascading.
-    // if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {
-    //     NSPoint point = pimpl->ns_window.frame.origin;
-    //     parent.pimpl->cascading_point = [pimpl->ns_window cascadeTopLeftFromPoint:point];
-
-    //     [pimpl->ns_window center];
-    // } else {
-    //     parent.pimpl->cascading_point =
-    //         [pimpl->ns_window cascadeTopLeftFromPoint:parent.pimpl->cascading_point];
-    // }
-}
-
-App::Window::~Window() {
-    [pimpl->window_controller release];
-}
-
-void App::Window::show() {
-    [pimpl->window_controller show];
-}
-
-void App::Window::close() {
-    [pimpl->window_controller close];
-}
-
-void App::Window::redraw() {
-    [pimpl->window_controller redraw];
-}
-
-int App::Window::width() {
-    return [pimpl->window_controller getWidth];
-}
-
-int App::Window::height() {
-    return [pimpl->window_controller getHeight];
-}
-
-int App::Window::scaleFactor() {
-    return [pimpl->window_controller getScaleFactor];
-}
-
-bool App::Window::isDarkMode() {
-    return [pimpl->window_controller isDarkMode];
 }

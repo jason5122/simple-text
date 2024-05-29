@@ -1,11 +1,13 @@
-#include "gui/app.h"
+#pragma once
+
 #include "gui/cocoa/displaygl.h"
+#include "gui/window.h"
 #import <Cocoa/Cocoa.h>
 
 @interface WindowController : NSWindowController <NSWindowDelegate>
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(App::Window*)appWindow
+                    appWindow:(Window2*)appWindow
                     displayGl:(DisplayGL*)displayGl;
 
 - (void)show;

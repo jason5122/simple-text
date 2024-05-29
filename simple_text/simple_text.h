@@ -1,66 +1,24 @@
 #pragma once
 
+#include "base/filesystem/file_watcher.h"
 #include "config/key_bindings.h"
+#include "font/rasterizer.h"
 #include "gui/app.h"
+#include "renderer/renderer.h"
+#include "simple_text/editor_window.h"
 #include "util/not_copyable_or_movable.h"
 #include <vector>
 
-#include "config/color_scheme.h"
-#include "font/rasterizer.h"
-#include "renderer/renderer.h"
-#include "simple_text/editor_tab.h"
-
-#include "base/filesystem/file_watcher.h"
-
 class SimpleText : public App, public FileWatcherCallback {
 public:
-    class EditorWindow : public App::Window {
-    public:
-        int wid;
-
-        NOT_COPYABLE(EditorWindow)
-        NOT_MOVABLE(EditorWindow)
-        EditorWindow(SimpleText& parent, int width, int height, int wid);
-        ~EditorWindow() override;
-        void createTab(fs::path file_path);
-        void reloadColorScheme();
-        void selectTabIndex(int index);
-        void selectPreviousTab();
-        void selectNextTab();
-        void selectLastTab();
-        void closeCurrentTab();
-        void toggleSideBar();
-
-        void onOpenGLActivate(int width, int height) override;
-        void onDraw() override;
-        void onResize(int width, int height) override;
-        void onScroll(int dx, int dy) override;
-        void onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
-        void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
-        void onKeyDown(app::Key key, app::ModifierKey modifiers) override;
-        void onClose() override;
-        void onDarkModeToggle() override;
-
-    private:
-        bool has_drawn = false;
-
-        SimpleText& parent;
-
-        int tab_index = 0;  // Use int instead of size_t to prevent wrap around when less than 0.
-        std::vector<std::unique_ptr<EditorTab>> tabs;
-
-        config::ColorScheme color_scheme;
-
-        font::FontRasterizer& main_font_rasterizer;
-        font::FontRasterizer& ui_font_rasterizer;
-
-// TODO: Figure out OpenGL context reuse on Linux.
+    // TODO: Make these private or move them to another class.
+    font::FontRasterizer main_font_rasterizer;
+    font::FontRasterizer ui_font_rasterizer;
 #if IS_MAC || IS_WIN
-        renderer::Renderer& renderer;
-#elif IS_LINUX
-        renderer::Renderer renderer;
+    renderer::Renderer renderer;
 #endif
-    };
+    config::KeyBindings key_bindings;
+    FileWatcher file_watcher;
 
     NOT_COPYABLE(SimpleText)
     NOT_MOVABLE(SimpleText)
@@ -77,15 +35,5 @@ public:
 
 private:
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
-    std::vector<WindowPtr> editor_windows2;
-
-    font::FontRasterizer main_font_rasterizer;
-    font::FontRasterizer ui_font_rasterizer;
-
-#if IS_MAC || IS_WIN
-    renderer::Renderer renderer;
-#endif
-
-    config::KeyBindings key_bindings;
-    FileWatcher file_watcher;
+    // std::vector<WindowPtr> editor_windows2;
 };

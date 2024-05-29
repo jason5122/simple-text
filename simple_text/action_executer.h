@@ -1,10 +1,10 @@
 #pragma once
 
 #include "config/key_bindings.h"
+#include "simple_text/editor_window.h"
 #include "simple_text/simple_text.h"
 
-inline void ExecuteAction(config::Action& action, SimpleText& app,
-                          SimpleText::EditorWindow& window) {
+inline void ExecuteAction(config::Action& action, SimpleText& app, EditorWindow& window) {
     using config::Action;
 
     switch (action) {

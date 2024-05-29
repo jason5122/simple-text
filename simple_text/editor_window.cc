@@ -1,15 +1,13 @@
 #include "build/buildflag.h"
-#include "simple_text.h"
+#include "editor_window.h"
 #include "simple_text/action_executer.h"
 #include <algorithm>
 #include <cctype>
 #include <glad/glad.h>
 #include <iostream>
 
-using EditorWindow = SimpleText::EditorWindow;
-
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window(parent, width, height), parent(parent), wid(wid), color_scheme(isDarkMode()),
+    : Window2(parent), parent(parent), wid(wid), color_scheme(isDarkMode()),
       main_font_rasterizer(parent.main_font_rasterizer),
       ui_font_rasterizer(parent.ui_font_rasterizer)
 #if IS_MAC || IS_WIN

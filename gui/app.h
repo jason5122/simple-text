@@ -13,43 +13,6 @@
 
 class App {
 public:
-    class Window {
-    public:
-        NOT_COPYABLE(Window)
-        NOT_MOVABLE(Window)
-        Window(App& parent, int width, int height);
-        virtual ~Window();
-        void show();
-        void close();
-        void redraw();
-
-        int width();
-        int height();
-        int scaleFactor();
-        bool isDarkMode();
-
-        virtual void onOpenGLActivate(int width, int height) {}
-        virtual void onDraw() {}
-        virtual void onResize(int width, int height) {}
-        virtual void onScroll(int dx, int dy) {}
-        virtual void onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers) {}
-        virtual void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {}
-        virtual void onKeyDown(app::Key key, app::ModifierKey modifiers) {}
-        virtual void onClose() {}
-        virtual void onDarkModeToggle() {}
-
-        // TODO: For debugging; remove this.
-        void stopLaunchTimer() {
-            parent.stopLaunchTimer();
-        }
-
-    private:
-        App& parent;
-
-        class impl;
-        std::unique_ptr<impl> pimpl;
-    };
-
     NOT_COPYABLE(App)
     NOT_MOVABLE(App)
     App();
@@ -57,13 +20,12 @@ public:
     void run();
     void quit();
 
-    using WindowPtr = std::unique_ptr<Window2, Window2::WindowDeleter>;
-    WindowPtr createWindowTemp();
-
     virtual void onLaunch() {}
     virtual void onQuit() {}
 
 private:
+    friend class Window2;
+
     class impl;
     std::unique_ptr<impl> pimpl;
 

@@ -68,9 +68,9 @@ void SimpleText::createWindow() {
     editor_window->show();
     editor_windows.push_back(std::move(editor_window));
 
-    WindowPtr window_ptr = createWindowTemp();
-    // window_ptr->show();
-    editor_windows2.push_back(std::move(window_ptr));
+    // WindowPtr window_ptr = createWindowTemp();
+    // // window_ptr->show();
+    // editor_windows2.push_back(std::move(window_ptr));
 }
 
 void SimpleText::destroyWindow(int wid) {

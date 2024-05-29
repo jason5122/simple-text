@@ -11,11 +11,12 @@ class Window2 {
 public:
     NOT_COPYABLE(Window2)
     NOT_MOVABLE(Window2)
+    Window2(App& app);
+    virtual ~Window2();
 
     void show();
     void close();
     void redraw();
-
     int width();
     int height();
     int scaleFactor();
@@ -34,15 +35,6 @@ public:
 private:
     friend class App;
     App& app;
-
-    Window2(App& app);
-    ~Window2();
-
-    struct WindowDeleter {
-        void operator()(Window2* ptr) {
-            delete ptr;
-        }
-    };
 
     class impl;
     std::unique_ptr<impl> pimpl;

@@ -11,6 +11,9 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
 #if IS_MAC || IS_WIN
       ,
       renderer(parent.renderer)
+#elif IS_LINUX
+      ,
+      renderer(parent.main_font_rasterizer, parent.ui_font_rasterizer)
 #endif
 {
 }

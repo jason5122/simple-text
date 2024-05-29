@@ -7,7 +7,7 @@
 @interface WindowController : NSWindowController <NSWindowDelegate>
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(Window2*)appWindow
+                    appWindow:(Window*)appWindow
                     displayGl:(DisplayGL*)displayGl;
 
 - (void)show;

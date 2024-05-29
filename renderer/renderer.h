@@ -18,6 +18,7 @@ public:
                 std::vector<std::unique_ptr<EditorTab>>& tabs, size_t tab_index);
     void toggleSideBar();
     void setCaretPosition(int mouse_x, int mouse_y, std::unique_ptr<EditorTab>& tab);
+    int lineHeight();
 
     // TODO: Make this private!
     Movement movement;

@@ -86,4 +86,8 @@ void Renderer::setCaretPosition(int mouse_x, int mouse_y, std::unique_ptr<Editor
     };
     movement.setCaretInfo(tab->buffer, mouse, tab->end_caret);
 }
+
+int Renderer::lineHeight() {
+    return main_glyph_cache.lineHeight();
+}
 }

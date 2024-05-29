@@ -7,7 +7,7 @@
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public
-    Window2* appWindow;
+    Window* appWindow;
 
 @private
     DisplayGL* displaygl;
@@ -26,7 +26,7 @@
 @implementation OpenGLView
 
 - (instancetype)initWithFrame:(NSRect)frame
-                    appWindow:(Window2*)theAppWindow
+                    appWindow:(Window*)theAppWindow
                     displaygl:(DisplayGL*)displaygl {
     self = [super initWithFrame:frame];
     if (self) {

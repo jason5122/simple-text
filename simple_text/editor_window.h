@@ -8,7 +8,7 @@
 
 class SimpleText;
 
-class EditorWindow : public Window2 {
+class EditorWindow : public Window {
 public:
     int wid;
 

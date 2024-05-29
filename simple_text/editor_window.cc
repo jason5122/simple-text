@@ -7,7 +7,7 @@
 #include <iostream>
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window2(parent), parent(parent), wid(wid), color_scheme(isDarkMode()),
+    : Window(parent), parent(parent), wid(wid), color_scheme(isDarkMode()),
       main_font_rasterizer(parent.main_font_rasterizer),
       ui_font_rasterizer(parent.ui_font_rasterizer)
 #if IS_MAC || IS_WIN
@@ -129,7 +129,7 @@ void EditorWindow::onScroll(int dx, int dy) {
 
     int max_scroll_x = std::max(0, tab->longest_line_x - buffer_width);
     // TODO: Subtract one from line count to leave the last line visible.
-    int max_scroll_y = tab->buffer.lineCount() * main_font_rasterizer.line_height;
+    int max_scroll_y = tab->buffer.lineCount() * renderer.lineHeight();
 
     renderer::Point delta{dx, dy};
     renderer::Point max_scroll{max_scroll_x, max_scroll_y};

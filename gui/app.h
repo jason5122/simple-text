@@ -24,7 +24,7 @@ public:
     virtual void onQuit() {}
 
 private:
-    friend class Window2;
+    friend class Window;
 
     class impl;
     std::unique_ptr<impl> pimpl;

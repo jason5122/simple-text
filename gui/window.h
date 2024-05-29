@@ -7,12 +7,12 @@
 
 class App;
 
-class Window2 {
+class Window {
 public:
-    NOT_COPYABLE(Window2)
-    NOT_MOVABLE(Window2)
-    Window2(App& app);
-    virtual ~Window2();
+    NOT_COPYABLE(Window)
+    NOT_MOVABLE(Window)
+    Window(App& app);
+    virtual ~Window();
 
     void show();
     void close();
@@ -33,7 +33,6 @@ public:
     virtual void onDarkModeToggle() {}
 
 private:
-    friend class App;
     App& app;
 
     class impl;

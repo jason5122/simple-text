@@ -1,7 +1,7 @@
 #include "gui/cocoa/pimpl_mac.h"
 #include "gui/window.h"
 
-Window2::Window2(App& app) : pimpl{new impl{}}, app(app) {
+Window::Window(App& app) : pimpl{new impl{}}, app(app) {
     // NSRect frame = NSMakeRect(500, 0, width, height);
     NSRect frame = NSScreen.mainScreen.visibleFrame;
 
@@ -26,34 +26,35 @@ Window2::Window2(App& app) : pimpl{new impl{}}, app(app) {
     // }
 }
 
-Window2::~Window2() {
+Window::~Window() {
+    std::cerr << "Window::~Window()\n";
     [pimpl->window_controller release];
 }
 
-void Window2::show() {
+void Window::show() {
     [pimpl->window_controller show];
 }
 
-void Window2::close() {
+void Window::close() {
     [pimpl->window_controller close];
 }
 
-void Window2::redraw() {
+void Window::redraw() {
     [pimpl->window_controller redraw];
 }
 
-int Window2::width() {
+int Window::width() {
     return [pimpl->window_controller getWidth];
 }
 
-int Window2::height() {
+int Window::height() {
     return [pimpl->window_controller getHeight];
 }
 
-int Window2::scaleFactor() {
+int Window::scaleFactor() {
     return [pimpl->window_controller getScaleFactor];
 }
 
-bool Window2::isDarkMode() {
+bool Window::isDarkMode() {
     return [pimpl->window_controller isDarkMode];
 }

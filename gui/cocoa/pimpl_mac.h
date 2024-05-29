@@ -15,7 +15,7 @@ public:
     impl() : displaygl(DisplayGL::Create()) {}
 };
 
-class Window2::impl {
+class Window::impl {
 public:
     WindowController* window_controller;
 };

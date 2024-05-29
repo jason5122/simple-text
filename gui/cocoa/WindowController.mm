@@ -3,14 +3,14 @@
 
 @interface WindowController () {
     OpenGLView* opengl_view;
-    Window2* app_window;
+    Window* app_window;
 }
 @end
 
 @implementation WindowController
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(Window2*)appWindow
+                    appWindow:(Window*)appWindow
                     displayGl:(DisplayGL*)displayGl {
     self = [super init];
     if (self) {

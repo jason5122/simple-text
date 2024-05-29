@@ -78,8 +78,8 @@ App::App() : pimpl{new impl{}} {
 
 App::~App() {}
 
-std::unique_ptr<Window2> App::createWindow() {
-    return std::unique_ptr<Window2>(new Window2(*this));
+std::unique_ptr<Window2, Window2::WindowDeleter> App::createWindowTemp() {
+    return std::unique_ptr<Window2, Window2::WindowDeleter>(new Window2(*this));
 }
 
 void App::run() {

@@ -77,6 +77,7 @@ public:
 
 private:
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
+    std::vector<WindowPtr> editor_windows2;
 
     font::FontRasterizer main_font_rasterizer;
     font::FontRasterizer ui_font_rasterizer;

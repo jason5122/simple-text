@@ -54,9 +54,11 @@ public:
     NOT_MOVABLE(App)
     App();
     virtual ~App();
-    std::unique_ptr<Window2> createWindow();
     void run();
     void quit();
+
+    using WindowPtr = std::unique_ptr<Window2, Window2::WindowDeleter>;
+    WindowPtr createWindowTemp();
 
     virtual void onLaunch() {}
     virtual void onQuit() {}

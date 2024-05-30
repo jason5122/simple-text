@@ -6,6 +6,7 @@
 #include <windowsx.h>
 #include <winuser.h>
 
+#include <format>
 #include <iostream>
 
 #define ID_FILE_ABOUT 1
@@ -206,6 +207,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_KEYDOWN: {
+        std::cerr << std::format("WM_KEYDOWN: {}", wParam) << '\n';
+
         gui::Key key = GetKey(wParam);
         gui::ModifierKey modifiers = GetModifiers();
 
@@ -238,6 +241,28 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         return 0;
+
+    case WM_CHAR: {
+        if (IS_HIGH_SURROGATE(wParam)) {
+            high_surrogate = wParam;
+        } else {
+            WCHAR utf16[3];
+
+            utf16[0] = high_surrogate ? high_surrogate : (WCHAR)wParam;
+            utf16[1] = high_surrogate ? (WCHAR)wParam : L'\0';
+            utf16[2] = L'\0';
+
+            char utf8[5];
+            int result =
+                WideCharToMultiByte(CP_UTF8, 0, utf16, -1, utf8, sizeof(utf8), nullptr, nullptr);
+            if (result > 0) {
+                std::cerr << std::format("WM_CHAR: {}", &utf8[0]) << '\n';
+            }
+
+            high_surrogate = '\0';
+        }
+        return 0;
+    }
 
     case WM_ERASEBKGND:
         return 1;

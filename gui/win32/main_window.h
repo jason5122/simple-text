@@ -25,6 +25,8 @@ private:
     HDC m_hdc;
     Window& app_window;
     DummyContext& dummy_context;
+
+    WCHAR high_surrogate = '\0';
 };
 
 }

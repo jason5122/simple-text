@@ -1,5 +1,6 @@
 #include "gui/modifier_key.h"
 #include "main_window.h"
+#include "util/escape_special_chars.h"
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <string>
@@ -256,7 +257,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             int result =
                 WideCharToMultiByte(CP_UTF8, 0, utf16, -1, utf8, sizeof(utf8), nullptr, nullptr);
             if (result > 0) {
-                std::cerr << std::format("WM_CHAR: {}", &utf8[0]) << '\n';
+                std::cerr << std::format("WM_CHAR: {}", EscapeSpecialChars(utf8)) << '\n';
+                app_window.onInsertText(utf8);
             }
 
             high_surrogate = '\0';

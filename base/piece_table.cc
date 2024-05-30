@@ -1,4 +1,5 @@
 #include "piece_table.h"
+#include "util/escape_special_chars.h"
 #include <format>
 #include <iostream>
 
@@ -63,28 +64,6 @@ std::string PieceTable::string() {
         str += buffer.substr(piece.start, piece.length);
     }
     return str;
-}
-
-static inline std::string EscapeSpecialChars(const std::string& str) {
-    std::string result;
-
-    for (auto c : str) {
-        switch (c) {
-        case '\n':
-            result += "\\n";
-            break;
-
-        case '\t':
-            result += "\\t";
-            break;
-
-        default:
-            result += c;
-            break;
-        }
-    }
-
-    return result;
 }
 
 void PieceTable::printPieces() {

@@ -3,11 +3,11 @@
 
 namespace base {
 
-void Buffer::setContents(std::string txt) {
+void Buffer::setContents(std::string text) {
     data.clear();
 
     std::string line;
-    for (char ch : txt) {
+    for (char ch : text) {
         if (ch == '\n') {
             data.push_back(line);
             line.clear();
@@ -17,7 +17,7 @@ void Buffer::setContents(std::string txt) {
     }
     data.push_back(line);
 
-    flat_string = txt;
+    flat_string = text;
 }
 
 size_t Buffer::size() {
@@ -46,15 +46,15 @@ size_t Buffer::byteOfLine(size_t line_index) {
     return byte_offset;
 }
 
-void Buffer::insert(size_t line_index, size_t line_offset, std::string_view txt) {
-    if (txt == "\n") {
+void Buffer::insert(size_t line_index, size_t line_offset, std::string_view text) {
+    if (text == "\n" || text == "\r") {
         std::string before_lf = data.at(line_index).substr(0, line_offset);
         std::string after_lf = data.at(line_index).substr(line_offset);
 
         data.insert(data.begin() + line_index + 1, after_lf);
         data.at(line_index) = before_lf;
     } else {
-        data.at(line_index).insert(line_offset, txt);
+        data.at(line_index).insert(line_offset, text);
     }
 }
 

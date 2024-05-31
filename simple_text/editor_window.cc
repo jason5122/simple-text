@@ -177,9 +177,6 @@ bool EditorWindow::onKeyDown(gui::Key key, gui::ModifierKey modifiers) {
         // if (key == gui::Key::kC && modifiers == gui::kPrimaryModifier) {
         //     close();
         // }
-        if (key == gui::Key::kQ && modifiers == gui::kPrimaryModifier) {
-            parent.quit();
-        }
 
         return true;
     }

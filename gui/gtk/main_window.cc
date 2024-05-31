@@ -2,6 +2,8 @@
 #include "main_window.h"
 #include <cmath>
 #include <glad/glad.h>
+
+#include <format>
 #include <iostream>
 
 namespace gui {
@@ -218,6 +220,8 @@ static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer us
 
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onKeyDown(key, modifiers);
+
+    std::cerr << std::format("hardware_keycode = {}", event->hardware_keycode) << '\n';
 
     return true;
 }

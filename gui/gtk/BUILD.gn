@@ -7,11 +7,6 @@ source_set("gtk") {
     "window.cc",
   ]
 
-  libs = [
-    "EGL",
-    "GL",
-  ]
-
   public_configs = [ ":gtk3" ]
 
   public_deps = [ "//third_party/glad" ]

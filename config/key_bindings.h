@@ -10,6 +10,7 @@
 namespace config {
 enum class Action {
     kNone,
+    kExit,
     kNewWindow,
     kCloseWindow,
     kNewTab,
@@ -61,6 +62,7 @@ private:
         {"primary", gui::kPrimaryModifier},
     };
     static inline const std::unordered_map<std::string, Action> action_map{
+        {"exit", Action::kExit},
         {"new_window", Action::kNewWindow},
         {"close_window", Action::kCloseWindow},
         {"new_tab", Action::kNewTab},

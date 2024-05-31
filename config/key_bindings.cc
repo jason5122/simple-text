@@ -5,6 +5,7 @@
 namespace config {
 KeyBindings::KeyBindings() {
     kDefaultKeyBindingsSchema = {
+        {.keys = "primary+q", .command = "exit"},
         {.keys = "primary+shift+n", .command = "new_window"},
         {.keys = "primary+shift+w", .command = "close_window"},
         {.keys = "primary+n", .command = "new_tab"},

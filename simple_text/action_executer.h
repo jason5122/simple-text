@@ -11,6 +11,10 @@ inline void ExecuteAction(config::Action& action, SimpleText& app, EditorWindow&
     case Action::kNone:
         break;
 
+    case Action::kExit:
+        app.quit();
+        break;
+
     case Action::kNewWindow:
         app.createWindow();
         break;

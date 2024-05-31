@@ -157,25 +157,31 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey mo
     redraw();
 }
 
-void EditorWindow::onKeyDown(gui::Key key, gui::ModifierKey modifiers) {
+bool EditorWindow::onKeyDown(gui::Key key, gui::ModifierKey modifiers) {
     using config::Action;
 
     Action action = parent.key_bindings.parseKeyPress(key, modifiers);
-    ExecuteAction(action, parent, *this);
 
-    // if (key == gui::Key::kA && modifiers == gui::kPrimaryModifier) {
-    //     parent.createNWindows(25);
-    // }
-    // if (key == gui::Key::kB && modifiers == gui::kPrimaryModifier) {
-    //     parent.destroyAllWindows();
-    // }
+    if (action == Action::kNone) {
+        return false;
+    } else {
+        ExecuteAction(action, parent, *this);
 
-    // if (key == gui::Key::kC && modifiers == gui::kPrimaryModifier) {
-    //     close();
-    // }
+        // if (key == gui::Key::kA && modifiers == gui::kPrimaryModifier) {
+        //     parent.createNWindows(25);
+        // }
+        // if (key == gui::Key::kB && modifiers == gui::kPrimaryModifier) {
+        //     parent.destroyAllWindows();
+        // }
 
-    if (key == gui::Key::kQ && modifiers == gui::kPrimaryModifier) {
-        parent.quit();
+        // if (key == gui::Key::kC && modifiers == gui::kPrimaryModifier) {
+        //     close();
+        // }
+        if (key == gui::Key::kQ && modifiers == gui::kPrimaryModifier) {
+            parent.quit();
+        }
+
+        return true;
     }
 }
 

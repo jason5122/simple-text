@@ -32,7 +32,9 @@ public:
     virtual void onScroll(int dx, int dy) {}
     virtual void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {}
     virtual void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {}
-    virtual void onKeyDown(gui::Key key, gui::ModifierKey modifiers) {}
+    virtual bool onKeyDown(gui::Key key, gui::ModifierKey modifiers) {
+        return false;
+    }
     virtual void onInsertText(std::string_view text) {}
     virtual void onAction(gui::Action action) {}
     virtual void onClose() {}

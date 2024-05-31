@@ -213,7 +213,14 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         gui::Key key = GetKey(wParam);
         gui::ModifierKey modifiers = GetModifiers();
 
-        app_window.onKeyDown(key, modifiers);
+        bool handled = app_window.onKeyDown(key, modifiers);
+
+        // Remove translated WM_CHAR if we've already handled the keybind.
+        if (handled) {
+            MSG msg;
+            PeekMessage(&msg, m_hwnd, WM_CHAR, WM_CHAR, PM_REMOVE);
+        }
+
         return 0;
     }
 
@@ -247,11 +254,14 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (IS_HIGH_SURROGATE(wParam)) {
             high_surrogate = wParam;
         } else {
-            WCHAR utf16[3];
+            WCHAR utf16[3]{};  // Initialized to {'\0', '\0', '\0'}.
 
-            utf16[0] = high_surrogate ? high_surrogate : (WCHAR)wParam;
-            utf16[1] = high_surrogate ? (WCHAR)wParam : L'\0';
-            utf16[2] = L'\0';
+            if (high_surrogate) {
+                utf16[0] = high_surrogate;
+                utf16[1] = (WCHAR)wParam;
+            } else {
+                utf16[0] = (WCHAR)wParam;
+            }
 
             char utf8[5];
             int result =

@@ -42,7 +42,7 @@
     [menu addItem:appMenu];
 
     NSMenuItem* fileMenu = [[[NSMenuItem alloc] initWithTitle:@"File"
-                                                       action:nullptr
+                                                       action:NULL
                                                 keyEquivalent:@""] autorelease];
     fileMenu.submenu = [[[NSMenu alloc] init] autorelease];
     [fileMenu.submenu addItemWithTitle:@"New File" action:@selector(newFile) keyEquivalent:@"n"];
@@ -83,7 +83,7 @@
 }
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app {
-    return true;
+    return YES;
 }
 
 @end

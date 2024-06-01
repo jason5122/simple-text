@@ -22,7 +22,6 @@
                                                    styleMask:mask
                                                      backing:NSBackingStoreBuffered
                                                        defer:false] autorelease];
-        self.window.title = @"Simple Text";
         opengl_view = [[[OpenGLView alloc] initWithFrame:frameRect
                                                appWindow:appWindow
                                                displaygl:displayGl] autorelease];
@@ -34,6 +33,10 @@
         self.window.tabbingMode = NSWindowTabbingModeDisallowed;
 
         self.window.delegate = self;
+
+        self.window.representedFilename = @"/Users/jason/cs/side-projects/simple-text/BUILD.gn";
+
+        self.window.title = @"BUILD.gn — simple-text";
     }
     return self;
 }

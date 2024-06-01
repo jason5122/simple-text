@@ -29,6 +29,7 @@
 - (void)applicationWillFinishLaunching:(NSNotification*)notification {
     NSString* appName = NSBundle.mainBundle.infoDictionary[@"CFBundleName"];
     menu = [[[NSMenu alloc] init] autorelease];
+
     NSMenuItem* appMenu = [[[NSMenuItem alloc] init] autorelease];
     appMenu.submenu = [[[NSMenu alloc] init] autorelease];
     [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"About %@", appName]
@@ -39,6 +40,19 @@
                                action:@selector(terminate:)
                         keyEquivalent:@"q"];
     [menu addItem:appMenu];
+
+    NSMenuItem* fileMenu = [[[NSMenuItem alloc] initWithTitle:@"File"
+                                                       action:nullptr
+                                                keyEquivalent:@""] autorelease];
+    fileMenu.submenu = [[[NSMenu alloc] init] autorelease];
+    [fileMenu.submenu addItemWithTitle:@"New File" action:@selector(newFile) keyEquivalent:@"n"];
+    [fileMenu.submenu addItem:[NSMenuItem separatorItem]];
+    [[fileMenu.submenu addItemWithTitle:@"New Window"
+                                 action:@selector(newWindow)
+                          keyEquivalent:@"n"]
+        setKeyEquivalentModifierMask:NSEventModifierFlagShift | NSEventModifierFlagCommand];
+    [menu addItem:fileMenu];
+
     NSApplication.sharedApplication.mainMenu = menu;
 
     app->onLaunch();
@@ -51,6 +65,21 @@
 - (void)showAboutPanel {
     [NSApplication.sharedApplication orderFrontStandardAboutPanel:menu];
     [NSApplication.sharedApplication activateIgnoringOtherApps:true];
+}
+
+- (void)newFile {
+    std::cerr << "new file\n";
+}
+
+- (void)newWindow {
+    std::cerr << "new window\n";
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem*)item {
+    if (item.action == @selector(newFile)) {
+        // return NO;
+    }
+    return YES;
 }
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app {

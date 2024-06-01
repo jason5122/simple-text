@@ -9,7 +9,10 @@ source_set("gtk") {
 
   public_configs = [ ":gtk3" ]
 
-  public_deps = [ "//third_party/glad" ]
+  public_deps = [
+    "//third_party/glad",
+    "//third_party/libgrapheme",
+  ]
 }
 
 pkg_config("gtk3") {

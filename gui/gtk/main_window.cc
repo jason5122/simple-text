@@ -3,6 +3,10 @@
 #include <cmath>
 #include <glad/glad.h>
 
+extern "C" {
+#include "third_party/libgrapheme/grapheme.h"
+}
+
 #include <format>
 #include <iostream>
 
@@ -219,9 +223,20 @@ static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer us
     gui::ModifierKey modifiers = GetModifiers(event->state);
 
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    main_window->app_window->onKeyDown(key, modifiers);
+    bool handled = main_window->app_window->onKeyDown(key, modifiers);
 
-    std::cerr << std::format("hardware_keycode = {}", event->hardware_keycode) << '\n';
+    if (!handled) {
+        guint32 codepoint = gdk_keyval_to_unicode(event->keyval);
+
+        char* str;
+        size_t len = grapheme_encode_utf8(codepoint, nullptr, 0);
+        str = new char[len + 1];
+        grapheme_encode_utf8(codepoint, str, len);
+        str[len] = '\0';
+
+        main_window->app_window->onInsertText(str);
+        free(str);
+    }
 
     return true;
 }

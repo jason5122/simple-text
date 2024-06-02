@@ -53,7 +53,7 @@
         setKeyEquivalentModifierMask:NSEventModifierFlagShift | NSEventModifierFlagCommand];
     [menu addItem:fileMenu];
 
-    NSApplication.sharedApplication.mainMenu = menu;
+    NSApp.mainMenu = menu;
 
     app->onLaunch();
 }
@@ -63,25 +63,27 @@
 }
 
 - (void)showAboutPanel {
-    [NSApplication.sharedApplication orderFrontStandardAboutPanel:menu];
-    [NSApplication.sharedApplication activateIgnoringOtherApps:true];
+    [NSApp orderFrontStandardAboutPanel:menu];
+    [NSApp activateIgnoringOtherApps:true];
 }
 
 - (void)newFile {
-    std::cerr << "new file\n";
+    app->onGuiAction(gui::GuiAction::kNewFile);
+
+    std::cerr << [NSApp.keyWindow.windowController getHeight] << '\n';
 }
 
 - (void)newWindow {
-    std::cerr << "new window\n";
+    app->onGuiAction(gui::GuiAction::kNewWindow);
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item {
-    if (item.action == @selector(newFile)) {
-        return NO;
-    }
-    if (item.action == @selector(newWindow)) {
-        return NO;
-    }
+    // if (item.action == @selector(newFile)) {
+    //     return NO;
+    // }
+    // if (item.action == @selector(newWindow)) {
+    //     return NO;
+    // }
     return YES;
 }
 
@@ -94,23 +96,25 @@
 namespace gui {
 
 App::App() : pimpl{new impl{}} {
-    pimpl->ns_app = NSApplication.sharedApplication;
+    // We must create the application instance once before using `NSApp`.
+    [NSApplication sharedApplication];
+
     AppDelegate* appDelegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
 
-    pimpl->ns_app.activationPolicy = NSApplicationActivationPolicyRegular;
-    pimpl->ns_app.delegate = appDelegate;
+    NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
+    NSApp.delegate = appDelegate;
 }
 
 App::~App() {}
 
 void App::run() {
     @autoreleasepool {
-        [pimpl->ns_app run];
+        [NSApp run];
     }
 }
 
 void App::quit() {
-    [pimpl->ns_app terminate:nil];
+    [NSApp terminate:nil];
 }
 
 }

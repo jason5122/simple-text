@@ -10,7 +10,6 @@ namespace gui {
 
 class App::impl {
 public:
-    NSApplication* ns_app;
     NSPoint cascading_point = NSZeroPoint;
     std::unique_ptr<DisplayGL> displaygl;
 

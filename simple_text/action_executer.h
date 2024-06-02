@@ -80,9 +80,6 @@ inline void ExecuteGuiAction(gui::Action action, EditorTab* tab) {
     using gui::Action;
 
     switch (action) {
-    case Action::kNone:
-        break;
-
     case Action::kMoveForwardByCharacter:
         tab->moveCaret(EditorTab::MovementType::kCharacters, true, false);
         break;

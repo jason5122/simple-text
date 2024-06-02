@@ -77,7 +77,10 @@
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item {
     if (item.action == @selector(newFile)) {
-        // return NO;
+        return NO;
+    }
+    if (item.action == @selector(newWindow)) {
+        return NO;
     }
     return YES;
 }

@@ -62,4 +62,12 @@ bool Window::isDarkMode() {
     return [pimpl->window_controller isDarkMode];
 }
 
+void Window::setTitle(const std::string& title) {
+    [pimpl->window_controller setTitle:title];
+}
+
+void Window::setFilePath(fs::path path) {
+    [pimpl->window_controller setFilePath:path];
+}
+
 }

@@ -50,4 +50,6 @@ private:
 #elif IS_LINUX
     renderer::Renderer renderer;
 #endif
+
+    void updateWindowTitle();
 };

@@ -33,10 +33,6 @@
         self.window.tabbingMode = NSWindowTabbingModeDisallowed;
 
         self.window.delegate = self;
-
-        self.window.representedFilename = @"/Users/jason/cs/side-projects/simple-text/BUILD.gn";
-
-        self.window.title = @"BUILD.gn — simple-text";
     }
     return self;
 }
@@ -71,6 +67,14 @@
 
 - (bool)isDarkMode {
     return opengl_view.effectiveAppearance.name == NSAppearanceNameDarkAqua;
+}
+
+- (void)setTitle:(const std::string&)title {
+    self.window.title = [NSString stringWithUTF8String:&title[0]];
+}
+
+- (void)setFilePath:(fs::path)path {
+    self.window.representedFilename = [NSString stringWithUTF8String:path.string().c_str()];
 }
 
 @end

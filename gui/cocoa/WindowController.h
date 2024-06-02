@@ -2,6 +2,8 @@
 
 #include "gui/cocoa/displaygl.h"
 #include "gui/window.h"
+#include <string>
+
 #import <Cocoa/Cocoa.h>
 
 @interface WindowController : NSWindowController <NSWindowDelegate>
@@ -17,5 +19,7 @@
 - (int)getHeight;
 - (int)getScaleFactor;
 - (bool)isDarkMode;
+- (void)setTitle:(const std::string&)title;
+- (void)setFilePath:(fs::path)path;
 
 @end

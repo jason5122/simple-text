@@ -4,8 +4,11 @@
 #include "gui/key.h"
 #include "gui/modifier_key.h"
 #include "util/not_copyable_or_movable.h"
+#include <filesystem>
 #include <memory>
 #include <string_view>
+
+namespace fs = std::filesystem;
 
 namespace gui {
 
@@ -25,6 +28,8 @@ public:
     int height();
     int scaleFactor();
     bool isDarkMode();
+    void setTitle(const std::string& title);
+    void setFilePath(fs::path path);
 
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw() {}

@@ -231,9 +231,9 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
         std::cerr << "keyDown was unhandled\n";
     }
 
-    // gui::Key key = GetKey(event.keyCode);
-    // gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    // openGLLayer->appWindow->onKeyDown(key, modifiers);
+    gui::Key key = GetKey(event.keyCode);
+    gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    openGLLayer->appWindow->onKeyDown(key, modifiers);
 }
 
 - (void)mouseDown:(NSEvent*)event {

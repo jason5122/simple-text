@@ -27,6 +27,7 @@ void EditorWindow::createTab(fs::path file_path) {
         std::make_unique<EditorTab>(file_path, renderer.movement);
     editor_tab->setup(color_scheme);
     tabs.insert(tabs.begin() + tab_index, std::move(editor_tab));
+    updateWindowTitle();
 }
 
 void EditorWindow::reloadColorScheme() {
@@ -37,6 +38,7 @@ void EditorWindow::reloadColorScheme() {
 void EditorWindow::selectTabIndex(int index) {
     if (tabs.size() > index) {
         tab_index = index;
+        updateWindowTitle();
     }
     redraw();
 }
@@ -47,17 +49,20 @@ static inline int PositiveModulo(int i, int n) {
 
 void EditorWindow::selectPreviousTab() {
     tab_index = PositiveModulo(tab_index - 1, tabs.size());
+    updateWindowTitle();
     redraw();
 }
 
 void EditorWindow::selectNextTab() {
     tab_index = PositiveModulo(tab_index + 1, tabs.size());
+    updateWindowTitle();
     redraw();
 }
 
 void EditorWindow::selectLastTab() {
     if (tabs.size() > 0) {
         tab_index = tabs.size() - 1;
+        updateWindowTitle();
     }
     redraw();
 }
@@ -72,6 +77,7 @@ void EditorWindow::closeCurrentTab() {
     if (tabs.empty()) {
         close();
     } else {
+        updateWindowTitle();
         redraw();
     }
 }
@@ -79,6 +85,11 @@ void EditorWindow::closeCurrentTab() {
 void EditorWindow::toggleSideBar() {
     renderer.toggleSideBar();
     redraw();
+}
+
+void EditorWindow::updateWindowTitle() {
+    setTitle(tabs[tab_index]->file_path.filename());
+    setFilePath(tabs[tab_index]->file_path);
 }
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
@@ -98,13 +109,15 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path7 = ResourceDir() / "sample_files/emoji-test.txt";
 
     createTab(file_path);
-    // createTab(file_path2);
-    // createTab(file_path3);
-    // createTab(file_path4);
-    // createTab(file_path5);
-    // createTab(file_path6);
-    // createTab(file_path7);
+    createTab(file_path2);
+    createTab(file_path3);
+    createTab(file_path4);
+    createTab(file_path5);
+    createTab(file_path6);
+    createTab(file_path7);
     // createTab({});
+
+    updateWindowTitle();
 }
 
 void EditorWindow::onDraw() {

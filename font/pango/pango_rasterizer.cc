@@ -41,7 +41,6 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     int height = pango_font_metrics_get_height(metrics.get()) / PANGO_SCALE;
     int line_height = std::max(ascent + descent, height);
 
-    // TODO: Remove magic numbers that emulate Sublime Text.
     this->line_height = line_height;
     this->descent = descent;
 }

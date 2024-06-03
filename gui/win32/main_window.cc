@@ -258,6 +258,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
 
     case WM_CHAR: {
+        // https://github.com/libsdl-org/SDL/blob/b1c7b2f44f4aa9c80700911703e40795a8de3fcb/src/video/windows/SDL_windowsevents.c#L1217
+        // https://discourse.libsdl.org/t/sdl-win32-simplify-unicode-text-input-code/47582
         if (IS_HIGH_SURROGATE(wParam)) {
             high_surrogate = wParam;
         } else {

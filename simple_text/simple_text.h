@@ -22,6 +22,7 @@ public:
 
     void onLaunch() override;
     void onQuit() override;
+    void onGuiAction(gui::GuiAction action) override;
     void onFileEvent() override;
 
 private:

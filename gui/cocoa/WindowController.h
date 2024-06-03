@@ -21,5 +21,6 @@
 - (bool)isDarkMode;
 - (void)setTitle:(const std::string&)title;
 - (void)setFilePath:(fs::path)path;
+- (gui::Window*)getAppWindow;
 
 @end

@@ -2,6 +2,7 @@
 #include "gui/cocoa/OpenGLView.h"
 #include "gui/cocoa/WindowController.h"
 #include "gui/cocoa/pimpl_mac.h"
+#include "gui/window.h"
 #include <Foundation/Foundation.h>
 #include <format>
 #include <iostream>
@@ -68,13 +69,23 @@
 }
 
 - (void)newFile {
-    app->onGuiAction(gui::GuiAction::kNewFile);
-
-    std::cerr << [NSApp.keyWindow.windowController getHeight] << '\n';
+    // If there are no open windows, pass action to `App` instead of `App::Window`.
+    if (NSApp.keyWindow == nil) {
+        app->onGuiAction(gui::GuiAction::kNewFile);
+    } else {
+        gui::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
+        app_window->onGuiAction(gui::GuiAction::kNewFile);
+    }
 }
 
 - (void)newWindow {
-    app->onGuiAction(gui::GuiAction::kNewWindow);
+    // If there are no open windows, pass action to `App` instead of `App::Window`.
+    if (NSApp.keyWindow == nil) {
+        app->onGuiAction(gui::GuiAction::kNewWindow);
+    } else {
+        gui::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
+        app_window->onGuiAction(gui::GuiAction::kNewWindow);
+    }
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item {

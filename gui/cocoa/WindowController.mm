@@ -77,4 +77,8 @@
     self.window.representedFilename = [NSString stringWithUTF8String:path.string().c_str()];
 }
 
+- (gui::Window*)getAppWindow {
+    return app_window;
+}
+
 @end

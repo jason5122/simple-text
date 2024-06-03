@@ -375,7 +375,8 @@ int MainWindow::scaleFactor() {
 }
 
 void MainWindow::setTitle(const std::string& title) {
-    SetWindowText(m_hwnd, L"untitleddddd");
+    std::wstring str16 = base::windows::ConvertToUTF16(title);
+    SetWindowText(m_hwnd, &str16[0]);
 }
 
 }

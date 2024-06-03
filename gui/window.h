@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/action.h"
+#include "gui/gui_action.h"
 #include "gui/key.h"
 #include "gui/modifier_key.h"
 #include "util/not_copyable_or_movable.h"
@@ -44,6 +45,7 @@ public:
     virtual void onAction(gui::Action action) {}
     virtual void onClose() {}
     virtual void onDarkModeToggle() {}
+    virtual void onGuiAction(GuiAction action) {}
 
 private:
     App& app;

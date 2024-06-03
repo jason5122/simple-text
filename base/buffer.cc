@@ -85,4 +85,8 @@ void Buffer::erase(size_t start_byte, size_t end_byte) {
     setContents(flat_string);
 }
 
+bool Buffer::empty() {
+    return data.size() == 1 && data[0].empty();
+}
+
 }

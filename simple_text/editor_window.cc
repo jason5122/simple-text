@@ -88,7 +88,16 @@ void EditorWindow::toggleSideBar() {
 }
 
 void EditorWindow::updateWindowTitle() {
-    setTitle(tabs[tab_index]->file_path.filename());
+    if (tabs[tab_index]->file_path.empty()) {
+        if (tabs[tab_index]->buffer.empty()) {
+            setTitle("untitled");
+        } else {
+            setTitle(tabs[tab_index]->buffer.getLineContent(0));
+        }
+    } else {
+        setTitle(tabs[tab_index]->file_path.filename());
+    }
+
     setFilePath(tabs[tab_index]->file_path);
 }
 
@@ -196,12 +205,16 @@ bool EditorWindow::onKeyDown(gui::Key key, gui::ModifierKey modifiers) {
 void EditorWindow::onInsertText(std::string_view text) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
     tab->buffer.insert(tab->end_caret.line, tab->end_caret.column, text);
+
+    updateWindowTitle();
     redraw();
 }
 
 void EditorWindow::onAction(gui::Action action) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
     ExecuteGuiAction(action, tab.get());
+
+    updateWindowTitle();
     redraw();
 }
 

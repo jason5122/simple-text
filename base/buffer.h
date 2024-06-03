@@ -17,6 +17,7 @@ public:
     void remove(size_t line_index, size_t line_offset, size_t bytes);
     void backspace(size_t line_index, size_t line_offset, size_t bytes);
     void erase(size_t start_byte, size_t end_byte);
+    bool empty();
 
 private:
     using BufferType = std::vector<std::string>;

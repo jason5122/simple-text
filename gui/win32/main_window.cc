@@ -1,6 +1,8 @@
+#include "base/windows/unicode.h"
 #include "gui/modifier_key.h"
 #include "main_window.h"
 #include "util/escape_special_chars.h"
+#include "util/profile_util.h"
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <string>
@@ -263,13 +265,9 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 utf16[0] = (WCHAR)wParam;
             }
 
-            char utf8[5];
-            int result =
-                WideCharToMultiByte(CP_UTF8, 0, utf16, -1, utf8, sizeof(utf8), nullptr, nullptr);
-            if (result > 0) {
-                std::cerr << std::format("WM_CHAR: {}", EscapeSpecialChars(utf8)) << '\n';
-                app_window.onInsertText(utf8);
-            }
+            std::string str8 = base::windows::ConvertToUTF8(utf16);
+            std::cerr << std::format("WM_CHAR: {}", EscapeSpecialChars(str8)) << '\n';
+            app_window.onInsertText(str8);
 
             high_surrogate = '\0';
         }
@@ -368,6 +366,10 @@ int MainWindow::scaleFactor() {
     // std::cerr << "scale_factor: " << scale_factor << '\n';
     // TODO: Don't hard code this.
     return 1;
+}
+
+void MainWindow::setTitle(const std::string& title) {
+    SetWindowText(m_hwnd, L"untitleddddd");
 }
 
 }

@@ -95,7 +95,7 @@ void EditorWindow::updateWindowTitle() {
             setTitle(tabs[tab_index]->buffer.getLineContent(0));
         }
     } else {
-        setTitle(tabs[tab_index]->file_path.filename());
+        setTitle(tabs[tab_index]->file_path.filename().string());
     }
 
     setFilePath(tabs[tab_index]->file_path);

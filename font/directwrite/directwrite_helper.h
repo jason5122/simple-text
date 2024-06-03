@@ -68,17 +68,6 @@ inline void ColorRunHelper(ID2D1RenderTarget* target,
     target->EndDraw();
 }
 
-inline std::wstring ConvertToUTF16(std::string_view str8) {
-    // https://stackoverflow.com/a/6693107/14698275
-    size_t len = str8.length();
-    int required_len = MultiByteToWideChar(CP_UTF8, 0, &str8[0], len, nullptr, 0);
-
-    std::wstring wstr;
-    wstr.resize(required_len);
-    MultiByteToWideChar(CP_UTF8, 0, &str8[0], len, &wstr[0], required_len);
-    return wstr;
-}
-
 inline void PrintFontFamilyName(IDWriteFont* font) {
     Microsoft::WRL::ComPtr<IDWriteFontFamily> font_family;
     font->GetFontFamily(&font_family);

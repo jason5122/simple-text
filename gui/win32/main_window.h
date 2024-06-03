@@ -20,6 +20,7 @@ public:
     int width();
     int height();
     int scaleFactor();
+    void setTitle(const std::string& title);
 
 private:
     HDC m_hdc;

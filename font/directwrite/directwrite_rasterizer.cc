@@ -1,6 +1,7 @@
 // https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
 #define NOMINMAX
 
+#include "base/windows/unicode.h"
 #include "font/directwrite/directwrite_helper.h"
 #include "font/directwrite/font_fallback_source.h"
 #include "font/directwrite/text_analysis.h"
@@ -37,7 +38,7 @@ public:
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     : pimpl{new impl{}} {
-    std::wstring font_name_utf16 = ConvertToUTF16(font_name_utf8);
+    std::wstring font_name_utf16 = base::windows::ConvertToUTF16(font_name_utf8);
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
                         reinterpret_cast<IUnknown**>(pimpl->dwrite_factory.GetAddressOf()));
@@ -109,7 +110,7 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 FontRasterizer::~FontRasterizer() {}
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
-    std::wstring str16 = ConvertToUTF16(str8);
+    std::wstring str16 = base::windows::ConvertToUTF16(str8);
 
     ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
     UINT16 glyph_index = 0;

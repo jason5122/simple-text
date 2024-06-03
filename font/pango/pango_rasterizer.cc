@@ -68,6 +68,19 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     PangoFontDescriptionPtr desc{pango_font_describe(pimpl->pango_font.get())};
     pango_layout_set_font_description(layout.get(), desc.get());
 
+    {
+        PangoLayoutLine* layout_line = pango_layout_get_line_readonly(layout.get(), 0);
+
+        PangoGlyphItem* item = static_cast<PangoGlyphItem*>(layout_line->runs->data);
+        PangoFont* run_font = item->item->analysis.font;
+        PangoGlyph glyph_index = item->glyphs->glyphs->glyph;
+
+        hb_font_t* hb_font = pango_font_get_hb_font(run_font);
+
+        const char* font_str = pango_font_description_to_string(pango_font_describe(run_font));
+        std::cerr << std::format("font = {}, glyph_index (?) = {}", font_str, glyph_index) << '\n';
+    }
+
     int text_width;
     int text_height;
     pango_layout_get_size(layout.get(), &text_width, &text_height);
@@ -81,7 +94,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     std::vector<unsigned char> surface_data(text_width * text_height * 4);
     CairoContextPtr render_context = CreateRenderContext(text_width, text_height, 4, surface_data);
 
-    cairo_set_source_rgba(render_context.get(), 0, 0, 0, 1);
+    cairo_set_source_rgba(render_context.get(), 0, 1, 1, 1);
     pango_cairo_show_layout(render_context.get(), layout.get());
 
     std::vector<uint8_t> temp_buffer;

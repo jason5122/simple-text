@@ -35,4 +35,12 @@ bool Window::isDarkMode() {
     return pimpl->main_window.isDarkMode();
 }
 
+void Window::setTitle(const std::string& title) {
+    pimpl->main_window.setTitle(title);
+}
+
+void Window::setFilePath(fs::path path) {
+    // UNIMPLEMENTED
+}
+
 }

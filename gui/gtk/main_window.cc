@@ -143,6 +143,10 @@ bool MainWindow::isDarkMode() {
     return g_variant_get_uint32(variant) == 1;
 }
 
+void MainWindow::setTitle(const std::string& title) {
+    gtk_window_set_title(GTK_WINDOW(window), &title[0]);
+}
+
 static inline gui::Key GetKey(guint vk) {
     static constexpr struct {
         guint fVK;

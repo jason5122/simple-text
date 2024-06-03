@@ -21,6 +21,7 @@ public:
     int height();
     int scaleFactor();
     bool isDarkMode();
+    void setTitle(const std::string& title);
 
 private:
     GtkWidget* window;

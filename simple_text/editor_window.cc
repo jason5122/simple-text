@@ -225,3 +225,18 @@ void EditorWindow::onClose() {
 void EditorWindow::onDarkModeToggle() {
     reloadColorScheme();
 }
+
+void EditorWindow::onGuiAction(gui::GuiAction action) {
+    using gui::GuiAction;
+
+    switch (action) {
+    case GuiAction::kNewFile:
+        createTab({});
+        redraw();
+        break;
+
+    case GuiAction::kNewWindow:
+        parent.createWindow();
+        break;
+    }
+}

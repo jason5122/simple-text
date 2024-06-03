@@ -1,4 +1,5 @@
 #include "base/windows/unicode.h"
+#include "gui/gui_action.h"
 #include "gui/modifier_key.h"
 #include "main_window.h"
 #include "util/escape_special_chars.h"
@@ -12,8 +13,9 @@
 #include <format>
 #include <iostream>
 
-#define ID_FILE_ABOUT 1
-#define ID_FILE_EXIT 2
+#define ID_FILE_NEW_FILE 1
+#define ID_FILE_NEW_WINDOW 2
+#define ID_FILE_EXIT 3
 
 namespace gui {
 
@@ -243,8 +245,11 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
-        case ID_FILE_ABOUT:
-            MessageBox(m_hwnd, L"About menu item clicked", L"Notice", MB_OK | MB_ICONINFORMATION);
+        case ID_FILE_NEW_FILE:
+            app_window.onGuiAction(gui::GuiAction::kNewFile);
+            break;
+        case ID_FILE_NEW_WINDOW:
+            app_window.onGuiAction(gui::GuiAction::kNewWindow);
             break;
         case ID_FILE_EXIT:
             PostQuitMessage(0);
@@ -305,15 +310,16 @@ void MainWindow::redraw() {
     InvalidateRect(m_hwnd, NULL, FALSE);
 }
 
-static void AddMenu(HWND hwnd) {
-    HMENU hMenubar = CreateMenu();
-    HMENU hMenu = CreateMenu();
+static inline void AddMenu(HWND hwnd) {
+    HMENU menubar = CreateMenu();
+    HMENU file_menu = CreateMenu();
 
-    AppendMenu(hMenu, MF_STRING, ID_FILE_ABOUT, L"About");
-    AppendMenu(hMenu, MF_STRING, ID_FILE_EXIT, L"Exit");
-    AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hMenu, L"File");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"Exit");
+    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"File");
 
-    SetMenu(hwnd, hMenubar);
+    SetMenu(hwnd, menubar);
 }
 
 BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {

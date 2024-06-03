@@ -35,6 +35,7 @@ public:
     void onAction(gui::Action action) override;
     void onClose() override;
     void onDarkModeToggle() override;
+    void onGuiAction(gui::GuiAction action) override;
 
 private:
     SimpleText& parent;

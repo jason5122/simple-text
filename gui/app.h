@@ -25,7 +25,6 @@ public:
 
     virtual void onLaunch() {}
     virtual void onQuit() {}
-    virtual void onGuiAction(GuiAction action) {}
 
 private:
     friend class Window;

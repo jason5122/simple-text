@@ -55,20 +55,6 @@ void SimpleText::onQuit() {
     std::cerr << "SimpleText::onQuit()\n";
 }
 
-void SimpleText::onGuiAction(gui::GuiAction action) {
-    using gui::GuiAction;
-
-    switch (action) {
-    case GuiAction::kNewFile:
-        std::cerr << "new file\n";
-        break;
-
-    case GuiAction::kNewWindow:
-        createWindow();
-        break;
-    }
-}
-
 void SimpleText::onFileEvent() {
     // TODO: Investigate if redrawing *all* windows is ever a performance problem.
     for (const auto& editor_window : editor_windows) {

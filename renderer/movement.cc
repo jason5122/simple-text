@@ -14,6 +14,9 @@ void Movement::setCaretInfo(base::Buffer& buffer, Point& mouse, CaretInfo& caret
     if (caret.line > buffer.lineCount() - 1) {
         caret.line = buffer.lineCount() - 1;
     }
+    if (mouse.y < 0) {
+        caret.line = 0;
+    }
 
     std::string start_line_str = buffer.getLineContent(caret.line);
 

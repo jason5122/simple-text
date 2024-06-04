@@ -94,7 +94,11 @@ RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index,
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
     top -= descent;
 
-    bool colored = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
+    // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
+    // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
+    bool colored_font = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
+    bool has_outline = CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr);
+    bool colored = colored_font && !has_outline;
 
     ScopedTypeRef<CGColorSpaceRef> color_space_ref{CGColorSpaceCreateDeviceRGB()};
     ScopedTypeRef<CGContextRef> context{CGBitmapContextCreate(

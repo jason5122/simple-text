@@ -117,14 +117,14 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     fs::path file_path6 = ResourceDir() / "sample_files/emoji-data.txt";
     fs::path file_path7 = ResourceDir() / "sample_files/emoji-test.txt";
 
-    createTab(file_path);
-    createTab(file_path2);
-    createTab(file_path3);
-    createTab(file_path4);
-    createTab(file_path5);
+    // createTab(file_path);
+    // createTab(file_path2);
+    // createTab(file_path3);
+    // createTab(file_path4);
+    // createTab(file_path5);
     createTab(file_path6);
-    createTab(file_path7);
-    createTab({});
+    // createTab(file_path7);
+    // createTab({});
 }
 
 void EditorWindow::onDraw() {

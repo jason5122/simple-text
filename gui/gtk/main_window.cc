@@ -318,7 +318,8 @@ static gboolean scroll_event(GtkWidget* self, GdkEventScroll* event, gpointer us
 }
 
 static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpointer user_data) {
-    if (event->type == GDK_BUTTON_PRESS) {
+    if (event->type == GDK_BUTTON_PRESS || event->type == GDK_2BUTTON_PRESS ||
+        event->type == GDK_3BUTTON_PRESS) {
         int mouse_x = std::round(event->x);
         int mouse_y = std::round(event->y);
 
@@ -328,9 +329,16 @@ static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpoin
 
         gui::ModifierKey modifiers = GetModifiers(event->state);
 
+        gui::ClickType click_type = gui::ClickType::kSingleClick;
+        if (event->type == GDK_2BUTTON_PRESS) {
+            click_type = gui::ClickType::kDoubleClick;
+        } else if (event->type == GDK_3BUTTON_PRESS) {
+            click_type = gui::ClickType::kTripleClick;
+        }
+
         MainWindow* main_window = static_cast<MainWindow*>(user_data);
         main_window->app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers,
-                                                 ClickType::kSingleClick);
+                                                 click_type);
     }
     return true;
 }

@@ -134,17 +134,9 @@ bool MainWindow::isDarkMode() {
         variant = g_variant_get_variant(variant);
     }
 
-    switch (g_variant_get_uint32(variant)) {
-    case 0:
-        std::cerr << "default\n";
-        break;
-    case 1:
-        std::cerr << "dark!\n";
-        break;
-    case 2:
-        std::cerr << "light!\n";
-        break;
-    }
+    // 0: default
+    // 1: dark
+    // 2: light
     return g_variant_get_uint32(variant) == 1;
 }
 

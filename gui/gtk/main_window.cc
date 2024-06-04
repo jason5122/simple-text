@@ -23,6 +23,8 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data)
 static gboolean scroll_event(GtkWidget* self, GdkEventScroll* event, gpointer user_data);
 static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpointer user_data);
 static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpointer user_data);
+static gboolean crossing_notify_event(GtkWidget* self, GdkEventCrossing* event,
+                                      gpointer user_data);
 static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gchar* signal_name,
                                        GVariant* parameters, gpointer user_data);
 
@@ -51,6 +53,9 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     g_signal_connect(gl_area, "button-press-event", G_CALLBACK(button_press_event), this);
     gtk_widget_add_events(gl_area, GDK_BUTTON1_MOTION_MASK);
     g_signal_connect(gl_area, "motion-notify-event", G_CALLBACK(motion_notify_event), this);
+    gtk_widget_add_events(gl_area, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
+    g_signal_connect(gl_area, "enter-notify-event", G_CALLBACK(crossing_notify_event), this);
+    g_signal_connect(gl_area, "leave-notify-event", G_CALLBACK(crossing_notify_event), this);
 
     // Add menu bar.
     {
@@ -344,6 +349,23 @@ static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpoi
         MainWindow* main_window = static_cast<MainWindow*>(user_data);
         main_window->app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
     }
+    return true;
+}
+
+static gboolean crossing_notify_event(GtkWidget* self, GdkEventCrossing* event,
+                                      gpointer user_data) {
+    GdkDisplay* display = gtk_widget_get_display(self);
+
+    // TODO: Create `GdkCursor` objects once on realize instead of re-creating them each time.
+    GdkCursor* cursor;
+    if (event->type == GDK_ENTER_NOTIFY) {
+        cursor = gdk_cursor_new_from_name(display, "text");
+    }
+    if (event->type == GDK_LEAVE_NOTIFY) {
+        cursor = gdk_cursor_new_from_name(display, "default");
+    }
+    gdk_window_set_cursor(gtk_widget_get_window(self), cursor);
+    g_object_unref(cursor);
     return true;
 }
 

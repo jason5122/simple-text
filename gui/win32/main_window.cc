@@ -187,11 +187,27 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_LBUTTONDOWN: {
         SetCapture(m_hwnd);
 
+        // https://devblogs.microsoft.com/oldnewthing/20041018-00/?p=37543
+        LONG click_time = GetMessageTime();
+        if (click_time - last_click_time > GetDoubleClickTime()) {
+            click_count = 0;
+        }
+        // TODO: Prevent this from overflowing! This is unlikely, but prevent it anyways.
+        click_count++;
+        last_click_time = click_time;
+
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
         gui::ModifierKey modifiers = GetModifiers();
 
-        app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers, ClickType::kSingleClick);
+        gui::ClickType click_type = gui::ClickType::kSingleClick;
+        if (click_count == 2) {
+            click_type = gui::ClickType::kDoubleClick;
+        } else if (click_count >= 3) {
+            click_type = gui::ClickType::kTripleClick;
+        }
+
+        app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers, click_type);
         return 0;
     }
 

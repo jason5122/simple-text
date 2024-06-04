@@ -1,9 +1,10 @@
 #include "font/pango/pango_helper.h"
 #include "font/rasterizer.h"
 #include <cairo-ft.h>
-
-#include <iostream>
 #include <vector>
+
+#include <format>
+#include <iostream>
 
 namespace font {
 

@@ -77,31 +77,11 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     PangoFontDescriptionPtr desc{pango_font_describe(pimpl->pango_font.get())};
     pango_layout_set_font_description(layout.get(), desc.get());
 
-    {
-        PangoLayoutLine* layout_line = pango_layout_get_line_readonly(layout.get(), 0);
-        PangoGlyphItem* item = static_cast<PangoGlyphItem*>(layout_line->runs->data);
-
-        PangoFont* run_font = item->item->analysis.font;
-        PangoGlyph glyph_index = item->glyphs->glyphs->glyph;
-
-        hb_font_t* hb_font = pango_font_get_hb_font(run_font);
-
-        cairo_font_face_t* cairo_font_face = cairo_get_font_face(layout_context.get());
-
-        cairo_font_type_t type = cairo_font_face_get_type(cairo_font_face);
-        if (type == CAIRO_FONT_TYPE_TOY) {
-            std::cerr << "CAIRO_FONT_TYPE_TOY\n";
-        }
-
-        const char* font_str = pango_font_description_to_string(pango_font_describe(run_font));
-        std::cerr << std::format("font = {}, glyph_index = {}", font_str, glyph_index) << '\n';
-        delete font_str;
-
-#ifdef CAIRO_HAS_FT_FONT
-        std::cerr << "CAIRO_HAS_FT_FONT!\n";
-#endif
-        // cairo_ft_scaled_font_lock_face();
-    }
+    PangoLayoutLine* layout_line = pango_layout_get_line_readonly(layout.get(), 0);
+    PangoGlyphItem* item = static_cast<PangoGlyphItem*>(layout_line->runs->data);
+    PangoFont* run_font = item->item->analysis.font;
+    // PangoGlyph glyph_index = item->glyphs->glyphs->glyph;
+    bool colored = item->glyphs->glyphs->attr.is_color;
 
     int text_width;
     int text_height;
@@ -127,11 +107,13 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
         temp_buffer.emplace_back(surface_data[i + 2]);
         temp_buffer.emplace_back(surface_data[i + 1]);
         temp_buffer.emplace_back(surface_data[i]);
-        // temp_buffer.emplace_back(surface_data[i + 3]);
+        if (colored) {
+            temp_buffer.emplace_back(surface_data[i + 3]);
+        }
     }
 
     return RasterizedGlyph{
-        .colored = false,
+        .colored = colored,
         .left = 0,
         .top = text_height,
         .width = text_width,

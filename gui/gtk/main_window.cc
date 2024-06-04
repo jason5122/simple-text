@@ -324,7 +324,8 @@ static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpoin
         gui::ModifierKey modifiers = GetModifiers(event->state);
 
         MainWindow* main_window = static_cast<MainWindow*>(user_data);
-        main_window->app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers);
+        main_window->app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers,
+                                                 ClickType::kSingleClick);
     }
     return true;
 }

@@ -191,7 +191,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int mouse_y = GET_Y_LPARAM(lParam);
         gui::ModifierKey modifiers = GetModifiers();
 
-        app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers);
+        app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers, ClickType::kSingleClick);
         return 0;
     }
 

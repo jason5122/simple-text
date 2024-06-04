@@ -13,6 +13,12 @@ namespace fs = std::filesystem;
 
 namespace gui {
 
+enum class ClickType {
+    kSingleClick,
+    kDoubleClick,
+    kTripleClick,
+};
+
 class App;
 
 class Window {
@@ -36,13 +42,14 @@ public:
     virtual void onDraw() {}
     virtual void onResize(int width, int height) {}
     virtual void onScroll(int dx, int dy) {}
-    virtual void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {}
-    virtual void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {}
-    virtual bool onKeyDown(gui::Key key, gui::ModifierKey modifiers) {
+    virtual void onLeftMouseDown(int mouse_x, int mouse_y, ModifierKey modifiers,
+                                 ClickType click_type) {}
+    virtual void onLeftMouseDrag(int mouse_x, int mouse_y, ModifierKey modifiers) {}
+    virtual bool onKeyDown(Key key, ModifierKey modifiers) {
         return false;
     }
     virtual void onInsertText(std::string_view text) {}
-    virtual void onAction(gui::Action action) {}
+    virtual void onAction(Action action) {}
     virtual void onClose() {}
     virtual void onDarkModeToggle() {}
     virtual void onGuiAction(GuiAction action) {}

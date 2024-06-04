@@ -28,7 +28,8 @@ public:
     void onDraw() override;
     void onResize(int width, int height) override;
     void onScroll(int dx, int dy) override;
-    void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
+    void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers,
+                         gui::ClickType click_type) override;
     void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
     bool onKeyDown(gui::Key key, gui::ModifierKey modifiers) override;
     void onInsertText(std::string_view text) override;

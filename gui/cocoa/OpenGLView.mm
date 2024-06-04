@@ -246,7 +246,15 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
     int scaled_mouse_y = mouse_y * scale;
 
     gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers);
+
+    gui::ClickType click_type = gui::ClickType::kSingleClick;
+    if (event.clickCount == 2) {
+        click_type = gui::ClickType::kDoubleClick;
+    } else if (event.clickCount >= 3) {
+        click_type = gui::ClickType::kTripleClick;
+    }
+
+    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
 }
 
 - (void)mouseDragged:(NSEvent*)event {

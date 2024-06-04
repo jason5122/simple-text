@@ -157,8 +157,16 @@ void EditorWindow::onScroll(int dx, int dy) {
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {
+void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers,
+                                   gui::ClickType click_type) {
     std::unique_ptr<EditorTab>& tab = tabs.at(tab_index);
+
+    if (click_type == gui::ClickType::kDoubleClick) {
+        std::cerr << "double click\n";
+    }
+    if (click_type == gui::ClickType::kTripleClick) {
+        std::cerr << "triple click\n";
+    }
 
     renderer::Point pos = renderer.translateMousePosition(mouse_x, mouse_y, tab.get());
 

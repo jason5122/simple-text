@@ -77,10 +77,9 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     PangoFontDescriptionPtr desc{pango_font_describe(pimpl->pango_font.get())};
     pango_layout_set_font_description(layout.get(), desc.get());
 
+    // We don't need to free these. These are owned by the `PangoLayout` instance.
     PangoLayoutLine* layout_line = pango_layout_get_line_readonly(layout.get(), 0);
     PangoGlyphItem* item = static_cast<PangoGlyphItem*>(layout_line->runs->data);
-    PangoFont* run_font = item->item->analysis.font;
-    // PangoGlyph glyph_index = item->glyphs->glyphs->glyph;
     bool colored = item->glyphs->glyphs->attr.is_color;
 
     int text_width;
@@ -97,7 +96,6 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     CairoContextPtr render_context = CreateRenderContext(text_width, text_height, 4, surface_data);
 
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
-    // cairo_set_source_rgba(render_context.get(), 0, 1, 1, 1);
     pango_cairo_show_layout(render_context.get(), layout.get());
 
     std::vector<uint8_t> temp_buffer;

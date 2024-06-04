@@ -106,7 +106,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
     {
-        PROFILE_BLOCK("Tree-sitter highlight");
+        // PROFILE_BLOCK("Tree-sitter highlight");
         highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
                                   {static_cast<uint32_t>(end_line), 0});
     }
@@ -127,7 +127,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
     };
 
     {
-        PROFILE_BLOCK("layout text");
+        // PROFILE_BLOCK("layout text");
 
         size_t selection_start = start_caret.byte;
         size_t selection_end = end_caret.byte;
@@ -216,16 +216,16 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
         }
     }
 
-    // instances.emplace_back(InstanceData{
-    //     .coords =
-    //         Vec2{
-    //             .x = static_cast<float>(size.width - Atlas::kAtlasSize - 400 + scroll.x),
-    //             .y = static_cast<float>(10 * main_glyph_cache.lineHeight() + scroll.y),
-    //         },
-    //     .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-    //     .uv = Vec4{0, 0, 1.0, 1.0},
-    //     .color = Rgba::fromRgb(color_scheme.foreground, false),
-    // });
+    instances.emplace_back(InstanceData{
+        .coords =
+            Vec2{
+                .x = static_cast<float>(size.width - Atlas::kAtlasSize - 800 + scroll.x),
+                .y = static_cast<float>(scroll.y),
+            },
+        .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+        .uv = Vec4{0, 0, 1.0, 1.0},
+        .color = Rgba::fromRgb(color_scheme.foreground, false),
+    });
 
     render_batch();
 

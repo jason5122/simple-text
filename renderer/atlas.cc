@@ -8,12 +8,10 @@ void Atlas::setup() {
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
     // TODO: Incorporate this into the build system.
-    const void* data;
+    const void* data = nullptr;
 
-    bool is_release_build = true;
-    if (is_release_build) {
-        data = nullptr;
-    } else {
+    bool debug_atlas = true;
+    if (debug_atlas) {
         // DEBUG: Color atlas background to spot incorrect shaders easier.
         // This helped with debugging the fractional pixel scrolling bug.
         // TODO: Creating this` vector is quite slow, so disable during release.

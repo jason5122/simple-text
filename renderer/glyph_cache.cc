@@ -26,22 +26,23 @@ GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view key) {
 }
 
 GlyphCache::Glyph GlyphCache::createGlyph(std::string_view str8) {
-    font::RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(str8);
+    font::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
 
-    Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
+    Vec4 uv;
+    atlas.insertTexture(rglyph.width, rglyph.height, rglyph.colored, &rglyph.buffer[0], uv);
 
-    Glyph atlas_glyph{
-        .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
-                      static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
+    Glyph glyph{
+        .glyph = Vec4{static_cast<float>(rglyph.left), static_cast<float>(rglyph.top),
+                      static_cast<float>(rglyph.width), static_cast<float>(rglyph.height)},
         .uv = uv,
-        .advance = glyph.advance,
-        .colored = glyph.colored,
+        .advance = rglyph.advance,
+        .colored = rglyph.colored,
     };
-    return atlas_glyph;
+    return glyph;
 }
 
 void GlyphCache::bindTexture() {
-    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+    glBindTexture(GL_TEXTURE_2D, atlas.tex());
 }
 
 int GlyphCache::lineHeight() {

@@ -45,15 +45,21 @@ void Atlas::setup() {
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
-Vec4 Atlas::insertTexture(int width, int height, bool colored, GLubyte* data) {
+GLuint Atlas::tex() {
+    return tex_id;
+}
+
+bool Atlas::insertTexture(int width, int height, bool colored, GLubyte* data, Vec4& uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
         std::cerr << "Glyph is too large.\n";
+        return false;
     }
 
     if (!roomInRow(width, height)) {
         bool success = advanceRow();
         if (!success) {
             std::cerr << "Atlas is full.\n";
+            return false;
         }
     }
 
@@ -74,7 +80,8 @@ Vec4 Atlas::insertTexture(int width, int height, bool colored, GLubyte* data) {
     row_extent += width;
     row_tallest = std::max(height, row_tallest);
 
-    return Vec4{uv_left, uv_bot, uv_width, uv_height};
+    uv = Vec4{uv_left, uv_bot, uv_width, uv_height};
+    return true;
 }
 
 bool Atlas::roomInRow(int width, int height) {
@@ -88,7 +95,7 @@ bool Atlas::roomInRow(int width, int height) {
 bool Atlas::advanceRow() {
     int advance_to = row_baseline + row_tallest;
     if (kAtlasSize - advance_to <= 0) {
-        return false;  // Atlas is full.
+        return false;
     }
 
     row_baseline = advance_to;

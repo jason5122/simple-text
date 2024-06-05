@@ -76,7 +76,9 @@ void ImageRenderer::setup() {
     GLubyte* out_data;
     this->loadPng(image_path, out_width, out_height, out_has_alpha, &out_data);
 
-    Vec4 uv = atlas.insertTexture(out_width, out_height, out_has_alpha, out_data);
+    Vec4 uv;
+    atlas.insertTexture(out_width, out_height, out_has_alpha, out_data, uv);
+
     image_atlas_entries.push_back(AtlasImage{
         .rect_size = Vec2{static_cast<float>(out_width), static_cast<float>(out_height)},
         .uv = uv,
@@ -126,7 +128,7 @@ void ImageRenderer::draw(Size& size, Point& scroll, Point& editor_offset,
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    glBindTexture(GL_TEXTURE_2D, atlas.tex_id);
+    glBindTexture(GL_TEXTURE_2D, atlas.tex());
 
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 

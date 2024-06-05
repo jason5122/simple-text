@@ -23,7 +23,7 @@ public:
 
     GlyphCache(font::FontRasterizer& font_rasterizer);
     void setup();
-    Glyph& getGlyph(std::string_view key);
+    Glyph& getGlyph(std::string_view str8);
     int lineHeight();
 
     // TODO: Make this private.
@@ -59,7 +59,7 @@ private:
     cache_type cache;
     ascii_cache_type ascii_cache;
 
-    Glyph createGlyph(std::string_view str8);
+    Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
 };
 
 }

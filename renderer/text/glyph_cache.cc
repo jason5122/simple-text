@@ -10,44 +10,46 @@ void GlyphCache::setup() {
     atlas_pages.push_back(std::move(atlas));
 }
 
-GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view key) {
+GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view str8) {
     // If the input is ASCII (a very common occurrence), we can skip the overhead of a hash map.
-    if (key.length() == 1 && 0x20 <= key[0] && key[0] <= 0x7e) {
-        size_t i = key[0] - 0x20;
+    if (str8.length() == 1 && 0x20 <= str8[0] && str8[0] <= 0x7e) {
+        size_t i = str8[0] - 0x20;
         if (ascii_cache.at(i) == std::nullopt) {
-            ascii_cache.at(i) = createGlyph(key);
+            font::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
+            ascii_cache.at(i) = loadGlyph(rglyph);
         }
         return ascii_cache.at(i).value();
     }
 
-    auto it = cache.find(key);
+    auto it = cache.find(str8);
     if (it == cache.end()) {
-        it = cache.emplace(key, createGlyph(key)).first;
+        font::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
+        it = cache.emplace(str8, loadGlyph(rglyph)).first;
     }
     return it->second;
 }
 
-GlyphCache::Glyph GlyphCache::createGlyph(std::string_view str8) {
-    font::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
+GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
+    Atlas& atlas = atlas_pages[current_page];
 
     // TODO: Handle the case when a texture is too large for the atlas.
     //       Return an enum classifying the error instead of using a boolean.
     Vec4 uv;
-    bool success = atlas_pages[current_page].insertTexture(rglyph.width, rglyph.height,
-                                                           rglyph.colored, &rglyph.buffer[0], uv);
+    bool success =
+        atlas.insertTexture(rglyph.width, rglyph.height, rglyph.colored, &rglyph.buffer[0], uv);
 
     // The current page is full, so create a new page and try again.
     if (!success) {
-        Atlas atlas;
-        atlas.setup();
-        atlas_pages.push_back(std::move(atlas));
+        Atlas new_atlas;
+        new_atlas.setup();
+        atlas_pages.push_back(std::move(new_atlas));
         current_page++;
 
-        return createGlyph(str8);
+        return loadGlyph(rglyph);
     }
 
     Glyph glyph{
-        .tex_id = atlas_pages[current_page].tex(),
+        .tex_id = atlas.tex(),
         .glyph = Vec4{static_cast<float>(rglyph.left), static_cast<float>(rglyph.top),
                       static_cast<float>(rglyph.width), static_cast<float>(rglyph.height)},
         .uv = uv,

@@ -22,7 +22,7 @@ public:
 
     void setup();
     GLuint tex() const;
-    bool insertTexture(int width, int height, bool colored, GLubyte* data, Vec4& uv);
+    bool insertTexture(int width, int height, bool colored, const GLubyte* data, Vec4& uv);
 
 private:
     GLuint tex_id = 0;

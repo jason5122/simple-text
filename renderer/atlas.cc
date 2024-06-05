@@ -74,7 +74,7 @@ GLuint Atlas::tex() const {
     return tex_id;
 }
 
-bool Atlas::insertTexture(int width, int height, bool colored, GLubyte* data, Vec4& uv) {
+bool Atlas::insertTexture(int width, int height, bool colored, const GLubyte* data, Vec4& uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
         std::cerr << "Glyph is too large.\n";
         return false;

@@ -13,6 +13,8 @@
 #include <glad/glad.h>
 #include <vector>
 
+#include <unordered_map>
+
 namespace renderer {
 
 class TextRenderer {
@@ -51,8 +53,11 @@ private:
     };
 
     // TODO: Move batch code into a "Batch" class.
-    std::vector<GLuint> batch_tex_ids;
-    std::vector<std::vector<InstanceData>> batch_instances;
+    // TODO: Implement this using a vector for more efficiency.
+    // std::vector<std::vector<InstanceData>> batch_instances;
+
+    // TODO: Use `std::vector::reserve()`.
+    std::unordered_map<size_t, std::vector<InstanceData>> batch_instances;
 };
 
 }

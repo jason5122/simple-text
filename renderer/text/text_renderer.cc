@@ -111,41 +111,14 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                                   {static_cast<uint32_t>(end_line), 0});
     }
 
-    // TODO: This is *very* sloppy. Clean this up!
-    while (batch_tex_ids.size() < main_glyph_cache.atlas_pages.size()) {
-        batch_tex_ids.emplace_back();
-        batch_instances.emplace_back();
-        batch_instances.back().reserve(kBatchMax);
-
-        std::cerr << std::format("inserting. batch_tex_ids.size() is now {}", batch_tex_ids.size())
-                  << '\n';
-    }
-    for (size_t i = 0; i < main_glyph_cache.atlas_pages.size(); i++) {
-        batch_tex_ids[i] = main_glyph_cache.atlas_pages[i].tex();
-    }
-
-    std::cerr << std::format("batch_tex_ids.size() = {}, atlas_pages.size() = {}",
-                             batch_tex_ids.size(), main_glyph_cache.atlas_pages.size())
-              << '\n';
-
-    std::cerr << "batch_tex_ids: [";
-    for (const auto& tex_id : batch_tex_ids) {
-        std::cerr << tex_id << ' ';
-    }
-    std::cerr << "]\n";
-
-    // std::vector<InstanceData> instances;
-    // instances.reserve(kBatchMax);
-    // GLuint batch_tex = 0;
     int batch_count = 0;
-
     auto render_batch = [this, &batch_count](size_t page) {
-        GLuint batch_tex = batch_tex_ids[page];
+        GLuint batch_tex = main_glyph_cache.atlas_pages[page].tex();
         std::vector<InstanceData>& instances = batch_instances[page];
 
-        std::cerr << std::format("rendering batch #{}, tex_id = {}, size = {}", batch_count,
-                                 batch_tex, instances.size())
-                  << '\n';
+        // std::cerr << std::format("rendering batch #{}, tex_id = {}, size = {}", batch_count,
+        //                          batch_tex, instances.size())
+        //           << '\n';
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
@@ -160,7 +133,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
     };
 
     {
-        // PROFILE_BLOCK("layout text");
+        PROFILE_BLOCK("layout text");
 
         size_t selection_start = start_caret.byte;
         size_t selection_end = end_caret.byte;
@@ -261,7 +234,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
     }
 
     int atlas_x_offset = 0;
-    for (size_t page = 0; page < batch_tex_ids.size(); page++) {
+    for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
         std::vector<InstanceData>& instances = batch_instances[page];
         instances.emplace_back(InstanceData{
             .coords =

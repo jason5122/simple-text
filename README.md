@@ -13,8 +13,8 @@
 | Window creation      | ✅ (Cocoa)     | ✅ (GTK 3) | ✅ (Win32)       |
 | OpenGL context       | ✅ (GLAD)      | ✅ (GLAD)  | ✅ (GLAD)        |
 | Keyboard/mouse input | ✅             | ✅         | ✅               |
-| Tabs                 | 🚧             | 🚧         | 🚧               |
-| Popups/Dialogs       | ❌             | ❌         | ❌               |
+| Tabs                 | ✅             | ✅         | ✅               |
+| Popups/Dialogs       | 🚧             | 🚧         | 🚧               |
 
 ## Dependencies
 

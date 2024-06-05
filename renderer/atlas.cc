@@ -1,6 +1,12 @@
 #include "atlas.h"
 
+#include <iostream>
+
 namespace renderer {
+
+Atlas::~Atlas() {
+    glDeleteTextures(1, &tex_id);
+}
 
 void Atlas::setup() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -40,32 +46,51 @@ void Atlas::setup() {
 }
 
 Vec4 Atlas::insertTexture(int width, int height, bool colored, GLubyte* data) {
-    tallest = std::max(height, tallest);
-    if (offset_x + width > kAtlasSize) {
-        offset_x = 0;
-        offset_y += tallest;
-        tallest = 0;
+    if (!roomInRow(width, height)) {
+        bool success = advanceRow();
+        if (!success) {
+            std::cerr << "Atlas is full.\n";
+        }
     }
 
+    // Load data into OpenGL.
     glBindTexture(GL_TEXTURE_2D, tex_id);
-
     GLenum format = colored ? GL_RGBA : GL_RGB;
-    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, format, GL_UNSIGNED_BYTE,
-                    data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, format,
+                    GL_UNSIGNED_BYTE, data);
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
-    float uv_left = static_cast<float>(offset_x) / kAtlasSize;
-    float uv_bot = static_cast<float>(offset_y) / kAtlasSize;
+    // Generate UV coordinates.
+    float uv_left = static_cast<float>(row_extent) / kAtlasSize;
+    float uv_bot = static_cast<float>(row_baseline) / kAtlasSize;
     float uv_width = static_cast<float>(width) / kAtlasSize;
     float uv_height = static_cast<float>(height) / kAtlasSize;
 
-    offset_x += width;
+    // Update Atlas state.
+    row_extent += width;
+    row_tallest = std::max(height, row_tallest);
 
     return Vec4{uv_left, uv_bot, uv_width, uv_height};
 }
 
-Atlas::~Atlas() {
-    glDeleteTextures(1, &tex_id);
+bool Atlas::roomInRow(int width, int height) {
+    int next_extent = row_extent + width;
+    bool enough_width = next_extent <= kAtlasSize;
+    bool enough_height = height < (kAtlasSize - row_baseline);
+
+    return enough_width && enough_height;
+}
+
+bool Atlas::advanceRow() {
+    int advance_to = row_baseline + row_tallest;
+    if (kAtlasSize - advance_to <= 0) {
+        return false;  // Atlas is full.
+    }
+
+    row_baseline = advance_to;
+    row_extent = 0;
+    row_tallest = 0;
+    return true;
 }
 
 }

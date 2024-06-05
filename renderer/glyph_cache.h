@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace renderer {
 
@@ -29,6 +30,7 @@ private:
     font::FontRasterizer& font_rasterizer;
 
     Atlas atlas;
+    // std::vector<Atlas> atlas;
 
     struct string_hash {
         using hash_type = std::hash<std::string_view>;

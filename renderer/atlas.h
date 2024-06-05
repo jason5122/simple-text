@@ -22,12 +22,15 @@ public:
     Vec4 insertTexture(int width, int height, bool colored, GLubyte* data);
 
 private:
-    int offset_x = 0;
-    int offset_y = 0;
-    int tallest = 0;
+    int row_extent = 0;
+    int row_baseline = 0;
+    int row_tallest = 0;
 
     // DEBUG: Color atlas background to spot incorrect shaders easier.
     std::vector<uint8_t> atlas_background;
+
+    bool roomInRow(int width, int height);
+    bool advanceRow();
 };
 
 }

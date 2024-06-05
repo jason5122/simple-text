@@ -8,6 +8,7 @@ sample_files = [
   "long_lines.json",
   "emoji-data.txt",
   "emoji-test.txt",
+  "ascii_box_drawing.txt",
 ]
 
 if (is_mac) {

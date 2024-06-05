@@ -1,14 +1,14 @@
 source_set("renderer") {
   sources = [
     "atlas.cc",
-    "glyph_cache.cc",
-    "image_renderer.cc",
+    "image/image_renderer.cc",
     "movement.cc",
     "rect_renderer.cc",
     "renderer.cc",
     "selection_renderer.cc",
     "shader.cc",
-    "text_renderer.cc",
+    "text/glyph_cache.cc",
+    "text/text_renderer.cc",
   ]
 
   deps = [

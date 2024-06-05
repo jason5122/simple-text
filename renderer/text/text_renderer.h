@@ -4,10 +4,10 @@
 #include "base/syntax_highlighter.h"
 #include "config/color_scheme.h"
 #include "renderer/atlas.h"
-#include "renderer/glyph_cache.h"
 #include "renderer/opengl_types.h"
 #include "renderer/selection_renderer.h"
 #include "renderer/shader.h"
+#include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
 #include "simple_text/editor_tab.h"
 #include <glad/glad.h>
@@ -35,10 +35,10 @@ public:
                       std::vector<int>& tab_title_x_coords);
 
 private:
+    static constexpr size_t kBatchMax = 0x10000;
+
     GlyphCache& main_glyph_cache;
     GlyphCache& ui_glyph_cache;
-
-    static constexpr int kBatchMax = 65536;
 
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;

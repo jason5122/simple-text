@@ -5,7 +5,9 @@ namespace renderer {
 GlyphCache::GlyphCache(font::FontRasterizer& font_rasterizer) : font_rasterizer(font_rasterizer) {}
 
 void GlyphCache::setup() {
+    Atlas atlas;
     atlas.setup();
+    atlases.emplace_back(std::move(atlas));
 }
 
 GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view key) {
@@ -28,10 +30,14 @@ GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view key) {
 GlyphCache::Glyph GlyphCache::createGlyph(std::string_view str8) {
     font::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
 
+    // TODO: Handle the case when a texture is too large for the atlas.
+    //       Return an enum classifying the error instead of using a boolean.
     Vec4 uv;
-    atlas.insertTexture(rglyph.width, rglyph.height, rglyph.colored, &rglyph.buffer[0], uv);
+    bool success = atlases[current_atlas].insertTexture(rglyph.width, rglyph.height,
+                                                        rglyph.colored, &rglyph.buffer[0], uv);
 
     Glyph glyph{
+        .tex_id = atlases[current_atlas].tex(),
         .glyph = Vec4{static_cast<float>(rglyph.left), static_cast<float>(rglyph.top),
                       static_cast<float>(rglyph.width), static_cast<float>(rglyph.height)},
         .uv = uv,
@@ -39,10 +45,6 @@ GlyphCache::Glyph GlyphCache::createGlyph(std::string_view str8) {
         .colored = rglyph.colored,
     };
     return glyph;
-}
-
-void GlyphCache::bindTexture() {
-    glBindTexture(GL_TEXTURE_2D, atlas.tex());
 }
 
 int GlyphCache::lineHeight() {

@@ -14,15 +14,17 @@ public:
     static constexpr int kAtlasSize = 1024;
 
     NOT_COPYABLE(Atlas)
-    NOT_MOVABLE(Atlas)
-    Atlas() = default;
+    Atlas();
     ~Atlas();
+    Atlas(Atlas&&);
+    Atlas& operator=(Atlas&&);
+
     void setup();
     GLuint tex();
     bool insertTexture(int width, int height, bool colored, GLubyte* data, Vec4& uv);
 
 private:
-    GLuint tex_id;
+    GLuint tex_id = 0;
 
     int row_extent = 0;
     int row_baseline = 0;

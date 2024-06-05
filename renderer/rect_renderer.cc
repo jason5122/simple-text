@@ -15,10 +15,10 @@ RectRenderer::~RectRenderer() {
 
 void RectRenderer::setup() {
     std::string vert_source =
-#include "shaders/rect_vert.glsl"
+#include "renderer/shaders/rect_vert.glsl"
         ;
     std::string frag_source =
-#include "shaders/rect_frag.glsl"
+#include "renderer/shaders/rect_frag.glsl"
         ;
 
     shader_program.link(vert_source, frag_source);

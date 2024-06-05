@@ -15,10 +15,10 @@ ImageRenderer::~ImageRenderer() {
 
 void ImageRenderer::setup() {
     std::string vert_source =
-#include "shaders/image_vert.glsl"
+#include "renderer/shaders/image_vert.glsl"
         ;
     std::string frag_source =
-#include "shaders/image_frag.glsl"
+#include "renderer/shaders/image_frag.glsl"
         ;
 
     shader_program.link(vert_source, frag_source);

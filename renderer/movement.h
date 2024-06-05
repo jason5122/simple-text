@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/buffer.h"
-#include "renderer/glyph_cache.h"
+#include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
 
 namespace renderer {

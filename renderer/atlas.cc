@@ -1,11 +1,23 @@
 #include "atlas.h"
 
-#include <iostream>
-
 namespace renderer {
+
+Atlas::Atlas() {}
 
 Atlas::~Atlas() {
     glDeleteTextures(1, &tex_id);
+}
+
+Atlas::Atlas(Atlas&& other) : tex_id(other.tex_id) {
+    other.tex_id = 0;
+}
+
+Atlas& Atlas::operator=(Atlas&& other) {
+    if (&other != this) {
+        tex_id = other.tex_id;
+        other.tex_id = 0;
+    }
+    return *this;
 }
 
 void Atlas::setup() {

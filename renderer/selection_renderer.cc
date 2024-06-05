@@ -17,10 +17,10 @@ SelectionRenderer::~SelectionRenderer() {
 
 void SelectionRenderer::setup() {
     std::string vert_source =
-#include "shaders/selection_vert.glsl"
+#include "renderer/shaders/selection_vert.glsl"
         ;
     std::string frag_source =
-#include "shaders/selection_frag.glsl"
+#include "renderer/shaders/selection_frag.glsl"
         ;
 
     shader_program.link(vert_source, frag_source);

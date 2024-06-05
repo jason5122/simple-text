@@ -1,8 +1,8 @@
 #pragma once
 
-#include "renderer/glyph_cache.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
+#include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
 #include "util/not_copyable_or_movable.h"
 #include <glad/glad.h>

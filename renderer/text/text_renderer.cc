@@ -27,10 +27,10 @@ TextRenderer::~TextRenderer() {
 
 void TextRenderer::setup() {
     std::string vert_source =
-#include "shaders/text_vert.glsl"
+#include "renderer/shaders/text_vert.glsl"
         ;
     std::string frag_source =
-#include "shaders/text_frag.glsl"
+#include "renderer/shaders/text_frag.glsl"
         ;
 
     shader_program.link(vert_source, frag_source);
@@ -113,17 +113,19 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
 
     std::vector<InstanceData> instances;
     instances.reserve(kBatchMax);
+    GLuint batch_tex = 0;
 
-    auto render_batch = [this, &instances]() {
+    auto render_batch = [this, &instances, &batch_tex]() {
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
                         &instances[0]);
 
-        main_glyph_cache.bindTexture();
+        glBindTexture(GL_TEXTURE_2D, batch_tex);
 
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
         instances.clear();
+        batch_tex = 0;
     };
 
     {
@@ -154,12 +156,22 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     .x = static_cast<float>(-total_advance - line_number_offset / 2),
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
+
+                if (!instances.empty() && batch_tex != glyph.tex_id) {
+                    render_batch();
+                }
+                if (instances.empty()) {
+                    batch_tex = glyph.tex_id;
+                }
                 instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
                 });
+                if (instances.size() == kBatchMax) {
+                    render_batch();
+                }
 
                 total_advance += glyph.advance;
             }
@@ -194,6 +206,13 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     .x = static_cast<float>(total_advance),
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
+
+                if (!instances.empty() && batch_tex != glyph.tex_id) {
+                    render_batch();
+                }
+                if (instances.empty()) {
+                    batch_tex = glyph.tex_id;
+                }
                 instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,
@@ -216,6 +235,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
         }
     }
 
+    // TODO: Refactor this to work with the new multi-atlas implementation.
     instances.emplace_back(InstanceData{
         .coords =
             Vec2{
@@ -350,6 +370,7 @@ void TextRenderer::renderUiText(Size& size, CaretInfo& end_caret,
     glBindVertexArray(vao);
 
     std::vector<InstanceData> instances;
+    GLuint batch_tex = 0;
 
     auto create_instances = [&](std::string_view str, int x_offset, int y_offset) {
         size_t ret;
@@ -359,6 +380,9 @@ void TextRenderer::renderUiText(Size& size, CaretInfo& end_caret,
             std::string_view key = str.substr(offset, ret);
             GlyphCache::Glyph& glyph = ui_glyph_cache.getGlyph(key);
 
+            if (instances.empty()) {
+                batch_tex = glyph.tex_id;
+            }
             instances.emplace_back(InstanceData{
                 .coords =
                     Vec2{
@@ -402,7 +426,7 @@ void TextRenderer::renderUiText(Size& size, CaretInfo& end_caret,
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
 
-    ui_glyph_cache.bindTexture();
+    glBindTexture(GL_TEXTURE_2D, batch_tex);
 
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 

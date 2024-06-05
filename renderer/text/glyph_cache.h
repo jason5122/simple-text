@@ -14,6 +14,7 @@ namespace renderer {
 class GlyphCache {
 public:
     struct Glyph {
+        GLuint tex_id;
         Vec4 glyph;
         Vec4 uv;
         int32_t advance;
@@ -23,14 +24,13 @@ public:
     GlyphCache(font::FontRasterizer& font_rasterizer);
     void setup();
     Glyph& getGlyph(std::string_view key);
-    void bindTexture();
     int lineHeight();
 
 private:
     font::FontRasterizer& font_rasterizer;
 
-    Atlas atlas;
-    // std::vector<Atlas> atlas;
+    std::vector<Atlas> atlases;
+    size_t current_atlas = 0;
 
     struct string_hash {
         using hash_type = std::hash<std::string_view>;

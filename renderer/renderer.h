@@ -1,12 +1,12 @@
 #pragma once
 
 #include "font/rasterizer.h"
-#include "renderer/glyph_cache.h"
-#include "renderer/image_renderer.h"
+#include "renderer/image/image_renderer.h"
 #include "renderer/movement.h"
 #include "renderer/rect_renderer.h"
 #include "renderer/selection_renderer.h"
-#include "renderer/text_renderer.h"
+#include "renderer/text/glyph_cache.h"
+#include "renderer/text/text_renderer.h"
 #include "simple_text/editor_tab.h"
 
 namespace renderer {

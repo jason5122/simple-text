@@ -49,6 +49,10 @@ private:
         Vec4 uv;
         Rgba color;
     };
+
+    // TODO: Move batch code into a "Batch" class.
+    std::vector<GLuint> batch_tex_ids;
+    std::vector<std::vector<InstanceData>> batch_instances;
 };
 
 }

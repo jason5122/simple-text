@@ -55,6 +55,7 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
         .uv = uv,
         .advance = rglyph.advance,
         .colored = rglyph.colored,
+        .page = current_page,
     };
     return glyph;
 }

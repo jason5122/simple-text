@@ -111,15 +111,41 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                                   {static_cast<uint32_t>(end_line), 0});
     }
 
-    std::vector<InstanceData> instances;
-    instances.reserve(kBatchMax);
-    GLuint batch_tex = 0;
-    int batch_count = 1;
+    // TODO: This is *very* sloppy. Clean this up!
+    while (batch_tex_ids.size() < main_glyph_cache.atlas_pages.size()) {
+        batch_tex_ids.emplace_back();
+        batch_instances.emplace_back();
+        batch_instances.back().reserve(kBatchMax);
 
-    auto render_batch = [this, &instances, &batch_tex, &batch_count]() {
-        // std::cerr << std::format("rendering batch #{}, tex_id = {}, size = {}", batch_count,
-        //                          batch_tex, instances.size())
-        //           << '\n';
+        std::cerr << std::format("inserting. batch_tex_ids.size() is now {}", batch_tex_ids.size())
+                  << '\n';
+    }
+    for (size_t i = 0; i < main_glyph_cache.atlas_pages.size(); i++) {
+        batch_tex_ids[i] = main_glyph_cache.atlas_pages[i].tex();
+    }
+
+    std::cerr << std::format("batch_tex_ids.size() = {}, atlas_pages.size() = {}",
+                             batch_tex_ids.size(), main_glyph_cache.atlas_pages.size())
+              << '\n';
+
+    std::cerr << "batch_tex_ids: [";
+    for (const auto& tex_id : batch_tex_ids) {
+        std::cerr << tex_id << ' ';
+    }
+    std::cerr << "]\n";
+
+    // std::vector<InstanceData> instances;
+    // instances.reserve(kBatchMax);
+    // GLuint batch_tex = 0;
+    int batch_count = 0;
+
+    auto render_batch = [this, &batch_count](size_t page) {
+        GLuint batch_tex = batch_tex_ids[page];
+        std::vector<InstanceData>& instances = batch_instances[page];
+
+        std::cerr << std::format("rendering batch #{}, tex_id = {}, size = {}", batch_count,
+                                 batch_tex, instances.size())
+                  << '\n';
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
@@ -130,7 +156,6 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
         instances.clear();
-        batch_tex = 0;
         batch_count++;
     };
 
@@ -163,12 +188,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
 
-                if (!instances.empty() && batch_tex != glyph.tex_id) {
-                    render_batch();
-                }
-                if (instances.empty()) {
-                    batch_tex = glyph.tex_id;
-                }
+                std::vector<InstanceData>& instances = batch_instances[glyph.page];
                 instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,
@@ -176,7 +196,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
                 });
                 if (instances.size() == kBatchMax) {
-                    render_batch();
+                    render_batch(glyph.page);
                 }
 
                 total_advance += glyph.advance;
@@ -217,12 +237,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
 
-                if (!instances.empty() && batch_tex != glyph.tex_id) {
-                    render_batch();
-                }
-                if (instances.empty()) {
-                    batch_tex = glyph.tex_id;
-                }
+                std::vector<InstanceData>& instances = batch_instances[glyph.page];
                 instances.emplace_back(InstanceData{
                     .coords = coords,
                     .glyph = glyph.glyph,
@@ -230,7 +245,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     .color = Rgba::fromRgb(text_color, glyph.colored),
                 });
                 if (instances.size() == kBatchMax) {
-                    render_batch();
+                    render_batch(glyph.page);
                 }
 
                 total_advance += glyph.advance;
@@ -245,12 +260,9 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
         }
     }
 
-    render_batch();
-
     int atlas_x_offset = 0;
-    for (const auto& atlas : main_glyph_cache.atlas_pages) {
-        batch_tex = atlas.tex();
-
+    for (size_t page = 0; page < batch_tex_ids.size(); page++) {
+        std::vector<InstanceData>& instances = batch_instances[page];
         instances.emplace_back(InstanceData{
             .coords =
                 Vec2{
@@ -262,10 +274,32 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
             .color = Rgba::fromRgb(color_scheme.foreground, false),
         });
 
-        render_batch();
+        render_batch(page);
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
+
+    // int atlas_x_offset = 0;
+    // for (const auto& atlas : main_glyph_cache.atlas_pages) {
+    //     batch_tex = atlas.tex();
+
+    //     instances.emplace_back(InstanceData{
+    //         .coords =
+    //             Vec2{
+    //                 .x = static_cast<float>(scroll.x + atlas_x_offset),
+    //                 .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
+    //             },
+    //         .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+    //         .uv = Vec4{0, 0, 1.0, 1.0},
+    //         .color = Rgba::fromRgb(color_scheme.foreground, false),
+    //     });
+
+    //     render_batch();
+
+    //     atlas_x_offset += Atlas::kAtlasSize + 100;
+    // }
+
+    std::cerr << std::format("batch_count = {}", batch_count) << '\n';
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

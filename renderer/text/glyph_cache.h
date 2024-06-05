@@ -19,6 +19,7 @@ public:
         Vec4 uv;
         int32_t advance;
         bool colored;
+        size_t page;
     };
 
     GlyphCache(font::FontRasterizer& font_rasterizer);

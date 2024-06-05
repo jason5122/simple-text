@@ -8,7 +8,7 @@ void GlyphCache::setup() {
     atlas.setup();
 }
 
-AtlasGlyph& GlyphCache::getGlyph(std::string_view key) {
+GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view key) {
     // If the input is ASCII (a very common occurrence), we can skip the overhead of a hash map.
     if (key.length() == 1 && 0x20 <= key[0] && key[0] <= 0x7e) {
         size_t i = key[0] - 0x20;
@@ -25,12 +25,12 @@ AtlasGlyph& GlyphCache::getGlyph(std::string_view key) {
     return it->second;
 }
 
-AtlasGlyph GlyphCache::createGlyph(std::string_view str8) {
+GlyphCache::Glyph GlyphCache::createGlyph(std::string_view str8) {
     font::RasterizedGlyph glyph = font_rasterizer.rasterizeUTF8(str8);
 
     Vec4 uv = atlas.insertTexture(glyph.width, glyph.height, glyph.colored, &glyph.buffer[0]);
 
-    AtlasGlyph atlas_glyph{
+    Glyph atlas_glyph{
         .glyph = Vec4{static_cast<float>(glyph.left), static_cast<float>(glyph.top),
                       static_cast<float>(glyph.width), static_cast<float>(glyph.height)},
         .uv = uv,

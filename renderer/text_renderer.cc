@@ -148,7 +148,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
             for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
                 ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
                 std::string_view key = std::string_view(line_number_str).substr(offset, ret);
-                AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
+                GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
                 Vec2 coords{
                     .x = static_cast<float>(-total_advance - line_number_offset / 2),
@@ -188,7 +188,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     key = "·";
                     text_color = base::Rgb{182, 182, 182};
                 }
-                AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
+                GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
                 Vec2 coords{
                     .x = static_cast<float>(total_advance),
@@ -265,7 +265,7 @@ TextRenderer::getSelections(base::Buffer& buffer, CaretInfo& start_caret, CaretI
         for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
             ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
             std::string_view key = std::string_view(line_str).substr(offset, ret);
-            AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
+            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
             if (byte_offset == start_byte) {
                 start = total_advance;
@@ -286,7 +286,7 @@ TextRenderer::getSelections(base::Buffer& buffer, CaretInfo& start_caret, CaretI
 
         if (line_index != end_line) {
             std::string_view key = " ";
-            AtlasGlyph& space_glyph = main_glyph_cache.getGlyph(key);
+            GlyphCache::Glyph& space_glyph = main_glyph_cache.getGlyph(key);
             end = total_advance + space_glyph.advance;
         }
 
@@ -313,7 +313,7 @@ TextRenderer::getTabTitleWidths(base::Buffer& buffer,
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
-            AtlasGlyph& glyph = ui_glyph_cache.getGlyph(key);
+            GlyphCache::Glyph& glyph = ui_glyph_cache.getGlyph(key);
 
             total_advance += glyph.advance;
         }
@@ -357,7 +357,7 @@ void TextRenderer::renderUiText(Size& size, CaretInfo& end_caret,
         for (size_t offset = 0; offset < str.size(); offset += ret) {
             ret = grapheme_next_character_break_utf8(&str[0] + offset, SIZE_MAX);
             std::string_view key = str.substr(offset, ret);
-            AtlasGlyph& glyph = ui_glyph_cache.getGlyph(key);
+            GlyphCache::Glyph& glyph = ui_glyph_cache.getGlyph(key);
 
             instances.emplace_back(InstanceData{
                 .coords =

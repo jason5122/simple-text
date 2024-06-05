@@ -46,6 +46,10 @@ void Atlas::setup() {
 }
 
 Vec4 Atlas::insertTexture(int width, int height, bool colored, GLubyte* data) {
+    if (width > kAtlasSize || height > kAtlasSize) {
+        std::cerr << "Glyph is too large.\n";
+    }
+
     if (!roomInRow(width, height)) {
         bool success = advanceRow();
         if (!success) {

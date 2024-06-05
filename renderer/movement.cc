@@ -119,7 +119,7 @@ size_t Movement::closestBoundaryForX(std::string_view line_str, int x) {
     for (offset = 0; offset < line_str.size(); offset += ret) {
         ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
         std::string_view key = line_str.substr(offset, ret);
-        AtlasGlyph& glyph = main_glyph_cache.getGlyph(key);
+        GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
         int glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {

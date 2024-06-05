@@ -30,9 +30,9 @@ void Atlas::setup() {
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
-    // TODO: Incorporate this into the build system.
     const void* data = nullptr;
 
+    // TODO: Incorporate this into the build system.
     bool debug_atlas = false;
     if (debug_atlas) {
         std::random_device dev;

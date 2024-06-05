@@ -244,17 +244,21 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
 
     int atlas_x_offset = 0;
     for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
-        // InstanceData instance{
-        //     .coords =
-        //         Vec2{
-        //             .x = static_cast<float>(scroll.x + atlas_x_offset),
-        //             .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
-        //         },
-        //     .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-        //     .uv = Vec4{0, 0, 1.0, 1.0},
-        //     .color = Rgba::fromRgb(color_scheme.foreground, false),
-        // };
-        // insert_into_batch(page, std::move(instance));
+        // TODO: Incorporate this into the build system.
+        bool debug_atlas = false;
+        if (debug_atlas) {
+            InstanceData instance{
+                .coords =
+                    Vec2{
+                        .x = static_cast<float>(scroll.x + atlas_x_offset),
+                        .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
+                    },
+                .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+                .uv = Vec4{0, 0, 1.0, 1.0},
+                .color = Rgba::fromRgb(color_scheme.foreground, false),
+            };
+            insert_into_batch(page, std::move(instance));
+        }
 
         render_batch(page);
 

@@ -7,7 +7,7 @@ GlyphCache::GlyphCache(font::FontRasterizer& font_rasterizer) : font_rasterizer(
 void GlyphCache::setup() {
     Atlas atlas;
     atlas.setup();
-    atlases.emplace_back(std::move(atlas));
+    atlas_pages.push_back(std::move(atlas));
 }
 
 GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view key) {
@@ -33,11 +33,21 @@ GlyphCache::Glyph GlyphCache::createGlyph(std::string_view str8) {
     // TODO: Handle the case when a texture is too large for the atlas.
     //       Return an enum classifying the error instead of using a boolean.
     Vec4 uv;
-    bool success = atlases[current_atlas].insertTexture(rglyph.width, rglyph.height,
-                                                        rglyph.colored, &rglyph.buffer[0], uv);
+    bool success = atlas_pages[current_page].insertTexture(rglyph.width, rglyph.height,
+                                                           rglyph.colored, &rglyph.buffer[0], uv);
+
+    // The current page is full, so create a new page and try again.
+    if (!success) {
+        Atlas atlas;
+        atlas.setup();
+        atlas_pages.push_back(std::move(atlas));
+        current_page++;
+
+        return createGlyph(str8);
+    }
 
     Glyph glyph{
-        .tex_id = atlases[current_atlas].tex(),
+        .tex_id = atlas_pages[current_page].tex(),
         .glyph = Vec4{static_cast<float>(rglyph.left), static_cast<float>(rglyph.top),
                       static_cast<float>(rglyph.width), static_cast<float>(rglyph.height)},
         .uv = uv,

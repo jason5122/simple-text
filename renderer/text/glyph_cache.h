@@ -26,11 +26,14 @@ public:
     Glyph& getGlyph(std::string_view key);
     int lineHeight();
 
+    // TODO: Make this private.
+    std::vector<Atlas> atlas_pages;
+
 private:
     font::FontRasterizer& font_rasterizer;
 
-    std::vector<Atlas> atlases;
-    size_t current_atlas = 0;
+    // std::vector<Atlas> atlas_pages;
+    size_t current_page = 0;
 
     struct string_hash {
         using hash_type = std::hash<std::string_view>;

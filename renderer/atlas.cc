@@ -1,5 +1,10 @@
 #include "atlas.h"
 
+// TODO: For debugging; remove this.
+#include <format>
+#include <iostream>
+#include <random>
+
 namespace renderer {
 
 Atlas::Atlas() {}
@@ -30,6 +35,14 @@ void Atlas::setup() {
 
     bool debug_atlas = true;
     if (debug_atlas) {
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);
+
+        uint8_t r = dist(rng);
+        uint8_t g = dist(rng);
+        uint8_t b = dist(rng);
+
         // DEBUG: Color atlas background to spot incorrect shaders easier.
         // This helped with debugging the fractional pixel scrolling bug.
         // TODO: Creating this` vector is quite slow, so disable during release.
@@ -37,9 +50,9 @@ void Atlas::setup() {
         size_t pixels = kAtlasSize * kAtlasSize;
         for (int i = 0; i < pixels; i++) {
             size_t offset = i * 4;
-            atlas_background[offset + 2] = 0;
-            atlas_background[offset + 1] = 255;
-            atlas_background[offset] = 0;
+            atlas_background[offset + 2] = r;
+            atlas_background[offset + 1] = g;
+            atlas_background[offset] = b;
             atlas_background[offset + 3] = 255;
         }
 
@@ -57,7 +70,7 @@ void Atlas::setup() {
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
-GLuint Atlas::tex() {
+GLuint Atlas::tex() const {
     return tex_id;
 }
 
@@ -67,10 +80,16 @@ bool Atlas::insertTexture(int width, int height, bool colored, GLubyte* data, Ve
         return false;
     }
 
+    // If there's not enough room in current row, advance to the next one.
     if (!roomInRow(width, height)) {
-        bool success = advanceRow();
-        if (!success) {
+        if (!advanceRow()) {
             std::cerr << "Atlas is full.\n";
+            return false;
+        }
+
+        // If there's still not enough room, then atlas is full.
+        if (!roomInRow(width, height)) {
+            std::cerr << "Could not insert into atlas.\n";
             return false;
         }
     }

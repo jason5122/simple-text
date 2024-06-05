@@ -114,8 +114,13 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
     std::vector<InstanceData> instances;
     instances.reserve(kBatchMax);
     GLuint batch_tex = 0;
+    int batch_count = 1;
 
-    auto render_batch = [this, &instances, &batch_tex]() {
+    auto render_batch = [this, &instances, &batch_tex, &batch_count]() {
+        // std::cerr << std::format("rendering batch #{}, tex_id = {}, size = {}", batch_count,
+        //                          batch_tex, instances.size())
+        //           << '\n';
+
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
                         &instances[0]);
@@ -126,6 +131,7 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
 
         instances.clear();
         batch_tex = 0;
+        batch_count++;
     };
 
     {
@@ -202,6 +208,10 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                 }
                 GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
+                if (glyph.tex_id == 0) {
+                    std::cerr << "holy shit...\n";
+                }
+
                 Vec2 coords{
                     .x = static_cast<float>(total_advance),
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
@@ -235,19 +245,27 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
         }
     }
 
-    // TODO: Refactor this to work with the new multi-atlas implementation.
-    instances.emplace_back(InstanceData{
-        .coords =
-            Vec2{
-                .x = static_cast<float>(size.width - Atlas::kAtlasSize - 800 + scroll.x),
-                .y = static_cast<float>(scroll.y),
-            },
-        .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-        .uv = Vec4{0, 0, 1.0, 1.0},
-        .color = Rgba::fromRgb(color_scheme.foreground, false),
-    });
-
     render_batch();
+
+    int atlas_x_offset = 0;
+    for (const auto& atlas : main_glyph_cache.atlas_pages) {
+        batch_tex = atlas.tex();
+
+        instances.emplace_back(InstanceData{
+            .coords =
+                Vec2{
+                    .x = static_cast<float>(scroll.x + atlas_x_offset),
+                    .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
+                },
+            .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+            .uv = Vec4{0, 0, 1.0, 1.0},
+            .color = Rgba::fromRgb(color_scheme.foreground, false),
+        });
+
+        render_batch();
+
+        atlas_x_offset += Atlas::kAtlasSize + 100;
+    }
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.

@@ -11,7 +11,8 @@ class Atlas {
 public:
     // 1024 is a conservative size.
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
-    static constexpr int kAtlasSize = 1024;
+    // static constexpr int kAtlasSize = 1024;
+    static constexpr int kAtlasSize = 512;
 
     NOT_COPYABLE(Atlas)
     Atlas();
@@ -20,7 +21,7 @@ public:
     Atlas& operator=(Atlas&&);
 
     void setup();
-    GLuint tex();
+    GLuint tex() const;
     bool insertTexture(int width, int height, bool colored, GLubyte* data, Vec4& uv);
 
 private:

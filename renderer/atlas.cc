@@ -33,7 +33,7 @@ void Atlas::setup() {
     // TODO: Incorporate this into the build system.
     const void* data = nullptr;
 
-    bool debug_atlas = true;
+    bool debug_atlas = false;
     if (debug_atlas) {
         std::random_device dev;
         std::mt19937 rng(dev());

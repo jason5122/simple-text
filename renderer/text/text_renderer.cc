@@ -113,12 +113,17 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
 
     int batch_count = 0;
     auto render_batch = [this, &batch_count](size_t page) {
-        GLuint batch_tex = main_glyph_cache.atlas_pages[page].tex();
-        std::vector<InstanceData>& instances = batch_instances[page];
+        while (batch_instances.size() <= page) {
+            batch_instances.emplace_back();
+            batch_instances.back().reserve(kBatchMax);
+        }
 
-        // std::cerr << std::format("rendering batch #{}, tex_id = {}, size = {}", batch_count,
-        //                          batch_tex, instances.size())
-        //           << '\n';
+        GLuint batch_tex = main_glyph_cache.atlas_pages.at(page).tex();
+        std::vector<InstanceData>& instances = batch_instances.at(page);
+
+        if (instances.empty()) {
+            return;
+        }
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
@@ -130,6 +135,20 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
 
         instances.clear();
         batch_count++;
+    };
+
+    auto insert_into_batch = [this, &render_batch](size_t page, const InstanceData& instance) {
+        while (batch_instances.size() <= page) {
+            batch_instances.emplace_back();
+            batch_instances.back().reserve(kBatchMax);
+        }
+
+        std::vector<InstanceData>& instances = batch_instances.at(page);
+
+        instances.emplace_back(std::move(instance));
+        if (instances.size() == kBatchMax) {
+            render_batch(page);
+        }
     };
 
     {
@@ -161,16 +180,13 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
 
-                std::vector<InstanceData>& instances = batch_instances[glyph.page];
-                instances.emplace_back(InstanceData{
+                InstanceData instance{
                     .coords = coords,
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
-                });
-                if (instances.size() == kBatchMax) {
-                    render_batch(glyph.page);
-                }
+                };
+                insert_into_batch(glyph.page, std::move(instance));
 
                 total_advance += glyph.advance;
             }
@@ -201,25 +217,18 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
                 }
                 GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
-                if (glyph.tex_id == 0) {
-                    std::cerr << "holy shit...\n";
-                }
-
                 Vec2 coords{
                     .x = static_cast<float>(total_advance),
                     .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()),
                 };
 
-                std::vector<InstanceData>& instances = batch_instances[glyph.page];
-                instances.emplace_back(InstanceData{
+                InstanceData instance{
                     .coords = coords,
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(text_color, glyph.colored),
-                });
-                if (instances.size() == kBatchMax) {
-                    render_batch(glyph.page);
-                }
+                };
+                insert_into_batch(glyph.page, std::move(instance));
 
                 total_advance += glyph.advance;
             }
@@ -235,42 +244,22 @@ void TextRenderer::renderText(Size& size, Point& scroll, base::Buffer& buffer,
 
     int atlas_x_offset = 0;
     for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
-        std::vector<InstanceData>& instances = batch_instances[page];
-        instances.emplace_back(InstanceData{
-            .coords =
-                Vec2{
-                    .x = static_cast<float>(scroll.x + atlas_x_offset),
-                    .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
-                },
-            .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-            .uv = Vec4{0, 0, 1.0, 1.0},
-            .color = Rgba::fromRgb(color_scheme.foreground, false),
-        });
+        // InstanceData instance{
+        //     .coords =
+        //         Vec2{
+        //             .x = static_cast<float>(scroll.x + atlas_x_offset),
+        //             .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
+        //         },
+        //     .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+        //     .uv = Vec4{0, 0, 1.0, 1.0},
+        //     .color = Rgba::fromRgb(color_scheme.foreground, false),
+        // };
+        // insert_into_batch(page, std::move(instance));
 
         render_batch(page);
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
-
-    // int atlas_x_offset = 0;
-    // for (const auto& atlas : main_glyph_cache.atlas_pages) {
-    //     batch_tex = atlas.tex();
-
-    //     instances.emplace_back(InstanceData{
-    //         .coords =
-    //             Vec2{
-    //                 .x = static_cast<float>(scroll.x + atlas_x_offset),
-    //                 .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
-    //             },
-    //         .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-    //         .uv = Vec4{0, 0, 1.0, 1.0},
-    //         .color = Rgba::fromRgb(color_scheme.foreground, false),
-    //     });
-
-    //     render_batch();
-
-    //     atlas_x_offset += Atlas::kAtlasSize + 100;
-    // }
 
     std::cerr << std::format("batch_count = {}", batch_count) << '\n';
 

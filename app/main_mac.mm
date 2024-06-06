@@ -77,13 +77,14 @@ int SimpleTextMain(int argc, char* argv[]) {
     @autoreleasepool {
         auto launch_time = std::chrono::high_resolution_clock::now();
 
-        NSApplication* app = NSApplication.sharedApplication;
+        [NSApplication sharedApplication];
+
         AppDelegate* appDelegate = [[AppDelegate alloc] init:launch_time];
 
-        app.activationPolicy = NSApplicationActivationPolicyRegular;
-        app.delegate = appDelegate;
+        NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
+        NSApp.delegate = appDelegate;
 
-        [app run];
+        [NSApp run];
     }
     return 0;
 }

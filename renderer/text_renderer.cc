@@ -49,8 +49,16 @@ struct ShapedGlyph {
 }
 
 void TextRenderer::setup(float width, float height, FontRasterizer& font_rasterizer) {
-    shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
-                        ResourcePath() / "shaders/text_frag.glsl");
+    std::string vert_source =
+#include "renderer/shaders/text_vert.glsl"
+        ;
+    std::string frag_source =
+#include "renderer/shaders/text_frag.glsl"
+        ;
+    shader_program.link(vert_source, frag_source);
+
+    // shader_program.link(ResourcePath() / "shaders/text_vert.glsl",
+    //                     ResourcePath() / "shaders/text_frag.glsl");
     this->resize(width, height);
 
     // TODO: Replace this with a more permanent solution.

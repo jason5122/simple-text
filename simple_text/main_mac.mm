@@ -47,7 +47,7 @@
                                action:@selector(terminate:)
                         keyEquivalent:@"q"];
     [menu addItem:appMenu];
-    NSApplication.sharedApplication.mainMenu = menu;
+    NSApp.mainMenu = menu;
 
     [windowController showWindow];
 
@@ -63,12 +63,8 @@
 }
 
 - (void)showAboutPanel {
-    [NSApplication.sharedApplication orderFrontStandardAboutPanel:menu];
-    [NSApplication.sharedApplication activateIgnoringOtherApps:true];
-}
-
-- (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app {
-    return true;
+    [NSApp orderFrontStandardAboutPanel:menu];
+    [NSApp activateIgnoringOtherApps:true];
 }
 
 @end

@@ -14,8 +14,16 @@ struct InstanceData {
 }
 
 void ImageRenderer::setup(float width, float height) {
-    shader_program.link(ResourcePath() / "shaders/image_vert.glsl",
-                        ResourcePath() / "shaders/image_frag.glsl");
+    std::string vert_source =
+#include "renderer/shaders/image_vert.glsl"
+        ;
+    std::string frag_source =
+#include "renderer/shaders/image_frag.glsl"
+        ;
+    shader_program.link(vert_source, frag_source);
+
+    // shader_program.link(ResourcePath() / "shaders/image_vert.glsl",
+    //                     ResourcePath() / "shaders/image_frag.glsl");
     this->resize(width, height);
     atlas.setup(false);  // Disable bilinear filtering.
 

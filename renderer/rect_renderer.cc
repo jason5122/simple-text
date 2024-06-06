@@ -16,8 +16,16 @@ struct InstanceData {
 }
 
 void RectRenderer::setup(float width, float height) {
-    shader_program.link(ResourcePath() / "shaders/rect_vert.glsl",
-                        ResourcePath() / "shaders/rect_frag.glsl");
+    std::string vert_source =
+#include "renderer/shaders/rect_vert.glsl"
+        ;
+    std::string frag_source =
+#include "renderer/shaders/rect_frag.glsl"
+        ;
+    shader_program.link(vert_source, frag_source);
+
+    // shader_program.link(ResourcePath() / "shaders/rect_vert.glsl",
+    //                     ResourcePath() / "shaders/rect_frag.glsl");
     this->resize(width, height);
 
     GLuint indices[] = {

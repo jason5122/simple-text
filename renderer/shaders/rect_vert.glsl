@@ -1,3 +1,5 @@
+R"(
+
 #version 330 core
 
 layout(location = 0) in vec2 coords;
@@ -42,3 +44,5 @@ void main() {
     corner_radius = in_corner_radius;
     tab_corner_radius = in_tab_corner_radius;
 }
+
+)"

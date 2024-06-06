@@ -15,5 +15,6 @@ public:
 
     Shader() = default;
     bool link(fs::path vert_path, fs::path frag_path);
+    bool link(const std::string& vert_source, const std::string& frag_source);
     ~Shader();
 };

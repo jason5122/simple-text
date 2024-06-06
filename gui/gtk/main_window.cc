@@ -1,7 +1,8 @@
 #include "gdk/gdkkeysyms.h"
 #include "main_window.h"
 #include <cmath>
-#include <glad/glad.h>
+
+#include <OpenGL/gl3.h>
 
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"

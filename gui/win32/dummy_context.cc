@@ -1,6 +1,6 @@
 #include "dummy_context.h"
 #include "util/profile_util.h"
-#include <glad/glad.h>
+
 #include <glad/glad_wgl.h>
 #include <iostream>
 

@@ -13,7 +13,6 @@ common_deps = [
   "//base",
   "//base/filesystem",
   "//gui",
-  "//third_party/glad",
 ]
 
 if (is_mac) {

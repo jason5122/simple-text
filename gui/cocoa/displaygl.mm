@@ -1,8 +1,8 @@
 #include "displaygl.h"
-#include <glad/glad.h>
 #include <iostream>
 
 #import <Cocoa/Cocoa.h>
+#import <OpenGL/gl3.h>
 
 namespace gui {
 
@@ -41,10 +41,10 @@ std::unique_ptr<DisplayGL> DisplayGL::Create() {
         return nullptr;
     }
 
-    if (!gladLoadGL()) {
-        std::cerr << "Failed to initialize GLAD.\n";
-        return nullptr;
-    }
+    // if (!gladLoadGL()) {
+    //     std::cerr << "Failed to initialize GLAD.\n";
+    //     return nullptr;
+    // }
 
     return std::unique_ptr<DisplayGL>(new DisplayGL(pixel_format, context));
 }

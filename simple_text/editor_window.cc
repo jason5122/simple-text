@@ -3,7 +3,8 @@
 #include "simple_text/simple_text.h"
 #include <cctype>
 
-#include <glad/glad.h>
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl3.h>
 #include <iostream>
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)

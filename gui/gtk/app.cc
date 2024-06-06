@@ -1,7 +1,8 @@
 #include "gui/app.h"
 #include "gui/gtk/pimpl_linux.h"
-#include <glad/glad.h>
 #include <gtk/gtk.h>
+
+#include <OpenGL/gl3.h>
 
 namespace gui {
 

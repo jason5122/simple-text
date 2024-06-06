@@ -1,9 +1,10 @@
 #include "gui/app.h"
 #include "gui/win32/pimpl_win.h"
-#include <glad/glad.h>
-#include <glad/glad_wgl.h>
 #include <memory>
 #include <windows.h>
+
+#include <glad/glad.h>
+#include <glad/glad_wgl.h>
 
 namespace gui {
 

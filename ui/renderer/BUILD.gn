@@ -22,7 +22,6 @@ source_set("renderer") {
     "//third_party/libgrapheme",
     "//third_party/libpng",
     "//ui/icons",
-    "//ui/sample_files",
     "//util",
   ]
 }

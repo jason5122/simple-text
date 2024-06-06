@@ -354,9 +354,6 @@ const char* hex(char c) {
         // }
         glClearColor(253 / 255.0, 253 / 255.0, 253 / 255.0, 1.0);
 
-        // fs::path file_path = ResourcePath() / "sample_files/text_renderer.cc";
-        fs::path file_path = ResourcePath() / "sample_files/example.json";
-
         float scaled_width = self.frame.size.width * self.contentsScale;
         float scaled_height = self.frame.size.height * self.contentsScale;
 
@@ -368,7 +365,7 @@ const char* hex(char c) {
         // highlighter.setLanguage("source.c++");
         highlighter.setLanguage("source.json");
 
-        buffer.setContents(ReadFile(file_path));
+        buffer.setContents("abc🇺🇸\n");
 
         // FIXME: Use locks to prevent race conditions.
         // std::thread parse_thread([&] {

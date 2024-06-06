@@ -416,6 +416,9 @@ const char* hex(char c) {
                     pixelFormat:pixelFormat
                    forLayerTime:timeInterval
                     displayTime:timeStamp];
+
+        std::cerr << "quit\n";
+        [NSApp terminate:nil];
     }
 }
 

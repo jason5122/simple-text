@@ -1,6 +1,5 @@
 #import "EditorView.h"
 #import "base/buffer.h"
-#import "base/syntax_highlighter.h"
 #import "font/rasterizer.h"
 #import "renderer/image_renderer.h"
 #import "renderer/rect_renderer.h"
@@ -36,7 +35,6 @@
 @private
     RectRenderer rect_renderer;
     ImageRenderer image_renderer;
-    SyntaxHighlighter highlighter;
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
 
@@ -48,10 +46,6 @@
 - (void)removeBytes:(size_t)bytes;
 
 - (void)backspaceBytes:(size_t)bytes;
-
-- (void)parseBuffer;
-
-- (void)editBuffer:(size_t)bytes;
 
 - (void)setRendererCursorPositions;
 
@@ -329,16 +323,6 @@ const char* hex(char c) {
     return pixelFormat;
 }
 
-- (void)parseBuffer {
-    TSInput input = {&buffer, Buffer::read, TSInputEncodingUTF8};
-    highlighter.parse(input);
-}
-
-- (void)editBuffer:(size_t)bytes {
-    size_t start_byte = text_renderer.cursor_end_byte;
-    highlighter.edit(start_byte, start_byte, start_byte + bytes);
-}
-
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
     CGLContextObj glContext = nullptr;
     CGLCreateContext(pixelFormat, nullptr, &glContext);
@@ -363,23 +347,8 @@ const char* hex(char c) {
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
         image_renderer.setup(scaled_width, scaled_height);
-        // highlighter.setLanguage("source.c++");
-        highlighter.setLanguage("source.json");
 
         buffer.setContents("abc🇺🇸\n");
-
-        // FIXME: Use locks to prevent race conditions.
-        // std::thread parse_thread([&] {
-        //     {
-        //         PROFILE_BLOCK("Tree-sitter only parse");
-        //         [self parseBuffer];
-        //     }
-        // });
-        // parse_thread.detach();
-        {
-            PROFILE_BLOCK("Tree-sitter only parse");
-            [self parseBuffer];
-        }
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
 
@@ -441,9 +410,9 @@ const char* hex(char c) {
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         text_renderer.resize(scaled_width, scaled_height);
-        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, highlighter,
-                                 scaled_editor_offset_x, scaled_editor_offset_y,
-                                 main_font_rasterizer, scaled_status_bar_height);
+        text_renderer.renderText(scaled_scroll_x, scaled_scroll_y, buffer, scaled_editor_offset_x,
+                                 scaled_editor_offset_y, main_font_rasterizer,
+                                 scaled_status_bar_height);
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
         rect_renderer.resize(scaled_width, scaled_height);
@@ -475,27 +444,21 @@ const char* hex(char c) {
         buffer.insert(text_renderer.cursor_end_line, text_renderer.cursor_end_col_offset, str);
     }
 
-    {
-        PROFILE_BLOCK("editBuffer + parseBuffer");
-        [self editBuffer:bytes];
-        [self parseBuffer];
+    // FIXME: This doesn't actually update the logical cursor position!
+    if (strcmp(str, "\n") == 0) {
+        text_renderer.cursor_start_line++;
+        text_renderer.cursor_end_line++;
 
-        // FIXME: This doesn't actually update the logical cursor position!
-        if (strcmp(str, "\n") == 0) {
-            text_renderer.cursor_start_line++;
-            text_renderer.cursor_end_line++;
-
-            text_renderer.cursor_start_col_offset = 0;
-            text_renderer.cursor_start_x = 0;
-            text_renderer.cursor_end_col_offset = 0;
-            text_renderer.cursor_end_x = 0;
-        } else {
-            float advance = text_renderer.getGlyphAdvance(std::string(str), main_font_rasterizer);
-            text_renderer.cursor_start_col_offset += bytes;
-            text_renderer.cursor_start_x += advance;
-            text_renderer.cursor_end_col_offset += bytes;
-            text_renderer.cursor_end_x += advance;
-        }
+        text_renderer.cursor_start_col_offset = 0;
+        text_renderer.cursor_start_x = 0;
+        text_renderer.cursor_end_col_offset = 0;
+        text_renderer.cursor_end_x = 0;
+    } else {
+        float advance = text_renderer.getGlyphAdvance(std::string(str), main_font_rasterizer);
+        text_renderer.cursor_start_col_offset += bytes;
+        text_renderer.cursor_start_x += advance;
+        text_renderer.cursor_end_col_offset += bytes;
+        text_renderer.cursor_end_x += advance;
     }
 }
 

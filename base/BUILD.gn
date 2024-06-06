@@ -1,10 +1,3 @@
 source_set("base") {
-  sources = [
-    "buffer.cc",
-    "syntax_highlighter.cc",
-  ]
-
-  deps = [ "//base/queries" ]
-
-  public_deps = [ "//third_party/tree_sitter" ]
+  sources = [ "buffer.cc" ]
 }

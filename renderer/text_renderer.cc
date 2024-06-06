@@ -2,12 +2,10 @@
 #include "font/rasterizer.h"
 #include "renderer/opengl_types.h"
 #include "text_renderer.h"
-#include "util/file_util.h"
 #include "util/opengl_error_util.h"
 #include "util/profile_util.h"
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
@@ -179,9 +177,8 @@ std::pair<float, size_t> TextRenderer::closestBoundaryForX(std::string line_str,
 }
 
 void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
-                              SyntaxHighlighter& highlighter, float editor_offset_x,
-                              float editor_offset_y, FontRasterizer& font_rasterizer,
-                              float status_bar_height) {
+                              float editor_offset_x, float editor_offset_y,
+                              FontRasterizer& font_rasterizer, float status_bar_height) {
     glUseProgram(shader_program.id);
     glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll_x, scroll_y);
     glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset_x,
@@ -193,12 +190,6 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
     size_t start_line = scroll_y / font_rasterizer.line_height;
     size_t visible_lines = std::ceil((height - status_bar_height) / font_rasterizer.line_height);
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
-
-    {
-        PROFILE_BLOCK("Tree-sitter highlight");
-        highlighter.getHighlights({static_cast<uint32_t>(start_line), 0},
-                                  {static_cast<uint32_t>(end_line), 0});
-    }
 
     size_t byte_offset = buffer.byteOfLine(start_line);
 
@@ -359,7 +350,7 @@ void TextRenderer::renderText(float scroll_x, float scroll_y, Buffer& buffer,
             bool is_glyph_in_selection = selection_start <= shaped_glyph.byte_offset &&
                                          shaped_glyph.byte_offset < selection_end;
 
-            Rgb text_color = highlighter.getColor(shaped_glyph.byte_offset);
+            Rgb text_color = colors::black;
             if (shaped_glyph.codepoint == 183) {
                 text_color = Rgb{182, 182, 182};
             }

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "base/buffer.h"
-#include "base/rgb.h"
-#include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
 #include "renderer/atlas.h"
 #include "renderer/shader.h"
@@ -35,8 +33,8 @@ public:
 
     TextRenderer() = default;
     void setup(float width, float height, FontRasterizer& font_rasterizer);
-    void renderText(float scroll_x, float scroll_y, Buffer& buffer, SyntaxHighlighter& highlighter,
-                    float editor_offset_x, float editor_offset_y, FontRasterizer& font_rasterizer,
+    void renderText(float scroll_x, float scroll_y, Buffer& buffer, float editor_offset_x,
+                    float editor_offset_y, FontRasterizer& font_rasterizer,
                     float status_bar_height);
     void renderUiText(FontRasterizer& main_font_rasterizer, FontRasterizer& ui_font_rasterizer);
     void resize(float new_width, float new_height);

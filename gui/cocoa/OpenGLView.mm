@@ -392,7 +392,7 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
     appWindow->onDraw();
 
     // TODO: For debugging; remove this.
-    // appWindow->stopLaunchTimer();
+    appWindow->stopLaunchTimer();
 
     // Calls glFlush() by default.
     [super drawInCGLContext:displaygl->context()

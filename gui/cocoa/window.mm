@@ -3,6 +3,11 @@
 
 namespace gui {
 
+// TODO: For debugging; remove this.
+void Window::stopLaunchTimer() {
+    app.pimpl->stopLaunchTimer();
+}
+
 Window::Window(App& app) : pimpl{new impl{}}, app(app) {
     // NSRect frame = NSMakeRect(500, 0, width, height);
     NSRect frame = NSScreen.mainScreen.visibleFrame;

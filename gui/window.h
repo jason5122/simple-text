@@ -54,6 +54,9 @@ public:
     virtual void onDarkModeToggle() {}
     virtual void onGuiAction(GuiAction action) {}
 
+    // TODO: For debugging; remove this.
+    void stopLaunchTimer();
+
 private:
     App& app;
 

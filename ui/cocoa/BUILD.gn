@@ -16,8 +16,5 @@ source_set("cocoa") {
     "//util",
   ]
 
-  public_deps = [
-    "//third_party/glad",
-    "//ui/renderer",
-  ]
+  public_deps = [ "//ui/renderer" ]
 }

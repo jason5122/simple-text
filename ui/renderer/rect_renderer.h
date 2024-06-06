@@ -2,7 +2,7 @@
 
 #include "ui/renderer/shader.h"
 #include <cstddef>
-#include <glad/glad.h>
+#include <OpenGL/gl3.h>
 
 class RectRenderer {
 public:

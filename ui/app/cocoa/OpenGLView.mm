@@ -1,5 +1,5 @@
 #include "OpenGLView.h"
-#include <glad/glad.h>
+#include <OpenGL/gl3.h>
 #include <iostream>
 
 @interface OpenGLLayer : CAOpenGLLayer
@@ -178,10 +178,6 @@
     CGLCreateContext(pixelFormat, nullptr, &glContext);
     if (glContext || (glContext = [super copyCGLContextForPixelFormat:pixelFormat])) {
         CGLSetCurrentContext(glContext);
-
-        if (!gladLoadGL()) {
-            std::cerr << "Failed to initialize GLAD\n";
-        }
 
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);

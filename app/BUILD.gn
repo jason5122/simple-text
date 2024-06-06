@@ -27,19 +27,3 @@ if (is_mac) {
     sources = [ "resources/app.iconset" ]
   }
 }
-
-if (is_linux) {
-  executable("app") {
-    output_name = "simple_text"
-
-    sources = [
-      "main.cc",
-      "main_linux.cc",
-    ]
-
-    deps = [
-      "//ui/gtk",
-      "//ui/renderer",
-    ]
-  }
-}

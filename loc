@@ -1,3 +1,0 @@
-#!/bin/bash
-
-tokei -e third_party -e sample_files -e scripts -e test_files

@@ -1,5 +1,6 @@
 #include "ui/app/app.h"
 #include "ui/app/cocoa/WindowController.h"
+#include "util/profile_util.h"
 #include <vector>
 
 #import <Cocoa/Cocoa.h>
@@ -39,7 +40,10 @@
     [menu addItem:appMenu];
     NSApplication.sharedApplication.mainMenu = menu;
 
-    app->onActivate();
+    {
+        PROFILE_BLOCK("app->onActivate()");
+        app->onActivate();
+    }
 }
 
 - (void)showAboutPanel {
@@ -55,21 +59,23 @@
 
 class App::impl {
 public:
-    NSApplication* ns_app;
     std::vector<WindowController*> window_controllers;
 };
 
 App::App() : pimpl{new impl{}}, launch_time(std::chrono::high_resolution_clock::now()) {
-    pimpl->ns_app = NSApplication.sharedApplication;
-    AppDelegate* appDelegate = [[AppDelegate alloc] initWithApp:this];
+    {
+        PROFILE_BLOCK("[NSApplication sharedApplication]");
+        [NSApplication sharedApplication];
+    }
 
-    pimpl->ns_app.activationPolicy = NSApplicationActivationPolicyRegular;
-    pimpl->ns_app.delegate = appDelegate;
+    AppDelegate* appDelegate = [[AppDelegate alloc] initWithApp:this];
+    NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
+    NSApp.delegate = appDelegate;
 }
 
 void App::run() {
     @autoreleasepool {
-        [pimpl->ns_app run];
+        [NSApp run];
     }
 }
 
@@ -78,6 +84,7 @@ void App::createNewWindow() {
     WindowController* window_controller = [[WindowController alloc] initWithFrame:frame];
 
     [window_controller showWindow];
+
     // pimpl->window_controllers.push_back(window_controller);
 
     // TODO: For debugging; remove this.

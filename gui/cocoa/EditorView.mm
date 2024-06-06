@@ -2,19 +2,20 @@
 #import "base/buffer.h"
 #import "base/syntax_highlighter.h"
 #import "font/rasterizer.h"
-#import "ui/renderer/image_renderer.h"
-#import "ui/renderer/rect_renderer.h"
-#import "ui/renderer/text_renderer.h"
+#import "renderer/image_renderer.h"
+#import "renderer/rect_renderer.h"
+#import "renderer/text_renderer.h"
 #import "util/file_util.h"
 #import "util/profile_util.h"
 #import <chrono>
 #import <fstream>
-#import <iostream>
 #import <limits>
 #import <sstream>
 #import <string>
 #import <thread>
 #import <vector>
+
+#import <iostream>
 
 @interface OpenGLLayer : CAOpenGLLayer {
 @public

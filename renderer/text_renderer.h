@@ -4,8 +4,8 @@
 #include "base/rgb.h"
 #include "base/syntax_highlighter.h"
 #include "font/rasterizer.h"
-#include "ui/renderer/atlas.h"
-#include "ui/renderer/shader.h"
+#include "renderer/atlas.h"
+#include "renderer/shader.h"
 #include <string>
 #include <unordered_map>
 #include <vector>

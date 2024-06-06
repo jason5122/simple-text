@@ -1,0 +1,8 @@
+group("gui") {
+  if (is_mac) {
+    deps = [
+      "cocoa",
+      "//renderer",
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ui/renderer/atlas.h"
-#include "ui/renderer/shader.h"
+#include "renderer/atlas.h"
+#include "renderer/shader.h"
 #include <vector>
 
 #include "build/buildflag.h"

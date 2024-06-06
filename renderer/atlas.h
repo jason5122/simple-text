@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/renderer/opengl_types.h"
+#include "renderer/opengl_types.h"
 #include <vector>
 
 #include "build/buildflag.h"

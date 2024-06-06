@@ -1,4 +1,4 @@
-#import "ui/cocoa/WindowController.h"
+#import "gui/cocoa/WindowController.h"
 #import "util/profile_util.h"
 #import <Cocoa/Cocoa.h>
 

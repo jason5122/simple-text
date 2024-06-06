@@ -1,10 +1,8 @@
 #import "EditorView.h"
 #import "base/buffer.h"
 #import "font/rasterizer.h"
-#import "renderer/image_renderer.h"
 #import "renderer/rect_renderer.h"
 #import "renderer/text_renderer.h"
-#import "util/file_util.h"
 #import "util/profile_util.h"
 #import <chrono>
 #import <fstream>
@@ -34,7 +32,6 @@
 
 @private
     RectRenderer rect_renderer;
-    ImageRenderer image_renderer;
     FontRasterizer main_font_rasterizer;
     FontRasterizer ui_font_rasterizer;
 
@@ -346,7 +343,6 @@ const char* hex(char c) {
         ui_font_rasterizer.setup(1, "SF Pro Text", 11 * self.contentsScale);
         text_renderer.setup(scaled_width, scaled_height, main_font_rasterizer);
         rect_renderer.setup(scaled_width, scaled_height);
-        image_renderer.setup(scaled_width, scaled_height);
 
         buffer.setContents("abc🇺🇸\n");
 
@@ -354,16 +350,6 @@ const char* hex(char c) {
 
         editor_offset_x = 200;
         editor_offset_y = 30;
-
-        fs::create_directory(DataPath());
-        std::ofstream settings_file(DataPath() / "settings.json");
-        if (settings_file.is_open()) {
-            settings_file << "test";
-            settings_file.flush();
-            settings_file.close();
-        } else {
-            std::cerr << "Error writing to settings.json.\n";
-        }
     }
     return glContext;
 }
@@ -421,11 +407,6 @@ const char* hex(char c) {
                            buffer.lineCount(), text_renderer.longest_line_x,
                            scaled_editor_offset_x, scaled_editor_offset_y,
                            scaled_status_bar_height);
-
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-        image_renderer.resize(scaled_width, scaled_height);
-        image_renderer.draw(scaled_scroll_x, scaled_scroll_y, scaled_editor_offset_x,
-                            scaled_editor_offset_y);
 
         glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         text_renderer.renderUiText(main_font_rasterizer, ui_font_rasterizer);

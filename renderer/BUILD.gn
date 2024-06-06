@@ -1,26 +1,17 @@
 source_set("renderer") {
   sources = [
     "atlas.cc",
-    "image_renderer.cc",
     "rect_renderer.cc",
     "shader.cc",
     "text_renderer.cc",
   ]
 
-  if (is_mac) {
-    frameworks = [ "OpenGL.framework" ]
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-  }
-  if (is_linux) {
-    libs = [ "epoxy" ]
-  }
+  frameworks = [ "OpenGL.framework" ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
 
   deps = [
-    "icons",
     "//base",
     "//font",
     "//third_party/libgrapheme",
-    "//third_party/libpng",
-    "//util",
   ]
 }

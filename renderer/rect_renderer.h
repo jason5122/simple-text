@@ -3,12 +3,7 @@
 #include "renderer/shader.h"
 #include <cstddef>
 
-#include "build/buildflag.h"
-#if IS_MAC
 #include <OpenGL/gl3.h>
-#else
-#include <epoxy/gl.h>
-#endif
 
 class RectRenderer {
 public:

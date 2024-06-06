@@ -13,8 +13,5 @@ source_set("cocoa") {
   frameworks += [ "OpenGL.framework" ]
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
-  deps = [
-    "//base",
-    "//util",
-  ]
+  deps = [ "//base" ]
 }

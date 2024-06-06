@@ -1,9 +1,0 @@
-source_set("uni_algo") {
-  public_configs = [ ":uni_algo_includes" ]
-}
-
-config("uni_algo_includes") {
-  defines = [ "UNI_ALGO_STATIC_DATA" ]
-
-  include_dirs = [ "include" ]
-}

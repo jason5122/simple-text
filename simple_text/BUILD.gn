@@ -2,7 +2,6 @@ import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
 common_sources = [
-  "editor_tab.cc",
   "editor_window.cc",
   "main.cc",
   "main_app.cc",
@@ -13,9 +12,8 @@ common_deps = [
   "sample_files",
   "//base",
   "//base/filesystem",
-  "//config",
   "//gui",
-  "//renderer",
+  "//third_party/glad",
 ]
 
 if (is_mac) {

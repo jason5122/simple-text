@@ -17,9 +17,10 @@
 
 @implementation AppDelegate
 
-- (instancetype)init {
+- (instancetype)init:(std::chrono::high_resolution_clock::time_point)theLaunchTime {
     has_drawn = false;
-    launch_time = std::chrono::high_resolution_clock::now();
+    // launch_time = std::chrono::high_resolution_clock::now();
+    launch_time = theLaunchTime;
 
     self = [super init];
     if (self) {
@@ -74,8 +75,10 @@
 
 int SimpleTextMain(int argc, char* argv[]) {
     @autoreleasepool {
+        auto launch_time = std::chrono::high_resolution_clock::now();
+
         NSApplication* app = NSApplication.sharedApplication;
-        AppDelegate* appDelegate = [[AppDelegate alloc] init];
+        AppDelegate* appDelegate = [[AppDelegate alloc] init:launch_time];
 
         app.activationPolicy = NSApplicationActivationPolicyRegular;
         app.delegate = appDelegate;

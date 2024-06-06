@@ -12,69 +12,10 @@ if (is_mac) {
     sources = [
       "main.cc",
       "main_app.cc",
-
-      # "main_mac.mm",
     ]
 
     frameworks = [ "Cocoa.framework" ]
 
-    deps = [
-      # ":icon",
-      "//ui/app",
-      # "//ui/cocoa",
-    ]
-  }
-  # icon("icon") {
-  #   sources = [ "resources/app.iconset" ]
-  # }
-}
-
-if (is_linux) {
-  executable("app") {
-    output_name = "simple_text"
-
-    sources = [
-      "main.cc",
-      "main_app.cc",
-
-      # "main_linux.cc",
-    ]
-
-    deps = [
-      "//ui/app",
-      "//ui/gtk",
-    ]
-  }
-}
-
-if (is_win) {
-  executable("app") {
-    output_name = "simple_text"
-
-    sources = [ "main_win.cc" ]
-
-    defines = [
-      "UNICODE",
-      "_UNICODE",
-    ]
-
-    libs = [
-      "user32",
-      "opengl32",
-      "gdi32",
-      "dwrite",
-      "shcore",
-    ]
-    deps = [
-      "//base",
-      "//util",
-    ]
-
-    public_deps = [
-      "//third_party/glad",
-      "//ui/renderer",
-    ]
-
-    # deps = [ "//ui/win32" ]
+    deps = [ "//ui/app" ]
   }
 }

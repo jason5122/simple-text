@@ -1,34 +1,16 @@
-import("//build/config/linux/pkg_config.gni")
-
 source_set("app") {
-  if (is_mac) {
-    sources = [
-      "cocoa/OpenGLView.mm",
-      "cocoa/WindowController.mm",
-      "cocoa/app_mac.mm",
-    ]
+  sources = [
+    "cocoa/OpenGLView.mm",
+    "cocoa/WindowController.mm",
+    "cocoa/app_mac.mm",
+  ]
 
-    frameworks = [
-      "Cocoa.framework",
-      "QuartzCore.framework",
-      "OpenGL.framework",
-    ]
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-  }
-  if (is_linux) {
-    sources = [ "app_linux.cc" ]
-
-    public_configs = [ ":gtk3" ]
-  }
+  frameworks = [
+    "Cocoa.framework",
+    "QuartzCore.framework",
+    "OpenGL.framework",
+  ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
 
   public_deps = [ "//third_party/glad" ]
-}
-
-if (is_linux) {
-  pkg_config("gtk3") {
-    packages = [
-      "gtk+-3.0",
-      "glib-2.0",
-    ]
-  }
 }

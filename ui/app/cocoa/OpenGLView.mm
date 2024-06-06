@@ -186,7 +186,7 @@
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);
 
-        glClearColor(1.0, 0.0, 0.0, 1.0);
+        glClearColor(1.0, 1.0, 1.0, 1.0);
 
         [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }

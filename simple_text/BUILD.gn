@@ -8,12 +8,7 @@ common_sources = [
   "simple_text.cc",
 ]
 
-common_deps = [
-  "sample_files",
-  "//base",
-  "//base/filesystem",
-  "//gui",
-]
+common_deps = [ "//gui" ]
 
 if (is_mac) {
   mac_app_bundle("simple_text") {
@@ -26,14 +21,7 @@ if (is_mac) {
     sources = common_sources
 
     deps = common_deps
-
-    deps += [
-      # ":icon"
-    ]
   }
-  # icon("icon") {
-  #   sources = [ "resources/app.iconset" ]
-  # }
 }
 
 if (is_linux || is_win) {

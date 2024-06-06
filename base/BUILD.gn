@@ -1,8 +1,0 @@
-source_set("base") {
-  sources = [
-    "buffer.cc",
-    "piece_table.cc",
-  ]
-
-  deps = [ "//base/queries" ]
-}

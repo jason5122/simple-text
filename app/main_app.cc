@@ -4,7 +4,6 @@ class SimpleText : public App {
 public:
     void onActivate() {
         createNewWindow();
-        createNewWindow();
     }
 };
 

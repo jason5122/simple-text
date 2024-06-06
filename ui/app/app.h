@@ -12,6 +12,9 @@ public:
     virtual void onActivate() = 0;
 
 private:
+    bool has_drawn = false;
+    std::chrono::high_resolution_clock::time_point launch_time;
+
     // https://herbsutter.com/gotw/_100/
     class impl;
     impl* pimpl;

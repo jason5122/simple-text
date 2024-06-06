@@ -4,6 +4,9 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include <format>
+#include <iostream>
+
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
     App* app;
@@ -56,7 +59,7 @@ public:
     std::vector<WindowController*> window_controllers;
 };
 
-App::App() : pimpl{new impl{}} {
+App::App() : pimpl{new impl{}}, launch_time(std::chrono::high_resolution_clock::now()) {
     pimpl->ns_app = NSApplication.sharedApplication;
     AppDelegate* appDelegate = [[AppDelegate alloc] initWithApp:this];
 
@@ -76,6 +79,16 @@ void App::createNewWindow() {
 
     [window_controller showWindow];
     // pimpl->window_controllers.push_back(window_controller);
+
+    // TODO: For debugging; remove this.
+    if (!has_drawn) {
+        has_drawn = true;
+
+        auto draw_time = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(draw_time - launch_time).count();
+        std::cerr << std::format("startup time: {} µs", duration) << '\n';
+    }
 }
 
 App::~App() {}

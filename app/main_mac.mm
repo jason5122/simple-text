@@ -1,4 +1,5 @@
 #import "ui/cocoa/WindowController.h"
+#import "util/profile_util.h"
 #import <Cocoa/Cocoa.h>
 
 #include <chrono>
@@ -23,7 +24,11 @@
     self = [super init];
     if (self) {
         NSRect frameRect = NSMakeRect(0, 0, 600, 500);
-        windowController = [[WindowController alloc] initWithFrame:frameRect];
+        {
+            // ~12000-13000 µs
+            PROFILE_BLOCK("[WindowController alloc]");
+            windowController = [[WindowController alloc] initWithFrame:frameRect];
+        }
     }
     return self;
 }

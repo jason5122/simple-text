@@ -1,4 +1,5 @@
 #import "WindowController.h"
+#include "util/profile_util.h"
 
 @implementation WindowController
 
@@ -11,6 +12,7 @@
                                                   styleMask:mask
                                                     backing:NSBackingStoreBuffered
                                                       defer:false];
+
         self.window.title = @"Simple Text";
         // self.window.titlebarAppearsTransparent = true;
         // self.window.backgroundColor = [NSColor colorWithSRGBRed:228 / 255.f

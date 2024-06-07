@@ -399,6 +399,9 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
+
+    std::cerr << "quit\n";
+    [NSApp terminate:nil];
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

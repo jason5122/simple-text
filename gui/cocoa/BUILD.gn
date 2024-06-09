@@ -6,9 +6,6 @@ source_set("cocoa") {
     "app.mm",
     "displaygl.mm",
     "window.mm",
-
-    # TODO: Create abstract `FunctionsGL` class and have a derived `FunctionsCGL` class.
-    "functions_gl.mm",
   ]
 
   frameworks = [

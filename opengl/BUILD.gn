@@ -1,0 +1,6 @@
+source_set("opengl") {
+  sources = [
+    "dispatch_table_gl.cc",
+    "functions_gl.cc",
+  ]
+}

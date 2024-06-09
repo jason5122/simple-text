@@ -15,6 +15,7 @@ common_deps = [
   "//base/filesystem",
   "//config",
   "//gui",
+  "//opengl",
 
   # "//font",
   # "//renderer",

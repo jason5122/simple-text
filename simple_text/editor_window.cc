@@ -8,7 +8,12 @@
 #include <iostream>
 
 // TODO: Temporary; remove this.
-#include "gui/functions_gl.h"
+#include "opengl/functions_gl.h"
+#include <dlfcn.h>
+namespace {
+const char* kDefaultOpenGLDylibName =
+    "/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib";
+}
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
     : Window(parent), parent(parent), wid(wid), color_scheme(isDarkMode()) {}
@@ -25,10 +30,16 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw() {
-    gui::FunctionsGL functions;
-    functions.initialize();
+    void* handle = dlopen(kDefaultOpenGLDylibName, RTLD_NOW);
+    if (!handle) {
+        std::cerr << "Could not open the OpenGL Framework.\n";
+    }
 
-    functions.clear(GL_COLOR_BUFFER_BIT);
+    std::unique_ptr<opengl::FunctionsGL> functionsGL(new opengl::FunctionsGL(handle));
+    // std::unique_ptr<FunctionsGL> functionsGL(new FunctionsGLCGL(handle));
+    functionsGL->initialize();
+
+    functionsGL->clear(GL_COLOR_BUFFER_BIT);
     // glClear(GL_COLOR_BUFFER_BIT);
 }
 

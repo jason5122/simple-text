@@ -46,7 +46,7 @@ typedef struct __GLsync* GLsync;
 
 // TODO(jmadill): It's likely we can auto-generate this file from gl.xml.
 
-namespace gui {
+namespace opengl {
 typedef void(INTERNAL_GL_APIENTRY* GLDEBUGPROC)(GLenum source, GLenum type, GLuint id,
                                                 GLenum severity, GLsizei length,
                                                 const GLchar* message, const void* userParam);

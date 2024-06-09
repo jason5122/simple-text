@@ -6,13 +6,11 @@
 #include "gui/app.h"
 #include "renderer/renderer.h"
 #include "simple_text/editor_window.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <vector>
 
-class SimpleText : public gui::App, public FileWatcherCallback {
+class SimpleText : public gui::App, public FileWatcherCallback, util::NonMovable {
 public:
-    NOT_COPYABLE(SimpleText)
-    NOT_MOVABLE(SimpleText)
     SimpleText();
     ~SimpleText() override;
     void createWindow();

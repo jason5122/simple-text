@@ -1,13 +1,15 @@
 #pragma once
 
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <cstdint>
 #include <dwrite_3.h>
 
 namespace font {
 
 // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L283
-class TextAnalysis : public IDWriteTextAnalysisSource, public IDWriteTextAnalysisSink {
+class TextAnalysis : public IDWriteTextAnalysisSource,
+                     public IDWriteTextAnalysisSink,
+                     util::NonMovable {
 public:
     IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject) {
         return S_OK;
@@ -39,8 +41,6 @@ public:
     };
 
 public:
-    NOT_COPYABLE(TextAnalysis)
-    NOT_MOVABLE(TextAnalysis)
     TextAnalysis(const wchar_t* text, uint32_t textLength, const wchar_t* localeName,
                  DWRITE_READING_DIRECTION readingDirection);
     ~TextAnalysis();

@@ -1,15 +1,13 @@
 #pragma once
 
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <chrono>
 #include <format>
 #include <iostream>
 
 // https://stackoverflow.com/a/37607676
-template <typename Duration = std::chrono::microseconds> class Profiler {
+template <typename Duration = std::chrono::microseconds> class Profiler : util::NonMovable {
 public:
-    NOT_COPYABLE(Profiler)
-    NOT_MOVABLE(Profiler)
     Profiler(std::string const& n) : name(n), t1(std::chrono::high_resolution_clock::now()) {}
     ~Profiler() {
         auto t2 = std::chrono::high_resolution_clock::now();

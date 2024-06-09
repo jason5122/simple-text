@@ -4,7 +4,7 @@
 #include "gui/key.h"
 #include "gui/modifier_key.h"
 #include "gui/window.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <memory>
 
 // TODO: For debugging; remove this.
@@ -16,8 +16,6 @@ namespace gui {
 
 class App {
 public:
-    NOT_COPYABLE(App)
-    NOT_MOVABLE(App)
     App();
     virtual ~App();
     void run();

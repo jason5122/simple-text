@@ -17,10 +17,8 @@
 
 namespace renderer {
 
-class TextRenderer {
+class TextRenderer : util::NonMovable {
 public:
-    NOT_COPYABLE(TextRenderer)
-    NOT_MOVABLE(TextRenderer)
     TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache);
     ~TextRenderer();
     void setup();

@@ -4,7 +4,7 @@
 #include "gui/gui_action.h"
 #include "gui/key.h"
 #include "gui/modifier_key.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <filesystem>
 #include <memory>
 #include <string_view>
@@ -23,8 +23,6 @@ class App;
 
 class Window {
 public:
-    NOT_COPYABLE(Window)
-    NOT_MOVABLE(Window)
     Window(App& app);
     virtual ~Window();
 

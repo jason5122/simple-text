@@ -4,12 +4,12 @@
 #include "renderer/shader.h"
 #include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <glad/glad.h>
 
 namespace renderer {
 
-class SelectionRenderer {
+class SelectionRenderer : util::NonMovable {
 public:
     struct Selection {
         int line;
@@ -17,8 +17,6 @@ public:
         int end;
     };
 
-    NOT_COPYABLE(SelectionRenderer)
-    NOT_MOVABLE(SelectionRenderer)
     SelectionRenderer();
     ~SelectionRenderer();
     void setup();

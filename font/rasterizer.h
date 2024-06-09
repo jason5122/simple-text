@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -17,13 +17,11 @@ struct RasterizedGlyph {
     std::vector<uint8_t> buffer;
 };
 
-class FontRasterizer {
+class FontRasterizer : util::NonMovable {
 public:
     int line_height;
     int descent;
 
-    NOT_COPYABLE(FontRasterizer)
-    NOT_MOVABLE(FontRasterizer)
     FontRasterizer(const std::string& font_name_utf8, int font_size);
     ~FontRasterizer();
 

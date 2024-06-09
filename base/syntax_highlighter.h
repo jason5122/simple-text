@@ -3,17 +3,15 @@
 #include "base/buffer.h"
 #include "base/rgb.h"
 #include "config/color_scheme.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <string>
 #include <tree_sitter/api.h>
 #include <vector>
 
 namespace base {
 
-class SyntaxHighlighter {
+class SyntaxHighlighter : util::NonMovable {
 public:
-    NOT_COPYABLE(SyntaxHighlighter)
-    NOT_MOVABLE(SyntaxHighlighter)
     SyntaxHighlighter();
     ~SyntaxHighlighter();
 

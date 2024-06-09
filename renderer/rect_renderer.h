@@ -4,17 +4,15 @@
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <cstddef>
 #include <glad/glad.h>
 #include <vector>
 
 namespace renderer {
 
-class RectRenderer {
+class RectRenderer : util::NonMovable {
 public:
-    NOT_COPYABLE(RectRenderer)
-    NOT_MOVABLE(RectRenderer)
     RectRenderer();
     ~RectRenderer();
     void setup();

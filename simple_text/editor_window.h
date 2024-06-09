@@ -7,12 +7,10 @@
 
 class SimpleText;
 
-class EditorWindow : public gui::Window {
+class EditorWindow : public gui::Window, util::NonMovable {
 public:
     int wid;
 
-    NOT_COPYABLE(EditorWindow)
-    NOT_MOVABLE(EditorWindow)
     EditorWindow(SimpleText& parent, int width, int height, int wid);
     ~EditorWindow() override;
     void createTab(fs::path file_path);

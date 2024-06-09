@@ -1,19 +1,18 @@
 #pragma once
 
 #include "renderer/opengl_types.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <glad/glad.h>
 #include <vector>
 
 namespace renderer {
 
-class Atlas {
+class Atlas : util::NonCopyable {
 public:
     // 1024 is a conservative size.
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
     static constexpr int kAtlasSize = 1024;
 
-    NOT_COPYABLE(Atlas)
     Atlas();
     ~Atlas();
     Atlas(Atlas&&);

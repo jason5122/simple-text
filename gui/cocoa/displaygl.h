@@ -1,17 +1,15 @@
 #pragma once
 
 #include "base/apple/scoped_cgtyperef.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <memory>
 
 using base::apple::ScopedTypeRef;
 
 namespace gui {
 
-class DisplayGL {
+class DisplayGL : util::NonMovable {
 public:
-    NOT_COPYABLE(DisplayGL)
-    NOT_MOVABLE(DisplayGL)
     ~DisplayGL();
     static std::unique_ptr<DisplayGL> Create();
 

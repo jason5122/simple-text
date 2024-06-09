@@ -5,16 +5,14 @@
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <glad/glad.h>
 #include <vector>
 
 namespace renderer {
 
-class ImageRenderer {
+class ImageRenderer : util::NonMovable {
 public:
-    NOT_COPYABLE(ImageRenderer)
-    NOT_MOVABLE(ImageRenderer)
     ImageRenderer();
     ~ImageRenderer();
     void setup();

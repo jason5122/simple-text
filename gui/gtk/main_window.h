@@ -1,17 +1,15 @@
 #pragma once
 
 #include "gui/window.h"
-#include "util/not_copyable_or_movable.h"
+#include "util/non_copyable.h"
 #include <gtk/gtk.h>
 
 namespace gui {
 
-class MainWindow {
+class MainWindow : util::NonMovable {
 public:
     Window* app_window;
 
-    NOT_COPYABLE(MainWindow)
-    NOT_MOVABLE(MainWindow)
     MainWindow(GtkApplication* gtk_app, Window* app_window);
     ~MainWindow();
     void show();

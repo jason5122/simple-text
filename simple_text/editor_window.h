@@ -10,7 +10,6 @@ public:
     int wid;
 
     EditorWindow(SimpleText& parent, int width, int height, int wid);
-    ~EditorWindow() override;
 
     void onOpenGLActivate(int width, int height) override;
     void onDraw() override;

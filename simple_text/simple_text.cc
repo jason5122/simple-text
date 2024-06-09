@@ -3,11 +3,9 @@
 #include <iostream>
 #include <memory>
 
-SimpleText::SimpleText() {}
-
-SimpleText::~SimpleText() {}
-
 void SimpleText::onLaunch() {
+    createWindow();
+    createWindow();
     createWindow();
 }
 

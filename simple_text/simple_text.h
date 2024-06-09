@@ -7,8 +7,6 @@
 
 class SimpleText : public gui::App {
 public:
-    SimpleText();
-    ~SimpleText() override;
     void createWindow();
     void destroyWindow(int wid);
 

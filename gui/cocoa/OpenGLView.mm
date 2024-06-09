@@ -390,7 +390,7 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
     CGLSetCurrentContext(displaygl->context());
 
     // TODO: For debugging; remove this.
-    [NSApp terminate:nil];
+    // [NSApp terminate:nil];
 
     appWindow->onDraw();
 

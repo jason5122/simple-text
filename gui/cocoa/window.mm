@@ -30,7 +30,6 @@ Window::Window(App& app) : pimpl{new impl{}}, app(app) {
 }
 
 Window::~Window() {
-    std::cerr << "Window::~Window()\n";
     [pimpl->window_controller release];
 }
 

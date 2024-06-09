@@ -1,5 +1,4 @@
 #include "gui/app.h"
-#include "gui/cocoa/OpenGLView.h"
 #include "gui/cocoa/WindowController.h"
 #include "gui/cocoa/pimpl_mac.h"
 #include "gui/window.h"

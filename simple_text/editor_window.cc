@@ -14,6 +14,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
+    glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
+
     GLuint tex_id;
     glGenTextures(1, &tex_id);
     std::cerr << std::format("tex_id = {}", tex_id) << '\n';

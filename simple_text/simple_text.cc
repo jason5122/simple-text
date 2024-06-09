@@ -6,7 +6,6 @@
 void SimpleText::onLaunch() {
     createWindow();
     createWindow();
-    createWindow();
 }
 
 void SimpleText::onQuit() {

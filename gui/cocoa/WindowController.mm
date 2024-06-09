@@ -1,8 +1,8 @@
 #include "WindowController.h"
-#include "gui/cocoa/OpenGLView.h"
+#include "gui/cocoa/GLView.h"
 
 @interface WindowController () {
-    OpenGLView* opengl_view;
+    GLView* opengl_view;
     gui::Window* app_window;
 }
 @end
@@ -22,9 +22,9 @@
                                                    styleMask:mask
                                                      backing:NSBackingStoreBuffered
                                                        defer:false] autorelease];
-        opengl_view = [[[OpenGLView alloc] initWithFrame:frameRect
-                                               appWindow:appWindow
-                                               displaygl:displayGl] autorelease];
+        opengl_view = [[[GLView alloc] initWithFrame:frameRect
+                                           appWindow:appWindow
+                                           displaygl:displayGl] autorelease];
         self.window.contentView = opengl_view;
         [self.window makeFirstResponder:opengl_view];
 

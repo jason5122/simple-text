@@ -1,41 +1,29 @@
-#include "OpenGLView.h"
+#include "GLView.h"
+#include "gui/cocoa/GLLayer.h"
 #include <iostream>
 
 #import <Carbon/Carbon.h>
-#import <OpenGL/gl3.h>
-#import <QuartzCore/QuartzCore.h>
 
-@interface OpenGLLayer : CAOpenGLLayer {
+@interface GLView () {
 @public
-    gui::Window* appWindow;
-
-@private
-    gui::DisplayGL* displaygl;
-}
-
-- (instancetype)initWithDisplayGL:(gui::DisplayGL*)theDisplaygl;
-@end
-
-@interface OpenGLView () {
-@public
-    OpenGLLayer* openGLLayer;
+    GLLayer* glLayer;
     NSTrackingArea* trackingArea;
 }
 @end
 
-@implementation OpenGLView
+@implementation GLView
 
 - (instancetype)initWithFrame:(NSRect)frame
                     appWindow:(gui::Window*)theAppWindow
                     displaygl:(gui::DisplayGL*)displaygl {
     self = [super initWithFrame:frame];
     if (self) {
-        openGLLayer = [[[OpenGLLayer alloc] initWithDisplayGL:displaygl] autorelease];
-        openGLLayer->appWindow = theAppWindow;
+        glLayer = [[[GLLayer alloc] initWithDisplayGL:displaygl] autorelease];
+        glLayer->appWindow = theAppWindow;
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;
-        self.layer = openGLLayer;
+        self.layer = glLayer;
 
         // Fixes blurriness on HiDPI displays.
         // https://bugzilla.gnome.org/show_bug.cgi?id=765194
@@ -59,7 +47,7 @@
 }
 
 - (void)redraw {
-    [openGLLayer setNeedsDisplay];
+    [glLayer setNeedsDisplay];
 
     // TODO: Investigate how this affects performance. This is needed to trigger redraws in the
     // background, but we do not normally need this. Consider disabling normally.
@@ -112,10 +100,10 @@
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         if (event.momentumPhase & NSEventPhaseBegan) {
-            openGLLayer.asynchronous = true;
+            glLayer.asynchronous = true;
         }
         if (event.momentumPhase & NSEventPhaseEnded) {
-            openGLLayer.asynchronous = false;
+            glLayer.asynchronous = false;
         }
 
         int dx = 0;
@@ -140,10 +128,10 @@
         //     dx = 0;
         // }
 
-        int scale = openGLLayer.contentsScale;
-        int scaled_dx = dx * openGLLayer.contentsScale;
-        int scaled_dy = dy * openGLLayer.contentsScale;
-        openGLLayer->appWindow->onScroll(scaled_dx, scaled_dy);
+        int scale = glLayer.contentsScale;
+        int scaled_dx = dx * glLayer.contentsScale;
+        int scaled_dy = dy * glLayer.contentsScale;
+        glLayer->appWindow->onScroll(scaled_dx, scaled_dy);
     }
 }
 
@@ -233,15 +221,15 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
 
     gui::Key key = GetKey(event.keyCode);
     gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    openGLLayer->appWindow->onKeyDown(key, modifiers);
+    glLayer->appWindow->onKeyDown(key, modifiers);
 }
 
 - (void)mouseDown:(NSEvent*)event {
     int mouse_x = std::round(event.locationInWindow.x);
     int mouse_y = std::round(event.locationInWindow.y);
-    mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
+    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    int scale = openGLLayer.contentsScale;
+    int scale = glLayer.contentsScale;
     int scaled_mouse_x = mouse_x * scale;
     int scaled_mouse_y = mouse_y * scale;
 
@@ -254,20 +242,20 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
         click_type = gui::ClickType::kTripleClick;
     }
 
-    openGLLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
+    glLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
     int mouse_x = std::round(event.locationInWindow.x);
     int mouse_y = std::round(event.locationInWindow.y);
-    mouse_y = openGLLayer.frame.size.height - mouse_y;  // Set origin at top left.
+    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
 
-    int scale = openGLLayer.contentsScale;
+    int scale = glLayer.contentsScale;
     int scaled_mouse_x = mouse_x * scale;
     int scaled_mouse_y = mouse_y * scale;
 
     gui::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    openGLLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
+    glLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
@@ -279,7 +267,7 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
 }
 
 - (void)viewDidChangeEffectiveAppearance {
-    openGLLayer->appWindow->onDarkModeToggle();
+    glLayer->appWindow->onDarkModeToggle();
 }
 
 // NSTextInputClient protocol implementation.
@@ -316,7 +304,7 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
     BOOL isAttributedString = [string isKindOfClass:[NSAttributedString class]];
     NSString* text = isAttributedString ? [string string] : string;
-    openGLLayer->appWindow->onInsertText(text.UTF8String);
+    glLayer->appWindow->onInsertText(text.UTF8String);
 }
 
 - (NSUInteger)characterIndexForPoint:(NSPoint)point {
@@ -337,90 +325,14 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
     std::string str = selector_str.UTF8String;
     std::cerr << str << '\n';
     if (str == "moveForward" || str == "moveRight") {
-        openGLLayer->appWindow->onAction(gui::Action::kMoveForwardByCharacter);
+        glLayer->appWindow->onAction(gui::Action::kMoveForwardByCharacter);
     }
     if (str == "moveBackward" || str == "moveLeft") {
-        openGLLayer->appWindow->onAction(gui::Action::kMoveBackwardByCharacter);
+        glLayer->appWindow->onAction(gui::Action::kMoveBackwardByCharacter);
     }
     if (str == "deleteBackward") {
-        openGLLayer->appWindow->onAction(gui::Action::kLeftDelete);
+        glLayer->appWindow->onAction(gui::Action::kLeftDelete);
     }
-}
-
-@end
-
-@implementation OpenGLLayer
-
-- (instancetype)initWithDisplayGL:(gui::DisplayGL*)theDisplaygl {
-    self = [super init];
-    if (self) {
-        displaygl = theDisplaygl;
-    }
-    return self;
-}
-
-- (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return displaygl->pixelFormat();
-}
-
-- (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLSetCurrentContext(displaygl->context());
-
-    int scaled_width = self.frame.size.width * self.contentsScale;
-    int scaled_height = self.frame.size.height * self.contentsScale;
-
-    appWindow->onOpenGLActivate(scaled_width, scaled_height);
-
-    [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
-
-    return displaygl->context();
-}
-
-- (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
-                pixelFormat:(CGLPixelFormatObj)pixelFormat
-               forLayerTime:(CFTimeInterval)timeInterval
-                displayTime:(const CVTimeStamp*)timeStamp {
-    return true;
-}
-
-- (void)drawInCGLContext:(CGLContextObj)glContext
-             pixelFormat:(CGLPixelFormatObj)pixelFormat
-            forLayerTime:(CFTimeInterval)timeInterval
-             displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(displaygl->context());
-
-    // TODO: For debugging; remove this.
-    // [NSApp terminate:nil];
-
-    appWindow->onDraw();
-
-    // TODO: For debugging; remove this.
-    // appWindow->stopLaunchTimer();
-
-    // Calls glFlush() by default.
-    [super drawInCGLContext:displaygl->context()
-                pixelFormat:pixelFormat
-               forLayerTime:timeInterval
-                displayTime:timeStamp];
-}
-
-- (void)observeValueForKeyPath:(NSString*)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary*)change
-                       context:(void*)context {
-    CGLSetCurrentContext(displaygl->context());
-
-    float scaled_width = self.frame.size.width * self.contentsScale;
-    float scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onResize(scaled_width, scaled_height);
-}
-
-// We shouldn't release the CGLContextObj since it isn't owned by this object.
-- (void)releaseCGLContext:(CGLContextObj)glContext {
-}
-
-// We shouldn't release the CGLPixelFormatObj since it isn't owned by this object.
-- (void)releaseCGLPixelFormat:(CGLPixelFormatObj)pixelFormat {
 }
 
 @end

@@ -5,7 +5,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface OpenGLView : NSView <NSTextInputClient>
+@interface GLView : NSView <NSTextInputClient>
 
 - (instancetype)initWithFrame:(NSRect)frame
                     appWindow:(gui::Window*)theAppWindow

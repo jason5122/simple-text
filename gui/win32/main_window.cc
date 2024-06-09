@@ -126,6 +126,9 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
+        // TODO: For debugging; remove this.
+        PostQuitMessage(0);
+
         wglMakeCurrent(m_hdc, dummy_context.m_context);
 
         PAINTSTRUCT ps;

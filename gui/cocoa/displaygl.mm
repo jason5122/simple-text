@@ -4,10 +4,16 @@
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
 
+// TODO: Temporary; remove this.
+#include "gui/functions_gl.h"
+
 namespace gui {
 
 DisplayGL::DisplayGL(CGLPixelFormatObj pixel_format, CGLContextObj context)
-    : pixel_format_(pixel_format), context_(context) {}
+    : pixel_format_(pixel_format), context_(context) {
+    FunctionsGL functions;
+    functions.initialize();
+}
 
 DisplayGL::~DisplayGL() {}
 

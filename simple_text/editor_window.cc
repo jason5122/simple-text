@@ -7,6 +7,9 @@
 #include <format>
 #include <iostream>
 
+// TODO: Temporary; remove this.
+#include "gui/functions_gl.h"
+
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
     : Window(parent), parent(parent), wid(wid), color_scheme(isDarkMode()) {}
 
@@ -22,7 +25,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    gui::FunctionsGL functions;
+    functions.initialize();
+    // glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void EditorWindow::onResize(int width, int height) {

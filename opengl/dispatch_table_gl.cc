@@ -7,6 +7,9 @@ namespace opengl {
 void DispatchTableGL::initProcsGL() {
     ASSIGN("glClear", clear);
     ASSIGN("glClearColor", clearColor);
+    ASSIGN("glDepthMask", depthMask);
+    ASSIGN("glEnable", enable);
+    ASSIGN("glGenTextures", genTextures);
 }
 
 }

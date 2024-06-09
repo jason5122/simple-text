@@ -3,6 +3,10 @@
 #include <iostream>
 #include <memory>
 
+SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()) {
+    gl->initialize();
+}
+
 void SimpleText::onLaunch() {
     createWindow();
     createWindow();

@@ -6,7 +6,7 @@ namespace opengl {
 
 class FunctionsGL : public DispatchTableGL {
 public:
-    FunctionsGL(void* dylib_handle);
+    FunctionsGL();
     ~FunctionsGL() override;
 
     void initialize();
@@ -14,7 +14,7 @@ public:
 private:
     void* loadProcAddress(const std::string& function) const override;
 
-    void* dylib_handle_;
+    void* handle_;
 };
 
 }

@@ -47,5 +47,11 @@ if (is_linux || is_win) {
     sources = common_sources
 
     deps = common_deps
+
+    # Required for CoInitializeEx()/CoUninitialize().
+    # TODO: Consider moving this to //gui/win32/.
+    if (is_win) {
+      libs = [ "ole32.lib" ]
+    }
   }
 }

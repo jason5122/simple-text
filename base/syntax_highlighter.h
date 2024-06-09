@@ -10,7 +10,7 @@
 
 namespace base {
 
-class SyntaxHighlighter : util::NonMovable {
+class SyntaxHighlighter {
 public:
     SyntaxHighlighter();
     ~SyntaxHighlighter();

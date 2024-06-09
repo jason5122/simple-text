@@ -6,7 +6,7 @@
 #include <iostream>
 
 // https://stackoverflow.com/a/37607676
-template <typename Duration = std::chrono::microseconds> class Profiler : util::NonMovable {
+template <typename Duration = std::chrono::microseconds> class Profiler {
 public:
     Profiler(std::string const& n) : name(n), t1(std::chrono::high_resolution_clock::now()) {}
     ~Profiler() {

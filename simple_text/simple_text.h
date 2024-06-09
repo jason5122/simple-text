@@ -9,7 +9,7 @@
 #include "util/non_copyable.h"
 #include <vector>
 
-class SimpleText : public gui::App, public FileWatcherCallback, util::NonMovable {
+class SimpleText : public gui::App, public FileWatcherCallback {
 public:
     SimpleText();
     ~SimpleText() override;

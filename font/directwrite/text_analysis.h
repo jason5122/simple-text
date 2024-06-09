@@ -7,9 +7,7 @@
 namespace font {
 
 // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L283
-class TextAnalysis : public IDWriteTextAnalysisSource,
-                     public IDWriteTextAnalysisSink,
-                     util::NonMovable {
+class TextAnalysis : public IDWriteTextAnalysisSource, public IDWriteTextAnalysisSink {
 public:
     IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject) {
         return S_OK;

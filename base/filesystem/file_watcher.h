@@ -14,7 +14,7 @@ public:
     virtual void onFileEvent() {}
 };
 
-class FileWatcher : util::NonMovable {
+class FileWatcher {
 public:
     FileWatcher(fs::path directory, FileWatcherCallback* callback);
     ~FileWatcher();

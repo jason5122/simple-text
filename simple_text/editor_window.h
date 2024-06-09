@@ -7,7 +7,7 @@
 
 class SimpleText;
 
-class EditorWindow : public gui::Window, util::NonMovable {
+class EditorWindow : public gui::Window {
 public:
     int wid;
 

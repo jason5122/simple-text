@@ -1,1 +1,1 @@
-# Checks: 'cppcoreguidelines-*'
+Checks: 'cppcoreguidelines-special-member-functions'

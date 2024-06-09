@@ -8,7 +8,7 @@ using base::apple::ScopedTypeRef;
 
 namespace gui {
 
-class DisplayGL : util::NonMovable {
+class DisplayGL {
 public:
     ~DisplayGL();
     static std::unique_ptr<DisplayGL> Create();

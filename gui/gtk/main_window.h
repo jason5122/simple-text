@@ -6,7 +6,7 @@
 
 namespace gui {
 
-class MainWindow : util::NonMovable {
+class MainWindow {
 public:
     Window* app_window;
 

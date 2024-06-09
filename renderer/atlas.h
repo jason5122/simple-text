@@ -7,7 +7,7 @@
 
 namespace renderer {
 
-class Atlas : util::NonCopyable {
+class Atlas {
 public:
     // 1024 is a conservative size.
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE

@@ -17,7 +17,7 @@ struct RasterizedGlyph {
     std::vector<uint8_t> buffer;
 };
 
-class FontRasterizer : util::NonMovable {
+class FontRasterizer {
 public:
     int line_height;
     int descent;

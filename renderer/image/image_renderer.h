@@ -11,7 +11,7 @@
 
 namespace renderer {
 
-class ImageRenderer : util::NonMovable {
+class ImageRenderer {
 public:
     ImageRenderer();
     ~ImageRenderer();

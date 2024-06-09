@@ -9,7 +9,7 @@
 
 namespace renderer {
 
-class SelectionRenderer : util::NonMovable {
+class SelectionRenderer {
 public:
     struct Selection {
         int line;

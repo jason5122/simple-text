@@ -17,7 +17,7 @@
 
 namespace renderer {
 
-class TextRenderer : util::NonMovable {
+class TextRenderer {
 public:
     TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache);
     ~TextRenderer();

@@ -6,7 +6,7 @@
 
 namespace renderer {
 
-class Shader : util::NonMovable {
+class Shader {
 public:
     GLuint id;
 

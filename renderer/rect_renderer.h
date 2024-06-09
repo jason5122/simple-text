@@ -11,7 +11,7 @@
 
 namespace renderer {
 
-class RectRenderer : util::NonMovable {
+class RectRenderer {
 public:
     RectRenderer();
     ~RectRenderer();

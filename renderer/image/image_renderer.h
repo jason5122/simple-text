@@ -2,11 +2,11 @@
 
 #include "base/filesystem/file_reader.h"
 #include "renderer/atlas.h"
+#include "renderer/opengl_functions.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "util/non_copyable.h"
-#include <glad/glad.h>
 #include <vector>
 
 namespace renderer {

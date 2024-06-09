@@ -1,12 +1,12 @@
 #pragma once
 
 #include "config/color_scheme.h"
+#include "renderer/opengl_functions.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "util/non_copyable.h"
 #include <cstddef>
-#include <glad/glad.h>
 #include <vector>
 
 namespace renderer {

@@ -4,13 +4,13 @@
 #include "base/syntax_highlighter.h"
 #include "config/color_scheme.h"
 #include "renderer/atlas.h"
+#include "renderer/opengl_functions.h"
 #include "renderer/opengl_types.h"
 #include "renderer/selection_renderer.h"
 #include "renderer/shader.h"
 #include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
 #include "simple_text/editor_tab.h"
-#include <glad/glad.h>
 #include <vector>
 
 #include <unordered_map>

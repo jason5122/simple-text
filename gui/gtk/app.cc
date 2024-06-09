@@ -1,6 +1,6 @@
 #include "gui/app.h"
 #include "gui/gtk/pimpl_linux.h"
-#include <glad/glad.h>
+#include "renderer/opengl_functions.h"
 #include <gtk/gtk.h>
 
 namespace gui {

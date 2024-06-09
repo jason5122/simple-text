@@ -1,8 +1,8 @@
 #include "displaygl.h"
-#include <glad/glad.h>
 #include <iostream>
 
 #import <Cocoa/Cocoa.h>
+#import <OpenGL/gl3.h>
 
 namespace gui {
 
@@ -38,11 +38,6 @@ std::unique_ptr<DisplayGL> DisplayGL::Create() {
 
     if (CGLSetCurrentContext(context) != kCGLNoError) {
         std::cerr << "Could not make the CGL context current." << '\n';
-        return nullptr;
-    }
-
-    if (!gladLoadGL()) {
-        std::cerr << "Failed to initialize GLAD.\n";
         return nullptr;
     }
 

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "renderer/opengl_functions.h"
 #include "util/non_copyable.h"
-#include <glad/glad.h>
 #include <string>
 
 namespace renderer {

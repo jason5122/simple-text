@@ -1,9 +1,9 @@
 #include "build/buildflag.h"
 #include "editor_window.h"
+#include "renderer/opengl_functions.h"
 #include "simple_text/action_executer.h"
 #include <algorithm>
 #include <cctype>
-#include <glad/glad.h>
 #include <iostream>
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)

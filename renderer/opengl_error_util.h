@@ -1,7 +1,7 @@
 #pragma once
 
+#include "renderer/opengl_functions.h"
 #include <cstdio>
-#include <glad/glad.h>
 #include <iostream>
 
 // https://learnopengl.com/In-Practice/Debugging

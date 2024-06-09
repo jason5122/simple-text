@@ -1,11 +1,11 @@
 #pragma once
 
+#include "renderer/opengl_functions.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
 #include "util/non_copyable.h"
-#include <glad/glad.h>
 
 namespace renderer {
 

@@ -2,6 +2,7 @@
 
 // TODO: For debugging; remove this.
 #include <Cocoa/Cocoa.h>
+#include <iostream>
 
 @interface GLLayer () {
     CGLContextObj mDisplayContext;
@@ -63,6 +64,9 @@
 
     // TODO: For debugging; remove this.
     // [NSApp terminate:nil];
+
+    CGLContextObj currentContext = CGLGetCurrentContext();
+    std::cerr << currentContext << '\n';
 
     appWindow->onDraw();
 

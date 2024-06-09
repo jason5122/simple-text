@@ -1,5 +1,8 @@
 #include "GLLayer.h"
 
+// TODO: For debugging; remove this.
+#include <Cocoa/Cocoa.h>
+
 @interface GLLayer () {
     CGLContextObj mDisplayContext;
 }

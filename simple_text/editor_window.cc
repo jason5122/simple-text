@@ -27,6 +27,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 void EditorWindow::onDraw() {
     gui::FunctionsGL functions;
     functions.initialize();
+
+    functions.clear(GL_COLOR_BUFFER_BIT);
     // glClear(GL_COLOR_BUFFER_BIT);
 }
 

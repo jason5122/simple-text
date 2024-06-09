@@ -1,30 +1,48 @@
 #include "GLLayer.h"
 
+@interface GLLayer () {
+    CGLContextObj mDisplayContext;
+}
+
+@end
+
 @implementation GLLayer
 
-- (instancetype)initWithDisplayGL:(gui::DisplayGL*)theDisplaygl {
+- (instancetype)initWithContext:(CGLContextObj)displayContext {
     self = [super init];
     if (self) {
-        displaygl = theDisplaygl;
+        mDisplayContext = displayContext;
     }
     return self;
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return displaygl->pixelFormat();
+    CGLPixelFormatAttribute attribs[] = {
+        kCGLPFADisplayMask, static_cast<CGLPixelFormatAttribute>(mask), kCGLPFAOpenGLProfile,
+        static_cast<CGLPixelFormatAttribute>(kCGLOGLPVersion_3_2_Core),
+        static_cast<CGLPixelFormatAttribute>(0)};
+
+    CGLPixelFormatObj pixelFormat = nullptr;
+    GLint numFormats = 0;
+    CGLChoosePixelFormat(attribs, &pixelFormat, &numFormats);
+
+    return pixelFormat;
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLSetCurrentContext(displaygl->context());
+    CGLContextObj context = nullptr;
+    CGLCreateContext(pixelFormat, mDisplayContext, &context);
 
-    int scaled_width = self.frame.size.width * self.contentsScale;
-    int scaled_height = self.frame.size.height * self.contentsScale;
-
-    appWindow->onOpenGLActivate(scaled_width, scaled_height);
-
+    // Set up KVO to detect resizing.
     [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
 
-    return displaygl->context();
+    // Call OpenGL activation callback.
+    CGLSetCurrentContext(context);
+    int scaled_width = self.frame.size.width * self.contentsScale;
+    int scaled_height = self.frame.size.height * self.contentsScale;
+    appWindow->onOpenGLActivate(scaled_width, scaled_height);
+
+    return context;
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
@@ -38,7 +56,7 @@
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(displaygl->context());
+    CGLSetCurrentContext(glContext);
 
     // TODO: For debugging; remove this.
     // [NSApp terminate:nil];
@@ -49,7 +67,7 @@
     // appWindow->stopLaunchTimer();
 
     // Calls glFlush() by default.
-    [super drawInCGLContext:displaygl->context()
+    [super drawInCGLContext:glContext
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
@@ -59,19 +77,11 @@
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-    CGLSetCurrentContext(displaygl->context());
+    CGLSetCurrentContext(mDisplayContext);
 
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;
     appWindow->onResize(scaled_width, scaled_height);
-}
-
-// We shouldn't release the CGLContextObj since it isn't owned by this object.
-- (void)releaseCGLContext:(CGLContextObj)glContext {
-}
-
-// We shouldn't release the CGLPixelFormatObj since it isn't owned by this object.
-- (void)releaseCGLPixelFormat:(CGLPixelFormatObj)pixelFormat {
 }
 
 @end

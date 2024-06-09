@@ -18,7 +18,7 @@
                     displaygl:(gui::DisplayGL*)displaygl {
     self = [super initWithFrame:frame];
     if (self) {
-        glLayer = [[[GLLayer alloc] initWithDisplayGL:displaygl] autorelease];
+        glLayer = [[[GLLayer alloc] initWithContext:displaygl->context()] autorelease];
         glLayer->appWindow = theAppWindow;
 
         // openGLLayer.needsDisplayOnBoundsChange = true;

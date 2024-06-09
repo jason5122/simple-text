@@ -30,8 +30,8 @@ private:
     GlyphCache ui_glyph_cache;
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
-    ImageRenderer image_renderer;
-    SelectionRenderer selection_renderer;
+    // ImageRenderer image_renderer;
+    // SelectionRenderer selection_renderer;
 
     static constexpr int kLineNumberOffset = 120;
 

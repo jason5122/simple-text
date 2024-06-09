@@ -1,11 +1,11 @@
 source_set("renderer") {
   sources = [
     "atlas.cc",
-    "image/image_renderer.cc",
+    # "image/image_renderer.cc",
     "movement.cc",
     "rect_renderer.cc",
     "renderer.cc",
-    "selection_renderer.cc",
+    # "selection_renderer.cc",
     "shader.cc",
     "text/glyph_cache.cc",
     "text/text_renderer.cc",
@@ -18,9 +18,7 @@ source_set("renderer") {
     "//config",
     "//font",
     "//third_party/libgrapheme",
-    "//third_party/libpng",
-    "//third_party/uni_algo",
+    # "//third_party/libpng",
+    # "//third_party/uni_algo",
   ]
-
-  public_deps = [ "//third_party/glad" ]
 }

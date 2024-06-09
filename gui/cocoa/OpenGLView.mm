@@ -389,6 +389,9 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
              displayTime:(const CVTimeStamp*)timeStamp {
     CGLSetCurrentContext(displaygl->context());
 
+    // TODO: For debugging; remove this.
+    [NSApp terminate:nil];
+
     appWindow->onDraw();
 
     // TODO: For debugging; remove this.
@@ -399,9 +402,6 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
-
-    std::cerr << "quit\n";
-    [NSApp terminate:nil];
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

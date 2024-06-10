@@ -7,4 +7,7 @@ source_set("opengl") {
   if (is_win) {
     sources += [ "functions_wgl.cc" ]
   }
+  if (is_linux) {
+    sources += [ "functions_egl.cc" ]
+  }
 }

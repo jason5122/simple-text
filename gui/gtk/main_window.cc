@@ -30,6 +30,7 @@ static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gc
 
 // https://github.com/ToshioCP/Gtk4-tutorial/blob/main/gfm/sec17.md#menu-and-action
 static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
+    std::cerr << "quit callback\n";
     g_application_quit(G_APPLICATION(app));
 }
 
@@ -65,12 +66,20 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
 
         g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
         g_menu_append_item(file_menu, quit_menu_item);
-        gtk_application_set_menubar(GTK_APPLICATION(gtk_app), G_MENU_MODEL(menu_bar));
+        gtk_application_set_menubar(gtk_app, G_MENU_MODEL(menu_bar));
+
         gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window), true);
 
-        GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
-        g_action_map_add_action(G_ACTION_MAP(gtk_app), G_ACTION(quit_action));
-        g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), gtk_app);
+        // GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
+        // g_action_map_add_action(G_ACTION_MAP(gtk_app), G_ACTION(quit_action));
+        // g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), gtk_app);
+
+        const GActionEntry entries[] = {{"quit", quit_callback}};
+        g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
+                                        gtk_app);
+
+        const gchar* quit_accels[2] = {"<Ctrl>q", NULL};
+        gtk_application_set_accels_for_action(gtk_app, "app.quit", quit_accels);
     }
 
     // gtk_window_maximize(GTK_WINDOW(window));
@@ -239,7 +248,9 @@ static gboolean key_press_event(GtkWidget* self, GdkEventKey* event, gpointer us
         free(str);
     }
 
-    return true;
+    // TODO: Determine when to propagate and when not to.
+    std::cerr << "key press\n";
+    return false;
 }
 
 static void destroy(GtkWidget* self, gpointer user_data) {

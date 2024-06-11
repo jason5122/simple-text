@@ -2,9 +2,7 @@
 
 #include "gui/app.h"
 #include "opengl/functions_gl.h"
-#include "opengl/functionsgl_enums.h"
 #include "simple_text/editor_window.h"
-#include "util/non_copyable.h"
 #include <vector>
 
 class SimpleText : public gui::App {

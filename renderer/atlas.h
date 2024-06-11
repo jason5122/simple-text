@@ -1,13 +1,13 @@
 #pragma once
 
-#include "renderer/opengl_functions.h"
+#include "opengl/functionsgl_typedefs.h"
 #include "renderer/opengl_types.h"
 #include "util/non_copyable.h"
 #include <vector>
 
 namespace renderer {
 
-class Atlas {
+class Atlas : util::NonCopyable {
 public:
     // 1024 is a conservative size.
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE

@@ -1,5 +1,6 @@
 #include "build/buildflag.h"
 #include "editor_window.h"
+#include "opengl/functionsgl_enums.h"
 #include "simple_text/simple_text.h"
 #include <cctype>
 

@@ -8,7 +8,7 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
       renderer(parent.renderer)
 #elif IS_LINUX
       ,
-      renderer(parent.gl)
+      renderer(parent.gl.get())
 #endif
 {
 }

@@ -4,10 +4,6 @@
 #include <Cocoa/Cocoa.h>
 #include <iostream>
 
-namespace {
-static constexpr bool kUseSharedContexts = false;
-}
-
 @interface GLLayer () {
     gui::DisplayGL* mDisplayGL;
 }

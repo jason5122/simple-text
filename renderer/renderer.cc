@@ -1,6 +1,7 @@
 #include "opengl/functionsgl_enums.h"
 #include "renderer.h"
 
+#include <format>
 #include <iostream>
 
 namespace renderer {

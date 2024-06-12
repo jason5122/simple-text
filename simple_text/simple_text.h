@@ -24,7 +24,7 @@ private:
 
     std::unique_ptr<opengl::FunctionsGL> gl;
 
-#if IS_MAC || IS_WINDOWS
+#if IS_MAC || IS_WIN
     renderer::Renderer renderer;
 #endif
 };

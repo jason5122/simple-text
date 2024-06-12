@@ -21,7 +21,7 @@ public:
 private:
     SimpleText& parent;
 
-#if IS_MAC || IS_WINDOWS
+#if IS_MAC || IS_WIN
     renderer::Renderer& renderer;
 #elif IS_LINUX
     renderer::Renderer renderer;

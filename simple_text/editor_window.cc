@@ -1,4 +1,3 @@
-#include "build/buildflag.h"
 #include "editor_window.h"
 #include "simple_text/simple_text.h"
 

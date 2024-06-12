@@ -13,6 +13,7 @@ public:
     PFNGLCLEARCOLORPROC clearColor = nullptr;
     PFNGLDEPTHMASKPROC depthMask = nullptr;
     PFNGLENABLEPROC enable = nullptr;
+    PFNGLGETERRORPROC getError = nullptr;
 
     // 1.1
     PFNGLGENTEXTURESPROC genTextures = nullptr;

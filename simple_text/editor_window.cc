@@ -22,6 +22,11 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw() {
+    GLenum err;
+    while ((err = parent.gl->getError()) != GL_NO_ERROR) {
+        std::cerr << "OpenGL error\n";
+    }
+
     parent.gl->clear(GL_COLOR_BUFFER_BIT);
 }
 

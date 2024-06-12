@@ -9,6 +9,7 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glClearColor", clearColor);
     ASSIGN("glDepthMask", depthMask);
     ASSIGN("glEnable", enable);
+    ASSIGN("glGetError", getError);
     ASSIGN("glGenTextures", genTextures);
 }
 

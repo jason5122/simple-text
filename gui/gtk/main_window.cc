@@ -18,6 +18,12 @@ static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
 static void realize(GtkGLArea* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 
+// TODO: Define this below instead.
+static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
+    std::cerr << "quit callback\n";
+    g_application_quit(G_APPLICATION(app));
+}
+
 MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
       app_window{app_window} {
@@ -30,6 +36,30 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     gtk_widget_set_hexpand(gl_area, true);
     gtk_widget_set_vexpand(gl_area, true);
     gtk_box_append(GTK_BOX(gtk_box), gl_area);
+
+    // Add menu bar.
+    {
+        GMenu* menu_bar = g_menu_new();
+        GMenu* file_menu = g_menu_new();
+        GMenuItem* quit_menu_item = g_menu_item_new("Quit", "app.quit");
+
+        g_menu_append_submenu(menu_bar, "File", G_MENU_MODEL(file_menu));
+        g_menu_append_item(file_menu, quit_menu_item);
+        gtk_application_set_menubar(gtk_app, G_MENU_MODEL(menu_bar));
+
+        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window), true);
+
+        // GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
+        // g_action_map_add_action(G_ACTION_MAP(gtk_app), G_ACTION(quit_action));
+        // g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), gtk_app);
+
+        const GActionEntry entries[] = {{"quit", quit_callback}};
+        g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
+                                        gtk_app);
+
+        const gchar* quit_accels[2] = {"<Ctrl>q", NULL};
+        gtk_application_set_accels_for_action(gtk_app, "app.quit", quit_accels);
+    }
 
     // GtkWindow callbacks.
     g_signal_connect(window, "destroy", G_CALLBACK(destroy), this);

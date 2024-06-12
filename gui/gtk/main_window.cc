@@ -1,6 +1,5 @@
 #include "gdk/gdkkeysyms.h"
 #include "main_window.h"
-#include "renderer/opengl_functions.h"
 #include <cmath>
 
 extern "C" {
@@ -268,10 +267,6 @@ static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
 static void realize(GtkWidget* self, gpointer user_data) {
     gtk_gl_area_make_current(GTK_GL_AREA(self));
     if (gtk_gl_area_get_error(GTK_GL_AREA(self)) != nullptr) return;
-
-    if (!gladLoadGL()) {
-        std::cerr << "Failed to initialize GLAD\n";
-    }
 
     int scale_factor = gtk_widget_get_scale_factor(self);
     int scaled_width = gtk_widget_get_allocated_width(self) * scale_factor;

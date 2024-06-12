@@ -11,7 +11,10 @@
 
 ### Linux
 
-1. Load GTK 3 using `dlopen()` instead of adding it as a link-time dependency.
+- Load GTK 3 using `dlopen()` instead of adding it as a link-time dependency.
+- Monitor GTK 4 slow startup issue.
+  - [GNOME issue](https://gitlab.gnome.org/GNOME/gtk/-/issues/4112)
+  - [Mesa issue](https://gitlab.freedesktop.org/mesa/mesa/-/issues/5113#note_2393235)
 
 ### General
 

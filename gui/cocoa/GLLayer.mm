@@ -79,4 +79,12 @@
     appWindow->onResize(scaled_width, scaled_height);
 }
 
+// We shouldn't release the CGLContextObj since it isn't owned by this object.
+- (void)releaseCGLContext:(CGLContextObj)glContext {
+}
+
+// We shouldn't release the CGLPixelFormatObj since it isn't owned by this object.
+- (void)releaseCGLPixelFormat:(CGLPixelFormatObj)pixelFormat {
+}
+
 @end

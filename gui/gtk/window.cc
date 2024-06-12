@@ -3,7 +3,7 @@
 
 namespace gui {
 
-Window::Window(App& app) : pimpl{new impl{app.pimpl->app, this}}, app(app) {}
+Window::Window(App& app) : pimpl{new impl{app.pimpl->app, this, app.pimpl->context}}, app(app) {}
 
 Window::~Window() {}
 

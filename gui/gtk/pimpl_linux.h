@@ -10,11 +10,13 @@ namespace gui {
 class App::impl {
 public:
     GtkApplication* app;
+    GdkGLContext* context;
 };
 
 class Window::impl {
 public:
-    impl(GtkApplication* app, Window* app_window) : main_window(app, app_window) {}
+    impl(GtkApplication* app, Window* app_window, GdkGLContext* context)
+        : main_window(app, app_window, context) {}
 
     MainWindow main_window;
 };

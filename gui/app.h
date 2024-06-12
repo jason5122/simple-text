@@ -25,7 +25,7 @@ public:
     virtual void onQuit() {}
     virtual void onGuiAction(GuiAction action) {}
 
-private:
+// private:
     friend class Window;
 
     class impl;

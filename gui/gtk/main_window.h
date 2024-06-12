@@ -9,9 +9,10 @@ namespace gui {
 class MainWindow {
 public:
     Window* app_window;
-    static inline GdkGLContext* context = nullptr;
+    // TODO: Make this a separate class, similar to //gui/cocoa and //gui/win32.
+    // static inline GdkGLContext* context = nullptr;
 
-    MainWindow(GtkApplication* gtk_app, Window* app_window);
+    MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context);
     ~MainWindow();
     void show();
     void close();

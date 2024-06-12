@@ -24,7 +24,7 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
-MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
+MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window, GdkGLContext* context)
     : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
       app_window{app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
@@ -64,7 +64,8 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     // GtkWindow callbacks.
     g_signal_connect(window, "destroy", G_CALLBACK(destroy), this);
     // GtkGLArea callbacks.
-    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
+    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
+    // g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
 
@@ -134,17 +135,20 @@ static void destroy(GtkWidget* self, gpointer user_data) {
 }
 
 static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
-    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+    GdkGLContext* context = static_cast<GdkGLContext*>(user_data);
+    return context;
 
-    GError* error = nullptr;
-    // GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(self));
-    GdkDisplay* display = gtk_widget_get_display(main_window->window);
+    // MainWindow* main_window = static_cast<MainWindow*>(user_data);
 
-    if (!MainWindow::context) {
-        GdkGLContext* new_context = gdk_display_create_gl_context(display, &error);
-        MainWindow::context = new_context;
-    }
-    return g_object_ref(MainWindow::context);
+    // GError* error = nullptr;
+    // // GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(self));
+    // GdkDisplay* display = gtk_widget_get_display(main_window->window);
+
+    // if (!MainWindow::context) {
+    //     GdkGLContext* new_context = gdk_display_create_gl_context(display, &error);
+    //     MainWindow::context = new_context;
+    // }
+    // return g_object_ref(MainWindow::context);
     // return gdk_display_create_gl_context(display, &error);
 }
 

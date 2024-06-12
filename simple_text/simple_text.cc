@@ -7,6 +7,8 @@ SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()), renderer
 }
 
 void SimpleText::onLaunch() {
+    renderer.setup();
+
     createWindow();
     createWindow();
 }

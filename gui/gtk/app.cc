@@ -6,16 +6,22 @@ namespace gui {
 
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
+
+    GError* error = nullptr;
+    GdkDisplay* display = gdk_display_get_default();
+    app->pimpl->context = gdk_display_create_gl_context(display, &error);
+
+    if (app->pimpl->context) {
+        std::cerr << "created context!\n";
+    }
+
+    gdk_gl_context_make_current(app->pimpl->context);
+
     app->onLaunch();
 }
 
 App::App() : pimpl{new impl{}} {
-#if GLIB_CHECK_VERSION(2, 74, 0)
-    GApplicationFlags flags = G_APPLICATION_DEFAULT_FLAGS;
-#else
-    GApplicationFlags flags = G_APPLICATION_FLAGS_NONE;
-#endif
-    pimpl->app = gtk_application_new("com.jason.simple-text", flags);
+    pimpl->app = gtk_application_new("com.jason.simple-text", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(pimpl->app, "activate", G_CALLBACK(activate), this);
 }
 

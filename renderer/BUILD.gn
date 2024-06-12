@@ -1,26 +1,23 @@
 source_set("renderer") {
   sources = [
-    "atlas.cc",
-
-    # "image_renderer.cc",
-    "movement.cc",
-    "rect_renderer.cc",
     "renderer.cc",
-
+    # "atlas.cc",
+    # "image_renderer.cc",
+    # "movement.cc",
+    # "rect_renderer.cc",
     # "selection_renderer.cc",
-    "shader.cc",
-    "text/glyph_cache.cc",
-    "text/text_renderer.cc",
+    # "shader.cc",
+    # "text/glyph_cache.cc",
+    # "text/text_renderer.cc",
   ]
 
   deps = [
-    "icons",
-    "//base",
-    "//base/filesystem",
-    "//config",
-    "//font",
-    "//third_party/libgrapheme",
-
+    # "icons",
+    # "//base",
+    # "//base/filesystem",
+    # "//config",
+    # "//font",
+    # "//third_party/libgrapheme",
     # "//third_party/libpng",
     # "//third_party/uni_algo",
   ]

@@ -1,7 +1,9 @@
 #pragma once
 
+#include "build/buildflag.h"
 #include "config/color_scheme.h"
 #include "gui/window.h"
+#include "renderer/renderer.h"
 
 class SimpleText;
 
@@ -18,6 +20,12 @@ public:
 
 private:
     SimpleText& parent;
+
+#if IS_MAC || IS_WINDOWS
+    renderer::Renderer& renderer;
+#elif IS_LINUX
+    renderer::Renderer renderer;
+#endif
 
     config::ColorScheme color_scheme;
 

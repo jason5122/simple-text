@@ -1,9 +1,14 @@
-#include "build/buildflag.h"
 #include "simple_text.h"
 #include <iostream>
 #include <memory>
 
-SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()) {
+SimpleText::SimpleText()
+    : gl(std::make_unique<opengl::FunctionsGL>())
+#if IS_MAC || IS_WIN
+      ,
+      renderer(gl.get())
+#endif
+{
     gl->initialize();
 }
 

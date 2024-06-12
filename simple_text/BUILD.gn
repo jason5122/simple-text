@@ -10,15 +10,14 @@ common_sources = [
 ]
 
 common_deps = [
-  "//base",
   "//base/filesystem",
   "//config",
   "//gui",
   "//opengl",
+  "//renderer",
 
   # "sample_files",
   # "//font",
-  # "//renderer",
 ]
 
 if (is_mac) {
@@ -37,9 +36,10 @@ if (is_mac) {
       # ":icon"
     ]
   }
-  # icon("icon") {
-  #   sources = [ "resources/app.iconset" ]
-  # }
+
+  icon("icon") {
+    sources = [ "resources/app.iconset" ]
+  }
 }
 
 if (is_linux || is_win) {

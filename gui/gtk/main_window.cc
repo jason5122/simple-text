@@ -14,6 +14,7 @@ namespace gui {
 // GtkWindow callbacks.
 static void destroy(GtkWidget* self, gpointer user_data);
 // GtkGLArea callbacks.
+static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
 static void realize(GtkGLArea* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 
@@ -29,6 +30,8 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     gtk_widget_set_hexpand(gl_area, true);
     gtk_widget_set_vexpand(gl_area, true);
     gtk_box_append(GTK_BOX(gtk_box), gl_area);
+
+    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
 
@@ -43,7 +46,6 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::show() {
-    // gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 }
 
@@ -52,7 +54,7 @@ void MainWindow::close() {
 }
 
 void MainWindow::redraw() {
-    // gtk_widget_queue_draw(window);
+    gtk_widget_queue_draw(window);
 }
 
 int MainWindow::width() {
@@ -66,8 +68,7 @@ int MainWindow::height() {
 }
 
 int MainWindow::scaleFactor() {
-    // return gtk_widget_get_scale_factor(window);
-    return 0;
+    return gtk_widget_get_scale_factor(window);
 }
 
 bool MainWindow::isDarkMode() {
@@ -91,12 +92,27 @@ bool MainWindow::isDarkMode() {
 }
 
 void MainWindow::setTitle(const std::string& title) {
-    // gtk_window_set_title(GTK_WINDOW(window), &title[0]);
+    gtk_window_set_title(GTK_WINDOW(window), &title[0]);
 }
 
 static void destroy(GtkWidget* self, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onClose();
+}
+
+static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+
+    GError* error = nullptr;
+    // GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(self));
+    GdkDisplay* display = gtk_widget_get_display(main_window->window);
+
+    if (!MainWindow::context) {
+        GdkGLContext* new_context = gdk_display_create_gl_context(display, &error);
+        MainWindow::context = g_object_ref(new_context);
+    }
+    return MainWindow::context;
+    // return gdk_display_create_gl_context(display, &error);
 }
 
 static void realize(GtkGLArea* self, gpointer user_data) {

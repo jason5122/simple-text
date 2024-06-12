@@ -264,17 +264,17 @@ static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
     // GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(self));
     GdkWindow* gdk_window = gtk_widget_get_window(main_window->window);
 
-    if (!MainWindow::context) {
-        GdkGLContext* new_context = gdk_window_create_gl_context(gdk_window, &error);
-        MainWindow::context = g_object_ref(new_context);
-    }
-    return MainWindow::context;
+    // if (!MainWindow::context) {
+    //     GdkGLContext* new_context = gdk_window_create_gl_context(gdk_window, &error);
+    //     MainWindow::context = g_object_ref(new_context);
+    // }
+    // return MainWindow::context;
+    return gdk_window_create_gl_context(gdk_window, &error);
 }
 
 static void realize(GtkWidget* self, gpointer user_data) {
-    // gtk_gl_area_make_current(GTK_GL_AREA(self));
-    gdk_gl_context_make_current(MainWindow::context);
-    // if (gtk_gl_area_get_error(GTK_GL_AREA(self)) != nullptr) return;
+    gtk_gl_area_make_current(GTK_GL_AREA(self));
+    if (gtk_gl_area_get_error(GTK_GL_AREA(self)) != nullptr) return;
 
     int scale_factor = gtk_widget_get_scale_factor(self);
     int scaled_width = gtk_widget_get_allocated_width(self) * scale_factor;
@@ -285,8 +285,7 @@ static void realize(GtkWidget* self, gpointer user_data) {
 }
 
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
-    // gtk_gl_area_make_current(self);
-    gdk_gl_context_make_current(MainWindow::context);
+    gtk_gl_area_make_current(self);
 
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onDraw();
@@ -299,16 +298,14 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_dat
 }
 
 static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
-    // gtk_gl_area_make_current(self);
-    gdk_gl_context_make_current(MainWindow::context);
+    gtk_gl_area_make_current(self);
 
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onResize(width, height);
 }
 
 static gboolean scroll_event(GtkWidget* self, GdkEventScroll* event, gpointer user_data) {
-    // gtk_gl_area_make_current(GTK_GL_AREA(self));
-    gdk_gl_context_make_current(MainWindow::context);
+    gtk_gl_area_make_current(GTK_GL_AREA(self));
 
     double delta_x, delta_y;
     gdk_event_get_scroll_deltas((GdkEvent*)event, &delta_x, &delta_y);

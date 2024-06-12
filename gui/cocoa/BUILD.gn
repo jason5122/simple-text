@@ -4,7 +4,7 @@ source_set("cocoa") {
     "GLView.mm",
     "WindowController.mm",
     "app.mm",
-    "displaygl.mm",
+    "display_gl.mm",
     "window.mm",
   ]
 

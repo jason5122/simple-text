@@ -2,7 +2,7 @@
 
 #include "gui/app.h"
 #include "gui/cocoa/WindowController.h"
-#include "gui/cocoa/displaygl.h"
+#include "gui/cocoa/display_gl.h"
 
 #import <Cocoa/Cocoa.h>
 

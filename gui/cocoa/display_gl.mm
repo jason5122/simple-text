@@ -1,4 +1,4 @@
-#include "displaygl.h"
+#include "display_gl.h"
 #include <iostream>
 
 #import <Cocoa/Cocoa.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/cocoa/displaygl.h"
+#include "gui/cocoa/display_gl.h"
 #include "gui/window.h"
 #include <string>
 

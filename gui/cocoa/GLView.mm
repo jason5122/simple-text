@@ -14,12 +14,12 @@
 @implementation GLView
 
 - (instancetype)initWithFrame:(NSRect)frame
-                    appWindow:(gui::Window*)theAppWindow
-                    displaygl:(gui::DisplayGL*)displaygl {
+                    appWindow:(gui::Window*)appWindow
+                    displaygl:(gui::DisplayGL*)displayGL {
     self = [super initWithFrame:frame];
     if (self) {
-        glLayer = [[[GLLayer alloc] initWithContext:displaygl->context()] autorelease];
-        glLayer->appWindow = theAppWindow;
+        glLayer = [[[GLLayer alloc] initWithDisplayGL:displayGL] autorelease];
+        glLayer->appWindow = appWindow;
 
         // openGLLayer.needsDisplayOnBoundsChange = true;
         // openGLLayer.asynchronous = true;

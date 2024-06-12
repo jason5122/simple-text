@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gui/cocoa/display_gl.h"
 #include "gui/window.h"
 #import <QuartzCore/QuartzCore.h>
 
@@ -8,6 +9,6 @@
     gui::Window* appWindow;
 }
 
-- (instancetype)initWithContext:(CGLContextObj)displayContext;
+- (instancetype)initWithDisplayGL:(gui::DisplayGL*)displayGL;
 
 @end

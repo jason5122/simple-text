@@ -25,11 +25,15 @@ public:
     virtual void onQuit() {}
     virtual void onGuiAction(GuiAction action) {}
 
-// private:
-    friend class Window;
-
+    // TODO: Find a way to make this private! We currently need this for GTK's callbacks.
     class impl;
     std::unique_ptr<impl> pimpl;
+
+private:
+    friend class Window;
+
+    // class impl;
+    // std::unique_ptr<impl> pimpl;
 
     // TODO: For debugging; remove this.
     bool has_drawn = false;

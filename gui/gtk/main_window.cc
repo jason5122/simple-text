@@ -49,10 +49,6 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window, GdkGLCo
 
         gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window), true);
 
-        // GSimpleAction* quit_action = g_simple_action_new("quit", nullptr);
-        // g_action_map_add_action(G_ACTION_MAP(gtk_app), G_ACTION(quit_action));
-        // g_signal_connect(quit_action, "activate", G_CALLBACK(quit_callback), gtk_app);
-
         const GActionEntry entries[] = {{"quit", quit_callback}};
         g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
                                         gtk_app);
@@ -62,12 +58,11 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window, GdkGLCo
     }
 
     // GtkWindow callbacks.
-    g_signal_connect(window, "destroy", G_CALLBACK(destroy), this);
+    g_signal_connect(window, "destroy", G_CALLBACK(destroy), app_window);
     // GtkGLArea callbacks.
     g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
-    // g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
+    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), app_window);
+    g_signal_connect(gl_area, "render", G_CALLBACK(render), app_window);
 
     // gtk_window_maximize(GTK_WINDOW(window));
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
@@ -130,26 +125,13 @@ void MainWindow::setTitle(const std::string& title) {
 }
 
 static void destroy(GtkWidget* self, gpointer user_data) {
-    MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    main_window->app_window->onClose();
+    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    app_window->onClose();
 }
 
 static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
     GdkGLContext* context = static_cast<GdkGLContext*>(user_data);
-    return context;
-
-    // MainWindow* main_window = static_cast<MainWindow*>(user_data);
-
-    // GError* error = nullptr;
-    // // GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(self));
-    // GdkDisplay* display = gtk_widget_get_display(main_window->window);
-
-    // if (!MainWindow::context) {
-    //     GdkGLContext* new_context = gdk_display_create_gl_context(display, &error);
-    //     MainWindow::context = new_context;
-    // }
-    // return g_object_ref(MainWindow::context);
-    // return gdk_display_create_gl_context(display, &error);
+    return g_object_ref(context);
 }
 
 static void realize(GtkGLArea* self, gpointer user_data) {
@@ -160,16 +142,16 @@ static void realize(GtkGLArea* self, gpointer user_data) {
     // int scaled_width = gtk_widget_get_allocated_width(self) * scale_factor;
     // int scaled_height = gtk_widget_get_allocated_height(self) * scale_factor;
 
-    MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    // main_window->app_window->onOpenGLActivate(scaled_width, scaled_height);
-    main_window->app_window->onOpenGLActivate(0, 0);
+    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    // app_window->onOpenGLActivate(scaled_width, scaled_height);
+    app_window->onOpenGLActivate(0, 0);
 }
 
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     gtk_gl_area_make_current(self);
 
-    MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    main_window->app_window->onDraw();
+    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    app_window->onDraw();
 
     // Draw commands are flushed after returning.
     return true;

@@ -11,13 +11,9 @@ static void activate(GtkApplication* gtk_app, gpointer p_app) {
     GdkDisplay* display = gdk_display_get_default();
     app->pimpl->context = gdk_display_create_gl_context(display, &error);
 
-    if (app->pimpl->context) {
-        std::cerr << "created context!\n";
-    }
-
     gdk_gl_context_make_current(app->pimpl->context);
-
     app->onLaunch();
+    gdk_gl_context_clear_current();
 }
 
 App::App() : pimpl{new impl{}} {

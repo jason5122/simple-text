@@ -4,10 +4,7 @@
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
     : Window(parent), wid(wid), parent(parent), color_scheme(isDarkMode()) {}
 
-void EditorWindow::onOpenGLActivate(int width, int height) {
-    // TODO: Move setup to SimpleText. We currently need this here because of GTK.
-    parent.renderer.setup();
-}
+void EditorWindow::onOpenGLActivate(int width, int height) {}
 
 void EditorWindow::onDraw() {
     parent.renderer.draw();

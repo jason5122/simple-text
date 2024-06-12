@@ -10,28 +10,33 @@ const char* kDefaultEGLPath = "libEGL.so.1";
 
 namespace opengl {
 
+class FunctionsGL::impl {
+public:
+    void* handle;
+    PFNEGLGETPROCADDRESSPROC mGetProcAddressPtr;
+};
+
 FunctionsGL::FunctionsGL() {
-    handle_ = dlopen(kDefaultEGLPath, RTLD_NOW);
-    if (!handle_) {
+    pimpl->handle = dlopen(kDefaultEGLPath, RTLD_NOW);
+    if (!pimpl->handle) {
         std::cerr << "Could not dlopen native EGL.\n";
+    }
+
+    pimpl->mGetProcAddressPtr =
+        reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(pimpl->handle, "eglGetProcAddress"));
+    if (!pimpl->mGetProcAddressPtr) {
+        std::cerr << "Could not find eglGetProcAddress\n";
     }
 }
 
 FunctionsGL::~FunctionsGL() {
-    dlclose(handle_);
+    dlclose(pimpl->handle);
 }
 
 void* FunctionsGL::loadProcAddress(const std::string& function) const {
-    // TODO: Fetch this function pointer only once. Move this into PIMPL idiom.
-    PFNEGLGETPROCADDRESSPROC mGetProcAddressPtr =
-        reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(handle_, "eglGetProcAddress"));
-    if (!mGetProcAddressPtr) {
-        std::cerr << "Could not find eglGetProcAddress\n";
-    }
-
-    void* p = reinterpret_cast<void*>(mGetProcAddressPtr(function.c_str()));
+    void* p = reinterpret_cast<void*>(pimpl->mGetProcAddressPtr(function.c_str()));
     if (!p) {
-        p = dlsym(handle_, function.c_str());
+        p = dlsym(pimpl->handle, function.c_str());
     }
     return p;
 }

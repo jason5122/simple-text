@@ -10,19 +10,24 @@ const char* kDefaultOpenGLDylibName =
 
 namespace opengl {
 
-FunctionsGL::FunctionsGL() {
-    handle_ = dlopen(kDefaultOpenGLDylibName, RTLD_NOW);
-    if (!handle_) {
+class FunctionsGL::impl {
+public:
+    void* handle;
+};
+
+FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
+    pimpl->handle = dlopen(kDefaultOpenGLDylibName, RTLD_NOW);
+    if (!pimpl->handle) {
         std::cerr << "Could not open the OpenGL Framework.\n";
     }
 }
 
 FunctionsGL::~FunctionsGL() {
-    dlclose(handle_);
+    dlclose(pimpl->handle);
 }
 
 void* FunctionsGL::loadProcAddress(const std::string& function) const {
-    return dlsym(handle_, function.c_str());
+    return dlsym(pimpl->handle, function.c_str());
 }
 
 void FunctionsGL::initialize() {

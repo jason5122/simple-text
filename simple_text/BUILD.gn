@@ -10,13 +10,13 @@ common_sources = [
 ]
 
 common_deps = [
-  "sample_files",
   "//base",
   "//base/filesystem",
   "//config",
   "//gui",
   "//opengl",
 
+  # "sample_files",
   # "//font",
   # "//renderer",
 ]

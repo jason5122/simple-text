@@ -14,7 +14,8 @@ public:
 private:
     void* loadProcAddress(const std::string& function) const override;
 
-    void* handle_;
+    class impl;
+    std::unique_ptr<impl> pimpl;
 };
 
 }

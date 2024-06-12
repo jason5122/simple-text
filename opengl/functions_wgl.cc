@@ -3,7 +3,14 @@
 
 namespace opengl {
 
-FunctionsGL::FunctionsGL() {}
+class FunctionsGL::impl {
+public:
+    HMODULE module;
+};
+
+FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
+    pimpl->module = LoadLibraryExA("opengl32.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+}
 
 FunctionsGL::~FunctionsGL() {}
 
@@ -14,8 +21,7 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
     // Therefore, we need to try using both functions.
     void* p = (void*)wglGetProcAddress(function.c_str());
     if (!p) {
-        HMODULE module = LoadLibraryExA("opengl32.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
-        p = (void*)GetProcAddress(module, function.c_str());
+        p = (void*)GetProcAddress(pimpl->module, function.c_str());
     }
     return p;
 }

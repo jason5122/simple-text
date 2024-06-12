@@ -2,6 +2,11 @@
 
 ## Priority
 
+### OpenGL
+
+- Ensure OpenGL function loading is context dependent
+  - Take inspiration from datenwolf's `struct` approach [here](https://www.reddit.com/r/opengl/comments/17mq767/comment/k7mox6f/)
+
 ## Unordered
 
 ### Linux

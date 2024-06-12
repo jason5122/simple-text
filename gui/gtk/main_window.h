@@ -9,6 +9,7 @@ namespace gui {
 class MainWindow {
 public:
     Window* app_window;
+    static inline GdkGLContext* context = nullptr;
 
     MainWindow(GtkApplication* gtk_app, Window* app_window);
     ~MainWindow();

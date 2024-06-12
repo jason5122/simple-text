@@ -1,7 +1,5 @@
 #include "gui/app.h"
 #include "gui/win32/pimpl_win.h"
-#include "renderer/opengl_functions.h"
-#include <glad/glad_wgl.h>
 #include <memory>
 #include <windows.h>
 

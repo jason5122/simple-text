@@ -8,6 +8,7 @@
 #include <shtypes.h>
 #include <string>
 #include <windowsx.h>
+#include <wingdi.h>
 #include <winuser.h>
 
 #include <format>
@@ -127,9 +128,12 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_PAINT:
     case WM_DISPLAYCHANGE: {
         // TODO: For debugging; remove this.
-        PostQuitMessage(0);
+        // PostQuitMessage(0);
 
         wglMakeCurrent(m_hdc, dummy_context.m_context);
+
+        // TODO: For debugging; remove this.
+        std::cerr << wglGetCurrentContext() << '\n';
 
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);

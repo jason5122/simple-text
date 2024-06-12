@@ -21,6 +21,4 @@ source_set("win32") {
     "dwrite.lib",
     "shcore.lib",
   ]
-
-  public_deps = [ "//third_party/glad" ]
 }

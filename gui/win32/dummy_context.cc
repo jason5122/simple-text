@@ -1,8 +1,5 @@
 #include "dummy_context.h"
-#include "renderer/opengl_functions.h"
 #include "util/profile_util.h"
-#include <glad/glad_wgl.h>
-#include <iostream>
 
 void DummyContext::initialize() {
     m_hwnd = CreateWindowEx(0, L"DummyClass", L"Dummy", WS_DISABLED, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -31,9 +28,7 @@ void DummyContext::initialize() {
 
     wglMakeCurrent(m_hdc, m_context);
 
-    if (!gladLoadGL() || !gladLoadWGL(m_hdc)) {
-        std::cerr << "Failed to initialize GLAD\n";
-    }
-
-    wglSwapIntervalEXT(0);
+    // TODO: Determine if this has any effect.
+    // TODO: If we need this, load this function pointer manually.
+    // wglSwapIntervalEXT(0);
 }

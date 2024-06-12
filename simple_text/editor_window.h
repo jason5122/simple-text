@@ -1,16 +1,12 @@
 #pragma once
 
-#include "build/buildflag.h"
 #include "config/color_scheme.h"
 #include "gui/window.h"
-#include "renderer/renderer.h"
 
 class SimpleText;
 
 class EditorWindow : public gui::Window {
 public:
-    int wid;
-
     EditorWindow(SimpleText& parent, int width, int height, int wid);
 
     void onOpenGLActivate(int width, int height) override;
@@ -19,13 +15,8 @@ public:
     void onClose() override;
 
 private:
+    int wid;
     SimpleText& parent;
-
-#if IS_MAC || IS_WIN
-    renderer::Renderer& renderer;
-#elif IS_LINUX
-    renderer::Renderer renderer;
-#endif
 
     config::ColorScheme color_scheme;
 

@@ -31,6 +31,9 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     gtk_widget_set_vexpand(gl_area, true);
     gtk_box_append(GTK_BOX(gtk_box), gl_area);
 
+    // GtkWindow callbacks.
+    g_signal_connect(window, "destroy", G_CALLBACK(destroy), this);
+    // GtkGLArea callbacks.
     g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
@@ -109,9 +112,9 @@ static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
 
     if (!MainWindow::context) {
         GdkGLContext* new_context = gdk_display_create_gl_context(display, &error);
-        MainWindow::context = g_object_ref(new_context);
+        MainWindow::context = new_context;
     }
-    return MainWindow::context;
+    return g_object_ref(MainWindow::context);
     // return gdk_display_create_gl_context(display, &error);
 }
 

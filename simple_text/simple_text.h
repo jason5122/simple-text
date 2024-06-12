@@ -1,6 +1,5 @@
 #pragma once
 
-#include "build/buildflag.h"
 #include "gui/app.h"
 #include "opengl/functions_gl.h"
 #include "renderer/renderer.h"
@@ -24,7 +23,5 @@ private:
 
     std::unique_ptr<opengl::FunctionsGL> gl;
 
-#if IS_MAC || IS_WIN
     renderer::Renderer renderer;
-#endif
 };

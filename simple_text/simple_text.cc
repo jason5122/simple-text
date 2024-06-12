@@ -2,13 +2,7 @@
 #include <iostream>
 #include <memory>
 
-SimpleText::SimpleText()
-    : gl(std::make_unique<opengl::FunctionsGL>())
-#if IS_MAC || IS_WIN
-      ,
-      renderer(gl.get())
-#endif
-{
+SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()), renderer(gl.get()) {
     gl->initialize();
 }
 

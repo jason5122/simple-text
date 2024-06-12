@@ -16,7 +16,7 @@ public:
     PFNEGLGETPROCADDRESSPROC mGetProcAddressPtr;
 };
 
-FunctionsGL::FunctionsGL() {
+FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
     pimpl->handle = dlopen(kDefaultEGLPath, RTLD_NOW);
     if (!pimpl->handle) {
         std::cerr << "Could not dlopen native EGL.\n";

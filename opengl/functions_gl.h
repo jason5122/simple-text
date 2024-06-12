@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opengl/dispatch_table_gl.h"
+#include <memory>
 
 namespace opengl {
 

@@ -22,8 +22,11 @@ public:
     bool isDarkMode();
     void setTitle(const std::string& title);
 
-private:
+    // TODO: Make this private.
     GtkWidget* window;
+
+private:
+    // GtkWidget* window;
     GtkWidget* gl_area;
     GDBusProxy* dbus_settings_proxy;
 };

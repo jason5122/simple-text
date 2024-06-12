@@ -43,7 +43,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
     g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(key_press_event), this);
     g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), this);
 
-    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), nullptr);
+    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), this);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), this);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), this);
     g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
@@ -258,14 +258,15 @@ static void destroy(GtkWidget* self, gpointer user_data) {
 }
 
 static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+
     GError* error = nullptr;
-    GdkWindow* gdk_window = gtk_widget_get_parent_window(GTK_WIDGET(self));
+    // GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(self));
+    GdkWindow* gdk_window = gtk_widget_get_window(main_window->window);
 
     if (!MainWindow::context) {
         GdkGLContext* new_context = gdk_window_create_gl_context(gdk_window, &error);
         MainWindow::context = g_object_ref(new_context);
-
-        std::cerr << "new_context: " << new_context << '\n';
     }
     return MainWindow::context;
 }
@@ -286,8 +287,6 @@ static void realize(GtkWidget* self, gpointer user_data) {
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     // gtk_gl_area_make_current(self);
     gdk_gl_context_make_current(MainWindow::context);
-
-    std::cerr << "current: " << gdk_gl_context_get_current() << '\n';
 
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->app_window->onDraw();

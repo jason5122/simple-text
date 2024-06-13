@@ -2,11 +2,12 @@
 #include <iostream>
 #include <memory>
 
-SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()), renderer(gl.get()) {
-    gl->initialize();
-}
+SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()), renderer(gl.get()) {}
 
+// We should have an OpenGL context within this function.
+// Load OpenGL function pointers and perform OpenGL setup here.
 void SimpleText::onLaunch() {
+    gl->initialize();
     renderer.setup();
 
     createWindow();

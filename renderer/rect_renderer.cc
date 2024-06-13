@@ -23,54 +23,54 @@ void RectRenderer::setup() {
 
     shader_program.link(vert_source, frag_source);
 
-    // GLuint indices[] = {
-    //     0, 1, 3,  // First triangle.
-    //     1, 2, 3,  // Second triangle.
-    // };
+    GLuint indices[] = {
+        0, 1, 3,  // First triangle.
+        1, 2, 3,  // Second triangle.
+    };
 
-    // gl->genVertexArrays(1, &vao);
-    // gl->genBuffers(1, &vbo_instance);
-    // gl->genBuffers(1, &ebo);
+    gl->genVertexArrays(1, &vao);
+    gl->genBuffers(1, &vbo_instance);
+    gl->genBuffers(1, &ebo);
 
-    // gl->bindVertexArray(vao);
+    gl->bindVertexArray(vao);
 
-    // gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    // gl->bufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    gl->bufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    // gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STATIC_DRAW);
+    gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STATIC_DRAW);
 
-    // GLuint index = 0;
+    GLuint index = 0;
 
-    // gl->enableVertexAttribArray(index);
-    // gl->vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-    //                         (void*)offsetof(InstanceData, coords));
-    // gl->vertexAttribDivisor(index++, 1);
+    gl->enableVertexAttribArray(index);
+    gl->vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                            (void*)offsetof(InstanceData, coords));
+    gl->vertexAttribDivisor(index++, 1);
 
-    // gl->enableVertexAttribArray(index);
-    // gl->vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-    //                         (void*)offsetof(InstanceData, rect_size));
-    // gl->vertexAttribDivisor(index++, 1);
+    gl->enableVertexAttribArray(index);
+    gl->vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                            (void*)offsetof(InstanceData, rect_size));
+    gl->vertexAttribDivisor(index++, 1);
 
-    // gl->enableVertexAttribArray(index);
-    // gl->vertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-    //                         (void*)offsetof(InstanceData, color));
-    // gl->vertexAttribDivisor(index++, 1);
+    gl->enableVertexAttribArray(index);
+    gl->vertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                            (void*)offsetof(InstanceData, color));
+    gl->vertexAttribDivisor(index++, 1);
 
-    // gl->enableVertexAttribArray(index);
-    // gl->vertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-    //                         (void*)offsetof(InstanceData, corner_radius));
-    // gl->vertexAttribDivisor(index++, 1);
+    gl->enableVertexAttribArray(index);
+    gl->vertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                            (void*)offsetof(InstanceData, corner_radius));
+    gl->vertexAttribDivisor(index++, 1);
 
-    // gl->enableVertexAttribArray(index);
-    // gl->vertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-    //                         (void*)offsetof(InstanceData, tab_corner_radius));
-    // gl->vertexAttribDivisor(index++, 1);
+    gl->enableVertexAttribArray(index);
+    gl->vertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                            (void*)offsetof(InstanceData, tab_corner_radius));
+    gl->vertexAttribDivisor(index++, 1);
 
-    // // Unbind.
-    // gl->bindVertexArray(0);
-    // gl->bindBuffer(GL_ARRAY_BUFFER, 0);
-    // gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    // Unbind.
+    gl->bindVertexArray(0);
+    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& end_caret,

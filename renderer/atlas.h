@@ -15,8 +15,8 @@ public:
 
     Atlas();
     ~Atlas();
-    Atlas(Atlas&&);
-    Atlas& operator=(Atlas&&);
+    Atlas(Atlas&& other);
+    Atlas& operator=(Atlas&& other);
 
     void setup();
     GLuint tex() const;

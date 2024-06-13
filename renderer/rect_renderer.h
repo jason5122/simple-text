@@ -6,14 +6,16 @@
 #include "renderer/types.h"
 #include "util/non_copyable.h"
 #include <cstddef>
-#include <vector>
 
 namespace renderer {
 
-class RectRenderer {
+class RectRenderer : util::NonCopyable {
 public:
     RectRenderer(opengl::FunctionsGL* gl);
     ~RectRenderer();
+    RectRenderer(RectRenderer&& other);
+    RectRenderer& operator=(RectRenderer&& other);
+
     void setup();
     void draw(const Size& size, const Point& scroll, const CaretInfo& end_caret, int end_caret_x,
               float line_height, size_t line_count, float longest_x, const Point& editor_offset,
@@ -26,7 +28,9 @@ private:
     static constexpr int kMinTabWidth = 350;
 
     Shader shader_program;
-    GLuint vao, vbo_instance, ebo;
+    GLuint vao = 0;
+    GLuint vbo_instance = 0;
+    GLuint ebo = 0;
 
     struct InstanceData {
         Vec2 coords;

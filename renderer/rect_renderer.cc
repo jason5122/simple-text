@@ -1,16 +1,41 @@
-#include "base/rgb.h"
 #include "opengl/functionsgl_enums.h"
 #include "rect_renderer.h"
 #include <vector>
+
+#include <iostream>
 
 namespace renderer {
 
 RectRenderer::RectRenderer(opengl::FunctionsGL* gl) : gl{gl}, shader_program{gl} {}
 
 RectRenderer::~RectRenderer() {
-    // glDeleteVertexArrays(1, &vao);
-    // glDeleteBuffers(1, &vbo_instance);
-    // glDeleteBuffers(1, &ebo);
+    std::cerr << std::format("vao = {}, vbo_instance = {}, ebo = {}", vao, vbo_instance, ebo)
+              << '\n';
+
+    gl->deleteVertexArrays(1, &vao);
+    gl->deleteBuffers(1, &vbo_instance);
+    gl->deleteBuffers(1, &ebo);
+}
+
+RectRenderer::RectRenderer(RectRenderer&& other)
+    : vao{other.vao}, vbo_instance{other.vbo_instance}, ebo{other.ebo}, gl{other.gl},
+      shader_program{std::move(other.shader_program)} {
+    other.vao = 0;
+    other.vbo_instance = 0;
+    other.ebo = 0;
+}
+
+RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
+    if (&other != this) {
+        vao = other.vao;
+        vbo_instance = other.vbo_instance;
+        ebo = other.ebo;
+        shader_program = std::move(other.shader_program);
+        other.vao = 0;
+        other.vbo_instance = 0;
+        other.ebo = 0;
+    }
+    return *this;
 }
 
 void RectRenderer::setup() {

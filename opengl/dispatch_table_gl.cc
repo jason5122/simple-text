@@ -24,6 +24,7 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glBindBuffer", bindBuffer);
     ASSIGN("glBufferData", bufferData);
     ASSIGN("glBufferSubData", bufferSubData);
+    ASSIGN("glDeleteBuffers", deleteBuffers);
 
     // 2.0
     ASSIGN("glAttachShader", attachShader);
@@ -47,6 +48,7 @@ void DispatchTableGL::initProcsGL() {
     // 3.0
     ASSIGN("glBindVertexArray", bindVertexArray);
     ASSIGN("glGenVertexArrays", genVertexArrays);
+    ASSIGN("glDeleteVertexArrays", deleteVertexArrays);
 
     // 3.1
     ASSIGN("glDrawElementsInstanced", drawElementsInstanced);

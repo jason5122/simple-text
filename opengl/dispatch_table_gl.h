@@ -27,6 +27,7 @@ public:
     PFNGLBINDBUFFERPROC bindBuffer = nullptr;
     PFNGLBUFFERDATAPROC bufferData = nullptr;
     PFNGLBUFFERSUBDATAPROC bufferSubData = nullptr;
+    PFNGLDELETEBUFFERSPROC deleteBuffers = nullptr;
 
     // 2.0
     PFNGLATTACHSHADERPROC attachShader = nullptr;
@@ -50,6 +51,7 @@ public:
     // 3.0
     PFNGLBINDVERTEXARRAYPROC bindVertexArray = nullptr;
     PFNGLGENVERTEXARRAYSPROC genVertexArrays = nullptr;
+    PFNGLDELETEVERTEXARRAYSPROC deleteVertexArrays = nullptr;
 
     // 3.1
     PFNGLDRAWELEMENTSINSTANCEDPROC drawElementsInstanced = nullptr;

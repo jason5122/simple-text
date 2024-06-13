@@ -10,8 +10,6 @@ Window::Window(App& app) : pimpl{new impl{}}, app(app) {
     frame.origin.y = 300;
     frame.size.height -= 300;
 
-    std::cerr << "scale factor: " << NSScreen.mainScreen.backingScaleFactor << '\n';
-
     DisplayGL* displaygl = app.pimpl->displaygl.get();
     pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
                                                              appWindow:this

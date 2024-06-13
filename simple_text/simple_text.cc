@@ -1,6 +1,8 @@
 #include "simple_text.h"
-#include <iostream>
 #include <memory>
+
+#include <format>
+#include <iostream>
 
 SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()), renderer(gl.get()) {}
 
@@ -26,5 +28,7 @@ void SimpleText::createWindow() {
 }
 
 void SimpleText::destroyWindow(int wid) {
+    std::cerr << std::format("SimpleText: destroy window {}", wid) << '\n';
+
     editor_windows[wid] = nullptr;
 }

@@ -11,8 +11,8 @@ class Shader : util::NonCopyable {
 public:
     Shader(opengl::FunctionsGL* gl);
     ~Shader();
-    Shader(Shader&&);
-    Shader& operator=(Shader&&);
+    Shader(Shader&& other);
+    Shader& operator=(Shader&& other);
 
     GLuint id();
     bool link(const std::string& vert_source, const std::string& frag_source);
@@ -20,7 +20,7 @@ public:
 private:
     opengl::FunctionsGL* gl;
 
-    GLuint id_;
+    GLuint id_ = 0;
 };
 
 }

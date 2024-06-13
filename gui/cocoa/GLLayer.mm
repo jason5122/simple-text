@@ -53,7 +53,9 @@
     // TODO: For debugging; remove this.
     // [NSApp terminate:nil];
 
-    appWindow->onDraw();
+    int scaled_width = self.frame.size.width * self.contentsScale;
+    int scaled_height = self.frame.size.height * self.contentsScale;
+    appWindow->onDraw(scaled_width, scaled_height);
 
     // TODO: For debugging; remove this.
     // appWindow->stopLaunchTimer();

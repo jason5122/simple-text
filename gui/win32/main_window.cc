@@ -113,7 +113,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         RECT rect{};
         GetClientRect(m_hwnd, &rect);
-
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
 
@@ -135,7 +134,12 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
 
-        app_window.onDraw();
+        RECT rect{};
+        GetClientRect(m_hwnd, &rect);
+        int scaled_width = rect.right;
+        int scaled_height = rect.bottom;
+
+        app_window.onDraw(scaled_width, scaled_height);
 
         // TODO: For debugging; remove this.
         // app_window.stopLaunchTimer();

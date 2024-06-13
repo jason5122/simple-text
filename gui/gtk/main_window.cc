@@ -33,6 +33,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window, GdkGLCo
     gtk_window_set_child(GTK_WINDOW(window), gtk_box);
 
     GtkWidget* gl_area = gtk_gl_area_new();
+    // gtk_widget_set_size_request(gl_area, 1000, 600);
     gtk_widget_set_hexpand(gl_area, true);
     gtk_widget_set_vexpand(gl_area, true);
     gtk_box_append(GTK_BOX(gtk_box), gl_area);
@@ -88,12 +89,14 @@ void MainWindow::redraw() {
 
 int MainWindow::width() {
     // return gtk_widget_get_allocated_width(gl_area);
-    return 0;
+    // return gtk_widget_get_width(gl_area);
+    return -1;
 }
 
 int MainWindow::height() {
     // return gtk_widget_get_allocated_height(gl_area);
-    return 0;
+    // return gtk_widget_get_height(gl_area);
+    return -1;
 }
 
 int MainWindow::scaleFactor() {
@@ -150,8 +153,12 @@ static void realize(GtkGLArea* self, gpointer user_data) {
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     gtk_gl_area_make_current(self);
 
+    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
+    int scaled_width = gtk_widget_get_width(GTK_WIDGET(self)) * scale_factor;
+    int scaled_height = gtk_widget_get_height(GTK_WIDGET(self)) * scale_factor;
+
     gui::Window* app_window = static_cast<gui::Window*>(user_data);
-    app_window->onDraw();
+    app_window->onDraw(scaled_width, scaled_height);
 
     // Draw commands are flushed after returning.
     return true;

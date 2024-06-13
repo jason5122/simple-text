@@ -10,7 +10,7 @@ public:
     EditorWindow(SimpleText& parent, int width, int height, int wid);
 
     void onOpenGLActivate(int width, int height) override;
-    void onDraw() override;
+    void onDraw(int width, int height) override;
     void onResize(int width, int height) override;
     void onClose() override;
 

@@ -15,6 +15,7 @@ void Renderer::setup() {
     gl->depthMask(GL_FALSE);
 
     gl->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // gl->clearColor(1.0f, 0.0f, 1.0f, 1.0f);
 
     GLuint tex_id;
     gl->genTextures(1, &tex_id);

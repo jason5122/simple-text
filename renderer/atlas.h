@@ -1,5 +1,6 @@
 #pragma once
 
+#include "opengl/functions_gl.h"
 #include "opengl/functionsgl_typedefs.h"
 #include "renderer/opengl_types.h"
 #include "util/non_copyable.h"
@@ -13,7 +14,7 @@ public:
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
     static constexpr int kAtlasSize = 1024;
 
-    Atlas();
+    Atlas(opengl::FunctionsGL* gl);
     ~Atlas();
     Atlas(Atlas&& other);
     Atlas& operator=(Atlas&& other);
@@ -23,6 +24,8 @@ public:
     bool insertTexture(int width, int height, bool colored, const GLubyte* data, Vec4& uv);
 
 private:
+    opengl::FunctionsGL* gl;
+
     GLuint tex_id = 0;
 
     int row_extent = 0;

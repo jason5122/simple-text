@@ -1,10 +1,10 @@
 source_set("renderer") {
   sources = [
+    "atlas.cc",
     "rect_renderer.cc",
     "renderer.cc",
     "shader.cc",
 
-    # "atlas.cc",
     # "image_renderer.cc",
     # "movement.cc",
     # "selection_renderer.cc",

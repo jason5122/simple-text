@@ -12,9 +12,15 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glEnable", enable);
     ASSIGN("glGetError", getError);
     ASSIGN("glViewport", viewport);
+    ASSIGN("glPixelStorei", pixelStorei);
+    ASSIGN("glTexImage2D", texImage2D);
+    ASSIGN("glTexParameteri", texParameteri);
 
     // 1.1
     ASSIGN("glGenTextures", genTextures);
+    ASSIGN("glDeleteTextures", deleteTextures);
+    ASSIGN("glBindTexture", bindTexture);
+    ASSIGN("glTexSubImage2D", texSubImage2D);
 
     // 1.4
     ASSIGN("glBlendFuncSeparate", blendFuncSeparate);

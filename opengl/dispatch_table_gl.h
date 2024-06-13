@@ -15,9 +15,15 @@ public:
     PFNGLENABLEPROC enable = nullptr;
     PFNGLGETERRORPROC getError = nullptr;
     PFNGLVIEWPORTPROC viewport = nullptr;
+    PFNGLPIXELSTOREIPROC pixelStorei = nullptr;
+    PFNGLTEXIMAGE2DPROC texImage2D = nullptr;
+    PFNGLTEXPARAMETERIPROC texParameteri = nullptr;
 
     // 1.1
     PFNGLGENTEXTURESPROC genTextures = nullptr;
+    PFNGLDELETETEXTURESPROC deleteTextures = nullptr;
+    PFNGLBINDTEXTUREPROC bindTexture = nullptr;
+    PFNGLTEXSUBIMAGE2DPROC texSubImage2D = nullptr;
 
     // 1.4
     PFNGLBLENDFUNCSEPARATEPROC blendFuncSeparate = nullptr;

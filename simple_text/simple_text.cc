@@ -4,7 +4,7 @@
 #include <format>
 #include <iostream>
 
-SimpleText::SimpleText() : gl(std::make_unique<opengl::FunctionsGL>()), renderer(gl.get()) {}
+SimpleText::SimpleText() : gl{std::make_unique<opengl::FunctionsGL>()}, renderer{gl.get()} {}
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.

@@ -2,16 +2,11 @@
 #include "rect_renderer.h"
 #include <vector>
 
-#include <iostream>
-
 namespace renderer {
 
 RectRenderer::RectRenderer(opengl::FunctionsGL* gl) : gl{gl}, shader_program{gl} {}
 
 RectRenderer::~RectRenderer() {
-    std::cerr << std::format("vao = {}, vbo_instance = {}, ebo = {}", vao, vbo_instance, ebo)
-              << '\n';
-
     gl->deleteVertexArrays(1, &vao);
     gl->deleteBuffers(1, &vbo_instance);
     gl->deleteBuffers(1, &ebo);

@@ -10,6 +10,7 @@ common_sources = [
 ]
 
 common_deps = [
+  "//base",
   "//base/filesystem",
   "//config",
   "//gui",
@@ -17,7 +18,6 @@ common_deps = [
   "//renderer",
 
   # "sample_files",
-  # "//font",
 ]
 
 if (is_mac) {

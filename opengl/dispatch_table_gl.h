@@ -18,6 +18,7 @@ public:
     PFNGLPIXELSTOREIPROC pixelStorei = nullptr;
     PFNGLTEXIMAGE2DPROC texImage2D = nullptr;
     PFNGLTEXPARAMETERIPROC texParameteri = nullptr;
+    PFNGLBLENDFUNCPROC blendFunc = nullptr;
 
     // 1.1
     PFNGLGENTEXTURESPROC genTextures = nullptr;

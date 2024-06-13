@@ -20,7 +20,7 @@ void Buffer::setContents(std::string text) {
     flat_string = text;
 }
 
-size_t Buffer::size() {
+size_t Buffer::size() const {
     size_t byte_count = 0;
     for (const std::string& line : data) {
         byte_count += line.size();
@@ -29,7 +29,7 @@ size_t Buffer::size() {
     return byte_count;
 }
 
-size_t Buffer::lineCount() {
+size_t Buffer::lineCount() const {
     return data.size();
 }
 
@@ -37,7 +37,7 @@ std::string Buffer::getLineContent(size_t line_index) const {
     return data.at(line_index);
 }
 
-size_t Buffer::byteOfLine(size_t line_index) {
+size_t Buffer::byteOfLine(size_t line_index) const {
     size_t byte_offset = 0;
     for (uint16_t row = 0; row < line_index; row++) {
         byte_offset += data.at(row).size();

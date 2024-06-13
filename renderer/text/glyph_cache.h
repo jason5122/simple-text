@@ -26,7 +26,7 @@ public:
 
     void setup();
     Glyph& getGlyph(std::string_view str8);
-    int lineHeight();
+    int lineHeight() const;
 
     // TODO: Make this private.
     std::vector<Atlas> atlas_pages;

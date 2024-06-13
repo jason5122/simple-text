@@ -61,7 +61,7 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
     return glyph;
 }
 
-int GlyphCache::lineHeight() {
+int GlyphCache::lineHeight() const {
     return font_rasterizer.line_height;
 }
 

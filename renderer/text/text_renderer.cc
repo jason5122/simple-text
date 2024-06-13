@@ -14,7 +14,8 @@ namespace renderer {
 
 TextRenderer::TextRenderer(opengl::FunctionsGL* gl, GlyphCache& main_glyph_cache,
                            GlyphCache& ui_glyph_cache)
-    : shader_program{gl}, main_glyph_cache{main_glyph_cache}, ui_glyph_cache{ui_glyph_cache} {}
+    : gl{gl}, shader_program{gl}, main_glyph_cache{main_glyph_cache},
+      ui_glyph_cache{ui_glyph_cache} {}
 
 TextRenderer::~TextRenderer() {
     gl->deleteVertexArrays(1, &vao);
@@ -77,9 +78,10 @@ void TextRenderer::setup() {
     gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void TextRenderer::renderText(const Size& size, const Point& scroll, base::Buffer& buffer,
-                              Point& editor_offset, CaretInfo& start_caret, CaretInfo& end_caret,
-                              int& longest_line_x, int line_number_offset, int& end_caret_x) {
+void TextRenderer::renderText(const Size& size, const Point& scroll, const base::Buffer& buffer,
+                              const Point& editor_offset, const CaretInfo& start_caret,
+                              const CaretInfo& end_caret, int& longest_line_x,
+                              int line_number_offset, int& end_caret_x) {
     GLuint shader_id = shader_program.id();
     gl->useProgram(shader_id);
     gl->uniform1f(gl->getUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
@@ -197,7 +199,7 @@ void TextRenderer::renderText(const Size& size, const Point& scroll, base::Buffe
 
                 // TODO: Preserve the width of the space character when substituting.
                 //       Otherwise, the line width changes when using proportional fonts.
-                base::Rgb text_color = base::colors::black;
+                base::Rgb text_color{0, 0, 0};
                 if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
                     key = "·";
                     text_color = base::Rgb{182, 182, 182};

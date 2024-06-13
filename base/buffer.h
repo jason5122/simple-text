@@ -9,10 +9,10 @@ namespace base {
 class Buffer {
 public:
     void setContents(std::string text);
-    size_t size();
-    size_t lineCount();
+    size_t size() const;
+    size_t lineCount() const;
     std::string getLineContent(size_t line_index) const;
-    size_t byteOfLine(size_t line_index);
+    size_t byteOfLine(size_t line_index) const;
     void insert(size_t line_index, size_t line_offset, std::string_view text);
     void remove(size_t line_index, size_t line_offset, size_t bytes);
     void backspace(size_t line_index, size_t line_offset, size_t bytes);

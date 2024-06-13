@@ -15,6 +15,7 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glPixelStorei", pixelStorei);
     ASSIGN("glTexImage2D", texImage2D);
     ASSIGN("glTexParameteri", texParameteri);
+    ASSIGN("glBlendFunc", blendFunc);
 
     // 1.1
     ASSIGN("glGenTextures", genTextures);

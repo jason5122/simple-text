@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/buffer.h"
 #include "config/color_scheme.h"
 #include "gui/window.h"
 
@@ -18,6 +19,7 @@ private:
     int wid;
     SimpleText& parent;
 
+    base::Buffer buffer;
     config::ColorScheme color_scheme;
 
     void updateWindowTitle();

@@ -2,12 +2,14 @@
 #include "simple_text/simple_text.h"
 
 EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
-    : Window(parent), wid(wid), parent(parent), color_scheme(isDarkMode()) {}
+    : Window(parent), wid(wid), parent(parent), color_scheme(isDarkMode()) {
+    buffer.setContents("Hello world!\nLorem ipsum");
+}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {}
 
 void EditorWindow::onDraw(int width, int height) {
-    parent.renderer.draw({width, height});
+    parent.renderer.draw({width, height}, buffer);
 }
 
 void EditorWindow::onResize(int width, int height) {

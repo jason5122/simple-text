@@ -13,12 +13,13 @@ Atlas::~Atlas() {
     gl->deleteTextures(1, &tex_id);
 }
 
-Atlas::Atlas(Atlas&& other) : tex_id(other.tex_id) {
+Atlas::Atlas(Atlas&& other) : gl{other.gl}, tex_id(other.tex_id) {
     other.tex_id = 0;
 }
 
 Atlas& Atlas::operator=(Atlas&& other) {
     if (&other != this) {
+        gl = other.gl;
         tex_id = other.tex_id;
         other.tex_id = 0;
     }

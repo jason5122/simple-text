@@ -6,7 +6,7 @@
 
 namespace renderer {
 
-Renderer::Renderer(opengl::FunctionsGL* gl) : gl(gl) {}
+Renderer::Renderer(opengl::FunctionsGL* gl) : gl{gl}, rect_renderer{gl} {}
 
 void Renderer::setup() {
     gl->enable(GL_BLEND);
@@ -20,11 +20,6 @@ void Renderer::setup() {
 }
 
 void Renderer::draw() {
-    GLenum err;
-    while ((err = gl->getError()) != GL_NO_ERROR) {
-        std::cerr << "OpenGL error\n";
-    }
-
     gl->clear(GL_COLOR_BUFFER_BIT);
 }
 

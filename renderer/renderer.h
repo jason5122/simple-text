@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opengl/functions_gl.h"
+#include "renderer/rect_renderer.h"
 
 namespace renderer {
 
@@ -13,6 +14,8 @@ public:
 
 private:
     opengl::FunctionsGL* gl;
+
+    RectRenderer rect_renderer;
 };
 
 }

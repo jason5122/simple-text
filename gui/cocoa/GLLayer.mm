@@ -53,9 +53,6 @@
     // TODO: For debugging; remove this.
     // [NSApp terminate:nil];
 
-    CGLContextObj currentContext = CGLGetCurrentContext();
-    std::cerr << currentContext << '\n';
-
     appWindow->onDraw();
 
     // TODO: For debugging; remove this.

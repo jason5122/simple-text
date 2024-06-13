@@ -18,6 +18,18 @@ public:
     // 1.1
     PFNGLGENTEXTURESPROC genTextures = nullptr;
 
+    // 2.0
+    PFNGLATTACHSHADERPROC attachShader = nullptr;
+    PFNGLCOMPILESHADERPROC compileShader = nullptr;
+    PFNGLCREATEPROGRAMPROC createProgram = nullptr;
+    PFNGLCREATESHADERPROC createShader = nullptr;
+    PFNGLDELETEPROGRAMPROC deleteProgram = nullptr;
+    PFNGLDELETESHADERPROC deleteShader = nullptr;
+    PFNGLLINKPROGRAMPROC linkProgram = nullptr;
+    PFNGLSHADERSOURCEPROC shaderSource = nullptr;
+    PFNGLGETSHADERINFOLOGPROC getShaderInfoLog = nullptr;
+    PFNGLGETSHADERIVPROC getShaderiv = nullptr;
+
     DispatchTableGL() = default;
     virtual ~DispatchTableGL() = default;
 

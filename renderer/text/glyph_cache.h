@@ -13,6 +13,8 @@ namespace renderer {
 
 class GlyphCache {
 public:
+    GlyphCache(opengl::FunctionsGL* gl, const std::string& font_name_utf8, int font_size);
+
     struct Glyph {
         GLuint tex_id;
         Vec4 glyph;
@@ -22,7 +24,6 @@ public:
         size_t page;
     };
 
-    GlyphCache(font::FontRasterizer& font_rasterizer);
     void setup();
     Glyph& getGlyph(std::string_view str8);
     int lineHeight();
@@ -31,7 +32,8 @@ public:
     std::vector<Atlas> atlas_pages;
 
 private:
-    font::FontRasterizer& font_rasterizer;
+    opengl::FunctionsGL* gl;
+    font::FontRasterizer font_rasterizer;
 
     // std::vector<Atlas> atlas_pages;
     size_t current_page = 0;

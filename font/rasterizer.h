@@ -1,6 +1,5 @@
 #pragma once
 
-#include "util/non_copyable.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -28,7 +27,6 @@ public:
     RasterizedGlyph rasterizeUTF8(std::string_view str8);
 
 private:
-    // https://herbsutter.com/gotw/_100/
     class impl;
     std::unique_ptr<impl> pimpl;
 };

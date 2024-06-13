@@ -2,10 +2,11 @@
 
 namespace renderer {
 
-GlyphCache::GlyphCache(font::FontRasterizer& font_rasterizer) : font_rasterizer(font_rasterizer) {}
+GlyphCache::GlyphCache(opengl::FunctionsGL* gl, const std::string& font_name_utf8, int font_size)
+    : gl{gl}, font_rasterizer{font_name_utf8, font_size} {}
 
 void GlyphCache::setup() {
-    Atlas atlas;
+    Atlas atlas{gl};
     atlas.setup();
     atlas_pages.push_back(std::move(atlas));
 }
@@ -40,7 +41,7 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
 
     // The current page is full, so create a new page and try again.
     if (!success) {
-        Atlas new_atlas;
+        Atlas new_atlas{gl};
         new_atlas.setup();
         atlas_pages.push_back(std::move(new_atlas));
         current_page++;

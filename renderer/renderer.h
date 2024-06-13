@@ -2,6 +2,7 @@
 
 #include "opengl/functions_gl.h"
 #include "renderer/rect_renderer.h"
+#include "renderer/text/glyph_cache.h"
 
 namespace renderer {
 
@@ -15,6 +16,7 @@ public:
 private:
     opengl::FunctionsGL* gl;
 
+    GlyphCache main_glyph_cache;
     RectRenderer rect_renderer;
 };
 

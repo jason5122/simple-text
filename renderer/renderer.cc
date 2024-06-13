@@ -1,12 +1,10 @@
 #include "opengl/functionsgl_enums.h"
 #include "renderer.h"
 
-#include <format>
-#include <iostream>
-
 namespace renderer {
 
-Renderer::Renderer(opengl::FunctionsGL* gl) : gl{gl}, rect_renderer{gl} {}
+Renderer::Renderer(opengl::FunctionsGL* gl)
+    : gl{gl}, main_glyph_cache{gl, "Source Code Pro", 16 * 2}, rect_renderer{gl} {}
 
 void Renderer::setup() {
     rect_renderer.setup();
@@ -16,10 +14,6 @@ void Renderer::setup() {
 
     gl->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
     // gl->clearColor(1.0f, 0.0f, 1.0f, 1.0f);
-
-    GLuint tex_id;
-    gl->genTextures(1, &tex_id);
-    std::cerr << std::format("tex_id = {}", tex_id) << '\n';
 }
 
 void Renderer::draw(const Size& size) {

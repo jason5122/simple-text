@@ -4,11 +4,11 @@ source_set("renderer") {
     "rect_renderer.cc",
     "renderer.cc",
     "shader.cc",
+    "text/glyph_cache.cc",
 
     # "image_renderer.cc",
     # "movement.cc",
     # "selection_renderer.cc",
-    # "text/glyph_cache.cc",
     # "text/text_renderer.cc",
   ]
 
@@ -17,7 +17,7 @@ source_set("renderer") {
     # "//base",
     # "//base/filesystem",
     # "//config",
-    # "//font",
+    "//font",
     # "//third_party/libgrapheme",
     # "//third_party/libpng",
     # "//third_party/uni_algo",

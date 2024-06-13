@@ -1,3 +1,4 @@
+#include "base/windows/win32_error.h"
 #include "functions_gl.h"
 #include <windows.h>
 
@@ -31,11 +32,10 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
         p = (void*)GetProcAddress(pimpl->module, function.c_str());
 
         DWORD error = GetLastError();
-        std::cerr << error << '\n';
-    }
-
-    if (!p) {
-        std::cerr << std::format("could not load function: {}", function) << '\n';
+        if (error != 0) {
+            std::string error_str = GetLastErrorAsString(error);
+            std::cerr << std::format("Error loading function `{}`: {}", function, error_str);
+        }
     }
     return p;
 }

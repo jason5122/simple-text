@@ -4,11 +4,11 @@
 #include "config/color_scheme.h"
 #include "gui/window.h"
 
-class SimpleText;
+class EditorApp;
 
 class EditorWindow : public gui::Window {
 public:
-    EditorWindow(SimpleText& parent, int width, int height, int wid);
+    EditorWindow(EditorApp& parent, int width, int height, int wid);
 
     void onOpenGLActivate(int width, int height) override;
     void onDraw(int width, int height) override;
@@ -17,7 +17,7 @@ public:
 
 private:
     int wid;
-    SimpleText& parent;
+    EditorApp& parent;
 
     base::Buffer buffer;
     config::ColorScheme color_scheme;

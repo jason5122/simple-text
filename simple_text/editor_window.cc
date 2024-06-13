@@ -1,7 +1,7 @@
 #include "editor_window.h"
-#include "simple_text/simple_text.h"
+#include "simple_text/editor_app.h"
 
-EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
+EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window(parent), wid(wid), parent(parent), color_scheme(isDarkMode()) {
     buffer.setContents("Hello world!\nLorem ipsum");
 }

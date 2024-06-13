@@ -1,7 +1,7 @@
-#include "simple_text/simple_text.h"
+#include "simple_text/editor_app.h"
 
 int SimpleTextMain(int argc, char* argv[]) {
-    SimpleText simple_text;
-    simple_text.run();
+    EditorApp editor_app;
+    editor_app.run();
     return 0;
 }

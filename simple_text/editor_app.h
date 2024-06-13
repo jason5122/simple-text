@@ -6,9 +6,9 @@
 #include "simple_text/editor_window.h"
 #include <vector>
 
-class SimpleText : public gui::App {
+class EditorApp : public gui::App {
 public:
-    SimpleText();
+    EditorApp();
 
     void createWindow();
     void destroyWindow(int wid);

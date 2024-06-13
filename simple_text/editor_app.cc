@@ -1,14 +1,14 @@
-#include "simple_text.h"
+#include "editor_app.h"
 #include <memory>
 
 #include <format>
 #include <iostream>
 
-SimpleText::SimpleText() : gl{std::make_unique<opengl::FunctionsGL>()}, renderer{gl.get()} {}
+EditorApp::EditorApp() : gl{std::make_unique<opengl::FunctionsGL>()}, renderer{gl.get()} {}
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
-void SimpleText::onLaunch() {
+void EditorApp::onLaunch() {
     gl->initialize();
     renderer.setup();
 
@@ -16,18 +16,18 @@ void SimpleText::onLaunch() {
     createWindow();
 }
 
-void SimpleText::onQuit() {
+void EditorApp::onQuit() {
     std::cerr << "SimpleText::onQuit()\n";
 }
 
-void SimpleText::createWindow() {
+void EditorApp::createWindow() {
     std::unique_ptr<EditorWindow> editor_window =
         std::make_unique<EditorWindow>(*this, 600, 400, editor_windows.size());
     editor_window->show();
     editor_windows.push_back(std::move(editor_window));
 }
 
-void SimpleText::destroyWindow(int wid) {
+void EditorApp::destroyWindow(int wid) {
     std::cerr << std::format("SimpleText: destroy window {}", wid) << '\n';
 
     editor_windows[wid] = nullptr;

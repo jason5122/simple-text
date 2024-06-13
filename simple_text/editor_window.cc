@@ -7,14 +7,7 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
 void EditorWindow::onOpenGLActivate(int width, int height) {}
 
 void EditorWindow::onDraw(int width, int height) {
-    // renderer::Size size{
-    //     .width = width() * scaleFactor(),
-    //     .height = height() * scaleFactor(),
-    // };
-    renderer::Size size{width, height};
-
-    std::cerr << std::format("width = {}, height = {}", size.width, size.height) << '\n';
-    parent.renderer.draw(size);
+    parent.renderer.draw({width, height});
 }
 
 void EditorWindow::onResize(int width, int height) {

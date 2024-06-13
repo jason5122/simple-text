@@ -9,6 +9,8 @@ extern "C" {
 #include <format>
 #include <iostream>
 
+#include <epoxy/gl.h>
+
 namespace gui {
 
 // GtkWindow callbacks.
@@ -33,6 +35,10 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window, GdkGLCo
     gtk_window_set_child(GTK_WINDOW(window), gtk_box);
 
     GtkWidget* gl_area = gtk_gl_area_new();
+    gtk_gl_area_set_allowed_apis(GTK_GL_AREA(gl_area), GDK_GL_API_GL);
+    GdkGLAPI apis = gtk_gl_area_get_allowed_apis(GTK_GL_AREA(gl_area));
+    std::cerr << apis << '\n';
+
     // gtk_widget_set_size_request(gl_area, 1000, 600);
     gtk_widget_set_hexpand(gl_area, true);
     gtk_widget_set_vexpand(gl_area, true);
@@ -137,9 +143,33 @@ static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
     return g_object_ref(context);
 }
 
+const char* vertexShaderSource = "#version 330 core\n"
+                                 "layout (location = 0) in vec3 aPos;\n"
+                                 "void main()\n"
+                                 "{\n"
+                                 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+                                 "}\0";
+const char* fragmentShaderSource = "#version 330 core\n"
+                                   "out vec4 FragColor;\n"
+                                   "void main()\n"
+                                   "{\n"
+                                   "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                                   "}\n\0";
+
+unsigned int shaderProgram;
+unsigned int VAO;
+
 static void realize(GtkGLArea* self, gpointer user_data) {
     gtk_gl_area_make_current(self);
     if (gtk_gl_area_get_error(self) != nullptr) return;
+
+    GdkGLAPI api = gtk_gl_area_get_api(self);
+    if (api == GDK_GL_API_GL) {
+        std::cerr << "GDK_GL_API_GL\n";
+    }
+    if (api == GDK_GL_API_GLES) {
+        std::cerr << "GDK_GL_API_GLES\n";
+    }
 
     // int scale_factor = gtk_widget_get_scale_factor(self);
     // int scaled_width = gtk_widget_get_allocated_width(self) * scale_factor;
@@ -148,10 +178,69 @@ static void realize(GtkGLArea* self, gpointer user_data) {
     gui::Window* app_window = static_cast<gui::Window*>(user_data);
     // app_window->onOpenGLActivate(scaled_width, scaled_height);
     app_window->onOpenGLActivate(0, 0);
+
+    // glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
+
+    // unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    // glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    // glCompileShader(vertexShader);
+    // // check for shader compile errors
+    // int success;
+    // char infoLog[512];
+    // glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    // if (!success) {
+    //     glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+    //     std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    // }
+    // // fragment shader
+    // unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    // glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    // glCompileShader(fragmentShader);
+    // // check for shader compile errors
+    // glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    // if (!success) {
+    //     glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+    //     std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    // }
+    // // link shaders
+    // shaderProgram = glCreateProgram();
+    // glAttachShader(shaderProgram, vertexShader);
+    // glAttachShader(shaderProgram, fragmentShader);
+    // glLinkProgram(shaderProgram);
+    // // check for linking errors
+    // glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    // if (!success) {
+    //     glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+    //     std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    // }
+    // glDeleteShader(vertexShader);
+    // glDeleteShader(fragmentShader);
+    // float vertices[] = {
+    //     -0.5f, -0.5f, 0.0f,  // left
+    //     0.5f,  -0.5f, 0.0f,  // right
+    //     0.0f,  0.5f,  0.0f   // top
+    // };
+
+    // unsigned int VBO;
+    // glGenVertexArrays(1, &VAO);
+    // glGenBuffers(1, &VBO);
+    // glBindVertexArray(VAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // glBindVertexArray(0);
 }
 
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     gtk_gl_area_make_current(self);
+
+    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // glUseProgram(shaderProgram);
+    // glBindVertexArray(VAO);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
 
     int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
     int scaled_width = gtk_widget_get_width(GTK_WIDGET(self)) * scale_factor;

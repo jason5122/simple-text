@@ -9,6 +9,8 @@ source_set("gtk") {
 
   public_configs = [ ":gtk4" ]
 
+  libs = [ "epoxy" ]
+
   deps = [ "//third_party/libgrapheme" ]
 }
 

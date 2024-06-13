@@ -1,6 +1,7 @@
 #include "base/windows/unicode.h"
 #include "gui/gui_action.h"
 #include "gui/modifier_key.h"
+#include "gui/win32/resources.h"
 #include "main_window.h"
 #include "util/escape_special_chars.h"
 #include "util/profile_util.h"
@@ -13,10 +14,6 @@
 
 #include <format>
 #include <iostream>
-
-#define ID_FILE_NEW_FILE 1
-#define ID_FILE_NEW_WINDOW 2
-#define ID_FILE_EXIT 3
 
 namespace gui {
 
@@ -339,10 +336,11 @@ static inline void AddMenu(HWND hwnd) {
     HMENU menubar = CreateMenu();
     HMENU file_menu = CreateMenu();
 
-    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File");
-    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window");
-    AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"Exit");
-    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"File");
+    // https://learn.microsoft.com/en-us/windows/win32/menurc/about-menus#menu-shortcut-keys
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File\tCtrl+N");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window\tCtrl+Shift+N");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"E&xit\tCtrl+Q");
+    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"&File");
 
     SetMenu(hwnd, menubar);
 }

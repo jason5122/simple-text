@@ -5,20 +5,21 @@ source_set("renderer") {
     "renderer.cc",
     "shader.cc",
     "text/glyph_cache.cc",
+    "text/text_renderer.cc",
 
     # "image_renderer.cc",
     # "movement.cc",
     # "selection_renderer.cc",
-    # "text/text_renderer.cc",
   ]
 
   deps = [
+    "//base",
+    "//font",
+    "//third_party/libgrapheme",
+
     # "icons",
-    # "//base",
     # "//base/filesystem",
     # "//config",
-    "//font",
-    # "//third_party/libgrapheme",
     # "//third_party/libpng",
     # "//third_party/uni_algo",
   ]

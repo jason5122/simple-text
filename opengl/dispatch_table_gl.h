@@ -25,6 +25,9 @@ public:
     PFNGLBINDTEXTUREPROC bindTexture = nullptr;
     PFNGLTEXSUBIMAGE2DPROC texSubImage2D = nullptr;
 
+    // 1.3
+    PFNGLACTIVETEXTUREPROC activeTexture = nullptr;
+
     // 1.4
     PFNGLBLENDFUNCSEPARATEPROC blendFuncSeparate = nullptr;
 
@@ -53,6 +56,7 @@ public:
     PFNGLUSEPROGRAMPROC useProgram = nullptr;
     PFNGLGETUNIFORMLOCATIONPROC getUniformLocation = nullptr;
     PFNGLUNIFORM2FPROC uniform2f = nullptr;
+    PFNGLUNIFORM1FPROC uniform1f = nullptr;
 
     // 3.0
     PFNGLBINDVERTEXARRAYPROC bindVertexArray = nullptr;

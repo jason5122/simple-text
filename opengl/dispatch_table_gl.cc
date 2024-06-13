@@ -22,6 +22,9 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glBindTexture", bindTexture);
     ASSIGN("glTexSubImage2D", texSubImage2D);
 
+    // 1.3
+    ASSIGN("glActiveTexture", activeTexture);
+
     // 1.4
     ASSIGN("glBlendFuncSeparate", blendFuncSeparate);
 
@@ -50,6 +53,7 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glUseProgram", useProgram);
     ASSIGN("glGetUniformLocation", getUniformLocation);
     ASSIGN("glUniform2f", uniform2f);
+    ASSIGN("glUniform1f", uniform1f);
 
     // 3.0
     ASSIGN("glBindVertexArray", bindVertexArray);

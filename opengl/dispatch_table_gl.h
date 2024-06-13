@@ -14,9 +14,19 @@ public:
     PFNGLDEPTHMASKPROC depthMask = nullptr;
     PFNGLENABLEPROC enable = nullptr;
     PFNGLGETERRORPROC getError = nullptr;
+    PFNGLVIEWPORTPROC viewport = nullptr;
 
     // 1.1
     PFNGLGENTEXTURESPROC genTextures = nullptr;
+
+    // 1.4
+    PFNGLBLENDFUNCSEPARATEPROC blendFuncSeparate = nullptr;
+
+    // 1.5
+    PFNGLGENBUFFERSPROC genBuffers = nullptr;
+    PFNGLBINDBUFFERPROC bindBuffer = nullptr;
+    PFNGLBUFFERDATAPROC bufferData = nullptr;
+    PFNGLBUFFERSUBDATAPROC bufferSubData = nullptr;
 
     // 2.0
     PFNGLATTACHSHADERPROC attachShader = nullptr;
@@ -29,6 +39,21 @@ public:
     PFNGLSHADERSOURCEPROC shaderSource = nullptr;
     PFNGLGETSHADERINFOLOGPROC getShaderInfoLog = nullptr;
     PFNGLGETSHADERIVPROC getShaderiv = nullptr;
+    PFNGLENABLEVERTEXATTRIBARRAYPROC enableVertexAttribArray = nullptr;
+    PFNGLVERTEXATTRIBPOINTERPROC vertexAttribPointer = nullptr;
+    PFNGLUSEPROGRAMPROC useProgram = nullptr;
+    PFNGLGETUNIFORMLOCATIONPROC getUniformLocation = nullptr;
+    PFNGLUNIFORM2FPROC uniform2f = nullptr;
+
+    // 3.0
+    PFNGLBINDVERTEXARRAYPROC bindVertexArray = nullptr;
+    PFNGLGENVERTEXARRAYSPROC genVertexArrays = nullptr;
+
+    // 3.1
+    PFNGLDRAWELEMENTSINSTANCEDPROC drawElementsInstanced = nullptr;
+
+    // 3.3
+    PFNGLVERTEXATTRIBDIVISORPROC vertexAttribDivisor = nullptr;
 
     DispatchTableGL() = default;
     virtual ~DispatchTableGL() = default;

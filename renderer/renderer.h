@@ -10,7 +10,7 @@ public:
     Renderer(opengl::FunctionsGL* gl);
 
     void setup();
-    void draw();
+    void draw(const Size& size);
 
 private:
     opengl::FunctionsGL* gl;

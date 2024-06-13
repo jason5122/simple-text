@@ -11,9 +11,19 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glDepthMask", depthMask);
     ASSIGN("glEnable", enable);
     ASSIGN("glGetError", getError);
+    ASSIGN("glViewport", viewport);
 
     // 1.1
     ASSIGN("glGenTextures", genTextures);
+
+    // 1.4
+    ASSIGN("glBlendFuncSeparate", blendFuncSeparate);
+
+    // 1.5
+    ASSIGN("glGenBuffers", genBuffers);
+    ASSIGN("glBindBuffer", bindBuffer);
+    ASSIGN("glBufferData", bufferData);
+    ASSIGN("glBufferSubData", bufferSubData);
 
     // 2.0
     ASSIGN("glAttachShader", attachShader);
@@ -26,6 +36,21 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glShaderSource", shaderSource);
     ASSIGN("glGetShaderInfoLog", getShaderInfoLog);
     ASSIGN("glGetShaderiv", getShaderiv);
+    ASSIGN("glEnableVertexAttribArray", enableVertexAttribArray);
+    ASSIGN("glVertexAttribPointer", vertexAttribPointer);
+    ASSIGN("glUseProgram", useProgram);
+    ASSIGN("glGetUniformLocation", getUniformLocation);
+    ASSIGN("glUniform2f", uniform2f);
+
+    // 3.0
+    ASSIGN("glBindVertexArray", bindVertexArray);
+    ASSIGN("glGenVertexArrays", genVertexArrays);
+
+    // 3.1
+    ASSIGN("glDrawElementsInstanced", drawElementsInstanced);
+
+    // 3.3
+    ASSIGN("glVertexAttribDivisor", vertexAttribDivisor);
 }
 
 }

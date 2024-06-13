@@ -7,7 +7,11 @@ EditorWindow::EditorWindow(SimpleText& parent, int width, int height, int wid)
 void EditorWindow::onOpenGLActivate(int width, int height) {}
 
 void EditorWindow::onDraw() {
-    parent.renderer.draw();
+    renderer::Size size{
+        .width = width() * scaleFactor(),
+        .height = height() * scaleFactor(),
+    };
+    parent.renderer.draw(size);
 }
 
 void EditorWindow::onResize(int width, int height) {

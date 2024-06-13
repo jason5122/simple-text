@@ -8,7 +8,23 @@ namespace renderer {
 Shader::Shader(opengl::FunctionsGL* gl) : gl{gl} {}
 
 Shader::~Shader() {
-    gl->deleteProgram(tex_id_);
+    gl->deleteProgram(id_);
+}
+
+Shader::Shader(Shader&& other) : id_(other.id_) {
+    other.id_ = 0;
+}
+
+Shader& Shader::operator=(Shader&& other) {
+    if (&other != this) {
+        id_ = other.id_;
+        other.id_ = 0;
+    }
+    return *this;
+}
+
+GLuint Shader::id() {
+    return id_;
 }
 
 bool Shader::link(const std::string& vert_source, const std::string& frag_source) {
@@ -51,10 +67,10 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
         return false;
     }
 
-    tex_id_ = gl->createProgram();
-    gl->attachShader(tex_id_, vertex_shader);
-    gl->attachShader(tex_id_, fragment_shader);
-    gl->linkProgram(tex_id_);
+    id_ = gl->createProgram();
+    gl->attachShader(id_, vertex_shader);
+    gl->attachShader(id_, fragment_shader);
+    gl->linkProgram(id_);
 
     gl->deleteShader(vertex_shader);
     gl->deleteShader(fragment_shader);

@@ -14,6 +14,8 @@ public:
     TextRenderer(opengl::FunctionsGL* gl, GlyphCache& main_glyph_cache,
                  GlyphCache& ui_glyph_cache);
     ~TextRenderer();
+    TextRenderer(TextRenderer&& other);
+    TextRenderer& operator=(TextRenderer&& other);
 
     void setup();
     void renderText(const Size& size, const Point& scroll, const base::Buffer& buffer,

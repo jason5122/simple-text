@@ -35,7 +35,9 @@ void DispatchTableGL::initProcsGL() {
     ASSIGN("glLinkProgram", linkProgram);
     ASSIGN("glShaderSource", shaderSource);
     ASSIGN("glGetShaderInfoLog", getShaderInfoLog);
+    ASSIGN("glGetProgramInfoLog", getProgramInfoLog);
     ASSIGN("glGetShaderiv", getShaderiv);
+    ASSIGN("glGetProgramiv", getProgramiv);
     ASSIGN("glEnableVertexAttribArray", enableVertexAttribArray);
     ASSIGN("glVertexAttribPointer", vertexAttribPointer);
     ASSIGN("glUseProgram", useProgram);

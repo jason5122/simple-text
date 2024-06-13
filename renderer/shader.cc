@@ -39,7 +39,7 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
     GLint success = 0;
     gl->compileShader(vertex_shader);
     gl->getShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-    if (success == GL_FALSE) {
+    if (!success) {
         GLint log_size = 0;
         gl->getShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &log_size);
 
@@ -54,7 +54,7 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
 
     gl->compileShader(fragment_shader);
     gl->getShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-    if (success == GL_FALSE) {
+    if (!success) {
         GLint log_size = 0;
         gl->getShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &log_size);
 
@@ -70,7 +70,18 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
     id_ = gl->createProgram();
     gl->attachShader(id_, vertex_shader);
     gl->attachShader(id_, fragment_shader);
+
     gl->linkProgram(id_);
+    gl->getProgramiv(id_, GL_LINK_STATUS, &success);
+    if (!success) {
+        // TODO: Do this in a more robust way.
+        char info_log[512];
+        gl->getProgramInfoLog(id_, 512, nullptr, info_log);
+        std::cerr << "Shader linking error:\n" << info_log << '\n';
+
+        // TODO: Use RAII wrappers to automatically destruct shaders and program.
+        return false;
+    }
 
     gl->deleteShader(vertex_shader);
     gl->deleteShader(fragment_shader);

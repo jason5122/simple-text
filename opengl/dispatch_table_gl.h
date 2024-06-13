@@ -38,7 +38,9 @@ public:
     PFNGLLINKPROGRAMPROC linkProgram = nullptr;
     PFNGLSHADERSOURCEPROC shaderSource = nullptr;
     PFNGLGETSHADERINFOLOGPROC getShaderInfoLog = nullptr;
+    PFNGLGETPROGRAMINFOLOGPROC getProgramInfoLog = nullptr;
     PFNGLGETSHADERIVPROC getShaderiv = nullptr;
+    PFNGLGETPROGRAMIVPROC getProgramiv = nullptr;
     PFNGLENABLEVERTEXATTRIBARRAYPROC enableVertexAttribArray = nullptr;
     PFNGLVERTEXATTRIBPOINTERPROC vertexAttribPointer = nullptr;
     PFNGLUSEPROGRAMPROC useProgram = nullptr;

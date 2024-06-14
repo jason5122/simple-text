@@ -12,7 +12,7 @@ Renderer::Renderer(opengl::FunctionsGL* gl)
     gl->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void Renderer::draw(const Size& size, const base::Buffer& buffer) {
+void Renderer::draw(const Size& size, const base::Buffer& buffer, const Point& scroll_offset) {
     gl->viewport(0, 0, size.width, size.height);
 
     gl->clear(GL_COLOR_BUFFER_BIT);
@@ -26,11 +26,6 @@ void Renderer::draw(const Size& size, const base::Buffer& buffer) {
     gl->blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, scroll_offset, {0, 0, 0}, 0, 20 * 2, 50, 1000, editor_offset,
                        ui_glyph_cache.lineHeight());
-}
-
-void Renderer::scroll(int dx, int dy) {
-    // scroll_offset.x += dx;
-    scroll_offset.y += dy;
 }
 
 }

@@ -11,8 +11,7 @@ class Renderer {
 public:
     Renderer(opengl::FunctionsGL* gl);
 
-    void draw(const Size& size, const base::Buffer& buffer);
-    void scroll(int dx, int dy);
+    void draw(const Size& size, const base::Buffer& buffer, const Point& scroll_offset);
 
 private:
     opengl::FunctionsGL* gl;
@@ -23,7 +22,6 @@ private:
     RectRenderer rect_renderer;
 
     Point editor_offset = {200 * 2, 30 * 2};
-    Point scroll_offset{};
 };
 
 }

@@ -17,6 +17,7 @@ static void destroy(GtkWidget* self, gpointer user_data);
 static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
 static void realize(GtkGLArea* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
+static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
 
 // TODO: Define this below instead.
 static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
@@ -63,6 +64,11 @@ MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window, GdkGLCo
     g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), app_window);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), app_window);
+
+    GtkEventControllerScrollFlags scroll_flags = GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES;
+    GtkEventController* scroll_event_controller = gtk_event_controller_scroll_new(scroll_flags);
+    gtk_widget_add_controller(gl_area, scroll_event_controller);
+    g_signal_connect(scroll_event_controller, "scroll", G_CALLBACK(scroll), app_window);
 
     // gtk_window_maximize(GTK_WINDOW(window));
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
@@ -168,6 +174,21 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_dat
     app_window->onDraw(scaled_width, scaled_height);
 
     // Draw commands are flushed after returning.
+    return true;
+}
+
+static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy,
+                       gpointer user_data) {
+    GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
+    gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
+
+    int delta_x = std::round(dx);
+    int delta_y = std::round(dy);
+    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    app_window->onScroll(delta_x, delta_y);
+
+    gtk_widget_queue_draw(gl_area);
+
     return true;
 }
 

@@ -13,6 +13,7 @@ public:
     void onOpenGLActivate(int width, int height) override;
     void onDraw(int width, int height) override;
     void onResize(int width, int height) override;
+    void onScroll(int dx, int dy) override;
     void onClose() override;
 
 private:

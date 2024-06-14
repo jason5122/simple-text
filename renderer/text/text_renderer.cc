@@ -117,12 +117,6 @@ void TextRenderer::renderText(const Size& size, const Point& scroll, const base:
     gl->activeTexture(GL_TEXTURE0);
     gl->bindVertexArray(vao);
 
-    size_t start_line = std::min(static_cast<size_t>(scroll.y / main_glyph_cache.lineHeight()),
-                                 buffer.lineCount());
-    size_t visible_lines =
-        std::ceil((size.height - ui_glyph_cache.lineHeight()) / main_glyph_cache.lineHeight());
-    size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
-
     int batch_count = 0;
     auto render_batch = [this, &batch_count](size_t page) {
         while (batch_instances.size() <= page) {
@@ -171,6 +165,16 @@ void TextRenderer::renderText(const Size& size, const Point& scroll, const base:
         if (selection_start > selection_end) {
             std::swap(selection_start, selection_end);
         }
+
+        size_t start_line = std::min(static_cast<size_t>(scroll.y / main_glyph_cache.lineHeight()),
+                                     buffer.lineCount());
+        size_t visible_lines =
+            std::ceil((size.height - ui_glyph_cache.lineHeight()) / main_glyph_cache.lineHeight());
+        size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
+
+        std::cerr << std::format("start_line = {}, end_line = {}", start_line, end_line) << '\n';
+        start_line = 0;
+        end_line = buffer.lineCount();
 
         size_t byte_offset = buffer.byteOfLine(start_line);
 

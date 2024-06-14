@@ -13,6 +13,7 @@ public:
 
     void setup();
     void draw(const Size& size, const base::Buffer& buffer);
+    void scroll(int dx, int dy);
 
 private:
     opengl::FunctionsGL* gl;
@@ -21,6 +22,9 @@ private:
     GlyphCache ui_glyph_cache;
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
+
+    Point editor_offset = {200 * 2, 30 * 2};
+    Point scroll_offset{};
 };
 
 }

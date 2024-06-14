@@ -180,7 +180,7 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& 
         .coords = Vec2{0, static_cast<float>(-editor_offset.y)},
         .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(editor_offset.y)},
         // .color = Rgba::fromRgb(color_scheme.tab_bar, 255),
-        .color = Rgba{127, 0, 0, 255},
+        .color = Rgba{190, 190, 190, 255},
     });
 
     // float tab_height = editor_offset.y - 5;  // Leave padding between window title bar and tab.
@@ -212,7 +212,7 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& 
         .coords = {static_cast<float>(-editor_offset.x), static_cast<float>(-editor_offset.y)},
         .rect_size = {static_cast<float>(editor_offset.x), static_cast<float>(size.height)},
         // .color = Rgba::fromRgb(color_scheme.side_bar, 255),
-        .color = Rgba{255, 0, 0, 255},
+        .color = Rgba{235, 237, 239, 255},
     });
 
     // Add status bar.
@@ -220,7 +220,7 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& 
         .coords = Vec2{static_cast<float>(-editor_offset.x), editor_height},
         .rect_size = Vec2{static_cast<float>(size.width), status_bar_height},
         // .color = Rgba::fromRgb(color_scheme.status_bar, 255),
-        .color = Rgba{0, 255, 0, 255},
+        .color = Rgba{199, 203, 209, 255},
     });
 
     gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);

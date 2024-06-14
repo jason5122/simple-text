@@ -182,6 +182,12 @@ static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy,
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
     gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
 
+    GdkScrollUnit unit = gtk_event_controller_scroll_get_unit(self);
+    if (GDK_SCROLL_UNIT_WHEEL) {
+        dx *= 32;
+        dy *= 32;
+    }
+
     int delta_x = std::round(dx);
     int delta_y = std::round(dy);
     gui::Window* app_window = static_cast<gui::Window*>(user_data);

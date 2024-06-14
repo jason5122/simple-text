@@ -7,26 +7,7 @@
 
 namespace renderer {
 
-Atlas::Atlas(opengl::FunctionsGL* gl) : gl{gl} {}
-
-Atlas::~Atlas() {
-    gl->deleteTextures(1, &tex_id);
-}
-
-Atlas::Atlas(Atlas&& other) : gl{other.gl}, tex_id(other.tex_id) {
-    other.tex_id = 0;
-}
-
-Atlas& Atlas::operator=(Atlas&& other) {
-    if (&other != this) {
-        gl = other.gl;
-        tex_id = other.tex_id;
-        other.tex_id = 0;
-    }
-    return *this;
-}
-
-void Atlas::setup() {
+Atlas::Atlas(opengl::FunctionsGL* gl) : gl{gl} {
     gl->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
     gl->genTextures(1, &tex_id);
     gl->bindTexture(GL_TEXTURE_2D, tex_id);
@@ -69,6 +50,23 @@ void Atlas::setup() {
     gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     gl->bindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+}
+
+Atlas::~Atlas() {
+    gl->deleteTextures(1, &tex_id);
+}
+
+Atlas::Atlas(Atlas&& other) : gl{other.gl}, tex_id(other.tex_id) {
+    other.tex_id = 0;
+}
+
+Atlas& Atlas::operator=(Atlas&& other) {
+    if (&other != this) {
+        gl = other.gl;
+        tex_id = other.tex_id;
+        other.tex_id = 0;
+    }
+    return *this;
 }
 
 GLuint Atlas::tex() const {

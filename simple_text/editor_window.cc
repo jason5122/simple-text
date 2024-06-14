@@ -39,7 +39,7 @@ private:
 void EditorWindow::onOpenGLActivate(int width, int height) {}
 
 void EditorWindow::onDraw(int width, int height) {
-    parent.renderer.draw({width, height}, buffer);
+    parent.renderer->draw({width, height}, buffer);
 }
 
 void EditorWindow::onResize(int width, int height) {
@@ -47,7 +47,7 @@ void EditorWindow::onResize(int width, int height) {
 }
 
 void EditorWindow::onScroll(int dx, int dy) {
-    parent.renderer.scroll(dx, dy);
+    parent.renderer->scroll(dx, dy);
     redraw();
 }
 

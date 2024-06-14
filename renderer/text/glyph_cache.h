@@ -24,7 +24,6 @@ public:
         size_t page;
     };
 
-    void setup();
     Glyph& getGlyph(std::string_view str8);
     int lineHeight() const;
 

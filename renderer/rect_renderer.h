@@ -16,7 +16,6 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    void setup();
     void draw(const Size& size, const Point& scroll, const CaretInfo& end_caret, int end_caret_x,
               float line_height, size_t line_count, float longest_x, const Point& editor_offset,
               float status_bar_height);

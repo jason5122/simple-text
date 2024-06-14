@@ -4,13 +4,13 @@
 #include <format>
 #include <iostream>
 
-EditorApp::EditorApp() : gl{std::make_unique<opengl::FunctionsGL>()}, renderer{gl.get()} {}
+EditorApp::EditorApp() : gl{std::make_unique<opengl::FunctionsGL>()} {}
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
 void EditorApp::onLaunch() {
     gl->initialize();
-    renderer.setup();
+    renderer.reset(new renderer::Renderer{gl.get()});
 
     createWindow();
     createWindow();

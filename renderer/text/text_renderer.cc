@@ -16,37 +16,7 @@ namespace renderer {
 TextRenderer::TextRenderer(opengl::FunctionsGL* gl, GlyphCache& main_glyph_cache,
                            GlyphCache& ui_glyph_cache)
     : gl{gl}, shader_program{gl}, main_glyph_cache{main_glyph_cache},
-      ui_glyph_cache{ui_glyph_cache} {}
-
-TextRenderer::~TextRenderer() {
-    gl->deleteVertexArrays(1, &vao);
-    gl->deleteBuffers(1, &vbo_instance);
-    gl->deleteBuffers(1, &ebo);
-}
-
-TextRenderer::TextRenderer(TextRenderer&& other)
-    : vao{other.vao}, vbo_instance{other.vbo_instance}, ebo{other.ebo}, gl{other.gl},
-      shader_program{std::move(other.shader_program)}, main_glyph_cache{other.main_glyph_cache},
-      ui_glyph_cache{other.ui_glyph_cache} {
-    other.vao = 0;
-    other.vbo_instance = 0;
-    other.ebo = 0;
-}
-
-TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
-    if (&other != this) {
-        vao = other.vao;
-        vbo_instance = other.vbo_instance;
-        ebo = other.ebo;
-        shader_program = std::move(other.shader_program);
-        other.vao = 0;
-        other.vbo_instance = 0;
-        other.ebo = 0;
-    }
-    return *this;
-}
-
-void TextRenderer::setup() {
+      ui_glyph_cache{ui_glyph_cache} {
     std::string vert_source =
 #include "renderer/shaders/text_vert.glsl"
         ;
@@ -99,6 +69,34 @@ void TextRenderer::setup() {
     gl->bindVertexArray(0);
     gl->bindBuffer(GL_ARRAY_BUFFER, 0);
     gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+TextRenderer::~TextRenderer() {
+    gl->deleteVertexArrays(1, &vao);
+    gl->deleteBuffers(1, &vbo_instance);
+    gl->deleteBuffers(1, &ebo);
+}
+
+TextRenderer::TextRenderer(TextRenderer&& other)
+    : vao{other.vao}, vbo_instance{other.vbo_instance}, ebo{other.ebo}, gl{other.gl},
+      shader_program{std::move(other.shader_program)}, main_glyph_cache{other.main_glyph_cache},
+      ui_glyph_cache{other.ui_glyph_cache} {
+    other.vao = 0;
+    other.vbo_instance = 0;
+    other.ebo = 0;
+}
+
+TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
+    if (&other != this) {
+        vao = other.vao;
+        vbo_instance = other.vbo_instance;
+        ebo = other.ebo;
+        shader_program = std::move(other.shader_program);
+        other.vao = 0;
+        other.vbo_instance = 0;
+        other.ebo = 0;
+    }
+    return *this;
 }
 
 void TextRenderer::renderText(const Size& size, const Point& scroll, const base::Buffer& buffer,

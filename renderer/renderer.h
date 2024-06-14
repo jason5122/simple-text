@@ -11,7 +11,6 @@ class Renderer {
 public:
     Renderer(opengl::FunctionsGL* gl);
 
-    void setup();
     void draw(const Size& size, const base::Buffer& buffer);
     void scroll(int dx, int dy);
 

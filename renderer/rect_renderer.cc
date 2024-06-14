@@ -4,36 +4,7 @@
 
 namespace renderer {
 
-RectRenderer::RectRenderer(opengl::FunctionsGL* gl) : gl{gl}, shader_program{gl} {}
-
-RectRenderer::~RectRenderer() {
-    gl->deleteVertexArrays(1, &vao);
-    gl->deleteBuffers(1, &vbo_instance);
-    gl->deleteBuffers(1, &ebo);
-}
-
-RectRenderer::RectRenderer(RectRenderer&& other)
-    : vao{other.vao}, vbo_instance{other.vbo_instance}, ebo{other.ebo}, gl{other.gl},
-      shader_program{std::move(other.shader_program)} {
-    other.vao = 0;
-    other.vbo_instance = 0;
-    other.ebo = 0;
-}
-
-RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
-    if (&other != this) {
-        vao = other.vao;
-        vbo_instance = other.vbo_instance;
-        ebo = other.ebo;
-        shader_program = std::move(other.shader_program);
-        other.vao = 0;
-        other.vbo_instance = 0;
-        other.ebo = 0;
-    }
-    return *this;
-}
-
-void RectRenderer::setup() {
+RectRenderer::RectRenderer(opengl::FunctionsGL* gl) : gl{gl}, shader_program{gl} {
     std::string vert_source =
 #include "renderer/shaders/rect_vert.glsl"
         ;
@@ -91,6 +62,33 @@ void RectRenderer::setup() {
     gl->bindVertexArray(0);
     gl->bindBuffer(GL_ARRAY_BUFFER, 0);
     gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+RectRenderer::~RectRenderer() {
+    gl->deleteVertexArrays(1, &vao);
+    gl->deleteBuffers(1, &vbo_instance);
+    gl->deleteBuffers(1, &ebo);
+}
+
+RectRenderer::RectRenderer(RectRenderer&& other)
+    : vao{other.vao}, vbo_instance{other.vbo_instance}, ebo{other.ebo}, gl{other.gl},
+      shader_program{std::move(other.shader_program)} {
+    other.vao = 0;
+    other.vbo_instance = 0;
+    other.ebo = 0;
+}
+
+RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
+    if (&other != this) {
+        vao = other.vao;
+        vbo_instance = other.vbo_instance;
+        ebo = other.ebo;
+        shader_program = std::move(other.shader_program);
+        other.vao = 0;
+        other.vbo_instance = 0;
+        other.ebo = 0;
+    }
+    return *this;
 }
 
 void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& end_caret,

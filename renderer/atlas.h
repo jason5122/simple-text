@@ -19,7 +19,6 @@ public:
     Atlas(Atlas&& other);
     Atlas& operator=(Atlas&& other);
 
-    void setup();
     GLuint tex() const;
     bool insertTexture(int width, int height, bool colored, const GLubyte* data, Vec4& uv);
 

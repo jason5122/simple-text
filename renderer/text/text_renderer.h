@@ -17,7 +17,6 @@ public:
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
 
-    void setup();
     void renderText(const Size& size, const Point& scroll, const base::Buffer& buffer,
                     const Point& editor_offset, const CaretInfo& start_caret,
                     const CaretInfo& end_caret, int& longest_line_x, int line_number_offset,

@@ -2,6 +2,9 @@
 #include "rect_renderer.h"
 #include <vector>
 
+#include <format>
+#include <iostream>
+
 namespace renderer {
 
 RectRenderer::RectRenderer(opengl::FunctionsGL* gl) : gl{gl}, shader_program{gl} {
@@ -103,17 +106,17 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& 
                   editor_offset.y);
     gl->bindVertexArray(vao);
 
-    // float caret_width = 4;
-    // float caret_height = line_height;
+    float caret_width = 4;
+    float caret_height = line_height;
 
-    // float caret_x = end_caret_x - caret_width / 2;
+    float caret_x = end_caret_x - caret_width / 2;
 
-    // int extra_padding = 8;
-    // float caret_y = end_caret.line * line_height;
-    // caret_y -= extra_padding;
-    // caret_height += extra_padding * 2;
+    int extra_padding = 8;
+    float caret_y = end_caret.line * line_height;
+    caret_y -= extra_padding;
+    caret_height += extra_padding * 2;
 
-    // Rgba editor_bg_color = Rgba::fromRgb(color_scheme.background, 255);
+    Rgba editor_bg_color{253, 253, 253, 255};
 
     std::vector<InstanceData> instances;
 
@@ -122,24 +125,27 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& 
     float editor_width = size.width - editor_offset.x;
     float editor_height = size.height - editor_offset.y - status_bar_height;
 
-    // // Add caret.
-    // if ((scroll.x < caret_x + caret_width + line_number_offset &&
-    //      caret_x < scroll.x + editor_width - line_number_offset) &&
-    //     (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
-    //     instances.emplace_back(InstanceData{
-    //         .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
-    //         .rect_size = Vec2{caret_width, caret_height},
-    //         .color = Rgba::fromRgb(color_scheme.caret, 255),
-    //     });
-    // }
-    // if (end_caret_x != -1 &&
-    //     (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
-    //     instances.emplace_back(InstanceData{
-    //         .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
-    //         .rect_size = Vec2{caret_width, caret_height},
-    //         .color = Rgba::fromRgb(color_scheme.caret, 255),
-    //     });
-    // }
+    // TODO: Add this to parameters.
+    int line_number_offset = 100;
+
+    // Add caret.
+    if ((scroll.x < caret_x + caret_width + line_number_offset &&
+         caret_x < scroll.x + editor_width - line_number_offset) &&
+        (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
+        instances.emplace_back(InstanceData{
+            .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
+            .rect_size = Vec2{caret_width, caret_height},
+            .color = Rgba{95, 180, 180, 255},
+        });
+    }
+    if (end_caret_x != -1 &&
+        (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
+        instances.emplace_back(InstanceData{
+            .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
+            .rect_size = Vec2{caret_width, caret_height},
+            .color = Rgba{95, 180, 180, 255},
+        });
+    }
 
     // // Add vertical scroll bar.
     // if (line_count > 0) {

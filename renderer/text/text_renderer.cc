@@ -102,7 +102,10 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 void TextRenderer::renderText(const Size& size, const Point& scroll, const base::Buffer& buffer,
                               const Point& editor_offset, const CaretInfo& start_caret,
                               const CaretInfo& end_caret, int& longest_line_x,
-                              int line_number_offset, int& end_caret_x) {
+                              Point& end_caret_pos) {
+    // TODO: Clean this up.
+    int line_number_offset = 100;
+
     GLuint shader_id = shader_program.id();
     gl->useProgram(shader_id);
     gl->uniform1f(gl->getUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
@@ -170,7 +173,6 @@ void TextRenderer::renderText(const Size& size, const Point& scroll, const base:
             std::ceil((size.height - ui_glyph_cache.lineHeight()) / main_glyph_cache.lineHeight());
         size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
-        std::cerr << std::format("start_line = {}, end_line = {}", start_line, end_line) << '\n';
         start_line = 0;
         end_line = buffer.lineCount();
 
@@ -217,7 +219,10 @@ void TextRenderer::renderText(const Size& size, const Point& scroll, const base:
                 }
 
                 if (byte_offset == end_caret.byte) {
-                    end_caret_x = total_advance;
+                    end_caret_pos = {
+                        .x = total_advance,
+                        .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
+                    };
                 }
 
                 std::string_view key = std::string_view(line_str).substr(offset, ret);
@@ -248,7 +253,10 @@ void TextRenderer::renderText(const Size& size, const Point& scroll, const base:
             }
 
             if (byte_offset == end_caret.byte) {
-                end_caret_x = total_advance;
+                end_caret_pos = {
+                    .x = total_advance,
+                    .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
+                };
             }
             byte_offset++;
 

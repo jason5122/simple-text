@@ -9,7 +9,7 @@ namespace renderer {
 
 Movement::Movement(GlyphCache& main_glyph_cache) : main_glyph_cache(main_glyph_cache) {}
 
-void Movement::setCaretInfo(base::Buffer& buffer, Point& mouse, CaretInfo& caret) {
+void Movement::setCaretInfo(const base::Buffer& buffer, const Point& mouse, CaretInfo& caret) {
     caret.line = mouse.y / main_glyph_cache.lineHeight();
     if (caret.line > buffer.lineCount() - 1) {
         caret.line = buffer.lineCount() - 1;

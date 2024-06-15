@@ -9,7 +9,7 @@ namespace renderer {
 class Movement {
 public:
     Movement(GlyphCache& main_glyph_cache);
-    void setCaretInfo(base::Buffer& buffer, Point& mouse, CaretInfo& caret);
+    void setCaretInfo(const base::Buffer& buffer, const Point& mouse, CaretInfo& caret);
     void moveCaretForwardChar(base::Buffer& buffer, CaretInfo& caret);
     void moveCaretBackwardChar(base::Buffer& buffer, CaretInfo& caret);
     void moveCaretForwardWord(base::Buffer& buffer, CaretInfo& caret);

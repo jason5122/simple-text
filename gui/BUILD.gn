@@ -1,7 +1,6 @@
 group("gui") {
   if (is_mac) {
-    # deps = [ "cocoa" ]
-    deps = [ "gtk" ]
+    deps = [ "cocoa" ]
   }
   if (is_linux) {
     deps = [ "gtk" ]

@@ -15,6 +15,9 @@ public:
     void onDraw(int width, int height) override;
     void onResize(int width, int height) override;
     void onScroll(int dx, int dy) override;
+    void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers,
+                         gui::ClickType click_type) override;
+    void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
     void onClose() override;
 
 private:
@@ -25,6 +28,7 @@ private:
     config::ColorScheme color_scheme;
 
     renderer::Point scroll_offset{};
+    renderer::CaretInfo end_caret{};
 
     void updateWindowTitle();
 };

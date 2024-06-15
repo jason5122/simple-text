@@ -19,10 +19,10 @@ void Renderer::draw(const Size& size, const base::Buffer& buffer, const Point& s
 
     gl->clear(GL_COLOR_BUFFER_BIT);
 
-    gl->blendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     int longest_line;
     Point end_caret_pos;
 
+    gl->blendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(size, scroll_offset, buffer, editor_offset, end_caret, end_caret,
                              longest_line, end_caret_pos);
 

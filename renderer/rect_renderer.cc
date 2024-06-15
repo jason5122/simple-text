@@ -105,14 +105,10 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const Point& end_
                   editor_offset.y);
     gl->bindVertexArray(vao);
 
-    float caret_width = 4;
-    float caret_height = line_height;
-
-    float caret_x = end_caret_pos.x - caret_width / 2;
+    int caret_width = 4;
+    int caret_height = line_height;
 
     int extra_padding = 8;
-    float caret_y = end_caret_pos.y;
-    caret_y -= extra_padding;
     caret_height += extra_padding * 2;
 
     Rgba editor_bg_color{253, 253, 253, 255};
@@ -128,23 +124,20 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const Point& end_
     int line_number_offset = 100;
 
     // Add caret.
-    if ((scroll.x < caret_x + caret_width + line_number_offset &&
-         caret_x < scroll.x + editor_width - line_number_offset) &&
-        (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
-        instances.emplace_back(InstanceData{
-            .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
-            .rect_size = Vec2{caret_width, caret_height},
-            .color = Rgba{95, 180, 180, 255},
-        });
-    }
-    if (end_caret_pos.x != -1 &&
-        (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
-        instances.emplace_back(InstanceData{
-            .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},
-            .rect_size = Vec2{caret_width, caret_height},
-            .color = Rgba{95, 180, 180, 255},
-        });
-    }
+    instances.emplace_back(InstanceData{
+        .coords =
+            Vec2{
+                .x = static_cast<float>(end_caret_pos.x - caret_width / 2 - scroll.x +
+                                        line_number_offset),
+                .y = static_cast<float>(end_caret_pos.y - extra_padding - scroll.y),
+            },
+        .rect_size =
+            Vec2{
+                .x = static_cast<float>(caret_width),
+                .y = static_cast<float>(caret_height),
+            },
+        .color = Rgba{95, 180, 180, 255},
+    });
 
     // // Add vertical scroll bar.
     // if (line_count > 0) {

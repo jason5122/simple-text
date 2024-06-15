@@ -10,7 +10,7 @@ Renderer::Renderer(opengl::FunctionsGL* gl)
     gl->enable(GL_BLEND);
     gl->depthMask(GL_FALSE);
 
-    gl->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    gl->clearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
 }
 
 void Renderer::draw(const Size& size, const base::Buffer& buffer, const Point& scroll_offset,

@@ -229,7 +229,7 @@ void TextRenderer::renderText(const Size& size, const Point& scroll, const base:
 
                 // TODO: Preserve the width of the space character when substituting.
                 //       Otherwise, the line width changes when using proportional fonts.
-                base::Rgb text_color{0, 0, 0};
+                base::Rgb text_color{51, 51, 51};
                 if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
                     key = "·";
                     text_color = base::Rgb{182, 182, 182};

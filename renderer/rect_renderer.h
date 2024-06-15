@@ -16,14 +16,14 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    void draw(const Size& size, const Point& scroll, const CaretInfo& end_caret, int end_caret_x,
-              float line_height, size_t line_count, float longest_x, const Point& editor_offset,
+    void draw(const Size& size, const Point& scroll, const Point& end_caret_pos, float line_height,
+              size_t line_count, float longest_x, const Point& editor_offset,
               float status_bar_height);
 
 private:
     opengl::FunctionsGL* gl;
 
-    static constexpr int kBatchMax = 65536;
+    static constexpr int kBatchMax = 0x10000;
     static constexpr int kMinTabWidth = 350;
 
     Shader shader_program;

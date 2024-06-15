@@ -27,9 +27,8 @@ void Renderer::draw(const Size& size, const base::Buffer& buffer, const Point& s
                              longest_line, end_caret_pos);
 
     gl->blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, scroll_offset, end_caret, end_caret_pos.x,
-                       main_glyph_cache.lineHeight(), 50, 1000, editor_offset,
-                       ui_glyph_cache.lineHeight());
+    rect_renderer.draw(size, scroll_offset, end_caret_pos, main_glyph_cache.lineHeight(), 50, 1000,
+                       editor_offset, ui_glyph_cache.lineHeight());
 }
 
 }

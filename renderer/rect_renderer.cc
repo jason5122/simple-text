@@ -94,25 +94,24 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
     return *this;
 }
 
-void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& end_caret,
-                        int end_caret_x, float line_height, size_t line_count, float longest_x,
+void RectRenderer::draw(const Size& size, const Point& scroll, const Point& end_caret_pos,
+                        float line_height, size_t line_count, float longest_x,
                         const Point& editor_offset, float status_bar_height) {
-    gl->useProgram(shader_program.id());
-    gl->uniform2f(gl->getUniformLocation(shader_program.id(), "resolution"), size.width,
-                  size.height);
-    gl->uniform2f(gl->getUniformLocation(shader_program.id(), "scroll_offset"), scroll.x,
-                  scroll.y);
-    gl->uniform2f(gl->getUniformLocation(shader_program.id(), "editor_offset"), editor_offset.x,
+    GLuint shader_id = shader_program.id();
+    gl->useProgram(shader_id);
+    gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
+    gl->uniform2f(gl->getUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
+    gl->uniform2f(gl->getUniformLocation(shader_id, "editor_offset"), editor_offset.x,
                   editor_offset.y);
     gl->bindVertexArray(vao);
 
     float caret_width = 4;
     float caret_height = line_height;
 
-    float caret_x = end_caret_x - caret_width / 2;
+    float caret_x = end_caret_pos.x - caret_width / 2;
 
     int extra_padding = 8;
-    float caret_y = end_caret.line * line_height;
+    float caret_y = end_caret_pos.y;
     caret_y -= extra_padding;
     caret_height += extra_padding * 2;
 
@@ -138,7 +137,7 @@ void RectRenderer::draw(const Size& size, const Point& scroll, const CaretInfo& 
             .color = Rgba{95, 180, 180, 255},
         });
     }
-    if (end_caret_x != -1 &&
+    if (end_caret_pos.x != -1 &&
         (scroll.y < caret_y + caret_height && caret_y < scroll.y + editor_height)) {
         instances.emplace_back(InstanceData{
             .coords = Vec2{caret_x - scroll.x + line_number_offset, caret_y - scroll.y},

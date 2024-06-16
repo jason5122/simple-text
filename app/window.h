@@ -1,7 +1,7 @@
 #pragma once
 
 #include "app/action.h"
-#include "app/gui_action.h"
+#include "app/app_action.h"
 #include "app/key.h"
 #include "app/modifier_key.h"
 #include "util/non_copyable.h"
@@ -50,7 +50,7 @@ public:
     virtual void onAction(Action action) {}
     virtual void onClose() {}
     virtual void onDarkModeToggle() {}
-    virtual void onGuiAction(GuiAction action) {}
+    virtual void onAppAction(AppAction action) {}
 
 private:
     App& app;

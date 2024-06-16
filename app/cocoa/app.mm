@@ -70,20 +70,20 @@
 - (void)newFile {
     // If there are no open windows, pass action to `App` instead of `App::Window`.
     if (NSApp.keyWindow == nil) {
-        app->onGuiAction(app::GuiAction::kNewFile);
+        app->onAppAction(app::AppAction::kNewFile);
     } else {
         app::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
-        app_window->onGuiAction(app::GuiAction::kNewFile);
+        app_window->onAppAction(app::AppAction::kNewFile);
     }
 }
 
 - (void)newWindow {
     // If there are no open windows, pass action to `App` instead of `App::Window`.
     if (NSApp.keyWindow == nil) {
-        app->onGuiAction(app::GuiAction::kNewWindow);
+        app->onAppAction(app::AppAction::kNewWindow);
     } else {
         app::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
-        app_window->onGuiAction(app::GuiAction::kNewWindow);
+        app_window->onAppAction(app::AppAction::kNewWindow);
     }
 }
 

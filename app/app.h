@@ -1,6 +1,6 @@
 #pragma once
 
-#include "app/gui_action.h"
+#include "app/app_action.h"
 #include "app/key.h"
 #include "app/modifier_key.h"
 #include "app/window.h"
@@ -23,7 +23,7 @@ public:
 
     virtual void onLaunch() {}
     virtual void onQuit() {}
-    virtual void onGuiAction(GuiAction action) {}
+    virtual void onAppAction(AppAction action) {}
 
     // TODO: Find a way to make this private! We currently need this for GTK's callbacks.
     class impl;

@@ -2,7 +2,7 @@
 
 namespace app {
 
-enum class GuiAction {
+enum class AppAction {
     kNewFile,
     kNewWindow,
 };

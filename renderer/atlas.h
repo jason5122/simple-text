@@ -1,7 +1,7 @@
 #pragma once
 
 #include "opengl/functions_gl.h"
-#include "opengl/functionsgl_typedefs.h"
+#include "opengl/functions_gl_typedefs.h"
 #include "renderer/opengl_types.h"
 #include "util/non_copyable.h"
 #include <vector>

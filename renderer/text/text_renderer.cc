@@ -1,5 +1,5 @@
 #include "base/rgb.h"
-#include "opengl/functionsgl_enums.h"
+#include "opengl/functions_gl_enums.h"
 #include "text_renderer.h"
 #include "util/profile_util.h"
 #include <cmath>

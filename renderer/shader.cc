@@ -1,4 +1,4 @@
-#include "opengl/functionsgl_enums.h"
+#include "opengl/functions_gl_enums.h"
 #include "shader.h"
 #include <format>
 #include <iostream>

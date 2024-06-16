@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opengl/functionsgl_typedefs.h"
+#include "opengl/functions_gl_typedefs.h"
 #include "util/non_copyable.h"
 #include <string>
 

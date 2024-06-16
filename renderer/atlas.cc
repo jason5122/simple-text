@@ -1,5 +1,5 @@
 #include "atlas.h"
-#include "opengl/functionsgl_enums.h"
+#include "opengl/functions_gl_enums.h"
 
 // TODO: For debugging; remove this.
 #include <iostream>

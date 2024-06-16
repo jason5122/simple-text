@@ -1,0 +1,11 @@
+group("app") {
+  if (is_mac) {
+    deps = [ "cocoa" ]
+  }
+  if (is_linux) {
+    deps = [ "gtk" ]
+  }
+  if (is_win) {
+    deps = [ "win32" ]
+  }
+}

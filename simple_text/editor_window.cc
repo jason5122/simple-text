@@ -52,8 +52,8 @@ void EditorWindow::onScroll(int dx, int dy) {
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers,
-                                   gui::ClickType click_type) {
+void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers,
+                                   app::ClickType click_type) {
     int line_number_offset = 100;
     renderer::Point mouse{
         .x = mouse_x + scroll_offset.x - 200 * 2 - line_number_offset,
@@ -65,7 +65,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey mo
     redraw();
 }
 
-void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) {
+void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
     int line_number_offset = 100;
     renderer::Point mouse{
         .x = mouse_x + scroll_offset.x - 200 * 2 - line_number_offset,

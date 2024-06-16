@@ -1,13 +1,13 @@
 #pragma once
 
+#include "app/window.h"
 #include "base/buffer.h"
 #include "config/color_scheme.h"
-#include "gui/window.h"
 #include "renderer/types.h"
 
 class EditorApp;
 
-class EditorWindow : public gui::Window {
+class EditorWindow : public app::Window {
 public:
     EditorWindow(EditorApp& parent, int width, int height, int wid);
 
@@ -15,9 +15,9 @@ public:
     void onDraw(int width, int height) override;
     void onResize(int width, int height) override;
     void onScroll(int dx, int dy) override;
-    void onLeftMouseDown(int mouse_x, int mouse_y, gui::ModifierKey modifiers,
-                         gui::ClickType click_type) override;
-    void onLeftMouseDrag(int mouse_x, int mouse_y, gui::ModifierKey modifiers) override;
+    void onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers,
+                         app::ClickType click_type) override;
+    void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
     void onClose() override;
 
 private:

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "gui/app.h"
+#include "app/app.h"
 #include "opengl/functions_gl.h"
 #include "renderer/renderer.h"
 #include "simple_text/editor_window.h"
 #include <vector>
 
-class EditorApp : public gui::App {
+class EditorApp : public app::App {
 public:
     EditorApp();
 

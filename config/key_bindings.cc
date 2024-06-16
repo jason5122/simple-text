@@ -1,4 +1,4 @@
-#include "gui/modifier_key.h"
+#include "app/modifier_key.h"
 #include "key_bindings.h"
 #include <iostream>
 
@@ -53,7 +53,7 @@ void KeyBindings::reload() {
     }
 }
 
-Action KeyBindings::parseKeyPress(gui::Key key, gui::ModifierKey modifiers) {
+Action KeyBindings::parseKeyPress(app::Key key, app::ModifierKey modifiers) {
     for (const auto& binding : bindings) {
         if (key == binding.key && modifiers == binding.modifiers) {
             return binding.action;
@@ -63,17 +63,17 @@ Action KeyBindings::parseKeyPress(gui::Key key, gui::ModifierKey modifiers) {
 }
 
 void KeyBindings::addBinding(const std::string& keys, const std::string& command) {
-    gui::Key key = gui::Key::kNone;
-    gui::ModifierKey modifiers = gui::ModifierKey::kNone;
+    app::Key key = app::Key::kNone;
+    app::ModifierKey modifiers = app::ModifierKey::kNone;
     Action action = Action::kNone;
 
     auto parse_substring = [&key, &modifiers](const std::string& substr) -> bool {
         if (substr.length() == 1 && 'a' <= substr[0] && substr[0] <= 'z') {
             int offset = substr[0] - 'a';
-            key = static_cast<gui::Key>(static_cast<int>(gui::Key::kA) + offset);
+            key = static_cast<app::Key>(static_cast<int>(app::Key::kA) + offset);
         } else if (substr.length() == 1 && '0' <= substr[0] && substr[0] <= '9') {
             int offset = substr[0] - '0';
-            key = static_cast<gui::Key>(static_cast<int>(gui::Key::k0) + offset);
+            key = static_cast<app::Key>(static_cast<int>(app::Key::k0) + offset);
         } else if (modifier_map.contains(substr)) {
             modifiers |= modifier_map.at(substr);
         } else {
@@ -98,7 +98,7 @@ void KeyBindings::addBinding(const std::string& keys, const std::string& command
         std::cerr << "KeyBindings::addBinding() error: Invalid key.\n";
         return;
     }
-    if (key == gui::Key::kNone) {
+    if (key == app::Key::kNone) {
         std::cerr << "KeyBindings::addBinding() error: No key provided.\n";
         return;
     }

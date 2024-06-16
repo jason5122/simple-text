@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gui/app.h"
-#include "gui/gtk/main_window.h"
-#include "gui/window.h"
+#include "app/app.h"
+#include "app/gtk/main_window.h"
+#include "app/window.h"
 #include <gtk/gtk.h>
 
 namespace app {

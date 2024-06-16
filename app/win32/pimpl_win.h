@@ -1,9 +1,9 @@
 #pragma once
 
-#include "gui/app.h"
-#include "gui/win32/dummy_context.h"
-#include "gui/win32/main_window.h"
-#include "gui/window.h"
+#include "app/app.h"
+#include "app/win32/dummy_context.h"
+#include "app/win32/main_window.h"
+#include "app/window.h"
 
 namespace app {
 

@@ -1,6 +1,6 @@
-#include "gui/app.h"
-#include "gui/win32/pimpl_win.h"
-#include "gui/win32/resources.h"
+#include "app/app.h"
+#include "app/win32/pimpl_win.h"
+#include "app/win32/resources.h"
 #include <memory>
 #include <windows.h>
 

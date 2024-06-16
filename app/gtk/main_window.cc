@@ -25,7 +25,7 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
     g_application_quit(G_APPLICATION(app));
 }
 
-MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window, GdkGLContext* context)
+MainWindow::MainWindow(GtkApplication* gtk_app, app::Window* app_window, GdkGLContext* context)
     : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
       app_window{app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
@@ -133,7 +133,7 @@ void MainWindow::setTitle(const std::string& title) {
 }
 
 static void destroy(GtkWidget* self, gpointer user_data) {
-    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    app::Window* app_window = static_cast<app::Window*>(user_data);
     app_window->onClose();
 }
 
@@ -158,7 +158,7 @@ static void realize(GtkGLArea* self, gpointer user_data) {
     // int scaled_width = gtk_widget_get_allocated_width(self) * scale_factor;
     // int scaled_height = gtk_widget_get_allocated_height(self) * scale_factor;
 
-    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    app::Window* app_window = static_cast<app::Window*>(user_data);
     // app_window->onOpenGLActivate(scaled_width, scaled_height);
     app_window->onOpenGLActivate(0, 0);
 }
@@ -170,7 +170,7 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_dat
     int scaled_width = gtk_widget_get_width(GTK_WIDGET(self)) * scale_factor;
     int scaled_height = gtk_widget_get_height(GTK_WIDGET(self)) * scale_factor;
 
-    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    app::Window* app_window = static_cast<app::Window*>(user_data);
     app_window->onDraw(scaled_width, scaled_height);
 
     // Draw commands are flushed after returning.
@@ -190,7 +190,7 @@ static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy,
 
     int delta_x = std::round(dx);
     int delta_y = std::round(dy);
-    gui::Window* app_window = static_cast<gui::Window*>(user_data);
+    app::Window* app_window = static_cast<app::Window*>(user_data);
     app_window->onScroll(delta_x, delta_y);
 
     gtk_widget_queue_draw(gl_area);

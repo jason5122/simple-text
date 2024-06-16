@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/window.h"
+#include "app/window.h"
 #include "util/non_copyable.h"
 #include <gtk/gtk.h>
 

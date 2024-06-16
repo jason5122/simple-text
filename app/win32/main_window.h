@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gui/win32/dummy_context.h"
-#include "gui/window.h"
+#include "app/win32/dummy_context.h"
+#include "app/window.h"
 #include <windows.h>
 
 namespace app {

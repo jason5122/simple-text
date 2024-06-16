@@ -1,5 +1,5 @@
-#include "gui/win32/pimpl_win.h"
-#include "gui/window.h"
+#include "app/win32/pimpl_win.h"
+#include "app/window.h"
 
 namespace app {
 

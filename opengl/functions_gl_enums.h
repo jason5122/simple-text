@@ -1,13 +1,4 @@
-//
-// Copyright 2015 The ANGLE Project Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-//
-
-// functionsgl_enums.h: OpenGL enums for versions 1.0 through 4.5.
-
-#ifndef LIBANGLE_RENDERER_GL_FUNCTIONSGLENUMS_H_
-#define LIBANGLE_RENDERER_GL_FUNCTIONSGLENUMS_H_
+#pragma once
 
 // 1.0
 #define GL_ALPHA 0x1906
@@ -1372,5 +1363,3 @@
 #define GL_UNKNOWN_CONTEXT_RESET 0x8255
 #define GL_ZERO_TO_ONE 0x935F
 #define GL_COMPLETION_STATUS 0x91B1
-
-#endif  // LIBANGLE_RENDERER_GL_FUNCTIONSGLENUMS_H_

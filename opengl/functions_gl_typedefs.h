@@ -1,13 +1,4 @@
-//
-// Copyright 2015 The ANGLE Project Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-//
-
-// functionsgl_typedefs.h: Typedefs of OpenGL types and functions for versions 1.0 through 4.5.
-
-#ifndef LIBANGLE_RENDERER_GL_FUNCTIONSGLTYPEDEFS_H_
-#define LIBANGLE_RENDERER_GL_FUNCTIONSGLTYPEDEFS_H_
+#pragma once
 
 #include "third_party/khronos/KHR/khrplatform.h"
 #include <stdint.h>
@@ -1249,5 +1240,3 @@ typedef void(INTERNAL_GL_APIENTRY* PFNGLFRAMEBUFFERFETCHBARRIEREXTPROC)();
 typedef void(INTERNAL_GL_APIENTRY* PFNGLFRAMEBUFFERPARAMETERIMESAPROC)(GLenum, GLenum, GLint);
 
 }  // namespace rx
-
-#endif  // LIBANGLE_RENDERER_GL_FUNCTIONSGLTYPEDEFS_H_

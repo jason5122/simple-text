@@ -270,10 +270,10 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
         case ID_FILE_NEW_FILE:
-            app_window.onGuiAction(app::GuiAction::kNewFile);
+            app_window.onAppAction(app::AppAction::kNewFile);
             break;
         case ID_FILE_NEW_WINDOW:
-            app_window.onGuiAction(app::GuiAction::kNewWindow);
+            app_window.onAppAction(app::AppAction::kNewWindow);
             break;
         case ID_FILE_EXIT:
             PostQuitMessage(0);

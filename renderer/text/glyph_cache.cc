@@ -2,8 +2,9 @@
 
 namespace renderer {
 
-GlyphCache::GlyphCache(opengl::FunctionsGL* gl, const std::string& font_name_utf8, int font_size)
-    : gl{gl}, font_rasterizer{font_name_utf8, font_size} {
+GlyphCache::GlyphCache(std::shared_ptr<opengl::FunctionsGL> shared_gl,
+                       const std::string& font_name_utf8, int font_size)
+    : gl{std::move(shared_gl)}, font_rasterizer{font_name_utf8, font_size} {
     atlas_pages.emplace_back(Atlas{gl});
 }
 

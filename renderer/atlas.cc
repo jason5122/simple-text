@@ -7,7 +7,7 @@
 
 namespace renderer {
 
-Atlas::Atlas(opengl::FunctionsGL* gl) : gl{gl} {
+Atlas::Atlas(std::shared_ptr<opengl::FunctionsGL> shared_gl) : gl{std::move(shared_gl)} {
     gl->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
     gl->genTextures(1, &tex_id);
     gl->bindTexture(GL_TEXTURE_2D, tex_id);

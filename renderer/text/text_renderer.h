@@ -5,13 +5,14 @@
 #include "renderer/shader.h"
 #include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
+#include <memory>
 #include <vector>
 
 namespace renderer {
 
 class TextRenderer {
 public:
-    TextRenderer(opengl::FunctionsGL* gl, GlyphCache& main_glyph_cache,
+    TextRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl, GlyphCache& main_glyph_cache,
                  GlyphCache& ui_glyph_cache);
     ~TextRenderer();
     TextRenderer(TextRenderer&& other);
@@ -24,7 +25,7 @@ public:
 private:
     static constexpr size_t kBatchMax = 0x10000;
 
-    opengl::FunctionsGL* gl;
+    std::shared_ptr<opengl::FunctionsGL> gl;
     GlyphCache& main_glyph_cache;
     GlyphCache& ui_glyph_cache;
 

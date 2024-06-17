@@ -21,6 +21,6 @@ private:
 
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 
-    std::unique_ptr<opengl::FunctionsGL> gl;
+    std::shared_ptr<opengl::FunctionsGL> gl;
     std::unique_ptr<renderer::Renderer> renderer;
 };

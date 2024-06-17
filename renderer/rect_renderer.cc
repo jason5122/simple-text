@@ -2,12 +2,10 @@
 #include "rect_renderer.h"
 #include <vector>
 
-#include <format>
-#include <iostream>
-
 namespace renderer {
 
-RectRenderer::RectRenderer(opengl::FunctionsGL* gl) : gl{gl}, shader_program{gl} {
+RectRenderer::RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
+    : gl{std::move(shared_gl)}, shader_program{gl} {
     std::string vert_source =
 #include "renderer/shaders/rect_vert.glsl"
         ;

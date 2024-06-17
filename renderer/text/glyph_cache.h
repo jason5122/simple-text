@@ -4,6 +4,7 @@
 #include "renderer/atlas.h"
 #include "renderer/opengl_types.h"
 #include <array>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -13,7 +14,8 @@ namespace renderer {
 
 class GlyphCache {
 public:
-    GlyphCache(opengl::FunctionsGL* gl, const std::string& font_name_utf8, int font_size);
+    GlyphCache(std::shared_ptr<opengl::FunctionsGL> shared_gl, const std::string& font_name_utf8,
+               int font_size);
 
     struct Glyph {
         GLuint tex_id;
@@ -31,7 +33,7 @@ public:
     std::vector<Atlas> atlas_pages;
 
 private:
-    opengl::FunctionsGL* gl;
+    std::shared_ptr<opengl::FunctionsGL> gl;
     font::FontRasterizer font_rasterizer;
 
     // std::vector<Atlas> atlas_pages;

@@ -5,12 +5,13 @@
 #include "renderer/rect_renderer.h"
 #include "renderer/text/glyph_cache.h"
 #include "renderer/text/text_renderer.h"
+#include <memory>
 
 namespace renderer {
 
 class Renderer {
 public:
-    Renderer(opengl::FunctionsGL* gl);
+    Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl);
 
     void draw(const Size& size, const base::Buffer& buffer, const Point& scroll_offset,
               const CaretInfo& end_caret);
@@ -19,7 +20,7 @@ public:
     Movement movement;
 
 private:
-    opengl::FunctionsGL* gl;
+    std::shared_ptr<opengl::FunctionsGL> gl;
 
     GlyphCache main_glyph_cache;
     GlyphCache ui_glyph_cache;

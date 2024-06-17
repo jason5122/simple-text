@@ -6,12 +6,13 @@
 #include "renderer/types.h"
 #include "util/non_copyable.h"
 #include <cstddef>
+#include <memory>
 
 namespace renderer {
 
 class RectRenderer : util::NonCopyable {
 public:
-    RectRenderer(opengl::FunctionsGL* gl);
+    RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl);
     ~RectRenderer();
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
@@ -21,7 +22,7 @@ public:
               float status_bar_height);
 
 private:
-    opengl::FunctionsGL* gl;
+    std::shared_ptr<opengl::FunctionsGL> gl;
 
     static constexpr int kBatchMax = 0x10000;
     static constexpr int kMinTabWidth = 350;

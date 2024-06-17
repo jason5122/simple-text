@@ -13,9 +13,9 @@ extern "C" {
 
 namespace renderer {
 
-TextRenderer::TextRenderer(opengl::FunctionsGL* gl, GlyphCache& main_glyph_cache,
-                           GlyphCache& ui_glyph_cache)
-    : gl{gl}, shader_program{gl}, main_glyph_cache{main_glyph_cache},
+TextRenderer::TextRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl,
+                           GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
+    : gl{std::move(shared_gl)}, shader_program{gl}, main_glyph_cache{main_glyph_cache},
       ui_glyph_cache{ui_glyph_cache} {
     std::string vert_source =
 #include "renderer/shaders/text_vert.glsl"

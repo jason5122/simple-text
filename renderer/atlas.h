@@ -4,6 +4,7 @@
 #include "opengl/functions_gl_typedefs.h"
 #include "renderer/opengl_types.h"
 #include "util/non_copyable.h"
+#include <memory>
 #include <vector>
 
 namespace renderer {
@@ -14,7 +15,7 @@ public:
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
     static constexpr int kAtlasSize = 1024;
 
-    Atlas(opengl::FunctionsGL* gl);
+    Atlas(std::shared_ptr<opengl::FunctionsGL> shared_gl);
     ~Atlas();
     Atlas(Atlas&& other);
     Atlas& operator=(Atlas&& other);
@@ -23,7 +24,7 @@ public:
     bool insertTexture(int width, int height, bool colored, const GLubyte* data, Vec4& uv);
 
 private:
-    opengl::FunctionsGL* gl;
+    std::shared_ptr<opengl::FunctionsGL> gl;
 
     GLuint tex_id = 0;
 

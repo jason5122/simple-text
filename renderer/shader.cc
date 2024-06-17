@@ -5,7 +5,7 @@
 
 namespace renderer {
 
-Shader::Shader(opengl::FunctionsGL* gl) : gl{gl} {}
+Shader::Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl) : gl{std::move(shared_gl)} {}
 
 Shader::~Shader() {
     gl->deleteProgram(id_);

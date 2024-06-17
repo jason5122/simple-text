@@ -3,10 +3,10 @@
 
 namespace renderer {
 
-Renderer::Renderer(opengl::FunctionsGL* gl)
-    : gl{gl}, main_glyph_cache{gl, "Source Code Pro", 16 * 2}, ui_glyph_cache{gl, "Arial", 11 * 2},
-      text_renderer{gl, main_glyph_cache, ui_glyph_cache}, rect_renderer{gl},
-      movement{main_glyph_cache} {
+Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
+    : gl{std::move(shared_gl)}, main_glyph_cache{gl, "Source Code Pro", 16 * 2},
+      ui_glyph_cache{gl, "Arial", 11 * 2}, text_renderer{gl, main_glyph_cache, ui_glyph_cache},
+      rect_renderer{gl}, movement{main_glyph_cache} {
     gl->enable(GL_BLEND);
     gl->depthMask(GL_FALSE);
 

@@ -5,29 +5,9 @@
 
 namespace renderer {
 
-Shader::Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl) : gl{std::move(shared_gl)} {}
-
-Shader::~Shader() {
-    gl->deleteProgram(id_);
-}
-
-Shader::Shader(Shader&& other) : id_(other.id_) {
-    other.id_ = 0;
-}
-
-Shader& Shader::operator=(Shader&& other) {
-    if (&other != this) {
-        id_ = other.id_;
-        other.id_ = 0;
-    }
-    return *this;
-}
-
-GLuint Shader::id() {
-    return id_;
-}
-
-bool Shader::link(const std::string& vert_source, const std::string& frag_source) {
+Shader::Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl, const std::string& vert_source,
+               const std::string& frag_source)
+    : gl{std::move(shared_gl)} {
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 
@@ -49,7 +29,7 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
         std::cerr << std::format("vertex shader: {}", error);
 
         gl->deleteShader(vertex_shader);
-        return false;
+        // TODO: Handle errors in constructor.
     }
 
     gl->compileShader(fragment_shader);
@@ -64,7 +44,7 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
         std::cerr << std::format("fragment shader: {}", error);
 
         gl->deleteShader(fragment_shader);
-        return false;
+        // TODO: Handle errors in constructor.
     }
 
     id_ = gl->createProgram();
@@ -80,12 +60,31 @@ bool Shader::link(const std::string& vert_source, const std::string& frag_source
         std::cerr << "Shader linking error:\n" << info_log << '\n';
 
         // TODO: Use RAII wrappers to automatically destruct shaders and program.
-        return false;
+        // TODO: Handle errors in constructor.
     }
 
     gl->deleteShader(vertex_shader);
     gl->deleteShader(fragment_shader);
-    return true;
+}
+
+Shader::~Shader() {
+    gl->deleteProgram(id_);
+}
+
+Shader::Shader(Shader&& other) : id_(other.id_) {
+    other.id_ = 0;
+}
+
+Shader& Shader::operator=(Shader&& other) {
+    if (&other != this) {
+        id_ = other.id_;
+        other.id_ = 0;
+    }
+    return *this;
+}
+
+GLuint Shader::id() {
+    return id_;
 }
 
 }

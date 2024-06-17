@@ -11,29 +11,29 @@ extern "C" {
 
 #include "build/buildflag.h"
 
+namespace {
+const std::string kVertexShaderSource =
+#include "renderer/shaders/text_vert.glsl"
+    ;
+const std::string kFragmentShaderSource =
+#include "renderer/shaders/text_frag.glsl"
+    ;
+}
+
 namespace renderer {
 
 TextRenderer::TextRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl,
                            GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
-    : gl{std::move(shared_gl)}, shader_program{gl}, main_glyph_cache{main_glyph_cache},
-      ui_glyph_cache{ui_glyph_cache} {
-    std::string vert_source =
-#include "renderer/shaders/text_vert.glsl"
-        ;
-    std::string frag_source =
-#include "renderer/shaders/text_frag.glsl"
-        ;
-
-    shader_program.link(vert_source, frag_source);
+    : gl{std::move(shared_gl)}, shader_program{gl, kVertexShaderSource, kFragmentShaderSource},
+      main_glyph_cache{main_glyph_cache}, ui_glyph_cache{ui_glyph_cache} {
+    gl->genVertexArrays(1, &vao);
+    gl->genBuffers(1, &vbo_instance);
+    gl->genBuffers(1, &ebo);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
     };
-
-    gl->genVertexArrays(1, &vao);
-    gl->genBuffers(1, &vbo_instance);
-    gl->genBuffers(1, &ebo);
 
     gl->bindVertexArray(vao);
 

@@ -2,27 +2,27 @@
 #include "rect_renderer.h"
 #include <vector>
 
+namespace {
+const std::string kVertexShaderSource =
+#include "renderer/shaders/rect_vert.glsl"
+    ;
+const std::string kFragmentShaderSource =
+#include "renderer/shaders/rect_frag.glsl"
+    ;
+}
+
 namespace renderer {
 
 RectRenderer::RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
-    : gl{std::move(shared_gl)}, shader_program{gl} {
-    std::string vert_source =
-#include "renderer/shaders/rect_vert.glsl"
-        ;
-    std::string frag_source =
-#include "renderer/shaders/rect_frag.glsl"
-        ;
-
-    shader_program.link(vert_source, frag_source);
+    : gl{std::move(shared_gl)}, shader_program{gl, kVertexShaderSource, kFragmentShaderSource} {
+    gl->genVertexArrays(1, &vao);
+    gl->genBuffers(1, &vbo_instance);
+    gl->genBuffers(1, &ebo);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
     };
-
-    gl->genVertexArrays(1, &vao);
-    gl->genBuffers(1, &vbo_instance);
-    gl->genBuffers(1, &ebo);
 
     gl->bindVertexArray(vao);
 

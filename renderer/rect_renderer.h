@@ -24,7 +24,8 @@ public:
               size_t line_count,
               float longest_x,
               const Point& editor_offset,
-              float status_bar_height);
+              int status_bar_height);
+    void addRect(const Point& coords, const Size& size, Rgba color);
     void flush(const Size& size);
 
 private:

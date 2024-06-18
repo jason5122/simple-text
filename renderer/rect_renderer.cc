@@ -104,38 +104,25 @@ void RectRenderer::draw(const Size& size,
                         size_t line_count,
                         float longest_x,
                         const Point& editor_offset,
-                        float status_bar_height) {
+                        int status_bar_height) {
     int caret_width = 4;
     int caret_height = line_height;
 
     int extra_padding = 8;
     caret_height += extra_padding * 2;
 
-    Rgba editor_bg_color{253, 253, 253, 255};
-
-    // line_count -= 1;  // TODO: Merge this with EditorView.
-
-    float editor_width = size.width;
-    float editor_height = size.height - status_bar_height;
+    int editor_width = size.width;
+    int editor_height = size.height - status_bar_height;
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
     // Add caret.
-    instances.emplace_back(InstanceData{
-        .coords =
-            Vec2{
-                .x = static_cast<float>(end_caret_pos.x - caret_width / 2 - scroll.x +
-                                        line_number_offset),
-                .y = static_cast<float>(end_caret_pos.y - extra_padding - scroll.y),
-            },
-        .rect_size =
-            Vec2{
-                .x = static_cast<float>(caret_width),
-                .y = static_cast<float>(caret_height),
-            },
-        .color = Rgba{95, 180, 180, 255},
-    });
+    const Point caret_pos{
+        .x = end_caret_pos.x - caret_width / 2 - scroll.x + editor_offset.x + line_number_offset,
+        .y = end_caret_pos.y - extra_padding - scroll.y + editor_offset.y,
+    };
+    addRect(caret_pos, {caret_width, caret_height}, Rgba{95, 180, 180, 255});
 
     // Add vertical scroll bar.
     if (line_count > 0) {
@@ -177,12 +164,7 @@ void RectRenderer::draw(const Size& size,
     }
 
     // Add tab bar.
-    instances.emplace_back(InstanceData{
-        .coords = Vec2{0, 0},
-        .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(editor_offset.y)},
-        // .color = Rgba::fromRgb(color_scheme.tab_bar, 255),
-        .color = Rgba{190, 190, 190, 255},
-    });
+    addRect({0, 0}, {size.width, editor_offset.y}, Rgba{190, 190, 190, 255});
 
     float tab_height = editor_offset.y - 5;  // Leave padding between window title bar and tab.
     float tab_corner_radius = 10;
@@ -195,19 +177,17 @@ void RectRenderer::draw(const Size& size,
     });
 
     // Add side bar.
-    instances.emplace_back(InstanceData{
-        .coords = {0, 0},
-        .rect_size = {static_cast<float>(editor_offset.x), static_cast<float>(size.height)},
-        // .color = Rgba::fromRgb(color_scheme.side_bar, 255),
-        .color = Rgba{235, 237, 239, 255},
-    });
+    addRect({0, 0}, {editor_offset.x, size.height}, Rgba{235, 237, 239, 255});
 
     // Add status bar.
+    addRect({0, editor_height}, size, Rgba{199, 203, 209, 255});
+}
+
+void RectRenderer::addRect(const Point& coords, const Size& size, Rgba color) {
     instances.emplace_back(InstanceData{
-        .coords = Vec2{0, editor_height},
-        .rect_size = Vec2{static_cast<float>(size.width), status_bar_height},
-        // .color = Rgba::fromRgb(color_scheme.status_bar, 255),
-        .color = Rgba{199, 203, 209, 255},
+        .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
+        .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(size.height)},
+        .color = color,
     });
 }
 

@@ -15,6 +15,8 @@ namespace renderer {
 
 RectRenderer::RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
     : gl{std::move(shared_gl)}, shader_program{gl, kVertexShaderSource, kFragmentShaderSource} {
+    instances.reserve(kBatchMax);
+
     gl->genVertexArrays(1, &vao);
     gl->genBuffers(1, &vbo_instance);
     gl->genBuffers(1, &ebo);
@@ -30,7 +32,7 @@ RectRenderer::RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
     gl->bufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STATIC_DRAW);
+    gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STREAM_DRAW);
 
     GLuint index = 0;
 
@@ -105,11 +107,10 @@ void RectRenderer::draw(const Size& size,
                         float status_bar_height) {
     GLuint shader_id = shader_program.id();
     gl->useProgram(shader_id);
-    gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
-    gl->uniform2f(gl->getUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
+    // gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
+    // gl->uniform2f(gl->getUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
     gl->uniform2f(gl->getUniformLocation(shader_id, "editor_offset"), editor_offset.x,
                   editor_offset.y);
-    gl->bindVertexArray(vao);
 
     int caret_width = 4;
     int caret_height = line_height;
@@ -118,8 +119,6 @@ void RectRenderer::draw(const Size& size,
     caret_height += extra_padding * 2;
 
     Rgba editor_bg_color{253, 253, 253, 255};
-
-    std::vector<InstanceData> instances;
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
 
@@ -145,39 +144,44 @@ void RectRenderer::draw(const Size& size,
         .color = Rgba{95, 180, 180, 255},
     });
 
-    // // Add vertical scroll bar.
-    // if (line_count > 0) {
-    //     float vertical_scroll_bar_width = 15;
-    //     float total_y = (line_count + (editor_height / line_height)) * line_height;
-    //     float vertical_scroll_bar_height = editor_height * (editor_height / total_y);
-    //     float vertical_scroll_bar_position_percentage = scroll.y / (line_count * line_height);
-    //     instances.emplace_back(InstanceData{
-    //         .coords =
-    //             Vec2{
-    //                 editor_width - vertical_scroll_bar_width,
-    //                 (editor_height - vertical_scroll_bar_height) *
-    //                     vertical_scroll_bar_position_percentage,
-    //             },
-    //         .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
-    //         .color = Rgba::fromRgb(color_scheme.scroll_bar, 255),
-    //         .corner_radius = 5,
-    //     });
-    // }
+    // Add vertical scroll bar.
+    if (line_count > 0) {
+        float vertical_scroll_bar_width = 15;
+        float total_y = (line_count + (editor_height / line_height)) * line_height;
+        float vertical_scroll_bar_height = editor_height * (editor_height / total_y);
+        float vertical_scroll_bar_position_percentage = scroll.y / (line_count * line_height);
+        instances.emplace_back(InstanceData{
+            // TODO: Round floats.
+            .coords =
+                Vec2{
+                    .x = editor_width - vertical_scroll_bar_width,
+                    .y = std::round((editor_height - vertical_scroll_bar_height) *
+                                    vertical_scroll_bar_position_percentage),
+                },
+            .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
+            .color = {190, 190, 190, 255},
+            .corner_radius = 5,
+        });
+    }
 
-    // // Add horizontal scroll bar.
-    // float horizontal_scroll_bar_width = editor_width * (editor_width / longest_x);
-    // float horizontal_scroll_bar_height = 15;
-    // float horizontal_scroll_bar_position_percentage = scroll.x / (longest_x - editor_width);
-    // if (horizontal_scroll_bar_width < editor_width) {
-    //     instances.emplace_back(InstanceData{
-    //         .coords = Vec2{(editor_width - horizontal_scroll_bar_width) *
-    //                            horizontal_scroll_bar_position_percentage,
-    //                        editor_height - horizontal_scroll_bar_height},
-    //         .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
-    //         .color = Rgba::fromRgb(color_scheme.scroll_bar, 255),
-    //         .corner_radius = 5,
-    //     });
-    // }
+    // Add horizontal scroll bar.
+    float horizontal_scroll_bar_width = editor_width * (editor_width / longest_x);
+    float horizontal_scroll_bar_height = 15;
+    float horizontal_scroll_bar_position_percentage = scroll.x / (longest_x - editor_width);
+    if (horizontal_scroll_bar_width < editor_width) {
+        instances.emplace_back(InstanceData{
+            // TODO: Round floats.
+            .coords =
+                Vec2{
+                    .x = std::round((editor_width - horizontal_scroll_bar_width) *
+                                    horizontal_scroll_bar_position_percentage),
+                    .y = editor_height - horizontal_scroll_bar_height,
+                },
+            .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
+            .color = {190, 190, 190, 255},
+            .corner_radius = 5,
+        });
+    }
 
     // // Add tab bar.
     instances.emplace_back(InstanceData{
@@ -187,29 +191,15 @@ void RectRenderer::draw(const Size& size,
         .color = Rgba{190, 190, 190, 255},
     });
 
-    // float tab_height = editor_offset.y - 5;  // Leave padding between window title bar and tab.
-    // float tab_corner_radius = 10;
+    float tab_height = editor_offset.y - 5;  // Leave padding between window title bar and tab.
+    float tab_corner_radius = 10;
 
-    // int total_x = 0;
-
-    // for (size_t i = 0; i < tab_title_widths.size(); i++) {
-    //     Rgba color = i == tab_index ? editor_bg_color : Rgba{100, 100, 100, 255};
-    //     tab_title_x_coords.emplace_back(total_x + tab_corner_radius);
-
-    //     int tab_width = tab_title_widths[i] + tab_corner_radius * 2;
-    //     tab_width = std::max(kMinTabWidth, tab_width);
-
-    //     actual_tab_title_widths.emplace_back(tab_width - tab_corner_radius * 2);
-
-    //     instances.emplace_back(InstanceData{
-    //         .coords = Vec2{static_cast<float>(total_x), 0 - tab_height},
-    //         .rect_size = Vec2{static_cast<float>(tab_width), tab_height},
-    //         .color = color,
-    //         .tab_corner_radius = tab_corner_radius,
-    //     });
-
-    //     total_x += tab_width;
-    // }
+    instances.emplace_back(InstanceData{
+        .coords = Vec2{static_cast<float>(0), 0 - tab_height},
+        .rect_size = Vec2{static_cast<float>(kMinTabWidth), tab_height},
+        .color = Rgba{100, 100, 100, 255},
+        .tab_corner_radius = tab_corner_radius,
+    });
 
     // Add side bar.
     instances.emplace_back(InstanceData{
@@ -226,15 +216,23 @@ void RectRenderer::draw(const Size& size,
         // .color = Rgba::fromRgb(color_scheme.status_bar, 255),
         .color = Rgba{199, 203, 209, 255},
     });
+}
 
+void RectRenderer::flush(const Size& size) {
+    GLuint shader_id = shader_program.id();
+    gl->useProgram(shader_id);
+    gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
+
+    gl->bindVertexArray(vao);
     gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     gl->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
-
     gl->drawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
-    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
     gl->bindVertexArray(0);
+    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+    instances.clear();
 }
 
 }

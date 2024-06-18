@@ -17,6 +17,7 @@ public:
               const base::Buffer& buffer,
               const Point& scroll_offset,
               const CaretInfo& end_caret);
+    void flush(const Size& size);
 
     // TODO: Combine this with TextRenderer (and rename TextRenderer).
     Movement movement;

@@ -25,6 +25,7 @@ public:
               float longest_x,
               const Point& editor_offset,
               float status_bar_height);
+    void flush(const Size& size);
 
 private:
     std::shared_ptr<opengl::FunctionsGL> gl;
@@ -44,6 +45,8 @@ private:
         float corner_radius = 0;
         float tab_corner_radius = 0;
     };
+
+    std::vector<InstanceData> instances;
 };
 
 }

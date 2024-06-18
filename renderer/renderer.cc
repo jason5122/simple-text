@@ -36,4 +36,8 @@ void Renderer::draw(const Size& size,
                        editor_offset, ui_glyph_cache.lineHeight());
 }
 
+void Renderer::flush(const Size& size) {
+    rect_renderer.flush(size);
+}
+
 }

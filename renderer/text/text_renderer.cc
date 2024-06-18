@@ -44,7 +44,7 @@ TextRenderer::TextRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl,
     gl->bufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STATIC_DRAW);
+    gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STREAM_DRAW);
 
     GLuint index = 0;
 

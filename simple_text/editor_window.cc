@@ -170,6 +170,7 @@ void EditorWindow::onDraw(int width, int height) {
     {
         PROFILE_BLOCK("render");
         parent.renderer->draw({width, height}, buffer, scroll_offset, end_caret);
+        parent.renderer->flush({width, height});
     }
 }
 

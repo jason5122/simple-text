@@ -298,8 +298,6 @@ void TextRenderer::renderText(const Size& size,
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
 
-    std::cerr << std::format("batch_count = {}", batch_count) << '\n';
-
     // Unbind.
     gl->bindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
     gl->bindVertexArray(0);

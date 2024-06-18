@@ -5,7 +5,8 @@
 
 namespace renderer {
 
-Shader::Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl, const std::string& vert_source,
+Shader::Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl,
+               const std::string& vert_source,
                const std::string& frag_source)
     : gl{std::move(shared_gl)} {
     const char* vert_source_c = vert_source.c_str();

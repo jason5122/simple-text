@@ -33,7 +33,9 @@ void EditorWindow::onScroll(int dx, int dy) {
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers,
+void EditorWindow::onLeftMouseDown(int mouse_x,
+                                   int mouse_y,
+                                   app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     int line_number_offset = 100;
     renderer::Point mouse{

@@ -17,8 +17,13 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    void draw(const Size& size, const Point& scroll, const Point& end_caret_pos, float line_height,
-              size_t line_count, float longest_x, const Point& editor_offset,
+    void draw(const Size& size,
+              const Point& scroll,
+              const Point& end_caret_pos,
+              float line_height,
+              size_t line_count,
+              float longest_x,
+              const Point& editor_offset,
               float status_bar_height);
 
 private:

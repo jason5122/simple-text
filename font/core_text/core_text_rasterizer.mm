@@ -14,7 +14,8 @@ class FontRasterizer::impl {
 public:
     ScopedCFTypeRef<CTFontRef> ct_font;
 
-    RasterizedGlyph rasterizeGlyph(CGGlyph glyph, ScopedCFTypeRef<CTFontRef> selected_font,
+    RasterizedGlyph rasterizeGlyph(CGGlyph glyph,
+                                   ScopedCFTypeRef<CTFontRef> selected_font,
                                    int descent);
 };
 

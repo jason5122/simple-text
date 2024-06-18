@@ -20,9 +20,12 @@ public:
     SelectionRenderer();
     ~SelectionRenderer();
     void setup();
-    void createInstances(Size& size, Point& scroll, Point& editor_offset,
+    void createInstances(Size& size,
+                         Point& scroll,
+                         Point& editor_offset,
                          renderer::GlyphCache& main_glyph_cache,
-                         std::vector<Selection>& selections, int line_number_offset);
+                         std::vector<Selection>& selections,
+                         int line_number_offset);
     void render(int rendering_pass);
     void destroyInstances();
 

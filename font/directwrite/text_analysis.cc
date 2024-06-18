@@ -3,10 +3,15 @@
 
 namespace font {
 
-TextAnalysis::TextAnalysis(const wchar_t* text, uint32_t textLength, const wchar_t* localeName,
+TextAnalysis::TextAnalysis(const wchar_t* text,
+                           uint32_t textLength,
+                           const wchar_t* localeName,
                            DWRITE_READING_DIRECTION readingDirection)
-    : mTextLength(textLength), mText(text), mLocaleName(localeName),
-      mReadingDirection(readingDirection), mCurrentRun(nullptr) {}
+    : mTextLength(textLength),
+      mText(text),
+      mLocaleName(localeName),
+      mReadingDirection(readingDirection),
+      mCurrentRun(nullptr) {}
 
 TextAnalysis::~TextAnalysis() {
     // delete runs, except mRunHead which is part of the TextAnalysis object
@@ -42,7 +47,8 @@ TextAnalysis::GenerateResults(IDWriteTextAnalyzer* textAnalyzer, Run** runHead) 
 // IDWriteTextAnalysisSource implementation
 
 IFACEMETHODIMP
-TextAnalysis::GetTextAtPosition(uint32_t textPosition, OUT wchar_t const** textString,
+TextAnalysis::GetTextAtPosition(uint32_t textPosition,
+                                OUT wchar_t const** textString,
                                 OUT uint32_t* textLength) {
     if (textPosition >= mTextLength) {
         // No text at this position, valid query though.
@@ -56,7 +62,8 @@ TextAnalysis::GetTextAtPosition(uint32_t textPosition, OUT wchar_t const** textS
 }
 
 IFACEMETHODIMP
-TextAnalysis::GetTextBeforePosition(uint32_t textPosition, OUT wchar_t const** textString,
+TextAnalysis::GetTextBeforePosition(uint32_t textPosition,
+                                    OUT wchar_t const** textString,
                                     OUT uint32_t* textLength) {
     if (textPosition == 0 || textPosition > mTextLength) {
         // Either there is no text before here (== 0), or this
@@ -75,13 +82,15 @@ TextAnalysis::GetParagraphReadingDirection() {
     return mReadingDirection;
 }
 
-IFACEMETHODIMP TextAnalysis::GetLocaleName(uint32_t textPosition, uint32_t* textLength,
+IFACEMETHODIMP TextAnalysis::GetLocaleName(uint32_t textPosition,
+                                           uint32_t* textLength,
                                            wchar_t const** localeName) {
     return S_OK;
 }
 
 IFACEMETHODIMP
-TextAnalysis::GetNumberSubstitution(uint32_t textPosition, OUT uint32_t* textLength,
+TextAnalysis::GetNumberSubstitution(uint32_t textPosition,
+                                    OUT uint32_t* textLength,
                                     OUT IDWriteNumberSubstitution** numberSubstitution) {
     // We do not support number substitution.
     *numberSubstitution = nullptr;
@@ -93,7 +102,8 @@ TextAnalysis::GetNumberSubstitution(uint32_t textPosition, OUT uint32_t* textLen
 // IDWriteTextAnalysisSink implementation
 
 IFACEMETHODIMP
-TextAnalysis::SetScriptAnalysis(uint32_t textPosition, uint32_t textLength,
+TextAnalysis::SetScriptAnalysis(uint32_t textPosition,
+                                uint32_t textLength,
                                 DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis) {
     SetCurrentRun(textPosition);
     SplitCurrentRun(textPosition);
@@ -106,18 +116,22 @@ TextAnalysis::SetScriptAnalysis(uint32_t textPosition, uint32_t textLength,
 }
 
 IFACEMETHODIMP
-TextAnalysis::SetLineBreakpoints(uint32_t textPosition, uint32_t textLength,
+TextAnalysis::SetLineBreakpoints(uint32_t textPosition,
+                                 uint32_t textLength,
                                  const DWRITE_LINE_BREAKPOINT* lineBreakpoints) {
     return S_OK;
 }
 
-IFACEMETHODIMP TextAnalysis::SetBidiLevel(uint32_t textPosition, uint32_t textLength,
-                                          uint8_t explicitLevel, uint8_t resolvedLevel) {
+IFACEMETHODIMP TextAnalysis::SetBidiLevel(uint32_t textPosition,
+                                          uint32_t textLength,
+                                          uint8_t explicitLevel,
+                                          uint8_t resolvedLevel) {
     return S_OK;
 }
 
 IFACEMETHODIMP
-TextAnalysis::SetNumberSubstitution(uint32_t textPosition, uint32_t textLength,
+TextAnalysis::SetNumberSubstitution(uint32_t textPosition,
+                                    uint32_t textLength,
                                     IDWriteNumberSubstitution* numberSubstitution) {
     return S_OK;
 }

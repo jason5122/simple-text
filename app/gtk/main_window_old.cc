@@ -22,10 +22,13 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data)
 static gboolean scroll_event(GtkWidget* self, GdkEventScroll* event, gpointer user_data);
 static gboolean button_press_event(GtkWidget* self, GdkEventButton* event, gpointer user_data);
 static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpointer user_data);
-static gboolean crossing_notify_event(GtkWidget* self, GdkEventCrossing* event,
-                                      gpointer user_data);
-static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gchar* signal_name,
-                                       GVariant* parameters, gpointer user_data);
+static gboolean
+crossing_notify_event(GtkWidget* self, GdkEventCrossing* event, gpointer user_data);
+static void settings_changed_signal_cb(GDBusProxy* proxy,
+                                       gchar* sender_name,
+                                       gchar* signal_name,
+                                       GVariant* parameters,
+                                       gpointer user_data);
 
 // https://github.com/ToshioCP/Gtk4-tutorial/blob/main/gfm/sec17.md#menu-and-action
 static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
@@ -34,7 +37,8 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
 }
 
 MainWindow::MainWindow(GtkApplication* gtk_app, gui::Window* app_window)
-    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
+    : window{gtk_application_window_new(gtk_app)},
+      gl_area{gtk_gl_area_new()},
       app_window{app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
     gtk_container_add(GTK_CONTAINER(window), gl_area);
@@ -366,8 +370,8 @@ static gboolean motion_notify_event(GtkWidget* self, GdkEventMotion* event, gpoi
     return true;
 }
 
-static gboolean crossing_notify_event(GtkWidget* self, GdkEventCrossing* event,
-                                      gpointer user_data) {
+static gboolean
+crossing_notify_event(GtkWidget* self, GdkEventCrossing* event, gpointer user_data) {
     GdkDisplay* display = gtk_widget_get_display(self);
 
     // TODO: Create `GdkCursor` objects once on realize instead of re-creating them each time.
@@ -383,8 +387,11 @@ static gboolean crossing_notify_event(GtkWidget* self, GdkEventCrossing* event,
     return true;
 }
 
-static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name, gchar* signal_name,
-                                       GVariant* parameters, gpointer user_data) {
+static void settings_changed_signal_cb(GDBusProxy* proxy,
+                                       gchar* sender_name,
+                                       gchar* signal_name,
+                                       GVariant* parameters,
+                                       gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
 
     GVariant* ns = g_variant_get_child_value(parameters, 0);

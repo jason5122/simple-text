@@ -85,7 +85,9 @@ void ImageRenderer::setup() {
     });
 }
 
-void ImageRenderer::draw(Size& size, Point& scroll, Point& editor_offset,
+void ImageRenderer::draw(Size& size,
+                         Point& scroll,
+                         Point& editor_offset,
                          std::vector<int>& tab_title_x_coords,
                          std::vector<int>& actual_tab_title_widths) {
     glUseProgram(shader_program.id);
@@ -140,8 +142,8 @@ void ImageRenderer::draw(Size& size, Point& scroll, Point& editor_offset,
 }
 
 // https://blog.nobel-joergensen.com/2010/11/07/loading-a-png-as-texture-in-opengl-using-libpng/
-bool ImageRenderer::loadPng(fs::path file_name, int& out_width, int& out_height,
-                            bool& out_has_alpha, GLubyte** out_data) {
+bool ImageRenderer::loadPng(
+    fs::path file_name, int& out_width, int& out_height, bool& out_has_alpha, GLubyte** out_data) {
     png_structp png_ptr;
     png_infop info_ptr;
     unsigned int sig_read = 0;

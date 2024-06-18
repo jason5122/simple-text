@@ -10,3 +10,8 @@ AccessModifierOffset: -4
 PointerAlignment: Left
 AlignTrailingComments: true
 FixNamespaceComments: false
+
+# Experimental options.
+BinPackParameters: false
+PackConstructorInitializers: NextLine
+PenaltyReturnTypeOnItsOwnLine: 200

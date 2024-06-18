@@ -16,8 +16,10 @@ public:
     Renderer(font::FontRasterizer& main_font_rasterizer, font::FontRasterizer& ui_font_rasterizer);
     void setup();
     // TODO: Split this up into smaller methods.
-    void render(Size& size, config::ColorScheme& color_scheme,
-                std::vector<std::unique_ptr<EditorTab>>& tabs, size_t tab_index);
+    void render(Size& size,
+                config::ColorScheme& color_scheme,
+                std::vector<std::unique_ptr<EditorTab>>& tabs,
+                size_t tab_index);
     void toggleSideBar();
     Point translateMousePosition(int mouse_x, int mouse_y, EditorTab* tab);
     int lineHeight();

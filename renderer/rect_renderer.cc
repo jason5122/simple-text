@@ -72,7 +72,10 @@ RectRenderer::~RectRenderer() {
 }
 
 RectRenderer::RectRenderer(RectRenderer&& other)
-    : vao{other.vao}, vbo_instance{other.vbo_instance}, ebo{other.ebo}, gl{other.gl},
+    : vao{other.vao},
+      vbo_instance{other.vbo_instance},
+      ebo{other.ebo},
+      gl{other.gl},
       shader_program{std::move(other.shader_program)} {
     other.vao = 0;
     other.vbo_instance = 0;
@@ -92,9 +95,14 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
     return *this;
 }
 
-void RectRenderer::draw(const Size& size, const Point& scroll, const Point& end_caret_pos,
-                        float line_height, size_t line_count, float longest_x,
-                        const Point& editor_offset, float status_bar_height) {
+void RectRenderer::draw(const Size& size,
+                        const Point& scroll,
+                        const Point& end_caret_pos,
+                        float line_height,
+                        size_t line_count,
+                        float longest_x,
+                        const Point& editor_offset,
+                        float status_bar_height) {
     GLuint shader_id = shader_program.id();
     gl->useProgram(shader_id);
     gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);

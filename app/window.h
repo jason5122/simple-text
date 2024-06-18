@@ -40,7 +40,9 @@ public:
     virtual void onDraw(int width, int height) {}
     virtual void onResize(int width, int height) {}
     virtual void onScroll(int dx, int dy) {}
-    virtual void onLeftMouseDown(int mouse_x, int mouse_y, ModifierKey modifiers,
+    virtual void onLeftMouseDown(int mouse_x,
+                                 int mouse_y,
+                                 ModifierKey modifiers,
                                  ClickType click_type) {}
     virtual void onLeftMouseDrag(int mouse_x, int mouse_y, ModifierKey modifiers) {}
     virtual bool onKeyDown(Key key, ModifierKey modifiers) {

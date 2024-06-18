@@ -82,7 +82,9 @@ void SelectionRenderer::setup() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void SelectionRenderer::createInstances(Size& size, Point& scroll, Point& editor_offset,
+void SelectionRenderer::createInstances(Size& size,
+                                        Point& scroll,
+                                        Point& editor_offset,
                                         renderer::GlyphCache& main_glyph_cache,
                                         std::vector<Selection>& selections,
                                         int line_number_offset) {

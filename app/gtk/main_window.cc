@@ -26,7 +26,8 @@ static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer a
 }
 
 MainWindow::MainWindow(GtkApplication* gtk_app, app::Window* app_window, GdkGLContext* context)
-    : window{gtk_application_window_new(gtk_app)}, gl_area{gtk_gl_area_new()},
+    : window{gtk_application_window_new(gtk_app)},
+      gl_area{gtk_gl_area_new()},
       app_window{app_window} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
@@ -177,8 +178,8 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_dat
     return true;
 }
 
-static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy,
-                       gpointer user_data) {
+static gboolean
+scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data) {
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
     gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
 

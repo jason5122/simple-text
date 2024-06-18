@@ -7,7 +7,9 @@ namespace font {
 // https://github.com/google/skia/blob/5fdc2b47dfa448b745545e897f3a70a238edf6d7/src/ports/SkFontMgr_win_dw.cpp#L356
 class FontFallbackSource : public IDWriteTextAnalysisSource {
 public:
-    FontFallbackSource(const WCHAR* string, UINT32 length, const WCHAR* locale,
+    FontFallbackSource(const WCHAR* string,
+                       UINT32 length,
+                       const WCHAR* locale,
                        IDWriteNumberSubstitution* numberSubstitution);
 
     // IUnknown methods
@@ -24,10 +26,12 @@ public:
                                                             UINT32* textLength) override;
     COM_DECLSPEC_NOTHROW STDMETHODIMP_(DWRITE_READING_DIRECTION)
         GetParagraphReadingDirection() override;
-    COM_DECLSPEC_NOTHROW STDMETHODIMP GetLocaleName(UINT32 textPosition, UINT32* textLength,
+    COM_DECLSPEC_NOTHROW STDMETHODIMP GetLocaleName(UINT32 textPosition,
+                                                    UINT32* textLength,
                                                     WCHAR const** localeName) override;
     COM_DECLSPEC_NOTHROW STDMETHODIMP
-    GetNumberSubstitution(UINT32 textPosition, UINT32* textLength,
+    GetNumberSubstitution(UINT32 textPosition,
+                          UINT32* textLength,
                           IDWriteNumberSubstitution** numberSubstitution) override;
 
 private:

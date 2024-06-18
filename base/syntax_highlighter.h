@@ -21,7 +21,9 @@ public:
     void getHighlights(TSPoint start_point, TSPoint end_point);
     Rgb getColor(size_t byte_offset, config::ColorScheme& color_scheme);
 
-    static const char* read(void* payload, uint32_t byte_index, TSPoint position,
+    static const char* read(void* payload,
+                            uint32_t byte_index,
+                            TSPoint position,
                             uint32_t* bytes_read) {
         Buffer* buffer = (Buffer*)payload;
         if (position.row >= buffer->lineCount()) {

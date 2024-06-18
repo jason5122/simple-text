@@ -2,9 +2,14 @@
 
 namespace font {
 
-FontFallbackSource::FontFallbackSource(const WCHAR* string, UINT32 length, const WCHAR* locale,
+FontFallbackSource::FontFallbackSource(const WCHAR* string,
+                                       UINT32 length,
+                                       const WCHAR* locale,
                                        IDWriteNumberSubstitution* numberSubstitution)
-    : fRefCount(1), fString(string), fLength(length), fLocale(locale),
+    : fRefCount(1),
+      fString(string),
+      fLength(length),
+      fLocale(locale),
       fNumberSubstitution(numberSubstitution) {}
 
 COM_DECLSPEC_NOTHROW STDMETHODIMP FontFallbackSource::QueryInterface(IID const& riid,

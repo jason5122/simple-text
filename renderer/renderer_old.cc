@@ -4,8 +4,10 @@ namespace renderer {
 
 Renderer::Renderer(font::FontRasterizer& main_font_rasterizer,
                    font::FontRasterizer& ui_font_rasterizer)
-    : main_glyph_cache(main_font_rasterizer), ui_glyph_cache(ui_font_rasterizer),
-      text_renderer(main_glyph_cache, ui_glyph_cache), movement(main_glyph_cache) {}
+    : main_glyph_cache(main_font_rasterizer),
+      ui_glyph_cache(ui_font_rasterizer),
+      text_renderer(main_glyph_cache, ui_glyph_cache),
+      movement(main_glyph_cache) {}
 
 void Renderer::setup() {
     main_glyph_cache.setup();
@@ -17,8 +19,10 @@ void Renderer::setup() {
     // selection_renderer.setup();
 }
 
-void Renderer::render(Size& size, config::ColorScheme& color_scheme,
-                      std::vector<std::unique_ptr<EditorTab>>& tabs, size_t tab_index) {
+void Renderer::render(Size& size,
+                      config::ColorScheme& color_scheme,
+                      std::vector<std::unique_ptr<EditorTab>>& tabs,
+                      size_t tab_index) {
     using Selection = renderer::SelectionRenderer::Selection;
 
     glViewport(0, 0, size.width, size.height);

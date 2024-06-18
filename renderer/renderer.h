@@ -13,7 +13,9 @@ class Renderer {
 public:
     Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl);
 
-    void draw(const Size& size, const base::Buffer& buffer, const Point& scroll_offset,
+    void draw(const Size& size,
+              const base::Buffer& buffer,
+              const Point& scroll_offset,
               const CaretInfo& end_caret);
 
     // TODO: Combine this with TextRenderer (and rename TextRenderer).

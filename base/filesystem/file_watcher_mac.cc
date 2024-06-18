@@ -3,8 +3,11 @@
 #include <format>
 #include <iostream>
 
-static void FSEventsCallback(ConstFSEventStreamRef stream, void* client_info, size_t num_events,
-                             void* event_paths, const FSEventStreamEventFlags event_flags[],
+static void FSEventsCallback(ConstFSEventStreamRef stream,
+                             void* client_info,
+                             size_t num_events,
+                             void* event_paths,
+                             const FSEventStreamEventFlags event_flags[],
                              const FSEventStreamEventId event_ids[]) {
     FileWatcherCallback* callback = static_cast<FileWatcherCallback*>(client_info);
 

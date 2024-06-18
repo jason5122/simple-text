@@ -4,16 +4,21 @@
 namespace renderer {
 
 Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
-    : gl{std::move(shared_gl)}, main_glyph_cache{gl, "Source Code Pro", 16 * 2},
-      ui_glyph_cache{gl, "Arial", 11 * 2}, text_renderer{gl, main_glyph_cache, ui_glyph_cache},
-      rect_renderer{gl}, movement{main_glyph_cache} {
+    : gl{std::move(shared_gl)},
+      main_glyph_cache{gl, "Source Code Pro", 16 * 2},
+      ui_glyph_cache{gl, "Arial", 11 * 2},
+      text_renderer{gl, main_glyph_cache, ui_glyph_cache},
+      rect_renderer{gl},
+      movement{main_glyph_cache} {
     gl->enable(GL_BLEND);
     gl->depthMask(GL_FALSE);
 
     gl->clearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
 }
 
-void Renderer::draw(const Size& size, const base::Buffer& buffer, const Point& scroll_offset,
+void Renderer::draw(const Size& size,
+                    const base::Buffer& buffer,
+                    const Point& scroll_offset,
                     const CaretInfo& end_caret) {
     gl->viewport(0, 0, size.width, size.height);
 

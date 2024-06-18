@@ -39,7 +39,9 @@ public:
     };
 
 public:
-    TextAnalysis(const wchar_t* text, uint32_t textLength, const wchar_t* localeName,
+    TextAnalysis(const wchar_t* text,
+                 uint32_t textLength,
+                 const wchar_t* localeName,
                  DWRITE_READING_DIRECTION readingDirection);
     ~TextAnalysis();
 
@@ -48,30 +50,39 @@ public:
 
     // IDWriteTextAnalysisSource implementation
     IFACEMETHODIMP
-    GetTextAtPosition(uint32_t textPosition, OUT wchar_t const** textString,
+    GetTextAtPosition(uint32_t textPosition,
+                      OUT wchar_t const** textString,
                       OUT uint32_t* textLength);
     IFACEMETHODIMP
-    GetTextBeforePosition(uint32_t textPosition, OUT wchar_t const** textString,
+    GetTextBeforePosition(uint32_t textPosition,
+                          OUT wchar_t const** textString,
                           OUT uint32_t* textLength);
     IFACEMETHODIMP_(DWRITE_READING_DIRECTION)
     GetParagraphReadingDirection();
-    IFACEMETHODIMP GetLocaleName(uint32_t textPosition, uint32_t* textLength,
+    IFACEMETHODIMP GetLocaleName(uint32_t textPosition,
+                                 uint32_t* textLength,
                                  wchar_t const** localeName);
     IFACEMETHODIMP
-    GetNumberSubstitution(uint32_t textPosition, OUT uint32_t* textLength,
+    GetNumberSubstitution(uint32_t textPosition,
+                          OUT uint32_t* textLength,
                           OUT IDWriteNumberSubstitution** numberSubstitution);
 
     // IDWriteTextAnalysisSink implementation
     IFACEMETHODIMP
-    SetScriptAnalysis(uint32_t textPosition, uint32_t textLength,
+    SetScriptAnalysis(uint32_t textPosition,
+                      uint32_t textLength,
                       DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis);
     IFACEMETHODIMP
-    SetLineBreakpoints(uint32_t textPosition, uint32_t textLength,
+    SetLineBreakpoints(uint32_t textPosition,
+                       uint32_t textLength,
                        const DWRITE_LINE_BREAKPOINT* lineBreakpoints);
-    IFACEMETHODIMP SetBidiLevel(uint32_t textPosition, uint32_t textLength, uint8_t explicitLevel,
+    IFACEMETHODIMP SetBidiLevel(uint32_t textPosition,
+                                uint32_t textLength,
+                                uint8_t explicitLevel,
                                 uint8_t resolvedLevel);
     IFACEMETHODIMP
-    SetNumberSubstitution(uint32_t textPosition, uint32_t textLength,
+    SetNumberSubstitution(uint32_t textPosition,
+                          uint32_t textLength,
                           IDWriteNumberSubstitution* numberSubstitution);
 
 protected:

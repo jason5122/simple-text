@@ -9,7 +9,8 @@ namespace renderer {
 
 class Shader : util::NonCopyable {
 public:
-    Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl, const std::string& vert_source,
+    Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl,
+           const std::string& vert_source,
            const std::string& frag_source);
     ~Shader();
     Shader(Shader&& other);

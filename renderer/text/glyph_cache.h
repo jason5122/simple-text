@@ -14,7 +14,8 @@ namespace renderer {
 
 class GlyphCache {
 public:
-    GlyphCache(std::shared_ptr<opengl::FunctionsGL> shared_gl, const std::string& font_name_utf8,
+    GlyphCache(std::shared_ptr<opengl::FunctionsGL> shared_gl,
+               const std::string& font_name_utf8,
                int font_size);
 
     struct Glyph {

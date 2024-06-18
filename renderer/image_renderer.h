@@ -16,8 +16,11 @@ public:
     ImageRenderer();
     ~ImageRenderer();
     void setup();
-    void draw(Size& size, Point& scroll, Point& editor_offset,
-              std::vector<int>& tab_title_x_coords, std::vector<int>& actual_tab_title_widths);
+    void draw(Size& size,
+              Point& scroll,
+              Point& editor_offset,
+              std::vector<int>& tab_title_x_coords,
+              std::vector<int>& actual_tab_title_widths);
 
 private:
     static constexpr int kBatchMax = 65536;
@@ -32,7 +35,10 @@ private:
     };
     std::vector<AtlasImage> image_atlas_entries;
 
-    bool loadPng(fs::path file_name, int& out_width, int& out_height, bool& out_has_alpha,
+    bool loadPng(fs::path file_name,
+                 int& out_width,
+                 int& out_height,
+                 bool& out_has_alpha,
                  GLubyte** out_data);
 
     struct InstanceData {

@@ -55,7 +55,9 @@ static inline CairoContextPtr CreateLayoutContext() {
     return CairoContextPtr{cairo_create(temp_surface.get())};
 }
 
-static inline CairoContextPtr CreateRenderContext(int width, int height, int channels,
+static inline CairoContextPtr CreateRenderContext(int width,
+                                                  int height,
+                                                  int channels,
                                                   std::vector<unsigned char>& buffer) {
     CairoSurfacePtr surface{cairo_image_surface_create_for_data(&buffer[0], CAIRO_FORMAT_ARGB32,
                                                                 width, height, channels * width)};

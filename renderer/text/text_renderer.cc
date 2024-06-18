@@ -23,9 +23,12 @@ const std::string kFragmentShaderSource =
 namespace renderer {
 
 TextRenderer::TextRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl,
-                           GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
-    : gl{std::move(shared_gl)}, shader_program{gl, kVertexShaderSource, kFragmentShaderSource},
-      main_glyph_cache{main_glyph_cache}, ui_glyph_cache{ui_glyph_cache} {
+                           GlyphCache& main_glyph_cache,
+                           GlyphCache& ui_glyph_cache)
+    : gl{std::move(shared_gl)},
+      shader_program{gl, kVertexShaderSource, kFragmentShaderSource},
+      main_glyph_cache{main_glyph_cache},
+      ui_glyph_cache{ui_glyph_cache} {
     gl->genVertexArrays(1, &vao);
     gl->genBuffers(1, &vbo_instance);
     gl->genBuffers(1, &ebo);
@@ -78,8 +81,12 @@ TextRenderer::~TextRenderer() {
 }
 
 TextRenderer::TextRenderer(TextRenderer&& other)
-    : vao{other.vao}, vbo_instance{other.vbo_instance}, ebo{other.ebo}, gl{other.gl},
-      shader_program{std::move(other.shader_program)}, main_glyph_cache{other.main_glyph_cache},
+    : vao{other.vao},
+      vbo_instance{other.vbo_instance},
+      ebo{other.ebo},
+      gl{other.gl},
+      shader_program{std::move(other.shader_program)},
+      main_glyph_cache{other.main_glyph_cache},
       ui_glyph_cache{other.ui_glyph_cache} {
     other.vao = 0;
     other.vbo_instance = 0;
@@ -99,9 +106,13 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderText(const Size& size, const Point& scroll, const base::Buffer& buffer,
-                              const Point& editor_offset, const CaretInfo& start_caret,
-                              const CaretInfo& end_caret, int& longest_line_x,
+void TextRenderer::renderText(const Size& size,
+                              const Point& scroll,
+                              const base::Buffer& buffer,
+                              const Point& editor_offset,
+                              const CaretInfo& start_caret,
+                              const CaretInfo& end_caret,
+                              int& longest_line_x,
                               Point& end_caret_pos) {
     // TODO: Clean this up.
     int line_number_offset = 100;

@@ -15,7 +15,9 @@ public:
     void onDraw(int width, int height) override;
     void onResize(int width, int height) override;
     void onScroll(int dx, int dy) override;
-    void onLeftMouseDown(int mouse_x, int mouse_y, app::ModifierKey modifiers,
+    void onLeftMouseDown(int mouse_x,
+                         int mouse_y,
+                         app::ModifierKey modifiers,
                          app::ClickType click_type) override;
     void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
     void onClose() override;

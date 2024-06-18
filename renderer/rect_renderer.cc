@@ -105,13 +105,6 @@ void RectRenderer::draw(const Size& size,
                         float longest_x,
                         const Point& editor_offset,
                         float status_bar_height) {
-    GLuint shader_id = shader_program.id();
-    gl->useProgram(shader_id);
-    // gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
-    // gl->uniform2f(gl->getUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
-    gl->uniform2f(gl->getUniformLocation(shader_id, "editor_offset"), editor_offset.x,
-                  editor_offset.y);
-
     int caret_width = 4;
     int caret_height = line_height;
 
@@ -122,8 +115,8 @@ void RectRenderer::draw(const Size& size,
 
     // line_count -= 1;  // TODO: Merge this with EditorView.
 
-    float editor_width = size.width - editor_offset.x;
-    float editor_height = size.height - editor_offset.y - status_bar_height;
+    float editor_width = size.width;
+    float editor_height = size.height - status_bar_height;
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
@@ -183,9 +176,9 @@ void RectRenderer::draw(const Size& size,
         });
     }
 
-    // // Add tab bar.
+    // Add tab bar.
     instances.emplace_back(InstanceData{
-        .coords = Vec2{0, static_cast<float>(-editor_offset.y)},
+        .coords = Vec2{0, 0},
         .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(editor_offset.y)},
         // .color = Rgba::fromRgb(color_scheme.tab_bar, 255),
         .color = Rgba{190, 190, 190, 255},
@@ -203,7 +196,7 @@ void RectRenderer::draw(const Size& size,
 
     // Add side bar.
     instances.emplace_back(InstanceData{
-        .coords = {static_cast<float>(-editor_offset.x), static_cast<float>(-editor_offset.y)},
+        .coords = {0, 0},
         .rect_size = {static_cast<float>(editor_offset.x), static_cast<float>(size.height)},
         // .color = Rgba::fromRgb(color_scheme.side_bar, 255),
         .color = Rgba{235, 237, 239, 255},
@@ -211,7 +204,7 @@ void RectRenderer::draw(const Size& size,
 
     // Add status bar.
     instances.emplace_back(InstanceData{
-        .coords = Vec2{static_cast<float>(-editor_offset.x), editor_height},
+        .coords = Vec2{0, editor_height},
         .rect_size = Vec2{static_cast<float>(size.width), status_bar_height},
         // .color = Rgba::fromRgb(color_scheme.status_bar, 255),
         .color = Rgba{199, 203, 209, 255},

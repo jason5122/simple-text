@@ -67,11 +67,7 @@ Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
 }
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
-    : Window{parent},
-      wid{wid},
-      parent{parent},
-      color_scheme{isDarkMode()},
-      main_widget{parent.renderer} {}
+    : Window{parent}, wid{wid}, parent{parent}, main_widget{parent.renderer} {}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
     int tab_bar_height = 30 * 2;
@@ -88,10 +84,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 void EditorWindow::onDraw(int width, int height) {
     {
         PROFILE_BLOCK("render");
-        // parent.renderer->draw({width, height}, buffer, scroll_offset, end_caret);
-        // parent.renderer->getTextRenderer().flush({width, height});
-        // parent.renderer->getRectRenderer().flush({width, height});
-
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
         main_widget.draw(width, height);
         parent.renderer->flush({width, height});

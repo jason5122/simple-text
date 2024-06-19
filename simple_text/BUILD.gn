@@ -11,9 +11,7 @@ common_sources = [
 
 common_deps = [
   "//app",
-  "//base",
   "//base/filesystem",
-  "//config",
   "//gui",
   "//opengl",
   "//renderer",

@@ -1,10 +1,7 @@
 #pragma once
 
 #include "app/window.h"
-#include "base/buffer.h"
-#include "config/color_scheme.h"
 #include "gui/main_widget.h"
-#include "renderer/types.h"
 
 class EditorApp;
 
@@ -26,13 +23,7 @@ public:
 private:
     int wid;
     EditorApp& parent;
-
-    config::ColorScheme color_scheme;
-
     gui::MainWidget main_widget;
-
-    renderer::Point scroll_offset{};
-    renderer::CaretInfo end_caret{};
 
     void updateWindowTitle();
 };

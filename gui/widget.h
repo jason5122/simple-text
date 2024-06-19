@@ -11,6 +11,7 @@ public:
     virtual ~Widget() {}
 
     virtual void draw(int width, int height) = 0;
+    virtual void scroll(int dx, int dy) = 0;
 
 protected:
     std::shared_ptr<renderer::Renderer> renderer;

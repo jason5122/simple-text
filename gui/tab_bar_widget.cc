@@ -9,4 +9,6 @@ void TabBarWidget::draw(int width, int height) {
     renderer->getRectRenderer().addRect({0, 0}, {width, tab_bar_height}, {190, 190, 190, 255});
 }
 
+void TabBarWidget::scroll(int dx, int dy) {}
+
 }

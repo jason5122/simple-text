@@ -10,6 +10,7 @@ public:
     TextViewWidget(std::shared_ptr<renderer::Renderer> renderer);
 
     void draw(int width, int height) override;
+    void scroll(int dx, int dy) override;
 
     void setContents(const std::string& text);
 

@@ -10,6 +10,12 @@ void MainWidget::draw(int width, int height) {
     }
 }
 
+void MainWidget::scroll(int dx, int dy) {
+    for (auto& child : children) {
+        child->scroll(dx, dy);
+    }
+}
+
 void MainWidget::addChild(std::unique_ptr<Widget> widget) {
     children.push_back(std::move(widget));
 }

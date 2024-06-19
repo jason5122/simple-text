@@ -12,6 +12,14 @@ void TextViewWidget::draw(int width, int height) {
                                            end_caret_pos);
 }
 
+void TextViewWidget::scroll(int dx, int dy) {
+    // scroll_offset.x += dx;
+    scroll_offset.y += dy;
+    if (scroll_offset.y < 0) {
+        scroll_offset.y = 0;
+    }
+}
+
 void TextViewWidget::setContents(const std::string& text) {
     buffer.setContents(text);
 }

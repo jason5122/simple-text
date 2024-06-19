@@ -103,12 +103,7 @@ void EditorWindow::onResize(int width, int height) {
 }
 
 void EditorWindow::onScroll(int dx, int dy) {
-    // scroll_offset.x += dx;
-    // scroll_offset.y += dy;
-    // if (scroll_offset.y < 0) {
-    //     scroll_offset.y = 0;
-    // }
-
+    main_widget.scroll(dx, dy);
     redraw();
 }
 

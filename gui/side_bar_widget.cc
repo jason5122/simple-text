@@ -9,4 +9,6 @@ void SideBarWidget::draw(int width, int height) {
     renderer->getRectRenderer().addRect({0, 0}, {side_bar_width, height}, {235, 237, 239, 255});
 }
 
+void SideBarWidget::scroll(int dx, int dy) {}
+
 }

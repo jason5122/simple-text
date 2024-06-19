@@ -11,6 +11,7 @@ public:
     MainWidget(std::shared_ptr<renderer::Renderer> renderer);
 
     void draw(int width, int height) override;
+    void scroll(int dx, int dy) override;
 
     void addChild(std::unique_ptr<Widget> widget);
 

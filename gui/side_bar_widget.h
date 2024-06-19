@@ -9,6 +9,7 @@ public:
     SideBarWidget(std::shared_ptr<renderer::Renderer> renderer, int side_bar_width);
 
     void draw(int width, int height) override;
+    void scroll(int dx, int dy) override;
 
 private:
     int side_bar_width;

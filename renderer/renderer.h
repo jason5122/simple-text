@@ -13,6 +13,7 @@ class Renderer {
 public:
     Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl);
 
+    TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
     Movement& getMovement();
 

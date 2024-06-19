@@ -16,6 +16,10 @@ Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
     gl->clearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
 }
 
+TextRenderer& Renderer::getTextRenderer() {
+    return text_renderer;
+}
+
 RectRenderer& Renderer::getRectRenderer() {
     return rect_renderer;
 }

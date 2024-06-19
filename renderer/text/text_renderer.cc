@@ -117,41 +117,7 @@ void TextRenderer::renderText(const Size& size,
     // TODO: Clean this up.
     int line_number_offset = 100;
 
-    GLuint shader_id = shader_program.id();
-    gl->useProgram(shader_id);
-    gl->uniform1f(gl->getUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
-    gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
-
-    gl->activeTexture(GL_TEXTURE0);
-    gl->bindVertexArray(vao);
-
-    int batch_count = 0;
-    auto render_batch = [this, &batch_count](size_t page) {
-        while (batch_instances.size() <= page) {
-            batch_instances.emplace_back();
-            batch_instances.back().reserve(kBatchMax);
-        }
-
-        GLuint batch_tex = main_glyph_cache.atlas_pages.at(page).tex();
-        std::vector<InstanceData>& instances = batch_instances.at(page);
-
-        if (instances.empty()) {
-            return;
-        }
-
-        gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-        gl->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
-                          &instances[0]);
-
-        gl->bindTexture(GL_TEXTURE_2D, batch_tex);
-
-        gl->drawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-
-        instances.clear();
-        batch_count++;
-    };
-
-    auto insert_into_batch = [this, &render_batch](size_t page, const InstanceData& instance) {
+    auto insert_into_batch = [this](size_t page, const InstanceData& instance) {
         while (batch_instances.size() <= page) {
             batch_instances.emplace_back();
             batch_instances.back().reserve(kBatchMax);
@@ -161,7 +127,7 @@ void TextRenderer::renderText(const Size& size,
 
         instances.emplace_back(std::move(instance));
         if (instances.size() == kBatchMax) {
-            render_batch(page);
+            std::cerr << "TextRenderer error: attempted to insert into a full batch!\n";
         }
     };
 
@@ -289,19 +255,49 @@ void TextRenderer::renderText(const Size& size,
             insert_into_batch(page, std::move(instance));
         }
 
-        render_batch(page);
-
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
-
-    // Unbind.
-    gl->bindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
-    gl->bindVertexArray(0);
-    gl->bindTexture(GL_TEXTURE_2D, 0);
 }
 
 void TextRenderer::flush(const Size& size) {
-    ;
+    gl->blendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+
+    GLuint shader_id = shader_program.id();
+    gl->useProgram(shader_id);
+    gl->uniform1f(gl->getUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
+    gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
+
+    gl->activeTexture(GL_TEXTURE0);
+    gl->bindVertexArray(vao);
+
+    for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
+        while (batch_instances.size() <= page) {
+            batch_instances.emplace_back();
+            batch_instances.back().reserve(kBatchMax);
+        }
+
+        GLuint batch_tex = main_glyph_cache.atlas_pages.at(page).tex();
+        std::vector<InstanceData>& instances = batch_instances.at(page);
+
+        if (instances.empty()) {
+            return;
+        }
+
+        gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+        gl->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
+                          &instances[0]);
+
+        gl->bindTexture(GL_TEXTURE_2D, batch_tex);
+
+        gl->drawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+
+        instances.clear();
+    }
+
+    // Unbind.
+    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->bindVertexArray(0);
+    gl->bindTexture(GL_TEXTURE_2D, 0);
 }
 
 }

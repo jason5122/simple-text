@@ -180,10 +180,12 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 void EditorWindow::onDraw(int width, int height) {
     {
         PROFILE_BLOCK("render");
-        // parent.renderer->draw({width, height}, buffer, scroll_offset, end_caret);
-        main_widget.draw(width, height);
-        // TODO: Move this to GUI toolkit instead of calling this directly.
-        parent.renderer->flush({width, height});
+        parent.renderer->draw({width, height}, buffer, scroll_offset, end_caret);
+        parent.renderer->getRectRenderer().flush({width, height});
+
+        // main_widget.draw(width, height);
+        // parent.renderer->flush({width, height});
+        // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
     }
 }
 

@@ -27,6 +27,7 @@ public:
                     const CaretInfo& end_caret,
                     int& longest_line_x,
                     Point& end_caret_pos);
+    void flush(const Size& size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

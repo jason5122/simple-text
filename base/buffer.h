@@ -8,7 +8,7 @@ namespace base {
 
 class Buffer {
 public:
-    void setContents(std::string text);
+    void setContents(const std::string& text);
     size_t size() const;
     size_t lineCount() const;
     std::string getLineContent(size_t line_index) const;

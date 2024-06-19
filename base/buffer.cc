@@ -3,7 +3,7 @@
 
 namespace base {
 
-void Buffer::setContents(std::string text) {
+void Buffer::setContents(const std::string& text) {
     data.clear();
 
     std::string line;

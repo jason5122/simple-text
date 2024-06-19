@@ -51,6 +51,7 @@ void Renderer::draw(const Size& size,
 void Renderer::flush(const Size& size) {
     gl->viewport(0, 0, size.width, size.height);
     gl->clear(GL_COLOR_BUFFER_BIT);
+    text_renderer.flush(size);
     rect_renderer.flush(size);
 }
 

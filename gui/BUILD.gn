@@ -3,7 +3,11 @@ source_set("gui") {
     "main_widget.cc",
     "side_bar_widget.cc",
     "tab_bar_widget.cc",
+    "text_view_widget.cc",
   ]
 
-  deps = [ "//renderer" ]
+  deps = [
+    "//base",
+    "//renderer",
+  ]
 }

@@ -27,7 +27,6 @@ private:
     int wid;
     EditorApp& parent;
 
-    base::Buffer buffer;
     config::ColorScheme color_scheme;
 
     gui::MainWidget main_widget;

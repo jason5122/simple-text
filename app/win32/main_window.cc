@@ -128,9 +128,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         wglMakeCurrent(m_hdc, dummy_context.m_context);
 
-        // TODO: For debugging; remove this.
-        std::cerr << wglGetCurrentContext() << '\n';
-
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
 
@@ -140,9 +137,6 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int scaled_height = rect.bottom;
 
         app_window.onDraw(scaled_width, scaled_height);
-
-        // TODO: For debugging; remove this.
-        // app_window.stopLaunchTimer();
 
         SwapBuffers(m_hdc);
 

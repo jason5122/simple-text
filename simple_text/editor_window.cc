@@ -1,5 +1,6 @@
 #include "editor_window.h"
 #include "gui/side_bar_widget.h"
+#include "gui/tab_bar_widget.h"
 #include "simple_text/editor_app.h"
 #include "util/profile_util.h"
 
@@ -170,7 +171,10 @@ void Renderer::draw(const Size& size,
 }
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
-    main_widget.addChild(std::make_unique<gui::SideBarWidget>(parent.renderer));
+    int tab_bar_height = 30 * 2;
+    int side_bar_width = 200 * 2;
+    main_widget.addChild(std::make_unique<gui::TabBarWidget>(parent.renderer, tab_bar_height));
+    main_widget.addChild(std::make_unique<gui::SideBarWidget>(parent.renderer, side_bar_width));
 }
 
 void EditorWindow::onDraw(int width, int height) {

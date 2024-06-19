@@ -7,6 +7,7 @@
 #include "util/non_copyable.h"
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace renderer {
 

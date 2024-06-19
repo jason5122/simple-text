@@ -1,6 +1,6 @@
 #include "opengl/functions_gl_enums.h"
 #include "rect_renderer.h"
-#include <vector>
+#include <cmath>
 
 namespace {
 const std::string kVertexShaderSource =

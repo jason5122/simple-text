@@ -3,7 +3,7 @@
 #include "app/window.h"
 #include "base/buffer.h"
 #include "config/color_scheme.h"
-#include "gui/side_bar_widget.h"
+#include "gui/main_widget.h"
 #include "renderer/types.h"
 
 class EditorApp;
@@ -30,7 +30,7 @@ private:
     base::Buffer buffer;
     config::ColorScheme color_scheme;
 
-    gui::SideBarWidget side_bar_widget;
+    gui::MainWidget main_widget;
 
     renderer::Point scroll_offset{};
     renderer::CaretInfo end_caret{};

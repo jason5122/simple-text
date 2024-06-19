@@ -1,4 +1,5 @@
 #include "editor_window.h"
+#include "gui/side_bar_widget.h"
 #include "simple_text/editor_app.h"
 #include "util/profile_util.h"
 
@@ -7,7 +8,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
       wid{wid},
       parent{parent},
       color_scheme{isDarkMode()},
-      side_bar_widget{parent.renderer} {
+      main_widget{parent.renderer} {
     buffer.setContents(R"(#include "opengl/functions_gl_enums.h"
 #include "renderer.h"
 
@@ -168,13 +169,15 @@ void Renderer::draw(const Size& size,
 )");
 }
 
-void EditorWindow::onOpenGLActivate(int width, int height) {}
+void EditorWindow::onOpenGLActivate(int width, int height) {
+    main_widget.addChild(std::make_unique<gui::SideBarWidget>(parent.renderer));
+}
 
 void EditorWindow::onDraw(int width, int height) {
     {
         PROFILE_BLOCK("render");
         // parent.renderer->draw({width, height}, buffer, scroll_offset, end_caret);
-        side_bar_widget.draw(width, height);
+        main_widget.draw(width, height);
         // TODO: Move this to GUI toolkit instead of calling this directly.
         parent.renderer->flush({width, height});
     }

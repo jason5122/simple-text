@@ -7,7 +7,8 @@ namespace gui {
 
 class Widget {
 public:
-    Widget(std::shared_ptr<renderer::Renderer> renderer);
+    Widget(std::shared_ptr<renderer::Renderer> renderer) : renderer{std::move(renderer)} {}
+    virtual ~Widget() {}
 
     virtual void draw(int width, int height) = 0;
 

@@ -16,6 +16,14 @@ Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
     gl->clearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
 }
 
+RectRenderer& Renderer::getRectRenderer() {
+    return rect_renderer;
+}
+
+Movement& Renderer::getMovement() {
+    return movement;
+}
+
 void Renderer::draw(const Size& size,
                     const base::Buffer& buffer,
                     const Point& scroll_offset,
@@ -24,8 +32,8 @@ void Renderer::draw(const Size& size,
 
     gl->clear(GL_COLOR_BUFFER_BIT);
 
-    int longest_line;
-    Point end_caret_pos;
+    int longest_line = 0;
+    Point end_caret_pos{};
 
     gl->blendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(size, scroll_offset, buffer, editor_offset, end_caret, end_caret,
@@ -37,6 +45,8 @@ void Renderer::draw(const Size& size,
 }
 
 void Renderer::flush(const Size& size) {
+    gl->viewport(0, 0, size.width, size.height);
+    gl->clear(GL_COLOR_BUFFER_BIT);
     rect_renderer.flush(size);
 }
 

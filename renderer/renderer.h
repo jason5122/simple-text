@@ -13,14 +13,14 @@ class Renderer {
 public:
     Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl);
 
+    RectRenderer& getRectRenderer();
+    Movement& getMovement();
+
     void draw(const Size& size,
               const base::Buffer& buffer,
               const Point& scroll_offset,
               const CaretInfo& end_caret);
     void flush(const Size& size);
-
-    // TODO: Combine this with TextRenderer (and rename TextRenderer).
-    Movement movement;
 
 private:
     std::shared_ptr<opengl::FunctionsGL> gl;
@@ -29,6 +29,7 @@ private:
     GlyphCache ui_glyph_cache;
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
+    Movement movement;
 
     Point editor_offset{200 * 2, 30 * 2};
 };

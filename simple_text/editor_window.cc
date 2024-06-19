@@ -3,7 +3,11 @@
 #include "util/profile_util.h"
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
-    : Window(parent), wid(wid), parent(parent), color_scheme(isDarkMode()) {
+    : Window{parent},
+      wid{wid},
+      parent{parent},
+      color_scheme{isDarkMode()},
+      side_bar_widget{parent.renderer} {
     buffer.setContents(R"(#include "opengl/functions_gl_enums.h"
 #include "renderer.h"
 
@@ -169,7 +173,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {}
 void EditorWindow::onDraw(int width, int height) {
     {
         PROFILE_BLOCK("render");
-        parent.renderer->draw({width, height}, buffer, scroll_offset, end_caret);
+        // parent.renderer->draw({width, height}, buffer, scroll_offset, end_caret);
+        side_bar_widget.draw(width, height);
+        // TODO: Move this to GUI toolkit instead of calling this directly.
         parent.renderer->flush({width, height});
     }
 }
@@ -198,7 +204,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
         .y = mouse_y + scroll_offset.y - 30 * 2,
     };
 
-    parent.renderer->movement.setCaretInfo(buffer, mouse, end_caret);
+    parent.renderer->getMovement().setCaretInfo(buffer, mouse, end_caret);
 
     redraw();
 }
@@ -210,7 +216,7 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
         .y = mouse_y + scroll_offset.y - 30 * 2,
     };
 
-    parent.renderer->movement.setCaretInfo(buffer, mouse, end_caret);
+    parent.renderer->getMovement().setCaretInfo(buffer, mouse, end_caret);
 
     redraw();
 }

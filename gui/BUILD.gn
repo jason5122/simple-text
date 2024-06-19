@@ -1,0 +1,8 @@
+source_set("gui") {
+  sources = [
+    "side_bar_widget.cc",
+    "widget.cc",
+  ]
+
+  deps = [ "//renderer" ]
+}

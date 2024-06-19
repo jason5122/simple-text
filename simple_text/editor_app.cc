@@ -4,7 +4,7 @@
 #include <format>
 #include <iostream>
 
-EditorApp::EditorApp() : gl{std::make_shared<opengl::FunctionsGL>()} {}
+EditorApp::EditorApp() : gl{std::make_unique<opengl::FunctionsGL>()} {}
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
@@ -29,6 +29,5 @@ void EditorApp::createWindow() {
 
 void EditorApp::destroyWindow(int wid) {
     std::cerr << std::format("SimpleText: destroy window {}", wid) << '\n';
-
     editor_windows[wid] = nullptr;
 }

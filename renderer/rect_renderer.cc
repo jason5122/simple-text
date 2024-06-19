@@ -192,6 +192,8 @@ void RectRenderer::addRect(const Point& coords, const Size& size, Rgba color) {
 }
 
 void RectRenderer::flush(const Size& size) {
+    gl->blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+
     GLuint shader_id = shader_program.id();
     gl->useProgram(shader_id);
     gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);

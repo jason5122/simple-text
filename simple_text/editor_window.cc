@@ -74,10 +74,12 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     int side_bar_width = 200 * 2;
     main_widget.addChild(
         std::make_unique<gui::SideBarWidget>(parent.renderer, renderer::Size{side_bar_width, 0}));
-    // main_widget.addChild(std::make_unique<gui::TabBarWidget>(parent.renderer, tab_bar_height));
+    // main_widget.addChild(
+    //     std::make_unique<gui::TabBarWidget>(parent.renderer, renderer::Size{0,
+    //     tab_bar_height}));
 
     std::unique_ptr<gui::TextViewWidget> text_view_widget =
-        std::make_unique<gui::TextViewWidget>(parent.renderer, renderer::Size{});
+        std::make_unique<gui::TextViewWidget>(parent.renderer, renderer::Size{400, 400});
     text_view_widget->setContents(sample_text);
     main_widget.addChild(std::move(text_view_widget));
 }

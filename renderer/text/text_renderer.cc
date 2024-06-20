@@ -1,15 +1,12 @@
 #include "base/rgb.h"
 #include "opengl/functions_gl_enums.h"
 #include "text_renderer.h"
-#include "util/profile_util.h"
 #include <cmath>
 #include <cstdint>
 
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
 }
-
-#include "build/buildflag.h"
 
 namespace {
 const std::string kVertexShaderSource =
@@ -19,6 +16,10 @@ const std::string kFragmentShaderSource =
 #include "renderer/shaders/text_frag.glsl"
     ;
 }
+
+// TODO: Debug; remove this.
+#include <format>
+#include <iostream>
 
 namespace renderer {
 

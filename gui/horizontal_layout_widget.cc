@@ -8,8 +8,14 @@ HorizontalLayoutWidget::HorizontalLayoutWidget(std::shared_ptr<renderer::Rendere
 
 void HorizontalLayoutWidget::draw(const renderer::Size& screen_size,
                                   const renderer::Point& offset) {
+    renderer::Size new_screen_size = screen_size;
+    renderer::Point new_offset = offset;
+
     for (auto& child : children) {
-        child->draw(screen_size, offset);
+        child->draw(new_screen_size, new_offset);
+
+        new_screen_size.width -= child->getSize().width;
+        new_offset.x += child->getSize().width;
     }
 }
 

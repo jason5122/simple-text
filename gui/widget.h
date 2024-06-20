@@ -14,6 +14,10 @@ public:
     virtual void draw(const renderer::Size& screen_size, const renderer::Point& offset) = 0;
     virtual void scroll(const renderer::Point& delta) = 0;
 
+    renderer::Size getSize() {
+        return size;
+    }
+
 protected:
     std::shared_ptr<renderer::Renderer> renderer;
     renderer::Size size;

@@ -41,8 +41,4 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
     return p;
 }
 
-void FunctionsGL::initialize() {
-    initProcsGL();
-}
-
 }

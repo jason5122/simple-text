@@ -70,18 +70,21 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window{parent}, wid{wid}, parent{parent}, main_widget{parent.renderer, {}} {}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
+    using namespace gui;
+    using namespace renderer;
+
     int tab_bar_height = 30 * 2;
     int side_bar_width = 200 * 2;
-    main_widget.addChild(
-        std::make_unique<gui::SideBarWidget>(parent.renderer, renderer::Size{side_bar_width, 0}));
-    // main_widget.addChild(
-    //     std::make_unique<gui::TabBarWidget>(parent.renderer, renderer::Size{0,
-    //     tab_bar_height}));
 
-    std::unique_ptr<gui::TextViewWidget> text_view_widget =
-        std::make_unique<gui::TextViewWidget>(parent.renderer, renderer::Size{400, 400});
-    text_view_widget->setContents(sample_text);
-    main_widget.addChild(std::move(text_view_widget));
+    std::unique_ptr<Widget> side_bar{new SideBarWidget(parent.renderer, Size{side_bar_width, 0})};
+    std::unique_ptr<Widget> tab_bar{new TabBarWidget(parent.renderer, Size{0, tab_bar_height})};
+    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget(parent.renderer, Size{})};
+
+    text_view->setContents(sample_text);
+
+    main_widget.addChild(std::move(side_bar));
+    main_widget.addChild(std::move(tab_bar));
+    main_widget.addChild(std::move(text_view));
 }
 
 void EditorWindow::onDraw(int width, int height) {

@@ -1,6 +1,9 @@
 #include "opengl/functions_gl_enums.h"
 #include "renderer.h"
 
+#include "opengl/gl.h"
+using namespace opengl;
+
 namespace renderer {
 
 Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
@@ -50,7 +53,8 @@ void Renderer::draw(const Size& size,
 
 void Renderer::flush(const Size& size) {
     gl->viewport(0, 0, size.width, size.height);
-    gl->clear(GL_COLOR_BUFFER_BIT);
+    // gl->clear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
     text_renderer.flush(size);
     rect_renderer.flush(size);
 }

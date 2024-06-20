@@ -1,5 +1,8 @@
 source_set("opengl") {
-  sources = [ "dispatch_table_gl.cc" ]
+  sources = [
+    "dispatch_table_gl.cc",
+    "gl.cc",
+  ]
 
   if (is_mac) {
     sources += [ "functions_cgl.cc" ]

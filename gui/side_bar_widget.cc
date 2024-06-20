@@ -7,7 +7,7 @@ SideBarWidget::SideBarWidget(std::shared_ptr<renderer::Renderer> renderer,
     : Widget{size}, renderer{renderer} {}
 
 void SideBarWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
-    renderer->getRectRenderer().addRect({0, 0}, {size.width, screen_size.height},
+    renderer->getRectRenderer().addRect(offset, {size.width, screen_size.height},
                                         {235, 237, 239, 255});
 }
 

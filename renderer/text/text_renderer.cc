@@ -1,8 +1,11 @@
 #include "base/rgb.h"
-#include "opengl/functions_gl_enums.h"
 #include "text_renderer.h"
 #include <cmath>
 #include <cstdint>
+
+#include "opengl/functions_gl_enums.h"
+#include "opengl/gl.h"
+using namespace opengl;
 
 extern "C" {
 #include "third_party/libgrapheme/grapheme.h"
@@ -30,55 +33,55 @@ TextRenderer::TextRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl,
       shader_program{gl, kVertexShaderSource, kFragmentShaderSource},
       main_glyph_cache{main_glyph_cache},
       ui_glyph_cache{ui_glyph_cache} {
-    gl->genVertexArrays(1, &vao);
-    gl->genBuffers(1, &vbo_instance);
-    gl->genBuffers(1, &ebo);
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo_instance);
+    glGenBuffers(1, &ebo);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
     };
 
-    gl->bindVertexArray(vao);
+    glBindVertexArray(vao);
 
-    gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    gl->bufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STREAM_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STREAM_DRAW);
 
     GLuint index = 0;
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, coords));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, coords));
+    glVertexAttribDivisor(index++, 1);
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, glyph));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, glyph));
+    glVertexAttribDivisor(index++, 1);
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, uv));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, uv));
+    glVertexAttribDivisor(index++, 1);
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, color));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, color));
+    glVertexAttribDivisor(index++, 1);
 
     // Unbind.
-    gl->bindVertexArray(0);
-    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
-    gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 TextRenderer::~TextRenderer() {
-    gl->deleteVertexArrays(1, &vao);
-    gl->deleteBuffers(1, &vbo_instance);
-    gl->deleteBuffers(1, &ebo);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo_instance);
+    glDeleteBuffers(1, &ebo);
 }
 
 TextRenderer::TextRenderer(TextRenderer&& other)
@@ -261,15 +264,15 @@ void TextRenderer::renderText(const Size& size,
 }
 
 void TextRenderer::flush(const Size& size) {
-    gl->blendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
-    gl->useProgram(shader_id);
-    gl->uniform1f(gl->getUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
-    gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUseProgram(shader_id);
+    glUniform1f(glGetUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
 
-    gl->activeTexture(GL_TEXTURE0);
-    gl->bindVertexArray(vao);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(vao);
 
     for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
         while (batch_instances.size() <= page) {
@@ -284,21 +287,21 @@ void TextRenderer::flush(const Size& size) {
             return;
         }
 
-        gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-        gl->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
-                          &instances[0]);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
+                        &instances[0]);
 
-        gl->bindTexture(GL_TEXTURE_2D, batch_tex);
+        glBindTexture(GL_TEXTURE_2D, batch_tex);
 
-        gl->drawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
         instances.clear();
     }
 
     // Unbind.
-    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
-    gl->bindVertexArray(0);
-    gl->bindTexture(GL_TEXTURE_2D, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 }

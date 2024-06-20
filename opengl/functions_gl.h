@@ -1,19 +1,20 @@
 #pragma once
 
-#include "opengl/dispatch_table_gl.h"
+#include "util/non_copyable.h"
 #include <memory>
+#include <string>
 
 namespace opengl {
 
-class FunctionsGL : public DispatchTableGL {
+class FunctionsGL : util::NonCopyable {
 public:
     FunctionsGL();
-    ~FunctionsGL() override;
+    ~FunctionsGL();
 
     void initialize();
 
 private:
-    void* loadProcAddress(const std::string& function) const override;
+    void* loadProcAddress(const std::string& function) const;
 
     class impl;
     std::unique_ptr<impl> pimpl;

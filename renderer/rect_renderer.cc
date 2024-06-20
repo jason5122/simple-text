@@ -1,6 +1,9 @@
-#include "opengl/functions_gl_enums.h"
 #include "rect_renderer.h"
 #include <cmath>
+
+#include "opengl/functions_gl_enums.h"
+#include "opengl/gl.h"
+using namespace opengl;
 
 namespace {
 const std::string kVertexShaderSource =
@@ -17,60 +20,60 @@ RectRenderer::RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
     : gl{std::move(shared_gl)}, shader_program{gl, kVertexShaderSource, kFragmentShaderSource} {
     instances.reserve(kBatchMax);
 
-    gl->genVertexArrays(1, &vao);
-    gl->genBuffers(1, &vbo_instance);
-    gl->genBuffers(1, &ebo);
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo_instance);
+    glGenBuffers(1, &ebo);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
     };
 
-    gl->bindVertexArray(vao);
+    glBindVertexArray(vao);
 
-    gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    gl->bufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    gl->bufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STREAM_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STREAM_DRAW);
 
     GLuint index = 0;
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, coords));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, coords));
+    glVertexAttribDivisor(index++, 1);
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, rect_size));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, rect_size));
+    glVertexAttribDivisor(index++, 1);
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, color));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, color));
+    glVertexAttribDivisor(index++, 1);
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, corner_radius));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, corner_radius));
+    glVertexAttribDivisor(index++, 1);
 
-    gl->enableVertexAttribArray(index);
-    gl->vertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                            (void*)offsetof(InstanceData, tab_corner_radius));
-    gl->vertexAttribDivisor(index++, 1);
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, tab_corner_radius));
+    glVertexAttribDivisor(index++, 1);
 
     // Unbind.
-    gl->bindVertexArray(0);
-    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
-    gl->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 RectRenderer::~RectRenderer() {
-    gl->deleteVertexArrays(1, &vao);
-    gl->deleteBuffers(1, &vbo_instance);
-    gl->deleteBuffers(1, &ebo);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo_instance);
+    glDeleteBuffers(1, &ebo);
 }
 
 RectRenderer::RectRenderer(RectRenderer&& other)
@@ -192,20 +195,20 @@ void RectRenderer::addRect(const Point& coords, const Size& size, Rgba color) {
 }
 
 void RectRenderer::flush(const Size& size) {
-    gl->blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
-    gl->useProgram(shader_id);
-    gl->uniform2f(gl->getUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUseProgram(shader_id);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
 
-    gl->bindVertexArray(vao);
-    gl->bindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    gl->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
-    gl->drawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
-    gl->bindVertexArray(0);
-    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     instances.clear();
 }

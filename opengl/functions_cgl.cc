@@ -30,8 +30,4 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
     return dlsym(pimpl->handle, function.c_str());
 }
 
-void FunctionsGL::initialize() {
-    initProcsGL();
-}
-
 }

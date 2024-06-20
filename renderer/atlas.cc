@@ -1,5 +1,8 @@
 #include "atlas.h"
+
 #include "opengl/functions_gl_enums.h"
+#include "opengl/gl.h"
+using namespace opengl;
 
 // TODO: For debugging; remove this.
 #include <iostream>
@@ -8,9 +11,9 @@
 namespace renderer {
 
 Atlas::Atlas(std::shared_ptr<opengl::FunctionsGL> shared_gl) : gl{std::move(shared_gl)} {
-    gl->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    gl->genTextures(1, &tex_id);
-    gl->bindTexture(GL_TEXTURE_2D, tex_id);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &tex_id);
+    glBindTexture(GL_TEXTURE_2D, tex_id);
 
     const void* data = nullptr;
 
@@ -41,19 +44,19 @@ Atlas::Atlas(std::shared_ptr<opengl::FunctionsGL> shared_gl) : gl{std::move(shar
         data = &atlas_background[0];
     }
 
-    gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kAtlasSize, kAtlasSize, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                   data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kAtlasSize, kAtlasSize, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 data);
 
-    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    gl->bindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
 Atlas::~Atlas() {
-    gl->deleteTextures(1, &tex_id);
+    glDeleteTextures(1, &tex_id);
 }
 
 Atlas::Atlas(Atlas&& other) : gl{other.gl}, tex_id(other.tex_id) {
@@ -94,11 +97,11 @@ bool Atlas::insertTexture(int width, int height, bool colored, const GLubyte* da
     }
 
     // Load data into OpenGL.
-    gl->bindTexture(GL_TEXTURE_2D, tex_id);
+    glBindTexture(GL_TEXTURE_2D, tex_id);
     GLenum format = colored ? GL_RGBA : GL_RGB;
-    gl->texSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, format,
-                      GL_UNSIGNED_BYTE, data);
-    gl->bindTexture(GL_TEXTURE_2D, 0);  // Unbind.
+    glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, format,
+                    GL_UNSIGNED_BYTE, data);
+    glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
     // Generate UV coordinates.
     float uv_left = static_cast<float>(row_extent) / kAtlasSize;

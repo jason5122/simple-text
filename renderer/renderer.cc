@@ -1,6 +1,6 @@
-#include "opengl/functions_gl_enums.h"
 #include "renderer.h"
 
+#include "opengl/functions_gl_enums.h"
 #include "opengl/gl.h"
 using namespace opengl;
 
@@ -13,10 +13,10 @@ Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
       text_renderer{gl, main_glyph_cache, ui_glyph_cache},
       rect_renderer{gl},
       movement{main_glyph_cache} {
-    gl->enable(GL_BLEND);
-    gl->depthMask(GL_FALSE);
+    glEnable(GL_BLEND);
+    glDepthMask(GL_FALSE);
 
-    gl->clearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
+    glClearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
 }
 
 TextRenderer& Renderer::getTextRenderer() {
@@ -35,25 +35,24 @@ void Renderer::draw(const Size& size,
                     const base::Buffer& buffer,
                     const Point& scroll_offset,
                     const CaretInfo& end_caret) {
-    gl->viewport(0, 0, size.width, size.height);
+    glViewport(0, 0, size.width, size.height);
 
-    gl->clear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     int longest_line = 0;
     Point end_caret_pos{};
 
-    gl->blendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     text_renderer.renderText(size, scroll_offset, buffer, editor_offset, end_caret, end_caret,
                              longest_line, end_caret_pos);
 
-    gl->blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
     rect_renderer.draw(size, scroll_offset, end_caret_pos, main_glyph_cache.lineHeight(), 50, 1000,
                        editor_offset, ui_glyph_cache.lineHeight());
 }
 
 void Renderer::flush(const Size& size) {
-    gl->viewport(0, 0, size.width, size.height);
-    // gl->clear(GL_COLOR_BUFFER_BIT);
+    glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
     text_renderer.flush(size);
     rect_renderer.flush(size);

@@ -4,6 +4,7 @@ source_set("gui") {
     "side_bar_widget.cc",
     "tab_bar_widget.cc",
     "text_view_widget.cc",
+    "vertical_layout_widget.cc",
   ]
 
   deps = [

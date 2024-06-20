@@ -2,6 +2,7 @@
 #include "gui/side_bar_widget.h"
 #include "gui/tab_bar_widget.h"
 #include "gui/text_view_widget.h"
+#include "gui/vertical_layout_widget.h"
 #include "simple_text/editor_app.h"
 #include "util/profile_util.h"
 
@@ -76,15 +77,18 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     int tab_bar_height = 30 * 2;
     int side_bar_width = 200 * 2;
 
-    std::unique_ptr<Widget> side_bar{new SideBarWidget(parent.renderer, Size{side_bar_width, 0})};
-    std::unique_ptr<Widget> tab_bar{new TabBarWidget(parent.renderer, Size{0, tab_bar_height})};
-    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget(parent.renderer, Size{})};
+    std::unique_ptr<VerticalLayoutWidget> vertical_layout{
+        new VerticalLayoutWidget(parent.renderer, {})};
+    std::unique_ptr<Widget> side_bar{new SideBarWidget(parent.renderer, {side_bar_width, 0})};
+    std::unique_ptr<Widget> tab_bar{new TabBarWidget(parent.renderer, {0, tab_bar_height})};
+    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget(parent.renderer, {})};
 
     text_view->setContents(sample_text);
 
     main_widget.addChild(std::move(side_bar));
-    main_widget.addChild(std::move(tab_bar));
-    main_widget.addChild(std::move(text_view));
+    vertical_layout->addChild(std::move(tab_bar));
+    vertical_layout->addChild(std::move(text_view));
+    main_widget.addChild(std::move(vertical_layout));
 }
 
 void EditorWindow::onDraw(int width, int height) {

@@ -14,8 +14,9 @@ void HorizontalLayoutWidget::draw(const renderer::Size& screen_size,
     for (auto& child : children) {
         child->draw(new_screen_size, new_offset);
 
-        new_screen_size.width -= child->getSize().width;
-        new_offset.x += child->getSize().width;
+        int child_width = child->getSize().width;
+        new_screen_size.width -= child_width;
+        new_offset.x += child_width;
     }
 }
 

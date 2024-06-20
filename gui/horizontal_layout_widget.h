@@ -8,9 +8,10 @@ namespace gui {
 
 class HorizontalLayoutWidget : public Widget {
 public:
-    HorizontalLayoutWidget(std::shared_ptr<renderer::Renderer> renderer);
+    HorizontalLayoutWidget(std::shared_ptr<renderer::Renderer> renderer,
+                           const renderer::Size& size);
 
-    void draw(const renderer::Size& size, const renderer::Point& offset) override;
+    void draw(const renderer::Size& screen_size, const renderer::Point& offset) override;
     void scroll(const renderer::Point& delta) override;
 
     void addChild(std::unique_ptr<Widget> widget);

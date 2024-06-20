@@ -2,15 +2,17 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(std::shared_ptr<renderer::Renderer> renderer) : Widget{renderer} {}
+TextViewWidget::TextViewWidget(std::shared_ptr<renderer::Renderer> renderer,
+                               const renderer::Size& size)
+    : Widget{renderer, size} {}
 
-void TextViewWidget::draw(const renderer::Size& size, const renderer::Point& offset) {
+void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
     int longest_line = 0;
     renderer::Point end_caret_pos;
     // renderer->getTextRenderer().renderText({width, height}, scroll_offset, buffer,
     //                                        {200 * 2, 30 * 2}, end_caret, end_caret,
     //                                        longest_line, end_caret_pos);
-    renderer->getTextRenderer().renderText(size, scroll_offset, buffer, offset, end_caret,
+    renderer->getTextRenderer().renderText(screen_size, scroll_offset, buffer, offset, end_caret,
                                            end_caret, longest_line, end_caret_pos);
 }
 

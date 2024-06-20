@@ -67,16 +67,17 @@ Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
 }
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
-    : Window{parent}, wid{wid}, parent{parent}, main_widget{parent.renderer} {}
+    : Window{parent}, wid{wid}, parent{parent}, main_widget{parent.renderer, {}} {}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
     int tab_bar_height = 30 * 2;
     int side_bar_width = 200 * 2;
-    main_widget.addChild(std::make_unique<gui::SideBarWidget>(parent.renderer, side_bar_width));
+    main_widget.addChild(
+        std::make_unique<gui::SideBarWidget>(parent.renderer, renderer::Size{side_bar_width, 0}));
     // main_widget.addChild(std::make_unique<gui::TabBarWidget>(parent.renderer, tab_bar_height));
 
     std::unique_ptr<gui::TextViewWidget> text_view_widget =
-        std::make_unique<gui::TextViewWidget>(parent.renderer);
+        std::make_unique<gui::TextViewWidget>(parent.renderer, renderer::Size{});
     text_view_widget->setContents(sample_text);
     main_widget.addChild(std::move(text_view_widget));
 }

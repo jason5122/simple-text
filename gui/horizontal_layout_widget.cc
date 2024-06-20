@@ -2,12 +2,14 @@
 
 namespace gui {
 
-HorizontalLayoutWidget::HorizontalLayoutWidget(std::shared_ptr<renderer::Renderer> renderer)
-    : Widget{renderer} {}
+HorizontalLayoutWidget::HorizontalLayoutWidget(std::shared_ptr<renderer::Renderer> renderer,
+                                               const renderer::Size& size)
+    : Widget{renderer, size} {}
 
-void HorizontalLayoutWidget::draw(const renderer::Size& size, const renderer::Point& offset) {
+void HorizontalLayoutWidget::draw(const renderer::Size& screen_size,
+                                  const renderer::Point& offset) {
     for (auto& child : children) {
-        child->draw(size, offset);
+        child->draw(screen_size, offset);
     }
 }
 

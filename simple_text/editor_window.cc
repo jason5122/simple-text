@@ -72,8 +72,8 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
 void EditorWindow::onOpenGLActivate(int width, int height) {
     int tab_bar_height = 30 * 2;
     int side_bar_width = 200 * 2;
-    main_widget.addChild(std::make_unique<gui::TabBarWidget>(parent.renderer, tab_bar_height));
     main_widget.addChild(std::make_unique<gui::SideBarWidget>(parent.renderer, side_bar_width));
+    // main_widget.addChild(std::make_unique<gui::TabBarWidget>(parent.renderer, tab_bar_height));
 
     std::unique_ptr<gui::TextViewWidget> text_view_widget =
         std::make_unique<gui::TextViewWidget>(parent.renderer);
@@ -85,7 +85,7 @@ void EditorWindow::onDraw(int width, int height) {
     {
         PROFILE_BLOCK("render");
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
-        main_widget.draw(width, height);
+        main_widget.draw({width, height}, {0, 0});
         parent.renderer->flush({width, height});
     }
 }
@@ -95,7 +95,7 @@ void EditorWindow::onResize(int width, int height) {
 }
 
 void EditorWindow::onScroll(int dx, int dy) {
-    main_widget.scroll(dx, dy);
+    main_widget.scroll({dx, dy});
     redraw();
 }
 

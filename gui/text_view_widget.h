@@ -9,8 +9,8 @@ class TextViewWidget : public Widget {
 public:
     TextViewWidget(std::shared_ptr<renderer::Renderer> renderer);
 
-    void draw(int width, int height) override;
-    void scroll(int dx, int dy) override;
+    void draw(const renderer::Size& size, const renderer::Point& offset) override;
+    void scroll(const renderer::Point& delta) override;
 
     void setContents(const std::string& text);
 

@@ -1,17 +1,15 @@
 #include "renderer.h"
 
-#include "opengl/functions_gl_enums.h"
 #include "opengl/gl.h"
 using namespace opengl;
 
 namespace renderer {
 
-Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
-    : gl{std::move(shared_gl)},
-      main_glyph_cache{gl, "Source Code Pro", 16 * 2},
-      ui_glyph_cache{gl, "Arial", 11 * 2},
-      text_renderer{gl, main_glyph_cache, ui_glyph_cache},
-      rect_renderer{gl},
+Renderer::Renderer()
+    : main_glyph_cache{"Source Code Pro", 16 * 2},
+      ui_glyph_cache{"Arial", 11 * 2},
+      text_renderer{main_glyph_cache, ui_glyph_cache},
+      rect_renderer{},
       movement{main_glyph_cache} {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);

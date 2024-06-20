@@ -1,19 +1,17 @@
 #pragma once
 
-#include "opengl/functions_gl_typedefs.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "util/non_copyable.h"
 #include <cstddef>
-#include <memory>
 #include <vector>
 
 namespace renderer {
 
 class RectRenderer : util::NonCopyable {
 public:
-    RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl);
+    RectRenderer();
     ~RectRenderer();
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
@@ -30,8 +28,6 @@ public:
     void flush(const Size& size);
 
 private:
-    std::shared_ptr<opengl::FunctionsGL> gl;
-
     static constexpr int kBatchMax = 0x10000;
     static constexpr int kMinTabWidth = 350;
 

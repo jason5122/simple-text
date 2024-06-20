@@ -1,17 +1,14 @@
 #include "shader.h"
+
+using namespace opengl;
+
+// TODO: Debug; remove this.
 #include <format>
 #include <iostream>
 
-#include "opengl/functions_gl_enums.h"
-#include "opengl/gl.h"
-using namespace opengl;
-
 namespace renderer {
 
-Shader::Shader(std::shared_ptr<opengl::FunctionsGL> shared_gl,
-               const std::string& vert_source,
-               const std::string& frag_source)
-    : gl{std::move(shared_gl)} {
+Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
 

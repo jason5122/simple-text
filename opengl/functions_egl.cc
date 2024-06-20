@@ -1,5 +1,5 @@
 #include "functions_gl.h"
-#include "opengl/functions_egl_typedefs.h"
+#include "opengl/egl_types.h"
 #include <dlfcn.h>
 
 #include <iostream>

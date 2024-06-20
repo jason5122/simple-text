@@ -2,11 +2,9 @@
 
 namespace renderer {
 
-GlyphCache::GlyphCache(std::shared_ptr<opengl::FunctionsGL> shared_gl,
-                       const std::string& font_name_utf8,
-                       int font_size)
-    : gl{std::move(shared_gl)}, font_rasterizer{font_name_utf8, font_size} {
-    atlas_pages.emplace_back(Atlas{gl});
+GlyphCache::GlyphCache(const std::string& font_name_utf8, int font_size)
+    : font_rasterizer{font_name_utf8, font_size} {
+    atlas_pages.emplace_back();
 }
 
 GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view str8) {
@@ -39,7 +37,7 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
 
     // The current page is full, so create a new page and try again.
     if (!success) {
-        atlas_pages.emplace_back(Atlas{gl});
+        atlas_pages.emplace_back();
         current_page++;
 
         return loadGlyph(rglyph);

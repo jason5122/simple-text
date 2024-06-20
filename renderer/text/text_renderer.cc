@@ -3,7 +3,6 @@
 #include <cmath>
 #include <cstdint>
 
-#include "opengl/functions_gl_enums.h"
 #include "opengl/gl.h"
 using namespace opengl;
 
@@ -26,11 +25,8 @@ const std::string kFragmentShaderSource =
 
 namespace renderer {
 
-TextRenderer::TextRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl,
-                           GlyphCache& main_glyph_cache,
-                           GlyphCache& ui_glyph_cache)
-    : gl{std::move(shared_gl)},
-      shader_program{gl, kVertexShaderSource, kFragmentShaderSource},
+TextRenderer::TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
+    : shader_program{kVertexShaderSource, kFragmentShaderSource},
       main_glyph_cache{main_glyph_cache},
       ui_glyph_cache{ui_glyph_cache} {
     glGenVertexArrays(1, &vao);
@@ -88,7 +84,6 @@ TextRenderer::TextRenderer(TextRenderer&& other)
     : vao{other.vao},
       vbo_instance{other.vbo_instance},
       ebo{other.ebo},
-      gl{other.gl},
       shader_program{std::move(other.shader_program)},
       main_glyph_cache{other.main_glyph_cache},
       ui_glyph_cache{other.ui_glyph_cache} {

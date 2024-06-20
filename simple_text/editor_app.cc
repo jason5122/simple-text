@@ -1,16 +1,19 @@
 #include "editor_app.h"
-#include <memory>
+#include "opengl/functions_gl.h"
 
+// TODO: Debug; remove this.
 #include <format>
 #include <iostream>
 
-EditorApp::EditorApp() : gl{std::make_unique<opengl::FunctionsGL>()} {}
+EditorApp::EditorApp() {}
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
 void EditorApp::onLaunch() {
-    gl->initialize();
-    renderer.reset(new renderer::Renderer{gl});
+    opengl::FunctionsGL functions_gl{};
+    functions_gl.loadGlobalFunctionPointers();
+
+    renderer.reset(new renderer::Renderer{});
 
     createWindow();
     createWindow();

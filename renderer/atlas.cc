@@ -1,7 +1,5 @@
 #include "atlas.h"
 
-#include "opengl/functions_gl_enums.h"
-#include "opengl/gl.h"
 using namespace opengl;
 
 // TODO: For debugging; remove this.
@@ -10,7 +8,7 @@ using namespace opengl;
 
 namespace renderer {
 
-Atlas::Atlas(std::shared_ptr<opengl::FunctionsGL> shared_gl) : gl{std::move(shared_gl)} {
+Atlas::Atlas() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
@@ -59,13 +57,12 @@ Atlas::~Atlas() {
     glDeleteTextures(1, &tex_id);
 }
 
-Atlas::Atlas(Atlas&& other) : gl{other.gl}, tex_id(other.tex_id) {
+Atlas::Atlas(Atlas&& other) : tex_id(other.tex_id) {
     other.tex_id = 0;
 }
 
 Atlas& Atlas::operator=(Atlas&& other) {
     if (&other != this) {
-        gl = other.gl;
         tex_id = other.tex_id;
         other.tex_id = 0;
     }

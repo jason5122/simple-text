@@ -11,7 +11,7 @@ public:
     FunctionsGL();
     ~FunctionsGL();
 
-    void initialize();
+    void loadGlobalFunctionPointers();
 
 private:
     void* loadProcAddress(const std::string& function) const;

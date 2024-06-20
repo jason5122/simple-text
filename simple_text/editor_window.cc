@@ -4,66 +4,18 @@
 #include "gui/text_view_widget.h"
 #include "gui/vertical_layout_widget.h"
 #include "simple_text/editor_app.h"
+
+// TODO: Debug; remove this.
 #include "util/profile_util.h"
 
 namespace {
-const std::string sample_text = R"(#include "opengl/functions_gl_enums.h"
-#include "renderer.h"
-
-namespace renderer {
-
-Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
-    : gl{std::move(shared_gl)},
-      main_glyph_cache{gl, "Source Code Pro", 16 * 2},
-      ui_glyph_cache{gl, "Arial", 11 * 2},
-      text_renderer{gl, main_glyph_cache, ui_glyph_cache},
-      rect_renderer{gl},
-      movement{main_glyph_cache} {
-    glEnable(GL_BLEND);
-    glDepthMask(GL_FALSE);
-
-    glClearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
-}
-
-void Renderer::draw(const Size& size,
-                    const base::Buffer& buffer,
-                    const Point& scroll_offset,
-                    const CaretInfo& end_caret) {
-    glViewport(0, 0, size.width, size.height);
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    int longest_line;
-    Point end_caret_pos;
-
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(size, scroll_offset, buffer, editor_offset, end_caret, end_caret,
-                             longest_line, end_caret_pos);
-
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, scroll_offset, end_caret_pos, main_glyph_cache.lineHeight(), 50, 1000,
-                       editor_offset, ui_glyph_cache.lineHeight());
-}
-
-}
-
-#include "opengl/functions_gl_enums.h"
-#include "renderer.h"
-
-namespace renderer {
-
-Renderer::Renderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
-    : gl{std::move(shared_gl)},
-      main_glyph_cache{gl, "Source Code Pro", 16 * 2},
-      ui_glyph_cache{gl, "Arial", 11 * 2},
-      text_renderer{gl, main_glyph_cache, ui_glyph_cache},
-      rect_renderer{gl},
-      movement{main_glyph_cache} {
-    glEnable(GL_BLEND);
-    glDepthMask(GL_FALSE);
-
-    glClearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
-}
+const std::string sample_text =
+    R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 )";
 }
 

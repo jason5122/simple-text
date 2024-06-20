@@ -1,7 +1,6 @@
 #include "rect_renderer.h"
 #include <cmath>
 
-#include "opengl/functions_gl_enums.h"
 #include "opengl/gl.h"
 using namespace opengl;
 
@@ -16,8 +15,7 @@ const std::string kFragmentShaderSource =
 
 namespace renderer {
 
-RectRenderer::RectRenderer(std::shared_ptr<opengl::FunctionsGL> shared_gl)
-    : gl{std::move(shared_gl)}, shader_program{gl, kVertexShaderSource, kFragmentShaderSource} {
+RectRenderer::RectRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
     instances.reserve(kBatchMax);
 
     glGenVertexArrays(1, &vao);
@@ -80,7 +78,6 @@ RectRenderer::RectRenderer(RectRenderer&& other)
     : vao{other.vao},
       vbo_instance{other.vbo_instance},
       ebo{other.ebo},
-      gl{other.gl},
       shader_program{std::move(other.shader_program)} {
     other.vao = 0;
     other.vbo_instance = 0;

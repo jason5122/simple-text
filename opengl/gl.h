@@ -1,6 +1,7 @@
 #pragma once
 
-#include "opengl/functions_gl_typedefs.h"
+#include "opengl/gl_enums.h"
+#include "opengl/gl_types.h"
 
 namespace opengl {
 

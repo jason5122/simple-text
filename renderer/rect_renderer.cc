@@ -170,8 +170,8 @@ void RectRenderer::draw(const Size& size,
     float tab_corner_radius = 10;
 
     instances.emplace_back(InstanceData{
-        .coords = Vec2{static_cast<float>(0), 0 - tab_height},
-        .rect_size = Vec2{static_cast<float>(kMinTabWidth), tab_height},
+        .coords = Vec2{0, -tab_height},
+        .rect_size = Vec2{kMinTabWidth, tab_height},
         .color = Rgba{100, 100, 100, 255},
         .tab_corner_radius = tab_corner_radius,
     });
@@ -188,6 +188,18 @@ void RectRenderer::addRect(const Point& coords, const Size& size, Rgba color) {
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(size.height)},
         .color = color,
+    });
+}
+
+void RectRenderer::addTab(const Point& coords,
+                          const Size& size,
+                          Rgba color,
+                          int tab_corner_radius) {
+    instances.emplace_back(InstanceData{
+        .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
+        .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(size.height)},
+        .color = color,
+        .tab_corner_radius = static_cast<float>(tab_corner_radius),
     });
 }
 

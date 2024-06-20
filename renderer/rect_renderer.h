@@ -25,6 +25,7 @@ public:
               const Point& editor_offset,
               int status_bar_height);
     void addRect(const Point& coords, const Size& size, Rgba color);
+    void addTab(const Point& coords, const Size& size, Rgba color, int tab_corner_radius);
     void flush(const Size& size);
 
 private:

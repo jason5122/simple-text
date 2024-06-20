@@ -15,10 +15,6 @@ public:
     RectRenderer& getRectRenderer();
     Movement& getMovement();
 
-    void draw(const Size& size,
-              const base::Buffer& buffer,
-              const Point& scroll_offset,
-              const CaretInfo& end_caret);
     void flush(const Size& size);
 
 private:

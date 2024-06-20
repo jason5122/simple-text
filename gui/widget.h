@@ -1,14 +1,12 @@
 #pragma once
 
-#include "renderer/renderer.h"
-#include <memory>
+#include "renderer/types.h"
 
 namespace gui {
 
 class Widget {
 public:
-    Widget(std::shared_ptr<renderer::Renderer> renderer, const renderer::Size& size)
-        : renderer{std::move(renderer)}, size{size} {}
+    Widget(const renderer::Size& size) : size{size} {}
     virtual ~Widget() {}
 
     virtual void draw(const renderer::Size& screen_size, const renderer::Point& offset) = 0;
@@ -19,7 +17,6 @@ public:
     }
 
 protected:
-    std::shared_ptr<renderer::Renderer> renderer;
     renderer::Size size;
 };
 

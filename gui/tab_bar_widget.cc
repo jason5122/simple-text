@@ -4,7 +4,7 @@ namespace gui {
 
 TabBarWidget::TabBarWidget(std::shared_ptr<renderer::Renderer> renderer,
                            const renderer::Size& size)
-    : Widget{renderer, size} {}
+    : Widget{size}, renderer{renderer} {}
 
 void TabBarWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
     renderer->getRectRenderer().addRect(offset, {screen_size.width, size.height},

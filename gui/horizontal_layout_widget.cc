@@ -2,9 +2,7 @@
 
 namespace gui {
 
-HorizontalLayoutWidget::HorizontalLayoutWidget(std::shared_ptr<renderer::Renderer> renderer,
-                                               const renderer::Size& size)
-    : Widget{renderer, size} {}
+HorizontalLayoutWidget::HorizontalLayoutWidget(const renderer::Size& size) : Widget{size} {}
 
 void HorizontalLayoutWidget::draw(const renderer::Size& screen_size,
                                   const renderer::Point& offset) {

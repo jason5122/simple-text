@@ -29,26 +29,6 @@ Movement& Renderer::getMovement() {
     return movement;
 }
 
-void Renderer::draw(const Size& size,
-                    const base::Buffer& buffer,
-                    const Point& scroll_offset,
-                    const CaretInfo& end_caret) {
-    glViewport(0, 0, size.width, size.height);
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    int longest_line = 0;
-    Point end_caret_pos{};
-
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderText(size, scroll_offset, buffer, editor_offset, end_caret, end_caret,
-                             longest_line, end_caret_pos);
-
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, scroll_offset, end_caret_pos, main_glyph_cache.lineHeight(), 50, 1000,
-                       editor_offset, ui_glyph_cache.lineHeight());
-}
-
 void Renderer::flush(const Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);

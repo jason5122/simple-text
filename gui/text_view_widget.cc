@@ -4,7 +4,7 @@ namespace gui {
 
 TextViewWidget::TextViewWidget(std::shared_ptr<renderer::Renderer> renderer,
                                const renderer::Size& size)
-    : Widget{renderer, size} {}
+    : Widget{size}, renderer{renderer} {}
 
 void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
     int longest_line = 0;

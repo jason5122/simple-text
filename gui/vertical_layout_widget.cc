@@ -2,9 +2,7 @@
 
 namespace gui {
 
-VerticalLayoutWidget::VerticalLayoutWidget(std::shared_ptr<renderer::Renderer> renderer,
-                                           const renderer::Size& size)
-    : Widget{renderer, size} {}
+VerticalLayoutWidget::VerticalLayoutWidget(const renderer::Size& size) : Widget{size} {}
 
 void VerticalLayoutWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
     renderer::Size new_screen_size = screen_size;

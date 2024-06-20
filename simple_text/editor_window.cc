@@ -20,7 +20,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 }
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
-    : Window{parent}, wid{wid}, parent{parent}, main_widget{parent.renderer, {}} {}
+    : Window{parent}, wid{wid}, parent{parent}, main_widget{{}} {}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
     using namespace gui;
@@ -29,8 +29,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     int tab_bar_height = 30 * 2;
     int side_bar_width = 200 * 2;
 
-    std::unique_ptr<VerticalLayoutWidget> vertical_layout{
-        new VerticalLayoutWidget(parent.renderer, {})};
+    std::unique_ptr<VerticalLayoutWidget> vertical_layout{new VerticalLayoutWidget({})};
     std::unique_ptr<Widget> side_bar{new SideBarWidget(parent.renderer, {side_bar_width, 0})};
     std::unique_ptr<Widget> tab_bar{new TabBarWidget(parent.renderer, {0, tab_bar_height})};
     std::unique_ptr<TextViewWidget> text_view{new TextViewWidget(parent.renderer, {})};

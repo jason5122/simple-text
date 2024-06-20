@@ -4,7 +4,7 @@ namespace gui {
 
 SideBarWidget::SideBarWidget(std::shared_ptr<renderer::Renderer> renderer,
                              const renderer::Size& size)
-    : Widget{renderer, size} {}
+    : Widget{size}, renderer{renderer} {}
 
 void SideBarWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
     renderer->getRectRenderer().addRect({0, 0}, {size.width, screen_size.height},

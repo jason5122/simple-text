@@ -2,6 +2,7 @@
 
 #include "base/buffer.h"
 #include "gui/widget.h"
+#include "renderer/renderer.h"
 
 namespace gui {
 
@@ -15,6 +16,8 @@ public:
     void setContents(const std::string& text);
 
 private:
+    std::shared_ptr<renderer::Renderer> renderer;
+
     base::Buffer buffer;
     renderer::Point scroll_offset{};
     renderer::CaretInfo end_caret{};

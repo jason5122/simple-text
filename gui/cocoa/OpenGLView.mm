@@ -401,7 +401,7 @@ static inline gui::ModifierKey GetModifiers(unsigned long flags) {
                 displayTime:timeStamp];
 
     std::cerr << "quit\n";
-    [NSApp terminate:nil];
+    // [NSApp terminate:nil];
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

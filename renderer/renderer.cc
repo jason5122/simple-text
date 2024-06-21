@@ -39,33 +39,9 @@ void Renderer::render(Size& size, config::ColorScheme& color_scheme,
     selection_renderer.createInstances(size, tab->scroll, editor_offset, main_glyph_cache,
                                        selections, kLineNumberOffset);
 
-    // Render.
-    int end_caret_x = -1;
-
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
     selection_renderer.render(0);
-    text_renderer.renderText(size, tab->scroll, tab->buffer, tab->highlighter, editor_offset,
-                             tab->start_caret, tab->end_caret, tab->longest_line_x, color_scheme,
-                             kLineNumberOffset, end_caret_x);
     selection_renderer.render(1);
-
-    std::vector<int> tab_title_widths = text_renderer.getTabTitleWidths(tab->buffer, tabs);
-    std::vector<int> tab_title_x_coords;
-    std::vector<int> actual_tab_title_widths;
-
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-    rect_renderer.draw(size, tab->scroll, tab->end_caret, end_caret_x,
-                       main_glyph_cache.lineHeight(), tab->buffer.lineCount(), tab->longest_line_x,
-                       editor_offset, ui_glyph_cache.lineHeight(), color_scheme, tab_index,
-                       tab_title_widths, kLineNumberOffset, tab_title_x_coords,
-                       actual_tab_title_widths);
-
-    image_renderer.draw(size, tab->scroll, editor_offset, tab_title_x_coords,
-                        actual_tab_title_widths);
-
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
-    text_renderer.renderUiText(size, tab->end_caret, color_scheme, editor_offset, tabs,
-                               tab_title_x_coords);
 
     // Cleanup.
     selection_renderer.destroyInstances();

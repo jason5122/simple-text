@@ -10,7 +10,7 @@ void TabBarWidget::draw(const renderer::Size& screen_size, const renderer::Point
                                                     {190, 190, 190, 255});
 
     // TODO: Unify `RectRenderer::addTab()` with `RectRenderer::addRect()`.
-    int padding_top = 5;
+    int padding_top = 3 * 2;
     int tab_height = size.height - padding_top;  // Leave padding between window title bar and tab.
     int tab_corner_radius = 10;
     renderer::g_renderer->getRectRenderer().addTab({offset.x, offset.y + padding_top},

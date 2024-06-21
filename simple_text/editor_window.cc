@@ -50,9 +50,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     using namespace gui;
     using namespace renderer;
 
-    int tab_bar_height = 30 * 2;
+    int tab_bar_height = 32 * 2;
     int side_bar_width = 200 * 2;
-    int status_bar_height = 20 * 2;
+    int status_bar_height = 22 * 2;
 
     std::unique_ptr<HorizontalLayoutWidget> horizontal_layout{new HorizontalLayoutWidget({})};
     std::unique_ptr<VerticalLayoutWidget> vertical_layout{new VerticalLayoutWidget({})};
@@ -67,8 +67,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     vertical_layout->addChild(std::move(tab_bar));
     vertical_layout->addChild(std::move(text_view));
     horizontal_layout->addChild(std::move(vertical_layout));
-    main_widget->addChild(std::move(status_bar));
     main_widget->addChild(std::move(horizontal_layout));
+    main_widget->addChild(std::move(status_bar));
 }
 
 void EditorWindow::onDraw(int width, int height) {

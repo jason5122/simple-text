@@ -1,5 +1,6 @@
 #include "renderer/renderer.h"
 #include "text_view_widget.h"
+#include <cmath>
 
 namespace gui {
 

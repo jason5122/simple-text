@@ -12,6 +12,7 @@ public:
     virtual void draw(const renderer::Size& screen_size, const renderer::Point& offset) = 0;
     virtual void scroll(const renderer::Point& delta) = 0;
     virtual void leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) = 0;
+    virtual void leftMouseDrag(const renderer::Point& mouse, const renderer::Point& offset) = 0;
 
     renderer::Size getSize() {
         return size;

@@ -15,4 +15,6 @@ void StatusBarWidget::scroll(const renderer::Point& delta) {}
 
 void StatusBarWidget::leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) {}
 
+void StatusBarWidget::leftMouseDrag(const renderer::Point& mouse, const renderer::Point& offset) {}
+
 }

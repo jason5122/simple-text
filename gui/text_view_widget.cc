@@ -78,6 +78,19 @@ void TextViewWidget::leftMouseDown(const renderer::Point& mouse, const renderer:
     new_coords.x -= line_number_offset;
 
     movement.setCaretInfo(buffer, new_coords, end_caret);
+    start_caret = end_caret;
+}
+
+void TextViewWidget::leftMouseDrag(const renderer::Point& mouse, const renderer::Point& offset) {
+    renderer::Movement& movement = renderer::g_renderer->getMovement();
+
+    // TODO: Add this to parameters.
+    int line_number_offset = 100;
+
+    renderer::Point new_coords = mouse - offset + scroll_offset;
+    new_coords.x -= line_number_offset;
+
+    movement.setCaretInfo(buffer, new_coords, end_caret);
 }
 
 void TextViewWidget::setContents(const std::string& text) {

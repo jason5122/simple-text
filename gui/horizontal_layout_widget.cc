@@ -36,6 +36,17 @@ void HorizontalLayoutWidget::leftMouseDown(const renderer::Point& mouse,
     }
 }
 
+void HorizontalLayoutWidget::leftMouseDrag(const renderer::Point& mouse,
+                                           const renderer::Point& offset) {
+    renderer::Point new_offset = offset;
+
+    for (auto& child : children) {
+        child->leftMouseDrag(mouse, new_offset);
+
+        new_offset.x += child->getSize().width;
+    }
+}
+
 void HorizontalLayoutWidget::addChild(std::unique_ptr<Widget> widget) {
     children.push_back(std::move(widget));
 }

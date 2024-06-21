@@ -98,7 +98,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
 }
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
-    main_widget->leftMouseDown({mouse_x, mouse_y}, {0, 0});
+    main_widget->leftMouseDrag({mouse_x, mouse_y}, {0, 0});
     redraw();
 }
 

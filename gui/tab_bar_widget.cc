@@ -22,4 +22,6 @@ void TabBarWidget::scroll(const renderer::Point& delta) {}
 
 void TabBarWidget::leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) {}
 
+void TabBarWidget::leftMouseDrag(const renderer::Point& mouse, const renderer::Point& offset) {}
+
 }

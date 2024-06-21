@@ -5,6 +5,10 @@
 #include "opengl/gl.h"
 using namespace opengl;
 
+extern "C" {
+#include "third_party/libgrapheme/grapheme.h"
+}
+
 namespace {
 const std::string kVertexShaderSource =
 #include "renderer/shaders/selection_vert.glsl"
@@ -109,18 +113,82 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
     return *this;
 }
 
-void SelectionRenderer::createInstances(const Size& size,
-                                        const Point& offset,
-                                        std::vector<Selection>& selections) {
-    auto create = [this](int start, int end, int line,
-                         uint32_t border_flags = kLeft | kRight | kTop | kBottom,
-                         uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
-                         uint32_t hide_background = 0) {
+std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base::Buffer& buffer,
+                                                                           CaretInfo& start_caret,
+                                                                           CaretInfo& end_caret) {
+    std::vector<SelectionRenderer::Selection> selections;
+
+    size_t start_byte = start_caret.byte, end_byte = end_caret.byte;
+    size_t start_line = start_caret.line, end_line = end_caret.line;
+
+    if (start_byte == end_byte) {
+        return selections;
+    }
+    if (start_byte > end_byte) {
+        std::swap(start_byte, end_byte);
+        std::swap(start_line, end_line);
+    }
+
+    size_t byte_offset = buffer.byteOfLine(start_line);
+    for (size_t line_index = start_line; line_index <= end_line; line_index++) {
+
+        std::string line_str = buffer.getLineContent(line_index);
+
+        int total_advance = 0;
+        int start = 0;
+        int end = 0;
+
+        size_t ret;
+        for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
+            ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
+            std::string_view key = std::string_view(line_str).substr(offset, ret);
+            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+
+            if (byte_offset == start_byte) {
+                start = total_advance;
+            }
+            if (byte_offset == end_byte) {
+                end = total_advance;
+            }
+
+            total_advance += glyph.advance;
+        }
+        if (byte_offset == start_byte) {
+            start = total_advance;
+        }
+        if (byte_offset == end_byte) {
+            end = total_advance;
+        }
+        byte_offset++;
+
+        if (line_index != end_line) {
+            std::string_view key = " ";
+            GlyphCache::Glyph& space_glyph = main_glyph_cache.getGlyph(key);
+            end = total_advance + space_glyph.advance;
+        }
+
+        if (start != end) {
+            selections.emplace_back(SelectionRenderer::Selection{
+                .line = static_cast<int>(line_index),
+                .start = start,
+                .end = end,
+            });
+        }
+    }
+
+    return selections;
+}
+
+void SelectionRenderer::createInstances(const Point& offset, std::vector<Selection>& selections) {
+    auto create = [&, this](int start, int end, int line,
+                            uint32_t border_flags = kLeft | kRight | kTop | kBottom,
+                            uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
+                            uint32_t hide_background = 0) {
         instances.emplace_back(InstanceData{
             .coords =
                 {
-                    .x = static_cast<float>(start),
-                    .y = static_cast<float>(main_glyph_cache.lineHeight() * line),
+                    .x = static_cast<float>(start) + offset.x,
+                    .y = static_cast<float>(main_glyph_cache.lineHeight() * line) + offset.y,
                 },
             .size =
                 {
@@ -128,8 +196,8 @@ void SelectionRenderer::createInstances(const Size& size,
                     .y = static_cast<float>(main_glyph_cache.lineHeight() + kBorderThickness),
                 },
             .color = Rgba::fromRgb(base::colors::selection_focused, 0),
-            // .border_color = Rgba::fromRgb(base::colors::selection_border, 0),
-            .border_color = Rgba::fromRgb(base::colors::red, 0),
+            .border_color = Rgba::fromRgb(base::colors::selection_border, 0),
+            // .border_color = Rgba::fromRgb(base::colors::red, 0),
             // .color = Rgba::fromRgb(base::colors::yellow, 0),
             // .border_color = Rgba::fromRgb(base::Rgb{0, 0, 0}, 0),
             .border_info =

@@ -40,13 +40,6 @@ void Renderer::flush(const Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    std::vector<SelectionRenderer::Selection> selections = {
-        {10, 0, 200},
-        {11, 0, 300},
-        {12, 0, 400},
-    };
-    selection_renderer.createInstances(size, {400, 64}, selections);
-
     selection_renderer.render(size, 0);
     text_renderer.flush(size);
     selection_renderer.render(size, 1);

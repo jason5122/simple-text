@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/buffer.h"
 #include "renderer/shader.h"
 #include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
@@ -20,9 +21,11 @@ public:
         int end;
     };
 
-    void createInstances(const Size& size,
-                         const Point& offset,
-                         std::vector<Selection>& selections);
+    // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
+    std::vector<Selection> getSelections(base::Buffer& buffer,
+                                         CaretInfo& start_caret,
+                                         CaretInfo& end_caret);
+    void createInstances(const Point& offset, std::vector<Selection>& selections);
     void render(const Size& size, int rendering_pass);
     void destroyInstances();
 

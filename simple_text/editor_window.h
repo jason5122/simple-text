@@ -1,7 +1,7 @@
 #pragma once
 
 #include "app/window.h"
-#include "gui/vertical_layout_widget.h"
+#include "gui/container_widget.h"
 
 class EditorApp;
 
@@ -23,7 +23,7 @@ public:
 private:
     int wid;
     EditorApp& parent;
-    std::unique_ptr<gui::VerticalLayoutWidget> main_widget;
+    std::unique_ptr<gui::ContainerWidget> main_widget;
 
     void updateWindowTitle();
 };

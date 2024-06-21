@@ -20,4 +20,6 @@ void TabBarWidget::draw(const renderer::Size& screen_size, const renderer::Point
 
 void TabBarWidget::scroll(const renderer::Point& delta) {}
 
+void TabBarWidget::leftMouseDown(const renderer::Point& mouse) {}
+
 }

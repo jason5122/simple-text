@@ -2,7 +2,7 @@
 
 namespace gui {
 
-VerticalLayoutWidget::VerticalLayoutWidget(const renderer::Size& size) : Widget{size} {}
+VerticalLayoutWidget::VerticalLayoutWidget(const renderer::Size& size) : ContainerWidget{size} {}
 
 void VerticalLayoutWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
     renderer::Size new_screen_size = screen_size;
@@ -20,6 +20,12 @@ void VerticalLayoutWidget::draw(const renderer::Size& screen_size, const rendere
 void VerticalLayoutWidget::scroll(const renderer::Point& delta) {
     for (auto& child : children) {
         child->scroll(delta);
+    }
+}
+
+void VerticalLayoutWidget::leftMouseDown(const renderer::Point& mouse) {
+    for (auto& child : children) {
+        child->leftMouseDown(mouse);
     }
 }
 

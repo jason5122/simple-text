@@ -30,10 +30,25 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
                                          vertical_scroll_bar_position_percentage))
 
     };
-    coords += offset;
-
-    rect_renderer.addRoundedRect(coords, {vertical_scroll_bar_width, vertical_scroll_bar_height},
+    rect_renderer.addRoundedRect(coords + offset,
+                                 {vertical_scroll_bar_width, vertical_scroll_bar_height},
                                  {190, 190, 190, 255}, 5);
+
+    // Add caret.
+    int caret_width = 4;
+    int caret_height = line_height;
+
+    int extra_padding = 8;
+    caret_height += extra_padding * 2;
+
+    // TODO: Add this to parameters.
+    int line_number_offset = 100;
+
+    const renderer::Point caret_pos{
+        .x = end_caret_pos.x - caret_width / 2 - scroll_offset.x + line_number_offset,
+        .y = end_caret_pos.y - extra_padding - scroll_offset.y,
+    };
+    rect_renderer.addRect(caret_pos + offset, {caret_width, caret_height}, {95, 180, 180, 255});
 }
 
 void TextViewWidget::scroll(const renderer::Point& delta) {
@@ -42,6 +57,11 @@ void TextViewWidget::scroll(const renderer::Point& delta) {
     if (scroll_offset.y < 0) {
         scroll_offset.y = 0;
     }
+}
+
+void TextViewWidget::leftMouseDown(const renderer::Point& mouse) {
+    renderer::Movement& movement = renderer::g_renderer->getMovement();
+    movement.setCaretInfo(buffer, mouse, end_caret);
 }
 
 void TextViewWidget::setContents(const std::string& text) {

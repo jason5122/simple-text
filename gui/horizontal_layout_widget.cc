@@ -2,7 +2,8 @@
 
 namespace gui {
 
-HorizontalLayoutWidget::HorizontalLayoutWidget(const renderer::Size& size) : Widget{size} {}
+HorizontalLayoutWidget::HorizontalLayoutWidget(const renderer::Size& size)
+    : ContainerWidget{size} {}
 
 void HorizontalLayoutWidget::draw(const renderer::Size& screen_size,
                                   const renderer::Point& offset) {
@@ -21,6 +22,12 @@ void HorizontalLayoutWidget::draw(const renderer::Size& screen_size,
 void HorizontalLayoutWidget::scroll(const renderer::Point& delta) {
     for (auto& child : children) {
         child->scroll(delta);
+    }
+}
+
+void HorizontalLayoutWidget::leftMouseDown(const renderer::Point& mouse) {
+    for (auto& child : children) {
+        child->leftMouseDown(mouse);
     }
 }
 

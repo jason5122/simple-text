@@ -1,22 +1,19 @@
 #pragma once
 
-#include "gui/widget.h"
+#include "gui/container_widget.h"
 #include <memory>
-#include <vector>
 
 namespace gui {
 
-class VerticalLayoutWidget : public Widget {
+class VerticalLayoutWidget : public ContainerWidget {
 public:
     VerticalLayoutWidget(const renderer::Size& size);
 
     void draw(const renderer::Size& screen_size, const renderer::Point& offset) override;
     void scroll(const renderer::Point& delta) override;
+    void leftMouseDown(const renderer::Point& mouse) override;
 
-    void addChild(std::unique_ptr<Widget> widget);
-
-private:
-    std::vector<std::unique_ptr<Widget>> children;
+    void addChild(std::unique_ptr<Widget> widget) override;
 };
 
 }

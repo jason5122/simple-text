@@ -11,7 +11,7 @@ public:
 
     void draw(const renderer::Size& screen_size, const renderer::Point& offset) override;
     void scroll(const renderer::Point& delta) override;
-    void leftMouseDown(const renderer::Point& mouse) override;
+    void leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) override;
 
     void setContents(const std::string& text);
 

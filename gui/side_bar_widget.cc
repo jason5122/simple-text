@@ -12,6 +12,6 @@ void SideBarWidget::draw(const renderer::Size& screen_size, const renderer::Poin
 
 void SideBarWidget::scroll(const renderer::Point& delta) {}
 
-void SideBarWidget::leftMouseDown(const renderer::Point& mouse) {}
+void SideBarWidget::leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) {}
 
 }

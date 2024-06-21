@@ -23,9 +23,14 @@ void VerticalLayoutWidget::scroll(const renderer::Point& delta) {
     }
 }
 
-void VerticalLayoutWidget::leftMouseDown(const renderer::Point& mouse) {
+void VerticalLayoutWidget::leftMouseDown(const renderer::Point& mouse,
+                                         const renderer::Point& offset) {
+    renderer::Point new_offset = offset;
+
     for (auto& child : children) {
-        child->leftMouseDown(mouse);
+        child->leftMouseDown(mouse, new_offset);
+
+        new_offset.y += child->getSize().height;
     }
 }
 

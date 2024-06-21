@@ -93,12 +93,12 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
                                    int mouse_y,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    main_widget->leftMouseDown({mouse_x, mouse_y});
+    main_widget->leftMouseDown({mouse_x, mouse_y}, {0, 0});
     redraw();
 }
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
-    main_widget->leftMouseDown({mouse_x, mouse_y});
+    main_widget->leftMouseDown({mouse_x, mouse_y}, {0, 0});
     redraw();
 }
 

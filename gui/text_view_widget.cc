@@ -8,11 +8,25 @@ TextViewWidget::TextViewWidget(const renderer::Size& size) : Widget{size} {}
 void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
+    renderer::SelectionRenderer& selection_renderer = renderer::g_renderer->getSelectionRenderer();
+
+    // TODO: Add this to parameters.
+    int line_number_offset = 100;
 
     int longest_line = 0;
     renderer::Point end_caret_pos;
-    text_renderer.renderText(screen_size, scroll_offset, buffer, offset, end_caret, end_caret,
+    text_renderer.renderText(screen_size, scroll_offset, buffer, offset, start_caret, end_caret,
                              longest_line, end_caret_pos);
+
+    // Add selections.
+    // using Selection = renderer::SelectionRenderer::Selection;
+    // // auto selections = selection_renderer.getSelections(buffer, start_caret, end_caret);
+    // std::vector<Selection> selections = {
+    //     {10, 100, 500},
+    //     {11, 100, 600},
+    // };
+    // selection_renderer.createInstances(screen_size, scroll_offset, offset, selections,
+    //                                    line_number_offset);
 
     // Add vertical scroll bar.
     int line_count = buffer.lineCount();
@@ -40,9 +54,6 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
 
     int extra_padding = 8;
     caret_height += extra_padding * 2;
-
-    // TODO: Add this to parameters.
-    int line_number_offset = 100;
 
     const renderer::Point caret_pos{
         .x = end_caret_pos.x - caret_width / 2 - scroll_offset.x + line_number_offset,

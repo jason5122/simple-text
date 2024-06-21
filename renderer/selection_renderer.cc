@@ -37,7 +37,7 @@ SelectionRenderer::SelectionRenderer()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData) * kBatchMax, nullptr, GL_STATIC_DRAW);
 
     GLuint index = 0;
 
@@ -81,42 +81,19 @@ SelectionRenderer::~SelectionRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
-    : vao{other.vao},
-      vbo_instance{other.vbo_instance},
-      ebo{other.ebo},
-      shader_program{std::move(other.shader_program)} {
-    other.vao = 0;
-    other.vbo_instance = 0;
-    other.ebo = 0;
-}
-
-SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
-    if (&other != this) {
-        vao = other.vao;
-        vbo_instance = other.vbo_instance;
-        ebo = other.ebo;
-        shader_program = std::move(other.shader_program);
-        other.vao = 0;
-        other.vbo_instance = 0;
-        other.ebo = 0;
-    }
-    return *this;
-}
-
-void SelectionRenderer::createInstances(Size& size,
-                                        Point& scroll,
-                                        Point& editor_offset,
+void SelectionRenderer::createInstances(const Size& size,
+                                        const Point& scroll,
+                                        const Point& editor_offset,
                                         renderer::GlyphCache& main_glyph_cache,
                                         std::vector<Selection>& selections,
                                         int line_number_offset) {
-    GLuint shader_id = shader_program.id();
-    glUseProgram(shader_id);
-    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
-    glUniform2f(glGetUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
-    glUniform2f(glGetUniformLocation(shader_id, "editor_offset"), editor_offset.x,
+    glUseProgram(shader_program.id());
+    glUniform2f(glGetUniformLocation(shader_program.id(), "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_program.id(), "scroll_offset"), scroll.x, scroll.y);
+    glUniform2f(glGetUniformLocation(shader_program.id(), "editor_offset"), editor_offset.x,
                 editor_offset.y);
-    glUniform1f(glGetUniformLocation(shader_id, "line_number_offset"), line_number_offset);
+    glUniform1f(glGetUniformLocation(shader_program.id(), "line_number_offset"),
+                line_number_offset);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

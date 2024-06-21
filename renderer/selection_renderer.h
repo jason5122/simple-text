@@ -7,22 +7,19 @@
 
 namespace renderer {
 
-class SelectionRenderer : util::NonCopyable {
+class SelectionRenderer {
 public:
-    SelectionRenderer();
-    ~SelectionRenderer();
-    SelectionRenderer(SelectionRenderer&& other);
-    SelectionRenderer& operator=(SelectionRenderer&& other);
-
     struct Selection {
         int line;
         int start;
         int end;
     };
 
-    void createInstances(Size& size,
-                         Point& scroll,
-                         Point& editor_offset,
+    SelectionRenderer();
+    ~SelectionRenderer();
+    void createInstances(const Size& size,
+                         const Point& scroll,
+                         const Point& editor_offset,
                          renderer::GlyphCache& main_glyph_cache,
                          std::vector<Selection>& selections,
                          int line_number_offset);
@@ -50,9 +47,7 @@ private:
     };
 
     Shader shader_program;
-    GLuint vao = 0;
-    GLuint vbo_instance = 0;
-    GLuint ebo = 0;
+    GLuint vao, vbo_instance, ebo;
 
     struct InstanceData {
         Vec2 coords;

@@ -18,6 +18,7 @@ public:
 private:
     base::Buffer buffer;
     renderer::Point scroll_offset{};
+    renderer::CaretInfo start_caret{};
     renderer::CaretInfo end_caret{};
 };
 

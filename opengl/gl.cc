@@ -52,11 +52,13 @@ PFNGLUSEPROGRAMPROC glUseProgram = nullptr;
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = nullptr;
 PFNGLUNIFORM2FPROC glUniform2f = nullptr;
 PFNGLUNIFORM1FPROC glUniform1f = nullptr;
+PFNGLUNIFORM1IPROC glUniform1i = nullptr;
 
 // 3.0
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = nullptr;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = nullptr;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = nullptr;
+PFNGLVERTEXATTRIBIPOINTERPROC glVertexAttribIPointer = nullptr;
 
 // 3.1
 PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced = nullptr;

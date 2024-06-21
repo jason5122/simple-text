@@ -56,11 +56,13 @@ void FunctionsGL::loadGlobalFunctionPointers() {
     ASSIGN("glGetUniformLocation", glGetUniformLocation);
     ASSIGN("glUniform2f", glUniform2f);
     ASSIGN("glUniform1f", glUniform1f);
+    ASSIGN("glUniform1i", glUniform1i);
 
     // 3.0
     ASSIGN("glBindVertexArray", glBindVertexArray);
     ASSIGN("glGenVertexArrays", glGenVertexArrays);
     ASSIGN("glDeleteVertexArrays", glDeleteVertexArrays);
+    ASSIGN("glVertexAttribIPointer", glVertexAttribIPointer);
 
     // 3.1
     ASSIGN("glDrawElementsInstanced", glDrawElementsInstanced);

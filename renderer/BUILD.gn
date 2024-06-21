@@ -4,12 +4,12 @@ source_set("renderer") {
     "movement.cc",
     "rect_renderer.cc",
     "renderer.cc",
+    "selection_renderer.cc",
     "shader.cc",
     "text/glyph_cache.cc",
     "text/text_renderer.cc",
 
     # "image_renderer.cc",
-    # "selection_renderer.cc",
   ]
 
   deps = [

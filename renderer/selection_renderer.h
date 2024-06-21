@@ -1,7 +1,5 @@
 #pragma once
 
-#include "renderer/opengl_functions.h"
-#include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/text/glyph_cache.h"
 #include "renderer/types.h"
@@ -9,17 +7,19 @@
 
 namespace renderer {
 
-class SelectionRenderer {
+class SelectionRenderer : util::NonCopyable {
 public:
+    SelectionRenderer();
+    ~SelectionRenderer();
+    SelectionRenderer(SelectionRenderer&& other);
+    SelectionRenderer& operator=(SelectionRenderer&& other);
+
     struct Selection {
         int line;
         int start;
         int end;
     };
 
-    SelectionRenderer();
-    ~SelectionRenderer();
-    void setup();
     void createInstances(Size& size,
                          Point& scroll,
                          Point& editor_offset,
@@ -50,7 +50,9 @@ private:
     };
 
     Shader shader_program;
-    GLuint vao, vbo_instance, ebo;
+    GLuint vao = 0;
+    GLuint vbo_instance = 0;
+    GLuint ebo = 0;
 
     struct InstanceData {
         Vec2 coords;

@@ -1,33 +1,26 @@
 #include "base/rgb.h"
-#include "renderer/opengl_error_util.h"
 #include "selection_renderer.h"
 #include <cstdint>
 
-#include "build/buildflag.h"
+#include "opengl/gl.h"
+using namespace opengl;
+
+namespace {
+const std::string kVertexShaderSource =
+#include "renderer/shaders/selection_vert.glsl"
+    ;
+const std::string kFragmentShaderSource =
+#include "renderer/shaders/selection_frag.glsl"
+    ;
+}
 
 namespace renderer {
 
-SelectionRenderer::SelectionRenderer() {}
-
-SelectionRenderer::~SelectionRenderer() {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo_instance);
-    glDeleteBuffers(1, &ebo);
-}
-
-void SelectionRenderer::setup() {
-    std::string vert_source =
-#include "renderer/shaders/selection_vert.glsl"
-        ;
-    std::string frag_source =
-#include "renderer/shaders/selection_frag.glsl"
-        ;
-
-    shader_program.link(vert_source, frag_source);
-
-    glUseProgram(shader_program.id);
-    glUniform1i(glGetUniformLocation(shader_program.id, "r"), kCornerRadius);
-    glUniform1i(glGetUniformLocation(shader_program.id, "thickness"), kBorderThickness);
+SelectionRenderer::SelectionRenderer()
+    : shader_program{kVertexShaderSource, kFragmentShaderSource} {
+    glUseProgram(shader_program.id());
+    glUniform1i(glGetUniformLocation(shader_program.id(), "r"), kCornerRadius);
+    glUniform1i(glGetUniformLocation(shader_program.id(), "thickness"), kBorderThickness);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -82,18 +75,48 @@ void SelectionRenderer::setup() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+SelectionRenderer::~SelectionRenderer() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo_instance);
+    glDeleteBuffers(1, &ebo);
+}
+
+SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
+    : vao{other.vao},
+      vbo_instance{other.vbo_instance},
+      ebo{other.ebo},
+      shader_program{std::move(other.shader_program)} {
+    other.vao = 0;
+    other.vbo_instance = 0;
+    other.ebo = 0;
+}
+
+SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
+    if (&other != this) {
+        vao = other.vao;
+        vbo_instance = other.vbo_instance;
+        ebo = other.ebo;
+        shader_program = std::move(other.shader_program);
+        other.vao = 0;
+        other.vbo_instance = 0;
+        other.ebo = 0;
+    }
+    return *this;
+}
+
 void SelectionRenderer::createInstances(Size& size,
                                         Point& scroll,
                                         Point& editor_offset,
                                         renderer::GlyphCache& main_glyph_cache,
                                         std::vector<Selection>& selections,
                                         int line_number_offset) {
-    glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
-    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
-    glUniform2f(glGetUniformLocation(shader_program.id, "editor_offset"), editor_offset.x,
+    GLuint shader_id = shader_program.id();
+    glUseProgram(shader_id);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
+    glUniform2f(glGetUniformLocation(shader_id, "editor_offset"), editor_offset.x,
                 editor_offset.y);
-    glUniform1f(glGetUniformLocation(shader_program.id, "line_number_offset"), line_number_offset);
+    glUniform1f(glGetUniformLocation(shader_id, "line_number_offset"), line_number_offset);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -190,19 +213,15 @@ void SelectionRenderer::createInstances(Size& size,
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    glCheckError();
 }
 
 void SelectionRenderer::render(int rendering_pass) {
-    glUseProgram(shader_program.id);
+    glUseProgram(shader_program.id());
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    glUniform1i(glGetUniformLocation(shader_program.id, "rendering_pass"), rendering_pass);
+    glUniform1i(glGetUniformLocation(shader_program.id(), "rendering_pass"), rendering_pass);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
-
-    glCheckError();
 }
 
 void SelectionRenderer::destroyInstances() {

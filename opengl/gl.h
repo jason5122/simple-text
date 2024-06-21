@@ -55,11 +55,13 @@ extern PFNGLUSEPROGRAMPROC glUseProgram;
 extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 extern PFNGLUNIFORM2FPROC glUniform2f;
 extern PFNGLUNIFORM1FPROC glUniform1f;
+extern PFNGLUNIFORM1IPROC glUniform1i;
 
 // 3.0
 extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
 extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
 extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
+extern PFNGLVERTEXATTRIBIPOINTERPROC glVertexAttribIPointer;
 
 // 3.1
 extern PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;

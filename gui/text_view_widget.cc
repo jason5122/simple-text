@@ -25,11 +25,13 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
         static_cast<float>(scroll_offset.y) / (line_count * line_height);
 
     renderer::Point coords{
-        .x = static_cast<int>(screen_size.width - vertical_scroll_bar_width) + offset.x,
+        .x = static_cast<int>(screen_size.width - vertical_scroll_bar_width),
         .y = static_cast<int>(std::round((screen_size.height - vertical_scroll_bar_height) *
-                                         vertical_scroll_bar_position_percentage)) +
-             offset.y,
+                                         vertical_scroll_bar_position_percentage))
+
     };
+    coords += offset;
+
     rect_renderer.addRoundedRect(coords, {vertical_scroll_bar_width, vertical_scroll_bar_height},
                                  {190, 190, 190, 255}, 5);
 }

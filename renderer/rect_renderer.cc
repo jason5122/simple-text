@@ -79,6 +79,7 @@ RectRenderer::RectRenderer(RectRenderer&& other)
       vbo_instance{other.vbo_instance},
       ebo{other.ebo},
       shader_program{std::move(other.shader_program)} {
+    instances.reserve(kBatchMax);
     other.vao = 0;
     other.vbo_instance = 0;
     other.ebo = 0;

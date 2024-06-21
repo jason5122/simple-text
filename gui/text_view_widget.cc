@@ -19,14 +19,16 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
                              longest_line, end_caret_pos);
 
     // Add selections.
-    // using Selection = renderer::SelectionRenderer::Selection;
-    // // auto selections = selection_renderer.getSelections(buffer, start_caret, end_caret);
-    // std::vector<Selection> selections = {
-    //     {10, 100, 500},
-    //     {11, 100, 600},
-    // };
+    using Selection = renderer::SelectionRenderer::Selection;
+    // auto selections = selection_renderer.getSelections(buffer, start_caret, end_caret);
+    std::vector<Selection> selections = {
+        {15, 0, 200},
+        {16, 0, 300},
+        {17, 0, 400},
+    };
     // selection_renderer.createInstances(screen_size, scroll_offset, offset, selections,
     //                                    line_number_offset);
+    selection_renderer.createInstances(screen_size, {0, 0}, {400, 64}, selections, 100);
 
     // Add vertical scroll bar.
     int line_count = buffer.lineCount();

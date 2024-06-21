@@ -7,29 +7,48 @@
 
 namespace renderer {
 
-class SelectionRenderer {
+class SelectionRenderer : util::NonCopyable {
 public:
+    SelectionRenderer(GlyphCache& main_glyph_cache);
+    ~SelectionRenderer();
+    SelectionRenderer(SelectionRenderer&& other);
+    SelectionRenderer& operator=(SelectionRenderer&& other);
+
     struct Selection {
         int line;
         int start;
         int end;
     };
 
-    SelectionRenderer();
-    ~SelectionRenderer();
     void createInstances(const Size& size,
                          const Point& scroll,
                          const Point& editor_offset,
-                         renderer::GlyphCache& main_glyph_cache,
                          std::vector<Selection>& selections,
                          int line_number_offset);
     void render(int rendering_pass);
     void destroyInstances();
 
 private:
-    static constexpr int kBatchMax = 65536;
+    static constexpr size_t kBatchMax = 0x10000;
     static constexpr int kCornerRadius = 6;
     static constexpr int kBorderThickness = 2;
+
+    GlyphCache& main_glyph_cache;
+
+    Shader shader_program;
+    GLuint vao = 0;
+    GLuint vbo_instance = 0;
+    GLuint ebo = 0;
+
+    struct InstanceData {
+        Vec2 coords;
+        Vec2 size;
+        Rgba color;
+        Rgba border_color;
+        // <border_flags, bottom_border_offset, top_border_offset, hide_background>
+        IVec4 border_info;
+    };
+    std::vector<InstanceData> instances;
 
     enum BorderFlags {
         kLeft = 1,
@@ -45,19 +64,6 @@ private:
         kTopLeftOutwards = 1 << 10,
         kTopRightOutwards = 1 << 11,
     };
-
-    Shader shader_program;
-    GLuint vao, vbo_instance, ebo;
-
-    struct InstanceData {
-        Vec2 coords;
-        Vec2 size;
-        Rgba color;
-        Rgba border_color;
-        // <border_flags, bottom_border_offset, top_border_offset, hide_background>
-        IVec4 border_info;
-    };
-    std::vector<InstanceData> instances;
 };
 
 }

@@ -16,8 +16,11 @@ const std::string kFragmentShaderSource =
 
 namespace renderer {
 
-SelectionRenderer::SelectionRenderer()
-    : shader_program{kVertexShaderSource, kFragmentShaderSource} {
+SelectionRenderer::SelectionRenderer(GlyphCache& main_glyph_cache)
+    : shader_program{kVertexShaderSource, kFragmentShaderSource},
+      main_glyph_cache{main_glyph_cache} {
+    instances.reserve(kBatchMax);
+
     glUseProgram(shader_program.id());
     glUniform1i(glGetUniformLocation(shader_program.id(), "r"), kCornerRadius);
     glUniform1i(glGetUniformLocation(shader_program.id(), "thickness"), kBorderThickness);
@@ -81,10 +84,34 @@ SelectionRenderer::~SelectionRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
+SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
+    : vao{other.vao},
+      vbo_instance{other.vbo_instance},
+      ebo{other.ebo},
+      shader_program{std::move(other.shader_program)},
+      main_glyph_cache{other.main_glyph_cache} {
+    instances.reserve(kBatchMax);
+    other.vao = 0;
+    other.vbo_instance = 0;
+    other.ebo = 0;
+}
+
+SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
+    if (&other != this) {
+        vao = other.vao;
+        vbo_instance = other.vbo_instance;
+        ebo = other.ebo;
+        shader_program = std::move(other.shader_program);
+        other.vao = 0;
+        other.vbo_instance = 0;
+        other.ebo = 0;
+    }
+    return *this;
+}
+
 void SelectionRenderer::createInstances(const Size& size,
                                         const Point& scroll,
                                         const Point& editor_offset,
-                                        renderer::GlyphCache& main_glyph_cache,
                                         std::vector<Selection>& selections,
                                         int line_number_offset) {
     glUseProgram(shader_program.id());
@@ -98,36 +125,35 @@ void SelectionRenderer::createInstances(const Size& size,
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    auto create =
-        [this, &main_glyph_cache](int start, int end, int line,
-                                  uint32_t border_flags = kLeft | kRight | kTop | kBottom,
-                                  uint32_t bottom_border_offset = 0,
-                                  uint32_t top_border_offset = 0, uint32_t hide_background = 0) {
-            instances.emplace_back(InstanceData{
-                .coords =
-                    {
-                        .x = static_cast<float>(start),
-                        .y = static_cast<float>(main_glyph_cache.lineHeight() * line),
-                    },
-                .size =
-                    {
-                        .x = static_cast<float>(end - start),
-                        .y = static_cast<float>(main_glyph_cache.lineHeight() + kBorderThickness),
-                    },
-                .color = Rgba::fromRgb(base::colors::selection_focused, 0),
-                .border_color = Rgba::fromRgb(base::colors::selection_border, 0),
-                // .border_color = Rgba::fromRgb(base::colors::red, 0),
-                // .color = Rgba::fromRgb(base::colors::yellow, 0),
-                // .border_color = Rgba::fromRgb(base::Rgb{0, 0, 0}, 0),
-                .border_info =
-                    IVec4{
-                        .x = border_flags,
-                        .y = bottom_border_offset,
-                        .z = top_border_offset,
-                        .w = hide_background,
-                    },
-            });
-        };
+    auto create = [this](int start, int end, int line,
+                         uint32_t border_flags = kLeft | kRight | kTop | kBottom,
+                         uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
+                         uint32_t hide_background = 0) {
+        instances.emplace_back(InstanceData{
+            .coords =
+                {
+                    .x = static_cast<float>(start),
+                    .y = static_cast<float>(main_glyph_cache.lineHeight() * line),
+                },
+            .size =
+                {
+                    .x = static_cast<float>(end - start),
+                    .y = static_cast<float>(main_glyph_cache.lineHeight() + kBorderThickness),
+                },
+            .color = Rgba::fromRgb(base::colors::selection_focused, 0),
+            .border_color = Rgba::fromRgb(base::colors::selection_border, 0),
+            // .border_color = Rgba::fromRgb(base::colors::red, 0),
+            // .color = Rgba::fromRgb(base::colors::yellow, 0),
+            // .border_color = Rgba::fromRgb(base::Rgb{0, 0, 0}, 0),
+            .border_info =
+                IVec4{
+                    .x = border_flags,
+                    .y = bottom_border_offset,
+                    .z = top_border_offset,
+                    .w = hide_background,
+                },
+        });
+    };
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {

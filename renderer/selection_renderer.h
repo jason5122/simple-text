@@ -21,11 +21,9 @@ public:
     };
 
     void createInstances(const Size& size,
-                         const Point& scroll,
-                         const Point& editor_offset,
-                         std::vector<Selection>& selections,
-                         int line_number_offset);
-    void render(int rendering_pass);
+                         const Point& offset,
+                         std::vector<Selection>& selections);
+    void render(const Size& size, int rendering_pass);
     void destroyInstances();
 
 private:

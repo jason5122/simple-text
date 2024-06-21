@@ -45,11 +45,11 @@ void Renderer::flush(const Size& size) {
         {11, 0, 300},
         {12, 0, 400},
     };
-    selection_renderer.createInstances(size, {0, 0}, {400, 64}, selections, 100);
+    selection_renderer.createInstances(size, {400, 64}, selections);
 
-    selection_renderer.render(0);
+    selection_renderer.render(size, 0);
     text_renderer.flush(size);
-    selection_renderer.render(1);
+    selection_renderer.render(size, 1);
     rect_renderer.flush(size);
 
     selection_renderer.destroyInstances();

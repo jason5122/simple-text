@@ -19,9 +19,6 @@ flat out int top_border_offset;
 flat out int hide_background;
 
 uniform vec2 resolution;
-uniform vec2 scroll_offset;
-uniform vec2 editor_offset;
-uniform float line_number_offset;
 uniform int r;
 
 vec2 pixelToClipSpace(vec2 point) {
@@ -39,9 +36,6 @@ void main() {
     size_temp.x += r * 2;
 
     vec2 cell_position = coords;
-    cell_position -= scroll_offset;
-    cell_position += editor_offset;
-    cell_position.x += line_number_offset;
 
     cell_position += size_temp * position;
 

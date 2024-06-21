@@ -28,7 +28,7 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
     };
     // selection_renderer.createInstances(screen_size, scroll_offset, offset, selections,
     //                                    line_number_offset);
-    selection_renderer.createInstances(screen_size, {0, 0}, {400, 64}, selections, 100);
+    selection_renderer.createInstances(screen_size, {400, 64}, selections);
 
     // Add vertical scroll bar.
     int line_count = buffer.lineCount();

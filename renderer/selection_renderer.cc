@@ -110,21 +110,8 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 void SelectionRenderer::createInstances(const Size& size,
-                                        const Point& scroll,
-                                        const Point& editor_offset,
-                                        std::vector<Selection>& selections,
-                                        int line_number_offset) {
-    glUseProgram(shader_program.id());
-    glUniform2f(glGetUniformLocation(shader_program.id(), "resolution"), size.width, size.height);
-    glUniform2f(glGetUniformLocation(shader_program.id(), "scroll_offset"), scroll.x, scroll.y);
-    glUniform2f(glGetUniformLocation(shader_program.id(), "editor_offset"), editor_offset.x,
-                editor_offset.y);
-    glUniform1f(glGetUniformLocation(shader_program.id(), "line_number_offset"),
-                line_number_offset);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(vao);
-
+                                        const Point& offset,
+                                        std::vector<Selection>& selections) {
     auto create = [this](int start, int end, int line,
                          uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                          uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -141,8 +128,8 @@ void SelectionRenderer::createInstances(const Size& size,
                     .y = static_cast<float>(main_glyph_cache.lineHeight() + kBorderThickness),
                 },
             .color = Rgba::fromRgb(base::colors::selection_focused, 0),
-            .border_color = Rgba::fromRgb(base::colors::selection_border, 0),
-            // .border_color = Rgba::fromRgb(base::colors::red, 0),
+            // .border_color = Rgba::fromRgb(base::colors::selection_border, 0),
+            .border_color = Rgba::fromRgb(base::colors::red, 0),
             // .color = Rgba::fromRgb(base::colors::yellow, 0),
             // .border_color = Rgba::fromRgb(base::Rgb{0, 0, 0}, 0),
             .border_info =
@@ -208,23 +195,24 @@ void SelectionRenderer::createInstances(const Size& size,
         create(selections[i].start, selections[i].end, selections[i].line, flags,
                bottom_border_offset, top_border_offset);
     }
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
-
-    // Unbind.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void SelectionRenderer::render(int rendering_pass) {
-    glUseProgram(shader_program.id());
-    glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(vao);
+void SelectionRenderer::render(const Size& size, int rendering_pass) {
+    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
-    glUniform1i(glGetUniformLocation(shader_program.id(), "rendering_pass"), rendering_pass);
+    GLuint shader_id = shader_program.id();
+    glUseProgram(shader_id);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUniform1i(glGetUniformLocation(shader_id, "rendering_pass"), rendering_pass);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+
+    // Unbind.
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void SelectionRenderer::destroyInstances() {

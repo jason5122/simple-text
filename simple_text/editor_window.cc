@@ -5,6 +5,7 @@
 #include "gui/tab_bar_widget.h"
 #include "gui/text_view_widget.h"
 #include "gui/vertical_layout_widget.h"
+#include "renderer/renderer.h"
 #include "simple_text/editor_app.h"
 
 // TODO: Debug; remove this.
@@ -55,11 +56,10 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     std::unique_ptr<HorizontalLayoutWidget> horizontal_layout{new HorizontalLayoutWidget({})};
     std::unique_ptr<VerticalLayoutWidget> vertical_layout{new VerticalLayoutWidget({})};
-    std::unique_ptr<Widget> side_bar{new SideBarWidget(parent.renderer, {side_bar_width, 0})};
-    std::unique_ptr<Widget> tab_bar{new TabBarWidget(parent.renderer, {0, tab_bar_height})};
-    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget(parent.renderer, {})};
-    std::unique_ptr<Widget> status_bar{
-        new StatusBarWidget(parent.renderer, {0, status_bar_height})};
+    std::unique_ptr<Widget> side_bar{new SideBarWidget({side_bar_width, 0})};
+    std::unique_ptr<Widget> tab_bar{new TabBarWidget({0, tab_bar_height})};
+    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget({})};
+    std::unique_ptr<Widget> status_bar{new StatusBarWidget({0, status_bar_height})};
 
     text_view->setContents(sample_text);
 
@@ -76,7 +76,7 @@ void EditorWindow::onDraw(int width, int height) {
         PROFILE_BLOCK("render");
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
         main_widget->draw({width, height}, {0, 0});
-        parent.renderer->flush({width, height});
+        renderer::g_renderer->flush({width, height});
     }
 }
 

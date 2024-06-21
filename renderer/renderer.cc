@@ -5,6 +5,8 @@ using namespace opengl;
 
 namespace renderer {
 
+Renderer* g_renderer = nullptr;
+
 Renderer::Renderer()
     : main_glyph_cache{"Source Code Pro", 16 * 2},
       ui_glyph_cache{"Arial", 11 * 2},

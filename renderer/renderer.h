@@ -27,4 +27,6 @@ private:
     Point editor_offset{200 * 2, 30 * 2};
 };
 
+extern Renderer* g_renderer;
+
 }

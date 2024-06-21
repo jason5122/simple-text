@@ -2,13 +2,12 @@
 
 #include "base/buffer.h"
 #include "gui/widget.h"
-#include "renderer/renderer.h"
 
 namespace gui {
 
 class TextViewWidget : public Widget {
 public:
-    TextViewWidget(std::shared_ptr<renderer::Renderer> renderer, const renderer::Size& size);
+    TextViewWidget(const renderer::Size& size);
 
     void draw(const renderer::Size& screen_size, const renderer::Point& offset) override;
     void scroll(const renderer::Point& delta) override;
@@ -16,8 +15,6 @@ public:
     void setContents(const std::string& text);
 
 private:
-    std::shared_ptr<renderer::Renderer> renderer;
-
     base::Buffer buffer;
     renderer::Point scroll_offset{};
     renderer::CaretInfo end_caret{};

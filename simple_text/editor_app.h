@@ -1,7 +1,6 @@
 #pragma once
 
 #include "app/app.h"
-#include "renderer/renderer.h"
 #include "simple_text/editor_window.h"
 #include <vector>
 
@@ -19,5 +18,4 @@ private:
     friend class EditorWindow;
 
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
-    std::shared_ptr<renderer::Renderer> renderer;
 };

@@ -1,5 +1,6 @@
 #include "editor_app.h"
 #include "opengl/functions_gl.h"
+#include "renderer/renderer.h"
 
 // TODO: Debug; remove this.
 #include <format>
@@ -13,7 +14,7 @@ void EditorApp::onLaunch() {
     opengl::FunctionsGL functions_gl{};
     functions_gl.loadGlobalFunctionPointers();
 
-    renderer.reset(new renderer::Renderer{});
+    renderer::g_renderer = new renderer::Renderer{};
 
     createWindow();
     createWindow();

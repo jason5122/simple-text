@@ -299,4 +299,8 @@ void TextRenderer::flush(const Size& size) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+int TextRenderer::lineHeight() {
+    return main_glyph_cache.lineHeight();
+}
+
 }

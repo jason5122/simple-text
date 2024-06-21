@@ -25,6 +25,7 @@ public:
                     int& longest_line_x,
                     Point& end_caret_pos);
     void flush(const Size& size);
+    int lineHeight();
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

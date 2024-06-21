@@ -191,6 +191,18 @@ void RectRenderer::addRect(const Point& coords, const Size& size, Rgba color) {
     });
 }
 
+void RectRenderer::addRoundedRect(const Point& coords,
+                                  const Size& size,
+                                  Rgba color,
+                                  int corner_radius) {
+    instances.emplace_back(InstanceData{
+        .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
+        .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(size.height)},
+        .color = color,
+        .corner_radius = static_cast<float>(corner_radius),
+    });
+}
+
 void RectRenderer::addTab(const Point& coords,
                           const Size& size,
                           Rgba color,

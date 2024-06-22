@@ -13,6 +13,7 @@ public:
     void scroll(const renderer::Point& delta) override;
     void leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) override;
     void leftMouseDrag(const renderer::Point& mouse, const renderer::Point& offset) override;
+    void setPosition(const renderer::Point& position) override;
 
     void addChild(std::unique_ptr<Widget> widget) override;
 };

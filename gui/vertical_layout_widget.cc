@@ -45,8 +45,28 @@ void VerticalLayoutWidget::leftMouseDrag(const renderer::Point& mouse,
     }
 }
 
+void VerticalLayoutWidget::setPosition(const renderer::Point& position) {
+    this->position = position;
+
+    // Recursively update position of children.
+    renderer::Point new_position = position;
+    for (auto& child : children) {
+        new_position.y += child->getSize().height;
+        child->setPosition(new_position);
+    }
+}
+
 void VerticalLayoutWidget::addChild(std::unique_ptr<Widget> widget) {
+    renderer::Point new_position{};
+    for (auto& child : children) {
+        new_position.y += child->getSize().height;
+        // child->setPosition(new_position);
+    }
+
+    widget->setPosition(new_position);
     children.push_back(std::move(widget));
+
+    // this->size.height = new_position.y;
 }
 
 }

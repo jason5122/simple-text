@@ -1,12 +1,38 @@
 #pragma once
 
 #include <cstddef>
+#include <format>
+#include <ostream>
 
 namespace renderer {
 
 struct Size {
     int width;
     int height;
+
+    friend Size operator+(const Size& s1, const Size& s2) {
+        return {s1.width + s2.width, s1.height + s2.height};
+    }
+
+    Size& operator+=(const Size& rhs) {
+        width += rhs.width;
+        height += rhs.height;
+        return *this;
+    }
+
+    friend Size operator-(const Size& s1, const Size& s2) {
+        return {s1.width - s2.width, s1.height - s2.height};
+    }
+
+    Size& operator-=(const Size& rhs) {
+        width -= rhs.width;
+        height -= rhs.height;
+        return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const Size& s) {
+        return out << std::format("Size{{{}, {}}}", s.width, s.height);
+    }
 };
 
 struct Point {
@@ -31,6 +57,10 @@ struct Point {
         x -= rhs.x;
         y -= rhs.y;
         return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const Point& p) {
+        return out << std::format("Point{{{}, {}}}", p.x, p.y);
     }
 };
 

@@ -2,11 +2,15 @@
 #include "text_view_widget.h"
 #include <cmath>
 
+#include <iostream>
+
 namespace gui {
 
 TextViewWidget::TextViewWidget(const renderer::Size& size) : Widget{size} {}
 
 void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
+    std::cerr << "TextView: position = " << position << ", size = " << size << '\n';
+
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
     renderer::SelectionRenderer& selection_renderer = renderer::g_renderer->getSelectionRenderer();
@@ -16,14 +20,14 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
 
     int longest_line = 0;
     renderer::Point end_caret_pos;
-    text_renderer.renderText(screen_size, scroll_offset, buffer, offset, start_caret, end_caret,
+    text_renderer.renderText(screen_size, scroll_offset, buffer, position, start_caret, end_caret,
                              longest_line, end_caret_pos);
 
     // Add selections.
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
     auto selections = selection_renderer.getSelections(buffer, start_caret, end_caret);
 
-    renderer::Point selection_offset = offset - scroll_offset;
+    renderer::Point selection_offset = position - scroll_offset;
     selection_offset.x += line_number_offset;
     selection_renderer.createInstances(selection_offset, selections);
 
@@ -43,7 +47,7 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
                                          vertical_scroll_bar_position_percentage))
 
     };
-    rect_renderer.addRoundedRect(coords + offset,
+    rect_renderer.addRoundedRect(coords + position,
                                  {vertical_scroll_bar_width, vertical_scroll_bar_height},
                                  {190, 190, 190, 255}, 5);
 
@@ -58,7 +62,7 @@ void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Poi
         .x = end_caret_pos.x - caret_width / 2 - scroll_offset.x + line_number_offset,
         .y = end_caret_pos.y - extra_padding - scroll_offset.y,
     };
-    rect_renderer.addRect(caret_pos + offset, {caret_width, caret_height}, {95, 180, 180, 255});
+    rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, {95, 180, 180, 255});
 }
 
 void TextViewWidget::scroll(const renderer::Point& delta) {
@@ -75,7 +79,7 @@ void TextViewWidget::leftMouseDown(const renderer::Point& mouse, const renderer:
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    renderer::Point new_coords = mouse - offset + scroll_offset;
+    renderer::Point new_coords = mouse - position + scroll_offset;
     new_coords.x -= line_number_offset;
 
     movement.setCaretInfo(buffer, new_coords, end_caret);
@@ -88,7 +92,7 @@ void TextViewWidget::leftMouseDrag(const renderer::Point& mouse, const renderer:
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    renderer::Point new_coords = mouse - offset + scroll_offset;
+    renderer::Point new_coords = mouse - position + scroll_offset;
     new_coords.x -= line_number_offset;
 
     movement.setCaretInfo(buffer, new_coords, end_caret);

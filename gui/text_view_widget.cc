@@ -8,7 +8,7 @@ namespace gui {
 
 TextViewWidget::TextViewWidget(const renderer::Size& size) : Widget{size} {}
 
-void TextViewWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
+void TextViewWidget::draw(const renderer::Size& screen_size) {
     std::cerr << "TextView: position = " << position << ", size = " << size << '\n';
 
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();

@@ -4,16 +4,11 @@ namespace gui {
 
 VerticalLayoutWidget::VerticalLayoutWidget(const renderer::Size& size) : ContainerWidget{size} {}
 
-void VerticalLayoutWidget::draw(const renderer::Size& screen_size, const renderer::Point& offset) {
+void VerticalLayoutWidget::draw(const renderer::Size& screen_size) {
     renderer::Size new_screen_size = screen_size;
-    renderer::Point new_offset = offset;
-
     for (auto& child : children) {
-        child->draw(new_screen_size, new_offset);
-
-        int child_height = child->getSize().height;
-        new_screen_size.height -= child_height;
-        new_offset.y += child_height;
+        child->draw(new_screen_size);
+        new_screen_size.height -= child->getSize().height;
     }
 }
 
@@ -41,8 +36,8 @@ void VerticalLayoutWidget::setPosition(const renderer::Point& position) {
     // Recursively update position of children.
     renderer::Point new_position = position;
     for (auto& child : children) {
-        new_position.y += child->getSize().height;
         child->setPosition(new_position);
+        new_position.y += child->getSize().height;
     }
 }
 

@@ -73,7 +73,7 @@ void TextViewWidget::scroll(const renderer::Point& delta) {
     }
 }
 
-void TextViewWidget::leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) {
+void TextViewWidget::leftMouseDown(const renderer::Point& mouse) {
     renderer::Movement& movement = renderer::g_renderer->getMovement();
 
     // TODO: Add this to parameters.
@@ -86,7 +86,7 @@ void TextViewWidget::leftMouseDown(const renderer::Point& mouse, const renderer:
     start_caret = end_caret;
 }
 
-void TextViewWidget::leftMouseDrag(const renderer::Point& mouse, const renderer::Point& offset) {
+void TextViewWidget::leftMouseDrag(const renderer::Point& mouse) {
     renderer::Movement& movement = renderer::g_renderer->getMovement();
 
     // TODO: Add this to parameters.

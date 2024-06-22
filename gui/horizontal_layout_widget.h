@@ -11,8 +11,8 @@ public:
 
     void draw(const renderer::Size& screen_size, const renderer::Point& offset) override;
     void scroll(const renderer::Point& delta) override;
-    void leftMouseDown(const renderer::Point& mouse, const renderer::Point& offset) override;
-    void leftMouseDrag(const renderer::Point& mouse, const renderer::Point& offset) override;
+    void leftMouseDown(const renderer::Point& mouse) override;
+    void leftMouseDrag(const renderer::Point& mouse) override;
     void setPosition(const renderer::Point& position) override;
 
     void addChild(std::unique_ptr<Widget> widget) override;

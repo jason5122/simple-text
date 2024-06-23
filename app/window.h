@@ -23,7 +23,7 @@ class App;
 
 class Window {
 public:
-    Window(App& app);
+    Window(App& app, int width, int height);
     virtual ~Window();
 
     void show();

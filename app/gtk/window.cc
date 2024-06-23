@@ -3,7 +3,8 @@
 
 namespace app {
 
-Window::Window(App& app) : pimpl{new impl{app.pimpl->app, this, app.pimpl->context}}, app(app) {}
+Window::Window(App& app, int width, int height)
+    : pimpl{new impl{app.pimpl->app, this, app.pimpl->context}}, app(app) {}
 
 Window::~Window() {}
 

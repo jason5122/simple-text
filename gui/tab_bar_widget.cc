@@ -6,16 +6,18 @@ namespace gui {
 TabBarWidget::TabBarWidget(const renderer::Size& size) : Widget{size} {}
 
 void TabBarWidget::draw(const renderer::Size& screen_size) {
-    renderer::g_renderer->getRectRenderer().addRect(position, {screen_size.width, size.height},
-                                                    {190, 190, 190, 255});
+    renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
+
+    rect_renderer.addRect(position, size, {190, 190, 190, 255});
+
+    // Leave padding between window title bar and tab.
+    renderer::Point padding_top{0, 3 * 2};
+    int tab_height = size.height - padding_top.y;
+    int tab_corner_radius = 10;
 
     // TODO: Unify `RectRenderer::addTab()` with `RectRenderer::addRect()`.
-    int padding_top = 3 * 2;
-    int tab_height = size.height - padding_top;  // Leave padding between window title bar and tab.
-    int tab_corner_radius = 10;
-    renderer::g_renderer->getRectRenderer().addTab({position.x, position.y + padding_top},
-                                                   {350, tab_height}, {253, 253, 253, 255},
-                                                   tab_corner_radius);
+    rect_renderer.addTab(position + padding_top, {350, tab_height}, {253, 253, 253, 255},
+                         tab_corner_radius);
 }
 
 }

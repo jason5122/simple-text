@@ -3,12 +3,14 @@
 
 namespace app {
 
-Window::Window(App& app) : pimpl{new impl{}}, app(app) {
-    // NSRect frame = NSMakeRect(500, 0, width, height);
-    NSRect frame = NSScreen.mainScreen.visibleFrame;
+Window::Window(App& app, int width, int height) : pimpl{new impl{}}, app(app) {
+    NSRect frame = NSMakeRect(0, 1000, width, height);
 
-    frame.origin.y = 300;
-    frame.size.height -= 300;
+    // TODO: Debug; remove this.
+    // NSRect frame = NSScreen.mainScreen.visibleFrame;
+    // frame.origin.y = 300;
+    // frame.size.height -= 300;
+    // frame.size.width -= 300;
 
     DisplayGL* displaygl = app.pimpl->displaygl.get();
     pimpl->window_controller = [[WindowController alloc] initWithFrame:frame

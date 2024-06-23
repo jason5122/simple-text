@@ -10,8 +10,8 @@ SideBarWidget::SideBarWidget(const renderer::Size& size) : Widget{size} {}
 void SideBarWidget::draw(const renderer::Size& screen_size) {
     std::cerr << "SideBarWidget: position = " << position << ", size = " << size << '\n';
 
-    renderer::g_renderer->getRectRenderer().addRect(position, {size.width, screen_size.height},
-                                                    {235, 237, 239, 255});
+    renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
+    rect_renderer.addRect(position, size, {235, 237, 239, 255});
 }
 
 }

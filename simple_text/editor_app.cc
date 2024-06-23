@@ -17,7 +17,6 @@ void EditorApp::onLaunch() {
     renderer::g_renderer = new renderer::Renderer{};
 
     createWindow();
-    createWindow();
 }
 
 void EditorApp::onQuit() {
@@ -26,7 +25,7 @@ void EditorApp::onQuit() {
 
 void EditorApp::createWindow() {
     std::unique_ptr<EditorWindow> editor_window =
-        std::make_unique<EditorWindow>(*this, 600, 400, editor_windows.size());
+        std::make_unique<EditorWindow>(*this, 1200, 800, editor_windows.size());
     editor_window->show();
     editor_windows.push_back(std::move(editor_window));
 }

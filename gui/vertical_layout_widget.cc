@@ -1,32 +1,22 @@
 #include "vertical_layout_widget.h"
 
+#include <iostream>
+
 namespace gui {
 
 VerticalLayoutWidget::VerticalLayoutWidget(const renderer::Size& size) : ContainerWidget{size} {}
 
 void VerticalLayoutWidget::draw(const renderer::Size& screen_size) {
+    std::cerr << "VerticalLayout: position = " << position << ", size = " << size << '\n';
+
+    if (main_widget) {
+        main_widget->draw(screen_size);
+    }
+
     renderer::Size new_screen_size = screen_size;
     for (auto& child : children) {
         child->draw(new_screen_size);
         new_screen_size.height -= child->getSize().height;
-    }
-}
-
-void VerticalLayoutWidget::scroll(const renderer::Point& delta) {
-    for (auto& child : children) {
-        child->scroll(delta);
-    }
-}
-
-void VerticalLayoutWidget::leftMouseDown(const renderer::Point& mouse) {
-    for (auto& child : children) {
-        child->leftMouseDown(mouse);
-    }
-}
-
-void VerticalLayoutWidget::leftMouseDrag(const renderer::Point& mouse) {
-    for (auto& child : children) {
-        child->leftMouseDrag(mouse);
     }
 }
 
@@ -39,6 +29,10 @@ void VerticalLayoutWidget::setPosition(const renderer::Point& position) {
         child->setPosition(new_position);
         new_position.y += child->getSize().height;
     }
+}
+
+void VerticalLayoutWidget::setMainWidget(std::unique_ptr<Widget> widget) {
+    main_widget = std::move(widget);
 }
 
 void VerticalLayoutWidget::addChild(std::unique_ptr<Widget> widget) {

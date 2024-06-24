@@ -17,6 +17,8 @@ void FunctionsGL::loadGlobalFunctionPointers() {
     ASSIGN("glTexImage2D", glTexImage2D);
     ASSIGN("glTexParameteri", glTexParameteri);
     ASSIGN("glBlendFunc", glBlendFunc);
+    ASSIGN("glScissor", glScissor);
+    ASSIGN("glDisable", glDisable);
 
     // 1.1
     ASSIGN("glGenTextures", glGenTextures);

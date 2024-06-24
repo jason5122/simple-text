@@ -16,6 +16,8 @@ extern PFNGLPIXELSTOREIPROC glPixelStorei;
 extern PFNGLTEXIMAGE2DPROC glTexImage2D;
 extern PFNGLTEXPARAMETERIPROC glTexParameteri;
 extern PFNGLBLENDFUNCPROC glBlendFunc;
+extern PFNGLSCISSORPROC glScissor;
+extern PFNGLDISABLEPROC glDisable;
 
 // 1.1
 extern PFNGLGENTEXTURESPROC glGenTextures;

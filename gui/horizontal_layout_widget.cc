@@ -10,28 +10,14 @@ HorizontalLayoutWidget::HorizontalLayoutWidget(const renderer::Size& size)
 void HorizontalLayoutWidget::draw(const renderer::Size& screen_size) {
     std::cerr << "HorizontalLayout: position = " << position << ", size = " << size << '\n';
 
+    if (main_widget) {
+        main_widget->draw(screen_size);
+    }
+
     renderer::Size new_screen_size = screen_size;
     for (auto& child : children) {
         child->draw(new_screen_size);
         new_screen_size.width -= child->getSize().width;
-    }
-}
-
-void HorizontalLayoutWidget::scroll(const renderer::Point& delta) {
-    for (auto& child : children) {
-        child->scroll(delta);
-    }
-}
-
-void HorizontalLayoutWidget::leftMouseDown(const renderer::Point& mouse) {
-    for (auto& child : children) {
-        child->leftMouseDown(mouse);
-    }
-}
-
-void HorizontalLayoutWidget::leftMouseDrag(const renderer::Point& mouse) {
-    for (auto& child : children) {
-        child->leftMouseDrag(mouse);
     }
 }
 
@@ -44,6 +30,10 @@ void HorizontalLayoutWidget::setPosition(const renderer::Point& position) {
         child->setPosition(new_position);
         new_position.x += child->getSize().width;
     }
+}
+
+void HorizontalLayoutWidget::setMainWidget(std::unique_ptr<Widget> widget) {
+    main_widget = std::move(widget);
 }
 
 void HorizontalLayoutWidget::addChild(std::unique_ptr<Widget> widget) {

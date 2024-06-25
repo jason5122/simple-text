@@ -100,6 +100,9 @@ void EditorWindow::onDraw(int width, int height) {
 }
 
 void EditorWindow::onResize(int width, int height) {
+    main_widget->setWidth(width);
+    main_widget->setHeight(height);
+    main_widget->layout();
     redraw();
 }
 

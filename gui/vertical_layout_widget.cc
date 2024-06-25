@@ -16,10 +16,12 @@ void VerticalLayoutWidget::layout() {
     int top_offset = 0;
     for (auto& child : children) {
         child->setPosition({position.x, top_offset});
-        top_offset += child->getSize().height;
+        child->setWidth(size.width);
 
         // Recursively layout children.
         child->layout();
+
+        top_offset += child->getSize().height;
     }
 
     if (main_widget) {

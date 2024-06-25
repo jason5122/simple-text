@@ -17,10 +17,12 @@ void HorizontalLayoutWidget::layout() {
     int left_offset = 0;
     for (auto& child : children) {
         child->setPosition({left_offset, position.y});
-        left_offset += child->getSize().width;
+        child->setHeight(size.height);
 
         // Recursively layout children.
         child->layout();
+
+        left_offset += child->getSize().width;
     }
 
     if (main_widget) {

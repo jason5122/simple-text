@@ -17,6 +17,7 @@ static void destroy(GtkWidget* self, gpointer user_data);
 static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
 static void realize(GtkGLArea* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
+static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
 static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
 
 // TODO: Define this below instead.
@@ -65,6 +66,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, app::Window* app_window, GdkGLCo
     g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), app_window);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), app_window);
+    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), app_window);
 
     GtkEventControllerScrollFlags scroll_flags = GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES;
     GtkEventController* scroll_event_controller = gtk_event_controller_scroll_new(scroll_flags);
@@ -155,13 +157,21 @@ static void realize(GtkGLArea* self, gpointer user_data) {
         std::cerr << "GDK_GL_API_GLES\n";
     }
 
-    // int scale_factor = gtk_widget_get_scale_factor(self);
-    // int scaled_width = gtk_widget_get_allocated_width(self) * scale_factor;
-    // int scaled_height = gtk_widget_get_allocated_height(self) * scale_factor;
+    // FIXME: Getting the size of a widget doesn't seem to be possible during realization.
+    // This is fine for now since GTK sends a resize signal once the widget is created.
+    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
+    int scaled_width = gtk_widget_get_width(GTK_WIDGET(self)) * scale_factor;
+    int scaled_height = gtk_widget_get_height(GTK_WIDGET(self)) * scale_factor;
 
     app::Window* app_window = static_cast<app::Window*>(user_data);
-    // app_window->onOpenGLActivate(scaled_width, scaled_height);
-    app_window->onOpenGLActivate(0, 0);
+    app_window->onOpenGLActivate(scaled_width, scaled_height);
+}
+
+static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
+    gtk_gl_area_make_current(self);
+
+    app::Window* app_window = static_cast<app::Window*>(user_data);
+    app_window->onResize(width, height);
 }
 
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {

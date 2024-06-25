@@ -7,6 +7,7 @@ namespace gui {
 
 class TextViewWidget : public Widget {
 public:
+    TextViewWidget() = default;
     TextViewWidget(const renderer::Size& size);
 
     void draw() override;

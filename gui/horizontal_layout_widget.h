@@ -6,6 +6,7 @@ namespace gui {
 
 class HorizontalLayoutWidget : public ContainerWidget {
 public:
+    HorizontalLayoutWidget() = default;
     HorizontalLayoutWidget(const renderer::Size& size);
 
     void draw() override;

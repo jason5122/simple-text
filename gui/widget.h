@@ -6,6 +6,7 @@ namespace gui {
 
 class Widget {
 public:
+    Widget() {}
     Widget(const renderer::Size& size) : size{size} {}
     virtual ~Widget() {}
 

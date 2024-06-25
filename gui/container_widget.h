@@ -8,6 +8,7 @@ namespace gui {
 
 class ContainerWidget : public Widget {
 public:
+    ContainerWidget() = default;
     ContainerWidget(const renderer::Size& size) : Widget{size} {}
     virtual ~ContainerWidget() {}
 

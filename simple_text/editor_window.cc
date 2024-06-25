@@ -47,7 +47,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window{parent, width, height},
       wid{wid},
       parent{parent},
-      main_widget{new gui::VerticalLayoutWidget{{}}} {}
+      main_widget{new gui::VerticalLayoutWidget{}} {}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
     using namespace gui;
@@ -60,9 +60,12 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     int side_bar_width = 200 * 2;
     int status_bar_height = 22 * 2;
 
-    std::unique_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget({})};
-    std::unique_ptr<ContainerWidget> vertical_layout{new VerticalLayoutWidget({})};
-    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget({})};
+    // Main widgets.
+    std::unique_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
+    std::unique_ptr<ContainerWidget> vertical_layout{new VerticalLayoutWidget{}};
+    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget{}};
+
+    // These don't have default constructors since they are not intended to be main widgets.
     std::unique_ptr<Widget> side_bar{new SideBarWidget({side_bar_width, height})};
     std::unique_ptr<Widget> tab_bar{new TabBarWidget({width, tab_bar_height})};
     std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, status_bar_height})};

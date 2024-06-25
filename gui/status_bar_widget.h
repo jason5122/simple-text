@@ -8,7 +8,7 @@ class StatusBarWidget : public Widget {
 public:
     StatusBarWidget(const renderer::Size& size);
 
-    void draw(const renderer::Size& screen_size) override;
+    void draw() override;
 };
 
 }

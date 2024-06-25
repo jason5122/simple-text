@@ -2,6 +2,25 @@
 
 namespace gui {
 
+void ContainerWidget::setMainWidget(std::unique_ptr<Widget> widget) {
+    main_widget = std::move(widget);
+    layout();
+}
+
+void ContainerWidget::addChild(std::unique_ptr<Widget> widget) {
+    children.push_back(std::move(widget));
+    layout();
+}
+
+void ContainerWidget::draw() {
+    if (main_widget) {
+        main_widget->draw();
+    }
+    for (auto& child : children) {
+        child->draw();
+    }
+}
+
 void ContainerWidget::scroll(const renderer::Point& delta) {
     if (main_widget) {
         main_widget->scroll(delta);
@@ -26,6 +45,17 @@ void ContainerWidget::leftMouseDrag(const renderer::Point& mouse) {
     }
     for (auto& child : children) {
         child->leftMouseDrag(mouse);
+    }
+}
+
+void ContainerWidget::setPosition(const renderer::Point& position) {
+    this->position = position;
+
+    // Recursively update position of children.
+    renderer::Point new_position = position;
+    for (auto& child : children) {
+        child->setPosition(new_position);
+        new_position.y += child->getSize().height;
     }
 }
 

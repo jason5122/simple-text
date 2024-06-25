@@ -8,7 +8,7 @@ namespace gui {
 
 TextViewWidget::TextViewWidget(const renderer::Size& size) : Widget{size} {}
 
-void TextViewWidget::draw(const renderer::Size& screen_size) {
+void TextViewWidget::draw() {
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
     renderer::SelectionRenderer& selection_renderer = renderer::g_renderer->getSelectionRenderer();

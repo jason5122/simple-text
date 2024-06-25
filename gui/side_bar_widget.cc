@@ -7,7 +7,7 @@ namespace gui {
 
 SideBarWidget::SideBarWidget(const renderer::Size& size) : Widget{size} {}
 
-void SideBarWidget::draw(const renderer::Size& screen_size) {
+void SideBarWidget::draw() {
     std::cerr << "SideBarWidget: position = " << position << ", size = " << size << '\n';
 
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();

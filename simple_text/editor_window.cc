@@ -53,6 +53,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     using namespace gui;
     using namespace renderer;
 
+    main_widget->setWidth(width);
+    main_widget->setHeight(height);
+
     int tab_bar_height = 32 * 2;
     int side_bar_width = 200 * 2;
     int status_bar_height = 22 * 2;
@@ -73,8 +76,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     // main_widget->addChild(std::move(horizontal_layout));
     // main_widget->addChild(std::move(status_bar));
 
-    horizontal_layout->addChild(std::move(side_bar));
     horizontal_layout->setMainWidget(std::move(text_view));
+    horizontal_layout->addChild(std::move(side_bar));
     main_widget->setMainWidget(std::move(horizontal_layout));
 
     // horizontal_layout->addChild(std::move(side_bar));
@@ -91,7 +94,7 @@ void EditorWindow::onDraw(int width, int height) {
     {
         PROFILE_BLOCK("render");
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
-        main_widget->draw({width, height});
+        main_widget->draw();
         renderer::g_renderer->flush({width, height});
     }
 }

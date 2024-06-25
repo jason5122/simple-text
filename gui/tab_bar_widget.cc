@@ -5,7 +5,7 @@ namespace gui {
 
 TabBarWidget::TabBarWidget(const renderer::Size& size) : Widget{size} {}
 
-void TabBarWidget::draw(const renderer::Size& screen_size) {
+void TabBarWidget::draw() {
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
 
     rect_renderer.addRect(position, size, {190, 190, 190, 255});

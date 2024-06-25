@@ -62,32 +62,24 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     std::unique_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget({})};
     std::unique_ptr<ContainerWidget> vertical_layout{new VerticalLayoutWidget({})};
+    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget({})};
     std::unique_ptr<Widget> side_bar{new SideBarWidget({side_bar_width, height})};
     std::unique_ptr<Widget> tab_bar{new TabBarWidget({width, tab_bar_height})};
-    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget({500 * 2, 400 * 2})};
     std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, status_bar_height})};
 
     text_view->setContents(sample_text);
 
-    // horizontal_layout->addChild(std::move(side_bar));
-    // vertical_layout->addChild(std::move(tab_bar));
-    // vertical_layout->addChild(std::move(text_view));
-    // horizontal_layout->addChild(std::move(vertical_layout));
-    // main_widget->addChild(std::move(horizontal_layout));
+    horizontal_layout->addChild(std::move(side_bar));
+    vertical_layout->addChild(std::move(tab_bar));
+    vertical_layout->setMainWidget(std::move(text_view));
+    horizontal_layout->setMainWidget(std::move(vertical_layout));
+    main_widget->setMainWidget(std::move(horizontal_layout));
     // main_widget->addChild(std::move(status_bar));
 
-    horizontal_layout->setMainWidget(std::move(text_view));
-    horizontal_layout->addChild(std::move(side_bar));
-    main_widget->setMainWidget(std::move(horizontal_layout));
-
+    // TODO: Debug use; remove this.
+    // horizontal_layout->setMainWidget(std::move(text_view));
     // horizontal_layout->addChild(std::move(side_bar));
-    // vertical_layout->addChild(std::move(text_view));
-    // horizontal_layout->addChild(std::move(vertical_layout));
-    // main_widget->addChild(std::move(horizontal_layout));
-
-    // horizontal_layout->addChild(std::move(side_bar));
-    // horizontal_layout->addChild(std::move(text_view));
-    // main_widget->addChild(std::move(horizontal_layout));
+    // main_widget->setMainWidget(std::move(horizontal_layout));
 }
 
 void EditorWindow::onDraw(int width, int height) {

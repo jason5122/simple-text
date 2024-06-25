@@ -1,11 +1,15 @@
 #include "renderer/renderer.h"
 #include "tab_bar_widget.h"
 
+#include <iostream>
+
 namespace gui {
 
 TabBarWidget::TabBarWidget(const renderer::Size& size) : Widget{size} {}
 
 void TabBarWidget::draw() {
+    std::cerr << "TabBar: position = " << position << ", size = " << size << '\n';
+
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
 
     rect_renderer.addRect(position, size, {190, 190, 190, 255});

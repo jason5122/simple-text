@@ -11,7 +11,6 @@ Renderer::Renderer()
     : main_glyph_cache{"Source Code Pro", 16 * 2},
       ui_glyph_cache{"Arial", 11 * 2},
       text_renderer{main_glyph_cache, ui_glyph_cache},
-      rect_renderer{},
       selection_renderer{main_glyph_cache},
       movement{main_glyph_cache} {
     glEnable(GL_BLEND);
@@ -32,6 +31,10 @@ SelectionRenderer& Renderer::getSelectionRenderer() {
     return selection_renderer;
 }
 
+ImageRenderer& Renderer::getImageRenderer() {
+    return image_renderer;
+}
+
 Movement& Renderer::getMovement() {
     return movement;
 }
@@ -44,6 +47,7 @@ void Renderer::flush(const Size& size) {
     text_renderer.flush(size);
     selection_renderer.render(size, 1);
     rect_renderer.flush(size);
+    image_renderer.flush(size);
 
     selection_renderer.destroyInstances();
 }

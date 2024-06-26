@@ -11,6 +11,7 @@ void TabBarWidget::draw() {
     std::cerr << "TabBar: position = " << position << ", size = " << size << '\n';
 
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
+    renderer::ImageRenderer& image_renderer = renderer::g_renderer->getImageRenderer();
 
     rect_renderer.addRect(position, size, {190, 190, 190, 255});
 
@@ -22,6 +23,9 @@ void TabBarWidget::draw() {
     // TODO: Unify `RectRenderer::addTab()` with `RectRenderer::addRect()`.
     rect_renderer.addTab(position + padding_top, {360, tab_height}, {253, 253, 253, 255},
                          tab_corner_radius);
+
+    image_renderer.addImage();
+    rect_renderer.addRect({800, 100}, {100, 100}, {127, 0, 0, 255});
 }
 
 }

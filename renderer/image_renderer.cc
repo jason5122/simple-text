@@ -111,59 +111,35 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
     return *this;
 }
 
-void ImageRenderer::draw(Size& size,
-                         Point& scroll,
-                         Point& editor_offset,
-                         std::vector<int>& tab_title_x_coords,
-                         std::vector<int>& actual_tab_title_widths) {
+void ImageRenderer::addImage() {
+    AtlasImage atlas_entry = image_atlas_entries[0];
+    instances.push_back(InstanceData{
+        .coords = Vec2{800, 100},
+        .rect_size = atlas_entry.rect_size,
+        .uv = atlas_entry.uv,
+        .color = Vec3{158, 158, 158},
+    });
+}
+
+void ImageRenderer::flush(const Size& size) {
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
-    glUniform2f(glGetUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
-
-    std::vector<InstanceData> instances;
-
-    AtlasImage atlas_entry = image_atlas_entries[0];
-    float tab_width = 360;
-    float tab_offset_from_top = 5;
-    float tab_corner_radius = 10;
-    float close_button_offset = 10;
-
-    for (size_t i = 0; i < tab_title_x_coords.size(); i++) {
-        // float pos_x = (editor_offset.x - close_button_offset) +
-        //               ((tab_width - tab_corner_radius) - atlas_entry.rect_size.x);
-        float pos_y = size.height - (atlas_entry.rect_size.y / 2) -
-                      ((editor_offset.y + tab_offset_from_top) / 2);
-
-        instances.push_back(InstanceData{
-            .coords =
-                Vec2{
-                    .x = editor_offset.x +
-                         static_cast<float>(tab_title_x_coords[i] + (actual_tab_title_widths[i] -
-                                                                     atlas_entry.rect_size.x)),
-                    .y = pos_y,
-                },
-            // .coords = Vec2{pos_x, pos_y},
-            .rect_size = atlas_entry.rect_size,
-            .uv = atlas_entry.uv,
-            .color = Vec3{158, 158, 158},
-            // .color = Vec3{116, 116, 116},
-        });
-    }
-
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
-
     glBindTexture(GL_TEXTURE_2D, atlas.tex());
-
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    instances.clear();
 }
 
 // https://blog.nobel-joergensen.com/2010/11/07/loading-a-png-as-texture-in-opengl-using-libpng/

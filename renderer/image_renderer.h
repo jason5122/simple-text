@@ -19,12 +19,8 @@ public:
     ImageRenderer(ImageRenderer&& other);
     ImageRenderer& operator=(ImageRenderer&& other);
 
-    void setup();
-    void draw(Size& size,
-              Point& scroll,
-              Point& editor_offset,
-              std::vector<int>& tab_title_x_coords,
-              std::vector<int>& actual_tab_title_widths);
+    void addImage();
+    void flush(const Size& size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -53,6 +49,7 @@ private:
         Vec4 uv;
         Vec3 color;
     };
+    std::vector<InstanceData> instances;
 };
 
 }

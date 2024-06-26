@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer/image_renderer.h"
 #include "renderer/movement.h"
 #include "renderer/rect_renderer.h"
 #include "renderer/selection_renderer.h"
@@ -15,6 +16,7 @@ public:
     TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();
+    ImageRenderer& getImageRenderer();
     Movement& getMovement();
 
     void flush(const Size& size);
@@ -25,6 +27,7 @@ private:
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
     SelectionRenderer selection_renderer;
+    ImageRenderer image_renderer;
     Movement movement;
 
     Point editor_offset{200 * 2, 30 * 2};

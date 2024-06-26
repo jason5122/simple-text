@@ -57,7 +57,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setHeight(height);
 
     int tab_bar_height = 32 * 2;
-    int side_bar_width = 200 * 2;
+    int side_bar_width = 250 * 2;
     int status_bar_height = 22 * 2;
 
     // Main widgets.
@@ -78,11 +78,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     horizontal_layout->setMainWidget(std::move(vertical_layout));
     main_widget->setMainWidget(std::move(horizontal_layout));
     // main_widget->addChild(std::move(status_bar));
-
-    // TODO: Debug use; remove this.
-    // horizontal_layout->setMainWidget(std::move(text_view));
-    // horizontal_layout->addChild(std::move(side_bar));
-    // main_widget->setMainWidget(std::move(horizontal_layout));
 }
 
 void EditorWindow::onDraw(int width, int height) {

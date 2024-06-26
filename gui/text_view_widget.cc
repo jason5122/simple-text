@@ -36,20 +36,17 @@ void TextViewWidget::draw() {
     // Add vertical scroll bar.
     int line_count = buffer.lineCount();
     int line_height = text_renderer.lineHeight();
-    int vertical_scroll_bar_width = 15;
-    float total_y = (line_count + (static_cast<float>(size.height) / line_height)) * line_height;
-    int vertical_scroll_bar_height = size.height * (size.height / total_y);
-    float vertical_scroll_bar_position_percentage =
-        static_cast<float>(scroll_offset.y) / (line_count * line_height);
+    int vbar_width = 15;
+    int visible_lines = std::ceil(static_cast<float>(size.height) / line_height);
+    int max_scrollbar_y = (line_count + visible_lines) * line_height;
+    int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
+    float vbar_percent = static_cast<float>(scroll_offset.y) / (line_count * line_height);
 
     renderer::Point coords{
-        .x = static_cast<int>(size.width - vertical_scroll_bar_width),
-        .y = static_cast<int>(std::round((size.height - vertical_scroll_bar_height) *
-                                         vertical_scroll_bar_position_percentage))
-
+        .x = size.width - vbar_width,
+        .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRoundedRect(coords + position,
-                                 {vertical_scroll_bar_width, vertical_scroll_bar_height},
+    rect_renderer.addRoundedRect(coords + position, {vbar_width, vbar_height},
                                  {190, 190, 190, 255}, 5);
 
     // Add caret.
@@ -67,11 +64,12 @@ void TextViewWidget::draw() {
 }
 
 void TextViewWidget::scroll(const renderer::Point& delta) {
+    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
+    int max_y = buffer.lineCount() * text_renderer.lineHeight();
+
     // scroll_offset.x += delta.x;
     scroll_offset.y += delta.y;
-    if (scroll_offset.y < 0) {
-        scroll_offset.y = 0;
-    }
+    scroll_offset.y = std::clamp(scroll_offset.y, 0, max_y);
 }
 
 void TextViewWidget::leftMouseDown(const renderer::Point& mouse) {

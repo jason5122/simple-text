@@ -20,7 +20,7 @@ void TabBarWidget::draw() {
     int tab_corner_radius = 10;
 
     // TODO: Unify `RectRenderer::addTab()` with `RectRenderer::addRect()`.
-    rect_renderer.addTab(position + padding_top, {350, tab_height}, {253, 253, 253, 255},
+    rect_renderer.addTab(position + padding_top, {360, tab_height}, {253, 253, 253, 255},
                          tab_corner_radius);
 }
 

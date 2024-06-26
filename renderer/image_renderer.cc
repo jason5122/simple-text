@@ -1,28 +1,24 @@
+#include "base/filesystem/file_reader.h"
 #include "image_renderer.h"
-#include "renderer/opengl_error_util.h"
 #include <cstring>
 #include <png.h>
 
-namespace renderer {
+#include "opengl/gl.h"
+using namespace opengl;
 
-ImageRenderer::ImageRenderer() {}
-
-ImageRenderer::~ImageRenderer() {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo_instance);
-    glDeleteBuffers(1, &ebo);
+namespace {
+const std::string kVertexShaderSource =
+#include "renderer/shaders/image_vert.glsl"
+    ;
+const std::string kFragmentShaderSource =
+#include "renderer/shaders/image_frag.glsl"
+    ;
 }
 
-void ImageRenderer::setup() {
-    std::string vert_source =
-#include "renderer/shaders/image_vert.glsl"
-        ;
-    std::string frag_source =
-#include "renderer/shaders/image_frag.glsl"
-        ;
+namespace renderer {
 
-    shader_program.link(vert_source, frag_source);
-    atlas.setup();
+ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
+    // instances.reserve(kBatchMax);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -85,14 +81,45 @@ void ImageRenderer::setup() {
     });
 }
 
+ImageRenderer::~ImageRenderer() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo_instance);
+    glDeleteBuffers(1, &ebo);
+}
+
+ImageRenderer::ImageRenderer(ImageRenderer&& other)
+    : vao{other.vao},
+      vbo_instance{other.vbo_instance},
+      ebo{other.ebo},
+      shader_program{std::move(other.shader_program)} {
+    // instances.reserve(kBatchMax);
+    other.vao = 0;
+    other.vbo_instance = 0;
+    other.ebo = 0;
+}
+
+ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
+    if (&other != this) {
+        vao = other.vao;
+        vbo_instance = other.vbo_instance;
+        ebo = other.ebo;
+        shader_program = std::move(other.shader_program);
+        other.vao = 0;
+        other.vbo_instance = 0;
+        other.ebo = 0;
+    }
+    return *this;
+}
+
 void ImageRenderer::draw(Size& size,
                          Point& scroll,
                          Point& editor_offset,
                          std::vector<int>& tab_title_x_coords,
                          std::vector<int>& actual_tab_title_widths) {
-    glUseProgram(shader_program.id);
-    glUniform2f(glGetUniformLocation(shader_program.id, "resolution"), size.width, size.height);
-    glUniform2f(glGetUniformLocation(shader_program.id, "scroll_offset"), scroll.x, scroll.y);
+    GLuint shader_id = shader_program.id();
+    glUseProgram(shader_id);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_id, "scroll_offset"), scroll.x, scroll.y);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
@@ -100,7 +127,7 @@ void ImageRenderer::draw(Size& size,
     std::vector<InstanceData> instances;
 
     AtlasImage atlas_entry = image_atlas_entries[0];
-    float tab_width = 350;
+    float tab_width = 360;
     float tab_offset_from_top = 5;
     float tab_corner_radius = 10;
     float close_button_offset = 10;
@@ -137,8 +164,6 @@ void ImageRenderer::draw(Size& size,
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    glCheckError();
 }
 
 // https://blog.nobel-joergensen.com/2010/11/07/loading-a-png-as-texture-in-opengl-using-libpng/

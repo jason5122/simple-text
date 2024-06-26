@@ -1,20 +1,24 @@
 #pragma once
 
-#include "base/filesystem/file_reader.h"
 #include "renderer/atlas.h"
-#include "renderer/opengl_functions.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/types.h"
 #include "util/non_copyable.h"
 #include <vector>
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 namespace renderer {
 
-class ImageRenderer {
+class ImageRenderer : util::NonCopyable {
 public:
     ImageRenderer();
     ~ImageRenderer();
+    ImageRenderer(ImageRenderer&& other);
+    ImageRenderer& operator=(ImageRenderer&& other);
+
     void setup();
     void draw(Size& size,
               Point& scroll,
@@ -23,10 +27,12 @@ public:
               std::vector<int>& actual_tab_title_widths);
 
 private:
-    static constexpr int kBatchMax = 65536;
+    static constexpr size_t kBatchMax = 0x10000;
 
     Shader shader_program;
-    GLuint vao, vbo_instance, ebo;
+    GLuint vao = 0;
+    GLuint vbo_instance = 0;
+    GLuint ebo = 0;
 
     Atlas atlas;
     struct AtlasImage {

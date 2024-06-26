@@ -25,9 +25,10 @@ SelectionRenderer::SelectionRenderer(GlyphCache& main_glyph_cache)
       main_glyph_cache{main_glyph_cache} {
     instances.reserve(kBatchMax);
 
-    glUseProgram(shader_program.id());
-    glUniform1i(glGetUniformLocation(shader_program.id(), "r"), kCornerRadius);
-    glUniform1i(glGetUniformLocation(shader_program.id(), "thickness"), kBorderThickness);
+    GLuint shader_id = shader_program.id();
+    glUseProgram(shader_id);
+    glUniform1i(glGetUniformLocation(shader_id, "r"), kCornerRadius);
+    glUniform1i(glGetUniformLocation(shader_id, "thickness"), kBorderThickness);
 
     GLuint indices[] = {
         0, 1, 3,  // First triangle.

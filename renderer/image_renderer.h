@@ -19,8 +19,8 @@ public:
     ImageRenderer(ImageRenderer&& other);
     ImageRenderer& operator=(ImageRenderer&& other);
 
-    void addImage();
-    void flush(const Size& size);
+    void addImage(const Point& coords, const Rgba& color);
+    void flush(const Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -47,7 +47,7 @@ private:
         Vec2 coords;
         Vec2 rect_size;
         Vec4 uv;
-        Vec3 color;
+        Rgba color;
     };
     std::vector<InstanceData> instances;
 };

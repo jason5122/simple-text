@@ -5,15 +5,16 @@ R"(
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
 layout(location = 2) in vec4 uv;
-layout(location = 3) in vec3 in_color;
+layout(location = 3) in vec4 in_color;
 
 out vec2 tex_coords;
-flat out vec3 image_color;
+flat out vec4 image_color;
 
 uniform vec2 resolution;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
+    point.y = 1.0 - point.y;     // Set origin at top left instead of bottom left.
     return (point * 2.0) - 1.0;  // Convert to [-1.0, 1.0].
 }
 

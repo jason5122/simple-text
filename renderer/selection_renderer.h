@@ -26,7 +26,7 @@ public:
                                          CaretInfo& start_caret,
                                          CaretInfo& end_caret);
     void createInstances(const Point& offset, std::vector<Selection>& selections);
-    void render(const Size& size, int rendering_pass);
+    void render(const Size& screen_size, int rendering_pass);
     void destroyInstances();
 
 private:

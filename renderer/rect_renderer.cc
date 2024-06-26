@@ -184,7 +184,7 @@ void RectRenderer::draw(const Size& size,
     addRect({0, editor_height}, size, Rgba{199, 203, 209, 255});
 }
 
-void RectRenderer::addRect(const Point& coords, const Size& size, Rgba color) {
+void RectRenderer::addRect(const Point& coords, const Size& size, const Rgba& color) {
     instances.emplace_back(InstanceData{
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(size.height)},
@@ -194,7 +194,7 @@ void RectRenderer::addRect(const Point& coords, const Size& size, Rgba color) {
 
 void RectRenderer::addRoundedRect(const Point& coords,
                                   const Size& size,
-                                  Rgba color,
+                                  const Rgba& color,
                                   int corner_radius) {
     instances.emplace_back(InstanceData{
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
@@ -206,7 +206,7 @@ void RectRenderer::addRoundedRect(const Point& coords,
 
 void RectRenderer::addTab(const Point& coords,
                           const Size& size,
-                          Rgba color,
+                          const Rgba& color,
                           int tab_corner_radius) {
     instances.emplace_back(InstanceData{
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
@@ -216,12 +216,13 @@ void RectRenderer::addTab(const Point& coords,
     });
 }
 
-void RectRenderer::flush(const Size& size) {
+void RectRenderer::flush(const Size& screen_size) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
+                screen_size.height);
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

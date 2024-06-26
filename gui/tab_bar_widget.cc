@@ -24,8 +24,7 @@ void TabBarWidget::draw() {
     rect_renderer.addTab(position + padding_top, {360, tab_height}, {253, 253, 253, 255},
                          tab_corner_radius);
 
-    image_renderer.addImage();
-    rect_renderer.addRect({800, 100}, {100, 100}, {127, 0, 0, 255});
+    image_renderer.addImage(position, {158, 158, 158, 255});
 }
 
 }

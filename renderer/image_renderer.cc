@@ -18,8 +18,6 @@ const std::string kFragmentShaderSource =
 namespace renderer {
 
 ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
-    // instances.reserve(kBatchMax);
-
     GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
@@ -55,7 +53,7 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+    glVertexAttribPointer(index, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, color));
     glVertexAttribDivisor(index++, 1);
 
@@ -92,7 +90,6 @@ ImageRenderer::ImageRenderer(ImageRenderer&& other)
       vbo_instance{other.vbo_instance},
       ebo{other.ebo},
       shader_program{std::move(other.shader_program)} {
-    // instances.reserve(kBatchMax);
     other.vao = 0;
     other.vbo_instance = 0;
     other.ebo = 0;
@@ -111,22 +108,23 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
     return *this;
 }
 
-void ImageRenderer::addImage() {
-    AtlasImage atlas_entry = image_atlas_entries[0];
+void ImageRenderer::addImage(const Point& coords, const Rgba& color) {
+    AtlasImage& atlas_entry = image_atlas_entries[0];
     instances.push_back(InstanceData{
-        .coords = Vec2{800, 100},
+        .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .rect_size = atlas_entry.rect_size,
         .uv = atlas_entry.uv,
-        .color = Vec3{158, 158, 158},
+        .color = color,
     });
 }
 
-void ImageRenderer::flush(const Size& size) {
+void ImageRenderer::flush(const Size& screen_size) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
+                screen_size.height);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

@@ -258,13 +258,14 @@ void TextRenderer::renderText(const Size& size,
     }
 }
 
-void TextRenderer::flush(const Size& size) {
+void TextRenderer::flush(const Size& screen_size) {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
     glUniform1f(glGetUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
-    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
+                screen_size.height);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

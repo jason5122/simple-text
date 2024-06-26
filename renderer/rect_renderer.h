@@ -24,10 +24,13 @@ public:
               float longest_x,
               const Point& editor_offset,
               int status_bar_height);
-    void addRect(const Point& coords, const Size& size, Rgba color);
-    void addRoundedRect(const Point& coords, const Size& size, Rgba color, int corner_radius);
-    void addTab(const Point& coords, const Size& size, Rgba color, int tab_corner_radius);
-    void flush(const Size& size);
+    void addRect(const Point& coords, const Size& size, const Rgba& color);
+    void addRoundedRect(const Point& coords,
+                        const Size& size,
+                        const Rgba& color,
+                        int corner_radius);
+    void addTab(const Point& coords, const Size& size, const Rgba& color, int tab_corner_radius);
+    void flush(const Size& screen_size);
 
 private:
     static constexpr int kBatchMax = 0x10000;

@@ -266,12 +266,13 @@ void SelectionRenderer::createInstances(const Point& offset, std::vector<Selecti
     }
 }
 
-void SelectionRenderer::render(const Size& size, int rendering_pass) {
+void SelectionRenderer::render(const Size& screen_size, int rendering_pass) {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform2f(glGetUniformLocation(shader_id, "resolution"), size.width, size.height);
+    glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
+                screen_size.height);
     glUniform1i(glGetUniformLocation(shader_id, "rendering_pass"), rendering_pass);
 
     glBindVertexArray(vao);

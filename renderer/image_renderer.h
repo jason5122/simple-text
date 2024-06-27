@@ -14,12 +14,15 @@ namespace renderer {
 
 class ImageRenderer : util::NonCopyable {
 public:
+    static constexpr size_t kPanelCloseImageIndex = 0;
+
     ImageRenderer();
     ~ImageRenderer();
     ImageRenderer(ImageRenderer&& other);
     ImageRenderer& operator=(ImageRenderer&& other);
 
-    void addImage(const Point& coords, const Rgba& color);
+    Size getImageSize(size_t image_index);
+    void addImage(size_t image_index, const Point& coords, const Rgba& color);
     void flush(const Size& screen_size);
 
 private:

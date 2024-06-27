@@ -108,8 +108,17 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
     return *this;
 }
 
-void ImageRenderer::addImage(const Point& coords, const Rgba& color) {
-    AtlasImage& atlas_entry = image_atlas_entries[0];
+// TODO: Store image size as Size (ints) instead of Vec2 (floats).
+Size ImageRenderer::getImageSize(size_t image_index) {
+    AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
+    return {
+        .width = static_cast<int>(atlas_entry.rect_size.x),
+        .height = static_cast<int>(atlas_entry.rect_size.y),
+    };
+}
+
+void ImageRenderer::addImage(size_t image_index, const Point& coords, const Rgba& color) {
+    AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
     instances.push_back(InstanceData{
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .rect_size = atlas_entry.rect_size,

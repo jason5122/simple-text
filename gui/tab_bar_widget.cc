@@ -38,7 +38,7 @@ void TabBarWidget::draw() {
 
     for (size_t i = 0; i < 3; i++) {
         image_renderer.addImage(renderer::ImageRenderer::kPanelCloseImageIndex, image_pos,
-                                {158, 158, 158, 255});
+                                {142, 142, 142, 255});
         image_pos += renderer::Point{340, 0};
     }
 

@@ -50,13 +50,7 @@ void ContainerWidget::leftMouseDrag(const renderer::Point& mouse) {
 
 void ContainerWidget::setPosition(const renderer::Point& position) {
     this->position = position;
-
-    // Recursively update position of children.
-    renderer::Point new_position = position;
-    for (auto& child : children) {
-        child->setPosition(new_position);
-        new_position.y += child->getSize().height;
-    }
+    layout();
 }
 
 }

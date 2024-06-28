@@ -77,7 +77,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     vertical_layout->setMainWidget(std::move(text_view));
     horizontal_layout->setMainWidget(std::move(vertical_layout));
     main_widget->setMainWidget(std::move(horizontal_layout));
-    // main_widget->addChild(std::move(status_bar));
+    main_widget->addChild(std::move(status_bar));
 }
 
 void EditorWindow::onDraw(int width, int height) {

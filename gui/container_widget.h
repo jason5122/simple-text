@@ -13,7 +13,8 @@ public:
     virtual ~ContainerWidget() {}
 
     virtual void setMainWidget(std::unique_ptr<Widget> widget);
-    virtual void addChild(std::unique_ptr<Widget> widget);
+    virtual void addChildStart(std::unique_ptr<Widget> widget);
+    virtual void addChildEnd(std::unique_ptr<Widget> widget);
 
     void draw() override;
     void scroll(const renderer::Point& delta) override;
@@ -24,7 +25,8 @@ public:
 
 protected:
     std::unique_ptr<Widget> main_widget;
-    std::vector<std::unique_ptr<Widget>> children;
+    std::vector<std::unique_ptr<Widget>> children_start;
+    std::vector<std::unique_ptr<Widget>> children_end;
 };
 
 }

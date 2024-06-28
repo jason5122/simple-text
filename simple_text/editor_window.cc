@@ -72,12 +72,12 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     text_view->setContents(sample_text);
 
-    horizontal_layout->addChild(std::move(side_bar));
-    vertical_layout->addChild(std::move(tab_bar));
+    horizontal_layout->addChildStart(std::move(side_bar));
+    vertical_layout->addChildStart(std::move(tab_bar));
     vertical_layout->setMainWidget(std::move(text_view));
     horizontal_layout->setMainWidget(std::move(vertical_layout));
     main_widget->setMainWidget(std::move(horizontal_layout));
-    main_widget->addChild(std::move(status_bar));
+    main_widget->addChildEnd(std::move(status_bar));
 }
 
 void EditorWindow::onDraw(int width, int height) {

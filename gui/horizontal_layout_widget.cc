@@ -15,7 +15,9 @@ void HorizontalLayoutWidget::draw() {
 
 void HorizontalLayoutWidget::layout() {
     int left_offset = position.x;
-    for (auto& child : children) {
+    int right_offset = position.x + size.width;
+
+    for (auto& child : children_start) {
         child->setPosition({left_offset, position.y});
         child->setHeight(size.height);
 
@@ -25,9 +27,19 @@ void HorizontalLayoutWidget::layout() {
         left_offset += child->getSize().width;
     }
 
+    for (auto& child : children_end) {
+        right_offset -= child->getSize().width;
+
+        child->setPosition({right_offset, position.y});
+        child->setHeight(size.height);
+
+        // Recursively layout children.
+        child->layout();
+    }
+
     if (main_widget) {
         main_widget->setPosition({left_offset, position.y});
-        main_widget->setWidth(size.width - (left_offset - position.x));
+        main_widget->setWidth(right_offset - left_offset);
         main_widget->setHeight(size.height);
 
         // Recursively layout main widget.

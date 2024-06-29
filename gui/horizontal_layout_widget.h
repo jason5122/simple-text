@@ -9,7 +9,6 @@ public:
     HorizontalLayoutWidget() = default;
     HorizontalLayoutWidget(const renderer::Size& size);
 
-    void draw() override;
     void layout() override;
 };
 

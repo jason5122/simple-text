@@ -13,10 +13,6 @@ void TextViewWidget::draw() {
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
     renderer::SelectionRenderer& selection_renderer = renderer::g_renderer->getSelectionRenderer();
 
-    // TODO: Debug; remove this.
-    std::cerr << "TextView: position = " << position << ", size = " << size << '\n';
-    // rect_renderer.addRect(position, size, {127, 0, 0, 255});
-
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
@@ -72,26 +68,28 @@ void TextViewWidget::scroll(const renderer::Point& delta) {
     scroll_offset.y = std::clamp(scroll_offset.y, 0, max_y);
 }
 
-void TextViewWidget::leftMouseDown(const renderer::Point& mouse) {
+void TextViewWidget::leftMouseDown(const renderer::Point& mouse_pos) {
+    std::cerr << "TextViewWidget::leftMouseDown()\n";
+
     renderer::Movement& movement = renderer::g_renderer->getMovement();
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    renderer::Point new_coords = mouse - position + scroll_offset;
+    renderer::Point new_coords = mouse_pos - position + scroll_offset;
     new_coords.x -= line_number_offset;
 
     movement.setCaretInfo(buffer, new_coords, end_caret);
     start_caret = end_caret;
 }
 
-void TextViewWidget::leftMouseDrag(const renderer::Point& mouse) {
+void TextViewWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
     renderer::Movement& movement = renderer::g_renderer->getMovement();
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    renderer::Point new_coords = mouse - position + scroll_offset;
+    renderer::Point new_coords = mouse_pos - position + scroll_offset;
     new_coords.x -= line_number_offset;
 
     movement.setCaretInfo(buffer, new_coords, end_caret);

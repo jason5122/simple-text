@@ -1,17 +1,9 @@
 #include "horizontal_layout_widget.h"
 
-#include <iostream>
-
 namespace gui {
 
 HorizontalLayoutWidget::HorizontalLayoutWidget(const renderer::Size& size)
     : ContainerWidget{size} {}
-
-// TODO: Debug use; remove this.
-void HorizontalLayoutWidget::draw() {
-    std::cerr << "HorizontalLayout: position = " << position << ", size = " << size << '\n';
-    ContainerWidget::draw();
-}
 
 void HorizontalLayoutWidget::layout() {
     int left_offset = position.x;
@@ -39,7 +31,7 @@ void HorizontalLayoutWidget::layout() {
 
     if (main_widget) {
         main_widget->setPosition({left_offset, position.y});
-        main_widget->setWidth(right_offset - left_offset);
+        main_widget->setWidth(std::max(right_offset - left_offset, 0));
         main_widget->setHeight(size.height);
 
         // Recursively layout main widget.

@@ -22,4 +22,9 @@ void Widget::setPosition(const renderer::Point& position) {
     this->position = position;
 }
 
+bool Widget::hitTest(const renderer::Point& point) {
+    return (position.x <= point.x && point.x < position.x + size.width) &&
+           (position.y <= point.y && point.y < position.y + size.height);
+}
+
 }

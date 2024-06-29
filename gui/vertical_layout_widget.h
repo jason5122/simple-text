@@ -9,7 +9,6 @@ public:
     VerticalLayoutWidget() = default;
     VerticalLayoutWidget(const renderer::Size& size);
 
-    void draw() override;
     void layout() override;
 };
 

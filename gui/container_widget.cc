@@ -41,27 +41,27 @@ void ContainerWidget::scroll(const renderer::Point& delta) {
     }
 }
 
-void ContainerWidget::leftMouseDown(const renderer::Point& mouse) {
+void ContainerWidget::leftMouseDown(const renderer::Point& mouse_pos) {
     if (main_widget) {
-        main_widget->leftMouseDown(mouse);
+        main_widget->leftMouseDown(mouse_pos);
     }
     for (auto& child : children_start) {
-        child->leftMouseDown(mouse);
+        child->leftMouseDown(mouse_pos);
     }
     for (auto& child : children_end) {
-        child->leftMouseDown(mouse);
+        child->leftMouseDown(mouse_pos);
     }
 }
 
-void ContainerWidget::leftMouseDrag(const renderer::Point& mouse) {
+void ContainerWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
     if (main_widget) {
-        main_widget->leftMouseDrag(mouse);
+        main_widget->leftMouseDrag(mouse_pos);
     }
     for (auto& child : children_start) {
-        child->leftMouseDrag(mouse);
+        child->leftMouseDrag(mouse_pos);
     }
     for (auto& child : children_end) {
-        child->leftMouseDrag(mouse);
+        child->leftMouseDrag(mouse_pos);
     }
 }
 

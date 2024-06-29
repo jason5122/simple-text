@@ -12,8 +12,8 @@ public:
 
     virtual void draw() = 0;
     virtual void scroll(const renderer::Point& delta) {}
-    virtual void leftMouseDown(const renderer::Point& mouse) {}
-    virtual void leftMouseDrag(const renderer::Point& mouse) {}
+    virtual void leftMouseDown(const renderer::Point& mouse_pos) {}
+    virtual void leftMouseDrag(const renderer::Point& mouse_pos) {}
 
     renderer::Size getSize();
     void setWidth(int width);
@@ -21,6 +21,8 @@ public:
     renderer::Point getPosition();
     virtual void setPosition(const renderer::Point& position);
     virtual void layout() {}
+
+    bool hitTest(const renderer::Point& point);
 
 protected:
     renderer::Size size{};

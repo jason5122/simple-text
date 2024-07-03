@@ -17,6 +17,25 @@ void ContainerWidget::addChildEnd(std::unique_ptr<Widget> widget) {
     layout();
 }
 
+Widget* ContainerWidget::getWidgetAtPosition(const renderer::Point& position) {
+    if (main_widget) {
+        if (main_widget->hitTest(position)) {
+            return main_widget.get();
+        }
+    }
+    for (auto& child : children_start) {
+        if (child->hitTest(position)) {
+            return child.get();
+        }
+    }
+    for (auto& child : children_end) {
+        if (child->hitTest(position)) {
+            return child.get();
+        }
+    }
+    return nullptr;
+}
+
 void ContainerWidget::draw() {
     if (main_widget) {
         main_widget->draw();

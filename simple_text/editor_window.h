@@ -17,6 +17,7 @@ public:
                          int mouse_y,
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;
+    void onLeftMouseUp() override;
     void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
     void onClose() override;
 

@@ -105,8 +105,16 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
                                    int mouse_y,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
+    gui::Widget* temp = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
+
     main_widget->leftMouseDown({mouse_x, mouse_y});
     redraw();
+
+    std::cerr << "down\n";
+}
+
+void EditorWindow::onLeftMouseUp() {
+    std::cerr << "up\n";
 }
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {

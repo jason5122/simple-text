@@ -44,6 +44,7 @@ public:
                                  int mouse_y,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}
+    virtual void onLeftMouseUp() {}
     virtual void onLeftMouseDrag(int mouse_x, int mouse_y, ModifierKey modifiers) {}
     virtual bool onKeyDown(Key key, ModifierKey modifiers) {
         return false;

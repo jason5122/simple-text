@@ -12,9 +12,10 @@ public:
     ContainerWidget(const renderer::Size& size) : Widget{size} {}
     virtual ~ContainerWidget() {}
 
-    virtual void setMainWidget(std::unique_ptr<Widget> widget);
-    virtual void addChildStart(std::unique_ptr<Widget> widget);
-    virtual void addChildEnd(std::unique_ptr<Widget> widget);
+    void setMainWidget(std::unique_ptr<Widget> widget);
+    void addChildStart(std::unique_ptr<Widget> widget);
+    void addChildEnd(std::unique_ptr<Widget> widget);
+    Widget* getWidgetAtPosition(const renderer::Point& position);
 
     void draw() override;
     void scroll(const renderer::Point& delta) override;

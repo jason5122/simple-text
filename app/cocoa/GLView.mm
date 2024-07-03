@@ -211,6 +211,19 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     return modifiers;
 }
 
+static inline void GetPosition(NSEvent* event,
+                               GLLayer* glLayer,
+                               int& scaled_mouse_x,
+                               int& scaled_mouse_y) {
+    int mouse_x = std::round(event.locationInWindow.x);
+    int mouse_y = std::round(event.locationInWindow.y);
+    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
+
+    int scale = glLayer.contentsScale;
+    scaled_mouse_x = mouse_x * scale;
+    scaled_mouse_y = mouse_y * scale;
+}
+
 - (void)keyDown:(NSEvent*)event {
     NSTextInputContext* inputContext = [self inputContext];
 
@@ -225,14 +238,8 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
 }
 
 - (void)mouseDown:(NSEvent*)event {
-    int mouse_x = std::round(event.locationInWindow.x);
-    int mouse_y = std::round(event.locationInWindow.y);
-    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
-
-    int scale = glLayer.contentsScale;
-    int scaled_mouse_x = mouse_x * scale;
-    int scaled_mouse_y = mouse_y * scale;
-
+    int scaled_mouse_x, scaled_mouse_y;
+    GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
 
     app::ClickType click_type = app::ClickType::kSingleClick;
@@ -245,24 +252,20 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     glLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
 }
 
+- (void)mouseUp:(NSEvent*)event {
+    glLayer->appWindow->onLeftMouseUp();
+}
+
 - (void)mouseDragged:(NSEvent*)event {
-    int mouse_x = std::round(event.locationInWindow.x);
-    int mouse_y = std::round(event.locationInWindow.y);
-    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
-
-    int scale = glLayer.contentsScale;
-    int scaled_mouse_x = mouse_x * scale;
-    int scaled_mouse_y = mouse_y * scale;
-
+    int scaled_mouse_x, scaled_mouse_y;
+    GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
     glLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
     NSMenu* contextMenu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
-    [contextMenu addItemWithTitle:@"Insert test string"
-                           action:@selector(insertTestString)
-                    keyEquivalent:@""];
+    [contextMenu addItemWithTitle:@"Exit" action:@selector(terminate:) keyEquivalent:@""];
     [contextMenu popUpMenuPositioningItem:nil atLocation:event.locationInWindow inView:self];
 }
 

@@ -2,6 +2,7 @@
 
 #include "app/window.h"
 #include "gui/container_widget.h"
+#include "gui/text_view_widget.h"
 
 class EditorApp;
 
@@ -25,6 +26,10 @@ private:
     int wid;
     EditorApp& parent;
     std::unique_ptr<gui::ContainerWidget> main_widget;
+
+    // Drag selection.
+    gui::Widget* drag_start_widget = nullptr;
+    gui::TextViewWidget* text_view_widget = nullptr;
 
     void updateWindowTitle();
 };

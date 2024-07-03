@@ -72,6 +72,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     text_view->setContents(sample_text);
 
+    // TODO: Temporary hack. Consider implementing this fully.
+    text_view_widget = text_view.get();
+
     horizontal_layout->addChildStart(std::move(side_bar));
     vertical_layout->addChildStart(std::move(tab_bar));
     vertical_layout->setMainWidget(std::move(text_view));
@@ -105,21 +108,32 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
                                    int mouse_y,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    gui::Widget* temp = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
+    // drag_start_widget = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
 
-    main_widget->leftMouseDown({mouse_x, mouse_y});
-    redraw();
+    // if (drag_start_widget) {
+    //     drag_start_widget->leftMouseDown({mouse_x, mouse_y});
+    //     redraw();
+    // }
 
-    std::cerr << "down\n";
+    if (text_view_widget->hitTest({mouse_x, mouse_y})) {
+        drag_start_widget = text_view_widget;
+
+        if (text_view_widget) {
+            text_view_widget->leftMouseDown({mouse_x, mouse_y});
+            redraw();
+        }
+    }
 }
 
 void EditorWindow::onLeftMouseUp() {
-    std::cerr << "up\n";
+    drag_start_widget = nullptr;
 }
 
 void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
-    main_widget->leftMouseDrag({mouse_x, mouse_y});
-    redraw();
+    if (drag_start_widget) {
+        drag_start_widget->leftMouseDrag({mouse_x, mouse_y});
+        redraw();
+    }
 }
 
 void EditorWindow::onClose() {

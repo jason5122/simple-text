@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer/opengl_types.h"
 #include <cstddef>
 #include <format>
 #include <ostream>
@@ -61,6 +62,10 @@ struct Point {
 
     friend std::ostream& operator<<(std::ostream& out, const Point& p) {
         return out << std::format("Point{{{}, {}}}", p.x, p.y);
+    }
+
+    Vec2 toVec2() {
+        return Vec2{static_cast<float>(x), static_cast<float>(y)};
     }
 };
 

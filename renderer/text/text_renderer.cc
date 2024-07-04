@@ -157,15 +157,16 @@ void TextRenderer::renderText(const Size& size,
                 std::string_view key = std::string_view(line_number_str).substr(offset, 1);
                 GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
-                Vec2 coords{
-                    .x = static_cast<float>(-total_advance - line_number_offset / 2) +
-                         editor_offset.x + line_number_offset - scroll.x,
-                    .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()) +
-                         editor_offset.y - scroll.y,
+                Point coords{
+                    .x = -total_advance,
+                    .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
                 };
+                coords += editor_offset;
+                coords -= scroll;
+                coords.x += line_number_offset / 2;
 
                 InstanceData instance{
-                    .coords = coords,
+                    .coords = coords.toVec2(),
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
@@ -199,15 +200,16 @@ void TextRenderer::renderText(const Size& size,
                 }
                 GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
-                Vec2 coords{
-                    .x = static_cast<float>(total_advance) + editor_offset.x + line_number_offset -
-                         scroll.x,
-                    .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()) +
-                         editor_offset.y - scroll.y,
+                Point coords{
+                    .x = total_advance,
+                    .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
                 };
+                coords += editor_offset;
+                coords -= scroll;
+                coords.x += line_number_offset;
 
                 InstanceData instance{
-                    .coords = coords,
+                    .coords = coords.toVec2(),
                     .glyph = glyph.glyph,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(text_color, glyph.colored),
@@ -224,12 +226,14 @@ void TextRenderer::renderText(const Size& size,
         // TODO: Incorporate this into the build system.
         bool debug_atlas = false;
         if (debug_atlas) {
+            Point coords{
+                .x = atlas_x_offset,
+                .y = size.height - Atlas::kAtlasSize - 200,
+            };
+            coords += editor_offset;
+
             InstanceData instance{
-                .coords =
-                    Vec2{
-                        .x = static_cast<float>(scroll.x + atlas_x_offset),
-                        .y = static_cast<float>(size.height - Atlas::kAtlasSize - 200 + scroll.y),
-                    },
+                .coords = coords.toVec2(),
                 .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
                 .uv = Vec4{0, 0, 1.0, 1.0},
                 .color = Rgba{255, 0, 0, 0},

@@ -20,6 +20,7 @@ const std::string kFragmentShaderSource =
 }
 
 // TODO: Debug; remove this.
+#include "util/profile_util.h"
 #include <format>
 #include <iostream>
 
@@ -147,46 +148,104 @@ void TextRenderer::renderText(const Size& size,
 
     size_t byte_offset = buffer.byteOfLine(start_line);
 
-    for (size_t line_index = start_line; line_index < end_line; line_index++) {
-        size_t ret;
-        int total_advance = 0;
+    std::vector<std::vector<int>> utf8_offsets;
+    utf8_offsets.resize(end_line - start_line);
 
-        // Draw line number.
-        std::string line_number_str = std::to_string(line_index + 1);
-        std::reverse(line_number_str.begin(), line_number_str.end());
+    {
+        PROFILE_BLOCK("collect UTF-8 offsets");
 
-        for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
-            ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
-            std::string_view key = std::string_view(line_number_str).substr(offset, ret);
-            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+        for (size_t line_index = start_line; line_index < end_line; line_index++) {
+            std::string line_str = buffer.getLineContent(line_index);
 
-            Vec2 coords{
-                .x = static_cast<float>(-total_advance - line_number_offset / 2) +
-                     editor_offset.x + line_number_offset - scroll.x,
-                .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()) +
-                     editor_offset.y - scroll.y,
-            };
-
-            InstanceData instance{
-                .coords = coords,
-                .glyph = glyph.glyph,
-                .uv = glyph.uv,
-                .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
-            };
-            insert_into_batch(glyph.page, std::move(instance));
-
-            total_advance += glyph.advance;
+            size_t ret;
+            for (size_t offset = 0; offset < line_str.size(); offset += ret) {
+                ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
+                utf8_offsets[line_index - start_line].emplace_back(ret);
+            }
         }
+    }
 
-        total_advance = 0;
-        std::string line_str = buffer.getLineContent(line_index);
+    {
+        PROFILE_BLOCK("renderText()");
 
-        for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
-            ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
+        for (size_t line_index = start_line; line_index < end_line; line_index++) {
+            size_t ret;
+            int total_advance = 0;
 
-            if (total_advance > size.width) {
-                byte_offset += line_str.size() - offset;
-                break;
+            // Draw line number.
+            std::string line_number_str = std::to_string(line_index + 1);
+            std::reverse(line_number_str.begin(), line_number_str.end());
+
+            for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
+                ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
+                std::string_view key = std::string_view(line_number_str).substr(offset, ret);
+                GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+
+                Vec2 coords{
+                    .x = static_cast<float>(-total_advance - line_number_offset / 2) +
+                         editor_offset.x + line_number_offset - scroll.x,
+                    .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()) +
+                         editor_offset.y - scroll.y,
+                };
+
+                InstanceData instance{
+                    .coords = coords,
+                    .glyph = glyph.glyph,
+                    .uv = glyph.uv,
+                    .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
+                };
+                insert_into_batch(glyph.page, std::move(instance));
+
+                total_advance += glyph.advance;
+            }
+
+            total_advance = 0;
+            std::string line_str = buffer.getLineContent(line_index);
+
+            int offset = 0;
+            for (int temp_name : utf8_offsets[line_index - start_line]) {
+                if (total_advance > size.width) {
+                    byte_offset += line_str.size() - offset;
+                    break;
+                }
+
+                if (byte_offset == end_caret.byte) {
+                    end_caret_pos = {
+                        .x = total_advance,
+                        .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
+                    };
+                }
+
+                std::string_view key = std::string_view(line_str).substr(offset, ret);
+
+                // TODO: Preserve the width of the space character when substituting.
+                //       Otherwise, the line width changes when using proportional fonts.
+                base::Rgb text_color{51, 51, 51};
+                if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
+                    key = "·";
+                    text_color = base::Rgb{182, 182, 182};
+                }
+                GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+
+                Vec2 coords{
+                    .x = static_cast<float>(total_advance) + editor_offset.x + line_number_offset -
+                         scroll.x,
+                    .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()) +
+                         editor_offset.y - scroll.y,
+                };
+
+                InstanceData instance{
+                    .coords = coords,
+                    .glyph = glyph.glyph,
+                    .uv = glyph.uv,
+                    .color = Rgba::fromRgb(text_color, glyph.colored),
+                };
+                insert_into_batch(glyph.page, std::move(instance));
+
+                total_advance += glyph.advance;
+
+                offset += temp_name;
+                byte_offset += temp_name;
             }
 
             if (byte_offset == end_caret.byte) {
@@ -195,45 +254,10 @@ void TextRenderer::renderText(const Size& size,
                     .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
                 };
             }
+            byte_offset++;
 
-            std::string_view key = std::string_view(line_str).substr(offset, ret);
-
-            // TODO: Preserve the width of the space character when substituting.
-            //       Otherwise, the line width changes when using proportional fonts.
-            base::Rgb text_color{51, 51, 51};
-            if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
-                key = "·";
-                text_color = base::Rgb{182, 182, 182};
-            }
-            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
-
-            Vec2 coords{
-                .x = static_cast<float>(total_advance) + editor_offset.x + line_number_offset -
-                     scroll.x,
-                .y = static_cast<float>(line_index * main_glyph_cache.lineHeight()) +
-                     editor_offset.y - scroll.y,
-            };
-
-            InstanceData instance{
-                .coords = coords,
-                .glyph = glyph.glyph,
-                .uv = glyph.uv,
-                .color = Rgba::fromRgb(text_color, glyph.colored),
-            };
-            insert_into_batch(glyph.page, std::move(instance));
-
-            total_advance += glyph.advance;
+            longest_line_x = std::max(total_advance, longest_line_x);
         }
-
-        if (byte_offset == end_caret.byte) {
-            end_caret_pos = {
-                .x = total_advance,
-                .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
-            };
-        }
-        byte_offset++;
-
-        longest_line_x = std::max(total_advance, longest_line_x);
     }
 
     int atlas_x_offset = 0;

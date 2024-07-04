@@ -85,7 +85,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
 void EditorWindow::onDraw(int width, int height) {
     {
-        PROFILE_BLOCK("render");
+        // PROFILE_BLOCK("render");
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
         main_widget->draw();
         renderer::g_renderer->flush({width, height});

@@ -20,13 +20,10 @@ void Movement::setCaretInfo(const base::Buffer& buffer, const Point& mouse, Care
 // TODO: Rewrite this so this operates on an already shaped line.
 //       We should remove any glyph cache/font rasterization from this method.
 size_t Movement::closestBoundaryForX(const base::Buffer& buffer, size_t line_index, int x) {
-    std::string line_str = buffer.getLineContent(line_index);
-
     size_t line_offset = 0;
     int total_advance = 0;
-    for (int offset : buffer.getUtf8Offsets(line_index)) {
-        std::string_view key = std::string_view(line_str).substr(line_offset, offset);
-        GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+    for (const auto& ch : buffer.getLineChars(line_index)) {
+        GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(ch.str);
 
         int glyph_center = total_advance + glyph.advance / 2;
         if (glyph_center >= x) {
@@ -34,8 +31,7 @@ size_t Movement::closestBoundaryForX(const base::Buffer& buffer, size_t line_ind
         }
 
         total_advance += glyph.advance;
-
-        line_offset += offset;
+        line_offset += ch.size;
     }
     return line_offset;
 }

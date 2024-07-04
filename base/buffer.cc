@@ -27,15 +27,25 @@ void Buffer::setContents(const std::string& text) {
     flat_string = text;
 
     {
-        PROFILE_BLOCK("Buffer: collect UTF-8 offsets");
-        utf8_offsets.resize(data.size());
+        PROFILE_BLOCK("Buffer: collect UTF-8 chars");
+        utf8_chars.resize(data.size());
+
+        size_t byte_offset = 0;
         for (size_t i = 0; i < data.size(); i++) {
             const auto& line_str = data.at(i);
 
             size_t offset;
-            for (size_t total_offset = 0; total_offset < line_str.size(); total_offset += offset) {
-                offset = grapheme_next_character_break_utf8(&line_str[0] + total_offset, SIZE_MAX);
-                utf8_offsets.at(i).emplace_back(offset);
+            for (size_t line_offset = 0; line_offset < line_str.size(); line_offset += offset) {
+                offset = grapheme_next_character_break_utf8(&line_str[0] + line_offset, SIZE_MAX);
+
+                utf8_chars.at(i).emplace_back(Utf8Char{
+                    .str = std::string_view(line_str).substr(line_offset, offset),
+                    .size = offset,
+                    .line_offset = line_offset,
+                    .byte_offset = byte_offset,
+                });
+
+                byte_offset += offset;
             }
         }
     }
@@ -54,12 +64,16 @@ size_t Buffer::lineCount() const {
     return data.size();
 }
 
+size_t Buffer::lineLength(size_t line_index) const {
+    return data.at(line_index).length();
+}
+
 std::string Buffer::getLineContent(size_t line_index) const {
     return data.at(line_index);
 }
 
-const std::vector<int>& Buffer::getUtf8Offsets(size_t line_index) const {
-    return utf8_offsets.at(line_index);
+const std::vector<Buffer::Utf8Char>& Buffer::getLineChars(size_t line_index) const {
+    return utf8_chars.at(line_index);
 }
 
 size_t Buffer::byteOfLine(size_t line_index) const {

@@ -178,12 +178,9 @@ void TextRenderer::renderText(const Size& size,
             }
 
             total_advance = 0;
-            std::string line_str = buffer.getLineContent(line_index);
-
-            int line_offset = 0;
-            for (int offset : buffer.getUtf8Offsets(line_index)) {
+            for (const auto& ch : buffer.getLineChars(line_index)) {
                 if (total_advance > size.width) {
-                    byte_offset += line_str.size() - line_offset;
+                    byte_offset += buffer.lineLength(line_index) - ch.line_offset;
                     break;
                 }
 
@@ -194,10 +191,9 @@ void TextRenderer::renderText(const Size& size,
                     };
                 }
 
-                std::string_view key = std::string_view(line_str).substr(line_offset, offset);
-
                 // TODO: Preserve the width of the space character when substituting.
                 //       Otherwise, the line width changes when using proportional fonts.
+                std::string_view key = ch.str;
                 base::Rgb text_color{51, 51, 51};
                 if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
                     key = "·";
@@ -222,8 +218,7 @@ void TextRenderer::renderText(const Size& size,
 
                 total_advance += glyph.advance;
 
-                line_offset += offset;
-                byte_offset += offset;
+                byte_offset += ch.size;
             }
 
             if (byte_offset == end_caret.byte) {

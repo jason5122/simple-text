@@ -27,7 +27,7 @@ void Buffer::setContents(const std::string& text) {
     flat_string = text;
 
     {
-        PROFILE_BLOCK("collect UTF-8 offsets");
+        PROFILE_BLOCK("Buffer: collect UTF-8 offsets");
         utf8_offsets.resize(data.size());
         for (size_t i = 0; i < data.size(); i++) {
             const auto& line_str = data.at(i);

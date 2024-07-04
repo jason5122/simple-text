@@ -14,7 +14,7 @@ public:
 private:
     GlyphCache& main_glyph_cache;
 
-    size_t closestBoundaryForX(std::string_view line_str, int x);
+    size_t closestBoundaryForX(const base::Buffer& buffer, size_t line_index, int x);
 };
 
 }

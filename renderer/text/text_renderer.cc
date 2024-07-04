@@ -6,10 +6,6 @@
 #include "opengl/gl.h"
 using namespace opengl;
 
-extern "C" {
-#include "third_party/libgrapheme/grapheme.h"
-}
-
 namespace {
 const std::string kVertexShaderSource =
 #include "renderer/shaders/text_vert.glsl"
@@ -148,37 +144,19 @@ void TextRenderer::renderText(const Size& size,
 
     size_t byte_offset = buffer.byteOfLine(start_line);
 
-    std::vector<std::vector<int>> utf8_offsets;
-    utf8_offsets.resize(end_line - start_line);
-
-    {
-        PROFILE_BLOCK("collect UTF-8 offsets");
-
-        for (size_t line_index = start_line; line_index < end_line; line_index++) {
-            std::string line_str = buffer.getLineContent(line_index);
-
-            size_t ret;
-            for (size_t offset = 0; offset < line_str.size(); offset += ret) {
-                ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
-                utf8_offsets[line_index - start_line].emplace_back(ret);
-            }
-        }
-    }
-
     {
         PROFILE_BLOCK("renderText()");
 
         for (size_t line_index = start_line; line_index < end_line; line_index++) {
-            size_t ret;
             int total_advance = 0;
 
             // Draw line number.
             std::string line_number_str = std::to_string(line_index + 1);
             std::reverse(line_number_str.begin(), line_number_str.end());
 
-            for (size_t offset = 0; offset < line_number_str.size(); offset += ret) {
-                ret = grapheme_next_character_break_utf8(&line_number_str[0] + offset, SIZE_MAX);
-                std::string_view key = std::string_view(line_number_str).substr(offset, ret);
+            // We can hard-code 1 as the offset increment since digits are ASCII.
+            for (size_t offset = 0; offset < line_number_str.size(); offset++) {
+                std::string_view key = std::string_view(line_number_str).substr(offset, 1);
                 GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
                 Vec2 coords{
@@ -202,10 +180,10 @@ void TextRenderer::renderText(const Size& size,
             total_advance = 0;
             std::string line_str = buffer.getLineContent(line_index);
 
-            int offset = 0;
-            for (int temp_name : utf8_offsets[line_index - start_line]) {
+            int line_offset = 0;
+            for (int offset : buffer.getUtf8Offsets(line_index)) {
                 if (total_advance > size.width) {
-                    byte_offset += line_str.size() - offset;
+                    byte_offset += line_str.size() - line_offset;
                     break;
                 }
 
@@ -216,7 +194,7 @@ void TextRenderer::renderText(const Size& size,
                     };
                 }
 
-                std::string_view key = std::string_view(line_str).substr(offset, ret);
+                std::string_view key = std::string_view(line_str).substr(line_offset, offset);
 
                 // TODO: Preserve the width of the space character when substituting.
                 //       Otherwise, the line width changes when using proportional fonts.
@@ -244,8 +222,8 @@ void TextRenderer::renderText(const Size& size,
 
                 total_advance += glyph.advance;
 
-                offset += temp_name;
-                byte_offset += temp_name;
+                line_offset += offset;
+                byte_offset += offset;
             }
 
             if (byte_offset == end_caret.byte) {

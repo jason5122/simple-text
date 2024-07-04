@@ -9,6 +9,7 @@ source_set("base") {
   deps = [
     # "//base/queries",
     "//config",
+    "//third_party/libgrapheme",
   ]
 
   # public_deps = [ "//third_party/tree_sitter" ]

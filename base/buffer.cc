@@ -1,6 +1,13 @@
 #include "buffer.h"
 #include <cstdint>
 
+extern "C" {
+#include "third_party/libgrapheme/grapheme.h"
+}
+
+// TODO: Debug use; remove this.
+#include "util/profile_util.h"
+
 namespace base {
 
 void Buffer::setContents(const std::string& text) {
@@ -18,6 +25,20 @@ void Buffer::setContents(const std::string& text) {
     data.push_back(line);
 
     flat_string = text;
+
+    {
+        PROFILE_BLOCK("collect UTF-8 offsets");
+        utf8_offsets.resize(data.size());
+        for (size_t i = 0; i < data.size(); i++) {
+            const auto& line_str = data.at(i);
+
+            size_t offset;
+            for (size_t total_offset = 0; total_offset < line_str.size(); total_offset += offset) {
+                offset = grapheme_next_character_break_utf8(&line_str[0] + total_offset, SIZE_MAX);
+                utf8_offsets.at(i).emplace_back(offset);
+            }
+        }
+    }
 }
 
 size_t Buffer::size() const {
@@ -35,6 +56,10 @@ size_t Buffer::lineCount() const {
 
 std::string Buffer::getLineContent(size_t line_index) const {
     return data.at(line_index);
+}
+
+const std::vector<int>& Buffer::getUtf8Offsets(size_t line_index) const {
+    return utf8_offsets.at(line_index);
 }
 
 size_t Buffer::byteOfLine(size_t line_index) const {

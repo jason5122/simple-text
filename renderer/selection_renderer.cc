@@ -5,10 +5,6 @@
 #include "opengl/gl.h"
 using namespace opengl;
 
-extern "C" {
-#include "third_party/libgrapheme/grapheme.h"
-}
-
 namespace {
 const std::string kVertexShaderSource =
 #include "renderer/shaders/selection_vert.glsl"
@@ -139,10 +135,9 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base:
         int start = 0;
         int end = 0;
 
-        size_t ret;
-        for (size_t offset = 0; offset < line_str.size(); offset += ret, byte_offset += ret) {
-            ret = grapheme_next_character_break_utf8(&line_str[0] + offset, SIZE_MAX);
-            std::string_view key = std::string_view(line_str).substr(offset, ret);
+        int line_offset = 0;
+        for (int offset : buffer.getUtf8Offsets(line_index)) {
+            std::string_view key = std::string_view(line_str).substr(line_offset, offset);
             GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
             if (byte_offset == start_byte) {
@@ -153,6 +148,9 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base:
             }
 
             total_advance += glyph.advance;
+
+            line_offset += offset;
+            byte_offset += offset;
         }
         if (byte_offset == start_byte) {
             start = total_advance;

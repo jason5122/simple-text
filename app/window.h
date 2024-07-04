@@ -39,7 +39,7 @@ public:
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw(int width, int height) {}
     virtual void onResize(int width, int height) {}
-    virtual void onScroll(int dx, int dy) {}
+    virtual void onScroll(int mouse_x, int mouse_y, int dx, int dy) {}
     virtual void onLeftMouseDown(int mouse_x,
                                  int mouse_y,
                                  ModifierKey modifiers,

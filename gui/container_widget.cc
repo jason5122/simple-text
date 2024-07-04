@@ -48,15 +48,21 @@ void ContainerWidget::draw() {
     }
 }
 
-void ContainerWidget::scroll(const renderer::Point& delta) {
+void ContainerWidget::scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {
     if (main_widget) {
-        main_widget->scroll(delta);
+        if (main_widget->hitTest(mouse_pos)) {
+            main_widget->scroll(mouse_pos, delta);
+        }
     }
     for (auto& child : children_start) {
-        child->scroll(delta);
+        if (child->hitTest(mouse_pos)) {
+            child->scroll(mouse_pos, delta);
+        }
     }
     for (auto& child : children_end) {
-        child->scroll(delta);
+        if (child->hitTest(mouse_pos)) {
+            child->scroll(mouse_pos, delta);
+        }
     }
 }
 

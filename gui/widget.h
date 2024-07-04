@@ -11,7 +11,7 @@ public:
     virtual ~Widget() {}
 
     virtual void draw() = 0;
-    virtual void scroll(const renderer::Point& delta) {}
+    virtual void scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {}
     virtual void leftMouseDown(const renderer::Point& mouse_pos) {}
     virtual void leftMouseDrag(const renderer::Point& mouse_pos) {}
 

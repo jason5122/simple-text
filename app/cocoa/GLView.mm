@@ -97,6 +97,19 @@
     // [NSCursor.arrowCursor set];
 }
 
+static inline void GetPosition(NSEvent* event,
+                               GLLayer* glLayer,
+                               int& scaled_mouse_x,
+                               int& scaled_mouse_y) {
+    int mouse_x = std::round(event.locationInWindow.x);
+    int mouse_y = std::round(event.locationInWindow.y);
+    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
+
+    int scale = glLayer.contentsScale;
+    scaled_mouse_x = mouse_x * scale;
+    scaled_mouse_y = mouse_y * scale;
+}
+
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         if (event.momentumPhase & NSEventPhaseBegan) {
@@ -131,7 +144,11 @@
         int scale = glLayer.contentsScale;
         int scaled_dx = dx * glLayer.contentsScale;
         int scaled_dy = dy * glLayer.contentsScale;
-        glLayer->appWindow->onScroll(scaled_dx, scaled_dy);
+
+        int scaled_mouse_x, scaled_mouse_y;
+        GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
+
+        glLayer->appWindow->onScroll(scaled_mouse_x, scaled_mouse_y, scaled_dx, scaled_dy);
     }
 }
 
@@ -209,19 +226,6 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
         modifiers |= app::ModifierKey::kSuper;
     }
     return modifiers;
-}
-
-static inline void GetPosition(NSEvent* event,
-                               GLLayer* glLayer,
-                               int& scaled_mouse_x,
-                               int& scaled_mouse_y) {
-    int mouse_x = std::round(event.locationInWindow.x);
-    int mouse_y = std::round(event.locationInWindow.y);
-    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
-
-    int scale = glLayer.contentsScale;
-    scaled_mouse_x = mouse_x * scale;
-    scaled_mouse_y = mouse_y * scale;
 }
 
 - (void)keyDown:(NSEvent*)event {

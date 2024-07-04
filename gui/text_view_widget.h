@@ -11,7 +11,7 @@ public:
     TextViewWidget(const renderer::Size& size);
 
     void draw() override;
-    void scroll(const renderer::Point& delta) override;
+    void scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) override;
     void leftMouseDown(const renderer::Point& mouse_pos) override;
     void leftMouseDrag(const renderer::Point& mouse_pos) override;
 

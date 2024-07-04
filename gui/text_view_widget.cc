@@ -59,7 +59,7 @@ void TextViewWidget::draw() {
     rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, {95, 180, 180, 255});
 }
 
-void TextViewWidget::scroll(const renderer::Point& delta) {
+void TextViewWidget::scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
     int max_y = buffer.lineCount() * text_renderer.lineHeight();
 

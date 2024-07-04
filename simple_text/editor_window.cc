@@ -99,8 +99,8 @@ void EditorWindow::onResize(int width, int height) {
     redraw();
 }
 
-void EditorWindow::onScroll(int dx, int dy) {
-    main_widget->scroll({dx, dy});
+void EditorWindow::onScroll(int mouse_x, int mouse_y, int dx, int dy) {
+    main_widget->scroll({mouse_x, mouse_y}, {dx, dy});
     redraw();
 }
 

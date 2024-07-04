@@ -22,7 +22,6 @@ public:
                     const Point& editor_offset,
                     const CaretInfo& start_caret,
                     const CaretInfo& end_caret,
-                    int& longest_line_x,
                     Point& end_caret_pos);
     void flush(const Size& screen_size);
     int lineHeight();

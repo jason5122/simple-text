@@ -108,7 +108,6 @@ void TextRenderer::renderText(const Size& size,
                               const Point& editor_offset,
                               const CaretInfo& start_caret,
                               const CaretInfo& end_caret,
-                              int& longest_line_x,
                               Point& end_caret_pos) {
     // TODO: Clean this up.
     int line_number_offset = 100;
@@ -139,10 +138,9 @@ void TextRenderer::renderText(const Size& size,
         std::ceil((size.height - ui_glyph_cache.lineHeight()) / main_glyph_cache.lineHeight());
     size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
 
+    // TODO: Debug use; remove this.
     start_line = 0;
     end_line = buffer.lineCount();
-
-    size_t byte_offset = buffer.byteOfLine(start_line);
 
     {
         PROFILE_BLOCK("renderText()");
@@ -180,11 +178,10 @@ void TextRenderer::renderText(const Size& size,
             total_advance = 0;
             for (const auto& ch : buffer.getLineChars(line_index)) {
                 if (total_advance > size.width) {
-                    byte_offset += buffer.lineLength(line_index) - ch.line_offset;
                     break;
                 }
 
-                if (byte_offset == end_caret.byte) {
+                if (ch.byte_offset == end_caret.byte) {
                     end_caret_pos = {
                         .x = total_advance,
                         .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
@@ -195,7 +192,8 @@ void TextRenderer::renderText(const Size& size,
                 //       Otherwise, the line width changes when using proportional fonts.
                 std::string_view key = ch.str;
                 base::Rgb text_color{51, 51, 51};
-                if (key == " " && selection_start <= byte_offset && byte_offset < selection_end) {
+                if (key == " " && selection_start <= ch.byte_offset &&
+                    ch.byte_offset < selection_end) {
                     key = "·";
                     text_color = base::Rgb{182, 182, 182};
                 }
@@ -217,19 +215,7 @@ void TextRenderer::renderText(const Size& size,
                 insert_into_batch(glyph.page, std::move(instance));
 
                 total_advance += glyph.advance;
-
-                byte_offset += ch.size;
             }
-
-            if (byte_offset == end_caret.byte) {
-                end_caret_pos = {
-                    .x = total_advance,
-                    .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
-                };
-            }
-            byte_offset++;
-
-            longest_line_x = std::max(total_advance, longest_line_x);
         }
     }
 

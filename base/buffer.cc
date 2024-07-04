@@ -37,16 +37,25 @@ void Buffer::setContents(const std::string& text) {
             size_t offset;
             for (size_t line_offset = 0; line_offset < line_str.size(); line_offset += offset) {
                 offset = grapheme_next_character_break_utf8(&line_str[0] + line_offset, SIZE_MAX);
-
                 utf8_chars.at(i).emplace_back(Utf8Char{
                     .str = std::string_view(line_str).substr(line_offset, offset),
                     .size = offset,
                     .line_offset = line_offset,
                     .byte_offset = byte_offset,
                 });
-
                 byte_offset += offset;
             }
+
+            // Include newline.
+            std::string_view newline = "\n";
+            offset = newline.length();
+            utf8_chars.at(i).emplace_back(Utf8Char{
+                .str = newline,
+                .size = offset,
+                .line_offset = line_str.size(),
+                .byte_offset = byte_offset,
+            });
+            byte_offset += offset;
         }
     }
 }

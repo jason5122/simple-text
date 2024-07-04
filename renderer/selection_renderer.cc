@@ -126,7 +126,6 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base:
         std::swap(start_line, end_line);
     }
 
-    size_t byte_offset = buffer.byteOfLine(start_line);
     for (size_t line_index = start_line; line_index <= end_line; line_index++) {
         int total_advance = 0;
         int start = 0;
@@ -135,29 +134,18 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base:
         for (const auto& ch : buffer.getLineChars(line_index)) {
             GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(ch.str);
 
-            if (byte_offset == start_byte) {
+            if (ch.byte_offset == start_byte) {
                 start = total_advance;
             }
-            if (byte_offset == end_byte) {
+            if (ch.byte_offset == end_byte) {
                 end = total_advance;
             }
 
             total_advance += glyph.advance;
-
-            byte_offset += ch.size;
         }
-        if (byte_offset == start_byte) {
-            start = total_advance;
-        }
-        if (byte_offset == end_byte) {
-            end = total_advance;
-        }
-        byte_offset++;
 
         if (line_index != end_line) {
-            std::string_view key = " ";
-            GlyphCache::Glyph& space_glyph = main_glyph_cache.getGlyph(key);
-            end = total_advance + space_glyph.advance;
+            end = total_advance;
         }
 
         if (start != end) {

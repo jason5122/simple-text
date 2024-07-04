@@ -16,10 +16,9 @@ void TextViewWidget::draw() {
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    int longest_line = 0;
     renderer::Point end_caret_pos;
     text_renderer.renderText(size, scroll_offset, buffer, position, start_caret, end_caret,
-                             longest_line, end_caret_pos);
+                             end_caret_pos);
 
     // Add selections.
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).

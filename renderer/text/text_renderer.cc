@@ -102,6 +102,24 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
+void TextRenderer::insertIntoBatch(size_t page,
+                                   const InstanceData& instance,
+                                   bool use_main_glyph_cache) {
+    auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
+
+    while (batch_instances.size() <= page) {
+        batch_instances.emplace_back();
+        batch_instances.back().reserve(kBatchMax);
+    }
+
+    std::vector<InstanceData>& instances = batch_instances.at(page);
+
+    instances.emplace_back(std::move(instance));
+    if (instances.size() == kBatchMax) {
+        std::cerr << "TextRenderer error: attempted to insert into a full batch!\n";
+    }
+}
+
 void TextRenderer::renderText(const Size& size,
                               const Point& scroll,
                               const base::Buffer& buffer,
@@ -111,20 +129,6 @@ void TextRenderer::renderText(const Size& size,
                               Point& end_caret_pos) {
     // TODO: Clean this up.
     int line_number_offset = 100;
-
-    auto insert_into_batch = [this](size_t page, const InstanceData& instance) {
-        while (batch_instances.size() <= page) {
-            batch_instances.emplace_back();
-            batch_instances.back().reserve(kBatchMax);
-        }
-
-        std::vector<InstanceData>& instances = batch_instances.at(page);
-
-        instances.emplace_back(std::move(instance));
-        if (instances.size() == kBatchMax) {
-            std::cerr << "TextRenderer error: attempted to insert into a full batch!\n";
-        }
-    };
 
     size_t selection_start = start_caret.byte;
     size_t selection_end = end_caret.byte;
@@ -171,7 +175,7 @@ void TextRenderer::renderText(const Size& size,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
                 };
-                insert_into_batch(glyph.page, std::move(instance));
+                insertIntoBatch(glyph.page, std::move(instance), true);
 
                 total_advance += glyph.advance;
             }
@@ -214,7 +218,7 @@ void TextRenderer::renderText(const Size& size,
                     .uv = glyph.uv,
                     .color = Rgba::fromRgb(text_color, glyph.colored),
                 };
-                insert_into_batch(glyph.page, std::move(instance));
+                insertIntoBatch(glyph.page, std::move(instance), true);
 
                 total_advance += glyph.advance;
             }
@@ -238,32 +242,59 @@ void TextRenderer::renderText(const Size& size,
                 .uv = Vec4{0, 0, 1.0, 1.0},
                 .color = Rgba{255, 0, 0, 0},
             };
-            insert_into_batch(page, std::move(instance));
+            insertIntoBatch(page, std::move(instance), true);
         }
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
 }
 
-void TextRenderer::flush(const Size& screen_size) {
+void TextRenderer::addUiText(const Point& coords, const base::Utf8String& str8) {
+    int total_advance = 0;
+    for (const auto& ch : str8.getChars()) {
+        GlyphCache::Glyph& glyph = ui_glyph_cache.getGlyph(ch.str);
+
+        // TODO: Rename this.
+        Point pos{
+            .x = total_advance,
+            .y = static_cast<int>(0) * ui_glyph_cache.lineHeight(),
+        };
+        pos += coords;
+
+        InstanceData instance{
+            .coords = pos.toVec2(),
+            .glyph = glyph.glyph,
+            .uv = glyph.uv,
+            .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
+        };
+        insertIntoBatch(glyph.page, std::move(instance), false);
+
+        total_advance += glyph.advance;
+    }
+}
+
+void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
+    auto& glyph_cache = use_main_glyph_cache ? main_glyph_cache : ui_glyph_cache;
+    auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
+
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform1f(glGetUniformLocation(shader_id, "line_height"), main_glyph_cache.lineHeight());
+    glUniform1f(glGetUniformLocation(shader_id, "line_height"), glyph_cache.lineHeight());
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
+    for (size_t page = 0; page < glyph_cache.atlas_pages.size(); page++) {
         while (batch_instances.size() <= page) {
             batch_instances.emplace_back();
             batch_instances.back().reserve(kBatchMax);
         }
 
-        GLuint batch_tex = main_glyph_cache.atlas_pages.at(page).tex();
+        GLuint batch_tex = glyph_cache.atlas_pages.at(page).tex();
         std::vector<InstanceData>& instances = batch_instances.at(page);
 
         if (instances.empty()) {

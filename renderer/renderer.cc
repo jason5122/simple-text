@@ -56,10 +56,11 @@ void Renderer::flush(const Size& size) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     selection_renderer.render(size, 0);
-    text_renderer.flush(size);
+    text_renderer.flush(size, true);
     selection_renderer.render(size, 1);
     rect_renderer.flush(size);
     image_renderer.flush(size);
+    text_renderer.flush(size, false);
 
     selection_renderer.destroyInstances();
 }

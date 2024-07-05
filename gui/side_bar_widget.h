@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/utf8_string.h"
 #include "gui/widget.h"
 
 namespace gui {
@@ -12,6 +13,8 @@ public:
     void scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) override;
 
 private:
+    const base::Utf8String kFoldersText{"FOLDERS"};
+
     renderer::Point scroll_offset{};
 };
 

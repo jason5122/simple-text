@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/buffer.h"
+#include "base/utf8_string.h"
 #include "renderer/opengl_types.h"
 #include "renderer/shader.h"
 #include "renderer/text/glyph_cache.h"
@@ -23,7 +24,8 @@ public:
                     const CaretInfo& start_caret,
                     const CaretInfo& end_caret,
                     Point& end_caret_pos);
-    void flush(const Size& screen_size);
+    void addUiText(const Point& coords, const base::Utf8String& str8);
+    void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();
 
 private:
@@ -43,7 +45,10 @@ private:
     };
 
     // TODO: Move batch code into a "Batch" class.
-    std::vector<std::vector<InstanceData>> batch_instances;
+    std::vector<std::vector<InstanceData>> main_batch_instances;
+    std::vector<std::vector<InstanceData>> ui_batch_instances;
+
+    void insertIntoBatch(size_t page, const InstanceData& instance, bool use_main_glyph_cache);
 };
 
 }

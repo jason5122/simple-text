@@ -2,6 +2,7 @@ source_set("base") {
   sources = [
     "buffer.cc",
     "piece_table.cc",
+    "utf8_string.cc",
 
     # "syntax_highlighter.cc",
   ]

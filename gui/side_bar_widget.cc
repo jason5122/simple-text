@@ -6,6 +6,7 @@ namespace gui {
 SideBarWidget::SideBarWidget(const renderer::Size& size) : Widget{size} {}
 
 void SideBarWidget::draw() {
+    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
     renderer::ImageRenderer& image_renderer = renderer::g_renderer->getImageRenderer();
 
@@ -25,8 +26,11 @@ void SideBarWidget::draw() {
                                  {190, 190, 190, 255}, 5);
 
     // Add folder icons.
-    image_renderer.addImage(renderer::ImageRenderer::kFolderOpen2xIndex, position,
+    image_renderer.addImage(renderer::ImageRenderer::kFolderOpen2xIndex, position - scroll_offset,
                             {142, 142, 142, 255});
+
+    // Add side bar text.
+    text_renderer.addUiText(position - scroll_offset + renderer::Point{100, 100}, kFoldersText);
 }
 
 void SideBarWidget::scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {

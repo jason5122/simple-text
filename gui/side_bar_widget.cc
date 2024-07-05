@@ -25,7 +25,7 @@ void SideBarWidget::draw() {
                                  {190, 190, 190, 255}, 5);
 
     // Add folder icons.
-    image_renderer.addImage(renderer::ImageRenderer::kPanelCloseImageIndex, position,
+    image_renderer.addImage(renderer::ImageRenderer::kFolderOpen2xIndex, position,
                             {142, 142, 142, 255});
 }
 

@@ -67,10 +67,13 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    fs::path image_path = ResourceDir() / "icons/panel_close@2x.png";
-    // fs::path image_path = ResourceDir() / "icons/folder_open@2x.png";
+    fs::path panel_close_2x = ResourceDir() / "icons/panel_close@2x.png";
+    fs::path folder_open_2x = ResourceDir() / "icons/folder_open@2x.png";
 
-    this->loadPng(image_path);
+    // TODO: Figure out a better way to do this.
+    image_atlas_entries.resize(2);
+    loadPng(kPanelClose2xIndex, panel_close_2x);
+    loadPng(kFolderOpen2xIndex, folder_open_2x);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -143,7 +146,7 @@ void ImageRenderer::flush(const Size& screen_size) {
     instances.clear();
 }
 
-bool ImageRenderer::loadPng(fs::path file_name) {
+bool ImageRenderer::loadPng(size_t index, fs::path file_name) {
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.string().c_str(), "rb"), fclose};
 
     if (!fp) {
@@ -181,21 +184,24 @@ bool ImageRenderer::loadPng(fs::path file_name) {
     size_t row_bytes = png_get_rowbytes(png_ptr, info_ptr);
     png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
 
-    // PNG is ordered top to bottom, but OpenGL expects bottom to top.
     std::vector<uint8_t> buffer(row_bytes * height);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < row_bytes; j++) {
-            int row = height - 1 - i;
+            // PNG is ordered top to bottom, but OpenGL expects bottom to top. This is fine.
+            // We want to load the image flipped, since we flip y-coordinates in the vertex shader.
+            // int row = height - 1 - i;
+
+            int row = i;
             buffer[row_bytes * row + j] = row_pointers[i][j];
         }
     }
 
     Vec4 uv;
-    atlas.insertTexture(width, height, color_type == PNG_COLOR_TYPE_RGBA, &buffer[0], uv);
-    image_atlas_entries.push_back(AtlasImage{
+    atlas.insertTexture(width, height, color_type == PNG_COLOR_TYPE_RGBA, buffer, uv);
+    image_atlas_entries[index] = {
         .rect_size = Vec2{static_cast<float>(width), static_cast<float>(height)},
         .uv = uv,
-    });
+    };
 
     png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
     return true;

@@ -33,7 +33,7 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
     //       Return an enum classifying the error instead of using a boolean.
     Vec4 uv;
     bool success =
-        atlas.insertTexture(rglyph.width, rglyph.height, rglyph.colored, &rglyph.buffer[0], uv);
+        atlas.insertTexture(rglyph.width, rglyph.height, rglyph.colored, rglyph.buffer, uv);
 
     // The current page is full, so create a new page and try again.
     if (!success) {

@@ -14,7 +14,8 @@ namespace renderer {
 
 class ImageRenderer : util::NonCopyable {
 public:
-    static constexpr size_t kPanelCloseImageIndex = 0;
+    static constexpr size_t kPanelClose2xIndex = 0;
+    static constexpr size_t kFolderOpen2xIndex = 1;
 
     ImageRenderer();
     ~ImageRenderer();
@@ -40,7 +41,7 @@ private:
     };
     std::vector<AtlasImage> image_atlas_entries;
 
-    bool loadPng(fs::path file_name);
+    bool loadPng(size_t index, fs::path file_name);
 
     struct InstanceData {
         Vec2 coords;

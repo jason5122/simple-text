@@ -22,7 +22,7 @@ void TabBarWidget::draw() {
     //                      tab_corner_radius);
 
     renderer::Size image_size =
-        image_renderer.getImageSize(renderer::ImageRenderer::kPanelCloseImageIndex);
+        image_renderer.getImageSize(renderer::ImageRenderer::kPanelClose2xIndex);
 
     renderer::Point image_pos = position + padding_top;
     image_pos.x += tab_corner_radius;
@@ -33,7 +33,7 @@ void TabBarWidget::draw() {
     image_pos.x -= 15;  // TODO: Don't hard code this value.
 
     for (size_t i = 0; i < 3; i++) {
-        image_renderer.addImage(renderer::ImageRenderer::kPanelCloseImageIndex, image_pos,
+        image_renderer.addImage(renderer::ImageRenderer::kPanelClose2xIndex, image_pos,
                                 {142, 142, 142, 255});
         image_pos += renderer::Point{340, 0};
     }

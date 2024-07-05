@@ -6,6 +6,10 @@
 #include "opengl/gl.h"
 using namespace opengl;
 
+// TODO: Debug use; remove this.
+#include <format>
+#include <iostream>
+
 namespace {
 const std::string kVertexShaderSource =
 #include "renderer/shaders/image_vert.glsl"
@@ -68,10 +72,12 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     int out_width, out_height;
     bool out_has_alpha;
     GLubyte* out_data;
+    std::vector<uint8_t> buffer;
     this->loadPng(image_path, out_width, out_height, out_has_alpha, &out_data);
 
     Vec4 uv;
     atlas.insertTexture(out_width, out_height, out_has_alpha, out_data, uv);
+    free(out_data);
 
     image_atlas_entries.push_back(AtlasImage{
         .rect_size = Vec2{static_cast<float>(out_width), static_cast<float>(out_height)},
@@ -152,64 +158,56 @@ void ImageRenderer::flush(const Size& screen_size) {
 // https://blog.nobel-joergensen.com/2010/11/07/loading-a-png-as-texture-in-opengl-using-libpng/
 bool ImageRenderer::loadPng(
     fs::path file_name, int& out_width, int& out_height, bool& out_has_alpha, GLubyte** out_data) {
-    png_structp png_ptr;
-    png_infop info_ptr;
-    unsigned int sig_read = 0;
-    int color_type, interlace_type;
-    FILE* fp;
+    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.string().c_str(), "rb"), fclose};
 
-    if ((fp = fopen(file_name.string().c_str(), "rb")) == NULL) {
+    if (!fp) {
         return false;
     }
 
-    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
-    if (png_ptr == NULL) {
-        fclose(fp);
+    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (png_ptr == nullptr) {
         return false;
     }
 
-    info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == NULL) {
-        fclose(fp);
-        png_destroy_read_struct(&png_ptr, NULL, NULL);
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if (info_ptr == nullptr) {
+        png_destroy_read_struct(&png_ptr, nullptr, nullptr);
         return false;
     }
 
     if (setjmp(png_jmpbuf(png_ptr))) {
-        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-        fclose(fp);
+        png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
         return false;
     }
 
-    png_init_io(png_ptr, fp);
+    png_init_io(png_ptr, fp.get());
 
-    png_set_sig_bytes(png_ptr, sig_read);
+    png_set_sig_bytes(png_ptr, 0);
 
     png_read_png(png_ptr, info_ptr,
-                 PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
+                 PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, nullptr);
 
     png_uint_32 width, height;
-    int bit_depth;
+    int bit_depth, color_type, interlace_type;
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type,
-                 NULL, NULL);
+                 nullptr, nullptr);
+
+    size_t row_bytes = png_get_rowbytes(png_ptr, info_ptr);
+    png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
+
+    *out_data = new GLubyte[row_bytes * height];
+    for (int i = 0; i < height; i++) {
+        // PNG is ordered top to bottom, but OpenGL expects bottom to top.
+        memcpy(*out_data + (row_bytes * (height - 1 - i)), row_pointers[i], row_bytes);
+    }
+
+    std::cerr << std::format("row_bytes = {}, height = {}\n", row_bytes, height);
+
     out_width = width;
     out_height = height;
     out_has_alpha = color_type == PNG_COLOR_TYPE_RGBA;
 
-    unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
-    *out_data = (unsigned char*)malloc(row_bytes * out_height);
-
-    png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
-
-    for (int i = 0; i < out_height; i++) {
-        // PNG is ordered top to bottom, but OpenGL expects bottom to top.
-        memcpy(*out_data + (row_bytes * (out_height - 1 - i)), row_pointers[i], row_bytes);
-    }
-
-    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-    fclose(fp);
-
+    png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
     return true;
 }
 

@@ -40,11 +40,7 @@ private:
     };
     std::vector<AtlasImage> image_atlas_entries;
 
-    bool loadPng(fs::path file_name,
-                 int& out_width,
-                 int& out_height,
-                 bool& out_has_alpha,
-                 GLubyte** out_data);
+    bool loadPng(fs::path file_name);
 
     struct InstanceData {
         Vec2 coords;

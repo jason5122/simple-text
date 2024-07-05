@@ -7,6 +7,7 @@
 using namespace opengl;
 
 // TODO: Debug use; remove this.
+#include <cassert>
 #include <format>
 #include <iostream>
 
@@ -69,20 +70,7 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     fs::path image_path = ResourceDir() / "icons/panel_close@2x.png";
     // fs::path image_path = ResourceDir() / "icons/folder_open@2x.png";
 
-    int out_width, out_height;
-    bool out_has_alpha;
-    GLubyte* out_data;
-    std::vector<uint8_t> buffer;
-    this->loadPng(image_path, out_width, out_height, out_has_alpha, &out_data);
-
-    Vec4 uv;
-    atlas.insertTexture(out_width, out_height, out_has_alpha, out_data, uv);
-    free(out_data);
-
-    image_atlas_entries.push_back(AtlasImage{
-        .rect_size = Vec2{static_cast<float>(out_width), static_cast<float>(out_height)},
-        .uv = uv,
-    });
+    this->loadPng(image_path);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -155,9 +143,7 @@ void ImageRenderer::flush(const Size& screen_size) {
     instances.clear();
 }
 
-// https://blog.nobel-joergensen.com/2010/11/07/loading-a-png-as-texture-in-opengl-using-libpng/
-bool ImageRenderer::loadPng(
-    fs::path file_name, int& out_width, int& out_height, bool& out_has_alpha, GLubyte** out_data) {
+bool ImageRenderer::loadPng(fs::path file_name) {
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.string().c_str(), "rb"), fclose};
 
     if (!fp) {
@@ -195,17 +181,21 @@ bool ImageRenderer::loadPng(
     size_t row_bytes = png_get_rowbytes(png_ptr, info_ptr);
     png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
 
-    *out_data = new GLubyte[row_bytes * height];
+    // PNG is ordered top to bottom, but OpenGL expects bottom to top.
+    std::vector<uint8_t> buffer(row_bytes * height);
     for (int i = 0; i < height; i++) {
-        // PNG is ordered top to bottom, but OpenGL expects bottom to top.
-        memcpy(*out_data + (row_bytes * (height - 1 - i)), row_pointers[i], row_bytes);
+        for (int j = 0; j < row_bytes; j++) {
+            int row = height - 1 - i;
+            buffer[row_bytes * row + j] = row_pointers[i][j];
+        }
     }
 
-    std::cerr << std::format("row_bytes = {}, height = {}\n", row_bytes, height);
-
-    out_width = width;
-    out_height = height;
-    out_has_alpha = color_type == PNG_COLOR_TYPE_RGBA;
+    Vec4 uv;
+    atlas.insertTexture(width, height, color_type == PNG_COLOR_TYPE_RGBA, &buffer[0], uv);
+    image_atlas_entries.push_back(AtlasImage{
+        .rect_size = Vec2{static_cast<float>(width), static_cast<float>(height)},
+        .uv = uv,
+    });
 
     png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
     return true;

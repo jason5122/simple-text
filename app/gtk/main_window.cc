@@ -209,7 +209,7 @@ static gboolean scroll(GtkEventControllerScroll* self,
     int delta_x = std::round(dx);
     int delta_y = std::round(dy);
     app::Window* app_window = static_cast<app::Window*>(user_data);
-    app_window->onScroll(delta_x, delta_y);
+    app_window->onScroll(0, 0, delta_x, delta_y);
 
     gtk_widget_queue_draw(gl_area);
 

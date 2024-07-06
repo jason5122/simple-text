@@ -1,5 +1,6 @@
 #include "renderer/renderer.h"
 #include "side_bar_widget.h"
+#include <cmath>
 
 namespace gui {
 

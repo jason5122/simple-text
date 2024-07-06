@@ -30,7 +30,11 @@ void SideBarWidget::draw() {
                             {142, 142, 142, 255});
 
     // Add side bar text.
-    text_renderer.addUiText(position - scroll_offset + renderer::Point{100, 100}, kFoldersText);
+    renderer::Size image_size =
+        image_renderer.getImageSize(renderer::ImageRenderer::kFolderOpen2xIndex);
+    renderer::Point text_coords = position - scroll_offset;
+    text_coords.x += image_size.width;
+    text_renderer.addUiText(text_coords, kFoldersText);
 }
 
 void SideBarWidget::scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {

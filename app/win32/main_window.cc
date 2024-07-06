@@ -167,7 +167,10 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         static constexpr float kScrollbarPixelsPerLine = 100.0f / 3.0f;
         dy *= kScrollbarPixelsPerLine;
 
-        app_window.onScroll(0, std::round(dy));
+        int mouse_x = GET_X_LPARAM(lParam);
+        int mouse_y = GET_Y_LPARAM(lParam);
+
+        app_window.onScroll(mouse_x, mouse_y, 0, std::round(dy));
         return 0;
     }
 
@@ -182,7 +185,10 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         static constexpr float kScrollbarPixelsPerLine = 100.0f / 3.0f;
         dx *= kScrollbarPixelsPerLine;
 
-        app_window.onScroll(std::round(dx), 0);
+        int mouse_x = GET_X_LPARAM(lParam);
+        int mouse_y = GET_Y_LPARAM(lParam);
+
+        app_window.onScroll(mouse_x, mouse_y, std::round(dx), 0);
         return 0;
     }
 

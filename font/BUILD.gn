@@ -1,11 +1,13 @@
-group("font") {
+source_set("font") {
+  sources = [ "font_rasterizer.cc" ]
+
   if (is_mac) {
-    public_deps = [ "core_text" ]
+    deps = [ "core_text" ]
   }
   if (is_linux) {
-    public_deps = [ "pango" ]
+    deps = [ "pango" ]
   }
   if (is_win) {
-    public_deps = [ "directwrite" ]
+    deps = [ "directwrite" ]
   }
 }

@@ -1,6 +1,6 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
-#include "font/rasterizer.h"
+#include "font/font_rasterizer.h"
 
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
@@ -39,7 +39,7 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
+FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     CGGlyph glyph = 0;
     ScopedCFTypeRef<CTFontRef> run_font;
 
@@ -78,9 +78,8 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     return pimpl->rasterizeGlyph(glyph, run_font, descent);
 }
 
-RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(CGGlyph glyph_index,
-                                                     ScopedCFTypeRef<CTFontRef> selected_font,
-                                                     int descent) {
+FontRasterizer::RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(
+    CGGlyph glyph_index, ScopedCFTypeRef<CTFontRef> selected_font, int descent) {
     CTFontRef font_ref = selected_font ? selected_font.get() : ct_font.get();
 
     CGRect bounds;

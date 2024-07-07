@@ -1,5 +1,5 @@
 #include "font/pango/pango_helper.h"
-#include "font/rasterizer.h"
+#include "font/font_rasterizer.h"
 #include <cairo-ft.h>
 #include <vector>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font/rasterizer.h"
+#include "font/font_rasterizer.h"
 #include "renderer/atlas.h"
 #include "renderer/opengl_types.h"
 #include <array>
@@ -60,7 +60,7 @@ private:
     cache_type cache;
     ascii_cache_type ascii_cache;
 
-    Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
+    Glyph loadGlyph(const font::FontRasterizer::RasterizedGlyph& rglyph);
 };
 
 }

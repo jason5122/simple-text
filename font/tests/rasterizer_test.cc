@@ -1,4 +1,4 @@
-#include "font/rasterizer.h"
+#include "font/font_rasterizer.h"
 #include "gtest/gtest.h"
 #include <vector>
 
@@ -11,7 +11,7 @@ TEST(RasterizerTest, RasterizedGlyph) {
         "",
     };
     for (const auto& str : utf8_strs) {
-        font::RasterizedGlyph glyph = rasterizer.rasterizeUTF8(str);
+        font::FontRasterizer::RasterizedGlyph glyph = rasterizer.rasterizeUTF8(str);
         EXPECT_FALSE(glyph.colored);
         EXPECT_EQ(glyph.buffer.size(), glyph.width * glyph.height * 3);
     }
@@ -20,7 +20,7 @@ TEST(RasterizerTest, RasterizedGlyph) {
         "😄", "🥲", "👨‍👩‍👦", "👩‍👩‍👧‍👦", "🇺🇸", "🏴‍☠️",
     };
     for (const auto& str : utf8_colored_strs) {
-        font::RasterizedGlyph glyph = rasterizer.rasterizeUTF8(str);
+        font::FontRasterizer::RasterizedGlyph glyph = rasterizer.rasterizeUTF8(str);
         EXPECT_TRUE(glyph.colored);
         EXPECT_EQ(glyph.buffer.size(), glyph.width * glyph.height * 4);
     }

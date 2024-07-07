@@ -5,7 +5,7 @@
 #include "font/directwrite/directwrite_helper.h"
 #include "font/directwrite/font_fallback_source.h"
 #include "font/directwrite/text_analysis.h"
-#include "font/rasterizer.h"
+#include "font/font_rasterizer.h"
 #include <array>
 #include <combaseapi.h>
 #include <comdef.h>

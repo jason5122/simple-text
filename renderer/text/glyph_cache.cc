@@ -12,7 +12,7 @@ GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view str8) {
     if (str8.length() == 1 && 0x20 <= str8[0] && str8[0] <= 0x7e) {
         size_t i = str8[0] - 0x20;
         if (ascii_cache.at(i) == std::nullopt) {
-            font::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
+            font::FontRasterizer::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
             ascii_cache.at(i) = loadGlyph(rglyph);
         }
         return ascii_cache.at(i).value();
@@ -20,13 +20,13 @@ GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view str8) {
 
     auto it = cache.find(str8);
     if (it == cache.end()) {
-        font::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
+        font::FontRasterizer::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
         it = cache.emplace(str8, loadGlyph(rglyph)).first;
     }
     return it->second;
 }
 
-GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
+GlyphCache::Glyph GlyphCache::loadGlyph(const font::FontRasterizer::RasterizedGlyph& rglyph) {
     Atlas& atlas = atlas_pages[current_page];
 
     // TODO: Handle the case when a texture is too large for the atlas.
@@ -56,7 +56,7 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
 }
 
 int GlyphCache::lineHeight() const {
-    return font_rasterizer.line_height;
+    return font_rasterizer.getLineHeight();
 }
 
 }

@@ -6,7 +6,7 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(const renderer::Size& size) : Widget{size} {}
+TextViewWidget::TextViewWidget(const renderer::Size& size) : ScrollableWidget{size} {}
 
 void TextViewWidget::draw() {
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
@@ -58,15 +58,6 @@ void TextViewWidget::draw() {
     rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, {95, 180, 180, 255});
 }
 
-void TextViewWidget::scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {
-    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
-    int max_y = buffer.lineCount() * text_renderer.lineHeight();
-
-    // scroll_offset.x += delta.x;
-    scroll_offset.y += delta.y;
-    scroll_offset.y = std::clamp(scroll_offset.y, 0, max_y);
-}
-
 void TextViewWidget::leftMouseDown(const renderer::Point& mouse_pos) {
     std::cerr << "TextViewWidget::leftMouseDown()\n";
 
@@ -94,8 +85,15 @@ void TextViewWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
     movement.setCaretInfo(buffer, new_coords, end_caret);
 }
 
+void TextViewWidget::updateMaxScroll() {
+    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
+    max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
+}
+
 void TextViewWidget::setContents(const std::string& text) {
     buffer.setContents(text);
+
+    updateMaxScroll();
 }
 
 }

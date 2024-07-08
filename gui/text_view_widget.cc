@@ -35,7 +35,7 @@ void TextViewWidget::draw() {
     int visible_lines = std::ceil(static_cast<float>(size.height) / line_height);
     int max_scrollbar_y = (line_count + visible_lines) * line_height;
     int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
-    float vbar_percent = static_cast<float>(scroll_offset.y) / (line_count * line_height);
+    float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
 
     renderer::Point coords{
         .x = size.width - vbar_width,

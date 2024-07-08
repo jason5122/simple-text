@@ -1,21 +1,20 @@
 #pragma once
 
 #include "base/utf8_string.h"
-#include "gui/widget.h"
+#include "gui/scrollable_widget.h"
 
 namespace gui {
 
-class SideBarWidget : public Widget {
+class SideBarWidget : public ScrollableWidget {
 public:
     SideBarWidget(const renderer::Size& size);
 
     void draw() override;
-    void scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) override;
+
+    void updateMaxScroll() override;
 
 private:
     const base::Utf8String kFoldersText{"FOLDERS"};
-
-    renderer::Point scroll_offset{};
 };
 
 }

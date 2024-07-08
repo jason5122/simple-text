@@ -4,7 +4,9 @@
 
 namespace gui {
 
-SideBarWidget::SideBarWidget(const renderer::Size& size) : Widget{size} {}
+SideBarWidget::SideBarWidget(const renderer::Size& size) : ScrollableWidget{size} {
+    updateMaxScroll();
+}
 
 void SideBarWidget::draw() {
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
@@ -17,7 +19,7 @@ void SideBarWidget::draw() {
     int vbar_width = 15;
     int max_scrollbar_y = 2688;
     int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
-    float vbar_percent = static_cast<float>(scroll_offset.y) / 1176;
+    float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
 
     renderer::Point coords{
         .x = size.width - vbar_width,
@@ -38,12 +40,10 @@ void SideBarWidget::draw() {
     text_renderer.addUiText(text_coords, kFoldersText);
 }
 
-void SideBarWidget::scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {
-    int max_scrollbar_y = 1176;
-
-    // scroll_offset.x += delta.x;
-    scroll_offset.y += delta.y;
-    scroll_offset.y = std::clamp(scroll_offset.y, 0, max_scrollbar_y);
+void SideBarWidget::updateMaxScroll() {
+    // TODO: Debug use; remove this.
+    max_scroll_offset.x = 400;
+    max_scroll_offset.y = 1176;
 }
 
 }

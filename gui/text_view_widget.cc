@@ -87,6 +87,7 @@ void TextViewWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
 
 void TextViewWidget::updateMaxScroll() {
     renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
+    max_scroll_offset.x = 400;  // TODO: Debug use; remove this.
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
 }
 

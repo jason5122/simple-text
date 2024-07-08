@@ -2,7 +2,6 @@ import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
 common_sources = [
-  # "editor_tab.cc",
   "editor_app.cc",
   "editor_window.cc",
   "main.cc",

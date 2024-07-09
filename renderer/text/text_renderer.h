@@ -27,6 +27,7 @@ public:
     void addUiText(const Point& coords, const base::Utf8String& str8);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();
+    int uiLineHeight();
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

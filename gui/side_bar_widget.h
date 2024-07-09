@@ -15,7 +15,7 @@ public:
     void updateMaxScroll() override;
 
 private:
-    const base::Utf8String kFoldersText{"FOLDERS"};
+    // const base::Utf8String kFoldersText{"FOLDERS"};
     std::unique_ptr<LabelWidget> folder_label;
 };
 

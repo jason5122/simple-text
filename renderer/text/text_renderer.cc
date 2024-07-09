@@ -265,7 +265,8 @@ void TextRenderer::addUiText(const Point& coords, const base::Utf8String& str8) 
             .coords = pos.toVec2(),
             .glyph = glyph.glyph,
             .uv = glyph.uv,
-            .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
+            // .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
+            .color = Rgba::fromRgb({64, 64, 64}, glyph.colored),
         };
         insertIntoBatch(glyph.page, std::move(instance), false);
 
@@ -320,6 +321,10 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
 
 int TextRenderer::lineHeight() {
     return main_glyph_cache.lineHeight();
+}
+
+int TextRenderer::uiLineHeight() {
+    return ui_glyph_cache.lineHeight();
 }
 
 }

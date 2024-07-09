@@ -14,7 +14,8 @@ void EditorApp::onLaunch() {
     opengl::FunctionsGL functions_gl{};
     functions_gl.loadGlobalFunctionPointers();
 
-    renderer::g_renderer = new renderer::Renderer{};
+    // Initialize renderer singleton here since an OpenGL context is now available.
+    renderer::Renderer::instance();
 
     createWindow();
 }

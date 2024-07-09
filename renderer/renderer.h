@@ -11,7 +11,7 @@ namespace renderer {
 
 class Renderer {
 public:
-    Renderer();
+    static Renderer& instance();
 
     TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
@@ -22,6 +22,9 @@ public:
     void flush(const Size& size);
 
 private:
+    Renderer();
+    ~Renderer() = default;
+
     GlyphCache main_glyph_cache;
     GlyphCache ui_glyph_cache;
     TextRenderer text_renderer;
@@ -32,7 +35,5 @@ private:
 
     Point editor_offset{200 * 2, 30 * 2};
 };
-
-extern Renderer* g_renderer;
 
 }

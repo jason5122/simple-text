@@ -6,8 +6,8 @@ namespace gui {
 TabBarWidget::TabBarWidget(const renderer::Size& size) : Widget{size} {}
 
 void TabBarWidget::draw() {
-    renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
-    renderer::ImageRenderer& image_renderer = renderer::g_renderer->getImageRenderer();
+    renderer::RectRenderer& rect_renderer = renderer::Renderer::instance().getRectRenderer();
+    renderer::ImageRenderer& image_renderer = renderer::Renderer::instance().getImageRenderer();
 
     rect_renderer.addRect(position, size, {190, 190, 190, 255});
 

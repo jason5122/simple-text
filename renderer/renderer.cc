@@ -17,8 +17,6 @@ const int kUIFontSize = 11 * 2;
 
 namespace renderer {
 
-Renderer* g_renderer = nullptr;
-
 Renderer::Renderer()
     : main_glyph_cache{"Source Code Pro", kMainFontSize},
       ui_glyph_cache{"Arial", kUIFontSize},
@@ -29,6 +27,11 @@ Renderer::Renderer()
     glDepthMask(GL_FALSE);
 
     glClearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
+}
+
+Renderer& Renderer::instance() {
+    static Renderer renderer;
+    return renderer;
 }
 
 TextRenderer& Renderer::getTextRenderer() {

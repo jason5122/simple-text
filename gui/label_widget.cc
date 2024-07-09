@@ -8,8 +8,8 @@ void LabelWidget::setText(const std::string& str8) {
 }
 
 void LabelWidget::draw() {
-    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
-    renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
+    renderer::TextRenderer& text_renderer = renderer::Renderer::instance().getTextRenderer();
+    renderer::RectRenderer& rect_renderer = renderer::Renderer::instance().getRectRenderer();
 
     constexpr renderer::Rgba temp_color{223, 227, 230, 255};
 

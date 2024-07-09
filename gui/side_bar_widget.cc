@@ -12,9 +12,9 @@ SideBarWidget::SideBarWidget(const renderer::Size& size)
 }
 
 void SideBarWidget::draw() {
-    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
-    renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
-    renderer::ImageRenderer& image_renderer = renderer::g_renderer->getImageRenderer();
+    renderer::TextRenderer& text_renderer = renderer::Renderer::instance().getTextRenderer();
+    renderer::RectRenderer& rect_renderer = renderer::Renderer::instance().getRectRenderer();
+    renderer::ImageRenderer& image_renderer = renderer::Renderer::instance().getImageRenderer();
 
     constexpr renderer::Rgba side_bar_color{235, 237, 239, 255};
     constexpr renderer::Rgba scroll_bar_color{190, 190, 190, 255};

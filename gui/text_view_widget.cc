@@ -9,9 +9,10 @@ namespace gui {
 TextViewWidget::TextViewWidget(const renderer::Size& size) : ScrollableWidget{size} {}
 
 void TextViewWidget::draw() {
-    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
-    renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
-    renderer::SelectionRenderer& selection_renderer = renderer::g_renderer->getSelectionRenderer();
+    renderer::TextRenderer& text_renderer = renderer::Renderer::instance().getTextRenderer();
+    renderer::RectRenderer& rect_renderer = renderer::Renderer::instance().getRectRenderer();
+    renderer::SelectionRenderer& selection_renderer =
+        renderer::Renderer::instance().getSelectionRenderer();
 
     constexpr renderer::Rgba scroll_bar_color{190, 190, 190, 255};
     constexpr renderer::Rgba caret_color{95, 180, 180, 255};
@@ -64,7 +65,7 @@ void TextViewWidget::draw() {
 void TextViewWidget::leftMouseDown(const renderer::Point& mouse_pos) {
     std::cerr << "TextViewWidget::leftMouseDown()\n";
 
-    renderer::Movement& movement = renderer::g_renderer->getMovement();
+    renderer::Movement& movement = renderer::Renderer::instance().getMovement();
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
@@ -77,7 +78,7 @@ void TextViewWidget::leftMouseDown(const renderer::Point& mouse_pos) {
 }
 
 void TextViewWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
-    renderer::Movement& movement = renderer::g_renderer->getMovement();
+    renderer::Movement& movement = renderer::Renderer::instance().getMovement();
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
@@ -89,7 +90,7 @@ void TextViewWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
 }
 
 void TextViewWidget::updateMaxScroll() {
-    renderer::TextRenderer& text_renderer = renderer::g_renderer->getTextRenderer();
+    renderer::TextRenderer& text_renderer = renderer::Renderer::instance().getTextRenderer();
     max_scroll_offset.x = 400;  // TODO: Debug use; remove this.
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
 }

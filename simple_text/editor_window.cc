@@ -88,7 +88,7 @@ void EditorWindow::onDraw(int width, int height) {
         // PROFILE_BLOCK("render");
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
         main_widget->draw();
-        renderer::g_renderer->flush({width, height});
+        renderer::Renderer::instance().flush({width, height});
     }
 }
 

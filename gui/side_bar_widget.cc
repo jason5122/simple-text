@@ -40,13 +40,6 @@ void SideBarWidget::draw() {
     // Add folder icons.
     image_renderer.addImage(renderer::ImageRenderer::kFolderOpen2xIndex, position - scroll_offset,
                             folder_icon_color);
-
-    // Add side bar text.
-    // renderer::Size image_size =
-    //     image_renderer.getImageSize(renderer::ImageRenderer::kFolderOpen2xIndex);
-    // renderer::Point text_coords = position - scroll_offset;
-    // text_coords.x += image_size.width;
-    // text_renderer.addUiText(text_coords, kFoldersText);
 }
 
 void SideBarWidget::updateMaxScroll() {

@@ -16,7 +16,7 @@ void StatusBarWidget::draw() {
 }
 
 void StatusBarWidget::layout() {
-    line_column_label->setPosition(position + renderer::Point{34, 0});
+    line_column_label->setPosition(position + renderer::Point{32, 0});
 }
 
 }

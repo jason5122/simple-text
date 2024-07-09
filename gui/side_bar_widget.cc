@@ -4,8 +4,11 @@
 
 namespace gui {
 
-SideBarWidget::SideBarWidget(const renderer::Size& size) : ScrollableWidget{size} {
+SideBarWidget::SideBarWidget(const renderer::Size& size)
+    : ScrollableWidget{size}, folder_label{new LabelWidget{{size.width, 50}}} {
     updateMaxScroll();
+
+    folder_label->setText("FOLDERS");
 }
 
 void SideBarWidget::draw() {
@@ -13,7 +16,13 @@ void SideBarWidget::draw() {
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
     renderer::ImageRenderer& image_renderer = renderer::g_renderer->getImageRenderer();
 
-    rect_renderer.addRect(position, size, {235, 237, 239, 255});
+    constexpr renderer::Rgba side_bar_color{235, 237, 239, 255};
+    constexpr renderer::Rgba scroll_bar_color{190, 190, 190, 255};
+    constexpr renderer::Rgba folder_icon_color{142, 142, 142, 255};
+
+    rect_renderer.addRect(position, size, side_bar_color);
+
+    folder_label->draw();
 
     // Add vertical scroll bar.
     int vbar_width = 15;
@@ -25,19 +34,19 @@ void SideBarWidget::draw() {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRoundedRect(coords + position, {vbar_width, vbar_height},
-                                 {190, 190, 190, 255}, 5);
+    rect_renderer.addRoundedRect(coords + position, {vbar_width, vbar_height}, scroll_bar_color,
+                                 5);
 
     // Add folder icons.
     image_renderer.addImage(renderer::ImageRenderer::kFolderOpen2xIndex, position - scroll_offset,
-                            {142, 142, 142, 255});
+                            folder_icon_color);
 
     // Add side bar text.
-    renderer::Size image_size =
-        image_renderer.getImageSize(renderer::ImageRenderer::kFolderOpen2xIndex);
-    renderer::Point text_coords = position - scroll_offset;
-    text_coords.x += image_size.width;
-    text_renderer.addUiText(text_coords, kFoldersText);
+    // renderer::Size image_size =
+    //     image_renderer.getImageSize(renderer::ImageRenderer::kFolderOpen2xIndex);
+    // renderer::Point text_coords = position - scroll_offset;
+    // text_coords.x += image_size.width;
+    // text_renderer.addUiText(text_coords, kFoldersText);
 }
 
 void SideBarWidget::updateMaxScroll() {

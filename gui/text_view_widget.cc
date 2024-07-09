@@ -13,6 +13,9 @@ void TextViewWidget::draw() {
     renderer::RectRenderer& rect_renderer = renderer::g_renderer->getRectRenderer();
     renderer::SelectionRenderer& selection_renderer = renderer::g_renderer->getSelectionRenderer();
 
+    constexpr renderer::Rgba scroll_bar_color{190, 190, 190, 255};
+    constexpr renderer::Rgba caret_color{95, 180, 180, 255};
+
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
@@ -41,8 +44,8 @@ void TextViewWidget::draw() {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRoundedRect(coords + position, {vbar_width, vbar_height},
-                                 {190, 190, 190, 255}, 5);
+    rect_renderer.addRoundedRect(coords + position, {vbar_width, vbar_height}, scroll_bar_color,
+                                 5);
 
     // Add caret.
     int caret_width = 4;
@@ -55,7 +58,7 @@ void TextViewWidget::draw() {
         .x = end_caret_pos.x - caret_width / 2 - scroll_offset.x + line_number_offset,
         .y = end_caret_pos.y - extra_padding - scroll_offset.y,
     };
-    rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, {95, 180, 180, 255});
+    rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, caret_color);
 }
 
 void TextViewWidget::leftMouseDown(const renderer::Point& mouse_pos) {

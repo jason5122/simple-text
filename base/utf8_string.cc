@@ -7,6 +7,14 @@ extern "C" {
 namespace base {
 
 Utf8String::Utf8String(const std::string& str8) : str8{str8} {
+    setText(str8);
+}
+
+void Utf8String::setText(const std::string& str8) {
+    this->str8 = str8;
+
+    utf8_chars.clear();
+
     size_t offset;
     for (size_t total_offset = 0; total_offset < str8.size(); total_offset += offset) {
         offset = grapheme_next_character_break_utf8(&str8[0] + total_offset, SIZE_MAX);

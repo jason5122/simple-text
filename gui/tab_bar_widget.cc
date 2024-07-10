@@ -3,13 +3,35 @@
 
 namespace gui {
 
-TabBarWidget::TabBarWidget(const renderer::Size& size) : Widget{size} {}
+TabBarWidget::TabBarWidget(const renderer::Size& size) : Widget{size} {
+    // Leave padding between window title bar and tab.
+    renderer::Point padding_top{0, 3 * 2};
+    int tab_width = 360;
+    // int tab_height = size.height - padding_top.y;
+    int tab_height = size.height;
+    int tab_corner_radius = 10;
+
+    for (size_t i = 0; i < 3; i++) {
+        renderer::Size label_pos{
+            .width = tab_width - tab_corner_radius * 2,
+            .height = tab_height,
+        };
+        std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget{label_pos}};
+        tab_name_label->setText(std::format("tab_{}", i));
+        tab_name_label->addRightIcon(renderer::ImageRenderer::kPanelClose2xIndex);
+        tab_name_labels.push_back(std::move(tab_name_label));
+    }
+}
 
 void TabBarWidget::draw() {
     renderer::RectRenderer& rect_renderer = renderer::Renderer::instance().getRectRenderer();
     renderer::ImageRenderer& image_renderer = renderer::Renderer::instance().getImageRenderer();
 
     rect_renderer.addRect(position, size, {190, 190, 190, 255});
+
+    for (const auto& tab_name_label : tab_name_labels) {
+        tab_name_label->draw();
+    }
 
     // Leave padding between window title bar and tab.
     renderer::Point padding_top{0, 3 * 2};
@@ -32,11 +54,11 @@ void TabBarWidget::draw() {
     image_pos.x += 340 - image_size.width;
     image_pos.x -= 15;  // TODO: Don't hard code this value.
 
-    for (size_t i = 0; i < 3; i++) {
-        image_renderer.addImage(renderer::ImageRenderer::kPanelClose2xIndex, image_pos,
-                                {142, 142, 142, 255});
-        image_pos += renderer::Point{340, 0};
-    }
+    // for (size_t i = 0; i < 3; i++) {
+    //     image_renderer.addImage(renderer::ImageRenderer::kPanelClose2xIndex, image_pos,
+    //                             {142, 142, 142, 255});
+    //     image_pos += renderer::Point{340, 0};
+    // }
 
     int tab_index = 2;
     rect_renderer.addTab(position + padding_top + renderer::Point{340 * tab_index, 0},
@@ -45,6 +67,21 @@ void TabBarWidget::draw() {
     // TODO: Figure out why we need to add 1 to `26 / 2`.
     rect_renderer.addRect(position + renderer::Point{350 * 1 - 2, 26 / 2 + 1},
                           {2, size.height - 26}, {148, 149, 149, 255});
+}
+
+void TabBarWidget::layout() {
+    int tab_width = 360;
+    int tab_corner_radius = 10;
+
+    renderer::Point left_width_offset{};
+    for (const auto& tab_name_label : tab_name_labels) {
+        renderer::Point label_pos = position;
+        label_pos += renderer::Point{tab_corner_radius, 0};
+        label_pos += left_width_offset;
+        tab_name_label->setPosition(label_pos);
+
+        left_width_offset.x += tab_width - tab_corner_radius * 2;
+    }
 }
 
 }

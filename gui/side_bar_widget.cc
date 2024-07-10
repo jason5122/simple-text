@@ -9,7 +9,7 @@ SideBarWidget::SideBarWidget(const renderer::Size& size)
     updateMaxScroll();
 
     folder_label->setText("FOLDERS");
-    folder_label->addIcon(renderer::ImageRenderer::kFolderOpen2xIndex);
+    folder_label->addLeftIcon(renderer::ImageRenderer::kFolderOpen2xIndex);
 }
 
 void SideBarWidget::draw() {

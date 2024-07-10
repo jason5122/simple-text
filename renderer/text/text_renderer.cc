@@ -16,7 +16,6 @@ const std::string kFragmentShaderSource =
 }
 
 // TODO: Debug; remove this.
-#include "util/profile_util.h"
 #include <format>
 #include <iostream>
 
@@ -146,82 +145,78 @@ void TextRenderer::renderText(const Size& size,
     start_line = 0;
     end_line = buffer.lineCount();
 
-    {
-        PROFILE_BLOCK("renderText()");
+    for (size_t line_index = start_line; line_index < end_line; line_index++) {
+        int total_advance = 0;
 
-        for (size_t line_index = start_line; line_index < end_line; line_index++) {
-            int total_advance = 0;
+        // Draw line number.
+        std::string line_number_str = std::to_string(line_index + 1);
+        std::reverse(line_number_str.begin(), line_number_str.end());
 
-            // Draw line number.
-            std::string line_number_str = std::to_string(line_index + 1);
-            std::reverse(line_number_str.begin(), line_number_str.end());
+        // We can hard-code 1 as the offset increment since digits are ASCII.
+        for (size_t offset = 0; offset < line_number_str.size(); offset++) {
+            std::string_view key = std::string_view(line_number_str).substr(offset, 1);
+            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
-            // We can hard-code 1 as the offset increment since digits are ASCII.
-            for (size_t offset = 0; offset < line_number_str.size(); offset++) {
-                std::string_view key = std::string_view(line_number_str).substr(offset, 1);
-                GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+            Point coords{
+                .x = -total_advance,
+                .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
+            };
+            coords += editor_offset;
+            coords -= scroll;
+            coords.x += line_number_offset / 2;
 
-                Point coords{
-                    .x = -total_advance,
-                    .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
-                };
-                coords += editor_offset;
-                coords -= scroll;
-                coords.x += line_number_offset / 2;
+            InstanceData instance{
+                .coords = coords.toVec2(),
+                .glyph = glyph.glyph,
+                .uv = glyph.uv,
+                .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
+            };
+            insertIntoBatch(glyph.page, std::move(instance), true);
 
-                InstanceData instance{
-                    .coords = coords.toVec2(),
-                    .glyph = glyph.glyph,
-                    .uv = glyph.uv,
-                    .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
-                };
-                insertIntoBatch(glyph.page, std::move(instance), true);
+            total_advance += glyph.advance;
+        }
 
-                total_advance += glyph.advance;
+        total_advance = 0;
+        for (const auto& ch : buffer.getLineChars(line_index)) {
+            if (total_advance > size.width) {
+                break;
             }
 
-            total_advance = 0;
-            for (const auto& ch : buffer.getLineChars(line_index)) {
-                if (total_advance > size.width) {
-                    break;
-                }
-
-                if (ch.byte_offset == end_caret.byte) {
-                    end_caret_pos = {
-                        .x = total_advance,
-                        .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
-                    };
-                }
-
-                // TODO: Preserve the width of the space character when substituting.
-                //       Otherwise, the line width changes when using proportional fonts.
-                std::string_view key = ch.str;
-                base::Rgb text_color{51, 51, 51};
-                if (key == " " && selection_start <= ch.byte_offset &&
-                    ch.byte_offset < selection_end) {
-                    key = "·";
-                    text_color = base::Rgb{182, 182, 182};
-                }
-                GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
-
-                Point coords{
+            if (ch.byte_offset == end_caret.byte) {
+                end_caret_pos = {
                     .x = total_advance,
                     .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
                 };
-                coords += editor_offset;
-                coords -= scroll;
-                coords.x += line_number_offset;
-
-                InstanceData instance{
-                    .coords = coords.toVec2(),
-                    .glyph = glyph.glyph,
-                    .uv = glyph.uv,
-                    .color = Rgba::fromRgb(text_color, glyph.colored),
-                };
-                insertIntoBatch(glyph.page, std::move(instance), true);
-
-                total_advance += glyph.advance;
             }
+
+            // TODO: Preserve the width of the space character when substituting.
+            //       Otherwise, the line width changes when using proportional fonts.
+            std::string_view key = ch.str;
+            base::Rgb text_color{51, 51, 51};
+            if (key == " " && selection_start <= ch.byte_offset &&
+                ch.byte_offset < selection_end) {
+                key = "·";
+                text_color = base::Rgb{182, 182, 182};
+            }
+            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+
+            Point coords{
+                .x = total_advance,
+                .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
+            };
+            coords += editor_offset;
+            coords -= scroll;
+            coords.x += line_number_offset;
+
+            InstanceData instance{
+                .coords = coords.toVec2(),
+                .glyph = glyph.glyph,
+                .uv = glyph.uv,
+                .color = Rgba::fromRgb(text_color, glyph.colored),
+            };
+            insertIntoBatch(glyph.page, std::move(instance), true);
+
+            total_advance += glyph.advance;
         }
     }
 

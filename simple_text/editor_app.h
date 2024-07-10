@@ -6,8 +6,6 @@
 
 class EditorApp : public app::App {
 public:
-    EditorApp();
-
     void createWindow();
     void destroyWindow(int wid);
 

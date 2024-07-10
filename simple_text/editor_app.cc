@@ -1,21 +1,15 @@
 #include "editor_app.h"
 #include "opengl/functions_gl.h"
-#include "renderer/renderer.h"
 
 // TODO: Debug; remove this.
 #include <format>
 #include <iostream>
-
-EditorApp::EditorApp() {}
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
 void EditorApp::onLaunch() {
     opengl::FunctionsGL functions_gl{};
     functions_gl.loadGlobalFunctionPointers();
-
-    // Initialize renderer singleton here since an OpenGL context is now available.
-    renderer::Renderer::instance();
 
     createWindow();
 }

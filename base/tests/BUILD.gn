@@ -2,6 +2,7 @@ source_set("tests") {
   testonly = true
 
   sources = [
+    "hash_map_test.cc",
     "piece_table_test.cc",
     "tree_sitter_test.cc",
   ]

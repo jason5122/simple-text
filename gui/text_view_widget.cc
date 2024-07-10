@@ -2,6 +2,8 @@
 #include "text_view_widget.h"
 #include <cmath>
 
+// TODO: Debug use; remove this.
+#include "util/profile_util.h"
 #include <iostream>
 
 namespace gui {
@@ -21,8 +23,11 @@ void TextViewWidget::draw() {
     int line_number_offset = 100;
 
     renderer::Point end_caret_pos;
-    text_renderer.renderText(size, scroll_offset, buffer, position, start_caret, end_caret,
-                             end_caret_pos);
+    {
+        PROFILE_BLOCK("TextRenderer::renderText()");
+        text_renderer.renderText(size, scroll_offset, buffer, position, start_caret, end_caret,
+                                 end_caret_pos);
+    }
 
     // Add selections.
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
@@ -49,11 +54,8 @@ void TextViewWidget::draw() {
 
     // Add caret.
     int caret_width = 4;
-    int caret_height = line_height;
-
     int extra_padding = 8;
-    caret_height += extra_padding * 2;
-
+    int caret_height = line_height + extra_padding * 2;
     const renderer::Point caret_pos{
         .x = end_caret_pos.x - caret_width / 2 - scroll_offset.x + line_number_offset,
         .y = end_caret_pos.y - extra_padding - scroll_offset.y,

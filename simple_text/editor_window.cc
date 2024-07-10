@@ -9,6 +9,9 @@
 #include "renderer/renderer.h"
 #include "simple_text/editor_app.h"
 
+// TODO: Debug use; remove this.
+#include "util/profile_util.h"
+
 namespace {
 const std::string sample_text =
     R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
@@ -69,7 +72,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, status_bar_height})};
 
     // Leave padding between window title bar and tab.
-    constexpr renderer::Rgba tab_bar_color{190, 190, 190, 255};
+    constexpr Rgba tab_bar_color{190, 190, 190, 255};
     std::unique_ptr<Widget> padding{new PaddingWidget({0, 3 * 2}, tab_bar_color)};
 
     text_view->setContents(sample_text);
@@ -88,7 +91,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
 void EditorWindow::onDraw(int width, int height) {
     {
-        // PROFILE_BLOCK("render");
+        // PROFILE_BLOCK("Total render time");
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
         main_widget->draw();
         renderer::Renderer::instance().flush({width, height});

@@ -3,11 +3,8 @@ executable("test_runner") {
 
   deps = [ "//third_party/googletest:gtest_main" ]
 
-  if (is_mac) {
-    deps += [
-      "//base/tests",
-      "//font/tests",
-      "//renderer/tests",
-    ]
-  }
+  deps += [
+    "//base/tests",
+    "//font/tests",
+  ]
 }

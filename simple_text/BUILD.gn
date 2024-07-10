@@ -14,8 +14,6 @@ common_deps = [
   "//gui",
   "//opengl",
   "//renderer",
-
-  # "sample_files",
 ]
 
 if (is_mac) {

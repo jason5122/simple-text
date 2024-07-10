@@ -20,7 +20,7 @@ const std::string kFragmentShaderSource =
     ;
 }
 
-namespace renderer {
+namespace gui {
 
 ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
     GLuint indices[] = {

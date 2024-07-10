@@ -7,7 +7,7 @@
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/text/text_renderer.h"
 
-namespace renderer {
+namespace gui {
 
 class Renderer {
 public:

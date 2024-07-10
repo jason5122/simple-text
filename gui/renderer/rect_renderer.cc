@@ -13,7 +13,7 @@ const std::string kFragmentShaderSource =
     ;
 }
 
-namespace renderer {
+namespace gui {
 
 RectRenderer::RectRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
     instances.reserve(kBatchMax);

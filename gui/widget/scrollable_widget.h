@@ -7,15 +7,15 @@ namespace gui {
 class ScrollableWidget : public Widget {
 public:
     ScrollableWidget() {}
-    ScrollableWidget(const renderer::Size& size);
+    ScrollableWidget(const Size& size);
 
     virtual void updateMaxScroll() = 0;
 
-    void scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) override;
+    void scroll(const Point& mouse_pos, const Point& delta) override;
 
 protected:
-    renderer::Point scroll_offset{};
-    renderer::Point max_scroll_offset{};
+    Point scroll_offset{};
+    Point max_scroll_offset{};
 
 private:
     static constexpr long long kScrollEventSeparation = 28;

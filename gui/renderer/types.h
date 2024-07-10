@@ -5,7 +5,7 @@
 #include <format>
 #include <ostream>
 
-namespace renderer {
+namespace gui {
 
 struct Size {
     int width;

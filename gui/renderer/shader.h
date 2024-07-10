@@ -4,7 +4,7 @@
 #include "util/non_copyable.h"
 #include <string>
 
-namespace renderer {
+namespace gui {
 
 class Shader : util::NonCopyable {
 public:

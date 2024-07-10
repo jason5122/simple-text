@@ -6,7 +6,7 @@
 #include "gui/renderer/types.h"
 #include "util/non_copyable.h"
 
-namespace renderer {
+namespace gui {
 
 class SelectionRenderer : util::NonCopyable {
 public:

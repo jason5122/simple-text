@@ -7,7 +7,7 @@ namespace gui {
 
 class StatusBarWidget : public Widget {
 public:
-    StatusBarWidget(const renderer::Size& size);
+    StatusBarWidget(const Size& size);
 
     void draw() override;
     void layout() override;

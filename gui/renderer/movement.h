@@ -4,7 +4,7 @@
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/types.h"
 
-namespace renderer {
+namespace gui {
 
 class Movement {
 public:

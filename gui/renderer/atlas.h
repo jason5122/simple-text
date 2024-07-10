@@ -5,7 +5,7 @@
 #include "util/non_copyable.h"
 #include <vector>
 
-namespace renderer {
+namespace gui {
 
 class Atlas : util::NonCopyable {
 public:

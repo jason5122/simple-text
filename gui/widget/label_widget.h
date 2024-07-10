@@ -8,7 +8,7 @@ namespace gui {
 class LabelWidget : public Widget {
 public:
     LabelWidget() {}
-    LabelWidget(const renderer::Size& size) : Widget{size} {}
+    LabelWidget(const Size& size) : Widget{size} {}
 
     void setText(const std::string& str8);
     void addLeftIcon(size_t icon_id);
@@ -21,7 +21,7 @@ private:
     std::vector<size_t> left_side_icons;
     std::vector<size_t> right_side_icons;
 
-    renderer::Point centerVertically(int widget_height);
+    Point centerVertically(int widget_height);
 };
 
 }

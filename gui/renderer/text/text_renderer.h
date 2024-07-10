@@ -8,7 +8,7 @@
 #include "gui/renderer/types.h"
 #include <vector>
 
-namespace renderer {
+namespace gui {
 
 class TextRenderer {
 public:

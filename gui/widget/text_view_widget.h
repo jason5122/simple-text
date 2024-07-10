@@ -8,11 +8,11 @@ namespace gui {
 class TextViewWidget : public ScrollableWidget {
 public:
     TextViewWidget() = default;
-    TextViewWidget(const renderer::Size& size);
+    TextViewWidget(const Size& size);
 
     void draw() override;
-    void leftMouseDown(const renderer::Point& mouse_pos) override;
-    void leftMouseDrag(const renderer::Point& mouse_pos) override;
+    void leftMouseDown(const Point& mouse_pos) override;
+    void leftMouseDrag(const Point& mouse_pos) override;
 
     void updateMaxScroll() override;
 
@@ -20,8 +20,8 @@ public:
 
 private:
     base::Buffer buffer;
-    renderer::CaretInfo start_caret{};
-    renderer::CaretInfo end_caret{};
+    CaretInfo start_caret{};
+    CaretInfo end_caret{};
 };
 
 }

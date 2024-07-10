@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace renderer {
+namespace gui {
 
 class GlyphCache {
 public:

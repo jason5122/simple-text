@@ -14,7 +14,7 @@ const std::string kFragmentShaderSource =
     ;
 }
 
-namespace renderer {
+namespace gui {
 
 SelectionRenderer::SelectionRenderer(GlyphCache& main_glyph_cache)
     : shader_program{kVertexShaderSource, kFragmentShaderSource},

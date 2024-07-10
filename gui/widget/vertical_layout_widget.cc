@@ -2,7 +2,7 @@
 
 namespace gui {
 
-VerticalLayoutWidget::VerticalLayoutWidget(const renderer::Size& size) : ContainerWidget{size} {}
+VerticalLayoutWidget::VerticalLayoutWidget(const Size& size) : ContainerWidget{size} {}
 
 void VerticalLayoutWidget::layout() {
     int top_offset = position.y;

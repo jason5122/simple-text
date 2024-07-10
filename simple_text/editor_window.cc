@@ -12,6 +12,8 @@
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
 
+using namespace gui;
+
 namespace {
 const std::string sample_text =
     R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
@@ -48,12 +50,9 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window{parent, width, height},
       wid{wid},
       parent{parent},
-      main_widget{new gui::VerticalLayoutWidget{}} {}
+      main_widget{new VerticalLayoutWidget{}} {}
 
 void EditorWindow::onOpenGLActivate(int width, int height) {
-    using namespace gui;
-    using namespace renderer;
-
     main_widget->setWidth(width);
     main_widget->setHeight(height);
 
@@ -94,7 +93,7 @@ void EditorWindow::onDraw(int width, int height) {
         // PROFILE_BLOCK("Total render time");
         // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
         main_widget->draw();
-        renderer::Renderer::instance().flush({width, height});
+        Renderer::instance().flush({width, height});
     }
 }
 

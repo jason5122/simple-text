@@ -8,21 +8,20 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(const renderer::Size& size) : ScrollableWidget{size} {}
+TextViewWidget::TextViewWidget(const Size& size) : ScrollableWidget{size} {}
 
 void TextViewWidget::draw() {
-    renderer::TextRenderer& text_renderer = renderer::Renderer::instance().getTextRenderer();
-    renderer::RectRenderer& rect_renderer = renderer::Renderer::instance().getRectRenderer();
-    renderer::SelectionRenderer& selection_renderer =
-        renderer::Renderer::instance().getSelectionRenderer();
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
 
-    constexpr renderer::Rgba scroll_bar_color{190, 190, 190, 255};
-    constexpr renderer::Rgba caret_color{95, 180, 180, 255};
+    constexpr Rgba scroll_bar_color{190, 190, 190, 255};
+    constexpr Rgba caret_color{95, 180, 180, 255};
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    renderer::Point end_caret_pos;
+    Point end_caret_pos;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
         text_renderer.renderText(size, scroll_offset, buffer, position, start_caret, end_caret,
@@ -33,7 +32,7 @@ void TextViewWidget::draw() {
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
     auto selections = selection_renderer.getSelections(buffer, start_caret, end_caret);
 
-    renderer::Point selection_offset = position - scroll_offset;
+    Point selection_offset = position - scroll_offset;
     selection_offset.x += line_number_offset;
     selection_renderer.createInstances(selection_offset, selections);
 
@@ -46,7 +45,7 @@ void TextViewWidget::draw() {
     int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
     float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
 
-    renderer::Point coords{
+    Point coords{
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
@@ -56,42 +55,42 @@ void TextViewWidget::draw() {
     int caret_width = 4;
     int extra_padding = 8;
     int caret_height = line_height + extra_padding * 2;
-    const renderer::Point caret_pos{
+    const Point caret_pos{
         .x = end_caret_pos.x - caret_width / 2 - scroll_offset.x + line_number_offset,
         .y = end_caret_pos.y - extra_padding - scroll_offset.y,
     };
     rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, caret_color);
 }
 
-void TextViewWidget::leftMouseDown(const renderer::Point& mouse_pos) {
+void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
     std::cerr << "TextViewWidget::leftMouseDown()\n";
 
-    renderer::Movement& movement = renderer::Renderer::instance().getMovement();
+    Movement& movement = Renderer::instance().getMovement();
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    renderer::Point new_coords = mouse_pos - position + scroll_offset;
+    Point new_coords = mouse_pos - position + scroll_offset;
     new_coords.x -= line_number_offset;
 
     movement.setCaretInfo(buffer, new_coords, end_caret);
     start_caret = end_caret;
 }
 
-void TextViewWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
-    renderer::Movement& movement = renderer::Renderer::instance().getMovement();
+void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
+    Movement& movement = Renderer::instance().getMovement();
 
     // TODO: Add this to parameters.
     int line_number_offset = 100;
 
-    renderer::Point new_coords = mouse_pos - position + scroll_offset;
+    Point new_coords = mouse_pos - position + scroll_offset;
     new_coords.x -= line_number_offset;
 
     movement.setCaretInfo(buffer, new_coords, end_caret);
 }
 
 void TextViewWidget::updateMaxScroll() {
-    renderer::TextRenderer& text_renderer = renderer::Renderer::instance().getTextRenderer();
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     max_scroll_offset.x = 400;  // TODO: Debug use; remove this.
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
 }

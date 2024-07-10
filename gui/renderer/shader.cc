@@ -6,7 +6,7 @@ using namespace opengl;
 #include <format>
 #include <iostream>
 
-namespace renderer {
+namespace gui {
 
 Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
     const char* vert_source_c = vert_source.c_str();

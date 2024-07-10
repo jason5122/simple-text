@@ -6,7 +6,7 @@ using namespace opengl;
 #include <iostream>
 #include <random>
 
-namespace renderer {
+namespace gui {
 
 Atlas::Atlas() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

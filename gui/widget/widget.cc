@@ -2,7 +2,7 @@
 
 namespace gui {
 
-renderer::Size Widget::getSize() {
+Size Widget::getSize() {
     return size;
 }
 
@@ -14,15 +14,15 @@ void Widget::setHeight(int height) {
     this->size.height = height;
 }
 
-renderer::Point Widget::getPosition() {
+Point Widget::getPosition() {
     return position;
 }
 
-void Widget::setPosition(const renderer::Point& position) {
+void Widget::setPosition(const Point& position) {
     this->position = position;
 }
 
-bool Widget::hitTest(const renderer::Point& point) {
+bool Widget::hitTest(const Point& point) {
     return (position.x <= point.x && point.x < position.x + size.width) &&
            (position.y <= point.y && point.y < position.y + size.height);
 }

@@ -19,7 +19,7 @@ const std::string kFragmentShaderSource =
 #include <format>
 #include <iostream>
 
-namespace renderer {
+namespace gui {
 
 TextRenderer::TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
     : shader_program{kVertexShaderSource, kFragmentShaderSource},

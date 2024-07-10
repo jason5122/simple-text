@@ -4,7 +4,7 @@
 #include <format>
 #include <ostream>
 
-namespace renderer {
+namespace gui {
 
 struct Vec2 {
     float x, y;

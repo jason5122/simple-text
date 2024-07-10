@@ -17,7 +17,7 @@ void ContainerWidget::addChildEnd(std::unique_ptr<Widget> widget) {
     layout();
 }
 
-Widget* ContainerWidget::getWidgetAtPosition(const renderer::Point& position) {
+Widget* ContainerWidget::getWidgetAtPosition(const Point& position) {
     if (main_widget) {
         if (main_widget->hitTest(position)) {
             return main_widget.get();
@@ -48,7 +48,7 @@ void ContainerWidget::draw() {
     }
 }
 
-void ContainerWidget::scroll(const renderer::Point& mouse_pos, const renderer::Point& delta) {
+void ContainerWidget::scroll(const Point& mouse_pos, const Point& delta) {
     if (main_widget) {
         if (main_widget->hitTest(mouse_pos)) {
             main_widget->scroll(mouse_pos, delta);
@@ -66,7 +66,7 @@ void ContainerWidget::scroll(const renderer::Point& mouse_pos, const renderer::P
     }
 }
 
-void ContainerWidget::leftMouseDown(const renderer::Point& mouse_pos) {
+void ContainerWidget::leftMouseDown(const Point& mouse_pos) {
     if (main_widget) {
         main_widget->leftMouseDown(mouse_pos);
     }
@@ -78,7 +78,7 @@ void ContainerWidget::leftMouseDown(const renderer::Point& mouse_pos) {
     }
 }
 
-void ContainerWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
+void ContainerWidget::leftMouseDrag(const Point& mouse_pos) {
     if (main_widget) {
         main_widget->leftMouseDrag(mouse_pos);
     }
@@ -90,7 +90,7 @@ void ContainerWidget::leftMouseDrag(const renderer::Point& mouse_pos) {
     }
 }
 
-void ContainerWidget::setPosition(const renderer::Point& position) {
+void ContainerWidget::setPosition(const Point& position) {
     this->position = position;
     layout();
 }

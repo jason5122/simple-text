@@ -7,7 +7,7 @@ namespace gui {
 
 class SideBarWidget : public ScrollableWidget {
 public:
-    SideBarWidget(const renderer::Size& size);
+    SideBarWidget(const Size& size);
 
     void draw() override;
     void layout() override;

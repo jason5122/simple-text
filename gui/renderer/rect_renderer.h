@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace renderer {
+namespace gui {
 
 class RectRenderer : util::NonCopyable {
 public:

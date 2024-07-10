@@ -6,12 +6,12 @@ namespace gui {
 
 class PaddingWidget : public Widget {
 public:
-    PaddingWidget(const renderer::Size& size, const renderer::Rgba& color);
+    PaddingWidget(const Size& size, const Rgba& color);
 
     void draw() override;
 
 private:
-    const renderer::Rgba color;
+    const Rgba color;
 };
 
 }

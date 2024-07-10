@@ -3,11 +3,10 @@
 
 namespace gui {
 
-PaddingWidget::PaddingWidget(const renderer::Size& size, const renderer::Rgba& color)
-    : Widget{size}, color{color} {}
+PaddingWidget::PaddingWidget(const Size& size, const Rgba& color) : Widget{size}, color{color} {}
 
 void PaddingWidget::draw() {
-    renderer::RectRenderer& rect_renderer = renderer::Renderer::instance().getRectRenderer();
+    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, color);
 }
 

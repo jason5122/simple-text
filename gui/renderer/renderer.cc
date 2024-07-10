@@ -15,7 +15,7 @@ const int kMainFontSize = 12 * 2;
 const int kUIFontSize = 11 * 2;
 }
 
-namespace renderer {
+namespace gui {
 
 Renderer::Renderer()
     : main_glyph_cache{"Source Code Pro", kMainFontSize},

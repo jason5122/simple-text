@@ -16,9 +16,5 @@ source_set("renderer") {
     "//base",
     "//font",
     "//third_party/libpng",
-
-    # "//base/filesystem",
-    # "//config",
-    # "//third_party/uni_algo",
   ]
 }

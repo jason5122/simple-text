@@ -10,7 +10,7 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-namespace renderer {
+namespace gui {
 
 class ImageRenderer : util::NonCopyable {
 public:

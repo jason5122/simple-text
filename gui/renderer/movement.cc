@@ -1,6 +1,6 @@
 #include "movement.h"
 
-namespace renderer {
+namespace gui {
 
 Movement::Movement(GlyphCache& main_glyph_cache) : main_glyph_cache(main_glyph_cache) {}
 

@@ -1,6 +1,6 @@
 #include "glyph_cache.h"
 
-namespace renderer {
+namespace gui {
 
 GlyphCache::GlyphCache(const std::string& font_name_utf8, int font_size)
     : font_rasterizer{font_name_utf8, font_size} {

@@ -10,6 +10,7 @@ public:
     SideBarWidget(const renderer::Size& size);
 
     void draw() override;
+    void layout() override;
 
     void updateMaxScroll() override;
 

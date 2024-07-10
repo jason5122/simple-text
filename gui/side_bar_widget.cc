@@ -27,8 +27,7 @@ void SideBarWidget::draw() {
 
     // Add vertical scroll bar.
     int vbar_width = 15;
-    int max_scrollbar_y = 2688;
-    int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
+    int vbar_height = size.height * (static_cast<float>(size.height) / max_scroll_offset.y);
     float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
 
     renderer::Point coords{
@@ -37,17 +36,15 @@ void SideBarWidget::draw() {
     };
     rect_renderer.addRoundedRect(coords + position, {vbar_width, vbar_height}, scroll_bar_color,
                                  5);
+}
 
-    // Add folder icons.
-    // image_renderer.addImage(renderer::ImageRenderer::kFolderOpen2xIndex, position -
-    // scroll_offset,
-    //                         folder_icon_color);
+void SideBarWidget::layout() {
+    folder_label->setPosition(position - scroll_offset);
 }
 
 void SideBarWidget::updateMaxScroll() {
     // TODO: Debug use; remove this.
-    max_scroll_offset.x = 400;
-    max_scroll_offset.y = 1176;
+    max_scroll_offset.y = 2688;
 }
 
 }

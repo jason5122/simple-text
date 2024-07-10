@@ -13,7 +13,6 @@ common_deps = [
   "//base/filesystem",
   "//gui",
   "//opengl",
-  "//renderer",
 ]
 
 if (is_mac) {

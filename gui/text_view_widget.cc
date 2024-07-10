@@ -45,8 +45,7 @@ void TextViewWidget::draw() {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRoundedRect(coords + position, {vbar_width, vbar_height}, scroll_bar_color,
-                                 5);
+    rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, scroll_bar_color, 5);
 
     // Add caret.
     int caret_width = 4;

@@ -1,5 +1,6 @@
 #include "editor_window.h"
 #include "gui/horizontal_layout_widget.h"
+#include "gui/padding_widget.h"
 #include "gui/side_bar_widget.h"
 #include "gui/status_bar_widget.h"
 #include "gui/tab_bar_widget.h"
@@ -7,9 +8,6 @@
 #include "gui/vertical_layout_widget.h"
 #include "renderer/renderer.h"
 #include "simple_text/editor_app.h"
-
-// TODO: Debug; remove this.
-#include "util/profile_util.h"
 
 namespace {
 const std::string sample_text =
@@ -56,7 +54,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setWidth(width);
     main_widget->setHeight(height);
 
-    int tab_bar_height = 32 * 2;
+    int tab_bar_height = 29 * 2;
     int side_bar_width = 250 * 2;
     int status_bar_height = 22 * 2;
 
@@ -70,12 +68,17 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::unique_ptr<Widget> tab_bar{new TabBarWidget({width, tab_bar_height})};
     std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, status_bar_height})};
 
+    // Leave padding between window title bar and tab.
+    constexpr renderer::Rgba tab_bar_color{190, 190, 190, 255};
+    std::unique_ptr<Widget> padding{new PaddingWidget({0, 3 * 2}, tab_bar_color)};
+
     text_view->setContents(sample_text);
 
     // TODO: Temporary hack. Consider implementing this fully.
     text_view_widget = text_view.get();
 
     horizontal_layout->addChildStart(std::move(side_bar));
+    vertical_layout->addChildStart(std::move(padding));
     vertical_layout->addChildStart(std::move(tab_bar));
     vertical_layout->setMainWidget(std::move(text_view));
     horizontal_layout->setMainWidget(std::move(vertical_layout));

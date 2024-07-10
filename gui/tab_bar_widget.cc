@@ -32,12 +32,19 @@ void TabBarWidget::draw() {
         tab_name_label->draw();
     }
 
-    rect_renderer.addRect(position + renderer::Point{340 * tab_index, 0}, {tab_width, size.height},
-                          tab_color, 0, tab_corner_radius);
+    renderer::Point tab_pos = position;
+    tab_pos.x += (tab_width - tab_corner_radius * 2) * tab_index;
+    rect_renderer.addRect(tab_pos, {tab_width, size.height}, tab_color, 0, tab_corner_radius);
 
-    // TODO: Figure out why we need to add 1 to `26 / 2`.
-    rect_renderer.addRect(position + renderer::Point{350 * 1 - 2, 26 / 2 + 1},
-                          {2, size.height - 26}, tab_separator_color);
+    renderer::Point tab_separator_pos = position;
+    tab_separator_pos.x += (tab_width - tab_corner_radius) * 1;  // TODO: Don't hard code 1.
+    tab_separator_pos.x -= tab_separator_size.width;
+
+    // Center tab separator.
+    tab_separator_pos.y += size.height / 2;
+    tab_separator_pos.y -= tab_separator_size.height / 2;
+
+    rect_renderer.addRect(tab_separator_pos, tab_separator_size, tab_separator_color);
 }
 
 void TabBarWidget::layout() {

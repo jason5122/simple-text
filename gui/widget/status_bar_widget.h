@@ -13,6 +13,8 @@ public:
     void layout() override;
 
 private:
+    static constexpr Point kLeftPadding{32, 0};
+
     std::unique_ptr<LabelWidget> line_column_label;
 };
 

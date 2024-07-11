@@ -11,7 +11,7 @@ TabBarWidget::TabBarWidget(const Size& size) : Widget{size} {
             .width = kTabWidth - kTabCornerRadius * 2,
             .height = size.height,
         };
-        std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget{label_pos}};
+        std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget{label_pos, 22, 16}};
         tab_name_label->setText(std::format("tab_{}", i), {92, 92, 92});
         tab_name_label->addRightIcon(ImageRenderer::kPanelClose2xIndex);
         tab_name_labels.push_back(std::move(tab_name_label));

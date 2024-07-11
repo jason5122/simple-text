@@ -3,6 +3,9 @@
 
 namespace gui {
 
+LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
+    : Widget{size}, left_padding{left_padding}, right_padding{right_padding} {}
+
 void LabelWidget::setText(const std::string& str8, const Rgb& color) {
     label_text.setText(str8);
     this->color = color;
@@ -27,7 +30,7 @@ void LabelWidget::draw() {
     // rect_renderer.addRect(position, size, temp_color);
 
     // Draw all left side icons.
-    Point left_offset{.x = kLeftPadding};
+    Point left_offset{.x = left_padding};
     for (size_t icon_id : left_side_icons) {
         Size image_size = image_renderer.getImageSize(icon_id);
 
@@ -38,7 +41,7 @@ void LabelWidget::draw() {
     }
 
     // Draw all right side icons.
-    Point right_offset{.x = kRightPadding};
+    Point right_offset{.x = right_padding};
     for (size_t icon_id : right_side_icons) {
         Size image_size = image_renderer.getImageSize(icon_id);
 

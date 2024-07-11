@@ -50,23 +50,10 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-static inline CairoContextPtr CreateLayoutContext() {
-    CairoSurfacePtr temp_surface{cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0)};
-    return CairoContextPtr{cairo_create(temp_surface.get())};
-}
-
-static inline CairoContextPtr CreateRenderContext(int width,
-                                                  int height,
-                                                  int channels,
-                                                  std::vector<unsigned char>& buffer) {
-    CairoSurfacePtr surface{cairo_image_surface_create_for_data(&buffer[0], CAIRO_FORMAT_ARGB32,
-                                                                width, height, channels * width)};
-    return CairoContextPtr{cairo_create(surface.get())};
-}
-
 // https://dthompson.us/posts/font-rendering-in-opengl-with-pango-and-cairo.html
 FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
-    CairoContextPtr layout_context = CreateLayoutContext();
+    CairoSurfacePtr temp_surface{cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0)};
+    CairoContextPtr layout_context{cairo_create(temp_surface.get())};
 
     cairo_font_options_t* font_options = cairo_font_options_create();
     cairo_font_options_set_antialias(font_options, CAIRO_ANTIALIAS_SUBPIXEL);
@@ -81,6 +68,10 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
 
     // We don't need to free these. These are owned by the `PangoLayout` instance.
     PangoLayoutLine* layout_line = pango_layout_get_line_readonly(layout.get(), 0);
+    if (!layout_line->runs) {
+        std::cerr << "FontRasterizer::rasterizeUTF8() error: no runs in PangoLayoutLine.\n";
+        return {};
+    }
     PangoGlyphItem* item = static_cast<PangoGlyphItem*>(layout_line->runs->data);
     bool colored = item->glyphs->glyphs->attr.is_color;
 
@@ -95,31 +86,33 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
     // text_width += 1;
 
     std::vector<unsigned char> surface_data(text_width * text_height * 4);
-    CairoContextPtr render_context = CreateRenderContext(text_width, text_height, 4, surface_data);
+    CairoSurfacePtr surface{cairo_image_surface_create_for_data(
+        &surface_data[0], CAIRO_FORMAT_ARGB32, text_width, text_height, text_width * 4)};
+    CairoContextPtr render_context{cairo_create(surface.get())};
 
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
     pango_cairo_show_layout(render_context.get(), layout.get());
 
-    std::vector<uint8_t> temp_buffer;
+    std::vector<uint8_t> buffer;
     size_t pixels = text_width * text_height * 4;
-    temp_buffer.reserve(pixels);
+    buffer.reserve(pixels);
     for (size_t i = 0; i < pixels; i += 4) {
-        temp_buffer.emplace_back(surface_data[i + 2]);
-        temp_buffer.emplace_back(surface_data[i + 1]);
-        temp_buffer.emplace_back(surface_data[i]);
+        buffer.emplace_back(surface_data[i + 2]);
+        buffer.emplace_back(surface_data[i + 1]);
+        buffer.emplace_back(surface_data[i]);
         if (colored) {
-            temp_buffer.emplace_back(surface_data[i + 3]);
+            buffer.emplace_back(surface_data[i + 3]);
         }
     }
 
-    return RasterizedGlyph{
+    return {
         .colored = colored,
         .left = 0,
         .top = text_height,
         .width = text_width,
         .height = text_height,
         .advance = text_width,
-        .buffer = temp_buffer,
+        .buffer = std::move(buffer),
     };
 }
 

@@ -193,7 +193,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
             buffer.emplace_back(alpha_values[i]);
         }
 
-        return RasterizedGlyph{
+        return {
             .colored = false,
             .left = texture_bounds.left,
             .top = top,
@@ -243,7 +243,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
 
         bitmap_lock->Release();
 
-        return RasterizedGlyph{
+        return {
             .colored = true,
             .left = 0,
             .top = top,

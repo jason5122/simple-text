@@ -29,6 +29,12 @@ public:
     bool empty();
 
 private:
+    // Render newline characters as spaces, since DirectWrite and Pango don't seem to support
+    // rendering "\n".
+    // TODO: Make this substitution happen in TextRenderer or FontRasterizer, not here.
+    static constexpr std::string_view kNewlineString = " ";
+    // static constexpr std::string_view kNewlineString = "\n";
+
     std::vector<std::string> data;
     std::string flat_string;
     std::vector<std::vector<Utf8Char>> utf8_chars;

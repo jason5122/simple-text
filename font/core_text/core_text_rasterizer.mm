@@ -144,10 +144,10 @@ FontRasterizer::RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(
         }
     }
 
-    float advance =
+    double advance =
         CTFontGetAdvancesForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
 
-    return RasterizedGlyph{
+    return {
         .colored = colored,
         .left = rasterized_left,
         .top = top,

@@ -47,10 +47,9 @@ void Buffer::setContents(const std::string& text) {
             }
 
             // Include newline.
-            std::string_view newline = "\n";
-            offset = newline.length();
+            offset = kNewlineString.length();
             utf8_chars.at(i).emplace_back(Utf8Char{
-                .str = newline,
+                .str = kNewlineString,
                 .size = offset,
                 .line_offset = line_str.size(),
                 .byte_offset = byte_offset,
@@ -64,7 +63,7 @@ size_t Buffer::size() const {
     size_t byte_count = 0;
     for (const std::string& line : data) {
         byte_count += line.size();
-        byte_count += 1;  // Account for \n characters.
+        byte_count += kNewlineString.length();
     }
     return byte_count;
 }
@@ -89,7 +88,7 @@ size_t Buffer::byteOfLine(size_t line_index) const {
     size_t byte_offset = 0;
     for (uint16_t row = 0; row < line_index; row++) {
         byte_offset += data.at(row).size();
-        byte_offset++;  // Include newline.
+        byte_offset += kNewlineString.length();
     }
     return byte_offset;
 }

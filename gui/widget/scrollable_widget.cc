@@ -1,4 +1,5 @@
 #include "scrollable_widget.h"
+#include <algorithm>
 
 namespace gui {
 

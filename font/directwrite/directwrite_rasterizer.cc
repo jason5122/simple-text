@@ -109,7 +109,7 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
+FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
 
     ComPtr<IDWriteFontFace> font_face = pimpl->font_face;

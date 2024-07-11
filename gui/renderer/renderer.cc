@@ -7,19 +7,21 @@ using namespace opengl;
 // TODO: Properly load this from settings.
 namespace {
 #if IS_MAC
-const int kMainFontSize = 16 * 2;
+constexpr int kMainFontSize = 16 * 2;
+constexpr std::string kMainFontFace = "SF Pro Text";
 #elif IS_WIN || IS_LINUX
-const int kMainFontSize = 12 * 2;
+constexpr int kMainFontSize = 12 * 2;
+constexpr std::string kMainFontFace = "Arial";
 #endif
 
-const int kUIFontSize = 11 * 2;
+constexpr int kUIFontSize = 11 * 2;
 }
 
 namespace gui {
 
 Renderer::Renderer()
     : main_glyph_cache{"Source Code Pro", kMainFontSize},
-      ui_glyph_cache{"Arial", kUIFontSize},
+      ui_glyph_cache{kMainFontFace, kUIFontSize},
       text_renderer{main_glyph_cache, ui_glyph_cache},
       selection_renderer{main_glyph_cache},
       movement{main_glyph_cache} {

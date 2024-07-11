@@ -22,6 +22,9 @@ private:
     base::Buffer buffer;
     CaretInfo start_caret{};
     CaretInfo end_caret{};
+
+    // TODO: Clean this up.
+    int longest_line_x = 0;
 };
 
 }

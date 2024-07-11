@@ -15,7 +15,15 @@
 using namespace gui;
 
 namespace {
-const std::string sample_text =
+constexpr std::string repeat(std::string_view sv, size_t times) {
+    std::string result;
+    for (size_t i = 0; i < times; i++) {
+        result += sv;
+    }
+    return result;
+}
+
+const std::string kSampleText =
     R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
 tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
 quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
@@ -23,27 +31,13 @@ consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 )";
+
+const std::string kLongLine =
+    "This is a long long long long long long long long long long long long long long long long "
+    "long long long long long long long long long long long long long long long long long long "
+    "long long long long long long long long long long long long long long long long long long "
+    "long long line.";
 }
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
@@ -56,9 +50,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setWidth(width);
     main_widget->setHeight(height);
 
-    int tab_bar_height = 29 * 2;
-    int side_bar_width = 250 * 2;
-    int status_bar_height = 22 * 2;
+    int kTabBarHeight = 29 * 2;
+    int kSideBarWidth = 250 * 2;
+    int kStatusBarHeight = 22 * 2;
 
     // Main widgets.
     std::unique_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
@@ -66,9 +60,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::unique_ptr<TextViewWidget> text_view{new TextViewWidget{}};
 
     // These don't have default constructors since they are not intended to be main widgets.
-    std::unique_ptr<Widget> side_bar{new SideBarWidget({side_bar_width, height})};
-    std::unique_ptr<Widget> tab_bar{new TabBarWidget({width, tab_bar_height})};
-    std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, status_bar_height})};
+    std::unique_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, height})};
+    std::unique_ptr<Widget> tab_bar{new TabBarWidget({width, kTabBarHeight})};
+    std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, kStatusBarHeight})};
 
     // Leave padding between window title bar and tab.
     constexpr Rgba kTabBarColor{190, 190, 190, 255};
@@ -76,7 +70,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::unique_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
     std::unique_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
 
-    text_view->setContents(sample_text);
+    text_view->setContents(repeat(kSampleText, 50) + kLongLine);
 
     // TODO: Temporary hack. Consider implementing this fully.
     text_view_widget = text_view.get();
@@ -143,6 +137,10 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
         drag_start_widget->leftMouseDrag({mouse_x, mouse_y});
         redraw();
     }
+}
+
+void EditorWindow::onInsertText(std::string_view text) {
+    std::cerr << text << '\n';
 }
 
 void EditorWindow::onClose() {

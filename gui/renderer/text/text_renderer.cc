@@ -100,31 +100,14 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::insertIntoBatch(size_t page,
-                                   const InstanceData& instance,
-                                   bool use_main_glyph_cache) {
-    auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
-
-    while (batch_instances.size() <= page) {
-        batch_instances.emplace_back();
-        batch_instances.back().reserve(kBatchMax);
-    }
-
-    std::vector<InstanceData>& instances = batch_instances.at(page);
-
-    instances.emplace_back(std::move(instance));
-    if (instances.size() == kBatchMax) {
-        std::cerr << "TextRenderer error: attempted to insert into a full batch!\n";
-    }
-}
-
 void TextRenderer::renderText(const Size& size,
                               const Point& scroll,
                               const base::Buffer& buffer,
                               const Point& editor_offset,
                               const CaretInfo& start_caret,
                               const CaretInfo& end_caret,
-                              Point& end_caret_pos) {
+                              Point& end_caret_pos,
+                              int& longest_line_x) {
     // TODO: Clean this up.
     int line_number_offset = 100;
 
@@ -177,9 +160,9 @@ void TextRenderer::renderText(const Size& size,
 
         total_advance = 0;
         for (const auto& ch : buffer.getLineChars(line_index)) {
-            if (total_advance > size.width) {
-                break;
-            }
+            // if (total_advance > size.width) {
+            //     break;
+            // }
 
             if (ch.byte_offset == end_caret.byte) {
                 end_caret_pos = {
@@ -217,6 +200,7 @@ void TextRenderer::renderText(const Size& size,
 
             total_advance += glyph.advance;
         }
+        longest_line_x = std::max(total_advance, longest_line_x);
     }
 
     int atlas_x_offset = 0;
@@ -318,6 +302,24 @@ int TextRenderer::lineHeight() {
 
 int TextRenderer::uiLineHeight() {
     return ui_glyph_cache.lineHeight();
+}
+
+void TextRenderer::insertIntoBatch(size_t page,
+                                   const InstanceData& instance,
+                                   bool use_main_glyph_cache) {
+    auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
+
+    while (batch_instances.size() <= page) {
+        batch_instances.emplace_back();
+        batch_instances.back().reserve(kBatchMax);
+    }
+
+    std::vector<InstanceData>& instances = batch_instances.at(page);
+
+    instances.emplace_back(std::move(instance));
+    if (instances.size() == kBatchMax) {
+        std::cerr << "TextRenderer error: attempted to insert into a full batch!\n";
+    }
 }
 
 }

@@ -25,8 +25,9 @@ void TextViewWidget::draw() {
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
         text_renderer.renderText(size, scroll_offset, buffer, position, start_caret, end_caret,
-                                 end_caret_pos);
+                                 end_caret_pos, longest_line_x);
     }
+    updateMaxScroll();  // TODO: Clean this up.
 
     // Add selections.
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
@@ -91,12 +92,15 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 
 void TextViewWidget::updateMaxScroll() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    max_scroll_offset.x = 400;  // TODO: Debug use; remove this.
+    max_scroll_offset.x = longest_line_x;
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
 }
 
 void TextViewWidget::setContents(const std::string& text) {
-    buffer.setContents(text);
+    {
+        PROFILE_BLOCK("TextRenderer::setContents()");
+        buffer.setContents(text);
+    }
 
     updateMaxScroll();
 }

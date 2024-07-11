@@ -8,7 +8,7 @@ SideBarWidget::SideBarWidget(const Size& size)
     : ScrollableWidget{size}, folder_label{new LabelWidget{{size.width, 50}}} {
     updateMaxScroll();
 
-    folder_label->setText("FOLDERS");
+    folder_label->setText("FOLDERS", {51, 51, 51});
     folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
 }
 
@@ -43,7 +43,7 @@ void SideBarWidget::layout() {
 
 void SideBarWidget::updateMaxScroll() {
     // TODO: Debug use; remove this.
-    max_scroll_offset.y = 2688;
+    max_scroll_offset.y = 2400;
 }
 
 }

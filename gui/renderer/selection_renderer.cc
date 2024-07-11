@@ -1,4 +1,3 @@
-#include "base/rgb.h"
 #include "selection_renderer.h"
 #include <cstdint>
 
@@ -176,8 +175,8 @@ void SelectionRenderer::createInstances(const Point& offset, std::vector<Selecti
                     .x = static_cast<float>(end - start),
                     .y = static_cast<float>(main_glyph_cache.lineHeight() + kBorderThickness),
                 },
-            .color = Rgba::fromRgb(base::colors::selection_focused, 0),
-            .border_color = Rgba::fromRgb(base::colors::selection_border, 0),
+            .color = Rgba::fromRgb({227, 230, 232}, 0),
+            .border_color = Rgba::fromRgb({212, 217, 221}, 0),
             // .border_color = Rgba::fromRgb(base::colors::red, 0),
             // .color = Rgba::fromRgb(base::colors::yellow, 0),
             // .border_color = Rgba::fromRgb(base::Rgb{0, 0, 0}, 0),

@@ -13,9 +13,9 @@ public:
     void layout() override;
 
 private:
-    static constexpr int tab_width = 360;
-    static constexpr int tab_corner_radius = 10;
-    static constexpr Size tab_separator_size{.width = 2, .height = 38};
+    static constexpr int kTabWidth = 360;
+    static constexpr int kTabCornerRadius = 10;
+    static constexpr Size kTabSeparatorSize{.width = 2, .height = 38};
 
     int tab_index = 0;
     std::vector<std::unique_ptr<LabelWidget>> tab_name_labels;

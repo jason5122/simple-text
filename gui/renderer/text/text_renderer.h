@@ -24,7 +24,7 @@ public:
                     const CaretInfo& start_caret,
                     const CaretInfo& end_caret,
                     Point& end_caret_pos);
-    void addUiText(const Point& coords, const base::Utf8String& str8);
+    void addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();
     int uiLineHeight();

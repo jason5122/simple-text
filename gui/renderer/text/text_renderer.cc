@@ -1,4 +1,3 @@
-#include "base/rgb.h"
 #include "text_renderer.h"
 #include <cmath>
 #include <cstdint>
@@ -169,7 +168,7 @@ void TextRenderer::renderText(const Size& size,
                 .coords = coords.toVec2(),
                 .glyph = glyph.glyph,
                 .uv = glyph.uv,
-                .color = Rgba::fromRgb(base::Rgb{150, 150, 150}, glyph.colored),
+                .color = Rgba::fromRgb({150, 150, 150}, glyph.colored),
             };
             insertIntoBatch(glyph.page, std::move(instance), true);
 
@@ -192,11 +191,11 @@ void TextRenderer::renderText(const Size& size,
             // TODO: Preserve the width of the space character when substituting.
             //       Otherwise, the line width changes when using proportional fonts.
             std::string_view key = ch.str;
-            base::Rgb text_color{51, 51, 51};
+            Rgb text_color{51, 51, 51};
             if (key == " " && selection_start <= ch.byte_offset &&
                 ch.byte_offset < selection_end) {
                 key = "·";
-                text_color = base::Rgb{182, 182, 182};
+                text_color = Rgb{182, 182, 182};
             }
             GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
 
@@ -244,7 +243,7 @@ void TextRenderer::renderText(const Size& size,
     }
 }
 
-void TextRenderer::addUiText(const Point& coords, const base::Utf8String& str8) {
+void TextRenderer::addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8) {
     int total_advance = 0;
     for (const auto& ch : str8.getChars()) {
         GlyphCache::Glyph& glyph = ui_glyph_cache.getGlyph(ch.str);
@@ -260,8 +259,7 @@ void TextRenderer::addUiText(const Point& coords, const base::Utf8String& str8) 
             .coords = pos.toVec2(),
             .glyph = glyph.glyph,
             .uv = glyph.uv,
-            // .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
-            .color = Rgba::fromRgb({64, 64, 64}, glyph.colored),
+            .color = Rgba::fromRgb(color, glyph.colored),
         };
         insertIntoBatch(glyph.page, std::move(instance), false);
 

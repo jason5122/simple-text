@@ -18,6 +18,14 @@ std::vector<Buffer::Utf8Char>::const_iterator Buffer::end() const {
     return utf8_chars_flat.end();
 }
 
+std::vector<Buffer::Utf8Char>::const_iterator Buffer::line(size_t line) const {
+    if (line >= newline_offsets.size()) {
+        return end();
+    } else {
+        return utf8_chars_flat.begin() + newline_offsets.at(line);
+    }
+}
+
 void Buffer::setContents(const std::string& text) {
     data.clear();
 
@@ -36,22 +44,17 @@ void Buffer::setContents(const std::string& text) {
 
     {
         PROFILE_BLOCK("Buffer: collect UTF-8 chars");
-        utf8_chars.resize(data.size());
 
         size_t byte_offset = 0;
         for (size_t line = 0; line < data.size(); line++) {
             const auto& line_str = data.at(line);
 
+            // Cache byte offsets of newlines.
+            newline_offsets.emplace_back(utf8_chars_flat.size());
+
             size_t offset;
             for (size_t line_offset = 0; line_offset < line_str.size(); line_offset += offset) {
                 offset = grapheme_next_character_break_utf8(&line_str[0] + line_offset, SIZE_MAX);
-                utf8_chars.at(line).emplace_back(Utf8Char{
-                    .str = std::string_view(line_str).substr(line_offset, offset),
-                    .size = offset,
-                    .line_offset = line_offset,
-                    .byte_offset = byte_offset,
-                    .line = line,
-                });
                 utf8_chars_flat.emplace_back(Utf8Char{
                     .str = std::string_view(line_str).substr(line_offset, offset),
                     .size = offset,
@@ -64,13 +67,6 @@ void Buffer::setContents(const std::string& text) {
 
             // Include newline.
             offset = kNewlineString.length();
-            utf8_chars.at(line).emplace_back(Utf8Char{
-                .str = kNewlineString,
-                .size = offset,
-                .line_offset = line_str.size(),
-                .byte_offset = byte_offset,
-                .line = line,
-            });
             utf8_chars_flat.emplace_back(Utf8Char{
                 .str = kNewlineString,
                 .size = offset,
@@ -102,10 +98,6 @@ size_t Buffer::lineLength(size_t line_index) const {
 
 std::string Buffer::getLineContent(size_t line_index) const {
     return data.at(line_index);
-}
-
-const std::vector<Buffer::Utf8Char>& Buffer::getLineChars(size_t line_index) const {
-    return utf8_chars.at(line_index);
 }
 
 size_t Buffer::byteOfLine(size_t line_index) const {

@@ -21,7 +21,8 @@ void Movement::setCaretInfo(const base::Buffer& buffer, const Point& mouse, Care
 //       We should remove any glyph cache/font rasterization from this method.
 size_t Movement::closestBoundaryForX(const base::Buffer& buffer, size_t line_index, int x) {
     int total_advance = 0;
-    for (const auto& ch : buffer.getLineChars(line_index)) {
+    for (auto it = buffer.line(line_index); it != buffer.line(line_index + 1); it++) {
+        const auto& ch = *it;
         GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(ch.str);
 
         int glyph_center = total_advance + glyph.advance / 2;
@@ -31,7 +32,7 @@ size_t Movement::closestBoundaryForX(const base::Buffer& buffer, size_t line_ind
 
         total_advance += glyph.advance;
     }
-    return buffer.getLineChars(line_index).back().line_offset;
+    return (*std::prev(buffer.line(line_index + 1))).line_offset;
 }
 
 }

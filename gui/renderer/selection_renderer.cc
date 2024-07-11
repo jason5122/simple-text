@@ -130,7 +130,8 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base:
         int start = 0;
         int end = 0;
 
-        for (const auto& ch : buffer.getLineChars(line_index)) {
+        for (auto it = buffer.line(line_index); it != buffer.line(line_index + 1); it++) {
+            const auto& ch = *it;
             GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(ch.str);
 
             if (ch.byte_offset == start_byte) {

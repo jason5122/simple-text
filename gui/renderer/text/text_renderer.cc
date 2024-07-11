@@ -117,84 +117,43 @@ void TextRenderer::renderText(const Size& size,
     start_line = 0;
     end_line = buffer.lineCount();
 
-    constexpr bool kUseIterator = true;
-    if (kUseIterator) {
-        int total_advance = 0;
-        for (auto it = buffer.begin(); it != buffer.end(); it++) {
-            const auto& ch = *it;
-            // Doing `ch.str == "\n"` comparison is slow!
-            const bool is_newline = ch.line != (*std::next(it)).line;
+    int total_advance = 0;
+    for (auto it = buffer.begin(); it != buffer.end(); it++) {
+        const auto& ch = *it;
+        // Doing `ch.str == "\n"` comparison is slow!
+        const bool is_newline = ch.line != (*std::next(it)).line;
 
-            if (ch.byte_offset == end_caret.byte) {
-                end_caret_pos = {
-                    .x = total_advance,
-                    .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
-                };
-            }
-
-            Point coords{
+        if (ch.byte_offset == end_caret.byte) {
+            end_caret_pos = {
                 .x = total_advance,
                 .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
             };
-            coords += editor_offset;
-            coords -= scroll;
-
-            // Render newline characters as spaces, since DirectWrite and Pango don't seem to
-            // support rendering "\n".
-            std::string_view key = is_newline ? " " : ch.str;
-            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
-            InstanceData instance{
-                .coords = coords.toVec2(),
-                .glyph = glyph.glyph,
-                .uv = glyph.uv,
-                .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
-            };
-            insertIntoBatch(glyph.page, std::move(instance), true);
-
-            total_advance += glyph.advance;
-
-            if (is_newline) {
-                longest_line_x = std::max(total_advance, longest_line_x);
-                total_advance = 0;
-            }
         }
-    } else {
-        for (size_t line_index = start_line; line_index < end_line; line_index++) {
-            int total_advance = 0;
-            for (const auto& ch : buffer.getLineChars(line_index)) {
-                // if (total_advance > size.width) {
-                //     break;
-                // }
 
-                if (ch.byte_offset == end_caret.byte) {
-                    end_caret_pos = {
-                        .x = total_advance,
-                        .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
-                    };
-                }
+        Point coords{
+            .x = total_advance,
+            .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
+        };
+        coords += editor_offset;
+        coords -= scroll;
 
-                Point coords{
-                    .x = total_advance,
-                    .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
-                };
-                coords += editor_offset;
-                coords -= scroll;
+        // Render newline characters as spaces, since DirectWrite and Pango don't seem to
+        // support rendering "\n".
+        std::string_view key = is_newline ? " " : ch.str;
+        GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
+        InstanceData instance{
+            .coords = coords.toVec2(),
+            .glyph = glyph.glyph,
+            .uv = glyph.uv,
+            .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
+        };
+        insertIntoBatch(glyph.page, std::move(instance), true);
 
-                // Render newline characters as spaces, since DirectWrite and Pango don't seem to
-                // support rendering "\n".
-                std::string_view key = ch.str == "\n" ? " " : ch.str;
-                GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
-                InstanceData instance{
-                    .coords = coords.toVec2(),
-                    .glyph = glyph.glyph,
-                    .uv = glyph.uv,
-                    .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
-                };
-                insertIntoBatch(glyph.page, std::move(instance), true);
+        total_advance += glyph.advance;
 
-                total_advance += glyph.advance;
-            }
+        if (is_newline) {
             longest_line_x = std::max(total_advance, longest_line_x);
+            total_advance = 0;
         }
     }
 

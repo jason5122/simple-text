@@ -18,13 +18,13 @@ public:
 
     std::vector<Utf8Char>::const_iterator begin() const;
     std::vector<Utf8Char>::const_iterator end() const;
+    std::vector<Utf8Char>::const_iterator line(size_t line) const;
 
     void setContents(const std::string& text);
     size_t size() const;
     size_t lineCount() const;
     size_t lineLength(size_t line_index) const;
     std::string getLineContent(size_t line_index) const;
-    const std::vector<Utf8Char>& getLineChars(size_t line_index) const;
     size_t byteOfLine(size_t line_index) const;
     void insert(size_t line_index, size_t line_offset, std::string_view text);
     void remove(size_t line_index, size_t line_offset, size_t bytes);
@@ -37,10 +37,10 @@ private:
 
     std::vector<std::string> data;
     std::string flat_string;
-    std::vector<std::vector<Utf8Char>> utf8_chars;
 
     // TODO: Make this the main data structure and get rid of 2D vector `utf8_chars`.
     std::vector<Utf8Char> utf8_chars_flat;
+    std::vector<size_t> newline_offsets;
 };
 
 }

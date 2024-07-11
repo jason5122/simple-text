@@ -1,5 +1,5 @@
-#include "font/pango/pango_helper.h"
 #include "font/font_rasterizer.h"
+#include "font/pango/pango_helper.h"
 #include <cairo-ft.h>
 #include <vector>
 
@@ -65,7 +65,7 @@ static inline CairoContextPtr CreateRenderContext(int width,
 }
 
 // https://dthompson.us/posts/font-rendering-in-opengl-with-pango-and-cairo.html
-RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
+FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
     CairoContextPtr layout_context = CreateLayoutContext();
 
     cairo_font_options_t* font_options = cairo_font_options_create();

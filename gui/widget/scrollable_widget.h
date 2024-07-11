@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/widget/widget.h"
+#include <chrono>
 
 namespace gui {
 

@@ -45,12 +45,21 @@ void TextViewWidget::draw() {
     int max_scrollbar_y = (line_count + visible_lines) * line_height;
     int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
     float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
-
-    Point coords{
+    Point vbar_coords{
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, scroll_bar_color, 5);
+    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, scroll_bar_color, 5);
+
+    // Add horizontal scroll bar.
+    int hbar_height = 15;
+    int hbar_width = size.width * (static_cast<float>(size.width) / max_scroll_offset.x);
+    float hbar_percent = static_cast<float>(scroll_offset.x) / max_scroll_offset.x;
+    Point hbar_coords{
+        .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
+        .y = size.height - hbar_height,
+    };
+    rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color, 5);
 
     // Add caret.
     int caret_width = 4;

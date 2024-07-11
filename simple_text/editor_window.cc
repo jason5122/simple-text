@@ -71,8 +71,10 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, status_bar_height})};
 
     // Leave padding between window title bar and tab.
-    constexpr Rgba tab_bar_color{190, 190, 190, 255};
-    std::unique_ptr<Widget> padding{new PaddingWidget({0, 3 * 2}, tab_bar_color)};
+    constexpr Rgba kTabBarColor{190, 190, 190, 255};
+    constexpr Rgba kTextViewColor{253, 253, 253, 255};
+    std::unique_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
+    std::unique_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
 
     text_view->setContents(sample_text);
 
@@ -80,8 +82,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     text_view_widget = text_view.get();
 
     horizontal_layout->addChildStart(std::move(side_bar));
-    vertical_layout->addChildStart(std::move(padding));
+    vertical_layout->addChildStart(std::move(tab_bar_padding));
     vertical_layout->addChildStart(std::move(tab_bar));
+    vertical_layout->addChildStart(std::move(text_view_padding));
     vertical_layout->setMainWidget(std::move(text_view));
     horizontal_layout->setMainWidget(std::move(vertical_layout));
     main_widget->setMainWidget(std::move(horizontal_layout));

@@ -40,8 +40,6 @@ void Buffer::setContents(const std::string& text) {
     }
     data.push_back(line);
 
-    flat_string = text;
-
     {
         PROFILE_BLOCK("Buffer: collect UTF-8 chars");
 
@@ -144,8 +142,7 @@ void Buffer::backspace(size_t line_index, size_t line_offset, size_t bytes) {
 }
 
 void Buffer::erase(size_t start_byte, size_t end_byte) {
-    flat_string.erase(flat_string.begin() + start_byte, flat_string.begin() + end_byte);
-    setContents(flat_string);
+    std::cerr << "Buffer::erase(): unimplemented!\n";
 }
 
 bool Buffer::empty() {

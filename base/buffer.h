@@ -36,9 +36,6 @@ private:
     static constexpr std::string_view kNewlineString = "\n";
 
     std::vector<std::string> data;
-    std::string flat_string;
-
-    // TODO: Make this the main data structure and get rid of 2D vector `utf8_chars`.
     std::vector<Utf8Char> utf8_chars_flat;
     std::vector<size_t> newline_offsets;
 };

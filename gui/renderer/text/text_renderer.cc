@@ -120,7 +120,6 @@ void TextRenderer::renderText(const Size& size,
     int total_advance = 0;
     for (auto it = buffer.begin(); it != buffer.end(); it++) {
         const auto& ch = *it;
-        // Doing `ch.str == "\n"` comparison is slow!
         const bool is_newline = ch.line != (*std::next(it)).line;
 
         if (ch.byte_offset == end_caret.byte) {

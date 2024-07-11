@@ -108,9 +108,6 @@ void TextRenderer::renderText(const Size& size,
                               const CaretInfo& end_caret,
                               Point& end_caret_pos,
                               int& longest_line_x) {
-    // TODO: Clean this up.
-    int line_number_offset = 100;
-
     size_t selection_start = start_caret.byte;
     size_t selection_end = end_caret.byte;
     if (selection_start > selection_end) {
@@ -129,36 +126,6 @@ void TextRenderer::renderText(const Size& size,
 
     for (size_t line_index = start_line; line_index < end_line; line_index++) {
         int total_advance = 0;
-
-        // Draw line number.
-        std::string line_number_str = std::to_string(line_index + 1);
-        std::reverse(line_number_str.begin(), line_number_str.end());
-
-        // We can hard-code 1 as the offset increment since digits are ASCII.
-        for (size_t offset = 0; offset < line_number_str.size(); offset++) {
-            std::string_view key = std::string_view(line_number_str).substr(offset, 1);
-            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
-
-            Point coords{
-                .x = -total_advance,
-                .y = static_cast<int>(line_index) * main_glyph_cache.lineHeight(),
-            };
-            coords += editor_offset;
-            coords -= scroll;
-            coords.x += line_number_offset / 2;
-
-            InstanceData instance{
-                .coords = coords.toVec2(),
-                .glyph = glyph.glyph,
-                .uv = glyph.uv,
-                .color = Rgba::fromRgb({150, 150, 150}, glyph.colored),
-            };
-            insertIntoBatch(glyph.page, std::move(instance), true);
-
-            total_advance += glyph.advance;
-        }
-
-        total_advance = 0;
         for (const auto& ch : buffer.getLineChars(line_index)) {
             // if (total_advance > size.width) {
             //     break;
@@ -188,7 +155,6 @@ void TextRenderer::renderText(const Size& size,
             };
             coords += editor_offset;
             coords -= scroll;
-            coords.x += line_number_offset;
 
             InstanceData instance{
                 .coords = coords.toVec2(),

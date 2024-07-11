@@ -115,14 +115,13 @@ void RectRenderer::draw(const Size& size,
     int editor_width = size.width;
     int editor_height = size.height - status_bar_height;
 
-    // TODO: Add this to parameters.
-    int line_number_offset = 100;
-
     // Add caret.
-    const Point caret_pos{
-        .x = end_caret_pos.x - caret_width / 2 - scroll.x + editor_offset.x + line_number_offset,
-        .y = end_caret_pos.y - extra_padding - scroll.y + editor_offset.y,
+    Point caret_pos{
+        .x = end_caret_pos.x - caret_width / 2,
+        .y = end_caret_pos.y - extra_padding,
     };
+    caret_pos -= scroll;
+    caret_pos -= editor_offset;
     addRect(caret_pos, {caret_width, caret_height}, Rgba{95, 180, 180, 255});
 
     // Add vertical scroll bar.

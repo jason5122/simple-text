@@ -18,9 +18,6 @@ void TextViewWidget::draw() {
     constexpr Rgba scroll_bar_color{190, 190, 190, 255};
     constexpr Rgba caret_color{95, 180, 180, 255};
 
-    // TODO: Add this to parameters.
-    int line_number_offset = 100;
-
     Point end_caret_pos;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
@@ -34,7 +31,6 @@ void TextViewWidget::draw() {
     auto selections = selection_renderer.getSelections(buffer, start_caret, end_caret);
 
     Point selection_offset = position - scroll_offset;
-    selection_offset.x += line_number_offset;
     selection_renderer.createInstances(selection_offset, selections);
 
     // Add vertical scroll bar.
@@ -65,10 +61,11 @@ void TextViewWidget::draw() {
     int caret_width = 4;
     int extra_padding = 8;
     int caret_height = line_height + extra_padding * 2;
-    const Point caret_pos{
-        .x = end_caret_pos.x - caret_width / 2 - scroll_offset.x + line_number_offset,
-        .y = end_caret_pos.y - extra_padding - scroll_offset.y,
+    Point caret_pos{
+        .x = end_caret_pos.x - caret_width / 2,
+        .y = end_caret_pos.y - extra_padding,
     };
+    caret_pos -= scroll_offset;
     rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, caret_color);
 }
 
@@ -77,12 +74,7 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
 
     Movement& movement = Renderer::instance().getMovement();
 
-    // TODO: Add this to parameters.
-    int line_number_offset = 100;
-
     Point new_coords = mouse_pos - position + scroll_offset;
-    new_coords.x -= line_number_offset;
-
     movement.setCaretInfo(buffer, new_coords, end_caret);
     start_caret = end_caret;
 }
@@ -90,12 +82,7 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     Movement& movement = Renderer::instance().getMovement();
 
-    // TODO: Add this to parameters.
-    int line_number_offset = 100;
-
     Point new_coords = mouse_pos - position + scroll_offset;
-    new_coords.x -= line_number_offset;
-
     movement.setCaretInfo(buffer, new_coords, end_caret);
 }
 

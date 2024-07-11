@@ -21,8 +21,8 @@ void TextViewWidget::draw() {
     Point end_caret_pos;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        text_renderer.renderText(size, scroll_offset, buffer, position, start_caret, end_caret,
-                                 end_caret_pos, longest_line_x);
+        text_renderer.renderText(size, scroll_offset, buffer, position, end_caret, end_caret_pos,
+                                 longest_line_x);
     }
     updateMaxScroll();  // TODO: Clean this up.
 

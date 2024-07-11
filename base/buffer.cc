@@ -10,6 +10,14 @@ extern "C" {
 
 namespace base {
 
+std::vector<Buffer::Utf8Char>::const_iterator Buffer::begin() const {
+    return utf8_chars_flat.begin();
+}
+
+std::vector<Buffer::Utf8Char>::const_iterator Buffer::end() const {
+    return utf8_chars_flat.end();
+}
+
 void Buffer::setContents(const std::string& text) {
     data.clear();
 
@@ -31,28 +39,44 @@ void Buffer::setContents(const std::string& text) {
         utf8_chars.resize(data.size());
 
         size_t byte_offset = 0;
-        for (size_t i = 0; i < data.size(); i++) {
-            const auto& line_str = data.at(i);
+        for (size_t line = 0; line < data.size(); line++) {
+            const auto& line_str = data.at(line);
 
             size_t offset;
             for (size_t line_offset = 0; line_offset < line_str.size(); line_offset += offset) {
                 offset = grapheme_next_character_break_utf8(&line_str[0] + line_offset, SIZE_MAX);
-                utf8_chars.at(i).emplace_back(Utf8Char{
+                utf8_chars.at(line).emplace_back(Utf8Char{
                     .str = std::string_view(line_str).substr(line_offset, offset),
                     .size = offset,
                     .line_offset = line_offset,
                     .byte_offset = byte_offset,
+                    .line = line,
+                });
+                utf8_chars_flat.emplace_back(Utf8Char{
+                    .str = std::string_view(line_str).substr(line_offset, offset),
+                    .size = offset,
+                    .line_offset = line_offset,
+                    .byte_offset = byte_offset,
+                    .line = line,
                 });
                 byte_offset += offset;
             }
 
             // Include newline.
             offset = kNewlineString.length();
-            utf8_chars.at(i).emplace_back(Utf8Char{
+            utf8_chars.at(line).emplace_back(Utf8Char{
                 .str = kNewlineString,
                 .size = offset,
                 .line_offset = line_str.size(),
                 .byte_offset = byte_offset,
+                .line = line,
+            });
+            utf8_chars_flat.emplace_back(Utf8Char{
+                .str = kNewlineString,
+                .size = offset,
+                .line_offset = line_str.size(),
+                .byte_offset = byte_offset,
+                .line = line,
             });
             byte_offset += offset;
         }

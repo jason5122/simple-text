@@ -13,7 +13,11 @@ public:
         size_t size;
         size_t line_offset;
         size_t byte_offset;
+        size_t line;
     };
+
+    std::vector<Utf8Char>::const_iterator begin() const;
+    std::vector<Utf8Char>::const_iterator end() const;
 
     void setContents(const std::string& text);
     size_t size() const;
@@ -29,15 +33,14 @@ public:
     bool empty();
 
 private:
-    // Render newline characters as spaces, since DirectWrite and Pango don't seem to support
-    // rendering "\n".
-    // TODO: Make this substitution happen in TextRenderer or FontRasterizer, not here.
-    static constexpr std::string_view kNewlineString = " ";
-    // static constexpr std::string_view kNewlineString = "\n";
+    static constexpr std::string_view kNewlineString = "\n";
 
     std::vector<std::string> data;
     std::string flat_string;
     std::vector<std::vector<Utf8Char>> utf8_chars;
+
+    // TODO: Make this the main data structure and get rid of 2D vector `utf8_chars`.
+    std::vector<Utf8Char> utf8_chars_flat;
 };
 
 }

@@ -21,7 +21,6 @@ public:
                     const Point& scroll,
                     const base::Buffer& buffer,
                     const Point& editor_offset,
-                    const CaretInfo& start_caret,
                     const CaretInfo& end_caret,
                     Point& end_caret_pos,
                     int& longest_line_x);

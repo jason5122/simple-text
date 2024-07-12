@@ -15,20 +15,10 @@ public:
     SelectionRenderer(SelectionRenderer&& other);
     SelectionRenderer& operator=(SelectionRenderer&& other);
 
-    struct Selection {
-        int line;
-        int start;
-        int end;
-    };
-
-    // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
-    // TODO: Unify this with createInstances(). This does not need to be a separate step for the
-    // API consumer.
-    std::vector<Selection> getSelections(
-        const LineLayout& line_layout,
-        std::vector<LineLayout::Token>::const_iterator start_caret,
-        std::vector<LineLayout::Token>::const_iterator end_caret);
-    void createInstances(const Point& offset, std::vector<Selection>& selections);
+    void renderSelections(const Point& offset,
+                          const LineLayout& line_layout,
+                          std::vector<LineLayout::Token>::const_iterator start_caret,
+                          std::vector<LineLayout::Token>::const_iterator end_caret);
     void render(const Size& screen_size, int rendering_pass);
     void destroyInstances();
 
@@ -38,6 +28,17 @@ private:
     static constexpr int kBorderThickness = 2;
 
     GlyphCache& main_glyph_cache;
+
+    struct Selection {
+        int line;
+        int start;
+        int end;
+    };
+
+    std::vector<Selection> getSelections(
+        const LineLayout& line_layout,
+        std::vector<LineLayout::Token>::const_iterator start_caret,
+        std::vector<LineLayout::Token>::const_iterator end_caret);
 
     Shader shader_program;
     GLuint vao = 0;

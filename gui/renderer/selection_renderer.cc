@@ -110,42 +110,11 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
     return *this;
 }
 
-std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
+void SelectionRenderer::renderSelections(
+    const Point& offset,
     const LineLayout& line_layout,
     std::vector<LineLayout::Token>::const_iterator start_caret,
     std::vector<LineLayout::Token>::const_iterator end_caret) {
-    if (start_caret > end_caret) {
-        std::swap(start_caret, end_caret);
-    }
-    assert(start_caret <= end_caret);
-
-    std::vector<SelectionRenderer::Selection> selections;
-
-    size_t start_line = (*start_caret).line;
-    size_t end_line = (*end_caret).line;
-
-    auto it = start_caret;
-    while (it < end_caret) {
-        size_t line = (*it).line;
-        auto next_it = std::prev(line_layout.line(line + 1));
-        if (next_it > end_caret) {
-            next_it = end_caret;
-        }
-
-        if (start_line <= line && line <= end_line) {
-            selections.emplace_back(SelectionRenderer::Selection{
-                .line = static_cast<int>((*it).line),
-                .start = (*it).total_advance,
-                .end = (*next_it).total_advance,
-            });
-        }
-
-        it = std::next(next_it);
-    }
-    return selections;
-}
-
-void SelectionRenderer::createInstances(const Point& offset, std::vector<Selection>& selections) {
     auto create = [&, this](int start, int end, int line,
                             uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                             uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -175,6 +144,9 @@ void SelectionRenderer::createInstances(const Point& offset, std::vector<Selecti
                 },
         });
     };
+
+    std::vector<SelectionRenderer::Selection> selections =
+        getSelections(line_layout, start_caret, end_caret);
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {
@@ -252,6 +224,41 @@ void SelectionRenderer::render(const Size& screen_size, int rendering_pass) {
 
 void SelectionRenderer::destroyInstances() {
     instances.clear();
+}
+
+std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
+    const LineLayout& line_layout,
+    std::vector<LineLayout::Token>::const_iterator start_caret,
+    std::vector<LineLayout::Token>::const_iterator end_caret) {
+    if (start_caret > end_caret) {
+        std::swap(start_caret, end_caret);
+    }
+    assert(start_caret <= end_caret);
+
+    std::vector<SelectionRenderer::Selection> selections;
+
+    size_t start_line = (*start_caret).line;
+    size_t end_line = (*end_caret).line;
+
+    auto it = start_caret;
+    while (it < end_caret) {
+        size_t line = (*it).line;
+        auto next_it = std::prev(line_layout.line(line + 1));
+        if (next_it > end_caret) {
+            next_it = end_caret;
+        }
+
+        if (start_line <= line && line <= end_line) {
+            selections.emplace_back(SelectionRenderer::Selection{
+                .line = static_cast<int>((*it).line),
+                .start = (*it).total_advance,
+                .end = (*next_it).total_advance,
+            });
+        }
+
+        it = std::next(next_it);
+    }
+    return selections;
 }
 
 }

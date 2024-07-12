@@ -32,18 +32,14 @@ void TextViewWidget::draw() {
     start_line = std::clamp(start_line, 0UL, buffer.lineCount());
     end_line = std::clamp(end_line, 0UL, buffer.lineCount());
 
-    Point end_caret_pos;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
         text_renderer.renderText(start_line, end_line, position - scroll_offset, buffer);
     }
 
     // Add selections.
-    auto selections =
-        selection_renderer.getSelections(text_renderer.getLineLayout(), start_caret, end_caret);
-
-    Point selection_offset = position - scroll_offset;
-    selection_renderer.createInstances(selection_offset, selections);
+    selection_renderer.renderSelections(position - scroll_offset, text_renderer.getLineLayout(),
+                                        start_caret, end_caret);
 
     // Add vertical scroll bar.
     int line_count = buffer.lineCount();

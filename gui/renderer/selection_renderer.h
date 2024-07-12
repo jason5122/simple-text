@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/buffer.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/text/line_layout.h"
@@ -25,10 +24,10 @@ public:
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
     // TODO: Unify this with createInstances(). This does not need to be a separate step for the
     // API consumer.
-    std::vector<Selection> getSelections(const LineLayout& line_layout,
-                                         base::Buffer& buffer,
-                                         CaretInfo& start_caret,
-                                         CaretInfo& end_caret);
+    std::vector<Selection> getSelections(
+        const LineLayout& line_layout,
+        std::vector<LineLayout::Token>::const_iterator start_caret,
+        std::vector<LineLayout::Token>::const_iterator end_caret);
     void createInstances(const Point& offset, std::vector<Selection>& selections);
     void render(const Size& screen_size, int rendering_pass);
     void destroyInstances();

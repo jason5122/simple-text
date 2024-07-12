@@ -27,9 +27,8 @@ void TextViewWidget::draw() {
     updateMaxScroll();  // TODO: Clean this up.
 
     // Add selections.
-    // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
-    auto selections = selection_renderer.getSelections(text_renderer.getLineLayout(), buffer,
-                                                       start_caret, end_caret);
+    auto selections = selection_renderer.getSelections(text_renderer.getLineLayout(),
+                                                       start_caret_temp, end_caret_temp);
 
     Point selection_offset = position - scroll_offset;
     selection_renderer.createInstances(selection_offset, selections);
@@ -78,6 +77,13 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
     movement.setCaretInfo(buffer, new_coords, end_caret);
     start_caret = end_caret;
+
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+
+    end_caret_temp =
+        text_renderer.getLineLayout().iteratorFromPoint(buffer, main_glyph_cache, new_coords);
+    start_caret_temp = end_caret_temp;
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
@@ -85,6 +91,12 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 
     Point new_coords = mouse_pos - position + scroll_offset;
     movement.setCaretInfo(buffer, new_coords, end_caret);
+
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+
+    end_caret_temp =
+        text_renderer.getLineLayout().iteratorFromPoint(buffer, main_glyph_cache, new_coords);
 }
 
 void TextViewWidget::updateMaxScroll() {

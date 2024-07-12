@@ -56,6 +56,10 @@ Movement& Renderer::getMovement() {
     return movement;
 }
 
+GlyphCache& Renderer::getMainGlyphCache() {
+    return main_glyph_cache;
+}
+
 void Renderer::flush(const Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);

@@ -19,6 +19,9 @@ public:
     ImageRenderer& getImageRenderer();
     Movement& getMovement();
 
+    // TODO: Remove this, probably.
+    GlyphCache& getMainGlyphCache();
+
     void flush(const Size& size);
 
 private:

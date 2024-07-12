@@ -2,6 +2,7 @@
 
 #include "base/buffer.h"
 #include "gui/renderer/text/glyph_cache.h"
+#include "gui/renderer/types.h"
 #include <vector>
 
 namespace gui {
@@ -19,6 +20,9 @@ public:
     std::vector<Token>::const_iterator line(size_t line) const;
 
     void layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache);
+    std::vector<Token>::const_iterator iteratorFromPoint(const base::Buffer& buffer,
+                                                         GlyphCache& main_glyph_cache,
+                                                         const Point& point);
 
 private:
     // TODO: Consider renaming "Token" and "tokens".

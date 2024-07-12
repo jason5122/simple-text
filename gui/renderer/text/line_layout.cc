@@ -1,11 +1,24 @@
 #include "line_layout.h"
-
-// TODO: Debug; remove this.
-#include "util/profile_util.h"
-#include <format>
-#include <iostream>
+#include <algorithm>
+#include <numeric>
 
 namespace gui {
+
+std::vector<LineLayout::Token>::const_iterator LineLayout::begin() const {
+    return tokens.begin();
+}
+
+std::vector<LineLayout::Token>::const_iterator LineLayout::end() const {
+    return tokens.end();
+}
+
+std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) const {
+    if (line >= newline_offsets.size()) {
+        return end();
+    } else {
+        return tokens.begin() + newline_offsets.at(line);
+    }
+}
 
 void LineLayout::layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache) {
     // Cache byte offsets of newlines.
@@ -36,35 +49,23 @@ void LineLayout::layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache
             total_advance = 0;
         }
     }
+}
 
-    std::cerr << std::format("tokens.size() = {}, newline_offsets.size() = {}\n", tokens.size(),
-                             newline_offsets.size());
-    std::cerr << std::format("longest_line_x = {}\n", longest_line_x);
-    {
-        PROFILE_BLOCK("LineLayout: iterate through tokens");
-        int lol = 0;
-        for (auto it = line(0); it != line(20); it++) {
-            const auto& token = *it;
-            lol += token.total_advance;
+std::vector<LineLayout::Token>::const_iterator LineLayout::iteratorFromPoint(
+    const base::Buffer& buffer, GlyphCache& main_glyph_cache, const Point& point) {
+    size_t line_index = std::max(0, point.y / main_glyph_cache.lineHeight());
+    line_index = std::clamp(line_index, 0UL, buffer.lineCount());
+
+    for (auto it = line(line_index); it != line(line_index + 1); it++) {
+        const auto& token = *it;
+        const auto& next_token = *std::next(it);
+
+        int glyph_center = std::midpoint(token.total_advance, next_token.total_advance);
+        if (glyph_center >= point.x) {
+            return it;
         }
-        std::cerr << std::format("lol = {}\n", lol);
     }
-}
-
-std::vector<LineLayout::Token>::const_iterator LineLayout::begin() const {
-    return tokens.begin();
-}
-
-std::vector<LineLayout::Token>::const_iterator LineLayout::end() const {
-    return tokens.end();
-}
-
-std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) const {
-    if (line >= newline_offsets.size()) {
-        return end();
-    } else {
-        return tokens.begin() + newline_offsets.at(line);
-    }
+    return std::prev(line(line_index + 1));
 }
 
 }

@@ -65,8 +65,7 @@ void TextViewWidget::draw() {
         .x = end_caret_pos.x - caret_width / 2,
         .y = end_caret_pos.y - extra_padding,
     };
-    caret_pos -= scroll_offset;
-    rect_renderer.addRect(caret_pos + position, {caret_width, caret_height}, caret_color);
+    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, caret_color);
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {

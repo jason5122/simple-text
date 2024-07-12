@@ -122,19 +122,16 @@ void TextRenderer::renderText(const Size& size,
         const auto& ch = *it;
         const bool is_newline = ch.line != (*std::next(it)).line;
 
-        if (ch.byte_offset == end_caret.byte) {
-            end_caret_pos = {
-                .x = total_advance,
-                .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
-            };
-        }
-
         Point coords{
             .x = total_advance,
             .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
         };
         coords += editor_offset;
         coords -= scroll;
+
+        if (ch.byte_offset == end_caret.byte) {
+            end_caret_pos = coords;
+        }
 
         // Render newline characters as spaces, since DirectWrite and Pango don't seem to
         // support rendering "\n".

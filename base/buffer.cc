@@ -11,18 +11,18 @@ extern "C" {
 namespace base {
 
 std::vector<Buffer::Utf8Char>::const_iterator Buffer::begin() const {
-    return utf8_chars_flat.begin();
+    return utf8_chars.begin();
 }
 
 std::vector<Buffer::Utf8Char>::const_iterator Buffer::end() const {
-    return utf8_chars_flat.end();
+    return utf8_chars.end();
 }
 
 std::vector<Buffer::Utf8Char>::const_iterator Buffer::line(size_t line) const {
     if (line >= newline_offsets.size()) {
         return end();
     } else {
-        return utf8_chars_flat.begin() + newline_offsets.at(line);
+        return utf8_chars.begin() + newline_offsets.at(line);
     }
 }
 
@@ -48,12 +48,12 @@ void Buffer::setContents(const std::string& text) {
             const auto& line_str = data.at(line);
 
             // Cache byte offsets of newlines.
-            newline_offsets.emplace_back(utf8_chars_flat.size());
+            newline_offsets.emplace_back(utf8_chars.size());
 
             size_t offset;
             for (size_t line_offset = 0; line_offset < line_str.size(); line_offset += offset) {
                 offset = grapheme_next_character_break_utf8(&line_str[0] + line_offset, SIZE_MAX);
-                utf8_chars_flat.emplace_back(Utf8Char{
+                utf8_chars.emplace_back(Utf8Char{
                     .str = std::string_view(line_str).substr(line_offset, offset),
                     .size = offset,
                     .line_offset = line_offset,
@@ -65,7 +65,7 @@ void Buffer::setContents(const std::string& text) {
 
             // Include newline.
             offset = kNewlineString.length();
-            utf8_chars_flat.emplace_back(Utf8Char{
+            utf8_chars.emplace_back(Utf8Char{
                 .str = kNewlineString,
                 .size = offset,
                 .line_offset = line_str.size(),

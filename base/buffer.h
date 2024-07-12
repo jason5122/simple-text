@@ -36,7 +36,7 @@ private:
     static constexpr std::string_view kNewlineString = "\n";
 
     std::vector<std::string> data;
-    std::vector<Utf8Char> utf8_chars_flat;
+    std::vector<Utf8Char> utf8_chars;
     std::vector<size_t> newline_offsets;
 };
 

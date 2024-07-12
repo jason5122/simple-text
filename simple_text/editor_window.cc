@@ -50,9 +50,13 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setWidth(width);
     main_widget->setHeight(height);
 
-    int kTabBarHeight = 29 * 2;
+    // TODO: Debug use; remove this.
+    int kTabBarHeight = 329 * 2;
+    int kStatusBarHeight = 222 * 2;
+
+    // int kTabBarHeight = 29 * 2;
     int kSideBarWidth = 250 * 2;
-    int kStatusBarHeight = 22 * 2;
+    // int kStatusBarHeight = 22 * 2;
 
     // Main widgets.
     std::unique_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};

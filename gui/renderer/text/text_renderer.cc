@@ -1,4 +1,5 @@
 #include "text_renderer.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -101,33 +102,36 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 }
 
 void TextRenderer::renderText(const Size& size,
-                              const Point& scroll,
+                              const Point& position,
+                              const Point& scroll_offset,
                               const base::Buffer& buffer,
-                              const Point& editor_offset,
                               const CaretInfo& end_caret,
                               Point& end_caret_pos,
                               int& longest_line_x) {
-    size_t start_line = std::min(static_cast<size_t>(scroll.y / main_glyph_cache.lineHeight()),
-                                 buffer.lineCount());
-    size_t visible_lines =
-        std::ceil((size.height - ui_glyph_cache.lineHeight()) / main_glyph_cache.lineHeight());
-    size_t end_line = std::min(start_line + visible_lines, buffer.lineCount());
+    size_t visible_lines = std::ceil(static_cast<float>(size.height) / lineHeight());
 
-    // TODO: Debug use; remove this.
-    start_line = 0;
-    end_line = buffer.lineCount();
+    size_t start_line = scroll_offset.y / lineHeight();
+    size_t end_line = start_line + visible_lines;
+
+    // Render one line before start and one line after end.
+    // This ensures no sudden cutoff of rendered text.
+    if (start_line > 0) start_line--;                               // Saturating subtraction.
+    if (end_line < std::numeric_limits<size_t>::max()) end_line++;  // Saturating addition;
+
+    start_line = std::clamp(start_line, 0UL, buffer.lineCount());
+    end_line = std::clamp(end_line, 0UL, buffer.lineCount());
 
     int total_advance = 0;
-    for (auto it = buffer.begin(); it != buffer.end(); it++) {
+    for (auto it = buffer.line(start_line); it != buffer.line(end_line); it++) {
         const auto& ch = *it;
         const bool is_newline = ch.line != (*std::next(it)).line;
 
         Point coords{
             .x = total_advance,
-            .y = static_cast<int>(ch.line) * main_glyph_cache.lineHeight(),
+            .y = static_cast<int>(ch.line) * lineHeight(),
         };
-        coords += editor_offset;
-        coords -= scroll;
+        coords += position;
+        coords -= scroll_offset;
 
         if (ch.byte_offset == end_caret.byte) {
             end_caret_pos = coords;
@@ -162,7 +166,7 @@ void TextRenderer::renderText(const Size& size,
                 .x = atlas_x_offset,
                 .y = size.height - Atlas::kAtlasSize - 200,
             };
-            coords += editor_offset;
+            coords += position;
 
             InstanceData instance{
                 .coords = coords.toVec2(),

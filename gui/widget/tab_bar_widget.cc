@@ -19,32 +19,32 @@ TabBarWidget::TabBarWidget(const Size& size) : Widget{size} {
 }
 
 void TabBarWidget::draw() {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
+    // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    // ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
 
-    constexpr Rgba tab_bar_color{190, 190, 190, 255};
-    constexpr Rgba tab_color{253, 253, 253, 255};
-    constexpr Rgba tab_separator_color{148, 149, 149, 255};
+    // constexpr Rgba tab_bar_color{190, 190, 190, 255};
+    // constexpr Rgba tab_color{253, 253, 253, 255};
+    // constexpr Rgba tab_separator_color{148, 149, 149, 255};
 
-    rect_renderer.addRect(position, size, tab_bar_color);
+    // rect_renderer.addRect(position, size, tab_bar_color);
 
-    for (const auto& tab_name_label : tab_name_labels) {
-        tab_name_label->draw();
-    }
+    // for (const auto& tab_name_label : tab_name_labels) {
+    //     tab_name_label->draw();
+    // }
 
-    Point tab_pos = position;
-    tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * tab_index;
-    rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, tab_color, 0, kTabCornerRadius);
+    // Point tab_pos = position;
+    // tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * tab_index;
+    // rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, tab_color, 0, kTabCornerRadius);
 
-    Point tab_separator_pos = position;
-    tab_separator_pos.x += (kTabWidth - kTabCornerRadius) * 1;  // TODO: Don't hard code 1.
-    tab_separator_pos.x -= kTabSeparatorSize.width;
+    // Point tab_separator_pos = position;
+    // tab_separator_pos.x += (kTabWidth - kTabCornerRadius) * 1;  // TODO: Don't hard code 1.
+    // tab_separator_pos.x -= kTabSeparatorSize.width;
 
-    // Center tab separator.
-    tab_separator_pos.y += size.height / 2;
-    tab_separator_pos.y -= kTabSeparatorSize.height / 2;
+    // // Center tab separator.
+    // tab_separator_pos.y += size.height / 2;
+    // tab_separator_pos.y -= kTabSeparatorSize.height / 2;
 
-    rect_renderer.addRect(tab_separator_pos, kTabSeparatorSize, tab_separator_color);
+    // rect_renderer.addRect(tab_separator_pos, kTabSeparatorSize, tab_separator_color);
 }
 
 void TabBarWidget::layout() {

@@ -21,7 +21,7 @@ void TextViewWidget::draw() {
     Point end_caret_pos;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        text_renderer.renderText(size, scroll_offset, buffer, position, end_caret, end_caret_pos,
+        text_renderer.renderText(size, position, scroll_offset, buffer, end_caret, end_caret_pos,
                                  longest_line_x);
     }
     updateMaxScroll();  // TODO: Clean this up.
@@ -55,7 +55,7 @@ void TextViewWidget::draw() {
         .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
         .y = size.height - hbar_height,
     };
-    rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color, 5);
+    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color, 5);
 
     // Add caret.
     int caret_width = 4;

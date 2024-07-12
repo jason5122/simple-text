@@ -10,7 +10,7 @@ StatusBarWidget::StatusBarWidget(const Size& size)
 
 void StatusBarWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, {199, 203, 209, 255});
+    // rect_renderer.addRect(position, size, {199, 203, 209, 255});
 
     line_column_label->draw();
 }

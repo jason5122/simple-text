@@ -38,7 +38,6 @@ void TextViewWidget::draw() {
         text_renderer.renderText(start_line, end_line, size, position, scroll_offset, buffer,
                                  end_caret, end_caret_pos, longest_line_x);
     }
-    updateMaxScroll();  // TODO: Clean this up.
 
     // Add selections.
     auto selections = selection_renderer.getSelections(
@@ -48,19 +47,17 @@ void TextViewWidget::draw() {
     selection_renderer.createInstances(selection_offset, selections);
 
     // Add vertical scroll bar.
-    // int line_count = buffer.lineCount();
-    // int line_height = text_renderer.lineHeight();
-    // int vbar_width = 15;
-    // int visible_lines = std::ceil(static_cast<float>(size.height) / line_height);
-    // int max_scrollbar_y = (line_count + visible_lines) * line_height;
-    // int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
-    // float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
-    // Point vbar_coords{
-    //     .x = size.width - vbar_width,
-    //     .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
-    // };
-    // rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, scroll_bar_color,
-    // 5);
+    int line_count = buffer.lineCount();
+    int line_height = text_renderer.lineHeight();
+    int vbar_width = 15;
+    int max_scrollbar_y = (line_count + visible_lines) * line_height;
+    int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
+    float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
+    Point vbar_coords{
+        .x = size.width - vbar_width,
+        .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
+    };
+    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, scroll_bar_color, 5);
 
     // Add horizontal scroll bar.
     int hbar_height = 15;
@@ -70,18 +67,23 @@ void TextViewWidget::draw() {
         .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
         .y = size.height - hbar_height,
     };
-    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color,
-    // 5);
+    rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color, 5);
 
     // Add caret.
-    // int caret_width = 4;
-    // int extra_padding = 8;
-    // int caret_height = line_height + extra_padding * 2;
-    // Point caret_pos{
-    //     .x = end_caret_pos.x - caret_width / 2,
-    //     .y = end_caret_pos.y - extra_padding,
-    // };
-    // rect_renderer.addRect(caret_pos, {caret_width, caret_height}, caret_color);
+    int caret_width = 4;
+    int extra_padding = 8;
+    int caret_height = line_height + extra_padding * 2;
+
+    const auto& token = *end_caret_temp;
+    Point caret_pos{
+        .x = token.total_advance,
+        .y = static_cast<int>(token.line) * line_height,
+    };
+    caret_pos += position;
+    caret_pos -= scroll_offset;
+    caret_pos.x -= caret_width / 2;
+    caret_pos.y -= extra_padding;
+    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, caret_color);
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
@@ -116,7 +118,7 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 
 void TextViewWidget::updateMaxScroll() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    max_scroll_offset.x = longest_line_x;
+    max_scroll_offset.x = text_renderer.getLineLayout().longest_line_x;
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
 }
 
@@ -131,6 +133,10 @@ void TextViewWidget::setContents(const std::string& text) {
     {
         PROFILE_BLOCK("TextRenderer::layout()");
         text_renderer.layout(buffer);
+
+        // Initialize start/end cursor.
+        start_caret_temp = text_renderer.getLineLayout().begin();
+        end_caret_temp = text_renderer.getLineLayout().begin();
     }
 
     updateMaxScroll();

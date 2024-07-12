@@ -50,13 +50,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setWidth(width);
     main_widget->setHeight(height);
 
-    // TODO: Debug use; remove this.
-    int kTabBarHeight = 329 * 2;
-    int kStatusBarHeight = 222 * 2;
-
-    // int kTabBarHeight = 29 * 2;
+    int kTabBarHeight = 29 * 2;
     int kSideBarWidth = 250 * 2;
-    // int kStatusBarHeight = 22 * 2;
+    int kStatusBarHeight = 22 * 2;
 
     // Main widgets.
     std::unique_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
@@ -74,7 +70,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::unique_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
     std::unique_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
 
-    text_view->setContents(repeat(kSampleText, 50) + kLongLine);
+    // text_view->setContents(repeat(kSampleText, 50) + kLongLine);
+    text_view->setContents("Hello world! hi there");
 
     // TODO: Temporary hack. Consider implementing this fully.
     text_view_widget = text_view.get();

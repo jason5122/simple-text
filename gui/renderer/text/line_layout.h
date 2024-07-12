@@ -24,13 +24,14 @@ public:
                                                          GlyphCache& main_glyph_cache,
                                                          const Point& point);
 
+    // TODO: Use a data structure (priority queue) for efficient updating.
+    // TODO: Make this private.
+    int longest_line_x = 0;
+
 private:
     // TODO: Consider renaming "Token" and "tokens".
     std::vector<Token> tokens;
     std::vector<size_t> newline_offsets;
-
-    // TODO: Use a data structure (priority queue) for efficient updating.
-    int longest_line_x = 0;
 };
 
 }

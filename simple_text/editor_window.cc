@@ -70,8 +70,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::unique_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
     std::unique_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
 
-    // text_view->setContents(repeat(kSampleText, 50) + kLongLine);
-    text_view->setContents("Hello world! hi there");
+    text_view->setContents(repeat(kSampleText, 50) + kLongLine);
 
     // TODO: Temporary hack. Consider implementing this fully.
     text_view_widget = text_view.get();

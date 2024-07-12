@@ -21,13 +21,8 @@ public:
     void layout(const base::Buffer& buffer);
     void renderText(size_t start_line,
                     size_t end_line,
-                    const Size& size,
-                    const Point& position,
-                    const Point& scroll_offset,
-                    const base::Buffer& buffer,
-                    const CaretInfo& end_caret,
-                    Point& end_caret_pos,
-                    int& longest_line_x);
+                    const Point& offset,
+                    const base::Buffer& buffer);
     void addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();

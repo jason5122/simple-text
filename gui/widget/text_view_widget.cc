@@ -35,13 +35,12 @@ void TextViewWidget::draw() {
     Point end_caret_pos;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        text_renderer.renderText(start_line, end_line, size, position, scroll_offset, buffer,
-                                 end_caret, end_caret_pos, longest_line_x);
+        text_renderer.renderText(start_line, end_line, position - scroll_offset, buffer);
     }
 
     // Add selections.
-    auto selections = selection_renderer.getSelections(
-        start_line, end_line, text_renderer.getLineLayout(), start_caret_temp, end_caret_temp);
+    auto selections =
+        selection_renderer.getSelections(text_renderer.getLineLayout(), start_caret, end_caret);
 
     Point selection_offset = position - scroll_offset;
     selection_renderer.createInstances(selection_offset, selections);
@@ -74,7 +73,7 @@ void TextViewWidget::draw() {
     int extra_padding = 8;
     int caret_height = line_height + extra_padding * 2;
 
-    const auto& token = *end_caret_temp;
+    const auto& token = *end_caret;
     Point caret_pos{
         .x = token.total_advance,
         .y = static_cast<int>(token.line) * line_height,
@@ -87,32 +86,21 @@ void TextViewWidget::draw() {
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
-    std::cerr << "TextViewWidget::leftMouseDown()\n";
-
-    Movement& movement = Renderer::instance().getMovement();
-
-    Point new_coords = mouse_pos - position + scroll_offset;
-    movement.setCaretInfo(buffer, new_coords, end_caret);
-    start_caret = end_caret;
-
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
-    end_caret_temp =
+    Point new_coords = mouse_pos - position + scroll_offset;
+    end_caret =
         text_renderer.getLineLayout().iteratorFromPoint(buffer, main_glyph_cache, new_coords);
-    start_caret_temp = end_caret_temp;
+    start_caret = end_caret;
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
-    Movement& movement = Renderer::instance().getMovement();
-
-    Point new_coords = mouse_pos - position + scroll_offset;
-    movement.setCaretInfo(buffer, new_coords, end_caret);
-
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
-    end_caret_temp =
+    Point new_coords = mouse_pos - position + scroll_offset;
+    end_caret =
         text_renderer.getLineLayout().iteratorFromPoint(buffer, main_glyph_cache, new_coords);
 }
 
@@ -135,8 +123,8 @@ void TextViewWidget::setContents(const std::string& text) {
         text_renderer.layout(buffer);
 
         // Initialize start/end cursor.
-        start_caret_temp = text_renderer.getLineLayout().begin();
-        end_caret_temp = text_renderer.getLineLayout().begin();
+        start_caret = text_renderer.getLineLayout().begin();
+        end_caret = text_renderer.getLineLayout().begin();
     }
 
     updateMaxScroll();

@@ -21,14 +21,8 @@ public:
 
 private:
     base::Buffer buffer;
-    CaretInfo start_caret{};
-    CaretInfo end_caret{};
-
-    std::vector<LineLayout::Token>::const_iterator start_caret_temp;
-    std::vector<LineLayout::Token>::const_iterator end_caret_temp;
-
-    // TODO: Clean this up.
-    int longest_line_x = 0;
+    std::vector<LineLayout::Token>::const_iterator start_caret;
+    std::vector<LineLayout::Token>::const_iterator end_caret;
 };
 
 }

@@ -16,8 +16,8 @@ Atlas::Atlas() {
     const void* data = nullptr;
 
     // TODO: Incorporate this into the build system.
-    bool debug_atlas = false;
-    if (debug_atlas) {
+    constexpr bool kDebugAtlas = false;
+    if (kDebugAtlas) {
         std::random_device dev;
         std::mt19937 rng(dev());
         std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);

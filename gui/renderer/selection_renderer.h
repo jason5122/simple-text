@@ -25,8 +25,6 @@ public:
     // TODO: Unify this with createInstances(). This does not need to be a separate step for the
     // API consumer.
     std::vector<Selection> getSelections(
-        size_t start_line,
-        size_t end_line,
         const LineLayout& line_layout,
         std::vector<LineLayout::Token>::const_iterator start_caret,
         std::vector<LineLayout::Token>::const_iterator end_caret);

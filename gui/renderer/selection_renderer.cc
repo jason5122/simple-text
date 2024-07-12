@@ -111,8 +111,6 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
-    size_t start_line,
-    size_t end_line,
     const LineLayout& line_layout,
     std::vector<LineLayout::Token>::const_iterator start_caret,
     std::vector<LineLayout::Token>::const_iterator end_caret) {
@@ -122,6 +120,9 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
     assert(start_caret <= end_caret);
 
     std::vector<SelectionRenderer::Selection> selections;
+
+    size_t start_line = (*start_caret).line;
+    size_t end_line = (*end_caret).line;
 
     auto it = start_caret;
     while (it < end_caret) {

@@ -108,13 +108,8 @@ void TextRenderer::layout(const base::Buffer& buffer) {
 
 void TextRenderer::renderText(size_t start_line,
                               size_t end_line,
-                              const Size& size,
-                              const Point& position,
-                              const Point& scroll_offset,
-                              const base::Buffer& buffer,
-                              const CaretInfo& end_caret,
-                              Point& end_caret_pos,
-                              int& longest_line_x) {
+                              const Point& offset,
+                              const base::Buffer& buffer) {
     int total_advance = 0;
     for (auto it = buffer.line(start_line); it != buffer.line(end_line); it++) {
         const auto& ch = *it;
@@ -124,12 +119,7 @@ void TextRenderer::renderText(size_t start_line,
             .x = total_advance,
             .y = static_cast<int>(ch.line) * lineHeight(),
         };
-        coords += position;
-        coords -= scroll_offset;
-
-        if (ch.byte_offset == end_caret.byte) {
-            end_caret_pos = coords;
-        }
+        coords += offset;
 
         // Render newline characters as spaces, since DirectWrite and Pango don't seem to
         // support rendering "\n".
@@ -146,7 +136,6 @@ void TextRenderer::renderText(size_t start_line,
         total_advance += glyph.advance;
 
         if (is_newline) {
-            longest_line_x = std::max(total_advance, longest_line_x);
             total_advance = 0;
         }
     }
@@ -158,9 +147,9 @@ void TextRenderer::renderText(size_t start_line,
         if (kDebugAtlas) {
             Point coords{
                 .x = atlas_x_offset,
-                .y = size.height - Atlas::kAtlasSize - 200,
+                .y = 200,
             };
-            coords += position;
+            coords += offset;
 
             InstanceData instance{
                 .coords = coords.toVec2(),

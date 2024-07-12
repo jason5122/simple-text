@@ -106,26 +106,15 @@ void TextRenderer::layout(const base::Buffer& buffer) {
     line_layout.layout(buffer, main_glyph_cache);
 }
 
-void TextRenderer::renderText(const Size& size,
+void TextRenderer::renderText(size_t start_line,
+                              size_t end_line,
+                              const Size& size,
                               const Point& position,
                               const Point& scroll_offset,
                               const base::Buffer& buffer,
                               const CaretInfo& end_caret,
                               Point& end_caret_pos,
                               int& longest_line_x) {
-    size_t visible_lines = std::ceil(static_cast<float>(size.height) / lineHeight());
-
-    size_t start_line = scroll_offset.y / lineHeight();
-    size_t end_line = start_line + visible_lines;
-
-    // Render one line before start and one line after end.
-    // This ensures no sudden cutoff of rendered text.
-    if (start_line > 0) start_line--;                               // Saturating subtraction.
-    if (end_line < std::numeric_limits<size_t>::max()) end_line++;  // Saturating addition;
-
-    start_line = std::clamp(start_line, 0UL, buffer.lineCount());
-    end_line = std::clamp(end_line, 0UL, buffer.lineCount());
-
     int total_advance = 0;
     for (auto it = buffer.line(start_line); it != buffer.line(end_line); it++) {
         const auto& ch = *it;

@@ -111,6 +111,8 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
+    size_t start_line,
+    size_t end_line,
     const LineLayout& line_layout,
     std::vector<LineLayout::Token>::const_iterator start_caret,
     std::vector<LineLayout::Token>::const_iterator end_caret) {
@@ -123,16 +125,19 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
 
     auto it = start_caret;
     while (it < end_caret) {
-        auto next_it = std::prev(line_layout.line((*it).line + 1));
+        size_t line = (*it).line;
+        auto next_it = std::prev(line_layout.line(line + 1));
         if (next_it > end_caret) {
             next_it = end_caret;
         }
 
-        selections.emplace_back(SelectionRenderer::Selection{
-            .line = static_cast<int>((*it).line),
-            .start = (*it).total_advance,
-            .end = (*next_it).total_advance,
-        });
+        if (start_line <= line && line <= end_line) {
+            selections.emplace_back(SelectionRenderer::Selection{
+                .line = static_cast<int>((*it).line),
+                .start = (*it).total_advance,
+                .end = (*next_it).total_advance,
+            });
+        }
 
         it = std::next(next_it);
     }

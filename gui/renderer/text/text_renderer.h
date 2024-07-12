@@ -19,7 +19,9 @@ public:
     TextRenderer& operator=(TextRenderer&& other);
 
     void layout(const base::Buffer& buffer);
-    void renderText(const Size& size,
+    void renderText(size_t start_line,
+                    size_t end_line,
+                    const Size& size,
                     const Point& position,
                     const Point& scroll_offset,
                     const base::Buffer& buffer,

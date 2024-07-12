@@ -16,6 +16,7 @@ const std::string kFragmentShaderSource =
 }
 
 // TODO: Debug; remove this.
+#include "util/profile_util.h"
 #include <format>
 #include <iostream>
 
@@ -99,6 +100,10 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
         other.ebo = 0;
     }
     return *this;
+}
+
+void TextRenderer::layout(const base::Buffer& buffer) {
+    line_layout.layout(buffer, main_glyph_cache);
 }
 
 void TextRenderer::renderText(const Size& size,
@@ -256,6 +261,10 @@ int TextRenderer::lineHeight() {
 
 int TextRenderer::uiLineHeight() {
     return ui_glyph_cache.lineHeight();
+}
+
+LineLayout& TextRenderer::getLineLayout() {
+    return line_layout;
 }
 
 void TextRenderer::insertIntoBatch(size_t page,

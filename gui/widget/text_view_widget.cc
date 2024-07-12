@@ -28,7 +28,8 @@ void TextViewWidget::draw() {
 
     // Add selections.
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
-    auto selections = selection_renderer.getSelections(buffer, start_caret, end_caret);
+    auto selections = selection_renderer.getSelections(text_renderer.getLineLayout(), buffer,
+                                                       start_caret, end_caret);
 
     Point selection_offset = position - scroll_offset;
     selection_renderer.createInstances(selection_offset, selections);
@@ -55,7 +56,8 @@ void TextViewWidget::draw() {
         .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
         .y = size.height - hbar_height,
     };
-    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color, 5);
+    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color,
+    // 5);
 
     // Add caret.
     int caret_width = 4;
@@ -92,9 +94,16 @@ void TextViewWidget::updateMaxScroll() {
 }
 
 void TextViewWidget::setContents(const std::string& text) {
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+
     {
         PROFILE_BLOCK("TextRenderer::setContents()");
         buffer.setContents(text);
+    }
+
+    {
+        PROFILE_BLOCK("TextRenderer::layout()");
+        text_renderer.layout(buffer);
     }
 
     updateMaxScroll();

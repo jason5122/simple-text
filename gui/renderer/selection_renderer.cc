@@ -109,9 +109,11 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
     return *this;
 }
 
-std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base::Buffer& buffer,
-                                                                           CaretInfo& start_caret,
-                                                                           CaretInfo& end_caret) {
+std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
+    const LineLayout& line_layout,
+    base::Buffer& buffer,
+    CaretInfo& start_caret,
+    CaretInfo& end_caret) {
     std::vector<SelectionRenderer::Selection> selections;
 
     size_t start_byte = start_caret.byte, end_byte = end_caret.byte;
@@ -125,37 +127,60 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(base:
         std::swap(start_line, end_line);
     }
 
-    for (size_t line_index = start_line; line_index <= end_line; line_index++) {
-        int total_advance = 0;
-        int start = 0;
-        int end = 0;
-
-        for (auto it = buffer.line(line_index); it != buffer.line(line_index + 1); it++) {
-            const auto& ch = *it;
-            GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(ch.str);
-
-            if (ch.byte_offset == start_byte) {
-                start = total_advance;
-            }
-            if (ch.byte_offset == end_byte) {
-                end = total_advance;
-            }
-
-            total_advance += glyph.advance;
-        }
-
-        if (line_index != end_line) {
-            end = total_advance;
-        }
-
-        if (start != end) {
-            selections.emplace_back(SelectionRenderer::Selection{
-                .line = static_cast<int>(line_index),
-                .start = start,
-                .end = end,
-            });
-        }
+    for (size_t line = start_line; line <= end_line; line++) {
+        const LineLayout::Token& token = *std::prev(line_layout.line(line + 1));
+        selections.emplace_back(SelectionRenderer::Selection{
+            .line = static_cast<int>(line),
+            .start = 0,
+            .end = token.total_advance,
+        });
     }
+
+    // int total_advance = 0;
+    // int start = 0;
+    // int end = 0;
+    // for (auto it = buffer.line(start_line); it != buffer.line(end_line); it++) {
+    //     const auto& ch = *it;
+    //     const bool is_newline = ch.line != (*std::next(it)).line;
+
+    //     if (is_newline) {
+    //         start = 0;
+    //         end = 0;
+    //         total_advance = 0;
+    //     }
+    // }
+
+    // for (size_t line_index = start_line; line_index <= end_line; line_index++) {
+    //     int total_advance = 0;
+    //     int start = 0;
+    //     int end = 0;
+
+    //     for (auto it = buffer.line(line_index); it != buffer.line(line_index + 1); it++) {
+    //         const auto& ch = *it;
+    //         GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(ch.str);
+
+    //         if (ch.byte_offset == start_byte) {
+    //             start = total_advance;
+    //         }
+    //         if (ch.byte_offset == end_byte) {
+    //             end = total_advance;
+    //         }
+
+    //         total_advance += glyph.advance;
+    //     }
+
+    //     if (line_index != end_line) {
+    //         end = total_advance;
+    //     }
+
+    //     if (start != end) {
+    //         selections.emplace_back(SelectionRenderer::Selection{
+    //             .line = static_cast<int>(line_index),
+    //             .start = start,
+    //             .end = end,
+    //         });
+    //     }
+    // }
 
     return selections;
 }

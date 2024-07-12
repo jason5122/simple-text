@@ -3,6 +3,7 @@
 #include "base/buffer.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/text/glyph_cache.h"
+#include "gui/renderer/text/line_layout.h"
 #include "gui/renderer/types.h"
 #include "util/non_copyable.h"
 
@@ -22,7 +23,10 @@ public:
     };
 
     // TODO: Batch this in with text renderer (or better yet, unify into one text layout step).
-    std::vector<Selection> getSelections(base::Buffer& buffer,
+    // TODO: Unify this with createInstances(). This does not need to be a separate step for the
+    // API consumer.
+    std::vector<Selection> getSelections(const LineLayout& line_layout,
+                                         base::Buffer& buffer,
                                          CaretInfo& start_caret,
                                          CaretInfo& end_caret);
     void createInstances(const Point& offset, std::vector<Selection>& selections);

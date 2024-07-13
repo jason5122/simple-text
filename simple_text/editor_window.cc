@@ -54,35 +54,32 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     int kSideBarWidth = 250 * 2;
     int kStatusBarHeight = 22 * 2;
 
+    text_view = std::make_shared<TextViewWidget>();
+    text_view->setContents(repeat(kSampleText, 50) + kLongLine);
+
     // Main widgets.
-    std::unique_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
-    std::unique_ptr<ContainerWidget> vertical_layout{new VerticalLayoutWidget{}};
-    std::unique_ptr<TextViewWidget> text_view{new TextViewWidget{}};
+    std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
+    std::shared_ptr<ContainerWidget> vertical_layout{new VerticalLayoutWidget{}};
 
     // These don't have default constructors since they are not intended to be main widgets.
-    std::unique_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, height})};
-    std::unique_ptr<Widget> tab_bar{new TabBarWidget({width, kTabBarHeight})};
-    std::unique_ptr<Widget> status_bar{new StatusBarWidget({width, kStatusBarHeight})};
+    std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, height})};
+    std::shared_ptr<Widget> tab_bar{new TabBarWidget({width, kTabBarHeight})};
+    std::shared_ptr<Widget> status_bar{new StatusBarWidget({width, kStatusBarHeight})};
 
     // Leave padding between window title bar and tab.
     constexpr Rgba kTabBarColor{190, 190, 190, 255};
     constexpr Rgba kTextViewColor{253, 253, 253, 255};
-    std::unique_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
-    std::unique_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
+    std::shared_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
+    std::shared_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
 
-    text_view->setContents(repeat(kSampleText, 50) + kLongLine);
-
-    // TODO: Temporary hack. Consider implementing this fully.
-    text_view_widget = text_view.get();
-
-    horizontal_layout->addChildStart(std::move(side_bar));
-    vertical_layout->addChildStart(std::move(tab_bar_padding));
-    vertical_layout->addChildStart(std::move(tab_bar));
-    vertical_layout->addChildStart(std::move(text_view_padding));
-    vertical_layout->setMainWidget(std::move(text_view));
-    horizontal_layout->setMainWidget(std::move(vertical_layout));
-    main_widget->setMainWidget(std::move(horizontal_layout));
-    main_widget->addChildEnd(std::move(status_bar));
+    horizontal_layout->addChildStart(side_bar);
+    vertical_layout->addChildStart(tab_bar_padding);
+    vertical_layout->addChildStart(tab_bar);
+    vertical_layout->addChildStart(text_view_padding);
+    vertical_layout->setMainWidget(text_view);
+    horizontal_layout->setMainWidget(vertical_layout);
+    main_widget->setMainWidget(horizontal_layout);
+    main_widget->addChildEnd(status_bar);
 }
 
 void EditorWindow::onDraw(int width, int height) {
@@ -118,11 +115,11 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
     //     redraw();
     // }
 
-    if (text_view_widget->hitTest({mouse_x, mouse_y})) {
-        drag_start_widget = text_view_widget;
+    if (text_view->hitTest({mouse_x, mouse_y})) {
+        drag_start_widget = text_view.get();
 
-        if (text_view_widget) {
-            text_view_widget->leftMouseDown({mouse_x, mouse_y});
+        if (text_view) {
+            text_view->leftMouseDown({mouse_x, mouse_y});
             redraw();
         }
     }

@@ -26,11 +26,11 @@ public:
 private:
     int wid;
     EditorApp& parent;
-    std::unique_ptr<gui::ContainerWidget> main_widget;
+    std::shared_ptr<gui::ContainerWidget> main_widget;
 
     // Drag selection.
     gui::Widget* drag_start_widget = nullptr;
-    gui::TextViewWidget* text_view_widget = nullptr;
+    std::shared_ptr<gui::TextViewWidget> text_view = nullptr;
 
     void updateWindowTitle();
 };

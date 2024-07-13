@@ -12,9 +12,9 @@ public:
     ContainerWidget(const Size& size) : Widget{size} {}
     virtual ~ContainerWidget() {}
 
-    void setMainWidget(std::unique_ptr<Widget> widget);
-    void addChildStart(std::unique_ptr<Widget> widget);
-    void addChildEnd(std::unique_ptr<Widget> widget);
+    void setMainWidget(std::shared_ptr<Widget> widget);
+    void addChildStart(std::shared_ptr<Widget> widget);
+    void addChildEnd(std::shared_ptr<Widget> widget);
     Widget* getWidgetAtPosition(const Point& position);
 
     void draw() override;
@@ -25,9 +25,9 @@ public:
     void setPosition(const Point& position) override;
 
 protected:
-    std::unique_ptr<Widget> main_widget;
-    std::vector<std::unique_ptr<Widget>> children_start;
-    std::vector<std::unique_ptr<Widget>> children_end;
+    std::shared_ptr<Widget> main_widget;
+    std::vector<std::shared_ptr<Widget>> children_start;
+    std::vector<std::shared_ptr<Widget>> children_end;
 };
 
 }

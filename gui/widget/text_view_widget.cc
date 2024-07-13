@@ -34,12 +34,12 @@ void TextViewWidget::draw() {
 
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        text_renderer.renderText(start_line, end_line, position - scroll_offset);
+        text_renderer.renderText(start_line, end_line, position - scroll_offset, line_layout);
     }
 
     // Add selections.
-    selection_renderer.renderSelections(position - scroll_offset, text_renderer.getLineLayout(),
-                                        start_caret, end_caret);
+    selection_renderer.renderSelections(position - scroll_offset, line_layout, start_caret,
+                                        end_caret);
 
     // Add vertical scroll bar.
     int line_count = buffer.lineCount();
@@ -84,7 +84,6 @@ void TextViewWidget::draw() {
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-    LineLayout& line_layout = text_renderer.getLineLayout();
 
     Point new_coords = mouse_pos - position + scroll_offset;
     end_caret = line_layout.iteratorFromPoint(buffer, main_glyph_cache, new_coords);
@@ -94,7 +93,6 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-    LineLayout& line_layout = text_renderer.getLineLayout();
 
     Point new_coords = mouse_pos - position + scroll_offset;
     end_caret = line_layout.iteratorFromPoint(buffer, main_glyph_cache, new_coords);
@@ -102,7 +100,6 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 
 void TextViewWidget::updateMaxScroll() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    LineLayout& line_layout = text_renderer.getLineLayout();
 
     max_scroll_offset.x = line_layout.longest_line_x;
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
@@ -110,7 +107,7 @@ void TextViewWidget::updateMaxScroll() {
 
 void TextViewWidget::setContents(const std::string& text) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    LineLayout& line_layout = text_renderer.getLineLayout();
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
     {
         PROFILE_BLOCK("TextRenderer::setContents()");
@@ -118,8 +115,8 @@ void TextViewWidget::setContents(const std::string& text) {
     }
 
     {
-        PROFILE_BLOCK("TextRenderer::layout()");
-        text_renderer.layout(buffer);
+        PROFILE_BLOCK("LineLayout::layout()");
+        line_layout.layout(buffer, main_glyph_cache);
 
         // Initialize start/end cursor.
         // TODO: Ensure this happens in constructor too. Currently, start/end cursor is invalid

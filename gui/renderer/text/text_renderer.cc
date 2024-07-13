@@ -102,11 +102,10 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::layout(const base::Buffer& buffer) {
-    line_layout.layout(buffer, main_glyph_cache);
-}
-
-void TextRenderer::renderText(size_t start_line, size_t end_line, const Point& offset) {
+void TextRenderer::renderText(size_t start_line,
+                              size_t end_line,
+                              const Point& offset,
+                              const LineLayout& line_layout) {
     for (auto it = line_layout.line(start_line); it != line_layout.line(end_line); it++) {
         const auto& token = *it;
 
@@ -224,10 +223,6 @@ int TextRenderer::lineHeight() {
 
 int TextRenderer::uiLineHeight() {
     return ui_glyph_cache.lineHeight();
-}
-
-LineLayout& TextRenderer::getLineLayout() {
-    return line_layout;
 }
 
 void TextRenderer::insertIntoBatch(size_t page,

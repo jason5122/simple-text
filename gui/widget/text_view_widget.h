@@ -21,6 +21,7 @@ public:
 
 private:
     base::Buffer buffer;
+    LineLayout line_layout;
     std::vector<LineLayout::Token>::const_iterator start_caret;
     std::vector<LineLayout::Token>::const_iterator end_caret;
 };

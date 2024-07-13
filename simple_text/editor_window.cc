@@ -126,6 +126,10 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
     }
 }
 
+bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
+    return true;
+}
+
 void EditorWindow::onInsertText(std::string_view text) {
     std::cerr << text << '\n';
 }

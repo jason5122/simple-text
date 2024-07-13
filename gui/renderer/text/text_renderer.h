@@ -19,12 +19,14 @@ public:
     TextRenderer& operator=(TextRenderer&& other);
 
     void layout(const base::Buffer& buffer);
-    void renderText(size_t start_line, size_t end_line, const Point& offset);
+    void renderText(size_t start_line,
+                    size_t end_line,
+                    const Point& offset,
+                    const LineLayout& line_layout);
     void addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();
     int uiLineHeight();
-    LineLayout& getLineLayout();
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -41,8 +43,6 @@ private:
         Vec4 uv;
         Rgba color;
     };
-
-    LineLayout line_layout;
 
     // TODO: Move batch code into a "Batch" class.
     std::vector<std::vector<InstanceData>> main_batch_instances;

@@ -36,6 +36,10 @@ Renderer& Renderer::instance() {
     return renderer;
 }
 
+GlyphCache& Renderer::getMainGlyphCache() {
+    return main_glyph_cache;
+}
+
 TextRenderer& Renderer::getTextRenderer() {
     return text_renderer;
 }
@@ -54,10 +58,6 @@ ImageRenderer& Renderer::getImageRenderer() {
 
 Movement& Renderer::getMovement() {
     return movement;
-}
-
-GlyphCache& Renderer::getMainGlyphCache() {
-    return main_glyph_cache;
 }
 
 void Renderer::flush(const Size& size) {

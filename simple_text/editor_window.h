@@ -20,6 +20,7 @@ public:
                          app::ClickType click_type) override;
     void onLeftMouseUp() override;
     void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
+    bool onKeyDown(app::Key key, app::ModifierKey modifiers) override;
     void onInsertText(std::string_view text) override;
     void onClose() override;
 

@@ -13,14 +13,12 @@ class Renderer {
 public:
     static Renderer& instance();
 
+    GlyphCache& getMainGlyphCache();
     TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();
     ImageRenderer& getImageRenderer();
     Movement& getMovement();
-
-    // TODO: Remove this, probably.
-    GlyphCache& getMainGlyphCache();
 
     void flush(const Size& size);
 

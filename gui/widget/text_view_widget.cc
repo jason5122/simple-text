@@ -84,30 +84,33 @@ void TextViewWidget::draw() {
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+    LineLayout& line_layout = text_renderer.getLineLayout();
 
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret =
-        text_renderer.getLineLayout().iteratorFromPoint(buffer, main_glyph_cache, new_coords);
+    end_caret = line_layout.iteratorFromPoint(buffer, main_glyph_cache, new_coords);
     start_caret = end_caret;
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+    LineLayout& line_layout = text_renderer.getLineLayout();
 
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret =
-        text_renderer.getLineLayout().iteratorFromPoint(buffer, main_glyph_cache, new_coords);
+    end_caret = line_layout.iteratorFromPoint(buffer, main_glyph_cache, new_coords);
 }
 
 void TextViewWidget::updateMaxScroll() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    max_scroll_offset.x = text_renderer.getLineLayout().longest_line_x;
+    LineLayout& line_layout = text_renderer.getLineLayout();
+
+    max_scroll_offset.x = line_layout.longest_line_x;
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
 }
 
 void TextViewWidget::setContents(const std::string& text) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    LineLayout& line_layout = text_renderer.getLineLayout();
 
     {
         PROFILE_BLOCK("TextRenderer::setContents()");
@@ -119,8 +122,10 @@ void TextViewWidget::setContents(const std::string& text) {
         text_renderer.layout(buffer);
 
         // Initialize start/end cursor.
-        start_caret = text_renderer.getLineLayout().begin();
-        end_caret = text_renderer.getLineLayout().begin();
+        // TODO: Ensure this happens in constructor too. Currently, start/end cursor is invalid
+        // after construction. We can reset it here if need be.
+        start_caret = line_layout.begin();
+        end_caret = line_layout.begin();
     }
 
     updateMaxScroll();

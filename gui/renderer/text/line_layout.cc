@@ -37,6 +37,7 @@ void LineLayout::layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache
         tokens.emplace_back(Token{
             .line = ch.line,
             .total_advance = total_advance,
+            .advance = glyph.advance,
         });
 
         total_advance += glyph.advance;

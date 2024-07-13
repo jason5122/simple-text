@@ -13,6 +13,7 @@ public:
     struct Token {
         size_t line;
         int total_advance;
+        int advance;
     };
 
     std::vector<Token>::const_iterator begin() const;

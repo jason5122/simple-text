@@ -38,6 +38,7 @@ void LineLayout::layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache
             .line = ch.line,
             .total_advance = total_advance,
             .advance = glyph.advance,
+            .glyph = glyph,
         });
 
         total_advance += glyph.advance;

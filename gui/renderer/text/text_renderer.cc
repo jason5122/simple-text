@@ -106,45 +106,30 @@ void TextRenderer::layout(const base::Buffer& buffer) {
     line_layout.layout(buffer, main_glyph_cache);
 }
 
-void TextRenderer::renderText(size_t start_line,
-                              size_t end_line,
-                              const Point& offset,
-                              const base::Buffer& buffer) {
-    int total_advance = 0;
-    for (auto it = buffer.line(start_line); it != buffer.line(end_line); it++) {
-        const auto& ch = *it;
-        const bool is_newline = ch.line != (*std::next(it)).line;
+void TextRenderer::renderText(size_t start_line, size_t end_line, const Point& offset) {
+    for (auto it = line_layout.line(start_line); it != line_layout.line(end_line); it++) {
+        const auto& token = *it;
 
         Point coords{
-            .x = total_advance,
-            .y = static_cast<int>(ch.line) * lineHeight(),
+            .x = token.total_advance,
+            .y = static_cast<int>(token.line) * lineHeight(),
         };
         coords += offset;
 
-        // Render newline characters as spaces, since DirectWrite and Pango don't seem to
-        // support rendering "\n".
-        std::string_view key = is_newline ? " " : ch.str;
-        GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
         InstanceData instance{
             .coords = coords.toVec2(),
-            .glyph = glyph.glyph,
-            .uv = glyph.uv,
-            .color = Rgba::fromRgb({51, 51, 51}, glyph.colored),
+            .glyph = token.glyph.glyph,
+            .uv = token.glyph.uv,
+            .color = Rgba::fromRgb({51, 51, 51}, token.glyph.colored),
         };
-        insertIntoBatch(glyph.page, std::move(instance), true);
-
-        total_advance += glyph.advance;
-
-        if (is_newline) {
-            total_advance = 0;
-        }
+        insertIntoBatch(token.glyph.page, std::move(instance), true);
     }
 
-    int atlas_x_offset = 0;
-    for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
-        // TODO: Incorporate this into the build system.
-        constexpr bool kDebugAtlas = false;
-        if (kDebugAtlas) {
+    // TODO: Incorporate this into the build system.
+    constexpr bool kDebugAtlas = false;
+    if (kDebugAtlas) {
+        int atlas_x_offset = 0;
+        for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
             Point coords{
                 .x = atlas_x_offset,
                 .y = 200,
@@ -158,9 +143,9 @@ void TextRenderer::renderText(size_t start_line,
                 .color = Rgba{255, 0, 0, 0},
             };
             insertIntoBatch(page, std::move(instance), true);
-        }
 
-        atlas_x_offset += Atlas::kAtlasSize + 100;
+            atlas_x_offset += Atlas::kAtlasSize + 100;
+        }
     }
 }
 

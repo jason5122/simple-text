@@ -34,7 +34,7 @@ void TextViewWidget::draw() {
 
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        text_renderer.renderText(start_line, end_line, position - scroll_offset, buffer);
+        text_renderer.renderText(start_line, end_line, position - scroll_offset);
     }
 
     // Add selections.

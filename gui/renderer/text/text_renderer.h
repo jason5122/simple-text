@@ -19,10 +19,7 @@ public:
     TextRenderer& operator=(TextRenderer&& other);
 
     void layout(const base::Buffer& buffer);
-    void renderText(size_t start_line,
-                    size_t end_line,
-                    const Point& offset,
-                    const base::Buffer& buffer);
+    void renderText(size_t start_line, size_t end_line, const Point& offset);
     void addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();

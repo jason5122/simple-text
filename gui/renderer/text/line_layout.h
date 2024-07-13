@@ -14,6 +14,7 @@ public:
         size_t line;
         int total_advance;
         int advance;
+        GlyphCache::Glyph& glyph;
     };
 
     std::vector<Token>::const_iterator begin() const;

@@ -14,6 +14,10 @@ static inline int PositiveModulo(int i, int n) {
     return (i % n + n) % n;
 }
 
+void MultiViewWidget::prevIndex() {
+    index = PositiveModulo(index - 1, text_views.size());
+}
+
 void MultiViewWidget::nextIndex() {
     index = PositiveModulo(index + 1, text_views.size());
 }

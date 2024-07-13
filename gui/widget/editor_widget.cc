@@ -6,7 +6,7 @@
 namespace gui {
 
 EditorWidget::EditorWidget()
-    : multi_view{new MultiViewWidget{}}, tab_bar{new TabBarWidget({0, kTabBarHeight})} {
+    : multi_view{new MultiViewWidget{}}, tab_bar{new TabBarWidget{kTabBarHeight}} {
     // Leave padding between window title bar and tab.
     constexpr Rgba kTabBarColor{190, 190, 190, 255};
     constexpr Rgba kTextViewColor{253, 253, 253, 255};
@@ -21,14 +21,22 @@ EditorWidget::EditorWidget()
 
 void EditorWidget::setIndex(size_t index) {
     multi_view->setIndex(index);
+    tab_bar->setIndex(index);
+}
+
+void EditorWidget::prevIndex() {
+    multi_view->prevIndex();
+    tab_bar->prevIndex();
 }
 
 void EditorWidget::nextIndex() {
     multi_view->nextIndex();
+    tab_bar->nextIndex();
 }
 
 void EditorWidget::addTab(const std::string& text) {
     multi_view->addTab(text);
+    tab_bar->addTab("untitled");
 }
 
 }

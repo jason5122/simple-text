@@ -11,6 +11,7 @@ public:
     EditorWidget();
 
     void setIndex(size_t index);
+    void prevIndex();
     void nextIndex();
     void addTab(const std::string& text);
 

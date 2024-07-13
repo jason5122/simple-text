@@ -1,11 +1,8 @@
 #include "editor_window.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/horizontal_layout_widget.h"
-#include "gui/widget/padding_widget.h"
 #include "gui/widget/side_bar_widget.h"
 #include "gui/widget/status_bar_widget.h"
-#include "gui/widget/tab_bar_widget.h"
-#include "gui/widget/text_view_widget.h"
 #include "gui/widget/vertical_layout_widget.h"
 #include "simple_text/editor_app.h"
 
@@ -50,20 +47,18 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setWidth(width);
     main_widget->setHeight(height);
 
-    int kSideBarWidth = 250 * 2;
-    int kTabBarHeight = 29 * 2;
-    int kStatusBarHeight = 22 * 2;
-
     editor_widget = std::make_shared<EditorWidget>();
     editor_widget->addTab(repeat(kSampleText, 50) + kLongLine);
+    editor_widget->addTab("Hello world!\nhi there");
 
     // Main widgets.
     std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
     std::shared_ptr<ContainerWidget> vertical_layout{new VerticalLayoutWidget{}};
 
     // These don't have default constructors since they are not intended to be main widgets.
+    constexpr int kSideBarWidth = 250 * 2;
+    constexpr int kStatusBarHeight = 22 * 2;
     std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, height})};
-    std::shared_ptr<Widget> tab_bar{new TabBarWidget({width, kTabBarHeight})};
     std::shared_ptr<Widget> status_bar{new StatusBarWidget({width, kStatusBarHeight})};
 
     horizontal_layout->addChildStart(side_bar);
@@ -117,9 +112,32 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
 }
 
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
-    editor_widget->nextIndex();
-    redraw();
-    return true;
+    bool handled = false;
+    if (key == app::Key::kJ && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->prevIndex();
+        handled = true;
+    }
+    if (key == app::Key::kK && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->nextIndex();
+        handled = true;
+    }
+    if (key == app::Key::k1 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(0);
+        handled = true;
+    }
+    if (key == app::Key::k2 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(1);
+        handled = true;
+    }
+    if (key == app::Key::k3 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(2);
+        handled = true;
+    }
+
+    if (handled) {
+        redraw();
+    }
+    return handled;
 }
 
 void EditorWindow::onInsertText(std::string_view text) {

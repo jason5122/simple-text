@@ -12,6 +12,7 @@ public:
     MultiViewWidget();
 
     void setIndex(int index);
+    void prevIndex();
     void nextIndex();
     void addTab(const std::string& text);
 

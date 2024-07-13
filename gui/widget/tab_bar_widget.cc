@@ -3,19 +3,35 @@
 
 namespace gui {
 
-TabBarWidget::TabBarWidget(const Size& size) : Widget{size} {
-    tab_index = 2;
+TabBarWidget::TabBarWidget(int height) : Widget{{.height = height}} {
+    addTab("untitled");
+}
 
-    for (size_t i = 0; i < 3; i++) {
-        Size label_pos{
-            .width = kTabWidth - kTabCornerRadius * 2,
-            .height = size.height,
-        };
-        std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget{label_pos, 22, 16}};
-        tab_name_label->setText(std::format("tab_{}", i), {92, 92, 92});
-        tab_name_label->addRightIcon(ImageRenderer::kPanelClose2xIndex);
-        tab_name_labels.push_back(std::move(tab_name_label));
-    }
+void TabBarWidget::setIndex(size_t index) {
+    this->index = index;
+}
+
+static inline int PositiveModulo(int i, int n) {
+    return (i % n + n) % n;
+}
+
+void TabBarWidget::prevIndex() {
+    index = PositiveModulo(index - 1, tab_name_labels.size());
+}
+
+void TabBarWidget::nextIndex() {
+    index = PositiveModulo(index + 1, tab_name_labels.size());
+}
+
+void TabBarWidget::addTab(const std::string& title) {
+    Size label_size{
+        .width = kTabWidth - kTabCornerRadius * 2,
+        .height = size.height,
+    };
+    std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget{label_size, 22, 16}};
+    tab_name_label->setText(title, {92, 92, 92});
+    tab_name_label->addRightIcon(ImageRenderer::kPanelClose2xIndex);
+    tab_name_labels.push_back(std::move(tab_name_label));
 }
 
 void TabBarWidget::draw() {
@@ -33,7 +49,7 @@ void TabBarWidget::draw() {
     }
 
     Point tab_pos = position;
-    tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * tab_index;
+    tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
     rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, tab_color, 0, kTabCornerRadius);
 
     Point tab_separator_pos = position;

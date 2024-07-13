@@ -19,6 +19,7 @@ public:
     virtual Widget* getWidgetAtPosition(const Point& pos);
 
     Size getSize();
+    void setSize(const Size& size);
     void setWidth(int width);
     void setHeight(int width);
     Point getPosition();

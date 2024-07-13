@@ -50,12 +50,12 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setWidth(width);
     main_widget->setHeight(height);
 
-    int kTabBarHeight = 29 * 2;
     int kSideBarWidth = 250 * 2;
+    int kTabBarHeight = 29 * 2;
     int kStatusBarHeight = 22 * 2;
 
-    text_view = std::make_shared<TextViewWidget>();
-    text_view->setContents(repeat(kSampleText, 50) + kLongLine);
+    editor_widget = std::make_shared<EditorWidget>();
+    editor_widget->setContents(repeat(kSampleText, 50) + kLongLine);
 
     // Main widgets.
     std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
@@ -66,17 +66,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::shared_ptr<Widget> tab_bar{new TabBarWidget({width, kTabBarHeight})};
     std::shared_ptr<Widget> status_bar{new StatusBarWidget({width, kStatusBarHeight})};
 
-    // Leave padding between window title bar and tab.
-    constexpr Rgba kTabBarColor{190, 190, 190, 255};
-    constexpr Rgba kTextViewColor{253, 253, 253, 255};
-    std::shared_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
-    std::shared_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
-
     horizontal_layout->addChildStart(side_bar);
-    vertical_layout->addChildStart(tab_bar_padding);
-    vertical_layout->addChildStart(tab_bar);
-    vertical_layout->addChildStart(text_view_padding);
-    vertical_layout->setMainWidget(text_view);
+    vertical_layout->setMainWidget(editor_widget);
     horizontal_layout->setMainWidget(vertical_layout);
     main_widget->setMainWidget(horizontal_layout);
     main_widget->addChildEnd(status_bar);

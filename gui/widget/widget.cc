@@ -6,6 +6,10 @@ Size Widget::getSize() {
     return size;
 }
 
+void Widget::setSize(const Size& size) {
+    this->size = size;
+}
+
 void Widget::setWidth(int width) {
     this->size.width = width;
 }

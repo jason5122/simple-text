@@ -1,8 +1,10 @@
 source_set("gui") {
   sources = [
     "widget/container_widget.cc",
+    "widget/editor_widget.cc",
     "widget/horizontal_layout_widget.cc",
     "widget/label_widget.cc",
+    "widget/multi_view_widget.cc",
     "widget/padding_widget.cc",
     "widget/scrollable_widget.cc",
     "widget/side_bar_widget.cc",

@@ -116,7 +116,7 @@ void TextRenderer::renderText(size_t start_line, size_t end_line, const Point& o
         };
         coords += offset;
 
-        InstanceData instance{
+        const InstanceData instance{
             .coords = coords.toVec2(),
             .glyph = token.glyph.glyph,
             .uv = token.glyph.uv,

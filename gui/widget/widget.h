@@ -14,14 +14,14 @@ public:
     virtual void scroll(const Point& mouse_pos, const Point& delta) {}
     virtual void leftMouseDown(const Point& mouse_pos) {}
     virtual void leftMouseDrag(const Point& mouse_pos) {}
+    virtual void layout() {}
+    virtual void setPosition(const Point& pos);
+    virtual Widget* getWidgetAtPosition(const Point& pos);
 
     Size getSize();
     void setWidth(int width);
     void setHeight(int width);
     Point getPosition();
-    virtual void setPosition(const Point& position);
-    virtual void layout() {}
-
     bool hitTest(const Point& point);
 
 protected:

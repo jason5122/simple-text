@@ -17,25 +17,6 @@ void ContainerWidget::addChildEnd(std::shared_ptr<Widget> widget) {
     layout();
 }
 
-Widget* ContainerWidget::getWidgetAtPosition(const Point& position) {
-    if (main_widget) {
-        if (main_widget->hitTest(position)) {
-            return main_widget.get();
-        }
-    }
-    for (auto& child : children_start) {
-        if (child->hitTest(position)) {
-            return child.get();
-        }
-    }
-    for (auto& child : children_end) {
-        if (child->hitTest(position)) {
-            return child.get();
-        }
-    }
-    return nullptr;
-}
-
 void ContainerWidget::draw() {
     if (main_widget) {
         main_widget->draw();
@@ -93,6 +74,24 @@ void ContainerWidget::leftMouseDrag(const Point& mouse_pos) {
 void ContainerWidget::setPosition(const Point& position) {
     this->position = position;
     layout();
+}
+
+Widget* ContainerWidget::getWidgetAtPosition(const Point& pos) {
+    Widget* result = nullptr;
+    if (main_widget) {
+        result = main_widget->getWidgetAtPosition(pos);
+    }
+    for (auto& child : children_start) {
+        if (!result) {
+            result = child->getWidgetAtPosition(pos);
+        }
+    }
+    for (auto& child : children_end) {
+        if (!result) {
+            result = child->getWidgetAtPosition(pos);
+        }
+    }
+    return result;
 }
 
 }

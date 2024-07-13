@@ -15,14 +15,13 @@ public:
     void setMainWidget(std::shared_ptr<Widget> widget);
     void addChildStart(std::shared_ptr<Widget> widget);
     void addChildEnd(std::shared_ptr<Widget> widget);
-    Widget* getWidgetAtPosition(const Point& position);
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;
     void leftMouseDown(const Point& mouse_pos) override;
     void leftMouseDrag(const Point& mouse_pos) override;
-
     void setPosition(const Point& position) override;
+    Widget* getWidgetAtPosition(const Point& pos) override;
 
 protected:
     std::shared_ptr<Widget> main_widget;

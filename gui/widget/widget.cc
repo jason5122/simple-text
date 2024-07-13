@@ -18,13 +18,17 @@ Point Widget::getPosition() {
     return position;
 }
 
-void Widget::setPosition(const Point& position) {
-    this->position = position;
-}
-
 bool Widget::hitTest(const Point& point) {
     return (position.x <= point.x && point.x < position.x + size.width) &&
            (position.y <= point.y && point.y < position.y + size.height);
+}
+
+void Widget::setPosition(const Point& pos) {
+    position = pos;
+}
+
+Widget* Widget::getWidgetAtPosition(const Point& pos) {
+    return hitTest(pos) ? this : nullptr;
 }
 
 }

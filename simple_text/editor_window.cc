@@ -108,20 +108,10 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
                                    int mouse_y,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    // drag_start_widget = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
-
-    // if (drag_start_widget) {
-    //     drag_start_widget->leftMouseDown({mouse_x, mouse_y});
-    //     redraw();
-    // }
-
-    if (text_view->hitTest({mouse_x, mouse_y})) {
-        drag_start_widget = text_view.get();
-
-        if (text_view) {
-            text_view->leftMouseDown({mouse_x, mouse_y});
-            redraw();
-        }
+    drag_start_widget = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
+    if (drag_start_widget) {
+        drag_start_widget->leftMouseDown({mouse_x, mouse_y});
+        redraw();
     }
 }
 

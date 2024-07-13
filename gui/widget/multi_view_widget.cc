@@ -3,19 +3,23 @@
 namespace gui {
 
 MultiViewWidget::MultiViewWidget() {
-    addTextView(std::make_shared<TextViewWidget>());
+    addTab("");
 }
 
-void MultiViewWidget::addTextView(std::shared_ptr<TextViewWidget> text_view) {
-    text_views.push_back(std::move(text_view));
-}
-
-void MultiViewWidget::setIndex(size_t index) {
+void MultiViewWidget::setIndex(int index) {
     this->index = index;
 }
 
-void MultiViewWidget::setContents(const std::string& text) {
-    text_views[index]->setContents(text);
+static inline int PositiveModulo(int i, int n) {
+    return (i % n + n) % n;
+}
+
+void MultiViewWidget::nextIndex() {
+    index = PositiveModulo(index + 1, text_views.size());
+}
+
+void MultiViewWidget::addTab(const std::string& text) {
+    text_views.emplace_back(new TextViewWidget{text});
 }
 
 void MultiViewWidget::draw() {

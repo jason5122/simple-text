@@ -19,8 +19,16 @@ EditorWidget::EditorWidget()
     setMainWidget(multi_view);
 }
 
-void EditorWidget::setContents(const std::string& text) {
-    multi_view->setContents(text);
+void EditorWidget::setIndex(size_t index) {
+    multi_view->setIndex(index);
+}
+
+void EditorWidget::nextIndex() {
+    multi_view->nextIndex();
+}
+
+void EditorWidget::addTab(const std::string& text) {
+    multi_view->addTab(text);
 }
 
 }

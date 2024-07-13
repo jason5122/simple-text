@@ -55,7 +55,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     int kStatusBarHeight = 22 * 2;
 
     editor_widget = std::make_shared<EditorWidget>();
-    editor_widget->setContents(repeat(kSampleText, 50) + kLongLine);
+    editor_widget->addTab(repeat(kSampleText, 50) + kLongLine);
 
     // Main widgets.
     std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
@@ -76,7 +76,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 void EditorWindow::onDraw(int width, int height) {
     {
         // PROFILE_BLOCK("Total render time");
-        // TODO: Move Renderer::flush() to GUI toolkit instead of calling this directly.
         main_widget->draw();
         Renderer::instance().flush({width, height});
     }
@@ -118,6 +117,8 @@ void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey mo
 }
 
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
+    editor_widget->nextIndex();
+    redraw();
     return true;
 }
 

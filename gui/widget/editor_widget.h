@@ -10,7 +10,9 @@ class EditorWidget : public VerticalLayoutWidget {
 public:
     EditorWidget();
 
-    void setContents(const std::string& text);
+    void setIndex(size_t index);
+    void nextIndex();
+    void addTab(const std::string& text);
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

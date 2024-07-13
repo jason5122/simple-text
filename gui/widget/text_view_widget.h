@@ -8,16 +8,13 @@ namespace gui {
 
 class TextViewWidget : public ScrollableWidget {
 public:
-    TextViewWidget() = default;
-    TextViewWidget(const Size& size);
+    TextViewWidget(const std::string& text);
 
     void draw() override;
     void leftMouseDown(const Point& mouse_pos) override;
     void leftMouseDrag(const Point& mouse_pos) override;
 
     void updateMaxScroll() override;
-
-    void setContents(const std::string& text);
 
 private:
     base::Buffer buffer;

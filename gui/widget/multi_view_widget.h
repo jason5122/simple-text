@@ -11,9 +11,9 @@ class MultiViewWidget : public Widget {
 public:
     MultiViewWidget();
 
-    void addTextView(std::shared_ptr<TextViewWidget> text_view);
-    void setIndex(size_t index);
-    void setContents(const std::string& text);
+    void setIndex(int index);
+    void nextIndex();
+    void addTab(const std::string& text);
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;
@@ -22,7 +22,7 @@ public:
     void layout() override;
 
 private:
-    size_t index = 0;
+    int index = 0;
     std::vector<std::shared_ptr<TextViewWidget>> text_views;
 };
 

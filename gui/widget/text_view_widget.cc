@@ -8,7 +8,28 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(const Size& size) : ScrollableWidget{size} {}
+TextViewWidget::TextViewWidget(const std::string& text) {
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+
+    {
+        PROFILE_BLOCK("TextRenderer::setContents()");
+        buffer.setContents(text);
+    }
+
+    {
+        PROFILE_BLOCK("LineLayout::layout()");
+        line_layout.layout(buffer, main_glyph_cache);
+
+        // Initialize start/end cursor.
+        // TODO: Ensure this happens in constructor too. Currently, start/end cursor is invalid
+        // after construction. We can reset it here if need be.
+        start_caret = line_layout.begin();
+        end_caret = line_layout.begin();
+    }
+
+    updateMaxScroll();
+}
 
 void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
@@ -103,29 +124,6 @@ void TextViewWidget::updateMaxScroll() {
 
     max_scroll_offset.x = line_layout.longest_line_x;
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
-}
-
-void TextViewWidget::setContents(const std::string& text) {
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-
-    {
-        PROFILE_BLOCK("TextRenderer::setContents()");
-        buffer.setContents(text);
-    }
-
-    {
-        PROFILE_BLOCK("LineLayout::layout()");
-        line_layout.layout(buffer, main_glyph_cache);
-
-        // Initialize start/end cursor.
-        // TODO: Ensure this happens in constructor too. Currently, start/end cursor is invalid
-        // after construction. We can reset it here if need be.
-        start_caret = line_layout.begin();
-        end_caret = line_layout.begin();
-    }
-
-    updateMaxScroll();
 }
 
 }

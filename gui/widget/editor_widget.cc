@@ -43,4 +43,8 @@ void EditorWidget::selectAll() {
     multi_view->selectAll();
 }
 
+void EditorWidget::move(MovementKind kind, bool forward) {
+    multi_view->move(kind, forward);
+}
+
 }

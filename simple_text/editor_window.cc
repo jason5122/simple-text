@@ -148,6 +148,17 @@ void EditorWindow::onInsertText(std::string_view text) {
     std::cerr << text << '\n';
 }
 
+void EditorWindow::onAction(app::Action action) {
+    if (action == app::Action::kMoveForwardByCharacter) {
+        editor_widget->move(gui::MovementKind::kCharacters, true);
+        redraw();
+    }
+    if (action == app::Action::kMoveBackwardByCharacter) {
+        editor_widget->move(gui::MovementKind::kCharacters, false);
+        redraw();
+    }
+}
+
 void EditorWindow::onClose() {
     parent.destroyWindow(wid);
 }

@@ -21,6 +21,22 @@ void TextViewWidget::selectAll() {
     end_caret = std::prev(line_layout.end());
 }
 
+void TextViewWidget::move(MovementKind kind, bool forward) {
+    int n = 0;
+    if (kind == MovementKind::kCharacters) {
+        n = 1;
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (forward && end_caret != std::prev(line_layout.end())) {
+            std::advance(end_caret, 1);
+        }
+        if (!forward && end_caret != line_layout.begin()) {
+            std::advance(end_caret, -1);
+        }
+    }
+}
+
 void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();

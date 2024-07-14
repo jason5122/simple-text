@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/widget/text_view_widget.h"
+#include "gui/widget/types.h"
 #include "gui/widget/widget.h"
 #include <memory>
 #include <vector>
@@ -16,6 +17,7 @@ public:
     void nextIndex();
     void addTab(const std::string& text);
     void selectAll();
+    void move(MovementKind kind, bool forward);
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;

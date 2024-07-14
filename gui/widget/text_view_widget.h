@@ -3,6 +3,7 @@
 #include "base/buffer.h"
 #include "gui/renderer/text/line_layout.h"
 #include "gui/widget/scrollable_widget.h"
+#include "gui/widget/types.h"
 
 namespace gui {
 
@@ -11,6 +12,7 @@ public:
     TextViewWidget(const std::string& text);
 
     void selectAll();
+    void move(MovementKind kind, bool forward);
 
     void draw() override;
     void leftMouseDown(const Point& mouse_pos) override;

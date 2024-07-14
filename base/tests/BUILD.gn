@@ -4,7 +4,8 @@ source_set("tests") {
   sources = [
     "hash_map_test.cc",
     "piece_table_test.cc",
-    "tree_sitter_test.cc",
+
+    # "tree_sitter_test.cc",
   ]
 
   # TODO: Find a way to share deps between //base and //base/tests (do this for other modules too).

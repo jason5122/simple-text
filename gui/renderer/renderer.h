@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gui/renderer/image_renderer.h"
-#include "gui/renderer/movement.h"
 #include "gui/renderer/rect_renderer.h"
 #include "gui/renderer/selection_renderer.h"
 #include "gui/renderer/text/glyph_cache.h"
@@ -18,7 +17,6 @@ public:
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();
     ImageRenderer& getImageRenderer();
-    Movement& getMovement();
 
     void flush(const Size& size);
 
@@ -32,7 +30,6 @@ private:
     RectRenderer rect_renderer;
     SelectionRenderer selection_renderer;
     ImageRenderer image_renderer;
-    Movement movement;
 
     Point editor_offset{200 * 2, 30 * 2};
 };

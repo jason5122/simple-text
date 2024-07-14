@@ -23,8 +23,7 @@ Renderer::Renderer()
     : main_glyph_cache{"Source Code Pro", kMainFontSize},
       ui_glyph_cache{kMainFontFace, kUIFontSize},
       text_renderer{main_glyph_cache, ui_glyph_cache},
-      selection_renderer{main_glyph_cache},
-      movement{main_glyph_cache} {
+      selection_renderer{main_glyph_cache} {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
@@ -54,10 +53,6 @@ SelectionRenderer& Renderer::getSelectionRenderer() {
 
 ImageRenderer& Renderer::getImageRenderer() {
     return image_renderer;
-}
-
-Movement& Renderer::getMovement() {
-    return movement;
 }
 
 void Renderer::flush(const Size& size) {

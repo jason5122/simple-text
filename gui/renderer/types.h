@@ -69,10 +69,4 @@ struct Point {
     }
 };
 
-struct CaretInfo {
-    size_t byte;
-    size_t line;
-    size_t column;
-};
-
 }

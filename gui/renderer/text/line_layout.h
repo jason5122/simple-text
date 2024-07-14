@@ -10,6 +10,8 @@ namespace gui {
 // TODO: Use a better name than this maybe.
 class LineLayout {
 public:
+    LineLayout(const base::Buffer& buffer, GlyphCache& main_glyph_cache);
+
     struct Token {
         size_t line;
         int total_advance;
@@ -21,16 +23,16 @@ public:
     std::vector<Token>::const_iterator end() const;
     std::vector<Token>::const_iterator line(size_t line) const;
 
-    void layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache);
-    std::vector<Token>::const_iterator iteratorFromPoint(const base::Buffer& buffer,
-                                                         GlyphCache& main_glyph_cache,
-                                                         const Point& point);
+    std::vector<Token>::const_iterator iteratorFromPoint(const Point& point);
 
     // TODO: Use a data structure (priority queue) for efficient updating.
     // TODO: Make this private.
     int longest_line_x = 0;
 
 private:
+    const base::Buffer& buffer;
+    GlyphCache& main_glyph_cache;
+
     // TODO: Consider renaming "Token" and "tokens".
     std::vector<Token> tokens;
     std::vector<size_t> newline_offsets;

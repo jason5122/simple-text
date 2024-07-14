@@ -4,23 +4,8 @@
 
 namespace gui {
 
-std::vector<LineLayout::Token>::const_iterator LineLayout::begin() const {
-    return tokens.begin();
-}
-
-std::vector<LineLayout::Token>::const_iterator LineLayout::end() const {
-    return tokens.end();
-}
-
-std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) const {
-    if (line >= newline_offsets.size()) {
-        return end();
-    } else {
-        return tokens.begin() + newline_offsets.at(line);
-    }
-}
-
-void LineLayout::layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache) {
+LineLayout::LineLayout(const base::Buffer& buffer, GlyphCache& main_glyph_cache)
+    : buffer{buffer}, main_glyph_cache{main_glyph_cache} {
     // Cache byte offsets of newlines.
     newline_offsets.emplace_back(tokens.size());
 
@@ -53,8 +38,23 @@ void LineLayout::layout(const base::Buffer& buffer, GlyphCache& main_glyph_cache
     }
 }
 
-std::vector<LineLayout::Token>::const_iterator LineLayout::iteratorFromPoint(
-    const base::Buffer& buffer, GlyphCache& main_glyph_cache, const Point& point) {
+std::vector<LineLayout::Token>::const_iterator LineLayout::begin() const {
+    return tokens.begin();
+}
+
+std::vector<LineLayout::Token>::const_iterator LineLayout::end() const {
+    return tokens.end();
+}
+
+std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) const {
+    if (line >= newline_offsets.size()) {
+        return end();
+    } else {
+        return tokens.begin() + newline_offsets.at(line);
+    }
+}
+
+std::vector<LineLayout::Token>::const_iterator LineLayout::iteratorFromPoint(const Point& point) {
     size_t line_index = std::max(0, point.y / main_glyph_cache.lineHeight());
     line_index = std::clamp(line_index, 0UL, buffer.lineCount());
 

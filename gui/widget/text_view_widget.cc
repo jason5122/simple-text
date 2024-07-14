@@ -8,26 +8,11 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(const std::string& text) {
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-
-    {
-        PROFILE_BLOCK("TextRenderer::setContents()");
-        buffer.setContents(text);
-    }
-
-    {
-        PROFILE_BLOCK("LineLayout::layout()");
-        line_layout.layout(buffer, main_glyph_cache);
-
-        // Initialize start/end cursor.
-        // TODO: Ensure this happens in constructor too. Currently, start/end cursor is invalid
-        // after construction. We can reset it here if need be.
-        start_caret = line_layout.begin();
-        end_caret = line_layout.begin();
-    }
-
+TextViewWidget::TextViewWidget(const std::string& text)
+    : buffer{text},
+      line_layout{buffer, Renderer::instance().getMainGlyphCache()},
+      start_caret{line_layout.begin()},
+      end_caret{line_layout.begin()} {
     updateMaxScroll();
 }
 
@@ -103,20 +88,14 @@ void TextViewWidget::draw() {
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret = line_layout.iteratorFromPoint(buffer, main_glyph_cache, new_coords);
+    end_caret = line_layout.iteratorFromPoint(new_coords);
     start_caret = end_caret;
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret = line_layout.iteratorFromPoint(buffer, main_glyph_cache, new_coords);
+    end_caret = line_layout.iteratorFromPoint(new_coords);
 }
 
 void TextViewWidget::updateMaxScroll() {

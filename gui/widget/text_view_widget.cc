@@ -19,14 +19,16 @@ TextViewWidget::TextViewWidget(const std::string& text)
 void TextViewWidget::selectAll() {
     start_caret = line_layout.begin();
     end_caret = std::prev(line_layout.end());
+    updateCaretX();
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     if (by == MoveBy::kCharacters) {
         end_caret = line_layout.moveByCharacters(forward, end_caret);
+        updateCaretX();
     }
     if (by == MoveBy::kLines) {
-        end_caret = line_layout.moveByLines(forward, end_caret);
+        end_caret = line_layout.moveByLines(forward, end_caret, caret_x);
     }
 
     if (!extend) {
@@ -38,9 +40,11 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     size_t line = (*end_caret).line;
     if (to == MoveTo::kHardBOL) {
         end_caret = line_layout.getLine(line);
+        updateCaretX();
     }
     if (to == MoveTo::kHardEOL) {
         end_caret = std::prev(line_layout.getLine(line + 1));
+        updateCaretX();
     }
 
     if (!extend) {
@@ -135,6 +139,10 @@ void TextViewWidget::updateMaxScroll() {
 
     max_scroll_offset.x = line_layout.longest_line_x;
     max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
+}
+
+void TextViewWidget::updateCaretX() {
+    caret_x = (*end_caret).total_advance;
 }
 
 }

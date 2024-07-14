@@ -83,20 +83,19 @@ LineLayout::Iterator LineLayout::moveByCharacters(bool forward, Iterator caret) 
     return caret;
 }
 
-LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret) {
+LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x) {
     size_t line = (*caret).line;
-    int x = (*caret).total_advance;
 
     if (forward) {
         if (line < newline_offsets.size()) line++;  // Saturating addition;
     } else {
-        if (line > 0) line--;  // Saturating subtraction.
-    }
+        // Edge case.
+        // TODO: See if we can handle this cleaner.
+        if (line == 0) {
+            return begin();
+        }
 
-    // Edge case.
-    // TODO: See if we can handle this cleaner.
-    if (line == 0 && !forward) {
-        return begin();
+        if (line > 0) line--;  // Saturating subtraction.
     }
 
     for (auto it = getLine(line); it != getLine(line + 1); it++) {

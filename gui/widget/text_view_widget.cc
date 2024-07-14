@@ -127,11 +127,13 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
     end_caret = line_layout.iteratorFromPoint(new_coords);
     start_caret = end_caret;
+    updateCaretX();
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
     end_caret = line_layout.iteratorFromPoint(new_coords);
+    updateCaretX();
 }
 
 void TextViewWidget::updateMaxScroll() {

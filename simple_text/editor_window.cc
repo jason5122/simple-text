@@ -51,7 +51,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     editor_widget->addTab(repeat(kSampleText, 50) + kLongLine);
     editor_widget->addTab("Hello world!\nhi there");
     editor_widget->addTab(
-        "Hello world!\nhi there\nlasdkjflaskdjf\nlakdjflkjf\naljdsfl\nlasdkfjalds");
+        "Hello world!\nhi there\nlasdkjflaskdjf\nlakdjflkjf\naljdsfl\nlasdkfjalds\n");
 
     // Main widgets.
     std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};

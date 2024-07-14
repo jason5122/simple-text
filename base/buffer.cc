@@ -6,19 +6,20 @@ extern "C" {
 }
 
 // TODO: Debug use; remove this.
-#include "util/profile_util.h"
+#include <format>
+#include <iostream>
 
 namespace base {
 
-std::vector<Buffer::Utf8Char>::const_iterator Buffer::begin() const {
+Buffer::Iterator Buffer::begin() const {
     return utf8_chars.begin();
 }
 
-std::vector<Buffer::Utf8Char>::const_iterator Buffer::end() const {
+Buffer::Iterator Buffer::end() const {
     return utf8_chars.end();
 }
 
-std::vector<Buffer::Utf8Char>::const_iterator Buffer::line(size_t line) const {
+Buffer::Iterator Buffer::getLine(size_t line) const {
     if (line >= newline_offsets.size()) {
         return end();
     } else {
@@ -26,59 +27,57 @@ std::vector<Buffer::Utf8Char>::const_iterator Buffer::line(size_t line) const {
     }
 }
 
-Buffer::Buffer(const std::string& text) {
-    data.clear();
+// This does not return the ending newline, if any.
+std::string_view Buffer::getLineContents(size_t line) const {
+    size_t s1 = newline_offsets[line] + 1;
+    size_t s2 = newline_offsets[line + 1];
+    return std::string_view(text).substr(s1, s2 - s1);
+}
 
-    std::string line;
-    for (char ch : text) {
-        if (ch == '\n') {
-            data.push_back(line);
-            line.clear();
-        } else {
-            line += ch;
+Buffer::Buffer(const std::string& text) : text{text} {
+    newline_offsets.emplace_back(-1);
+    for (size_t i = 0; i < text.length(); i++) {
+        if (text[i] == '\n') {
+            // Cache byte offsets of newlines.
+            newline_offsets.emplace_back(i);
+            line_count++;
         }
     }
-    data.push_back(line);
+    newline_offsets.emplace_back(text.length());
+    line_count++;
 
-    {
-        PROFILE_BLOCK("Buffer: collect UTF-8 chars");
+    size_t byte_offset = 0;
+    for (size_t line = 0; line < lineCount(); line++) {
+        std::string_view line_str = getLineContents(line);
 
-        size_t byte_offset = 0;
-        for (size_t line = 0; line < data.size(); line++) {
-            const auto& line_str = data.at(line);
-
-            // Cache byte offsets of newlines.
-            newline_offsets.emplace_back(utf8_chars.size());
-
-            size_t offset;
-            for (size_t line_offset = 0; line_offset < line_str.size(); line_offset += offset) {
-                offset = grapheme_next_character_break_utf8(&line_str[0] + line_offset, SIZE_MAX);
-                utf8_chars.emplace_back(Utf8Char{
-                    .str = std::string_view(line_str).substr(line_offset, offset),
-                    .size = offset,
-                    .line_offset = line_offset,
-                    .byte_offset = byte_offset,
-                    .line = line,
-                });
-                byte_offset += offset;
-            }
-
-            // Include newline.
-            offset = kNewlineString.length();
+        size_t offset;
+        for (size_t line_offset = 0; line_offset < line_str.size(); line_offset += offset) {
+            offset = grapheme_next_character_break_utf8(&line_str[0] + line_offset, SIZE_MAX);
             utf8_chars.emplace_back(Utf8Char{
-                .str = kNewlineString,
+                .str = std::string_view(line_str).substr(line_offset, offset),
                 .size = offset,
-                .line_offset = line_str.size(),
+                .line_offset = line_offset,
                 .byte_offset = byte_offset,
                 .line = line,
             });
             byte_offset += offset;
         }
+
+        // Include newline.
+        offset = kNewlineString.length();
+        utf8_chars.emplace_back(Utf8Char{
+            .str = kNewlineString,
+            .size = offset,
+            .line_offset = line_str.size(),
+            .byte_offset = byte_offset,
+            .line = line,
+        });
+        byte_offset += offset;
     }
 }
 
 size_t Buffer::lineCount() const {
-    return newline_offsets.size();
+    return line_count;
 }
 
 void Buffer::insert(size_t line_index, size_t line_offset, std::string_view text) {

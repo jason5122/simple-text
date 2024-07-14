@@ -3,7 +3,6 @@
 #include "base/buffer.h"
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/types.h"
-#include "gui/widget/types.h"
 #include <vector>
 
 namespace gui {

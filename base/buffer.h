@@ -18,10 +18,12 @@ public:
         size_t line;
     };
 
-    std::vector<Utf8Char>::const_iterator begin() const;
-    std::vector<Utf8Char>::const_iterator end() const;
-    std::vector<Utf8Char>::const_iterator line(size_t line) const;
+    using Iterator = std::vector<Utf8Char>::const_iterator;
 
+    Iterator begin() const;
+    Iterator end() const;
+    Iterator getLine(size_t line) const;
+    std::string_view getLineContents(size_t line) const;
     size_t lineCount() const;
     void insert(size_t line_index, size_t line_offset, std::string_view text);
     void erase(size_t start_byte, size_t end_byte);
@@ -29,9 +31,10 @@ public:
 private:
     static constexpr std::string_view kNewlineString = "\n";
 
-    std::vector<std::string> data;
+    std::string text;
     std::vector<Utf8Char> utf8_chars;
     std::vector<size_t> newline_offsets;
+    size_t line_count = 0;
 };
 
 }

@@ -26,6 +26,10 @@ void MultiViewWidget::addTab(const std::string& text) {
     text_views.emplace_back(new TextViewWidget{text});
 }
 
+void MultiViewWidget::selectAll() {
+    text_views[index]->selectAll();
+}
+
 void MultiViewWidget::draw() {
     text_views[index]->draw();
 }

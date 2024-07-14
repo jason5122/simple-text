@@ -78,7 +78,7 @@ Buffer::Buffer(const std::string& text) {
 }
 
 size_t Buffer::lineCount() const {
-    return data.size();
+    return newline_offsets.size();
 }
 
 void Buffer::insert(size_t line_index, size_t line_offset, std::string_view text) {

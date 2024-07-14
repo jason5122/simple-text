@@ -133,6 +133,10 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->setIndex(2);
         handled = true;
     }
+    if (key == app::Key::kA && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->selectAll();
+        handled = true;
+    }
 
     if (handled) {
         redraw();

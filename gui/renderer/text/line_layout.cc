@@ -47,7 +47,9 @@ std::vector<LineLayout::Token>::const_iterator LineLayout::end() const {
 }
 
 std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) const {
-    if (line >= newline_offsets.size()) {
+    if (line < 0) {
+        return begin();
+    } else if (line >= newline_offsets.size()) {
         return end();
     } else {
         return tokens.begin() + newline_offsets.at(line);
@@ -55,9 +57,7 @@ std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) con
 }
 
 std::vector<LineLayout::Token>::const_iterator LineLayout::iteratorFromPoint(const Point& point) {
-    size_t line_index = std::max(0, point.y / main_glyph_cache.lineHeight());
-    line_index = std::clamp(line_index, 0UL, buffer.lineCount());
-
+    size_t line_index = point.y / main_glyph_cache.lineHeight();
     for (auto it = line(line_index); it != line(line_index + 1); it++) {
         const auto& token = *it;
         const auto& next_token = *std::next(it);

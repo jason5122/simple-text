@@ -39,4 +39,8 @@ void EditorWidget::addTab(const std::string& text) {
     tab_bar->addTab("untitled");
 }
 
+void EditorWidget::selectAll() {
+    multi_view->selectAll();
+}
+
 }

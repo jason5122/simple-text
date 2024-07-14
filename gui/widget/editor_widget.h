@@ -14,6 +14,7 @@ public:
     void prevIndex();
     void nextIndex();
     void addTab(const std::string& text);
+    void selectAll();
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

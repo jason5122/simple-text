@@ -8,6 +8,8 @@ namespace base {
 
 class Buffer {
 public:
+    Buffer(const std::string& text);
+
     struct Utf8Char {
         std::string_view str;
         size_t size;
@@ -20,7 +22,6 @@ public:
     std::vector<Utf8Char>::const_iterator end() const;
     std::vector<Utf8Char>::const_iterator line(size_t line) const;
 
-    Buffer(const std::string& text);
     size_t lineCount() const;
     void insert(size_t line_index, size_t line_offset, std::string_view text);
     void erase(size_t start_byte, size_t end_byte);

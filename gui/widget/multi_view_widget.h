@@ -15,6 +15,7 @@ public:
     void prevIndex();
     void nextIndex();
     void addTab(const std::string& text);
+    void selectAll();
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;

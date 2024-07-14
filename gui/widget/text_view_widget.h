@@ -10,6 +10,8 @@ class TextViewWidget : public ScrollableWidget {
 public:
     TextViewWidget(const std::string& text);
 
+    void selectAll();
+
     void draw() override;
     void leftMouseDown(const Point& mouse_pos) override;
     void leftMouseDrag(const Point& mouse_pos) override;

@@ -16,6 +16,11 @@ TextViewWidget::TextViewWidget(const std::string& text)
     updateMaxScroll();
 }
 
+void TextViewWidget::selectAll() {
+    start_caret = line_layout.begin();
+    end_caret = std::prev(line_layout.end());
+}
+
 void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();

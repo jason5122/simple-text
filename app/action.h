@@ -4,8 +4,10 @@ namespace app {
 
 enum class Action {
     // TODO: Combine movement in a more clean way.
-    kMoveForwardByCharacter,
-    kMoveBackwardByCharacter,
+    kMoveForwardByCharacters,
+    kMoveBackwardByCharacters,
+    kMoveForwardByLines,
+    kMoveBackwardByLines,
     kMoveToHardBOL,
     kMoveToHardEOL,
     kLeftDelete,

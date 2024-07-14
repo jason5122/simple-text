@@ -26,6 +26,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     if (by == MoveBy::kCharacters) {
         n = 1;
     }
+    int delta = forward ? 1 : -1;
 
     for (int i = 0; i < n; i++) {
         if (forward && end_caret != std::prev(line_layout.end())) {
@@ -36,6 +37,10 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         }
     }
 
+    if (by == MoveBy::kLines) {
+        end_caret = line_layout.moveByLines(forward, end_caret);
+    }
+
     if (!extend) {
         start_caret = end_caret;
     }
@@ -44,10 +49,10 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
     size_t line = (*end_caret).line;
     if (to == MoveTo::kHardBOL) {
-        end_caret = line_layout.line(line);
+        end_caret = line_layout.getLine(line);
     }
     if (to == MoveTo::kHardEOL) {
-        end_caret = std::prev(line_layout.line(line + 1));
+        end_caret = std::prev(line_layout.getLine(line + 1));
     }
 
     if (!extend) {

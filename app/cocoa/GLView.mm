@@ -332,10 +332,16 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     std::string str = selector_str.UTF8String;
     std::cerr << str << '\n';
     if (str == "moveForward" || str == "moveRight") {
-        glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacter);
+        glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters);
     }
     if (str == "moveBackward" || str == "moveLeft") {
-        glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacter);
+        glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacters);
+    }
+    if (str == "moveDown") {
+        glLayer->appWindow->onAction(app::Action::kMoveForwardByLines);
+    }
+    if (str == "moveUp") {
+        glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines);
     }
     if (str == "moveToBeginningOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardBOL);

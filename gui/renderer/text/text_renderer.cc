@@ -106,7 +106,7 @@ void TextRenderer::renderText(size_t start_line,
                               size_t end_line,
                               const Point& offset,
                               const LineLayout& line_layout) {
-    for (auto it = line_layout.line(start_line); it != line_layout.line(end_line); it++) {
+    for (auto it = line_layout.getLine(start_line); it != line_layout.getLine(end_line); it++) {
         const auto& token = *it;
 
         Point coords{

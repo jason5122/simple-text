@@ -50,6 +50,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     editor_widget = std::make_shared<EditorWidget>();
     editor_widget->addTab(repeat(kSampleText, 50) + kLongLine);
     editor_widget->addTab("Hello world!\nhi there");
+    editor_widget->addTab(
+        "Hello world!\nhi there\nlasdkjflaskdjf\nlakdjflkjf\naljdsfl\nlasdkfjalds");
 
     // Main widgets.
     std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
@@ -133,6 +135,10 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->setIndex(2);
         handled = true;
     }
+    if (key == app::Key::k4 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(3);
+        handled = true;
+    }
     if (key == app::Key::kA && modifiers == app::ModifierKey::kSuper) {
         editor_widget->selectAll();
         handled = true;
@@ -149,12 +155,20 @@ void EditorWindow::onInsertText(std::string_view text) {
 }
 
 void EditorWindow::onAction(app::Action action) {
-    if (action == app::Action::kMoveForwardByCharacter) {
+    if (action == app::Action::kMoveForwardByCharacters) {
         editor_widget->move(gui::MoveBy::kCharacters, true, false);
         redraw();
     }
-    if (action == app::Action::kMoveBackwardByCharacter) {
+    if (action == app::Action::kMoveBackwardByCharacters) {
         editor_widget->move(gui::MoveBy::kCharacters, false, false);
+        redraw();
+    }
+    if (action == app::Action::kMoveForwardByLines) {
+        editor_widget->move(gui::MoveBy::kLines, true, false);
+        redraw();
+    }
+    if (action == app::Action::kMoveBackwardByLines) {
+        editor_widget->move(gui::MoveBy::kLines, false, false);
         redraw();
     }
     if (action == app::Action::kMoveToHardBOL) {

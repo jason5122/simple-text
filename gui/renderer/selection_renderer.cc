@@ -245,7 +245,7 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
         size_t line = (*it).line;
 
         // Find either the next line break or the end caret, whichever comes first.
-        auto next_it = std::prev(line_layout.line(line + 1));
+        auto next_it = std::prev(line_layout.getLine(line + 1));
         if (next_it >= end_caret) {
             next_it = std::prev(end_caret);
         }

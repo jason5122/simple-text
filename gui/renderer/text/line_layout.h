@@ -3,6 +3,7 @@
 #include "base/buffer.h"
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/types.h"
+#include "gui/widget/types.h"
 #include <vector>
 
 namespace gui {
@@ -19,11 +20,13 @@ public:
         GlyphCache::Glyph& glyph;
     };
 
-    std::vector<Token>::const_iterator begin() const;
-    std::vector<Token>::const_iterator end() const;
-    std::vector<Token>::const_iterator line(size_t line) const;
+    using Iterator = std::vector<Token>::const_iterator;
 
-    std::vector<Token>::const_iterator iteratorFromPoint(const Point& point);
+    Iterator begin() const;
+    Iterator end() const;
+    Iterator getLine(int line) const;
+    Iterator iteratorFromPoint(const Point& point);
+    Iterator moveByLines(bool forward, Iterator caret);
 
     // TODO: Use a data structure (priority queue) for efficient updating.
     // TODO: Make this private.

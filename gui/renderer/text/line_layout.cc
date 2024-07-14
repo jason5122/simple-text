@@ -42,15 +42,15 @@ LineLayout::LineLayout(const base::Buffer& buffer, GlyphCache& main_glyph_cache)
     }
 }
 
-std::vector<LineLayout::Token>::const_iterator LineLayout::begin() const {
+LineLayout::Iterator LineLayout::begin() const {
     return tokens.begin();
 }
 
-std::vector<LineLayout::Token>::const_iterator LineLayout::end() const {
+LineLayout::Iterator LineLayout::end() const {
     return tokens.end();
 }
 
-std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) const {
+LineLayout::Iterator LineLayout::getLine(int line) const {
     if (line >= newline_offsets.size()) {
         return end();
     } else {
@@ -58,10 +58,10 @@ std::vector<LineLayout::Token>::const_iterator LineLayout::line(size_t line) con
     }
 }
 
-std::vector<LineLayout::Token>::const_iterator LineLayout::iteratorFromPoint(const Point& point) {
+LineLayout::Iterator LineLayout::iteratorFromPoint(const Point& point) {
     int y = std::max(point.y, 0);
-    size_t line_index = y / main_glyph_cache.lineHeight();
-    for (auto it = line(line_index); it != line(line_index + 1); it++) {
+    size_t line = y / main_glyph_cache.lineHeight();
+    for (auto it = getLine(line); it != getLine(line + 1); it++) {
         const auto& token = *it;
         const auto& next_token = *std::next(it);
 
@@ -70,7 +70,35 @@ std::vector<LineLayout::Token>::const_iterator LineLayout::iteratorFromPoint(con
             return it;
         }
     }
-    return std::prev(line(line_index + 1));
+    return std::prev(getLine(line + 1));
+}
+
+LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret) {
+    size_t line = (*caret).line;
+    int x = (*caret).total_advance;
+
+    if (forward) {
+        if (line < newline_offsets.size()) line++;  // Saturating addition;
+    } else {
+        if (line > 0) line--;  // Saturating subtraction.
+    }
+
+    // Edge case.
+    // TODO: See if we can handle this cleaner.
+    if (line == 0 && !forward) {
+        return begin();
+    }
+
+    for (auto it = getLine(line); it != getLine(line + 1); it++) {
+        const auto& token = *it;
+        const auto& next_token = *std::next(it);
+
+        int glyph_center = std::midpoint(token.total_advance, next_token.total_advance);
+        if (glyph_center >= x) {
+            return it;
+        }
+    }
+    return std::prev(getLine(line + 1));
 }
 
 }

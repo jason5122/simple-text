@@ -73,6 +73,16 @@ LineLayout::Iterator LineLayout::iteratorFromPoint(const Point& point) {
     return std::prev(getLine(line + 1));
 }
 
+LineLayout::Iterator LineLayout::moveByCharacters(bool forward, Iterator caret) {
+    if (forward && caret != std::prev(end())) {
+        return std::next(caret);
+    }
+    if (!forward && caret != begin()) {
+        return std::prev(caret);
+    }
+    return caret;
+}
+
 LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret) {
     size_t line = (*caret).line;
     int x = (*caret).total_advance;

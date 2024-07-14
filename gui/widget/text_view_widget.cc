@@ -22,21 +22,9 @@ void TextViewWidget::selectAll() {
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
-    int n = 0;
     if (by == MoveBy::kCharacters) {
-        n = 1;
+        end_caret = line_layout.moveByCharacters(forward, end_caret);
     }
-    int delta = forward ? 1 : -1;
-
-    for (int i = 0; i < n; i++) {
-        if (forward && end_caret != std::prev(line_layout.end())) {
-            std::advance(end_caret, 1);
-        }
-        if (!forward && end_caret != line_layout.begin()) {
-            std::advance(end_caret, -1);
-        }
-    }
-
     if (by == MoveBy::kLines) {
         end_caret = line_layout.moveByLines(forward, end_caret);
     }

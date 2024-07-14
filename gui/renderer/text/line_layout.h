@@ -26,6 +26,7 @@ public:
     Iterator end() const;
     Iterator getLine(int line) const;
     Iterator iteratorFromPoint(const Point& point);
+    Iterator moveByCharacters(bool forward, Iterator caret);
     Iterator moveByLines(bool forward, Iterator caret);
 
     // TODO: Use a data structure (priority queue) for efficient updating.

@@ -17,7 +17,8 @@ public:
     void nextIndex();
     void addTab(const std::string& text);
     void selectAll();
-    void move(MovementKind kind, bool forward);
+    void move(MoveBy by, bool forward, bool extend);
+    void moveTo(MoveTo to, bool extend);
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;

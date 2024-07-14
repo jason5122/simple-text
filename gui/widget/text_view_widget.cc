@@ -21,9 +21,9 @@ void TextViewWidget::selectAll() {
     end_caret = std::prev(line_layout.end());
 }
 
-void TextViewWidget::move(MovementKind kind, bool forward) {
+void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     int n = 0;
-    if (kind == MovementKind::kCharacters) {
+    if (by == MoveBy::kCharacters) {
         n = 1;
     }
 
@@ -34,6 +34,24 @@ void TextViewWidget::move(MovementKind kind, bool forward) {
         if (!forward && end_caret != line_layout.begin()) {
             std::advance(end_caret, -1);
         }
+    }
+
+    if (!extend) {
+        start_caret = end_caret;
+    }
+}
+
+void TextViewWidget::moveTo(MoveTo to, bool extend) {
+    size_t line = (*end_caret).line;
+    if (to == MoveTo::kHardBOL) {
+        end_caret = line_layout.line(line);
+    }
+    if (to == MoveTo::kHardEOL) {
+        end_caret = std::prev(line_layout.line(line + 1));
+    }
+
+    if (!extend) {
+        start_caret = end_caret;
     }
 }
 

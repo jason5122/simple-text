@@ -150,11 +150,19 @@ void EditorWindow::onInsertText(std::string_view text) {
 
 void EditorWindow::onAction(app::Action action) {
     if (action == app::Action::kMoveForwardByCharacter) {
-        editor_widget->move(gui::MovementKind::kCharacters, true);
+        editor_widget->move(gui::MoveBy::kCharacters, true, false);
         redraw();
     }
     if (action == app::Action::kMoveBackwardByCharacter) {
-        editor_widget->move(gui::MovementKind::kCharacters, false);
+        editor_widget->move(gui::MoveBy::kCharacters, false, false);
+        redraw();
+    }
+    if (action == app::Action::kMoveToHardBOL) {
+        editor_widget->moveTo(gui::MoveTo::kHardBOL, false);
+        redraw();
+    }
+    if (action == app::Action::kMoveToHardEOL) {
+        editor_widget->moveTo(gui::MoveTo::kHardEOL, false);
         redraw();
     }
 }

@@ -30,8 +30,12 @@ void MultiViewWidget::selectAll() {
     text_views[index]->selectAll();
 }
 
-void MultiViewWidget::move(MovementKind kind, bool forward) {
-    text_views[index]->move(kind, forward);
+void MultiViewWidget::move(MoveBy by, bool forward, bool extend) {
+    text_views[index]->move(by, forward, extend);
+}
+
+void MultiViewWidget::moveTo(MoveTo to, bool extend) {
+    text_views[index]->moveTo(to, extend);
 }
 
 void MultiViewWidget::draw() {

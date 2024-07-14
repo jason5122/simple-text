@@ -16,7 +16,8 @@ public:
     void nextIndex();
     void addTab(const std::string& text);
     void selectAll();
-    void move(MovementKind kind, bool forward);
+    void move(MoveBy by, bool forward, bool extend);
+    void moveTo(MoveTo to, bool extend);
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

@@ -2,8 +2,13 @@
 
 namespace gui {
 
-enum class MovementKind {
+enum class MoveBy {
     kCharacters,
+};
+
+enum class MoveTo {
+    kHardBOL,
+    kHardEOL,
 };
 
 }

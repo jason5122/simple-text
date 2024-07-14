@@ -326,7 +326,7 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     NSString* selector_str = NSStringFromSelector(selector);
 
     // Remove the trailing colon.
-    int selector_len = [selector_str length];
+    int selector_len = selector_str.length;
     selector_str = [selector_str substringToIndex:selector_len - 1];
 
     std::string str = selector_str.UTF8String;
@@ -336,6 +336,12 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     }
     if (str == "moveBackward" || str == "moveLeft") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacter);
+    }
+    if (str == "moveToBeginningOfParagraph") {
+        glLayer->appWindow->onAction(app::Action::kMoveToHardBOL);
+    }
+    if (str == "moveToEndOfParagraph") {
+        glLayer->appWindow->onAction(app::Action::kMoveToHardEOL);
     }
     if (str == "deleteBackward") {
         glLayer->appWindow->onAction(app::Action::kLeftDelete);

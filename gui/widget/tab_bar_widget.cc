@@ -8,7 +8,9 @@ TabBarWidget::TabBarWidget(int height) : Widget{{.height = height}} {
 }
 
 void TabBarWidget::setIndex(size_t index) {
-    this->index = index;
+    if (index < tab_name_labels.size()) {
+        this->index = index;
+    }
 }
 
 static inline int PositiveModulo(int i, int n) {
@@ -32,6 +34,10 @@ void TabBarWidget::addTab(const std::string& title) {
     tab_name_label->setText(title, {92, 92, 92});
     tab_name_label->addRightIcon(ImageRenderer::kPanelClose2xIndex);
     tab_name_labels.push_back(std::move(tab_name_label));
+}
+
+void TabBarWidget::removeTab(size_t index) {
+    tab_name_labels.erase(tab_name_labels.begin() + index);
 }
 
 void TabBarWidget::draw() {

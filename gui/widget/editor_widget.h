@@ -14,7 +14,9 @@ public:
     void setIndex(size_t index);
     void prevIndex();
     void nextIndex();
+    size_t getCurrentIndex();
     void addTab(const std::string& text);
+    void removeTab(size_t index);
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);

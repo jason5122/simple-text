@@ -34,9 +34,19 @@ void EditorWidget::nextIndex() {
     tab_bar->nextIndex();
 }
 
+size_t EditorWidget::getCurrentIndex() {
+    return multi_view->getCurrentIndex();
+}
+
 void EditorWidget::addTab(const std::string& text) {
     multi_view->addTab(text);
     tab_bar->addTab("untitled");
+}
+
+void EditorWidget::removeTab(size_t index) {
+    multi_view->removeTab(index);
+    tab_bar->removeTab(index);
+    layout();
 }
 
 void EditorWidget::selectAll() {

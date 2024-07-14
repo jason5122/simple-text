@@ -143,6 +143,10 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->selectAll();
         handled = true;
     }
+    if (key == app::Key::kW && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->removeTab(editor_widget->getCurrentIndex());
+        handled = true;
+    }
 
     if (handled) {
         redraw();

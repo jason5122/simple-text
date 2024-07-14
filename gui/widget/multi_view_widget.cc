@@ -7,7 +7,9 @@ MultiViewWidget::MultiViewWidget() {
 }
 
 void MultiViewWidget::setIndex(int index) {
-    this->index = index;
+    if (index < text_views.size()) {
+        this->index = index;
+    }
 }
 
 static inline int PositiveModulo(int i, int n) {
@@ -22,8 +24,16 @@ void MultiViewWidget::nextIndex() {
     index = PositiveModulo(index + 1, text_views.size());
 }
 
+size_t MultiViewWidget::getCurrentIndex() {
+    return index;
+}
+
 void MultiViewWidget::addTab(const std::string& text) {
     text_views.emplace_back(new TextViewWidget{text});
+}
+
+void MultiViewWidget::removeTab(size_t index) {
+    text_views.erase(text_views.begin() + index);
 }
 
 void MultiViewWidget::selectAll() {

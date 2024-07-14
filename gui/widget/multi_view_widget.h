@@ -15,7 +15,9 @@ public:
     void setIndex(int index);
     void prevIndex();
     void nextIndex();
+    size_t getCurrentIndex();
     void addTab(const std::string& text);
+    void removeTab(size_t index);
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
@@ -27,7 +29,7 @@ public:
     void layout() override;
 
 private:
-    int index = 0;
+    int index = 0;  // TODO: Replace this with `size_t` and implement a positive modulo function.
     std::vector<std::shared_ptr<TextViewWidget>> text_views;
 };
 

@@ -13,6 +13,7 @@ public:
     void prevIndex();
     void nextIndex();
     void addTab(const std::string& title);
+    void removeTab(size_t index);
 
     void draw() override;
     void layout() override;

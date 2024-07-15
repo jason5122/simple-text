@@ -21,6 +21,7 @@ public:
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
+    void insertText(std::string_view text);
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;

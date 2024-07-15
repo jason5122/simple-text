@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer.h"
+#include "base/buffer/buffer.h"
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/types.h"
 #include <vector>

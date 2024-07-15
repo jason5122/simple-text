@@ -1,0 +1,11 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [ "tree_sitter_test.cc" ]
+
+  deps = [
+    "//base/buffer",
+    "//third_party/googletest:gtest",
+    "//third_party/tree_sitter",
+  ]
+}

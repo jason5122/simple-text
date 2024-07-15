@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base/buffer.h"
-#include "base/utf8_string.h"
+#include "base/buffer/buffer.h"
+#include "base/buffer/utf8_string.h"
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/text/glyph_cache.h"

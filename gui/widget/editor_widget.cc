@@ -38,9 +38,9 @@ size_t EditorWidget::getCurrentIndex() {
     return multi_view->getCurrentIndex();
 }
 
-void EditorWidget::addTab(const std::string& text) {
+void EditorWidget::addTab(const std::string& tab_name, const std::string& text) {
     multi_view->addTab(text);
-    tab_bar->addTab("untitled");
+    tab_bar->addTab(tab_name);
 }
 
 void EditorWidget::removeTab(size_t index) {
@@ -59,6 +59,10 @@ void EditorWidget::move(MoveBy by, bool forward, bool extend) {
 
 void EditorWidget::moveTo(MoveTo to, bool extend) {
     multi_view->moveTo(to, extend);
+}
+
+void EditorWidget::insertText(std::string_view text) {
+    multi_view->insertText(text);
 }
 
 }

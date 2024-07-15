@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer.h"
+#include "base/buffer/buffer.h"
 #include "gui/renderer/text/line_layout.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
@@ -14,6 +14,7 @@ public:
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
+    void insertText(std::string_view text);
 
     void draw() override;
     void leftMouseDown(const Point& mouse_pos) override;

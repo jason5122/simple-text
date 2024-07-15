@@ -15,11 +15,12 @@ public:
     void prevIndex();
     void nextIndex();
     size_t getCurrentIndex();
-    void addTab(const std::string& text);
+    void addTab(const std::string& tab_name, const std::string& text);
     void removeTab(size_t index);
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
+    void insertText(std::string_view text);
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

@@ -1,0 +1,13 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [
+    "buffer_test.cc",
+    "piece_table_test.cc",
+  ]
+
+  deps = [
+    "//base/buffer",
+    "//third_party/googletest:gtest",
+  ]
+}

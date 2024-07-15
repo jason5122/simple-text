@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/utf8_string.h"
+#include "base/buffer/utf8_string.h"
 #include "gui/widget/widget.h"
 
 namespace gui {

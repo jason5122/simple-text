@@ -52,6 +52,10 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     }
 }
 
+void TextViewWidget::insertText(std::string_view text) {
+    ;
+}
+
 void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();

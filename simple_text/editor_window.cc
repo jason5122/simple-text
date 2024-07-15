@@ -48,9 +48,10 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setHeight(height);
 
     editor_widget = std::make_shared<EditorWidget>();
-    editor_widget->addTab(repeat(kSampleText, 50) + kLongLine);
-    editor_widget->addTab("Hello world!\nhi there");
+    editor_widget->addTab("sample_text.txt", repeat(kSampleText, 50) + kLongLine);
+    editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     editor_widget->addTab(
+        "hello_newline.txt",
         "Hello world!\nhi there\nlasdkjflaskdjf\nlakdjflkjf\naljdsfl\nlasdkfjalds\n");
 
     // Main widgets.
@@ -155,7 +156,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 }
 
 void EditorWindow::onInsertText(std::string_view text) {
-    std::cerr << text << '\n';
+    editor_widget->insertText(text);
 }
 
 void EditorWindow::onAction(app::Action action) {

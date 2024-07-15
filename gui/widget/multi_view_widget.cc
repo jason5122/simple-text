@@ -48,6 +48,10 @@ void MultiViewWidget::moveTo(MoveTo to, bool extend) {
     text_views[index]->moveTo(to, extend);
 }
 
+void MultiViewWidget::insertText(std::string_view text) {
+    text_views[index]->insertText(text);
+}
+
 void MultiViewWidget::draw() {
     text_views[index]->draw();
 }

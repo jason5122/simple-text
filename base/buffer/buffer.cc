@@ -19,13 +19,21 @@ Buffer::Iterator Buffer::end() const {
     return utf8_chars.end();
 }
 
-Buffer::Iterator Buffer::getLine(size_t line) const {
-    if (line >= newline_offsets.size()) {
-        return end();
-    } else {
-        return utf8_chars.begin() + newline_offsets.at(line);
-    }
+Buffer::StringIterator Buffer::stringBegin() const {
+    return text.begin();
 }
+
+Buffer::StringIterator Buffer::stringEnd() const {
+    return text.end();
+}
+
+// Buffer::Iterator Buffer::getLine(size_t line) const {
+//     if (line >= newline_offsets.size()) {
+//         return end();
+//     } else {
+//         return utf8_chars.begin() + newline_offsets.at(line);
+//     }
+// }
 
 // This does not return the ending newline, if any.
 std::string_view Buffer::getLineContents(size_t line) const {
@@ -35,6 +43,33 @@ std::string_view Buffer::getLineContents(size_t line) const {
 }
 
 Buffer::Buffer(const std::string& text) : text{text} {
+    reflow();
+}
+
+size_t Buffer::lineCount() const {
+    return line_count;
+}
+
+void Buffer::insert(Buffer::StringIterator pos, std::string_view value) {
+    text.insert(pos, value.begin(), value.end());
+    reflow();
+}
+
+void Buffer::erase(Buffer::StringIterator first, Buffer::StringIterator last) {
+    text.erase(first, last);
+    reflow();
+}
+
+std::string_view Buffer::str() const {
+    return text;
+}
+
+void Buffer::reflow() {
+    // Clear existing info.
+    utf8_chars.clear();
+    newline_offsets.clear();
+    line_count = 0;
+
     newline_offsets.emplace_back(-1);
     for (size_t i = 0; i < text.length(); i++) {
         if (text[i] == '\n') {
@@ -74,18 +109,6 @@ Buffer::Buffer(const std::string& text) : text{text} {
         });
         byte_offset += offset;
     }
-}
-
-size_t Buffer::lineCount() const {
-    return line_count;
-}
-
-void Buffer::insert(size_t line_index, size_t line_offset, std::string_view text) {
-    std::cerr << "Buffer::insert(): unimplemented!\n";
-}
-
-void Buffer::erase(size_t start_byte, size_t end_byte) {
-    std::cerr << "Buffer::erase(): unimplemented!\n";
 }
 
 }

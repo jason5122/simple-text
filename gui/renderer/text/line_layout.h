@@ -24,18 +24,18 @@ public:
     Iterator begin() const;
     Iterator end() const;
     Iterator getLine(int line) const;
-    Iterator iteratorFromPoint(const Point& point);
+    Iterator iteratorFromPoint(size_t line, const Point& point);
     Iterator moveByCharacters(bool forward, Iterator caret);
     Iterator moveByLines(bool forward, Iterator caret, int x);
+
+    // TODO: This is a reference implementation. Don't do this for the actual implementation.
+    void reflow(const base::Buffer& buffer, GlyphCache& main_glyph_cache);
 
     // TODO: Use a data structure (priority queue) for efficient updating.
     // TODO: Make this private.
     int longest_line_x = 0;
 
 private:
-    const base::Buffer& buffer;
-    GlyphCache& main_glyph_cache;
-
     // TODO: Consider renaming "Token" and "tokens".
     std::vector<Token> tokens;
     std::vector<size_t> newline_offsets;

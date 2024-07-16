@@ -15,6 +15,7 @@ public:
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
     void insertText(std::string_view text);
+    void leftDelete();
 
     void draw() override;
     void leftMouseDown(const Point& mouse_pos) override;
@@ -33,6 +34,7 @@ private:
     // This is updated whenever the caret moves horizontally.
     int caret_x = 0;
     void updateCaretX();
+    size_t lineAtPoint(const Point& point);
 };
 
 }

@@ -352,6 +352,12 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     if (str == "deleteBackward") {
         glLayer->appWindow->onAction(app::Action::kLeftDelete);
     }
+    if (str == "insertNewline") {
+        glLayer->appWindow->onAction(app::Action::kInsertNewline);
+    }
+    if (str == "insertTab") {
+        glLayer->appWindow->onAction(app::Action::kInsertTab);
+    }
 }
 
 @end

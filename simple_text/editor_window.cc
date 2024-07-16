@@ -157,6 +157,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
 void EditorWindow::onInsertText(std::string_view text) {
     editor_widget->insertText(text);
+    redraw();
 }
 
 void EditorWindow::onAction(app::Action action) {
@@ -182,6 +183,14 @@ void EditorWindow::onAction(app::Action action) {
     }
     if (action == app::Action::kMoveToHardEOL) {
         editor_widget->moveTo(gui::MoveTo::kHardEOL, false);
+        redraw();
+    }
+    if (action == app::Action::kInsertNewline) {
+        editor_widget->insertText("\n");
+        redraw();
+    }
+    if (action == app::Action::kLeftDelete) {
+        editor_widget->leftDelete();
         redraw();
     }
 }

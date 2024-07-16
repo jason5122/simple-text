@@ -11,6 +11,8 @@ enum class Action {
     kMoveToHardBOL,
     kMoveToHardEOL,
     kLeftDelete,
+    kInsertNewline,
+    kInsertTab,
 };
 
 }

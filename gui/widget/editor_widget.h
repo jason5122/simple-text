@@ -21,6 +21,7 @@ public:
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
     void insertText(std::string_view text);
+    void leftDelete();
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

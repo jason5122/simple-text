@@ -53,7 +53,38 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 }
 
 void TextViewWidget::insertText(std::string_view text) {
-    ;
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+
+    // TODO: This is a hack; refactor this.
+    buffer.insert(buffer.stringBegin() + std::distance(line_layout.begin(), end_caret), text);
+    line_layout.reflow(buffer, main_glyph_cache);
+    updateMaxScroll();
+
+    // TODO: This is a hack. Remove this after we solve iterator invalidation.
+    start_caret = line_layout.begin();
+    end_caret = line_layout.begin();
+}
+
+void TextViewWidget::leftDelete() {
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+
+    // TODO: This is a hack; refactor this.
+    base::Buffer::StringIterator first =
+        buffer.stringBegin() + std::distance(line_layout.begin(), start_caret);
+    base::Buffer::StringIterator last =
+        buffer.stringBegin() + std::distance(line_layout.begin(), end_caret);
+
+    if (first > last) {
+        std::swap(first, last);
+    }
+
+    buffer.erase(first, last);
+    line_layout.reflow(buffer, main_glyph_cache);
+    updateMaxScroll();
+
+    // TODO: This is a hack. Remove this after we solve iterator invalidation.
+    start_caret = line_layout.begin();
+    end_caret = line_layout.begin();
 }
 
 void TextViewWidget::draw() {
@@ -129,14 +160,14 @@ void TextViewWidget::draw() {
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret = line_layout.iteratorFromPoint(new_coords);
+    end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
     start_caret = end_caret;
     updateCaretX();
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret = line_layout.iteratorFromPoint(new_coords);
+    end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
     updateCaretX();
 }
 
@@ -149,6 +180,12 @@ void TextViewWidget::updateMaxScroll() {
 
 void TextViewWidget::updateCaretX() {
     caret_x = (*end_caret).total_advance;
+}
+
+size_t TextViewWidget::lineAtPoint(const Point& point) {
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+    int y = std::max(point.y, 0);
+    return y / main_glyph_cache.lineHeight();
 }
 
 }

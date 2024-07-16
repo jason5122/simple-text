@@ -52,6 +52,10 @@ void MultiViewWidget::insertText(std::string_view text) {
     text_views[index]->insertText(text);
 }
 
+void MultiViewWidget::leftDelete() {
+    text_views[index]->leftDelete();
+}
+
 void MultiViewWidget::draw() {
     text_views[index]->draw();
 }

@@ -65,4 +65,8 @@ void EditorWidget::insertText(std::string_view text) {
     multi_view->insertText(text);
 }
 
+void EditorWidget::leftDelete() {
+    multi_view->leftDelete();
+}
+
 }

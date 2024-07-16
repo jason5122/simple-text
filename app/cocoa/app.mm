@@ -14,6 +14,8 @@
     app::App* app;
 }
 
+- (void)callAppAction:(app::AppAction)appAction;
+
 @end
 
 @implementation AppDelegate
@@ -67,24 +69,22 @@
     [NSApp activateIgnoringOtherApps:true];
 }
 
-- (void)newFile {
+- (void)callAppAction:(app::AppAction)appAction {
     // If there are no open windows, pass action to `App` instead of `App::Window`.
     if (NSApp.keyWindow == nil) {
-        app->onAppAction(app::AppAction::kNewFile);
+        app->onAppAction(appAction);
     } else {
         app::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
-        app_window->onAppAction(app::AppAction::kNewFile);
+        app_window->onAppAction(appAction);
     }
 }
 
+- (void)newFile {
+    [self callAppAction:app::AppAction::kNewFile];
+}
+
 - (void)newWindow {
-    // If there are no open windows, pass action to `App` instead of `App::Window`.
-    if (NSApp.keyWindow == nil) {
-        app->onAppAction(app::AppAction::kNewWindow);
-    } else {
-        app::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
-        app_window->onAppAction(app::AppAction::kNewWindow);
-    }
+    [self callAppAction:app::AppAction::kNewWindow];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item {

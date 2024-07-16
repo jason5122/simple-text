@@ -195,6 +195,16 @@ void EditorWindow::onAction(app::Action action) {
     }
 }
 
+void EditorWindow::onAppAction(app::AppAction action) {
+    if (action == app::AppAction::kNewFile) {
+        editor_widget->addTab("sample_text.txt", repeat(kSampleText, 50) + kLongLine);
+        redraw();
+    }
+    if (action == app::AppAction::kNewWindow) {
+        parent.createWindow();
+    }
+}
+
 void EditorWindow::onClose() {
     parent.destroyWindow(wid);
 }

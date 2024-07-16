@@ -18,6 +18,15 @@ void EditorApp::onQuit() {
     std::cerr << "SimpleText::onQuit()\n";
 }
 
+void EditorApp::onAppAction(app::AppAction action) {
+    if (action == app::AppAction::kNewFile) {
+        createWindow();
+    }
+    if (action == app::AppAction::kNewWindow) {
+        createWindow();
+    }
+}
+
 void EditorApp::createWindow() {
     std::unique_ptr<EditorWindow> editor_window =
         std::make_unique<EditorWindow>(*this, 1200, 800, editor_windows.size());

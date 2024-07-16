@@ -41,6 +41,7 @@ size_t EditorWidget::getCurrentIndex() {
 void EditorWidget::addTab(const std::string& tab_name, const std::string& text) {
     multi_view->addTab(text);
     tab_bar->addTab(tab_name);
+    layout();
 }
 
 void EditorWidget::removeTab(size_t index) {

@@ -11,6 +11,7 @@ public:
 
     void onLaunch() override;
     void onQuit() override;
+    void onAppAction(app::AppAction action) override;
 
 private:
     friend class EditorWindow;

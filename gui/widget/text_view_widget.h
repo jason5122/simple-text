@@ -27,8 +27,8 @@ private:
     base::Buffer buffer;
     LineLayout line_layout;
 
-    std::vector<LineLayout::Token>::const_iterator start_caret;
-    std::vector<LineLayout::Token>::const_iterator end_caret;
+    LineLayout::Iterator start_caret;
+    LineLayout::Iterator end_caret;
 
     // We use this value to position the caret during vertical movement.
     // This is updated whenever the caret moves horizontally.

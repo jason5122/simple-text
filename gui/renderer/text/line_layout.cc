@@ -116,4 +116,13 @@ void LineLayout::reflow(const base::Buffer& buffer, GlyphCache& main_glyph_cache
     }
 }
 
+size_t LineLayout::iteratorIndex(Iterator it) {
+    size_t index = std::distance(begin(), it);
+    return std::clamp(index, 0UL, tokens.size());
+}
+
+LineLayout::Iterator LineLayout::getIterator(size_t index) {
+    return std::min(begin() + index, std::prev(end()));
+}
+
 }

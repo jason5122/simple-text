@@ -57,13 +57,18 @@ void TextViewWidget::insertText(std::string_view text) {
 
     size_t end_byte_offset = (*end_caret).byte_offset;
     base::Buffer::StringIterator pos = buffer.stringBegin() + end_byte_offset;
+
+    // Store old cursor position before we invalidate our iterators.
+    // TODO: Consider always ensuring `start_caret <= end_caret`.
+    LineLayout::Iterator actual_end = std::max(start_caret, end_caret);
+    size_t old_end_index = line_layout.iteratorIndex(actual_end);
+
     buffer.insert(pos, text);
     line_layout.reflow(buffer, main_glyph_cache);
     updateMaxScroll();
 
-    // TODO: This is a hack. Remove this after we solve iterator invalidation.
-    start_caret = line_layout.begin();
-    end_caret = line_layout.begin();
+    end_caret = line_layout.getIterator(old_end_index);
+    start_caret = end_caret;
 }
 
 void TextViewWidget::leftDelete() {
@@ -78,13 +83,17 @@ void TextViewWidget::leftDelete() {
         std::swap(first, last);
     }
 
+    // Store old cursor position before we invalidate our iterators.
+    // TODO: Consider always ensuring `start_caret <= end_caret`.
+    LineLayout::Iterator actual_start = std::min(start_caret, end_caret);
+    size_t old_start_index = line_layout.iteratorIndex(actual_start);
+
     buffer.erase(first, last);
     line_layout.reflow(buffer, main_glyph_cache);
     updateMaxScroll();
 
-    // TODO: This is a hack. Remove this after we solve iterator invalidation.
-    start_caret = line_layout.begin();
-    end_caret = line_layout.begin();
+    end_caret = line_layout.getIterator(old_start_index);
+    start_caret = end_caret;
 }
 
 void TextViewWidget::draw() {

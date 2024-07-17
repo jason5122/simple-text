@@ -32,6 +32,10 @@ public:
     // TODO: This is a reference implementation. Don't do this for the actual implementation.
     void reflow(const base::Buffer& buffer, GlyphCache& main_glyph_cache);
 
+    // TODO: Clean this up.
+    size_t iteratorIndex(Iterator it);
+    Iterator getIterator(size_t index);
+
     // TODO: Use a data structure (priority queue) for efficient updating.
     // TODO: Make this private.
     int longest_line_x = 0;

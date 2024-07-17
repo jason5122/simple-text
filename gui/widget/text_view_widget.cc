@@ -90,6 +90,10 @@ void TextViewWidget::leftDelete() {
         first = buffer.stringBegin() + new_start_byte_offset;
     }
 
+    // Ensure we only move back when 1) there selection is empty, and 2) we are not at the end.
+    bool should_move_back = start_caret == end_caret && end_caret != line_layout.begin() &&
+                            end_caret != std::prev(line_layout.end());
+
     // Store old cursor position before we invalidate our iterators.
     // TODO: Consider always ensuring `start_caret <= end_caret`.
     LineLayout::Iterator actual_start = std::min(start_caret, end_caret);
@@ -100,7 +104,7 @@ void TextViewWidget::leftDelete() {
     updateMaxScroll();
 
     end_caret = line_layout.getIterator(old_start_index);
-    if (end_caret != line_layout.begin()) {
+    if (should_move_back) {
         std::advance(end_caret, -1);
     }
     start_caret = end_caret;

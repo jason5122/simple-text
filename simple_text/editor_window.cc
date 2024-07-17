@@ -35,6 +35,14 @@ const std::string kLongLine =
     "long long long long long long long long long long long long long long long long long long "
     "long long long long long long long long long long long long long long long long long long "
     "long long line.";
+
+const std::string kUnicode =
+    R"(˚¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
+¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
+¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
+¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
+¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
+¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£)";
 }
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
@@ -48,6 +56,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setHeight(height);
 
     editor_widget = std::make_shared<EditorWidget>();
+    editor_widget->addTab("unicode.txt", kUnicode);
     editor_widget->addTab("sample_text.txt", repeat(kSampleText, 50) + kLongLine);
     editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     editor_widget->addTab(

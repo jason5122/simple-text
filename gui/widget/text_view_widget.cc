@@ -55,8 +55,9 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 void TextViewWidget::insertText(std::string_view text) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
-    // TODO: This is a hack; refactor this.
-    buffer.insert(buffer.stringBegin() + std::distance(line_layout.begin(), end_caret), text);
+    size_t end_byte_offset = (*end_caret).byte_offset;
+    base::Buffer::StringIterator pos = buffer.stringBegin() + end_byte_offset;
+    buffer.insert(pos, text);
     line_layout.reflow(buffer, main_glyph_cache);
     updateMaxScroll();
 
@@ -68,11 +69,10 @@ void TextViewWidget::insertText(std::string_view text) {
 void TextViewWidget::leftDelete() {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
-    // TODO: This is a hack; refactor this.
-    base::Buffer::StringIterator first =
-        buffer.stringBegin() + std::distance(line_layout.begin(), start_caret);
-    base::Buffer::StringIterator last =
-        buffer.stringBegin() + std::distance(line_layout.begin(), end_caret);
+    size_t start_byte_offset = (*start_caret).byte_offset;
+    size_t end_byte_offset = (*end_caret).byte_offset;
+    base::Buffer::StringIterator first = buffer.stringBegin() + start_byte_offset;
+    base::Buffer::StringIterator last = buffer.stringBegin() + end_byte_offset;
 
     if (first > last) {
         std::swap(first, last);

@@ -101,6 +101,7 @@ void LineLayout::reflow(const base::Buffer& buffer, GlyphCache& main_glyph_cache
             .total_advance = total_advance,
             .advance = glyph.advance,
             .glyph = glyph,
+            .byte_offset = ch.byte_offset,
         });
 
         total_advance += glyph.advance;

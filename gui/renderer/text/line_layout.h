@@ -17,6 +17,7 @@ public:
         int total_advance;
         int advance;
         GlyphCache::Glyph& glyph;
+        size_t byte_offset;
     };
 
     using Iterator = std::vector<Token>::const_iterator;

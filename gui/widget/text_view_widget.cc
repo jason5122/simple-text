@@ -68,6 +68,9 @@ void TextViewWidget::insertText(std::string_view text) {
     updateMaxScroll();
 
     end_caret = line_layout.getIterator(old_end_index);
+    if (end_caret != std::prev(line_layout.end())) {
+        std::advance(end_caret, 1);
+    }
     start_caret = end_caret;
 }
 
@@ -82,6 +85,10 @@ void TextViewWidget::leftDelete() {
     if (first > last) {
         std::swap(first, last);
     }
+    if (first == last && start_caret != line_layout.begin()) {
+        size_t new_start_byte_offset = (*std::prev(start_caret)).byte_offset;
+        first = buffer.stringBegin() + new_start_byte_offset;
+    }
 
     // Store old cursor position before we invalidate our iterators.
     // TODO: Consider always ensuring `start_caret <= end_caret`.
@@ -93,6 +100,9 @@ void TextViewWidget::leftDelete() {
     updateMaxScroll();
 
     end_caret = line_layout.getIterator(old_start_index);
+    if (end_caret != line_layout.begin()) {
+        std::advance(end_caret, -1);
+    }
     start_caret = end_caret;
 }
 

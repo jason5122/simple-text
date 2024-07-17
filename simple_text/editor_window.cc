@@ -171,41 +171,45 @@ void EditorWindow::onInsertText(std::string_view text) {
     redraw();
 }
 
-void EditorWindow::onAction(app::Action action) {
+void EditorWindow::onAction(app::Action action, bool extend) {
     if (action == app::Action::kMoveForwardByCharacters) {
-        editor_widget->move(gui::MoveBy::kCharacters, true, false);
+        editor_widget->move(gui::MoveBy::kCharacters, true, extend);
         redraw();
     }
     if (action == app::Action::kMoveBackwardByCharacters) {
-        editor_widget->move(gui::MoveBy::kCharacters, false, false);
+        editor_widget->move(gui::MoveBy::kCharacters, false, extend);
         redraw();
     }
     if (action == app::Action::kMoveForwardByLines) {
-        editor_widget->move(gui::MoveBy::kLines, true, false);
+        editor_widget->move(gui::MoveBy::kLines, true, extend);
         redraw();
     }
     if (action == app::Action::kMoveBackwardByLines) {
-        editor_widget->move(gui::MoveBy::kLines, false, false);
+        editor_widget->move(gui::MoveBy::kLines, false, extend);
         redraw();
     }
     if (action == app::Action::kMoveToHardBOL) {
-        editor_widget->moveTo(gui::MoveTo::kHardBOL, false);
+        editor_widget->moveTo(gui::MoveTo::kHardBOL, extend);
         redraw();
     }
     if (action == app::Action::kMoveToHardEOL) {
-        editor_widget->moveTo(gui::MoveTo::kHardEOL, false);
+        editor_widget->moveTo(gui::MoveTo::kHardEOL, extend);
         redraw();
     }
     if (action == app::Action::kMoveToBOF) {
-        editor_widget->moveTo(gui::MoveTo::kBOF, false);
+        editor_widget->moveTo(gui::MoveTo::kBOF, extend);
         redraw();
     }
     if (action == app::Action::kMoveToEOF) {
-        editor_widget->moveTo(gui::MoveTo::kEOF, false);
+        editor_widget->moveTo(gui::MoveTo::kEOF, extend);
         redraw();
     }
     if (action == app::Action::kInsertNewline) {
         editor_widget->insertText("\n");
+        redraw();
+    }
+    if (action == app::Action::kInsertTab) {
+        editor_widget->insertText("    ");
         redraw();
     }
     if (action == app::Action::kLeftDelete) {

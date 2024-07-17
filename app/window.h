@@ -50,7 +50,7 @@ public:
         return false;
     }
     virtual void onInsertText(std::string_view text) {}
-    virtual void onAction(Action action) {}
+    virtual void onAction(Action action, bool extend = false) {}
     virtual void onAppAction(AppAction action) {}
     virtual void onClose() {}
     virtual void onDarkModeToggle() {}

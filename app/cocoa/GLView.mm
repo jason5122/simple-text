@@ -334,20 +334,38 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     if (str == "moveForward" || str == "moveRight") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters);
     }
+    if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters, true);
+    }
     if (str == "moveBackward" || str == "moveLeft") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacters);
+    }
+    if (str == "moveBackwardAndModifySelection" || str == "moveLeftAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacters, true);
     }
     if (str == "moveDown") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByLines);
     }
+    if (str == "moveDownAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveForwardByLines, true);
+    }
     if (str == "moveUp") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines);
+    }
+    if (str == "moveUpAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines, true);
     }
     if (str == "moveToBeginningOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardBOL);
     }
+    if (str == "moveToBeginningOfParagraphAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveToHardBOL, true);
+    }
     if (str == "moveToEndOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardEOL);
+    }
+    if (str == "moveToEndOfParagraphAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveToHardEOL, true);
     }
     if (str == "moveToBeginningOfDocument") {
         glLayer->appWindow->onAction(app::Action::kMoveToBOF);

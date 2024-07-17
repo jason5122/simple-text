@@ -22,7 +22,7 @@ public:
     void onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) override;
     bool onKeyDown(app::Key key, app::ModifierKey modifiers) override;
     void onInsertText(std::string_view text) override;
-    void onAction(app::Action action) override;
+    void onAction(app::Action action, bool extend) override;
     void onAppAction(app::AppAction action) override;
     void onClose() override;
 

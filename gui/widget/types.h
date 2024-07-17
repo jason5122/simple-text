@@ -10,6 +10,8 @@ enum class MoveBy {
 enum class MoveTo {
     kHardBOL,
     kHardEOL,
+    kBOF,
+    kEOF,
 };
 
 }

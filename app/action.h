@@ -10,6 +10,8 @@ enum class Action {
     kMoveBackwardByLines,
     kMoveToHardBOL,
     kMoveToHardEOL,
+    kMoveToBOF,
+    kMoveToEOF,
     kLeftDelete,
     kInsertNewline,
     kInsertTab,

@@ -349,6 +349,12 @@ static inline app::ModifierKey GetModifiers(unsigned long flags) {
     if (str == "moveToEndOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardEOL);
     }
+    if (str == "moveToBeginningOfDocument") {
+        glLayer->appWindow->onAction(app::Action::kMoveToBOF);
+    }
+    if (str == "moveToEndOfDocument") {
+        glLayer->appWindow->onAction(app::Action::kMoveToEOF);
+    }
     if (str == "deleteBackward") {
         glLayer->appWindow->onAction(app::Action::kLeftDelete);
     }

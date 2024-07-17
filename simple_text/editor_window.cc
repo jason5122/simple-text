@@ -42,7 +42,9 @@ const std::string kUnicode =
 ¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
 ¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
 ¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
-¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£)";
+¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
+
+🥲🥲🥲🥲🥲🥲)";
 }
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
@@ -192,6 +194,14 @@ void EditorWindow::onAction(app::Action action) {
     }
     if (action == app::Action::kMoveToHardEOL) {
         editor_widget->moveTo(gui::MoveTo::kHardEOL, false);
+        redraw();
+    }
+    if (action == app::Action::kMoveToBOF) {
+        editor_widget->moveTo(gui::MoveTo::kBOF, false);
+        redraw();
+    }
+    if (action == app::Action::kMoveToEOF) {
+        editor_widget->moveTo(gui::MoveTo::kEOF, false);
         redraw();
     }
     if (action == app::Action::kInsertNewline) {

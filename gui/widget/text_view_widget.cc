@@ -46,6 +46,14 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
         end_caret = std::prev(line_layout.getLine(line + 1));
         updateCaretX();
     }
+    if (to == MoveTo::kBOF) {
+        end_caret = line_layout.begin();
+        updateCaretX();
+    }
+    if (to == MoveTo::kEOF) {
+        end_caret = std::prev(line_layout.end());
+        updateCaretX();
+    }
 
     if (!extend) {
         start_caret = end_caret;

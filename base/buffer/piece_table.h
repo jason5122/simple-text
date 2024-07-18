@@ -2,21 +2,18 @@
 
 #include <forward_list>
 #include <string>
-#include <string_view>
 
 namespace base {
 
-// https://darrenburns.net/posts/piece-table/
 class PieceTable {
 public:
     PieceTable(std::string_view str);
 
     void insert(size_t start, std::string_view str);
     void erase(size_t pos, size_t count);
-    std::string string();
+    std::string str();
 
-    // DEBUG: Visualizes pieces.
-    void printPieces();
+    friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
 
 private:
     enum class PieceSource {

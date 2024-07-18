@@ -5,7 +5,7 @@
 
 namespace base {
 
-PieceTable::PieceTable(std::string_view str) : original(str) {
+PieceTable::PieceTable(std::string_view str) : original{str} {
     pieces.emplace_front(Piece{
         .source = PieceSource::Original,
         .start = 0,
@@ -14,26 +14,29 @@ PieceTable::PieceTable(std::string_view str) : original(str) {
 }
 
 void PieceTable::insert(size_t start, std::string_view str) {
-    size_t add_start = add.size();
+    size_t add_start = add.length();
     add += str;
 
     for (auto it = pieces.begin(); it != pieces.end(); it++) {
         // Split piece into three pieces.
-        auto& piece = *it;
-        if (start < piece.start + piece.length) {
-            size_t old_length = piece.length;
-            piece.length = start;
+        auto& p1 = *it;
+        if (start < p1.start + p1.length) {
+            size_t old_length = p1.length;
+            p1.length = start;
 
-            pieces.emplace_after(it, Piece{
-                                         .source = PieceSource::Add,
-                                         .start = add_start,
-                                         .length = add_start + str.length(),
-                                     });
-            pieces.emplace_after(std::next(it), Piece{
-                                                    .source = PieceSource::Original,
-                                                    .start = start,
-                                                    .length = old_length - start,
-                                                });
+            const Piece p2{
+                .source = PieceSource::Add,
+                .start = add_start,
+                .length = add_start + str.length(),
+            };
+            const Piece p3{
+                .source = PieceSource::Original,
+                .start = start,
+                .length = old_length - start,
+            };
+
+            auto it2 = pieces.emplace_after(it, p2);
+            pieces.emplace_after(it2, p3);
             break;
         }
     }
@@ -42,39 +45,43 @@ void PieceTable::insert(size_t start, std::string_view str) {
 void PieceTable::erase(size_t pos, size_t count) {
     for (auto it = pieces.begin(); it != pieces.end(); it++) {
         // Split piece into two pieces.
-        auto& piece = *it;
-        if (pos >= piece.start && pos + count < piece.start + piece.length) {
-            size_t old_length = piece.length;
-            piece.length = pos - piece.start;
+        auto& p1 = *it;
+        if (pos >= p1.start && pos + count < p1.start + p1.length) {
+            size_t old_length = p1.length;
+            p1.length = pos - p1.start;
 
-            pieces.emplace_after(it, Piece{
-                                         .source = piece.source,
-                                         .start = pos + count,
-                                         .length = old_length - count,
-                                     });
+            const Piece p2{
+                .source = p1.source,
+                .start = pos + count,
+                .length = old_length - count,
+            };
+
+            pieces.emplace_after(it, p2);
             break;
         }
     }
 }
 
-std::string PieceTable::string() {
+std::string PieceTable::str() {
     std::string str;
     for (const auto& piece : pieces) {
-        std::string& buffer = piece.source == PieceSource::Original ? original : add;
+        const std::string& buffer = piece.source == PieceSource::Original ? original : add;
         str += buffer.substr(piece.start, piece.length);
     }
     return str;
 }
 
-void PieceTable::printPieces() {
-    std::cerr << "original: \"" << EscapeSpecialChars(original) << "\"\n";
-    std::cerr << "add:      \"" << EscapeSpecialChars(add) << "\"\n";
+std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
+    out << std::format("Original: \"{}\"\n", EscapeSpecialChars(table.original));
+    out << std::format("Add: \"{}\"\n", EscapeSpecialChars(table.add));
 
-    for (const auto& piece : pieces) {
-        const char* source = piece.source == PieceSource::Original ? "original" : "add";
-        std::cerr << std::format("Piece(start={}, length={}, source={})\n", piece.start,
-                                 piece.length, source);
+    for (const auto& piece : table.pieces) {
+        const std::string source =
+            piece.source == PieceTable::PieceSource::Original ? "original" : "add";
+        out << std::format("Piece(start={}, length={}, source={})\n", piece.start, piece.length,
+                           source);
     }
+    return out;
 }
 
 }

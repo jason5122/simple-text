@@ -167,53 +167,64 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 }
 
 void EditorWindow::onInsertText(std::string_view text) {
-    editor_widget->insertText(text);
+    {
+        PROFILE_BLOCK("EditorWindow::onInsertText()");
+        editor_widget->insertText(text);
+    }
     redraw();
 }
 
 void EditorWindow::onAction(app::Action action, bool extend) {
-    if (action == app::Action::kMoveForwardByCharacters) {
-        editor_widget->move(gui::MoveBy::kCharacters, true, extend);
-        redraw();
+    bool handled = false;
+    {
+        PROFILE_BLOCK("EditorWindow::onAction()");
+        if (action == app::Action::kMoveForwardByCharacters) {
+            editor_widget->move(gui::MoveBy::kCharacters, true, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveBackwardByCharacters) {
+            editor_widget->move(gui::MoveBy::kCharacters, false, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveForwardByLines) {
+            editor_widget->move(gui::MoveBy::kLines, true, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveBackwardByLines) {
+            editor_widget->move(gui::MoveBy::kLines, false, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveToHardBOL) {
+            editor_widget->moveTo(gui::MoveTo::kHardBOL, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveToHardEOL) {
+            editor_widget->moveTo(gui::MoveTo::kHardEOL, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveToBOF) {
+            editor_widget->moveTo(gui::MoveTo::kBOF, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveToEOF) {
+            editor_widget->moveTo(gui::MoveTo::kEOF, extend);
+            handled = true;
+        }
+        if (action == app::Action::kInsertNewline) {
+            editor_widget->insertText("\n");
+            handled = true;
+        }
+        if (action == app::Action::kInsertTab) {
+            editor_widget->insertText("    ");
+            handled = true;
+        }
+        if (action == app::Action::kLeftDelete) {
+            editor_widget->leftDelete();
+            handled = true;
+        }
     }
-    if (action == app::Action::kMoveBackwardByCharacters) {
-        editor_widget->move(gui::MoveBy::kCharacters, false, extend);
-        redraw();
-    }
-    if (action == app::Action::kMoveForwardByLines) {
-        editor_widget->move(gui::MoveBy::kLines, true, extend);
-        redraw();
-    }
-    if (action == app::Action::kMoveBackwardByLines) {
-        editor_widget->move(gui::MoveBy::kLines, false, extend);
-        redraw();
-    }
-    if (action == app::Action::kMoveToHardBOL) {
-        editor_widget->moveTo(gui::MoveTo::kHardBOL, extend);
-        redraw();
-    }
-    if (action == app::Action::kMoveToHardEOL) {
-        editor_widget->moveTo(gui::MoveTo::kHardEOL, extend);
-        redraw();
-    }
-    if (action == app::Action::kMoveToBOF) {
-        editor_widget->moveTo(gui::MoveTo::kBOF, extend);
-        redraw();
-    }
-    if (action == app::Action::kMoveToEOF) {
-        editor_widget->moveTo(gui::MoveTo::kEOF, extend);
-        redraw();
-    }
-    if (action == app::Action::kInsertNewline) {
-        editor_widget->insertText("\n");
-        redraw();
-    }
-    if (action == app::Action::kInsertTab) {
-        editor_widget->insertText("    ");
-        redraw();
-    }
-    if (action == app::Action::kLeftDelete) {
-        editor_widget->leftDelete();
+
+    if (handled) {
         redraw();
     }
 }

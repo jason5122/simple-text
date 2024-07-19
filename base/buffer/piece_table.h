@@ -9,8 +9,8 @@ class PieceTable {
 public:
     PieceTable(std::string_view str);
 
-    void insert(size_t start, std::string_view str);
-    void erase(size_t pos, size_t count);
+    void insert(size_t index, std::string_view str);
+    void erase(size_t index, size_t count);
     std::string str();
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);

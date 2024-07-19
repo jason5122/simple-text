@@ -29,7 +29,7 @@ TEST(PieceTableTest, InsertAtBeginningOfString2) {
     base::PieceTable table{str};
 
     const std::string s1 = "String1 ";
-    for (size_t i = 0; i < 5; i++) {
+    for (size_t n = 0; n < 5; n++) {
         str.insert(0, s1);
         table.insert(0, s1);
         EXPECT_EQ(str, table.str());
@@ -159,6 +159,26 @@ TEST(PieceTableTest, InsertAtEnd2) {
     EXPECT_EQ(str, table.str());
 }
 
+TEST(PieceTableTest, InsertCustomTest1) {
+    std::string str = "";
+    base::PieceTable table{str};
+
+    const std::string s1 = "R7";
+    str.insert(0, s1);
+    table.insert(0, s1);
+    EXPECT_EQ(str, table.str());
+
+    const std::string s2 = "nB";
+    str.insert(1, s2);
+    table.insert(1, s2);
+    EXPECT_EQ(str, table.str());
+
+    const std::string s3 = "6D";
+    str.insert(2, s3);
+    table.insert(2, s3);
+    EXPECT_EQ(str, table.str());
+}
+
 static std::string RandomString(size_t length) {
     std::random_device rd;
     std::mt19937 gen{rd()};
@@ -177,14 +197,27 @@ static std::string RandomString(size_t length) {
     return str;
 }
 
-TEST(PieceTableTest, InsertRandom) {
-    std::string str = "The quick brown fox\njumped over the lazy dog";
+// Randomly inserts 100 alphanumeric strings of length [0, 10] at index [0, length).
+TEST(PieceTableTest, InsertAtRandom) {
+    std::string str = "";
     base::PieceTable table{str};
 
-    for (size_t i = 0; i < 100; i++) {
-        const std::string random_str = RandomString(10);
-        str.insert(0, random_str);
-        table.insert(0, random_str);
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+
+    constexpr int max_string_len = 10;
+    std::uniform_int_distribution<> len_distr{0, max_string_len};
+
+    for (size_t n = 0; n < 100; n++) {
+        const int max_index = std::max(0, static_cast<int>(str.length()) - 1);
+        std::uniform_int_distribution<> index_distr{0, max_index};
+
+        size_t len = len_distr(gen);
+        const std::string random_str = RandomString(len);
+
+        size_t index = index_distr(gen);
+        str.insert(index, random_str);
+        table.insert(index, random_str);
         EXPECT_EQ(str, table.str());
     }
 }

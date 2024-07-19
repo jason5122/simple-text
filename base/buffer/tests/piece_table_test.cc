@@ -8,6 +8,7 @@ TEST(PieceTableTest, Init) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertAtBeginningOfString1) {
@@ -18,10 +19,12 @@ TEST(PieceTableTest, InsertAtBeginningOfString1) {
     str.insert(0, s1);
     table.insert(0, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     str.insert(0, s1);
     table.insert(0, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertAtBeginningOfString2) {
@@ -33,6 +36,7 @@ TEST(PieceTableTest, InsertAtBeginningOfString2) {
         str.insert(0, s1);
         table.insert(0, s1);
         EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
     }
 }
 
@@ -44,11 +48,13 @@ TEST(PieceTableTest, InsertAtBeginningOfPiece1) {
     str.insert(0, s1);
     table.insert(0, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s2 = "String2 ";
     str.insert(s1.length(), s2);
     table.insert(s1.length(), s2);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertAtBeginningOfPiece2) {
@@ -59,21 +65,25 @@ TEST(PieceTableTest, InsertAtBeginningOfPiece2) {
     str.insert(0, s1);
     table.insert(0, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s2 = "String2 ";
     str.insert(s1.length(), s2);
     table.insert(s1.length(), s2);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s3 = "String3 ";
     str.insert(s1.length(), s3);
     table.insert(s1.length(), s3);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s4 = "String4 ";
     str.insert(s1.length() + s2.length(), s4);
     table.insert(s1.length() + s2.length(), s4);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertAtMiddleOfPiece1) {
@@ -84,11 +94,13 @@ TEST(PieceTableTest, InsertAtMiddleOfPiece1) {
     str.insert(20, s1);
     table.insert(20, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s2 = " and nimble";
     str.insert(9, s2);
     table.insert(9, s2);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertAtMiddleOfPiece2) {
@@ -99,26 +111,31 @@ TEST(PieceTableTest, InsertAtMiddleOfPiece2) {
     str.insert(20, s1);
     table.insert(20, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s2 = " and nimble";
     str.insert(9, s2);
     table.insert(9, s2);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s3 = " sneaky,";
     str.insert(3, s3);
     table.insert(3, s3);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s4 = "String4";
     str.insert(30, s4);
     table.insert(30, s4);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s5 = "String5";
     str.insert(15, s5);
     table.insert(15, s5);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertAtEnd1) {
@@ -130,6 +147,7 @@ TEST(PieceTableTest, InsertAtEnd1) {
     str.insert(len, s1);
     table.insert(len, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertAtEnd2) {
@@ -141,22 +159,26 @@ TEST(PieceTableTest, InsertAtEnd2) {
     str.insert(len1, s1);
     table.insert(len1, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s2 = "went to the park and\n";
     str.insert(20, s2);
     table.insert(20, s2);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s3 = " and nimble";
     str.insert(9, s3);
     table.insert(9, s3);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s4 = " from the dog\n";
     size_t len2 = str.length();
     str.insert(len2, s4);
     table.insert(len2, s4);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, InsertCustomTest1) {
@@ -167,16 +189,19 @@ TEST(PieceTableTest, InsertCustomTest1) {
     str.insert(0, s1);
     table.insert(0, s1);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s2 = "nB";
     str.insert(1, s2);
     table.insert(1, s2);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     const std::string s3 = "6D";
     str.insert(2, s3);
     table.insert(2, s3);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 static std::string RandomString(size_t length) {
@@ -219,6 +244,7 @@ TEST(PieceTableTest, InsertAtRandom) {
         str.insert(index, random_str);
         table.insert(index, random_str);
         EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
     }
 }
 
@@ -239,4 +265,5 @@ TEST(PieceTableTest, InsertAtRandom) {
 
 //     std::cerr << table << '\n';
 // }
+
 }

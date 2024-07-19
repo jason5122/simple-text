@@ -5,7 +5,7 @@
 
 namespace base {
 
-PieceTable::PieceTable(std::string_view str) : original{str} {
+PieceTable::PieceTable(std::string_view str) : original{str}, _length{str.length()} {
     pieces.emplace_front(Piece{
         .source = PieceSource::Original,
         .start = 0,
@@ -14,6 +14,11 @@ PieceTable::PieceTable(std::string_view str) : original{str} {
 }
 
 void PieceTable::insert(size_t index, std::string_view str) {
+    if (index > length()) {
+        std::cerr << "PieceTable::insert() out of range error: index > length()\n";
+        std::abort();
+    }
+
     auto it = pieces.begin();
     size_t offset = 0;
     while (it != pieces.end()) {
@@ -27,7 +32,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
     }
 
     if (it == pieces.end()) {
-        std::cerr << "PieceTable::insert() out of range error: index > size()\n";
+        std::cerr << "PieceTable::insert() out of range error: index > length()\n";
         std::abort();
     }
 
@@ -38,6 +43,9 @@ void PieceTable::insert(size_t index, std::string_view str) {
     // Append string to `add` buffer.
     size_t add_start = add.length();
     add += str;
+
+    // Update length.
+    _length += str.length();
 
     // Case 1: Beginning/end of a piece. We only need to add a single piece.
     if (index == piece_start || index == piece_end) {
@@ -87,6 +95,10 @@ void PieceTable::erase(size_t index, size_t count) {
             break;
         }
     }
+}
+
+size_t PieceTable::length() {
+    return _length;
 }
 
 std::string PieceTable::str() {

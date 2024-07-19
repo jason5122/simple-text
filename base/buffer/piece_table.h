@@ -11,6 +11,7 @@ public:
 
     void insert(size_t index, std::string_view str);
     void erase(size_t index, size_t count);
+    size_t length();
     std::string str();
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
@@ -31,6 +32,7 @@ private:
     std::string original;
     std::string add;
     std::list<Piece> pieces;
+    size_t _length = 0;
 };
 
 }

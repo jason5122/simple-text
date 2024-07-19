@@ -248,22 +248,58 @@ TEST(PieceTableTest, InsertAtRandom) {
     }
 }
 
-// TEST(PieceTableTest, EraseAtMiddleOfPiece1) {
-//     std::string str = "The quick brown fox\njumped over the lazy dog";
-//     base::PieceTable table{str};
+TEST(PieceTableTest, EraseAtMiddleOfPiece1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
 
-//     str.erase(3, 6);
-//     table.erase(3, 6);
-//     EXPECT_EQ(str, table.str());
+    str.erase(3, 6);
+    table.erase(3, 6);
+    EXPECT_EQ(str, table.str());
 
-//     // std::cerr << str << '\n';
-//     // std::cerr << table.str() << '\n';
+    str.erase(4, 10);
+    table.erase(4, 10);
+    EXPECT_EQ(str, table.str());
+}
 
-//     // str.erase(4, 10);
-//     // table.erase(4, 10);
-//     // EXPECT_EQ(str, table.str());
+TEST(PieceTableTest, EraseAtMiddleOfPiece2) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
 
-//     std::cerr << table << '\n';
-// }
+    str.erase(3, 6);
+    table.erase(3, 6);
+    EXPECT_EQ(str, table.str());
+
+    str.erase(4, 10);
+    table.erase(4, 10);
+    EXPECT_EQ(str, table.str());
+
+    std::cerr << table << '\n';
+
+    str.erase(4, 21);
+    table.erase(4, 21);
+    EXPECT_EQ(str, table.str());
+
+    std::cerr << str << '\n';
+    std::cerr << table << '\n';
+}
+
+TEST(PieceTableTest, EraseBeyondOnePiece1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    const std::string s1 = " and nimble";
+    str.insert(9, s1);
+    table.insert(9, s1);
+    EXPECT_EQ(str, table.str());
+
+    std::cerr << table << '\n';
+
+    str.erase(4, 17);
+    table.erase(4, 17);
+    EXPECT_EQ(str, table.str());
+
+    std::cerr << str << '\n';
+    std::cerr << table << '\n';
+}
 
 }

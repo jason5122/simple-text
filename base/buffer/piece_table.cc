@@ -78,22 +78,75 @@ void PieceTable::insert(size_t index, std::string_view str) {
 }
 
 void PieceTable::erase(size_t index, size_t count) {
-    for (auto it = pieces.begin(); it != pieces.end(); it++) {
-        // Split piece into two pieces.
-        auto& p1 = *it;
-        if (index >= p1.start && index + count < p1.start + p1.length) {
-            size_t old_length = p1.length;
-            p1.length = index - p1.start;
+    if (index > length()) {
+        std::cerr << "PieceTable::erase() out of range error: index > length()\n";
+        std::abort();
+    }
 
-            const Piece p2{
-                .source = p1.source,
-                .start = index + count,
-                .length = old_length - count,
-            };
-
-            pieces.insert(it, p2);
+    auto it = pieces.begin();
+    size_t offset = 0;
+    while (it != pieces.end()) {
+        size_t piece_start = offset;
+        size_t piece_end = offset + (*it).length;
+        if (piece_start <= index && index <= piece_end) {
             break;
         }
+        offset += (*it).length;
+        it++;
+    }
+
+    if (it == pieces.end()) {
+        std::cerr << "PieceTable::erase() out of range error: index > length()\n";
+        std::abort();
+    }
+
+    Piece& p1 = *it;
+    size_t piece_start = offset;
+    size_t piece_end = offset + (*it).length;
+
+    // Case 1 Middle of a piece. We need to split one piece into two pieces.
+    if (piece_start <= index && index + count <= piece_end) {
+        std::cerr << "Case 1\n";
+        size_t p1_old_length = p1.length;
+        p1.length = index - piece_start;
+
+        const Piece p2{
+            .source = p1.source,
+            .start = p1.start + p1.length + count,
+            .length = p1_old_length - count,
+        };
+        pieces.insert(std::next(it), p2);
+        return;
+    }
+
+    // Case 2: Erase spans multiple pieces.
+    std::cerr << "Case 2\n";
+    auto start_it = it;  // TODO: See if we can do this in a cleaner way.
+    while (it != pieces.end() && count > 0) {
+        Piece& piece = *it;
+        size_t piece_start = offset;
+        size_t piece_end = offset + (*it).length;
+
+        // TODO: See if we can do this in a cleaner way.
+        bool temp = true;
+        if (it == start_it) {
+            piece_start = index;
+            temp = false;
+            std::cerr << "...no...\n";
+        }
+
+        std::cerr << std::format("{{{}, {}}}\n", piece_end - piece_start, count);
+        size_t sub = std::min(piece_end - piece_start, count);
+        if (count >= sub) {
+            std::cerr << std::format("Updating piece length from {} to {}\n", piece.length,
+                                     piece.length - sub);
+            if (temp) piece.start += sub;
+            piece.length -= sub;
+            count -= sub;
+        }
+
+        offset += (*it).length;
+        it++;
     }
 }
 

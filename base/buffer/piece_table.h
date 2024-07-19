@@ -1,6 +1,6 @@
 #pragma once
 
-#include <forward_list>
+#include <list>
 #include <string>
 
 namespace base {
@@ -25,12 +25,12 @@ private:
         PieceSource source;
         size_t start;
         size_t length;
-        std::forward_list<size_t> line_starts;
+        std::list<size_t> line_starts;
     };
 
     std::string original;
     std::string add;
-    std::forward_list<Piece> pieces;
+    std::list<Piece> pieces;
 };
 
 }

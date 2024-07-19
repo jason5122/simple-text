@@ -18,8 +18,6 @@ void PieceTable::insert(size_t start, std::string_view str) {
     size_t piece_start = 0;
     size_t piece_end = (*it).length;
     while (it != pieces.end() && start > piece_end) {
-        std::cerr << std::format("Current piece: Piece(start={}, length={})\n", (*it).start,
-                                 (*it).length);
         piece_start += (*it).length;
         piece_end = piece_start + (*it).length;
         it++;
@@ -30,39 +28,25 @@ void PieceTable::insert(size_t start, std::string_view str) {
         return;
     }
 
-    Piece& p1 = *it;
+    // Append string to `add` buffer.
     size_t add_start = add.length();
     add += str;
 
-    // Case 1: Beginning of a piece. We only need to add a single piece.
-    if (start == piece_start) {
-        std::cerr << "Case 1\n";
+    Piece& p1 = *it;
 
-        const Piece p0{
+    // Case 1: Beginning/end of a piece. We only need to add a single piece.
+    if (start == piece_start || start == piece_end) {
+        const Piece p{
             .source = PieceSource::Add,
             .start = add_start,
             .length = str.length(),
         };
-        pieces.insert(it, p0);
+        auto pos = start == piece_start ? it : std::next(it);
+        pieces.insert(pos, p);
     }
-    // Case 2: End of a piece. We only need to add a single piece.
-    else if (start == piece_end) {
-        std::cerr << "Case 2\n";
-
-        const Piece p0{
-            .source = PieceSource::Add,
-            .start = add_start,
-            .length = str.length(),
-        };
-        pieces.insert(std::next(it), p0);
-    }
-    // Case 3: Middle of a piece. We need to split one piece into three pieces.
+    // Case 2: Middle of a piece. We need to split one piece into three pieces.
     else {
-        std::cerr << "Case 3\n";
-        std::cerr << std::format("Chosen piece: Piece(start={}, length={})\n", p1.start,
-                                 p1.length);
-
-        size_t old_length = p1.length;
+        size_t p1_old_length = p1.length;
         p1.length = start - piece_start;
 
         const Piece p2{
@@ -70,16 +54,10 @@ void PieceTable::insert(size_t start, std::string_view str) {
             .start = add_start,
             .length = str.length(),
         };
-
-        std::cerr << std::format("[{}, {}]\n", piece_start, piece_end);
-        if (old_length < start) {
-            std::cerr << std::format("{} < {}\n", old_length, start);
-        }
         const Piece p3{
             .source = PieceSource::Original,
             .start = p1.start + p1.length,
-            // .length = old_length - start,
-            .length = piece_end - start,
+            .length = p1_old_length - p1.length,
         };
         auto it2 = pieces.insert(std::next(it), p2);
         pieces.insert(std::next(it2), p3);

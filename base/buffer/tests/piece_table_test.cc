@@ -1,5 +1,6 @@
 #include "base/buffer/piece_table.h"
 #include "gtest/gtest.h"
+#include <random>
 
 namespace base {
 
@@ -94,72 +95,99 @@ TEST(PieceTableTest, InsertAtMiddleOfPiece2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
 
-    std::cerr << str << '\n';
-    std::cerr << table << '\n';
-
     const std::string s1 = "went to the park and\n";
     str.insert(20, s1);
     table.insert(20, s1);
     EXPECT_EQ(str, table.str());
-
-    std::cerr << str << '\n';
-    std::cerr << table << '\n';
 
     const std::string s2 = " and nimble";
     str.insert(9, s2);
     table.insert(9, s2);
     EXPECT_EQ(str, table.str());
 
-    std::cerr << str << '\n';
-    std::cerr << table << '\n';
-
     const std::string s3 = " sneaky,";
     str.insert(3, s3);
     table.insert(3, s3);
     EXPECT_EQ(str, table.str());
-
-    std::cerr << str << '\n';
-    std::cerr << table << '\n';
 
     const std::string s4 = "String4";
     str.insert(30, s4);
     table.insert(30, s4);
     EXPECT_EQ(str, table.str());
 
-    std::cerr << str << '\n';
-    std::cerr << table << '\n';
-
-    // std::string str2 = "The sneaky, quick and nimble brown fox\nwent to the park and\njumped "
-    //                    "over the lazy dog";
-    // PieceTable table2{str2};
-
-    // const std::string s4 = "String4";
-    // str2.insert(30, s4);
-    // table2.insert(30, s4);
-    // EXPECT_EQ(str2, table2.str());
-
-    // std::cerr << str2 << '\n';
-    // std::cerr << table2 << '\n';
-
-    // str.insert(15, s2);
-    // table.insert(15, s2);
-    // EXPECT_EQ(str, table.str());
-
-    // std::cerr << table << '\n';
+    const std::string s5 = "String5";
+    str.insert(15, s5);
+    table.insert(15, s5);
+    EXPECT_EQ(str, table.str());
 }
 
-// TEST(PieceTableTest, InsertAtEnd1) {
-//     std::string str = "The quick brown fox\njumped over the lazy dog";
-//     base::PieceTable table{str};
+TEST(PieceTableTest, InsertAtEnd1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
 
-//     const std::string s1 = " and walked away\n";
-//     size_t len = str.length();
-//     str.insert(len, s1);
-//     table.insert(len, s1);
-//     EXPECT_EQ(str, table.str());
+    const std::string s1 = " and walked away\n";
+    size_t len = str.length();
+    str.insert(len, s1);
+    table.insert(len, s1);
+    EXPECT_EQ(str, table.str());
+}
 
-//     std::cerr << table << '\n';
-// }
+TEST(PieceTableTest, InsertAtEnd2) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    const std::string s1 = " and walked away\n";
+    size_t len1 = str.length();
+    str.insert(len1, s1);
+    table.insert(len1, s1);
+    EXPECT_EQ(str, table.str());
+
+    const std::string s2 = "went to the park and\n";
+    str.insert(20, s2);
+    table.insert(20, s2);
+    EXPECT_EQ(str, table.str());
+
+    const std::string s3 = " and nimble";
+    str.insert(9, s3);
+    table.insert(9, s3);
+    EXPECT_EQ(str, table.str());
+
+    const std::string s4 = " from the dog\n";
+    size_t len2 = str.length();
+    str.insert(len2, s4);
+    table.insert(len2, s4);
+    EXPECT_EQ(str, table.str());
+}
+
+static std::string RandomString(size_t length) {
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+
+    auto random_char = [&gen]() -> char {
+        srand(time(nullptr));
+        static constexpr std::string_view charset = "0123456789"
+                                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                                    "abcdefghijklmnopqrstuvwxyz";
+        std::uniform_int_distribution<> distr{0, charset.length() - 1};
+        size_t i = distr(gen);
+        return charset.at(i);
+    };
+    std::string str(length, 0);
+    std::generate_n(str.begin(), length, random_char);
+    return str;
+}
+
+TEST(PieceTableTest, InsertRandom) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    for (size_t i = 0; i < 100; i++) {
+        const std::string random_str = RandomString(10);
+        str.insert(0, random_str);
+        table.insert(0, random_str);
+        EXPECT_EQ(str, table.str());
+    }
+}
 
 // TEST(PieceTableTest, EraseAtMiddleOfPiece1) {
 //     std::string str = "The quick brown fox\njumped over the lazy dog";

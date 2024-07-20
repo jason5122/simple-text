@@ -106,47 +106,42 @@ void PieceTable::erase(size_t index, size_t count) {
 
     // Case 1 Middle of a piece. We need to split one piece into two pieces.
     if (piece_start <= index && index + count <= piece_end) {
-        std::cerr << "Case 1\n";
         size_t p1_old_length = p1.length;
         p1.length = index - piece_start;
 
         const Piece p2{
             .source = p1.source,
             .start = p1.start + p1.length + count,
-            .length = p1_old_length - count,
+            .length = p1_old_length - (p1.length + count),
         };
         pieces.insert(std::next(it), p2);
-        return;
+
+        _length -= count;
     }
-
     // Case 2: Erase spans multiple pieces.
-    std::cerr << "Case 2\n";
-    auto start_it = it;  // TODO: See if we can do this in a cleaner way.
-    while (it != pieces.end() && count > 0) {
-        Piece& piece = *it;
-        size_t piece_start = offset;
-        size_t piece_end = offset + (*it).length;
+    else {
+        // Erase from the first piece without updating the piece's start.
+        size_t sub = std::min(piece_end - index, count);
+        p1.length -= sub;
+        count -= sub;
+        _length -= sub;
+        it++;
 
-        // TODO: See if we can do this in a cleaner way.
-        bool temp = true;
-        if (it == start_it) {
-            piece_start = index;
-            temp = false;
-            std::cerr << "...no...\n";
-        }
+        // Erase from next pieces until `count` is exhausted, updating each piece's start.
+        while (it != pieces.end() && count > 0) {
+            Piece& piece = *it;
+            size_t piece_start = offset;
+            size_t piece_end = offset + (*it).length;
 
-        std::cerr << std::format("{{{}, {}}}\n", piece_end - piece_start, count);
-        size_t sub = std::min(piece_end - piece_start, count);
-        if (count >= sub) {
-            std::cerr << std::format("Updating piece length from {} to {}\n", piece.length,
-                                     piece.length - sub);
-            if (temp) piece.start += sub;
+            size_t sub = std::min(piece_end - piece_start, count);
+            piece.start += sub;
             piece.length -= sub;
             count -= sub;
-        }
+            _length -= sub;
 
-        offset += (*it).length;
-        it++;
+            offset += (*it).length;
+            it++;
+        }
     }
 }
 

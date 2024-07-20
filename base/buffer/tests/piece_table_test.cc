@@ -248,6 +248,18 @@ TEST(PieceTableTest, InsertAtRandom) {
     }
 }
 
+TEST(PieceTableTest, EraseAtBeginning1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    while (str.length() > 0) {
+        str.erase(0, 1);
+        table.erase(0, 1);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+    }
+}
+
 TEST(PieceTableTest, EraseAtMiddleOfPiece1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
@@ -255,10 +267,12 @@ TEST(PieceTableTest, EraseAtMiddleOfPiece1) {
     str.erase(3, 6);
     table.erase(3, 6);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     str.erase(4, 10);
     table.erase(4, 10);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, EraseAtMiddleOfPiece2) {
@@ -268,19 +282,17 @@ TEST(PieceTableTest, EraseAtMiddleOfPiece2) {
     str.erase(3, 6);
     table.erase(3, 6);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
     str.erase(4, 10);
     table.erase(4, 10);
     EXPECT_EQ(str, table.str());
-
-    std::cerr << table << '\n';
+    EXPECT_EQ(str.length(), table.length());
 
     str.erase(4, 21);
     table.erase(4, 21);
     EXPECT_EQ(str, table.str());
-
-    std::cerr << str << '\n';
-    std::cerr << table << '\n';
+    EXPECT_EQ(str.length(), table.length());
 }
 
 TEST(PieceTableTest, EraseBeyondOnePiece1) {
@@ -291,15 +303,134 @@ TEST(PieceTableTest, EraseBeyondOnePiece1) {
     str.insert(9, s1);
     table.insert(9, s1);
     EXPECT_EQ(str, table.str());
-
-    std::cerr << table << '\n';
+    EXPECT_EQ(str.length(), table.length());
 
     str.erase(4, 17);
     table.erase(4, 17);
     EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
 
-    std::cerr << str << '\n';
-    std::cerr << table << '\n';
+TEST(PieceTableTest, EraseBeyondOnePiece2) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    const std::string s1 = "String1";
+    str.insert(0, s1);
+    table.insert(0, s1);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(1, str.length());
+    table.erase(1, table.length());
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
+
+TEST(PieceTableTest, EraseBeyondOnePiece3) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    const std::string s1 = "String1";
+    str.insert(10, s1);
+    table.insert(10, s1);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(0, 9999);
+    table.erase(0, 9999);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
+
+TEST(PieceTableTest, EraseCustomTest1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    str.erase(25, 44);
+    table.erase(25, 44);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(9, 14);
+    table.erase(9, 14);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
+
+TEST(PieceTableTest, EraseCustomTest2) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    str.erase(3, 2);
+    table.erase(3, 2);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(7, 15);
+    table.erase(7, 15);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(4, 4);
+    table.erase(4, 4);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(22, 7);
+    table.erase(22, 7);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
+
+TEST(PieceTableTest, EraseCustomTest3) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    str.erase(1, 40);
+    table.erase(1, 40);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(1, 0);
+    table.erase(1, 0);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(1, 2);
+    table.erase(1, 2);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(2, 0);
+    table.erase(2, 0);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
+
+// Randomly erases 10 times from the string at index [0, length] and count [0, length).
+// We repeat this for 100 iterations.
+TEST(PieceTableTest, EraseAtRandom) {
+    constexpr std::string_view original_str = "The quick brown fox\njumped over the lazy dog";
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+
+    for (size_t n = 0; n < 100; n++) {
+        std::string str{original_str};
+        base::PieceTable table{original_str};
+
+        for (size_t i = 0; i < 10; i++) {
+            std::uniform_int_distribution<> index_distr{0, static_cast<int>(str.length())};
+            std::uniform_int_distribution<> count_distr{0, static_cast<int>(str.length())};
+            size_t index = index_distr(gen);
+            size_t count = count_distr(gen);
+
+            str.erase(index, count);
+            table.erase(index, count);
+            EXPECT_EQ(str, table.str());
+            EXPECT_EQ(str.length(), table.length());
+        }
+    }
 }
 
 }

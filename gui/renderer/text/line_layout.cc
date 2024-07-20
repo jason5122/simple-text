@@ -1,3 +1,4 @@
+#include "base/numeric/saturation_arithmetic.h"
 #include "line_layout.h"
 #include <algorithm>
 #include <numeric>
@@ -55,7 +56,7 @@ LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x
     size_t line = (*caret).line;
 
     if (forward) {
-        if (line < newline_offsets.size()) line++;  // Saturating addition;
+        line = base::add_sat(line, 1UL);
     } else {
         // Edge case.
         // TODO: See if we can handle this cleaner.
@@ -63,8 +64,9 @@ LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x
             return begin();
         }
 
-        if (line > 0) line--;  // Saturating subtraction.
+        line = base::sub_sat(line, 1UL);
     }
+    line = std::clamp(line, 0UL, newline_offsets.size());
 
     for (auto it = getLine(line); it != getLine(line + 1); it++) {
         const auto& token = *it;

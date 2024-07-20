@@ -1,3 +1,4 @@
+#include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
 #include "text_view_widget.h"
 #include <cmath>
@@ -134,8 +135,8 @@ void TextViewWidget::draw() {
 
     // Render one line before start and one line after end. This ensures no sudden cutoff of
     // rendered text.
-    if (start_line > 0) start_line--;                               // Saturating subtraction.
-    if (end_line < std::numeric_limits<size_t>::max()) end_line++;  // Saturating addition;
+    start_line = base::sub_sat(start_line, 1UL);
+    end_line = base::add_sat(end_line, 1UL);
 
     start_line = std::clamp(start_line, 0UL, buffer.lineCount());
     end_line = std::clamp(end_line, 0UL, buffer.lineCount());

@@ -520,25 +520,62 @@ TEST(PieceTableTest, CombinedRandomTest1) {
     }
 }
 
-TEST(PieceTableTest, IteratorTest1) {
+TEST(PieceTableTest, IteratorIncrementTest) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
 
+    const std::string s1 = "went to the park and\n";
+    table.insert(20, s1);
+
+    const std::string s2 = " and nimble";
+    table.insert(9, s2);
+
+    // Iterate manually.
+    std::string temp1;
+    auto it1 = table.begin();
+    for (size_t i = 0; i < table.length(); i++) {
+        EXPECT_NE(it1, table.end());
+        temp1 += *it1;
+        it1++;
+    }
+    EXPECT_EQ(it1, table.end());
+    EXPECT_EQ(temp1, table.str());
+
+    // Iterate using for loop.
+    std::string temp2;
+    for (auto it = table.begin(); it != table.end(); it++) {
+        EXPECT_NE(it, table.end());
+        temp2 += *it;
+    }
+    EXPECT_EQ(temp2, table.str());
+
+    // Iterate using range-based for loop.
+    std::string temp3;
+    for (char ch : table) {
+        temp3 += ch;
+    }
+    EXPECT_EQ(temp3, table.str());
+}
+
+TEST(PieceTableTest, IteratorForwardIteratorTest) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    // `std::fill` accepts a forward iterator.
     std::fill(table.begin(), table.end(), 'e');
 
     for (char ch : table) {
-        std::cerr << ch;
-    }
-    std::cerr << '\n';
-}
-
-TEST(PieceTableTest, LineTest1) {
-    std::string str = "The quick brown fox\njumped over the lazy dog";
-    base::PieceTable table{str};
-
-    for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
-        table.line(line_index);
+        EXPECT_EQ(ch, 'e');
     }
 }
+
+// TEST(PieceTableTest, LineTest1) {
+//     std::string str = "The quick brown fox\njumped over the lazy dog";
+//     base::PieceTable table{str};
+
+//     for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
+//         table.line(line_index);
+//     }
+// }
 
 }

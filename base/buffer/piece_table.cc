@@ -22,14 +22,6 @@ PieceTable::PieceTable(std::string_view str) : original{str}, _length{str.length
     });
 }
 
-PieceTable::Iterator PieceTable::begin() {
-    return Iterator(&original[0]);
-}
-
-PieceTable::Iterator PieceTable::end() {
-    return Iterator(&original[original.size()]);
-}
-
 void PieceTable::insert(size_t index, std::string_view str) {
     if (index > length()) {
         std::cerr << "PieceTable::insert() out of range error: index > length()\n";
@@ -209,16 +201,32 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
     return out;
 }
 
+PieceTable::Iterator PieceTable::begin() {
+    return Iterator{*this, pieces.begin(), 0};
+}
+
+PieceTable::Iterator PieceTable::end() {
+    return Iterator{*this, pieces.end(), 0};
+}
+
 PieceTable::Iterator::reference PieceTable::Iterator::operator*() const {
-    return *_ptr;
+    size_t i = piece_it->start + piece_index;
+    std::string& buffer = piece_it->source == PieceSource::Original ? table.original : table.add;
+    return buffer[i];
 }
 
 PieceTable::Iterator::pointer PieceTable::Iterator::operator->() {
-    return _ptr;
+    size_t i = piece_it->start + piece_index;
+    std::string& buffer = piece_it->source == PieceSource::Original ? table.original : table.add;
+    return &buffer[i];
 }
 
 PieceTable::Iterator& PieceTable::Iterator::operator++() {
-    _ptr++;
+    ++piece_index;
+    if (piece_index == piece_it->length) {
+        piece_index = 0;
+        ++piece_it;
+    }
     return *this;
 }
 
@@ -229,11 +237,11 @@ PieceTable::Iterator PieceTable::Iterator::operator++(int) {
 }
 
 bool operator==(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
-    return a._ptr == b._ptr;
+    return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
 }
 
 bool operator!=(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
-    return a._ptr != b._ptr;
+    return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
 }
 
 }

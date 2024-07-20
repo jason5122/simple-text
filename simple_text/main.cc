@@ -1,8 +1,8 @@
-#include "build/buildflag.h"
+#include "build/build_config.h"
 
 int SimpleTextMain(int argc, char* argv[]);
 
-#if IS_WIN
+#if BUILDFLAG(IS_WIN)
 #include <shellscalingapi.h>
 #include <windows.h>
 

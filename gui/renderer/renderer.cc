@@ -1,4 +1,4 @@
-#include "build/buildflag.h"
+#include "build/build_config.h"
 #include "renderer.h"
 
 #include "opengl/gl.h"
@@ -6,10 +6,10 @@ using namespace opengl;
 
 // TODO: Properly load this from settings.
 namespace {
-#if IS_MAC
+#if BUILDFLAG(IS_MAC)
 constexpr int kMainFontSize = 16 * 2;
 constexpr std::string kMainFontFace = "SF Pro Text";
-#elif IS_WIN || IS_LINUX
+#elif BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
 constexpr int kMainFontSize = 12 * 2;
 constexpr std::string kMainFontFace = "Arial";
 #endif

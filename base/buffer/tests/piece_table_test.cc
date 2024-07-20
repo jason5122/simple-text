@@ -520,4 +520,25 @@ TEST(PieceTableTest, CombinedRandomTest1) {
     }
 }
 
+TEST(PieceTableTest, IteratorTest1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    std::fill(table.begin(), table.end(), 'e');
+
+    for (char ch : table) {
+        std::cerr << ch;
+    }
+    std::cerr << '\n';
+}
+
+TEST(PieceTableTest, LineTest1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
+        table.line(line_index);
+    }
+}
+
 }

@@ -6,11 +6,28 @@
 namespace base {
 
 PieceTable::PieceTable(std::string_view str) : original{str}, _length{str.length()} {
+    std::list<size_t> line_starts;
+    for (size_t i = 0; i < str.length(); i++) {
+        if (str[i] == '\n') {
+            line_starts.emplace_back(i);
+        }
+    }
+    _line_count = line_starts.size();
+
     pieces.emplace_front(Piece{
         .source = PieceSource::Original,
         .start = 0,
         .length = str.length(),
+        .line_starts = std::move(line_starts),
     });
+}
+
+PieceTable::Iterator PieceTable::begin() {
+    return Iterator(&original[0]);
+}
+
+PieceTable::Iterator PieceTable::end() {
+    return Iterator(&original[original.size()]);
 }
 
 void PieceTable::insert(size_t index, std::string_view str) {
@@ -149,6 +166,11 @@ size_t PieceTable::length() {
     return _length;
 }
 
+size_t PieceTable::lineCount() {
+    // TODO: See if adding an extra line is the right implementation.
+    return _line_count + 1;
+}
+
 std::string PieceTable::str() {
     std::string result;
     for (const auto& piece : pieces) {
@@ -156,6 +178,19 @@ std::string PieceTable::str() {
         result += buffer.substr(piece.start, piece.length);
     }
     return result;
+}
+
+std::string PieceTable::line(size_t line_index) {
+    size_t curr_index = 0;
+    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+        for (size_t line_start : (*it).line_starts) {
+            curr_index++;
+            if (curr_index == line_index + 1) {
+                std::cerr << std::format("line_start = {}\n", line_start);
+            }
+        }
+    }
+    return "";
 }
 
 std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
@@ -172,6 +207,33 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
                            piece.length, source, EscapeSpecialChars(piece_str));
     }
     return out;
+}
+
+PieceTable::Iterator::reference PieceTable::Iterator::operator*() const {
+    return *_ptr;
+}
+
+PieceTable::Iterator::pointer PieceTable::Iterator::operator->() {
+    return _ptr;
+}
+
+PieceTable::Iterator& PieceTable::Iterator::operator++() {
+    _ptr++;
+    return *this;
+}
+
+PieceTable::Iterator PieceTable::Iterator::operator++(int) {
+    Iterator tmp = *this;
+    ++(*this);
+    return tmp;
+}
+
+bool operator==(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
+    return a._ptr == b._ptr;
+}
+
+bool operator!=(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
+    return a._ptr != b._ptr;
 }
 
 }

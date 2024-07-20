@@ -204,6 +204,31 @@ TEST(PieceTableTest, InsertCustomTest1) {
     EXPECT_EQ(str.length(), table.length());
 }
 
+TEST(PieceTableTest, InsertEmpty) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    str.insert(0, "");
+    table.insert(0, "");
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.insert(10, "");
+    table.insert(10, "");
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.insert(18, "");
+    table.insert(18, "");
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.insert(str.length(), "");
+    table.insert(str.length(), "");
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
+
 static std::string RandomString(size_t length) {
     std::random_device rd;
     std::mt19937 gen{rd()};
@@ -408,6 +433,31 @@ TEST(PieceTableTest, EraseCustomTest3) {
     EXPECT_EQ(str.length(), table.length());
 }
 
+TEST(PieceTableTest, EraseEmpty) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    str.erase(1, 0);
+    table.erase(1, 0);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(8, 0);
+    table.erase(8, 0);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(0, 0);
+    table.erase(0, 0);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.erase(str.length(), 0);
+    table.erase(str.length(), 0);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+}
+
 // Randomly erases 10 times from the string at index [0, length] and count [0, length).
 // We repeat this for 100 iterations.
 TEST(PieceTableTest, EraseAtRandom) {
@@ -430,6 +480,43 @@ TEST(PieceTableTest, EraseAtRandom) {
             EXPECT_EQ(str, table.str());
             EXPECT_EQ(str.length(), table.length());
         }
+    }
+}
+
+TEST(PieceTableTest, CombinedRandomTest1) {
+    std::string str = "";
+    base::PieceTable table{str};
+
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+
+    constexpr int max_string_len = 10;
+    std::uniform_int_distribution<> len_distr{0, max_string_len};
+    std::uniform_int_distribution<> count_distr{0, 4};
+
+    for (size_t n = 0; n < 100; n++) {
+        // Randomly insert.
+        const int max_index = std::max(0, static_cast<int>(str.length()) - 1);
+        std::uniform_int_distribution<> index_distr{0, max_index};
+
+        size_t len = len_distr(gen);
+        const std::string random_str = RandomString(len);
+
+        size_t index = index_distr(gen);
+        str.insert(index, random_str);
+        table.insert(index, random_str);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+
+        // Randomly erase.
+        index_distr = std::uniform_int_distribution<>{0, static_cast<int>(str.length())};
+        index = index_distr(gen);
+        size_t count = count_distr(gen);
+
+        str.erase(index, count);
+        table.erase(index, count);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
     }
 }
 

@@ -12,7 +12,7 @@
 using namespace gui;
 
 namespace {
-constexpr std::string repeat(std::string_view sv, size_t times) {
+constexpr std::string Repeat(std::string_view sv, size_t times) {
     std::string result;
     for (size_t i = 0; i < times; i++) {
         result += sv;
@@ -59,7 +59,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
     editor_widget = std::make_shared<EditorWidget>();
     editor_widget->addTab("unicode.txt", kUnicode);
-    editor_widget->addTab("sample_text.txt", repeat(kSampleText, 50) + kLongLine);
+    editor_widget->addTab("sample_text.txt", Repeat(kSampleText, 50) + kLongLine);
     editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     editor_widget->addTab(
         "hello_newline.txt",
@@ -231,7 +231,7 @@ void EditorWindow::onAction(app::Action action, bool extend) {
 
 void EditorWindow::onAppAction(app::AppAction action) {
     if (action == app::AppAction::kNewFile) {
-        editor_widget->addTab("sample_text.txt", repeat(kSampleText, 50) + kLongLine);
+        editor_widget->addTab("sample_text.txt", Repeat(kSampleText, 50) + kLongLine);
         redraw();
     }
     if (action == app::AppAction::kNewWindow) {

@@ -150,12 +150,12 @@ size_t PieceTable::length() {
 }
 
 std::string PieceTable::str() {
-    std::string str;
+    std::string result;
     for (const auto& piece : pieces) {
         const std::string& buffer = piece.source == PieceSource::Original ? original : add;
-        str += buffer.substr(piece.start, piece.length);
+        result += buffer.substr(piece.start, piece.length);
     }
-    return str;
+    return result;
 }
 
 std::ostream& operator<<(std::ostream& out, const PieceTable& table) {

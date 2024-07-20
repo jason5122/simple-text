@@ -9,17 +9,9 @@ namespace base {
 
 class PieceTable {
 private:
-    enum class PieceSource {
-        Original,
-        Add,
-    };
-
-    struct Piece {
-        PieceSource source;
-        size_t start;
-        size_t length;
-        std::list<size_t> line_starts;
-    };
+    // We need to forward declare `Piece` since `Iterator` uses it.
+    // TODO: See if we can come up with a cleaner solution.
+    struct Piece;
 
 public:
     PieceTable(std::string_view str);
@@ -29,7 +21,7 @@ public:
     size_t length();
     size_t lineCount();
     std::string str();
-    std::string line(size_t line_index);  // Zero-indexed.
+    std::string lineContent(size_t line_index);  // Zero-indexed.
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
 
@@ -61,8 +53,21 @@ public:
 
     Iterator begin();
     Iterator end();
+    Iterator line(size_t line_index);  // Zero-indexed.
 
 private:
+    enum class PieceSource {
+        Original,
+        Add,
+    };
+
+    struct Piece {
+        PieceSource source;
+        size_t start;
+        size_t length;
+        std::list<size_t> line_starts;
+    };
+
     std::string original;
     std::string add;
     std::list<Piece> pieces;

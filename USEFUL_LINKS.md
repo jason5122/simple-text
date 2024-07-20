@@ -1,6 +1,7 @@
 # Useful Links
 
 - [UTF-8 encoder/decoder](https://mothereff.in/utf-8)
+- [UTF summary](https://howardhinnant.github.io/utf_summary.html)
 
 ## Text rendering
 

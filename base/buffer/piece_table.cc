@@ -7,6 +7,8 @@ namespace base {
 
 PieceTable::PieceTable(std::string_view str) : original{str}, _length{str.length()} {
     std::list<size_t> line_starts;
+
+    line_starts.emplace_back(0);
     for (size_t i = 0; i < str.length(); i++) {
         if (str[i] == '\n') {
             line_starts.emplace_back(i);
@@ -159,8 +161,7 @@ size_t PieceTable::length() {
 }
 
 size_t PieceTable::lineCount() {
-    // TODO: See if adding an extra line is the right implementation.
-    return _line_count + 1;
+    return _line_count;
 }
 
 std::string PieceTable::str() {
@@ -172,7 +173,7 @@ std::string PieceTable::str() {
     return result;
 }
 
-std::string PieceTable::line(size_t line_index) {
+std::string PieceTable::lineContent(size_t line_index) {
     size_t curr_index = 0;
     for (auto it = pieces.begin(); it != pieces.end(); it++) {
         for (size_t line_start : (*it).line_starts) {
@@ -202,11 +203,29 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
 }
 
 PieceTable::Iterator PieceTable::begin() {
-    return Iterator{*this, pieces.begin(), 0};
+    return {*this, pieces.begin(), 0};
 }
 
 PieceTable::Iterator PieceTable::end() {
-    return Iterator{*this, pieces.end(), 0};
+    return {*this, pieces.end(), 0};
+}
+
+PieceTable::Iterator PieceTable::line(size_t line_index) {
+    size_t count = 0;
+    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+        size_t n = (*it).line_starts.size();
+        if (count + n < line_index) {
+            count += n;
+        } else {
+            for (size_t line_start : (*it).line_starts) {
+                if (count == line_index) {
+                    return {*this, it, line_start};
+                }
+                count++;
+            }
+        }
+    }
+    return end();
 }
 
 PieceTable::Iterator::reference PieceTable::Iterator::operator*() const {

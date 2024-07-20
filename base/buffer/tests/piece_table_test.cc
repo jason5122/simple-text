@@ -524,11 +524,8 @@ TEST(PieceTableTest, IteratorIncrementTest) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
 
-    const std::string s1 = "went to the park and\n";
-    table.insert(20, s1);
-
-    const std::string s2 = " and nimble";
-    table.insert(9, s2);
+    table.insert(20, "went to the park and\n");
+    table.insert(9, " and nimble");
 
     // Iterate manually.
     std::string temp1;
@@ -569,13 +566,53 @@ TEST(PieceTableTest, IteratorForwardIteratorTest) {
     }
 }
 
-// TEST(PieceTableTest, LineTest1) {
-//     std::string str = "The quick brown fox\njumped over the lazy dog";
-//     base::PieceTable table{str};
+TEST(PieceTableTest, IteratorLineTest1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
 
-//     for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
-//         table.line(line_index);
-//     }
-// }
+    EXPECT_EQ(table.lineCount(), 2);
+
+    size_t newline0 = std::distance(table.begin(), table.line(0));
+    EXPECT_EQ(newline0, 0);
+
+    size_t newline1 = std::distance(table.begin(), table.line(1));
+    EXPECT_EQ(newline1, str.find('\n'));
+
+    EXPECT_EQ(table.line(2), table.end());
+}
+
+TEST(PieceTableTest, IteratorLineTest2) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    const std::string s1 = "went to the park and\n";
+    const std::string s2 = " and nimble";
+    str.insert(20, s1);
+    table.insert(20, s1);
+    str.insert(9, s2);
+    table.insert(9, s2);
+
+    // EXPECT_EQ(table.lineCount(), 3);
+
+    // size_t newline0 = std::distance(table.begin(), table.line(0));
+    // EXPECT_EQ(newline0, 0);
+
+    // size_t newline1 = std::distance(table.begin(), table.line(1));
+    // EXPECT_EQ(newline1, str.find('\n'));
+
+    // size_t newline2 = std::distance(table.begin(), table.line(2));
+    // EXPECT_EQ(newline2, str.find('\n', str.find('\n') + 1));
+
+    // EXPECT_EQ(table.line(3), table.end());
+}
+
+TEST(PieceTableTest, LineTest1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
+        table.lineContent(line_index);
+    }
+}
 
 }

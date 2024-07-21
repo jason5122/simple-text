@@ -202,15 +202,15 @@ void PieceTable::erase(size_t index, size_t count) {
     }
 }
 
-size_t PieceTable::length() {
+size_t PieceTable::length() const {
     return m_length;
 }
 
-size_t PieceTable::newlineCount() {
+size_t PieceTable::newlineCount() const {
     return newline_count;
 }
 
-std::string PieceTable::str() {
+std::string PieceTable::str() const {
     std::string result;
     for (const auto& piece : pieces) {
         const std::string& buffer = piece.source == PieceSource::Original ? original : add;

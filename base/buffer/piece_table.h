@@ -17,9 +17,9 @@ public:
 
     void insert(size_t index, std::string_view str);
     void erase(size_t index, size_t count);
-    size_t length();
-    size_t newlineCount();
-    std::string str();
+    size_t length() const;
+    size_t newlineCount() const;
+    std::string str() const;
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
 

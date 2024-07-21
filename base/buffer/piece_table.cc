@@ -1,3 +1,4 @@
+#include "base/numeric/saturation_arithmetic.h"
 #include "piece_table.h"
 #include "util/escape_special_chars.h"
 #include <format>
@@ -32,8 +33,9 @@ void PieceTable::insert(size_t index, std::string_view str) {
         it++;
     }
 
-    if (it == pieces.end()) {
-        std::cerr << "PieceTable::insert() out of range error: index > length()\n";
+    if (it == pieces.end()) [[unlikely]] {
+        std::cerr << "PieceTable::insert() unknown error: index <= length(), but there was no "
+                     "corresponding piece\n";
         std::abort();
     }
 
@@ -112,8 +114,9 @@ void PieceTable::erase(size_t index, size_t count) {
         it++;
     }
 
-    if (it == pieces.end()) {
-        std::cerr << "PieceTable::erase() out of range error: index > length()\n";
+    if (it == pieces.end()) [[unlikely]] {
+        std::cerr << "PieceTable::erase() unknown error: index <= length(), but there was no "
+                     "corresponding piece\n";
         std::abort();
     }
 
@@ -121,22 +124,44 @@ void PieceTable::erase(size_t index, size_t count) {
     size_t piece_start = offset;
     size_t piece_end = offset + (*it).length;
 
-    // Case 1 Middle of a piece. We need to split one piece into two pieces.
+    // Case 1: Middle of a piece. We need to split one piece into two pieces.
     if (piece_start <= index && index + count <= piece_end) {
         size_t p1_old_length = p1.length;
         p1.length = index - piece_start;
+
+        // Split up line starts, if necessary.
+        std::list<size_t> p2_line_starts;
+        for (auto it = p1.line_starts.begin(); it != p1.line_starts.end(); it++) {
+            if ((*it) >= p1.length) {
+                p2_line_starts.splice(p2_line_starts.begin(), p1.line_starts, it,
+                                      p1.line_starts.end());
+                break;
+            }
+        }
+        // Remove erased line starts.
+        size_t old_p2_size = p2_line_starts.size();
+        p2_line_starts.remove_if([&](auto line_start) { return line_start < p1.length + count; });
+        size_t num_removed = old_p2_size - p2_line_starts.size();
+        // Decrement the line count.
+        m_line_count = base::sub_sat(m_line_count, num_removed);
+        // Adjust the remaining line starts after the split.
+        for (auto& line_start : p2_line_starts) {
+            line_start -= p1.length + count;
+        }
 
         const Piece p2{
             .source = p1.source,
             .start = p1.start + p1.length + count,
             .length = p1_old_length - (p1.length + count),
+            .line_starts = std::move(p2_line_starts),
         };
         pieces.insert(std::next(it), p2);
 
         m_length -= count;
     }
-    // Case 2: Erase spans multiple pieces.
+    // Case 2: Spanning multiple pieces.
     else {
+        std::cerr << "Case 2\n";
         // Erase from the first piece without updating the piece's start.
         size_t sub = std::min(piece_end - index, count);
         p1.length -= sub;

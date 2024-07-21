@@ -717,6 +717,69 @@ TEST(PieceTableTest, IteratorRandomNewlineInsertTest2) {
     }
 }
 
+TEST(PieceTableTest, IteratorNewlineEraseTest1) {
+    std::string str = "\nThe \nquick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    str.erase(11, 6);
+    table.erase(11, 6);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+
+    size_t newline0 = std::distance(table.begin(), table.line(0));
+    EXPECT_EQ(newline0, 0);
+
+    size_t newline1 = std::distance(table.begin(), table.line(1));
+    size_t str_newline1 = str.find('\n');
+    EXPECT_EQ(newline1, str_newline1);
+
+    size_t newline2 = std::distance(table.begin(), table.line(2));
+    size_t str_newline2 = str.find('\n', str_newline1 + 1);
+    EXPECT_EQ(newline2, str_newline2);
+
+    size_t newline3 = std::distance(table.begin(), table.line(3));
+    size_t str_newline3 = str.find('\n', str_newline2 + 1);
+    EXPECT_EQ(newline3, str_newline3);
+
+    EXPECT_EQ(table.line(4), table.end());
+}
+
+TEST(PieceTableTest, IteratorNewlineEraseTest2) {
+    std::string str = "\nThe \nquick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    str.erase(5, 20);
+    table.erase(5, 20);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+}
+
+TEST(PieceTableTest, IteratorNewlineEraseTest3) {
+    std::string str = "\nThe \nquick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    const std::string s1 = "adept\n";
+    str.insert(10, s1);
+    table.insert(10, s1);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    std::cerr << table << '\n';
+
+    str.erase(5, 30);
+    table.erase(5, 30);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    std::cerr << table << '\n';
+
+    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+}
+
 // TEST(PieceTableTest, LineTest1) {
 //     std::string str = "The quick brown fox\njumped over the lazy dog";
 //     base::PieceTable table{str};

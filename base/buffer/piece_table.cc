@@ -16,28 +16,7 @@ PieceTable::PieceTable(std::string_view str) : original{str}, m_length{str.lengt
 }
 
 void PieceTable::insert(size_t index, std::string_view str) {
-    if (index > length()) {
-        std::cerr << "PieceTable::insert() out of range error: index > length()\n";
-        std::abort();
-    }
-
-    auto it = pieces.begin();
-    size_t offset = 0;
-    while (it != pieces.end()) {
-        size_t piece_start = offset;
-        size_t piece_end = offset + (*it).length;
-        if (piece_start <= index && index <= piece_end) {
-            break;
-        }
-        offset += (*it).length;
-        it++;
-    }
-
-    if (it == pieces.end()) [[unlikely]] {
-        std::cerr << "PieceTable::insert() unknown error: index <= length(), but there was no "
-                     "corresponding piece\n";
-        std::abort();
-    }
+    auto [it, offset] = pieceAt(index);
 
     Piece& p1 = *it;
     size_t piece_start = offset;
@@ -96,28 +75,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
 }
 
 void PieceTable::erase(size_t index, size_t count) {
-    if (index > length()) {
-        std::cerr << "PieceTable::erase() out of range error: index > length()\n";
-        std::abort();
-    }
-
-    auto it = pieces.begin();
-    size_t offset = 0;
-    while (it != pieces.end()) {
-        size_t piece_start = offset;
-        size_t piece_end = offset + (*it).length;
-        if (piece_start <= index && index <= piece_end) {
-            break;
-        }
-        offset += (*it).length;
-        it++;
-    }
-
-    if (it == pieces.end()) [[unlikely]] {
-        std::cerr << "PieceTable::erase() unknown error: index <= length(), but there was no "
-                     "corresponding piece\n";
-        std::abort();
-    }
+    auto [it, offset] = pieceAt(index);
 
     Piece& p1 = *it;
     size_t piece_start = offset;
@@ -323,6 +281,33 @@ std::ostream& operator<<(std::ostream& out, const PieceTable::Iterator& it) {
     const std::string_view end_str = it.piece_it == it.pieces().end() ? " (end)" : "";
     return out << std::format("PieceTable::Iterator(piece_it = {}{}, piece_index = {})", dist,
                               end_str, it.piece_index);
+}
+
+std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
+    if (index > length()) {
+        std::cerr << "PieceTable::pieceAt() out of range error: index > length()\n";
+        std::abort();
+    }
+
+    auto it = pieces.begin();
+    size_t offset = 0;
+    while (it != pieces.end()) {
+        size_t piece_start = offset;
+        size_t piece_end = offset + (*it).length;
+        if (piece_start <= index && index <= piece_end) {
+            break;
+        }
+        offset += (*it).length;
+        it++;
+    }
+
+    if (it == pieces.end()) [[unlikely]] {
+        std::cerr << "PieceTable::pieceAt() internal error: index <= length(), but there was no "
+                     "corresponding piece\n";
+        std::abort();
+    }
+
+    return {it, offset};
 }
 
 std::list<size_t> PieceTable::cacheNewlines(std::string_view str) {

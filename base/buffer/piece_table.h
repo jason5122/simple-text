@@ -11,6 +11,7 @@ class PieceTable {
 private:
     // We need to forward declare `Piece` since `Iterator` references it.
     struct Piece;
+    using PieceIterator = std::list<Piece>::iterator;
 
 public:
     PieceTable(std::string_view str);
@@ -43,11 +44,11 @@ public:
     private:
         friend class PieceTable;
 
-        Iterator(PieceTable& table, std::list<Piece>::iterator piece_it, size_t piece_index)
+        Iterator(PieceTable& table, PieceIterator piece_it, size_t piece_index)
             : table{table}, piece_it{piece_it}, piece_index{piece_index} {}
 
         PieceTable& table;
-        std::list<Piece>::iterator piece_it;
+        PieceIterator piece_it;
         size_t piece_index;
 
         // TODO: This is needed for `operator<<()`. Can we work around this?
@@ -79,6 +80,7 @@ private:
     size_t m_length = 0;
     size_t newline_count = 0;
 
+    std::pair<PieceIterator, size_t> pieceAt(size_t index);
     std::list<size_t> cacheNewlines(std::string_view str);
 };
 

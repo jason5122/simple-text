@@ -1,6 +1,38 @@
 #include "base/buffer/piece_table.h"
+#include "base/numeric/saturation_arithmetic.h"
 #include "gtest/gtest.h"
 #include <random>
+
+namespace {
+std::mt19937 rng{std::random_device{}()};
+
+// Returns a random number in the range [low, high].
+inline int RandomNumber(int low, int high) {
+    std::uniform_int_distribution<> distr{low, high};
+    return distr(rng);
+}
+
+// Returns a random alphanumeric string of a specified length.
+inline std::string RandomString(size_t length) {
+    static constexpr std::string_view charset = "0123456789"
+                                                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                                "abcdefghijklmnopqrstuvwxyz";
+    auto random_char = []() -> char { return charset.at(RandomNumber(0, charset.length() - 1)); };
+    std::string str(length, 0);
+    std::generate_n(str.begin(), length, random_char);
+    return str;
+}
+
+// Like `RandomString()`, but the string is guaranteed to contain a specified number of newlines.
+inline std::string RandomNewlineString(size_t length, size_t newlines) {
+    std::string str = RandomString(base::sub_sat(length, newlines));
+    for (size_t k = 0; k < newlines; k++) {
+        size_t i = RandomNumber(0, str.length());
+        str.insert(i, "\n");
+    }
+    return str;
+}
+}
 
 namespace base {
 
@@ -229,43 +261,15 @@ TEST(PieceTableTest, InsertEmpty) {
     EXPECT_EQ(str.length(), table.length());
 }
 
-static std::string RandomString(size_t length) {
-    std::random_device rd;
-    std::mt19937 gen{rd()};
-
-    auto random_char = [&gen]() -> char {
-        srand(time(nullptr));
-        static constexpr std::string_view charset = "0123456789"
-                                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                                    "abcdefghijklmnopqrstuvwxyz";
-        std::uniform_int_distribution<> distr{0, charset.length() - 1};
-        size_t i = distr(gen);
-        return charset.at(i);
-    };
-    std::string str(length, 0);
-    std::generate_n(str.begin(), length, random_char);
-    return str;
-}
-
 // Randomly inserts 100 alphanumeric strings of length [0, 10] at index [0, length).
 TEST(PieceTableTest, InsertAtRandom) {
     std::string str = "";
     base::PieceTable table{str};
 
-    std::random_device rd;
-    std::mt19937 gen{rd()};
-
-    constexpr int max_string_len = 10;
-    std::uniform_int_distribution<> len_distr{0, max_string_len};
-
     for (size_t n = 0; n < 100; n++) {
-        const int max_index = std::max(0, static_cast<int>(str.length()) - 1);
-        std::uniform_int_distribution<> index_distr{0, max_index};
+        size_t index = RandomNumber(0, str.length());
+        const std::string random_str = RandomString(RandomNumber(0, 10));
 
-        size_t len = len_distr(gen);
-        const std::string random_str = RandomString(len);
-
-        size_t index = index_distr(gen);
         str.insert(index, random_str);
         table.insert(index, random_str);
         EXPECT_EQ(str, table.str());
@@ -462,18 +466,14 @@ TEST(PieceTableTest, EraseEmpty) {
 // We repeat this for 100 iterations.
 TEST(PieceTableTest, EraseAtRandom) {
     constexpr std::string_view original_str = "The quick brown fox\njumped over the lazy dog";
-    std::random_device rd;
-    std::mt19937 gen{rd()};
 
     for (size_t n = 0; n < 100; n++) {
         std::string str{original_str};
         base::PieceTable table{original_str};
 
         for (size_t i = 0; i < 10; i++) {
-            std::uniform_int_distribution<> index_distr{0, static_cast<int>(str.length())};
-            std::uniform_int_distribution<> count_distr{0, static_cast<int>(str.length())};
-            size_t index = index_distr(gen);
-            size_t count = count_distr(gen);
+            size_t index = RandomNumber(0, str.length());
+            size_t count = RandomNumber(0, str.length());
 
             str.erase(index, count);
             table.erase(index, count);
@@ -487,34 +487,20 @@ TEST(PieceTableTest, CombinedRandomTest1) {
     std::string str = "";
     base::PieceTable table{str};
 
-    std::random_device rd;
-    std::mt19937 gen{rd()};
-
-    constexpr int max_string_len = 10;
-    std::uniform_int_distribution<> len_distr{0, max_string_len};
-    std::uniform_int_distribution<> count_distr{0, 4};
-
     for (size_t n = 0; n < 100; n++) {
         // Randomly insert.
-        const int max_index = std::max(0, static_cast<int>(str.length()) - 1);
-        std::uniform_int_distribution<> index_distr{0, max_index};
-
-        size_t len = len_distr(gen);
-        const std::string random_str = RandomString(len);
-
-        size_t index = index_distr(gen);
-        str.insert(index, random_str);
-        table.insert(index, random_str);
+        size_t insert_index = RandomNumber(0, str.length());
+        const std::string random_str = RandomString(RandomNumber(0, 10));
+        str.insert(insert_index, random_str);
+        table.insert(insert_index, random_str);
         EXPECT_EQ(str, table.str());
         EXPECT_EQ(str.length(), table.length());
 
         // Randomly erase.
-        index_distr = std::uniform_int_distribution<>{0, static_cast<int>(str.length())};
-        index = index_distr(gen);
-        size_t count = count_distr(gen);
-
-        str.erase(index, count);
-        table.erase(index, count);
+        size_t erase_index = RandomNumber(0, str.length());
+        size_t count = RandomNumber(0, 4);
+        str.erase(erase_index, count);
+        table.erase(erase_index, count);
         EXPECT_EQ(str, table.str());
         EXPECT_EQ(str.length(), table.length());
     }
@@ -585,41 +571,159 @@ TEST(PieceTableTest, IteratorLineTest2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
 
-    const std::string s1 = "went to the park and\n";
-    const std::string s2 = " and nimble";
-    str.insert(20, s1);
-    table.insert(20, s1);
-    str.insert(9, s2);
-    table.insert(9, s2);
+    const std::string s1 = "String1 ";
+    str.insert(0, s1);
+    table.insert(0, s1);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
 
-    std::cerr << table << '\n';
+    EXPECT_EQ(table.lineCount(), 2);
 
-    // EXPECT_EQ(table.lineCount(), 3);
+    size_t newline0 = std::distance(table.begin(), table.line(0));
+    EXPECT_EQ(newline0, 0);
 
-    // size_t newline0 = std::distance(table.begin(), table.line(0));
-    // EXPECT_EQ(newline0, 0);
+    size_t newline1 = std::distance(table.begin(), table.line(1));
+    EXPECT_EQ(newline1, str.find('\n'));
 
-    // for (auto it = table.begin(); it != table.end(); it++) {
-    //     std::cerr << it << '\n';
-    // }
-
-    // size_t newline1 = std::distance(table.begin(), table.line(1));
-    // std::cerr << std::format("newline1 = {}\n", newline1);
-    // EXPECT_EQ(newline1, str.find('\n'));
-
-    // size_t newline2 = std::distance(table.begin(), table.line(2));
-    // EXPECT_EQ(newline2, str.find('\n', str.find('\n') + 1));
-
-    // EXPECT_EQ(table.line(3), table.end());
+    EXPECT_EQ(table.line(2), table.end());
 }
 
-TEST(PieceTableTest, LineTest1) {
-    std::string str = "The quick brown fox\njumped over the lazy dog";
+TEST(PieceTableTest, IteratorLineTest3) {
+    std::string str = "The \nquick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
 
-    for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
-        table.lineContent(line_index);
+    const std::string s1 = "String1 ";
+    str.insert(0, s1);
+    table.insert(0, s1);
+    table.insert(13, "");  // This should split up a piece internally.
+
+    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+
+    size_t newline0 = std::distance(table.begin(), table.line(0));
+    EXPECT_EQ(newline0, 0);
+
+    size_t newline1 = std::distance(table.begin(), table.line(1));
+    EXPECT_EQ(newline1, str.find('\n'));
+
+    size_t newline2 = std::distance(table.begin(), table.line(2));
+    EXPECT_EQ(newline2, str.find('\n', str.find('\n') + 1));
+
+    EXPECT_EQ(table.line(3), table.end());
+}
+
+TEST(PieceTableTest, IteratorNewlineInsertTest1) {
+    std::string str = "The \nquick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    const std::string str_with_newline = "hello\n";
+    str.insert(0, str_with_newline);
+    table.insert(0, str_with_newline);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.insert(5, str_with_newline);
+    table.insert(5, str_with_newline);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.insert(str.length(), str_with_newline);
+    table.insert(table.length(), str_with_newline);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.insert(20, str_with_newline);
+    table.insert(20, str_with_newline);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    str.insert(10, str_with_newline);
+    table.insert(10, str_with_newline);
+    EXPECT_EQ(str, table.str());
+    EXPECT_EQ(str.length(), table.length());
+
+    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+
+    auto str_it = str.begin();
+    auto table_it = table.begin();
+    while (str_it != str.end() && table_it != table.end()) {
+        if ((*str_it) == '\n') {
+            EXPECT_EQ(*table_it, '\n');
+        } else {
+            EXPECT_NE(*table_it, '\n');
+        }
+
+        str_it++;
+        table_it++;
     }
 }
+
+TEST(PieceTableTest, IteratorRandomNewlineInsertTest1) {
+    std::string str = "The \nquick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    for (size_t n = 0; n < 100; n++) {
+        size_t index = RandomNumber(0, str.length());
+        const std::string newline_str = RandomNewlineString(RandomNumber(1, 10), 1);
+
+        str.insert(index, newline_str);
+        table.insert(index, newline_str);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+    }
+
+    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+
+    auto str_it = str.begin();
+    auto table_it = table.begin();
+    while (str_it != str.end() && table_it != table.end()) {
+        if ((*str_it) == '\n') {
+            EXPECT_EQ(*table_it, '\n');
+        } else {
+            EXPECT_NE(*table_it, '\n');
+        }
+
+        str_it++;
+        table_it++;
+    }
+}
+
+TEST(PieceTableTest, IteratorRandomNewlineInsertTest2) {
+    std::string str = "The \nquick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
+
+    for (size_t n = 0; n < 100; n++) {
+        size_t index = RandomNumber(0, str.length());
+        const std::string newline_str = RandomNewlineString(RandomNumber(1, 50), 5);
+
+        str.insert(index, newline_str);
+        table.insert(index, newline_str);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+    }
+
+    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+
+    auto str_it = str.begin();
+    auto table_it = table.begin();
+    while (str_it != str.end() && table_it != table.end()) {
+        if ((*str_it) == '\n') {
+            EXPECT_EQ(*table_it, '\n');
+        } else {
+            EXPECT_NE(*table_it, '\n');
+        }
+
+        str_it++;
+        table_it++;
+    }
+}
+
+// TEST(PieceTableTest, LineTest1) {
+//     std::string str = "The quick brown fox\njumped over the lazy dog";
+//     base::PieceTable table{str};
+
+//     for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
+//         table.lineContent(line_index);
+//     }
+// }
 
 }

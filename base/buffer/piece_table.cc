@@ -6,17 +6,11 @@
 namespace base {
 
 PieceTable::PieceTable(std::string_view str) : original{str}, m_length{str.length()} {
-    std::list<size_t> line_starts = cacheLineStarts(str);
-
-    // Add start of string as a line start.
-    line_starts.emplace_front(0);
-    ++m_line_count;
-
     pieces.emplace_front(Piece{
         .source = PieceSource::Original,
         .start = 0,
         .length = str.length(),
-        .line_starts = std::move(line_starts),
+        .line_starts = cacheLineStarts(str),
     });
 }
 
@@ -56,19 +50,32 @@ void PieceTable::insert(size_t index, std::string_view str) {
 
     // Case 1: Beginning/end of a piece. We only need to add a single piece.
     if (index == piece_start || index == piece_end) {
-        const Piece p{
+        const Piece piece{
             .source = PieceSource::Add,
             .start = add_start,
             .length = str.length(),
             .line_starts = cacheLineStarts(str),
         };
         auto pos = index == piece_start ? it : std::next(it);
-        pieces.insert(pos, p);
+        pieces.insert(pos, piece);
     }
     // Case 2: Middle of a piece. We need to split one piece into three pieces.
     else {
         size_t p1_old_length = p1.length;
         p1.length = index - piece_start;
+
+        // Split up line starts, if necessary.
+        std::list<size_t> p3_line_starts;
+        for (auto it = p1.line_starts.begin(); it != p1.line_starts.end(); it++) {
+            if ((*it) >= p1.length) {
+                p3_line_starts.splice(p3_line_starts.begin(), p1.line_starts, it,
+                                      p1.line_starts.end());
+                break;
+            }
+        }
+        for (auto& line_start : p3_line_starts) {
+            line_start -= p1.length;
+        }
 
         const Piece p2{
             .source = PieceSource::Add,
@@ -80,6 +87,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
             .source = p1.source,
             .start = p1.start + p1.length,
             .length = p1_old_length - p1.length,
+            .line_starts = std::move(p3_line_starts),
         };
         auto it2 = pieces.insert(std::next(it), p2);
         pieces.insert(std::next(it2), p3);
@@ -159,7 +167,8 @@ size_t PieceTable::length() {
 }
 
 size_t PieceTable::lineCount() {
-    return m_line_count;
+    // TODO: Should we add one here?
+    return m_line_count + 1;
 }
 
 std::string PieceTable::str() {
@@ -171,6 +180,7 @@ std::string PieceTable::str() {
     return result;
 }
 
+// TODO: Implement this.
 std::string PieceTable::lineContent(size_t line_index) {
     size_t curr_index = 0;
     for (auto it = pieces.begin(); it != pieces.end(); it++) {
@@ -220,6 +230,11 @@ PieceTable::Iterator PieceTable::end() {
 }
 
 PieceTable::Iterator PieceTable::line(size_t line_index) {
+    if (line_index == 0) {
+        return begin();
+    }
+    --line_index;
+
     size_t count = 0;
     for (auto it = pieces.begin(); it != pieces.end(); it++) {
         size_t n = (*it).line_starts.size();
@@ -229,7 +244,6 @@ PieceTable::Iterator PieceTable::line(size_t line_index) {
             for (size_t line_start : (*it).line_starts) {
                 if (count == line_index) {
                     return {*this, it, line_start};
-                    // return {*this, pieces.end(), 0};
                 }
                 count++;
             }
@@ -252,7 +266,9 @@ PieceTable::Iterator::pointer PieceTable::Iterator::operator->() {
 
 PieceTable::Iterator& PieceTable::Iterator::operator++() {
     ++piece_index;
-    if (piece_index == piece_it->length) {
+    // If the end of the piece is reached, move onto the next piece.
+    // We use a while loop in order to skip past any empty pieces.
+    while (piece_index == piece_it->length) {
         piece_index = 0;
         ++piece_it;
     }

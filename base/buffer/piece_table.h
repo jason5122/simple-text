@@ -9,8 +9,7 @@ namespace base {
 
 class PieceTable {
 private:
-    // We need to forward declare `Piece` since `Iterator` uses it.
-    // TODO: See if we can come up with a cleaner solution.
+    // We need to forward declare `Piece` since `Iterator` references it.
     struct Piece;
 
 public:

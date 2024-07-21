@@ -556,15 +556,18 @@ TEST(PieceTableTest, IteratorLineTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     base::PieceTable table{str};
 
-    EXPECT_EQ(table.lineCount(), 2);
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
-    size_t newline0 = std::distance(table.begin(), table.line(0));
-    EXPECT_EQ(newline0, 0);
+    size_t str_pos = str.find('\n');
+    size_t line_index = 0;
+    while (str_pos != std::string::npos) {
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
+        EXPECT_EQ(str_pos, table_pos);
 
-    size_t newline1 = std::distance(table.begin(), table.line(1));
-    EXPECT_EQ(newline1, str.find('\n'));
-
-    EXPECT_EQ(table.line(2), table.end());
+        str_pos = str.find('\n', str_pos + 1);
+        ++line_index;
+    }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorLineTest2) {
@@ -577,15 +580,18 @@ TEST(PieceTableTest, IteratorLineTest2) {
     EXPECT_EQ(str, table.str());
     EXPECT_EQ(str.length(), table.length());
 
-    EXPECT_EQ(table.lineCount(), 2);
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
-    size_t newline0 = std::distance(table.begin(), table.line(0));
-    EXPECT_EQ(newline0, 0);
+    size_t str_pos = str.find('\n');
+    size_t line_index = 0;
+    while (str_pos != std::string::npos) {
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
+        EXPECT_EQ(str_pos, table_pos);
 
-    size_t newline1 = std::distance(table.begin(), table.line(1));
-    EXPECT_EQ(newline1, str.find('\n'));
-
-    EXPECT_EQ(table.line(2), table.end());
+        str_pos = str.find('\n', str_pos + 1);
+        ++line_index;
+    }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorLineTest3) {
@@ -597,18 +603,18 @@ TEST(PieceTableTest, IteratorLineTest3) {
     table.insert(0, s1);
     table.insert(13, "");  // This should split up a piece internally.
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
-    size_t newline0 = std::distance(table.begin(), table.line(0));
-    EXPECT_EQ(newline0, 0);
+    size_t str_pos = str.find('\n');
+    size_t line_index = 0;
+    while (str_pos != std::string::npos) {
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
+        EXPECT_EQ(str_pos, table_pos);
 
-    size_t newline1 = std::distance(table.begin(), table.line(1));
-    EXPECT_EQ(newline1, str.find('\n'));
-
-    size_t newline2 = std::distance(table.begin(), table.line(2));
-    EXPECT_EQ(newline2, str.find('\n', str.find('\n') + 1));
-
-    EXPECT_EQ(table.line(3), table.end());
+        str_pos = str.find('\n', str_pos + 1);
+        ++line_index;
+    }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorNewlineInsertTest1) {
@@ -641,7 +647,7 @@ TEST(PieceTableTest, IteratorNewlineInsertTest1) {
     EXPECT_EQ(str, table.str());
     EXPECT_EQ(str.length(), table.length());
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
     auto str_it = str.begin();
     auto table_it = table.begin();
@@ -671,17 +677,18 @@ TEST(PieceTableTest, IteratorRandomNewlineInsertTest1) {
         EXPECT_EQ(str.length(), table.length());
     }
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
     size_t str_pos = str.find('\n');
-    size_t line_index = 1;
+    size_t line_index = 0;
     while (str_pos != std::string::npos) {
-        size_t table_pos = std::distance(table.begin(), table.line(line_index));
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
         EXPECT_EQ(str_pos, table_pos);
 
         str_pos = str.find('\n', str_pos + 1);
         ++line_index;
     }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorRandomNewlineInsertTest2) {
@@ -698,15 +705,18 @@ TEST(PieceTableTest, IteratorRandomNewlineInsertTest2) {
         EXPECT_EQ(str.length(), table.length());
     }
 
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
+
     size_t str_pos = str.find('\n');
-    size_t line_index = 1;
+    size_t line_index = 0;
     while (str_pos != std::string::npos) {
-        size_t table_pos = std::distance(table.begin(), table.line(line_index));
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
         EXPECT_EQ(str_pos, table_pos);
 
         str_pos = str.find('\n', str_pos + 1);
         ++line_index;
     }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorNewlineEraseTest1) {
@@ -718,19 +728,18 @@ TEST(PieceTableTest, IteratorNewlineEraseTest1) {
     EXPECT_EQ(str, table.str());
     EXPECT_EQ(str.length(), table.length());
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
-    EXPECT_EQ(table.line(0), table.begin());
-    EXPECT_EQ(table.line(table.lineCount()), table.end());
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
     size_t str_pos = str.find('\n');
-    size_t line_index = 1;
+    size_t line_index = 0;
     while (str_pos != std::string::npos) {
-        size_t table_pos = std::distance(table.begin(), table.line(line_index));
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
         EXPECT_EQ(str_pos, table_pos);
 
         str_pos = str.find('\n', str_pos + 1);
         ++line_index;
     }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorNewlineEraseTest2) {
@@ -742,19 +751,18 @@ TEST(PieceTableTest, IteratorNewlineEraseTest2) {
     EXPECT_EQ(str, table.str());
     EXPECT_EQ(str.length(), table.length());
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
-    EXPECT_EQ(table.line(0), table.begin());
-    EXPECT_EQ(table.line(table.lineCount()), table.end());
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
     size_t str_pos = str.find('\n');
-    size_t line_index = 1;
+    size_t line_index = 0;
     while (str_pos != std::string::npos) {
-        size_t table_pos = std::distance(table.begin(), table.line(line_index));
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
         EXPECT_EQ(str_pos, table_pos);
 
         str_pos = str.find('\n', str_pos + 1);
         ++line_index;
     }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorNewlineEraseTest3) {
@@ -772,19 +780,18 @@ TEST(PieceTableTest, IteratorNewlineEraseTest3) {
     EXPECT_EQ(str, table.str());
     EXPECT_EQ(str.length(), table.length());
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
-    EXPECT_EQ(table.line(0), table.begin());
-    EXPECT_EQ(table.line(table.lineCount()), table.end());
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
     size_t str_pos = str.find('\n');
-    size_t line_index = 1;
+    size_t line_index = 0;
     while (str_pos != std::string::npos) {
-        size_t table_pos = std::distance(table.begin(), table.line(line_index));
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
         EXPECT_EQ(str_pos, table_pos);
 
         str_pos = str.find('\n', str_pos + 1);
         ++line_index;
     }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorRandomNewlineEraseTest1) {
@@ -802,19 +809,18 @@ TEST(PieceTableTest, IteratorRandomNewlineEraseTest1) {
             EXPECT_EQ(str.length(), table.length());
         }
 
-        EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
-        EXPECT_EQ(table.line(0), table.begin());
-        EXPECT_EQ(table.line(table.lineCount()), table.end());
+        EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
         size_t str_pos = str.find('\n');
-        size_t line_index = 1;
+        size_t line_index = 0;
         while (str_pos != std::string::npos) {
-            size_t table_pos = std::distance(table.begin(), table.line(line_index));
+            size_t table_pos = std::distance(table.begin(), table.newline(line_index));
             EXPECT_EQ(str_pos, table_pos);
 
             str_pos = str.find('\n', str_pos + 1);
             ++line_index;
         }
+        EXPECT_EQ(table.newline(table.newlineCount()), table.end());
     }
 }
 
@@ -837,19 +843,18 @@ TEST(PieceTableTest, IteratorCustomNewlineEraseTest1) {
     EXPECT_EQ(str, table.str());
     EXPECT_EQ(str.length(), table.length());
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
-    EXPECT_EQ(table.line(0), table.begin());
-    EXPECT_EQ(table.line(table.lineCount()), table.end());
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
     size_t str_pos = str.find('\n');
-    size_t line_index = 1;
+    size_t line_index = 0;
     while (str_pos != std::string::npos) {
-        size_t table_pos = std::distance(table.begin(), table.line(line_index));
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
         EXPECT_EQ(str_pos, table_pos);
 
         str_pos = str.find('\n', str_pos + 1);
         ++line_index;
     }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorCustomNewlineEraseTest2) {
@@ -863,19 +868,18 @@ TEST(PieceTableTest, IteratorCustomNewlineEraseTest2) {
         EXPECT_EQ(str.length(), table.length());
     }
 
-    EXPECT_EQ(table.lineCount(), std::ranges::count(str, '\n') + 1);
-    EXPECT_EQ(table.line(0), table.begin());
-    EXPECT_EQ(table.line(table.lineCount()), table.end());
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
     size_t str_pos = str.find('\n');
-    size_t line_index = 1;
+    size_t line_index = 0;
     while (str_pos != std::string::npos) {
-        size_t table_pos = std::distance(table.begin(), table.line(line_index));
+        size_t table_pos = std::distance(table.begin(), table.newline(line_index));
         EXPECT_EQ(str_pos, table_pos);
 
         str_pos = str.find('\n', str_pos + 1);
         ++line_index;
     }
+    EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
 
 TEST(PieceTableTest, IteratorEmptyTest1) {
@@ -905,12 +909,12 @@ TEST(PieceTableTest, IteratorLineContentTest1) {
     base::PieceTable table{str};
 
     std::string line0;
-    for (auto it = table.line(0); it != table.line(1); it++) {
+    for (auto it = table.begin(); it != table.newline(0); it++) {
         line0 += *it;
     }
 
     std::string line1;
-    for (auto it = std::next(table.line(1)); it != table.line(2); it++) {
+    for (auto it = std::next(table.newline(0)); it != table.newline(1); it++) {
         line1 += *it;
     }
 

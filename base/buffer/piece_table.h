@@ -18,7 +18,7 @@ public:
     void insert(size_t index, std::string_view str);
     void erase(size_t index, size_t count);
     size_t length();
-    size_t lineCount();
+    size_t newlineCount();
     std::string str();
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
@@ -58,7 +58,7 @@ public:
 
     Iterator begin();
     Iterator end();
-    Iterator line(size_t line_index);  // Zero-indexed.
+    Iterator newline(size_t line_index);  // Zero-indexed.
 
 private:
     enum class PieceSource {
@@ -70,16 +70,16 @@ private:
         PieceSource source;
         size_t start;
         size_t length;
-        std::list<size_t> line_starts;
+        std::list<size_t> newlines;
     };
 
     std::string original;
     std::string add;
     std::list<Piece> pieces;
     size_t m_length = 0;
-    size_t m_line_count = 0;
+    size_t newline_count = 0;
 
-    std::list<size_t> cacheLineStarts(std::string_view str);
+    std::list<size_t> cacheNewlines(std::string_view str);
 };
 
 }

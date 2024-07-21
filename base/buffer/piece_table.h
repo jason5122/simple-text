@@ -20,7 +20,6 @@ public:
     size_t length();
     size_t lineCount();
     std::string str();
-    std::string lineContent(size_t line_index);  // Zero-indexed.
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
 

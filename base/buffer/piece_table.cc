@@ -222,20 +222,6 @@ std::string PieceTable::str() {
     return result;
 }
 
-// TODO: Implement this.
-std::string PieceTable::lineContent(size_t line_index) {
-    size_t curr_index = 0;
-    for (auto it = pieces.begin(); it != pieces.end(); it++) {
-        for (size_t line_start : (*it).line_starts) {
-            curr_index++;
-            if (curr_index == line_index + 1) {
-                std::cerr << std::format("line_start = {}\n", line_start);
-            }
-        }
-    }
-    return "";
-}
-
 std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
     out << std::format("Original: \"{}\"\n", EscapeSpecialChars(table.original));
     out << std::format("Add: \"{}\"\n", EscapeSpecialChars(table.add));

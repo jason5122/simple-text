@@ -900,13 +900,23 @@ TEST(PieceTableTest, IteratorEmptyTest2) {
     EXPECT_EQ(table.begin(), table.end());
 }
 
-// TEST(PieceTableTest, LineTest1) {
-//     std::string str = "The quick brown fox\njumped over the lazy dog";
-//     base::PieceTable table{str};
+TEST(PieceTableTest, IteratorLineContentTest1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    base::PieceTable table{str};
 
-//     for (size_t line_index = 0; line_index < table.lineCount(); line_index++) {
-//         table.lineContent(line_index);
-//     }
-// }
+    std::string line0;
+    for (auto it = table.line(0); it != table.line(1); it++) {
+        line0 += *it;
+    }
+
+    std::string line1;
+    for (auto it = std::next(table.line(1)); it != table.line(2); it++) {
+        line1 += *it;
+    }
+
+    size_t str_pos = str.find('\n');
+    EXPECT_EQ(line0, str.substr(0, str_pos));
+    EXPECT_EQ(line1, str.substr(str_pos + 1));
+}
 
 }

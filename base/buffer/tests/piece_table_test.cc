@@ -592,12 +592,19 @@ TEST(PieceTableTest, IteratorLineTest2) {
     str.insert(9, s2);
     table.insert(9, s2);
 
+    std::cerr << table << '\n';
+
     // EXPECT_EQ(table.lineCount(), 3);
 
     // size_t newline0 = std::distance(table.begin(), table.line(0));
     // EXPECT_EQ(newline0, 0);
 
+    // for (auto it = table.begin(); it != table.end(); it++) {
+    //     std::cerr << it << '\n';
+    // }
+
     // size_t newline1 = std::distance(table.begin(), table.line(1));
+    // std::cerr << std::format("newline1 = {}\n", newline1);
     // EXPECT_EQ(newline1, str.find('\n'));
 
     // size_t newline2 = std::distance(table.begin(), table.line(2));

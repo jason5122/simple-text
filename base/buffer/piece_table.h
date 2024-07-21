@@ -40,6 +40,8 @@ public:
         friend bool operator==(const Iterator& a, const Iterator& b);
         friend bool operator!=(const Iterator& a, const Iterator& b);
 
+        friend std::ostream& operator<<(std::ostream& out, const Iterator& it);
+
     private:
         friend class PieceTable;
 
@@ -49,6 +51,11 @@ public:
         PieceTable& table;
         std::list<Piece>::iterator piece_it;
         size_t piece_index;
+
+        // TODO: This is needed for `operator<<()`. Can we work around this?
+        std::list<Piece>& pieces() const {
+            return table.pieces;
+        }
     };
 
     Iterator begin();
@@ -71,8 +78,10 @@ private:
     std::string original;
     std::string add;
     std::list<Piece> pieces;
-    size_t _length = 0;
-    size_t _line_count = 0;
+    size_t m_length = 0;
+    size_t m_line_count = 0;
+
+    std::list<size_t> cacheLineStarts(std::string_view str);
 };
 
 }

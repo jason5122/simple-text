@@ -5,16 +5,12 @@
 
 namespace base {
 
-PieceTable::PieceTable(std::string_view str) : original{str}, _length{str.length()} {
-    std::list<size_t> line_starts;
+PieceTable::PieceTable(std::string_view str) : original{str}, m_length{str.length()} {
+    std::list<size_t> line_starts = cacheLineStarts(str);
 
-    line_starts.emplace_back(0);
-    for (size_t i = 0; i < str.length(); i++) {
-        if (str[i] == '\n') {
-            line_starts.emplace_back(i);
-        }
-    }
-    _line_count = line_starts.size();
+    // Add start of string as a line start.
+    line_starts.emplace_front(0);
+    ++m_line_count;
 
     pieces.emplace_front(Piece{
         .source = PieceSource::Original,
@@ -56,7 +52,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
     add += str;
 
     // Update length.
-    _length += str.length();
+    m_length += str.length();
 
     // Case 1: Beginning/end of a piece. We only need to add a single piece.
     if (index == piece_start || index == piece_end) {
@@ -64,6 +60,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
             .source = PieceSource::Add,
             .start = add_start,
             .length = str.length(),
+            .line_starts = cacheLineStarts(str),
         };
         auto pos = index == piece_start ? it : std::next(it);
         pieces.insert(pos, p);
@@ -77,6 +74,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
             .source = PieceSource::Add,
             .start = add_start,
             .length = str.length(),
+            .line_starts = cacheLineStarts(str),
         };
         const Piece p3{
             .source = p1.source,
@@ -127,7 +125,7 @@ void PieceTable::erase(size_t index, size_t count) {
         };
         pieces.insert(std::next(it), p2);
 
-        _length -= count;
+        m_length -= count;
     }
     // Case 2: Erase spans multiple pieces.
     else {
@@ -135,7 +133,7 @@ void PieceTable::erase(size_t index, size_t count) {
         size_t sub = std::min(piece_end - index, count);
         p1.length -= sub;
         count -= sub;
-        _length -= sub;
+        m_length -= sub;
         it++;
 
         // Erase from next pieces until `count` is exhausted, updating each piece's start.
@@ -148,7 +146,7 @@ void PieceTable::erase(size_t index, size_t count) {
             piece.start += sub;
             piece.length -= sub;
             count -= sub;
-            _length -= sub;
+            m_length -= sub;
 
             offset += (*it).length;
             it++;
@@ -157,11 +155,11 @@ void PieceTable::erase(size_t index, size_t count) {
 }
 
 size_t PieceTable::length() {
-    return _length;
+    return m_length;
 }
 
 size_t PieceTable::lineCount() {
-    return _line_count;
+    return m_line_count;
 }
 
 std::string PieceTable::str() {
@@ -196,8 +194,19 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
         const std::string source = is_original ? "Original" : "Add";
         const std::string piece_str = buffer.substr(piece.start, piece.length);
 
-        out << std::format("Piece(start={}, length={}, source={}): \"{}\"\n", piece.start,
-                           piece.length, source, EscapeSpecialChars(piece_str));
+        // TODO: Simplify this by implementing `std::format` support for `std::list` elsewhere.
+        std::string line_start_str = "[";
+        for (auto it = piece.line_starts.begin(); it != piece.line_starts.end(); it++) {
+            line_start_str += std::to_string(*it);
+            if (std::next(it) != piece.line_starts.end()) {
+                line_start_str += ", ";
+            }
+        }
+        line_start_str += "]";
+
+        out << std::format("Piece(start={}, length={}, source={}, line_starts={}): \"{}\"\n",
+                           piece.start, piece.length, source, line_start_str,
+                           EscapeSpecialChars(piece_str));
     }
     return out;
 }
@@ -220,6 +229,7 @@ PieceTable::Iterator PieceTable::line(size_t line_index) {
             for (size_t line_start : (*it).line_starts) {
                 if (count == line_index) {
                     return {*this, it, line_start};
+                    // return {*this, pieces.end(), 0};
                 }
                 count++;
             }
@@ -261,6 +271,24 @@ bool operator==(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
 
 bool operator!=(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
     return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
+}
+
+std::ostream& operator<<(std::ostream& out, const PieceTable::Iterator& it) {
+    size_t dist = std::distance(it.pieces().begin(), it.piece_it);
+    const std::string_view end_str = it.piece_it == it.pieces().end() ? " (end)" : "";
+    return out << std::format("PieceTable::Iterator(piece_it = {}{}, piece_index = {})", dist,
+                              end_str, it.piece_index);
+}
+
+std::list<size_t> PieceTable::cacheLineStarts(std::string_view str) {
+    std::list<size_t> line_starts;
+    for (size_t i = 0; i < str.length(); i++) {
+        if (str[i] == '\n') {
+            line_starts.emplace_back(i);
+        }
+    }
+    m_line_count += line_starts.size();
+    return line_starts;
 }
 
 }

@@ -161,13 +161,19 @@ void PieceTable::erase(size_t index, size_t count) {
     }
     // Case 2: Spanning multiple pieces.
     else {
-        std::cerr << "Case 2\n";
         // Erase from the first piece without updating the piece's start.
         size_t sub = std::min(piece_end - index, count);
         p1.length -= sub;
         count -= sub;
         m_length -= sub;
         it++;
+
+        // Remove erased line starts.
+        size_t old_size = p1.line_starts.size();
+        p1.line_starts.remove_if([&](auto line_start) { return line_start >= p1.length; });
+        size_t num_removed = old_size - p1.line_starts.size();
+        // Decrement the line count.
+        m_line_count = base::sub_sat(m_line_count, num_removed);
 
         // Erase from next pieces until `count` is exhausted, updating each piece's start.
         while (it != pieces.end() && count > 0) {
@@ -180,6 +186,17 @@ void PieceTable::erase(size_t index, size_t count) {
             piece.length -= sub;
             count -= sub;
             m_length -= sub;
+
+            // Remove erased line starts.
+            size_t old_size = piece.line_starts.size();
+            piece.line_starts.remove_if([&](auto line_start) { return line_start < sub; });
+            size_t num_removed = old_size - piece.line_starts.size();
+            // Decrement the line count.
+            m_line_count = base::sub_sat(m_line_count, num_removed);
+            // Adjust the remaining line starts after the shift.
+            for (auto& line_start : piece.line_starts) {
+                line_start -= sub;
+            }
 
             offset += (*it).length;
             it++;
@@ -247,7 +264,16 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
 }
 
 PieceTable::Iterator PieceTable::begin() {
-    return {*this, pieces.begin(), 0};
+    auto piece_it = pieces.begin();
+    size_t piece_index = 0;
+
+    // Skip past any empty pieces.
+    while (piece_it != pieces.end() && piece_index == piece_it->length) {
+        piece_index = 0;
+        ++piece_it;
+    }
+
+    return {*this, piece_it, piece_index};
 }
 
 PieceTable::Iterator PieceTable::end() {

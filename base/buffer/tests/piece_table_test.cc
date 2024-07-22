@@ -817,4 +817,35 @@ TEST(PieceTableTest, IteratorLineContentTest1) {
     EXPECT_EQ(line1, str.substr(str_pos + 1));
 }
 
+TEST(PieceTableTest, ConstIteratorTest1) {
+    std::string str = "Hello";
+    PieceTable table{str};
+
+    PieceTable::iterator it = table.begin();
+    PieceTable::const_iterator cit = it;
+
+    *it = 'Y';
+    EXPECT_EQ(table.str(), "Yello");
+
+    // The following line should not compile.
+    // *cit = 'J';
+
+    // Test `operator==` commutativity.
+    EXPECT_EQ(cit, table.begin());
+    EXPECT_EQ(table.begin(), cit);
+
+    // Test `operator!=` commutativity.
+    EXPECT_NE(cit, table.end());
+    EXPECT_NE(table.end(), cit);
+
+    EXPECT_EQ(table.begin(), table.cbegin());
+    EXPECT_EQ(table.end(), table.cend());
+
+    while (it != table.end()) {
+        EXPECT_EQ(*it, *cit);
+        it++;
+        ++cit;
+    }
+}
+
 }

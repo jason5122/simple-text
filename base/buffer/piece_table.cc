@@ -170,9 +170,9 @@ size_t PieceTable::newlineCount() const {
 
 std::string PieceTable::line(size_t index) const {
     std::string line_str;
-    // for (auto it = begin(); it != newline(0); it++) {
-    //     line_str += *it;
-    // }
+    for (auto it = begin(); it != newline(0); it++) {
+        line_str += *it;
+    }
     return line_str;
 }
 
@@ -186,7 +186,7 @@ std::string PieceTable::str() const {
 }
 
 PieceTable::iterator PieceTable::begin() {
-    auto piece_it = pieces.begin();
+    PieceIterator piece_it = pieces.begin();
     size_t piece_index = 0;
 
     // Skip past any empty pieces.
@@ -200,6 +200,31 @@ PieceTable::iterator PieceTable::begin() {
 
 PieceTable::iterator PieceTable::end() {
     return {*this, pieces.end(), 0};
+}
+
+PieceTable::const_iterator PieceTable::begin() const {
+    PieceConstIterator piece_it = pieces.begin();
+    size_t piece_index = 0;
+
+    // Skip past any empty pieces.
+    while (piece_it != pieces.end() && piece_index == piece_it->length) {
+        piece_index = 0;
+        ++piece_it;
+    }
+
+    return {*this, piece_it, piece_index};
+}
+
+PieceTable::const_iterator PieceTable::end() const {
+    return {*this, pieces.end(), 0};
+}
+
+PieceTable::const_iterator PieceTable::cbegin() const {
+    return begin();
+}
+
+PieceTable::const_iterator PieceTable::cend() const {
+    return end();
 }
 
 PieceTable::iterator PieceTable::newline(size_t index) {
@@ -218,6 +243,10 @@ PieceTable::iterator PieceTable::newline(size_t index) {
         }
     }
     return end();
+}
+
+PieceTable::const_iterator PieceTable::newline(size_t index) const {
+    return newline(index);
 }
 
 std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
@@ -302,7 +331,7 @@ PieceTable::Iterator& PieceTable::Iterator::operator++() {
     ++piece_index;
     // If the end of the piece is reached, move onto the next piece.
     // We use a while loop in order to skip past any empty pieces.
-    while (piece_index == piece_it->length) {
+    while (piece_it != table.pieces.end() && piece_index == piece_it->length) {
         piece_index = 0;
         ++piece_it;
     }
@@ -327,6 +356,76 @@ std::ostream& operator<<(std::ostream& out, const PieceTable::Iterator& it) {
     size_t dist = std::distance(it.table.pieces.begin(), it.piece_it);
     const std::string_view end_str = it.piece_it == it.table.pieces.end() ? " (end)" : "";
     return out << std::format("PieceTable::Iterator(piece_it = {}{}, piece_index = {})", dist,
+                              end_str, it.piece_index);
+}
+
+PieceTable::ConstIterator::ConstIterator(const PieceTable& table,
+                                         PieceConstIterator piece_it,
+                                         size_t piece_index)
+    : table{table}, piece_it{piece_it}, piece_index{piece_index} {}
+
+PieceTable::ConstIterator::ConstIterator(Iterator& it)
+    : table{it.table}, piece_it{it.piece_it}, piece_index{it.piece_index} {}
+
+PieceTable::ConstIterator::reference PieceTable::ConstIterator::operator*() const {
+    size_t i = piece_it->start + piece_index;
+    const std::string& buffer =
+        piece_it->source == PieceTable::PieceSource::Original ? table.original : table.add;
+    return buffer[i];
+}
+
+PieceTable::ConstIterator::pointer PieceTable::ConstIterator::operator->() {
+    size_t i = piece_it->start + piece_index;
+    const std::string& buffer =
+        piece_it->source == PieceTable::PieceSource::Original ? table.original : table.add;
+    return &buffer[i];
+}
+
+PieceTable::ConstIterator& PieceTable::ConstIterator::operator++() {
+    ++piece_index;
+    // If the end of the piece is reached, move onto the next piece.
+    // We use a while loop in order to skip past any empty pieces.
+    while (piece_it != table.pieces.end() && piece_index == piece_it->length) {
+        piece_index = 0;
+        ++piece_it;
+    }
+    return *this;
+}
+
+PieceTable::ConstIterator PieceTable::ConstIterator::operator++(int) {
+    ConstIterator tmp = *this;
+    ++(*this);
+    return tmp;
+}
+
+bool operator==(const PieceTable::ConstIterator& a, const PieceTable::ConstIterator& b) {
+    return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
+}
+
+bool operator==(const PieceTable::ConstIterator& a, const PieceTable::Iterator& b) {
+    return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
+}
+
+bool operator==(const PieceTable::Iterator& a, const PieceTable::ConstIterator& b) {
+    return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
+}
+
+bool operator!=(const PieceTable::ConstIterator& a, const PieceTable::ConstIterator& b) {
+    return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
+}
+
+bool operator!=(const PieceTable::ConstIterator& a, const PieceTable::Iterator& b) {
+    return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
+}
+
+bool operator!=(const PieceTable::Iterator& a, const PieceTable::ConstIterator& b) {
+    return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
+}
+
+std::ostream& operator<<(std::ostream& out, const PieceTable::ConstIterator& it) {
+    size_t dist = std::distance(it.table.pieces.begin(), it.piece_it);
+    const std::string_view end_str = it.piece_it == it.table.pieces.end() ? " (end)" : "";
+    return out << std::format("PieceTable::ConstIterator(piece_it = {}{}, piece_index = {})", dist,
                               end_str, it.piece_index);
 }
 

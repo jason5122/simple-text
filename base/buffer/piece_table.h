@@ -19,15 +19,24 @@ public:
     std::string str() const;
 
     struct Iterator;
+    struct ConstIterator;
     using iterator = Iterator;
+    using const_iterator = ConstIterator;
 
     iterator begin();
     iterator end();
-    iterator newline(size_t index);  // Zero-indexed.
+    const_iterator begin() const;
+    const_iterator end() const;
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    iterator newline(size_t index);              // Zero-indexed.
+    const_iterator newline(size_t index) const;  // Zero-indexed.
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
     // This is needed for `Iterator` to access `pieces`.
     friend std::ostream& operator<<(std::ostream& out, const Iterator& it);
+    // This is needed for `ConstIterator` to access `pieces`.
+    friend std::ostream& operator<<(std::ostream& out, const ConstIterator& it);
 
 private:
     enum class PieceSource {
@@ -49,6 +58,7 @@ private:
     size_t newline_count = 0;
 
     using PieceIterator = std::list<Piece>::iterator;
+    using PieceConstIterator = std::list<Piece>::const_iterator;
     std::pair<PieceIterator, size_t> pieceAt(size_t index);
     std::list<size_t> cacheNewlines(std::string_view str);
 };
@@ -66,7 +76,11 @@ struct PieceTable::Iterator {
     Iterator operator++(int);
 
     friend bool operator==(const Iterator& a, const Iterator& b);
+    friend bool operator==(const ConstIterator& a, const Iterator& b);
+    friend bool operator==(const Iterator& a, const ConstIterator& b);
     friend bool operator!=(const Iterator& a, const Iterator& b);
+    friend bool operator!=(const ConstIterator& a, const Iterator& b);
+    friend bool operator!=(const Iterator& a, const ConstIterator& b);
 
     friend std::ostream& operator<<(std::ostream& out, const Iterator& it);
 
@@ -77,6 +91,39 @@ private:
 
     PieceTable& table;
     PieceIterator piece_it;
+    size_t piece_index;
+};
+
+struct PieceTable::ConstIterator {
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = const char;
+    using pointer = const char*;
+    using reference = const char&;
+
+    ConstIterator(Iterator& it);
+
+    reference operator*() const;
+    pointer operator->();
+    ConstIterator& operator++();
+    ConstIterator operator++(int);
+
+    friend bool operator==(const ConstIterator& a, const ConstIterator& b);
+    friend bool operator==(const ConstIterator& a, const Iterator& b);
+    friend bool operator==(const Iterator& a, const ConstIterator& b);
+    friend bool operator!=(const ConstIterator& a, const ConstIterator& b);
+    friend bool operator!=(const ConstIterator& a, const Iterator& b);
+    friend bool operator!=(const Iterator& a, const ConstIterator& b);
+
+    friend std::ostream& operator<<(std::ostream& out, const ConstIterator& it);
+
+private:
+    friend class PieceTable;
+
+    ConstIterator(const PieceTable& table, PieceConstIterator piece_it, size_t piece_index);
+
+    const PieceTable& table;
+    PieceConstIterator piece_it;
     size_t piece_index;
 };
 

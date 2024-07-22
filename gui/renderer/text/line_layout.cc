@@ -1,4 +1,5 @@
 #include "base/numeric/saturation_arithmetic.h"
+#include "gui/renderer/renderer.h"
 #include "line_layout.h"
 #include <algorithm>
 #include <numeric>
@@ -9,8 +10,9 @@
 
 namespace gui {
 
-LineLayout::LineLayout(const base::Buffer& buffer, GlyphCache& main_glyph_cache) {
-    reflow(buffer, main_glyph_cache);
+LineLayout::LineLayout(const base::PieceTable& table, const base::Buffer& buffer) {
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+    reflow(table, buffer, main_glyph_cache);
 }
 
 LineLayout::Iterator LineLayout::begin() const {
@@ -80,7 +82,9 @@ LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x
     return std::prev(getLine(line + 1));
 }
 
-void LineLayout::reflow(const base::Buffer& buffer, GlyphCache& main_glyph_cache) {
+void LineLayout::reflow(const base::PieceTable& table,
+                        const base::Buffer& buffer,
+                        GlyphCache& main_glyph_cache) {
     // Clear existing info.
     tokens.clear();
     newline_offsets.clear();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/buffer/buffer.h"
+#include "base/buffer/piece_table.h"
 #include "gui/renderer/text/line_layout.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
@@ -24,6 +25,7 @@ public:
     void updateMaxScroll() override;
 
 private:
+    base::PieceTable table;
     base::Buffer buffer;
     LineLayout line_layout;
 

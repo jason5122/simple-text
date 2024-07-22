@@ -46,15 +46,15 @@ void PieceTable::insert(size_t index, std::string_view str) {
         p1.length = index - piece_start;
 
         // Split up line starts, if necessary.
-        std::list<size_t> p3_line_starts;
+        std::list<size_t> p3_newlines;
         for (auto it = p1.newlines.begin(); it != p1.newlines.end(); it++) {
             if ((*it) >= p1.length) {
-                p3_line_starts.splice(p3_line_starts.begin(), p1.newlines, it, p1.newlines.end());
+                p3_newlines.splice(p3_newlines.begin(), p1.newlines, it, p1.newlines.end());
                 break;
             }
         }
-        for (auto& line_start : p3_line_starts) {
-            line_start -= p1.length;
+        for (auto& newline : p3_newlines) {
+            newline -= p1.length;
         }
 
         const Piece p2{
@@ -67,7 +67,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
             .source = p1.source,
             .start = p1.start + p1.length,
             .length = p1_old_length - p1.length,
-            .newlines = std::move(p3_line_starts),
+            .newlines = std::move(p3_newlines),
         };
         auto it2 = pieces.insert(std::next(it), p2);
         pieces.insert(std::next(it2), p3);
@@ -87,29 +87,29 @@ void PieceTable::erase(size_t index, size_t count) {
         p1.length = index - piece_start;
 
         // Split up line starts, if necessary.
-        std::list<size_t> p2_line_starts;
+        std::list<size_t> p2_newlines;
         for (auto it = p1.newlines.begin(); it != p1.newlines.end(); it++) {
             if ((*it) >= p1.length) {
-                p2_line_starts.splice(p2_line_starts.begin(), p1.newlines, it, p1.newlines.end());
+                p2_newlines.splice(p2_newlines.begin(), p1.newlines, it, p1.newlines.end());
                 break;
             }
         }
         // Remove erased line starts.
-        size_t old_p2_size = p2_line_starts.size();
-        p2_line_starts.remove_if([&](auto line_start) { return line_start < p1.length + count; });
-        size_t num_removed = old_p2_size - p2_line_starts.size();
+        size_t old_p2_size = p2_newlines.size();
+        p2_newlines.remove_if([&](auto newline) { return newline < p1.length + count; });
+        size_t num_removed = old_p2_size - p2_newlines.size();
         // Decrement the line count.
         newline_count = base::sub_sat(newline_count, num_removed);
         // Adjust the remaining line starts after the split.
-        for (auto& line_start : p2_line_starts) {
-            line_start -= p1.length + count;
+        for (auto& newline : p2_newlines) {
+            newline -= p1.length + count;
         }
 
         const Piece p2{
             .source = p1.source,
             .start = p1.start + p1.length + count,
             .length = p1_old_length - (p1.length + count),
-            .newlines = std::move(p2_line_starts),
+            .newlines = std::move(p2_newlines),
         };
         pieces.insert(std::next(it), p2);
 
@@ -126,7 +126,7 @@ void PieceTable::erase(size_t index, size_t count) {
 
         // Remove erased line starts.
         size_t old_size = p1.newlines.size();
-        p1.newlines.remove_if([&](auto line_start) { return line_start >= p1.length; });
+        p1.newlines.remove_if([&](auto newline) { return newline >= p1.length; });
         size_t num_removed = old_size - p1.newlines.size();
         // Decrement the line count.
         newline_count = base::sub_sat(newline_count, num_removed);
@@ -145,13 +145,13 @@ void PieceTable::erase(size_t index, size_t count) {
 
             // Remove erased line starts.
             size_t old_size = piece.newlines.size();
-            piece.newlines.remove_if([&](auto line_start) { return line_start < sub; });
+            piece.newlines.remove_if([&](auto newline) { return newline < sub; });
             size_t num_removed = old_size - piece.newlines.size();
             // Decrement the line count.
             newline_count = base::sub_sat(newline_count, num_removed);
             // Adjust the remaining line starts after the shift.
-            for (auto& line_start : piece.newlines) {
-                line_start -= sub;
+            for (auto& newline : piece.newlines) {
+                newline -= sub;
             }
 
             offset += (*it).length;
@@ -166,6 +166,14 @@ size_t PieceTable::length() const {
 
 size_t PieceTable::newlineCount() const {
     return newline_count;
+}
+
+std::string PieceTable::line(size_t index) const {
+    std::string line_str;
+    for (auto it = begin(); it != newline(0); it++) {
+        line_str += *it;
+    }
+    return line_str;
 }
 
 std::string PieceTable::str() const {
@@ -188,17 +196,17 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
         const std::string piece_str = buffer.substr(piece.start, piece.length);
 
         // TODO: Simplify this by implementing `std::format` support for `std::list` elsewhere.
-        std::string line_start_str = "[";
+        std::string newlines_str = "[";
         for (auto it = piece.newlines.begin(); it != piece.newlines.end(); it++) {
-            line_start_str += std::to_string(*it);
+            newlines_str += std::to_string(*it);
             if (std::next(it) != piece.newlines.end()) {
-                line_start_str += ", ";
+                newlines_str += ", ";
             }
         }
-        line_start_str += "]";
+        newlines_str += "]";
 
-        out << std::format("Piece(start={}, length={}, source={}, line_starts={}): \"{}\"\n",
-                           piece.start, piece.length, source, line_start_str,
+        out << std::format("Piece(start={}, length={}, source={}, newlines={}): \"{}\"\n",
+                           piece.start, piece.length, source, newlines_str,
                            EscapeSpecialChars(piece_str));
     }
     return out;
@@ -221,16 +229,16 @@ PieceTable::Iterator PieceTable::end() {
     return {*this, pieces.end(), 0};
 }
 
-PieceTable::Iterator PieceTable::newline(size_t line_index) {
+PieceTable::Iterator PieceTable::newline(size_t index) {
     size_t count = 0;
     for (auto it = pieces.begin(); it != pieces.end(); it++) {
         size_t n = (*it).newlines.size();
-        if (count + n < line_index) {
+        if (count + n < index) {
             count += n;
         } else {
-            for (size_t line_start : (*it).newlines) {
-                if (count == line_index) {
-                    return {*this, it, line_start};
+            for (size_t newline : (*it).newlines) {
+                if (count == index) {
+                    return {*this, it, newline};
                 }
                 count++;
             }
@@ -295,30 +303,26 @@ std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
         size_t piece_start = offset;
         size_t piece_end = offset + (*it).length;
         if (piece_start <= index && index <= piece_end) {
-            break;
+            return {it, offset};
         }
         offset += (*it).length;
         it++;
     }
 
-    if (it == pieces.end()) [[unlikely]] {
-        std::cerr << "PieceTable::pieceAt() internal error: index <= length(), but there was no "
-                     "corresponding piece\n";
-        std::abort();
-    }
-
-    return {it, offset};
+    std::cerr << "PieceTable::pieceAt() internal error: index <= length(), but there was no "
+                 "corresponding piece\n";
+    std::abort();
 }
 
 std::list<size_t> PieceTable::cacheNewlines(std::string_view str) {
-    std::list<size_t> line_starts;
+    std::list<size_t> newlines;
     for (size_t i = 0; i < str.length(); i++) {
         if (str[i] == '\n') {
-            line_starts.emplace_back(i);
+            newlines.emplace_back(i);
         }
     }
-    newline_count += line_starts.size();
-    return line_starts;
+    newline_count += newlines.size();
+    return newlines;
 }
 
 }

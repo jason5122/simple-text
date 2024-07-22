@@ -20,6 +20,7 @@ public:
     void erase(size_t index, size_t count);
     size_t length() const;
     size_t newlineCount() const;
+    std::string line(size_t index) const;
     std::string str() const;
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
@@ -59,7 +60,7 @@ public:
 
     Iterator begin();
     Iterator end();
-    Iterator newline(size_t line_index);  // Zero-indexed.
+    Iterator newline(size_t index);  // Zero-indexed.
 
 private:
     enum class PieceSource {

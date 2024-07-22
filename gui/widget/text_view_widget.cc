@@ -10,8 +10,9 @@
 namespace gui {
 
 TextViewWidget::TextViewWidget(const std::string& text)
-    : buffer{text},
-      line_layout{buffer, Renderer::instance().getMainGlyphCache()},
+    : table{text},
+      buffer{text},
+      line_layout{table, buffer},
       start_caret{line_layout.begin()},
       end_caret{line_layout.begin()} {
     updateMaxScroll();
@@ -72,8 +73,18 @@ void TextViewWidget::insertText(std::string_view text) {
     LineLayout::Iterator actual_end = std::max(start_caret, end_caret);
     size_t old_end_index = line_layout.iteratorIndex(actual_end);
 
-    buffer.insert(pos, text);
-    line_layout.reflow(buffer, main_glyph_cache);
+    {
+        PROFILE_BLOCK("PieceTable::insert()");
+        table.insert(end_byte_offset, text);
+    }
+    {
+        PROFILE_BLOCK("Buffer::insert()");
+        buffer.insert(pos, text);
+    }
+    {
+        PROFILE_BLOCK("LineLayout::reflow()");
+        line_layout.reflow(table, buffer, main_glyph_cache);
+    }
     updateMaxScroll();
 
     end_caret = line_layout.getIterator(old_end_index);
@@ -109,7 +120,7 @@ void TextViewWidget::leftDelete() {
     size_t old_start_index = line_layout.iteratorIndex(actual_start);
 
     buffer.erase(first, last);
-    line_layout.reflow(buffer, main_glyph_cache);
+    line_layout.reflow(table, buffer, main_glyph_cache);
     updateMaxScroll();
 
     end_caret = line_layout.getIterator(old_start_index);

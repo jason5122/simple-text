@@ -7,12 +7,8 @@
 
 namespace base {
 
-struct Iterator;
-
 class PieceTable {
 public:
-    using iterator = Iterator;
-
     PieceTable(std::string_view str);
 
     void insert(size_t index, std::string_view str);
@@ -22,15 +18,18 @@ public:
     std::string line(size_t index) const;
     std::string str() const;
 
+    struct Iterator;
+    using iterator = Iterator;
+
     iterator begin();
     iterator end();
     iterator newline(size_t index);  // Zero-indexed.
 
     friend std::ostream& operator<<(std::ostream& out, const PieceTable& table);
+    // This is needed for `Iterator` to access `pieces`.
+    friend std::ostream& operator<<(std::ostream& out, const Iterator& it);
 
 private:
-    friend class Iterator;
-
     enum class PieceSource {
         Original,
         Add,
@@ -54,7 +53,7 @@ private:
     std::list<size_t> cacheNewlines(std::string_view str);
 };
 
-struct Iterator {
+struct PieceTable::Iterator {
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = char;
@@ -74,17 +73,11 @@ struct Iterator {
 private:
     friend class PieceTable;
 
-    Iterator(PieceTable& table, PieceTable::PieceIterator piece_it, size_t piece_index)
-        : table{table}, piece_it{piece_it}, piece_index{piece_index} {}
+    Iterator(PieceTable& table, PieceIterator piece_it, size_t piece_index);
 
     PieceTable& table;
-    PieceTable::PieceIterator piece_it;
+    PieceIterator piece_it;
     size_t piece_index;
-
-    // TODO: This is needed for `operator<<()`. Can we work around this?
-    std::list<PieceTable::Piece>& pieces() const {
-        return table.pieces;
-    }
 };
 
 }

@@ -170,9 +170,9 @@ size_t PieceTable::newlineCount() const {
 
 std::string PieceTable::line(size_t index) const {
     std::string line_str;
-    for (auto it = begin(); it != newline(0); it++) {
-        line_str += *it;
-    }
+    // for (auto it = begin(); it != newline(0); it++) {
+    //     line_str += *it;
+    // }
     return line_str;
 }
 
@@ -183,6 +183,41 @@ std::string PieceTable::str() const {
         result += buffer.substr(piece.start, piece.length);
     }
     return result;
+}
+
+PieceTable::iterator PieceTable::begin() {
+    auto piece_it = pieces.begin();
+    size_t piece_index = 0;
+
+    // Skip past any empty pieces.
+    while (piece_it != pieces.end() && piece_index == piece_it->length) {
+        piece_index = 0;
+        ++piece_it;
+    }
+
+    return {*this, piece_it, piece_index};
+}
+
+PieceTable::iterator PieceTable::end() {
+    return {*this, pieces.end(), 0};
+}
+
+PieceTable::iterator PieceTable::newline(size_t index) {
+    size_t count = 0;
+    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+        size_t n = (*it).newlines.size();
+        if (count + n < index) {
+            count += n;
+        } else {
+            for (size_t newline : (*it).newlines) {
+                if (count == index) {
+                    return {*this, it, newline};
+                }
+                count++;
+            }
+        }
+    }
+    return end();
 }
 
 std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
@@ -212,54 +247,21 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
     return out;
 }
 
-PieceTable::Iterator PieceTable::begin() {
-    auto piece_it = pieces.begin();
-    size_t piece_index = 0;
-
-    // Skip past any empty pieces.
-    while (piece_it != pieces.end() && piece_index == piece_it->length) {
-        piece_index = 0;
-        ++piece_it;
-    }
-
-    return {*this, piece_it, piece_index};
-}
-
-PieceTable::Iterator PieceTable::end() {
-    return {*this, pieces.end(), 0};
-}
-
-PieceTable::Iterator PieceTable::newline(size_t index) {
-    size_t count = 0;
-    for (auto it = pieces.begin(); it != pieces.end(); it++) {
-        size_t n = (*it).newlines.size();
-        if (count + n < index) {
-            count += n;
-        } else {
-            for (size_t newline : (*it).newlines) {
-                if (count == index) {
-                    return {*this, it, newline};
-                }
-                count++;
-            }
-        }
-    }
-    return end();
-}
-
-PieceTable::Iterator::reference PieceTable::Iterator::operator*() const {
+Iterator::reference Iterator::operator*() const {
     size_t i = piece_it->start + piece_index;
-    std::string& buffer = piece_it->source == PieceSource::Original ? table.original : table.add;
+    std::string& buffer =
+        piece_it->source == PieceTable::PieceSource::Original ? table.original : table.add;
     return buffer[i];
 }
 
-PieceTable::Iterator::pointer PieceTable::Iterator::operator->() {
+Iterator::pointer Iterator::operator->() {
     size_t i = piece_it->start + piece_index;
-    std::string& buffer = piece_it->source == PieceSource::Original ? table.original : table.add;
+    std::string& buffer =
+        piece_it->source == PieceTable::PieceSource::Original ? table.original : table.add;
     return &buffer[i];
 }
 
-PieceTable::Iterator& PieceTable::Iterator::operator++() {
+Iterator& Iterator::operator++() {
     ++piece_index;
     // If the end of the piece is reached, move onto the next piece.
     // We use a while loop in order to skip past any empty pieces.
@@ -270,25 +272,25 @@ PieceTable::Iterator& PieceTable::Iterator::operator++() {
     return *this;
 }
 
-PieceTable::Iterator PieceTable::Iterator::operator++(int) {
+Iterator Iterator::operator++(int) {
     Iterator tmp = *this;
     ++(*this);
     return tmp;
 }
 
-bool operator==(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
+bool operator==(const Iterator& a, const Iterator& b) {
     return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
 }
 
-bool operator!=(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
+bool operator!=(const Iterator& a, const Iterator& b) {
     return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
 }
 
-std::ostream& operator<<(std::ostream& out, const PieceTable::Iterator& it) {
+std::ostream& operator<<(std::ostream& out, const Iterator& it) {
     size_t dist = std::distance(it.pieces().begin(), it.piece_it);
     const std::string_view end_str = it.piece_it == it.pieces().end() ? " (end)" : "";
-    return out << std::format("PieceTable::Iterator(piece_it = {}{}, piece_index = {})", dist,
-                              end_str, it.piece_index);
+    return out << std::format("Iterator(piece_it = {}{}, piece_index = {})", dist, end_str,
+                              it.piece_index);
 }
 
 std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {

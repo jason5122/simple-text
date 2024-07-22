@@ -51,4 +51,7 @@ private:
     std::vector<InstanceData> instances;
 };
 
+static_assert(!std::is_copy_constructible_v<RectRenderer>);
+static_assert(!std::is_trivially_copy_constructible_v<RectRenderer>);
+
 }

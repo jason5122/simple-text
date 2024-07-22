@@ -19,4 +19,7 @@ private:
     GLuint id_ = 0;
 };
 
+static_assert(!std::is_copy_constructible_v<Shader>);
+static_assert(!std::is_trivially_copy_constructible_v<Shader>);
+
 }

@@ -20,4 +20,7 @@ private:
     std::unique_ptr<impl> pimpl;
 };
 
+static_assert(!std::is_copy_constructible_v<FunctionsGL>);
+static_assert(!std::is_trivially_copy_constructible_v<FunctionsGL>);
+
 }

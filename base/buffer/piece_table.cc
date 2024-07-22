@@ -169,8 +169,16 @@ size_t PieceTable::newlineCount() const {
 }
 
 std::string PieceTable::line(size_t index) const {
+    if (index > newlineCount()) {
+        std::cerr << "PieceTable::line() out of range error: index > newlineCount()\n";
+        std::abort();
+    }
+
+    auto first = index == 0 ? begin() : std::next(newline(base::sub_sat(index, 1UL)));
+    auto last = newline(index);
+
     std::string line_str;
-    for (auto it = begin(); it != newline(0); it++) {
+    for (auto it = first; it != last; it++) {
         line_str += *it;
     }
     return line_str;
@@ -202,6 +210,7 @@ PieceTable::iterator PieceTable::end() {
     return {*this, pieces.end(), 0};
 }
 
+// This calls the const overloads for `begin()/end()` since we are in a const method.
 PieceTable::const_iterator PieceTable::begin() const {
     PieceConstIterator piece_it = pieces.begin();
     size_t piece_index = 0;
@@ -245,8 +254,23 @@ PieceTable::iterator PieceTable::newline(size_t index) {
     return end();
 }
 
+// This calls the const overloads for `begin()/end()` since we are in a const method.
 PieceTable::const_iterator PieceTable::newline(size_t index) const {
-    return newline(index);
+    size_t count = 0;
+    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+        size_t n = (*it).newlines.size();
+        if (count + n < index) {
+            count += n;
+        } else {
+            for (size_t newline : (*it).newlines) {
+                if (count == index) {
+                    return {*this, it, newline};
+                }
+                count++;
+            }
+        }
+    }
+    return end();
 }
 
 std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {

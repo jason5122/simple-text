@@ -798,7 +798,7 @@ TEST(PieceTableTest, IteratorEmptyTest2) {
     EXPECT_EQ(table.begin(), table.end());
 }
 
-TEST(PieceTableTest, IteratorLineContentTest1) {
+TEST(PieceTableTest, IteratorNewlineTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     PieceTable table{str};
 
@@ -817,12 +817,34 @@ TEST(PieceTableTest, IteratorLineContentTest1) {
     EXPECT_EQ(line1, str.substr(str_pos + 1));
 }
 
+TEST(PieceTableTest, LineContentTest1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog\nand went to sleep.";
+    PieceTable table{str};
+
+    size_t str_newline0 = str.find('\n');
+    size_t str_newline1 = str.find('\n', str_newline0 + 1);
+    size_t dist = str_newline1 - (str_newline0 + 1);
+
+    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
+
+    EXPECT_EQ(table.line(0), str.substr(0, str_newline0));
+    EXPECT_EQ(table.line(1), str.substr(str_newline0 + 1, dist));
+    EXPECT_EQ(table.line(2), str.substr(str_newline1 + 1));
+    EXPECT_EQ(table.line(2), table.line(table.newlineCount()));
+
+    // The following line should produce an out of range error.
+    // table.line(table.newlineCount() + 1);
+}
+
 TEST(PieceTableTest, ConstIteratorTest1) {
     std::string str = "Hello";
     PieceTable table{str};
 
     PieceTable::iterator it = table.begin();
     PieceTable::const_iterator cit = it;
+
+    // The following line should not compile.
+    // it = cit;
 
     *it = 'Y';
     EXPECT_EQ(table.str(), "Yello");

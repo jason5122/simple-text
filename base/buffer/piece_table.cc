@@ -310,62 +310,10 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
     return out;
 }
 
-PieceTable::Iterator::Iterator(PieceTable& table, PieceIterator piece_it, size_t piece_index)
-    : table{table}, piece_it{piece_it}, piece_index{piece_index} {}
-
-PieceTable::Iterator::reference PieceTable::Iterator::operator*() const {
-    size_t i = piece_it->start + piece_index;
-    std::string& buffer =
-        piece_it->source == PieceTable::PieceSource::Original ? table.original : table.add;
-    return buffer[i];
-}
-
-PieceTable::Iterator::pointer PieceTable::Iterator::operator->() {
-    size_t i = piece_it->start + piece_index;
-    std::string& buffer =
-        piece_it->source == PieceTable::PieceSource::Original ? table.original : table.add;
-    return &buffer[i];
-}
-
-PieceTable::Iterator& PieceTable::Iterator::operator++() {
-    ++piece_index;
-    // If the end of the piece is reached, move onto the next piece.
-    // We use a while loop in order to skip past any empty pieces.
-    while (piece_it != table.pieces.end() && piece_index == piece_it->length) {
-        piece_index = 0;
-        ++piece_it;
-    }
-    return *this;
-}
-
-PieceTable::Iterator PieceTable::Iterator::operator++(int) {
-    Iterator tmp = *this;
-    ++(*this);
-    return tmp;
-}
-
-bool operator==(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
-    return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
-}
-
-bool operator!=(const PieceTable::Iterator& a, const PieceTable::Iterator& b) {
-    return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
-}
-
-std::ostream& operator<<(std::ostream& out, const PieceTable::Iterator& it) {
-    size_t dist = std::distance(it.table.pieces.begin(), it.piece_it);
-    const std::string_view end_str = it.piece_it == it.table.pieces.end() ? " (end)" : "";
-    return out << std::format("PieceTable::Iterator(piece_it = {}{}, piece_index = {})", dist,
-                              end_str, it.piece_index);
-}
-
 PieceTable::ConstIterator::ConstIterator(const PieceTable& table,
                                          PieceConstIterator piece_it,
                                          size_t piece_index)
     : table{table}, piece_it{piece_it}, piece_index{piece_index} {}
-
-PieceTable::ConstIterator::ConstIterator(Iterator& it)
-    : table{it.table}, piece_it{it.piece_it}, piece_index{it.piece_index} {}
 
 PieceTable::ConstIterator::reference PieceTable::ConstIterator::operator*() const {
     size_t i = piece_it->start + piece_index;
@@ -402,23 +350,7 @@ bool operator==(const PieceTable::ConstIterator& a, const PieceTable::ConstItera
     return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
 }
 
-bool operator==(const PieceTable::ConstIterator& a, const PieceTable::Iterator& b) {
-    return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
-}
-
-bool operator==(const PieceTable::Iterator& a, const PieceTable::ConstIterator& b) {
-    return a.piece_it == b.piece_it && a.piece_index == b.piece_index;
-}
-
 bool operator!=(const PieceTable::ConstIterator& a, const PieceTable::ConstIterator& b) {
-    return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
-}
-
-bool operator!=(const PieceTable::ConstIterator& a, const PieceTable::Iterator& b) {
-    return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
-}
-
-bool operator!=(const PieceTable::Iterator& a, const PieceTable::ConstIterator& b) {
     return a.piece_it != b.piece_it || a.piece_index != b.piece_index;
 }
 
@@ -426,6 +358,23 @@ std::ostream& operator<<(std::ostream& out, const PieceTable::ConstIterator& it)
     size_t dist = std::distance(it.table.pieces.begin(), it.piece_it);
     const std::string_view end_str = it.piece_it == it.table.pieces.end() ? " (end)" : "";
     return out << std::format("PieceTable::ConstIterator(piece_it = {}{}, piece_index = {})", dist,
+                              end_str, it.piece_index);
+}
+
+PieceTable::Iterator::Iterator(PieceTable& table, PieceIterator piece_it, size_t piece_index)
+    : ConstIterator{table, piece_it, piece_index}, table{table} {}
+
+PieceTable::Iterator::reference PieceTable::Iterator::operator*() const {
+    size_t i = piece_it->start + piece_index;
+    std::string& buffer =
+        piece_it->source == PieceTable::PieceSource::Original ? table.original : table.add;
+    return buffer[i];
+}
+
+std::ostream& operator<<(std::ostream& out, const PieceTable::Iterator& it) {
+    size_t dist = std::distance(it.table.pieces.cbegin(), it.piece_it);
+    const std::string_view end_str = it.piece_it == it.table.pieces.end() ? " (end)" : "";
+    return out << std::format("PieceTable::Iterator(piece_it = {}{}, piece_index = {})", dist,
                               end_str, it.piece_index);
 }
 

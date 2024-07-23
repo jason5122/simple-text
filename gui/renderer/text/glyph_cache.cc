@@ -59,4 +59,8 @@ int GlyphCache::lineHeight() const {
     return font_rasterizer.getLineHeight();
 }
 
+const font::FontRasterizer& GlyphCache::rasterizer() const {
+    return font_rasterizer;
+}
+
 }

@@ -22,6 +22,7 @@ public:
     ~FontRasterizer();
 
     RasterizedGlyph rasterizeUTF8(std::string_view str8);
+    int layoutLine(std::string_view str8) const;
     int getLineHeight() const;
 
 private:

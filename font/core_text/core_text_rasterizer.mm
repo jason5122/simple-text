@@ -44,8 +44,8 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
     ScopedCFTypeRef<CTFontRef> run_font;
 
     ScopedCFTypeRef<CFStringRef> text_string{
-        CFStringCreateWithBytes(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
-                                kCFStringEncodingUTF8, false)};
+        CFStringCreateWithBytesNoCopy(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
+                                      kCFStringEncodingUTF8, false, kCFAllocatorNull)};
 
     ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
@@ -76,6 +76,24 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
     }
 
     return pimpl->rasterizeGlyph(glyph, run_font, descent);
+}
+
+int FontRasterizer::layoutLine(std::string_view str8) const {
+    ScopedCFTypeRef<CFStringRef> text_string{
+        CFStringCreateWithBytesNoCopy(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
+                                      kCFStringEncodingUTF8, false, kCFAllocatorNull)};
+
+    ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
+        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
+    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, pimpl->ct_font.get());
+
+    ScopedCFTypeRef<CFAttributedStringRef> attr_string{
+        CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
+
+    ScopedCFTypeRef<CTLineRef> line{CTLineCreateWithAttributedString(attr_string.get())};
+
+    double width = CTLineGetTypographicBounds(line.get(), nullptr, nullptr, nullptr);
+    return std::ceil(width);
 }
 
 FontRasterizer::RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(

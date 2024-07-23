@@ -1,6 +1,7 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
 #include "line_layout.h"
+#include "util/profile_util.h"
 #include <algorithm>
 #include <numeric>
 
@@ -85,6 +86,13 @@ LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x
 void LineLayout::reflow(const base::PieceTable& table,
                         const base::Buffer& buffer,
                         GlyphCache& main_glyph_cache) {
+    {
+        PROFILE_BLOCK("Core Text reflow");
+        std::string line = table.line(table.newlineCount());
+        int line_length = main_glyph_cache.rasterizer().layoutLine(line);
+        std::cerr << std::format("line_length = {}\n", line_length);
+    }
+
     // Clear existing info.
     tokens.clear();
     newline_offsets.clear();

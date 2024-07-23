@@ -27,6 +27,9 @@ public:
     Glyph& getGlyph(std::string_view str8);
     int lineHeight() const;
 
+    // TODO: Refactor FontRasterizer out of GlyphCache.
+    const font::FontRasterizer& rasterizer() const;
+
     // TODO: Make this private.
     std::vector<Atlas> atlas_pages;
 

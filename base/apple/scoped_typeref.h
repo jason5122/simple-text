@@ -106,6 +106,15 @@ public:
         return object_;
     }
 
+    // ScopedTypeRef<>::release() is like std::unique_ptr<>::release.  It is NOT
+    // a wrapper for Release().  To force a ScopedTypeRef<> object to call
+    // Release(), use ScopedTypeRef<>::reset().
+    [[nodiscard]] element_type release() {
+        element_type temp = object_;
+        object_ = Traits::InvalidValue();
+        return temp;
+    }
+
 private:
     element_type object_;
 };

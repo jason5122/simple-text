@@ -3,7 +3,8 @@
 namespace gui {
 
 MultiViewWidget::MultiViewWidget() {
-    addTab("");
+    // TODO: Don't create a tab by default. See if we can have zero tabs like Sublime Text.
+    addTab("Hi 💣🇺🇸 Hello world!");
 }
 
 void MultiViewWidget::setIndex(int index) {

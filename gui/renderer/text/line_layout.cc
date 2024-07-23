@@ -88,9 +88,9 @@ void LineLayout::reflow(const base::PieceTable& table,
                         GlyphCache& main_glyph_cache) {
     {
         PROFILE_BLOCK("Core Text reflow");
-        std::string line = table.line(table.newlineCount());
-        int line_length = main_glyph_cache.rasterizer().layoutLine(line);
-        std::cerr << std::format("line_length = {}\n", line_length);
+        std::string line = table.line(0);
+        auto layout = main_glyph_cache.rasterizer().layoutLine(line);
+        std::cerr << std::format("line_length = {}\n", layout.width);
     }
 
     // Clear existing info.

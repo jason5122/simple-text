@@ -1,5 +1,8 @@
 #include "glyph_cache.h"
 
+// TODO: Debug use; remove this.
+#include <iostream>
+
 namespace gui {
 
 GlyphCache::GlyphCache(const std::string& font_name_utf8, int font_size)
@@ -7,23 +10,16 @@ GlyphCache::GlyphCache(const std::string& font_name_utf8, int font_size)
     atlas_pages.emplace_back();
 }
 
-GlyphCache::Glyph& GlyphCache::getGlyph(std::string_view str8) {
-    // If the input is ASCII (a very common occurrence), we can skip the overhead of a hash map.
-    if (str8.length() == 1 && 0x20 <= str8[0] && str8[0] <= 0x7e) {
-        size_t i = str8[0] - 0x20;
-        if (ascii_cache.at(i) == std::nullopt) {
-            font::FontRasterizer::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
-            ascii_cache.at(i) = loadGlyph(rglyph);
-        }
-        return ascii_cache.at(i).value();
-    }
+GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id) {
+    if (!cache[font_id].contains(glyph_id)) {
+        font::FontRasterizer::RasterizedGlyph rglyph =
+            font_rasterizer.rasterizeUTF8(font_id, glyph_id);
 
-    auto it = cache.find(str8);
-    if (it == cache.end()) {
-        font::FontRasterizer::RasterizedGlyph rglyph = font_rasterizer.rasterizeUTF8(str8);
-        it = cache.emplace(str8, loadGlyph(rglyph)).first;
+        std::cerr << rglyph.left << '\n';
+
+        cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
     }
-    return it->second;
+    return cache[font_id][glyph_id];
 }
 
 GlyphCache::Glyph GlyphCache::loadGlyph(const font::FontRasterizer::RasterizedGlyph& rglyph) {

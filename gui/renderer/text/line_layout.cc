@@ -16,6 +16,10 @@ LineLayout::LineLayout(const base::PieceTable& table, const base::Buffer& buffer
     reflow(table, buffer, main_glyph_cache);
 }
 
+font::FontRasterizer::LineLayout& LineLayout::getLineLayout(size_t line) {
+    return line_layouts[line];
+}
+
 LineLayout::Iterator LineLayout::begin() const {
     return tokens.begin();
 }
@@ -88,44 +92,11 @@ void LineLayout::reflow(const base::PieceTable& table,
                         GlyphCache& main_glyph_cache) {
     {
         PROFILE_BLOCK("Core Text reflow");
-        std::string line = table.line(0);
-        auto layout = main_glyph_cache.rasterizer().layoutLine(line);
-        std::cerr << std::format("line_length = {}\n", layout.width);
-    }
-
-    // Clear existing info.
-    tokens.clear();
-    newline_offsets.clear();
-
-    // Cache byte offsets of newlines.
-    newline_offsets.emplace_back(tokens.size());
-
-    int total_advance = 0;
-    for (auto it = buffer.begin(); it != buffer.end(); it++) {
-        const auto& ch = *it;
-        const bool is_newline = ch.line != (*std::next(it)).line;
-
-        // Render newline characters as spaces, since DirectWrite and Pango don't seem to
-        // support rendering "\n".
-        std::string_view key = is_newline ? " " : ch.str;
-        GlyphCache::Glyph& glyph = main_glyph_cache.getGlyph(key);
-
-        tokens.emplace_back(Token{
-            .line = ch.line,
-            .total_advance = total_advance,
-            .advance = glyph.advance,
-            .glyph = glyph,
-            .byte_offset = ch.byte_offset,
-        });
-
-        total_advance += glyph.advance;
-
-        if (is_newline) {
-            // Cache byte offsets of newlines.
-            newline_offsets.emplace_back(tokens.size());
-
-            longest_line_x = std::max(total_advance, longest_line_x);
-            total_advance = 0;
+        size_t lines = table.newlineCount() + 1;
+        for (size_t i = 0; i < lines; i++) {
+            std::string line = table.line(i);
+            auto layout = main_glyph_cache.rasterizer().layoutLine(line);
+            line_layouts.push_back(std::move(layout));
         }
     }
 }

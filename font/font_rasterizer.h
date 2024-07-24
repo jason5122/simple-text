@@ -42,7 +42,7 @@ public:
         std::vector<ShapedRun> runs;
     };
 
-    RasterizedGlyph rasterizeUTF8(std::string_view str8) const;
+    RasterizedGlyph rasterizeUTF8(size_t font_id, uint32_t glyph_id) const;
     LineLayout layoutLine(std::string_view str8) const;
     int getLineHeight() const;
 

@@ -16,11 +16,9 @@ namespace font {
 class FontRasterizer::impl {
 public:
     ScopedCFTypeRef<CTFontRef> ct_font;
+    std::vector<ScopedCFTypeRef<CTFontRef>> font_map;
 
     ScopedCFTypeRef<CTLineRef> createCTLine(std::string_view str8);
-    RasterizedGlyph rasterizeGlyph(CGGlyph glyph,
-                                   ScopedCFTypeRef<CTFontRef> selected_font,
-                                   int descent);
 };
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
@@ -43,102 +41,11 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) const {
-    ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(str8);
-
-    CGGlyph glyph = 0;
-    ScopedCFTypeRef<CTFontRef> run_font;
-
-    CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
-    CFIndex run_count = CFArrayGetCount(run_array);
-    for (CFIndex i = 0; i < run_count; i++) {
-        CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
-        CTFontRef font =
-            (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(run), kCTFontAttributeName);
-
-        CFIndex glyph_count = CTRunGetGlyphCount(run);
-        std::vector<CGGlyph> glyphs(glyph_count, 0);
-        CTRunGetGlyphs(run, {0, glyph_count}, glyphs.data());
-
-        if (!glyphs.empty()) {
-            glyph = glyphs[0];
-            run_font.reset(font);
-            break;
-        }
-    }
-
-    return pimpl->rasterizeGlyph(glyph, run_font, descent);
-}
-
-FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
-    std::vector<ShapedRun> runs;
-
-    ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(str8);
-
-    CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
-    CFIndex run_count = CFArrayGetCount(run_array);
-    for (CFIndex i = 0; i < run_count; i++) {
-        CTRunRef ct_run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
-        CTFontRef ct_font =
-            (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
-
-        CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
-        std::vector<CGGlyph> glyph_ids(glyph_count);
-        CTRunGetGlyphs(ct_run, {0, glyph_count}, glyph_ids.data());
-
-        std::vector<CFIndex> indices(glyph_count);
-        CTRunGetStringIndices(ct_run, {0, glyph_count}, indices.data());
-
-        std::vector<CGPoint> positions(glyph_count);
-        CTRunGetPositions(ct_run, {0, glyph_count}, positions.data());
-
-        std::vector<ShapedGlyph> glyphs;
-        for (size_t i = 0; i < glyph_count; i++) {
-            ShapedGlyph glyph{
-                .glyph_id = glyph_ids[i],
-                .position =
-                    Point{
-                        .x = static_cast<int>(std::ceil(positions[i].x)),
-                        .y = static_cast<int>(std::ceil(positions[i].y)),
-                    },
-                // TODO: Properly calculate UTF-8 index.
-                .index = static_cast<size_t>(indices[i]),
-            };
-            glyphs.push_back(std::move(glyph));
-        }
-
-        ShapedRun run{
-            .font_id = 0,  // TODO: Turn CTFont into font_id.
-            .glyphs = std::move(glyphs),
-        };
-        runs.push_back(std::move(run));
-    }
-
-    double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
-    return {
-        .width = static_cast<int>(std::ceil(width)),
-        .runs = std::move(runs),
-    };
-}
-
-ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(std::string_view str8) {
-    ScopedCFTypeRef<CFStringRef> text_string{
-        CFStringCreateWithBytesNoCopy(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
-                                      kCFStringEncodingUTF8, false, kCFAllocatorNull)};
-
-    ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
-        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
-    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font.get());
-
-    ScopedCFTypeRef<CFAttributedStringRef> attr_string{
-        CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
-
-    return CTLineCreateWithAttributedString(attr_string.get());
-}
-
-FontRasterizer::RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(
-    CGGlyph glyph_index, ScopedCFTypeRef<CTFontRef> selected_font, int descent) {
-    CTFontRef font_ref = selected_font ? selected_font.get() : ct_font.get();
+FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
+                                                              uint32_t glyph_id) const {
+    CTFontRef font_ref = pimpl->ct_font.get();
+    // CTFontRef font_ref = pimpl->font_map[font_id].get();
+    CGGlyph glyph_index = glyph_id;
 
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
@@ -215,6 +122,84 @@ FontRasterizer::RasterizedGlyph FontRasterizer::impl::rasterizeGlyph(
         .advance = static_cast<int32_t>(std::ceil(advance)),
         .buffer = buffer,
     };
+}
+
+FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
+    std::vector<ShapedRun> runs;
+
+    ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(str8);
+
+    CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
+    CFIndex run_count = CFArrayGetCount(run_array);
+    for (CFIndex i = 0; i < run_count; i++) {
+        CTRunRef ct_run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
+        CTFontRef ct_font =
+            (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
+
+        // TODO: Debug use; remove this.
+        CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
+        NSString* foo = (NSString*)ct_font_name;
+        std::cerr << foo.UTF8String << '\n';
+
+        // Cache font in font map.
+        pimpl->font_map.emplace_back(ct_font);
+        size_t font_id = pimpl->font_map.size();
+
+        CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
+        std::vector<CGGlyph> glyph_ids(glyph_count);
+        std::vector<CFIndex> indices(glyph_count);
+        std::vector<CGPoint> positions(glyph_count);
+        std::vector<CGSize> advances(glyph_count);
+
+        CTRunGetGlyphs(ct_run, {0, glyph_count}, glyph_ids.data());
+        CTRunGetStringIndices(ct_run, {0, glyph_count}, indices.data());
+        CTRunGetPositions(ct_run, {0, glyph_count}, positions.data());
+        CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
+
+        std::vector<ShapedGlyph> glyphs;
+        for (size_t i = 0; i < glyph_count; i++) {
+            ShapedGlyph glyph{
+                .glyph_id = glyph_ids[i],
+                // TODO: Use subpixel variants instead of rounding.
+                .position =
+                    Point{
+                        .x = static_cast<int>(std::ceil(positions[i].x)),
+                        .y = static_cast<int>(std::ceil(positions[i].y)),
+                    },
+                // TODO: Properly calculate UTF-8 index.
+                .index = static_cast<size_t>(indices[i]),
+            };
+            glyphs.push_back(std::move(glyph));
+        }
+
+        runs.reserve(glyph_count);
+        ShapedRun run{
+            .font_id = font_id,
+            .glyphs = std::move(glyphs),
+        };
+        runs.push_back(std::move(run));
+    }
+
+    double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
+    return {
+        .width = static_cast<int>(std::ceil(width)),
+        .runs = std::move(runs),
+    };
+}
+
+ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(std::string_view str8) {
+    ScopedCFTypeRef<CFStringRef> text_string{
+        CFStringCreateWithBytesNoCopy(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
+                                      kCFStringEncodingUTF8, false, kCFAllocatorNull)};
+
+    ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
+        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
+    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font.get());
+
+    ScopedCFTypeRef<CFAttributedStringRef> attr_string{
+        CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
+
+    return CTLineCreateWithAttributedString(attr_string.get());
 }
 
 }  // namespace font

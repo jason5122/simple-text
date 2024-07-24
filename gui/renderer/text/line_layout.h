@@ -13,12 +13,14 @@ class LineLayout {
 public:
     LineLayout(const base::PieceTable& table, const base::Buffer& buffer);
 
+    font::FontRasterizer::LineLayout& getLineLayout(size_t line);
+
     struct Token {
         size_t line;
         int total_advance;
         int advance;
         GlyphCache::Glyph& glyph;
-        size_t byte_offset;
+        // size_t byte_offset;
     };
 
     using Iterator = std::vector<Token>::const_iterator;
@@ -44,6 +46,8 @@ public:
     int longest_line_x = 0;
 
 private:
+    std::vector<font::FontRasterizer::LineLayout> line_layouts;
+
     // TODO: Consider renaming "Token" and "tokens".
     std::vector<Token> tokens;
     std::vector<size_t> newline_offsets;

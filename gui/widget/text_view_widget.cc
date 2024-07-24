@@ -207,7 +207,7 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 void TextViewWidget::updateMaxScroll() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 
-    max_scroll_offset.x = line_layout_cache.longest_line_x;
+    max_scroll_offset.x = line_layout_cache.maxWidth();
     max_scroll_offset.y = table.lineCount() * text_renderer.lineHeight();
 }
 

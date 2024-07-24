@@ -1,8 +1,7 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
-#include "gui/renderer/text/glyph_cache.h"
-#include "gui/renderer/types.h"
+#include "font/font_rasterizer.h"
 #include <vector>
 
 namespace gui {
@@ -14,34 +13,13 @@ public:
 
     const font::FontRasterizer::LineLayout& getLineLayout(size_t line) const;
     void reflow(const base::PieceTable& table, size_t line);
-
-    struct Token {
-        size_t line;
-        int total_advance;
-        int advance;
-        GlyphCache::Glyph& glyph;
-        // size_t byte_offset;
-    };
-
-    using Iterator = std::vector<Token>::const_iterator;
-
-    Iterator begin() const;
-    Iterator end() const;
-    Iterator getLine(int line) const;
-    Iterator iteratorFromPoint(size_t line, const Point& point);
-    Iterator moveByCharacters(bool forward, Iterator caret);
-    Iterator moveByLines(bool forward, Iterator caret, int x);
-
-    // TODO: Clean this up.
-    size_t iteratorIndex(Iterator it);
-    Iterator getIterator(size_t index);
-
-    // TODO: Use a data structure (priority queue) for efficient updating.
-    // TODO: Make this private.
-    int longest_line_x = 10000;
+    int maxWidth() const;
 
 private:
     std::vector<font::FontRasterizer::LineLayout> line_layouts;
+
+    // TODO: Use a data structure (priority queue) for efficient updating.
+    int max_width = 0;
 };
 
 }

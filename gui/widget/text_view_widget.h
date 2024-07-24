@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
+#include "gui/renderer/text/caret.h"
 #include "gui/renderer/text/line_layout_cache.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
@@ -27,8 +28,8 @@ private:
     base::PieceTable table;
     LineLayoutCache line_layout_cache;
 
-    // LineLayout::Iterator start_caret;
-    // LineLayout::Iterator end_caret;
+    Caret start_caret{};
+    Caret end_caret{};
 
     // We use this value to position the caret during vertical movement.
     // This is updated whenever the caret moves horizontally.

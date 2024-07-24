@@ -17,6 +17,8 @@ LineLayoutCache::LineLayoutCache(const base::PieceTable& table) {
         std::string line = table.line(i);
         auto layout = main_glyph_cache.rasterizer().layoutLine(line);
         line_layouts.push_back(std::move(layout));
+
+        max_width = std::max(layout.width, max_width);
     }
 }
 
@@ -41,21 +43,9 @@ void LineLayoutCache::reflow(const base::PieceTable& table, size_t line) {
     // }
 }
 
-// LineLayoutCache::Iterator LineLayoutCache::begin() const {
-//     return tokens.begin();
-// }
-
-// LineLayoutCache::Iterator LineLayoutCache::end() const {
-//     return tokens.end();
-// }
-
-// LineLayoutCache::Iterator LineLayoutCache::getLine(int line) const {
-//     if (line >= newline_offsets.size()) {
-//         return end();
-//     } else {
-//         return tokens.begin() + newline_offsets.at(line);
-//     }
-// }
+int LineLayoutCache::maxWidth() const {
+    return max_width;
+}
 
 // LineLayoutCache::Iterator LineLayoutCache::iteratorFromPoint(size_t line, const Point& point) {
 //     for (auto it = getLine(line); it != getLine(line + 1); it++) {

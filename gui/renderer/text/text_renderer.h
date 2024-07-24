@@ -1,11 +1,9 @@
 #pragma once
 
-#include "base/buffer/buffer.h"
 #include "base/buffer/utf8_string.h"
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/text/glyph_cache.h"
-#include "gui/renderer/text/line_layout.h"
 #include "gui/renderer/types.h"
 #include <vector>
 
@@ -18,10 +16,9 @@ public:
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
 
-    void layout(const base::Buffer& buffer);
-    void renderText(const Point& offset,
-                    const font::FontRasterizer::LineLayout& line_layout,
-                    size_t line);
+    void renderLineLayout(const Point& offset,
+                          const font::FontRasterizer::LineLayout& line_layout,
+                          size_t line);
     void addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();

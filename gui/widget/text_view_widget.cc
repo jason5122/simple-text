@@ -11,8 +11,7 @@ namespace gui {
 
 TextViewWidget::TextViewWidget(const std::string& text)
     : table{text},
-      buffer{text},
-      line_layout{table, buffer},
+      line_layout{table},
       start_caret{line_layout.begin()},
       end_caret{line_layout.begin()} {
     updateMaxScroll();
@@ -67,24 +66,17 @@ void TextViewWidget::insertText(std::string_view text) {
 
     size_t end_byte_offset = 0;
     // size_t end_byte_offset = (*end_caret).byte_offset;
-    base::Buffer::StringIterator pos = buffer.stringBegin() + end_byte_offset;
+    // base::Buffer::StringIterator pos = buffer.stringBegin() + end_byte_offset;
 
     // Store old cursor position before we invalidate our iterators.
     // TODO: Consider always ensuring `start_caret <= end_caret`.
     LineLayout::Iterator actual_end = std::max(start_caret, end_caret);
     size_t old_end_index = line_layout.iteratorIndex(actual_end);
 
-    {
-        PROFILE_BLOCK("PieceTable::insert()");
-        table.insert(end_byte_offset, text);
-    }
-    {
-        PROFILE_BLOCK("Buffer::insert()");
-        buffer.insert(pos, text);
-    }
+    table.insert(end_byte_offset, text);
     {
         PROFILE_BLOCK("LineLayout::reflow()");
-        line_layout.reflow(table, buffer, main_glyph_cache);
+        line_layout.reflow(table, 0);
     }
     updateMaxScroll();
 
@@ -150,15 +142,14 @@ void TextViewWidget::draw() {
     start_line = base::sub_sat(start_line, 1UL);
     end_line = base::add_sat(end_line, 1UL);
 
-    start_line = std::clamp(start_line, 0UL, buffer.lineCount());
-    end_line = std::clamp(end_line, 0UL, buffer.lineCount());
+    start_line = std::clamp(start_line, 0UL, table.lineCount());
+    end_line = std::clamp(end_line, 0UL, table.lineCount());
 
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        // size_t lines = table.newlineCount() + 1;
         for (size_t line = start_line; line < end_line; line++) {
-            text_renderer.renderText(position - scroll_offset, line_layout.getLineLayout(line),
-                                     line);
+            text_renderer.renderLineLayout(position - scroll_offset,
+                                           line_layout.getLineLayout(line), line);
         }
     }
 
@@ -225,7 +216,7 @@ void TextViewWidget::updateMaxScroll() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 
     max_scroll_offset.x = line_layout.longest_line_x;
-    max_scroll_offset.y = buffer.lineCount() * text_renderer.lineHeight();
+    max_scroll_offset.y = table.lineCount() * text_renderer.lineHeight();
 }
 
 void TextViewWidget::updateCaretX() {

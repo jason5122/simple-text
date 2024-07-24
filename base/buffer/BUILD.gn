@@ -1,6 +1,5 @@
 source_set("buffer") {
   sources = [
-    "buffer.cc",
     "piece_table.cc",
     "utf8_string.cc",
   ]

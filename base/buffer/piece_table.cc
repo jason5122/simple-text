@@ -164,6 +164,10 @@ size_t PieceTable::length() const {
     return m_length;
 }
 
+size_t PieceTable::lineCount() const {
+    return newline_count + 1;
+}
+
 size_t PieceTable::newlineCount() const {
     return newline_count;
 }

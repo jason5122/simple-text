@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/buffer/buffer.h"
 #include "base/buffer/piece_table.h"
 #include "gui/renderer/text/line_layout.h"
 #include "gui/widget/scrollable_widget.h"
@@ -26,7 +25,6 @@ public:
 
 private:
     base::PieceTable table;
-    base::Buffer buffer;
     LineLayout line_layout;
 
     LineLayout::Iterator start_caret;

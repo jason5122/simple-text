@@ -1,19 +1,23 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
 #include "line_layout.h"
-#include "util/profile_util.h"
 #include <algorithm>
 #include <numeric>
 
 // TODO: Debug use; remove this.
+#include "util/profile_util.h"
 #include <format>
 #include <iostream>
 
 namespace gui {
 
-LineLayout::LineLayout(const base::PieceTable& table, const base::Buffer& buffer) {
+LineLayout::LineLayout(const base::PieceTable& table) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-    reflow(table, buffer, main_glyph_cache);
+    for (size_t i = 0; i < table.lineCount(); i++) {
+        std::string line = table.line(i);
+        auto layout = main_glyph_cache.rasterizer().layoutLine(line);
+        line_layouts.push_back(std::move(layout));
+    }
 }
 
 font::FontRasterizer::LineLayout& LineLayout::getLineLayout(size_t line) {
@@ -87,20 +91,21 @@ LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x
     return std::prev(getLine(line + 1));
 }
 
-void LineLayout::reflow(const base::PieceTable& table,
-                        const base::Buffer& buffer,
-                        GlyphCache& main_glyph_cache) {
-    line_layouts.clear();
+void LineLayout::reflow(const base::PieceTable& table, size_t line) {
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
-    {
-        PROFILE_BLOCK("Core Text reflow");
-        size_t lines = table.newlineCount() + 1;
-        for (size_t i = 0; i < lines; i++) {
-            std::string line = table.line(i);
-            auto layout = main_glyph_cache.rasterizer().layoutLine(line);
-            line_layouts.push_back(std::move(layout));
-        }
-    }
+    std::string line_str = table.line(line);
+    auto layout = main_glyph_cache.rasterizer().layoutLine(line_str);
+    line_layouts[line] = std::move(layout);
+
+    // TODO: Debug use; remove this.
+    // Reflow all lines.
+    // line_layouts.clear();
+    // for (size_t i = 0; i < table.lineCount(); i++) {
+    //     std::string line = table.line(i);
+    //     auto layout = main_glyph_cache.rasterizer().layoutLine(line);
+    //     line_layouts.push_back(std::move(layout));
+    // }
 }
 
 size_t LineLayout::iteratorIndex(Iterator it) {

@@ -14,6 +14,7 @@ public:
     void insert(size_t index, std::string_view str);
     void erase(size_t index, size_t count);
     size_t length() const;
+    size_t lineCount() const;
     size_t newlineCount() const;
     std::string line(size_t index) const;  // Zero-indexed.
     std::string str() const;

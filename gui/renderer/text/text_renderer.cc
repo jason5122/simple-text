@@ -102,9 +102,9 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderText(const Point& offset,
-                              const font::FontRasterizer::LineLayout& line_layout,
-                              size_t line) {
+void TextRenderer::renderLineLayout(const Point& offset,
+                                    const font::FontRasterizer::LineLayout& line_layout,
+                                    size_t line) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             Point coords{

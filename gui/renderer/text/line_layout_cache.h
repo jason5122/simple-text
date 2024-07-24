@@ -38,14 +38,10 @@ public:
 
     // TODO: Use a data structure (priority queue) for efficient updating.
     // TODO: Make this private.
-    int longest_line_x = 0;
+    int longest_line_x = 10000;
 
 private:
     std::vector<font::FontRasterizer::LineLayout> line_layouts;
-
-    // TODO: Consider renaming "Token" and "tokens".
-    std::vector<Token> tokens;
-    std::vector<size_t> newline_offsets;
 };
 
 }

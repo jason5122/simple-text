@@ -21,6 +21,7 @@ public:
         std::vector<uint8_t> buffer;
     };
 
+    // TODO: Consider making a global "geometry" namespace and moving Point there.
     struct Point {
         int x;
         int y;

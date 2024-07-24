@@ -202,29 +202,31 @@ void SelectionRenderer::renderSelections(const Point& offset,
     }
 }
 
-void SelectionRenderer::render(const Size& screen_size, int rendering_pass) {
+void SelectionRenderer::flush(const Size& screen_size) {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
-    glUniform1i(glGetUniformLocation(shader_id, "rendering_pass"), rendering_pass);
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
+
+    glUniform1i(glGetUniformLocation(shader_id, "rendering_pass"), 0);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+    glUniform1i(glGetUniformLocation(shader_id, "rendering_pass"), 1);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
 
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
 
-void SelectionRenderer::destroyInstances() {
     instances.clear();
 }
 
+// TODO: Operate on characters instead of lines.
 std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
     const LineLayoutCache& line_layout_cache, size_t start_line, size_t end_line) {
     std::vector<SelectionRenderer::Selection> selections;

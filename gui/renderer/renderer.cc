@@ -14,8 +14,9 @@ constexpr int kMainFontSize = 12 * 2;
 constexpr std::string kUIFontFace = "Arial";
 #endif
 
-constexpr std::string kMainFontFace = "Fira Code";
-// constexpr std::string kMainFontFace = "Source Code Pro";
+constexpr std::string kMainFontFace = "Source Code Pro";
+// constexpr std::string kMainFontFace = "Fira Code";
+// constexpr std::string kMainFontFace = "Menlo";
 constexpr int kUIFontSize = 11 * 2;
 }
 
@@ -61,14 +62,11 @@ void Renderer::flush(const Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    selection_renderer.render(size, 0);
+    selection_renderer.flush(size);
     text_renderer.flush(size, true);
-    selection_renderer.render(size, 1);
     rect_renderer.flush(size);
     image_renderer.flush(size);
     text_renderer.flush(size, false);
-
-    selection_renderer.destroyInstances();
 }
 
 }

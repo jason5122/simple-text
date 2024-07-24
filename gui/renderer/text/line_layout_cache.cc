@@ -41,80 +41,71 @@ void LineLayoutCache::reflow(const base::PieceTable& table, size_t line) {
     // }
 }
 
-LineLayoutCache::Iterator LineLayoutCache::begin() const {
-    return tokens.begin();
-}
+// LineLayoutCache::Iterator LineLayoutCache::begin() const {
+//     return tokens.begin();
+// }
 
-LineLayoutCache::Iterator LineLayoutCache::end() const {
-    return tokens.end();
-}
+// LineLayoutCache::Iterator LineLayoutCache::end() const {
+//     return tokens.end();
+// }
 
-LineLayoutCache::Iterator LineLayoutCache::getLine(int line) const {
-    if (line >= newline_offsets.size()) {
-        return end();
-    } else {
-        return tokens.begin() + newline_offsets.at(line);
-    }
-}
+// LineLayoutCache::Iterator LineLayoutCache::getLine(int line) const {
+//     if (line >= newline_offsets.size()) {
+//         return end();
+//     } else {
+//         return tokens.begin() + newline_offsets.at(line);
+//     }
+// }
 
-LineLayoutCache::Iterator LineLayoutCache::iteratorFromPoint(size_t line, const Point& point) {
-    for (auto it = getLine(line); it != getLine(line + 1); it++) {
-        const auto& token = *it;
-        const auto& next_token = *std::next(it);
+// LineLayoutCache::Iterator LineLayoutCache::iteratorFromPoint(size_t line, const Point& point) {
+//     for (auto it = getLine(line); it != getLine(line + 1); it++) {
+//         const auto& token = *it;
+//         const auto& next_token = *std::next(it);
 
-        int glyph_center = std::midpoint(token.total_advance, next_token.total_advance);
-        if (glyph_center >= point.x) {
-            return it;
-        }
-    }
-    return std::prev(getLine(line + 1));
-}
+//         int glyph_center = std::midpoint(token.total_advance, next_token.total_advance);
+//         if (glyph_center >= point.x) {
+//             return it;
+//         }
+//     }
+//     return std::prev(getLine(line + 1));
+// }
 
-LineLayoutCache::Iterator LineLayoutCache::moveByCharacters(bool forward, Iterator caret) {
-    if (forward && caret != std::prev(end())) {
-        return std::next(caret);
-    }
-    if (!forward && caret != begin()) {
-        return std::prev(caret);
-    }
-    return caret;
-}
+// LineLayoutCache::Iterator LineLayoutCache::moveByCharacters(bool forward, Iterator caret) {
+//     if (forward && caret != std::prev(end())) {
+//         return std::next(caret);
+//     }
+//     if (!forward && caret != begin()) {
+//         return std::prev(caret);
+//     }
+//     return caret;
+// }
 
-LineLayoutCache::Iterator LineLayoutCache::moveByLines(bool forward, Iterator caret, int x) {
-    size_t line = (*caret).line;
+// LineLayoutCache::Iterator LineLayoutCache::moveByLines(bool forward, Iterator caret, int x) {
+//     size_t line = (*caret).line;
 
-    if (forward) {
-        line = base::add_sat(line, 1UL);
-    } else {
-        // Edge case.
-        // TODO: See if we can handle this cleaner.
-        if (line == 0) {
-            return begin();
-        }
+//     if (forward) {
+//         line = base::add_sat(line, 1UL);
+//     } else {
+//         // Edge case.
+//         // TODO: See if we can handle this cleaner.
+//         if (line == 0) {
+//             return begin();
+//         }
 
-        line = base::sub_sat(line, 1UL);
-    }
-    line = std::clamp(line, 0UL, newline_offsets.size());
+//         line = base::sub_sat(line, 1UL);
+//     }
+//     line = std::clamp(line, 0UL, newline_offsets.size());
 
-    for (auto it = getLine(line); it != getLine(line + 1); it++) {
-        const auto& token = *it;
-        const auto& next_token = *std::next(it);
+//     for (auto it = getLine(line); it != getLine(line + 1); it++) {
+//         const auto& token = *it;
+//         const auto& next_token = *std::next(it);
 
-        int glyph_center = std::midpoint(token.total_advance, next_token.total_advance);
-        if (glyph_center >= x) {
-            return it;
-        }
-    }
-    return std::prev(getLine(line + 1));
-}
-
-size_t LineLayoutCache::iteratorIndex(Iterator it) {
-    size_t index = std::distance(begin(), it);
-    return std::clamp(index, 0UL, tokens.size());
-}
-
-LineLayoutCache::Iterator LineLayoutCache::getIterator(size_t index) {
-    return std::min(begin() + index, std::prev(end()));
-}
+//         int glyph_center = std::midpoint(token.total_advance, next_token.total_advance);
+//         if (glyph_center >= x) {
+//             return it;
+//         }
+//     }
+//     return std::prev(getLine(line + 1));
+// }
 
 }

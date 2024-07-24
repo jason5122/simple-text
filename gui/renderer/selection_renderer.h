@@ -19,8 +19,7 @@ public:
                           const LineLayoutCache& line_layout_cache,
                           size_t start_line,
                           size_t end_line);
-    void render(const Size& screen_size, int rendering_pass);
-    void destroyInstances();
+    void flush(const Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

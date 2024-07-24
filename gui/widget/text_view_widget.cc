@@ -174,7 +174,8 @@ void TextViewWidget::draw() {
     //     .x = size.width - vbar_width,
     //     .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     // };
-    // rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, scroll_bar_color, 5);
+    // rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, scroll_bar_color,
+    // 5);
 
     // // Add horizontal scroll bar.
     // int hbar_height = 15;
@@ -184,7 +185,8 @@ void TextViewWidget::draw() {
     //     .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
     //     .y = size.height - hbar_height,
     // };
-    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color, 5);
+    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color,
+    // 5);
 
     // // Add caret.
     // int caret_width = 4;

@@ -43,9 +43,13 @@ FontRasterizer::~FontRasterizer() {}
 
 FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
                                                               uint32_t glyph_id) const {
-    CTFontRef font_ref = pimpl->ct_font.get();
-    // CTFontRef font_ref = pimpl->font_map[font_id].get();
+    CTFontRef font_ref = pimpl->font_map[font_id].get();
     CGGlyph glyph_index = glyph_id;
+
+    if (!font_ref) {
+        std::cerr << "FontRasterizer::rasterizeUTF8() error: CTFontRef is null!\n";
+        std::abort();
+    }
 
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
@@ -133,17 +137,17 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     CFIndex run_count = CFArrayGetCount(run_array);
     for (CFIndex i = 0; i < run_count; i++) {
         CTRunRef ct_run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
-        CTFontRef ct_font =
-            (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
-
-        // TODO: Debug use; remove this.
-        CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
-        NSString* foo = (NSString*)ct_font_name;
-        std::cerr << foo.UTF8String << '\n';
 
         // Cache font in font map.
-        pimpl->font_map.emplace_back(ct_font);
+        ScopedCFTypeRef<CTFontRef> ct_font =
+            (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
         size_t font_id = pimpl->font_map.size();
+        pimpl->font_map.push_back(std::move(ct_font));
+
+        // TODO: Debug use; remove this.
+        CTFontRef temp = pimpl->font_map[font_id].get();
+        CFStringRef ct_font_name = CTFontCopyPostScriptName(temp);
+        std::cerr << ((NSString*)ct_font_name).UTF8String << '\n';
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);

@@ -126,7 +126,7 @@ void TextRenderer::renderText(const Point& offset,
 
     // TODO: Incorporate this into the build system.
     constexpr bool kDebugAtlas = false;
-    if (kDebugAtlas) {
+    if constexpr (kDebugAtlas) {
         int atlas_x_offset = 0;
         for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
             Point coords{

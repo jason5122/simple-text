@@ -11,12 +11,39 @@
 using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
 
+namespace {
+// https://gist.github.com/peter-bloomfield/1b228e2bb654702b1e50ef7524121fb9
+inline std::string CFStringToStdString(CFStringRef cf_str) {
+    if (!cf_str) return {};
+
+    // Attempt to access the underlying buffer directly. This only works if no conversion or
+    // internal allocation is required.
+    auto originalBuffer{CFStringGetCStringPtr(cf_str, kCFStringEncodingUTF8)};
+    if (originalBuffer) {
+        return originalBuffer;
+    }
+
+    // Copy the data out to a local buffer.
+    auto lengthInUtf16{CFStringGetLength(cf_str)};
+    // Leave room for null terminator.
+    auto maxLengthInUtf8{CFStringGetMaximumSizeForEncoding(lengthInUtf16, kCFStringEncodingUTF8) +
+                         1};
+    std::vector<char> buffer(maxLengthInUtf8);
+
+    if (CFStringGetCString(cf_str, buffer.data(), maxLengthInUtf8, maxLengthInUtf8)) {
+        return buffer.data();
+    }
+    return {};
+}
+}
+
 namespace font {
 
 class FontRasterizer::impl {
 public:
     ScopedCFTypeRef<CTFontRef> ct_font;
-    std::vector<ScopedCFTypeRef<CTFontRef>> font_map;
+    std::unordered_map<std::string, size_t> font_postscript_name_to_id;
+    std::vector<ScopedCFTypeRef<CTFontRef>> font_id_to_native;
 
     ScopedCFTypeRef<CTLineRef> createCTLine(std::string_view str8);
 };
@@ -43,7 +70,7 @@ FontRasterizer::~FontRasterizer() {}
 
 FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
                                                               uint32_t glyph_id) const {
-    CTFontRef font_ref = pimpl->font_map[font_id].get();
+    CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
     CGGlyph glyph_index = glyph_id;
 
     if (!font_ref) {
@@ -138,16 +165,21 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     for (CFIndex i = 0; i < run_count; i++) {
         CTRunRef ct_run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
 
-        // Cache font in font map.
-        ScopedCFTypeRef<CTFontRef> ct_font =
+        CTFontRef ct_font =
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
-        size_t font_id = pimpl->font_map.size();
-        pimpl->font_map.push_back(std::move(ct_font));
+        CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
+        std::string font_name = CFStringToStdString(ct_font_name);
 
-        // TODO: Debug use; remove this.
-        CTFontRef temp = pimpl->font_map[font_id].get();
-        CFStringRef ct_font_name = CTFontCopyPostScriptName(temp);
-        std::cerr << ((NSString*)ct_font_name).UTF8String << '\n';
+        // Cache font in font map.
+        if (!pimpl->font_postscript_name_to_id.contains(font_name)) {
+            // TODO: Figure out how to automatically retain using ScopedCFTypeRef.
+            ct_font = (CTFontRef)CFRetain(ct_font);
+
+            size_t font_id = pimpl->font_id_to_native.size();
+            pimpl->font_id_to_native.push_back(std::move(ct_font));
+            pimpl->font_postscript_name_to_id[font_name] = font_id;
+        }
+        size_t font_id = pimpl->font_postscript_name_to_id[font_name];
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -206,4 +238,4 @@ ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(std::string_view s
     return CTLineCreateWithAttributedString(attr_string.get());
 }
 
-}  // namespace font
+}

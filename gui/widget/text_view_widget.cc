@@ -155,8 +155,11 @@ void TextViewWidget::draw() {
 
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        size_t line = 0;
-        text_renderer.renderText(position - scroll_offset, line_layout.getLineLayout(line), line);
+        // size_t lines = table.newlineCount() + 1;
+        for (size_t line = start_line; line < end_line; line++) {
+            text_renderer.renderText(position - scroll_offset, line_layout.getLineLayout(line),
+                                     line);
+        }
     }
 
     // // Add selections.

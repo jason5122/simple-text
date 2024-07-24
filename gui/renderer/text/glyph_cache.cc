@@ -1,8 +1,5 @@
 #include "glyph_cache.h"
 
-// TODO: Debug use; remove this.
-#include <iostream>
-
 namespace gui {
 
 GlyphCache::GlyphCache(const std::string& font_name_utf8, int font_size)
@@ -14,8 +11,6 @@ GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id) {
     if (!cache[font_id].contains(glyph_id)) {
         font::FontRasterizer::RasterizedGlyph rglyph =
             font_rasterizer.rasterizeUTF8(font_id, glyph_id);
-
-        std::cerr << rglyph.left << '\n';
 
         cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
     }

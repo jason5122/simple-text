@@ -90,6 +90,8 @@ LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x
 void LineLayout::reflow(const base::PieceTable& table,
                         const base::Buffer& buffer,
                         GlyphCache& main_glyph_cache) {
+    line_layouts.clear();
+
     {
         PROFILE_BLOCK("Core Text reflow");
         size_t lines = table.newlineCount() + 1;

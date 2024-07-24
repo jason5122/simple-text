@@ -8,20 +8,22 @@ using namespace opengl;
 namespace {
 #if BUILDFLAG(IS_MAC)
 constexpr int kMainFontSize = 16 * 2;
-constexpr std::string kMainFontFace = "SF Pro Text";
+constexpr std::string kUIFontFace = "SF Pro Text";
 #elif BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
 constexpr int kMainFontSize = 12 * 2;
-constexpr std::string kMainFontFace = "Arial";
+constexpr std::string kUIFontFace = "Arial";
 #endif
 
+constexpr std::string kMainFontFace = "Fira Code";
+// constexpr std::string kMainFontFace = "Source Code Pro";
 constexpr int kUIFontSize = 11 * 2;
 }
 
 namespace gui {
 
 Renderer::Renderer()
-    : main_glyph_cache{"Source Code Pro", kMainFontSize},
-      ui_glyph_cache{kMainFontFace, kUIFontSize},
+    : main_glyph_cache{kMainFontFace, kMainFontSize},
+      ui_glyph_cache{kUIFontFace, kUIFontSize},
       text_renderer{main_glyph_cache, ui_glyph_cache},
       selection_renderer{main_glyph_cache} {
     glEnable(GL_BLEND);

@@ -7,7 +7,7 @@ source_set("renderer") {
     "selection_renderer.cc",
     "shader.cc",
     "text/glyph_cache.cc",
-    "text/line_layout.cc",
+    "text/line_layout_cache.cc",
     "text/text_renderer.cc",
   ]
 

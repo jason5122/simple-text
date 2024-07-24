@@ -1,6 +1,6 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
-#include "line_layout.h"
+#include "line_layout_cache.h"
 #include <algorithm>
 #include <numeric>
 
@@ -11,7 +11,7 @@
 
 namespace gui {
 
-LineLayout::LineLayout(const base::PieceTable& table) {
+LineLayoutCache::LineLayoutCache(const base::PieceTable& table) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
     for (size_t i = 0; i < table.lineCount(); i++) {
         std::string line = table.line(i);
@@ -20,19 +20,36 @@ LineLayout::LineLayout(const base::PieceTable& table) {
     }
 }
 
-font::FontRasterizer::LineLayout& LineLayout::getLineLayout(size_t line) {
+const font::FontRasterizer::LineLayout& LineLayoutCache::getLineLayout(size_t line) const {
     return line_layouts[line];
 }
 
-LineLayout::Iterator LineLayout::begin() const {
+void LineLayoutCache::reflow(const base::PieceTable& table, size_t line) {
+    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+
+    std::string line_str = table.line(line);
+    auto layout = main_glyph_cache.rasterizer().layoutLine(line_str);
+    line_layouts[line] = std::move(layout);
+
+    // TODO: Debug use; remove this.
+    // Reflow all lines.
+    // line_layouts.clear();
+    // for (size_t i = 0; i < table.lineCount(); i++) {
+    //     std::string line = table.line(i);
+    //     auto layout = main_glyph_cache.rasterizer().layoutLine(line);
+    //     line_layouts.push_back(std::move(layout));
+    // }
+}
+
+LineLayoutCache::Iterator LineLayoutCache::begin() const {
     return tokens.begin();
 }
 
-LineLayout::Iterator LineLayout::end() const {
+LineLayoutCache::Iterator LineLayoutCache::end() const {
     return tokens.end();
 }
 
-LineLayout::Iterator LineLayout::getLine(int line) const {
+LineLayoutCache::Iterator LineLayoutCache::getLine(int line) const {
     if (line >= newline_offsets.size()) {
         return end();
     } else {
@@ -40,7 +57,7 @@ LineLayout::Iterator LineLayout::getLine(int line) const {
     }
 }
 
-LineLayout::Iterator LineLayout::iteratorFromPoint(size_t line, const Point& point) {
+LineLayoutCache::Iterator LineLayoutCache::iteratorFromPoint(size_t line, const Point& point) {
     for (auto it = getLine(line); it != getLine(line + 1); it++) {
         const auto& token = *it;
         const auto& next_token = *std::next(it);
@@ -53,7 +70,7 @@ LineLayout::Iterator LineLayout::iteratorFromPoint(size_t line, const Point& poi
     return std::prev(getLine(line + 1));
 }
 
-LineLayout::Iterator LineLayout::moveByCharacters(bool forward, Iterator caret) {
+LineLayoutCache::Iterator LineLayoutCache::moveByCharacters(bool forward, Iterator caret) {
     if (forward && caret != std::prev(end())) {
         return std::next(caret);
     }
@@ -63,7 +80,7 @@ LineLayout::Iterator LineLayout::moveByCharacters(bool forward, Iterator caret) 
     return caret;
 }
 
-LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x) {
+LineLayoutCache::Iterator LineLayoutCache::moveByLines(bool forward, Iterator caret, int x) {
     size_t line = (*caret).line;
 
     if (forward) {
@@ -91,29 +108,12 @@ LineLayout::Iterator LineLayout::moveByLines(bool forward, Iterator caret, int x
     return std::prev(getLine(line + 1));
 }
 
-void LineLayout::reflow(const base::PieceTable& table, size_t line) {
-    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-
-    std::string line_str = table.line(line);
-    auto layout = main_glyph_cache.rasterizer().layoutLine(line_str);
-    line_layouts[line] = std::move(layout);
-
-    // TODO: Debug use; remove this.
-    // Reflow all lines.
-    // line_layouts.clear();
-    // for (size_t i = 0; i < table.lineCount(); i++) {
-    //     std::string line = table.line(i);
-    //     auto layout = main_glyph_cache.rasterizer().layoutLine(line);
-    //     line_layouts.push_back(std::move(layout));
-    // }
-}
-
-size_t LineLayout::iteratorIndex(Iterator it) {
+size_t LineLayoutCache::iteratorIndex(Iterator it) {
     size_t index = std::distance(begin(), it);
     return std::clamp(index, 0UL, tokens.size());
 }
 
-LineLayout::Iterator LineLayout::getIterator(size_t index) {
+LineLayoutCache::Iterator LineLayoutCache::getIterator(size_t index) {
     return std::min(begin() + index, std::prev(end()));
 }
 

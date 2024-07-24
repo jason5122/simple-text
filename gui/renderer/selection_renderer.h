@@ -2,7 +2,7 @@
 
 #include "gui/renderer/shader.h"
 #include "gui/renderer/text/glyph_cache.h"
-#include "gui/renderer/text/line_layout.h"
+#include "gui/renderer/text/line_layout_cache.h"
 #include "gui/renderer/types.h"
 #include "util/non_copyable.h"
 
@@ -16,9 +16,9 @@ public:
     SelectionRenderer& operator=(SelectionRenderer&& other);
 
     void renderSelections(const Point& offset,
-                          const LineLayout& line_layout,
-                          std::vector<LineLayout::Token>::const_iterator start_caret,
-                          std::vector<LineLayout::Token>::const_iterator end_caret);
+                          const LineLayoutCache& line_layout_cache,
+                          size_t start_line,
+                          size_t end_line);
     void render(const Size& screen_size, int rendering_pass);
     void destroyInstances();
 
@@ -35,10 +35,9 @@ private:
         int end;
     };
 
-    std::vector<Selection> getSelections(
-        const LineLayout& line_layout,
-        std::vector<LineLayout::Token>::const_iterator start_caret,
-        std::vector<LineLayout::Token>::const_iterator end_caret);
+    std::vector<Selection> getSelections(const LineLayoutCache& line_layout_cache,
+                                         size_t start_line,
+                                         size_t end_line);
 
     Shader shader_program;
     GLuint vao = 0;

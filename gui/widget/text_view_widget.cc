@@ -9,56 +9,52 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(const std::string& text)
-    : table{text},
-      line_layout{table},
-      start_caret{line_layout.begin()},
-      end_caret{line_layout.begin()} {
+TextViewWidget::TextViewWidget(const std::string& text) : table{text}, line_layout_cache{table} {
     updateMaxScroll();
 }
 
 void TextViewWidget::selectAll() {
-    start_caret = line_layout.begin();
-    end_caret = std::prev(line_layout.end());
+    // start_caret = line_layout.begin();
+    // end_caret = std::prev(line_layout.end());
     updateCaretX();
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
-    if (by == MoveBy::kCharacters) {
-        end_caret = line_layout.moveByCharacters(forward, end_caret);
-        updateCaretX();
-    }
-    if (by == MoveBy::kLines) {
-        end_caret = line_layout.moveByLines(forward, end_caret, caret_x);
-    }
+    // if (by == MoveBy::kCharacters) {
+    //     end_caret = line_layout.moveByCharacters(forward, end_caret);
+    //     updateCaretX();
+    // }
+    // if (by == MoveBy::kLines) {
+    //     end_caret = line_layout.moveByLines(forward, end_caret, caret_x);
+    // }
 
-    if (!extend) {
-        start_caret = end_caret;
-    }
+    // if (!extend) {
+    //     start_caret = end_caret;
+    // }
 }
 
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
-    size_t line = (*end_caret).line;
-    if (to == MoveTo::kHardBOL) {
-        end_caret = line_layout.getLine(line);
-        updateCaretX();
-    }
-    if (to == MoveTo::kHardEOL) {
-        end_caret = std::prev(line_layout.getLine(line + 1));
-        updateCaretX();
-    }
-    if (to == MoveTo::kBOF) {
-        end_caret = line_layout.begin();
-        updateCaretX();
-    }
-    if (to == MoveTo::kEOF) {
-        end_caret = std::prev(line_layout.end());
-        updateCaretX();
-    }
+    // size_t line = (*end_caret).line;
+    // if (to == MoveTo::kHardBOL) {
+    //     end_caret = line_layout.getLine(line);
+    //     updateCaretX();
+    // }
+    // if (to == MoveTo::kHardEOL) {
+    //     end_caret = std::prev(line_layout.getLine(line + 1));
+    //     updateCaretX();
+    // }
+    // if (to == MoveTo::kBOF) {
+    //     end_caret = line_layout.begin();
+    //     updateCaretX();
+    // }
+    // if (to == MoveTo::kEOF) {
+    //     end_caret = std::prev(line_layout.end());
+    //     updateCaretX();
+    // }
 
-    if (!extend) {
-        start_caret = end_caret;
-    }
+    // if (!extend) {
+    //     start_caret = end_caret;
+    // }
 }
 
 void TextViewWidget::insertText(std::string_view text) {
@@ -70,21 +66,21 @@ void TextViewWidget::insertText(std::string_view text) {
 
     // Store old cursor position before we invalidate our iterators.
     // TODO: Consider always ensuring `start_caret <= end_caret`.
-    LineLayout::Iterator actual_end = std::max(start_caret, end_caret);
-    size_t old_end_index = line_layout.iteratorIndex(actual_end);
+    // LineLayout::Iterator actual_end = std::max(start_caret, end_caret);
+    // size_t old_end_index = line_layout.iteratorIndex(actual_end);
 
     table.insert(end_byte_offset, text);
     {
         PROFILE_BLOCK("LineLayout::reflow()");
-        line_layout.reflow(table, 0);
+        line_layout_cache.reflow(table, 0);
     }
     updateMaxScroll();
 
-    end_caret = line_layout.getIterator(old_end_index);
-    if (end_caret != std::prev(line_layout.end())) {
-        std::advance(end_caret, 1);
-    }
-    start_caret = end_caret;
+    // end_caret = line_layout.getIterator(old_end_index);
+    // if (end_caret != std::prev(line_layout.end())) {
+    //     std::advance(end_caret, 1);
+    // }
+    // start_caret = end_caret;
 }
 
 void TextViewWidget::leftDelete() {
@@ -149,13 +145,12 @@ void TextViewWidget::draw() {
         PROFILE_BLOCK("TextRenderer::renderText()");
         for (size_t line = start_line; line < end_line; line++) {
             text_renderer.renderLineLayout(position - scroll_offset,
-                                           line_layout.getLineLayout(line), line);
+                                           line_layout_cache.getLineLayout(line), line);
         }
     }
 
-    // // Add selections.
-    // selection_renderer.renderSelections(position - scroll_offset, line_layout, start_caret,
-    //                                     end_caret);
+    // Add selections.
+    selection_renderer.renderSelections(position - scroll_offset, line_layout_cache, 0, 1);
 
     // // Add vertical scroll bar.
     // int line_count = buffer.lineCount();
@@ -200,27 +195,27 @@ void TextViewWidget::draw() {
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
-    Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
-    start_caret = end_caret;
+    // Point new_coords = mouse_pos - position + scroll_offset;
+    // end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
+    // start_caret = end_caret;
     updateCaretX();
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
-    Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
+    // Point new_coords = mouse_pos - position + scroll_offset;
+    // end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
     updateCaretX();
 }
 
 void TextViewWidget::updateMaxScroll() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 
-    max_scroll_offset.x = line_layout.longest_line_x;
+    max_scroll_offset.x = line_layout_cache.longest_line_x;
     max_scroll_offset.y = table.lineCount() * text_renderer.lineHeight();
 }
 
 void TextViewWidget::updateCaretX() {
-    caret_x = (*end_caret).total_advance;
+    // caret_x = (*end_caret).total_advance;
 }
 
 size_t TextViewWidget::lineAtPoint(const Point& point) {

@@ -8,11 +8,11 @@
 namespace gui {
 
 // TODO: Use a better name than this maybe.
-class LineLayout {
+class LineLayoutCache {
 public:
-    LineLayout(const base::PieceTable& table);
+    LineLayoutCache(const base::PieceTable& table);
 
-    font::FontRasterizer::LineLayout& getLineLayout(size_t line);
+    const font::FontRasterizer::LineLayout& getLineLayout(size_t line) const;
     void reflow(const base::PieceTable& table, size_t line);
 
     struct Token {

@@ -110,11 +110,10 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
     return *this;
 }
 
-void SelectionRenderer::renderSelections(
-    const Point& offset,
-    const LineLayout& line_layout,
-    std::vector<LineLayout::Token>::const_iterator start_caret,
-    std::vector<LineLayout::Token>::const_iterator end_caret) {
+void SelectionRenderer::renderSelections(const Point& offset,
+                                         const LineLayoutCache& line_layout_cache,
+                                         size_t start_line,
+                                         size_t end_line) {
     auto create = [&, this](int start, int end, int line,
                             uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                             uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -146,7 +145,7 @@ void SelectionRenderer::renderSelections(
     };
 
     std::vector<SelectionRenderer::Selection> selections =
-        getSelections(line_layout, start_caret, end_caret);
+        getSelections(line_layout_cache, start_line, end_line);
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; i++) {
@@ -227,43 +226,16 @@ void SelectionRenderer::destroyInstances() {
 }
 
 std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
-    const LineLayout& line_layout,
-    std::vector<LineLayout::Token>::const_iterator start_caret,
-    std::vector<LineLayout::Token>::const_iterator end_caret) {
-    if (start_caret > end_caret) {
-        std::swap(start_caret, end_caret);
-    }
-    assert(start_caret <= end_caret);
-
+    const LineLayoutCache& line_layout_cache, size_t start_line, size_t end_line) {
     std::vector<SelectionRenderer::Selection> selections;
 
-    size_t start_line = (*start_caret).line;
-    size_t end_line = (*end_caret).line;
-
-    auto it = start_caret;
-    while (it < end_caret) {
-        size_t line = (*it).line;
-
-        // Find either the next line break or the end caret, whichever comes first.
-        auto next_it = std::prev(line_layout.getLine(line + 1));
-        if (next_it >= end_caret) {
-            next_it = std::prev(end_caret);
-        }
-
-        // Only render selection if
-        // 1) the selection is visible, and
-        // 2) the selection width is non-zero.
-        int advance = (*it).total_advance;
-        int next_advance = (*next_it).total_advance + (*next_it).advance;
-        if ((start_line <= line && line <= end_line) && (advance != next_advance)) {
-            selections.emplace_back(SelectionRenderer::Selection{
-                .line = static_cast<int>((*it).line),
-                .start = advance,
-                .end = next_advance,
-            });
-        }
-
-        it = std::next(next_it);
+    for (size_t line = start_line; line < end_line; line++) {
+        auto layout = line_layout_cache.getLineLayout(line);
+        selections.emplace_back(SelectionRenderer::Selection{
+            .line = static_cast<int>(line),
+            .start = 0,
+            .end = layout.width,
+        });
     }
     return selections;
 }

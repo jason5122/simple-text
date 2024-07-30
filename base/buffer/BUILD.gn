@@ -1,8 +1,3 @@
 source_set("buffer") {
-  sources = [
-    "piece_table.cc",
-    "utf8_string.cc",
-  ]
-
-  deps = [ "//third_party/libgrapheme" ]
+  sources = [ "piece_table.cc" ]
 }

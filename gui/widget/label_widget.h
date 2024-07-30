@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer/utf8_string.h"
+#include "font/font_rasterizer.h"
 #include "gui/widget/widget.h"
 
 namespace gui {
@@ -19,7 +19,7 @@ private:
     int left_padding;
     int right_padding;
 
-    base::Utf8String label_text{""};
+    font::FontRasterizer::LineLayout label_line_layout;
     Rgb color{};
     std::vector<size_t> left_side_icons;
     std::vector<size_t> right_side_icons;

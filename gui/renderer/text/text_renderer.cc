@@ -160,28 +160,27 @@ void TextRenderer::renderLineLayout(const Point& offset,
     }
 }
 
-void TextRenderer::addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8) {
-    // int total_advance = 0;
-    // for (const auto& ch : str8.getChars()) {
-    //     GlyphCache::Glyph& glyph = ui_glyph_cache.getGlyph(ch.str);
+void TextRenderer::addUiText(const Point& coords,
+                             const Rgb& color,
+                             const font::FontRasterizer::LineLayout& line_layout) {
+    for (const auto& run : line_layout.runs) {
+        for (const auto& glyph : run.glyphs) {
+            Point glyph_coords{
+                .x = glyph.position.x,
+                .y = 0,
+            };
+            glyph_coords += coords;
 
-    //     // TODO: Rename this.
-    //     Point pos{
-    //         .x = total_advance,
-    //         .y = static_cast<int>(0) * ui_glyph_cache.lineHeight(),
-    //     };
-    //     pos += coords;
-
-    //     InstanceData instance{
-    //         .coords = pos.toVec2(),
-    //         .glyph = glyph.glyph,
-    //         .uv = glyph.uv,
-    //         .color = Rgba::fromRgb(color, glyph.colored),
-    //     };
-    //     insertIntoBatch(glyph.page, std::move(instance), false);
-
-    //     total_advance += glyph.advance;
-    // }
+            GlyphCache::Glyph& rglyph = ui_glyph_cache.getGlyph(run.font_id, glyph.glyph_id);
+            const InstanceData instance{
+                .coords = glyph_coords.toVec2(),
+                .glyph = rglyph.glyph,
+                .uv = rglyph.uv,
+                .color = Rgba::fromRgb(color, rglyph.colored),
+            };
+            insertIntoBatch(rglyph.page, std::move(instance), false);
+        }
+    }
 }
 
 void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {

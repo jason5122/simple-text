@@ -7,7 +7,9 @@ LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
     : Widget{size}, left_padding{left_padding}, right_padding{right_padding} {}
 
 void LabelWidget::setText(const std::string& str8, const Rgb& color) {
-    label_text.setText(str8);
+    GlyphCache& ui_glyph_cache = Renderer::instance().getUiGlyphCache();
+
+    label_line_layout = ui_glyph_cache.rasterizer().layoutLine(str8);
     this->color = color;
 }
 
@@ -53,7 +55,7 @@ void LabelWidget::draw() {
     }
 
     Point text_position = centerVertically(text_renderer.uiLineHeight()) + left_offset;
-    text_renderer.addUiText(text_position, color, label_text);
+    text_renderer.addUiText(text_position, color, label_line_layout);
 }
 
 Point LabelWidget::centerVertically(int widget_height) {

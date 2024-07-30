@@ -42,6 +42,10 @@ GlyphCache& Renderer::getMainGlyphCache() {
     return main_glyph_cache;
 }
 
+GlyphCache& Renderer::getUiGlyphCache() {
+    return ui_glyph_cache;
+}
+
 TextRenderer& Renderer::getTextRenderer() {
     return text_renderer;
 }

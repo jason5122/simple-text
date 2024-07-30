@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/buffer/utf8_string.h"
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/text/glyph_cache.h"
@@ -21,7 +20,9 @@ public:
                           size_t line,
                           int min_x,
                           int max_x);
-    void addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8);
+    void addUiText(const Point& coords,
+                   const Rgb& color,
+                   const font::FontRasterizer::LineLayout& line_layout);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();
     int uiLineHeight();

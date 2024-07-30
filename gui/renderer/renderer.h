@@ -13,6 +13,7 @@ public:
     static Renderer& instance();
 
     GlyphCache& getMainGlyphCache();
+    GlyphCache& getUiGlyphCache();
     TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();

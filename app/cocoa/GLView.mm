@@ -21,8 +21,8 @@
         glLayer = [[[GLLayer alloc] initWithDisplayGL:displayGL] autorelease];
         glLayer->appWindow = appWindow;
 
-        // openGLLayer.needsDisplayOnBoundsChange = true;
-        // openGLLayer.asynchronous = true;
+        // glLayer.needsDisplayOnBoundsChange = true;
+        // glLayer.asynchronous = true;
         self.layer = glLayer;
 
         // Fixes blurriness on HiDPI displays.

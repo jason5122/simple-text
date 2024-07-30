@@ -104,9 +104,27 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 
 void TextRenderer::renderLineLayout(const Point& offset,
                                     const font::FontRasterizer::LineLayout& line_layout,
-                                    size_t line) {
+                                    size_t line,
+                                    int min_x,
+                                    int max_x) {
+    // TODO: Debug use; remove this.
+    size_t iterations = 0;
+    size_t count = 0;
+
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
+            // If we reach a glyph before the minimum x, skip it and continue.
+            // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
+            // This assumes glyph positions are monotonically increasing.
+            if (glyph.position.x < min_x) {
+                continue;
+            }
+            if (glyph.position.x > max_x) {
+                break;
+            }
+            ++iterations;
+            ++count;
+
             Point coords{
                 .x = glyph.position.x,
                 .y = static_cast<int>(line) * lineHeight(),
@@ -123,6 +141,7 @@ void TextRenderer::renderLineLayout(const Point& offset,
             insertIntoBatch(rglyph.page, std::move(instance), true);
         }
     }
+    std::cerr << std::format("render count: {}, iterations = {}\n", count, iterations);
 
     // TODO: Incorporate this into the build system.
     constexpr bool kDebugAtlas = false;

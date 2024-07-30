@@ -18,7 +18,9 @@ public:
 
     void renderLineLayout(const Point& offset,
                           const font::FontRasterizer::LineLayout& line_layout,
-                          size_t line);
+                          size_t line,
+                          int min_x,
+                          int max_x);
     void addUiText(const Point& coords, const Rgb& color, const base::Utf8String& str8);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();

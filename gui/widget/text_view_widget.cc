@@ -141,11 +141,14 @@ void TextViewWidget::draw() {
     start_line = std::clamp(start_line, 0UL, table.lineCount());
     end_line = std::clamp(end_line, 0UL, table.lineCount());
 
+    int min_x = scroll_offset.x;
+    int max_x = scroll_offset.x + size.width;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
         for (size_t line = start_line; line < end_line; line++) {
             text_renderer.renderLineLayout(position - scroll_offset,
-                                           line_layout_cache.getLineLayout(line), line);
+                                           line_layout_cache.getLineLayout(line), line, min_x,
+                                           max_x);
         }
     }
 

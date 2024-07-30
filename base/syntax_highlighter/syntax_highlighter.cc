@@ -65,7 +65,7 @@ void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& colo
 
     uint32_t capture_count = ts_query_capture_count(query);
     capture_index_color_table = std::vector(capture_count, color_scheme.foreground);
-    for (size_t i = 0; i < capture_count; i++) {
+    for (size_t i = 0; i < capture_count; ++i) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
         // std::cerr << "capture name " << i << ": " << capture_name << '\n';
@@ -149,7 +149,7 @@ void SyntaxHighlighter::getHighlights(TSPoint start_point, TSPoint end_point) {
 Rgb SyntaxHighlighter::getColor(size_t byte_offset, config::ColorScheme& color_scheme) {
     size_t size = highlight_ranges.size();
     while (idx < size && byte_offset >= highlight_ranges.at(idx).second) {
-        idx++;
+        ++idx;
     }
 
     if (idx < size && highlight_ranges.at(idx).first <= byte_offset &&

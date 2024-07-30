@@ -12,7 +12,7 @@ static void FSEventsCallback(ConstFSEventStreamRef stream,
     FileWatcherCallback* callback = static_cast<FileWatcherCallback*>(client_info);
 
     char** paths = static_cast<char**>(event_paths);
-    for (int i = 0; i < num_events; i++) {
+    for (int i = 0; i < num_events; ++i) {
         std::cerr << std::format("Change {} in {}, flags {}\n", event_ids[i], paths[i],
                                  event_flags[i]);
 

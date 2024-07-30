@@ -131,7 +131,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 
     // TODO: This assumes little endian; detect and support big endian.
     buffer.reserve(size);
-    for (size_t i = 0; i < pixels; i++) {
+    for (size_t i = 0; i < pixels; ++i) {
         size_t offset = i * 4;
         buffer.emplace_back(bitmap_data[offset + 2]);
         buffer.emplace_back(bitmap_data[offset + 1]);
@@ -162,7 +162,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
-    for (CFIndex i = 0; i < run_count; i++) {
+    for (CFIndex i = 0; i < run_count; ++i) {
         CTRunRef ct_run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
 
         CTFontRef ct_font =
@@ -193,7 +193,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
 
         std::vector<ShapedGlyph> glyphs;
-        for (size_t i = 0; i < glyph_count; i++) {
+        for (size_t i = 0; i < glyph_count; ++i) {
             ShapedGlyph glyph{
                 .glyph_id = glyph_ids[i],
                 // TODO: Use subpixel variants instead of rounding.

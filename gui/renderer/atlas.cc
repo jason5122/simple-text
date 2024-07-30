@@ -31,7 +31,7 @@ Atlas::Atlas() {
         // TODO: Creating this` vector is quite slow, so disable during release.
         atlas_background = std::vector<uint8_t>(kAtlasSize * kAtlasSize * 4, 0);
         size_t pixels = kAtlasSize * kAtlasSize;
-        for (int i = 0; i < pixels; i++) {
+        for (int i = 0; i < pixels; ++i) {
             size_t offset = i * 4;
             atlas_background[offset + 2] = r;
             atlas_background[offset + 1] = g;

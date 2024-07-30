@@ -148,7 +148,7 @@ void SelectionRenderer::renderSelections(const Point& offset,
         getSelections(line_layout_cache, start_line, end_line);
 
     size_t selections_size = selections.size();
-    for (size_t i = 0; i < selections_size; i++) {
+    for (size_t i = 0; i < selections_size; ++i) {
         uint32_t flags = kLeft | kRight;
         uint32_t bottom_border_offset = 0;
         uint32_t top_border_offset = 0;
@@ -231,7 +231,7 @@ std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
     const LineLayoutCache& line_layout_cache, size_t start_line, size_t end_line) {
     std::vector<SelectionRenderer::Selection> selections;
 
-    for (size_t line = start_line; line < end_line; line++) {
+    for (size_t line = start_line; line < end_line; ++line) {
         auto layout = line_layout_cache.getLineLayout(line);
         selections.emplace_back(SelectionRenderer::Selection{
             .line = static_cast<int>(line),

@@ -107,10 +107,6 @@ void TextRenderer::renderLineLayout(const Point& offset,
                                     size_t line,
                                     int min_x,
                                     int max_x) {
-    // TODO: Debug use; remove this.
-    size_t iterations = 0;
-    size_t count = 0;
-
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             // If we reach a glyph before the minimum x, skip it and continue.
@@ -122,8 +118,6 @@ void TextRenderer::renderLineLayout(const Point& offset,
             if (glyph.position.x > max_x) {
                 break;
             }
-            ++iterations;
-            ++count;
 
             Point coords{
                 .x = glyph.position.x,
@@ -141,13 +135,12 @@ void TextRenderer::renderLineLayout(const Point& offset,
             insertIntoBatch(rglyph.page, std::move(instance), true);
         }
     }
-    std::cerr << std::format("render count: {}, iterations = {}\n", count, iterations);
 
     // TODO: Incorporate this into the build system.
     constexpr bool kDebugAtlas = false;
     if constexpr (kDebugAtlas) {
         int atlas_x_offset = 0;
-        for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); page++) {
+        for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); ++page) {
             Point coords{
                 .x = atlas_x_offset,
                 .y = 200,
@@ -206,7 +199,7 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    for (size_t page = 0; page < glyph_cache.atlas_pages.size(); page++) {
+    for (size_t page = 0; page < glyph_cache.atlas_pages.size(); ++page) {
         while (batch_instances.size() <= page) {
             batch_instances.emplace_back();
             batch_instances.back().reserve(kBatchMax);

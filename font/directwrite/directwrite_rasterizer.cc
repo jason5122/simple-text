@@ -189,7 +189,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
 
         std::vector<uint8_t> buffer;
         buffer.reserve(size);
-        for (size_t i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; ++i) {
             buffer.emplace_back(alpha_values[i]);
         }
 
@@ -233,7 +233,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
 
         std::vector<uint8_t> temp_buffer;
         temp_buffer.reserve(pixels * 4);
-        for (size_t i = 0; i < pixels; i++) {
+        for (size_t i = 0; i < pixels; ++i) {
             size_t offset = i * 4;
             temp_buffer.emplace_back(pv[offset]);
             temp_buffer.emplace_back(pv[offset + 1]);

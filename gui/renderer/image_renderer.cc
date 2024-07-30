@@ -185,8 +185,8 @@ bool ImageRenderer::loadPng(size_t index, fs::path file_name) {
     png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
 
     std::vector<uint8_t> buffer(row_bytes * height);
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < row_bytes; j++) {
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < row_bytes; ++j) {
             // PNG is ordered top to bottom, but OpenGL expects bottom to top. This is fine!
             // We want to load the image flipped, since we flip y-coordinates in the vertex shader.
             // int row = height - 1 - i;

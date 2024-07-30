@@ -202,7 +202,7 @@ static inline app::Key GetKey(unsigned short vk) {
         {kVK_UpArrow, app::Key::kUpArrow},
     };
 
-    for (size_t i = 0; i < std::size(gPair); i++) {
+    for (size_t i = 0; i < std::size(gPair); ++i) {
         if (gPair[i].fVK == vk) {
             return gPair[i].fKey;
         }

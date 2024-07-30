@@ -47,7 +47,7 @@ void PieceTable::insert(size_t index, std::string_view str) {
 
         // Split up line starts, if necessary.
         std::list<size_t> p3_newlines;
-        for (auto it = p1.newlines.begin(); it != p1.newlines.end(); it++) {
+        for (auto it = p1.newlines.begin(); it != p1.newlines.end(); ++it) {
             if ((*it) >= p1.length) {
                 p3_newlines.splice(p3_newlines.begin(), p1.newlines, it, p1.newlines.end());
                 break;
@@ -88,7 +88,7 @@ void PieceTable::erase(size_t index, size_t count) {
 
         // Split up line starts, if necessary.
         std::list<size_t> p2_newlines;
-        for (auto it = p1.newlines.begin(); it != p1.newlines.end(); it++) {
+        for (auto it = p1.newlines.begin(); it != p1.newlines.end(); ++it) {
             if ((*it) >= p1.length) {
                 p2_newlines.splice(p2_newlines.begin(), p1.newlines, it, p1.newlines.end());
                 break;
@@ -122,7 +122,7 @@ void PieceTable::erase(size_t index, size_t count) {
         p1.length -= sub;
         count -= sub;
         m_length -= sub;
-        it++;
+        ++it;
 
         // Remove erased line starts.
         size_t old_size = p1.newlines.size();
@@ -155,7 +155,7 @@ void PieceTable::erase(size_t index, size_t count) {
             }
 
             offset += (*it).length;
-            it++;
+            ++it;
         }
     }
 }
@@ -182,7 +182,7 @@ std::string PieceTable::line(size_t index) const {
     auto last = newline(index);
 
     std::string line_str;
-    for (auto it = first; it != last; it++) {
+    for (auto it = first; it != last; ++it) {
         line_str += *it;
     }
     return line_str;
@@ -242,7 +242,7 @@ PieceTable::const_iterator PieceTable::cend() const {
 
 PieceTable::iterator PieceTable::newline(size_t index) {
     size_t count = 0;
-    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+    for (auto it = pieces.begin(); it != pieces.end(); ++it) {
         size_t n = (*it).newlines.size();
         if (count + n < index) {
             count += n;
@@ -251,7 +251,7 @@ PieceTable::iterator PieceTable::newline(size_t index) {
                 if (count == index) {
                     return {*this, it, newline};
                 }
-                count++;
+                ++count;
             }
         }
     }
@@ -261,7 +261,7 @@ PieceTable::iterator PieceTable::newline(size_t index) {
 // This calls the const overloads for `begin()/end()` since we are in a const method.
 PieceTable::const_iterator PieceTable::newline(size_t index) const {
     size_t count = 0;
-    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+    for (auto it = pieces.begin(); it != pieces.end(); ++it) {
         size_t n = (*it).newlines.size();
         if (count + n < index) {
             count += n;
@@ -270,7 +270,7 @@ PieceTable::const_iterator PieceTable::newline(size_t index) const {
                 if (count == index) {
                     return {*this, it, newline};
                 }
-                count++;
+                ++count;
             }
         }
     }
@@ -292,7 +292,7 @@ std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
             return {it, offset};
         }
         offset += (*it).length;
-        it++;
+        ++it;
     }
 
     std::cerr << "PieceTable::pieceAt() internal error: index <= length(), but there was no "
@@ -302,7 +302,7 @@ std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
 
 std::list<size_t> PieceTable::cacheNewlines(std::string_view str) {
     std::list<size_t> newlines;
-    for (size_t i = 0; i < str.length(); i++) {
+    for (size_t i = 0; i < str.length(); ++i) {
         if (str[i] == '\n') {
             newlines.emplace_back(i);
         }
@@ -323,7 +323,7 @@ std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
 
         // TODO: Simplify this by implementing `std::format` support for `std::list` elsewhere.
         std::string newlines_str = "[";
-        for (auto it = piece.newlines.begin(); it != piece.newlines.end(); it++) {
+        for (auto it = piece.newlines.begin(); it != piece.newlines.end(); ++it) {
             newlines_str += std::to_string(*it);
             if (std::next(it) != piece.newlines.end()) {
                 newlines_str += ", ";

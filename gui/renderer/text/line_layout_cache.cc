@@ -13,7 +13,7 @@ namespace gui {
 
 LineLayoutCache::LineLayoutCache(const base::PieceTable& table) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-    for (size_t i = 0; i < table.lineCount(); i++) {
+    for (size_t i = 0; i < table.lineCount(); ++i) {
         std::string line = table.line(i);
         auto layout = main_glyph_cache.rasterizer().layoutLine(line);
         line_layouts.push_back(std::move(layout));
@@ -36,7 +36,7 @@ void LineLayoutCache::reflow(const base::PieceTable& table, size_t line) {
     // TODO: Debug use; remove this.
     // Reflow all lines.
     // line_layouts.clear();
-    // for (size_t i = 0; i < table.lineCount(); i++) {
+    // for (size_t i = 0; i < table.lineCount(); ++i) {
     //     std::string line = table.line(i);
     //     auto layout = main_glyph_cache.rasterizer().layoutLine(line);
     //     line_layouts.push_back(std::move(layout));
@@ -48,7 +48,7 @@ int LineLayoutCache::maxWidth() const {
 }
 
 // LineLayoutCache::Iterator LineLayoutCache::iteratorFromPoint(size_t line, const Point& point) {
-//     for (auto it = getLine(line); it != getLine(line + 1); it++) {
+//     for (auto it = getLine(line); it != getLine(line + 1); ++it) {
 //         const auto& token = *it;
 //         const auto& next_token = *std::next(it);
 
@@ -86,7 +86,7 @@ int LineLayoutCache::maxWidth() const {
 //     }
 //     line = std::clamp(line, 0UL, newline_offsets.size());
 
-//     for (auto it = getLine(line); it != getLine(line + 1); it++) {
+//     for (auto it = getLine(line); it != getLine(line + 1); ++it) {
 //         const auto& token = *it;
 //         const auto& next_token = *std::next(it);
 

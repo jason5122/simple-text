@@ -145,7 +145,7 @@ void TextViewWidget::draw() {
     int max_x = scroll_offset.x + size.width;
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
-        for (size_t line = start_line; line < end_line; line++) {
+        for (size_t line = start_line; line < end_line; ++line) {
             text_renderer.renderLineLayout(position - scroll_offset,
                                            line_layout_cache.getLineLayout(line), line, min_x,
                                            max_x);

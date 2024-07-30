@@ -26,7 +26,7 @@ inline std::string RandomString(size_t length) {
 // Like `RandomString()`, but the string is guaranteed to contain a specified number of newlines.
 inline std::string RandomNewlineString(size_t length, size_t newlines) {
     std::string str = RandomString(base::sub_sat(length, newlines));
-    for (size_t k = 0; k < newlines; k++) {
+    for (size_t k = 0; k < newlines; ++k) {
         size_t i = RandomNumber(0, str.length());
         str.insert(i, "\n");
     }
@@ -79,7 +79,7 @@ TEST(PieceTableTest, InsertAtBeginningOfString2) {
     PieceTable table{str};
 
     const std::string s1 = "String1 ";
-    for (size_t n = 0; n < 5; n++) {
+    for (size_t n = 0; n < 5; ++n) {
         str.insert(0, s1);
         table.insert(0, s1);
         EXPECT_EQ(str, table.str());
@@ -281,7 +281,7 @@ TEST(PieceTableTest, InsertAtRandom) {
     std::string str = "";
     PieceTable table{str};
 
-    for (size_t n = 0; n < 100; n++) {
+    for (size_t n = 0; n < 100; ++n) {
         size_t index = RandomNumber(0, str.length());
         const std::string random_str = RandomString(RandomNumber(0, 10));
 
@@ -482,11 +482,11 @@ TEST(PieceTableTest, EraseEmpty) {
 TEST(PieceTableTest, EraseAtRandom) {
     constexpr std::string_view original_str = "The quick brown fox\njumped over the lazy dog";
 
-    for (size_t n = 0; n < 100; n++) {
+    for (size_t n = 0; n < 100; ++n) {
         std::string str{original_str};
         PieceTable table{original_str};
 
-        for (size_t i = 0; i < 10; i++) {
+        for (size_t i = 0; i < 10; ++i) {
             size_t index = RandomNumber(0, str.length());
             size_t count = RandomNumber(0, str.length());
 
@@ -502,7 +502,7 @@ TEST(PieceTableTest, CombinedRandomTest1) {
     std::string str = "";
     PieceTable table{str};
 
-    for (size_t n = 0; n < 100; n++) {
+    for (size_t n = 0; n < 100; ++n) {
         // Randomly insert.
         size_t insert_index = RandomNumber(0, str.length());
         const std::string random_str = RandomString(RandomNumber(0, 10));
@@ -531,7 +531,7 @@ TEST(PieceTableTest, IteratorIncrementTest) {
     // Iterate manually.
     std::string temp1;
     auto it1 = table.begin();
-    for (size_t i = 0; i < table.length(); i++) {
+    for (size_t i = 0; i < table.length(); ++i) {
         EXPECT_NE(it1, table.end());
         temp1 += *it1;
         it1++;
@@ -541,7 +541,7 @@ TEST(PieceTableTest, IteratorIncrementTest) {
 
     // Iterate using for loop.
     std::string temp2;
-    for (auto it = table.begin(); it != table.end(); it++) {
+    for (auto it = table.begin(); it != table.end(); ++it) {
         EXPECT_NE(it, table.end());
         temp2 += *it;
     }
@@ -640,8 +640,8 @@ TEST(PieceTableTest, IteratorNewlineInsertTest1) {
             EXPECT_NE(*table_it, '\n');
         }
 
-        str_it++;
-        table_it++;
+        ++str_it;
+        ++table_it;
     }
 }
 
@@ -649,7 +649,7 @@ TEST(PieceTableTest, IteratorRandomNewlineInsertTest1) {
     std::string str = "The \nquick brown fox\njumped over the lazy dog";
     PieceTable table{str};
 
-    for (size_t n = 0; n < 100; n++) {
+    for (size_t n = 0; n < 100; ++n) {
         size_t index = RandomNumber(0, str.length());
         const std::string newline_str = RandomNewlineString(RandomNumber(1, 10), 1);
 
@@ -666,7 +666,7 @@ TEST(PieceTableTest, IteratorRandomNewlineInsertTest2) {
     std::string str = "The \nquick brown fox\njumped over the lazy dog";
     PieceTable table{str};
 
-    for (size_t n = 0; n < 100; n++) {
+    for (size_t n = 0; n < 100; ++n) {
         size_t index = RandomNumber(0, str.length());
         const std::string newline_str = RandomNewlineString(RandomNumber(1, 50), 5);
 
@@ -722,11 +722,11 @@ TEST(PieceTableTest, IteratorNewlineEraseTest3) {
 }
 
 TEST(PieceTableTest, IteratorRandomNewlineEraseTest1) {
-    for (size_t n = 0; n < 100; n++) {
+    for (size_t n = 0; n < 100; ++n) {
         std::string str = RandomNewlineString(100, 20);
         PieceTable table{str};
 
-        for (size_t i = 0; i < 10; i++) {
+        for (size_t i = 0; i < 10; ++i) {
             size_t index = RandomNumber(0, str.length());
             size_t count = RandomNumber(0, 5);
 
@@ -766,7 +766,7 @@ TEST(PieceTableTest, IteratorCustomNewlineEraseTest2) {
     std::string str = "";
     PieceTable table{str};
 
-    for (size_t k = 0; k < 6; k++) {
+    for (size_t k = 0; k < 6; ++k) {
         str.erase(0, 0);
         table.erase(0, 0);
         EXPECT_EQ(str, table.str());
@@ -803,12 +803,12 @@ TEST(PieceTableTest, IteratorNewlineTest1) {
     PieceTable table{str};
 
     std::string line0;
-    for (auto it = table.begin(); it != table.newline(0); it++) {
+    for (auto it = table.begin(); it != table.newline(0); ++it) {
         line0 += *it;
     }
 
     std::string line1;
-    for (auto it = std::next(table.newline(0)); it != table.newline(1); it++) {
+    for (auto it = std::next(table.newline(0)); it != table.newline(1); ++it) {
         line1 += *it;
     }
 
@@ -865,7 +865,7 @@ TEST(PieceTableTest, ConstIteratorTest1) {
 
     while (it != table.end()) {
         EXPECT_EQ(*it, *cit);
-        it++;
+        ++it;
         ++cit;
     }
 }

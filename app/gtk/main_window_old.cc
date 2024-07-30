@@ -205,7 +205,7 @@ static inline gui::Key GetKey(guint vk) {
         {GDK_KEY_Up, gui::Key::kUpArrow},
     };
 
-    for (size_t i = 0; i < std::size(gPair); i++) {
+    for (size_t i = 0; i < std::size(gPair); ++i) {
         if (gPair[i].fVK == vk) {
             return gPair[i].fKey;
         }

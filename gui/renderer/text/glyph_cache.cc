@@ -29,7 +29,7 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::FontRasterizer::RasterizedGl
     // The current page is full, so create a new page and try again.
     if (!success) {
         atlas_pages.emplace_back();
-        current_page++;
+        ++current_page;
 
         return loadGlyph(rglyph);
     }

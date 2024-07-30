@@ -65,7 +65,7 @@ static inline app::Key GetKey(WPARAM vk) {
         {VK_DOWN, app::Key::kDownArrow},
         {VK_UP, app::Key::kUpArrow},
     };
-    for (size_t i = 0; i < std::size(gPair); i++) {
+    for (size_t i = 0; i < std::size(gPair); ++i) {
         if (gPair[i].fVK == vk) {
             return gPair[i].fKey;
         }
@@ -201,7 +201,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             click_count = 0;
         }
         // TODO: Prevent this from overflowing! This is unlikely, but prevent it anyways.
-        click_count++;
+        ++click_count;
         last_click_time = click_time;
 
         int mouse_x = GET_X_LPARAM(lParam);

@@ -49,6 +49,15 @@ config("no_exceptions") {
   }
 }
 
+config("no_rtti") {
+  if (is_win) {
+    cflags_cc = [ "/GR-" ]
+  } else {
+    cflags_cc = [ "-fno-rtti" ]
+    cflags_objcc = cflags_cc
+  }
+}
+
 config("c99") {
   if (is_win) {
     # FIXME: Figure out how to override C standard flag on Windows.
@@ -58,10 +67,41 @@ config("c99") {
   }
 }
 
-config("optimizations") {
-  cflags = [
-    "-flto=thin",
-    "-O2",
-  ]
-  ldflags = cflags
+config("optimize") {
+  if (is_win) {
+    # TODO: Verify these flags do what we want on Windows.
+    cflags = [
+      "/O2",
+      "/Ob2",  # Both explicit and auto inlining.
+      "/Oy-",  # Disable omitting frame pointers, must be after /O2.
+      "/Zc:inline",  # Remove unreferenced COMDAT (faster links).
+      "/Oi",
+    ]
+  } else {
+    cflags = [ "-O2" ]
+
+    # TODO: Consider moving LTO into a separate config.
+    ldflags = [ "-flto=thin" ]
+  }
+}
+
+config("no_optimize") {
+  if (is_win) {
+    # TODO: Verify these flags do what we want on Windows.
+    cflags = [
+      "/Od",  # Disable optimization.
+      "/Ob0",  # Disable all inlining (on by default).
+      "/GF",  # Enable string pooling (off by default).
+    ]
+  } else {
+    cflags = [ "-O0" ]
+  }
+}
+
+config("default_optimization") {
+  if (is_release) {
+    configs = [ ":optimize" ]
+  } else {
+    configs = [ ":no_optimize" ]
+  }
 }

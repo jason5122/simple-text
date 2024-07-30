@@ -199,6 +199,7 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
     glBindVertexArray(vao);
 
     for (size_t page = 0; page < glyph_cache.atlas_pages.size(); ++page) {
+        // TODO: Refactor this ugly hack.
         while (batch_instances.size() <= page) {
             batch_instances.emplace_back();
             batch_instances.back().reserve(kBatchMax);
@@ -241,6 +242,7 @@ void TextRenderer::insertIntoBatch(size_t page,
                                    bool use_main_glyph_cache) {
     auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
 
+    // TODO: Refactor this ugly hack.
     while (batch_instances.size() <= page) {
         batch_instances.emplace_back();
         batch_instances.back().reserve(kBatchMax);

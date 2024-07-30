@@ -1,3 +1,6 @@
+# =============================================================================
+# PLATFORM SELECTION
+# =============================================================================
 if (target_os == "") {
   target_os = host_os
 }
@@ -5,17 +8,34 @@ if (target_cpu == "") {
   target_cpu = host_cpu
 }
 
+# =============================================================================
+# BUILD FLAGS
+# =============================================================================
+declare_args() {
+  is_release = false
+}
+
+# =============================================================================
+# OS DEFINITIONS
+# =============================================================================
 is_mac = target_os == "mac"
 is_linux = target_os == "linux"
 is_win = target_os == "win"
 
+# =============================================================================
+# TARGET DEFAULTS
+# =============================================================================
 default_compiler_configs = [
   "//build/config/compiler",
   "//build/config/compiler:default_include_dirs",
+  "//build/config/compiler:default_optimization",
   "//build/config/compiler:no_exceptions",
-
-  # "//build/config/compiler:optimizations",
+  "//build/config/compiler:no_rtti",
 ]
+
+if (is_release) {
+  default_compiler_configs += [ "//build/config:release" ]
+}
 
 set_defaults("executable") {
   configs = default_compiler_configs

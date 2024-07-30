@@ -60,7 +60,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     editor_widget = std::make_shared<EditorWidget>();
     editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     editor_widget->addTab("unicode.txt", kUnicode);
-    editor_widget->addTab("long_line.txt", kSampleText + Repeat(kLongLine, 50));
+    editor_widget->addTab("long_line.txt", Repeat(kLongLine, 50) + kSampleText);
     editor_widget->addTab("sample_text.txt", Repeat(kSampleText, 50) + kLongLine);
 
     // Main widgets.

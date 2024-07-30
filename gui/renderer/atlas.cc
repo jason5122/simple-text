@@ -33,9 +33,9 @@ Atlas::Atlas() {
         size_t pixels = kAtlasSize * kAtlasSize;
         for (int i = 0; i < pixels; ++i) {
             size_t offset = i * 4;
-            atlas_background[offset + 2] = r;
+            atlas_background[offset] = r;
             atlas_background[offset + 1] = g;
-            atlas_background[offset] = b;
+            atlas_background[offset + 2] = b;
             atlas_background[offset + 3] = 255;
         }
 

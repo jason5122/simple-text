@@ -40,7 +40,7 @@ size_t EditorWidget::getCurrentIndex() {
 }
 
 void EditorWidget::addTab(const std::string& tab_name, const std::string& text) {
-    assert(false == true);
+    // assert(false == true);
     multi_view->addTab(text);
     tab_bar->addTab(tab_name);
     layout();

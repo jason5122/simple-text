@@ -135,29 +135,6 @@ void TextRenderer::renderLineLayout(const Point& offset,
             insertIntoBatch(rglyph.page, std::move(instance), true);
         }
     }
-
-    // TODO: Incorporate this into the build system.
-    constexpr bool kDebugAtlas = false;
-    if constexpr (kDebugAtlas) {
-        int atlas_x_offset = 0;
-        for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); ++page) {
-            Point coords{
-                .x = atlas_x_offset,
-                .y = 200,
-            };
-            coords += offset;
-
-            InstanceData instance{
-                .coords = coords.toVec2(),
-                .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-                .uv = Vec4{0, 0, 1.0, 1.0},
-                .color = Rgba{255, 0, 0, 0},
-            };
-            insertIntoBatch(page, std::move(instance), true);
-
-            atlas_x_offset += Atlas::kAtlasSize + 100;
-        }
-    }
 }
 
 void TextRenderer::addUiText(const Point& coords,
@@ -235,6 +212,27 @@ int TextRenderer::lineHeight() {
 
 int TextRenderer::uiLineHeight() {
     return ui_glyph_cache.lineHeight();
+}
+
+void TextRenderer::renderAtlases(const Point& coords) {
+    int atlas_x_offset = 0;
+    for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); ++page) {
+        Point atlas_coords{
+            .x = atlas_x_offset,
+            .y = 0,
+        };
+        atlas_coords += coords;
+
+        InstanceData instance{
+            .coords = atlas_coords.toVec2(),
+            .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+            .uv = Vec4{0, 0, 1.0, 1.0},
+            .color = Rgba{255, 255, 255, true},
+        };
+        insertIntoBatch(page, std::move(instance), true);
+
+        atlas_x_offset += Atlas::kAtlasSize + 100;
+    }
 }
 
 void TextRenderer::insertIntoBatch(size_t page,

@@ -27,6 +27,9 @@ public:
     int lineHeight();
     int uiLineHeight();
 
+    // DEBUG: Draws all texture atlases.
+    void renderAtlases(const Point& coords);
+
 private:
     static constexpr size_t kBatchMax = 0x10000;
 

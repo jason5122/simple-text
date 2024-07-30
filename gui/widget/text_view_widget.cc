@@ -151,6 +151,10 @@ void TextViewWidget::draw() {
                                            max_x);
         }
     }
+    constexpr bool kDebugAtlas = false;
+    if constexpr (kDebugAtlas) {
+        text_renderer.renderAtlases(position);
+    }
 
     // Add selections.
     selection_renderer.renderSelections(position - scroll_offset, line_layout_cache, 0, 1);

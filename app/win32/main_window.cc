@@ -15,10 +15,10 @@
 #include <format>
 #include <iostream>
 
-namespace app {
+namespace {
 
-static inline app::Key GetKey(WPARAM vk) {
-    static constexpr struct {
+constexpr app::Key GetKey(WPARAM vk) {
+    constexpr struct {
         WPARAM fVK;
         app::Key fKey;
     } gPair[] = {
@@ -73,7 +73,7 @@ static inline app::Key GetKey(WPARAM vk) {
     return app::Key::kNone;
 }
 
-static inline app::ModifierKey GetModifiers(void) {
+inline app::ModifierKey GetModifiers() {
     app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (GetKeyState(VK_SHIFT) & 0x8000) {
         modifiers |= app::ModifierKey::kShift;
@@ -89,6 +89,23 @@ static inline app::ModifierKey GetModifiers(void) {
     }
     return modifiers;
 }
+
+inline void AddMenu(HWND hwnd) {
+    HMENU menubar = CreateMenu();
+    HMENU file_menu = CreateMenu();
+
+    // https://learn.microsoft.com/en-us/windows/win32/menurc/about-menus#menu-shortcut-keys
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File\tCtrl+N");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window\tCtrl+Shift+N");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"E&xit\tCtrl+Q");
+    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"&File");
+
+    SetMenu(hwnd, menubar);
+}
+
+}
+
+namespace app {
 
 LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -334,19 +351,6 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 void MainWindow::redraw() {
     InvalidateRect(m_hwnd, NULL, FALSE);
-}
-
-static inline void AddMenu(HWND hwnd) {
-    HMENU menubar = CreateMenu();
-    HMENU file_menu = CreateMenu();
-
-    // https://learn.microsoft.com/en-us/windows/win32/menurc/about-menus#menu-shortcut-keys
-    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File\tCtrl+N");
-    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window\tCtrl+Shift+N");
-    AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"E&xit\tCtrl+Q");
-    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"&File");
-
-    SetMenu(hwnd, menubar);
 }
 
 BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {

@@ -2,7 +2,7 @@
 
 #include <string>
 
-static inline std::string EscapeSpecialChars(const std::string& str) {
+constexpr std::string EscapeSpecialChars(const std::string& str) {
     std::string result;
     for (auto c : str) {
         switch (c) {

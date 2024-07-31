@@ -8,11 +8,11 @@ fs::path ResourceDir() {
 
 // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/AccessingFilesandDirectories/AccessingFilesandDirectories.html
 fs::path DataDir() {
-    NSFileManager* shared_fm = [NSFileManager defaultManager];
+    NSFileManager* shared_fm = NSFileManager.defaultManager;
     NSArray* possible_urls = [shared_fm URLsForDirectory:NSApplicationSupportDirectory
                                                inDomains:NSUserDomainMask];
     NSURL* app_support_dir = nil;
-    if ([possible_urls count] >= 1) {
+    if (possible_urls.count >= 1) {
         app_support_dir = [possible_urls objectAtIndex:0];
     }
 

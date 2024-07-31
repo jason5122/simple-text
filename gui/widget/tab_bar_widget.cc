@@ -1,3 +1,4 @@
+#include "base/numeric/wrap_arithmetic.h"
 #include "gui/renderer/renderer.h"
 #include "tab_bar_widget.h"
 
@@ -13,16 +14,12 @@ void TabBarWidget::setIndex(size_t index) {
     }
 }
 
-static inline int PositiveModulo(int i, int n) {
-    return (i % n + n) % n;
-}
-
 void TabBarWidget::prevIndex() {
-    index = PositiveModulo(index - 1, tab_name_labels.size());
+    index = base::dec_wrap(index, tab_name_labels.size());
 }
 
 void TabBarWidget::nextIndex() {
-    index = PositiveModulo(index + 1, tab_name_labels.size());
+    index = base::inc_wrap(index, tab_name_labels.size());
 }
 
 void TabBarWidget::addTab(const std::string& title) {

@@ -1,3 +1,4 @@
+#include "base/numeric/wrap_arithmetic.h"
 #include "multi_view_widget.h"
 
 namespace gui {
@@ -7,22 +8,18 @@ MultiViewWidget::MultiViewWidget() {
     addTab("Hi 💣🇺🇸 Hello world!");
 }
 
-void MultiViewWidget::setIndex(int index) {
+void MultiViewWidget::setIndex(size_t index) {
     if (index < text_views.size()) {
         this->index = index;
     }
 }
 
-static inline int PositiveModulo(int i, int n) {
-    return (i % n + n) % n;
-}
-
 void MultiViewWidget::prevIndex() {
-    index = PositiveModulo(index - 1, text_views.size());
+    index = base::dec_wrap(index, text_views.size());
 }
 
 void MultiViewWidget::nextIndex() {
-    index = PositiveModulo(index + 1, text_views.size());
+    index = base::inc_wrap(index, text_views.size());
 }
 
 size_t MultiViewWidget::getCurrentIndex() {
@@ -38,39 +35,57 @@ void MultiViewWidget::removeTab(size_t index) {
 }
 
 void MultiViewWidget::selectAll() {
-    text_views[index]->selectAll();
+    if (!text_views.empty()) {
+        text_views[index]->selectAll();
+    }
 }
 
 void MultiViewWidget::move(MoveBy by, bool forward, bool extend) {
-    text_views[index]->move(by, forward, extend);
+    if (!text_views.empty()) {
+        text_views[index]->move(by, forward, extend);
+    }
 }
 
 void MultiViewWidget::moveTo(MoveTo to, bool extend) {
-    text_views[index]->moveTo(to, extend);
+    if (!text_views.empty()) {
+        text_views[index]->moveTo(to, extend);
+    }
 }
 
 void MultiViewWidget::insertText(std::string_view text) {
-    text_views[index]->insertText(text);
+    if (!text_views.empty()) {
+        text_views[index]->insertText(text);
+    }
 }
 
 void MultiViewWidget::leftDelete() {
-    text_views[index]->leftDelete();
+    if (!text_views.empty()) {
+        text_views[index]->leftDelete();
+    }
 }
 
 void MultiViewWidget::draw() {
-    text_views[index]->draw();
+    if (!text_views.empty()) {
+        text_views[index]->draw();
+    }
 }
 
 void MultiViewWidget::scroll(const Point& mouse_pos, const Point& delta) {
-    text_views[index]->scroll(mouse_pos, delta);
+    if (!text_views.empty()) {
+        text_views[index]->scroll(mouse_pos, delta);
+    }
 }
 
 void MultiViewWidget::leftMouseDown(const Point& mouse_pos) {
-    text_views[index]->leftMouseDown(mouse_pos);
+    if (!text_views.empty()) {
+        text_views[index]->leftMouseDown(mouse_pos);
+    }
 }
 
 void MultiViewWidget::leftMouseDrag(const Point& mouse_pos) {
-    text_views[index]->leftMouseDrag(mouse_pos);
+    if (!text_views.empty()) {
+        text_views[index]->leftMouseDrag(mouse_pos);
+    }
 }
 
 void MultiViewWidget::layout() {

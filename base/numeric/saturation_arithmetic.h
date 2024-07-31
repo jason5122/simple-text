@@ -4,6 +4,15 @@
 
 #include <limits>
 
+namespace {
+
+constexpr int min_int = std::numeric_limits<int>::min();
+constexpr int max_int = std::numeric_limits<int>::max();
+constexpr size_t min_size_t = std::numeric_limits<size_t>::min();
+constexpr size_t max_size_t = std::numeric_limits<size_t>::max();
+
+}
+
 namespace base {
 
 template <class T> constexpr T add_sat(T x, T y) noexcept {
@@ -60,11 +69,6 @@ template <class T> constexpr T sub_sat(T x, T y) noexcept {
 
 static_assert(std::is_unsigned<int>::value == false);
 static_assert(std::is_unsigned<size_t>::value == true);
-
-constexpr int min_int = std::numeric_limits<int>::min();
-constexpr int max_int = std::numeric_limits<int>::max();
-constexpr size_t min_size_t = std::numeric_limits<size_t>::min();
-constexpr size_t max_size_t = std::numeric_limits<size_t>::max();
 
 // No overflow (simple tests).
 static_assert(add_sat(10, 5) == 15);

@@ -12,7 +12,7 @@ class MultiViewWidget : public Widget {
 public:
     MultiViewWidget();
 
-    void setIndex(int index);
+    void setIndex(size_t index);
     void prevIndex();
     void nextIndex();
     size_t getCurrentIndex();
@@ -31,7 +31,7 @@ public:
     void layout() override;
 
 private:
-    int index = 0;  // TODO: Replace this with `size_t` and implement a positive modulo function.
+    size_t index = 0;
     std::vector<std::shared_ptr<TextViewWidget>> text_views;
 };
 

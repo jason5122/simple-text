@@ -23,7 +23,7 @@ private:
     static constexpr int kTabCornerRadius = 10;
     static constexpr Size kTabSeparatorSize{.width = 2, .height = 38};
 
-    int index = 0;
+    size_t index = 0;
     std::vector<std::unique_ptr<LabelWidget>> tab_name_labels;
 };
 

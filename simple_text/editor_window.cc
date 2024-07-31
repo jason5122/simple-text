@@ -12,6 +12,7 @@
 using namespace gui;
 
 namespace {
+
 constexpr std::string Repeat(std::string_view sv, size_t times) {
     std::string result;
     for (size_t i = 0; i < times; ++i) {
@@ -45,6 +46,7 @@ const std::string kUnicode =
 ¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
 
 🥲🥲🥲🥲🥲🥲)";
+
 }
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
@@ -147,6 +149,22 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
     if (key == app::Key::k4 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(3);
+        handled = true;
+    }
+    if (key == app::Key::k5 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(4);
+        handled = true;
+    }
+    if (key == app::Key::k6 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(5);
+        handled = true;
+    }
+    if (key == app::Key::k7 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(6);
+        handled = true;
+    }
+    if (key == app::Key::k8 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->setIndex(7);
         handled = true;
     }
     if (key == app::Key::kA && modifiers == app::ModifierKey::kSuper) {

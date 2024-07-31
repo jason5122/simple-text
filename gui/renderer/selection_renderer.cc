@@ -6,12 +6,14 @@
 using namespace opengl;
 
 namespace {
+
 const std::string kVertexShaderSource =
 #include "gui/renderer/shaders/selection_vert.glsl"
     ;
 const std::string kFragmentShaderSource =
 #include "gui/renderer/shaders/selection_frag.glsl"
     ;
+
 }
 
 namespace gui {

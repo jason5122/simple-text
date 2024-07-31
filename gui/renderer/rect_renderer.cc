@@ -5,12 +5,14 @@
 using namespace opengl;
 
 namespace {
+
 const std::string kVertexShaderSource =
 #include "gui/renderer/shaders/rect_vert.glsl"
     ;
 const std::string kFragmentShaderSource =
 #include "gui/renderer/shaders/rect_frag.glsl"
     ;
+
 }
 
 namespace gui {

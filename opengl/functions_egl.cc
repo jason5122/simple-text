@@ -5,7 +5,9 @@
 #include <iostream>
 
 namespace {
+
 const char* kDefaultEGLPath = "libEGL.so.1";
+
 }
 
 namespace opengl {

@@ -6,6 +6,7 @@ using namespace opengl;
 
 // TODO: Properly load this from settings.
 namespace {
+
 #if BUILDFLAG(IS_MAC)
 constexpr int kMainFontSize = 16 * 2;
 constexpr std::string kUIFontFace = "SF Pro Text";
@@ -18,6 +19,7 @@ constexpr std::string kMainFontFace = "Source Code Pro";
 // constexpr std::string kMainFontFace = "Fira Code";
 // constexpr std::string kMainFontFace = "Menlo";
 constexpr int kUIFontSize = 11 * 2;
+
 }
 
 namespace gui {

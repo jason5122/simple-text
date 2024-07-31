@@ -12,12 +12,14 @@ using namespace opengl;
 #include <iostream>
 
 namespace {
+
 const std::string kVertexShaderSource =
 #include "gui/renderer/shaders/image_vert.glsl"
     ;
 const std::string kFragmentShaderSource =
 #include "gui/renderer/shaders/image_frag.glsl"
     ;
+
 }
 
 namespace gui {

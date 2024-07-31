@@ -4,8 +4,10 @@
 #include <iostream>
 
 namespace {
+
 const char* kDefaultOpenGLDylibName =
     "/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib";
+
 }
 
 namespace opengl {

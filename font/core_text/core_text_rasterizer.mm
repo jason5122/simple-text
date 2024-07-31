@@ -12,6 +12,7 @@ using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
 
 namespace {
+
 // https://gist.github.com/peter-bloomfield/1b228e2bb654702b1e50ef7524121fb9
 inline std::string CFStringToStdString(CFStringRef cf_str) {
     if (!cf_str) return {};
@@ -35,6 +36,7 @@ inline std::string CFStringToStdString(CFStringRef cf_str) {
     }
     return {};
 }
+
 }
 
 namespace font {

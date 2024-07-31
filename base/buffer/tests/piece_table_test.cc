@@ -4,6 +4,7 @@
 #include <random>
 
 namespace {
+
 std::mt19937 rng{std::random_device{}()};
 
 // Returns a random number in the range [low, high].
@@ -47,6 +48,7 @@ inline void CheckNewlineOffsets(std::string_view str, base::PieceTable& table) {
     }
     EXPECT_EQ(table.newline(table.newlineCount()), table.end());
 }
+
 }
 
 namespace base {

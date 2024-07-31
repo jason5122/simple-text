@@ -7,12 +7,14 @@
 using namespace opengl;
 
 namespace {
+
 const std::string kVertexShaderSource =
 #include "gui/renderer/shaders/text_vert.glsl"
     ;
 const std::string kFragmentShaderSource =
 #include "gui/renderer/shaders/text_frag.glsl"
     ;
+
 }
 
 // TODO: Debug; remove this.

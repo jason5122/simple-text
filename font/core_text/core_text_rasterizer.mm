@@ -206,6 +206,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
     };
 }
 
+// https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     std::vector<ShapedRun> runs;
 

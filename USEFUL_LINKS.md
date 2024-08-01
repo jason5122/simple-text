@@ -3,6 +3,11 @@
 - [UTF-8 encoder/decoder](https://mothereff.in/utf-8)
 - [UTF summary](https://howardhinnant.github.io/utf_summary.html)
 
+## Unicode test data
+
+- [ICU UDHR `.txt` files](https://github.com/unicode-org/icu/tree/main/icu4j/perf-tests/data/udhr)
+- [COSMIC Text `.txt` files](https://github.com/pop-os/cosmic-text/tree/main/sample)
+
 ## Text rendering
 
 1. [Playing with UTF-8 in C++](https://mobiarch.wordpress.com/2022/12/03/playing-with-utf-8-in-c/)

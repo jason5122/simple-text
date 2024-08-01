@@ -255,8 +255,8 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view s
     }
 }
 
-// https://github.com/linebender/skribo/blob/master/docs/script_matching.md#windows
-// https://chromium.googlesource.com/chromium/src/+/refs/heads/main/content/browser/renderer_host/dwrite_font_proxy_impl_win.cc#389
+// https://github.com/linebender/skribo/blob/f801e63b5097204c07a7116683b81a834afe8a2f/docs/script_matching.md#windows
+// https://chromium.googlesource.com/chromium/src/+/a539c03e2ac242feafb921f7c1bdc01412f72393/content/browser/renderer_host/dwrite_font_proxy_impl_win.cc#389
 ComPtr<IDWriteFontFace> FontRasterizer::impl::mapCharacters(std::wstring_view str16) {
     ComPtr<IDWriteFont> mapped_font;
 

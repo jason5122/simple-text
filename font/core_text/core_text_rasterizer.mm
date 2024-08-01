@@ -1,6 +1,8 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
 #include "font/font_rasterizer.h"
+#include "unicode/SkTFitsIn.h"
+#include "unicode/unicode.h"
 
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
@@ -12,6 +14,53 @@ using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
 
 namespace {
+
+// https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#115
+class UTF16ToUTF8IndicesMap {
+public:
+    /** Builds a UTF-16 to UTF-8 indices map; the text is not retained
+     * @return true if successful
+     */
+    bool setUTF8(const char* utf8, size_t size) {
+        assert(utf8 != nullptr);
+
+        if (!SkTFitsIn<int32_t>(size)) {
+            std::cerr << "UTF16ToUTF8IndicesMap: text too long\n";
+            return false;
+        }
+
+        auto utf16Size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
+        if (utf16Size < 0) {
+            std::cerr << "UTF16ToUTF8IndicesMap: Invalid utf8 input\n";
+            return false;
+        }
+
+        // utf16Size+1 to also store the size
+        fUtf16ToUtf8Indices = std::vector<size_t>(utf16Size + 1);
+        auto utf16 = fUtf16ToUtf8Indices.begin();
+        auto utf8Begin = utf8, utf8End = utf8 + size;
+        while (utf8Begin < utf8End) {
+            *utf16 = utf8Begin - utf8;
+            utf16 += unicode::ToUTF16(unicode::NextUTF8(&utf8Begin, utf8End), nullptr);
+        }
+        *utf16 = size;
+
+        return true;
+    }
+
+    size_t mapIndex(size_t index) const {
+        assert(index < fUtf16ToUtf8Indices.size());
+        return fUtf16ToUtf8Indices[index];
+    }
+
+    std::pair<size_t, size_t> mapRange(size_t start, size_t size) const {
+        auto utf8Start = mapIndex(start);
+        return {utf8Start, mapIndex(start + size) - utf8Start};
+    }
+
+private:
+    std::vector<size_t> fUtf16ToUtf8Indices;
+};
 
 // https://gist.github.com/peter-bloomfield/1b228e2bb654702b1e50ef7524121fb9
 inline std::string CFStringToStdString(CFStringRef cf_str) {
@@ -160,6 +209,12 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     std::vector<ShapedRun> runs;
 
+    UTF16ToUTF8IndicesMap utf8IndicesMap;
+    if (!utf8IndicesMap.setUTF8(&str8[0], str8.length())) {
+        std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
+        std::abort();
+    }
+
     ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(str8);
 
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
@@ -204,8 +259,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
                         .x = static_cast<int>(std::ceil(positions[i].x)),
                         .y = static_cast<int>(std::ceil(positions[i].y)),
                     },
-                // TODO: Properly calculate UTF-8 index.
-                .index = static_cast<size_t>(indices[i]),
+                .index = utf8IndicesMap.mapIndex(indices[i]),
             };
             glyphs.push_back(std::move(glyph));
         }

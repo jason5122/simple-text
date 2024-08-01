@@ -1,0 +1,3 @@
+source_set("unicode") {
+  sources = [ "unicode.cc" ]
+}

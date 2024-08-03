@@ -179,9 +179,8 @@ std::string PieceTable::line(size_t index) const {
     }
 
     auto first = index == 0 ? begin() : std::next(newline(base::sub_sat(index, 1UL)));
-    auto last = newline(index);
+    auto last = index == newlineCount() ? end() : std::next(newline(index));
 
-    // TODO: Include newline character, if any.
     std::string line_str;
     for (auto it = first; it != last; ++it) {
         line_str += *it;

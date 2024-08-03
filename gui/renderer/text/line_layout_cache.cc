@@ -15,8 +15,14 @@ namespace gui {
 LineLayoutCache::LineLayoutCache(const base::PieceTable& table) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
     for (size_t i = 0; i < table.lineCount(); ++i) {
-        std::string line = table.line(i);
-        auto layout = main_glyph_cache.rasterizer().layoutLine(line);
+        std::string line_str = table.line(i);
+
+        // Convert newlines to spaces for line layout.
+        if (!line_str.empty() && line_str.back() == '\n') {
+            line_str.back() = ' ';
+        }
+
+        auto layout = main_glyph_cache.rasterizer().layoutLine(line_str);
         line_layouts.push_back(std::move(layout));
 
         max_width = std::max(layout.width, max_width);
@@ -32,6 +38,12 @@ void LineLayoutCache::reflow(const base::PieceTable& table, size_t line) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
     std::string line_str = table.line(line);
+
+    // Convert newlines to spaces for line layout.
+    if (!line_str.empty() && line_str.back() == '\n') {
+        line_str.back() = ' ';
+    }
+
     auto layout = main_glyph_cache.rasterizer().layoutLine(line_str);
     line_layouts[line] = std::move(layout);
 
@@ -63,8 +75,18 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
     caret.line = line;
 
     auto layout = getLineLayout(line);
-    for (const auto& run : layout.runs) {
-        for (const auto& glyph : run.glyphs) {
+    size_t last_run = base::sub_sat(layout.runs.size(), 1UL);
+    for (size_t i = 0; i < layout.runs.size(); i++) {
+        const auto& run = layout.runs[i];
+        size_t last_run_glyph = base::sub_sat(run.glyphs.size(), 1UL);
+
+        for (size_t j = 0; j < run.glyphs.size(); j++) {
+            const auto& glyph = run.glyphs[j];
+
+            if (i != last_run && j == last_run_glyph) {
+                continue;
+            }
+
             int glyph_x = glyph.position.x;
             int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
             if (glyph_center >= point.x) {
@@ -74,9 +96,16 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
             }
         }
     }
-    caret.x = layout.width;
+
+    size_t last_layout = base::sub_sat(line_layouts.size(), 1UL);
     if (!layout.runs.empty()) {
-        caret.index = layout.runs.back().glyphs.back().index;
+        const auto& last_glyph = layout.runs.back().glyphs.back();
+        if (line == last_layout) {
+            caret.x = layout.width;
+        } else {
+            caret.x = last_glyph.position.x;
+        }
+        caret.index = last_glyph.index;
     }
 }
 

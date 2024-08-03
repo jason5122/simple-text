@@ -823,16 +823,15 @@ TEST(PieceTableTest, LineContentTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog\nand went to sleep.";
     PieceTable table{str};
 
-    size_t str_newline0 = str.find('\n');
-    size_t str_newline1 = str.find('\n', str_newline0 + 1);
-    size_t dist = str_newline1 - (str_newline0 + 1);
+    size_t i0 = str.find('\n');
+    size_t i1 = str.find('\n', i0 + 1);
+    size_t dist = i1 - (i0 + 1);
 
     EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
 
-    EXPECT_EQ(table.line(0), str.substr(0, str_newline0));
-    EXPECT_EQ(table.line(1), str.substr(str_newline0 + 1, dist));
-    EXPECT_EQ(table.line(2), str.substr(str_newline1 + 1));
-    EXPECT_EQ(table.line(2), table.line(table.newlineCount()));
+    EXPECT_EQ(table.line(0), str.substr(0, i0 + 1));
+    EXPECT_EQ(table.line(1), str.substr(i0 + 1, dist + 1));
+    EXPECT_EQ(table.line(2), str.substr(i1 + 1));
 
     // The following line should produce an out of range error.
     // table.line(table.newlineCount() + 1);

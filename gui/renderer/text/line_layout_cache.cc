@@ -75,15 +75,17 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
     caret.line = line;
 
     auto layout = getLineLayout(line);
-    size_t last_run = base::sub_sat(layout.runs.size(), 1UL);
     for (size_t i = 0; i < layout.runs.size(); i++) {
         const auto& run = layout.runs[i];
+
+        size_t last_run = base::sub_sat(layout.runs.size(), 1UL);
         size_t last_run_glyph = base::sub_sat(run.glyphs.size(), 1UL);
 
         for (size_t j = 0; j < run.glyphs.size(); j++) {
             const auto& glyph = run.glyphs[j];
 
-            if (i != last_run && j == last_run_glyph) {
+            // Skip newlines.
+            if (i == last_run && j == last_run_glyph) {
                 continue;
             }
 
@@ -100,6 +102,7 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
     size_t last_layout = base::sub_sat(line_layouts.size(), 1UL);
     if (!layout.runs.empty()) {
         const auto& last_glyph = layout.runs.back().glyphs.back();
+        // Skip newlines.
         if (line == last_layout) {
             caret.x = layout.width;
         } else {

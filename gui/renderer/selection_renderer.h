@@ -17,8 +17,8 @@ public:
 
     void renderSelections(const Point& offset,
                           const LineLayoutCache& line_layout_cache,
-                          size_t start_line,
-                          size_t end_line);
+                          const LineLayoutCache::Caret& start_caret,
+                          const LineLayoutCache::Caret& end_caret);
     void flush(const Size& screen_size);
 
 private:
@@ -33,10 +33,6 @@ private:
         int start;
         int end;
     };
-
-    std::vector<Selection> getSelections(const LineLayoutCache& line_layout_cache,
-                                         size_t start_line,
-                                         size_t end_line);
 
     Shader shader_program;
     GLuint vao = 0;

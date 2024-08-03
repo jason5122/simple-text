@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
-#include "gui/renderer/text/caret.h"
 #include "gui/renderer/text/line_layout_cache.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
@@ -25,15 +24,14 @@ public:
     void updateMaxScroll() override;
 
 private:
+    static constexpr int kMinScrollbarWidth = 100;
+
     base::PieceTable table;
     LineLayoutCache line_layout_cache;
 
-    Caret start_caret{};
-    Caret end_caret{};
+    LineLayoutCache::Caret start_caret{};
+    LineLayoutCache::Caret end_caret{};
 
-    // We use this value to position the caret during vertical movement.
-    // This is updated whenever the caret moves horizontally.
-    int caret_x = 0;
     void updateCaretX();
     size_t lineAtPoint(const Point& point);
 };

@@ -260,6 +260,11 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
                         .x = static_cast<int>(std::ceil(positions[i].x)),
                         .y = static_cast<int>(std::ceil(positions[i].y)),
                     },
+                .advance =
+                    Point{
+                        .x = static_cast<int>(std::ceil(advances[i].width)),
+                        .y = static_cast<int>(std::ceil(advances[i].height)),
+                    },
                 .index = utf8IndicesMap.mapIndex(indices[i]),
             };
             glyphs.push_back(std::move(glyph));

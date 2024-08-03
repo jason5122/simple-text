@@ -20,10 +20,10 @@ void TextViewWidget::selectAll() {
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
-    // if (by == MoveBy::kCharacters) {
-    //     end_caret = line_layout.moveByCharacters(forward, end_caret);
-    //     updateCaretX();
-    // }
+    if (by == MoveBy::kCharacters) {
+        line_layout_cache.moveByCharacters(forward, end_caret);
+        // updateCaretX();
+    }
     // if (by == MoveBy::kLines) {
     //     end_caret = line_layout.moveByLines(forward, end_caret, caret_x);
     // }
@@ -58,6 +58,9 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 }
 
 void TextViewWidget::insertText(std::string_view text) {
+    // TODO: Debug use; remove this.
+    scroll_offset.x = line_layout_cache.maxWidth();
+
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
     size_t end_byte_offset = 0;
@@ -84,6 +87,8 @@ void TextViewWidget::insertText(std::string_view text) {
 }
 
 void TextViewWidget::leftDelete() {
+    scroll_offset.x = 0;
+
     // GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
 
     // size_t start_byte_offset = (*start_caret).byte_offset;
@@ -157,7 +162,10 @@ void TextViewWidget::draw() {
     }
 
     // Add selections.
-    selection_renderer.renderSelections(position - scroll_offset, line_layout_cache, 0, 1);
+    bool should_swap = end_caret < start_caret;
+    const auto& c1 = should_swap ? end_caret : start_caret;
+    const auto& c2 = should_swap ? start_caret : end_caret;
+    selection_renderer.renderSelections(position - scroll_offset, line_layout_cache, c1, c2);
 
     // Add vertical scroll bar.
     int line_count = table.lineCount();
@@ -175,6 +183,7 @@ void TextViewWidget::draw() {
     // Add horizontal scroll bar.
     int hbar_height = 15;
     int hbar_width = size.width * (static_cast<float>(size.width) / max_scroll_offset.x);
+    hbar_width = std::max(hbar_width, kMinScrollbarWidth);
     float hbar_percent = static_cast<float>(scroll_offset.x) / max_scroll_offset.x;
     Point hbar_coords{
         .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
@@ -188,8 +197,8 @@ void TextViewWidget::draw() {
     int caret_height = line_height + extra_padding * 2;
 
     Point caret_pos{
-        .x = 0,
-        .y = static_cast<int>(0) * line_height,
+        .x = end_caret.x,
+        .y = static_cast<int>(end_caret.line) * line_height,
     };
     caret_pos += position;
     caret_pos -= scroll_offset;
@@ -199,15 +208,15 @@ void TextViewWidget::draw() {
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
-    // Point new_coords = mouse_pos - position + scroll_offset;
-    // end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
-    // start_caret = end_caret;
+    Point new_coords = mouse_pos - position + scroll_offset;
+    line_layout_cache.moveToPoint(lineAtPoint(new_coords), new_coords, end_caret);
+    start_caret = end_caret;
     updateCaretX();
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
-    // Point new_coords = mouse_pos - position + scroll_offset;
-    // end_caret = line_layout.iteratorFromPoint(lineAtPoint(new_coords), new_coords);
+    Point new_coords = mouse_pos - position + scroll_offset;
+    line_layout_cache.moveToPoint(lineAtPoint(new_coords), new_coords, end_caret);
     updateCaretX();
 }
 

@@ -30,6 +30,7 @@ public:
     struct ShapedGlyph {
         uint32_t glyph_id;
         Point position;
+        Point advance;
         size_t index;  // UTF-8 index in the original text.
     };
 

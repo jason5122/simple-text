@@ -114,8 +114,26 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 
 void SelectionRenderer::renderSelections(const Point& offset,
                                          const LineLayoutCache& line_layout_cache,
-                                         size_t start_line,
-                                         size_t end_line) {
+                                         const LineLayoutCache::Caret& start_caret,
+                                         const LineLayoutCache::Caret& end_caret) {
+    std::vector<SelectionRenderer::Selection> selections;
+
+    size_t start_line = start_caret.line;
+    size_t end_line = end_caret.line;
+
+    for (size_t line = start_line; line <= end_line; ++line) {
+        auto layout = line_layout_cache.getLineLayout(line);
+        int start = line == start_line ? start_caret.x : 0;
+        int end = line == end_line ? end_caret.x : layout.width;
+        if (end - start > 0) {
+            selections.emplace_back(SelectionRenderer::Selection{
+                .line = static_cast<int>(line),
+                .start = start,
+                .end = end,
+            });
+        }
+    }
+
     auto create = [&, this](int start, int end, int line,
                             uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                             uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -145,9 +163,6 @@ void SelectionRenderer::renderSelections(const Point& offset,
                 },
         });
     };
-
-    std::vector<SelectionRenderer::Selection> selections =
-        getSelections(line_layout_cache, start_line, end_line);
 
     size_t selections_size = selections.size();
     for (size_t i = 0; i < selections_size; ++i) {
@@ -226,22 +241,6 @@ void SelectionRenderer::flush(const Size& screen_size) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     instances.clear();
-}
-
-// TODO: Operate on characters instead of lines.
-std::vector<SelectionRenderer::Selection> SelectionRenderer::getSelections(
-    const LineLayoutCache& line_layout_cache, size_t start_line, size_t end_line) {
-    std::vector<SelectionRenderer::Selection> selections;
-
-    for (size_t line = start_line; line < end_line; ++line) {
-        auto layout = line_layout_cache.getLineLayout(line);
-        selections.emplace_back(SelectionRenderer::Selection{
-            .line = static_cast<int>(line),
-            .start = 0,
-            .end = layout.width,
-        });
-    }
-    return selections;
 }
 
 }

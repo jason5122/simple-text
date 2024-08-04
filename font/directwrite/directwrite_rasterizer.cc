@@ -109,151 +109,161 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) {
-    std::wstring str16 = base::windows::ConvertToUTF16(str8);
-
-    ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
-    UINT16 glyph_index = 0;
-
-    // If no fallback font is found, don't do anything and leave the glyph index as 0.
-    // Let the glyph be rendered as the "tofu" glyph by the default font.
-    ComPtr<IDWriteFontFace> mapped_font_face = pimpl->mapCharacters(str16);
-    if (mapped_font_face != nullptr) {
-        font_face = mapped_font_face;
-        glyph_index = pimpl->getGlyphIndex(str16, mapped_font_face.Get());
-    }
-
-    FLOAT glyph_advances = 0;
-    DWRITE_GLYPH_OFFSET offset{};
-    DWRITE_GLYPH_RUN glyph_run{
-        .fontFace = font_face.Get(),
-        .fontEmSize = pimpl->em_size,
-        .glyphCount = 1,
-        .glyphIndices = &glyph_index,
-        .glyphAdvances = &glyph_advances,
-        .glyphOffsets = &offset,
-        .isSideways = 0,
-        .bidiLevel = 0,
-    };
-
-    IDWriteRenderingParams* rendering_params;
-    pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
-
-    DWRITE_RENDERING_MODE rendering_mode;
-    font_face->GetRecommendedRenderingMode(pimpl->em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
-                                           rendering_params, &rendering_mode);
-
-    IDWriteGlyphRunAnalysis* glyph_run_analysis;
-    pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
-                                                  DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
-                                                  &glyph_run_analysis);
-
-    RECT texture_bounds;
-    glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds);
-
-    LONG pixel_width = texture_bounds.right - texture_bounds.left;
-    LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
-    UINT32 size = pixel_width * pixel_height * 3;
-
-    // std::cerr << std::format("pixel_width = {}, pixel_height = {}\n", pixel_width,
-    // pixel_height);
-
-    DWRITE_GLYPH_METRICS metrics;
-    font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
-
-    DWRITE_FONT_METRICS font_metrics;
-    font_face->GetMetrics(&font_metrics);
-
-    FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
-    FLOAT advance = metrics.advanceWidth * scale;
-
-    int32_t top = -texture_bounds.top;
-    top -= descent;
-
-    HRESULT hr = DWRITE_E_NOCOLOR;
-    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
-
-    ComPtr<IDWriteFontFace2> font_face_2;
-    font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(font_face_2.GetAddressOf()));
-    if (font_face_2->IsColorFont()) {
-        DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
-        hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr, image_formats,
-                                                           DWRITE_MEASURING_MODE_NATURAL, nullptr,
-                                                           0, &color_run_enumerator);
-    }
-
-    if (hr == DWRITE_E_NOCOLOR) {
-        std::vector<BYTE> alpha_values(size);
-        glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-                                               &alpha_values[0], size);
-
-        std::vector<uint8_t> buffer;
-        buffer.reserve(size);
-        for (size_t i = 0; i < size; ++i) {
-            buffer.emplace_back(alpha_values[i]);
-        }
-
-        return {
-            .colored = false,
-            .left = texture_bounds.left,
-            .top = top,
-            .width = static_cast<int32_t>(pixel_width),
-            .height = static_cast<int32_t>(pixel_height),
-            .advance = static_cast<int32_t>(std::ceil(advance)),
-            .buffer = std::move(buffer),
-        };
-    } else {
-        ComPtr<IWICBitmap> wic_bitmap;
-        // TODO: Implement without magic numbers. Properly find the right width/height.
-        UINT bitmap_width = pixel_width + 10;
-        UINT bitmap_height = pixel_height + 10;
-        pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
-                                         GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
-                                         wic_bitmap.GetAddressOf());
-
-        D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
-
-        // TODO: Find a way to reuse render target and brushes.
-        ComPtr<ID2D1RenderTarget> target;
-        pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
-                                                        target.GetAddressOf());
-
-        ColorRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
-
-        IWICBitmapLock* bitmap_lock;
-        wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
-
-        UINT buffer_size = 0;
-        BYTE* pv = NULL;
-        bitmap_lock->GetDataPointer(&buffer_size, &pv);
-
-        UINT bw = 0, bh = 0;
-        bitmap_lock->GetSize(&bw, &bh);
-        size_t pixels = bw * bh;
-
-        std::vector<uint8_t> temp_buffer;
-        temp_buffer.reserve(pixels * 4);
-        for (size_t i = 0; i < pixels; ++i) {
-            size_t offset = i * 4;
-            temp_buffer.emplace_back(pv[offset]);
-            temp_buffer.emplace_back(pv[offset + 1]);
-            temp_buffer.emplace_back(pv[offset + 2]);
-            temp_buffer.emplace_back(pv[offset + 3]);
-        }
-
-        bitmap_lock->Release();
-
-        return {
-            .colored = true,
-            .left = 0,
-            .top = top,
-            .width = static_cast<int32_t>(bw),
-            .height = static_cast<int32_t>(bh),
-            .advance = static_cast<int32_t>(std::ceil(advance)),
-            .buffer = std::move(temp_buffer),
-        };
-    }
+FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
+                                                              uint32_t glyph_id) const {
+    return {};
 }
+
+FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
+    return {};
+}
+
+// FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) const {
+//     std::wstring str16 = base::windows::ConvertToUTF16(str8);
+
+//     ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
+//     UINT16 glyph_index = 0;
+
+//     // If no fallback font is found, don't do anything and leave the glyph index as 0.
+//     // Let the glyph be rendered as the "tofu" glyph by the default font.
+//     ComPtr<IDWriteFontFace> mapped_font_face = pimpl->mapCharacters(str16);
+//     if (mapped_font_face != nullptr) {
+//         font_face = mapped_font_face;
+//         glyph_index = pimpl->getGlyphIndex(str16, mapped_font_face.Get());
+//     }
+
+//     FLOAT glyph_advances = 0;
+//     DWRITE_GLYPH_OFFSET offset{};
+//     DWRITE_GLYPH_RUN glyph_run{
+//         .fontFace = font_face.Get(),
+//         .fontEmSize = pimpl->em_size,
+//         .glyphCount = 1,
+//         .glyphIndices = &glyph_index,
+//         .glyphAdvances = &glyph_advances,
+//         .glyphOffsets = &offset,
+//         .isSideways = 0,
+//         .bidiLevel = 0,
+//     };
+
+//     IDWriteRenderingParams* rendering_params;
+//     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
+
+//     DWRITE_RENDERING_MODE rendering_mode;
+//     font_face->GetRecommendedRenderingMode(pimpl->em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
+//                                            rendering_params, &rendering_mode);
+
+//     IDWriteGlyphRunAnalysis* glyph_run_analysis;
+//     pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
+//                                                   DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
+//                                                   &glyph_run_analysis);
+
+//     RECT texture_bounds;
+//     glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds);
+
+//     LONG pixel_width = texture_bounds.right - texture_bounds.left;
+//     LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
+//     UINT32 size = pixel_width * pixel_height * 3;
+
+//     // std::cerr << std::format("pixel_width = {}, pixel_height = {}\n", pixel_width,
+//     // pixel_height);
+
+//     DWRITE_GLYPH_METRICS metrics;
+//     font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
+
+//     DWRITE_FONT_METRICS font_metrics;
+//     font_face->GetMetrics(&font_metrics);
+
+//     FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
+//     FLOAT advance = metrics.advanceWidth * scale;
+
+//     int32_t top = -texture_bounds.top;
+//     top -= descent;
+
+//     HRESULT hr = DWRITE_E_NOCOLOR;
+//     ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
+
+//     ComPtr<IDWriteFontFace2> font_face_2;
+//     font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(font_face_2.GetAddressOf()));
+//     if (font_face_2->IsColorFont()) {
+//         DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
+//         hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr,
+//         image_formats,
+//                                                            DWRITE_MEASURING_MODE_NATURAL,
+//                                                            nullptr, 0, &color_run_enumerator);
+//     }
+
+//     if (hr == DWRITE_E_NOCOLOR) {
+//         std::vector<BYTE> alpha_values(size);
+//         glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
+//                                                &alpha_values[0], size);
+
+//         std::vector<uint8_t> buffer;
+//         buffer.reserve(size);
+//         for (size_t i = 0; i < size; ++i) {
+//             buffer.emplace_back(alpha_values[i]);
+//         }
+
+//         return {
+//             .colored = false,
+//             .left = texture_bounds.left,
+//             .top = top,
+//             .width = static_cast<int32_t>(pixel_width),
+//             .height = static_cast<int32_t>(pixel_height),
+//             .advance = static_cast<int32_t>(std::ceil(advance)),
+//             .buffer = std::move(buffer),
+//         };
+//     } else {
+//         ComPtr<IWICBitmap> wic_bitmap;
+//         // TODO: Implement without magic numbers. Properly find the right width/height.
+//         UINT bitmap_width = pixel_width + 10;
+//         UINT bitmap_height = pixel_height + 10;
+//         pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
+//                                          GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
+//                                          wic_bitmap.GetAddressOf());
+
+//         D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
+
+//         // TODO: Find a way to reuse render target and brushes.
+//         ComPtr<ID2D1RenderTarget> target;
+//         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
+//                                                         target.GetAddressOf());
+
+//         ColorRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
+
+//         IWICBitmapLock* bitmap_lock;
+//         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
+
+//         UINT buffer_size = 0;
+//         BYTE* pv = NULL;
+//         bitmap_lock->GetDataPointer(&buffer_size, &pv);
+
+//         UINT bw = 0, bh = 0;
+//         bitmap_lock->GetSize(&bw, &bh);
+//         size_t pixels = bw * bh;
+
+//         std::vector<uint8_t> temp_buffer;
+//         temp_buffer.reserve(pixels * 4);
+//         for (size_t i = 0; i < pixels; ++i) {
+//             size_t offset = i * 4;
+//             temp_buffer.emplace_back(pv[offset]);
+//             temp_buffer.emplace_back(pv[offset + 1]);
+//             temp_buffer.emplace_back(pv[offset + 2]);
+//             temp_buffer.emplace_back(pv[offset + 3]);
+//         }
+
+//         bitmap_lock->Release();
+
+//         return {
+//             .colored = true,
+//             .left = 0,
+//             .top = top,
+//             .width = static_cast<int32_t>(bw),
+//             .height = static_cast<int32_t>(bh),
+//             .advance = static_cast<int32_t>(std::ceil(advance)),
+//             .buffer = std::move(temp_buffer),
+//         };
+//     }
+// }
 
 // https://github.com/linebender/skribo/blob/f801e63b5097204c07a7116683b81a834afe8a2f/docs/script_matching.md#windows
 // https://chromium.googlesource.com/chromium/src/+/a539c03e2ac242feafb921f7c1bdc01412f72393/content/browser/renderer_host/dwrite_font_proxy_impl_win.cc#389

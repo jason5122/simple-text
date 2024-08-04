@@ -120,11 +120,11 @@ void TextViewWidget::draw() {
 
     // Render one line before start and one line after end. This ensures no sudden cutoff of
     // rendered text.
-    start_line = base::sub_sat(start_line, 1UL);
-    end_line = base::add_sat(end_line, 1UL);
+    start_line = base::sub_sat(start_line, 1_Z);
+    end_line = base::add_sat(end_line, 1_Z);
 
-    start_line = std::clamp(start_line, 0UL, table.lineCount());
-    end_line = std::clamp(end_line, 0UL, table.lineCount());
+    start_line = std::clamp(start_line, 0_Z, table.lineCount());
+    end_line = std::clamp(end_line, 0_Z, table.lineCount());
 
     int min_x = scroll_offset.x;
     int max_x = scroll_offset.x + size.width;
@@ -215,7 +215,7 @@ size_t TextViewWidget::lineAtPoint(const Point& point) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
     int y = std::max(point.y, 0);
     size_t line = y / main_glyph_cache.lineHeight();
-    return std::clamp(line, 0UL, base::sub_sat(table.lineCount(), 1UL));
+    return std::clamp(line, 0_Z, base::sub_sat(table.lineCount(), 1_Z));
 }
 
 }

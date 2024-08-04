@@ -68,8 +68,8 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
     for (size_t i = 0; i < layout.runs.size(); i++) {
         const auto& run = layout.runs[i];
 
-        size_t last_run = base::sub_sat(layout.runs.size(), 1UL);
-        size_t last_run_glyph = base::sub_sat(run.glyphs.size(), 1UL);
+        size_t last_run = base::sub_sat(layout.runs.size(), 1_Z);
+        size_t last_run_glyph = base::sub_sat(run.glyphs.size(), 1_Z);
 
         for (size_t j = 0; j < run.glyphs.size(); j++) {
             const auto& glyph = run.glyphs[j];
@@ -102,7 +102,7 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
         index = last_glyph.index;
     }
 
-    size_t last_layout_line = base::sub_sat(line_layouts.size(), 1UL);
+    size_t last_layout_line = base::sub_sat(line_layouts.size(), 1_Z);
     if (line == last_layout_line) {
         width = layout.width;
         // index = 0;  // TODO: Set this to piece table length.

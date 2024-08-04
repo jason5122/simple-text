@@ -1,8 +1,9 @@
 #pragma once
 
 #include "base/compiler_specific.h"
-
+#include "base/numeric/literals.h"
 #include <limits>
+#include <type_traits>
 
 namespace {
 
@@ -76,13 +77,13 @@ static_assert(add_sat(-10, 5) == -5);
 static_assert(add_sat(10UL, 5UL) == 15UL);
 // No overflow (boundary tests).
 static_assert(add_sat(0, min_int) == min_int);
-static_assert(add_sat(0UL, min_size_t) == min_size_t);
+static_assert(add_sat(0_Z, min_size_t) == min_size_t);
 static_assert(add_sat(max_int - 5, 5) == max_int);
 static_assert(add_sat(min_int + 5, -5) == min_int);
-static_assert(add_sat(max_size_t - 5UL, 5UL) == max_size_t);
+static_assert(add_sat(max_size_t - 5_Z, 5_Z) == max_size_t);
 // Overflow.
 static_assert(add_sat(max_int, 1) == max_int);
-static_assert(add_sat(max_size_t, 1UL) == max_size_t);
+static_assert(add_sat(max_size_t, 1_Z) == max_size_t);
 
 // No overflow (simple tests).
 static_assert(sub_sat(10, 5) == 5);
@@ -90,12 +91,12 @@ static_assert(sub_sat(-10, 5) == -15);
 static_assert(sub_sat(10UL, 5UL) == 5UL);
 // No overflow (boundary tests).
 static_assert(sub_sat(max_int, 0) == max_int);
-static_assert(sub_sat(max_size_t, 0UL) == max_size_t);
+static_assert(sub_sat(max_size_t, 0_Z) == max_size_t);
 static_assert(sub_sat(min_int + 5, 5) == min_int);
 static_assert(sub_sat(max_int - 5, -5) == max_int);
-static_assert(sub_sat(min_size_t + 5UL, 5UL) == min_size_t);
+static_assert(sub_sat(min_size_t + 5_Z, 5_Z) == min_size_t);
 // Overflow.
 static_assert(sub_sat(min_int, 1) == min_int);
-static_assert(sub_sat(min_size_t, 1UL) == min_size_t);
+static_assert(sub_sat(min_size_t, 1_Z) == min_size_t);
 
 }

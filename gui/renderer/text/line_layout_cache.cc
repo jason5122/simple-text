@@ -62,17 +62,7 @@ int LineLayoutCache::maxWidth() const {
 }
 
 void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret) {
-    if (line >= line_layouts.size()) {
-        if (!line_layouts.empty()) {
-            caret.line = base::sub_sat(line_layouts.size(), 1UL);
-            const auto& last_glyph = line_layouts.back().runs.back().glyphs.back();
-            caret.x = line_layouts.back().width;
-            caret.index = last_glyph.index;
-        }
-        return;
-    }
-
-    caret.line = line;
+    assert(line < line_layouts.size());
 
     auto layout = getLineLayout(line);
     for (size_t i = 0; i < layout.runs.size(); i++) {
@@ -85,31 +75,42 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
             const auto& glyph = run.glyphs[j];
 
             // Skip newlines.
-            if (i == last_run && j == last_run_glyph) {
-                continue;
-            }
+            // if (i == last_run && j == last_run_glyph) {
+            //     continue;
+            // }
 
             int glyph_x = glyph.position.x;
             int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
             if (glyph_center >= point.x) {
+                caret.line = line;
                 caret.x = glyph_x;
                 caret.index = glyph.index;
+
+                caret.run_index = i;
+                caret.run_glyph_index = j;
                 return;
             }
         }
     }
 
-    size_t last_layout = base::sub_sat(line_layouts.size(), 1UL);
+    int width = 0;
+    size_t index = 0;
+
     if (!layout.runs.empty()) {
         const auto& last_glyph = layout.runs.back().glyphs.back();
-        // Skip newlines.
-        if (line == last_layout) {
-            caret.x = layout.width;
-        } else {
-            caret.x = last_glyph.position.x;
-        }
-        caret.index = last_glyph.index;
+        width = last_glyph.position.x;
+        index = last_glyph.index;
     }
+
+    size_t last_layout_line = base::sub_sat(line_layouts.size(), 1UL);
+    if (line == last_layout_line) {
+        width = layout.width;
+        // index = 0;  // TODO: Set this to piece table length.
+    }
+
+    caret.line = line;
+    caret.x = width;
+    caret.index = index;
 }
 
 void LineLayoutCache::moveByCharacters(bool forward, Caret& caret) {
@@ -137,7 +138,8 @@ void LineLayoutCache::moveByCharacters(bool forward, Caret& caret) {
     }
 }
 
-// LineLayoutCache::Iterator LineLayoutCache::moveByLines(bool forward, Iterator caret, int x) {
+// LineLayoutCache::Iterator LineLayoutCache::moveByLines(bool forward, Iterator caret, int x)
+// {
 //     size_t line = (*caret).line;
 
 //     if (forward) {
@@ -164,5 +166,4 @@ void LineLayoutCache::moveByCharacters(bool forward, Caret& caret) {
 //     }
 //     return std::prev(getLine(line + 1));
 // }
-
 }

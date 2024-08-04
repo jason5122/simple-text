@@ -28,9 +28,9 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     //     end_caret = line_layout.moveByLines(forward, end_caret, caret_x);
     // }
 
-    // if (!extend) {
-    //     start_caret = end_caret;
-    // }
+    if (!extend) {
+        start_caret = end_caret;
+    }
 }
 
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
@@ -58,32 +58,12 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 }
 
 void TextViewWidget::insertText(std::string_view text) {
-    // TODO: Debug use; remove this.
-    scroll_offset.x = line_layout_cache.maxWidth();
-
-    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-
-    size_t end_byte_offset = 0;
-    // size_t end_byte_offset = (*end_caret).byte_offset;
-    // base::Buffer::StringIterator pos = buffer.stringBegin() + end_byte_offset;
-
-    // Store old cursor position before we invalidate our iterators.
-    // TODO: Consider always ensuring `start_caret <= end_caret`.
-    // LineLayout::Iterator actual_end = std::max(start_caret, end_caret);
-    // size_t old_end_index = line_layout.iteratorIndex(actual_end);
-
-    table.insert(end_byte_offset, text);
+    table.insert(end_caret.index, text);
     {
         PROFILE_BLOCK("LineLayout::reflow()");
         line_layout_cache.reflow(table, 0);
     }
     updateMaxScroll();
-
-    // end_caret = line_layout.getIterator(old_end_index);
-    // if (end_caret != std::prev(line_layout.end())) {
-    //     std::advance(end_caret, 1);
-    // }
-    // start_caret = end_caret;
 }
 
 void TextViewWidget::leftDelete() {
@@ -234,7 +214,8 @@ void TextViewWidget::updateCaretX() {
 size_t TextViewWidget::lineAtPoint(const Point& point) {
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
     int y = std::max(point.y, 0);
-    return y / main_glyph_cache.lineHeight();
+    size_t line = y / main_glyph_cache.lineHeight();
+    return std::clamp(line, 0UL, base::sub_sat(table.lineCount(), 1UL));
 }
 
 }

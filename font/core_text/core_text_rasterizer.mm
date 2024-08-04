@@ -281,6 +281,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
     return {
         .width = static_cast<int>(std::ceil(width)),
+        .length = str8.length(),
         .runs = std::move(runs),
     };
 }

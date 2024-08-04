@@ -61,7 +61,7 @@ int LineLayoutCache::maxWidth() const {
     return max_width;
 }
 
-void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret) {
+void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret) const {
     assert(line < line_layouts.size());
 
     auto layout = getLineLayout(line);
@@ -113,7 +113,7 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
     caret.index = index;
 }
 
-void LineLayoutCache::moveByCharacters(bool forward, Caret& caret) {
+void LineLayoutCache::moveByCharacters(bool forward, Caret& caret) const {
     auto layout = getLineLayout(caret.line);
     assert(caret.run_index < layout.runs.size());
 

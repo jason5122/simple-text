@@ -16,7 +16,7 @@ constexpr std::string kOSFontFace = "Consolas";
 
 namespace font {
 
-TEST(FontRasterizerTest, LineLayout1) {
+TEST(FontRasterizerTest, LayoutLine1) {
     FontRasterizer rasterizer{kOSFontFace, 32};
 
     const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
@@ -59,6 +59,60 @@ TEST(FontRasterizerTest, LineLayout1) {
             prev_x = std::max(glyph.position.x, prev_x);
         }
     }
+}
+
+TEST(FontRasterizerTest, LineLayoutClosestForX) {
+    FontRasterizer rasterizer{kOSFontFace, 32};
+
+    const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
+    auto layout = rasterizer.layoutLine(line);
+
+    size_t prev_glyph_index = 0;
+    int prev_glyph_x = 0;
+    for (int x = 0; x < layout.width; ++x) {
+        auto [glyph_index, glyph_x] = layout.closestForX(x);
+
+        EXPECT_GE(glyph_index, prev_glyph_index);
+        EXPECT_GE(glyph_x, prev_glyph_x);
+
+        prev_glyph_index = glyph_index;
+        prev_glyph_x = glyph_x;
+    }
+
+    auto [index, x] = layout.closestForX(99999);
+    EXPECT_EQ(index, layout.length);
+    EXPECT_EQ(x, layout.width);
+
+    std::tie(index, x) = layout.closestForX(0);
+    EXPECT_EQ(index, 0);
+    EXPECT_EQ(x, 0);
+}
+
+TEST(FontRasterizerTest, LineLayoutClosestForIndex) {
+    FontRasterizer rasterizer{kOSFontFace, 32};
+
+    const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
+    auto layout = rasterizer.layoutLine(line);
+
+    size_t prev_glyph_index = 0;
+    int prev_glyph_x = 0;
+    for (size_t index = 0; index < layout.width; ++index) {
+        auto [glyph_index, glyph_x] = layout.closestForIndex(index);
+
+        EXPECT_GE(glyph_index, prev_glyph_index);
+        EXPECT_GE(glyph_x, prev_glyph_x);
+
+        prev_glyph_index = glyph_index;
+        prev_glyph_x = glyph_x;
+    }
+
+    auto [index, x] = layout.closestForIndex(99999);
+    EXPECT_EQ(index, layout.length);
+    EXPECT_EQ(x, layout.width);
+
+    std::tie(index, x) = layout.closestForIndex(0);
+    EXPECT_EQ(index, 0);
+    EXPECT_EQ(x, 0);
 }
 
 }

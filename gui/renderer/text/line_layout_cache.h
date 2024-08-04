@@ -17,8 +17,8 @@ public:
     int maxWidth() const;
 
     struct Caret;
-    void moveToPoint(size_t line, const Point& point, Caret& caret);
-    void moveByCharacters(bool forward, Caret& caret);
+    void moveToPoint(size_t line, const Point& point, Caret& caret) const;
+    void moveByCharacters(bool forward, Caret& caret) const;
 
 private:
     std::vector<font::FontRasterizer::LineLayout> line_layouts;

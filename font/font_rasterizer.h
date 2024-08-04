@@ -11,6 +11,7 @@ public:
     FontRasterizer(const std::string& font_name_utf8, int font_size);
     ~FontRasterizer();
 
+    // TODO: Consider unnesting these inner classes.
     struct RasterizedGlyph {
         bool colored;
         int32_t left;
@@ -41,7 +42,11 @@ public:
 
     struct LineLayout {
         int width;
+        size_t length;
         std::vector<ShapedRun> runs;
+
+        std::pair<size_t, int> closestForX(int x) const;
+        std::pair<size_t, int> closestForIndex(size_t index) const;
     };
 
     RasterizedGlyph rasterizeUTF8(size_t font_id, uint32_t glyph_id) const;

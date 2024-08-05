@@ -208,8 +208,6 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
-    std::vector<ShapedRun> runs;
-
     UTF16ToUTF8IndicesMap utf8IndicesMap;
     if (!utf8IndicesMap.setUTF8(&str8[0], str8.length())) {
         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
@@ -218,6 +216,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 
     ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(str8);
 
+    std::vector<ShapedRun> runs;
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
     for (CFIndex i = 0; i < run_count; ++i) {
@@ -251,6 +250,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
 
         std::vector<ShapedGlyph> glyphs;
+        glyphs.reserve(glyph_count);
         for (size_t i = 0; i < glyph_count; ++i) {
             ShapedGlyph glyph{
                 .glyph_id = glyph_ids[i],
@@ -270,12 +270,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
             glyphs.push_back(std::move(glyph));
         }
 
-        runs.reserve(glyph_count);
-        ShapedRun run{
-            .font_id = font_id,
-            .glyphs = std::move(glyphs),
-        };
-        runs.push_back(std::move(run));
+        runs.emplace_back(ShapedRun{font_id, std::move(glyphs)});
     }
 
     double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);

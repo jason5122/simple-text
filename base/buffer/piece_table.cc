@@ -1,3 +1,4 @@
+#include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "piece_table.h"
 #include "util/escape_special_chars.h"

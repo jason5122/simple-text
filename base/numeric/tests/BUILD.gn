@@ -1,0 +1,11 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [
+    "literals_test.cc",
+    "saturation_arithmetic_test.cc",
+    "wrap_arithmetic_test.cc",
+  ]
+
+  deps = [ "//third_party/googletest:gtest" ]
+}

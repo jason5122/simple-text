@@ -1,3 +1,4 @@
+#include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
 #include "text_view_widget.h"

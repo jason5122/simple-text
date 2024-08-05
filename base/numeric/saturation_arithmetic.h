@@ -1,18 +1,8 @@
 #pragma once
 
 #include "base/compiler_specific.h"
-#include "base/numeric/literals.h"
 #include <limits>
 #include <type_traits>
-
-namespace {
-
-constexpr int min_int = std::numeric_limits<int>::min();
-constexpr int max_int = std::numeric_limits<int>::max();
-constexpr size_t min_size_t = std::numeric_limits<size_t>::min();
-constexpr size_t max_size_t = std::numeric_limits<size_t>::max();
-
-}
 
 namespace base {
 
@@ -67,36 +57,5 @@ template <class T> constexpr T sub_sat(T x, T y) noexcept {
         }
     }
 }
-
-static_assert(std::is_unsigned<int>::value == false);
-static_assert(std::is_unsigned<size_t>::value == true);
-
-// No overflow (simple tests).
-static_assert(add_sat(10, 5) == 15);
-static_assert(add_sat(-10, 5) == -5);
-static_assert(add_sat(10UL, 5UL) == 15UL);
-// No overflow (boundary tests).
-static_assert(add_sat(0, min_int) == min_int);
-static_assert(add_sat(0_Z, min_size_t) == min_size_t);
-static_assert(add_sat(max_int - 5, 5) == max_int);
-static_assert(add_sat(min_int + 5, -5) == min_int);
-static_assert(add_sat(max_size_t - 5_Z, 5_Z) == max_size_t);
-// Overflow.
-static_assert(add_sat(max_int, 1) == max_int);
-static_assert(add_sat(max_size_t, 1_Z) == max_size_t);
-
-// No overflow (simple tests).
-static_assert(sub_sat(10, 5) == 5);
-static_assert(sub_sat(-10, 5) == -15);
-static_assert(sub_sat(10UL, 5UL) == 5UL);
-// No overflow (boundary tests).
-static_assert(sub_sat(max_int, 0) == max_int);
-static_assert(sub_sat(max_size_t, 0_Z) == max_size_t);
-static_assert(sub_sat(min_int + 5, 5) == min_int);
-static_assert(sub_sat(max_int - 5, -5) == max_int);
-static_assert(sub_sat(min_size_t + 5_Z, 5_Z) == min_size_t);
-// Overflow.
-static_assert(sub_sat(min_int, 1) == min_int);
-static_assert(sub_sat(min_size_t, 1_Z) == min_size_t);
 
 }

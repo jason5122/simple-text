@@ -5,6 +5,7 @@ executable("test_runner") {
 
   deps += [
     "//base/buffer/tests",
+    "//base/numeric/tests",
     "//font/tests",
   ]
 }

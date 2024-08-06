@@ -1,6 +1,7 @@
 // https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
 #define NOMINMAX
 
+#include "base/numeric/saturation_arithmetic.h"
 #include "base/windows/unicode.h"
 #include "font/directwrite/directwrite_helper.h"
 #include "font/directwrite/font_fallback_source.h"
@@ -115,6 +116,42 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 }
 
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
+    std::cerr << str8 << '\n';
+
+    std::wstring str16 = base::windows::ConvertToUTF16(str8);
+    size_t len = str16.length();
+
+    ComPtr<IDWriteFont> mapped_font;
+
+    // TODO: Don't hard code locale.
+    static constexpr wchar_t locale[] = L"en-us";
+
+    ComPtr<IDWriteNumberSubstitution> number_substitution;
+    pimpl->dwrite_factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE, locale,
+                                                    true, &number_substitution);
+
+    ComPtr<IDWriteTextAnalysisSource> analysis_source =
+        new FontFallbackSource(str16.data(), len, locale, number_substitution.Get());
+
+    UINT32 mapped_len;
+    for (UINT32 i = 0; i < str16.length(); i += mapped_len) {
+        FLOAT mapped_scale;
+        pimpl->font_fallback_->MapCharacters(analysis_source.Get(), i, len - i, nullptr, nullptr,
+                                             DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+                                             DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
+                                             &mapped_scale);
+
+        if (mapped_font != nullptr) {
+            PrintFontFamilyName(mapped_font.Get());
+        } else {
+            // TODO: Handle missing glyphs when no font can render the text.
+            std::cerr << "mapped_font is null!\n";
+            std::abort();
+        }
+
+        std::cerr << std::format("mapped_len = {}\n", mapped_len);
+    }
+
     return {};
 }
 

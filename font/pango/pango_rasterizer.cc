@@ -92,6 +92,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
     //                          },
     //                      .attr = {1}};
     PangoGlyphInfo gi = pimpl->glyph_info_cache[glyph_id];
+    gi.geometry.width = PANGO_SCALE * width;
     gi.geometry.y_offset = PANGO_SCALE * (height - descent);
     glyph_string->glyphs[0] = gi;
 
@@ -174,9 +175,15 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 
             const PangoGlyphGeometry& geometry = glyph_infos[i].geometry;
 
+            // TODO: Experimental.
+            PangoRectangle ink_rect;
+            PangoRectangle logical_rect;
+            pango_font_get_glyph_extents(run_font, glyph_infos[i].glyph, &ink_rect, &logical_rect);
+            int width = PANGO_PIXELS(logical_rect.width);
+
             int x_offset = PANGO_PIXELS(geometry.x_offset);
             int y_offset = PANGO_PIXELS(geometry.y_offset);
-            int width = PANGO_PIXELS(geometry.width);
+            // int width = PANGO_PIXELS(geometry.width);
 
             std::cerr << std::format("width = {}\n", width);
 

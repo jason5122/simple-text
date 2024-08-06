@@ -1,6 +1,7 @@
 #include "base/buffer/piece_table.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <random>
 
 namespace {

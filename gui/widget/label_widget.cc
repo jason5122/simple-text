@@ -9,7 +9,7 @@ LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
 void LabelWidget::setText(const std::string& str8, const Rgb& color) {
     GlyphCache& ui_glyph_cache = Renderer::instance().getUiGlyphCache();
 
-    // label_line_layout = ui_glyph_cache.rasterizer().layoutLine(str8);
+    label_line_layout = ui_glyph_cache.rasterizer().layoutLine(str8);
     this->color = color;
 }
 

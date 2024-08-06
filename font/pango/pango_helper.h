@@ -17,6 +17,7 @@ template <typename T, auto fn> using UniquePtrDeleter = std::unique_ptr<T, Delet
 using PangoFontDescriptionPtr =
     UniquePtrDeleter<PangoFontDescription, pango_font_description_free>;
 using PangoFontMetricsPtr = UniquePtrDeleter<PangoFontMetrics, pango_font_metrics_unref>;
+using PangoGlyphStringPtr = UniquePtrDeleter<PangoGlyphString, pango_glyph_string_free>;
 using CairoSurfacePtr = UniquePtrDeleter<cairo_surface_t, cairo_surface_destroy>;
 using CairoContextPtr = UniquePtrDeleter<cairo_t, cairo_destroy>;
 

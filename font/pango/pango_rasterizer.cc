@@ -11,6 +11,10 @@ namespace font {
 class FontRasterizer::impl {
 public:
     GObjectPtr<PangoFont> pango_font;
+
+    std::unordered_map<std::string, size_t> font_postscript_name_to_id;
+    std::vector<GObjectPtr<PangoFont>> font_id_to_native;
+    size_t cacheFont(PangoFont* font);
 };
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
@@ -52,7 +56,72 @@ FontRasterizer::~FontRasterizer() {}
 
 FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
                                                               uint32_t glyph_id) const {
-    return {};
+    std::cerr << std::format("font_id = {}, glyph_id = {}\n", font_id, glyph_id);
+
+    PangoFont* font = pimpl->font_id_to_native[font_id].get();
+
+    // TODO: Debug use; remove this.
+    PangoFontDescription* run_font_desc = pango_font_describe(font);
+    char* font_str = pango_font_description_to_string(run_font_desc);
+    std::cerr << std::format("font_str = {}\n", font_str);
+    g_free(font_str);
+
+    PangoRectangle ink_rect;
+    PangoRectangle logical_rect;
+
+    // pango_glyph_string_extents(glyph_string, font, &ink_rect, &logical_rect);
+    // pango_glyph_string_get_logical_widths(glyph_string, )
+
+    pango_font_get_glyph_extents(font, glyph_id, &ink_rect, &logical_rect);
+
+    int width = PANGO_PIXELS(logical_rect.width);
+    int height = PANGO_PIXELS(logical_rect.height);
+    std::cerr << std::format("{}x{}\n", width, height);
+
+    PangoGlyphStringPtr glyph_string{pango_glyph_string_new()};
+    pango_glyph_string_set_size(glyph_string.get(), 1);
+    PangoGlyphInfo gi = {.glyph = glyph_id,
+                         .geometry =
+                             {
+                                 .width = PANGO_SCALE * width,
+                                 .x_offset = 0,
+                                 .y_offset = PANGO_SCALE * height,
+                             },
+                         .attr = {1}};
+    glyph_string->glyphs[0] = gi;
+
+    std::vector<unsigned char> surface_data(width * height * 4);
+    CairoSurfacePtr surface{cairo_image_surface_create_for_data(
+        &surface_data[0], CAIRO_FORMAT_ARGB32, width, height, width * 4)};
+    CairoContextPtr render_context{cairo_create(surface.get())};
+
+    cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
+    // pango_cairo_show_layout(render_context.get(), layout.get());
+
+    pango_cairo_show_glyph_string(render_context.get(), font, glyph_string.get());
+
+    bool colored = false;
+    std::vector<uint8_t> buffer;
+    size_t pixels = width * height * 4;
+    buffer.reserve(pixels);
+    for (size_t i = 0; i < pixels; i += 4) {
+        buffer.emplace_back(surface_data[i + 2]);
+        buffer.emplace_back(surface_data[i + 1]);
+        buffer.emplace_back(surface_data[i]);
+        if (colored) {
+            buffer.emplace_back(surface_data[i + 3]);
+        }
+    }
+
+    return {
+        .colored = colored,
+        .left = 0,
+        .top = height,
+        .width = width,
+        .height = height,
+        .advance = width,
+        .buffer = std::move(buffer),
+    };
 }
 
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
@@ -80,13 +149,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         PangoItem* item = glyph_item->item;
 
         PangoFont* run_font = item->analysis.font;
-        size_t font_id = 0;  // TODO: Cache font.
-
-        // TODO: Print the font name for debug use; remove this.
-        PangoFontDescription* run_font_desc = pango_font_describe(run_font);
-        char* font_str = pango_font_description_to_string(run_font_desc);
-        std::cerr << std::format("font_str = {}\n", font_str);
-        g_free(font_str);
+        size_t font_id = pimpl->cacheFont(run_font);
 
         PangoGlyphString* glyph_string = glyph_item->glyphs;
         PangoGlyphInfo* glyph_infos = glyph_string->glyphs;
@@ -103,6 +166,8 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
             int x_offset = PANGO_PIXELS(geometry.x_offset);
             int y_offset = PANGO_PIXELS(geometry.y_offset);
             int width = PANGO_PIXELS(geometry.width);
+
+            std::cerr << std::format("width = {}\n", width);
 
             uint32_t glyph_id = glyph_infos[i].glyph;
             Point position = {.x = total_advance + x_offset, .y = y_offset};
@@ -195,5 +260,22 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 //         .buffer = std::move(buffer),
 //     };
 // }
+
+size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
+    PangoFontDescription* run_font_desc = pango_font_describe(font);
+    char* font_str = pango_font_description_to_string(run_font_desc);
+    std::string font_name = font_str;
+    g_free(font_str);
+
+    // Cache font in font map.
+    if (!font_postscript_name_to_id.contains(font_name)) {
+        // g_object_ref(font);  // TODO: Do we need this?
+
+        size_t font_id = font_id_to_native.size();
+        font_id_to_native.emplace_back(font);
+        font_postscript_name_to_id[font_name] = font_id;
+    }
+    return font_postscript_name_to_id[font_name];
+}
 
 }

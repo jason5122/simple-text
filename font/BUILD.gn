@@ -2,8 +2,7 @@ source_set("font") {
   sources = [ "font_rasterizer.cc" ]
 
   if (is_mac) {
-    # deps = [ "core_text" ]
-    deps = [ "pango" ]
+    deps = [ "core_text" ]
   }
   if (is_linux) {
     deps = [ "pango" ]

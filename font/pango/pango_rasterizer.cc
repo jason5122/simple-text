@@ -149,7 +149,9 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
             int width = PANGO_PIXELS(logical_rect.width);
             int height = PANGO_PIXELS(logical_rect.height);
 
-            ++width;  // Seems like Sublime Text adds 1 pixel.
+            // Seems like Sublime Text adds some pixels?
+            // width += 1;
+            // height += 2;
 
             PangoGlyphInfo gi = glyph_infos[i];
             gi.geometry.width = PANGO_SCALE * width;
@@ -180,9 +182,11 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     PangoRectangle logical_rect;
     pango_layout_line_get_extents(layout_line, &ink_rect, &logical_rect);
 
-    int width = PANGO_PIXELS(logical_rect.width);
+    // int width = PANGO_PIXELS(logical_rect.width);
     return {
-        .width = width,
+        // We shouldn't use Pango's width since we make our own slight adjustments.
+        // .width = width,
+        .width = total_advance,
         .length = str8.length(),
         .runs = std::move(runs),
     };

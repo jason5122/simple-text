@@ -116,12 +116,8 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 }
 
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
-    std::cerr << str8 << '\n';
-
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
     size_t len = str16.length();
-
-    ComPtr<IDWriteFont> mapped_font;
 
     // TODO: Don't hard code locale.
     static constexpr wchar_t locale[] = L"en-us";
@@ -136,6 +132,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     UINT32 mapped_len;
     for (UINT32 i = 0; i < str16.length(); i += mapped_len) {
         FLOAT mapped_scale;
+        ComPtr<IDWriteFont> mapped_font;
         pimpl->font_fallback_->MapCharacters(analysis_source.Get(), i, len - i, nullptr, nullptr,
                                              DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
                                              DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
@@ -145,11 +142,54 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
             PrintFontFamilyName(mapped_font.Get());
         } else {
             // TODO: Handle missing glyphs when no font can render the text.
-            std::cerr << "mapped_font is null!\n";
+            std::cerr << "Mapped font is null!\n";
             std::abort();
         }
 
-        std::cerr << std::format("mapped_len = {}\n", mapped_len);
+        std::wstring substr = str16.substr(i, mapped_len);
+        std::cerr << std::format("\"{}\", mapped_len = {}\n", base::windows::ConvertToUTF8(substr),
+                                 mapped_len);
+
+        // Get glyph run properties.
+
+        // TODO: Do we need to construct this each time?
+        ComPtr<IDWriteTextAnalyzer> text_analyzer;
+        pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
+        TextAnalysis analysis(substr.data(), substr.length(), nullptr,
+                              DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
+        TextAnalysis::Run* run_head;
+        analysis.GenerateResults(text_analyzer.Get(), &run_head);
+
+        uint32_t max_glyph_count = 3 * str16.length() / 2 + 16;
+        std::vector<uint16_t> cluster_map(str16.length());
+        std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_properties(str16.length());
+        std::vector<uint16_t> glyph_indices(max_glyph_count);
+        std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_properties(max_glyph_count);
+        uint32_t glyph_count;
+
+        // TODO: Don't hard code locale.
+        static constexpr wchar_t locale[] = L"en-us";
+
+        ComPtr<IDWriteFontFace> mapped_font_face;
+        mapped_font->CreateFontFace(&mapped_font_face);
+        text_analyzer->GetGlyphs(substr.data(), substr.length(), mapped_font_face.Get(), false,
+                                 false, &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
+                                 max_glyph_count, cluster_map.data(), text_properties.data(),
+                                 glyph_indices.data(), glyph_properties.data(), &glyph_count);
+
+        std::vector<float> glyph_advances(max_glyph_count);
+        std::vector<DWRITE_GLYPH_OFFSET> glyph_offsets(max_glyph_count);
+        text_analyzer->GetGlyphPlacements(
+            substr.data(), cluster_map.data(), text_properties.data(), substr.length(),
+            glyph_indices.data(), glyph_properties.data(), glyph_count, mapped_font_face.Get(),
+            pimpl->em_size, false, false, &run_head->mScript, locale, nullptr, nullptr, 0,
+            glyph_advances.data(), glyph_offsets.data());
+
+        for (uint32_t i = 0; i < glyph_count; i++) {
+            std::cerr << std::format("{{adv={} idx={}}}", glyph_advances[i], glyph_indices[i])
+                      << ' ';
+        }
+        std::cerr << '\n';
     }
 
     return {};

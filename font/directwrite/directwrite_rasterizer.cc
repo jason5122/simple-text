@@ -1,4 +1,6 @@
 // https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
+#include <cassert>
+#include <limits>
 #define NOMINMAX
 
 #include "base/numeric/saturation_arithmetic.h"
@@ -7,6 +9,8 @@
 #include "font/directwrite/font_fallback_source.h"
 #include "font/directwrite/text_analysis.h"
 #include "font/font_rasterizer.h"
+#include "unicode/SkTFitsIn.h"
+#include "unicode/unicode.h"
 #include <array>
 #include <combaseapi.h>
 #include <comdef.h>
@@ -20,6 +24,57 @@
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
+
+namespace {
+
+// https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#115
+class UTF16ToUTF8IndicesMap {
+public:
+    /** Builds a UTF-16 to UTF-8 indices map; the text is not retained
+     * @return true if successful
+     */
+    bool setUTF8(const char* utf8, size_t size) {
+        assert(utf8 != nullptr);
+
+        if (!SkTFitsIn<int32_t>(size)) {
+            std::cerr << "UTF16ToUTF8IndicesMap: text too long\n";
+            return false;
+        }
+
+        auto utf16Size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
+        if (utf16Size < 0) {
+            std::cerr << "UTF16ToUTF8IndicesMap: Invalid utf8 input\n";
+            return false;
+        }
+
+        // utf16Size+1 to also store the size
+        fUtf16ToUtf8Indices = std::vector<size_t>(utf16Size + 1);
+        auto utf16 = fUtf16ToUtf8Indices.begin();
+        auto utf8Begin = utf8, utf8End = utf8 + size;
+        while (utf8Begin < utf8End) {
+            *utf16 = utf8Begin - utf8;
+            utf16 += unicode::ToUTF16(unicode::NextUTF8(&utf8Begin, utf8End), nullptr);
+        }
+        *utf16 = size;
+
+        return true;
+    }
+
+    size_t mapIndex(size_t index) const {
+        assert(index < fUtf16ToUtf8Indices.size());
+        return fUtf16ToUtf8Indices[index];
+    }
+
+    std::pair<size_t, size_t> mapRange(size_t start, size_t size) const {
+        auto utf8Start = mapIndex(start);
+        return {utf8Start, mapIndex(start + size) - utf8Start};
+    }
+
+private:
+    std::vector<size_t> fUtf16ToUtf8Indices;
+};
+
+}
 
 namespace font {
 
@@ -130,6 +185,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         new FontFallbackSource(str16.data(), len, locale, number_substitution.Get());
 
     UINT32 mapped_len;
+    size_t offset = 0;
     for (UINT32 i = 0; i < str16.length(); i += mapped_len) {
         FLOAT mapped_scale;
         ComPtr<IDWriteFont> mapped_font;
@@ -149,6 +205,13 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         std::wstring substr = str16.substr(i, mapped_len);
         std::cerr << std::format("\"{}\", mapped_len = {}\n", base::windows::ConvertToUTF8(substr),
                                  mapped_len);
+
+        std::string substr_utf8 = base::windows::ConvertToUTF8(substr);
+        UTF16ToUTF8IndicesMap utf8IndicesMap;
+        if (!utf8IndicesMap.setUTF8(substr_utf8.data(), substr_utf8.length())) {
+            std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
+            std::abort();
+        }
 
         // Get glyph run properties.
 
@@ -170,12 +233,32 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         // TODO: Don't hard code locale.
         static constexpr wchar_t locale[] = L"en-us";
 
+        DWRITE_FONT_FEATURE fontFeature = {DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES, 1};
+
+        const DWRITE_TYPOGRAPHIC_FEATURES* features =
+            new DWRITE_TYPOGRAPHIC_FEATURES{&fontFeature};
+
+        UINT32 feature_range_lengths[1];
+        feature_range_lengths[0] = substr.length();
+
+        // DWRITE_FONT_FEATURE* ligatures = new DWRITE_FONT_FEATURE{
+        //     .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES,
+        //     .parameter = 1,
+        // };
+        // const DWRITE_TYPOGRAPHIC_FEATURES* ligature_feature = new DWRITE_TYPOGRAPHIC_FEATURES{
+        //     .features = ligatures,
+        //     .featureCount = 1,
+        // };
+        // std::vector<const DWRITE_TYPOGRAPHIC_FEATURES*> features = {ligature_feature};
+        // std::vector<UINT32> feature_range_lengths = {static_cast<UINT32>(substr.length())};
+
         ComPtr<IDWriteFontFace> mapped_font_face;
         mapped_font->CreateFontFace(&mapped_font_face);
         text_analyzer->GetGlyphs(substr.data(), substr.length(), mapped_font_face.Get(), false,
-                                 false, &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
-                                 max_glyph_count, cluster_map.data(), text_properties.data(),
-                                 glyph_indices.data(), glyph_properties.data(), &glyph_count);
+                                 false, &run_head->mScript, locale, nullptr, &features,
+                                 feature_range_lengths, 1, max_glyph_count, cluster_map.data(),
+                                 text_properties.data(), glyph_indices.data(),
+                                 glyph_properties.data(), &glyph_count);
 
         std::vector<float> glyph_advances(max_glyph_count);
         std::vector<DWRITE_GLYPH_OFFSET> glyph_offsets(max_glyph_count);
@@ -185,11 +268,24 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
             pimpl->em_size, false, false, &run_head->mScript, locale, nullptr, nullptr, 0,
             glyph_advances.data(), glyph_offsets.data());
 
-        for (uint32_t i = 0; i < glyph_count; i++) {
-            std::cerr << std::format("{{adv={} idx={}}}", glyph_advances[i], glyph_indices[i])
-                      << ' ';
+        // Invert cluster map.
+        // TODO: Do this in a cleaner way.
+        std::vector<uint16_t> log_clusters(glyph_count, std::numeric_limits<uint16_t>::max());
+        for (uint16_t i = 0; i < substr.length(); i++) {
+            uint16_t byte_idx = cluster_map[i];
+            log_clusters[byte_idx] = std::min(i, log_clusters[byte_idx]);
         }
-        std::cerr << '\n';
+
+        for (uint32_t i = 0; i < glyph_count; i++) {
+            // size_t index = offset + utf8IndicesMap.mapIndex(log_clusters[i]);
+            // std::cerr << std::format("{{adv={} idx={} byte={}}}\n", glyph_advances[i],
+            //                          glyph_indices[i], index);
+            // std::cerr << std::format("index = {}\n", index);
+
+            std::cerr << std::format("glyph_id = {}\n", glyph_indices[i]);
+        }
+
+        offset += substr_utf8.length();
     }
 
     return {};

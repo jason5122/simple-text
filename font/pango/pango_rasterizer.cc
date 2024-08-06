@@ -15,6 +15,9 @@ public:
     std::unordered_map<std::string, size_t> font_postscript_name_to_id;
     std::vector<GObjectPtr<PangoFont>> font_id_to_native;
     size_t cacheFont(PangoFont* font);
+
+    std::unordered_map<PangoGlyph, PangoGlyphInfo> glyph_info_cache;
+    void cacheGlyphInfo(const PangoGlyphInfo& glyph_info);
 };
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
@@ -76,19 +79,26 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 
     int width = PANGO_PIXELS(logical_rect.width);
     int height = PANGO_PIXELS(logical_rect.height);
-    std::cerr << std::format("{}x{}\n", width, height);
+    // std::cerr << std::format("{}x{}\n", width, height);
 
     PangoGlyphStringPtr glyph_string{pango_glyph_string_new()};
     pango_glyph_string_set_size(glyph_string.get(), 1);
-    PangoGlyphInfo gi = {.glyph = glyph_id,
-                         .geometry =
-                             {
-                                 .width = PANGO_SCALE * width,
-                                 .x_offset = 0,
-                                 .y_offset = PANGO_SCALE * height,
-                             },
-                         .attr = {1}};
+    // PangoGlyphInfo gi = {.glyph = glyph_id,
+    //                      .geometry =
+    //                          {
+    //                              .width = PANGO_SCALE * width,
+    //                              .x_offset = 0,
+    //                              .y_offset = PANGO_SCALE * height,
+    //                          },
+    //                      .attr = {1}};
+    PangoGlyphInfo gi = pimpl->glyph_info_cache[glyph_id];
+    gi.geometry.y_offset = PANGO_SCALE * (height - descent);
     glyph_string->glyphs[0] = gi;
+
+    // int width = PANGO_PIXELS(gi.geometry.width);
+    // int height = PANGO_PIXELS(gi.geometry.y_offset);
+    // int height = line_height;
+    std::cerr << std::format("{}x{}\n", width, height);
 
     std::vector<unsigned char> surface_data(width * height * 4);
     CairoSurfacePtr surface{cairo_image_surface_create_for_data(
@@ -96,11 +106,9 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
     CairoContextPtr render_context{cairo_create(surface.get())};
 
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
-    // pango_cairo_show_layout(render_context.get(), layout.get());
-
     pango_cairo_show_glyph_string(render_context.get(), font, glyph_string.get());
 
-    bool colored = false;
+    bool colored = gi.attr.is_color;
     std::vector<uint8_t> buffer;
     size_t pixels = width * height * 4;
     buffer.reserve(pixels);
@@ -161,6 +169,9 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         std::vector<ShapedGlyph> glyphs;
         glyphs.reserve(glyph_count);
         for (int i = 0; i < glyph_count; i++) {
+            // Cache glyph info struct.
+            pimpl->cacheGlyphInfo(glyph_infos[i]);
+
             const PangoGlyphGeometry& geometry = glyph_infos[i].geometry;
 
             int x_offset = PANGO_PIXELS(geometry.x_offset);
@@ -276,6 +287,10 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
         font_postscript_name_to_id[font_name] = font_id;
     }
     return font_postscript_name_to_id[font_name];
+}
+
+void FontRasterizer::impl::cacheGlyphInfo(const PangoGlyphInfo& glyph_info) {
+    glyph_info_cache[glyph_info.glyph] = glyph_info;
 }
 
 }

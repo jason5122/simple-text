@@ -153,6 +153,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
             // width += 1;
             // height += 2;
 
+            // Make some adjustments to glyph info struct.
             PangoGlyphInfo gi = glyph_infos[i];
             gi.geometry.width = PANGO_SCALE * width;
             gi.geometry.y_offset = PANGO_SCALE * (height - descent);
@@ -178,14 +179,8 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         runs.emplace_back(ShapedRun{font_id, std::move(glyphs)});
     }
 
-    PangoRectangle ink_rect;
-    PangoRectangle logical_rect;
-    pango_layout_line_get_extents(layout_line, &ink_rect, &logical_rect);
-
-    // int width = PANGO_PIXELS(logical_rect.width);
     return {
         // We shouldn't use Pango's width since we make our own slight adjustments.
-        // .width = width,
         .width = total_advance,
         .length = str8.length(),
         .runs = std::move(runs),

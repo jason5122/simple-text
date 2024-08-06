@@ -61,6 +61,22 @@ TEST(FontRasterizerTest, LayoutLine1) {
     }
 }
 
+TEST(FontRasterizerTest, LayoutLine2) {
+    FontRasterizer rasterizer{kOSFontFace, 32};
+
+    const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
+    auto layout = rasterizer.layoutLine(line);
+
+    int total_advance = 0;
+    for (const auto& run : layout.runs) {
+        for (const auto& glyph : run.glyphs) {
+            total_advance += glyph.advance.x;
+        }
+    }
+
+    EXPECT_EQ(total_advance, layout.width);
+}
+
 TEST(FontRasterizerTest, LineLayoutClosestForX) {
     FontRasterizer rasterizer{kOSFontFace, 32};
 

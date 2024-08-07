@@ -6,6 +6,7 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "base/windows/unicode.h"
 #include "font/directwrite/directwrite_helper.h"
+#include "font/directwrite/font_fallback_renderer.h"
 #include "font/directwrite/font_fallback_source.h"
 #include "font/directwrite/text_analysis.h"
 #include "font/font_rasterizer.h"
@@ -172,121 +173,147 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
-    size_t len = str16.length();
 
-    // TODO: Don't hard code locale.
-    static constexpr wchar_t locale[] = L"en-us";
+    IDWriteFontCollection* font_collection;
+    pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
-    ComPtr<IDWriteNumberSubstitution> number_substitution;
-    pimpl->dwrite_factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE, locale,
-                                                    true, &number_substitution);
+    ComPtr<IDWriteTextFormat> text_format;
+    pimpl->dwrite_factory->CreateTextFormat(
+        L"Fira Code", font_collection, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL,
+        DWRITE_FONT_STRETCH_NORMAL, 16.0f, L"en-us", &text_format);
 
-    ComPtr<IDWriteTextAnalysisSource> analysis_source =
-        new FontFallbackSource(str16.data(), len, locale, number_substitution.Get());
+    UINT32 len = str16.length();
+    ComPtr<IDWriteTextLayout> text_layout;
+    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 200.0f, 200.0f,
+                                            &text_layout);
 
-    UINT32 mapped_len;
-    size_t offset = 0;
-    for (UINT32 i = 0; i < str16.length(); i += mapped_len) {
-        FLOAT mapped_scale;
-        ComPtr<IDWriteFont> mapped_font;
-        pimpl->font_fallback_->MapCharacters(analysis_source.Get(), i, len - i, nullptr, nullptr,
-                                             DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-                                             DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
-                                             &mapped_scale);
+    ComPtr<FontFallbackRenderer> font_fallback_renderer =
+        new FontFallbackRenderer(font_collection);
 
-        if (mapped_font != nullptr) {
-            PrintFontFamilyName(mapped_font.Get());
-        } else {
-            // TODO: Handle missing glyphs when no font can render the text.
-            std::cerr << "Mapped font is null!\n";
-            std::abort();
-        }
+    text_layout->SetFontCollection(font_collection, {0, len});
+    text_layout->Draw(nullptr, font_fallback_renderer.Get(), 50.0f, 50.0f);
 
-        std::wstring substr = str16.substr(i, mapped_len);
-        std::cerr << std::format("\"{}\", mapped_len = {}\n", base::windows::ConvertToUTF8(substr),
-                                 mapped_len);
+    // std::wstring str16 = base::windows::ConvertToUTF16(str8);
+    // size_t len = str16.length();
 
-        std::string substr_utf8 = base::windows::ConvertToUTF8(substr);
-        UTF16ToUTF8IndicesMap utf8IndicesMap;
-        if (!utf8IndicesMap.setUTF8(substr_utf8.data(), substr_utf8.length())) {
-            std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
-            std::abort();
-        }
+    // // TODO: Don't hard code locale.
+    // static constexpr wchar_t locale[] = L"en-us";
 
-        // Get glyph run properties.
+    // ComPtr<IDWriteNumberSubstitution> number_substitution;
+    // pimpl->dwrite_factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE,
+    // locale,
+    //                                                 true, &number_substitution);
 
-        // TODO: Do we need to construct this each time?
-        ComPtr<IDWriteTextAnalyzer> text_analyzer;
-        pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
-        TextAnalysis analysis(substr.data(), substr.length(), nullptr,
-                              DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
-        TextAnalysis::Run* run_head;
-        analysis.GenerateResults(text_analyzer.Get(), &run_head);
+    // ComPtr<IDWriteTextAnalysisSource> analysis_source =
+    //     new FontFallbackSource(str16.data(), len, locale, number_substitution.Get());
 
-        uint32_t max_glyph_count = 3 * str16.length() / 2 + 16;
-        std::vector<uint16_t> cluster_map(str16.length());
-        std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_properties(str16.length());
-        std::vector<uint16_t> glyph_indices(max_glyph_count);
-        std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_properties(max_glyph_count);
-        uint32_t glyph_count;
+    // UINT32 mapped_len;
+    // size_t offset = 0;
+    // for (UINT32 i = 0; i < str16.length(); i += mapped_len) {
+    //     FLOAT mapped_scale;
+    //     ComPtr<IDWriteFont> mapped_font;
+    //     pimpl->font_fallback_->MapCharacters(analysis_source.Get(), i, len - i, nullptr,
+    //     nullptr,
+    //                                          DWRITE_FONT_WEIGHT_NORMAL,
+    //                                          DWRITE_FONT_STYLE_NORMAL,
+    //                                          DWRITE_FONT_STRETCH_NORMAL, &mapped_len,
+    //                                          &mapped_font, &mapped_scale);
 
-        // TODO: Don't hard code locale.
-        static constexpr wchar_t locale[] = L"en-us";
+    //     if (mapped_font != nullptr) {
+    //         PrintFontFamilyName(mapped_font.Get());
+    //     } else {
+    //         // TODO: Handle missing glyphs when no font can render the text.
+    //         std::cerr << "Mapped font is null!\n";
+    //         std::abort();
+    //     }
 
-        DWRITE_FONT_FEATURE fontFeature = {DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES, 1};
+    //     std::wstring substr = str16.substr(i, mapped_len);
+    //     std::cerr << std::format("\"{}\", mapped_len = {}\n",
+    //     base::windows::ConvertToUTF8(substr),
+    //                              mapped_len);
 
-        const DWRITE_TYPOGRAPHIC_FEATURES* features =
-            new DWRITE_TYPOGRAPHIC_FEATURES{&fontFeature};
+    //     std::string substr_utf8 = base::windows::ConvertToUTF8(substr);
+    //     UTF16ToUTF8IndicesMap utf8IndicesMap;
+    //     if (!utf8IndicesMap.setUTF8(substr_utf8.data(), substr_utf8.length())) {
+    //         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
+    //         std::abort();
+    //     }
 
-        UINT32 feature_range_lengths[1];
-        feature_range_lengths[0] = substr.length();
+    //     // Get glyph run properties.
 
-        // DWRITE_FONT_FEATURE* ligatures = new DWRITE_FONT_FEATURE{
-        //     .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES,
-        //     .parameter = 1,
-        // };
-        // const DWRITE_TYPOGRAPHIC_FEATURES* ligature_feature = new DWRITE_TYPOGRAPHIC_FEATURES{
-        //     .features = ligatures,
-        //     .featureCount = 1,
-        // };
-        // std::vector<const DWRITE_TYPOGRAPHIC_FEATURES*> features = {ligature_feature};
-        // std::vector<UINT32> feature_range_lengths = {static_cast<UINT32>(substr.length())};
+    //     // TODO: Do we need to construct this each time?
+    //     ComPtr<IDWriteTextAnalyzer> text_analyzer;
+    //     pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
+    //     TextAnalysis analysis(substr.data(), substr.length(), nullptr,
+    //                           DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
+    //     TextAnalysis::Run* run_head;
+    //     analysis.GenerateResults(text_analyzer.Get(), &run_head);
 
-        ComPtr<IDWriteFontFace> mapped_font_face;
-        mapped_font->CreateFontFace(&mapped_font_face);
-        text_analyzer->GetGlyphs(substr.data(), substr.length(), mapped_font_face.Get(), false,
-                                 false, &run_head->mScript, locale, nullptr, &features,
-                                 feature_range_lengths, 1, max_glyph_count, cluster_map.data(),
-                                 text_properties.data(), glyph_indices.data(),
-                                 glyph_properties.data(), &glyph_count);
+    //     uint32_t max_glyph_count = 3 * str16.length() / 2 + 16;
+    //     std::vector<uint16_t> cluster_map(str16.length());
+    //     std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_properties(str16.length());
+    //     std::vector<uint16_t> glyph_indices(max_glyph_count);
+    //     std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_properties(max_glyph_count);
+    //     uint32_t glyph_count;
 
-        std::vector<float> glyph_advances(max_glyph_count);
-        std::vector<DWRITE_GLYPH_OFFSET> glyph_offsets(max_glyph_count);
-        text_analyzer->GetGlyphPlacements(
-            substr.data(), cluster_map.data(), text_properties.data(), substr.length(),
-            glyph_indices.data(), glyph_properties.data(), glyph_count, mapped_font_face.Get(),
-            pimpl->em_size, false, false, &run_head->mScript, locale, nullptr, nullptr, 0,
-            glyph_advances.data(), glyph_offsets.data());
+    //     // TODO: Don't hard code locale.
+    //     static constexpr wchar_t locale[] = L"en-us";
 
-        // Invert cluster map.
-        // TODO: Do this in a cleaner way.
-        std::vector<uint16_t> log_clusters(glyph_count, std::numeric_limits<uint16_t>::max());
-        for (uint16_t i = 0; i < substr.length(); i++) {
-            uint16_t byte_idx = cluster_map[i];
-            log_clusters[byte_idx] = std::min(i, log_clusters[byte_idx]);
-        }
+    //     DWRITE_FONT_FEATURE fontFeature = {DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES, 1};
 
-        for (uint32_t i = 0; i < glyph_count; i++) {
-            // size_t index = offset + utf8IndicesMap.mapIndex(log_clusters[i]);
-            // std::cerr << std::format("{{adv={} idx={} byte={}}}\n", glyph_advances[i],
-            //                          glyph_indices[i], index);
-            // std::cerr << std::format("index = {}\n", index);
+    //     const DWRITE_TYPOGRAPHIC_FEATURES* features =
+    //         new DWRITE_TYPOGRAPHIC_FEATURES{&fontFeature};
 
-            std::cerr << std::format("glyph_id = {}\n", glyph_indices[i]);
-        }
+    //     UINT32 feature_range_lengths[1];
+    //     feature_range_lengths[0] = substr.length();
 
-        offset += substr_utf8.length();
-    }
+    //     // DWRITE_FONT_FEATURE* ligatures = new DWRITE_FONT_FEATURE{
+    //     //     .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES,
+    //     //     .parameter = 1,
+    //     // };
+    //     // const DWRITE_TYPOGRAPHIC_FEATURES* ligature_feature = new
+    //     DWRITE_TYPOGRAPHIC_FEATURES{
+    //     //     .features = ligatures,
+    //     //     .featureCount = 1,
+    //     // };
+    //     // std::vector<const DWRITE_TYPOGRAPHIC_FEATURES*> features = {ligature_feature};
+    //     // std::vector<UINT32> feature_range_lengths = {static_cast<UINT32>(substr.length())};
+
+    //     ComPtr<IDWriteFontFace> mapped_font_face;
+    //     mapped_font->CreateFontFace(&mapped_font_face);
+    //     text_analyzer->GetGlyphs(substr.data(), substr.length(), mapped_font_face.Get(), false,
+    //                              false, &run_head->mScript, locale, nullptr, &features,
+    //                              feature_range_lengths, 1, max_glyph_count, cluster_map.data(),
+    //                              text_properties.data(), glyph_indices.data(),
+    //                              glyph_properties.data(), &glyph_count);
+
+    //     std::vector<float> glyph_advances(max_glyph_count);
+    //     std::vector<DWRITE_GLYPH_OFFSET> glyph_offsets(max_glyph_count);
+    //     text_analyzer->GetGlyphPlacements(
+    //         substr.data(), cluster_map.data(), text_properties.data(), substr.length(),
+    //         glyph_indices.data(), glyph_properties.data(), glyph_count, mapped_font_face.Get(),
+    //         pimpl->em_size, false, false, &run_head->mScript, locale, nullptr, nullptr, 0,
+    //         glyph_advances.data(), glyph_offsets.data());
+
+    //     // Invert cluster map.
+    //     // TODO: Do this in a cleaner way.
+    //     std::vector<uint16_t> log_clusters(glyph_count, std::numeric_limits<uint16_t>::max());
+    //     for (uint16_t i = 0; i < substr.length(); i++) {
+    //         uint16_t byte_idx = cluster_map[i];
+    //         log_clusters[byte_idx] = std::min(i, log_clusters[byte_idx]);
+    //     }
+
+    //     for (uint32_t i = 0; i < glyph_count; i++) {
+    //         // size_t index = offset + utf8IndicesMap.mapIndex(log_clusters[i]);
+    //         // std::cerr << std::format("{{adv={} idx={} byte={}}}\n", glyph_advances[i],
+    //         //                          glyph_indices[i], index);
+    //         // std::cerr << std::format("index = {}\n", index);
+
+    //         std::cerr << std::format("glyph_id = {}\n", glyph_indices[i]);
+    //     }
+
+    //     offset += substr_utf8.length();
+    // }
 
     return {};
 }

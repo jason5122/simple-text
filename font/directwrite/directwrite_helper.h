@@ -7,13 +7,12 @@
 #include <format>
 #include <iostream>
 
-using Microsoft::WRL::ComPtr;
-
 namespace font {
 
-inline void ColorRunHelper(ID2D1RenderTarget* target,
-                           ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
-                           UINT origin_y) {
+inline void ColorRunHelper(
+    ID2D1RenderTarget* target,
+    Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+    UINT origin_y) {
     // TODO: Find a way to reuse render target and brushes.
     Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);

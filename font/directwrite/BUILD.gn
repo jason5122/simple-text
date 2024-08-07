@@ -1,6 +1,7 @@
 source_set("directwrite") {
   sources = [
     "directwrite_rasterizer.cc",
+    "font_fallback_renderer.cc",
     "font_fallback_source.cc",
     "text_analysis.cc",
   ]

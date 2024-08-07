@@ -320,8 +320,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 200.0f, 200.0f,
                                             &text_layout);
 
-    ComPtr<FontFallbackRenderer> font_fallback_renderer =
-        new FontFallbackRenderer(font_collection);
+    ComPtr<FontFallbackRenderer> font_fallback_renderer = new FontFallbackRenderer{};
 
     text_layout->SetFontCollection(font_collection, {0, len});
     text_layout->Draw(nullptr, font_fallback_renderer.Get(), 50.0f, 50.0f);

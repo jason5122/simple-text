@@ -5,13 +5,13 @@ namespace gui {
 
 MultiViewWidget::MultiViewWidget() {
     // TODO: Don't create a tab by default. See if we can have zero tabs like Sublime Text.
-//     addTab(R"(Hi 💣🇺🇸 Hello world!
-// This is a new line.)");
+    //     addTab(R"(Hi 💣🇺🇸 Hello world!
+    // This is a new line.)");
     // addTab(R"(👩‍👩‍👧‍👦)");
     // addTab(R"(🇺🇸)");
     // addTab(R"(==👩‍👩‍👧‍👦﷽)");
     // addTab(R"(==💣🇺🇸)");
-    addTab(R"(apples != oranges)");
+    addTab(R"(apples != oranges >= bananas)");
 }
 
 void MultiViewWidget::setIndex(size_t index) {

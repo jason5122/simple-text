@@ -49,7 +49,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
 
     for (size_t i = 0; i < glyph_count; ++i) {
         uint32_t glyph_id = glyphRun->glyphIndices[i];
-        // int advance = std::ceil(glyphRun->glyphAdvances[i]);
+        // TODO: See if we need to round this or anything.
         int advance = glyphRun->glyphAdvances[i];
 
         FontRasterizer::ShapedGlyph glyph{

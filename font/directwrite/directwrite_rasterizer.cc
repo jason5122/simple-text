@@ -242,9 +242,25 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 200.0f, 200.0f,
                                             &text_layout);
 
-    ComPtr<FontFallbackRenderer> font_fallback_renderer = new FontFallbackRenderer{};
+    ComPtr<IDWriteTypography> default_typography;
+    text_layout->GetTypography(0, &default_typography, nullptr);
+
+    // OpenType features.
+    // TODO: Consider using the lower-level IDWriteTextAnalyzer, which IDWriteTextLayout uses under
+    // the hood. IDWriteTextLayout::CreateTypography() removes the default per-script OpenType
+    // options, which is not ideal.
+    // https://stackoverflow.com/questions/32545675/what-are-the-default-typography-settings-used-by-idwritetextlayout#48800921
+    // https://stackoverflow.com/questions/44611592/how-do-i-balance-script-oriented-opentype-features-with-other-opentype-features
+
+    IDWriteTypography* typography;
+    pimpl->dwrite_factory->CreateTypography(&typography);
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19, 1});
+    text_layout->SetTypography(typography, {0, len});
 
     text_layout->SetFontCollection(font_collection, {0, len});
+
+    ComPtr<FontFallbackRenderer> font_fallback_renderer = new FontFallbackRenderer{};
     text_layout->Draw(nullptr, font_fallback_renderer.Get(), 50.0f, 50.0f);
 
     return {

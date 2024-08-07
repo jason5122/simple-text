@@ -1,21 +1,15 @@
 // https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
-#include <cassert>
-#include <limits>
 #define NOMINMAX
 
-#include "base/numeric/saturation_arithmetic.h"
 #include "base/windows/unicode.h"
-#include "font/directwrite/directwrite_helper.h"
 #include "font/directwrite/font_fallback_renderer.h"
-#include "font/directwrite/font_fallback_source.h"
-#include "font/directwrite/text_analysis.h"
 #include "font/font_rasterizer.h"
-#include "unicode/SkTFitsIn.h"
-#include "unicode/unicode.h"
 #include <array>
 #include <combaseapi.h>
 #include <comdef.h>
 #include <cwchar>
+#include <d2d1.h>
+#include <iostream>
 #include <unknwnbase.h>
 #include <vector>
 #include <wincodec.h>
@@ -25,57 +19,6 @@
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
-
-namespace {
-
-// https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#115
-class UTF16ToUTF8IndicesMap {
-public:
-    /** Builds a UTF-16 to UTF-8 indices map; the text is not retained
-     * @return true if successful
-     */
-    bool setUTF8(const char* utf8, size_t size) {
-        assert(utf8 != nullptr);
-
-        if (!SkTFitsIn<int32_t>(size)) {
-            std::cerr << "UTF16ToUTF8IndicesMap: text too long\n";
-            return false;
-        }
-
-        auto utf16Size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
-        if (utf16Size < 0) {
-            std::cerr << "UTF16ToUTF8IndicesMap: Invalid utf8 input\n";
-            return false;
-        }
-
-        // utf16Size+1 to also store the size
-        fUtf16ToUtf8Indices = std::vector<size_t>(utf16Size + 1);
-        auto utf16 = fUtf16ToUtf8Indices.begin();
-        auto utf8Begin = utf8, utf8End = utf8 + size;
-        while (utf8Begin < utf8End) {
-            *utf16 = utf8Begin - utf8;
-            utf16 += unicode::ToUTF16(unicode::NextUTF8(&utf8Begin, utf8End), nullptr);
-        }
-        *utf16 = size;
-
-        return true;
-    }
-
-    size_t mapIndex(size_t index) const {
-        assert(index < fUtf16ToUtf8Indices.size());
-        return fUtf16ToUtf8Indices[index];
-    }
-
-    std::pair<size_t, size_t> mapRange(size_t start, size_t size) const {
-        auto utf8Start = mapIndex(start);
-        return {utf8Start, mapIndex(start + size) - utf8Start};
-    }
-
-private:
-    std::vector<size_t> fUtf16ToUtf8Indices;
-};
-
-}
 
 namespace font {
 
@@ -90,6 +33,10 @@ public:
     ComPtr<ID2D1Factory> d2d_factory;
     ComPtr<IWICImagingFactory2> wic_factory;
     ComPtr<IDWriteFontFallback> font_fallback_;
+
+    void drawColorRun(ID2D1RenderTarget* target,
+                      Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+                      UINT origin_y);
 };
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
@@ -266,7 +213,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
 
-        ColorRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
+        pimpl->drawColorRun(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
 
         IWICBitmapLock* bitmap_lock;
         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
@@ -330,6 +277,64 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         .length = str8.length(),
         .runs = font_fallback_renderer->runs,
     };
+}
+
+void FontRasterizer::impl::drawColorRun(
+    ID2D1RenderTarget* target,
+    Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+    UINT origin_y) {
+    // TODO: Find a way to reuse render target and brushes.
+    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
+    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
+
+    D2D1_POINT_2F baseline_origin{
+        .x = 0,
+        .y = static_cast<FLOAT>(origin_y),
+    };
+
+    target->BeginDraw();
+    BOOL has_run;
+    const DWRITE_COLOR_GLYPH_RUN1* color_run;
+
+    while (true) {
+        if (FAILED(color_run_enumerator->MoveNext(&has_run)) || !has_run) {
+            break;
+        }
+        if (FAILED(color_run_enumerator->GetCurrentRun(&color_run))) {
+            break;
+        }
+
+        switch (color_run->glyphImageFormat) {
+        case DWRITE_GLYPH_IMAGE_FORMATS_PNG:
+        case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
+        case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
+        case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
+            // std::cerr << "DrawColorBitmapGlyphRun()\n";
+            break;
+
+        case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
+            // std::cerr << "DrawSvgGlyphRun()\n";
+            break;
+
+        case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
+        case DWRITE_GLYPH_IMAGE_FORMATS_CFF:
+        case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
+        default: {
+            // std::cerr << "DrawGlyphRun()\n";
+
+            Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> layer_brush;
+            if (color_run->paletteIndex == 0xFFFF) {
+                layer_brush = blue_brush;
+            } else {
+                target->CreateSolidColorBrush(color_run->runColor, &layer_brush);
+            }
+
+            target->DrawGlyphRun(baseline_origin, &color_run->glyphRun, layer_brush.Get());
+            break;
+        }
+        }
+    }
+    target->EndDraw();
 }
 
 }

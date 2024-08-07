@@ -4,7 +4,6 @@
 #include "base/windows/unicode.h"
 #include "font/directwrite/font_fallback_renderer.h"
 #include "font/font_rasterizer.h"
-#include <array>
 #include <combaseapi.h>
 #include <comdef.h>
 #include <cwchar>
@@ -25,17 +24,15 @@ namespace font {
 class FontRasterizer::impl {
 public:
     ComPtr<IDWriteFactory4> dwrite_factory;
-    ComPtr<IDWriteFontFace> font_face;
+    ComPtr<ID2D1Factory> d2d_factory;
+    ComPtr<IWICImagingFactory2> wic_factory;
 
+    ComPtr<IDWriteFontFace> font_face;
     std::wstring font_name_utf16;
     FLOAT em_size;
 
-    ComPtr<ID2D1Factory> d2d_factory;
-    ComPtr<IWICImagingFactory2> wic_factory;
-    ComPtr<IDWriteFontFallback> font_fallback_;
-
     void drawColorRun(ID2D1RenderTarget* target,
-                      Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+                      ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
                       UINT origin_y);
 };
 
@@ -52,25 +49,6 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     if (FAILED(hr)) {
         _com_error err(hr);
         std::cerr << err.ErrorMessage() << '\n';
-    }
-
-    // Create custom font fallback.
-    {
-        ComPtr<IDWriteFontFallbackBuilder> font_fallback_builder;
-        pimpl->dwrite_factory->CreateFontFallbackBuilder(&font_fallback_builder);
-
-        ComPtr<IDWriteFontFallback> system_font_fallback;
-        pimpl->dwrite_factory->GetSystemFontFallback(&system_font_fallback);
-
-        DWRITE_UNICODE_RANGE unicode_range{
-            .first = std::numeric_limits<UINT32>::min(),
-            .last = std::numeric_limits<UINT32>::max(),
-        };
-        std::array<const wchar_t*, 1> family_names{pimpl->font_name_utf16.data()};
-        font_fallback_builder->AddMapping(&unicode_range, 1, &family_names[0],
-                                          family_names.size());
-        font_fallback_builder->AddMappings(system_font_fallback.Get());
-        font_fallback_builder->CreateFontFallback(&pimpl->font_fallback_);
     }
 
     ComPtr<IDWriteFontCollection> font_collection;
@@ -177,16 +155,11 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
                                                            0, &color_run_enumerator);
     }
 
+    // Non-colored glyph run.
     if (hr == DWRITE_E_NOCOLOR) {
-        std::vector<BYTE> alpha_values(size);
+        std::vector<uint8_t> buffer(size);
         glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-                                               &alpha_values[0], size);
-
-        std::vector<uint8_t> buffer;
-        buffer.reserve(size);
-        for (size_t i = 0; i < size; ++i) {
-            buffer.emplace_back(alpha_values[i]);
-        }
+                                               &buffer[0], size);
 
         return {
             .colored = false,
@@ -197,7 +170,9 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
             .advance = static_cast<int32_t>(std::ceil(advance)),
             .buffer = std::move(buffer),
         };
-    } else {
+    }
+    // Colored glyph run.
+    else {
         ComPtr<IWICBitmap> wic_bitmap;
         // TODO: Implement without magic numbers. Properly find the right width/height.
         UINT bitmap_width = pixel_width + 10;
@@ -281,10 +256,10 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 
 void FontRasterizer::impl::drawColorRun(
     ID2D1RenderTarget* target,
-    Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
     UINT origin_y) {
     // TODO: Find a way to reuse render target and brushes.
-    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
+    ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
 
     D2D1_POINT_2F baseline_origin{
@@ -322,7 +297,7 @@ void FontRasterizer::impl::drawColorRun(
         default: {
             // std::cerr << "DrawGlyphRun()\n";
 
-            Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> layer_brush;
+            ComPtr<ID2D1SolidColorBrush> layer_brush;
             if (color_run->paletteIndex == 0xFFFF) {
                 layer_brush = blue_brush;
             } else {

@@ -83,19 +83,18 @@ class FontRasterizer::impl {
 public:
     ComPtr<IDWriteFactory4> dwrite_factory;
     ComPtr<IDWriteFontFace> font_face;
+
+    std::wstring font_name_utf16;
     FLOAT em_size;
 
     ComPtr<ID2D1Factory> d2d_factory;
     ComPtr<IWICImagingFactory2> wic_factory;
     ComPtr<IDWriteFontFallback> font_fallback_;
-
-    ComPtr<IDWriteFontFace> mapCharacters(std::wstring_view str16);
-    UINT16 getGlyphIndex(std::wstring_view str16, IDWriteFontFace* font_face);
 };
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     : pimpl{new impl{}} {
-    std::wstring font_name_utf16 = base::windows::ConvertToUTF16(font_name_utf8);
+    pimpl->font_name_utf16 = base::windows::ConvertToUTF16(font_name_utf8);
 
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
                         reinterpret_cast<IUnknown**>(pimpl->dwrite_factory.GetAddressOf()));
@@ -120,7 +119,7 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
             .first = std::numeric_limits<UINT32>::min(),
             .last = std::numeric_limits<UINT32>::max(),
         };
-        std::array<const wchar_t*, 1> family_names{&font_name_utf16[0]};
+        std::array<const wchar_t*, 1> family_names{pimpl->font_name_utf16.data()};
         font_fallback_builder->AddMapping(&unicode_range, 1, &family_names[0],
                                           family_names.size());
         font_fallback_builder->AddMappings(system_font_fallback.Get());
@@ -133,7 +132,7 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     // https://stackoverflow.com/q/40365439/14698275
     UINT32 index;
     BOOL exists;
-    font_collection->FindFamilyName(&font_name_utf16[0], &index, &exists);
+    font_collection->FindFamilyName(pimpl->font_name_utf16.data(), &index, &exists);
 
     ComPtr<IDWriteFontFamily> font_family;
     font_collection->GetFontFamily(index, &font_family);
@@ -168,7 +167,140 @@ FontRasterizer::~FontRasterizer() {}
 
 FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
                                                               uint32_t glyph_id) const {
-    return {};
+    // TODO: Implement font_id lookup.
+    ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
+    UINT16 glyph_index = glyph_id;
+
+    FLOAT glyph_advances = 0;
+    DWRITE_GLYPH_OFFSET offset{};
+    DWRITE_GLYPH_RUN glyph_run{
+        .fontFace = font_face.Get(),
+        .fontEmSize = pimpl->em_size,
+        .glyphCount = 1,
+        .glyphIndices = &glyph_index,
+        .glyphAdvances = &glyph_advances,
+        .glyphOffsets = &offset,
+        .isSideways = 0,
+        .bidiLevel = 0,
+    };
+
+    IDWriteRenderingParams* rendering_params;
+    pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
+
+    DWRITE_RENDERING_MODE rendering_mode;
+    font_face->GetRecommendedRenderingMode(pimpl->em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
+                                           rendering_params, &rendering_mode);
+
+    IDWriteGlyphRunAnalysis* glyph_run_analysis;
+    pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
+                                                  DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
+                                                  &glyph_run_analysis);
+
+    RECT texture_bounds;
+    glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds);
+
+    LONG pixel_width = texture_bounds.right - texture_bounds.left;
+    LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
+    UINT32 size = pixel_width * pixel_height * 3;
+
+    // std::cerr << std::format("pixel_width = {}, pixel_height = {}\n", pixel_width,
+    // pixel_height);
+
+    DWRITE_GLYPH_METRICS metrics;
+    font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
+
+    DWRITE_FONT_METRICS font_metrics;
+    font_face->GetMetrics(&font_metrics);
+
+    FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
+    FLOAT advance = metrics.advanceWidth * scale;
+
+    int32_t top = -texture_bounds.top;
+    top -= descent;
+
+    HRESULT hr = DWRITE_E_NOCOLOR;
+    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
+
+    ComPtr<IDWriteFontFace2> font_face_2;
+    font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(font_face_2.GetAddressOf()));
+    if (font_face_2->IsColorFont()) {
+        DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
+        hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr, image_formats,
+                                                           DWRITE_MEASURING_MODE_NATURAL, nullptr,
+                                                           0, &color_run_enumerator);
+    }
+
+    if (hr == DWRITE_E_NOCOLOR) {
+        std::vector<BYTE> alpha_values(size);
+        glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
+                                               &alpha_values[0], size);
+
+        std::vector<uint8_t> buffer;
+        buffer.reserve(size);
+        for (size_t i = 0; i < size; ++i) {
+            buffer.emplace_back(alpha_values[i]);
+        }
+
+        return {
+            .colored = false,
+            .left = texture_bounds.left,
+            .top = top,
+            .width = static_cast<int32_t>(pixel_width),
+            .height = static_cast<int32_t>(pixel_height),
+            .advance = static_cast<int32_t>(std::ceil(advance)),
+            .buffer = std::move(buffer),
+        };
+    } else {
+        ComPtr<IWICBitmap> wic_bitmap;
+        // TODO: Implement without magic numbers. Properly find the right width/height.
+        UINT bitmap_width = pixel_width + 10;
+        UINT bitmap_height = pixel_height + 10;
+        pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
+                                         GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
+                                         wic_bitmap.GetAddressOf());
+
+        D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
+
+        // TODO: Find a way to reuse render target and brushes.
+        ComPtr<ID2D1RenderTarget> target;
+        pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
+                                                        target.GetAddressOf());
+
+        ColorRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
+
+        IWICBitmapLock* bitmap_lock;
+        wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
+
+        UINT buffer_size = 0;
+        BYTE* pv = NULL;
+        bitmap_lock->GetDataPointer(&buffer_size, &pv);
+
+        UINT bw = 0, bh = 0;
+        bitmap_lock->GetSize(&bw, &bh);
+        size_t pixels = bw * bh;
+
+        std::vector<uint8_t> temp_buffer;
+        temp_buffer.reserve(pixels * 4);
+        for (size_t i = 0; i < pixels; ++i) {
+            size_t offset = i * 4;
+            temp_buffer.emplace_back(pv[offset]);
+            temp_buffer.emplace_back(pv[offset + 1]);
+            temp_buffer.emplace_back(pv[offset + 2]);
+            temp_buffer.emplace_back(pv[offset + 3]);
+        }
+
+        bitmap_lock->Release();
+
+        return {
+            .colored = true,
+            .left = 0,
+            .top = top,
+            .width = static_cast<int32_t>(bw),
+            .height = static_cast<int32_t>(bh),
+            .advance = static_cast<int32_t>(std::ceil(advance)),
+            .buffer = std::move(temp_buffer),
+        };
+    }
 }
 
 FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
@@ -178,9 +310,10 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
     ComPtr<IDWriteTextFormat> text_format;
-    pimpl->dwrite_factory->CreateTextFormat(
-        L"Fira Code", font_collection, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL,
-        DWRITE_FONT_STRETCH_NORMAL, 16.0f, L"en-us", &text_format);
+    pimpl->dwrite_factory->CreateTextFormat(pimpl->font_name_utf16.data(), font_collection,
+                                            DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL,
+                                            DWRITE_FONT_STRETCH_NORMAL, pimpl->em_size, L"en-us",
+                                            &text_format);
 
     UINT32 len = str16.length();
     ComPtr<IDWriteTextLayout> text_layout;
@@ -193,336 +326,11 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     text_layout->SetFontCollection(font_collection, {0, len});
     text_layout->Draw(nullptr, font_fallback_renderer.Get(), 50.0f, 50.0f);
 
-    // std::wstring str16 = base::windows::ConvertToUTF16(str8);
-    // size_t len = str16.length();
-
-    // // TODO: Don't hard code locale.
-    // static constexpr wchar_t locale[] = L"en-us";
-
-    // ComPtr<IDWriteNumberSubstitution> number_substitution;
-    // pimpl->dwrite_factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE,
-    // locale,
-    //                                                 true, &number_substitution);
-
-    // ComPtr<IDWriteTextAnalysisSource> analysis_source =
-    //     new FontFallbackSource(str16.data(), len, locale, number_substitution.Get());
-
-    // UINT32 mapped_len;
-    // size_t offset = 0;
-    // for (UINT32 i = 0; i < str16.length(); i += mapped_len) {
-    //     FLOAT mapped_scale;
-    //     ComPtr<IDWriteFont> mapped_font;
-    //     pimpl->font_fallback_->MapCharacters(analysis_source.Get(), i, len - i, nullptr,
-    //     nullptr,
-    //                                          DWRITE_FONT_WEIGHT_NORMAL,
-    //                                          DWRITE_FONT_STYLE_NORMAL,
-    //                                          DWRITE_FONT_STRETCH_NORMAL, &mapped_len,
-    //                                          &mapped_font, &mapped_scale);
-
-    //     if (mapped_font != nullptr) {
-    //         PrintFontFamilyName(mapped_font.Get());
-    //     } else {
-    //         // TODO: Handle missing glyphs when no font can render the text.
-    //         std::cerr << "Mapped font is null!\n";
-    //         std::abort();
-    //     }
-
-    //     std::wstring substr = str16.substr(i, mapped_len);
-    //     std::cerr << std::format("\"{}\", mapped_len = {}\n",
-    //     base::windows::ConvertToUTF8(substr),
-    //                              mapped_len);
-
-    //     std::string substr_utf8 = base::windows::ConvertToUTF8(substr);
-    //     UTF16ToUTF8IndicesMap utf8IndicesMap;
-    //     if (!utf8IndicesMap.setUTF8(substr_utf8.data(), substr_utf8.length())) {
-    //         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
-    //         std::abort();
-    //     }
-
-    //     // Get glyph run properties.
-
-    //     // TODO: Do we need to construct this each time?
-    //     ComPtr<IDWriteTextAnalyzer> text_analyzer;
-    //     pimpl->dwrite_factory->CreateTextAnalyzer(&text_analyzer);
-    //     TextAnalysis analysis(substr.data(), substr.length(), nullptr,
-    //                           DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
-    //     TextAnalysis::Run* run_head;
-    //     analysis.GenerateResults(text_analyzer.Get(), &run_head);
-
-    //     uint32_t max_glyph_count = 3 * str16.length() / 2 + 16;
-    //     std::vector<uint16_t> cluster_map(str16.length());
-    //     std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_properties(str16.length());
-    //     std::vector<uint16_t> glyph_indices(max_glyph_count);
-    //     std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_properties(max_glyph_count);
-    //     uint32_t glyph_count;
-
-    //     // TODO: Don't hard code locale.
-    //     static constexpr wchar_t locale[] = L"en-us";
-
-    //     DWRITE_FONT_FEATURE fontFeature = {DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES, 1};
-
-    //     const DWRITE_TYPOGRAPHIC_FEATURES* features =
-    //         new DWRITE_TYPOGRAPHIC_FEATURES{&fontFeature};
-
-    //     UINT32 feature_range_lengths[1];
-    //     feature_range_lengths[0] = substr.length();
-
-    //     // DWRITE_FONT_FEATURE* ligatures = new DWRITE_FONT_FEATURE{
-    //     //     .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES,
-    //     //     .parameter = 1,
-    //     // };
-    //     // const DWRITE_TYPOGRAPHIC_FEATURES* ligature_feature = new
-    //     DWRITE_TYPOGRAPHIC_FEATURES{
-    //     //     .features = ligatures,
-    //     //     .featureCount = 1,
-    //     // };
-    //     // std::vector<const DWRITE_TYPOGRAPHIC_FEATURES*> features = {ligature_feature};
-    //     // std::vector<UINT32> feature_range_lengths = {static_cast<UINT32>(substr.length())};
-
-    //     ComPtr<IDWriteFontFace> mapped_font_face;
-    //     mapped_font->CreateFontFace(&mapped_font_face);
-    //     text_analyzer->GetGlyphs(substr.data(), substr.length(), mapped_font_face.Get(), false,
-    //                              false, &run_head->mScript, locale, nullptr, &features,
-    //                              feature_range_lengths, 1, max_glyph_count, cluster_map.data(),
-    //                              text_properties.data(), glyph_indices.data(),
-    //                              glyph_properties.data(), &glyph_count);
-
-    //     std::vector<float> glyph_advances(max_glyph_count);
-    //     std::vector<DWRITE_GLYPH_OFFSET> glyph_offsets(max_glyph_count);
-    //     text_analyzer->GetGlyphPlacements(
-    //         substr.data(), cluster_map.data(), text_properties.data(), substr.length(),
-    //         glyph_indices.data(), glyph_properties.data(), glyph_count, mapped_font_face.Get(),
-    //         pimpl->em_size, false, false, &run_head->mScript, locale, nullptr, nullptr, 0,
-    //         glyph_advances.data(), glyph_offsets.data());
-
-    //     // Invert cluster map.
-    //     // TODO: Do this in a cleaner way.
-    //     std::vector<uint16_t> log_clusters(glyph_count, std::numeric_limits<uint16_t>::max());
-    //     for (uint16_t i = 0; i < substr.length(); i++) {
-    //         uint16_t byte_idx = cluster_map[i];
-    //         log_clusters[byte_idx] = std::min(i, log_clusters[byte_idx]);
-    //     }
-
-    //     for (uint32_t i = 0; i < glyph_count; i++) {
-    //         // size_t index = offset + utf8IndicesMap.mapIndex(log_clusters[i]);
-    //         // std::cerr << std::format("{{adv={} idx={} byte={}}}\n", glyph_advances[i],
-    //         //                          glyph_indices[i], index);
-    //         // std::cerr << std::format("index = {}\n", index);
-
-    //         std::cerr << std::format("glyph_id = {}\n", glyph_indices[i]);
-    //     }
-
-    //     offset += substr_utf8.length();
-    // }
-
-    return {};
-}
-
-// FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(std::string_view str8) const {
-//     std::wstring str16 = base::windows::ConvertToUTF16(str8);
-
-//     ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
-//     UINT16 glyph_index = 0;
-
-//     // If no fallback font is found, don't do anything and leave the glyph index as 0.
-//     // Let the glyph be rendered as the "tofu" glyph by the default font.
-//     ComPtr<IDWriteFontFace> mapped_font_face = pimpl->mapCharacters(str16);
-//     if (mapped_font_face != nullptr) {
-//         font_face = mapped_font_face;
-//         glyph_index = pimpl->getGlyphIndex(str16, mapped_font_face.Get());
-//     }
-
-//     FLOAT glyph_advances = 0;
-//     DWRITE_GLYPH_OFFSET offset{};
-//     DWRITE_GLYPH_RUN glyph_run{
-//         .fontFace = font_face.Get(),
-//         .fontEmSize = pimpl->em_size,
-//         .glyphCount = 1,
-//         .glyphIndices = &glyph_index,
-//         .glyphAdvances = &glyph_advances,
-//         .glyphOffsets = &offset,
-//         .isSideways = 0,
-//         .bidiLevel = 0,
-//     };
-
-//     IDWriteRenderingParams* rendering_params;
-//     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
-
-//     DWRITE_RENDERING_MODE rendering_mode;
-//     font_face->GetRecommendedRenderingMode(pimpl->em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
-//                                            rendering_params, &rendering_mode);
-
-//     IDWriteGlyphRunAnalysis* glyph_run_analysis;
-//     pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
-//                                                   DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
-//                                                   &glyph_run_analysis);
-
-//     RECT texture_bounds;
-//     glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds);
-
-//     LONG pixel_width = texture_bounds.right - texture_bounds.left;
-//     LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
-//     UINT32 size = pixel_width * pixel_height * 3;
-
-//     // std::cerr << std::format("pixel_width = {}, pixel_height = {}\n", pixel_width,
-//     // pixel_height);
-
-//     DWRITE_GLYPH_METRICS metrics;
-//     font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
-
-//     DWRITE_FONT_METRICS font_metrics;
-//     font_face->GetMetrics(&font_metrics);
-
-//     FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
-//     FLOAT advance = metrics.advanceWidth * scale;
-
-//     int32_t top = -texture_bounds.top;
-//     top -= descent;
-
-//     HRESULT hr = DWRITE_E_NOCOLOR;
-//     ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
-
-//     ComPtr<IDWriteFontFace2> font_face_2;
-//     font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(font_face_2.GetAddressOf()));
-//     if (font_face_2->IsColorFont()) {
-//         DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
-//         hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr,
-//         image_formats,
-//                                                            DWRITE_MEASURING_MODE_NATURAL,
-//                                                            nullptr, 0, &color_run_enumerator);
-//     }
-
-//     if (hr == DWRITE_E_NOCOLOR) {
-//         std::vector<BYTE> alpha_values(size);
-//         glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-//                                                &alpha_values[0], size);
-
-//         std::vector<uint8_t> buffer;
-//         buffer.reserve(size);
-//         for (size_t i = 0; i < size; ++i) {
-//             buffer.emplace_back(alpha_values[i]);
-//         }
-
-//         return {
-//             .colored = false,
-//             .left = texture_bounds.left,
-//             .top = top,
-//             .width = static_cast<int32_t>(pixel_width),
-//             .height = static_cast<int32_t>(pixel_height),
-//             .advance = static_cast<int32_t>(std::ceil(advance)),
-//             .buffer = std::move(buffer),
-//         };
-//     } else {
-//         ComPtr<IWICBitmap> wic_bitmap;
-//         // TODO: Implement without magic numbers. Properly find the right width/height.
-//         UINT bitmap_width = pixel_width + 10;
-//         UINT bitmap_height = pixel_height + 10;
-//         pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
-//                                          GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
-//                                          wic_bitmap.GetAddressOf());
-
-//         D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
-
-//         // TODO: Find a way to reuse render target and brushes.
-//         ComPtr<ID2D1RenderTarget> target;
-//         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
-//                                                         target.GetAddressOf());
-
-//         ColorRunHelper(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
-
-//         IWICBitmapLock* bitmap_lock;
-//         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
-
-//         UINT buffer_size = 0;
-//         BYTE* pv = NULL;
-//         bitmap_lock->GetDataPointer(&buffer_size, &pv);
-
-//         UINT bw = 0, bh = 0;
-//         bitmap_lock->GetSize(&bw, &bh);
-//         size_t pixels = bw * bh;
-
-//         std::vector<uint8_t> temp_buffer;
-//         temp_buffer.reserve(pixels * 4);
-//         for (size_t i = 0; i < pixels; ++i) {
-//             size_t offset = i * 4;
-//             temp_buffer.emplace_back(pv[offset]);
-//             temp_buffer.emplace_back(pv[offset + 1]);
-//             temp_buffer.emplace_back(pv[offset + 2]);
-//             temp_buffer.emplace_back(pv[offset + 3]);
-//         }
-
-//         bitmap_lock->Release();
-
-//         return {
-//             .colored = true,
-//             .left = 0,
-//             .top = top,
-//             .width = static_cast<int32_t>(bw),
-//             .height = static_cast<int32_t>(bh),
-//             .advance = static_cast<int32_t>(std::ceil(advance)),
-//             .buffer = std::move(temp_buffer),
-//         };
-//     }
-// }
-
-// https://github.com/linebender/skribo/blob/f801e63b5097204c07a7116683b81a834afe8a2f/docs/script_matching.md#windows
-// https://chromium.googlesource.com/chromium/src/+/a539c03e2ac242feafb921f7c1bdc01412f72393/content/browser/renderer_host/dwrite_font_proxy_impl_win.cc#389
-ComPtr<IDWriteFontFace> FontRasterizer::impl::mapCharacters(std::wstring_view str16) {
-    ComPtr<IDWriteFont> mapped_font;
-
-    // TODO: Don't hard code locale.
-    static constexpr wchar_t locale[] = L"en-us";
-
-    ComPtr<IDWriteNumberSubstitution> number_substitution;
-    dwrite_factory->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE, locale, true,
-                                             &number_substitution);
-
-    ComPtr<IDWriteTextAnalysisSource> analysis_source =
-        new FontFallbackSource(&str16[0], str16.length(), locale, number_substitution.Get());
-
-    UINT32 mapped_len;
-    FLOAT mapped_scale;
-    font_fallback_->MapCharacters(analysis_source.Get(), 0, str16.length(), nullptr, nullptr,
-                                  DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-                                  DWRITE_FONT_STRETCH_NORMAL, &mapped_len, &mapped_font,
-                                  &mapped_scale);
-
-    if (mapped_font == nullptr) {
-        return nullptr;
-    }
-
-    ComPtr<IDWriteFontFace> mapped_font_face;
-    mapped_font->CreateFontFace(&mapped_font_face);
-    return mapped_font_face;
-}
-
-UINT16 FontRasterizer::impl::getGlyphIndex(std::wstring_view str16, IDWriteFontFace* font_face) {
-    ComPtr<IDWriteTextAnalyzer> text_analyzer;
-    dwrite_factory->CreateTextAnalyzer(&text_analyzer);
-
-    TextAnalysis analysis(&str16[0], str16.length(), nullptr,
-                          DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
-    TextAnalysis::Run* run_head;
-    analysis.GenerateResults(text_analyzer.Get(), &run_head);
-
-    uint32_t max_glyph_count = 3 * str16.length() / 2 + 16;
-
-    std::vector<uint16_t> cluster_map(str16.length());
-    std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_properties(str16.length());
-    std::vector<uint16_t> out_glyph_indices(max_glyph_count);
-    std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_properties(max_glyph_count);
-    uint32_t glyph_count;
-
-    // TODO: Don't hard code locale.
-    static constexpr wchar_t locale[] = L"en-us";
-
-    // https://github.com/harfbuzz/harfbuzz/blob/2fcace77b2137abb44468a04e87d8716294641a9/src/hb-directwrite.cc#L661
-    text_analyzer->GetGlyphs(&str16[0], str16.length(), font_face, false, false,
-                             &run_head->mScript, locale, nullptr, nullptr, nullptr, 0,
-                             max_glyph_count, &cluster_map[0], &text_properties[0],
-                             &out_glyph_indices[0], &glyph_properties[0], &glyph_count);
-
-    return out_glyph_indices[0];
+    return {
+        .width = font_fallback_renderer->total_advance,
+        .length = str8.length(),
+        .runs = font_fallback_renderer->runs,
+    };
 }
 
 }

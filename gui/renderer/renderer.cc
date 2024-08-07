@@ -15,8 +15,8 @@ constexpr int kMainFontSize = 12 * 2;
 constexpr std::string kUIFontFace = "Arial";
 #endif
 
-constexpr std::string kMainFontFace = "Source Code Pro";
-// constexpr std::string kMainFontFace = "Fira Code";
+// constexpr std::string kMainFontFace = "Source Code Pro";
+constexpr std::string kMainFontFace = "Fira Code";
 // constexpr std::string kMainFontFace = "Menlo";
 constexpr int kUIFontSize = 11 * 2;
 

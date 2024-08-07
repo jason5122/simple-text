@@ -1,7 +1,7 @@
 #pragma once
 
 #include "font/directwrite/directwrite_helper.h"
-#include "unicode/unicode.h"
+#include "font/font_rasterizer.h"
 #include <dwrite_3.h>
 #include <wrl/client.h>
 
@@ -20,6 +20,9 @@ namespace font {
 
 class FontFallbackRenderer : public IDWriteTextRenderer {
 public:
+    int total_advance = 0;
+    std::vector<FontRasterizer::ShapedRun> runs;
+
     FontFallbackRenderer(IDWriteFontCollection* pFontCollection)
         : fRefCount(1), fFontCollection(pFontCollection) {}
 
@@ -60,29 +63,44 @@ public:
             std::abort();
         }
 
-        ComPtr<IDWriteFont> font;
-        fFontCollection->GetFontFromFontFace(glyphRun->fontFace, &font);
-        PrintFontFamilyName(font.Get());
+        // TODO: Debug use; remove this.
+        // ComPtr<IDWriteFont> font;
+        // fFontCollection->GetFontFromFontFace(glyphRun->fontFace, &font);
+        // PrintFontFamilyName(font.Get());
 
-        std::cerr << std::format("glyph_count = {}\n", glyphRun->glyphCount);
-        for (UINT32 i = 0; i < glyphRun->glyphCount; i++) {
-            std::cerr << std::format("glyph_id[{}] = {}\n", i, glyphRun->glyphIndices[i]);
-        }
-        for (UINT32 i = 0; i < glyphRun->glyphCount; i++) {
-            std::cerr << std::format("advance[{}] = {}\n", i, glyphRun->glyphAdvances[i]);
-        }
-
-        // const char* utf8 = "👩‍👩‍👧‍👦";
-        // size_t size = 1;
-        // auto utf8Begin = utf8, utf8End = utf8 + size;
-        // UINT32 fCharacter = unicode::NextUTF8(&utf8Begin, utf8End);
-
-        // BOOL exists;
-        // font->HasCharacter(fCharacter, &exists);
-
-        // if (exists) {
-        //     std::cerr << "Font has the character!\n";
+        // std::cerr << std::format("glyph_count = {}\n", glyphRun->glyphCount);
+        // for (UINT32 i = 0; i < glyphRun->glyphCount; i++) {
+        //     std::cerr << std::format("glyph_id[{}] = {}\n", i, glyphRun->glyphIndices[i]);
         // }
+        // for (UINT32 i = 0; i < glyphRun->glyphCount; i++) {
+        //     int advance = std::ceil(glyphRun->glyphAdvances[i]);
+        //     std::cerr << std::format("advance[{}] = {}\n", i, advance);
+        // }
+
+        size_t glyph_count = glyphRun->glyphCount;
+        std::vector<FontRasterizer::ShapedGlyph> glyphs;
+        glyphs.reserve(glyph_count);
+
+        for (size_t i = 0; i < glyph_count; ++i) {
+            uint32_t glyph_id = glyphRun->glyphIndices[i];
+            // int advance = std::ceil(glyphRun->glyphAdvances[i]);
+            int advance = glyphRun->glyphAdvances[i];
+
+            FontRasterizer::ShapedGlyph glyph{
+                .glyph_id = glyph_id,
+                .position = {.x = total_advance},
+                .advance = {.x = advance},
+                .index = 0,  // TODO: Implement this.
+            };
+            glyphs.push_back(std::move(glyph));
+
+            total_advance += advance;
+        }
+
+        runs.emplace_back(FontRasterizer::ShapedRun{
+            .font_id = 0,
+            .glyphs = std::move(glyphs),
+        });
 
         return S_OK;
     }

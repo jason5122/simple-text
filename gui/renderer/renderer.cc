@@ -14,7 +14,7 @@ constexpr std::string kMainFontFace = "Menlo";
 constexpr std::string kUIFontFace = "SF Pro Text";
 #elif BUILDFLAG(IS_WIN)
 constexpr int kMainFontSize = 11 * 2;
-constexpr int kUIFontSize = 11 * 2;
+constexpr int kUIFontSize = 8 * 2;
 constexpr std::string kMainFontFace = "Source Code Pro";
 // constexpr std::string kMainFontFace = "Consolas";
 // constexpr std::string kMainFontFace = "Cascadia Code";

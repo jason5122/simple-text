@@ -1,4 +1,7 @@
 #include "font_fallback_renderer.h"
+
+// TODO: Debug use; remove this.
+#include <format>
 #include <iostream>
 
 namespace font {
@@ -42,6 +45,9 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
         std::cerr << "Glyph run without font face.\n";
         std::abort();
     }
+
+    std::string* str = static_cast<std::string*>(clientDrawingContext);
+    std::cerr << std::format("in your walls = {}\n", *str);
 
     size_t glyph_count = glyphRun->glyphCount;
     std::vector<FontRasterizer::ShapedGlyph> glyphs;

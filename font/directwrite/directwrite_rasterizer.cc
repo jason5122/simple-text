@@ -19,6 +19,10 @@
 
 using Microsoft::WRL::ComPtr;
 
+// TODO: Debug use; remove this.
+#include <format>
+#include <iostream>
+
 namespace font {
 
 class FontRasterizer::impl {
@@ -239,7 +243,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 
     UINT32 len = str16.length();
     ComPtr<IDWriteTextLayout> text_layout;
-    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 200.0f, 200.0f,
+    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 0.0f, 0.0f,
                                             &text_layout);
 
     ComPtr<IDWriteTypography> default_typography;
@@ -254,14 +258,27 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 
     IDWriteTypography* typography;
     pimpl->dwrite_factory->CreateTypography(&typography);
+    // Since we have to provide our own defaults, here are some sane ones from Harfbuzz:
+    // https://github.com/harfbuzz/harfbuzz/blob/f35b0a63b1c30923e91b612399c4387e64432b91/src/hb-ot-shape.cc#L285-L308
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES, 1});
     typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_CURSIVE_POSITIONING, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_KERNING, 1});
+    typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES, 1});
+    // Additional tags.
     typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19, 1});
     text_layout->SetTypography(typography, {0, len});
 
     text_layout->SetFontCollection(font_collection, {0, len});
 
+    std::string temp = "lol";
     ComPtr<FontFallbackRenderer> font_fallback_renderer = new FontFallbackRenderer{};
-    text_layout->Draw(nullptr, font_fallback_renderer.Get(), 50.0f, 50.0f);
+    text_layout->Draw(&temp, font_fallback_renderer.Get(), 0.0f, 0.0f);
 
     return {
         .width = font_fallback_renderer->total_advance,

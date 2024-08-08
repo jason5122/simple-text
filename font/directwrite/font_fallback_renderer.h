@@ -17,7 +17,7 @@ public:
     int total_advance = 0;
     std::vector<FontRasterizer::ShapedRun> runs;
 
-    FontFallbackRenderer();
+    FontFallbackRenderer(Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection);
 
     // IUnknown methods
     SK_STDMETHODIMP QueryInterface(IID const& riid, void** ppvObject) override;
@@ -60,6 +60,7 @@ private:
     virtual ~FontFallbackRenderer() {}
 
     ULONG fRefCount;
+    Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
 };
 
 }

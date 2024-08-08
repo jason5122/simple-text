@@ -1,6 +1,6 @@
 #include "app/app.h"
 #include "app/cocoa/WindowController.h"
-#include "app/cocoa/pimpl_mac.h"
+#include "app/cocoa/impl_cocoa.h"
 #include "app/window.h"
 #include <Foundation/Foundation.h>
 #include <format>

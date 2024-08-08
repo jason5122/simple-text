@@ -53,12 +53,13 @@ public:
     LineLayout layoutLine(std::string_view str8) const;
     int getLineHeight() const;
 
+    // TODO: Make these private. Currently, we make these public as a hack for DirectWrite.
+    class impl;
+    std::unique_ptr<impl> pimpl;
+
 private:
     int line_height;
     int descent;
-
-    class impl;
-    std::unique_ptr<impl> pimpl;
 };
 
 }

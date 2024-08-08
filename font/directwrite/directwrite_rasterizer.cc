@@ -3,6 +3,7 @@
 
 #include "base/windows/unicode.h"
 #include "font/directwrite/font_fallback_renderer.h"
+#include "font/directwrite/impl_directwrite.h"
 #include "font/font_rasterizer.h"
 #include <combaseapi.h>
 #include <comdef.h>
@@ -23,22 +24,33 @@ using Microsoft::WRL::ComPtr;
 #include <format>
 #include <iostream>
 
+namespace {
+
+std::wstring GetPostScriptName(ComPtr<IDWriteFont> font) {
+    ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
+    BOOL has_id_keyed_names;
+    font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
+                                  &font_id_keyed_names, &has_id_keyed_names);
+
+    wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
+    int defaultLocaleSuccess = GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
+
+    UINT32 index = 0;
+    BOOL exists = false;
+    font_id_keyed_names->FindLocaleName(localeName, &index, &exists);
+
+    UINT32 length = 0;
+    font_id_keyed_names->GetStringLength(index, &length);
+
+    std::wstring localized_name;
+    localized_name.resize(length + 1);
+    font_id_keyed_names->GetString(index, localized_name.data(), length + 1);
+    return localized_name;
+}
+
+}
+
 namespace font {
-
-class FontRasterizer::impl {
-public:
-    ComPtr<IDWriteFactory4> dwrite_factory;
-    ComPtr<ID2D1Factory> d2d_factory;
-    ComPtr<IWICImagingFactory2> wic_factory;
-
-    ComPtr<IDWriteFontFace> font_face;
-    std::wstring font_name_utf16;
-    FLOAT em_size;
-
-    void drawColorRun(ID2D1RenderTarget* target,
-                      ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
-                      UINT origin_y);
-};
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     : pimpl{new impl{}} {
@@ -96,8 +108,9 @@ FontRasterizer::~FontRasterizer() {}
 
 FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
                                                               uint32_t glyph_id) const {
-    // TODO: Implement font_id lookup.
-    ComPtr<IDWriteFontFace> font_face = pimpl->font_face;
+    ComPtr<IDWriteFont> font = pimpl->font_id_to_native[font_id];
+    ComPtr<IDWriteFontFace> font_face;
+    font->CreateFontFace(&font_face);
     UINT16 glyph_index = glyph_id;
 
     FLOAT glyph_advances = 0;
@@ -241,13 +254,14 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
                                             DWRITE_FONT_STRETCH_NORMAL, pimpl->em_size, L"en-us",
                                             &text_format);
 
+    // TODO: The `maxWidth`/`maxHeight` arguments *do* prevent ligature formation if the values are
+    // too low. Find out what the appropriate values are.
+    // You can reproduce this by creating a long string of `=` in Cascadia/Fira Code. Eventually,
+    // the ligatures break when they go past the max width.
     UINT32 len = str16.length();
     ComPtr<IDWriteTextLayout> text_layout;
-    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 0.0f, 0.0f,
+    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 200.0f, 200.0f,
                                             &text_layout);
-
-    ComPtr<IDWriteTypography> default_typography;
-    text_layout->GetTypography(0, &default_typography, nullptr);
 
     // OpenType features.
     // TODO: Consider using the lower-level IDWriteTextAnalyzer, which IDWriteTextLayout uses under
@@ -276,9 +290,9 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
 
     text_layout->SetFontCollection(font_collection, {0, len});
 
-    std::string temp = "lol";
-    ComPtr<FontFallbackRenderer> font_fallback_renderer = new FontFallbackRenderer{};
-    text_layout->Draw(&temp, font_fallback_renderer.Get(), 0.0f, 0.0f);
+    ComPtr<FontFallbackRenderer> font_fallback_renderer =
+        new FontFallbackRenderer{font_collection};
+    text_layout->Draw(pimpl.get(), font_fallback_renderer.Get(), 0.0f, 0.0f);
 
     return {
         .width = font_fallback_renderer->total_advance,
@@ -343,6 +357,18 @@ void FontRasterizer::impl::drawColorRun(
         }
     }
     target->EndDraw();
+}
+
+size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font) {
+    std::wstring font_name = GetPostScriptName(font);
+
+    // Cache font in font map.
+    if (!font_postscript_name_to_id.contains(font_name)) {
+        size_t font_id = font_id_to_native.size();
+        font_id_to_native.emplace_back(font);
+        font_postscript_name_to_id[font_name] = font_id;
+    }
+    return font_postscript_name_to_id[font_name];
 }
 
 }

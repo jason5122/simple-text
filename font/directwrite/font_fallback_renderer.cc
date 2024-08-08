@@ -1,4 +1,7 @@
+#include "font/directwrite/impl_directwrite.h"
 #include "font_fallback_renderer.h"
+
+using Microsoft::WRL::ComPtr;
 
 // TODO: Debug use; remove this.
 #include <format>
@@ -6,7 +9,8 @@
 
 namespace font {
 
-FontFallbackRenderer::FontFallbackRenderer() : fRefCount(1) {}
+FontFallbackRenderer::FontFallbackRenderer(ComPtr<IDWriteFontCollection> font_collection)
+    : fRefCount(1), font_collection{font_collection} {}
 
 // IUnknown methods
 SK_STDMETHODIMP FontFallbackRenderer::QueryInterface(IID const& riid, void** ppvObject) {
@@ -46,8 +50,11 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
         std::abort();
     }
 
-    std::string* str = static_cast<std::string*>(clientDrawingContext);
-    std::cerr << std::format("in your walls = {}\n", *str);
+    // Cache font.
+    auto pimpl = static_cast<FontRasterizer::impl*>(clientDrawingContext);
+    ComPtr<IDWriteFont> font;
+    font_collection->GetFontFromFontFace(glyphRun->fontFace, &font);
+    size_t font_id = pimpl->cacheFont(font);
 
     size_t glyph_count = glyphRun->glyphCount;
     std::vector<FontRasterizer::ShapedGlyph> glyphs;
@@ -70,7 +77,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     }
 
     runs.emplace_back(FontRasterizer::ShapedRun{
-        .font_id = 0,
+        .font_id = font_id,
         .glyphs = std::move(glyphs),
     });
 

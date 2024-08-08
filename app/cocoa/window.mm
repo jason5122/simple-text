@@ -1,4 +1,4 @@
-#include "app/cocoa/pimpl_mac.h"
+#include "app/cocoa/impl_cocoa.h"
 #include "app/window.h"
 
 namespace app {

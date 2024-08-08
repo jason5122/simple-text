@@ -1,5 +1,5 @@
 #include "app/app.h"
-#include "app/gtk/pimpl_linux.h"
+#include "app/gtk/impl_gtk.h"
 #include <gtk/gtk.h>
 
 namespace app {

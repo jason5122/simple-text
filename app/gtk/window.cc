@@ -1,4 +1,4 @@
-#include "app/gtk/pimpl_linux.h"
+#include "app/gtk/impl_gtk.h"
 #include "app/window.h"
 
 namespace app {

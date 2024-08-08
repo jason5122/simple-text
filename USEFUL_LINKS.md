@@ -17,6 +17,7 @@
 
 ### Unordered
 
+- [Chromium `//base/threading/`](https://chromium.googlesource.com/chromium/src/base/+/refs/heads/main/threading)
 - [Text Rendering Hates You](https://faultlore.com/blah/text-hates-you/#selection-isnt-a-box-and-text-goes-in-all-the-directions)
 - [Laying Out Text With Core Text](https://robnapier.net/laying-out-text-with-coretext)
 - [Modern text rendering with Linux: Overview](https://mrandri19.github.io/2019/07/24/modern-text-rendering-linux-overview.html)

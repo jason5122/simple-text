@@ -1,3 +1,6 @@
+// https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
+#define NOMINMAX
+
 #include "font/directwrite/impl_directwrite.h"
 #include "font_fallback_renderer.h"
 
@@ -9,8 +12,14 @@ using Microsoft::WRL::ComPtr;
 
 namespace font {
 
-FontFallbackRenderer::FontFallbackRenderer(ComPtr<IDWriteFontCollection> font_collection)
-    : fRefCount(1), font_collection{font_collection} {}
+FontFallbackRenderer::FontFallbackRenderer(ComPtr<IDWriteFontCollection> font_collection,
+                                           std::string_view str8)
+    : fRefCount(1), font_collection{font_collection} {
+    if (!utf8IndicesMap.setUTF8(&str8[0], str8.length())) {
+        std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
+        std::abort();
+    }
+}
 
 // IUnknown methods
 SK_STDMETHODIMP FontFallbackRenderer::QueryInterface(IID const& riid, void** ppvObject) {
@@ -60,16 +69,32 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     std::vector<FontRasterizer::ShapedGlyph> glyphs;
     glyphs.reserve(glyph_count);
 
+    auto cluster_map = glyphRunDescription->clusterMap;
+    size_t text_position = glyphRunDescription->textPosition;
+    size_t len = glyphRunDescription->stringLength;
+
+    // Invert cluster map (string index -> glyph index) to (glyph index -> string index).
+    std::vector<size_t> inverted_cluster_map(glyph_count);
+    size_t i = 0;
+    while (i < len) {
+        size_t glyph_index = cluster_map[i];
+        inverted_cluster_map[glyph_index] = i;
+
+        while (i < len && cluster_map[i] == glyph_index) {
+            ++i;
+        }
+    }
+
     for (size_t i = 0; i < glyph_count; ++i) {
         uint32_t glyph_id = glyphRun->glyphIndices[i];
-        // TODO: See if we need to round this or anything.
-        int advance = glyphRun->glyphAdvances[i];
+        // TODO: Verify that rounding up is correct.
+        int advance = std::ceil(glyphRun->glyphAdvances[i]);
 
         FontRasterizer::ShapedGlyph glyph{
             .glyph_id = glyph_id,
             .position = {.x = total_advance},
             .advance = {.x = advance},
-            .index = 0,  // TODO: Implement this.
+            .index = utf8IndicesMap.mapIndex(text_position + inverted_cluster_map[i]),
         };
         glyphs.push_back(std::move(glyph));
 

@@ -12,6 +12,8 @@ This is a new line.)");
     // addTab(R"(==👩‍👩‍👧‍👦﷽)");
     // addTab(R"(==💣🇺🇸)");
     // addTab(R"(apples != oranges >= bananas)");
+    // addTab(R"(🥲 != 💣 >= 🙂)");
+    // addTab(R"(🙂🙂🙂hi)");
 }
 
 void MultiViewWidget::setIndex(size_t index) {

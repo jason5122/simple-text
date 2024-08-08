@@ -1,5 +1,5 @@
 #include "base/numeric/literals.h"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <type_traits>
 
 TEST(LiteralsTest, TypeTraits) {

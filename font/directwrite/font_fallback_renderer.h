@@ -1,6 +1,7 @@
 #pragma once
 
 #include "font/font_rasterizer.h"
+#include "font/utf16_to_utf8_indices_map.h"
 #include <dwrite_3.h>
 #include <wrl/client.h>
 
@@ -17,7 +18,8 @@ public:
     int total_advance = 0;
     std::vector<FontRasterizer::ShapedRun> runs;
 
-    FontFallbackRenderer(Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection);
+    FontFallbackRenderer(Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection,
+                         std::string_view str8);
 
     // IUnknown methods
     SK_STDMETHODIMP QueryInterface(IID const& riid, void** ppvObject) override;
@@ -61,6 +63,7 @@ private:
 
     ULONG fRefCount;
     Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
+    UTF16ToUTF8IndicesMap utf8IndicesMap;
 };
 
 }

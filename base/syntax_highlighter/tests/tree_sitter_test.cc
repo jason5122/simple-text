@@ -2,8 +2,8 @@
 #include "base/filesystem/file_reader.h"
 #include "base/syntax_highlighter.h"
 #include "util/profile_util.h"
-#include "gtest/gtest.h"
 #include <chrono>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <tree_sitter/api.h>
 

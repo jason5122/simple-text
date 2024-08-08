@@ -260,7 +260,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     // the ligatures break when they go past the max width.
     UINT32 len = str16.length();
     ComPtr<IDWriteTextLayout> text_layout;
-    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 200.0f, 200.0f,
+    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 2000.0f, 2000.0f,
                                             &text_layout);
 
     // OpenType features.
@@ -291,7 +291,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
     text_layout->SetFontCollection(font_collection, {0, len});
 
     ComPtr<FontFallbackRenderer> font_fallback_renderer =
-        new FontFallbackRenderer{font_collection};
+        new FontFallbackRenderer{font_collection, str8};
     text_layout->Draw(pimpl.get(), font_fallback_renderer.Get(), 0.0f, 0.0f);
 
     return {

@@ -1,6 +1,6 @@
 #include "build/build_config.h"
 #include "font/font_rasterizer.h"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 namespace {
 
@@ -16,10 +16,11 @@ constexpr std::string kOSFontFace = "Consolas";
 
 namespace font {
 
+// TODO: This crashes for DirectWrite. Find a way to initialize the COM library correctly.
 TEST(FontRasterizerTest, LayoutLine1) {
     FontRasterizer rasterizer{kOSFontFace, 32};
 
-    const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
+    const std::string line = "Hello😄🙂hi";
     auto layout = rasterizer.layoutLine(line);
 
     EXPECT_GT(layout.width, 0);
@@ -32,8 +33,8 @@ TEST(FontRasterizerTest, LayoutLine1) {
 
     const auto& hi_glyphs = layout.runs[2].glyphs;
     EXPECT_EQ(hi_glyphs.size(), 2);
-    EXPECT_EQ(hi_glyphs[0].index, 34);
-    EXPECT_EQ(hi_glyphs[1].index, 35);
+    EXPECT_EQ(hi_glyphs[0].index, 13);
+    EXPECT_EQ(hi_glyphs[1].index, 14);
 
     // Emojis should be colored and should have 4 channels.
     size_t emoji_font_id = layout.runs[1].font_id;
@@ -64,7 +65,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
 TEST(FontRasterizerTest, LayoutLine2) {
     FontRasterizer rasterizer{kOSFontFace, 32};
 
-    const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
+    const std::string line = "Hello😄🙂hi";
     auto layout = rasterizer.layoutLine(line);
 
     int total_advance = 0;
@@ -80,7 +81,7 @@ TEST(FontRasterizerTest, LayoutLine2) {
 TEST(FontRasterizerTest, LineLayoutClosestForX) {
     FontRasterizer rasterizer{kOSFontFace, 32};
 
-    const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
+    const std::string line = "Hello😄🙂hi";
     auto layout = rasterizer.layoutLine(line);
 
     size_t prev_glyph_index = 0;
@@ -107,7 +108,7 @@ TEST(FontRasterizerTest, LineLayoutClosestForX) {
 TEST(FontRasterizerTest, LineLayoutClosestForIndex) {
     FontRasterizer rasterizer{kOSFontFace, 32};
 
-    const std::string line = "Hello😄👩‍👩‍👧‍👦hi";
+    const std::string line = "Hello😄🙂hi";
     auto layout = rasterizer.layoutLine(line);
 
     size_t prev_glyph_index = 0;

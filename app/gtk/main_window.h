@@ -1,7 +1,6 @@
 #pragma once
 
 #include "app/window.h"
-#include "util/non_copyable.h"
 #include <gtk/gtk.h>
 
 namespace app {
@@ -10,6 +9,11 @@ class MainWindow {
 public:
     MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context);
     ~MainWindow();
+
+    // We track mouse position in `GtkEventControllerMotion` for use in `GtkEventControllerScroll`.
+    gdouble mouse_x = 0;
+    gdouble mouse_y = 0;
+
     void show();
     void close();
     void redraw();
@@ -18,6 +22,7 @@ public:
     int scaleFactor();
     bool isDarkMode();
     void setTitle(const std::string& title);
+    Window* appWindow();
 
 private:
     Window* app_window;

@@ -86,7 +86,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
     GtkEventControllerScrollFlags scroll_flags = GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES;
     GtkEventController* scroll_event_controller = gtk_event_controller_scroll_new(scroll_flags);
     gtk_widget_add_controller(gl_area, scroll_event_controller);
-    g_signal_connect(scroll_event_controller, "scroll", G_CALLBACK(scroll), app_window);
+    g_signal_connect(scroll_event_controller, "scroll", G_CALLBACK(scroll), this);
 
     GtkGesture* gesture = gtk_gesture_click_new();
     gtk_widget_add_controller(gl_area, GTK_EVENT_CONTROLLER(gesture));
@@ -94,7 +94,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
 
     GtkEventController* motion_event_controller = gtk_event_controller_motion_new();
     gtk_widget_add_controller(gl_area, motion_event_controller);
-    g_signal_connect(motion_event_controller, "motion", G_CALLBACK(motion), app_window);
+    g_signal_connect(motion_event_controller, "motion", G_CALLBACK(motion), this);
 
     GtkEventController* key_event_controller = gtk_event_controller_key_new();
     gtk_widget_add_controller(window, key_event_controller);
@@ -164,6 +164,10 @@ void MainWindow::setTitle(const std::string& title) {
     gtk_window_set_title(GTK_WINDOW(window), &title[0]);
 }
 
+Window* MainWindow::appWindow() {
+    return app_window;
+}
+
 static void destroy(GtkWidget* self, gpointer user_data) {
     Window* app_window = static_cast<Window*>(user_data);
     app_window->onClose();
@@ -221,6 +225,8 @@ static gboolean scroll(GtkEventControllerScroll* self,
                        gdouble dx,
                        gdouble dy,
                        gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
     gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
 
@@ -235,10 +241,18 @@ static gboolean scroll(GtkEventControllerScroll* self,
         // dy *= 32;
     }
 
+    int mouse_x = std::round(main_window->mouse_x);
+    int mouse_y = std::round(main_window->mouse_y);
+
+    int scale_factor = gtk_widget_get_scale_factor(gl_area);
+    int scaled_mouse_x = mouse_x * scale_factor;
+    int scaled_mouse_y = mouse_y * scale_factor;
+
     int delta_x = std::round(dx);
     int delta_y = std::round(dy);
-    Window* app_window = static_cast<Window*>(user_data);
-    app_window->onScroll(0, 0, delta_x, delta_y);
+    Window* app_window = main_window->appWindow();
+    std::cerr << std::format("x = {}, y = {}\n", scaled_mouse_x, scaled_mouse_y);
+    app_window->onScroll(scaled_mouse_x, scaled_mouse_y, delta_x, delta_y);
 
     return true;
 }
@@ -287,6 +301,10 @@ static void pressed(
 }
 
 static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+    main_window->mouse_x = x;
+    main_window->mouse_y = y;
+
     GdkModifierType event_state =
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
 
@@ -303,7 +321,7 @@ static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointe
 
         ModifierKey modifiers = ConvertGdkModifiers(event_state);
 
-        Window* app_window = static_cast<Window*>(user_data);
+        Window* app_window = main_window->appWindow();
         app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
     }
 }

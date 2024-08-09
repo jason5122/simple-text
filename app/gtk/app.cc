@@ -20,7 +20,7 @@ App::App() : pimpl{new impl{}} {
     g_setenv("GDK_DEBUG", "gl-prefer-gl", 1);
     // TODO: Disable Cairo when not testing with emulator.
     //       We enable Cairo since OpenGL has a 1-2 second startup delay on emulator.
-    g_setenv("GSK_RENDERER", "cairo", 1);
+    // g_setenv("GSK_RENDERER", "cairo", 1);
 
     pimpl->app = gtk_application_new("com.jason.simple-text", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(pimpl->app, "activate", G_CALLBACK(activate), this);

@@ -75,11 +75,6 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
         for (size_t j = 0; j < run.glyphs.size(); j++) {
             const auto& glyph = run.glyphs[j];
 
-            // Skip newlines.
-            // if (i == last_run && j == last_run_glyph) {
-            //     continue;
-            // }
-
             int glyph_x = glyph.position.x;
             int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
             if (glyph_center >= point.x) {
@@ -106,7 +101,7 @@ void LineLayoutCache::moveToPoint(size_t line, const Point& point, Caret& caret)
     size_t last_layout_line = base::sub_sat(line_layouts.size(), 1_Z);
     if (line == last_layout_line) {
         width = layout.width;
-        // index = 0;  // TODO: Set this to piece table length.
+        index = layout.length;
     }
 
     caret.line = line;

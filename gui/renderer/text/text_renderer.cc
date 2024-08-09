@@ -114,7 +114,7 @@ void TextRenderer::renderLineLayout(const Point& offset,
             // If we reach a glyph before the minimum x, skip it and continue.
             // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
             // This assumes glyph positions are monotonically increasing.
-            if (glyph.position.x < min_x) {
+            if (glyph.position.x + glyph.advance.x < min_x) {
                 continue;
             }
             if (glyph.position.x > max_x) {

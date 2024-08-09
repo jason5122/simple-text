@@ -273,6 +273,8 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
         runs.emplace_back(ShapedRun{font_id, std::move(glyphs)});
     }
 
+    // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
+    // variants, this should no longer be an issue.
     double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
     return {
         .width = static_cast<int>(std::ceil(width)),

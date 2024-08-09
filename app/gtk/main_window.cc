@@ -9,6 +9,27 @@ extern "C" {
 #include <format>
 #include <iostream>
 
+namespace {
+
+constexpr app::ModifierKey GetModifiers(guint state) {
+    app::ModifierKey modifiers = app::ModifierKey::kNone;
+    if (state & GDK_SHIFT_MASK) {
+        modifiers |= app::ModifierKey::kShift;
+    }
+    if (state & GDK_CONTROL_MASK) {
+        modifiers |= app::ModifierKey::kControl;
+    }
+    if (state & GDK_ALT_MASK) {
+        modifiers |= app::ModifierKey::kAlt;
+    }
+    if (state & GDK_SUPER_MASK) {
+        modifiers |= app::ModifierKey::kSuper;
+    }
+    return modifiers;
+}
+
+}
+
 namespace app {
 
 // GtkWindow callbacks.
@@ -19,6 +40,7 @@ static void realize(GtkGLArea* self, gpointer user_data);
 static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
 static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
+static void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
 
 // TODO: Define this below instead.
 static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
@@ -72,6 +94,10 @@ MainWindow::MainWindow(GtkApplication* gtk_app, app::Window* app_window, GdkGLCo
     GtkEventController* scroll_event_controller = gtk_event_controller_scroll_new(scroll_flags);
     gtk_widget_add_controller(gl_area, scroll_event_controller);
     g_signal_connect(scroll_event_controller, "scroll", G_CALLBACK(scroll), app_window);
+
+    GtkGesture* gesture = gtk_gesture_click_new();
+    gtk_widget_add_controller(gl_area, GTK_EVENT_CONTROLLER(gesture));
+    g_signal_connect(gesture, "pressed", G_CALLBACK(pressed), app_window);
 
     // gtk_window_maximize(GTK_WINDOW(window));
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
@@ -214,6 +240,35 @@ static gboolean scroll(GtkEventControllerScroll* self,
     gtk_widget_queue_draw(gl_area);
 
     return true;
+}
+
+static void pressed(
+    GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
+    GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
+    gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
+
+    int mouse_x = std::round(x);
+    int mouse_y = std::round(y);
+
+    int scale_factor = gtk_widget_get_scale_factor(gl_area);
+    int scaled_mouse_x = mouse_x * scale_factor;
+    int scaled_mouse_y = mouse_y * scale_factor;
+
+    GdkModifierType event_state =
+        gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
+    app::ModifierKey modifiers = GetModifiers(event_state);
+
+    app::ClickType click_type = app::ClickType::kSingleClick;
+    if (n_press == 2) {
+        click_type = app::ClickType::kDoubleClick;
+    } else if (n_press >= 3) {
+        click_type = app::ClickType::kTripleClick;
+    }
+
+    app::Window* app_window = static_cast<app::Window*>(user_data);
+    app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
+
+    gtk_widget_queue_draw(gl_area);
 }
 
 }

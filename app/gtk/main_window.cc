@@ -1,4 +1,5 @@
 #include "main_window.h"
+#include "unicode/unicode.h"
 #include <cmath>
 
 #include <format>
@@ -16,11 +17,28 @@ static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data)
 static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
 static void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
 static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data);
+static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app);
+static gboolean key_pressed(GtkEventControllerKey* self,
+                            guint keyval,
+                            guint keycode,
+                            GdkModifierType state,
+                            gpointer user_data);
 
-// TODO: Define this below instead.
-static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
-    std::cerr << "quit callback\n";
-    g_application_quit(G_APPLICATION(app));
+static constexpr const gchar* ConvertModifier(ModifierKey modifier) {
+    switch (modifier) {
+    case ModifierKey::kShift:
+        return "<Shift>";
+    case ModifierKey::kControl:
+        return "<Control>";
+    case ModifierKey::kAlt:
+        return "<Alt>";
+    // TODO: Figure out why this is <Meta> and not <Super>. We use GDK_SUPER_MASK elsewhere.
+    case ModifierKey::kSuper:
+        return "<Meta>";
+    default:
+        std::cerr << "Error: Could not parse modifier.\n";
+        std::abort();
+    }
 }
 
 MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context)
@@ -32,7 +50,6 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
     GtkWidget* gtk_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_window_set_child(GTK_WINDOW(window), gtk_box);
 
-    GtkWidget* gl_area = gtk_gl_area_new();
     gtk_widget_set_hexpand(gl_area, true);
     gtk_widget_set_vexpand(gl_area, true);
     gtk_box_append(GTK_BOX(gtk_box), gl_area);
@@ -53,7 +70,8 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
         g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
                                         gtk_app);
 
-        const gchar* quit_accels[2] = {"<Ctrl>q", NULL};
+        std::string quit_accel = std::format("{}q", ConvertModifier(kPrimaryModifier), "q");
+        const gchar* quit_accels[2] = {quit_accel.data(), NULL};
         gtk_application_set_accels_for_action(gtk_app, "app.quit", quit_accels);
     }
 
@@ -78,6 +96,10 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
     gtk_widget_add_controller(gl_area, motion_event_controller);
     g_signal_connect(motion_event_controller, "motion", G_CALLBACK(motion), app_window);
 
+    GtkEventController* key_event_controller = gtk_event_controller_key_new();
+    gtk_widget_add_controller(window, key_event_controller);
+    g_signal_connect(key_event_controller, "key-pressed", G_CALLBACK(key_pressed), app_window);
+
     gtk_widget_set_cursor(gl_area, gdk_cursor_new_from_name("text", nullptr));
 
     // gtk_window_maximize(GTK_WINDOW(window));
@@ -99,7 +121,7 @@ void MainWindow::close() {
 }
 
 void MainWindow::redraw() {
-    gtk_widget_queue_draw(window);
+    gtk_widget_queue_draw(gl_area);
 }
 
 int MainWindow::width() {
@@ -209,16 +231,14 @@ static gboolean scroll(GtkEventControllerScroll* self,
     } else {
         // TODO: Figure out how to interpret scroll numbers (usually between 0.0-1.0).
         std::cerr << std::format("dy = {}", dy) << '\n';
-        dx *= 32;
-        dy *= 32;
+        // dx *= 32;
+        // dy *= 32;
     }
 
     int delta_x = std::round(dx);
     int delta_y = std::round(dy);
     Window* app_window = static_cast<Window*>(user_data);
     app_window->onScroll(0, 0, delta_x, delta_y);
-
-    gtk_widget_queue_draw(gl_area);
 
     return true;
 }
@@ -243,7 +263,6 @@ static constexpr ModifierKey ConvertGdkModifiers(guint state) {
 static void pressed(
     GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
-    gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
 
     int mouse_x = std::round(x);
     int mouse_y = std::round(y);
@@ -265,8 +284,6 @@ static void pressed(
 
     Window* app_window = static_cast<Window*>(user_data);
     app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
-
-    gtk_widget_queue_draw(gl_area);
 }
 
 static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
@@ -276,7 +293,6 @@ static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointe
     // Left click drag.
     if (event_state & GDK_BUTTON1_MASK) {
         GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
-        gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
 
         int mouse_x = std::round(x);
         int mouse_y = std::round(y);
@@ -289,9 +305,31 @@ static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointe
 
         Window* app_window = static_cast<Window*>(user_data);
         app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
-
-        gtk_widget_queue_draw(gl_area);
     }
+}
+
+static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
+    std::cerr << "quit callback\n";
+    g_application_quit(G_APPLICATION(app));
+}
+
+static gboolean key_pressed(GtkEventControllerKey* self,
+                            guint keyval,
+                            guint keycode,
+                            GdkModifierType state,
+                            gpointer user_data) {
+    guint32 codepoint = gdk_keyval_to_unicode(keyval);
+    if (codepoint > 0) {
+        char utf8[unicode::kMaxBytesInUTF8Sequence];
+        size_t utf8_len = unicode::ToUTF8(codepoint, utf8);
+
+        std::string str8(utf8, utf8_len);
+        Window* app_window = static_cast<Window*>(user_data);
+        app_window->onInsertText(str8);
+
+        std::cerr << std::format("str8 = {}, codepoint = {}\n", str8, codepoint);
+    }
+    return false;
 }
 
 }

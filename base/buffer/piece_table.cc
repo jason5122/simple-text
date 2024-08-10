@@ -75,6 +75,13 @@ void PieceTable::insert(size_t index, std::string_view str) {
     }
 }
 
+// TODO: Add tests for this method.
+void PieceTable::insert(size_t line, size_t column, std::string_view str) {
+    iterator line_itr = line == 0 ? begin() : std::next(newline(base::sub_sat(line, 1_Z)));
+    size_t index = std::distance(begin(), line_itr) + column;
+    insert(index, str);
+}
+
 void PieceTable::erase(size_t index, size_t count) {
     auto [it, offset] = pieceAt(index);
 

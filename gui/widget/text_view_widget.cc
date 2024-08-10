@@ -59,10 +59,10 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 }
 
 void TextViewWidget::insertText(std::string_view text) {
-    table.insert(end_caret.index, text);
+    table.insert(end_caret.line, end_caret.index, text);
     {
         PROFILE_BLOCK("LineLayout::reflow()");
-        line_layout_cache.reflow(table, 0);
+        line_layout_cache.reflow(table, end_caret.line);
     }
     updateMaxScroll();
 }

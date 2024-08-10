@@ -12,6 +12,7 @@ public:
     PieceTable(std::string_view str);
 
     void insert(size_t index, std::string_view str);
+    void insert(size_t line, size_t column, std::string_view str);
     void erase(size_t index, size_t count);
     size_t length() const;
     size_t lineCount() const;

@@ -9,15 +9,13 @@ GlyphCache::GlyphCache(const std::string& font_name_utf8, int font_size)
 
 GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id) {
     if (!cache[font_id].contains(glyph_id)) {
-        font::FontRasterizer::RasterizedGlyph rglyph =
-            font_rasterizer.rasterizeUTF8(font_id, glyph_id);
-
+        auto rglyph = font_rasterizer.rasterizeUTF8(font_id, glyph_id);
         cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
     }
     return cache[font_id][glyph_id];
 }
 
-GlyphCache::Glyph GlyphCache::loadGlyph(const font::FontRasterizer::RasterizedGlyph& rglyph) {
+GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
     Atlas& atlas = atlas_pages[current_page];
 
     // TODO: Handle the case when a texture is too large for the atlas.

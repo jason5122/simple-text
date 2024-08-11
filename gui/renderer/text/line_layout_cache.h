@@ -7,12 +7,12 @@
 
 namespace gui {
 
-// TODO: Maybe use a better name than this.
 class LineLayoutCache {
 public:
     LineLayoutCache(const base::PieceTable& table);
 
-    const font::FontRasterizer::LineLayout& getLineLayout(size_t line) const;
+    const font::LineLayout& getLineLayout(size_t line) const;
+    const font::LineLayout& getLineLayout(std::string_view str8);
     void reflow(const base::PieceTable& table, size_t line);
     int maxWidth() const;
 
@@ -21,7 +21,23 @@ public:
     void moveByCharacters(bool forward, Caret& caret) const;
 
 private:
-    std::vector<font::FontRasterizer::LineLayout> line_layouts;
+    // https://www.reddit.com/r/cpp_questions/comments/12xw3sn/comment/jhki225/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+    template <typename... Bases> struct overload : Bases... {
+        using is_transparent = void;
+        using Bases::operator()...;
+    };
+    struct char_pointer_hash {
+        auto operator()(const char* ptr) const noexcept {
+            return std::hash<std::string_view>{}(ptr);
+        }
+    };
+    using transparent_string_hash =
+        overload<std::hash<std::string>, std::hash<std::string_view>, char_pointer_hash>;
+
+    std::vector<font::LineLayout> line_layouts;
+    // std::unordered_map<std::string, font::LineLayout> cache;
+    std::unordered_map<std::string, font::LineLayout, transparent_string_hash, std::equal_to<>>
+        cache;
 
     // TODO: Use a data structure (priority queue) for efficient updating.
     int max_width = 0;

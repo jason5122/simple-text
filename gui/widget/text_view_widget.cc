@@ -132,9 +132,10 @@ void TextViewWidget::draw() {
     {
         PROFILE_BLOCK("TextRenderer::renderText()");
         for (size_t line = start_line; line < end_line; ++line) {
-            text_renderer.renderLineLayout(position - scroll_offset,
-                                           line_layout_cache.getLineLayout(line), line, min_x,
-                                           max_x);
+            std::string line_str = table.line(line);
+            // const auto& layout = line_layout_cache.getLineLayout(line);
+            const auto& layout = line_layout_cache.getLineLayout(line_str);
+            text_renderer.renderLineLayout(position - scroll_offset, layout, line, min_x, max_x);
         }
     }
     constexpr bool kDebugAtlas = false;

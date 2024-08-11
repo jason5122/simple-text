@@ -30,9 +30,20 @@ LineLayoutCache::LineLayoutCache(const base::PieceTable& table) {
     }
 }
 
-const font::FontRasterizer::LineLayout& LineLayoutCache::getLineLayout(size_t line) const {
+const font::LineLayout& LineLayoutCache::getLineLayout(size_t line) const {
     assert(line < line_layouts.size());
     return line_layouts[line];
+}
+
+const font::LineLayout& LineLayoutCache::getLineLayout(std::string_view str8) {
+    if (auto it = cache.find(str8); it != cache.end()) {
+        return it->second;
+    } else {
+        GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+        auto layout = main_glyph_cache.rasterizer().layoutLine(str8);
+        auto inserted = cache.emplace(str8, std::move(layout));
+        return inserted.first->second;
+    }
 }
 
 void LineLayoutCache::reflow(const base::PieceTable& table, size_t line) {

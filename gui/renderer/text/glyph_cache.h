@@ -39,7 +39,7 @@ private:
 
     std::unordered_map<size_t, std::unordered_map<uint32_t, Glyph>> cache;
 
-    Glyph loadGlyph(const font::FontRasterizer::RasterizedGlyph& rglyph);
+    Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
 };
 
 }

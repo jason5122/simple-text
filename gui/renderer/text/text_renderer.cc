@@ -104,11 +104,8 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderLineLayout(const Point& offset,
-                                    const font::FontRasterizer::LineLayout& line_layout,
-                                    size_t line,
-                                    int min_x,
-                                    int max_x) {
+void TextRenderer::renderLineLayout(
+    const Point& offset, const font::LineLayout& line_layout, size_t line, int min_x, int max_x) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             // If we reach a glyph before the minimum x, skip it and continue.
@@ -141,7 +138,7 @@ void TextRenderer::renderLineLayout(const Point& offset,
 
 void TextRenderer::addUiText(const Point& coords,
                              const Rgb& color,
-                             const font::FontRasterizer::LineLayout& line_layout) {
+                             const font::LineLayout& line_layout) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             Point glyph_coords{

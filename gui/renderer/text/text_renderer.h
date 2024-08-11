@@ -16,13 +16,11 @@ public:
     TextRenderer& operator=(TextRenderer&& other);
 
     void renderLineLayout(const Point& offset,
-                          const font::FontRasterizer::LineLayout& line_layout,
+                          const font::LineLayout& line_layout,
                           size_t line,
                           int min_x,
                           int max_x);
-    void addUiText(const Point& coords,
-                   const Rgb& color,
-                   const font::FontRasterizer::LineLayout& line_layout);
+    void addUiText(const Point& coords, const Rgb& color, const font::LineLayout& line_layout);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();
     int uiLineHeight();

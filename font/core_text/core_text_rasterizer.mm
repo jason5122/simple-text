@@ -119,8 +119,7 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
-                                                              uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id) const {
     CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
     CGGlyph glyph_index = glyph_id;
 
@@ -207,7 +206,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
 }
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
-FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
+LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     UTF16ToUTF8IndicesMap utf8IndicesMap;
     if (!utf8IndicesMap.setUTF8(&str8[0], str8.length())) {
         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";

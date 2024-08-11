@@ -1,7 +1,8 @@
 #pragma once
 
-#include "base/buffer/piece_table.h"
-#include "font/font_rasterizer.h"
+// #include "base/buffer/piece_table.h"
+// #include "font/font_rasterizer.h"
+#include "font/types.h"
 #include "gui/renderer/types.h"
 #include <vector>
 
@@ -9,11 +10,7 @@ namespace gui {
 
 class LineLayoutCache {
 public:
-    LineLayoutCache(const base::PieceTable& table);
-
-    const font::LineLayout& getLineLayout(size_t line) const;
     const font::LineLayout& getLineLayout(std::string_view str8);
-    void reflow(const base::PieceTable& table, size_t line);
     int maxWidth() const;
 
     struct Caret;
@@ -21,6 +18,7 @@ public:
     void moveByCharacters(bool forward, Caret& caret) const;
 
 private:
+    // TODO: Clean this up.
     // https://www.reddit.com/r/cpp_questions/comments/12xw3sn/comment/jhki225/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
     template <typename... Bases> struct overload : Bases... {
         using is_transparent = void;
@@ -34,7 +32,7 @@ private:
     using transparent_string_hash =
         overload<std::hash<std::string>, std::hash<std::string_view>, char_pointer_hash>;
 
-    std::vector<font::LineLayout> line_layouts;
+    // TODO: Clean this up.
     // std::unordered_map<std::string, font::LineLayout> cache;
     std::unordered_map<std::string, font::LineLayout, transparent_string_hash, std::equal_to<>>
         cache;

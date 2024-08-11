@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/buffer/piece_table.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/text/line_layout_cache.h"
@@ -16,7 +17,8 @@ public:
     SelectionRenderer& operator=(SelectionRenderer&& other);
 
     void renderSelections(const Point& offset,
-                          const LineLayoutCache& line_layout_cache,
+                          const base::PieceTable& table,
+                          LineLayoutCache& line_layout_cache,
                           const LineLayoutCache::Caret& start_caret,
                           const LineLayoutCache::Caret& end_caret);
     void flush(const Size& screen_size);

@@ -6,6 +6,7 @@ source_set("renderer") {
     "renderer.cc",
     "selection_renderer.cc",
     "shader.cc",
+    "text/caret.cc",
     "text/glyph_cache.cc",
     "text/line_layout_cache.cc",
     "text/text_renderer.cc",

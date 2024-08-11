@@ -30,7 +30,7 @@ private:
     LineLayoutCache line_layout_cache;
 
     LineLayoutCache::Caret start_caret{};
-    LineLayoutCache::Caret end_caret{};
+    LineLayoutCache::Caret end_caret{0, 2, 200};
 
     void updateCaretX();
     size_t lineAtPoint(const Point& point);

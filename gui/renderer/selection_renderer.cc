@@ -113,7 +113,8 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 void SelectionRenderer::renderSelections(const Point& offset,
-                                         const LineLayoutCache& line_layout_cache,
+                                         const base::PieceTable& table,
+                                         LineLayoutCache& line_layout_cache,
                                          const LineLayoutCache::Caret& start_caret,
                                          const LineLayoutCache::Caret& end_caret) {
     std::vector<SelectionRenderer::Selection> selections;
@@ -122,7 +123,8 @@ void SelectionRenderer::renderSelections(const Point& offset,
     size_t end_line = end_caret.line;
 
     for (size_t line = start_line; line <= end_line; ++line) {
-        auto layout = line_layout_cache.getLineLayout(line);
+        std::string line_str = table.line(line);
+        const auto& layout = line_layout_cache.getLineLayout(line_str);
         int start = line == start_line ? start_caret.x : 0;
         int end = line == end_line ? end_caret.x : layout.width;
         if (end - start > 0) {

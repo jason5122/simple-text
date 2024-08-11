@@ -10,7 +10,7 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(const std::string& text) : table{text}, line_layout_cache{table} {
+TextViewWidget::TextViewWidget(const std::string& text) : table{text} {
     updateMaxScroll();
 }
 
@@ -60,10 +60,6 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 
 void TextViewWidget::insertText(std::string_view text) {
     table.insert(end_caret.line, end_caret.index, text);
-    {
-        PROFILE_BLOCK("LineLayout::reflow()");
-        line_layout_cache.reflow(table, end_caret.line);
-    }
     updateMaxScroll();
 }
 
@@ -133,7 +129,6 @@ void TextViewWidget::draw() {
         PROFILE_BLOCK("TextRenderer::renderText()");
         for (size_t line = start_line; line < end_line; ++line) {
             std::string line_str = table.line(line);
-            // const auto& layout = line_layout_cache.getLineLayout(line);
             const auto& layout = line_layout_cache.getLineLayout(line_str);
             text_renderer.renderLineLayout(position - scroll_offset, layout, line, min_x, max_x);
         }
@@ -147,7 +142,8 @@ void TextViewWidget::draw() {
     bool should_swap = end_caret < start_caret;
     const auto& c1 = should_swap ? end_caret : start_caret;
     const auto& c2 = should_swap ? start_caret : end_caret;
-    selection_renderer.renderSelections(position - scroll_offset, line_layout_cache, c1, c2);
+    selection_renderer.renderSelections(position - scroll_offset, table, line_layout_cache, c1,
+                                        c2);
 
     // Add vertical scroll bar.
     int line_count = table.lineCount();

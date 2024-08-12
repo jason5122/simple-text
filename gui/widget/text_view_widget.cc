@@ -22,17 +22,15 @@ void TextViewWidget::selectAll() {
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
+    size_t line = end_caret.line;
+    std::string line_str = table.line(line);
+    const auto& layout = line_layout_cache.getLineLayout(line_str);
+
     if (by == MoveBy::kCharacters && !forward) {
-        size_t line = end_caret.line;
-        std::string line_str = table.line(line);
-        const auto& layout = line_layout_cache.getLineLayout(line_str);
         end_caret.moveToPrevGlyph(layout, line, end_caret.index);
         // updateCaretX();
     }
     if (by == MoveBy::kCharacters && forward) {
-        size_t line = end_caret.line;
-        std::string line_str = table.line(line);
-        const auto& layout = line_layout_cache.getLineLayout(line_str);
         end_caret.moveToNextGlyph(layout, line, end_caret.index);
         // updateCaretX();
     }
@@ -87,13 +85,20 @@ void TextViewWidget::insertText(std::string_view text) {
 void TextViewWidget::leftDelete() {
     assert(start_caret <= end_caret);
 
-    std::string line_str = table.line(end_caret.line);
-    const auto& layout = line_layout_cache.getLineLayout(line_str);
+    // Selection is empty.
+    if (start_caret == end_caret) {
+        std::string line_str = table.line(end_caret.line);
+        const auto& layout = line_layout_cache.getLineLayout(line_str);
 
-    // Erases from [first, last).
-    size_t first = layout.runs[0].glyphs.front().index;
-    size_t last = layout.runs[1].glyphs.back().index;
-    table.erase(first, last - first);
+        size_t delta = end_caret.moveToPrevGlyph(layout, end_caret.line, end_caret.index);
+        table.erase(end_caret.line, end_caret.index, delta);
+
+        start_caret = end_caret;
+    } else {
+        table.erase(start_caret.line, start_caret.index, end_caret.line, end_caret.index);
+
+        end_caret = start_caret;
+    }
 }
 
 void TextViewWidget::draw() {

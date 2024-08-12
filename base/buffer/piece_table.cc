@@ -75,13 +75,6 @@ void PieceTable::insert(size_t index, std::string_view str) {
     }
 }
 
-// TODO: Add tests for this method.
-void PieceTable::insert(size_t line, size_t column, std::string_view str) {
-    iterator line_itr = line == 0 ? begin() : std::next(newline(base::sub_sat(line, 1_Z)));
-    size_t index = std::distance(begin(), line_itr) + column;
-    insert(index, str);
-}
-
 void PieceTable::erase(size_t index, size_t count) {
     auto [it, offset] = pieceAt(index);
 
@@ -166,6 +159,36 @@ void PieceTable::erase(size_t index, size_t count) {
             ++it;
         }
     }
+}
+
+// TODO: Add tests for this method.
+void PieceTable::insert(size_t line, size_t column, std::string_view str) {
+    iterator line_itr = line == 0 ? begin() : std::next(newline(base::sub_sat(line, 1_Z)));
+    size_t index = std::distance(begin(), line_itr) + column;
+    insert(index, str);
+}
+
+// TODO: Add tests for this method.
+void PieceTable::erase(size_t line, size_t column, size_t count) {
+    iterator line_itr = line == 0 ? begin() : std::next(newline(base::sub_sat(line, 1_Z)));
+    size_t index = std::distance(begin(), line_itr) + column;
+    erase(index, count);
+}
+
+// TODO: Add tests for this method.
+void PieceTable::erase(size_t start_line,
+                       size_t start_column,
+                       size_t end_line,
+                       size_t end_column) {
+    iterator start_line_itr =
+        start_line == 0 ? begin() : std::next(newline(base::sub_sat(start_line, 1_Z)));
+    size_t start_index = std::distance(begin(), start_line_itr) + start_column;
+
+    iterator end_line_itr =
+        end_line == 0 ? begin() : std::next(newline(base::sub_sat(end_line, 1_Z)));
+    size_t end_index = std::distance(begin(), end_line_itr) + end_column;
+
+    erase(start_index, end_index - start_index);
 }
 
 size_t PieceTable::length() const {

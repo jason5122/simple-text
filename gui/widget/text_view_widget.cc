@@ -22,10 +22,18 @@ void TextViewWidget::selectAll() {
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
-    if (by == MoveBy::kCharacters) {
-        std::string line_str = table.line(end_caret.line);
+    if (by == MoveBy::kCharacters && !forward) {
+        size_t line = end_caret.line;
+        std::string line_str = table.line(line);
         const auto& layout = line_layout_cache.getLineLayout(line_str);
-        // end_caret.moveByCharacters(layout, forward);
+        end_caret.moveToPrevGlyph(layout, line, end_caret.index);
+        // updateCaretX();
+    }
+    if (by == MoveBy::kCharacters && forward) {
+        size_t line = end_caret.line;
+        std::string line_str = table.line(line);
+        const auto& layout = line_layout_cache.getLineLayout(line_str);
+        end_caret.moveToNextGlyph(layout, line, end_caret.index);
         // updateCaretX();
     }
     // if (by == MoveBy::kLines) {

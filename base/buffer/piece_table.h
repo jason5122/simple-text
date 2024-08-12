@@ -93,7 +93,6 @@ private:
     PieceConstIterator piece_it;
     size_t piece_index;
 };
-static_assert(std::is_trivially_copy_constructible_v<PieceTable::ConstIterator>);
 
 struct PieceTable::Iterator : public ConstIterator {
     using reference = char&;
@@ -109,6 +108,8 @@ private:
 
     PieceTable& table;
 };
+
+static_assert(std::is_trivially_copy_constructible_v<PieceTable::ConstIterator>);
 static_assert(std::is_trivially_copy_constructible_v<PieceTable::Iterator>);
 
 }

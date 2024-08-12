@@ -1,8 +1,4 @@
-#include "base/numeric/literals.h"
-#include "base/numeric/saturation_arithmetic.h"
 #include "caret.h"
-#include <cassert>
-#include <numeric>
 
 namespace gui {
 
@@ -15,6 +11,20 @@ void Caret::moveToX(const font::LineLayout& layout, size_t line, int x) {
 
 void Caret::moveToIndex(const font::LineLayout& layout, size_t line, size_t index) {
     auto [glyph_index, glyph_x] = layout.closestForIndex(index);
+    this->line = line;
+    this->index = glyph_index;
+    this->x = glyph_x;
+}
+
+void Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_t index) {
+    auto [glyph_index, glyph_x] = layout.prevClosestForIndex(index);
+    this->line = line;
+    this->index = glyph_index;
+    this->x = glyph_x;
+}
+
+void Caret::moveToNextGlyph(const font::LineLayout& layout, size_t line, size_t index) {
+    auto [glyph_index, glyph_x] = layout.nextClosestForIndex(index);
     this->line = line;
     this->index = glyph_index;
     this->x = glyph_x;

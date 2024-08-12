@@ -1,11 +1,6 @@
 #include "gui/renderer/renderer.h"
 #include "line_layout_cache.h"
 
-// TODO: Debug use; remove this.
-#include "util/profile_util.h"
-#include <format>
-#include <iostream>
-
 namespace gui {
 
 const font::LineLayout& LineLayoutCache::getLineLayout(std::string_view str8) {

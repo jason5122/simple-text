@@ -35,7 +35,7 @@ private:
     Caret start_caret{};
     Caret end_caret{};
 
-    size_t lineAtPoint(const Point& point);
+    size_t lineAtY(int y);
 };
 
 }

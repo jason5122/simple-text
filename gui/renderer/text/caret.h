@@ -14,12 +14,8 @@ struct Caret {
     // This is updated whenever the caret moves horizontally.
     int max_x;
 
-    // TODO: Is this the best implementation?
-    size_t run_index;
-    size_t run_glyph_index;
-
-    void moveToPoint(const font::LineLayout& layout, size_t line, const Point& point);
-    void moveByCharacters(const font::LineLayout& layout, bool forward);
+    void moveToX(const font::LineLayout& layout, size_t line, int x);
+    void moveToIndex(const font::LineLayout& layout, size_t line, size_t index);
 
     friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
         return c1.line == c2.line && c1.index == c2.index;

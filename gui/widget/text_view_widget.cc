@@ -25,7 +25,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     if (by == MoveBy::kCharacters) {
         std::string line_str = table.line(end_caret.line);
         const auto& layout = line_layout_cache.getLineLayout(line_str);
-        end_caret.moveByCharacters(layout, forward);
+        // end_caret.moveByCharacters(layout, forward);
         // updateCaretX();
     }
     // if (by == MoveBy::kLines) {
@@ -63,6 +63,16 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 
 void TextViewWidget::insertText(std::string_view text) {
     table.insert(end_caret.line, end_caret.index, text);
+
+    size_t line = end_caret.line;
+    size_t new_index = end_caret.index + text.length();
+    std::string line_str = table.line(line);
+    const auto& layout = line_layout_cache.getLineLayout(line_str);
+    end_caret.moveToIndex(layout, line, new_index);
+
+    start_caret = end_caret;
+    // TODO: Do we update caret `max_x` too?
+
     updateMaxScroll();
 }
 
@@ -160,21 +170,19 @@ void TextViewWidget::draw() {
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
-    std::string line_str = table.line(end_caret.line);
-    const auto& layout = line_layout_cache.getLineLayout(line_str);
-
-    Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret.moveToPoint(layout, lineAtPoint(new_coords), new_coords);
+    leftMouseDrag(mouse_pos);
     start_caret = end_caret;
-    // updateCaretX();
+    // updateCaretX();  // Update for start as well.
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
-    std::string line_str = table.line(end_caret.line);
+    Point new_coords = mouse_pos - position + scroll_offset;
+    size_t new_line = lineAtY(new_coords.y);
+
+    std::string line_str = table.line(new_line);
     const auto& layout = line_layout_cache.getLineLayout(line_str);
 
-    Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret.moveToPoint(layout, lineAtPoint(new_coords), new_coords);
+    end_caret.moveToX(layout, new_line, new_coords.x);
     // updateCaretX();
 }
 
@@ -185,9 +193,12 @@ void TextViewWidget::updateMaxScroll() {
     max_scroll_offset.y = table.lineCount() * text_renderer.lineHeight();
 }
 
-size_t TextViewWidget::lineAtPoint(const Point& point) {
+size_t TextViewWidget::lineAtY(int y) {
+    if (y < 0) {
+        y = 0;
+    }
+
     GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-    int y = std::max(point.y, 0);
     size_t line = y / main_glyph_cache.lineHeight();
     return std::clamp(line, 0_Z, base::sub_sat(table.lineCount(), 1_Z));
 }

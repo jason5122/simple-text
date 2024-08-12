@@ -115,8 +115,8 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 void SelectionRenderer::renderSelections(const Point& offset,
                                          const base::PieceTable& table,
                                          LineLayoutCache& line_layout_cache,
-                                         const LineLayoutCache::Caret& start_caret,
-                                         const LineLayoutCache::Caret& end_caret) {
+                                         const Caret& start_caret,
+                                         const Caret& end_caret) {
     std::vector<SelectionRenderer::Selection> selections;
 
     size_t start_line = start_caret.line;

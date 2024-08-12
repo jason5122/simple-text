@@ -2,6 +2,7 @@
 
 #include "base/buffer/piece_table.h"
 #include "gui/renderer/shader.h"
+#include "gui/renderer/text/caret.h"
 #include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/text/line_layout_cache.h"
 #include "gui/renderer/types.h"
@@ -19,8 +20,8 @@ public:
     void renderSelections(const Point& offset,
                           const base::PieceTable& table,
                           LineLayoutCache& line_layout_cache,
-                          const LineLayoutCache::Caret& start_caret,
-                          const LineLayoutCache::Caret& end_caret);
+                          const Caret& start_caret,
+                          const Caret& end_caret);
     void flush(const Size& screen_size);
 
 private:

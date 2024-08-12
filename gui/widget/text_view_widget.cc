@@ -22,7 +22,7 @@ void TextViewWidget::selectAll() {
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     if (by == MoveBy::kCharacters) {
-        line_layout_cache.moveByCharacters(forward, end_caret);
+        end_caret.moveByCharacters(forward);
         // updateCaretX();
     }
     // if (by == MoveBy::kLines) {
@@ -187,14 +187,14 @@ void TextViewWidget::draw() {
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
-    line_layout_cache.moveToPoint(lineAtPoint(new_coords), new_coords, end_caret);
+    end_caret.moveToPoint(lineAtPoint(new_coords), new_coords);
     start_caret = end_caret;
     updateCaretX();
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
-    line_layout_cache.moveToPoint(lineAtPoint(new_coords), new_coords, end_caret);
+    end_caret.moveToPoint(lineAtPoint(new_coords), new_coords);
     updateCaretX();
 }
 

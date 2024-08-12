@@ -26,14 +26,15 @@ public:
 
 private:
     static constexpr int kMinScrollbarWidth = 100;
+    static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
+    static constexpr Rgba kCaretColor{95, 180, 180, 255};
 
     base::PieceTable table;
     LineLayoutCache line_layout_cache;
 
     Caret start_caret{};
-    Caret end_caret{0, 2, 200};
+    Caret end_caret{};
 
-    void updateCaretX();
     size_t lineAtPoint(const Point& point);
 };
 

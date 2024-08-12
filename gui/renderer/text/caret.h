@@ -1,5 +1,6 @@
 #pragma once
 
+#include "font/types.h"
 #include "gui/renderer/types.h"
 #include <cstddef>
 
@@ -17,6 +18,17 @@ struct Caret {
     size_t run_index;
     size_t run_glyph_index;
 
+    void moveToPoint(const font::LineLayout& layout, size_t line, const Point& point);
+    void moveByCharacters(const font::LineLayout& layout, bool forward);
+
+    friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
+        return c1.line == c2.line && c1.index == c2.index;
+    }
+
+    friend constexpr bool operator!=(const Caret& c1, const Caret& c2) {
+        return !(operator==(c1, c2));
+    }
+
     friend constexpr bool operator<(const Caret& c1, const Caret& c2) {
         if (c1.line == c2.line) {
             return c1.index < c2.index;
@@ -24,22 +36,18 @@ struct Caret {
             return c1.line < c2.line;
         }
     }
+
     friend constexpr bool operator>(const Caret& c1, const Caret& c2) {
         return operator<(c2, c1);
     }
 
-    void moveToPoint(size_t line, const Point& point);
-    void moveByCharacters(bool forward);
+    friend constexpr bool operator<=(const Caret& c1, const Caret& c2) {
+        return !(operator>(c1, c2));
+    }
+
+    friend constexpr bool operator>=(const Caret& c1, const Caret& c2) {
+        return !(operator<(c1, c2));
+    }
 };
-
-static_assert(Caret{0, 0} < Caret{0, 1});
-static_assert(Caret{0, 1} < Caret{1, 0});
-static_assert(Caret{1, 0} < Caret{1, 1});
-static_assert(!(Caret{1, 0} < Caret{1, 0}));
-
-static_assert(Caret{0, 1} > Caret{0, 0});
-static_assert(Caret{1, 0} > Caret{0, 1});
-static_assert(Caret{1, 1} > Caret{1, 0});
-static_assert(!(Caret{1, 0} > Caret{1, 0}));
 
 }

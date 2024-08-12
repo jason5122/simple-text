@@ -6,6 +6,7 @@
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
+#include <cassert>
 #include <iostream>
 
 namespace gui {
@@ -17,12 +18,14 @@ TextViewWidget::TextViewWidget(const std::string& text) : table{text} {
 void TextViewWidget::selectAll() {
     // start_caret = line_layout.begin();
     // end_caret = std::prev(line_layout.end());
-    updateCaretX();
+    // updateCaretX();
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     if (by == MoveBy::kCharacters) {
-        end_caret.moveByCharacters(forward);
+        std::string line_str = table.line(end_caret.line);
+        const auto& layout = line_layout_cache.getLineLayout(line_str);
+        end_caret.moveByCharacters(layout, forward);
         // updateCaretX();
     }
     // if (by == MoveBy::kLines) {
@@ -64,50 +67,21 @@ void TextViewWidget::insertText(std::string_view text) {
 }
 
 void TextViewWidget::leftDelete() {
-    scroll_offset.x = 0;
+    assert(start_caret <= end_caret);
 
-    // GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
+    std::string line_str = table.line(end_caret.line);
+    const auto& layout = line_layout_cache.getLineLayout(line_str);
 
-    // size_t start_byte_offset = (*start_caret).byte_offset;
-    // size_t end_byte_offset = (*end_caret).byte_offset;
-    // base::Buffer::StringIterator first = buffer.stringBegin() + start_byte_offset;
-    // base::Buffer::StringIterator last = buffer.stringBegin() + end_byte_offset;
-
-    // if (first > last) {
-    //     std::swap(first, last);
-    // }
-    // if (first == last && start_caret != line_layout.begin()) {
-    //     size_t new_start_byte_offset = (*std::prev(start_caret)).byte_offset;
-    //     first = buffer.stringBegin() + new_start_byte_offset;
-    // }
-
-    // // Ensure we only move back when 1) there selection is empty, and 2) we are not at the end.
-    // bool should_move_back = start_caret == end_caret && end_caret != line_layout.begin() &&
-    //                         end_caret != std::prev(line_layout.end());
-
-    // // Store old cursor position before we invalidate our iterators.
-    // // TODO: Consider always ensuring `start_caret <= end_caret`.
-    // LineLayout::Iterator actual_start = std::min(start_caret, end_caret);
-    // size_t old_start_index = line_layout.iteratorIndex(actual_start);
-
-    // buffer.erase(first, last);
-    // line_layout.reflow(table, buffer, main_glyph_cache);
-    // updateMaxScroll();
-
-    // end_caret = line_layout.getIterator(old_start_index);
-    // if (should_move_back) {
-    //     std::advance(end_caret, -1);
-    // }
-    // start_caret = end_caret;
+    // Erases from [first, last).
+    size_t first = layout.runs[0].glyphs.front().index;
+    size_t last = layout.runs[1].glyphs.back().index;
+    table.erase(first, last - first);
 }
 
 void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
-
-    constexpr Rgba scroll_bar_color{190, 190, 190, 255};
-    constexpr Rgba caret_color{95, 180, 180, 255};
 
     // Calculate start and end lines.
     size_t visible_lines = std::ceil(static_cast<float>(size.height) / text_renderer.lineHeight());
@@ -156,7 +130,7 @@ void TextViewWidget::draw() {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, scroll_bar_color, 5);
+    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor, 5);
 
     // Add horizontal scroll bar.
     int hbar_height = 15;
@@ -167,7 +141,7 @@ void TextViewWidget::draw() {
         .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
         .y = size.height - hbar_height,
     };
-    rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, scroll_bar_color, 5);
+    rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, kScrollBarColor, 5);
 
     // Add caret.
     int caret_width = 4;
@@ -182,20 +156,26 @@ void TextViewWidget::draw() {
     caret_pos -= scroll_offset;
     caret_pos.x -= caret_width / 2;
     caret_pos.y -= extra_padding;
-    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, caret_color);
+    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
+    std::string line_str = table.line(end_caret.line);
+    const auto& layout = line_layout_cache.getLineLayout(line_str);
+
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret.moveToPoint(lineAtPoint(new_coords), new_coords);
+    end_caret.moveToPoint(layout, lineAtPoint(new_coords), new_coords);
     start_caret = end_caret;
-    updateCaretX();
+    // updateCaretX();
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
+    std::string line_str = table.line(end_caret.line);
+    const auto& layout = line_layout_cache.getLineLayout(line_str);
+
     Point new_coords = mouse_pos - position + scroll_offset;
-    end_caret.moveToPoint(lineAtPoint(new_coords), new_coords);
-    updateCaretX();
+    end_caret.moveToPoint(layout, lineAtPoint(new_coords), new_coords);
+    // updateCaretX();
 }
 
 void TextViewWidget::updateMaxScroll() {
@@ -203,10 +183,6 @@ void TextViewWidget::updateMaxScroll() {
 
     max_scroll_offset.x = line_layout_cache.maxWidth();
     max_scroll_offset.y = table.lineCount() * text_renderer.lineHeight();
-}
-
-void TextViewWidget::updateCaretX() {
-    // caret_x = (*end_caret).total_advance;
 }
 
 size_t TextViewWidget::lineAtPoint(const Point& point) {

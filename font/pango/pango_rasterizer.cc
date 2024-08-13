@@ -58,15 +58,15 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
 
 FontRasterizer::~FontRasterizer() {}
 
-FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
-                                                              uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id) const {
     PangoFont* font = pimpl->font_id_to_native[font_id].get();
 
     PangoRectangle ink_rect;
     PangoRectangle logical_rect;
     pango_font_get_glyph_extents(font, glyph_id, &ink_rect, &logical_rect);
     int width = PANGO_PIXELS(logical_rect.width);
-    int height = PANGO_PIXELS(logical_rect.height);
+    // TODO: Make sure descent is correct here. We already checked once, but good to verify.
+    int height = PANGO_PIXELS(logical_rect.height) + descent;
 
     PangoGlyphStringPtr glyph_string{pango_glyph_string_new()};
     pango_glyph_string_set_size(glyph_string.get(), 1);
@@ -106,7 +106,7 @@ FontRasterizer::RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id,
     };
 }
 
-FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
+LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     CairoSurfacePtr temp_surface{cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0)};
     CairoContextPtr layout_context{cairo_create(temp_surface.get())};
 
@@ -156,7 +156,7 @@ FontRasterizer::LineLayout FontRasterizer::layoutLine(std::string_view str8) con
             // Make some adjustments to glyph info struct.
             PangoGlyphInfo gi = glyph_infos[i];
             gi.geometry.width = PANGO_SCALE * width;
-            gi.geometry.y_offset = PANGO_SCALE * (height - descent);
+            gi.geometry.y_offset = PANGO_SCALE * height;
 
             // Cache glyph info struct.
             pimpl->cacheGlyphInfo(gi);

@@ -19,7 +19,7 @@ public:
     size_t length() const;
     size_t lineCount() const;
     size_t newlineCount() const;
-    std::string line(size_t index) const;  // Zero-indexed.
+    std::string line(size_t index);  // Zero-indexed.
     std::string str() const;
 
     struct Iterator;
@@ -61,6 +61,8 @@ private:
     std::list<Piece> pieces;
     size_t m_length = 0;
     size_t newline_count = 0;
+
+    std::unordered_map<size_t, std::string> line_cache;
 
     using PieceIterator = std::list<Piece>::iterator;
     using PieceConstIterator = std::list<Piece>::const_iterator;

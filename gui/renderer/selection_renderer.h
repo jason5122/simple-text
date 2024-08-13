@@ -18,7 +18,7 @@ public:
     SelectionRenderer& operator=(SelectionRenderer&& other);
 
     void renderSelections(const Point& offset,
-                          const base::PieceTable& table,
+                          base::PieceTable& table,
                           LineLayoutCache& line_layout_cache,
                           const Caret& start_caret,
                           const Caret& end_caret);

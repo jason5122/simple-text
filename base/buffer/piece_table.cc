@@ -17,6 +17,9 @@ PieceTable::PieceTable(std::string_view str) : original{str}, m_length{str.lengt
 }
 
 void PieceTable::insert(size_t index, std::string_view str) {
+    // Invalidate line cache.
+    line_cache.clear();
+
     auto [it, offset] = pieceAt(index);
 
     Piece& p1 = *it;
@@ -76,6 +79,9 @@ void PieceTable::insert(size_t index, std::string_view str) {
 }
 
 void PieceTable::erase(size_t index, size_t count) {
+    // Invalidate line cache.
+    line_cache.clear();
+
     auto [it, offset] = pieceAt(index);
 
     Piece& p1 = *it;
@@ -203,10 +209,15 @@ size_t PieceTable::newlineCount() const {
     return newline_count;
 }
 
-std::string PieceTable::line(size_t index) const {
+std::string PieceTable::line(size_t index) {
     if (index > newlineCount()) {
         std::cerr << "PieceTable::line() out of range error: index > newlineCount()\n";
         std::abort();
+    }
+
+    // Memoize line strings.
+    if (line_cache.contains(index)) {
+        return line_cache.at(index);
     }
 
     auto first = index == 0 ? begin() : std::next(newline(base::sub_sat(index, 1_Z)));
@@ -223,6 +234,8 @@ std::string PieceTable::line(size_t index) const {
         }
         line_str += ch;
     }
+
+    line_cache.emplace(index, line_str);
     return line_str;
 }
 

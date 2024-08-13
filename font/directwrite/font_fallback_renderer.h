@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font/font_rasterizer.h"
+#include "font/types.h"
 #include "font/utf16_to_utf8_indices_map.h"
 #include <dwrite_3.h>
 #include <wrl/client.h>
@@ -16,7 +16,7 @@ class FontFallbackRenderer : public IDWriteTextRenderer {
 public:
     // TODO: Consider encapsulating these with getters.
     int total_advance = 0;
-    std::vector<FontRasterizer::ShapedRun> runs;
+    std::vector<ShapedRun> runs;
 
     FontFallbackRenderer(Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection,
                          std::string_view str8);

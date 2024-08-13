@@ -66,7 +66,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     size_t font_id = pimpl->cacheFont(font);
 
     size_t glyph_count = glyphRun->glyphCount;
-    std::vector<FontRasterizer::ShapedGlyph> glyphs;
+    std::vector<ShapedGlyph> glyphs;
     glyphs.reserve(glyph_count);
 
     auto cluster_map = glyphRunDescription->clusterMap;
@@ -90,7 +90,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
         // TODO: Verify that rounding up is correct.
         int advance = std::ceil(glyphRun->glyphAdvances[i]);
 
-        FontRasterizer::ShapedGlyph glyph{
+        ShapedGlyph glyph{
             .glyph_id = glyph_id,
             .position = {.x = total_advance},
             .advance = {.x = advance},
@@ -101,7 +101,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
         total_advance += advance;
     }
 
-    runs.emplace_back(FontRasterizer::ShapedRun{
+    runs.emplace_back(ShapedRun{
         .font_id = font_id,
         .glyphs = std::move(glyphs),
     });

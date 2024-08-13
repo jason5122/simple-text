@@ -1,0 +1,11 @@
+source_set("text_system") {
+  sources = [
+    "caret.cc",
+    "line_layout_cache.cc",
+  ]
+
+  deps = [
+    "//font",
+    "//third_party/xxhash",
+  ]
+}

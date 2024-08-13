@@ -1,11 +1,11 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
+#include "gui/renderer/glyph_cache.h"
 #include "gui/renderer/shader.h"
-#include "gui/renderer/text/caret.h"
-#include "gui/renderer/text/glyph_cache.h"
-#include "gui/renderer/text/line_layout_cache.h"
 #include "gui/renderer/types.h"
+#include "gui/text_system/caret.h"
+#include "gui/text_system/line_layout_cache.h"
 #include "util/non_copyable.h"
 
 namespace gui {

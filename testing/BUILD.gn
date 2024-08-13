@@ -7,6 +7,7 @@ executable("test_runner") {
     "//base/buffer/tests",
     "//base/numeric/tests",
     "//font/tests",
+    "//gui/text_system/integration_tests",
     "//third_party/googletest:gtest",
   ]
 }

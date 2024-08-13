@@ -1,15 +1,13 @@
 source_set("renderer") {
   sources = [
     "atlas.cc",
+    "glyph_cache.cc",
     "image_renderer.cc",
     "rect_renderer.cc",
     "renderer.cc",
     "selection_renderer.cc",
     "shader.cc",
-    "text/caret.cc",
-    "text/glyph_cache.cc",
-    "text/line_layout_cache.cc",
-    "text/text_renderer.cc",
+    "text_renderer.cc",
   ]
 
   deps = [
@@ -17,6 +15,5 @@ source_set("renderer") {
     "//base/buffer",
     "//font",
     "//third_party/libpng",
-    "//third_party/xxhash",
   ]
 }

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "gui/renderer/glyph_cache.h"
 #include "gui/renderer/image_renderer.h"
 #include "gui/renderer/rect_renderer.h"
 #include "gui/renderer/selection_renderer.h"
-#include "gui/renderer/text/glyph_cache.h"
-#include "gui/renderer/text/text_renderer.h"
+#include "gui/renderer/text_renderer.h"
 
 namespace gui {
 

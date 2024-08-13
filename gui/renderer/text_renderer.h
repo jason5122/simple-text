@@ -1,8 +1,8 @@
 #pragma once
 
+#include "gui/renderer/glyph_cache.h"
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
-#include "gui/renderer/text/glyph_cache.h"
 #include "gui/renderer/types.h"
 #include <vector>
 

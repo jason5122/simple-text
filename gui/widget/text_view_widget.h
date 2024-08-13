@@ -1,8 +1,8 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
-#include "gui/renderer/text/caret.h"
-#include "gui/renderer/text/line_layout_cache.h"
+#include "gui/text_system/caret.h"
+#include "gui/text_system/line_layout_cache.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
 

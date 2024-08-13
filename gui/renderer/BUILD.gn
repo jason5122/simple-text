@@ -17,5 +17,6 @@ source_set("renderer") {
     "//base/buffer",
     "//font",
     "//third_party/libpng",
+    "//third_party/xxhash",
   ]
 }

@@ -195,7 +195,8 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
 
     // Cache font in font map.
     if (!font_postscript_name_to_id.contains(font_name)) {
-        // g_object_ref(font);  // TODO: Do we need this?
+        // TODO: Incorporate this into a smart pointer.
+        g_object_ref(font);
 
         size_t font_id = font_id_to_native.size();
         font_id_to_native.emplace_back(font);

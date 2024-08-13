@@ -1,11 +1,12 @@
 executable("test_runner") {
   testonly = true
 
-  deps = [ "//third_party/googletest:gtest_main" ]
+  sources = [ "main.cc" ]
 
-  deps += [
+  deps = [
     "//base/buffer/tests",
     "//base/numeric/tests",
     "//font/tests",
+    "//third_party/googletest:gtest",
   ]
 }

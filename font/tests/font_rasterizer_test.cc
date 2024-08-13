@@ -16,7 +16,6 @@ constexpr std::string kOSFontFace = "Consolas";
 
 namespace font {
 
-// TODO: This crashes for DirectWrite. Find a way to initialize the COM library correctly.
 TEST(FontRasterizerTest, LayoutLine1) {
     FontRasterizer rasterizer{kOSFontFace, 32};
 

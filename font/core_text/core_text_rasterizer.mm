@@ -215,6 +215,7 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
 
     ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(str8);
 
+    int total_advance = 0;
     std::vector<ShapedRun> runs;
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
@@ -251,22 +252,26 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
         std::vector<ShapedGlyph> glyphs;
         glyphs.reserve(glyph_count);
         for (size_t i = 0; i < glyph_count; ++i) {
+            // TODO: Use subpixel variants instead of rounding.
+            Point position = {
+                .x = total_advance,
+                // .x = static_cast<int>(std::ceil(positions[i].x)),
+                .y = static_cast<int>(std::ceil(positions[i].y)),
+            };
+            Point advance = {
+                .x = static_cast<int>(std::ceil(advances[i].width)),
+                .y = static_cast<int>(std::ceil(advances[i].height)),
+            };
+
             ShapedGlyph glyph{
                 .glyph_id = glyph_ids[i],
-                // TODO: Use subpixel variants instead of rounding.
-                .position =
-                    Point{
-                        .x = static_cast<int>(std::ceil(positions[i].x)),
-                        .y = static_cast<int>(std::ceil(positions[i].y)),
-                    },
-                .advance =
-                    Point{
-                        .x = static_cast<int>(std::ceil(advances[i].width)),
-                        .y = static_cast<int>(std::ceil(advances[i].height)),
-                    },
+                .position = position,
+                .advance = advance,
                 .index = utf8IndicesMap.mapIndex(indices[i]),
             };
             glyphs.push_back(std::move(glyph));
+
+            total_advance += advance.x;
         }
 
         runs.emplace_back(ShapedRun{font_id, std::move(glyphs)});
@@ -274,9 +279,10 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
 
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.
-    double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
+    // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
     return {
-        .width = static_cast<int>(std::ceil(width)),
+        .width = total_advance,
+        // .width = static_cast<int>(std::ceil(width)),
         .length = str8.length(),
         .runs = std::move(runs),
     };

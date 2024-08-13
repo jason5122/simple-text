@@ -173,7 +173,7 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
             glyphs.emplace_back(
                 ShapedGlyph{glyph_id, std::move(position), std::move(advance), index});
 
-            total_advance += width;
+            total_advance += advance.x;
         }
 
         runs.emplace_back(ShapedRun{font_id, std::move(glyphs)});

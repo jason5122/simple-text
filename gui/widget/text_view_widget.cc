@@ -146,38 +146,40 @@ void TextViewWidget::draw() {
     selection_renderer.renderSelections(position - scroll_offset, table, line_layout_cache, c1,
                                         c2);
 
-    // Add vertical scroll bar.
-    int line_count = table.lineCount();
-    int line_height = main_line_height;
-    int vbar_width = 15;
-    int max_scrollbar_y = (line_count + visible_lines) * line_height;
-    int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
-    float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
-    Point vbar_coords{
-        .x = size.width - vbar_width,
-        .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
-    };
-    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor, 5);
+    // // Add vertical scroll bar.
+    // int line_count = table.lineCount();
+    // int line_height = main_line_height;
+    // int vbar_width = 15;
+    // int max_scrollbar_y = (line_count + visible_lines) * line_height;
+    // int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
+    // float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
+    // Point vbar_coords{
+    //     .x = size.width - vbar_width,
+    //     .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
+    // };
+    // rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
+    // 5);
 
-    // Add horizontal scroll bar.
-    int hbar_height = 15;
-    int hbar_width = size.width * (static_cast<float>(size.width) / max_scroll_offset.x);
-    hbar_width = std::max(hbar_width, kMinScrollbarWidth);
-    float hbar_percent = static_cast<float>(scroll_offset.x) / max_scroll_offset.x;
-    Point hbar_coords{
-        .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
-        .y = size.height - hbar_height,
-    };
-    rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, kScrollBarColor, 5);
+    // // Add horizontal scroll bar.
+    // int hbar_height = 15;
+    // int hbar_width = size.width * (static_cast<float>(size.width) / max_scroll_offset.x);
+    // hbar_width = std::max(hbar_width, kMinScrollbarWidth);
+    // float hbar_percent = static_cast<float>(scroll_offset.x) / max_scroll_offset.x;
+    // Point hbar_coords{
+    //     .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
+    //     .y = size.height - hbar_height,
+    // };
+    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, kScrollBarColor,
+    // 5);
 
     // Add caret.
     int caret_width = 4;
     int extra_padding = 8;
-    int caret_height = line_height + extra_padding * 2;
+    int caret_height = main_line_height + extra_padding * 2;
 
     Point caret_pos{
         .x = end_caret.x,
-        .y = static_cast<int>(end_caret.line) * line_height,
+        .y = static_cast<int>(end_caret.line) * main_line_height,
     };
     caret_pos += position;
     caret_pos -= scroll_offset;

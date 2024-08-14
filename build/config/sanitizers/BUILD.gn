@@ -1,0 +1,16 @@
+config("default_sanitizer_flags") {
+  if (!is_release) {
+    sanitizers = [
+      "address",  # ASan
+      "leak",  #LSan
+      "undefined",  # UBSan
+    ]
+
+    cflags = []
+    ldflags = []
+    foreach(sanitizer, sanitizers) {
+      cflags += [ "-fsanitize=$sanitizer" ]
+      ldflags += [ "-fsanitize=$sanitizer" ]
+    }
+  }
+}

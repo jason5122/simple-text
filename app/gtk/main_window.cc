@@ -42,9 +42,9 @@ static constexpr const gchar* ConvertModifier(ModifierKey modifier) {
 }
 
 MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context)
-    : window{gtk_application_window_new(gtk_app)},
-      gl_area{gtk_gl_area_new()},
-      app_window{app_window} {
+    : app_window{app_window},
+      window{gtk_application_window_new(gtk_app)},
+      gl_area{gtk_gl_area_new()} {
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
     GtkWidget* gtk_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -231,7 +231,7 @@ static gboolean scroll(GtkEventControllerScroll* self,
     gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
 
     GdkScrollUnit unit = gtk_event_controller_scroll_get_unit(self);
-    if (GDK_SCROLL_UNIT_WHEEL) {
+    if (unit == GDK_SCROLL_UNIT_WHEEL) {
         dx *= 32;
         dy *= 32;
     } else {

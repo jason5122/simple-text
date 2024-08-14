@@ -143,14 +143,23 @@ void TextRenderer::renderMainLineLayout(const font::LineLayout& line_layout,
 
 void TextRenderer::renderUILineLayout(const font::LineLayout& line_layout,
                                       const Point& coords,
+                                      int min_x,
+                                      int max_x,
                                       const Rgb& color) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
-            Point glyph_coords{
-                .x = glyph.position.x,
-                .y = 0,
-            };
-            glyph_coords += coords;
+            // If we reach a glyph before the minimum x, skip it and continue.
+            // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
+            // This assumes glyph positions are monotonically increasing.
+            if (glyph.position.x + glyph.advance.x < min_x) {
+                continue;
+            }
+            if (glyph.position.x > max_x) {
+                break;
+            }
+
+            Point glyph_coords = coords;
+            glyph_coords.x += glyph.position.x;
 
             GlyphCache::Glyph& rglyph = glyph_cache.getUIGlyph(run.font_id, glyph.glyph_id);
             const InstanceData instance{

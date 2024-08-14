@@ -1,6 +1,9 @@
 #include "gui/renderer/renderer.h"
 #include "label_widget.h"
 
+// TODO: Debug use; remove this.
+#include "util/profile_util.h"
+
 namespace gui {
 
 LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
@@ -55,8 +58,10 @@ void LabelWidget::draw() {
     const font::FontRasterizer& ui_font_rasterizer =
         Renderer::instance().getGlyphCache().uiRasterizer();
 
-    Point text_position = centerVertically(ui_font_rasterizer.getLineHeight()) + left_offset;
-    text_renderer.renderUILineLayout(layout, text_position, color);
+    Point coords = centerVertically(ui_font_rasterizer.getLineHeight()) + left_offset;
+    int min_x = 0;
+    int max_x = size.width - left_padding - right_padding;
+    text_renderer.renderUILineLayout(layout, coords, min_x, max_x, color);
 }
 
 Point LabelWidget::centerVertically(int widget_height) {

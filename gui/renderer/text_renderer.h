@@ -23,6 +23,8 @@ public:
                               const Rgb& color);
     void renderUILineLayout(const font::LineLayout& line_layout,
                             const Point& coords,
+                            int min_x,
+                            int max_x,
                             const Rgb& color);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
 

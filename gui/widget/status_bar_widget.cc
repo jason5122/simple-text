@@ -4,7 +4,7 @@
 namespace gui {
 
 StatusBarWidget::StatusBarWidget(const Size& size)
-    : Widget{size}, line_column_label{new LabelWidget{{200, size.height}}} {
+    : Widget{size}, line_column_label{new LabelWidget{{0, size.height}}} {
     line_column_label->setText("clangd, Line 1, Column 1", {64, 64, 64});
 }
 
@@ -16,6 +16,7 @@ void StatusBarWidget::draw() {
 }
 
 void StatusBarWidget::layout() {
+    line_column_label->setSize(size);
     line_column_label->setPosition(position + kLeftPadding);
 }
 

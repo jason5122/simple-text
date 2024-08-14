@@ -126,7 +126,7 @@ void TextViewWidget::draw() {
     int min_x = scroll_offset.x;
     int max_x = scroll_offset.x + size.width;
     {
-        PROFILE_BLOCK("TextRenderer::renderText()");
+        PROFILE_BLOCK("TextViewWidget::renderText()");
         for (size_t line = start_line; line < end_line; ++line) {
             std::string line_str = table.line(line);
             const auto& layout = line_layout_cache.getLineLayout(line_str);

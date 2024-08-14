@@ -39,7 +39,7 @@ public:
         size_t len = line_str.size();
         size_t bytes_copied = std::min(len - position.column, BUFSIZE);
 
-        memcpy(buf, &line_str[0] + position.column, bytes_copied);
+        memcpy(buf, line_str.data() + position.column, bytes_copied);
         *bytes_read = (uint32_t)bytes_copied;
         if (bytes_copied < BUFSIZE) {
             // Add the final \n.

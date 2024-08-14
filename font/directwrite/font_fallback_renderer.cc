@@ -15,7 +15,7 @@ namespace font {
 FontFallbackRenderer::FontFallbackRenderer(ComPtr<IDWriteFontCollection> font_collection,
                                            std::string_view str8)
     : fRefCount(1), font_collection{font_collection} {
-    if (!utf8IndicesMap.setUTF8(&str8[0], str8.length())) {
+    if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
         std::abort();
     }

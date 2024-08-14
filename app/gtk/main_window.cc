@@ -161,7 +161,7 @@ bool MainWindow::isDarkMode() {
 }
 
 void MainWindow::setTitle(const std::string& title) {
-    gtk_window_set_title(GTK_WINDOW(window), &title[0]);
+    gtk_window_set_title(GTK_WINDOW(window), title.data());
 }
 
 Window* MainWindow::appWindow() {

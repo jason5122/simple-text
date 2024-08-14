@@ -26,7 +26,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
 
         std::string error;
         error.reserve(log_size);
-        glGetShaderInfoLog(vertex_shader, log_size, nullptr, &error[0]);
+        glGetShaderInfoLog(vertex_shader, log_size, nullptr, error.data());
         std::cerr << std::format("vertex shader: {}", error);
 
         glDeleteShader(vertex_shader);
@@ -41,7 +41,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
 
         std::string error;
         error.reserve(log_size);
-        glGetShaderInfoLog(vertex_shader, log_size, nullptr, &error[0]);
+        glGetShaderInfoLog(vertex_shader, log_size, nullptr, error.data());
         std::cerr << std::format("fragment shader: {}", error);
 
         glDeleteShader(fragment_shader);

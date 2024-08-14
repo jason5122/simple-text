@@ -27,8 +27,8 @@ inline void PrintFontFamilyName(IDWriteFont* font) {
 
     std::wstring name;
     name.resize(length + 1);
-    family_names->GetString(index, &name[0], length + 1);
-    std::wcerr << std::format(L"family name: {}\n", &name[0]);
+    family_names->GetString(index, name.data(), length + 1);
+    std::wcerr << std::format(L"family name: {}\n", name.data());
 }
 
 }

@@ -162,7 +162,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
 LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     UTF16ToUTF8IndicesMap utf8IndicesMap;
-    if (!utf8IndicesMap.setUTF8(&str8[0], str8.length())) {
+    if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
         std::abort();
     }
@@ -243,9 +243,9 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
 }
 
 ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(std::string_view str8) {
-    ScopedCFTypeRef<CFStringRef> text_string{
-        CFStringCreateWithBytesNoCopy(kCFAllocatorDefault, (const uint8_t*)&str8[0], str8.length(),
-                                      kCFStringEncodingUTF8, false, kCFAllocatorNull)};
+    ScopedCFTypeRef<CFStringRef> text_string{CFStringCreateWithBytesNoCopy(
+        kCFAllocatorDefault, (const uint8_t*)str8.data(), str8.length(), kCFStringEncodingUTF8,
+        false, kCFAllocatorNull)};
 
     ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};

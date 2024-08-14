@@ -363,13 +363,14 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
         .hCursor = LoadCursor(NULL, IDC_IBEAM),
         // TODO: Change this color based on the editor background color.
         .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
-        .lpszClassName = &class_name[0],
+        .lpszClassName = class_name.data(),
     };
 
     RegisterClass(&wc);
 
-    m_hwnd = CreateWindowEx(0, &class_name[0], lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
-                            CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
+    m_hwnd =
+        CreateWindowEx(0, class_name.data(), lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+                       CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
 
     AddMenu(m_hwnd);
 
@@ -407,7 +408,7 @@ int MainWindow::scaleFactor() {
 
 void MainWindow::setTitle(const std::string& title) {
     std::wstring str16 = base::windows::ConvertToUTF16(title);
-    SetWindowText(m_hwnd, &str16[0]);
+    SetWindowText(m_hwnd, str16.data());
 }
 
 }

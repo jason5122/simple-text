@@ -175,7 +175,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
     if (hr == DWRITE_E_NOCOLOR) {
         std::vector<uint8_t> buffer(size);
         glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-                                               &buffer[0], size);
+                                               buffer.data(), size);
 
         return {
             .colored = false,

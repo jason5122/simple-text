@@ -55,7 +55,7 @@ void SyntaxHighlighter::setLanguage(std::string scope, config::ColorScheme& colo
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
     std::string query_code = ReadFile(ResourceDir() / highlights_query_filename);
-    query = ts_query_new(language, &query_code[0], query_code.size(), &error_offset, &error_type);
+    query = ts_query_new(language, query_code.data(), query_code.length(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
         std::cerr << std::format("Error creating new TSQuery. error_offset: {}, error type: {}\n",

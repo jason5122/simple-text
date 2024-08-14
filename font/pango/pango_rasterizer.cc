@@ -75,9 +75,9 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
     bool colored = gi.attr.is_color;
     glyph_string->glyphs[0] = std::move(gi);
 
-    std::vector<unsigned char> surface_data(width * height * 4);
+    std::vector<uint8_t> surface_data(width * height * 4);
     CairoSurfacePtr surface{cairo_image_surface_create_for_data(
-        &surface_data[0], CAIRO_FORMAT_ARGB32, width, height, width * 4)};
+        surface_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
     CairoContextPtr render_context{cairo_create(surface.get())};
 
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
@@ -116,7 +116,7 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     cairo_font_options_destroy(font_options);
 
     GObjectPtr<PangoLayout> layout{pango_cairo_create_layout(layout_context.get())};
-    pango_layout_set_text(layout.get(), &str8[0], str8.length());
+    pango_layout_set_text(layout.get(), str8.data(), str8.length());
 
     PangoFontDescriptionPtr desc{pango_font_describe(pimpl->pango_font.get())};
     pango_layout_set_font_description(layout.get(), desc.get());

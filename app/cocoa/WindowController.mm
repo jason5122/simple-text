@@ -70,7 +70,7 @@
 }
 
 - (void)setTitle:(const std::string&)title {
-    self.window.title = [NSString stringWithUTF8String:&title[0]];
+    self.window.title = [NSString stringWithUTF8String:title.data()];
 }
 
 - (void)setFilePath:(fs::path)path {

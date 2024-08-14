@@ -39,7 +39,7 @@ Atlas::Atlas() {
             atlas_background[offset + 3] = 255;
         }
 
-        data = &atlas_background[0];
+        data = atlas_background.data();
     }
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kAtlasSize, kAtlasSize, 0, GL_RGBA, GL_UNSIGNED_BYTE,

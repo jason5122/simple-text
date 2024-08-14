@@ -236,7 +236,7 @@ void SelectionRenderer::flush(const Size& screen_size) {
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), &instances[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), instances.data());
 
     glUniform1i(glGetUniformLocation(shader_id, "rendering_pass"), 0);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());

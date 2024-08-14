@@ -194,7 +194,7 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
-                        &instances[0]);
+                        instances.data());
 
         glBindTexture(GL_TEXTURE_2D, batch_tex);
 

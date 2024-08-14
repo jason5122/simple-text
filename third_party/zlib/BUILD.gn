@@ -27,7 +27,11 @@ config("zlib_includes") {
   include_dirs = [ "src" ]
 }
 
-# TODO: This gives "warning: unknown argument ignored in clang-cl" on Windows. Fix this.
 config("c90") {
-  cflags_c = [ "-std=c90" ]
+  if (is_win) {
+    # FIXME: Figure out how to override C standard flag on Windows.
+    # cflags_c = [ "/std:c90" ]
+  } else {
+    cflags_c = [ "-std=c90" ]
+  }
 }

@@ -35,6 +35,17 @@ default_compiler_configs = [
   "//build/config/sanitizers:default_sanitizer_flags",
 ]
 
+if (is_win) {
+  default_compiler_configs += [
+    "//build/config/win:unicode",
+    "//build/config/win:lean_and_mean",
+    "//build/config/win:nominmax",
+    "//build/config/win:winver",
+    "//build/config/win:static_crt",
+    "//build/config/win:no_crt_deprecation_warnings",
+  ]
+}
+
 if (is_release) {
   default_compiler_configs += [ "//build/config:release" ]
 }

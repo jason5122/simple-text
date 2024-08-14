@@ -214,7 +214,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         // https://devblogs.microsoft.com/oldnewthing/20041018-00/?p=37543
         LONG click_time = GetMessageTime();
-        if (click_time - last_click_time > GetDoubleClickTime()) {
+        UINT delta = click_time - last_click_time;
+        if (delta > GetDoubleClickTime()) {
             click_count = 0;
         }
         // TODO: Prevent this from overflowing! This is unlikely, but prevent it anyways.

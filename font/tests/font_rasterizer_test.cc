@@ -6,11 +6,11 @@
 namespace {
 
 #if BUILDFLAG(IS_MAC)
-constexpr std::string kOSFontFace = "Menlo";
+const std::string kOSFontFace = "Menlo";
 #elif BUILDFLAG(IS_LINUX)
-constexpr std::string kOSFontFace = "Monospace";
+const std::string kOSFontFace = "Monospace";
 #elif BUILDFLAG(IS_WIN)
-constexpr std::string kOSFontFace = "Consolas";
+const std::string kOSFontFace = "Consolas";
 #endif
 
 }

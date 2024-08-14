@@ -3,6 +3,10 @@ executable("test_runner") {
 
   sources = [ "main.cc" ]
 
+  if (is_win) {
+    libs = [ "ole32.lib" ]
+  }
+
   deps = [
     "//base/buffer/tests",
     "//base/numeric/tests",

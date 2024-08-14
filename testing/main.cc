@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #if BUILDFLAG(IS_WIN)
-#include <windows.h>
+#include <ole2.h>
 #endif
 
 int main(int argc, char** argv) {

@@ -89,23 +89,25 @@ config("treat_warnings_as_errors") {
 }
 
 config("default_warnings") {
+  cflags = []
+
   if (is_win) {
-    cflags = [ "/W4" ]
+    cflags += [ "/W4" ]
 
     # Opt in to additional [[nodiscard]] on standard library methods.
     defines = [ "_HAS_NODISCARD" ]
   } else {
-    cflags = [ "-Wall" ]
+    cflags += [ "-Wall" ]
 
     # Clang-specific.
     cflags += [ "-Wextra" ]
-
-    # Disable specific warnings.
-    cflags += [
-      "-Wno-missing-field-initializers",
-      "-Wno-unused-parameter",
-    ]
   }
+
+  # Disable specific warnings.
+  cflags += [
+    "-Wno-missing-field-initializers",
+    "-Wno-unused-parameter",
+  ]
 
   configs = [ ":treat_warnings_as_errors" ]
 }

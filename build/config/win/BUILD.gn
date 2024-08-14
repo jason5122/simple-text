@@ -1,0 +1,62 @@
+# Character set ----------------------------------------------------------------
+
+# Not including this config means "ansi" (8-bit system codepage).
+config("unicode") {
+  defines = [
+    "_UNICODE",
+    "UNICODE",
+  ]
+}
+
+# Lean and mean ----------------------------------------------------------------
+
+# Some third party code might not compile with WIN32_LEAN_AND_MEAN so we have
+# to have a separate config for it. Remove this config from your target to
+# get the "bloaty and accommodating" version of windows.h.
+config("lean_and_mean") {
+  defines = [ "WIN32_LEAN_AND_MEAN" ]
+}
+
+# Nominmax --------------------------------------------------------------------
+
+# Some third party code defines NOMINMAX before including windows.h, which
+# then causes warnings when it's been previously defined on the command line.
+# For such targets, this config can be removed.
+
+config("nominmax") {
+  defines = [ "NOMINMAX" ]
+}
+
+# Support Windows 10+.
+# Some third-party libraries assume that these defines set what version of
+# Windows is available at runtime. Targets using these libraries need to
+# manually override this config for their compiles.
+config("winver") {
+  defines = [
+    "NTDDI_VERSION=NTDDI_WIN10_NI",
+
+    # We can't say `=_WIN32_WINNT_WIN10` here because some files do
+    # `#if WINVER < 0x0600` without including windows.h before,
+    # and then _WIN32_WINNT_WIN10 isn't yet known to be 0x0A00.
+    "_WIN32_WINNT=0x0A00",
+    "WINVER=0x0A00",
+  ]
+}
+
+config("static_crt") {
+  if (is_release) {
+    cflags = [ "/MT" ]
+  } else {
+    # This pulls in the static debug CRT and defines _DEBUG.
+    cflags = [ "/MTd" ]
+  }
+}
+
+config("no_crt_deprecation_warnings") {
+  defines = [
+    "_CRT_NONSTDC_NO_WARNINGS",
+    "_CRT_SECURE_NO_DEPRECATE",
+    "_CRT_SECURE_NO_WARNINGS",
+    "_SCL_SECURE_NO_DEPRECATE",
+  ]
+}

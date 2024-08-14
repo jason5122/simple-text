@@ -10,24 +10,24 @@ namespace {
 #if BUILDFLAG(IS_MAC)
 constexpr int kMainFontSize = 16 * 2;
 constexpr int kUIFontSize = 11 * 2;
-constexpr std::string kMainFontFace = "Menlo";
-constexpr std::string kUIFontFace = "SF Pro Text";
+const std::string kMainFontFace = "Menlo";
+const std::string kUIFontFace = "SF Pro Text";
 #elif BUILDFLAG(IS_WIN)
 constexpr int kMainFontSize = 11 * 2;
 constexpr int kUIFontSize = 8 * 2;
-constexpr std::string kMainFontFace = "Source Code Pro";
-// constexpr std::string kMainFontFace = "Consolas";
-// constexpr std::string kMainFontFace = "Cascadia Code";
-constexpr std::string kUIFontFace = "Segoe UI";
+const std::string kMainFontFace = "Source Code Pro";
+// const std::string kMainFontFace = "Consolas";
+// const std::string kMainFontFace = "Cascadia Code";
+const std::string kUIFontFace = "Segoe UI";
 #elif BUILDFLAG(IS_LINUX)
 constexpr int kMainFontSize = 12 * 2;
 constexpr int kUIFontSize = 11 * 2;
-constexpr std::string kMainFontFace = "Monospace";
-constexpr std::string kUIFontFace = "Arial";
+const std::string kMainFontFace = "Monospace";
+const std::string kUIFontFace = "Arial";
 #endif
 
-// constexpr std::string kMainFontFace = "Source Code Pro";
-// constexpr std::string kMainFontFace = "Fira Code";
+// const std::string kMainFontFace = "Source Code Pro";
+// const std::string kMainFontFace = "Fira Code";
 
 }
 

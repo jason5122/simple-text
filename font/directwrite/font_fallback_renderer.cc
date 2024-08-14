@@ -1,6 +1,3 @@
-// https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
-#define NOMINMAX
-
 #include "font/directwrite/impl_directwrite.h"
 #include "font_fallback_renderer.h"
 

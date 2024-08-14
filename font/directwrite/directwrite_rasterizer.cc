@@ -1,6 +1,3 @@
-// https://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
-#define NOMINMAX
-
 #include "base/windows/unicode.h"
 #include "font/directwrite/font_fallback_renderer.h"
 #include "font/directwrite/impl_directwrite.h"
@@ -33,7 +30,7 @@ std::wstring GetPostScriptName(ComPtr<IDWriteFont> font) {
                                   &font_id_keyed_names, &has_id_keyed_names);
 
     wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
-    int defaultLocaleSuccess = GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
+    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
 
     UINT32 index = 0;
     BOOL exists = false;
@@ -63,8 +60,10 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                                   IID_PPV_ARGS(&pimpl->wic_factory));
     if (FAILED(hr)) {
-        _com_error err(hr);
-        std::cerr << err.ErrorMessage() << '\n';
+        // TODO: Make this work with `UNICODE`/`_UNICODE`.
+        // _com_error err(hr);
+        // std::cerr << err.ErrorMessage() << '\n';
+        std::abort();
     }
 
     ComPtr<IDWriteFontCollection> font_collection;

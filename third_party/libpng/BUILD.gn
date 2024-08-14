@@ -1,4 +1,5 @@
 static_library("libpng") {
+  configs -= [ "//build/config/compiler:default_warnings" ]
   configs += [ ":c89" ]
 
   sources = [
@@ -51,5 +52,10 @@ config("libpng_includes") {
 }
 
 config("c89") {
-  cflags_c = [ "-std=c89" ]
+  if (is_win) {
+    # FIXME: Figure out how to override C standard flag on Windows.
+    # cflags_c = [ "/std:c89" ]
+  } else {
+    cflags_c = [ "-std=c89" ]
+  }
 }

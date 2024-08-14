@@ -3,8 +3,8 @@
 int SimpleTextMain(int argc, char* argv[]);
 
 #if BUILDFLAG(IS_WIN)
+#include <ole2.h>
 #include <shellscalingapi.h>
-#include <windows.h>
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);

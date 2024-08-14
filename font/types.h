@@ -74,7 +74,7 @@ struct LineLayout::ConstIterator {
     }
 
 private:
-    friend class LineLayout;
+    friend struct LineLayout;
 
     ConstIterator(const LineLayout& layout, size_t run_index, size_t run_glyph_index);
 

@@ -13,15 +13,9 @@ SideBarWidget::SideBarWidget(const Size& size)
 }
 
 void SideBarWidget::draw() {
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
 
-    constexpr Rgba side_bar_color{235, 237, 239, 255};
-    constexpr Rgba scroll_bar_color{190, 190, 190, 255};
-    constexpr Rgba folder_icon_color{142, 142, 142, 255};
-
-    rect_renderer.addRect(position, size, side_bar_color);
+    rect_renderer.addRect(position, size, kSideBarColor);
 
     folder_label->draw();
 
@@ -34,7 +28,7 @@ void SideBarWidget::draw() {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, scroll_bar_color, 5);
+    rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, kScrollBarColor, 5);
 }
 
 void SideBarWidget::layout() {

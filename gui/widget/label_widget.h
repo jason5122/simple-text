@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font/font_rasterizer.h"
+#include "font/types.h"
 #include "gui/widget/widget.h"
 
 namespace gui {
@@ -16,6 +16,9 @@ public:
     void draw() override;
 
 private:
+    static constexpr Rgba kTempColor{223, 227, 230, 255};
+    static constexpr Rgba kFolderIconColor{142, 142, 142, 255};
+
     int left_padding;
     int right_padding;
 

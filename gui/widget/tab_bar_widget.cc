@@ -39,7 +39,6 @@ void TabBarWidget::removeTab(size_t index) {
 
 void TabBarWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
 
     constexpr Rgba tab_bar_color{190, 190, 190, 255};
     constexpr Rgba tab_color{253, 253, 253, 255};

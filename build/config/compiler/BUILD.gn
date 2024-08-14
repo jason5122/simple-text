@@ -1,10 +1,3 @@
-config("default_include_dirs") {
-  include_dirs = [
-    "//",
-    root_gen_dir,
-  ]
-}
-
 config("compiler") {
   cflags = []
   cflags_c = []
@@ -40,31 +33,11 @@ config("compiler") {
   }
 }
 
-config("no_exceptions") {
-  if (is_win) {
-    defines = [ "_HAS_EXCEPTIONS=0" ]
-  } else {
-    cflags_cc = [ "-fno-exceptions" ]
-    cflags_objcc = cflags_cc
-  }
-}
-
-config("no_rtti") {
-  if (is_win) {
-    cflags_cc = [ "/GR-" ]
-  } else {
-    cflags_cc = [ "-fno-rtti" ]
-    cflags_objcc = cflags_cc
-  }
-}
-
-config("c99") {
-  if (is_win) {
-    # FIXME: Figure out how to override C standard flag on Windows.
-    # cflags_c = [ "/std:c99" ]
-  } else {
-    cflags_c = [ "-std=c99" ]
-  }
+config("default_include_dirs") {
+  include_dirs = [
+    "//",
+    root_gen_dir,
+  ]
 }
 
 config("optimize") {
@@ -103,5 +76,63 @@ config("default_optimization") {
     configs = [ ":optimize" ]
   } else {
     configs = [ ":no_optimize" ]
+  }
+}
+
+config("treat_warnings_as_errors") {
+  if (is_win) {
+    cflags = [ "/WX" ]
+  } else {
+    cflags = [ "-Werror" ]
+    ldflags = [ "-Werror" ]
+  }
+}
+
+config("default_warnings") {
+  if (is_win) {
+    cflags = [ "/W4" ]
+
+    # Opt in to additional [[nodiscard]] on standard library methods.
+    defines = [ "_HAS_NODISCARD" ]
+  } else {
+    cflags = [ "-Wall" ]
+
+    # Clang-specific.
+    cflags += [ "-Wextra" ]
+
+    # Disable specific warnings.
+    cflags += [
+      "-Wno-missing-field-initializers",
+      "-Wno-unused-parameter",
+    ]
+  }
+
+  configs = [ ":treat_warnings_as_errors" ]
+}
+
+config("no_exceptions") {
+  if (is_win) {
+    defines = [ "_HAS_EXCEPTIONS=0" ]
+  } else {
+    cflags_cc = [ "-fno-exceptions" ]
+    cflags_objcc = cflags_cc
+  }
+}
+
+config("no_rtti") {
+  if (is_win) {
+    cflags_cc = [ "/GR-" ]
+  } else {
+    cflags_cc = [ "-fno-rtti" ]
+    cflags_objcc = cflags_cc
+  }
+}
+
+config("c99") {
+  if (is_win) {
+    # FIXME: Figure out how to override C standard flag on Windows.
+    # cflags_c = [ "/std:c99" ]
+  } else {
+    cflags_c = [ "-std=c99" ]
   }
 }

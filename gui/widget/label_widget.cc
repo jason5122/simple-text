@@ -24,13 +24,10 @@ void LabelWidget::addRightIcon(size_t icon_id) {
 
 void LabelWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
 
-    constexpr Rgba temp_color{223, 227, 230, 255};
-    constexpr Rgba folder_icon_color{142, 142, 142, 255};
-
-    // rect_renderer.addRect(position, size, temp_color);
+    // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    // rect_renderer.addRect(position, size, kTempColor);
 
     // Draw all left side icons.
     Point left_offset{.x = left_padding};
@@ -38,7 +35,7 @@ void LabelWidget::draw() {
         Size image_size = image_renderer.getImageSize(icon_id);
 
         Point icon_position = centerVertically(image_size.height) + left_offset;
-        image_renderer.addImage(icon_id, icon_position, folder_icon_color);
+        image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image_size.width;
     }
@@ -52,7 +49,7 @@ void LabelWidget::draw() {
 
         Point icon_position = centerVertically(image_size.height) - right_offset;
         icon_position += Point{size.width, 0};
-        image_renderer.addImage(icon_id, icon_position, folder_icon_color);
+        image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
     const font::FontRasterizer& ui_font_rasterizer =

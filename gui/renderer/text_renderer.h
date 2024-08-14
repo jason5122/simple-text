@@ -34,7 +34,9 @@ private:
     GlyphCache& glyph_cache;
 
     Shader shader_program;
-    GLuint vao, vbo_instance, ebo;
+    GLuint vao = 0;
+    GLuint vbo_instance = 0;
+    GLuint ebo = 0;
 
     struct InstanceData {
         Vec2 coords;

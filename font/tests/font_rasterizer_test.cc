@@ -1,3 +1,4 @@
+#include "base/numeric/literals.h"
 #include "build/build_config.h"
 #include "font/font_rasterizer.h"
 #include <gtest/gtest.h>
@@ -23,24 +24,24 @@ TEST(FontRasterizerTest, LayoutLine1) {
     auto layout = rasterizer.layoutLine(line);
 
     EXPECT_GT(layout.width, 0);
-    EXPECT_EQ(layout.runs.size(), 3);
+    EXPECT_EQ(layout.runs.size(), 3_Z);
 
     const auto& emoji_glyphs = layout.runs[1].glyphs;
-    EXPECT_EQ(emoji_glyphs.size(), 2);
-    EXPECT_EQ(emoji_glyphs[0].index, 5);
-    EXPECT_EQ(emoji_glyphs[1].index, 9);
+    EXPECT_EQ(emoji_glyphs.size(), 2_Z);
+    EXPECT_EQ(emoji_glyphs[0].index, 5_Z);
+    EXPECT_EQ(emoji_glyphs[1].index, 9_Z);
 
     const auto& hi_glyphs = layout.runs[2].glyphs;
-    EXPECT_EQ(hi_glyphs.size(), 2);
-    EXPECT_EQ(hi_glyphs[0].index, 13);
-    EXPECT_EQ(hi_glyphs[1].index, 14);
+    EXPECT_EQ(hi_glyphs.size(), 2_Z);
+    EXPECT_EQ(hi_glyphs[0].index, 13_Z);
+    EXPECT_EQ(hi_glyphs[1].index, 14_Z);
 
     // Emojis should be colored and should have 4 channels.
     size_t emoji_font_id = layout.runs[1].font_id;
     for (const auto& glyph : emoji_glyphs) {
         auto rglyph = rasterizer.rasterizeUTF8(emoji_font_id, glyph.glyph_id);
         EXPECT_TRUE(rglyph.colored);
-        EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 4);
+        EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 4_Z);
     }
 
     // Regular text should not be colored and should have 3 channels.
@@ -48,7 +49,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
     for (const auto& glyph : hi_glyphs) {
         auto rglyph = rasterizer.rasterizeUTF8(monospace_font_id, glyph.glyph_id);
         EXPECT_FALSE(rglyph.colored);
-        EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 3);
+        EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 3_Z);
     }
 
     // Ensure positions are monotonically increasing.
@@ -100,7 +101,7 @@ TEST(FontRasterizerTest, LineLayoutClosestForX) {
     EXPECT_EQ(x, layout.width);
 
     std::tie(index, x) = layout.closestForX(0);
-    EXPECT_EQ(index, 0);
+    EXPECT_EQ(index, 0_Z);
     EXPECT_EQ(x, 0);
 }
 
@@ -112,7 +113,7 @@ TEST(FontRasterizerTest, LineLayoutClosestForIndex) {
 
     size_t prev_glyph_index = 0;
     int prev_glyph_x = 0;
-    for (size_t index = 0; index < layout.width; ++index) {
+    for (size_t index = 0; index < line.length(); ++index) {
         auto [glyph_index, glyph_x] = layout.closestForIndex(index);
 
         EXPECT_GE(glyph_index, prev_glyph_index);
@@ -127,7 +128,7 @@ TEST(FontRasterizerTest, LineLayoutClosestForIndex) {
     EXPECT_EQ(x, layout.width);
 
     std::tie(index, x) = layout.closestForIndex(0);
-    EXPECT_EQ(index, 0);
+    EXPECT_EQ(index, 0_Z);
     EXPECT_EQ(x, 0);
 }
 

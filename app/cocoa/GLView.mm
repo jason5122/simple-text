@@ -165,8 +165,8 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 // This can be reproduced by opening another window in front of this one, and clicking on this
 // without moving the mouse.
 - (void)setCursorStyle:(NSEvent*)event {
-    CGFloat mouse_x = event.locationInWindow.x;
-    CGFloat mouse_y = event.locationInWindow.y;
+    // CGFloat mouse_x = event.locationInWindow.x;
+    // CGFloat mouse_y = event.locationInWindow.y;
 
     [NSCursor.IBeamCursor set];
 }
@@ -222,8 +222,8 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
         // }
 
         int scale = glLayer.contentsScale;
-        int scaled_dx = dx * glLayer.contentsScale;
-        int scaled_dy = dy * glLayer.contentsScale;
+        int scaled_dx = dx * scale;
+        int scaled_dy = dy * scale;
 
         int scaled_mouse_x, scaled_mouse_y;
         GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);

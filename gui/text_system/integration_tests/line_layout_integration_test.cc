@@ -9,7 +9,7 @@ TEST(LineLayoutIntegrationTest, CaretMovement1) {
     base::PieceTable table{R"(Hi 🙂🙂 Hello world!
 This is a new line.)"};
     LineLayoutCache line_layout_cache;
-    Caret caret{};
+    // Caret caret{};
 
     // Cache all piece table lines.
     for (size_t line = 0; line < table.lineCount(); ++line) {

@@ -146,7 +146,7 @@ void TextViewWidget::draw() {
     selection_renderer.renderSelections(position - scroll_offset, table, line_layout_cache, c1,
                                         c2);
 
-    // // Add vertical scroll bar.
+    // Add vertical scroll bar.
     // int line_count = table.lineCount();
     // int line_height = main_line_height;
     // int vbar_width = 15;
@@ -160,7 +160,7 @@ void TextViewWidget::draw() {
     // rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
     // 5);
 
-    // // Add horizontal scroll bar.
+    // Add horizontal scroll bar.
     // int hbar_height = 15;
     // int hbar_width = size.width * (static_cast<float>(size.width) / max_scroll_offset.x);
     // hbar_width = std::max(hbar_width, kMinScrollbarWidth);

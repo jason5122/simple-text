@@ -77,10 +77,10 @@ RectRenderer::~RectRenderer() {
 }
 
 RectRenderer::RectRenderer(RectRenderer&& other)
-    : vao{other.vao},
+    : shader_program{std::move(other.shader_program)},
+      vao{other.vao},
       vbo_instance{other.vbo_instance},
-      ebo{other.ebo},
-      shader_program{std::move(other.shader_program)} {
+      ebo{other.ebo} {
     instances.reserve(kBatchMax);
     other.vao = 0;
     other.vbo_instance = 0;
@@ -89,10 +89,10 @@ RectRenderer::RectRenderer(RectRenderer&& other)
 
 RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
     if (&other != this) {
+        shader_program = std::move(other.shader_program);
         vao = other.vao;
         vbo_instance = other.vbo_instance;
         ebo = other.ebo;
-        shader_program = std::move(other.shader_program);
         other.vao = 0;
         other.vbo_instance = 0;
         other.ebo = 0;

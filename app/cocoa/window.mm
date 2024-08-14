@@ -3,7 +3,7 @@
 
 namespace app {
 
-Window::Window(App& app, int width, int height) : pimpl{new impl{}}, app(app) {
+Window::Window(App& app, int width, int height) : app{app}, pimpl{new impl{}} {
     NSRect frame = NSMakeRect(0, 1000, width, height);
 
     // TODO: Debug; remove this.

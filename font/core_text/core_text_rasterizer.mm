@@ -205,7 +205,7 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
 
         std::vector<ShapedGlyph> glyphs;
         glyphs.reserve(glyph_count);
-        for (size_t i = 0; i < glyph_count; ++i) {
+        for (CFIndex i = 0; i < glyph_count; ++i) {
             // TODO: Use subpixel variants instead of rounding.
             Point position = {
                 .x = total_advance,

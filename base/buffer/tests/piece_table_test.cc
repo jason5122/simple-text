@@ -36,7 +36,7 @@ inline std::string RandomNewlineString(size_t length, size_t newlines) {
 }
 
 inline void CheckNewlineOffsets(std::string_view str, base::PieceTable& table) {
-    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
+    EXPECT_EQ(table.newlineCount(), static_cast<size_t>(std::ranges::count(str, '\n')));
 
     size_t str_pos = str.find('\n');
     size_t line_index = 0;
@@ -632,7 +632,7 @@ TEST(PieceTableTest, IteratorNewlineInsertTest1) {
     EXPECT_EQ(str, table.str());
     EXPECT_EQ(str.length(), table.length());
 
-    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
+    EXPECT_EQ(table.newlineCount(), static_cast<size_t>(std::ranges::count(str, '\n')));
 
     auto str_it = str.begin();
     auto table_it = table.begin();
@@ -828,7 +828,7 @@ TEST(PieceTableTest, LineContentTest1) {
     size_t i1 = str.find('\n', i0 + 1);
     size_t dist = i1 - (i0 + 1);
 
-    EXPECT_EQ(table.newlineCount(), std::ranges::count(str, '\n'));
+    EXPECT_EQ(table.newlineCount(), static_cast<size_t>(std::ranges::count(str, '\n')));
 
     EXPECT_EQ(table.line(0), str.substr(0, i0 + 1));
     EXPECT_EQ(table.line(1), str.substr(i0 + 1, dist + 1));

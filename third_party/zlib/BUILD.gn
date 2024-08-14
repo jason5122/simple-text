@@ -1,4 +1,5 @@
 static_library("zlib") {
+  configs -= [ "//build/config/compiler:default_warnings" ]
   configs += [ ":c90" ]
 
   sources = [

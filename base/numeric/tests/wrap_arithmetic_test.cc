@@ -5,9 +5,6 @@
 
 namespace {
 
-constexpr int min_int = std::numeric_limits<int>::min();
-constexpr int max_int = std::numeric_limits<int>::max();
-constexpr size_t min_size_t = std::numeric_limits<size_t>::min();
 constexpr size_t max_size_t = std::numeric_limits<size_t>::max();
 
 }

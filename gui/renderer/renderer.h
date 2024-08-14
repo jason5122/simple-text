@@ -28,8 +28,6 @@ private:
     RectRenderer rect_renderer;
     SelectionRenderer selection_renderer;
     ImageRenderer image_renderer;
-
-    Point editor_offset{200 * 2, 30 * 2};
 };
 
 }

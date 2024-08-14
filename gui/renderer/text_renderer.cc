@@ -102,8 +102,12 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderMainLineLayout(
-    const Point& offset, const font::LineLayout& line_layout, size_t line, int min_x, int max_x) {
+void TextRenderer::renderMainLineLayout(const font::LineLayout& line_layout,
+                                        const Point& offset,
+                                        size_t line,
+                                        int min_x,
+                                        int max_x,
+                                        const Rgb& color) {
     const font::FontRasterizer& main_font_rasterizer =
         Renderer::instance().getGlyphCache().mainRasterizer();
 
@@ -130,16 +134,16 @@ void TextRenderer::renderMainLineLayout(
                 .coords = coords.toVec2(),
                 .glyph = rglyph.glyph,
                 .uv = rglyph.uv,
-                .color = Rgba::fromRgb({51, 51, 51}, rglyph.colored),
+                .color = Rgba::fromRgb(color, rglyph.colored),
             };
             insertIntoBatch(rglyph.page, std::move(instance), true);
         }
     }
 }
 
-void TextRenderer::renderUILineLayout(const Point& coords,
-                                      const Rgb& color,
-                                      const font::LineLayout& line_layout) {
+void TextRenderer::renderUILineLayout(const font::LineLayout& line_layout,
+                                      const Point& coords,
+                                      const Rgb& color) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             Point glyph_coords{

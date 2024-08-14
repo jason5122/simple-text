@@ -22,7 +22,7 @@ private:
     int left_padding;
     int right_padding;
 
-    font::LineLayout label_line_layout;
+    font::LineLayout layout;
     Rgb color{};
     std::vector<size_t> left_side_icons;
     std::vector<size_t> right_side_icons;

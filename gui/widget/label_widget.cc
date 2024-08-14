@@ -10,7 +10,7 @@ void LabelWidget::setText(const std::string& str8, const Rgb& color) {
     const font::FontRasterizer& ui_font_rasterizer =
         Renderer::instance().getGlyphCache().uiRasterizer();
 
-    label_line_layout = ui_font_rasterizer.layoutLine(str8);
+    layout = ui_font_rasterizer.layoutLine(str8);
     this->color = color;
 }
 
@@ -56,7 +56,7 @@ void LabelWidget::draw() {
         Renderer::instance().getGlyphCache().uiRasterizer();
 
     Point text_position = centerVertically(ui_font_rasterizer.getLineHeight()) + left_offset;
-    text_renderer.renderUILineLayout(text_position, color, label_line_layout);
+    text_renderer.renderUILineLayout(layout, text_position, color);
 }
 
 Point LabelWidget::centerVertically(int widget_height) {

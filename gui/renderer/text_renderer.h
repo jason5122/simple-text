@@ -15,14 +15,15 @@ public:
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
 
-    void renderMainLineLayout(const Point& offset,
-                              const font::LineLayout& line_layout,
+    void renderMainLineLayout(const font::LineLayout& line_layout,
+                              const Point& offset,
                               size_t line,
                               int min_x,
-                              int max_x);
-    void renderUILineLayout(const Point& coords,
-                            const Rgb& color,
-                            const font::LineLayout& line_layout);
+                              int max_x,
+                              const Rgb& color);
+    void renderUILineLayout(const font::LineLayout& line_layout,
+                            const Point& coords,
+                            const Rgb& color);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
 
     // DEBUG: Draws all texture atlases.

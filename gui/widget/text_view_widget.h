@@ -26,6 +26,7 @@ public:
 
 private:
     static constexpr int kMinScrollbarWidth = 100;
+    static constexpr Rgb kTextColor{51, 51, 51};
     static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
     static constexpr Rgba kCaretColor{95, 180, 180, 255};
 

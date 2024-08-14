@@ -136,7 +136,7 @@ void TextViewWidget::draw() {
     }
     constexpr bool kDebugAtlas = false;
     if constexpr (kDebugAtlas) {
-        text_renderer.renderAtlases(position);
+        text_renderer.renderAtlasPages(position);
     }
 
     // Add selections.

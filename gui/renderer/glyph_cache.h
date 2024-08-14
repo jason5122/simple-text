@@ -31,15 +31,13 @@ public:
     // TODO: Refactor FontRasterizer out of GlyphCache.
     const font::FontRasterizer& mainRasterizer() const;
     const font::FontRasterizer& uiRasterizer() const;
-
-    // TODO: Make this private.
-    std::vector<Atlas> atlas_pages;
+    const std::vector<Atlas>& atlasPages() const;
 
 private:
     font::FontRasterizer main_font_rasterizer;
     font::FontRasterizer ui_font_rasterizer;
 
-    // std::vector<Atlas> atlas_pages;
+    std::vector<Atlas> atlas_pages;
     size_t current_page = 0;
 
     std::unordered_map<size_t, std::unordered_map<uint32_t, Glyph>> main_cache;

@@ -178,14 +178,14 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    for (size_t page = 0; page < glyph_cache.atlas_pages.size(); ++page) {
+    for (size_t page = 0; page < glyph_cache.atlasPages().size(); ++page) {
         // TODO: Refactor this ugly hack.
         while (batch_instances.size() <= page) {
             batch_instances.emplace_back();
             batch_instances.back().reserve(kBatchMax);
         }
 
-        GLuint batch_tex = glyph_cache.atlas_pages.at(page).tex();
+        GLuint batch_tex = glyph_cache.atlasPages().at(page).tex();
         std::vector<InstanceData>& instances = batch_instances.at(page);
 
         if (instances.empty()) {
@@ -209,9 +209,9 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextRenderer::renderAtlases(const Point& coords) {
+void TextRenderer::renderAtlasPages(const Point& coords) {
     int atlas_x_offset = 0;
-    for (size_t page = 0; page < glyph_cache.atlas_pages.size(); ++page) {
+    for (size_t page = 0; page < glyph_cache.atlasPages().size(); ++page) {
         Point atlas_coords{
             .x = atlas_x_offset,
             .y = 0,

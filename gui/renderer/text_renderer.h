@@ -26,7 +26,7 @@ public:
     void flush(const Size& screen_size, bool use_main_glyph_cache);
 
     // DEBUG: Draws all texture atlases.
-    void renderAtlases(const Point& coords);
+    void renderAtlasPages(const Point& coords);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

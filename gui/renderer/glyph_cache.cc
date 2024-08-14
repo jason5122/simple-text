@@ -64,4 +64,8 @@ const font::FontRasterizer& GlyphCache::uiRasterizer() const {
     return ui_font_rasterizer;
 }
 
+const std::vector<Atlas>& GlyphCache::atlasPages() const {
+    return atlas_pages;
+}
+
 }

@@ -1,6 +1,7 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
 #include "font/font_rasterizer.h"
+#include "font/utf16_to_utf8_indices_map.h"
 #include "unicode/SkTFitsIn.h"
 #include "unicode/unicode.h"
 
@@ -15,72 +16,25 @@ using base::apple::ScopedTypeRef;
 
 namespace {
 
-// https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#115
-class UTF16ToUTF8IndicesMap {
-public:
-    /** Builds a UTF-16 to UTF-8 indices map; the text is not retained
-     * @return true if successful
-     */
-    bool setUTF8(const char* utf8, size_t size) {
-        assert(utf8 != nullptr);
-
-        if (!SkTFitsIn<int32_t>(size)) {
-            std::cerr << "UTF16ToUTF8IndicesMap: text too long\n";
-            return false;
-        }
-
-        auto utf16Size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
-        if (utf16Size < 0) {
-            std::cerr << "UTF16ToUTF8IndicesMap: Invalid utf8 input\n";
-            return false;
-        }
-
-        // utf16Size+1 to also store the size
-        fUtf16ToUtf8Indices = std::vector<size_t>(utf16Size + 1);
-        auto utf16 = fUtf16ToUtf8Indices.begin();
-        auto utf8Begin = utf8, utf8End = utf8 + size;
-        while (utf8Begin < utf8End) {
-            *utf16 = utf8Begin - utf8;
-            utf16 += unicode::ToUTF16(unicode::NextUTF8(&utf8Begin, utf8End), nullptr);
-        }
-        *utf16 = size;
-
-        return true;
-    }
-
-    size_t mapIndex(size_t index) const {
-        assert(index < fUtf16ToUtf8Indices.size());
-        return fUtf16ToUtf8Indices[index];
-    }
-
-    std::pair<size_t, size_t> mapRange(size_t start, size_t size) const {
-        auto utf8Start = mapIndex(start);
-        return {utf8Start, mapIndex(start + size) - utf8Start};
-    }
-
-private:
-    std::vector<size_t> fUtf16ToUtf8Indices;
-};
-
 // https://gist.github.com/peter-bloomfield/1b228e2bb654702b1e50ef7524121fb9
 inline std::string CFStringToStdString(CFStringRef cf_str) {
     if (!cf_str) return {};
 
     // Attempt to access the underlying buffer directly. This only works if no conversion or
     // internal allocation is required.
-    auto originalBuffer{CFStringGetCStringPtr(cf_str, kCFStringEncodingUTF8)};
-    if (originalBuffer) {
-        return originalBuffer;
+    auto original_buffer{CFStringGetCStringPtr(cf_str, kCFStringEncodingUTF8)};
+    if (original_buffer) {
+        return original_buffer;
     }
 
     // Copy the data out to a local buffer.
-    auto lengthInUtf16{CFStringGetLength(cf_str)};
+    auto utf16_length{CFStringGetLength(cf_str)};
     // Leave room for null terminator.
-    auto maxLengthInUtf8{CFStringGetMaximumSizeForEncoding(lengthInUtf16, kCFStringEncodingUTF8) +
+    auto utf8_max_length{CFStringGetMaximumSizeForEncoding(utf16_length, kCFStringEncodingUTF8) +
                          1};
-    std::vector<char> buffer(maxLengthInUtf8);
+    std::vector<char> buffer(utf8_max_length);
 
-    if (CFStringGetCString(cf_str, buffer.data(), maxLengthInUtf8, maxLengthInUtf8)) {
+    if (CFStringGetCString(cf_str, buffer.data(), utf8_max_length, utf8_max_length)) {
         return buffer.data();
     }
     return {};

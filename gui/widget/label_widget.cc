@@ -61,7 +61,8 @@ void LabelWidget::draw() {
     Point coords = centerVertically(ui_font_rasterizer.getLineHeight()) + left_offset;
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
-    text_renderer.renderUILineLayout(layout, coords, min_x, max_x, color);
+    text_renderer.renderLineLayout(layout, coords, min_x, max_x, color,
+                                   TextRenderer::FontType::kUI);
 }
 
 Point LabelWidget::centerVertically(int widget_height) {

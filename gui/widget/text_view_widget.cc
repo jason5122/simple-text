@@ -134,7 +134,8 @@ void TextViewWidget::draw() {
             Point coords = position - scroll_offset;
             coords.y += line * main_font_rasterizer.getLineHeight();
 
-            text_renderer.renderMainLineLayout(layout, coords, min_x, max_x, kTextColor);
+            text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
+                                           TextRenderer::FontType::kMain);
         }
     }
     constexpr bool kDebugAtlas = false;

@@ -102,11 +102,12 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderMainLineLayout(const font::LineLayout& line_layout,
-                                        const Point& coords,
-                                        int min_x,
-                                        int max_x,
-                                        const Rgb& color) {
+void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
+                                    const Point& coords,
+                                    int min_x,
+                                    int max_x,
+                                    const Rgb& color,
+                                    FontType font_type) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             // If we reach a glyph before the minimum x, skip it and continue.
@@ -122,56 +123,26 @@ void TextRenderer::renderMainLineLayout(const font::LineLayout& line_layout,
             Point glyph_coords = coords;
             glyph_coords.x += glyph.position.x;
 
-            GlyphCache::Glyph& rglyph = glyph_cache.getMainGlyph(run.font_id, glyph.glyph_id);
+            GlyphCache::Glyph& rglyph = font_type == FontType::kMain
+                                            ? glyph_cache.getMainGlyph(run.font_id, glyph.glyph_id)
+                                            : glyph_cache.getUIGlyph(run.font_id, glyph.glyph_id);
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
                 .uv = rglyph.uv,
                 .color = Rgba::fromRgb(color, rglyph.colored),
             };
-            insertIntoBatch(rglyph.page, std::move(instance), true);
+            insertIntoBatch(rglyph.page, std::move(instance), font_type);
         }
     }
 }
 
-void TextRenderer::renderUILineLayout(const font::LineLayout& line_layout,
-                                      const Point& coords,
-                                      int min_x,
-                                      int max_x,
-                                      const Rgb& color) {
-    for (const auto& run : line_layout.runs) {
-        for (const auto& glyph : run.glyphs) {
-            // If we reach a glyph before the minimum x, skip it and continue.
-            // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
-            // This assumes glyph positions are monotonically increasing.
-            if (glyph.position.x + glyph.advance.x < min_x) {
-                continue;
-            }
-            if (glyph.position.x > max_x) {
-                break;
-            }
-
-            Point glyph_coords = coords;
-            glyph_coords.x += glyph.position.x;
-
-            GlyphCache::Glyph& rglyph = glyph_cache.getUIGlyph(run.font_id, glyph.glyph_id);
-            const InstanceData instance{
-                .coords = glyph_coords.toVec2(),
-                .glyph = rglyph.glyph,
-                .uv = rglyph.uv,
-                .color = Rgba::fromRgb(color, rglyph.colored),
-            };
-            insertIntoBatch(rglyph.page, std::move(instance), false);
-        }
-    }
-}
-
-void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
+void TextRenderer::flush(const Size& screen_size, FontType font_type) {
     const font::FontRasterizer& font_rasterizer =
-        use_main_glyph_cache ? Renderer::instance().getGlyphCache().mainRasterizer()
-                             : Renderer::instance().getGlyphCache().uiRasterizer();
-
-    auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
+        font_type == FontType::kMain ? Renderer::instance().getGlyphCache().mainRasterizer()
+                                     : Renderer::instance().getGlyphCache().uiRasterizer();
+    auto& batch_instances =
+        font_type == FontType::kMain ? main_batch_instances : ui_batch_instances;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
@@ -230,16 +201,15 @@ void TextRenderer::renderAtlasPages(const Point& coords) {
             .uv = Vec4{0, 0, 1.0, 1.0},
             .color = Rgba{255, 255, 255, true},
         };
-        insertIntoBatch(page, std::move(instance), true);
+        insertIntoBatch(page, std::move(instance), FontType::kMain);
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
 }
 
-void TextRenderer::insertIntoBatch(size_t page,
-                                   const InstanceData& instance,
-                                   bool use_main_glyph_cache) {
-    auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
+void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance, FontType font_type) {
+    auto& batch_instances =
+        font_type == FontType::kMain ? main_batch_instances : ui_batch_instances;
 
     // TODO: Refactor this ugly hack.
     while (batch_instances.size() <= page) {

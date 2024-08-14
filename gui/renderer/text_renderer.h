@@ -15,17 +15,18 @@ public:
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
 
-    void renderMainLineLayout(const font::LineLayout& line_layout,
-                              const Point& coords,
-                              int min_x,
-                              int max_x,
-                              const Rgb& color);
-    void renderUILineLayout(const font::LineLayout& line_layout,
-                            const Point& coords,
-                            int min_x,
-                            int max_x,
-                            const Rgb& color);
-    void flush(const Size& screen_size, bool use_main_glyph_cache);
+    enum class FontType {
+        kMain,
+        kUI,
+    };
+
+    void renderLineLayout(const font::LineLayout& line_layout,
+                          const Point& coords,
+                          int min_x,
+                          int max_x,
+                          const Rgb& color,
+                          FontType font_type);
+    void flush(const Size& screen_size, FontType font_type);
 
     // DEBUG: Draws all texture atlases.
     void renderAtlasPages(const Point& coords);
@@ -51,7 +52,7 @@ private:
     std::vector<std::vector<InstanceData>> main_batch_instances;
     std::vector<std::vector<InstanceData>> ui_batch_instances;
 
-    void insertIntoBatch(size_t page, const InstanceData& instance, bool use_main_glyph_cache);
+    void insertIntoBatch(size_t page, const InstanceData& instance, FontType font_type);
 };
 
 }

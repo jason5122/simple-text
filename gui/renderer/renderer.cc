@@ -73,10 +73,10 @@ void Renderer::flush(const Size& size) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     selection_renderer.flush(size);
-    text_renderer.flush(size, true);
+    text_renderer.flush(size, TextRenderer::FontType::kMain);
     rect_renderer.flush(size);
     image_renderer.flush(size);
-    text_renderer.flush(size, false);
+    text_renderer.flush(size, TextRenderer::FontType::kUI);
 }
 
 }

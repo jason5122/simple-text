@@ -16,8 +16,7 @@ public:
     TextRenderer& operator=(TextRenderer&& other);
 
     void renderMainLineLayout(const font::LineLayout& line_layout,
-                              const Point& offset,
-                              size_t line,
+                              const Point& coords,
                               int min_x,
                               int max_x,
                               const Rgb& color);

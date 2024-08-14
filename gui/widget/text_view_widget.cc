@@ -130,8 +130,11 @@ void TextViewWidget::draw() {
         for (size_t line = start_line; line < end_line; ++line) {
             std::string line_str = table.line(line);
             const auto& layout = line_layout_cache.getLineLayout(line_str);
-            text_renderer.renderMainLineLayout(layout, position - scroll_offset, line, min_x,
-                                               max_x, kTextColor);
+
+            Point coords = position - scroll_offset;
+            coords.y += line * main_font_rasterizer.getLineHeight();
+
+            text_renderer.renderMainLineLayout(layout, coords, min_x, max_x, kTextColor);
         }
     }
     constexpr bool kDebugAtlas = false;

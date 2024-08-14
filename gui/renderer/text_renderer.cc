@@ -103,14 +103,10 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 }
 
 void TextRenderer::renderMainLineLayout(const font::LineLayout& line_layout,
-                                        const Point& offset,
-                                        size_t line,
+                                        const Point& coords,
                                         int min_x,
                                         int max_x,
                                         const Rgb& color) {
-    const font::FontRasterizer& main_font_rasterizer =
-        Renderer::instance().getGlyphCache().mainRasterizer();
-
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             // If we reach a glyph before the minimum x, skip it and continue.
@@ -123,15 +119,12 @@ void TextRenderer::renderMainLineLayout(const font::LineLayout& line_layout,
                 break;
             }
 
-            Point coords{
-                .x = glyph.position.x,
-                .y = static_cast<int>(line) * main_font_rasterizer.getLineHeight(),
-            };
-            coords += offset;
+            Point glyph_coords = coords;
+            glyph_coords.x += glyph.position.x;
 
             GlyphCache::Glyph& rglyph = glyph_cache.getMainGlyph(run.font_id, glyph.glyph_id);
             const InstanceData instance{
-                .coords = coords.toVec2(),
+                .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
                 .uv = rglyph.uv,
                 .color = Rgba::fromRgb(color, rglyph.colored),

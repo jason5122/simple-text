@@ -251,7 +251,6 @@ static gboolean scroll(GtkEventControllerScroll* self,
     int delta_x = std::round(dx);
     int delta_y = std::round(dy);
     Window* app_window = main_window->appWindow();
-    std::cerr << std::format("x = {}, y = {}\n", scaled_mouse_x, scaled_mouse_y);
     app_window->onScroll(scaled_mouse_x, scaled_mouse_y, delta_x, delta_y);
 
     return true;

@@ -55,7 +55,10 @@ void LabelWidget::draw() {
         image_renderer.addImage(icon_id, icon_position, folder_icon_color);
     }
 
-    Point text_position = centerVertically(text_renderer.uiLineHeight()) + left_offset;
+    const font::FontRasterizer& ui_font_rasterizer =
+        Renderer::instance().getGlyphCache().uiRasterizer();
+
+    Point text_position = centerVertically(ui_font_rasterizer.getLineHeight()) + left_offset;
     text_renderer.renderUILineLayout(text_position, color, label_line_layout);
 }
 

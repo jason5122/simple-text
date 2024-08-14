@@ -27,8 +27,6 @@ public:
 
     Glyph& getMainGlyph(size_t font_id, uint32_t glyph_id);
     Glyph& getUIGlyph(size_t font_id, uint32_t glyph_id);
-    int mainLineHeight() const;
-    int uiLineHeight() const;
 
     // TODO: Refactor FontRasterizer out of GlyphCache.
     const font::FontRasterizer& mainRasterizer() const;

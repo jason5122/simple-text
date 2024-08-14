@@ -105,11 +105,14 @@ void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
+    const font::FontRasterizer& main_font_rasterizer =
+        Renderer::instance().getGlyphCache().mainRasterizer();
 
     // Calculate start and end lines.
-    size_t visible_lines = std::ceil(static_cast<float>(size.height) / text_renderer.lineHeight());
+    int main_line_height = main_font_rasterizer.getLineHeight();
+    size_t visible_lines = std::ceil(static_cast<float>(size.height) / main_line_height);
 
-    size_t start_line = scroll_offset.y / text_renderer.lineHeight();
+    size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
 
     // Render one line before start and one line after end. This ensures no sudden cutoff of
@@ -145,7 +148,7 @@ void TextViewWidget::draw() {
 
     // Add vertical scroll bar.
     int line_count = table.lineCount();
-    int line_height = text_renderer.lineHeight();
+    int line_height = main_line_height;
     int vbar_width = 15;
     int max_scrollbar_y = (line_count + visible_lines) * line_height;
     int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
@@ -201,10 +204,11 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 }
 
 void TextViewWidget::updateMaxScroll() {
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    const font::FontRasterizer& main_font_rasterizer =
+        Renderer::instance().getGlyphCache().mainRasterizer();
 
     max_scroll_offset.x = line_layout_cache.maxWidth();
-    max_scroll_offset.y = table.lineCount() * text_renderer.lineHeight();
+    max_scroll_offset.y = table.lineCount() * main_font_rasterizer.getLineHeight();
 }
 
 size_t TextViewWidget::lineAtY(int y) {
@@ -212,8 +216,10 @@ size_t TextViewWidget::lineAtY(int y) {
         y = 0;
     }
 
-    GlyphCache& glyph_cache = Renderer::instance().getGlyphCache();
-    size_t line = y / glyph_cache.mainLineHeight();
+    const font::FontRasterizer& main_font_rasterizer =
+        Renderer::instance().getGlyphCache().mainRasterizer();
+
+    size_t line = y / main_font_rasterizer.getLineHeight();
     return std::clamp(line, 0_Z, base::sub_sat(table.lineCount(), 1_Z));
 }
 

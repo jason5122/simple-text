@@ -1,3 +1,4 @@
+#include "gui/renderer/renderer.h"
 #include "text_renderer.h"
 #include <algorithm>
 #include <cmath>
@@ -103,6 +104,9 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 
 void TextRenderer::renderMainLineLayout(
     const Point& offset, const font::LineLayout& line_layout, size_t line, int min_x, int max_x) {
+    const font::FontRasterizer& main_font_rasterizer =
+        Renderer::instance().getGlyphCache().mainRasterizer();
+
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             // If we reach a glyph before the minimum x, skip it and continue.
@@ -117,7 +121,7 @@ void TextRenderer::renderMainLineLayout(
 
             Point coords{
                 .x = glyph.position.x,
-                .y = static_cast<int>(line) * lineHeight(),
+                .y = static_cast<int>(line) * main_font_rasterizer.getLineHeight(),
             };
             coords += offset;
 
@@ -157,15 +161,17 @@ void TextRenderer::renderUILineLayout(const Point& coords,
 }
 
 void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
-    int line_height =
-        use_main_glyph_cache ? glyph_cache.mainLineHeight() : glyph_cache.uiLineHeight();
+    const font::FontRasterizer& font_rasterizer =
+        use_main_glyph_cache ? Renderer::instance().getGlyphCache().mainRasterizer()
+                             : Renderer::instance().getGlyphCache().uiRasterizer();
+
     auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform1f(glGetUniformLocation(shader_id, "line_height"), line_height);
+    glUniform1f(glGetUniformLocation(shader_id, "line_height"), font_rasterizer.getLineHeight());
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
@@ -201,14 +207,6 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-int TextRenderer::lineHeight() {
-    return glyph_cache.mainLineHeight();
-}
-
-int TextRenderer::uiLineHeight() {
-    return glyph_cache.uiLineHeight();
 }
 
 void TextRenderer::renderAtlases(const Point& coords) {

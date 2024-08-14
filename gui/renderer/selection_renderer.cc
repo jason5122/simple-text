@@ -1,3 +1,4 @@
+#include "gui/renderer/renderer.h"
 #include "selection_renderer.h"
 #include <cassert>
 #include <cstdint>
@@ -135,6 +136,9 @@ void SelectionRenderer::renderSelections(const Point& offset,
         }
     }
 
+    const font::FontRasterizer& main_font_rasterizer =
+        Renderer::instance().getGlyphCache().mainRasterizer();
+
     auto create = [&, this](int start, int end, int line,
                             uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                             uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -143,12 +147,14 @@ void SelectionRenderer::renderSelections(const Point& offset,
             .coords =
                 {
                     .x = static_cast<float>(start) + offset.x,
-                    .y = static_cast<float>(glyph_cache.mainLineHeight() * line) + offset.y,
+                    .y =
+                        static_cast<float>(main_font_rasterizer.getLineHeight() * line) + offset.y,
                 },
             .size =
                 {
                     .x = static_cast<float>(end - start),
-                    .y = static_cast<float>(glyph_cache.mainLineHeight() + kBorderThickness),
+                    .y = static_cast<float>(main_font_rasterizer.getLineHeight() +
+                                            kBorderThickness),
                 },
             .color = Rgba::fromRgb({227, 230, 232}, 0),
             .border_color = Rgba::fromRgb({212, 217, 221}, 0),

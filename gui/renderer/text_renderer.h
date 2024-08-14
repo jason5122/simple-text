@@ -24,8 +24,6 @@ public:
                             const Rgb& color,
                             const font::LineLayout& line_layout);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
-    int lineHeight();
-    int uiLineHeight();
 
     // DEBUG: Draws all texture atlases.
     void renderAtlases(const Point& coords);

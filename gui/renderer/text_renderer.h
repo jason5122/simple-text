@@ -10,17 +10,19 @@ namespace gui {
 
 class TextRenderer {
 public:
-    TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache);
+    TextRenderer(GlyphCache& glyph_cache);
     ~TextRenderer();
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
 
-    void renderLineLayout(const Point& offset,
-                          const font::LineLayout& line_layout,
-                          size_t line,
-                          int min_x,
-                          int max_x);
-    void addUiText(const Point& coords, const Rgb& color, const font::LineLayout& line_layout);
+    void renderMainLineLayout(const Point& offset,
+                              const font::LineLayout& line_layout,
+                              size_t line,
+                              int min_x,
+                              int max_x);
+    void renderUILineLayout(const Point& coords,
+                            const Rgb& color,
+                            const font::LineLayout& line_layout);
     void flush(const Size& screen_size, bool use_main_glyph_cache);
     int lineHeight();
     int uiLineHeight();
@@ -31,8 +33,7 @@ public:
 private:
     static constexpr size_t kBatchMax = 0x10000;
 
-    GlyphCache& main_glyph_cache;
-    GlyphCache& ui_glyph_cache;
+    GlyphCache& glyph_cache;
 
     Shader shader_program;
     GLuint vao, vbo_instance, ebo;

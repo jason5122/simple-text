@@ -34,10 +34,9 @@ constexpr std::string kUIFontFace = "Arial";
 namespace gui {
 
 Renderer::Renderer()
-    : main_glyph_cache{kMainFontFace, kMainFontSize},
-      ui_glyph_cache{kUIFontFace, kUIFontSize},
-      text_renderer{main_glyph_cache, ui_glyph_cache},
-      selection_renderer{main_glyph_cache} {
+    : glyph_cache{kMainFontFace, kMainFontSize, kUIFontFace, kUIFontSize},
+      text_renderer{glyph_cache},
+      selection_renderer{glyph_cache} {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
@@ -49,12 +48,8 @@ Renderer& Renderer::instance() {
     return renderer;
 }
 
-GlyphCache& Renderer::getMainGlyphCache() {
-    return main_glyph_cache;
-}
-
-GlyphCache& Renderer::getUiGlyphCache() {
-    return ui_glyph_cache;
+GlyphCache& Renderer::getGlyphCache() {
+    return glyph_cache;
 }
 
 TextRenderer& Renderer::getTextRenderer() {

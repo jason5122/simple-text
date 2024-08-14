@@ -12,8 +12,7 @@ class Renderer {
 public:
     static Renderer& instance();
 
-    GlyphCache& getMainGlyphCache();
-    GlyphCache& getUiGlyphCache();
+    GlyphCache& getGlyphCache();
     TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();
@@ -23,10 +22,8 @@ public:
 
 private:
     Renderer();
-    ~Renderer() = default;
 
-    GlyphCache main_glyph_cache;
-    GlyphCache ui_glyph_cache;
+    GlyphCache glyph_cache;
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
     SelectionRenderer selection_renderer;

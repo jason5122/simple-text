@@ -11,7 +11,10 @@ namespace gui {
 
 class GlyphCache {
 public:
-    GlyphCache(const std::string& font_name_utf8, int font_size);
+    GlyphCache(const std::string& main_font_name_utf8,
+               int main_font_size,
+               const std::string& ui_font_name_utf8,
+               int ui_font_size);
 
     struct Glyph {
         GLuint tex_id;
@@ -22,22 +25,27 @@ public:
         size_t page;
     };
 
-    Glyph& getGlyph(size_t font_id, uint32_t glyph_id);
-    int lineHeight() const;
+    Glyph& getMainGlyph(size_t font_id, uint32_t glyph_id);
+    Glyph& getUIGlyph(size_t font_id, uint32_t glyph_id);
+    int mainLineHeight() const;
+    int uiLineHeight() const;
 
     // TODO: Refactor FontRasterizer out of GlyphCache.
-    const font::FontRasterizer& rasterizer() const;
+    const font::FontRasterizer& mainRasterizer() const;
+    const font::FontRasterizer& uiRasterizer() const;
 
     // TODO: Make this private.
     std::vector<Atlas> atlas_pages;
 
 private:
-    font::FontRasterizer font_rasterizer;
+    font::FontRasterizer main_font_rasterizer;
+    font::FontRasterizer ui_font_rasterizer;
 
     // std::vector<Atlas> atlas_pages;
     size_t current_page = 0;
 
-    std::unordered_map<size_t, std::unordered_map<uint32_t, Glyph>> cache;
+    std::unordered_map<size_t, std::unordered_map<uint32_t, Glyph>> main_cache;
+    std::unordered_map<size_t, std::unordered_map<uint32_t, Glyph>> ui_cache;
 
     Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
 };

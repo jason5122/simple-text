@@ -18,9 +18,8 @@ const std::string kFragmentShaderSource =
 
 namespace gui {
 
-SelectionRenderer::SelectionRenderer(GlyphCache& main_glyph_cache)
-    : shader_program{kVertexShaderSource, kFragmentShaderSource},
-      main_glyph_cache{main_glyph_cache} {
+SelectionRenderer::SelectionRenderer(GlyphCache& glyph_cache)
+    : shader_program{kVertexShaderSource, kFragmentShaderSource}, glyph_cache{glyph_cache} {
     instances.reserve(kBatchMax);
 
     GLuint shader_id = shader_program.id();
@@ -92,7 +91,7 @@ SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
       vbo_instance{other.vbo_instance},
       ebo{other.ebo},
       shader_program{std::move(other.shader_program)},
-      main_glyph_cache{other.main_glyph_cache} {
+      glyph_cache{other.glyph_cache} {
     instances.reserve(kBatchMax);
     other.vao = 0;
     other.vbo_instance = 0;
@@ -144,12 +143,12 @@ void SelectionRenderer::renderSelections(const Point& offset,
             .coords =
                 {
                     .x = static_cast<float>(start) + offset.x,
-                    .y = static_cast<float>(main_glyph_cache.lineHeight() * line) + offset.y,
+                    .y = static_cast<float>(glyph_cache.mainLineHeight() * line) + offset.y,
                 },
             .size =
                 {
                     .x = static_cast<float>(end - start),
-                    .y = static_cast<float>(main_glyph_cache.lineHeight() + kBorderThickness),
+                    .y = static_cast<float>(glyph_cache.mainLineHeight() + kBorderThickness),
                 },
             .color = Rgba::fromRgb({227, 230, 232}, 0),
             .border_color = Rgba::fromRgb({212, 217, 221}, 0),

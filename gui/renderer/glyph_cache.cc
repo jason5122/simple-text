@@ -2,17 +2,29 @@
 
 namespace gui {
 
-GlyphCache::GlyphCache(const std::string& font_name_utf8, int font_size)
-    : font_rasterizer{font_name_utf8, font_size} {
+GlyphCache::GlyphCache(const std::string& main_font_name_utf8,
+                       int main_font_size,
+                       const std::string& ui_font_name_utf8,
+                       int ui_font_size)
+    : main_font_rasterizer{main_font_name_utf8, main_font_size},
+      ui_font_rasterizer{ui_font_name_utf8, ui_font_size} {
     atlas_pages.emplace_back();
 }
 
-GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id) {
-    if (!cache[font_id].contains(glyph_id)) {
-        auto rglyph = font_rasterizer.rasterizeUTF8(font_id, glyph_id);
-        cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
+GlyphCache::Glyph& GlyphCache::getMainGlyph(size_t font_id, uint32_t glyph_id) {
+    if (!main_cache[font_id].contains(glyph_id)) {
+        auto rglyph = main_font_rasterizer.rasterizeUTF8(font_id, glyph_id);
+        main_cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
     }
-    return cache[font_id][glyph_id];
+    return main_cache[font_id][glyph_id];
+}
+
+GlyphCache::Glyph& GlyphCache::getUIGlyph(size_t font_id, uint32_t glyph_id) {
+    if (!ui_cache[font_id].contains(glyph_id)) {
+        auto rglyph = ui_font_rasterizer.rasterizeUTF8(font_id, glyph_id);
+        ui_cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
+    }
+    return ui_cache[font_id][glyph_id];
 }
 
 GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
@@ -44,12 +56,20 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
     return glyph;
 }
 
-int GlyphCache::lineHeight() const {
-    return font_rasterizer.getLineHeight();
+int GlyphCache::mainLineHeight() const {
+    return main_font_rasterizer.getLineHeight();
 }
 
-const font::FontRasterizer& GlyphCache::rasterizer() const {
-    return font_rasterizer;
+int GlyphCache::uiLineHeight() const {
+    return ui_font_rasterizer.getLineHeight();
+}
+
+const font::FontRasterizer& GlyphCache::mainRasterizer() const {
+    return main_font_rasterizer;
+}
+
+const font::FontRasterizer& GlyphCache::uiRasterizer() const {
+    return ui_font_rasterizer;
 }
 
 }

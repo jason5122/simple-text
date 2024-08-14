@@ -127,7 +127,8 @@ void TextViewWidget::draw() {
         for (size_t line = start_line; line < end_line; ++line) {
             std::string line_str = table.line(line);
             const auto& layout = line_layout_cache.getLineLayout(line_str);
-            text_renderer.renderLineLayout(position - scroll_offset, layout, line, min_x, max_x);
+            text_renderer.renderMainLineLayout(position - scroll_offset, layout, line, min_x,
+                                               max_x);
         }
     }
     constexpr bool kDebugAtlas = false;
@@ -211,8 +212,8 @@ size_t TextViewWidget::lineAtY(int y) {
         y = 0;
     }
 
-    GlyphCache& main_glyph_cache = Renderer::instance().getMainGlyphCache();
-    size_t line = y / main_glyph_cache.lineHeight();
+    GlyphCache& glyph_cache = Renderer::instance().getGlyphCache();
+    size_t line = y / glyph_cache.mainLineHeight();
     return std::clamp(line, 0_Z, base::sub_sat(table.lineCount(), 1_Z));
 }
 

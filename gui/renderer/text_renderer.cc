@@ -24,10 +24,8 @@ const std::string kFragmentShaderSource =
 
 namespace gui {
 
-TextRenderer::TextRenderer(GlyphCache& main_glyph_cache, GlyphCache& ui_glyph_cache)
-    : shader_program{kVertexShaderSource, kFragmentShaderSource},
-      main_glyph_cache{main_glyph_cache},
-      ui_glyph_cache{ui_glyph_cache} {
+TextRenderer::TextRenderer(GlyphCache& glyph_cache)
+    : shader_program{kVertexShaderSource, kFragmentShaderSource}, glyph_cache{glyph_cache} {
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo_instance);
     glGenBuffers(1, &ebo);
@@ -84,8 +82,7 @@ TextRenderer::TextRenderer(TextRenderer&& other)
       vbo_instance{other.vbo_instance},
       ebo{other.ebo},
       shader_program{std::move(other.shader_program)},
-      main_glyph_cache{other.main_glyph_cache},
-      ui_glyph_cache{other.ui_glyph_cache} {
+      glyph_cache{other.glyph_cache} {
     other.vao = 0;
     other.vbo_instance = 0;
     other.ebo = 0;
@@ -104,7 +101,7 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderLineLayout(
+void TextRenderer::renderMainLineLayout(
     const Point& offset, const font::LineLayout& line_layout, size_t line, int min_x, int max_x) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
@@ -124,7 +121,7 @@ void TextRenderer::renderLineLayout(
             };
             coords += offset;
 
-            GlyphCache::Glyph& rglyph = main_glyph_cache.getGlyph(run.font_id, glyph.glyph_id);
+            GlyphCache::Glyph& rglyph = glyph_cache.getMainGlyph(run.font_id, glyph.glyph_id);
             const InstanceData instance{
                 .coords = coords.toVec2(),
                 .glyph = rglyph.glyph,
@@ -136,9 +133,9 @@ void TextRenderer::renderLineLayout(
     }
 }
 
-void TextRenderer::addUiText(const Point& coords,
-                             const Rgb& color,
-                             const font::LineLayout& line_layout) {
+void TextRenderer::renderUILineLayout(const Point& coords,
+                                      const Rgb& color,
+                                      const font::LineLayout& line_layout) {
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             Point glyph_coords{
@@ -147,7 +144,7 @@ void TextRenderer::addUiText(const Point& coords,
             };
             glyph_coords += coords;
 
-            GlyphCache::Glyph& rglyph = ui_glyph_cache.getGlyph(run.font_id, glyph.glyph_id);
+            GlyphCache::Glyph& rglyph = glyph_cache.getUIGlyph(run.font_id, glyph.glyph_id);
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
@@ -160,14 +157,15 @@ void TextRenderer::addUiText(const Point& coords,
 }
 
 void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
-    auto& glyph_cache = use_main_glyph_cache ? main_glyph_cache : ui_glyph_cache;
+    int line_height =
+        use_main_glyph_cache ? glyph_cache.mainLineHeight() : glyph_cache.uiLineHeight();
     auto& batch_instances = use_main_glyph_cache ? main_batch_instances : ui_batch_instances;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform1f(glGetUniformLocation(shader_id, "line_height"), glyph_cache.lineHeight());
+    glUniform1f(glGetUniformLocation(shader_id, "line_height"), line_height);
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
@@ -206,16 +204,16 @@ void TextRenderer::flush(const Size& screen_size, bool use_main_glyph_cache) {
 }
 
 int TextRenderer::lineHeight() {
-    return main_glyph_cache.lineHeight();
+    return glyph_cache.mainLineHeight();
 }
 
 int TextRenderer::uiLineHeight() {
-    return ui_glyph_cache.lineHeight();
+    return glyph_cache.uiLineHeight();
 }
 
 void TextRenderer::renderAtlases(const Point& coords) {
     int atlas_x_offset = 0;
-    for (size_t page = 0; page < main_glyph_cache.atlas_pages.size(); ++page) {
+    for (size_t page = 0; page < glyph_cache.atlas_pages.size(); ++page) {
         Point atlas_coords{
             .x = atlas_x_offset,
             .y = 0,

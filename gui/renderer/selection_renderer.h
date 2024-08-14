@@ -12,7 +12,7 @@ namespace gui {
 
 class SelectionRenderer : util::NonCopyable {
 public:
-    SelectionRenderer(GlyphCache& main_glyph_cache);
+    SelectionRenderer(GlyphCache& glyph_cache);
     ~SelectionRenderer();
     SelectionRenderer(SelectionRenderer&& other);
     SelectionRenderer& operator=(SelectionRenderer&& other);
@@ -29,7 +29,7 @@ private:
     static constexpr int kCornerRadius = 6;
     static constexpr int kBorderThickness = 2;
 
-    GlyphCache& main_glyph_cache;
+    GlyphCache& glyph_cache;
 
     struct Selection {
         int line;

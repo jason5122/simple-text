@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
+// TODO: Debug use; remove this.
 #include <format>
 #include <iostream>
 
@@ -16,8 +17,7 @@ public:
     std::vector<Metrics> font_id_to_metrics;
     size_t cacheFont(PangoFont* font);
 
-    std::unordered_map<PangoGlyph, PangoGlyphInfo> glyph_info_cache;
-    void cacheGlyphInfo(const PangoGlyphInfo& glyph_info);
+    std::vector<std::vector<std::unordered_map<PangoGlyph, PangoGlyphInfo>>> glyph_info_cache;
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -66,7 +66,15 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     PangoGlyphStringPtr glyph_string{pango_glyph_string_new()};
     pango_glyph_string_set_size(glyph_string.get(), 1);
 
-    PangoGlyphInfo gi = pimpl->glyph_info_cache[glyph_id];
+    // TODO: Refactor this ugly hack.
+    while (pimpl->glyph_info_cache.size() <= layout_font_id) {
+        pimpl->glyph_info_cache.emplace_back();
+    }
+    while (pimpl->glyph_info_cache[layout_font_id].size() <= font_id) {
+        pimpl->glyph_info_cache[layout_font_id].emplace_back();
+    }
+
+    PangoGlyphInfo gi = pimpl->glyph_info_cache[layout_font_id][font_id][glyph_id];
     bool colored = gi.attr.is_color;
     glyph_string->glyphs[0] = std::move(gi);
 
@@ -156,7 +164,14 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             gi.geometry.y_offset = PANGO_SCALE * height;
 
             // Cache glyph info struct.
-            pimpl->cacheGlyphInfo(gi);
+            // TODO: Refactor this ugly hack.
+            while (pimpl->glyph_info_cache.size() <= font_id) {
+                pimpl->glyph_info_cache.emplace_back();
+            }
+            while (pimpl->glyph_info_cache[font_id].size() <= run_font_id) {
+                pimpl->glyph_info_cache[font_id].emplace_back();
+            }
+            pimpl->glyph_info_cache[font_id][run_font_id][gi.glyph] = gi;
 
             const PangoGlyphGeometry& geometry = gi.geometry;
             int x_offset = PANGO_PIXELS(geometry.x_offset);
@@ -218,10 +233,6 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
         font_id_to_metrics.emplace_back(std::move(metrics));
     }
     return font_postscript_name_to_id.at(font_name);
-}
-
-void FontRasterizer::impl::cacheGlyphInfo(const PangoGlyphInfo& glyph_info) {
-    glyph_info_cache[glyph_info.glyph] = glyph_info;
 }
 
 }

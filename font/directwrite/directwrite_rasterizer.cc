@@ -21,38 +21,9 @@ using Microsoft::WRL::ComPtr;
 #include <format>
 #include <iostream>
 
-namespace {
-
-std::wstring GetPostScriptName(ComPtr<IDWriteFont> font) {
-    ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
-    BOOL has_id_keyed_names;
-    font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
-                                  &font_id_keyed_names, &has_id_keyed_names);
-
-    wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
-    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
-
-    UINT32 index = 0;
-    BOOL exists = false;
-    font_id_keyed_names->FindLocaleName(localeName, &index, &exists);
-
-    UINT32 length = 0;
-    font_id_keyed_names->GetStringLength(index, &length);
-
-    std::wstring localized_name;
-    localized_name.resize(length + 1);
-    font_id_keyed_names->GetString(index, localized_name.data(), length + 1);
-    return localized_name;
-}
-
-}
-
 namespace font {
 
-FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
-    : pimpl{new impl{}} {
-    pimpl->font_name_utf16 = base::windows::ConvertToUTF16(font_name_utf8);
-
+FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
                         reinterpret_cast<IUnknown**>(pimpl->dwrite_factory.GetAddressOf()));
     D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, pimpl->d2d_factory.GetAddressOf());
@@ -65,6 +36,15 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
         // std::cerr << err.ErrorMessage() << '\n';
         std::abort();
     }
+}
+
+FontRasterizer::~FontRasterizer() {}
+
+size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size) {
+    std::wstring font_name_utf16 = base::windows::ConvertToUTF16(font_name_utf8);
+
+    // TODO: Verify that this is correct.
+    FLOAT em_size = static_cast<FLOAT>(font_size) * 96 / 72;
 
     ComPtr<IDWriteFontCollection> font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
@@ -72,7 +52,7 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     // https://stackoverflow.com/q/40365439/14698275
     UINT32 index;
     BOOL exists;
-    font_collection->FindFamilyName(pimpl->font_name_utf16.data(), &index, &exists);
+    font_collection->FindFamilyName(font_name_utf16.data(), &index, &exists);
 
     ComPtr<IDWriteFontFamily> font_family;
     font_collection->GetFontFamily(index, &font_family);
@@ -81,32 +61,20 @@ FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
     font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STRETCH_NORMAL,
                                       DWRITE_FONT_STYLE_NORMAL, &font);
 
-    font->CreateFontFace(&pimpl->font_face);
-
-    // TODO: Verify that this is correct.
-    pimpl->em_size = static_cast<FLOAT>(font_size) * 96 / 72;
-
-    DWRITE_FONT_METRICS metrics;
-    pimpl->font_face->GetMetrics(&metrics);
-
-    FLOAT scale = pimpl->em_size / metrics.designUnitsPerEm;
-
-    int ascent = std::ceil(metrics.ascent * scale);
-    int descent = std::ceil(-metrics.descent * scale);
-    int line_gap = std::ceil(metrics.lineGap * scale);
-    int line_height = ascent - descent + line_gap;
-
-    // TODO: Remove magic numbers that emulate Sublime Text.
-    line_height += 1;
-
-    this->line_height = line_height;
-    this->descent = descent;
+    return pimpl->cacheFont(font, font_name_utf16, em_size);
 }
 
-FontRasterizer::~FontRasterizer() {}
+const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const {
+    return pimpl->font_id_to_metrics.at(font_id);
+}
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
+                                              size_t font_id,
+                                              uint32_t glyph_id) const {
     ComPtr<IDWriteFont> font = pimpl->font_id_to_native[font_id];
+    int descent = getMetrics(layout_font_id).descent;
+    const auto& dwrite_info = pimpl->getDWriteInfo(layout_font_id);
+
     ComPtr<IDWriteFontFace> font_face;
     font->CreateFontFace(&font_face);
     UINT16 glyph_index = glyph_id;
@@ -115,7 +83,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
     DWRITE_GLYPH_OFFSET offset{};
     DWRITE_GLYPH_RUN glyph_run{
         .fontFace = font_face.Get(),
-        .fontEmSize = pimpl->em_size,
+        .fontEmSize = dwrite_info.em_size,
         .glyphCount = 1,
         .glyphIndices = &glyph_index,
         .glyphAdvances = &glyph_advances,
@@ -128,7 +96,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
     pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
 
     DWRITE_RENDERING_MODE rendering_mode;
-    font_face->GetRecommendedRenderingMode(pimpl->em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
+    font_face->GetRecommendedRenderingMode(dwrite_info.em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
                                            rendering_params, &rendering_mode);
 
     IDWriteGlyphRunAnalysis* glyph_run_analysis;
@@ -152,7 +120,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
     DWRITE_FONT_METRICS font_metrics;
     font_face->GetMetrics(&font_metrics);
 
-    FLOAT scale = pimpl->em_size / font_metrics.designUnitsPerEm;
+    FLOAT scale = dwrite_info.em_size / font_metrics.designUnitsPerEm;
     FLOAT advance = metrics.advanceWidth * scale;
 
     int32_t top = -texture_bounds.top;
@@ -240,17 +208,19 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
     }
 }
 
-LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
+LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
+
+    const auto& dwrite_info = pimpl->getDWriteInfo(font_id);
 
     IDWriteFontCollection* font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
     ComPtr<IDWriteTextFormat> text_format;
-    pimpl->dwrite_factory->CreateTextFormat(pimpl->font_name_utf16.data(), font_collection,
+    pimpl->dwrite_factory->CreateTextFormat(dwrite_info.font_name_utf16.data(), font_collection,
                                             DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL,
-                                            DWRITE_FONT_STRETCH_NORMAL, pimpl->em_size, L"en-us",
-                                            &text_format);
+                                            DWRITE_FONT_STRETCH_NORMAL, dwrite_info.em_size,
+                                            L"en-us", &text_format);
 
     // TODO: The `maxWidth`/`maxHeight` arguments *do* prevent ligature formation if the values are
     // too low. Find out what the appropriate values are.
@@ -293,6 +263,7 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     text_layout->Draw(pimpl.get(), font_fallback_renderer.Get(), 0.0f, 0.0f);
 
     return {
+        .layout_font_id = font_id,
         .width = font_fallback_renderer->total_advance,
         .length = str8.length(),
         .runs = font_fallback_renderer->runs,
@@ -357,15 +328,71 @@ void FontRasterizer::impl::drawColorRun(
     target->EndDraw();
 }
 
-size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font) {
-    std::wstring font_name = GetPostScriptName(font);
+size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font,
+                                       std::wstring font_name_utf16,
+                                       FLOAT em_size) {
+    std::wstring font_name = getPostScriptName(font);
 
     if (!font_postscript_name_to_id.contains(font_name)) {
+        ComPtr<IDWriteFontFace> font_face;
+        font->CreateFontFace(&font_face);
+
+        DWRITE_FONT_METRICS dwrite_metrics;
+        font_face->GetMetrics(&dwrite_metrics);
+
+        FLOAT scale = em_size / dwrite_metrics.designUnitsPerEm;
+
+        int ascent = std::ceil(dwrite_metrics.ascent * scale);
+        int descent = std::ceil(-dwrite_metrics.descent * scale);
+        int line_gap = std::ceil(dwrite_metrics.lineGap * scale);
+        int line_height = ascent - descent + line_gap;
+
+        // TODO: Remove magic numbers that emulate Sublime Text.
+        line_height += 1;
+
+        Metrics metrics{
+            .font_size = 0,  // TODO: Calculate font size correctly.
+            .line_height = line_height,
+            .descent = descent,
+        };
+        DWriteInfo dwrite_info{
+            .font_name_utf16 = font_name_utf16,
+            .em_size = em_size,
+        };
+
         size_t font_id = font_id_to_native.size();
-        font_id_to_native.emplace_back(font);
         font_postscript_name_to_id.emplace(font_name, font_id);
+        font_id_to_native.emplace_back(font);
+        font_id_to_metrics.emplace_back(std::move(metrics));
+        font_id_to_dwrite_info.emplace_back(std::move(dwrite_info));
     }
     return font_postscript_name_to_id.at(font_name);
+}
+
+const FontRasterizer::impl::DWriteInfo& FontRasterizer::impl::getDWriteInfo(size_t font_id) {
+    return font_id_to_dwrite_info[font_id];
+}
+
+std::wstring FontRasterizer::impl::getPostScriptName(ComPtr<IDWriteFont> font) {
+    ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
+    BOOL has_id_keyed_names;
+    font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
+                                  &font_id_keyed_names, &has_id_keyed_names);
+
+    wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
+    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
+
+    UINT32 index = 0;
+    BOOL exists = false;
+    font_id_keyed_names->FindLocaleName(localeName, &index, &exists);
+
+    UINT32 length = 0;
+    font_id_keyed_names->GetStringLength(index, &length);
+
+    std::wstring localized_name;
+    localized_name.resize(length + 1);
+    font_id_keyed_names->GetString(index, localized_name.data(), length + 1);
+    return localized_name;
 }
 
 }

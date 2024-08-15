@@ -60,7 +60,8 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     auto pimpl = static_cast<FontRasterizer::impl*>(clientDrawingContext);
     ComPtr<IDWriteFont> font;
     font_collection->GetFontFromFontFace(glyphRun->fontFace, &font);
-    size_t font_id = pimpl->cacheFont(font);
+    // TODO: Pass font name/size.
+    size_t font_id = pimpl->cacheFont(font, L"", 0);
 
     size_t glyph_count = glyphRun->glyphCount;
     std::vector<ShapedGlyph> glyphs;

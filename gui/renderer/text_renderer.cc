@@ -138,9 +138,9 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 }
 
 void TextRenderer::flush(const Size& screen_size, FontType font_type) {
-    const font::FontRasterizer& font_rasterizer =
-        font_type == FontType::kMain ? Renderer::instance().getGlyphCache().mainRasterizer()
-                                     : Renderer::instance().getGlyphCache().uiRasterizer();
+    const auto& font_rasterizer = font_type == FontType::kMain
+                                      ? Renderer::instance().getGlyphCache().mainRasterizer()
+                                      : Renderer::instance().getGlyphCache().uiRasterizer();
     auto& batch_instances =
         font_type == FontType::kMain ? main_batch_instances : ui_batch_instances;
 

@@ -35,6 +35,7 @@ struct ShapedRun {
 };
 
 struct LineLayout {
+    size_t layout_font_id;
     int width;
     size_t length;
     std::vector<ShapedRun> runs;

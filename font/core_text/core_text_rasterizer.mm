@@ -14,43 +14,18 @@
 using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
 
-namespace {
-
-// https://gist.github.com/peter-bloomfield/1b228e2bb654702b1e50ef7524121fb9
-inline std::string CFStringToStdString(CFStringRef cf_str) {
-    if (!cf_str) return {};
-
-    // Attempt to access the underlying buffer directly. This only works if no conversion or
-    // internal allocation is required.
-    auto original_buffer{CFStringGetCStringPtr(cf_str, kCFStringEncodingUTF8)};
-    if (original_buffer) {
-        return original_buffer;
-    }
-
-    // Copy the data out to a local buffer.
-    auto utf16_length{CFStringGetLength(cf_str)};
-    // Leave room for null terminator.
-    auto utf8_max_length{CFStringGetMaximumSizeForEncoding(utf16_length, kCFStringEncodingUTF8) +
-                         1};
-    std::vector<char> buffer(utf8_max_length);
-
-    if (CFStringGetCString(cf_str, buffer.data(), utf8_max_length, utf8_max_length)) {
-        return buffer.data();
-    }
-    return {};
-}
-
-}
-
 namespace font {
 
 class FontRasterizer::impl {
 public:
     ScopedCFTypeRef<CTFontRef> ct_font;
+
     std::unordered_map<std::string, size_t> font_postscript_name_to_id;
     std::vector<ScopedCFTypeRef<CTFontRef>> font_id_to_native;
+    size_t cacheFont(CTFontRef ct_font);
 
     ScopedCFTypeRef<CTLineRef> createCTLine(std::string_view str8);
+    std::string convertCFString(CFStringRef cf_string);
 };
 
 FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
@@ -178,19 +153,7 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
 
         CTFontRef ct_font =
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
-        CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
-        std::string font_name = CFStringToStdString(ct_font_name);
-
-        // Cache font in font map.
-        if (!pimpl->font_postscript_name_to_id.contains(font_name)) {
-            // TODO: Figure out how to automatically retain using ScopedCFTypeRef.
-            ct_font = (CTFontRef)CFRetain(ct_font);
-
-            size_t font_id = pimpl->font_id_to_native.size();
-            pimpl->font_id_to_native.push_back(std::move(ct_font));
-            pimpl->font_postscript_name_to_id[font_name] = font_id;
-        }
-        size_t font_id = pimpl->font_postscript_name_to_id[font_name];
+        size_t font_id = pimpl->cacheFont(ct_font);
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -242,6 +205,21 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
     };
 }
 
+size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
+    CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
+    std::string font_name = convertCFString(ct_font_name);
+
+    if (!font_postscript_name_to_id.contains(font_name)) {
+        // TODO: Figure out how to automatically retain using ScopedCFTypeRef.
+        ct_font = (CTFontRef)CFRetain(ct_font);
+
+        size_t font_id = font_id_to_native.size();
+        font_id_to_native.push_back(std::move(ct_font));
+        font_postscript_name_to_id.emplace(font_name, font_id);
+    }
+    return font_postscript_name_to_id.at(font_name);
+}
+
 ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(std::string_view str8) {
     ScopedCFTypeRef<CFStringRef> text_string{CFStringCreateWithBytesNoCopy(
         kCFAllocatorDefault, (const uint8_t*)str8.data(), str8.length(), kCFStringEncodingUTF8,
@@ -255,6 +233,31 @@ ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(std::string_view s
         CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
 
     return CTLineCreateWithAttributedString(attr_string.get());
+}
+
+// https://gist.github.com/peter-bloomfield/1b228e2bb654702b1e50ef7524121fb9
+std::string FontRasterizer::impl::convertCFString(CFStringRef cf_string) {
+    if (!cf_string) return {};
+
+    // Attempt to access the underlying buffer directly. This only works if no conversion or
+    // internal allocation is required.
+    auto original_buffer{CFStringGetCStringPtr(cf_string, kCFStringEncodingUTF8)};
+    if (original_buffer) {
+        return original_buffer;
+    }
+
+    // Copy the data out to a local buffer.
+    auto utf16_length{CFStringGetLength(cf_string)};
+    // Leave room for null terminator.
+    auto utf8_max_length{CFStringGetMaximumSizeForEncoding(utf16_length, kCFStringEncodingUTF8) +
+                         1};
+    std::vector<char> buffer(utf8_max_length);
+
+    if (CFStringGetCString(cf_string, buffer.data(), utf8_max_length, utf8_max_length)) {
+        return buffer.data();
+    } else {
+        return {};
+    }
 }
 
 }

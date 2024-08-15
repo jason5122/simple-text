@@ -128,7 +128,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         PangoItem* item = glyph_item->item;
 
         PangoFont* run_font = item->analysis.font;
-        size_t font_id = pimpl->cacheFont(run_font);
+        size_t run_font_id = pimpl->cacheFont(run_font);
 
         PangoGlyphString* glyph_string = glyph_item->glyphs;
         PangoGlyphInfo* glyph_infos = glyph_string->glyphs;
@@ -173,10 +173,11 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             total_advance += advance.x;
         }
 
-        runs.emplace_back(ShapedRun{font_id, std::move(glyphs)});
+        runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
     return {
+        .layout_font_id = font_id,
         // We shouldn't use Pango's width since we make our own slight adjustments.
         .width = total_advance,
         .length = str8.length(),

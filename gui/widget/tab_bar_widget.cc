@@ -5,8 +5,7 @@
 namespace gui {
 
 TabBarWidget::TabBarWidget(int height) : Widget{{.height = height}} {
-    // addTab("untitled");
-    addTab("EEE");
+    addTab("untitled");
 }
 
 void TabBarWidget::setIndex(size_t index) {

@@ -46,7 +46,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
                                               size_t font_id,
                                               uint32_t glyph_id) const {
     CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
-    int descent = getMetrics(font_id).descent;
+    int descent = getMetrics(layout_font_id).descent;
 
     CGGlyph glyph_index = glyph_id;
 

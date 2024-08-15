@@ -105,11 +105,13 @@ void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
-    const font::FontRasterizer& main_font_rasterizer =
-        Renderer::instance().getGlyphCache().mainRasterizer();
+
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     // Calculate start and end lines.
-    int main_line_height = main_font_rasterizer.getLineHeight();
+    int main_line_height = metrics.line_height;
     size_t visible_lines = std::ceil(static_cast<float>(size.height) / main_line_height);
 
     size_t start_line = scroll_offset.y / main_line_height;
@@ -123,8 +125,6 @@ void TextViewWidget::draw() {
     start_line = std::clamp(start_line, 0_Z, table.lineCount());
     end_line = std::clamp(end_line, 0_Z, table.lineCount());
 
-    int min_x = scroll_offset.x;
-    int max_x = scroll_offset.x + size.width;
     {
         PROFILE_BLOCK("TextViewWidget::renderText()");
         for (size_t line = start_line; line < end_line; ++line) {
@@ -132,7 +132,12 @@ void TextViewWidget::draw() {
             const auto& layout = line_layout_cache.getLineLayout(line_str);
 
             Point coords = position - scroll_offset;
-            coords.y += line * main_font_rasterizer.getLineHeight();
+            // TODO: Using `metrics.line_height` causes a use-after-free error??
+            //       The line with `line_layout_cache.getLineLayout()` is problematic.
+            coords.y += line * main_line_height;
+
+            int min_x = scroll_offset.x;
+            int max_x = scroll_offset.x + size.width;
 
             text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
                                            TextRenderer::FontType::kMain);
@@ -210,11 +215,12 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 }
 
 void TextViewWidget::updateMaxScroll() {
-    const font::FontRasterizer& main_font_rasterizer =
-        Renderer::instance().getGlyphCache().mainRasterizer();
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     max_scroll_offset.x = line_layout_cache.maxWidth();
-    max_scroll_offset.y = table.lineCount() * main_font_rasterizer.getLineHeight();
+    max_scroll_offset.y = table.lineCount() * metrics.line_height;
 }
 
 size_t TextViewWidget::lineAtY(int y) {
@@ -222,10 +228,11 @@ size_t TextViewWidget::lineAtY(int y) {
         y = 0;
     }
 
-    const font::FontRasterizer& main_font_rasterizer =
-        Renderer::instance().getGlyphCache().mainRasterizer();
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
-    size_t line = y / main_font_rasterizer.getLineHeight();
+    size_t line = y / metrics.line_height;
     return std::clamp(line, 0_Z, base::sub_sat(table.lineCount(), 1_Z));
 }
 

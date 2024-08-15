@@ -10,10 +10,10 @@ LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
     : Widget{size}, left_padding{left_padding}, right_padding{right_padding} {}
 
 void LabelWidget::setText(const std::string& str8, const Rgb& color) {
-    const font::FontRasterizer& ui_font_rasterizer =
-        Renderer::instance().getGlyphCache().uiRasterizer();
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = glyph_cache.fontRasterizer();
 
-    layout = ui_font_rasterizer.layoutLine(str8);
+    layout = font_rasterizer.layoutLine(glyph_cache.uiFontId(), str8);
     this->color = color;
 }
 
@@ -55,10 +55,11 @@ void LabelWidget::draw() {
         image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
-    const font::FontRasterizer& ui_font_rasterizer =
-        Renderer::instance().getGlyphCache().uiRasterizer();
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
 
-    Point coords = centerVertically(ui_font_rasterizer.getLineHeight()) + left_offset;
+    Point coords = centerVertically(metrics.line_height) + left_offset;
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
     text_renderer.renderLineLayout(layout, coords, min_x, max_x, color,

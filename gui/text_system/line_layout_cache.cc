@@ -10,10 +10,10 @@ const font::LineLayout& LineLayoutCache::getLineLayout(std::string_view str8) {
     if (auto it = cache.find(hash); it != cache.end()) {
         return it->second;
     } else {
-        const font::FontRasterizer& main_font_rasterizer =
-            Renderer::instance().getGlyphCache().mainRasterizer();
+        const auto& glyph_cache = Renderer::instance().getGlyphCache();
+        const auto& font_rasterizer = Renderer::instance().getGlyphCache().fontRasterizer();
 
-        auto layout = main_font_rasterizer.layoutLine(str8);
+        auto layout = font_rasterizer.layoutLine(glyph_cache.mainFontId(), str8);
         auto inserted = cache.emplace(hash, std::move(layout));
 
         // TODO: Track max width in a better way.

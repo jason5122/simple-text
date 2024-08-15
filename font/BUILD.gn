@@ -1,8 +1,5 @@
 source_set("font") {
-  sources = [
-    "font_rasterizer.cc",
-    "types.cc",
-  ]
+  sources = [ "types.cc" ]
 
   if (is_mac) {
     deps = [ "core_text" ]

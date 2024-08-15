@@ -18,38 +18,36 @@ namespace font {
 
 class FontRasterizer::impl {
 public:
-    ScopedCFTypeRef<CTFontRef> ct_font;
-
     std::unordered_map<std::string, size_t> font_postscript_name_to_id;
     std::vector<ScopedCFTypeRef<CTFontRef>> font_id_to_native;
+    std::vector<Metrics> font_id_to_metrics;
     size_t cacheFont(CTFontRef ct_font);
 
-    ScopedCFTypeRef<CTLineRef> createCTLine(std::string_view str8);
+    ScopedCFTypeRef<CTLineRef> createCTLine(size_t font_id, std::string_view str8);
     std::string convertCFString(CFStringRef cf_string);
 };
 
-FontRasterizer::FontRasterizer(const std::string& font_name_utf8, int font_size)
-    : pimpl{new impl{}} {
-    ScopedCFTypeRef<CFStringRef> ct_font_name{
-        CFStringCreateWithCString(nullptr, font_name_utf8.c_str(), kCFStringEncodingUTF8)};
-    pimpl->ct_font.reset(CTFontCreateWithName(ct_font_name.get(), font_size, nullptr));
-
-    int ascent = std::ceil(CTFontGetAscent(pimpl->ct_font.get()));
-    int descent = std::ceil(CTFontGetDescent(pimpl->ct_font.get()));
-    int leading = std::ceil(CTFontGetLeading(pimpl->ct_font.get()));
-    int line_height = ascent + descent + leading;
-
-    // TODO: Remove magic numbers that emulate Sublime Text.
-    line_height += 1;
-
-    this->line_height = line_height;
-    this->descent = -descent;
-}
+FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id) const {
+size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size) {
+    ScopedCFTypeRef<CFStringRef> ct_font_name{
+        CFStringCreateWithCString(nullptr, font_name_utf8.c_str(), kCFStringEncodingUTF8)};
+    CTFontRef ct_font = CTFontCreateWithName(ct_font_name.get(), font_size, nullptr);
+    return pimpl->cacheFont(ct_font);
+}
+
+const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const {
+    return pimpl->font_id_to_metrics.at(font_id);
+}
+
+RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
+                                              size_t font_id,
+                                              uint32_t glyph_id) const {
     CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
+    int descent = getMetrics(font_id).descent;
+
     CGGlyph glyph_index = glyph_id;
 
     if (!font_ref) {
@@ -135,14 +133,14 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
 }
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
-LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
+LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
     UTF16ToUTF8IndicesMap utf8IndicesMap;
     if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
         std::abort();
     }
 
-    ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(str8);
+    ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(font_id, str8);
 
     int total_advance = 0;
     std::vector<ShapedRun> runs;
@@ -153,7 +151,7 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
 
         CTFontRef ct_font =
             (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
-        size_t font_id = pimpl->cacheFont(ct_font);
+        size_t run_font_id = pimpl->cacheFont(ct_font);
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -191,13 +189,14 @@ LineLayout FontRasterizer::layoutLine(std::string_view str8) const {
             total_advance += advance.x;
         }
 
-        runs.emplace_back(ShapedRun{font_id, std::move(glyphs)});
+        runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.
     // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
     return {
+        .layout_font_id = font_id,
         .width = total_advance,
         // .width = static_cast<int>(std::ceil(width)),
         .length = str8.length(),
@@ -213,21 +212,39 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         // TODO: Figure out how to automatically retain using ScopedCFTypeRef.
         ct_font = (CTFontRef)CFRetain(ct_font);
 
+        int ascent = std::ceil(CTFontGetAscent(ct_font));
+        int descent = std::ceil(CTFontGetDescent(ct_font));
+        int leading = std::ceil(CTFontGetLeading(ct_font));
+        int line_height = ascent + descent + leading;
+
+        // TODO: Remove magic numbers that emulate Sublime Text.
+        line_height += 1;
+
+        Metrics metrics{
+            .font_size = 0,  // TODO: Calculate font size correctly.
+            .line_height = line_height,
+            .descent = -descent,
+        };
+
         size_t font_id = font_id_to_native.size();
-        font_id_to_native.emplace_back(ct_font);
         font_postscript_name_to_id.emplace(font_name, font_id);
+        font_id_to_native.emplace_back(ct_font);
+        font_id_to_metrics.emplace_back(std::move(metrics));
     }
     return font_postscript_name_to_id.at(font_name);
 }
 
-ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(std::string_view str8) {
+ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(size_t font_id,
+                                                              std::string_view str8) {
+    CTFontRef ct_font = font_id_to_native[font_id].get();
+
     ScopedCFTypeRef<CFStringRef> text_string{CFStringCreateWithBytesNoCopy(
         kCFAllocatorDefault, (const uint8_t*)str8.data(), str8.length(), kCFStringEncodingUTF8,
         false, kCFAllocatorNull)};
 
     ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
-    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font.get());
+    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font);
 
     ScopedCFTypeRef<CFAttributedStringRef> attr_string{
         CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};

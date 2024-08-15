@@ -18,10 +18,11 @@ const std::string kOSFontFace = "Consolas";
 namespace font {
 
 TEST(FontRasterizerTest, LayoutLine1) {
-    FontRasterizer rasterizer{kOSFontFace, 32};
+    FontRasterizer rasterizer{};
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";
-    auto layout = rasterizer.layoutLine(line);
+    auto layout = rasterizer.layoutLine(font_id, line);
 
     EXPECT_GT(layout.width, 0);
     EXPECT_EQ(layout.runs.size(), 3_Z);
@@ -39,7 +40,8 @@ TEST(FontRasterizerTest, LayoutLine1) {
     // Emojis should be colored and should have 4 channels.
     size_t emoji_font_id = layout.runs[1].font_id;
     for (const auto& glyph : emoji_glyphs) {
-        auto rglyph = rasterizer.rasterizeUTF8(emoji_font_id, glyph.glyph_id);
+        auto rglyph =
+            rasterizer.rasterizeUTF8(layout.layout_font_id, emoji_font_id, glyph.glyph_id);
         EXPECT_TRUE(rglyph.colored);
         EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 4_Z);
     }
@@ -47,7 +49,8 @@ TEST(FontRasterizerTest, LayoutLine1) {
     // Regular text should not be colored and should have 3 channels.
     size_t monospace_font_id = layout.runs[2].font_id;
     for (const auto& glyph : hi_glyphs) {
-        auto rglyph = rasterizer.rasterizeUTF8(monospace_font_id, glyph.glyph_id);
+        auto rglyph =
+            rasterizer.rasterizeUTF8(layout.layout_font_id, monospace_font_id, glyph.glyph_id);
         EXPECT_FALSE(rglyph.colored);
         EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 3_Z);
     }
@@ -63,10 +66,11 @@ TEST(FontRasterizerTest, LayoutLine1) {
 }
 
 TEST(FontRasterizerTest, LayoutLine2) {
-    FontRasterizer rasterizer{kOSFontFace, 32};
+    FontRasterizer rasterizer{};
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";
-    auto layout = rasterizer.layoutLine(line);
+    auto layout = rasterizer.layoutLine(font_id, line);
 
     int total_advance = 0;
     for (const auto& run : layout.runs) {
@@ -79,10 +83,11 @@ TEST(FontRasterizerTest, LayoutLine2) {
 }
 
 TEST(FontRasterizerTest, LineLayoutClosestForX) {
-    FontRasterizer rasterizer{kOSFontFace, 32};
+    FontRasterizer rasterizer{};
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";
-    auto layout = rasterizer.layoutLine(line);
+    auto layout = rasterizer.layoutLine(font_id, line);
 
     size_t prev_glyph_index = 0;
     int prev_glyph_x = 0;
@@ -106,10 +111,11 @@ TEST(FontRasterizerTest, LineLayoutClosestForX) {
 }
 
 TEST(FontRasterizerTest, LineLayoutClosestForIndex) {
-    FontRasterizer rasterizer{kOSFontFace, 32};
+    FontRasterizer rasterizer{};
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";
-    auto layout = rasterizer.layoutLine(line);
+    auto layout = rasterizer.layoutLine(font_id, line);
 
     size_t prev_glyph_index = 0;
     int prev_glyph_x = 0;

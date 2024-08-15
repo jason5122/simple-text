@@ -136,8 +136,9 @@ void SelectionRenderer::renderSelections(const Point& offset,
         }
     }
 
-    const font::FontRasterizer& main_font_rasterizer =
-        Renderer::instance().getGlyphCache().mainRasterizer();
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     auto create = [&, this](int start, int end, int line,
                             uint32_t border_flags = kLeft | kRight | kTop | kBottom,
@@ -147,14 +148,12 @@ void SelectionRenderer::renderSelections(const Point& offset,
             .coords =
                 {
                     .x = static_cast<float>(start) + offset.x,
-                    .y =
-                        static_cast<float>(main_font_rasterizer.getLineHeight() * line) + offset.y,
+                    .y = static_cast<float>(metrics.line_height * line) + offset.y,
                 },
             .size =
                 {
                     .x = static_cast<float>(end - start),
-                    .y = static_cast<float>(main_font_rasterizer.getLineHeight() +
-                                            kBorderThickness),
+                    .y = static_cast<float>(metrics.line_height + kBorderThickness),
                 },
             .color = Rgba::fromRgb({227, 230, 232}, 0),
             .border_color = Rgba::fromRgb({212, 217, 221}, 0),

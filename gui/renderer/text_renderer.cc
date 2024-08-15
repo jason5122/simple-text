@@ -123,9 +123,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             Point glyph_coords = coords;
             glyph_coords.x += glyph.position.x;
 
-            GlyphCache::Glyph& rglyph = font_type == FontType::kMain
-                                            ? glyph_cache.getMainGlyph(run.font_id, glyph.glyph_id)
-                                            : glyph_cache.getUIGlyph(run.font_id, glyph.glyph_id);
+            GlyphCache::Glyph& rglyph =
+                glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id, glyph.glyph_id);
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
@@ -138,17 +137,20 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 }
 
 void TextRenderer::flush(const Size& screen_size, FontType font_type) {
-    const auto& font_rasterizer = font_type == FontType::kMain
-                                      ? Renderer::instance().getGlyphCache().mainRasterizer()
-                                      : Renderer::instance().getGlyphCache().uiRasterizer();
     auto& batch_instances =
         font_type == FontType::kMain ? main_batch_instances : ui_batch_instances;
+
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    size_t font_id =
+        font_type == FontType::kMain ? glyph_cache.mainFontId() : glyph_cache.uiFontId();
+    const auto& metrics = font_rasterizer.getMetrics(font_id);
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform1f(glGetUniformLocation(shader_id, "line_height"), font_rasterizer.getLineHeight());
+    glUniform1f(glGetUniformLocation(shader_id, "line_height"), metrics.line_height);
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 

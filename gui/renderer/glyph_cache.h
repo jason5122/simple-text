@@ -25,23 +25,23 @@ public:
         size_t page;
     };
 
-    Glyph& getMainGlyph(size_t font_id, uint32_t glyph_id);
-    Glyph& getUIGlyph(size_t font_id, uint32_t glyph_id);
+    Glyph& getGlyph(size_t layout_font_id, size_t font_id, uint32_t glyph_id);
 
-    // TODO: Refactor FontRasterizer out of GlyphCache.
-    const font::FontRasterizer& mainRasterizer() const;
-    const font::FontRasterizer& uiRasterizer() const;
+    size_t mainFontId() const;
+    size_t uiFontId() const;
+    const font::FontRasterizer& fontRasterizer() const;
     const std::vector<Atlas>& atlasPages() const;
 
 private:
-    font::FontRasterizer main_font_rasterizer;
-    font::FontRasterizer ui_font_rasterizer;
+    size_t main_font_id;
+    size_t ui_font_id;
+    font::FontRasterizer font_rasterizer;
 
     std::vector<Atlas> atlas_pages;
     size_t current_page = 0;
 
-    std::unordered_map<size_t, std::unordered_map<uint32_t, Glyph>> main_cache;
-    std::unordered_map<size_t, std::unordered_map<uint32_t, Glyph>> ui_cache;
+    // [layout_font_id, run_font_id, glyph_id] -> Glyph
+    std::vector<std::vector<std::unordered_map<uint32_t, Glyph>>> cache;
 
     Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
 };

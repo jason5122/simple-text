@@ -360,13 +360,12 @@ void FontRasterizer::impl::drawColorRun(
 size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font) {
     std::wstring font_name = GetPostScriptName(font);
 
-    // Cache font in font map.
     if (!font_postscript_name_to_id.contains(font_name)) {
         size_t font_id = font_id_to_native.size();
         font_id_to_native.emplace_back(font);
-        font_postscript_name_to_id[font_name] = font_id;
+        font_postscript_name_to_id.emplace(font_name, font_id);
     }
-    return font_postscript_name_to_id[font_name];
+    return font_postscript_name_to_id.at(font_name);
 }
 
 }

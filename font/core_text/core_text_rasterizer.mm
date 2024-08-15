@@ -214,7 +214,7 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         ct_font = (CTFontRef)CFRetain(ct_font);
 
         size_t font_id = font_id_to_native.size();
-        font_id_to_native.push_back(std::move(ct_font));
+        font_id_to_native.emplace_back(ct_font);
         font_postscript_name_to_id.emplace(font_name, font_id);
     }
     return font_postscript_name_to_id.at(font_name);

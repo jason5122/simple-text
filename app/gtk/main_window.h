@@ -28,7 +28,7 @@ private:
     Window* app_window;
     GtkWidget* window;
     GtkWidget* gl_area;
-    GDBusProxy* dbus_settings_proxy;
+    // GDBusProxy* dbus_settings_proxy;
 };
 
 }

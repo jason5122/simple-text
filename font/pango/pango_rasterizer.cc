@@ -193,16 +193,15 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
     std::string font_name = font_str;
     g_free(font_str);
 
-    // Cache font in font map.
     if (!font_postscript_name_to_id.contains(font_name)) {
         // TODO: Incorporate this into a smart pointer.
         g_object_ref(font);
 
         size_t font_id = font_id_to_native.size();
         font_id_to_native.emplace_back(font);
-        font_postscript_name_to_id[font_name] = font_id;
+        font_postscript_name_to_id.emplace(font_name, font_id);
     }
-    return font_postscript_name_to_id[font_name];
+    return font_postscript_name_to_id.at(font_name);
 }
 
 void FontRasterizer::impl::cacheGlyphInfo(const PangoGlyphInfo& glyph_info) {

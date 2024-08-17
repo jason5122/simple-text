@@ -148,8 +148,27 @@ void TextViewWidget::draw() {
     bool should_swap = end_caret < start_caret;
     const auto& c1 = should_swap ? end_caret : start_caret;
     const auto& c2 = should_swap ? start_caret : end_caret;
-    selection_renderer.renderSelections(position - scroll_offset, table, line_layout_cache, c1,
-                                        c2);
+
+    std::vector<SelectionRenderer::Selection> selections;
+    for (size_t line = c1.line; line <= c2.line; ++line) {
+        std::string line_str = table.line(line);
+
+        if (!line_str.empty() && line_str.back() == '\n') {
+            line_str.back() = ' ';
+        }
+
+        const auto& layout = line_layout_cache.getLineLayout(line_str);
+        int start = line == c1.line ? start_caret.x : 0;
+        int end = line == c2.line ? end_caret.x : layout.width;
+        if (end - start > 0) {
+            selections.emplace_back(SelectionRenderer::Selection{
+                .line = static_cast<int>(line),
+                .start = start,
+                .end = end,
+            });
+        }
+    }
+    selection_renderer.renderSelections(selections, position - scroll_offset);
 
     // Add vertical scroll bar.
     // int line_count = table.lineCount();

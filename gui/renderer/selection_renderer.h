@@ -1,11 +1,8 @@
 #pragma once
 
-#include "base/buffer/piece_table.h"
 #include "gui/renderer/glyph_cache.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
-#include "gui/text_system/caret.h"
-#include "gui/text_system/line_layout_cache.h"
 #include "util/non_copyable.h"
 
 namespace gui {
@@ -17,11 +14,12 @@ public:
     SelectionRenderer(SelectionRenderer&& other);
     SelectionRenderer& operator=(SelectionRenderer&& other);
 
-    void renderSelections(const Point& offset,
-                          base::PieceTable& table,
-                          LineLayoutCache& line_layout_cache,
-                          const Caret& start_caret,
-                          const Caret& end_caret);
+    struct Selection {
+        int line;
+        int start;
+        int end;
+    };
+    void renderSelections(const std::vector<Selection>& selections, const Point& offset);
     void flush(const Size& screen_size);
 
 private:
@@ -30,12 +28,6 @@ private:
     static constexpr int kBorderThickness = 2;
 
     GlyphCache& glyph_cache;
-
-    struct Selection {
-        int line;
-        int start;
-        int end;
-    };
 
     Shader shader_program;
     GLuint vao = 0;

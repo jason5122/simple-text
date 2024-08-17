@@ -1,42 +1,11 @@
-#include "build/build_config.h"
 #include "renderer.h"
 
 #include "opengl/gl.h"
 using namespace opengl;
 
-// TODO: Properly load this from settings.
-namespace {
-
-#if BUILDFLAG(IS_MAC)
-constexpr int kMainFontSize = 16 * 2;
-constexpr int kUIFontSize = 11 * 2;
-const std::string kMainFontFace = "Menlo";
-const std::string kUIFontFace = "SF Pro Text";
-#elif BUILDFLAG(IS_WIN)
-constexpr int kMainFontSize = 11 * 2;
-constexpr int kUIFontSize = 8 * 2;
-const std::string kMainFontFace = "Source Code Pro";
-// const std::string kMainFontFace = "Consolas";
-// const std::string kMainFontFace = "Cascadia Code";
-const std::string kUIFontFace = "Segoe UI";
-#elif BUILDFLAG(IS_LINUX)
-constexpr int kMainFontSize = 12 * 2;
-constexpr int kUIFontSize = 11 * 2;
-const std::string kMainFontFace = "Monospace";
-const std::string kUIFontFace = "Arial";
-#endif
-
-// const std::string kMainFontFace = "Source Code Pro";
-// const std::string kMainFontFace = "Fira Code";
-
-}
-
 namespace gui {
 
-Renderer::Renderer()
-    : glyph_cache{kMainFontFace, kMainFontSize, kUIFontFace, kUIFontSize},
-      text_renderer{glyph_cache},
-      selection_renderer{glyph_cache} {
+Renderer::Renderer() : text_renderer{glyph_cache}, selection_renderer{glyph_cache} {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 

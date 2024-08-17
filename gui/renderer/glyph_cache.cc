@@ -2,21 +2,14 @@
 
 namespace gui {
 
-GlyphCache::GlyphCache(const std::string& main_font_name_utf8,
-                       int main_font_size,
-                       const std::string& ui_font_name_utf8,
-                       int ui_font_size) {
-    main_font_id = font_rasterizer.addFont(main_font_name_utf8, main_font_size);
-    ui_font_id = font_rasterizer.addFont(ui_font_name_utf8, ui_font_size);
-
-    // TODO: Generalize this for new fonts.
-    cache.emplace_back();
-    cache.emplace_back();
-
+GlyphCache::GlyphCache() {
     atlas_pages.emplace_back();
 }
 
-GlyphCache::Glyph& GlyphCache::getGlyph(size_t layout_font_id, size_t font_id, uint32_t glyph_id) {
+GlyphCache::Glyph& GlyphCache::getGlyph(size_t layout_font_id,
+                                        size_t font_id,
+                                        uint32_t glyph_id,
+                                        const font::FontRasterizer& font_rasterizer) {
     // TODO: Refactor this ugly hack.
     while (cache[layout_font_id].size() <= font_id) {
         cache[layout_font_id].emplace_back();
@@ -58,16 +51,28 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
     return glyph;
 }
 
+void GlyphCache::setMainFontId(size_t font_id) {
+    // TODO: Refactor this ugly hack.
+    while (cache.size() <= font_id) {
+        cache.emplace_back();
+    }
+    main_font_id = font_id;
+}
+
+void GlyphCache::setUIFontId(size_t font_id) {
+    // TODO: Refactor this ugly hack.
+    while (cache.size() <= font_id) {
+        cache.emplace_back();
+    }
+    ui_font_id = font_id;
+}
+
 size_t GlyphCache::mainFontId() const {
     return main_font_id;
 }
 
 size_t GlyphCache::uiFontId() const {
     return ui_font_id;
-}
-
-const font::FontRasterizer& GlyphCache::fontRasterizer() const {
-    return font_rasterizer;
 }
 
 const std::vector<Atlas>& GlyphCache::atlasPages() const {

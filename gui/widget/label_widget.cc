@@ -11,7 +11,7 @@ LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
 
 void LabelWidget::setText(const std::string& str8, const Rgb& color) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
 
     layout = font_rasterizer.layoutLine(glyph_cache.uiFontId(), str8);
     this->color = color;
@@ -56,7 +56,7 @@ void LabelWidget::draw() {
     }
 
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
 
     Point coords = centerVertically(metrics.line_height) + left_offset;

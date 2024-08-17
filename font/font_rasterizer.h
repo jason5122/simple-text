@@ -11,6 +11,8 @@ public:
     FontRasterizer();
     ~FontRasterizer();
 
+    static FontRasterizer& instance();
+
     size_t addFont(const std::string& font_name_utf8, int font_size);
 
     struct Metrics {

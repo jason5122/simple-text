@@ -11,7 +11,7 @@ const font::LineLayout& LineLayoutCache::getLineLayout(std::string_view str8) {
         return it->second;
     } else {
         const auto& glyph_cache = Renderer::instance().getGlyphCache();
-        const auto& font_rasterizer = Renderer::instance().getGlyphCache().fontRasterizer();
+        const auto& font_rasterizer = font::FontRasterizer::instance();
 
         auto layout = font_rasterizer.layoutLine(glyph_cache.mainFontId(), str8);
         auto inserted = cache.emplace(hash, std::move(layout));

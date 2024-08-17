@@ -137,7 +137,7 @@ void SelectionRenderer::renderSelections(const Point& offset,
     }
 
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     auto create = [&, this](int start, int end, int line,

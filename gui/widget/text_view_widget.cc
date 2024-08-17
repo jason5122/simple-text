@@ -107,7 +107,7 @@ void TextViewWidget::draw() {
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
 
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     // Calculate start and end lines.
@@ -216,7 +216,7 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 
 void TextViewWidget::updateMaxScroll() {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     max_scroll_offset.x = line_layout_cache.maxWidth();
@@ -229,7 +229,7 @@ size_t TextViewWidget::lineAtY(int y) {
     }
 
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     size_t line = y / metrics.line_height;

@@ -1,4 +1,3 @@
-#include "gui/renderer/renderer.h"
 #include "text_renderer.h"
 #include <algorithm>
 #include <cmath>
@@ -108,6 +107,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     int max_x,
                                     const Rgb& color,
                                     FontType font_type) {
+    const auto& font_rasterizer = font::FontRasterizer::instance();
+
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             // If we reach a glyph before the minimum x, skip it and continue.
@@ -123,8 +124,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             Point glyph_coords = coords;
             glyph_coords.x += glyph.position.x;
 
-            GlyphCache::Glyph& rglyph =
-                glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id, glyph.glyph_id);
+            GlyphCache::Glyph& rglyph = glyph_cache.getGlyph(
+                line_layout.layout_font_id, run.font_id, glyph.glyph_id, font_rasterizer);
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
@@ -140,8 +141,7 @@ void TextRenderer::flush(const Size& screen_size, FontType font_type) {
     auto& batch_instances =
         font_type == FontType::kMain ? main_batch_instances : ui_batch_instances;
 
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = glyph_cache.fontRasterizer();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
     size_t font_id =
         font_type == FontType::kMain ? glyph_cache.mainFontId() : glyph_cache.uiFontId();
     const auto& metrics = font_rasterizer.getMetrics(font_id);

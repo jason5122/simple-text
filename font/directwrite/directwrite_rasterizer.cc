@@ -18,8 +18,10 @@
 using Microsoft::WRL::ComPtr;
 
 // TODO: Debug use; remove this.
+#include <cassert>
 #include <format>
 #include <iostream>
+#include <ranges>
 
 namespace font {
 
@@ -209,6 +211,8 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
 }
 
 LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
+    assert(std::ranges::count(str8, '\n') == 0);
+
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
 
     const auto& dwrite_info = pimpl->getDWriteInfo(font_id);

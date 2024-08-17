@@ -124,6 +124,11 @@ void SelectionRenderer::renderSelections(const Point& offset,
 
     for (size_t line = start_line; line <= end_line; ++line) {
         std::string line_str = table.line(line);
+
+        if (!line_str.empty() && line_str.back() == '\n') {
+            line_str.back() = ' ';
+        }
+
         const auto& layout = line_layout_cache.getLineLayout(line_str);
         int start = line == start_line ? start_caret.x : 0;
         int end = line == end_line ? end_caret.x : layout.width;

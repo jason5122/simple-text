@@ -225,14 +225,7 @@ std::string PieceTable::line(size_t index) {
 
     std::string line_str;
     for (auto it = first; it != last; ++it) {
-        // line_str += *it;
-
-        // TODO: Formalize newline-to-string replacement as an option.
-        char ch = *it;
-        if (ch == '\n') {
-            ch = ' ';
-        }
-        line_str += ch;
+        line_str += *it;
     }
 
     line_cache.emplace(index, line_str);

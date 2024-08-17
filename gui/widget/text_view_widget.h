@@ -37,6 +37,7 @@ private:
     Caret end_caret{};
 
     size_t lineAtY(int y);
+    inline const font::LineLayout& layoutAt(size_t line);
 };
 
 }

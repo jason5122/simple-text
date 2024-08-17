@@ -8,9 +8,6 @@ namespace font {
 
 class FontRasterizer {
 public:
-    FontRasterizer();
-    ~FontRasterizer();
-
     static FontRasterizer& instance();
 
     size_t addFont(const std::string& font_name_utf8, int font_size);
@@ -28,6 +25,10 @@ public:
     // TODO: Make these private. Currently, we make these public as a hack for DirectWrite.
     class impl;
     std::unique_ptr<impl> pimpl;
+
+private:
+    FontRasterizer();
+    ~FontRasterizer();
 };
 
 }

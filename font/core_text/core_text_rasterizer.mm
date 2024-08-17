@@ -9,7 +9,10 @@
 #import <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.
+#include <cassert>
+#include <format>
 #include <iostream>
+#include <ranges>
 
 using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
@@ -134,6 +137,8 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
 LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
+    assert(std::ranges::count(str8, '\n') == 0);
+
     UTF16ToUTF8IndicesMap utf8IndicesMap;
     if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
         std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";

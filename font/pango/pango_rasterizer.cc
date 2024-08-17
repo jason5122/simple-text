@@ -5,8 +5,10 @@
 #include <vector>
 
 // TODO: Debug use; remove this.
+#include <cassert>
 #include <format>
 #include <iostream>
+#include <ranges>
 
 namespace font {
 
@@ -110,6 +112,8 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
 }
 
 LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
+    assert(std::ranges::count(str8, '\n') == 0);
+
     PangoFont* font = pimpl->font_id_to_native[font_id].get();
 
     CairoSurfacePtr temp_surface{cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0)};

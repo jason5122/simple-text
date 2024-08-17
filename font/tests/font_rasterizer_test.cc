@@ -18,7 +18,7 @@ const std::string kOSFontFace = "Consolas";
 namespace font {
 
 TEST(FontRasterizerTest, LayoutLine1) {
-    FontRasterizer rasterizer{};
+    auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";
@@ -66,7 +66,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
 }
 
 TEST(FontRasterizerTest, LayoutLine2) {
-    FontRasterizer rasterizer{};
+    auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";
@@ -83,7 +83,7 @@ TEST(FontRasterizerTest, LayoutLine2) {
 }
 
 TEST(FontRasterizerTest, LineLayoutClosestForX) {
-    FontRasterizer rasterizer{};
+    auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";
@@ -111,7 +111,7 @@ TEST(FontRasterizerTest, LineLayoutClosestForX) {
 }
 
 TEST(FontRasterizerTest, LineLayoutClosestForIndex) {
-    FontRasterizer rasterizer{};
+    auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 
     const std::string line = "Hello😄🙂hi";

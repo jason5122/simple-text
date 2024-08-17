@@ -23,8 +23,7 @@ void TextViewWidget::selectAll() {
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     size_t line = end_caret.line;
-    std::string line_str = table.line(line);
-    const auto& layout = line_layout_cache.getLineLayout(line_str);
+    const auto& layout = layoutAt(line);
 
     if (by == MoveBy::kCharacters && !forward) {
         end_caret.moveToPrevGlyph(layout, line, end_caret.index);
@@ -72,8 +71,7 @@ void TextViewWidget::insertText(std::string_view text) {
 
     size_t line = end_caret.line;
     size_t new_index = end_caret.index + text.length();
-    std::string line_str = table.line(line);
-    const auto& layout = line_layout_cache.getLineLayout(line_str);
+    const auto& layout = layoutAt(line);
     end_caret.moveToIndex(layout, line, new_index);
 
     start_caret = end_caret;
@@ -87,8 +85,7 @@ void TextViewWidget::leftDelete() {
 
     // Selection is empty.
     if (start_caret == end_caret) {
-        std::string line_str = table.line(end_caret.line);
-        const auto& layout = line_layout_cache.getLineLayout(line_str);
+        const auto& layout = layoutAt(end_caret.line);
 
         size_t delta = end_caret.moveToPrevGlyph(layout, end_caret.line, end_caret.index);
         table.erase(end_caret.line, end_caret.index, delta);
@@ -128,8 +125,7 @@ void TextViewWidget::draw() {
     {
         PROFILE_BLOCK("TextViewWidget::renderText()");
         for (size_t line = start_line; line < end_line; ++line) {
-            std::string line_str = table.line(line);
-            const auto& layout = line_layout_cache.getLineLayout(line_str);
+            const auto& layout = layoutAt(line);
 
             Point coords = position - scroll_offset;
             // TODO: Using `metrics.line_height` causes a use-after-free error??
@@ -207,9 +203,7 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
     size_t new_line = lineAtY(new_coords.y);
 
-    std::string line_str = table.line(new_line);
-    const auto& layout = line_layout_cache.getLineLayout(line_str);
-
+    const auto& layout = layoutAt(new_line);
     end_caret.moveToX(layout, new_line, new_coords.x);
     // updateCaretX();
 }
@@ -234,6 +228,16 @@ size_t TextViewWidget::lineAtY(int y) {
 
     size_t line = y / metrics.line_height;
     return std::clamp(line, 0_Z, base::sub_sat(table.lineCount(), 1_Z));
+}
+
+inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
+    std::string line_str = table.line(line);
+
+    if (!line_str.empty() && line_str.back() == '\n') {
+        line_str.back() = ' ';
+    }
+
+    return line_layout_cache.getLineLayout(line_str);
 }
 
 }

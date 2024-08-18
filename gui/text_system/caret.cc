@@ -9,8 +9,11 @@ void Caret::moveToX(const font::LineLayout& layout, size_t line, int x, bool exc
     this->x = glyph_x;
 }
 
-void Caret::moveToIndex(const font::LineLayout& layout, size_t line, size_t index) {
-    auto [glyph_index, glyph_x] = layout.closestForIndex(index);
+void Caret::moveToIndex(const font::LineLayout& layout,
+                        size_t line,
+                        size_t index,
+                        bool exclude_end) {
+    auto [glyph_index, glyph_x] = layout.closestForIndex(index, exclude_end);
     this->line = line;
     this->index = glyph_index;
     this->x = glyph_x;
@@ -28,8 +31,11 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_
     return delta;
 }
 
-size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t line, size_t index) {
-    auto [glyph_index, glyph_x] = layout.nextClosestForIndex(index);
+size_t Caret::moveToNextGlyph(const font::LineLayout& layout,
+                              size_t line,
+                              size_t index,
+                              bool exclude_end) {
+    auto [glyph_index, glyph_x] = layout.nextClosestForIndex(index, exclude_end);
 
     size_t delta = glyph_index - this->index;
 

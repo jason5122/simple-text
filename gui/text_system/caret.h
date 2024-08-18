@@ -14,9 +14,15 @@ struct Caret {
     int max_x;
 
     void moveToX(const font::LineLayout& layout, size_t line, int x, bool exclude_end = false);
-    void moveToIndex(const font::LineLayout& layout, size_t line, size_t index);
+    void moveToIndex(const font::LineLayout& layout,
+                     size_t line,
+                     size_t index,
+                     bool exclude_end = false);
     size_t moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_t index);
-    size_t moveToNextGlyph(const font::LineLayout& layout, size_t line, size_t index);
+    size_t moveToNextGlyph(const font::LineLayout& layout,
+                           size_t line,
+                           size_t index,
+                           bool exclude_end = false);
 
     friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
         return c1.line == c2.line && c1.index == c2.index;

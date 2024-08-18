@@ -23,14 +23,15 @@ void TextViewWidget::selectAll() {
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     size_t line = end_caret.line;
-    const auto& layout = layoutAt(line);
+    bool exclude_end;
+    const auto& layout = layoutAt(line, exclude_end);
 
     if (by == MoveBy::kCharacters && !forward) {
         end_caret.moveToPrevGlyph(layout, line, end_caret.index);
         // updateCaretX();
     }
     if (by == MoveBy::kCharacters && forward) {
-        end_caret.moveToNextGlyph(layout, line, end_caret.index);
+        end_caret.moveToNextGlyph(layout, line, end_caret.index, exclude_end);
         // updateCaretX();
     }
     // if (by == MoveBy::kLines) {
@@ -71,8 +72,9 @@ void TextViewWidget::insertText(std::string_view text) {
 
     size_t line = end_caret.line;
     size_t new_index = end_caret.index + text.length();
-    const auto& layout = layoutAt(line);
-    end_caret.moveToIndex(layout, line, new_index);
+    bool exclude_end;
+    const auto& layout = layoutAt(line, exclude_end);
+    end_caret.moveToIndex(layout, line, new_index, exclude_end);
 
     start_caret = end_caret;
     // TODO: Do we update caret `max_x` too?

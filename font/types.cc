@@ -9,12 +9,18 @@
 
 namespace font {
 
-std::pair<size_t, int> LineLayout::closestForX(int x) const {
-    for (const auto& glyph : *this) {
+std::pair<size_t, int> LineLayout::closestForX(int x, bool exclude_end) const {
+    for (auto it = begin(); it != end(); ++it) {
+        const auto& glyph = *it;
         int glyph_x = glyph.position.x;
+
+        if (exclude_end && it == std::prev(end())) {
+            return {glyph.index, glyph_x};
+        }
+
         int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
         if (glyph_center >= x) {
-            return {glyph.index, glyph.position.x};
+            return {glyph.index, glyph_x};
         }
     }
     return {length, width};

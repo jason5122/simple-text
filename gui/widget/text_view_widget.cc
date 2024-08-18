@@ -216,8 +216,9 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     Point new_coords = mouse_pos - position + scroll_offset;
     size_t new_line = lineAtY(new_coords.y);
 
-    const auto& layout = layoutAt(new_line);
-    end_caret.moveToX(layout, new_line, new_coords.x);
+    bool exclude_end;
+    const auto& layout = layoutAt(new_line, exclude_end);
+    end_caret.moveToX(layout, new_line, new_coords.x, exclude_end);
     // updateCaretX();
 }
 
@@ -244,9 +245,15 @@ size_t TextViewWidget::lineAtY(int y) {
 }
 
 inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
-    std::string line_str = table.line(line);
+    bool unused;
+    return layoutAt(line, unused);
+}
 
-    if (!line_str.empty() && line_str.back() == '\n') {
+inline const font::LineLayout& TextViewWidget::layoutAt(size_t line, bool& exclude_end) {
+    std::string line_str = table.line(line);
+    exclude_end = !line_str.empty() && line_str.back() == '\n';
+
+    if (exclude_end) {
         line_str.back() = ' ';
     }
 

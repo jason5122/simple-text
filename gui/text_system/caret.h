@@ -13,7 +13,7 @@ struct Caret {
     // This is updated whenever the caret moves horizontally.
     int max_x;
 
-    void moveToX(const font::LineLayout& layout, size_t line, int x);
+    void moveToX(const font::LineLayout& layout, size_t line, int x, bool exclude_end = false);
     void moveToIndex(const font::LineLayout& layout, size_t line, size_t index);
     size_t moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_t index);
     size_t moveToNextGlyph(const font::LineLayout& layout, size_t line, size_t index);

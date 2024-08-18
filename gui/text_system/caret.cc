@@ -2,8 +2,8 @@
 
 namespace gui {
 
-void Caret::moveToX(const font::LineLayout& layout, size_t line, int x) {
-    auto [glyph_index, glyph_x] = layout.closestForX(x);
+void Caret::moveToX(const font::LineLayout& layout, size_t line, int x, bool exclude_end) {
+    auto [glyph_index, glyph_x] = layout.closestForX(x, exclude_end);
     this->line = line;
     this->index = glyph_index;
     this->x = glyph_x;

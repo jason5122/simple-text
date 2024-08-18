@@ -38,6 +38,7 @@ private:
 
     size_t lineAtY(int y);
     inline const font::LineLayout& layoutAt(size_t line);
+    inline const font::LineLayout& layoutAt(size_t line, bool& exclude_end);
 };
 
 }

@@ -40,7 +40,7 @@ struct LineLayout {
     size_t length;
     std::vector<ShapedRun> runs;
 
-    std::pair<size_t, int> closestForX(int x) const;
+    std::pair<size_t, int> closestForX(int x, bool exclude_end = false) const;
     std::pair<size_t, int> closestForIndex(size_t index) const;
     std::pair<size_t, int> prevClosestForIndex(size_t index) const;
     std::pair<size_t, int> nextClosestForIndex(size_t index) const;

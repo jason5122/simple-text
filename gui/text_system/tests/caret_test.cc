@@ -134,4 +134,26 @@ TEST(CaretTest, MoveToNextGlyph) {
     }
 }
 
+TEST(CaretTest, MoveInEmptyLayout) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    const std::string line = "";
+    const auto layout = rasterizer.layoutLine(font_id, line);
+    Caret caret;
+
+    caret.moveToIndex(layout, 0, 0);
+
+    for (size_t i = 0; i < 10; i++) {
+        caret.moveToPrevGlyph(layout, 0, caret.index);
+        EXPECT_EQ(caret.index, layout.length);
+        EXPECT_EQ(caret.x, layout.width);
+    }
+    for (size_t i = 0; i < 10; i++) {
+        caret.moveToNextGlyph(layout, 0, caret.index);
+        EXPECT_EQ(caret.index, layout.length);
+        EXPECT_EQ(caret.x, layout.width);
+    }
+}
+
 }

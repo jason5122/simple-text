@@ -2,10 +2,6 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "types.h"
 
-// TODO: Debug use; remove this.
-#include <format>
-#include <iostream>
-
 namespace font {
 
 LineLayout::const_iterator LineLayout::begin() const {

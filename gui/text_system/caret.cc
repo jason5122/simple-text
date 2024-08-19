@@ -71,11 +71,14 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_
             return set((*it).index, (*it).position.x);
         }
     }
-    auto it = layout.end();
-    // TODO: Replace this with saturating sub for iterators.
-    if (it != layout.begin()) --it;
 
-    return set((*it).index, (*it).position.x);
+    if (layout.begin() != layout.end()) {
+        auto it = std::prev(layout.end());
+        const auto& glyph = *it;
+        return set(glyph.index, glyph.position.x);
+    } else {
+        return 0;
+    }
 }
 
 size_t Caret::moveToNextGlyph(const font::LineLayout& layout,

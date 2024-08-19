@@ -1,0 +1,10 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [ "caret_test.cc" ]
+
+  deps = [
+    "//gui/text_system",
+    "//third_party/googletest:gtest",
+  ]
+}

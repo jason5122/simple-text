@@ -1,31 +1,12 @@
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "types.h"
-#include <numeric>
 
 // TODO: Debug use; remove this.
 #include <format>
 #include <iostream>
 
 namespace font {
-
-std::pair<size_t, int> LineLayout::closestForX(int x, bool exclude_end) const {
-    for (auto it = begin(); it != end(); ++it) {
-        const auto& glyph = *it;
-        int glyph_x = glyph.position.x;
-
-        // Exclude end if requested.
-        if (exclude_end && it == std::prev(end())) {
-            return {glyph.index, glyph_x};
-        }
-
-        int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
-        if (glyph_center >= x) {
-            return {glyph.index, glyph_x};
-        }
-    }
-    return {length, width};
-}
 
 std::pair<size_t, int> LineLayout::closestForIndex(size_t index, bool exclude_end) const {
     for (auto it = begin(); it != end(); ++it) {

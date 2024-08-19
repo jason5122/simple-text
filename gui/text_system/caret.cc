@@ -1,12 +1,30 @@
 #include "caret.h"
+#include <numeric>
 
 namespace gui {
 
 void Caret::moveToX(const font::LineLayout& layout, size_t line, int x, bool exclude_end) {
-    auto [glyph_index, glyph_x] = layout.closestForX(x, exclude_end);
     this->line = line;
-    this->index = glyph_index;
-    this->x = glyph_x;
+    auto set = [&](size_t index, int x) {
+        this->index = index;
+        this->x = x;
+    };
+
+    for (auto it = layout.begin(); it != layout.end(); ++it) {
+        const auto& glyph = *it;
+        int glyph_x = glyph.position.x;
+
+        // Exclude end if requested.
+        if (exclude_end && it == std::prev(layout.end())) {
+            return set(glyph.index, glyph_x);
+        }
+
+        int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
+        if (glyph_center >= x) {
+            return set(glyph.index, glyph_x);
+        }
+    }
+    set(layout.length, layout.width);
 }
 
 void Caret::moveToIndex(const font::LineLayout& layout,

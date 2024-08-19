@@ -16,8 +16,13 @@ TextViewWidget::TextViewWidget(const std::string& text) : table{text} {
 }
 
 void TextViewWidget::selectAll() {
-    // start_caret = line_layout.begin();
-    // end_caret = std::prev(line_layout.end());
+    size_t start_line = 0;
+    size_t end_line = base::sub_sat(table.lineCount(), 1_Z);
+    const auto& start_layout = layoutAt(start_line);
+    const auto& end_layout = layoutAt(end_line);
+
+    start_caret.moveToIndex(start_layout, start_line, 0);
+    end_caret.moveToIndex(end_layout, end_line, end_layout.length);
     // updateCaretX();
 }
 
@@ -44,27 +49,34 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
 }
 
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
-    // size_t line = (*end_caret).line;
-    // if (to == MoveTo::kHardBOL) {
-    //     end_caret = line_layout.getLine(line);
-    //     updateCaretX();
-    // }
-    // if (to == MoveTo::kHardEOL) {
-    //     end_caret = std::prev(line_layout.getLine(line + 1));
-    //     updateCaretX();
-    // }
-    // if (to == MoveTo::kBOF) {
-    //     end_caret = line_layout.begin();
-    //     updateCaretX();
-    // }
-    // if (to == MoveTo::kEOF) {
-    //     end_caret = std::prev(line_layout.end());
-    //     updateCaretX();
-    // }
+    if (to == MoveTo::kHardBOL) {
+        bool exclude_end;
+        const auto& layout = layoutAt(end_caret.line, exclude_end);
+        end_caret.moveToIndex(layout, end_caret.line, 0, exclude_end);
+        // updateCaretX();
+    }
+    if (to == MoveTo::kHardEOL) {
+        bool exclude_end;
+        const auto& layout = layoutAt(end_caret.line, exclude_end);
+        end_caret.moveToIndex(layout, end_caret.line, layout.length, exclude_end);
+        // updateCaretX();
+    }
+    if (to == MoveTo::kBOF) {
+        size_t start_line = 0;
+        const auto& layout = layoutAt(start_line);
+        end_caret.moveToIndex(layout, start_line, 0);
+        // updateCaretX();
+    }
+    if (to == MoveTo::kEOF) {
+        size_t end_line = base::sub_sat(table.lineCount(), 1_Z);
+        const auto& layout = layoutAt(end_line);
+        end_caret.moveToIndex(layout, end_line, layout.length);
+        // updateCaretX();
+    }
 
-    // if (!extend) {
-    //     start_caret = end_caret;
-    // }
+    if (!extend) {
+        start_caret = end_caret;
+    }
 }
 
 void TextViewWidget::insertText(std::string_view text) {

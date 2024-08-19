@@ -47,4 +47,91 @@ TEST(CaretTest, MoveToX) {
     EXPECT_EQ(caret.x, 0);
 }
 
+TEST(CaretTest, MoveToIndex) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    const std::string line = "Hello😄🙂hi";
+    const auto layout = rasterizer.layoutLine(font_id, line);
+    Caret caret;
+
+    size_t prev_glyph_index = 0;
+    int prev_glyph_x = 0;
+    for (size_t index = 0; index < line.length(); ++index) {
+        caret.moveToIndex(layout, 0, index);
+
+        EXPECT_GE(caret.index, prev_glyph_index);
+        EXPECT_GE(caret.x, prev_glyph_x);
+
+        prev_glyph_index = caret.index;
+        prev_glyph_x = caret.x;
+    }
+
+    caret.moveToIndex(layout, 0, 99999);
+    EXPECT_EQ(caret.index, layout.length);
+    EXPECT_EQ(caret.x, layout.width);
+
+    caret.moveToIndex(layout, 0, 0);
+    EXPECT_EQ(caret.index, 0_Z);
+    EXPECT_EQ(caret.x, 0);
+}
+
+TEST(CaretTest, MoveToPrevGlyph) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    const std::string line = "Hello😄🙂hi";
+    const auto layout = rasterizer.layoutLine(font_id, line);
+    Caret caret;
+
+    caret.moveToIndex(layout, 0, 99999);
+    size_t prev_glyph_index = caret.index;
+    int prev_glyph_x = caret.x;
+    while (caret.index > 0) {
+        caret.moveToPrevGlyph(layout, 0, caret.index);
+
+        EXPECT_LT(caret.index, prev_glyph_index);
+        EXPECT_LT(caret.x, prev_glyph_x);
+
+        prev_glyph_index = caret.index;
+        prev_glyph_x = caret.x;
+    }
+
+    // Ensure moving while at the beginning does nothing.
+    for (size_t i = 0; i < 10; i++) {
+        caret.moveToPrevGlyph(layout, 0, 0);
+        EXPECT_EQ(caret.index, 0_Z);
+        EXPECT_EQ(caret.x, 0);
+    }
+}
+
+TEST(CaretTest, MoveToNextGlyph) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    const std::string line = "Hello😄🙂hi";
+    const auto layout = rasterizer.layoutLine(font_id, line);
+    Caret caret;
+
+    caret.moveToIndex(layout, 0, 0);
+    size_t prev_glyph_index = caret.index;
+    int prev_glyph_x = caret.x;
+    while (caret.index < layout.length) {
+        caret.moveToNextGlyph(layout, 0, caret.index);
+
+        EXPECT_GT(caret.index, prev_glyph_index);
+        EXPECT_GT(caret.x, prev_glyph_x);
+
+        prev_glyph_index = caret.index;
+        prev_glyph_x = caret.x;
+    }
+
+    // Ensure moving while at the end does nothing.
+    for (size_t i = 0; i < 10; i++) {
+        caret.moveToNextGlyph(layout, 0, layout.length);
+        EXPECT_EQ(caret.index, layout.length);
+        EXPECT_EQ(caret.x, layout.width);
+    }
+}
+
 }

@@ -82,32 +82,4 @@ TEST(FontRasterizerTest, LayoutLine2) {
     EXPECT_EQ(total_advance, layout.width);
 }
 
-TEST(FontRasterizerTest, LineLayoutClosestForIndex) {
-    auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
-
-    const std::string line = "Hello😄🙂hi";
-    auto layout = rasterizer.layoutLine(font_id, line);
-
-    size_t prev_glyph_index = 0;
-    int prev_glyph_x = 0;
-    for (size_t index = 0; index < line.length(); ++index) {
-        auto [glyph_index, glyph_x] = layout.closestForIndex(index);
-
-        EXPECT_GE(glyph_index, prev_glyph_index);
-        EXPECT_GE(glyph_x, prev_glyph_x);
-
-        prev_glyph_index = glyph_index;
-        prev_glyph_x = glyph_x;
-    }
-
-    auto [index, x] = layout.closestForIndex(99999);
-    EXPECT_EQ(index, layout.length);
-    EXPECT_EQ(x, layout.width);
-
-    std::tie(index, x) = layout.closestForIndex(0);
-    EXPECT_EQ(index, 0_Z);
-    EXPECT_EQ(x, 0);
-}
-
 }

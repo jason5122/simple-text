@@ -8,62 +8,6 @@
 
 namespace font {
 
-std::pair<size_t, int> LineLayout::closestForIndex(size_t index, bool exclude_end) const {
-    for (auto it = begin(); it != end(); ++it) {
-        const auto& glyph = *it;
-
-        // Exclude end if requested.
-        if (exclude_end && it == std::prev(end())) {
-            return {glyph.index, glyph.position.x};
-        }
-
-        if (glyph.index >= index) {
-            return {glyph.index, glyph.position.x};
-        }
-    }
-    return {length, width};
-}
-
-std::pair<size_t, int> LineLayout::prevClosestForIndex(size_t index) const {
-    for (auto it = begin(); it != end(); ++it) {
-        const auto& glyph = *it;
-
-        if (glyph.index >= index) {
-            // TODO: Replace this with saturating sub for iterators.
-            if (it != begin()) --it;
-
-            return {(*it).index, (*it).position.x};
-        }
-    }
-    auto it = end();
-    // TODO: Replace this with saturating sub for iterators.
-    if (it != begin()) --it;
-
-    return {(*it).index, (*it).position.x};
-}
-
-std::pair<size_t, int> LineLayout::nextClosestForIndex(size_t index, bool exclude_end) const {
-    for (auto it = begin(); it != end(); ++it) {
-        const auto& glyph = *it;
-
-        // Exclude end if requested.
-        if (exclude_end && it == std::prev(end())) {
-            return {glyph.index, glyph.position.x};
-        }
-
-        if (glyph.index >= index) {
-            ++it;
-
-            if (it == end()) {
-                return {length, width};
-            } else {
-                return {(*it).index, (*it).position.x};
-            }
-        }
-    }
-    return {length, width};
-}
-
 LineLayout::const_iterator LineLayout::begin() const {
     return {*this, 0, 0};
 }

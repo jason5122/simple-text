@@ -31,37 +31,84 @@ void Caret::moveToIndex(const font::LineLayout& layout,
                         size_t line,
                         size_t index,
                         bool exclude_end) {
-    auto [glyph_index, glyph_x] = layout.closestForIndex(index, exclude_end);
     this->line = line;
-    this->index = glyph_index;
-    this->x = glyph_x;
+    auto set = [&](size_t index, int x) {
+        this->index = index;
+        this->x = x;
+    };
+
+    for (auto it = layout.begin(); it != layout.end(); ++it) {
+        const auto& glyph = *it;
+
+        // Exclude end if requested.
+        if (exclude_end && it == std::prev(layout.end())) {
+            return set(glyph.index, glyph.position.x);
+        }
+
+        if (glyph.index >= index) {
+            return set(glyph.index, glyph.position.x);
+        }
+    }
+    set(layout.length, layout.width);
 }
 
 size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_t index) {
-    auto [glyph_index, glyph_x] = layout.prevClosestForIndex(index);
-
-    size_t delta = this->index - glyph_index;
-
     this->line = line;
-    this->index = glyph_index;
-    this->x = glyph_x;
+    auto set = [&](size_t index, int x) {
+        size_t delta = this->index - index;
+        this->index = index;
+        this->x = x;
+        return delta;
+    };
 
-    return delta;
+    for (auto it = layout.begin(); it != layout.end(); ++it) {
+        const auto& glyph = *it;
+
+        if (glyph.index >= index) {
+            // TODO: Replace this with saturating sub for iterators.
+            if (it != layout.begin()) --it;
+
+            return set((*it).index, (*it).position.x);
+        }
+    }
+    auto it = layout.end();
+    // TODO: Replace this with saturating sub for iterators.
+    if (it != layout.begin()) --it;
+
+    return set((*it).index, (*it).position.x);
 }
 
 size_t Caret::moveToNextGlyph(const font::LineLayout& layout,
                               size_t line,
                               size_t index,
                               bool exclude_end) {
-    auto [glyph_index, glyph_x] = layout.nextClosestForIndex(index, exclude_end);
-
-    size_t delta = glyph_index - this->index;
-
     this->line = line;
-    this->index = glyph_index;
-    this->x = glyph_x;
+    auto set = [&](size_t index, int x) {
+        size_t delta = this->index - index;
+        this->index = index;
+        this->x = x;
+        return delta;
+    };
 
-    return delta;
+    for (auto it = layout.begin(); it != layout.end(); ++it) {
+        const auto& glyph = *it;
+
+        // Exclude end if requested.
+        if (exclude_end && it == std::prev(layout.end())) {
+            return set(glyph.index, glyph.position.x);
+        }
+
+        if (glyph.index >= index) {
+            ++it;
+
+            if (it == layout.end()) {
+                return set(layout.length, layout.width);
+            } else {
+                return set((*it).index, (*it).position.x);
+            }
+        }
+    }
+    return set(layout.length, layout.width);
 }
 
 // TODO: Move this to tests. Also, test all comparison operators.

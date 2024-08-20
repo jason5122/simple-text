@@ -1,9 +1,13 @@
 #include "caret.h"
 #include <numeric>
 
+// TODO: Debug use; remove this.
+#include <format>
+#include <iostream>
+
 namespace gui {
 
-size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end) {
+size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end) const {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
         int glyph_x = glyph.position.x;
@@ -21,7 +25,7 @@ size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end)
     return layout.length;
 }
 
-int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end) {
+int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end) const {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
 
@@ -40,7 +44,7 @@ int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_en
 void Caret::moveToX(const font::LineLayout& layout, int x, bool exclude_end) {
     auto set = [&](size_t col, int x) {
         this->index = col;
-        this->x = x;
+        // this->x = x;
     };
 
     for (auto it = layout.begin(); it != layout.end(); ++it) {
@@ -63,7 +67,7 @@ void Caret::moveToX(const font::LineLayout& layout, int x, bool exclude_end) {
 void Caret::moveToIndex(const font::LineLayout& layout, size_t col, bool exclude_end) {
     auto set = [&](size_t col, int x) {
         this->index = col;
-        this->x = x;
+        // this->x = x;
     };
 
     for (auto it = layout.begin(); it != layout.end(); ++it) {
@@ -83,17 +87,15 @@ void Caret::moveToIndex(const font::LineLayout& layout, size_t col, bool exclude
 
 size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     auto set = [&](size_t index, int x) {
-        size_t delta = 0;
-        // size_t delta = this->col - index;
-        // this->col = index;
-        // this->x = x;
+        size_t delta = col - index;
+        this->index -= delta;
         return delta;
     };
 
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
 
-        if (glyph.index >= index) {
+        if (glyph.index >= col) {
             // TODO: Replace this with saturating sub for iterators.
             if (it != layout.begin()) --it;
 

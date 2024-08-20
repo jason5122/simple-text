@@ -11,13 +11,13 @@ struct Caret {
     // Cached values.
     // size_t line;
     // size_t col;  // UTF-8 index in line.
-    int x;
+    // int x;
     // We use this value to position the caret during vertical movement.
     // This is updated whenever the caret moves horizontally.
     // int max_x;
 
-    size_t columnAtX(const font::LineLayout& layout, int x, bool exclude_end = false);
-    int xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end = false);
+    size_t columnAtX(const font::LineLayout& layout, int x, bool exclude_end = false) const;
+    int xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end = false) const;
 
     void moveToX(const font::LineLayout& layout, int x, bool exclude_end = false);
     void moveToIndex(const font::LineLayout& layout, size_t col, bool exclude_end = false);

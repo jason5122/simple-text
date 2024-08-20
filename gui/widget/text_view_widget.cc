@@ -7,6 +7,7 @@
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
 #include <cassert>
+#include <format>
 #include <iostream>
 
 namespace gui {
@@ -99,22 +100,23 @@ void TextViewWidget::insertText(std::string_view text) {
 }
 
 void TextViewWidget::leftDelete() {
-    assert(start_caret <= end_caret);
-
     // Selection is empty.
-    auto [line, col] = table.lineColumnAt(end_caret.index);
     if (start_caret == end_caret) {
+        auto [line, col] = table.lineColumnAt(end_caret.index);
         const auto& layout = layoutAt(line);
 
         size_t delta = end_caret.moveToPrevGlyph(layout, col);
-        table.erase(line, col, delta);
+        table.erase(end_caret.index, delta);
 
         start_caret = end_caret;
     } else {
-        auto [start_line, start_col] = table.lineColumnAt(end_caret.index);
-        table.erase(start_line, start_col, line, col);
+        bool should_swap = end_caret < start_caret;
+        const auto& c1 = should_swap ? end_caret : start_caret;
+        const auto& c2 = should_swap ? start_caret : end_caret;
 
-        end_caret = start_caret;
+        table.erase(c1.index, c2.index - c1.index);
+        start_caret = c1;
+        end_caret = c1;
     }
 }
 
@@ -171,11 +173,16 @@ void TextViewWidget::draw() {
     auto [c1_line, c1_col] = table.lineColumnAt(c1.index);
     auto [c2_line, c2_col] = table.lineColumnAt(c2.index);
 
+    const auto& c1_layout = layoutAt(c1_line);
+    const auto& c2_layout = layoutAt(c2_line);
+    int c1_x = c1.xAtColumn(c1_layout, c1_col);
+    int c2_x = c1.xAtColumn(c2_layout, c2_col);
+
     std::vector<SelectionRenderer::Selection> selections;
     for (size_t line = c1_line; line <= c2_line; ++line) {
         const auto& layout = layoutAt(line);
-        int start = line == c1_line ? c1.x : 0;
-        int end = line == c2_line ? c2.x : layout.width;
+        int start = line == c1_line ? c1_x : 0;
+        int end = line == c2_line ? c2_x : layout.width;
         if (end - start > 0) {
             selections.emplace_back(SelectionRenderer::Selection{
                 .line = static_cast<int>(line),

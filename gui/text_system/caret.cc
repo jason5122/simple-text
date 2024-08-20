@@ -3,10 +3,9 @@
 
 namespace gui {
 
-void Caret::moveToX(const font::LineLayout& layout, size_t line, int x, bool exclude_end) {
-    this->line = line;
-    auto set = [&](size_t index, int x) {
-        this->col = index;
+void Caret::moveToX(const font::LineLayout& layout, int x, bool exclude_end) {
+    auto set = [&](size_t col, int x) {
+        this->index = col;
         this->x = x;
     };
 
@@ -27,13 +26,9 @@ void Caret::moveToX(const font::LineLayout& layout, size_t line, int x, bool exc
     set(layout.length, layout.width);
 }
 
-void Caret::moveToIndex(const font::LineLayout& layout,
-                        size_t line,
-                        size_t index,
-                        bool exclude_end) {
-    this->line = line;
-    auto set = [&](size_t index, int x) {
-        this->col = index;
+void Caret::moveToIndex(const font::LineLayout& layout, size_t col, bool exclude_end) {
+    auto set = [&](size_t col, int x) {
+        this->index = col;
         this->x = x;
     };
 
@@ -45,19 +40,19 @@ void Caret::moveToIndex(const font::LineLayout& layout,
             return set(glyph.index, glyph.position.x);
         }
 
-        if (glyph.index >= index) {
+        if (glyph.index >= col) {
             return set(glyph.index, glyph.position.x);
         }
     }
     set(layout.length, layout.width);
 }
 
-size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_t index) {
-    this->line = line;
+size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     auto set = [&](size_t index, int x) {
-        size_t delta = this->col - index;
-        this->col = index;
-        this->x = x;
+        size_t delta = 0;
+        // size_t delta = this->col - index;
+        // this->col = index;
+        // this->x = x;
         return delta;
     };
 
@@ -81,15 +76,12 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_
     }
 }
 
-size_t Caret::moveToNextGlyph(const font::LineLayout& layout,
-                              size_t line,
-                              size_t index,
-                              bool exclude_end) {
-    this->line = line;
+size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col, bool exclude_end) {
     auto set = [&](size_t index, int x) {
-        size_t delta = this->col - index;
-        this->col = index;
-        this->x = x;
+        size_t delta = 0;
+        // size_t delta = this->col - index;
+        // this->col = index;
+        // this->x = x;
         return delta;
     };
 
@@ -113,16 +105,5 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout,
     }
     return set(layout.length, layout.width);
 }
-
-// TODO: Move this to tests. Also, test all comparison operators.
-static_assert(Caret{0, 0} < Caret{0, 1});
-static_assert(Caret{0, 1} < Caret{1, 0});
-static_assert(Caret{1, 0} < Caret{1, 1});
-static_assert(!(Caret{1, 0} < Caret{1, 0}));
-
-static_assert(Caret{0, 1} > Caret{0, 0});
-static_assert(Caret{1, 0} > Caret{0, 1});
-static_assert(Caret{1, 1} > Caret{1, 0});
-static_assert(!(Caret{1, 0} > Caret{1, 0}));
 
 }

@@ -1,4 +1,5 @@
 #include "base/buffer/piece_table.h"
+#include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include <algorithm>
 #include <gtest/gtest.h>
@@ -870,6 +871,48 @@ TEST(PieceTableTest, ConstIteratorTest1) {
         ++it;
         ++cit;
     }
+}
+
+TEST(PieceTableTest, LineColumnAt1) {
+    auto check = [](std::string_view str) {
+        PieceTable table{str};
+
+        std::unordered_map<size_t, std::pair<size_t, size_t>> index_to_line_col_map;
+        size_t line = 0;
+        size_t col = 0;
+        for (size_t i = 0; i <= str.length(); i++) {
+            index_to_line_col_map[i] = {line, col};
+
+            if (str[i] == '\n') {
+                ++line;
+                col = 0;
+            } else {
+                ++col;
+            }
+        }
+
+        for (size_t i = 0; i <= table.length(); i++) {
+            EXPECT_EQ(table.lineColumnAt(i), index_to_line_col_map[i]);
+        }
+    };
+
+    check("Line 1\nLine 2");
+    check("Line 1\nLine 2\nLine 3\nLine 4");
+    check("\n\n\n");
+}
+
+TEST(PieceTableTest, LineColumnAt2) {
+    std::string str1 = "Hello world!";
+    PieceTable table1{str1};
+    auto [line1, col1] = table1.lineColumnAt(99999);
+    EXPECT_EQ(line1, 0_Z);
+    EXPECT_EQ(col1, table1.length());
+
+    std::string str2 = "Hello\nworld!";
+    PieceTable table2{str2};
+    auto [line2, col2] = table2.lineColumnAt(99999);
+    EXPECT_EQ(line2, 1_Z);
+    EXPECT_EQ(col2, table2.length() - 6);
 }
 
 }

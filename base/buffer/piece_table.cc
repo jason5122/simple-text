@@ -241,6 +241,30 @@ std::string PieceTable::str() const {
     return result;
 }
 
+std::pair<size_t, size_t> PieceTable::lineColumnAt(size_t index) const {
+    if (index > m_length) {
+        index = m_length;
+    }
+
+    std::vector<size_t> line_starts = {0};
+    size_t total_len = 0;
+    for (const auto& piece : pieces) {
+        for (size_t offset : piece.newlines) {
+            // TODO: Do we need +1 here?
+            line_starts.emplace_back(total_len + offset + 1);
+        }
+        total_len += piece.length;
+    }
+
+    // `line_starts.size()` is > 0, so this subtraction is safe.
+    for (size_t i = line_starts.size() - 1; i >= 0; i--) {
+        if (index >= line_starts[i]) {
+            return {i, index - line_starts[i]};
+        }
+    }
+    return {newline_count, base::sub_sat(index, line_starts.back())};
+}
+
 PieceTable::iterator PieceTable::begin() {
     PieceIterator piece_it = pieces.begin();
     size_t piece_index = 0;

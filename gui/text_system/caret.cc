@@ -3,6 +3,40 @@
 
 namespace gui {
 
+size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end) {
+    for (auto it = layout.begin(); it != layout.end(); ++it) {
+        const auto& glyph = *it;
+        int glyph_x = glyph.position.x;
+
+        // Exclude end if requested.
+        if (exclude_end && it == std::prev(layout.end())) {
+            return glyph.index;
+        }
+
+        int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
+        if (glyph_center >= x) {
+            return glyph.index;
+        }
+    }
+    return layout.length;
+}
+
+int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end) {
+    for (auto it = layout.begin(); it != layout.end(); ++it) {
+        const auto& glyph = *it;
+
+        // Exclude end if requested.
+        if (exclude_end && it == std::prev(layout.end())) {
+            return glyph.position.x;
+        }
+
+        if (glyph.index >= col) {
+            return glyph.position.x;
+        }
+    }
+    return layout.width;
+}
+
 void Caret::moveToX(const font::LineLayout& layout, int x, bool exclude_end) {
     auto set = [&](size_t col, int x) {
         this->index = col;

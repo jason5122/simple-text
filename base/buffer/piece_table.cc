@@ -265,6 +265,13 @@ std::pair<size_t, size_t> PieceTable::lineColumnAt(size_t index) const {
     return {newline_count, base::sub_sat(index, line_starts.back())};
 }
 
+// TODO: Add tests for this method.
+size_t PieceTable::indexAt(size_t line, size_t col) const {
+    const_iterator line_itr = line == 0 ? begin() : std::next(newline(base::sub_sat(line, 1_Z)));
+    size_t index = std::distance(begin(), line_itr) + col;
+    return index;
+}
+
 PieceTable::iterator PieceTable::begin() {
     PieceIterator piece_it = pieces.begin();
     size_t piece_index = 0;

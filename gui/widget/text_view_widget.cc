@@ -217,9 +217,13 @@ void TextViewWidget::draw() {
     int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;
 
-    auto [line, _] = table.lineColumnAt(end_caret.index);
+    auto [line, col] = table.lineColumnAt(end_caret.index);
+    bool exclude_end;
+    const auto& layout = layoutAt(line, exclude_end);
+    int end_caret_x = end_caret.xAtColumn(layout, col, exclude_end);
+
     Point caret_pos{
-        .x = end_caret.x,
+        .x = end_caret_x,
         .y = static_cast<int>(line) * main_line_height,
     };
     caret_pos += position;
@@ -241,7 +245,10 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 
     bool exclude_end;
     const auto& layout = layoutAt(new_line, exclude_end);
-    end_caret.moveToX(layout, new_coords.x, exclude_end);
+    size_t new_col = end_caret.columnAtX(layout, new_coords.x, exclude_end);
+
+    end_caret.index = table.indexAt(new_line, new_col);
+
     // updateCaretX();
 }
 

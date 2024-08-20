@@ -14,7 +14,10 @@ struct Caret {
     int x;
     // We use this value to position the caret during vertical movement.
     // This is updated whenever the caret moves horizontally.
-    int max_x;
+    // int max_x;
+
+    size_t columnAtX(const font::LineLayout& layout, int x, bool exclude_end = false);
+    int xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end = false);
 
     void moveToX(const font::LineLayout& layout, int x, bool exclude_end = false);
     void moveToIndex(const font::LineLayout& layout, size_t col, bool exclude_end = false);

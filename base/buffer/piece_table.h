@@ -22,7 +22,10 @@ public:
     size_t newlineCount() const;
     std::string line(size_t index);  // Zero-indexed.
     std::string str() const;
+
+    // TODO: See if we can rely on these conversions less.
     std::pair<size_t, size_t> lineColumnAt(size_t index) const;  // Zero-indexed.
+    size_t indexAt(size_t line, size_t col) const;               // Zero-indexed.
 
     struct Iterator;
     struct ConstIterator;

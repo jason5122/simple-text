@@ -7,7 +7,7 @@ namespace gui {
 
 struct Caret {
     size_t line;
-    size_t index;  // UTF-8 index in line.
+    size_t col;  // UTF-8 index in line.
     int x;
     // We use this value to position the caret during vertical movement.
     // This is updated whenever the caret moves horizontally.
@@ -25,7 +25,7 @@ struct Caret {
                            bool exclude_end = false);
 
     friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
-        return c1.line == c2.line && c1.index == c2.index;
+        return c1.line == c2.line && c1.col == c2.col;
     }
 
     friend constexpr bool operator!=(const Caret& c1, const Caret& c2) {
@@ -34,7 +34,7 @@ struct Caret {
 
     friend constexpr bool operator<(const Caret& c1, const Caret& c2) {
         if (c1.line == c2.line) {
-            return c1.index < c2.index;
+            return c1.col < c2.col;
         } else {
             return c1.line < c2.line;
         }

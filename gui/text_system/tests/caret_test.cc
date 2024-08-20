@@ -31,19 +31,19 @@ TEST(CaretTest, MoveToX) {
     for (int x = 0; x < layout.width; ++x) {
         caret.moveToX(layout, 0, x);
 
-        EXPECT_GE(caret.index, prev_glyph_index);
+        EXPECT_GE(caret.col, prev_glyph_index);
         EXPECT_GE(caret.x, prev_glyph_x);
 
-        prev_glyph_index = caret.index;
+        prev_glyph_index = caret.col;
         prev_glyph_x = caret.x;
     }
 
     caret.moveToX(layout, 0, 99999);
-    EXPECT_EQ(caret.index, layout.length);
+    EXPECT_EQ(caret.col, layout.length);
     EXPECT_EQ(caret.x, layout.width);
 
     caret.moveToX(layout, 0, 0);
-    EXPECT_EQ(caret.index, 0_Z);
+    EXPECT_EQ(caret.col, 0_Z);
     EXPECT_EQ(caret.x, 0);
 }
 
@@ -60,19 +60,19 @@ TEST(CaretTest, MoveToIndex) {
     for (size_t index = 0; index < line.length(); ++index) {
         caret.moveToIndex(layout, 0, index);
 
-        EXPECT_GE(caret.index, prev_glyph_index);
+        EXPECT_GE(caret.col, prev_glyph_index);
         EXPECT_GE(caret.x, prev_glyph_x);
 
-        prev_glyph_index = caret.index;
+        prev_glyph_index = caret.col;
         prev_glyph_x = caret.x;
     }
 
     caret.moveToIndex(layout, 0, 99999);
-    EXPECT_EQ(caret.index, layout.length);
+    EXPECT_EQ(caret.col, layout.length);
     EXPECT_EQ(caret.x, layout.width);
 
     caret.moveToIndex(layout, 0, 0);
-    EXPECT_EQ(caret.index, 0_Z);
+    EXPECT_EQ(caret.col, 0_Z);
     EXPECT_EQ(caret.x, 0);
 }
 
@@ -85,22 +85,22 @@ TEST(CaretTest, MoveToPrevGlyph) {
     Caret caret;
 
     caret.moveToIndex(layout, 0, 99999);
-    size_t prev_glyph_index = caret.index;
+    size_t prev_glyph_index = caret.col;
     int prev_glyph_x = caret.x;
-    while (caret.index > 0) {
-        caret.moveToPrevGlyph(layout, 0, caret.index);
+    while (caret.col > 0) {
+        caret.moveToPrevGlyph(layout, 0, caret.col);
 
-        EXPECT_LT(caret.index, prev_glyph_index);
+        EXPECT_LT(caret.col, prev_glyph_index);
         EXPECT_LT(caret.x, prev_glyph_x);
 
-        prev_glyph_index = caret.index;
+        prev_glyph_index = caret.col;
         prev_glyph_x = caret.x;
     }
 
     // Ensure moving while at the beginning does nothing.
     for (size_t i = 0; i < 10; i++) {
         caret.moveToPrevGlyph(layout, 0, 0);
-        EXPECT_EQ(caret.index, 0_Z);
+        EXPECT_EQ(caret.col, 0_Z);
         EXPECT_EQ(caret.x, 0);
     }
 }
@@ -114,22 +114,22 @@ TEST(CaretTest, MoveToNextGlyph) {
     Caret caret;
 
     caret.moveToIndex(layout, 0, 0);
-    size_t prev_glyph_index = caret.index;
+    size_t prev_glyph_index = caret.col;
     int prev_glyph_x = caret.x;
-    while (caret.index < layout.length) {
-        caret.moveToNextGlyph(layout, 0, caret.index);
+    while (caret.col < layout.length) {
+        caret.moveToNextGlyph(layout, 0, caret.col);
 
-        EXPECT_GT(caret.index, prev_glyph_index);
+        EXPECT_GT(caret.col, prev_glyph_index);
         EXPECT_GT(caret.x, prev_glyph_x);
 
-        prev_glyph_index = caret.index;
+        prev_glyph_index = caret.col;
         prev_glyph_x = caret.x;
     }
 
     // Ensure moving while at the end does nothing.
     for (size_t i = 0; i < 10; i++) {
         caret.moveToNextGlyph(layout, 0, layout.length);
-        EXPECT_EQ(caret.index, layout.length);
+        EXPECT_EQ(caret.col, layout.length);
         EXPECT_EQ(caret.x, layout.width);
     }
 }
@@ -145,13 +145,13 @@ TEST(CaretTest, MoveInEmptyLayout) {
     caret.moveToIndex(layout, 0, 0);
 
     for (size_t i = 0; i < 10; i++) {
-        caret.moveToPrevGlyph(layout, 0, caret.index);
-        EXPECT_EQ(caret.index, layout.length);
+        caret.moveToPrevGlyph(layout, 0, caret.col);
+        EXPECT_EQ(caret.col, layout.length);
         EXPECT_EQ(caret.x, layout.width);
     }
     for (size_t i = 0; i < 10; i++) {
-        caret.moveToNextGlyph(layout, 0, caret.index);
-        EXPECT_EQ(caret.index, layout.length);
+        caret.moveToNextGlyph(layout, 0, caret.col);
+        EXPECT_EQ(caret.col, layout.length);
         EXPECT_EQ(caret.x, layout.width);
     }
 }

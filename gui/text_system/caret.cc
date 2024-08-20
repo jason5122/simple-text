@@ -6,7 +6,7 @@ namespace gui {
 void Caret::moveToX(const font::LineLayout& layout, size_t line, int x, bool exclude_end) {
     this->line = line;
     auto set = [&](size_t index, int x) {
-        this->index = index;
+        this->col = index;
         this->x = x;
     };
 
@@ -33,7 +33,7 @@ void Caret::moveToIndex(const font::LineLayout& layout,
                         bool exclude_end) {
     this->line = line;
     auto set = [&](size_t index, int x) {
-        this->index = index;
+        this->col = index;
         this->x = x;
     };
 
@@ -55,8 +55,8 @@ void Caret::moveToIndex(const font::LineLayout& layout,
 size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t line, size_t index) {
     this->line = line;
     auto set = [&](size_t index, int x) {
-        size_t delta = this->index - index;
-        this->index = index;
+        size_t delta = this->col - index;
+        this->col = index;
         this->x = x;
         return delta;
     };
@@ -87,8 +87,8 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout,
                               bool exclude_end) {
     this->line = line;
     auto set = [&](size_t index, int x) {
-        size_t delta = this->index - index;
-        this->index = index;
+        size_t delta = this->col - index;
+        this->col = index;
         this->x = x;
         return delta;
     };

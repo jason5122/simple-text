@@ -32,11 +32,11 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     const auto& layout = layoutAt(line, exclude_end);
 
     if (by == MoveBy::kCharacters && !forward) {
-        end_caret.moveToPrevGlyph(layout, line, end_caret.index);
+        end_caret.moveToPrevGlyph(layout, line, end_caret.col);
         // updateCaretX();
     }
     if (by == MoveBy::kCharacters && forward) {
-        end_caret.moveToNextGlyph(layout, line, end_caret.index, exclude_end);
+        end_caret.moveToNextGlyph(layout, line, end_caret.col, exclude_end);
         // updateCaretX();
     }
     // if (by == MoveBy::kLines) {
@@ -80,10 +80,10 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 }
 
 void TextViewWidget::insertText(std::string_view text) {
-    table.insert(end_caret.line, end_caret.index, text);
+    table.insert(end_caret.line, end_caret.col, text);
 
     size_t line = end_caret.line;
-    size_t new_index = end_caret.index + text.length();
+    size_t new_index = end_caret.col + text.length();
     bool exclude_end;
     const auto& layout = layoutAt(line, exclude_end);
     end_caret.moveToIndex(layout, line, new_index, exclude_end);
@@ -101,12 +101,12 @@ void TextViewWidget::leftDelete() {
     if (start_caret == end_caret) {
         const auto& layout = layoutAt(end_caret.line);
 
-        size_t delta = end_caret.moveToPrevGlyph(layout, end_caret.line, end_caret.index);
-        table.erase(end_caret.line, end_caret.index, delta);
+        size_t delta = end_caret.moveToPrevGlyph(layout, end_caret.line, end_caret.col);
+        table.erase(end_caret.line, end_caret.col, delta);
 
         start_caret = end_caret;
     } else {
-        table.erase(start_caret.line, start_caret.index, end_caret.line, end_caret.index);
+        table.erase(start_caret.line, start_caret.col, end_caret.line, end_caret.col);
 
         end_caret = start_caret;
     }

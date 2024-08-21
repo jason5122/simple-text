@@ -112,34 +112,27 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     }
 }
 
-size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col, bool exclude_end) {
-    auto set = [&](size_t index, int x) {
-        size_t delta = 0;
-        // size_t delta = this->col - index;
-        // this->col = index;
-        // this->x = x;
+size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
+    auto set = [&](size_t index) {
+        size_t delta = index - col;
+        this->index += delta;
         return delta;
     };
 
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
 
-        // Exclude end if requested.
-        if (exclude_end && it == std::prev(layout.end())) {
-            return set(glyph.index, glyph.position.x);
-        }
-
-        if (glyph.index >= index) {
+        if (glyph.index >= col) {
             ++it;
 
             if (it == layout.end()) {
-                return set(layout.length, layout.width);
+                return set(layout.length);
             } else {
-                return set((*it).index, (*it).position.x);
+                return set((*it).index);
             }
         }
     }
-    return set(layout.length, layout.width);
+    return set(layout.length);
 }
 
 }

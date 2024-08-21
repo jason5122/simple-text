@@ -17,27 +17,22 @@ TextViewWidget::TextViewWidget(const std::string& text) : table{text} {
 }
 
 void TextViewWidget::selectAll() {
-    size_t start_line = 0;
-    size_t end_line = base::sub_sat(table.lineCount(), 1_Z);
-    const auto& start_layout = layoutAt(start_line);
-    const auto& end_layout = layoutAt(end_line);
+    start_caret.index = 0;
+    end_caret.index = table.length();
 
-    start_caret.moveToIndex(start_layout, start_line, 0);
-    end_caret.moveToIndex(end_layout, end_line, end_layout.length);
     // updateCaretX();
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     auto [line, col] = table.lineColumnAt(end_caret.index);
-    bool exclude_end;
-    const auto& layout = layoutAt(line, exclude_end);
+    const auto& layout = layoutAt(line);
 
     if (by == MoveBy::kCharacters && !forward) {
         end_caret.moveToPrevGlyph(layout, col);
         // updateCaretX();
     }
     if (by == MoveBy::kCharacters && forward) {
-        end_caret.moveToNextGlyph(layout, col, exclude_end);
+        end_caret.moveToNextGlyph(layout, col);
         // updateCaretX();
     }
     // if (by == MoveBy::kLines) {
@@ -83,15 +78,8 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 }
 
 void TextViewWidget::insertText(std::string_view text) {
-    auto [line, col] = table.lineColumnAt(end_caret.index);
-    table.insert(line, col, text);
-
+    table.insert(end_caret.index, text);
     end_caret.index += text.length();
-    // size_t new_line = line;
-    // size_t new_col = col + text.length();
-    // bool exclude_end;
-    // const auto& layout = layoutAt(new_line, exclude_end);
-    // end_caret.moveToIndex(layout, new_col, exclude_end);
 
     start_caret = end_caret;
     // TODO: Do we update caret `max_x` too?

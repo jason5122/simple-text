@@ -14,7 +14,11 @@ namespace {
 #if BUILDFLAG(IS_MAC)
 constexpr int kMainFontSize = 16 * 2;
 constexpr int kUIFontSize = 11 * 2;
-const std::string kMainFontFace = "Menlo";
+const std::string kMainFontFace = "Monaco";
+// const std::string kMainFontFace = "Fira Code";
+// const std::string kMainFontFace = "Source Code Pro";
+// const std::string kMainFontFace = "SF Pro Text";
+// const std::string kMainFontFace = "Menlo";
 const std::string kUIFontFace = "SF Pro Text";
 #elif BUILDFLAG(IS_WIN)
 constexpr int kMainFontSize = 11 * 2;

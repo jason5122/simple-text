@@ -35,9 +35,12 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         end_caret.moveToNextGlyph(layout, col);
         // updateCaretX();
     }
-    // if (by == MoveBy::kLines) {
-    //     end_caret = line_layout.moveByLines(forward, end_caret, caret_x);
-    // }
+    if (by == MoveBy::kLines && !forward) {
+        std::cerr << "unimplemented!\n";
+    }
+    if (by == MoveBy::kLines && forward) {
+        std::cerr << "unimplemented!\n";
+    }
 
     if (!extend) {
         start_caret = end_caret;
@@ -47,16 +50,22 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
     if (to == MoveTo::kHardBOL) {
         auto [line, _] = table.lineColumnAt(end_caret.index);
+
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
-        end_caret.moveToIndex(layout, 0, exclude_end);
+        size_t new_col = end_caret.columnAtX(layout, 0, exclude_end);
+
+        end_caret.index = table.indexAt(line, new_col);
         // updateCaretX();
     }
     if (to == MoveTo::kHardEOL) {
         auto [line, _] = table.lineColumnAt(end_caret.index);
+
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
-        end_caret.moveToIndex(layout, layout.length, exclude_end);
+        size_t new_col = end_caret.columnAtX(layout, layout.width, exclude_end);
+
+        end_caret.index = table.indexAt(line, new_col);
         // updateCaretX();
     }
     if (to == MoveTo::kBOF) {

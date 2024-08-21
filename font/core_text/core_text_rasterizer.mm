@@ -27,7 +27,6 @@ public:
     size_t cacheFont(CTFontRef ct_font);
 
     ScopedCFTypeRef<CTLineRef> createCTLine(size_t font_id, std::string_view str8);
-    std::string convertCFString(CFStringRef cf_string);
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
@@ -211,7 +210,15 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
 size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
     CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
-    std::string font_name = convertCFString(ct_font_name);
+    NSString* ns_font_name = (NSString*)ct_font_name;
+    std::string font_name(ns_font_name.UTF8String);
+
+    // Sometimes, the CFStringRef isn't convertible to std::string. We need to bridge it to an
+    // NSString first.
+    if (font_name.empty()) {
+        std::cerr << "FontRasterizer::impl::cacheFont() error: font_name is empty\n";
+        std::abort();
+    }
 
     if (!font_postscript_name_to_id.contains(font_name)) {
         // TODO: Figure out how to automatically retain using ScopedCFTypeRef.
@@ -220,10 +227,14 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         int ascent = std::ceil(CTFontGetAscent(ct_font));
         int descent = std::ceil(CTFontGetDescent(ct_font));
         int leading = std::ceil(CTFontGetLeading(ct_font));
+        leading = 0;
         int line_height = ascent + descent + leading;
 
         // TODO: Remove magic numbers that emulate Sublime Text.
-        line_height += 1;
+        // line_height += 1;
+
+        std::cerr << std::format("{}: {} {} {}\n", font_name, CTFontGetAscent(ct_font),
+                                 CTFontGetDescent(ct_font), CTFontGetLeading(ct_font));
 
         Metrics metrics{
             .font_size = 0,  // TODO: Calculate font size correctly.
@@ -255,31 +266,6 @@ ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(size_t font_id,
         CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
 
     return CTLineCreateWithAttributedString(attr_string.get());
-}
-
-// https://gist.github.com/peter-bloomfield/1b228e2bb654702b1e50ef7524121fb9
-std::string FontRasterizer::impl::convertCFString(CFStringRef cf_string) {
-    if (!cf_string) return {};
-
-    // Attempt to access the underlying buffer directly. This only works if no conversion or
-    // internal allocation is required.
-    auto original_buffer{CFStringGetCStringPtr(cf_string, kCFStringEncodingUTF8)};
-    if (original_buffer) {
-        return original_buffer;
-    }
-
-    // Copy the data out to a local buffer.
-    auto utf16_length{CFStringGetLength(cf_string)};
-    // Leave room for null terminator.
-    auto utf8_max_length{CFStringGetMaximumSizeForEncoding(utf16_length, kCFStringEncodingUTF8) +
-                         1};
-    std::vector<char> buffer(utf8_max_length);
-
-    if (CFStringGetCString(cf_string, buffer.data(), utf8_max_length, utf8_max_length)) {
-        return buffer.data();
-    } else {
-        return {};
-    }
 }
 
 }

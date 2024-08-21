@@ -11,8 +11,6 @@ struct Caret {
     size_t columnAtX(const font::LineLayout& layout, int x, bool exclude_end = false) const;
     int xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end = false) const;
 
-    void moveToX(const font::LineLayout& layout, int x, bool exclude_end = false);
-    void moveToIndex(const font::LineLayout& layout, size_t col, bool exclude_end = false);
     size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col);
     size_t moveToNextGlyph(const font::LineLayout& layout, size_t col);
 

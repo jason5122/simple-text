@@ -197,12 +197,16 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
-    CGFloat ascent_float;
-    CTLineGetTypographicBounds(ct_line.get(), &ascent_float, nullptr, nullptr);
-    int ascent = std::ceil(ascent_float);
-    if (ascent % 2 == 1) {
-        ascent += 1;
-    }
+    // CGFloat ascent_float;
+    // CTLineGetTypographicBounds(ct_line.get(), &ascent_float, nullptr, nullptr);
+    // int ascent = std::ceil(ascent_float);
+    // if (ascent % 2 == 1) {
+    //     ascent += 1;
+    // }
+
+    // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
+    // when fonts with different ascents mix (e.g., emoji being taller than plain text).
+    int ascent = getMetrics(font_id).ascent;
 
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.
@@ -260,6 +264,7 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
             .font_size = 0,  // TODO: Calculate font size correctly.
             .line_height = line_height,
             .descent = -descent,
+            .ascent = ascent,
         };
 
         size_t font_id = font_id_to_native.size();

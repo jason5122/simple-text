@@ -16,6 +16,7 @@ public:
         int font_size;
         int line_height;
         int descent;
+        int ascent;
     };
     const Metrics& getMetrics(size_t font_id) const;
 

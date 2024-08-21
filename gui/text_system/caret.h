@@ -8,14 +8,6 @@ namespace gui {
 struct Caret {
     size_t index;
 
-    // Cached values.
-    // size_t line;
-    // size_t col;  // UTF-8 index in line.
-    // int x;
-    // We use this value to position the caret during vertical movement.
-    // This is updated whenever the caret moves horizontally.
-    // int max_x;
-
     size_t columnAtX(const font::LineLayout& layout, int x, bool exclude_end = false) const;
     int xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end = false) const;
 

@@ -46,29 +46,25 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
 
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
     if (to == MoveTo::kHardBOL) {
-        auto [line, col] = table.lineColumnAt(end_caret.index);
+        auto [line, _] = table.lineColumnAt(end_caret.index);
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
         end_caret.moveToIndex(layout, 0, exclude_end);
         // updateCaretX();
     }
     if (to == MoveTo::kHardEOL) {
-        auto [line, col] = table.lineColumnAt(end_caret.index);
+        auto [line, _] = table.lineColumnAt(end_caret.index);
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
         end_caret.moveToIndex(layout, layout.length, exclude_end);
         // updateCaretX();
     }
     if (to == MoveTo::kBOF) {
-        size_t start_line = 0;
-        const auto& layout = layoutAt(start_line);
-        end_caret.moveToIndex(layout, start_line, 0);
+        end_caret.index = 0;
         // updateCaretX();
     }
     if (to == MoveTo::kEOF) {
-        size_t end_line = base::sub_sat(table.lineCount(), 1_Z);
-        const auto& layout = layoutAt(end_line);
-        end_caret.moveToIndex(layout, end_line, layout.length);
+        end_caret.index = table.length();
         // updateCaretX();
     }
 

@@ -147,6 +147,12 @@ void TextViewWidget::draw() {
             //       The line with `line_layout_cache.getLineLayout()` is problematic.
             coords.y += line * main_line_height;
 
+            // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
+            coords.y -= main_line_height;
+            // TODO: Seems like Sublime Text adds something to the left edge no matter what.
+            // We could formalize this as padding, but we need selection to be flush...
+            // coords.x += 3;
+
             int min_x = scroll_offset.x;
             int max_x = scroll_offset.x + size.width;
 
@@ -176,6 +182,7 @@ void TextViewWidget::draw() {
         const auto& layout = layoutAt(line);
         int start = line == c1_line ? c1_x : 0;
         int end = line == c2_line ? c2_x : layout.width;
+
         if (end - start > 0) {
             selections.emplace_back(SelectionRenderer::Selection{
                 .line = static_cast<int>(line),

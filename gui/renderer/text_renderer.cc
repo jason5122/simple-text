@@ -124,6 +124,9 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             Point glyph_coords = coords;
             glyph_coords.x += glyph.position.x;
 
+            // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
+            glyph_coords.y += line_layout.ascent;
+
             GlyphCache::Glyph& rglyph = glyph_cache.getGlyph(
                 line_layout.layout_font_id, run.font_id, glyph.glyph_id, font_rasterizer);
             const InstanceData instance{

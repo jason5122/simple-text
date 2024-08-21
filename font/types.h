@@ -39,6 +39,7 @@ struct LineLayout {
     int width;
     size_t length;
     std::vector<ShapedRun> runs;
+    int ascent;
 
     struct ConstIterator;
     using const_iterator = ConstIterator;

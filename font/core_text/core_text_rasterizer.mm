@@ -87,6 +87,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
 
     CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
     CGContextSetAllowsFontSmoothing(context.get(), true);
+    // TODO: Read user's font smoothing setting.
     CGContextSetShouldSmoothFonts(context.get(), false);
     CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
     CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
@@ -96,8 +97,13 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     CGContextSetShouldAntialias(context.get(), true);
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
-    CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
-
+    // CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
+    CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
+    // TODO: Implement subpixel variants.
+    CGPoint rasterization_origin{
+        .x = 0,
+        .y = 0,
+    };
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
     uint8_t* bitmap_data = (uint8_t*)CGBitmapContextGetData(context.get());

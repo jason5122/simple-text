@@ -109,34 +109,69 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     FontType font_type) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
 
+    // float pos_x = 0;
+
+    std::vector<float> ideal_pos = {0, 12, 20, 31, 39, 59, 78, 86, 110, 118, 130};
+    std::vector<float> ideal_spv = {0, 0, 0, 0, 0.5, 0.5, 0.5, 0, 0, 0, 0};
+    size_t i = 0;
+
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
-            float _;
-            Point subpixel_variant{
-                .x = static_cast<int>(std::floor(std::modf(glyph.position.x, &_) * 4)),
-                .y = static_cast<int>(std::floor(std::modf(glyph.position.y, &_) * 4)),
-            };
-            std::cerr << std::format("{}: {} ({}), {}\n", glyph.glyph_id, glyph.position.x,
-                                     subpixel_variant.x, subpixel_variant.y);
+            // float _;
+            // Point subpixel_variant{
+            //     .x = static_cast<int>(std::floor(std::modf(glyph.position.x, &_) * 2)),
+            //     .y = static_cast<int>(std::floor(std::modf(glyph.position.y, &_) * 2)),
+            // };
+            // std::cerr << std::format("{}: {} ({}), {}\n", glyph.glyph_id, glyph.position.x,
+            //                          subpixel_variant.x, subpixel_variant.y);
 
             // If we reach a glyph before the minimum x, skip it and continue.
             // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
             // This assumes glyph positions are monotonically increasing.
-            if (glyph.position.x + glyph.advance.x < min_x) {
-                continue;
-            }
-            if (glyph.position.x > max_x) {
-                break;
+            // if (glyph.position.x + glyph.advance.x < min_x) {
+            //     continue;
+            // }
+            // if (glyph.position.x > max_x) {
+            //     break;
+            // }
+
+            float actual = std::round(glyph.position.x);
+            if (actual != ideal_pos[i]) {
+                std::cerr << std::format("{} != {}\n", actual, ideal_pos[i]);
+                std::abort();
             }
 
             Point glyph_coords = coords;
-            glyph_coords.x += glyph.position.x;
+            glyph_coords.x += ideal_pos[i];
+            // glyph_coords.x += std::ceil(glyph.position.x);
+            // glyph_coords.x += glyph.position.x;
+            // glyph_coords.x += pos_x;
+
+            std::cerr << glyph_coords << '\n';
 
             // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
             glyph_coords.y += line_layout.ascent;
 
-            GlyphCache::Glyph& rglyph = glyph_cache.getGlyph(
-                line_layout.layout_font_id, run.font_id, glyph.glyph_id, font_rasterizer);
+            float integer;
+            float frac = std::modf(glyph.position.x, &integer);
+            std::cerr << std::format("position: {}+{}\n", integer, frac);
+            float advance_frac = std::modf(glyph.advance.x, &integer);
+            std::cerr << std::format("advance: {}+{}\n", integer, advance_frac);
+
+            // pos_x = std::ceil(pos_x);
+            // pos_x += std::ceil(glyph.advance.x);
+
+            // int subpixel_variant_x = 0;
+            // if (frac > 0) {
+            //     subpixel_variant_x = 1;
+            // }
+            // if (frac > 0.25) {
+            //     subpixel_variant_x = 2;
+            // }
+
+            GlyphCache::Glyph& rglyph =
+                glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id, glyph.glyph_id,
+                                     font_rasterizer, ideal_spv[i]);
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
@@ -144,6 +179,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                 .color = Rgba::fromRgb(color, rglyph.colored),
             };
             insertIntoBatch(rglyph.page, std::move(instance), font_type);
+
+            i++;
         }
     }
 }

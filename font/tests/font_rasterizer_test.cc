@@ -41,7 +41,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
     size_t emoji_font_id = layout.runs[1].font_id;
     for (const auto& glyph : emoji_glyphs) {
         auto rglyph =
-            rasterizer.rasterizeUTF8(layout.layout_font_id, emoji_font_id, glyph.glyph_id);
+            rasterizer.rasterizeUTF8(layout.layout_font_id, emoji_font_id, glyph.glyph_id, 0);
         EXPECT_TRUE(rglyph.colored);
         EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 4_Z);
     }
@@ -50,7 +50,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
     size_t monospace_font_id = layout.runs[2].font_id;
     for (const auto& glyph : hi_glyphs) {
         auto rglyph =
-            rasterizer.rasterizeUTF8(layout.layout_font_id, monospace_font_id, glyph.glyph_id);
+            rasterizer.rasterizeUTF8(layout.layout_font_id, monospace_font_id, glyph.glyph_id, 0);
         EXPECT_FALSE(rglyph.colored);
         EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 3_Z);
     }

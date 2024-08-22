@@ -46,7 +46,8 @@ const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const 
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
                                               size_t font_id,
-                                              uint32_t glyph_id) const {
+                                              uint32_t glyph_id,
+                                              float subpixel_variant_x) const {
     CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
 
     CGGlyph glyph_index = glyph_id;
@@ -66,6 +67,11 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     uint32_t rasterized_height = rasterized_descent + rasterized_ascent;
 
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
+
+    // Leave room for subpixel variant.
+    if (subpixel_variant_x > 0) {
+        rasterized_width += 1;
+    }
 
     // int descent = getMetrics(layout_font_id).descent;
     // top -= descent;
@@ -97,13 +103,18 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     CGContextSetShouldAntialias(context.get(), true);
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
-    // CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
-    CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
+    CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
+    // CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
     // TODO: Implement subpixel variants.
-    CGPoint rasterization_origin{
-        .x = 0,
-        .y = 0,
-    };
+    // CGPoint rasterization_origin{
+    //     .x = 1,
+    //     // .x = static_cast<float>(subpixel_variant_x) / 2,
+    //     .y = 0,
+    // };
+    // rasterization_origin.x += subpixel_variant_x;
+    rasterization_origin.x += subpixel_variant_x;
+
+    std::cerr << std::format("hmm: {}\n", subpixel_variant_x);
 
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 

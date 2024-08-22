@@ -218,10 +218,13 @@ std::string PieceTable::substr(size_t index, size_t count) const {
     size_t piece_start = offset;
     size_t piece_end = offset + (*it).length;
 
+    // Case 1: Middle of a piece.
     if (piece_start <= index && index + count <= piece_end) {
         const std::string& buffer = p1.source == PieceSource::Original ? original : add;
         return buffer.substr(p1.start + (index - offset), count);
-    } else {
+    }
+    // Case 2: Spanning multiple pieces.
+    else {
         std::string str;
 
         size_t sub = std::min(piece_end - index, count);

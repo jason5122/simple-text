@@ -113,9 +113,12 @@ void TextViewWidget::leftDelete() {
     }
 }
 
-// TODO: Implement this.
 std::string TextViewWidget::getSelectionText() {
-    return table.str();
+    bool should_swap = end_caret < start_caret;
+    const auto& c1 = should_swap ? end_caret : start_caret;
+    const auto& c2 = should_swap ? start_caret : end_caret;
+
+    return table.substr(c1.index, c2.index - c1.index);
 }
 
 void TextViewWidget::draw() {

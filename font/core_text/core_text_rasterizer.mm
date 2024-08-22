@@ -103,16 +103,13 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     CGContextSetShouldAntialias(context.get(), true);
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
-    CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
-    // CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
-    // TODO: Implement subpixel variants.
-    // CGPoint rasterization_origin{
-    //     .x = 1,
-    //     // .x = static_cast<float>(subpixel_variant_x) / 2,
-    //     .y = 0,
-    // };
+    // CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
     // rasterization_origin.x += subpixel_variant_x;
-    rasterization_origin.x += subpixel_variant_x;
+    CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
+    CGPoint rasterization_origin{
+        .x = subpixel_variant_x,
+        .y = 0,
+    };
 
     std::cerr << std::format("hmm: {}\n", subpixel_variant_x);
 

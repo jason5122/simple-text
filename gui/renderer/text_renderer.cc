@@ -109,12 +109,11 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     FontType font_type) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
 
-    // float pos_x = 0;
-
-    std::vector<float> ideal_pos = {0, 12, 20, 31, 39, 59, 78, 86, 110, 118, 130};
-    std::vector<float> ideal_spv = {0, 0, 0, 0, 0.5, 0.5, 0.5, 0, 0, 0, 0};
+    std::vector<float> ideal_pos = {0, 8, 27, 44, 63};
+    std::vector<float> ideal_spv = {0, 0.5, 0.5, 0, 0.5};
     size_t i = 0;
 
+    // float pos_x = 0;
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
             // float _;
@@ -135,19 +134,18 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             //     break;
             // }
 
-            float actual = std::round(glyph.position.x);
-            if (actual != ideal_pos[i]) {
-                std::cerr << std::format("{} != {}\n", actual, ideal_pos[i]);
-                std::abort();
-            }
+            // float actual = std::round(glyph.position.x);
+            // if (actual != ideal_pos[i]) {
+            //     std::cerr << std::format("{} != {}\n", actual, ideal_pos[i]);
+            //     std::abort();
+            // }
 
             Point glyph_coords = coords;
             glyph_coords.x += ideal_pos[i];
-            // glyph_coords.x += std::ceil(glyph.position.x);
-            // glyph_coords.x += glyph.position.x;
             // glyph_coords.x += pos_x;
+            // glyph_coords.x += glyph.position.x;
 
-            std::cerr << glyph_coords << '\n';
+            // pos_x += std::ceil(glyph.advance.x);
 
             // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
             glyph_coords.y += line_layout.ascent;
@@ -158,20 +156,12 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             float advance_frac = std::modf(glyph.advance.x, &integer);
             std::cerr << std::format("advance: {}+{}\n", integer, advance_frac);
 
-            // pos_x = std::ceil(pos_x);
-            // pos_x += std::ceil(glyph.advance.x);
-
-            // int subpixel_variant_x = 0;
-            // if (frac > 0) {
-            //     subpixel_variant_x = 1;
-            // }
-            // if (frac > 0.25) {
-            //     subpixel_variant_x = 2;
-            // }
+            float subpixel_variant_x = ideal_spv[i];
+            // float subpixel_variant_x = 0;
 
             GlyphCache::Glyph& rglyph =
                 glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id, glyph.glyph_id,
-                                     font_rasterizer, ideal_spv[i]);
+                                     font_rasterizer, subpixel_variant_x);
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,

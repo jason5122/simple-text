@@ -23,7 +23,8 @@ MultiViewWidget::MultiViewWidget() {
     // addTab(hello_emoji);
     // addTab("ffmpeg");
     // addTab("Lorem");
-    addTab("flflggiHlff");
+    // addTab("flflggiHlff");
+    addTab("ipsum");
     // addTab(R"(👩‍👩‍👧‍👦)");
     // addTab(R"(🇺🇸)");
     // addTab(R"(==👩‍👩‍👧‍👦﷽)");

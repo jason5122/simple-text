@@ -915,4 +915,91 @@ TEST(PieceTableTest, LineColumnAt2) {
     EXPECT_EQ(col2, table2.length() - 6);
 }
 
+TEST(PieceTableTest, Substr1) {
+    std::string str = "Hello world!";
+    PieceTable table{str};
+
+    EXPECT_EQ(table.substr(0, table.length()), str.substr(0, str.length()));
+    EXPECT_EQ(table.substr(0, 5), str.substr(0, 5));
+    EXPECT_EQ(table.substr(6, 5), str.substr(6, 5));
+    EXPECT_EQ(table.substr(1, 1), str.substr(1, 1));
+    EXPECT_EQ(table.substr(1, 0), str.substr(1, 0));
+    EXPECT_EQ(table.substr(0, 99999), str.substr(0, 99999));
+    EXPECT_EQ(table.substr(11, 99999), str.substr(11, 99999));
+}
+
+TEST(PieceTableTest, Substr2) {
+    std::string str = "Hello world!";
+    PieceTable table{str};
+
+    table.insert(6, "brave new ");
+    str.insert(6, "brave new ");
+    EXPECT_EQ(table.str(), str);
+
+    EXPECT_EQ(table.substr(0, table.length()), str.substr(0, str.length()));
+    EXPECT_EQ(table.substr(0, 5), str.substr(0, 5));
+    EXPECT_EQ(table.substr(6, 5), str.substr(6, 5));
+    EXPECT_EQ(table.substr(1, 1), str.substr(1, 1));
+    EXPECT_EQ(table.substr(1, 0), str.substr(1, 0));
+    EXPECT_EQ(table.substr(0, 99999), str.substr(0, 99999));
+    EXPECT_EQ(table.substr(11, 99999), str.substr(11, 99999));
+}
+
+TEST(PieceTableTest, Substr3) {
+    std::string str = "Hello world!";
+    PieceTable table{str};
+
+    table.insert(0, "String1 ");
+    str.insert(0, "String1 ");
+    EXPECT_EQ(table.str(), str);
+
+    table.insert(20, "String2 ");
+    str.insert(20, "String2 ");
+    EXPECT_EQ(table.str(), str);
+
+    table.erase(6, 3);
+    str.erase(6, 3);
+    EXPECT_EQ(table.str(), str);
+
+    table.erase(0, 10);
+    str.erase(0, 10);
+    EXPECT_EQ(table.str(), str);
+
+    EXPECT_EQ(table.substr(0, table.length()), str.substr(0, str.length()));
+    EXPECT_EQ(table.substr(0, 5), str.substr(0, 5));
+    EXPECT_EQ(table.substr(6, 5), str.substr(6, 5));
+    EXPECT_EQ(table.substr(1, 1), str.substr(1, 1));
+    EXPECT_EQ(table.substr(1, 0), str.substr(1, 0));
+    EXPECT_EQ(table.substr(0, 99999), str.substr(0, 99999));
+    EXPECT_EQ(table.substr(11, 99999), str.substr(11, 99999));
+}
+
+TEST(PieceTableTest, SubstrRandomTest) {
+    std::string str = "";
+    PieceTable table{str};
+
+    for (size_t n = 0; n < 100; ++n) {
+        // Randomly insert.
+        size_t insert_index = RandomNumber(0, str.length());
+        const std::string random_str = RandomString(RandomNumber(0, 10));
+        str.insert(insert_index, random_str);
+        table.insert(insert_index, random_str);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+
+        // Randomly erase.
+        size_t erase_index = RandomNumber(0, str.length());
+        size_t erase_count = RandomNumber(0, 4);
+        str.erase(erase_index, erase_count);
+        table.erase(erase_index, erase_count);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+
+        // Randomly get substrings.
+        size_t index = RandomNumber(0, str.length());
+        size_t count = RandomNumber(0, str.length());
+        EXPECT_EQ(str.substr(index, count), table.substr(index, count));
+    }
+}
+
 }

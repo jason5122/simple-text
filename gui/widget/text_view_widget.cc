@@ -113,6 +113,11 @@ void TextViewWidget::leftDelete() {
     }
 }
 
+// TODO: Implement this.
+std::string TextViewWidget::getSelectionText() {
+    return table.str();
+}
+
 void TextViewWidget::draw() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();

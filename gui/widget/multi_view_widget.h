@@ -23,6 +23,7 @@ public:
     void moveTo(MoveTo to, bool extend);
     void insertText(std::string_view text);
     void leftDelete();
+    std::string getSelectionText();
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;

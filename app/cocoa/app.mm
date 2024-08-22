@@ -127,4 +127,17 @@ void App::quit() {
     [NSApp terminate:nil];
 }
 
+std::string App::getClipboardString() {
+    NSString* ns_string = [NSPasteboard.generalPasteboard stringForType:NSPasteboardTypeString];
+    std::string str(ns_string.UTF8String);
+    return str;
+}
+
+void App::setClipboardString(const std::string& str8) {
+    NSPasteboard* pboard = NSPasteboard.generalPasteboard;
+    NSString* ns_string = [[NSString alloc] initWithUTF8String:str8.data()];
+    [pboard clearContents];
+    [pboard setString:ns_string forType:NSPasteboardTypeString];
+}
+
 }

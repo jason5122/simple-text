@@ -14,14 +14,12 @@ public:
 
     void insert(size_t index, std::string_view str);
     void erase(size_t index, size_t count);
-    void insert(size_t line, size_t column, std::string_view str);
-    void erase(size_t line, size_t column, size_t count);
-    void erase(size_t start_line, size_t start_column, size_t end_line, size_t end_column);
     size_t length() const;
     size_t lineCount() const;
     size_t newlineCount() const;
     std::string line(size_t index);  // Zero-indexed.
     std::string str() const;
+    std::string substr(size_t index, size_t count) const;
 
     // TODO: See if we can rely on these conversions less.
     std::pair<size_t, size_t> lineColumnAt(size_t index) const;  // Zero-indexed.
@@ -72,6 +70,7 @@ private:
     using PieceIterator = std::list<Piece>::iterator;
     using PieceConstIterator = std::list<Piece>::const_iterator;
     std::pair<PieceIterator, size_t> pieceAt(size_t index);
+    std::pair<PieceConstIterator, size_t> pieceAt(size_t index) const;
     std::list<size_t> cacheNewlines(std::string_view str);
 };
 

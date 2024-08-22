@@ -174,6 +174,15 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->removeTab(editor_widget->getCurrentIndex());
         handled = true;
     }
+    // Copy/paste.
+    if (key == app::Key::kC && modifiers == app::ModifierKey::kSuper) {
+        parent.setClipboardString(editor_widget->getSelectionText());
+        handled = true;
+    }
+    if (key == app::Key::kV && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->insertText(parent.getClipboardString());
+        handled = true;
+    }
 
     if (handled) {
         redraw();

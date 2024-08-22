@@ -17,6 +17,7 @@ public:
     void moveTo(MoveTo to, bool extend);
     void insertText(std::string_view text);
     void leftDelete();
+    std::string getSelectionText();
 
     void draw() override;
     void leftMouseDown(const Point& mouse_pos) override;

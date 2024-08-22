@@ -20,6 +20,8 @@ public:
     virtual ~App();
     void run();
     void quit();
+    std::string getClipboardString();
+    void setClipboardString(const std::string& str8);
 
     virtual void onLaunch() {}
     virtual void onQuit() {}

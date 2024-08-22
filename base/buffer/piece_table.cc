@@ -167,36 +167,6 @@ void PieceTable::erase(size_t index, size_t count) {
     }
 }
 
-// TODO: Add tests for this method.
-void PieceTable::insert(size_t line, size_t column, std::string_view str) {
-    iterator line_itr = line == 0 ? begin() : std::next(newline(base::sub_sat(line, 1_Z)));
-    size_t index = std::distance(begin(), line_itr) + column;
-    insert(index, str);
-}
-
-// TODO: Add tests for this method.
-void PieceTable::erase(size_t line, size_t column, size_t count) {
-    iterator line_itr = line == 0 ? begin() : std::next(newline(base::sub_sat(line, 1_Z)));
-    size_t index = std::distance(begin(), line_itr) + column;
-    erase(index, count);
-}
-
-// TODO: Add tests for this method.
-void PieceTable::erase(size_t start_line,
-                       size_t start_column,
-                       size_t end_line,
-                       size_t end_column) {
-    iterator start_line_itr =
-        start_line == 0 ? begin() : std::next(newline(base::sub_sat(start_line, 1_Z)));
-    size_t start_index = std::distance(begin(), start_line_itr) + start_column;
-
-    iterator end_line_itr =
-        end_line == 0 ? begin() : std::next(newline(base::sub_sat(end_line, 1_Z)));
-    size_t end_index = std::distance(begin(), end_line_itr) + end_column;
-
-    erase(start_index, end_index - start_index);
-}
-
 size_t PieceTable::length() const {
     return m_length;
 }
@@ -239,6 +209,43 @@ std::string PieceTable::str() const {
         result += buffer.substr(piece.start, piece.length);
     }
     return result;
+}
+
+std::string PieceTable::substr(size_t index, size_t count) const {
+    auto [it, offset] = pieceAt(index);
+
+    const Piece& p1 = *it;
+    size_t piece_start = offset;
+    size_t piece_end = offset + (*it).length;
+
+    if (piece_start <= index && index + count <= piece_end) {
+        const std::string& buffer = p1.source == PieceSource::Original ? original : add;
+        return buffer.substr(p1.start + (index - offset), count);
+    } else {
+        std::string str;
+
+        size_t sub = std::min(piece_end - index, count);
+        count -= sub;
+        const std::string& buffer = p1.source == PieceSource::Original ? original : add;
+        str += buffer.substr(p1.start + (p1.length - sub), sub);
+
+        ++it;
+
+        while (it != pieces.end() && count > 0) {
+            const Piece& piece = *it;
+            size_t piece_start = offset;
+            size_t piece_end = offset + (*it).length;
+
+            size_t sub = std::min(piece_end - piece_start, count);
+            count -= sub;
+            const std::string& buffer = piece.source == PieceSource::Original ? original : add;
+            str += buffer.substr(piece.start, sub);
+
+            offset += (*it).length;
+            ++it;
+        }
+        return str;
+    }
 }
 
 std::pair<size_t, size_t> PieceTable::lineColumnAt(size_t index) const {
@@ -353,6 +360,30 @@ PieceTable::const_iterator PieceTable::newline(size_t index) const {
 }
 
 std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
+    if (index > length()) {
+        std::cerr << "PieceTable::pieceAt() out of range error: index > length()\n";
+        std::abort();
+    }
+
+    auto it = pieces.begin();
+    size_t offset = 0;
+    while (it != pieces.end()) {
+        size_t piece_start = offset;
+        size_t piece_end = offset + (*it).length;
+        if (piece_start <= index && index <= piece_end) {
+            return {it, offset};
+        }
+        offset += (*it).length;
+        ++it;
+    }
+
+    std::cerr << "PieceTable::pieceAt() internal error: index <= length(), but there was no "
+                 "corresponding piece\n";
+    std::abort();
+}
+
+// TODO: Remove code duplication.
+std::pair<PieceTable::PieceConstIterator, size_t> PieceTable::pieceAt(size_t index) const {
     if (index > length()) {
         std::cerr << "PieceTable::pieceAt() out of range error: index > length()\n";
         std::abort();

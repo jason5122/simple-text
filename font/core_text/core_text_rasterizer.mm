@@ -44,9 +44,7 @@ const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const 
     return pimpl->font_id_to_metrics.at(font_id);
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
-                                              size_t font_id,
-                                              uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id) const {
     CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
 
     CGGlyph glyph_index = glyph_id;
@@ -66,9 +64,6 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     uint32_t rasterized_height = rasterized_descent + rasterized_ascent;
 
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
-
-    // int descent = getMetrics(layout_font_id).descent;
-    // top -= descent;
 
     // If the font is a color font and the glyph doesn't have an outline, it is
     // a color glyph.
@@ -197,13 +192,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
-    // CGFloat ascent_float;
-    // CTLineGetTypographicBounds(ct_line.get(), &ascent_float, nullptr, nullptr);
-    // int ascent = std::ceil(ascent_float);
-    // if (ascent % 2 == 1) {
-    //     ascent += 1;
-    // }
-
     // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
     // when fonts with different ascents mix (e.g., emoji being taller than plain text).
     int ascent = getMetrics(font_id).ascent;
@@ -247,18 +235,8 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         if (descent % 2 == 1) {
             descent += 1;
         }
-        // leading = 0;
+
         int line_height = ascent + descent + leading;
-
-        // TODO: Seems like Sublime Text rounds up to the nearest even number?
-        // if (line_height % 2 == 1) {
-        //     line_height += 1;
-        // }
-
-        std::cerr << std::format(
-            "{}: ascent = {} ({}), descent = {} ({}), leading = {} ({}), line_height = {}\n",
-            font_name, CTFontGetAscent(ct_font), ascent, CTFontGetDescent(ct_font), descent,
-            CTFontGetLeading(ct_font), leading, line_height);
 
         Metrics metrics{
             .font_size = 0,  // TODO: Calculate font size correctly.

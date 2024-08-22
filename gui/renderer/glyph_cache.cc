@@ -16,7 +16,7 @@ GlyphCache::Glyph& GlyphCache::getGlyph(size_t layout_font_id,
     }
 
     if (!cache[layout_font_id][font_id].contains(glyph_id)) {
-        auto rglyph = font_rasterizer.rasterizeUTF8(layout_font_id, font_id, glyph_id);
+        auto rglyph = font_rasterizer.rasterizeUTF8(font_id, glyph_id);
         cache[layout_font_id][font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
     }
     return cache[layout_font_id][font_id][glyph_id];

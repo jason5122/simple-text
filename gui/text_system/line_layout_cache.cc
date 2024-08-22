@@ -23,7 +23,7 @@ const font::LineLayout& LineLayoutCache::getLineLayout(std::string_view str8) {
     }
 }
 
-float LineLayoutCache::maxWidth() const {
+int LineLayoutCache::maxWidth() const {
     return max_width;
 }
 

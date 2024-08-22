@@ -9,13 +9,13 @@ namespace gui {
 class LineLayoutCache {
 public:
     const font::LineLayout& getLineLayout(std::string_view str8);
-    float maxWidth() const;
+    int maxWidth() const;
 
 private:
     std::unordered_map<XXH64_hash_t, font::LineLayout> cache;
 
     // TODO: Use a data structure (priority queue) for efficient updating.
-    float max_width = 0;
+    int max_width = 0;
 };
 
 }

@@ -9,35 +9,17 @@ GlyphCache::GlyphCache() {
 GlyphCache::Glyph& GlyphCache::getGlyph(size_t layout_font_id,
                                         size_t font_id,
                                         uint32_t glyph_id,
-                                        const font::FontRasterizer& font_rasterizer,
-                                        float subpixel_variant_x) {
-    auto rglyph =
-        font_rasterizer.rasterizeUTF8(layout_font_id, font_id, glyph_id, subpixel_variant_x);
-    cache.emplace_back(loadGlyph(std::move(rglyph)));
-    return cache.back();
-
+                                        const font::FontRasterizer& font_rasterizer) {
     // TODO: Refactor this ugly hack.
-    // while (cache[layout_font_id].size() <= font_id) {
-    //     cache[layout_font_id].emplace_back();
-    // }
+    while (cache[layout_font_id].size() <= font_id) {
+        cache[layout_font_id].emplace_back();
+    }
 
-    // if (!cache[layout_font_id][font_id].contains(glyph_id) &&
-    // !cache[layout_font_id][font_id].contains(subpixel_variant_x)) {
-    //     auto rglyph =
-    //         font_rasterizer.rasterizeUTF8(layout_font_id, font_id, glyph_id,
-    //         subpixel_variant_x);
-    //     cache[layout_font_id][font_id][glyph_id][subpixel_variant_x] =
-    //     loadGlyph(std::move(rglyph));
-    // }
-    // return cache[layout_font_id][font_id][glyph_id][subpixel_variant_x];
-
-    // if (!cache[layout_font_id][font_id].contains(glyph_id)) {
-    //     auto rglyph =
-    //         font_rasterizer.rasterizeUTF8(layout_font_id, font_id, glyph_id,
-    //         subpixel_variant_x);
-    //     cache[layout_font_id][font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
-    // }
-    // return cache[layout_font_id][font_id][glyph_id];
+    if (!cache[layout_font_id][font_id].contains(glyph_id)) {
+        auto rglyph = font_rasterizer.rasterizeUTF8(layout_font_id, font_id, glyph_id);
+        cache[layout_font_id][font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
+    }
+    return cache[layout_font_id][font_id][glyph_id];
 }
 
 GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {

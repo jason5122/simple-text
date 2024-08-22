@@ -26,7 +26,7 @@ void LabelWidget::addRightIcon(size_t icon_id) {
 }
 
 void LabelWidget::draw() {
-    // TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
 
     // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
@@ -55,19 +55,19 @@ void LabelWidget::draw() {
         image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
-    // const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    // const auto& font_rasterizer = font::FontRasterizer::instance();
-    // const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
 
-    // Point coords = centerVertically(metrics.line_height) + left_offset;
-    // int min_x = 0;
-    // int max_x = size.width - left_padding - right_padding;
+    Point coords = centerVertically(metrics.line_height) + left_offset;
+    int min_x = 0;
+    int max_x = size.width - left_padding - right_padding;
 
-    // // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
-    // coords.y -= metrics.line_height;
+    // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
+    coords.y -= metrics.line_height;
 
-    // text_renderer.renderLineLayout(layout, coords, min_x, max_x, color,
-    //                                TextRenderer::FontType::kUI);
+    text_renderer.renderLineLayout(layout, coords, min_x, max_x, color,
+                                   TextRenderer::FontType::kUI);
 }
 
 Point LabelWidget::centerVertically(int widget_height) {

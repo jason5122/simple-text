@@ -18,8 +18,8 @@ struct RasterizedGlyph {
 
 // TODO: Consider making a global "geometry" namespace and moving Point there.
 struct Point {
-    float x;
-    float y;
+    int x;
+    int y;
 };
 
 struct ShapedGlyph {
@@ -36,7 +36,7 @@ struct ShapedRun {
 
 struct LineLayout {
     size_t layout_font_id;
-    float width;
+    int width;
     size_t length;
     std::vector<ShapedRun> runs;
     int ascent;

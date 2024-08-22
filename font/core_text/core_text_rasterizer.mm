@@ -46,8 +46,7 @@ const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const 
 
 RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
                                               size_t font_id,
-                                              uint32_t glyph_id,
-                                              float subpixel_variant_x) const {
+                                              uint32_t glyph_id) const {
     CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
 
     CGGlyph glyph_index = glyph_id;
@@ -67,11 +66,6 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     uint32_t rasterized_height = rasterized_descent + rasterized_ascent;
 
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
-
-    // Leave room for subpixel variant.
-    if (subpixel_variant_x > 0) {
-        rasterized_width += 1;
-    }
 
     // int descent = getMetrics(layout_font_id).descent;
     // top -= descent;
@@ -93,7 +87,6 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
 
     CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
     CGContextSetAllowsFontSmoothing(context.get(), true);
-    // TODO: Read user's font smoothing setting.
     CGContextSetShouldSmoothFonts(context.get(), false);
     CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
     CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
@@ -103,15 +96,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     CGContextSetShouldAntialias(context.get(), true);
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
-    // CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
-    // rasterization_origin.x += subpixel_variant_x;
-    CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
-    CGPoint rasterization_origin{
-        .x = subpixel_variant_x,
-        .y = 0,
-    };
-
-    std::cerr << std::format("hmm: {}\n", subpixel_variant_x);
+    CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
 
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
@@ -162,6 +147,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(font_id, str8);
 
+    int total_advance = 0;
     std::vector<ShapedRun> runs;
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
@@ -183,18 +169,18 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         CTRunGetPositions(ct_run, {0, glyph_count}, positions.data());
         CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
 
-        // float total_advance = 0;
         std::vector<ShapedGlyph> glyphs;
         glyphs.reserve(glyph_count);
         for (CFIndex i = 0; i < glyph_count; ++i) {
+            // TODO: Use subpixel variants instead of rounding.
             Point position = {
-                // .x = total_advance,
-                .x = static_cast<float>(positions[i].x),
-                .y = static_cast<float>(positions[i].y),
+                .x = total_advance,
+                // .x = static_cast<int>(std::ceil(positions[i].x)),
+                .y = static_cast<int>(std::ceil(positions[i].y)),
             };
             Point advance = {
-                .x = static_cast<float>(advances[i].width),
-                .y = static_cast<float>(advances[i].height),
+                .x = static_cast<int>(std::ceil(advances[i].width)),
+                .y = static_cast<int>(std::ceil(advances[i].height)),
             };
 
             ShapedGlyph glyph{
@@ -205,11 +191,18 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             };
             glyphs.push_back(std::move(glyph));
 
-            // total_advance += std::ceil(advances[i].width);
+            total_advance += advance.x;
         }
 
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
+
+    // CGFloat ascent_float;
+    // CTLineGetTypographicBounds(ct_line.get(), &ascent_float, nullptr, nullptr);
+    // int ascent = std::ceil(ascent_float);
+    // if (ascent % 2 == 1) {
+    //     ascent += 1;
+    // }
 
     // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
     // when fonts with different ascents mix (e.g., emoji being taller than plain text).
@@ -217,12 +210,11 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.
-    double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
-    std::cerr << std::format("width = {}\n", width);
-
+    // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
     return {
         .layout_font_id = font_id,
-        .width = static_cast<float>(width),
+        .width = total_advance,
+        // .width = static_cast<int>(std::ceil(width)),
         .length = str8.length(),
         .runs = std::move(runs),
         .ascent = static_cast<int>(ascent),
@@ -255,8 +247,18 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         if (descent % 2 == 1) {
             descent += 1;
         }
-
+        // leading = 0;
         int line_height = ascent + descent + leading;
+
+        // TODO: Seems like Sublime Text rounds up to the nearest even number?
+        // if (line_height % 2 == 1) {
+        //     line_height += 1;
+        // }
+
+        std::cerr << std::format(
+            "{}: ascent = {} ({}), descent = {} ({}), leading = {} ({}), line_height = {}\n",
+            font_name, CTFontGetAscent(ct_font), ascent, CTFontGetDescent(ct_font), descent,
+            CTFontGetLeading(ct_font), leading, line_height);
 
         Metrics metrics{
             .font_size = 0,  // TODO: Calculate font size correctly.

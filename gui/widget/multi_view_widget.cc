@@ -19,8 +19,9 @@ namespace gui {
 
 MultiViewWidget::MultiViewWidget() {
     // TODO: Don't create a tab by default. See if we can have zero tabs like Sublime Text.
-    addTab(lorem);
+    // addTab(lorem);
     // addTab(hello_emoji);
+    addTab("ffmpeg");
     // addTab(R"(👩‍👩‍👧‍👦)");
     // addTab(R"(🇺🇸)");
     // addTab(R"(==👩‍👩‍👧‍👦﷽)");

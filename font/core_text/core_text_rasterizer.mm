@@ -104,6 +104,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
         .x = 0,
         .y = 0,
     };
+
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
     uint8_t* bitmap_data = (uint8_t*)CGBitmapContextGetData(context.get());
@@ -153,7 +154,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(font_id, str8);
 
-    int total_advance = 0;
     std::vector<ShapedRun> runs;
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
@@ -175,18 +175,18 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         CTRunGetPositions(ct_run, {0, glyph_count}, positions.data());
         CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
 
+        // float total_advance = 0;
         std::vector<ShapedGlyph> glyphs;
         glyphs.reserve(glyph_count);
         for (CFIndex i = 0; i < glyph_count; ++i) {
-            // TODO: Use subpixel variants instead of rounding.
             Point position = {
-                .x = total_advance,
-                // .x = static_cast<int>(std::ceil(positions[i].x)),
-                .y = static_cast<int>(std::ceil(positions[i].y)),
+                // .x = total_advance,
+                .x = static_cast<float>(positions[i].x),
+                .y = static_cast<float>(positions[i].y),
             };
             Point advance = {
-                .x = static_cast<int>(std::ceil(advances[i].width)),
-                .y = static_cast<int>(std::ceil(advances[i].height)),
+                .x = static_cast<float>(advances[i].width),
+                .y = static_cast<float>(advances[i].height),
             };
 
             ShapedGlyph glyph{
@@ -197,18 +197,11 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             };
             glyphs.push_back(std::move(glyph));
 
-            total_advance += advance.x;
+            // total_advance += std::ceil(advances[i].width);
         }
 
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
-
-    // CGFloat ascent_float;
-    // CTLineGetTypographicBounds(ct_line.get(), &ascent_float, nullptr, nullptr);
-    // int ascent = std::ceil(ascent_float);
-    // if (ascent % 2 == 1) {
-    //     ascent += 1;
-    // }
 
     // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
     // when fonts with different ascents mix (e.g., emoji being taller than plain text).
@@ -216,11 +209,12 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.
-    // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
+    double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
+    std::cerr << std::format("width = {}\n", width);
+
     return {
         .layout_font_id = font_id,
-        .width = total_advance,
-        // .width = static_cast<int>(std::ceil(width)),
+        .width = static_cast<float>(width),
         .length = str8.length(),
         .runs = std::move(runs),
         .ascent = static_cast<int>(ascent),
@@ -253,18 +247,8 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         if (descent % 2 == 1) {
             descent += 1;
         }
-        // leading = 0;
+
         int line_height = ascent + descent + leading;
-
-        // TODO: Seems like Sublime Text rounds up to the nearest even number?
-        // if (line_height % 2 == 1) {
-        //     line_height += 1;
-        // }
-
-        std::cerr << std::format(
-            "{}: ascent = {} ({}), descent = {} ({}), leading = {} ({}), line_height = {}\n",
-            font_name, CTFontGetAscent(ct_font), ascent, CTFontGetDescent(ct_font), descent,
-            CTFontGetLeading(ct_font), leading, line_height);
 
         Metrics metrics{
             .font_size = 0,  // TODO: Calculate font size correctly.

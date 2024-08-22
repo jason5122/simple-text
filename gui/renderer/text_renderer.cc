@@ -111,6 +111,14 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
+            float _;
+            Point subpixel_variant{
+                .x = static_cast<int>(std::floor(std::modf(glyph.position.x, &_) * 4)),
+                .y = static_cast<int>(std::floor(std::modf(glyph.position.y, &_) * 4)),
+            };
+            std::cerr << std::format("{}: {} ({}), {}\n", glyph.glyph_id, glyph.position.x,
+                                     subpixel_variant.x, subpixel_variant.y);
+
             // If we reach a glyph before the minimum x, skip it and continue.
             // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
             // This assumes glyph positions are monotonically increasing.

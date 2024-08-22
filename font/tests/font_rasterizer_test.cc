@@ -56,7 +56,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
     }
 
     // Ensure positions are monotonically increasing.
-    int prev_x = 0;
+    float prev_x = 0;
     for (const auto& run : layout.runs) {
         for (const auto& glyph : run.glyphs) {
             EXPECT_GE(glyph.position.x, prev_x);

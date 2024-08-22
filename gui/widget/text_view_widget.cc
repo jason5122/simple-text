@@ -152,7 +152,7 @@ void TextViewWidget::draw() {
             // TODO: Seems like Sublime Text adds something to the left edge no matter what.
             // We could formalize this as padding, but we need selection to be flush...
             // coords.x += 3;  // Source Code Pro et al.
-            // coords.x += 2;  // Chinese
+            coords.x += 2;  // Chinese
 
             int min_x = scroll_offset.x;
             int max_x = scroll_offset.x + size.width;

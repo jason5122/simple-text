@@ -83,7 +83,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
 void EditorWindow::onDraw(int width, int height) {
     {
-        // PROFILE_BLOCK("Total render time");
+        PROFILE_BLOCK("Total render time");
         main_widget->draw();
         Renderer::instance().flush({width, height});
     }

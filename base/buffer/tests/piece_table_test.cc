@@ -915,6 +915,72 @@ TEST(PieceTableTest, LineColumnAt2) {
     EXPECT_EQ(col2, table2.length() - 6);
 }
 
+TEST(PieceTableTest, LineColumnAt3) {
+    std::string str = "Hello\nworld!\nthis is a newline";
+    PieceTable table{str};
+
+    str.insert(23, "\n");
+    table.insert(23, "\n");
+    EXPECT_EQ(str, table.str());
+
+    size_t line;
+    size_t col;
+    std::tie(line, col) = table.lineColumnAt(2);
+    EXPECT_EQ(line, 0_Z);
+    EXPECT_EQ(col, 2_Z);
+
+    std::tie(line, col) = table.lineColumnAt(7);
+    EXPECT_EQ(line, 1_Z);
+    EXPECT_EQ(col, 1_Z);
+}
+
+TEST(PieceTableTest, LineColumnAtRandomTest) {
+    std::string str = "";
+    PieceTable table{str};
+
+    auto check = [](std::string_view str) {
+        PieceTable table{str};
+
+        std::unordered_map<size_t, std::pair<size_t, size_t>> index_to_line_col_map;
+        size_t line = 0;
+        size_t col = 0;
+        for (size_t i = 0; i <= str.length(); i++) {
+            index_to_line_col_map[i] = {line, col};
+
+            if (str[i] == '\n') {
+                ++line;
+                col = 0;
+            } else {
+                ++col;
+            }
+        }
+
+        for (size_t i = 0; i <= table.length(); i++) {
+            EXPECT_EQ(table.lineColumnAt(i), index_to_line_col_map[i]);
+        }
+    };
+
+    for (size_t n = 0; n < 50; ++n) {
+        // Randomly insert.
+        size_t insert_index = RandomNumber(0, str.length());
+        const std::string random_str = RandomNewlineString(RandomNumber(0, 10), 5);
+        str.insert(insert_index, random_str);
+        table.insert(insert_index, random_str);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+
+        // Randomly erase.
+        size_t erase_index = RandomNumber(0, str.length());
+        size_t erase_count = RandomNumber(0, 4);
+        str.erase(erase_index, erase_count);
+        table.erase(erase_index, erase_count);
+        EXPECT_EQ(str, table.str());
+        EXPECT_EQ(str.length(), table.length());
+
+        check(str);
+    }
+}
+
 TEST(PieceTableTest, Substr1) {
     std::string str = "Hello world!";
     PieceTable table{str};

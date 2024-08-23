@@ -133,9 +133,9 @@ void TextViewWidget::draw() {
     size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
 
-    // Render one line before start and one line after end. This ensures no sudden cutoff of
+    // Render two lines before start and one line after end. This ensures no sudden cutoff of
     // rendered text.
-    start_line = base::sub_sat(start_line, 1_Z);
+    start_line = base::sub_sat(start_line, 2_Z);
     end_line = base::add_sat(end_line, 1_Z);
 
     start_line = std::clamp(start_line, 0_Z, table.lineCount());
@@ -172,7 +172,6 @@ void TextViewWidget::draw() {
     }
 
     // Add selections.
-    // TODO: Only render selections that are on-screen.
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
     bool should_swap = end_caret < start_caret;
     const auto& c1 = should_swap ? end_caret : start_caret;
@@ -184,6 +183,10 @@ void TextViewWidget::draw() {
     const auto& c2_layout = layoutAt(c2_line);
     int c1_x = c1.xAtColumn(c1_layout, c1_col);
     int c2_x = c1.xAtColumn(c2_layout, c2_col);
+
+    // Don't render off-screen selections.
+    if (c1_line < start_line) c1_line = start_line;
+    if (c2_line > end_line) c2_line = end_line;
 
     std::vector<SelectionRenderer::Selection> selections;
     for (size_t line = c1_line; line <= c2_line; ++line) {

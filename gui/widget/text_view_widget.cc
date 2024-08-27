@@ -93,6 +93,8 @@ void TextViewWidget::insertText(std::string_view text) {
 }
 
 void TextViewWidget::leftDelete() {
+    PROFILE_BLOCK("TextViewWidget::leftDelete()");
+
     // Selection is empty.
     if (start_caret == end_caret) {
         auto [line, col] = table.lineColumnAt(end_caret.index);
@@ -172,39 +174,39 @@ void TextViewWidget::draw() {
     }
 
     // Add selections.
-    SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
-    bool should_swap = end_caret < start_caret;
-    const auto& c1 = should_swap ? end_caret : start_caret;
-    const auto& c2 = should_swap ? start_caret : end_caret;
-    auto [c1_line, c1_col] = table.lineColumnAt(c1.index);
-    auto [c2_line, c2_col] = table.lineColumnAt(c2.index);
+    // SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
+    // bool should_swap = end_caret < start_caret;
+    // const auto& c1 = should_swap ? end_caret : start_caret;
+    // const auto& c2 = should_swap ? start_caret : end_caret;
+    // auto [c1_line, c1_col] = table.lineColumnAt(c1.index);
+    // auto [c2_line, c2_col] = table.lineColumnAt(c2.index);
 
-    const auto& c1_layout = layoutAt(c1_line);
-    const auto& c2_layout = layoutAt(c2_line);
-    int c1_x = c1.xAtColumn(c1_layout, c1_col);
-    int c2_x = c1.xAtColumn(c2_layout, c2_col);
+    // const auto& c1_layout = layoutAt(c1_line);
+    // const auto& c2_layout = layoutAt(c2_line);
+    // int c1_x = c1.xAtColumn(c1_layout, c1_col);
+    // int c2_x = c1.xAtColumn(c2_layout, c2_col);
 
-    // Don't render off-screen selections.
-    if (c1_line < start_line) c1_line = start_line;
-    if (c2_line > end_line) c2_line = end_line;
+    // // Don't render off-screen selections.
+    // if (c1_line < start_line) c1_line = start_line;
+    // if (c2_line > end_line) c2_line = end_line;
 
-    std::vector<SelectionRenderer::Selection> selections;
-    for (size_t line = c1_line; line <= c2_line; ++line) {
-        const auto& layout = layoutAt(line);
-        int start = line == c1_line ? c1_x : 0;
-        int end = line == c2_line ? c2_x : layout.width;
+    // std::vector<SelectionRenderer::Selection> selections;
+    // for (size_t line = c1_line; line <= c2_line; ++line) {
+    //     const auto& layout = layoutAt(line);
+    //     int start = line == c1_line ? c1_x : 0;
+    //     int end = line == c2_line ? c2_x : layout.width;
 
-        if (end - start > 0) {
-            selections.emplace_back(SelectionRenderer::Selection{
-                .line = static_cast<int>(line),
-                .start = start,
-                .end = end,
-            });
-        }
-    }
-    selection_renderer.renderSelections(selections, position - scroll_offset);
+    //     if (end - start > 0) {
+    //         selections.emplace_back(SelectionRenderer::Selection{
+    //             .line = static_cast<int>(line),
+    //             .start = start,
+    //             .end = end,
+    //         });
+    //     }
+    // }
+    // selection_renderer.renderSelections(selections, position - scroll_offset);
 
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     // Add vertical scroll bar.
     // int line_count = table.lineCount();
     // int line_height = main_line_height;
@@ -233,24 +235,24 @@ void TextViewWidget::draw() {
     // 5);
 
     // Add caret.
-    int caret_width = 4;
-    int extra_padding = 8;
-    int caret_height = main_line_height + extra_padding * 2;
+    // int caret_width = 4;
+    // int extra_padding = 8;
+    // int caret_height = main_line_height + extra_padding * 2;
 
-    auto [line, col] = table.lineColumnAt(end_caret.index);
-    bool exclude_end;
-    const auto& layout = layoutAt(line, exclude_end);
-    int end_caret_x = end_caret.xAtColumn(layout, col, exclude_end);
+    // auto [line, col] = table.lineColumnAt(end_caret.index);
+    // bool exclude_end;
+    // const auto& layout = layoutAt(line, exclude_end);
+    // int end_caret_x = end_caret.xAtColumn(layout, col, exclude_end);
 
-    Point caret_pos{
-        .x = end_caret_x,
-        .y = static_cast<int>(line) * main_line_height,
-    };
-    caret_pos += position;
-    caret_pos -= scroll_offset;
-    caret_pos.x -= caret_width / 2;
-    caret_pos.y -= extra_padding;
-    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
+    // Point caret_pos{
+    //     .x = end_caret_x,
+    //     .y = static_cast<int>(line) * main_line_height,
+    // };
+    // caret_pos += position;
+    // caret_pos -= scroll_offset;
+    // caret_pos.x -= caret_width / 2;
+    // caret_pos.y -= extra_padding;
+    // rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {

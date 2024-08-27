@@ -2,13 +2,16 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "piece_table.h"
 #include "util/escape_special_chars.h"
+
+// TODO: Debug use; remove this.
+#include "util/profile_util.h"
 #include <format>
 #include <iostream>
 
 namespace base {
 
 PieceTable::PieceTable(std::string_view str) : original{str}, m_length{str.length()} {
-    pieces.emplace_front(Piece{
+    pieces.emplace_back(Piece{
         .source = PieceSource::Original,
         .start = 0,
         .length = str.length(),
@@ -35,14 +38,14 @@ void PieceTable::insert(size_t index, std::string_view str) {
 
     // Case 1: Beginning/end of a piece. We only need to add a single piece.
     if (index == piece_start || index == piece_end) {
-        const Piece piece{
+        Piece piece{
             .source = PieceSource::Add,
             .start = add_start,
             .length = str.length(),
             .newlines = cacheNewlines(str),
         };
         auto pos = index == piece_start ? it : std::next(it);
-        pieces.insert(pos, piece);
+        pieces.insert(pos, std::move(piece));
     }
     // Case 2: Middle of a piece. We need to split one piece into three pieces.
     else {
@@ -61,20 +64,20 @@ void PieceTable::insert(size_t index, std::string_view str) {
             newline -= p1.length;
         }
 
-        const Piece p2{
+        Piece p2{
             .source = PieceSource::Add,
             .start = add_start,
             .length = str.length(),
             .newlines = cacheNewlines(str),
         };
-        const Piece p3{
+        Piece p3{
             .source = p1.source,
             .start = p1.start + p1.length,
             .length = p1_old_length - p1.length,
             .newlines = std::move(p3_newlines),
         };
-        auto it2 = pieces.insert(std::next(it), p2);
-        pieces.insert(std::next(it2), p3);
+        auto it2 = pieces.insert(std::next(it), std::move(p2));
+        pieces.insert(std::next(it2), std::move(p3));
     }
 }
 
@@ -95,30 +98,37 @@ void PieceTable::erase(size_t index, size_t count) {
 
         // Split up line starts, if necessary.
         std::list<size_t> p2_newlines;
-        for (auto it = p1.newlines.begin(); it != p1.newlines.end(); ++it) {
-            if ((*it) >= p1.length) {
-                p2_newlines.splice(p2_newlines.begin(), p1.newlines, it, p1.newlines.end());
-                break;
+        {
+            PROFILE_BLOCK("part 1");
+            for (auto it = p1.newlines.begin(); it != p1.newlines.end(); ++it) {
+                if ((*it) >= p1.length) {
+                    p2_newlines.splice(p2_newlines.begin(), p1.newlines, it, p1.newlines.end());
+                    break;
+                }
             }
         }
+
         // Remove erased line starts.
-        size_t old_p2_size = p2_newlines.size();
-        p2_newlines.remove_if([&](auto newline) { return newline < p1.length + count; });
-        size_t num_removed = old_p2_size - p2_newlines.size();
-        // Decrement the line count.
-        newline_count = base::sub_sat(newline_count, num_removed);
-        // Adjust the remaining line starts after the split.
-        for (auto& newline : p2_newlines) {
-            newline -= p1.length + count;
+        {
+            PROFILE_BLOCK("part 2");
+            size_t old_p2_size = p2_newlines.size();
+            p2_newlines.remove_if([&](auto newline) { return newline < p1.length + count; });
+            size_t num_removed = old_p2_size - p2_newlines.size();
+            // Decrement the line count.
+            newline_count = base::sub_sat(newline_count, num_removed);
+            // Adjust the remaining line starts after the split.
+            for (auto& newline : p2_newlines) {
+                newline -= p1.length + count;
+            }
         }
 
-        const Piece p2{
+        Piece p2{
             .source = p1.source,
             .start = p1.start + p1.length + count,
             .length = p1_old_length - (p1.length + count),
             .newlines = std::move(p2_newlines),
         };
-        pieces.insert(std::next(it), p2);
+        pieces.insert(std::next(it), std::move(p2));
 
         m_length -= count;
     }

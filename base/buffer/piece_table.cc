@@ -98,28 +98,22 @@ void PieceTable::erase(size_t index, size_t count) {
 
         // Split up line starts, if necessary.
         std::list<size_t> p2_newlines;
-        {
-            PROFILE_BLOCK("part 1");
-            for (auto it = p1.newlines.begin(); it != p1.newlines.end(); ++it) {
-                if ((*it) >= p1.length) {
-                    p2_newlines.splice(p2_newlines.begin(), p1.newlines, it, p1.newlines.end());
-                    break;
-                }
+        for (auto it = p1.newlines.begin(); it != p1.newlines.end(); ++it) {
+            if ((*it) >= p1.length) {
+                p2_newlines.splice(p2_newlines.begin(), p1.newlines, it, p1.newlines.end());
+                break;
             }
         }
 
         // Remove erased line starts.
-        {
-            PROFILE_BLOCK("part 2");
-            size_t old_p2_size = p2_newlines.size();
-            p2_newlines.remove_if([&](auto newline) { return newline < p1.length + count; });
-            size_t num_removed = old_p2_size - p2_newlines.size();
-            // Decrement the line count.
-            newline_count = base::sub_sat(newline_count, num_removed);
-            // Adjust the remaining line starts after the split.
-            for (auto& newline : p2_newlines) {
-                newline -= p1.length + count;
-            }
+        size_t old_p2_size = p2_newlines.size();
+        p2_newlines.remove_if([&](auto newline) { return newline < p1.length + count; });
+        size_t num_removed = old_p2_size - p2_newlines.size();
+        // Decrement the line count.
+        newline_count = base::sub_sat(newline_count, num_removed);
+        // Adjust the remaining line starts after the split.
+        for (auto& newline : p2_newlines) {
+            newline -= p1.length + count;
         }
 
         Piece p2{
@@ -262,6 +256,8 @@ std::string PieceTable::substr(size_t index, size_t count) const {
 }
 
 std::pair<size_t, size_t> PieceTable::lineColumnAt(size_t index) const {
+    PROFILE_BLOCK("PieceTable::lineColumnAt()");
+
     if (index > m_length) {
         index = m_length;
     }

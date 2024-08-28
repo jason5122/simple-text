@@ -24,11 +24,19 @@ void TextViewWidget::selectAll() {
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
+    PROFILE_BLOCK("TextViewWidget::move()");
+
     auto [line, col] = table.lineColumnAt(end_caret.index);
     const auto& layout = layoutAt(line);
 
     if (by == MoveBy::kCharacters && !forward) {
-        end_caret.moveToPrevGlyph(layout, col);
+        size_t delta = end_caret.moveToPrevGlyph(layout, col);
+
+        // Move to previous line if at beginning of line.
+        if (delta == 0 && line > 0) {
+            const auto& prev_layout = layoutAt(line - 1);
+            end_caret.index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
+        }
         // updateCaretX();
     }
     if (by == MoveBy::kCharacters && forward) {
@@ -48,6 +56,8 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
 }
 
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
+    PROFILE_BLOCK("TextViewWidget::moveTo()");
+
     if (to == MoveTo::kHardBOL) {
         auto [line, _] = table.lineColumnAt(end_caret.index);
 
@@ -83,6 +93,8 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 }
 
 void TextViewWidget::insertText(std::string_view text) {
+    PROFILE_BLOCK("TextViewWidget::insertText()");
+
     table.insert(end_caret.index, text);
     end_caret.index += text.length();
 
@@ -101,6 +113,13 @@ void TextViewWidget::leftDelete() {
         const auto& layout = layoutAt(line);
 
         size_t delta = end_caret.moveToPrevGlyph(layout, col);
+
+        // Delete newline if at beginning of line.
+        if (delta == 0 && line > 0) {
+            --end_caret.index;
+            delta = 1;
+        }
+
         table.erase(end_caret.index, delta);
 
         start_caret = end_caret;
@@ -174,53 +193,52 @@ void TextViewWidget::draw() {
     }
 
     // Add selections.
-    // SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
-    // bool should_swap = end_caret < start_caret;
-    // const auto& c1 = should_swap ? end_caret : start_caret;
-    // const auto& c2 = should_swap ? start_caret : end_caret;
-    // auto [c1_line, c1_col] = table.lineColumnAt(c1.index);
-    // auto [c2_line, c2_col] = table.lineColumnAt(c2.index);
+    SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
+    bool should_swap = end_caret < start_caret;
+    const auto& c1 = should_swap ? end_caret : start_caret;
+    const auto& c2 = should_swap ? start_caret : end_caret;
+    auto [c1_line, c1_col] = table.lineColumnAt(c1.index);
+    auto [c2_line, c2_col] = table.lineColumnAt(c2.index);
 
-    // const auto& c1_layout = layoutAt(c1_line);
-    // const auto& c2_layout = layoutAt(c2_line);
-    // int c1_x = c1.xAtColumn(c1_layout, c1_col);
-    // int c2_x = c1.xAtColumn(c2_layout, c2_col);
+    const auto& c1_layout = layoutAt(c1_line);
+    const auto& c2_layout = layoutAt(c2_line);
+    int c1_x = c1.xAtColumn(c1_layout, c1_col);
+    int c2_x = c1.xAtColumn(c2_layout, c2_col);
 
-    // // Don't render off-screen selections.
-    // if (c1_line < start_line) c1_line = start_line;
-    // if (c2_line > end_line) c2_line = end_line;
+    // Don't render off-screen selections.
+    if (c1_line < start_line) c1_line = start_line;
+    if (c2_line > end_line) c2_line = end_line;
 
-    // std::vector<SelectionRenderer::Selection> selections;
-    // for (size_t line = c1_line; line <= c2_line; ++line) {
-    //     const auto& layout = layoutAt(line);
-    //     int start = line == c1_line ? c1_x : 0;
-    //     int end = line == c2_line ? c2_x : layout.width;
+    std::vector<SelectionRenderer::Selection> selections;
+    for (size_t line = c1_line; line <= c2_line; ++line) {
+        const auto& layout = layoutAt(line);
+        int start = line == c1_line ? c1_x : 0;
+        int end = line == c2_line ? c2_x : layout.width;
 
-    //     if (end - start > 0) {
-    //         selections.emplace_back(SelectionRenderer::Selection{
-    //             .line = static_cast<int>(line),
-    //             .start = start,
-    //             .end = end,
-    //         });
-    //     }
-    // }
-    // selection_renderer.renderSelections(selections, position - scroll_offset);
+        if (end - start > 0) {
+            selections.emplace_back(SelectionRenderer::Selection{
+                .line = static_cast<int>(line),
+                .start = start,
+                .end = end,
+            });
+        }
+    }
+    selection_renderer.renderSelections(selections, position - scroll_offset);
 
-    // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     // Add vertical scroll bar.
-    // int line_count = table.lineCount();
-    // int line_height = main_line_height;
-    // int vbar_width = 15;
-    // int max_scrollbar_y = (line_count + visible_lines) * line_height;
-    // int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
-    // vbar_height = std::max(30, vbar_height);
-    // float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
-    // Point vbar_coords{
-    //     .x = size.width - vbar_width,
-    //     .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
-    // };
-    // rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-    // 5);
+    int line_count = table.lineCount();
+    int line_height = main_line_height;
+    int vbar_width = 15;
+    int max_scrollbar_y = (line_count + visible_lines) * line_height;
+    int vbar_height = size.height * (static_cast<float>(size.height) / max_scrollbar_y);
+    vbar_height = std::max(30, vbar_height);
+    float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
+    Point vbar_coords{
+        .x = size.width - vbar_width,
+        .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
+    };
+    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor, 5);
 
     // Add horizontal scroll bar.
     // int hbar_height = 15;
@@ -235,24 +253,24 @@ void TextViewWidget::draw() {
     // 5);
 
     // Add caret.
-    // int caret_width = 4;
-    // int extra_padding = 8;
-    // int caret_height = main_line_height + extra_padding * 2;
+    int caret_width = 4;
+    int extra_padding = 8;
+    int caret_height = main_line_height + extra_padding * 2;
 
-    // auto [line, col] = table.lineColumnAt(end_caret.index);
-    // bool exclude_end;
-    // const auto& layout = layoutAt(line, exclude_end);
-    // int end_caret_x = end_caret.xAtColumn(layout, col, exclude_end);
+    auto [line, col] = table.lineColumnAt(end_caret.index);
+    bool exclude_end;
+    const auto& layout = layoutAt(line, exclude_end);
+    int end_caret_x = end_caret.xAtColumn(layout, col, exclude_end);
 
-    // Point caret_pos{
-    //     .x = end_caret_x,
-    //     .y = static_cast<int>(line) * main_line_height,
-    // };
-    // caret_pos += position;
-    // caret_pos -= scroll_offset;
-    // caret_pos.x -= caret_width / 2;
-    // caret_pos.y -= extra_padding;
-    // rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
+    Point caret_pos{
+        .x = end_caret_x,
+        .y = static_cast<int>(line) * main_line_height,
+    };
+    caret_pos += position;
+    caret_pos -= scroll_offset;
+    caret_pos.x -= caret_width / 2;
+    caret_pos.y -= extra_padding;
+    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {

@@ -1,5 +1,7 @@
 #include "file_reader.h"
 
+namespace base {
+
 std::string ReadFile(std::string_view file_name) {
     std::string contents;
 
@@ -17,4 +19,6 @@ void WriteFile(std::string_view file_name, std::string_view contents) {
     FILE* fp = fopen(file_name.data(), "wb");
     fwrite(&contents[0], 1, contents.length(), fp);
     fclose(fp);
+}
+
 }

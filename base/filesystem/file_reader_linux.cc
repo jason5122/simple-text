@@ -3,6 +3,8 @@
 #include <limits.h>
 #include <unistd.h>
 
+namespace base {
+
 // TODO: See if there is a more native way to describe the resource path.
 fs::path ResourceDir() {
     return std::filesystem::canonical("/proc/self/exe").parent_path();
@@ -16,4 +18,6 @@ fs::path DataDir() {
         fs::path home_dir = std::getenv("HOME");
         return home_dir / ".config" / "simple-text";
     }
+}
+
 }

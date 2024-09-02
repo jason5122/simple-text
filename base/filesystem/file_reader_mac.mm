@@ -2,6 +2,8 @@
 
 #include "file_reader.h"
 
+namespace base {
+
 fs::path ResourceDir() {
     return NSBundle.mainBundle.resourcePath.fileSystemRepresentation;
 }
@@ -21,4 +23,6 @@ fs::path DataDir() {
         app_dir = [app_support_dir URLByAppendingPathComponent:@"Simple Text"];
     }
     return app_dir.fileSystemRepresentation;
+}
+
 }

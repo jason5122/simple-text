@@ -69,8 +69,8 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    fs::path panel_close_2x = ResourceDir() / "icons/panel_close@2x.png";
-    fs::path folder_open_2x = ResourceDir() / "icons/folder_open@2x.png";
+    fs::path panel_close_2x = base::ResourceDir() / "icons/panel_close@2x.png";
+    fs::path folder_open_2x = base::ResourceDir() / "icons/folder_open@2x.png";
 
     // TODO: Figure out a better way to do this.
     image_atlas_entries.resize(2);

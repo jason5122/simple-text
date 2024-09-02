@@ -1,6 +1,8 @@
 #include "file_reader.h"
 #include <shlobj_core.h>
 
+namespace base {
+
 // TODO: Consider baking in resources into the .exe.
 // https://learn.microsoft.com/en-us/windows/win32/menurc/about-resource-files
 fs::path ResourceDir() {
@@ -15,4 +17,6 @@ fs::path DataDir() {
     fs::path data_dir = path;
     data_dir /= "Simple Text";
     return data_dir;
+}
+
 }

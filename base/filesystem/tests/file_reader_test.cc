@@ -28,12 +28,12 @@ const std::string kStr1Gb = kLongLine * 10000000;
 TEST(FileReaderTest, ReadFile1) {
     {
         PROFILE_BLOCK_WITH_DURATION("Write 1GB file", std::chrono::milliseconds);
-        WriteFile(kFileName, kStr1Gb);
+        base::WriteFile(kFileName, kStr1Gb);
     }
 
     {
         PROFILE_BLOCK_WITH_DURATION("Read 1GB file", std::chrono::milliseconds);
-        std::string contents = ReadFile(kFileName);
+        std::string contents = base::ReadFile(kFileName);
     }
 
     remove(kFileName.data());

@@ -2,7 +2,14 @@
 #include <fstream>
 
 std::string ReadFile(fs::path file_name) {
-    std::ifstream in(file_name);
-    std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    return contents;
+    static constexpr size_t kReadSize = 4096;
+
+    std::ifstream stream{file_name};
+    std::string out{};
+    std::string buf(kReadSize, '\0');
+    while (stream.read(&buf[0], kReadSize)) {
+        out.append(buf, 0, stream.gcount());
+    }
+    out.append(buf, 0, stream.gcount());
+    return out;
 }

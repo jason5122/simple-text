@@ -1,0 +1,10 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [ "file_reader_test.cc" ]
+
+  deps = [
+    "//base/filesystem",
+    "//third_party/googletest:gtest",
+  ]
+}

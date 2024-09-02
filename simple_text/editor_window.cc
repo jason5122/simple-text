@@ -13,9 +13,9 @@ using namespace gui;
 
 namespace {
 
-constexpr std::string Repeat(std::string_view sv, size_t times) {
+constexpr auto operator*(const std::string_view& sv, size_t times) {
     std::string result;
-    for (size_t i = 0; i < times; ++i) {
+    for (std::size_t i = 0; i < times; ++i) {
         result += sv;
     }
     return result;
@@ -61,8 +61,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     editor_widget = std::make_shared<EditorWidget>();
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
-    // editor_widget->addTab("long_line.txt", Repeat(kLongLine, 50) + kSampleText);
-    // editor_widget->addTab("sample_text.txt", Repeat(kSampleText, 50) + kLongLine);
+    // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);
+    // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
 
     // Main widgets.
     std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
@@ -253,7 +253,7 @@ void EditorWindow::onAction(app::Action action, bool extend) {
 
 void EditorWindow::onAppAction(app::AppAction action) {
     if (action == app::AppAction::kNewFile) {
-        editor_widget->addTab("sample_text.txt", Repeat(kSampleText, 50) + kLongLine);
+        editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
         redraw();
     }
     if (action == app::AppAction::kNewWindow) {

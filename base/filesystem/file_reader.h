@@ -4,7 +4,8 @@
 #include <string>
 namespace fs = std::filesystem;
 
-std::string ReadFile(fs::path file_name);
+std::string ReadFile(std::string_view file_name);
+void WriteFile(std::string_view file_name, std::string_view contents);
 
 fs::path ResourceDir();
 

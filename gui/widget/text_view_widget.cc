@@ -43,11 +43,24 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         end_caret.moveToNextGlyph(layout, col);
         // updateCaretX();
     }
+    // TODO: Find a clean way to combine vertical caret movement logic.
     if (by == MoveBy::kLines && !forward) {
-        std::cerr << "unimplemented!\n";
+        if (line > 0) {
+            bool exclude_end;
+            const auto& prev_layout = layoutAt(line - 1, exclude_end);
+            int x = Caret::xAtColumn(layout, col, false);
+            size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
+            end_caret.index = table.indexAt(line - 1, new_col);
+        }
     }
     if (by == MoveBy::kLines && forward) {
-        std::cerr << "unimplemented!\n";
+        if (line < base::sub_sat(table.lineCount(), 1_Z)) {
+            bool exclude_end;
+            const auto& prev_layout = layoutAt(line + 1, exclude_end);
+            int x = Caret::xAtColumn(layout, col, false);
+            size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
+            end_caret.index = table.indexAt(line + 1, new_col);
+        }
     }
 
     if (!extend) {
@@ -63,7 +76,7 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
-        size_t new_col = end_caret.columnAtX(layout, 0, exclude_end);
+        size_t new_col = Caret::columnAtX(layout, 0, exclude_end);
 
         end_caret.index = table.indexAt(line, new_col);
         // updateCaretX();
@@ -73,7 +86,7 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
-        size_t new_col = end_caret.columnAtX(layout, layout.width, exclude_end);
+        size_t new_col = Caret::columnAtX(layout, layout.width, exclude_end);
 
         end_caret.index = table.indexAt(line, new_col);
         // updateCaretX();
@@ -202,8 +215,8 @@ void TextViewWidget::draw() {
 
     const auto& c1_layout = layoutAt(c1_line);
     const auto& c2_layout = layoutAt(c2_line);
-    int c1_x = c1.xAtColumn(c1_layout, c1_col);
-    int c2_x = c1.xAtColumn(c2_layout, c2_col);
+    int c1_x = Caret::xAtColumn(c1_layout, c1_col);
+    int c2_x = Caret::xAtColumn(c2_layout, c2_col);
 
     // Don't render off-screen selections.
     if (c1_line < start_line) c1_line = start_line;
@@ -260,7 +273,7 @@ void TextViewWidget::draw() {
     auto [line, col] = table.lineColumnAt(end_caret.index);
     bool exclude_end;
     const auto& layout = layoutAt(line, exclude_end);
-    int end_caret_x = end_caret.xAtColumn(layout, col, exclude_end);
+    int end_caret_x = Caret::xAtColumn(layout, col, exclude_end);
 
     Point caret_pos{
         .x = end_caret_x,
@@ -285,7 +298,7 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
 
     bool exclude_end;
     const auto& layout = layoutAt(new_line, exclude_end);
-    size_t new_col = end_caret.columnAtX(layout, new_coords.x, exclude_end);
+    size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
 
     end_caret.index = table.indexAt(new_line, new_col);
 

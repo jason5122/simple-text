@@ -2,7 +2,10 @@ toolchain("clang") {
   if (target_cpu == "arm64") {
     prefix = "/opt/homebrew/opt/llvm/bin"
   } else {
-    prefix = "/usr/local/opt/llvm/bin"
+    # TODO: Don't hard code this.
+    # Auto-detect common clang install paths, but allow the user to specify their own path.
+    # prefix = "/usr/local/opt/llvm/bin"
+    prefix = "/opt/homebrew/opt/llvm/bin"
   }
 
   cc = "${prefix}/clang"

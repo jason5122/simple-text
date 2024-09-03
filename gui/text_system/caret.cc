@@ -3,7 +3,7 @@
 
 namespace gui {
 
-size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end) const {
+size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end) {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
         int glyph_x = glyph.position.x;
@@ -21,7 +21,7 @@ size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end)
     return layout.length;
 }
 
-int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end) const {
+int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end) {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
 

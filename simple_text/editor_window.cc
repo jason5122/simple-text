@@ -172,6 +172,13 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->removeTab(editor_widget->getCurrentIndex());
         handled = true;
     }
+    if (key == app::Key::kW &&
+        modifiers == (app::ModifierKey::kSuper | app::ModifierKey::kShift)) {
+        // Immediately exit this function and don't let redraw() get called! The window smart
+        // pointer will be deallocated at this point.
+        close();
+        return true;
+    }
     // Copy/paste.
     if (key == app::Key::kC && modifiers == app::ModifierKey::kSuper) {
         parent.setClipboardString(editor_widget->getSelectionText());

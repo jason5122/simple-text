@@ -75,7 +75,14 @@
         app->onAppAction(appAction);
     } else {
         app::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
-        app_window->onAppAction(appAction);
+
+        // `app_window` is null if we are in the about panel.
+        // TODO: Create our own "About ..." panel.
+        if (app_window) {
+            app_window->onAppAction(appAction);
+        } else {
+            app->onAppAction(appAction);
+        }
     }
 }
 

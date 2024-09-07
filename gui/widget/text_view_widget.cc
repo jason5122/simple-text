@@ -124,6 +124,7 @@ void TextViewWidget::insertText(std::string_view text) {
 
     table.insert(end_caret.index, text);
     end_caret.index += text.length();
+    selection.incrementIndex(text.length(), false);
 
     start_caret = end_caret;
     // TODO: Do we update caret `max_x` too?

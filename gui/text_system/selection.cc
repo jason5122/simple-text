@@ -21,6 +21,13 @@ void Selection::setIndex(size_t index, bool extend) {
     }
 }
 
+void Selection::incrementIndex(size_t inc, bool extend) {
+    end_caret.index += inc;
+    if (!extend) {
+        start_caret = end_caret;
+    }
+}
+
 std::pair<size_t, size_t> Selection::range() const {
     return {std::min(start_caret, end_caret).index, std::max(start_caret, end_caret).index};
 }

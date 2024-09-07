@@ -10,6 +10,7 @@ public:
     Caret& end();
     bool empty() const;
     void setIndex(size_t index, bool extend);
+    void incrementIndex(size_t inc, bool extend);
     std::pair<size_t, size_t> range() const;
 
 private:

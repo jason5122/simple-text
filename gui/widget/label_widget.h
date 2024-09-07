@@ -9,7 +9,7 @@ class LabelWidget : public Widget {
 public:
     LabelWidget(const Size& size, int left_padding = 0, int right_padding = 0);
 
-    void setText(const std::string& str8, const Rgb& color);
+    void setText(std::string_view str8, const Rgb& color);
     void addLeftIcon(size_t icon_id);
     void addRightIcon(size_t icon_id);
 

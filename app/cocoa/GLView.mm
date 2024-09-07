@@ -193,7 +193,8 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
         if (event.momentumPhase & NSEventPhaseBegan) {
-            glLayer.asynchronous = true;
+            // TODO: Implement this as a timer.
+            // glLayer.asynchronous = true;
         }
         if (event.momentumPhase & NSEventPhaseEnded) {
             glLayer.asynchronous = false;

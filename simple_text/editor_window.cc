@@ -164,6 +164,10 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->setIndex(7);
         handled = true;
     }
+    if (key == app::Key::k9 && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->lastIndex();
+        handled = true;
+    }
     if (key == app::Key::kA && modifiers == app::ModifierKey::kSuper) {
         editor_widget->selectAll();
         handled = true;
@@ -187,6 +191,14 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kV && modifiers == app::ModifierKey::kSuper) {
         editor_widget->insertText(parent.getClipboardString());
         handled = true;
+    }
+    if (key == app::Key::kO && modifiers == app::ModifierKey::kSuper) {
+        auto path = openFilePicker();
+        if (path) {
+            editor_widget->openFile(*path);
+            editor_widget->lastIndex();
+            handled = true;
+        }
     }
 
     if (handled) {

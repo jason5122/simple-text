@@ -9,7 +9,7 @@ namespace gui {
 LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
     : Widget{size}, left_padding{left_padding}, right_padding{right_padding} {}
 
-void LabelWidget::setText(const std::string& str8, const Rgb& color) {
+void LabelWidget::setText(std::string_view str8, const Rgb& color) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
 

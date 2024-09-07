@@ -14,8 +14,9 @@ public:
     void setIndex(size_t index);
     void prevIndex();
     void nextIndex();
+    void lastIndex();
     size_t getCurrentIndex();
-    void addTab(const std::string& tab_name, const std::string& text);
+    void addTab(std::string_view tab_name, std::string_view text);
     void removeTab(size_t index);
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
@@ -23,6 +24,7 @@ public:
     void insertText(std::string_view text);
     void leftDelete();
     std::string getSelectionText();
+    void openFile(std::string_view path);
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

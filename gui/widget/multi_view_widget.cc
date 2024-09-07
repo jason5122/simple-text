@@ -1,3 +1,5 @@
+#include "base/numeric/literals.h"
+#include "base/numeric/saturation_arithmetic.h"
 #include "base/numeric/wrap_arithmetic.h"
 #include "multi_view_widget.h"
 
@@ -44,11 +46,15 @@ void MultiViewWidget::nextIndex() {
     index = base::inc_wrap(index, text_views.size());
 }
 
+void MultiViewWidget::lastIndex() {
+    index = base::sub_sat(text_views.size(), 1_Z);
+}
+
 size_t MultiViewWidget::getCurrentIndex() {
     return index;
 }
 
-void MultiViewWidget::addTab(const std::string& text) {
+void MultiViewWidget::addTab(std::string_view text) {
     text_views.emplace_back(new TextViewWidget{text});
 }
 

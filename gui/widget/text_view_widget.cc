@@ -12,7 +12,7 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(const std::string& text) : table{text} {
+TextViewWidget::TextViewWidget(std::string_view text) : table{text} {
     updateMaxScroll();
 }
 

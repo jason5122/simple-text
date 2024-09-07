@@ -1,3 +1,5 @@
+#include "base/numeric/literals.h"
+#include "base/numeric/saturation_arithmetic.h"
 #include "base/numeric/wrap_arithmetic.h"
 #include "gui/renderer/renderer.h"
 #include "tab_bar_widget.h"
@@ -22,7 +24,11 @@ void TabBarWidget::nextIndex() {
     index = base::inc_wrap(index, tab_name_labels.size());
 }
 
-void TabBarWidget::addTab(const std::string& title) {
+void TabBarWidget::lastIndex() {
+    index = base::sub_sat(tab_name_labels.size(), 1_Z);
+}
+
+void TabBarWidget::addTab(std::string_view title) {
     Size label_size{
         .width = kTabWidth - kTabCornerRadius * 2,
         .height = size.height,

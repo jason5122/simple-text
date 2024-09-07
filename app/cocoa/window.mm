@@ -69,4 +69,25 @@ void Window::setFilePath(fs::path path) {
     [pimpl->window_controller setFilePath:path];
 }
 
+std::optional<std::string> Window::openFilePicker() {
+    NSOpenPanel* openPanel = [NSOpenPanel openPanel];
+    openPanel.title = @"Choose File";
+    openPanel.prompt = @"Choose";
+    openPanel.canChooseDirectories = false;
+    openPanel.canChooseFiles = true;
+    if ([openPanel runModal] != NSModalResponseCancel) {
+        return openPanel.URL.fileSystemRepresentation;
+    } else {
+        return std::nullopt;
+    }
+
+    // TODO: Investigate how to open a sheet synchronously.
+    // [openPanel beginSheetModalForWindow:pimpl->window_controller.window
+    //                   completionHandler:^(NSInteger result) {
+    //                     if (result == NSModalResponseOK) {
+    //                         std::cerr << openPanel.URL.fileSystemRepresentation << '\n';
+    //                     }
+    //                   }];
+}
+
 }

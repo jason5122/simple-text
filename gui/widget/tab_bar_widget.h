@@ -12,7 +12,8 @@ public:
     void setIndex(size_t index);
     void prevIndex();
     void nextIndex();
-    void addTab(const std::string& title);
+    void lastIndex();
+    void addTab(std::string_view title);
     void removeTab(size_t index);
 
     void draw() override;

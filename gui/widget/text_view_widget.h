@@ -10,7 +10,7 @@ namespace gui {
 
 class TextViewWidget : public ScrollableWidget {
 public:
-    TextViewWidget(const std::string& text);
+    TextViewWidget(std::string_view text);
 
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);

@@ -1,7 +1,11 @@
+#include "base/filesystem/file_reader.h"
 #include "editor_widget.h"
 #include "gui/widget/multi_view_widget.h"
 #include "gui/widget/padding_widget.h"
 #include "gui/widget/tab_bar_widget.h"
+
+// TODO: Debug use; remove this.
+#include <iostream>
 
 namespace gui {
 
@@ -34,11 +38,16 @@ void EditorWidget::nextIndex() {
     tab_bar->nextIndex();
 }
 
+void EditorWidget::lastIndex() {
+    multi_view->lastIndex();
+    tab_bar->lastIndex();
+}
+
 size_t EditorWidget::getCurrentIndex() {
     return multi_view->getCurrentIndex();
 }
 
-void EditorWidget::addTab(const std::string& tab_name, const std::string& text) {
+void EditorWidget::addTab(std::string_view tab_name, std::string_view text) {
     multi_view->addTab(text);
     tab_bar->addTab(tab_name);
     layout();
@@ -72,6 +81,11 @@ void EditorWidget::leftDelete() {
 
 std::string EditorWidget::getSelectionText() {
     return multi_view->getSelectionText();
+}
+
+void EditorWidget::openFile(std::string_view path) {
+    std::string contents = base::ReadFile(path);
+    addTab(path, contents);
 }
 
 }

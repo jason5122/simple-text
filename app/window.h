@@ -7,6 +7,8 @@
 #include "util/non_copyable.h"
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <string>
 #include <string_view>
 
 namespace fs = std::filesystem;
@@ -35,6 +37,7 @@ public:
     bool isDarkMode();
     void setTitle(const std::string& title);
     void setFilePath(fs::path path);
+    std::optional<std::string> openFilePicker();
 
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw(int width, int height) {}

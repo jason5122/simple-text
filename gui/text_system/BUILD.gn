@@ -2,6 +2,7 @@ source_set("text_system") {
   sources = [
     "caret.cc",
     "line_layout_cache.cc",
+    "selection.cc",
   ]
 
   deps = [

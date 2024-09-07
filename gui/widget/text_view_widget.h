@@ -3,6 +3,7 @@
 #include "base/buffer/piece_table.h"
 #include "gui/text_system/caret.h"
 #include "gui/text_system/line_layout_cache.h"
+#include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
 
@@ -36,10 +37,17 @@ private:
 
     Caret start_caret{};
     Caret end_caret{};
+    Selection selection{};
 
     size_t lineAtY(int y);
     inline const font::LineLayout& layoutAt(size_t line);
     inline const font::LineLayout& layoutAt(size_t line, bool& exclude_end);
+
+    // Draw helpers.
+    void renderText(size_t start_line, size_t end_line, int main_line_height);
+    void renderSelections(size_t start_line, size_t end_line);
+    void renderScrollBars(int main_line_height, size_t visible_lines);
+    void renderCaret(int main_line_height);
 };
 
 }

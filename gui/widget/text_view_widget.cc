@@ -17,8 +17,7 @@ TextViewWidget::TextViewWidget(std::string_view text) : table{text} {
 }
 
 void TextViewWidget::selectAll() {
-    start_caret.index = 0;
-    end_caret.index = table.length();
+    selection.setRange(0, table.length());
 
     // updateCaretX();
 }
@@ -26,27 +25,33 @@ void TextViewWidget::selectAll() {
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     PROFILE_BLOCK("TextViewWidget::move()");
 
-    auto [line, col] = table.lineColumnAt(end_caret.index);
+    auto [line, col] = table.lineColumnAt(selection.end().index);
     const auto& layout = layoutAt(line);
 
     if (by == MoveBy::kCharacters && !forward) {
-        size_t delta = end_caret.moveToPrevGlyph(layout, col);
-        selection.end().moveToPrevGlyph(layout, col);
+        if (!extend && !selection.empty()) {
+            selection.collapse(Selection::Direction::kLeft);
+            return;
+        }
+
+        size_t delta = selection.end().moveToPrevGlyph(layout, col);
+        selection.decrementIndex(delta, extend);
 
         // Move to previous line if at beginning of line.
         if (delta == 0 && line > 0) {
             const auto& prev_layout = layoutAt(line - 1);
-            end_caret.index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
-
             size_t index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
             selection.setIndex(index, extend);
         }
-        // updateCaretX();
     }
     if (by == MoveBy::kCharacters && forward) {
-        end_caret.moveToNextGlyph(layout, col);
-        selection.end().moveToNextGlyph(layout, col);
-        // updateCaretX();
+        if (!extend && !selection.empty()) {
+            selection.collapse(Selection::Direction::kRight);
+            return;
+        }
+
+        size_t delta = selection.end().moveToNextGlyph(layout, col);
+        selection.incrementIndex(delta, extend);
     }
     // TODO: Find a clean way to combine vertical caret movement logic.
     if (by == MoveBy::kLines && !forward) {
@@ -55,8 +60,6 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             const auto& prev_layout = layoutAt(line - 1, exclude_end);
             int x = Caret::xAtColumn(layout, col, false);
             size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
-            end_caret.index = table.indexAt(line - 1, new_col);
-
             size_t index = table.indexAt(line - 1, new_col);
             selection.setIndex(index, extend);
         }
@@ -67,15 +70,13 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             const auto& prev_layout = layoutAt(line + 1, exclude_end);
             int x = Caret::xAtColumn(layout, col, false);
             size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
-            end_caret.index = table.indexAt(line + 1, new_col);
-
             size_t index = table.indexAt(line + 1, new_col);
             selection.setIndex(index, extend);
         }
     }
 
-    if (!extend) {
-        start_caret = end_caret;
+    if (by == MoveBy::kCharacters) {
+        // updateCaretX();
     }
 }
 
@@ -83,50 +84,39 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     PROFILE_BLOCK("TextViewWidget::moveTo()");
 
     if (to == MoveTo::kHardBOL) {
-        auto [line, _] = table.lineColumnAt(end_caret.index);
+        auto [line, _] = table.lineColumnAt(selection.end().index);
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
         size_t new_col = Caret::columnAtX(layout, 0, exclude_end);
-
-        end_caret.index = table.indexAt(line, new_col);
         selection.setIndex(table.indexAt(line, new_col), extend);
         // updateCaretX();
     }
     if (to == MoveTo::kHardEOL) {
-        auto [line, _] = table.lineColumnAt(end_caret.index);
+        auto [line, _] = table.lineColumnAt(selection.end().index);
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
         size_t new_col = Caret::columnAtX(layout, layout.width, exclude_end);
-
-        end_caret.index = table.indexAt(line, new_col);
         selection.setIndex(table.indexAt(line, new_col), extend);
         // updateCaretX();
     }
     if (to == MoveTo::kBOF) {
-        end_caret.index = 0;
+        selection.setIndex(0, extend);
         // updateCaretX();
     }
     if (to == MoveTo::kEOF) {
-        end_caret.index = table.length();
         selection.setIndex(table.length(), extend);
         // updateCaretX();
-    }
-
-    if (!extend) {
-        start_caret = end_caret;
     }
 }
 
 void TextViewWidget::insertText(std::string_view text) {
     PROFILE_BLOCK("TextViewWidget::insertText()");
 
-    table.insert(end_caret.index, text);
-    end_caret.index += text.length();
+    table.insert(selection.end().index, text);
     selection.incrementIndex(text.length(), false);
 
-    start_caret = end_caret;
     // TODO: Do we update caret `max_x` too?
 
     updateMaxScroll();
@@ -135,35 +125,30 @@ void TextViewWidget::insertText(std::string_view text) {
 void TextViewWidget::leftDelete() {
     PROFILE_BLOCK("TextViewWidget::leftDelete()");
 
-    // Selection is empty.
-    if (start_caret == end_caret) {
-        auto [line, col] = table.lineColumnAt(end_caret.index);
+    if (selection.empty()) {
+        auto [line, col] = table.lineColumnAt(selection.end().index);
         const auto& layout = layoutAt(line);
 
-        size_t delta = end_caret.moveToPrevGlyph(layout, col);
+        size_t delta = selection.end().moveToPrevGlyph(layout, col);
+        selection.decrementIndex(delta, false);
 
         // Delete newline if at beginning of line.
         if (delta == 0 && line > 0) {
-            --end_caret.index;
+            selection.decrementIndex(1_Z, false);
             delta = 1;
         }
 
-        table.erase(end_caret.index, delta);
-
-        start_caret = end_caret;
+        table.erase(selection.end().index, delta);
     } else {
-        const auto& c1 = std::min(start_caret, end_caret);
-        const auto& c2 = std::max(start_caret, end_caret);
-        table.erase(c1.index, c2.index - c1.index);
-        start_caret = c1;
-        end_caret = c1;
+        auto [start, end] = selection.range();
+        table.erase(start, end - start);
+        selection.collapse(Selection::Direction::kLeft);
     }
 }
 
 std::string TextViewWidget::getSelectionText() {
-    const auto& c1 = std::min(start_caret, end_caret);
-    const auto& c2 = std::max(start_caret, end_caret);
-    return table.substr(c1.index, c2.index - c1.index);
+    auto [start, end] = selection.range();
+    return table.substr(start, end - start);
 }
 
 void TextViewWidget::draw() {
@@ -185,21 +170,15 @@ void TextViewWidget::draw() {
 }
 
 void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
-    {
-        // TODO: Outdated; remove this.
-        leftMouseDrag(mouse_pos);
-        start_caret = end_caret;
-        // updateCaretX();  // Update for start as well.
-    }
-
     Point new_coords = mouse_pos - position + scroll_offset;
     size_t new_line = lineAtY(new_coords.y);
 
     bool exclude_end;
     const auto& layout = layoutAt(new_line, exclude_end);
     size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
-
     selection.setIndex(table.indexAt(new_line, new_col), false);
+
+    // updateCaretX();
 }
 
 void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
@@ -209,8 +188,6 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
     bool exclude_end;
     const auto& layout = layoutAt(new_line, exclude_end);
     size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
-
-    end_caret.index = table.indexAt(new_line, new_col);
     selection.setIndex(table.indexAt(new_line, new_col), true);
 
     // updateCaretX();
@@ -296,10 +273,9 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
 void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
-    const auto& c1 = std::min(start_caret, end_caret);
-    const auto& c2 = std::max(start_caret, end_caret);
-    auto [c1_line, c1_col] = table.lineColumnAt(c1.index);
-    auto [c2_line, c2_col] = table.lineColumnAt(c2.index);
+    auto [start, end] = selection.range();
+    auto [c1_line, c1_col] = table.lineColumnAt(start);
+    auto [c2_line, c2_col] = table.lineColumnAt(end);
 
     const auto& c1_layout = layoutAt(c1_line);
     const auto& c2_layout = layoutAt(c2_line);
@@ -364,7 +340,7 @@ void TextViewWidget::renderCaret(int main_line_height) {
     int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;
 
-    auto [line, col] = table.lineColumnAt(end_caret.index);
+    auto [line, col] = table.lineColumnAt(selection.end().index);
     bool exclude_end;
     const auto& layout = layoutAt(line, exclude_end);
     int end_caret_x = Caret::xAtColumn(layout, col, exclude_end);
@@ -378,23 +354,6 @@ void TextViewWidget::renderCaret(int main_line_height) {
     caret_pos.x -= caret_width / 2;
     caret_pos.y -= extra_padding;
     rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
-
-    {
-        auto [line, col] = table.lineColumnAt(selection.end().index);
-        bool exclude_end;
-        const auto& layout = layoutAt(line, exclude_end);
-        int caret_x = Caret::xAtColumn(layout, col, exclude_end);
-
-        Point caret_pos{
-            .x = caret_x,
-            .y = static_cast<int>(line) * main_line_height,
-        };
-        caret_pos += position;
-        caret_pos -= scroll_offset;
-        caret_pos.x -= caret_width / 2;
-        caret_pos.y -= extra_padding;
-        rect_renderer.addRect(caret_pos, {caret_width, caret_height}, {255, 0, 0, 255});
-    }
 }
 
 }

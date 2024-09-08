@@ -35,8 +35,8 @@ private:
     base::PieceTable table;
     LineLayoutCache line_layout_cache;
 
-    Caret start_caret{};
-    Caret end_caret{};
+    // Caret start_caret{};
+    // Caret end_caret{};
     Selection selection{};
 
     size_t lineAtY(int y);

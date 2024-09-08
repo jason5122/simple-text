@@ -40,7 +40,6 @@ int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_en
 size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     auto set = [&](size_t index) {
         size_t delta = col - index;
-        this->index -= delta;
         return delta;
     };
 
@@ -67,7 +66,6 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
 size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     auto set = [&](size_t index) {
         size_t delta = index - col;
-        this->index += delta;
         return delta;
     };
 

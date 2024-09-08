@@ -1,11 +1,14 @@
 source_set("tests") {
   testonly = true
 
-  sources = [ "tree_sitter_test.cc" ]
+  sources = [
+    "syntax_highlighter_test.cc",
+    # "tree_sitter_test.cc",
+  ]
 
   deps = [
     "//base/buffer",
+    "//base/syntax_highlighter",
     "//third_party/googletest:gtest",
-    "//third_party/tree_sitter",
   ]
 }

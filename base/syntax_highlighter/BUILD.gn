@@ -1,10 +1,6 @@
-source_set("base") {
-  sources = [
-    # "syntax_highlighter.cc",
-  ]
+source_set("syntax_highlighter") {
+  sources = [ "syntax_highlighter.cc" ]
 
-  deps = [
-    "//base/syntax_highlighter/queries",
-    "//config",
-  ]
+  deps = [ "queries" ]
+  public_deps = [ "//third_party/tree_sitter" ]
 }

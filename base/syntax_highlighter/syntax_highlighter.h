@@ -1,12 +1,13 @@
 #pragma once
 
-#include "base/buffer/buffer.h"
-#include "base/rgb.h"
-#include "config/color_scheme.h"
-#include "util/non_copyable.h"
+#include "base/buffer/piece_table.h"
 #include <string>
 #include <tree_sitter/api.h>
 #include <vector>
+
+// Debug use; remove this.
+#include <format>
+#include <iostream>
 
 namespace base {
 
@@ -15,39 +16,40 @@ public:
     SyntaxHighlighter();
     ~SyntaxHighlighter();
 
-    void setLanguage(std::string scope, config::ColorScheme& color_scheme);
+    struct Rgb {
+        int r, g, b;
+
+        friend std::ostream& operator<<(std::ostream& out, const Rgb& rgb) {
+            return out << std::format("Rgb{{{}, {}, {}}}", rgb.r, rgb.g, rgb.b);
+        }
+    };
+
+    void mystery();
+    // void setLanguage(std::string scope, config::ColorScheme& color_scheme);
     void parse(TSInput& input);
-    void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
-    void getHighlights(TSPoint start_point, TSPoint end_point);
-    Rgb getColor(size_t byte_offset, config::ColorScheme& color_scheme);
+    // void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
+    void getHighlights(size_t start_byte, size_t end_byte);
+    Rgb getColor(size_t byte_offset);
 
     static const char* read(void* payload,
                             uint32_t byte_index,
                             TSPoint position,
                             uint32_t* bytes_read) {
-        Buffer* buffer = (Buffer*)payload;
-        if (position.row >= buffer->lineCount()) {
+        PieceTable* table = (PieceTable*)payload;
+
+        if (position.row >= table->lineCount()) {
             *bytes_read = 0;
             return "";
         }
 
-        const size_t BUFSIZE = 256;
-        static char buf[BUFSIZE];
+        static constexpr size_t kBufferSize = 256;
+        static char buf[kBufferSize];
 
-        std::string line_str = buffer->getLineContent(position.row);
-
-        size_t len = line_str.size();
-        size_t bytes_copied = std::min(len - position.column, BUFSIZE);
+        std::string line_str = table->line(position.row);
+        size_t bytes_copied = std::min(line_str.length() - position.column, kBufferSize);
 
         memcpy(buf, line_str.data() + position.column, bytes_copied);
-        *bytes_read = (uint32_t)bytes_copied;
-        if (bytes_copied < BUFSIZE) {
-            // Add the final \n.
-            // If it didn't fit, read() will be called again on the same line with the column
-            // advanced.
-            buf[bytes_copied] = '\n';
-            (*bytes_read)++;
-        }
+        *bytes_read = bytes_copied;
         return buf;
     }
 
@@ -56,7 +58,7 @@ private:
     TSQuery* query = nullptr;
     TSTree* tree = nullptr;
 
-    std::string scope;
+    // std::string scope;
 
     size_t idx = 0;
     std::vector<size_t> capture_indexes;

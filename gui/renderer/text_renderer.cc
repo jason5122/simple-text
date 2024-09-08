@@ -124,8 +124,10 @@ void TextRenderer::renderLineLayout(
                 ++it;
             }
 
+            // size_t capture_index = 0;
             bool temp = false;
             if (it != highlights.end() && (*it).start <= p && p < (*it).end) {
+                // capture_index = (*it).capture_index;
                 temp = true;
             }
 

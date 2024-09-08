@@ -122,8 +122,12 @@ void TextViewWidget::insertText(std::string_view text) {
         leftDelete();
     }
 
-    table.insert(selection.end().index, text);
+    size_t i = selection.end().index;
+    table.insert(i, text);
     selection.incrementIndex(text.length(), false);
+
+    highlighter.edit(i, i, i + text.length());
+    highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 
     // TODO: Do we update caret `max_x` too?
 
@@ -146,11 +150,18 @@ void TextViewWidget::leftDelete() {
             delta = 1;
         }
 
-        table.erase(selection.end().index, delta);
+        size_t i = selection.end().index;
+        table.erase(i, delta);
+
+        highlighter.edit(i, i + delta, i);
+        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
     } else {
         auto [start, end] = selection.range();
         table.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
+
+        highlighter.edit(start, end, start);
+        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
     }
 }
 

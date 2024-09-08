@@ -101,16 +101,34 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
-                                    const Point& coords,
-                                    int min_x,
-                                    int max_x,
-                                    const Rgb& color,
-                                    FontType font_type) {
+void TextRenderer::renderLineLayout(
+    const font::LineLayout& line_layout,
+    const Point& coords,
+    int min_x,
+    int max_x,
+    const Rgb& color,
+    FontType font_type,
+    const std::vector<base::SyntaxHighlighter::Highlight>& highlights) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
 
+    for (const auto& h : highlights) {
+        std::cerr << std::format("[{}, {}] capture_index = {}\n", h.start_byte, h.end_byte,
+                                 h.capture_index);
+    }
+
+    auto it = highlights.begin();
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
+            while (it != highlights.end() && glyph.index >= (*it).end_byte) {
+                ++it;
+            }
+
+            bool temp = false;
+            if (it != highlights.end() &&
+                ((*it).start_byte <= glyph.index && glyph.index < (*it).end_byte)) {
+                temp = true;
+            }
+
             // If we reach a glyph before the minimum x, skip it and continue.
             // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
             // This assumes glyph positions are monotonically increasing.
@@ -133,7 +151,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
                 .uv = rglyph.uv,
-                .color = Rgba::fromRgb(color, rglyph.colored),
+                .color = Rgba::fromRgb(temp ? Rgb{255, 0, 0} : color, rglyph.colored),
             };
             insertIntoBatch(rglyph.page, std::move(instance), font_type);
         }

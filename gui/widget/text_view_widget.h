@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
+#include "base/syntax_highlighter/syntax_highlighter.h"
 #include "gui/text_system/line_layout_cache.h"
 #include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
@@ -39,6 +40,7 @@ private:
     LineLayoutCache line_layout_cache;
 
     Selection selection{};
+    base::SyntaxHighlighter highlighter;
 
     size_t lineAtY(int y);
     inline const font::LineLayout& layoutAt(size_t line);

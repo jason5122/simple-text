@@ -5,15 +5,19 @@
 
 namespace {
 
-const std::string lorem =
+const std::string lorem [[maybe_unused]] =
     R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
 tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
 quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.)";
-const std::string hello_emoji = R"(Hi 💣🇺🇸 Hello world!
+const std::string hello_emoji [[maybe_unused]] = R"(Hi 💣🇺🇸 Hello world!
 This is a new line.)";
+const std::string json [[maybe_unused]] = R"({
+  "x": 10,
+})";
+const std::string flat_json [[maybe_unused]] = R"({ "x": 10 })";
 
 }
 
@@ -21,7 +25,7 @@ namespace gui {
 
 MultiViewWidget::MultiViewWidget() {
     // TODO: Don't create a tab by default. See if we can have zero tabs like Sublime Text.
-    addTab(lorem);
+    // addTab(lorem);
     // addTab(hello_emoji);
     // addTab(R"(👩‍👩‍👧‍👦)");
     // addTab(R"(🇺🇸)");
@@ -30,6 +34,8 @@ MultiViewWidget::MultiViewWidget() {
     // addTab(R"(apples != oranges >= bananas)");
     // addTab(R"(🥲 != 💣 >= 🙂)");
     // addTab(R"(🙂🙂🙂hi)");
+    // addTab(json);
+    addTab(flat_json);
 }
 
 void MultiViewWidget::setIndex(size_t index) {

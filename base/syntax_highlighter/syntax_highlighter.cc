@@ -63,38 +63,25 @@ void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_
     ts_tree_edit(tree, &edit);
 }
 
-std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_t start_byte,
-                                                                           size_t end_byte) {
+std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_t start_line,
+                                                                           size_t end_line) {
+    std::vector<Highlight> highlights;
+
     TSNode root_node = ts_tree_root_node(tree);
     TSQueryCursor* cursor = ts_query_cursor_new();
     ts_query_cursor_exec(cursor, query, root_node);
-    ts_query_cursor_set_byte_range(cursor, start_byte, end_byte);
-
-    // TODO: Profile this code and optimize it to be as fast as Tree-sitter's CLI.
-    const void* prev_id = 0;
-    uint32_t prev_start = -1;
-    uint32_t prev_end = -1;
+    ts_query_cursor_set_point_range(cursor, {static_cast<uint32_t>(start_line), 0},
+                                    {static_cast<uint32_t>(end_line) + 1, 0});
 
     TSQueryMatch match;
     uint32_t capture_index;
-
-    std::vector<Highlight> highlights;
+    // TODO: Profile this code and optimize it to be as fast as Tree-sitter's CLI.
     while (ts_query_cursor_next_capture(cursor, &match, &capture_index)) {
-        TSQueryCapture capture = match.captures[capture_index];
-        TSNode node = capture.node;
+        const TSQueryCapture& capture = match.captures[capture_index];
+        const TSNode& node = capture.node;
         uint32_t start_byte = ts_node_start_byte(node);
         uint32_t end_byte = ts_node_end_byte(node);
-
-        std::cerr << std::format("{}, {}, capture_index = {}\n", start_byte, end_byte,
-                                 capture.index);
-
-        if (start_byte != prev_start && end_byte != prev_end && node.id != prev_id) {
-            highlights.emplace_back(start_byte, end_byte, capture.index);
-        }
-
-        prev_id = node.id;
-        prev_start = start_byte;
-        prev_end = end_byte;
+        highlights.emplace_back(start_byte, end_byte, capture.index);
     }
     ts_query_cursor_delete(cursor);
     return highlights;

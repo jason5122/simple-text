@@ -9,11 +9,15 @@
 #include <cassert>
 #include <format>
 #include <iostream>
+#include <tree_sitter/api.h>
 
 namespace gui {
 
 TextViewWidget::TextViewWidget(std::string_view text) : table{text} {
     updateMaxScroll();
+
+    highlighter.setJsonLanguage();
+    highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 }
 
 void TextViewWidget::selectAll() {
@@ -253,6 +257,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     {
         PROFILE_BLOCK("TextViewWidget::renderText()");
+        auto highlights = highlighter.getHighlights(start_line, end_line);
+
         for (size_t line = start_line; line < end_line; ++line) {
             const auto& layout = layoutAt(line);
 
@@ -272,7 +278,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             int max_x = scroll_offset.x + size.width;
 
             text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                           TextRenderer::FontType::kMain);
+                                           TextRenderer::FontType::kMain, highlights);
         }
     }
     constexpr bool kDebugAtlas = false;

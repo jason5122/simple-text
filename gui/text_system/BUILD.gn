@@ -9,4 +9,5 @@ source_set("text_system") {
     "//font",
     "//third_party/xxhash",
   ]
+  public_deps = [ "//third_party/tree_sitter" ]
 }

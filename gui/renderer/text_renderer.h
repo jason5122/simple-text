@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/syntax_highlighter/syntax_highlighter.h"
 #include "gui/renderer/glyph_cache.h"
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
@@ -25,7 +26,8 @@ public:
                           int min_x,
                           int max_x,
                           const Rgb& color,
-                          FontType font_type);
+                          FontType font_type,
+                          const std::vector<base::SyntaxHighlighter::Highlight>& highlights = {});
     void flush(const Size& screen_size, FontType font_type);
 
     // DEBUG: Draws all texture atlases.

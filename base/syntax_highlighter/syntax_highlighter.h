@@ -9,6 +9,10 @@
 #include <format>
 #include <iostream>
 
+inline constexpr std::ostream& operator<<(std::ostream& out, const TSPoint& point) {
+    return out << std::format("TSPoint{{{}, {}}}", point.row, point.column);
+}
+
 namespace base {
 
 class SyntaxHighlighter {
@@ -32,7 +36,7 @@ public:
             return out << std::format("Rgb{{{}, {}, {}}}", rgb.r, rgb.g, rgb.b);
         }
     };
-    std::vector<Highlight> getHighlights(size_t start_byte, size_t end_byte);
+    std::vector<Highlight> getHighlights(size_t start_line, size_t end_line);
     Rgb getColor(size_t capture_index);
 
     static const char* read(void* payload,

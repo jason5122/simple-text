@@ -13,6 +13,9 @@ common_deps = [
   "//base/filesystem",
   "//gui",
   "//opengl",
+
+  # TODO: Find a way to include Tree-sitter headers without listing the dependency here.
+  "//third_party/tree_sitter",
 ]
 
 if (is_mac) {

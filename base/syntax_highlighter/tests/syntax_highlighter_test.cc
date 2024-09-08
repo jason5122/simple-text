@@ -18,9 +18,10 @@ TEST(SyntaxHighlighterTest, Basic) {
     TSInput input = {&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8};
     highlighter.parse(input);
 
-    highlighter.getHighlights(0, table.length());
-    for (size_t i = 0; i < table.length(); ++i) {
-        SyntaxHighlighter::Rgb rgb = highlighter.getColor(i);
+    auto highlights = highlighter.getHighlights(0, table.length());
+    for (const auto& [start_byte, end_byte, capture_index] : highlights) {
+        auto rgb = highlighter.getColor(capture_index);
+        std::cerr << std::format("[{}, {}] {}\n", start_byte, end_byte, capture_index);
         std::cerr << rgb << '\n';
     }
 }

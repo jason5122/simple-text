@@ -16,8 +16,8 @@ public:
     SyntaxHighlighter();
     ~SyntaxHighlighter();
 
-    void mystery();
-    void parse(TSInput& input);
+    void setJsonLanguage();
+    void parse(const TSInput& input);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
 
     struct Highlight {

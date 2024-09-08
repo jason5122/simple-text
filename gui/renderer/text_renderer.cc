@@ -108,24 +108,24 @@ void TextRenderer::renderLineLayout(
     int max_x,
     const Rgb& color,
     FontType font_type,
-    const std::vector<base::SyntaxHighlighter::Highlight>& highlights) {
+    const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
+    size_t line) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
-
-    for (const auto& h : highlights) {
-        std::cerr << std::format("[{}, {}] capture_index = {}\n", h.start_byte, h.end_byte,
-                                 h.capture_index);
-    }
 
     auto it = highlights.begin();
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
-            while (it != highlights.end() && glyph.index >= (*it).end_byte) {
+            TSPoint p{
+                .row = static_cast<uint32_t>(line),
+                .column = static_cast<uint32_t>(glyph.index),
+            };
+
+            while (it != highlights.end() && p >= (*it).end) {
                 ++it;
             }
 
             bool temp = false;
-            if (it != highlights.end() &&
-                ((*it).start_byte <= glyph.index && glyph.index < (*it).end_byte)) {
+            if (it != highlights.end() && (*it).start <= p && p < (*it).end) {
                 temp = true;
             }
 

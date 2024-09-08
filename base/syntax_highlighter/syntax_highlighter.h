@@ -9,8 +9,14 @@
 #include <format>
 #include <iostream>
 
-inline constexpr std::ostream& operator<<(std::ostream& out, const TSPoint& point) {
-    return out << std::format("TSPoint{{{}, {}}}", point.row, point.column);
+inline constexpr std::ostream& operator<<(std::ostream& out, const TSPoint& p) {
+    return out << std::format("TSPoint{{{}, {}}}", p.row, p.column);
+}
+inline constexpr bool operator==(const TSPoint& p1, const TSPoint& p2) {
+    return p1.row == p2.row && p1.column == p2.column;
+}
+inline constexpr auto operator<=>(const TSPoint& p1, const TSPoint& p2) {
+    return std::tie(p1.row, p1.column) <=> std::tie(p2.row, p2.column);
 }
 
 namespace base {
@@ -25,8 +31,8 @@ public:
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
 
     struct Highlight {
-        size_t start_byte;
-        size_t end_byte;
+        TSPoint start;
+        TSPoint end;
         size_t capture_index;
     };
     struct Rgb {

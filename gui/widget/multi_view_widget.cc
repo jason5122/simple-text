@@ -34,8 +34,8 @@ MultiViewWidget::MultiViewWidget() {
     // addTab(R"(apples != oranges >= bananas)");
     // addTab(R"(🥲 != 💣 >= 🙂)");
     // addTab(R"(🙂🙂🙂hi)");
-    // addTab(json);
-    addTab(flat_json);
+    addTab(json);
+    // addTab(flat_json);
 }
 
 void MultiViewWidget::setIndex(size_t index) {

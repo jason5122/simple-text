@@ -27,7 +27,8 @@ public:
                           int max_x,
                           const Rgb& color,
                           FontType font_type,
-                          const std::vector<base::SyntaxHighlighter::Highlight>& highlights = {});
+                          const std::vector<base::SyntaxHighlighter::Highlight>& highlights = {},
+                          size_t line = 0);
     void flush(const Size& screen_size, FontType font_type);
 
     // DEBUG: Draws all texture atlases.

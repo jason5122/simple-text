@@ -79,9 +79,9 @@ std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_
     while (ts_query_cursor_next_capture(cursor, &match, &capture_index)) {
         const TSQueryCapture& capture = match.captures[capture_index];
         const TSNode& node = capture.node;
-        uint32_t start_byte = ts_node_start_byte(node);
-        uint32_t end_byte = ts_node_end_byte(node);
-        highlights.emplace_back(start_byte, end_byte, capture.index);
+        TSPoint start = ts_node_start_point(node);
+        TSPoint end = ts_node_end_point(node);
+        highlights.emplace_back(start, end, capture.index);
     }
     ts_query_cursor_delete(cursor);
     return highlights;

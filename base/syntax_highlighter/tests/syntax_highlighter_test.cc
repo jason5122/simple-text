@@ -22,12 +22,12 @@ TEST(SyntaxHighlighterTest, Basic) {
     highlighter.edit(i, i, i + str.length());
     highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 
-    auto highlights = highlighter.getHighlights(0, table.lineCount());
-    for (const auto& [start_byte, end_byte, capture_index] : highlights) {
-        auto rgb = highlighter.getColor(capture_index);
-        std::cerr << std::format("[{}, {}] {}\n", start_byte, end_byte, capture_index);
-        std::cerr << rgb << '\n';
-    }
+    // auto highlights = highlighter.getHighlights(0, table.lineCount());
+    // for (const auto& [start_byte, end_byte, capture_index] : highlights) {
+    //     auto rgb = highlighter.getColor(capture_index);
+    //     std::cerr << std::format("[{}, {}] {}\n", start_byte, end_byte, capture_index);
+    //     std::cerr << rgb << '\n';
+    // }
 }
 
 }

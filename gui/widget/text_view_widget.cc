@@ -255,10 +255,13 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     end_line = std::clamp(end_line, 0_Z, table.lineCount());
 
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    std::vector<base::SyntaxHighlighter::Highlight> highlights;
+    {
+        PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
+        highlights = highlighter.getHighlights(start_line, end_line);
+    }
     {
         PROFILE_BLOCK("TextViewWidget::renderText()");
-        auto highlights = highlighter.getHighlights(start_line, end_line);
-
         for (size_t line = start_line; line < end_line; ++line) {
             const auto& layout = layoutAt(line);
 
@@ -278,7 +281,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             int max_x = scroll_offset.x + size.width;
 
             text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                           TextRenderer::FontType::kMain, highlights);
+                                           TextRenderer::FontType::kMain, highlights, line);
         }
     }
     constexpr bool kDebugAtlas = false;

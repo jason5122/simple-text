@@ -18,8 +18,12 @@ public:
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;
-    void leftMouseDown(const Point& mouse_pos) override;
-    void leftMouseDrag(const Point& mouse_pos) override;
+    void leftMouseDown(const Point& mouse_pos,
+                       app::ModifierKey modifiers,
+                       app::ClickType click_type) override;
+    void leftMouseDrag(const Point& mouse_pos,
+                       app::ModifierKey modifiers,
+                       app::ClickType click_type) override;
     void setPosition(const Point& position) override;
     Widget* getWidgetAtPosition(const Point& pos) override;
 

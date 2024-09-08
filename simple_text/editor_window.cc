@@ -106,7 +106,7 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
                                    app::ClickType click_type) {
     drag_start_widget = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
     if (drag_start_widget) {
-        drag_start_widget->leftMouseDown({mouse_x, mouse_y});
+        drag_start_widget->leftMouseDown({mouse_x, mouse_y}, modifiers, click_type);
         redraw();
     }
 }
@@ -124,7 +124,7 @@ void EditorWindow::onLeftMouseDrag(int mouse_x,
     }
 
     if (drag_start_widget) {
-        drag_start_widget->leftMouseDrag({mouse_x, mouse_y});
+        drag_start_widget->leftMouseDrag({mouse_x, mouse_y}, modifiers, click_type);
         redraw();
     }
 }

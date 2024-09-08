@@ -173,19 +173,25 @@ void TextViewWidget::draw() {
     renderCaret(main_line_height);
 }
 
-void TextViewWidget::leftMouseDown(const Point& mouse_pos) {
+void TextViewWidget::leftMouseDown(const Point& mouse_pos,
+                                   app::ModifierKey modifiers,
+                                   app::ClickType click_type) {
     Point new_coords = mouse_pos - position + scroll_offset;
     size_t new_line = lineAtY(new_coords.y);
 
     bool exclude_end;
     const auto& layout = layoutAt(new_line, exclude_end);
     size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
-    selection.setIndex(table.indexAt(new_line, new_col), false);
+
+    bool extend = modifiers == app::ModifierKey::kShift;
+    selection.setIndex(table.indexAt(new_line, new_col), extend);
 
     // updateCaretX();
 }
 
-void TextViewWidget::leftMouseDrag(const Point& mouse_pos) {
+void TextViewWidget::leftMouseDrag(const Point& mouse_pos,
+                                   app::ModifierKey modifiers,
+                                   app::ClickType click_type) {
     Point new_coords = mouse_pos - position + scroll_offset;
     size_t new_line = lineAtY(new_coords.y);
 

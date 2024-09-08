@@ -47,27 +47,31 @@ void ContainerWidget::scroll(const Point& mouse_pos, const Point& delta) {
     }
 }
 
-void ContainerWidget::leftMouseDown(const Point& mouse_pos) {
+void ContainerWidget::leftMouseDown(const Point& mouse_pos,
+                                    app::ModifierKey modifiers,
+                                    app::ClickType click_type) {
     if (main_widget) {
-        main_widget->leftMouseDown(mouse_pos);
+        main_widget->leftMouseDown(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_start) {
-        child->leftMouseDown(mouse_pos);
+        child->leftMouseDown(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_end) {
-        child->leftMouseDown(mouse_pos);
+        child->leftMouseDown(mouse_pos, modifiers, click_type);
     }
 }
 
-void ContainerWidget::leftMouseDrag(const Point& mouse_pos) {
+void ContainerWidget::leftMouseDrag(const Point& mouse_pos,
+                                    app::ModifierKey modifiers,
+                                    app::ClickType click_type) {
     if (main_widget) {
-        main_widget->leftMouseDrag(mouse_pos);
+        main_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_start) {
-        child->leftMouseDrag(mouse_pos);
+        child->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_end) {
-        child->leftMouseDrag(mouse_pos);
+        child->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
 }
 

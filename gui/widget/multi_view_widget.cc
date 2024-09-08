@@ -112,15 +112,19 @@ void MultiViewWidget::scroll(const Point& mouse_pos, const Point& delta) {
     }
 }
 
-void MultiViewWidget::leftMouseDown(const Point& mouse_pos) {
+void MultiViewWidget::leftMouseDown(const Point& mouse_pos,
+                                    app::ModifierKey modifiers,
+                                    app::ClickType click_type) {
     if (!text_views.empty()) {
-        text_views[index]->leftMouseDown(mouse_pos);
+        text_views[index]->leftMouseDown(mouse_pos, modifiers, click_type);
     }
 }
 
-void MultiViewWidget::leftMouseDrag(const Point& mouse_pos) {
+void MultiViewWidget::leftMouseDrag(const Point& mouse_pos,
+                                    app::ModifierKey modifiers,
+                                    app::ClickType click_type) {
     if (!text_views.empty()) {
-        text_views[index]->leftMouseDrag(mouse_pos);
+        text_views[index]->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
 }
 

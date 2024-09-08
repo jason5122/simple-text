@@ -1,5 +1,7 @@
 #pragma once
 
+#include "app/modifier_key.h"
+#include "app/window.h"
 #include "gui/renderer/types.h"
 
 namespace gui {
@@ -12,8 +14,12 @@ public:
 
     virtual void draw() = 0;
     virtual void scroll(const Point& mouse_pos, const Point& delta) {}
-    virtual void leftMouseDown(const Point& mouse_pos) {}
-    virtual void leftMouseDrag(const Point& mouse_pos) {}
+    virtual void leftMouseDown(const Point& mouse_pos,
+                               app::ModifierKey modifiers,
+                               app::ClickType click_type) {}
+    virtual void leftMouseDrag(const Point& mouse_pos,
+                               app::ModifierKey modifiers,
+                               app::ClickType click_type) {}
     virtual void layout() {}
     virtual void setPosition(const Point& pos);
     virtual Widget* getWidgetAtPosition(const Point& pos);

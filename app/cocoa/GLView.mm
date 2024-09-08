@@ -269,7 +269,15 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     int scaled_mouse_x, scaled_mouse_y;
     GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    glLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
+
+    app::ClickType click_type = app::ClickType::kSingleClick;
+    if (event.clickCount == 2) {
+        click_type = app::ClickType::kDoubleClick;
+    } else if (event.clickCount >= 3) {
+        click_type = app::ClickType::kTripleClick;
+    }
+
+    glLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

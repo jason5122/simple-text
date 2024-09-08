@@ -115,7 +115,14 @@ void EditorWindow::onLeftMouseUp() {
     drag_start_widget = nullptr;
 }
 
-void EditorWindow::onLeftMouseDrag(int mouse_x, int mouse_y, app::ModifierKey modifiers) {
+void EditorWindow::onLeftMouseDrag(int mouse_x,
+                                   int mouse_y,
+                                   app::ModifierKey modifiers,
+                                   app::ClickType click_type) {
+    if (click_type == app::ClickType::kTripleClick) {
+        std::cerr << "triple click\n";
+    }
+
     if (drag_start_widget) {
         drag_start_widget->leftMouseDrag({mouse_x, mouse_y});
         redraw();

@@ -114,6 +114,10 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
 void TextViewWidget::insertText(std::string_view text) {
     PROFILE_BLOCK("TextViewWidget::insertText()");
 
+    if (!selection.empty()) {
+        leftDelete();
+    }
+
     table.insert(selection.end().index, text);
     selection.incrementIndex(text.length(), false);
 

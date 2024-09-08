@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
-#include "gui/text_system/caret.h"
 #include "gui/text_system/line_layout_cache.h"
 #include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
@@ -35,8 +34,6 @@ private:
     base::PieceTable table;
     LineLayoutCache line_layout_cache;
 
-    // Caret start_caret{};
-    // Caret end_caret{};
     Selection selection{};
 
     size_t lineAtY(int y);

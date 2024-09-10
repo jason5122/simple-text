@@ -44,8 +44,18 @@ void SyntaxHighlighter::setJsonLanguage() {
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
         std::cerr << std::format("{}: {}\n", i, capture_name);
 
-        if (capture_name == "number") {
-            capture_index_color_table[i] = {255, 0, 0};
+        if (capture_name == "string.special.key") {
+            capture_index_color_table[i] = {249, 174, 88};
+        } else if (capture_name == "string") {
+            capture_index_color_table[i] = {128, 185, 121};
+        } else if (capture_name == "number") {
+            capture_index_color_table[i] = {249, 174, 88};
+        } else if (capture_name == "constant.builtin") {
+            capture_index_color_table[i] = {236, 95, 102};
+        } else if (capture_name == "escape") {
+            capture_index_color_table[i] = {198, 149, 198};
+        } else if (capture_name == "comment") {
+            capture_index_color_table[i] = {128, 128, 128};
         }
     }
 }
@@ -64,7 +74,7 @@ void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_
 }
 
 std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_t start_line,
-                                                                           size_t end_line) {
+                                                                           size_t end_line) const {
     std::vector<Highlight> highlights;
 
     TSNode root_node = ts_tree_root_node(tree);
@@ -87,7 +97,7 @@ std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_
     return highlights;
 }
 
-SyntaxHighlighter::Rgb SyntaxHighlighter::getColor(size_t capture_index) {
+const SyntaxHighlighter::Rgb& SyntaxHighlighter::getColor(size_t capture_index) const {
     return capture_index_color_table[capture_index];
 }
 

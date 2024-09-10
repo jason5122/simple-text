@@ -101,36 +101,16 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderLineLayout(
-    const font::LineLayout& line_layout,
-    const Point& coords,
-    int min_x,
-    int max_x,
-    const Rgb& color,
-    FontType font_type,
-    const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
-    size_t line) {
+void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
+                                    const Point& coords,
+                                    int min_x,
+                                    int max_x,
+                                    const Rgb& color,
+                                    FontType font_type) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
 
-    auto it = highlights.begin();
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
-            TSPoint p{
-                .row = static_cast<uint32_t>(line),
-                .column = static_cast<uint32_t>(glyph.index),
-            };
-
-            while (it != highlights.end() && p >= (*it).end) {
-                ++it;
-            }
-
-            // size_t capture_index = 0;
-            bool temp = false;
-            if (it != highlights.end() && (*it).start <= p && p < (*it).end) {
-                // capture_index = (*it).capture_index;
-                temp = true;
-            }
-
             // If we reach a glyph before the minimum x, skip it and continue.
             // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
             // This assumes glyph positions are monotonically increasing.
@@ -153,7 +133,71 @@ void TextRenderer::renderLineLayout(
                 .coords = glyph_coords.toVec2(),
                 .glyph = rglyph.glyph,
                 .uv = rglyph.uv,
-                .color = Rgba::fromRgb(temp ? Rgb{255, 0, 0} : color, rglyph.colored),
+                .color = Rgba::fromRgb(color, rglyph.colored),
+            };
+            insertIntoBatch(rglyph.page, std::move(instance), font_type);
+        }
+    }
+}
+
+void TextRenderer::renderLineLayout(
+    const font::LineLayout& line_layout,
+    const Point& coords,
+    int min_x,
+    int max_x,
+    const Rgb& color,
+    FontType font_type,
+    const base::SyntaxHighlighter& highlighter,
+    const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
+    size_t line) {
+    const auto& font_rasterizer = font::FontRasterizer::instance();
+
+    auto it = highlights.begin();
+    for (const auto& run : line_layout.runs) {
+        for (const auto& glyph : run.glyphs) {
+            TSPoint p{
+                .row = static_cast<uint32_t>(line),
+                .column = static_cast<uint32_t>(glyph.index),
+            };
+
+            while (it != highlights.end() && p >= (*it).end) {
+                ++it;
+            }
+
+            bool is_highlight = false;
+            size_t capture_index = 0;
+            if (it != highlights.end() && (*it).start <= p && p < (*it).end) {
+                capture_index = (*it).capture_index;
+                is_highlight = true;
+            }
+
+            // If we reach a glyph before the minimum x, skip it and continue.
+            // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
+            // This assumes glyph positions are monotonically increasing.
+            if (glyph.position.x + glyph.advance.x < min_x) {
+                continue;
+            }
+            if (glyph.position.x > max_x) {
+                break;
+            }
+
+            Point glyph_coords = coords;
+            glyph_coords.x += glyph.position.x;
+
+            // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
+            glyph_coords.y += line_layout.ascent;
+
+            // TODO: Use unified Rgb struct.
+            const auto& highlight_color = highlighter.getColor(capture_index);
+            const Rgb rgb{.r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
+
+            GlyphCache::Glyph& rglyph = glyph_cache.getGlyph(
+                line_layout.layout_font_id, run.font_id, glyph.glyph_id, font_rasterizer);
+            const InstanceData instance{
+                .coords = glyph_coords.toVec2(),
+                .glyph = rglyph.glyph,
+                .uv = rglyph.uv,
+                .color = Rgba::fromRgb(is_highlight ? rgb : color, rglyph.colored),
             };
             insertIntoBatch(rglyph.page, std::move(instance), font_type);
         }

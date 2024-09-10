@@ -36,14 +36,14 @@ public:
         size_t capture_index;
     };
     struct Rgb {
-        int r, g, b;
+        uint8_t r, g, b;
 
         friend std::ostream& operator<<(std::ostream& out, const Rgb& rgb) {
             return out << std::format("Rgb{{{}, {}, {}}}", rgb.r, rgb.g, rgb.b);
         }
     };
-    std::vector<Highlight> getHighlights(size_t start_line, size_t end_line);
-    Rgb getColor(size_t capture_index);
+    std::vector<Highlight> getHighlights(size_t start_line, size_t end_line) const;
+    const Rgb& getColor(size_t capture_index) const;
 
     static const char* read(void* payload,
                             uint32_t byte_index,

@@ -18,6 +18,9 @@ const std::string json [[maybe_unused]] = R"({
   "x": 10,
 })";
 const std::string flat_json [[maybe_unused]] = R"({ "x": 10 })";
+const std::string json_with_escape [[maybe_unused]] = R"({
+  "x": "\n",
+})";
 
 }
 
@@ -34,8 +37,9 @@ MultiViewWidget::MultiViewWidget() {
     // addTab(R"(apples != oranges >= bananas)");
     // addTab(R"(🥲 != 💣 >= 🙂)");
     // addTab(R"(🙂🙂🙂hi)");
-    addTab(json);
+    // addTab(json);
     // addTab(flat_json);
+    addTab(json_with_escape);
 }
 
 void MultiViewWidget::setIndex(size_t index) {

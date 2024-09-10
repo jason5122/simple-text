@@ -26,9 +26,16 @@ public:
                           int min_x,
                           int max_x,
                           const Rgb& color,
+                          FontType font_type);
+    void renderLineLayout(const font::LineLayout& line_layout,
+                          const Point& coords,
+                          int min_x,
+                          int max_x,
+                          const Rgb& color,
                           FontType font_type,
-                          const std::vector<base::SyntaxHighlighter::Highlight>& highlights = {},
-                          size_t line = 0);
+                          const base::SyntaxHighlighter& highlighter,
+                          const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
+                          size_t line);
     void flush(const Size& screen_size, FontType font_type);
 
     // DEBUG: Draws all texture atlases.

@@ -271,12 +271,12 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
         highlights = highlighter.getHighlights(start_line, end_line);
 
-        std::cerr << "printing all highlights:\n";
-        for (const auto& h : highlights) {
-            std::cerr << h.start << ' ' << h.end
-                      << std::format(" , capture_index = {}\n", h.capture_index);
-        }
-        std::cerr << "done\n";
+        // std::cerr << "Printing all highlights:\n";
+        // for (const auto& h : highlights) {
+        //     std::cerr << h.start << ' ' << h.end
+        //               << std::format(" , capture_index = {}\n", h.capture_index);
+        // }
+        // std::cerr << "Done\n";
     }
     {
         PROFILE_BLOCK("TextViewWidget::renderText()");

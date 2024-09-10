@@ -34,6 +34,18 @@ public:
         TSPoint start;
         TSPoint end;
         size_t capture_index;
+
+        bool containsPoint(const TSPoint& p) const {
+            return start <= p && p < end;
+        }
+
+        friend constexpr bool operator==(const Highlight& h1, const Highlight& h2) {
+            return h1.start == h2.start && h1.end == h2.end;
+        }
+
+        friend constexpr auto operator<=>(const Highlight& h1, const Highlight& h2) {
+            return std::tie(h1.start, h1.end) <=> std::tie(h2.start, h2.end);
+        }
     };
     struct Rgb {
         uint8_t r, g, b;

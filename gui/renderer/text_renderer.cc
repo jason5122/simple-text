@@ -152,6 +152,8 @@ void TextRenderer::renderLineLayout(
     size_t line) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
 
+    std::stack<base::SyntaxHighlighter::Highlight> stk;
+
     auto it = highlights.begin();
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
@@ -160,14 +162,24 @@ void TextRenderer::renderLineLayout(
                 .column = static_cast<uint32_t>(glyph.index),
             };
 
+            // Use stack to parse highlights.
             while (it != highlights.end() && p >= (*it).end) {
                 ++it;
             }
-
+            while (it != highlights.end() && (*it).containsPoint(p)) {
+                // If multiple ranges are equal, prefer the one that comes first.
+                if (stk.empty() || stk.top() != *it) {
+                    stk.push(*it);
+                }
+                ++it;
+            }
+            while (!stk.empty() && p >= stk.top().end) {
+                stk.pop();
+            }
             bool is_highlight = false;
             size_t capture_index = 0;
-            if (it != highlights.end() && (*it).start <= p && p < (*it).end) {
-                capture_index = (*it).capture_index;
+            if (!stk.empty() && stk.top().containsPoint(p)) {
+                capture_index = stk.top().capture_index;
                 is_highlight = true;
             }
 

@@ -38,7 +38,9 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        size_t delta = Caret::moveToPrevGlyph(layout, col);
+        std::string line_str = table.line(line);
+        size_t delta = Caret::moveToPrevWord(layout, col, line_str);
+        // size_t delta = Caret::moveToPrevGlyph(layout, col);
         selection.decrementIndex(delta, extend);
 
         // Move to previous line if at beginning of line.

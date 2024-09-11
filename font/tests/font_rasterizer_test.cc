@@ -80,4 +80,17 @@ TEST(FontRasterizerTest, LayoutLine2) {
     EXPECT_EQ(total_advance, layout.width);
 }
 
+TEST(FontRasterizerTest, ShapedGlyphIndexAndSize) {
+    auto& rasterizer = FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    const std::string line = "Hello😄🙂hi";
+    auto layout = rasterizer.layoutLine(font_id, line);
+
+    for (auto it = layout.begin(), next_it = ++layout.begin(); next_it != layout.end();
+         ++it, ++next_it) {
+        EXPECT_EQ((*it).length, (*next_it).index - (*it).index);
+    }
+}
+
 }

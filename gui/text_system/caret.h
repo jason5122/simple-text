@@ -15,9 +15,12 @@ public:
     static size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col);
     static size_t moveToNextGlyph(const font::LineLayout& layout, size_t col);
 
-    static size_t moveToPrevWord(const font::LineLayout& layout,
-                                 size_t col,
-                                 std::string_view line_str);
+    static size_t prevWordStart(const font::LineLayout& layout,
+                                size_t col,
+                                std::string_view line_str);
+    static size_t nextWordEnd(const font::LineLayout& layout,
+                              size_t col,
+                              std::string_view line_str);
 
     friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
         return c1.index == c2.index;

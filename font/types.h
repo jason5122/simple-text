@@ -74,13 +74,14 @@ struct LineLayout::ConstIterator {
 private:
     friend struct LineLayout;
 
-    ConstIterator(const LineLayout& layout, size_t run_index, size_t run_glyph_index);
+    ConstIterator(const LineLayout* layout, size_t run_index, size_t run_glyph_index);
 
-    const LineLayout& layout;
+    const LineLayout* layout;
     size_t run_index;
     size_t run_glyph_index;
 };
 
 static_assert(std::is_trivially_copy_constructible_v<LineLayout::ConstIterator>);
+static_assert(std::is_trivially_copy_assignable_v<LineLayout::ConstIterator>);
 
 }

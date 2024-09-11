@@ -368,6 +368,18 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     if (str == "moveUpAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines, true);
     }
+    if (str == "moveWordRight") {
+        glLayer->appWindow->onAction(app::Action::kMoveForwardByWords);
+    }
+    if (str == "moveWordRightAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveForwardByWords, true);
+    }
+    if (str == "moveWordLeft") {
+        glLayer->appWindow->onAction(app::Action::kMoveBackwardByWords);
+    }
+    if (str == "moveWordLeftAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveBackwardByWords, true);
+    }
     if (str == "moveToBeginningOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardBOL);
     }

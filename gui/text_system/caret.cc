@@ -63,51 +63,50 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     }
 }
 
-size_t Caret::moveToPrevWord(const font::LineLayout& layout,
-                             size_t col,
-                             std::string_view line_str) {
-    // auto prev_it = layout.end();
-    // for (auto it = iteratorAtColumn(layout, col); it != layout.begin(); --it) {
-    //     if (prev_it != layout.end()) {
-    //         ;
-    //     }
+size_t Caret::prevWordStart(const font::LineLayout& layout,
+                            size_t col,
+                            std::string_view line_str) {
+    auto it = iteratorAtColumn(layout, col);
+    if (it != layout.begin()) --it;
 
-    //     prev_it = it;
-    // }
+    auto prev_it = layout.end();  // Invalid/"null" iterator.
+    for (; it != layout.begin(); --it) {
+        if (prev_it != layout.end()) {
+            std::string_view left_str = line_str.substr((*it).index, (*it).length);
+            std::string_view right_str = line_str.substr((*prev_it).index, (*prev_it).length);
 
-    return moveToPrevGlyph(layout, col);
-    // for (auto it = layout.begin(); it != layout.end(); ++it) {
-    //     const auto& glyph = *it;
+            // TODO: Properly implement this.
+            bool left_kind = std::isalpha(left_str[0]);
+            bool right_kind = std::isalpha(right_str[0]);
+            if (left_kind != right_kind && right_str != " ") {
+                return col - (*prev_it).index;
+            }
+        }
+        prev_it = it;
+    }
+    return col;
+}
 
-    //     if (glyph.index >= col) {
-    //         auto right = it;
-    //         auto left = it;
-    //         if (left != layout.begin()) --left;
+size_t Caret::nextWordEnd(const font::LineLayout& layout, size_t col, std::string_view line_str) {
+    auto it = iteratorAtColumn(layout, col);
+    if (it != layout.end()) ++it;
 
-    //         while (left != layout.begin()) {
-    //             std::string_view right_str = line_str.substr((*it).index, (*it).length);
-    //             std::string_view left_str = line_str.substr((*it).index, (*it).length);
-    //             std::cerr << std::format("left = \"{}\", right = \"{}\"\n", right_str,
-    //             left_str);
-    //             // if (substr == " ") {
-    //             //     return col - (*prev_it).index;
-    //             // }
+    auto prev_it = layout.end();  // Invalid/"null" iterator.
+    for (; it != layout.end(); ++it) {
+        if (prev_it != layout.end()) {
+            std::string_view left_str = line_str.substr((*prev_it).index, (*prev_it).length);
+            std::string_view right_str = line_str.substr((*it).index, (*it).length);
 
-    //             --right;
-    //             --left;
-    //         }
-
-    //         return col - (*right).index;
-    //     }
-    // }
-
-    // if (layout.begin() != layout.end()) {
-    //     std::cerr << "edge case\n";
-    //     auto it = std::prev(layout.end());
-    //     return col - (*it).index;
-    // } else {
-    //     return 0;
-    // }
+            // TODO: Properly implement this.
+            bool left_kind = std::isalpha(left_str[0]);
+            bool right_kind = std::isalpha(right_str[0]);
+            if (left_kind != right_kind && left_str != " ") {
+                return (*it).index - col;
+            }
+        }
+        prev_it = it;
+    }
+    return layout.length - col;
 }
 
 font::LineLayout::const_iterator Caret::iteratorAtColumn(const font::LineLayout& layout,

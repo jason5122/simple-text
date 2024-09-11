@@ -80,7 +80,7 @@ TEST(FontRasterizerTest, LayoutLine2) {
     EXPECT_EQ(total_advance, layout.width);
 }
 
-TEST(FontRasterizerTest, ShapedGlyphIndexAndSize) {
+TEST(FontRasterizerTest, ShapedGlyphSize) {
     auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
 

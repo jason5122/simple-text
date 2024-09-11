@@ -38,9 +38,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        std::string line_str = table.line(line);
-        size_t delta = Caret::moveToPrevWord(layout, col, line_str);
-        // size_t delta = Caret::moveToPrevGlyph(layout, col);
+        size_t delta = Caret::moveToPrevGlyph(layout, col);
         selection.decrementIndex(delta, extend);
 
         // Move to previous line if at beginning of line.
@@ -57,6 +55,21 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         }
 
         size_t delta = Caret::moveToNextGlyph(layout, col);
+        selection.incrementIndex(delta, extend);
+    }
+    if (by == MoveBy::kWords && !forward) {
+        size_t delta = Caret::prevWordStart(layout, col, table.line(line));
+        selection.decrementIndex(delta, extend);
+
+        // Move to previous line if at beginning of line.
+        if (delta == 0 && line > 0) {
+            const auto& prev_layout = layoutAt(line - 1);
+            size_t index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
+            selection.setIndex(index, extend);
+        }
+    }
+    if (by == MoveBy::kWords && forward) {
+        size_t delta = Caret::nextWordEnd(layout, col, table.line(line));
         selection.incrementIndex(delta, extend);
     }
     // TODO: Find a clean way to combine vertical caret movement logic.

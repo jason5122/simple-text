@@ -242,6 +242,14 @@ void EditorWindow::onAction(app::Action action, bool extend) {
             editor_widget->move(gui::MoveBy::kLines, false, extend);
             handled = true;
         }
+        if (action == app::Action::kMoveForwardByWords) {
+            editor_widget->move(gui::MoveBy::kWords, true, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveBackwardByWords) {
+            editor_widget->move(gui::MoveBy::kWords, false, extend);
+            handled = true;
+        }
         if (action == app::Action::kMoveToHardBOL) {
             editor_widget->moveTo(gui::MoveTo::kHardBOL, extend);
             handled = true;

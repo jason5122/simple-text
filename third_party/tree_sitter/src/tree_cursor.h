@@ -8,11 +8,13 @@ typedef struct {
   Length position;
   uint32_t child_index;
   uint32_t structural_child_index;
+  uint32_t descendant_index;
 } TreeCursorEntry;
 
 typedef struct {
   const TSTree *tree;
   Array(TreeCursorEntry) stack;
+  TSSymbol root_alias_symbol;
 } TreeCursor;
 
 typedef enum {

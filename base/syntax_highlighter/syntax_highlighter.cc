@@ -78,8 +78,8 @@ std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_
     std::vector<Highlight> highlights;
 
     TSNode root_node = ts_tree_root_node(tree);
+    TSQueryCursor* cursor = ts_query_cursor_new();
     for (size_t line = start_line; line <= end_line; line++) {
-        TSQueryCursor* cursor = ts_query_cursor_new();
         ts_query_cursor_exec(cursor, query, root_node);
         // ts_query_cursor_set_point_range(cursor, {static_cast<uint32_t>(start_line), 0},
         //                                 {static_cast<uint32_t>(end_line) + 1, 0});
@@ -96,8 +96,8 @@ std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_
             TSPoint end = ts_node_end_point(node);
             highlights.emplace_back(start, end, capture.index);
         }
-        ts_query_cursor_delete(cursor);
     }
+    ts_query_cursor_delete(cursor);
     return highlights;
 }
 

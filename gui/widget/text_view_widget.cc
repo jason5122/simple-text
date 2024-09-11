@@ -38,7 +38,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        size_t delta = selection.end().moveToPrevGlyph(layout, col);
+        size_t delta = Caret::moveToPrevGlyph(layout, col);
         selection.decrementIndex(delta, extend);
 
         // Move to previous line if at beginning of line.
@@ -54,7 +54,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        size_t delta = selection.end().moveToNextGlyph(layout, col);
+        size_t delta = Caret::moveToNextGlyph(layout, col);
         selection.incrementIndex(delta, extend);
     }
     // TODO: Find a clean way to combine vertical caret movement logic.
@@ -141,7 +141,7 @@ void TextViewWidget::leftDelete() {
         auto [line, col] = table.lineColumnAt(selection.end().index);
         const auto& layout = layoutAt(line);
 
-        size_t delta = selection.end().moveToPrevGlyph(layout, col);
+        size_t delta = Caret::moveToPrevGlyph(layout, col);
         selection.decrementIndex(delta, false);
 
         // Delete newline if at beginning of line.

@@ -11,8 +11,10 @@ struct Caret {
     static size_t columnAtX(const font::LineLayout& layout, int x, bool exclude_end = false);
     static int xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end = false);
 
-    size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col);
-    size_t moveToNextGlyph(const font::LineLayout& layout, size_t col);
+    static size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col);
+    static size_t moveToNextGlyph(const font::LineLayout& layout, size_t col);
+
+    static size_t moveToPrevWord(const font::LineLayout& layout, size_t col);
 
     friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
         return c1.index == c2.index;

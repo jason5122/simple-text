@@ -38,11 +38,6 @@ int Caret::xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_en
 }
 
 size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
-    auto set = [&](size_t index) {
-        size_t delta = col - index;
-        return delta;
-    };
-
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
 
@@ -50,25 +45,19 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
             // TODO: Replace this with saturating sub for iterators.
             if (it != layout.begin()) --it;
 
-            return set((*it).index);
+            return col - (*it).index;
         }
     }
 
     if (layout.begin() != layout.end()) {
         auto it = std::prev(layout.end());
-        const auto& glyph = *it;
-        return set(glyph.index);
+        return col - (*it).index;
     } else {
         return 0;
     }
 }
 
 size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
-    auto set = [&](size_t index) {
-        size_t delta = index - col;
-        return delta;
-    };
-
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
 
@@ -76,13 +65,13 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
             ++it;
 
             if (it == layout.end()) {
-                return set(layout.length);
+                return layout.length - col;
             } else {
-                return set((*it).index);
+                return (*it).index - col;
             }
         }
     }
-    return set(layout.length);
+    return layout.length - col;
 }
 
 }

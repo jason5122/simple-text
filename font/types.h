@@ -44,9 +44,12 @@ struct LineLayout {
 
     struct ConstIterator;
     using const_iterator = ConstIterator;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     const_iterator begin() const;
     const_iterator end() const;
+    const_reverse_iterator rbegin() const;
+    const_reverse_iterator rend() const;
 };
 
 struct LineLayout::ConstIterator {

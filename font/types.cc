@@ -12,6 +12,14 @@ LineLayout::const_iterator LineLayout::end() const {
     return {this, runs.size(), 0};
 }
 
+LineLayout::const_reverse_iterator LineLayout::rbegin() const {
+    return const_reverse_iterator(end());
+}
+
+LineLayout::const_reverse_iterator LineLayout::rend() const {
+    return const_reverse_iterator(begin());
+}
+
 LineLayout::ConstIterator::ConstIterator(const LineLayout* layout,
                                          size_t run_index,
                                          size_t run_glyph_index)

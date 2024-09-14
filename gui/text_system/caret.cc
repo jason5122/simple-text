@@ -69,6 +69,10 @@ size_t Caret::prevWordStart(const font::LineLayout& layout,
     auto it = iteratorAtColumn(layout, col);
     if (it != layout.begin()) --it;
 
+    // TODO: Implement const_reverse_iterator for LineLayout.
+    // auto it = std::make_reverse_iterator(iteratorAtColumn(layout, col));
+    // if (it != layout.rend()) ++it;
+
     auto prev_it = layout.end();  // Invalid/"null" iterator.
     for (; it != layout.begin(); --it) {
         if (prev_it != layout.end()) {
@@ -83,6 +87,18 @@ size_t Caret::prevWordStart(const font::LineLayout& layout,
             }
         }
         prev_it = it;
+    }
+    // TODO: This will be obsolete when we implement const_reverse_iterator.
+    if (prev_it != layout.end()) {
+        std::string_view left_str = line_str.substr((*it).index, (*it).length);
+        std::string_view right_str = line_str.substr((*prev_it).index, (*prev_it).length);
+
+        // TODO: Properly implement this.
+        bool left_kind = std::isalpha(left_str[0]);
+        bool right_kind = std::isalpha(right_str[0]);
+        if (left_kind != right_kind && right_str != " ") {
+            return col - (*prev_it).index;
+        }
     }
     return col;
 }

@@ -313,9 +313,15 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             int min_x = scroll_offset.x;
             int max_x = scroll_offset.x + size.width;
 
-            text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                           TextRenderer::FontType::kMain, highlighter, highlights,
-                                           line);
+            constexpr bool kHighlight = false;
+            if constexpr (kHighlight) {
+                text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
+                                               TextRenderer::FontType::kMain, highlighter,
+                                               highlights, line);
+            } else {
+                text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
+                                               TextRenderer::FontType::kMain);
+            }
         }
     }
     constexpr bool kDebugAtlas = false;

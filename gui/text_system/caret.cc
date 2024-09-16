@@ -67,8 +67,6 @@ size_t Caret::prevWordStart(const font::LineLayout& layout,
                             size_t col,
                             std::string_view line_str) {
     auto it = std::make_reverse_iterator(iteratorAtColumn(layout, col));
-    if (it != layout.rend()) ++it;
-
     auto prev_it = layout.rend();  // Invalid/"null" iterator.
     for (; it != layout.rend(); ++it) {
         if (prev_it != layout.rend()) {
@@ -89,7 +87,6 @@ size_t Caret::prevWordStart(const font::LineLayout& layout,
 
 size_t Caret::nextWordEnd(const font::LineLayout& layout, size_t col, std::string_view line_str) {
     auto it = iteratorAtColumn(layout, col);
-
     auto prev_it = layout.end();  // Invalid/"null" iterator.
     for (; it != layout.end(); ++it) {
         if (prev_it != layout.end()) {

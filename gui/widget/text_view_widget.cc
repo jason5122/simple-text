@@ -313,7 +313,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             int min_x = scroll_offset.x;
             int max_x = scroll_offset.x + size.width;
 
-            constexpr bool kHighlight = false;
+            constexpr bool kHighlight = true;
             if constexpr (kHighlight) {
                 text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
                                                TextRenderer::FontType::kMain, highlighter,

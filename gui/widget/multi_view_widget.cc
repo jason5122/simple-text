@@ -50,9 +50,8 @@ MultiViewWidget::MultiViewWidget() {
     // addTab(R"(🙂🙂🙂hi)");
     // addTab(json);
     // addTab(flat_json);
-    // addTab(json_with_escape);
+    addTab(json_with_escape);
     // addTab(large_json);
-    addTab("Hello world this is a sentence");
 }
 
 void MultiViewWidget::setIndex(size_t index) {

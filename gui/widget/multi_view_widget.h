@@ -24,6 +24,7 @@ public:
     void moveTo(MoveTo to, bool extend);
     void insertText(std::string_view text);
     void leftDelete();
+    void rightDelete();
     std::string getSelectionText();
 
     void draw() override;

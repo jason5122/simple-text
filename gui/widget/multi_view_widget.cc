@@ -114,6 +114,12 @@ void MultiViewWidget::leftDelete() {
     }
 }
 
+void MultiViewWidget::rightDelete() {
+    if (!text_views.empty()) {
+        text_views[index]->rightDelete();
+    }
+}
+
 std::string MultiViewWidget::getSelectionText() {
     if (!text_views.empty()) {
         return text_views[index]->getSelectionText();

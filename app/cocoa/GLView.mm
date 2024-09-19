@@ -413,6 +413,9 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     if (str == "deleteBackward") {
         glLayer->appWindow->onAction(app::Action::kLeftDelete);
     }
+    if (str == "deleteForward") {
+        glLayer->appWindow->onAction(app::Action::kRightDelete);
+    }
     if (str == "insertNewline") {
         glLayer->appWindow->onAction(app::Action::kInsertNewline);
     }

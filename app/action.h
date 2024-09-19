@@ -17,6 +17,7 @@ enum class Action {
     kMoveToBOF,
     kMoveToEOF,
     kLeftDelete,
+    kRightDelete,
     kInsertNewline,
     kInsertTab,
 };

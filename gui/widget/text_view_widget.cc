@@ -180,6 +180,29 @@ void TextViewWidget::leftDelete() {
     }
 }
 
+void TextViewWidget::rightDelete() {
+    PROFILE_BLOCK("TextViewWidget::rightDelete()");
+
+    if (selection.empty()) {
+        auto [line, col] = table.lineColumnAt(selection.end().index);
+        const auto& layout = layoutAt(line);
+
+        size_t delta = Caret::moveToNextGlyph(layout, col);
+        size_t i = selection.end().index;
+        table.erase(i, delta);
+
+        highlighter.edit(i, i + delta, i);
+        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    } else {
+        auto [start, end] = selection.range();
+        table.erase(start, end - start);
+        selection.collapse(Selection::Direction::kLeft);
+
+        highlighter.edit(start, end, start);
+        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    }
+}
+
 std::string TextViewWidget::getSelectionText() {
     auto [start, end] = selection.range();
     return table.substr(start, end - start);

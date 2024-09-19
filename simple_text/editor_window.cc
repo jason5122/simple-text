@@ -291,6 +291,10 @@ void EditorWindow::onAction(app::Action action, bool extend) {
             editor_widget->leftDelete();
             handled = true;
         }
+        if (action == app::Action::kRightDelete) {
+            editor_widget->rightDelete();
+            handled = true;
+        }
     }
 
     if (handled) {

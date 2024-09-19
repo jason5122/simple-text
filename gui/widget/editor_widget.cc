@@ -79,6 +79,10 @@ void EditorWidget::leftDelete() {
     multi_view->leftDelete();
 }
 
+void EditorWidget::rightDelete() {
+    multi_view->rightDelete();
+}
+
 std::string EditorWidget::getSelectionText() {
     return multi_view->getSelectionText();
 }

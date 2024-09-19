@@ -10,6 +10,8 @@ enum class Action {
     kMoveBackwardByLines,
     kMoveForwardByWords,
     kMoveBackwardByWords,
+    kMoveToBOL,
+    kMoveToEOL,
     kMoveToHardBOL,
     kMoveToHardEOL,
     kMoveToBOF,

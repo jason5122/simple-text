@@ -380,6 +380,18 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     if (str == "moveWordLeftAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByWords, true);
     }
+    if (str == "moveToLeftEndOfLine") {
+        glLayer->appWindow->onAction(app::Action::kMoveToBOL);
+    }
+    if (str == "moveToLeftEndOfLineAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveToBOL, true);
+    }
+    if (str == "moveToRightEndOfLine") {
+        glLayer->appWindow->onAction(app::Action::kMoveToEOL);
+    }
+    if (str == "moveToRightEndOfLineAndModifySelection") {
+        glLayer->appWindow->onAction(app::Action::kMoveToEOL, true);
+    }
     if (str == "moveToBeginningOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardBOL);
     }

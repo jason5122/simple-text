@@ -9,6 +9,8 @@ enum class MoveBy {
 };
 
 enum class MoveTo {
+    kBOL,
+    kEOL,
     kHardBOL,
     kHardEOL,
     kBOF,

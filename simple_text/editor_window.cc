@@ -15,7 +15,7 @@ namespace {
 
 constexpr auto operator*(const std::string_view& sv, size_t times) {
     std::string result;
-    for (std::size_t i = 0; i < times; ++i) {
+    for (size_t i = 0; i < times; ++i) {
         result += sv;
     }
     return result;
@@ -199,6 +199,11 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->insertText(parent.getClipboardString());
         handled = true;
     }
+    if (key == app::Key::kX && modifiers == app::ModifierKey::kSuper) {
+        parent.setClipboardString(editor_widget->getSelectionText());
+        editor_widget->leftDelete();
+        handled = true;
+    }
     if (key == app::Key::kO && modifiers == app::ModifierKey::kSuper) {
         auto path = openFilePicker();
         if (path) {
@@ -248,6 +253,14 @@ void EditorWindow::onAction(app::Action action, bool extend) {
         }
         if (action == app::Action::kMoveBackwardByWords) {
             editor_widget->move(gui::MoveBy::kWords, false, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveToBOL) {
+            editor_widget->moveTo(gui::MoveTo::kBOL, extend);
+            handled = true;
+        }
+        if (action == app::Action::kMoveToEOL) {
+            editor_widget->moveTo(gui::MoveTo::kEOL, extend);
             handled = true;
         }
         if (action == app::Action::kMoveToHardBOL) {

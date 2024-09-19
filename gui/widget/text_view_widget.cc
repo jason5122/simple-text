@@ -102,7 +102,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
     PROFILE_BLOCK("TextViewWidget::moveTo()");
 
-    if (to == MoveTo::kHardBOL) {
+    if (to == MoveTo::kBOL || to == MoveTo::kHardBOL) {
         auto [line, _] = table.lineColumnAt(selection.end().index);
 
         bool exclude_end;
@@ -111,7 +111,7 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
         selection.setIndex(table.indexAt(line, new_col), extend);
         // updateCaretX();
     }
-    if (to == MoveTo::kHardEOL) {
+    if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
         auto [line, _] = table.lineColumnAt(selection.end().index);
 
         bool exclude_end;

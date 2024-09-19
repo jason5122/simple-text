@@ -7,7 +7,7 @@ namespace {
 
 constexpr auto operator*(const std::string_view& sv, size_t times) {
     std::string result;
-    for (std::size_t i = 0; i < times; ++i) {
+    for (size_t i = 0; i < times; ++i) {
         result += sv;
     }
     return result;

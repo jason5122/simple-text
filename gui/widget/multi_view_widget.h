@@ -12,6 +12,7 @@ class MultiViewWidget : public Widget {
 public:
     MultiViewWidget();
 
+    TextViewWidget* currentTextViewWidget() const;
     void setIndex(size_t index);
     void prevIndex();
     void nextIndex();
@@ -19,13 +20,6 @@ public:
     size_t getCurrentIndex();
     void addTab(std::string_view text);
     void removeTab(size_t index);
-    void selectAll();
-    void move(MoveBy by, bool forward, bool extend);
-    void moveTo(MoveTo to, bool extend);
-    void insertText(std::string_view text);
-    void leftDelete();
-    void rightDelete();
-    std::string getSelectionText();
 
     void draw() override;
     void scroll(const Point& mouse_pos, const Point& delta) override;

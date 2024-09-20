@@ -23,6 +23,10 @@ EditorWidget::EditorWidget()
     setMainWidget(multi_view);
 }
 
+TextViewWidget* EditorWidget::currentTextViewWidget() const {
+    return multi_view->currentTextViewWidget();
+}
+
 void EditorWidget::setIndex(size_t index) {
     multi_view->setIndex(index);
     tab_bar->setIndex(index);
@@ -57,34 +61,6 @@ void EditorWidget::removeTab(size_t index) {
     multi_view->removeTab(index);
     tab_bar->removeTab(index);
     layout();
-}
-
-void EditorWidget::selectAll() {
-    multi_view->selectAll();
-}
-
-void EditorWidget::move(MoveBy by, bool forward, bool extend) {
-    multi_view->move(by, forward, extend);
-}
-
-void EditorWidget::moveTo(MoveTo to, bool extend) {
-    multi_view->moveTo(to, extend);
-}
-
-void EditorWidget::insertText(std::string_view text) {
-    multi_view->insertText(text);
-}
-
-void EditorWidget::leftDelete() {
-    multi_view->leftDelete();
-}
-
-void EditorWidget::rightDelete() {
-    multi_view->rightDelete();
-}
-
-std::string EditorWidget::getSelectionText() {
-    return multi_view->getSelectionText();
 }
 
 void EditorWidget::openFile(std::string_view path) {

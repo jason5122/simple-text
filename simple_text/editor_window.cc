@@ -134,77 +134,62 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     if (key == app::Key::kJ && modifiers == app::ModifierKey::kSuper) {
         editor_widget->prevIndex();
         handled = true;
-    }
-    if (key == app::Key::kK && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::kK && modifiers == app::ModifierKey::kSuper) {
         editor_widget->nextIndex();
         handled = true;
-    }
-    if (key == app::Key::k1 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k1 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(0);
         handled = true;
-    }
-    if (key == app::Key::k2 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k2 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(1);
         handled = true;
-    }
-    if (key == app::Key::k3 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k3 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(2);
         handled = true;
-    }
-    if (key == app::Key::k4 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k4 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(3);
         handled = true;
-    }
-    if (key == app::Key::k5 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k5 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(4);
         handled = true;
-    }
-    if (key == app::Key::k6 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k6 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(5);
         handled = true;
-    }
-    if (key == app::Key::k7 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k7 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(6);
         handled = true;
-    }
-    if (key == app::Key::k8 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k8 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->setIndex(7);
         handled = true;
-    }
-    if (key == app::Key::k9 && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::k9 && modifiers == app::ModifierKey::kSuper) {
         editor_widget->lastIndex();
         handled = true;
-    }
-    if (key == app::Key::kA && modifiers == app::ModifierKey::kSuper) {
-        editor_widget->selectAll();
+    } else if (key == app::Key::kA && modifiers == app::ModifierKey::kSuper) {
+        editor_widget->currentTextViewWidget()->selectAll();
         handled = true;
-    }
-    if (key == app::Key::kW && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::kW && modifiers == app::ModifierKey::kSuper) {
         editor_widget->removeTab(editor_widget->getCurrentIndex());
         handled = true;
-    }
-    if (key == app::Key::kW &&
-        modifiers == (app::ModifierKey::kSuper | app::ModifierKey::kShift)) {
+    } else if (key == app::Key::kW &&
+               modifiers == (app::ModifierKey::kSuper | app::ModifierKey::kShift)) {
         // Immediately exit this function and don't let redraw() get called! The window smart
         // pointer will be deallocated at this point.
         close();
         return true;
-    }
-    // Copy/paste.
-    if (key == app::Key::kC && modifiers == app::ModifierKey::kSuper) {
-        parent.setClipboardString(editor_widget->getSelectionText());
+    } else if (key == app::Key::kC && modifiers == app::ModifierKey::kSuper) {
+        auto* text_view = editor_widget->currentTextViewWidget();
+        parent.setClipboardString(text_view->getSelectionText());
         handled = true;
-    }
-    if (key == app::Key::kV && modifiers == app::ModifierKey::kSuper) {
-        editor_widget->insertText(parent.getClipboardString());
+    } else if (key == app::Key::kV && modifiers == app::ModifierKey::kSuper) {
+        auto* text_view = editor_widget->currentTextViewWidget();
+        text_view->insertText(parent.getClipboardString());
         handled = true;
-    }
-    if (key == app::Key::kX && modifiers == app::ModifierKey::kSuper) {
-        parent.setClipboardString(editor_widget->getSelectionText());
-        editor_widget->leftDelete();
+    } else if (key == app::Key::kX && modifiers == app::ModifierKey::kSuper) {
+        auto* text_view = editor_widget->currentTextViewWidget();
+        parent.setClipboardString(text_view->getSelectionText());
+        text_view->leftDelete();
         handled = true;
-    }
-    if (key == app::Key::kO && modifiers == app::ModifierKey::kSuper) {
+    } else if (key == app::Key::kO && modifiers == app::ModifierKey::kSuper) {
         auto path = openFilePicker();
         if (path) {
             editor_widget->openFile(*path);
@@ -222,7 +207,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 void EditorWindow::onInsertText(std::string_view text) {
     {
         PROFILE_BLOCK("EditorWindow::onInsertText()");
-        editor_widget->insertText(text);
+        editor_widget->currentTextViewWidget()->insertText(text);
     }
     redraw();
 }
@@ -231,68 +216,77 @@ void EditorWindow::onAction(app::Action action, bool extend) {
     bool handled = false;
     {
         PROFILE_BLOCK("EditorWindow::onAction()");
+        auto* text_view = editor_widget->currentTextViewWidget();
         if (action == app::Action::kMoveForwardByCharacters) {
-            editor_widget->move(gui::MoveBy::kCharacters, true, extend);
+            text_view->move(gui::MoveBy::kCharacters, true, extend);
             handled = true;
         }
         if (action == app::Action::kMoveBackwardByCharacters) {
-            editor_widget->move(gui::MoveBy::kCharacters, false, extend);
+            text_view->move(gui::MoveBy::kCharacters, false, extend);
             handled = true;
         }
         if (action == app::Action::kMoveForwardByLines) {
-            editor_widget->move(gui::MoveBy::kLines, true, extend);
+            text_view->move(gui::MoveBy::kLines, true, extend);
             handled = true;
         }
         if (action == app::Action::kMoveBackwardByLines) {
-            editor_widget->move(gui::MoveBy::kLines, false, extend);
+            text_view->move(gui::MoveBy::kLines, false, extend);
             handled = true;
         }
         if (action == app::Action::kMoveForwardByWords) {
-            editor_widget->move(gui::MoveBy::kWords, true, extend);
+            text_view->move(gui::MoveBy::kWords, true, extend);
             handled = true;
         }
         if (action == app::Action::kMoveBackwardByWords) {
-            editor_widget->move(gui::MoveBy::kWords, false, extend);
+            text_view->move(gui::MoveBy::kWords, false, extend);
             handled = true;
         }
         if (action == app::Action::kMoveToBOL) {
-            editor_widget->moveTo(gui::MoveTo::kBOL, extend);
+            text_view->moveTo(gui::MoveTo::kBOL, extend);
             handled = true;
         }
         if (action == app::Action::kMoveToEOL) {
-            editor_widget->moveTo(gui::MoveTo::kEOL, extend);
+            text_view->moveTo(gui::MoveTo::kEOL, extend);
             handled = true;
         }
         if (action == app::Action::kMoveToHardBOL) {
-            editor_widget->moveTo(gui::MoveTo::kHardBOL, extend);
+            text_view->moveTo(gui::MoveTo::kHardBOL, extend);
             handled = true;
         }
         if (action == app::Action::kMoveToHardEOL) {
-            editor_widget->moveTo(gui::MoveTo::kHardEOL, extend);
+            text_view->moveTo(gui::MoveTo::kHardEOL, extend);
             handled = true;
         }
         if (action == app::Action::kMoveToBOF) {
-            editor_widget->moveTo(gui::MoveTo::kBOF, extend);
+            text_view->moveTo(gui::MoveTo::kBOF, extend);
             handled = true;
         }
         if (action == app::Action::kMoveToEOF) {
-            editor_widget->moveTo(gui::MoveTo::kEOF, extend);
+            text_view->moveTo(gui::MoveTo::kEOF, extend);
             handled = true;
         }
         if (action == app::Action::kInsertNewline) {
-            editor_widget->insertText("\n");
+            text_view->insertText("\n");
             handled = true;
         }
         if (action == app::Action::kInsertTab) {
-            editor_widget->insertText("    ");
+            text_view->insertText("    ");
             handled = true;
         }
         if (action == app::Action::kLeftDelete) {
-            editor_widget->leftDelete();
+            text_view->leftDelete();
             handled = true;
         }
         if (action == app::Action::kRightDelete) {
-            editor_widget->rightDelete();
+            text_view->rightDelete();
+            handled = true;
+        }
+        if (action == app::Action::kDeleteWordForward) {
+            text_view->deleteWord(true);
+            handled = true;
+        }
+        if (action == app::Action::kDeleteWordBackward) {
+            text_view->deleteWord(false);
             handled = true;
         }
     }

@@ -11,6 +11,7 @@ class EditorWidget : public VerticalLayoutWidget {
 public:
     EditorWidget();
 
+    TextViewWidget* currentTextViewWidget() const;
     void setIndex(size_t index);
     void prevIndex();
     void nextIndex();
@@ -18,13 +19,6 @@ public:
     size_t getCurrentIndex();
     void addTab(std::string_view tab_name, std::string_view text);
     void removeTab(size_t index);
-    void selectAll();
-    void move(MoveBy by, bool forward, bool extend);
-    void moveTo(MoveTo to, bool extend);
-    void insertText(std::string_view text);
-    void leftDelete();
-    void rightDelete();
-    std::string getSelectionText();
     void openFile(std::string_view path);
 
 private:

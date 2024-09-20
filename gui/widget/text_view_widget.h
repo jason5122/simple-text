@@ -19,6 +19,7 @@ public:
     void insertText(std::string_view text);
     void leftDelete();
     void rightDelete();
+    void deleteWord(bool forward);
     std::string getSelectionText();
 
     void draw() override;

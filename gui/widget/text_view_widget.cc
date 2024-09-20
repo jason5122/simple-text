@@ -203,6 +203,43 @@ void TextViewWidget::rightDelete() {
     }
 }
 
+void TextViewWidget::deleteWord(bool forward) {
+    PROFILE_BLOCK("TextViewWidget::deleteWord()");
+
+    if (selection.empty()) {
+        auto [line, col] = table.lineColumnAt(selection.end().index);
+        const auto& layout = layoutAt(line);
+
+        size_t delta;
+        if (forward) {
+            delta = Caret::nextWordEnd(layout, col, table.line(line));
+        } else {
+            delta = Caret::prevWordStart(layout, col, table.line(line));
+            selection.decrementIndex(delta, false);
+
+            // Move to previous line if at beginning of line.
+            if (delta == 0 && line > 0) {
+                const auto& prev_layout = layoutAt(line - 1);
+                size_t index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
+                selection.setIndex(index, false);
+            }
+        }
+
+        size_t i = selection.end().index;
+        table.erase(i, delta);
+
+        highlighter.edit(i, i + delta, i);
+        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    } else {
+        auto [start, end] = selection.range();
+        table.erase(start, end - start);
+        selection.collapse(Selection::Direction::kLeft);
+
+        highlighter.edit(start, end, start);
+        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    }
+}
+
 std::string TextViewWidget::getSelectionText() {
     auto [start, end] = selection.range();
     return table.substr(start, end - start);

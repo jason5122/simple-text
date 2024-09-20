@@ -18,6 +18,8 @@ enum class Action {
     kMoveToEOF,
     kLeftDelete,
     kRightDelete,
+    kDeleteWordForward,
+    kDeleteWordBackward,
     kInsertNewline,
     kInsertTab,
 };

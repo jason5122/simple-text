@@ -54,6 +54,14 @@ MultiViewWidget::MultiViewWidget() {
     // addTab(large_json);
 }
 
+TextViewWidget* MultiViewWidget::currentTextViewWidget() const {
+    if (!text_views.empty()) {
+        return text_views[index].get();
+    } else {
+        return nullptr;
+    }
+}
+
 void MultiViewWidget::setIndex(size_t index) {
     if (index < text_views.size()) {
         this->index = index;
@@ -82,50 +90,6 @@ void MultiViewWidget::addTab(std::string_view text) {
 
 void MultiViewWidget::removeTab(size_t index) {
     text_views.erase(text_views.begin() + index);
-}
-
-void MultiViewWidget::selectAll() {
-    if (!text_views.empty()) {
-        text_views[index]->selectAll();
-    }
-}
-
-void MultiViewWidget::move(MoveBy by, bool forward, bool extend) {
-    if (!text_views.empty()) {
-        text_views[index]->move(by, forward, extend);
-    }
-}
-
-void MultiViewWidget::moveTo(MoveTo to, bool extend) {
-    if (!text_views.empty()) {
-        text_views[index]->moveTo(to, extend);
-    }
-}
-
-void MultiViewWidget::insertText(std::string_view text) {
-    if (!text_views.empty()) {
-        text_views[index]->insertText(text);
-    }
-}
-
-void MultiViewWidget::leftDelete() {
-    if (!text_views.empty()) {
-        text_views[index]->leftDelete();
-    }
-}
-
-void MultiViewWidget::rightDelete() {
-    if (!text_views.empty()) {
-        text_views[index]->rightDelete();
-    }
-}
-
-std::string MultiViewWidget::getSelectionText() {
-    if (!text_views.empty()) {
-        return text_views[index]->getSelectionText();
-    } else {
-        return "";
-    }
 }
 
 void MultiViewWidget::draw() {

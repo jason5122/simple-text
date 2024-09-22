@@ -23,6 +23,8 @@ const std::string kMainFontFace = "Source Code Pro";
 // const std::string kMainFontFace = "Andale Mono";
 // const std::string kMainFontFace = "Arial";
 // const std::string kMainFontFace = "Menlo";
+// const std::string kMainFontFace = "Charter";
+// const std::string kMainFontFace = "Times New Roman";
 const std::string kUIFontFace = "SF Pro Text";
 #elif BUILDFLAG(IS_WIN)
 constexpr int kMainFontSize = 11 * 2;

@@ -213,6 +213,12 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.
     // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
+
+    // TODO: See if this is correct.
+    if (total_advance % 2 == 1) {
+        total_advance += 1;
+    }
+
     return {
         .layout_font_id = font_id,
         .width = total_advance,

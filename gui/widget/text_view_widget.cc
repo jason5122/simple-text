@@ -18,6 +18,14 @@ TextViewWidget::TextViewWidget(std::string_view text) : table{text} {
 
     highlighter.setJsonLanguage();
     highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+
+    int max_width = 0;
+    for (int k = 0; k <= 9; ++k) {
+        const auto& line_number_layout = line_layout_cache.getLineLayout("9");
+        max_width = std::max(line_number_layout.width, max_width);
+    }
+    temp_width = max_width;
+    std::cerr << std::format("temp_width = {}\n", temp_width);
 }
 
 void TextViewWidget::selectAll() {
@@ -267,6 +275,11 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     Point new_coords = mouse_pos - position + scroll_offset;
+
+    // TODO: Formalize this.
+    new_coords.x -= kGutterPadding;
+    new_coords.x -= temp_width;
+
     size_t new_line = lineAtY(new_coords.y);
 
     bool exclude_end;
@@ -291,6 +304,11 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     Point new_coords = mouse_pos - position + scroll_offset;
+
+    // TODO: Formalize this.
+    new_coords.x -= kGutterPadding;
+    new_coords.x -= temp_width;
+
     size_t new_line = lineAtY(new_coords.y);
 
     bool exclude_end;
@@ -354,58 +372,65 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     {
         PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
         highlights = highlighter.getHighlights(start_line, end_line);
-
-        // std::cerr << "Printing all highlights:\n";
-        // for (const auto& h : highlights) {
-        //     std::cerr << h.start << ' ' << h.end
-        //               << std::format(" , capture_index = {}\n", h.capture_index);
-        // }
-        // std::cerr << "Done\n";
     }
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     auto [selection_line, selection_col] = table.lineColumnAt(selection.end().index);
-    {
-        PROFILE_BLOCK("TextViewWidget::renderText()");
-        for (size_t line = start_line; line < end_line; ++line) {
-            const auto& layout = layoutAt(line);
 
-            Point coords = position - scroll_offset;
-            // TODO: Using `metrics.line_height` causes a use-after-free error??
-            //       The line with `line_layout_cache.getLineLayout()` is problematic.
-            coords.y += line * main_line_height;
+    PROFILE_BLOCK("TextViewWidget::renderText()");
+    for (size_t line = start_line; line < end_line; ++line) {
+        const auto& layout = layoutAt(line);
 
-            // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
-            coords.y -= main_line_height;
-            // TODO: Seems like Sublime Text adds something to the left edge no matter what.
-            // We could formalize this as padding, but we need selection to be flush...
-            // coords.x += 3;  // Source Code Pro et al.
-            // coords.x += 2;  // Chinese
+        Point coords = position - scroll_offset;
+        // TODO: Using `metrics.line_height` causes a use-after-free error??
+        //       The line with `line_layout_cache.getLineLayout()` is problematic.
+        coords.y += line * main_line_height;
 
-            // Gutter padding (matches Sublime Text's padding).
-            coords.x += 23 * 2;
+        // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
+        coords.y -= main_line_height;
+        // TODO: Seems like Sublime Text adds something to the left edge no matter what.
+        // We could formalize this as padding, but we need selection to be flush...
+        // coords.x += 3;  // Source Code Pro et al.
+        // coords.x += 2;  // Chinese
 
-            int min_x = scroll_offset.x;
-            int max_x = scroll_offset.x + size.width;
+        // Gutter padding (matches Sublime Text's padding).
+        coords.x += kGutterPadding;
+        coords.x += temp_width;
 
-            constexpr bool kHighlight = true;
-            if constexpr (kHighlight) {
-                text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                               TextRenderer::FontType::kMain, highlighter,
-                                               highlights, line);
-            } else {
-                text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                               TextRenderer::FontType::kMain);
-            }
+        int min_x = scroll_offset.x;
+        int max_x = scroll_offset.x + size.width;
 
-            // Draw gutter.
-            if (line == selection_line) {
-                Point gutter_coords = position - scroll_offset;
-                gutter_coords.y += line * main_line_height;
-                rect_renderer.addRect(gutter_coords, {23 * 2, main_line_height}, {227, 230, 232});
-            }
+        constexpr bool kHighlight = true;
+        if constexpr (kHighlight) {
+            text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
+                                           TextRenderer::FontType::kMain, highlighter, highlights,
+                                           line);
+        } else {
+            text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
+                                           TextRenderer::FontType::kMain);
         }
+
+        // Draw gutter.
+        if (line == selection_line) {
+            Point gutter_coords = position - scroll_offset;
+            gutter_coords.y += line * main_line_height;
+            int gutter_width = kGutterPadding;
+            // int gutter_width = kGutterPadding + max_digit_width * 2;
+            rect_renderer.addRect(gutter_coords, {gutter_width, main_line_height},
+                                  {227, 230, 232});
+        }
+
+        // Draw line numbers.
+        Point line_number_coords = position - scroll_offset;
+        line_number_coords.y += line * main_line_height;
+        line_number_coords.y -= main_line_height;
+        line_number_coords.x += kGutterPadding;
+        std::string line_number_str = std::format("{}", line + 1);
+        const auto& line_number_layout = line_layout_cache.getLineLayout(line_number_str);
+        text_renderer.renderLineLayout(line_number_layout, line_number_coords, min_x, max_x,
+                                       kTextColor, TextRenderer::FontType::kMain);
     }
+
     constexpr bool kDebugAtlas = false;
     if constexpr (kDebugAtlas) {
         text_renderer.renderAtlasPages(position);
@@ -445,7 +470,8 @@ void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
     Point offset = position - scroll_offset;
 
     // Gutter padding (matches Sublime Text's padding).
-    offset.x += 23 * 2;
+    offset.x += kGutterPadding;
+    offset.x += temp_width;
 
     selection_renderer.renderSelections(selections, offset);
 }
@@ -502,7 +528,8 @@ void TextViewWidget::renderCaret(int main_line_height) {
     caret_pos.y -= extra_padding;
 
     // Gutter padding (matches Sublime Text's padding).
-    caret_pos.x += 23 * 2;
+    caret_pos.x += kGutterPadding;
+    caret_pos.x += temp_width;
 
     rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
 }

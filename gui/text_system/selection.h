@@ -7,7 +7,7 @@ namespace gui {
 class Selection {
 public:
     Caret& start();
-    Caret& end();
+    Caret& end();  // TODO: Rename this to avoid collision with range end() function.
     bool empty() const;
     std::pair<size_t, size_t> range() const;
     void setIndex(size_t index, bool extend);

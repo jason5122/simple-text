@@ -252,7 +252,7 @@ void TextViewWidget::draw() {
 
     // Calculate start and end lines.
     int main_line_height = metrics.line_height;
-    size_t visible_lines = std::ceil(static_cast<float>(size.height) / main_line_height);
+    size_t visible_lines = std::ceil(static_cast<double>(size.height) / main_line_height);
 
     size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
@@ -273,8 +273,16 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos,
     const auto& layout = layoutAt(new_line, exclude_end);
     size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
 
-    bool extend = modifiers == app::ModifierKey::kShift;
-    selection.setIndex(table.indexAt(new_line, new_col), extend);
+    if (click_type == app::ClickType::kSingleClick) {
+        bool extend = modifiers == app::ModifierKey::kShift;
+        selection.setIndex(table.indexAt(new_line, new_col), extend);
+    } else if (click_type == app::ClickType::kDoubleClick) {
+        selection.setIndex(table.indexAt(new_line, new_col), false);
+        size_t start_delta = Caret::prevWordStart(layout, new_col, table.line(new_line));
+        size_t end_delta = Caret::nextWordEnd(layout, new_col, table.line(new_line));
+        selection.start().index -= start_delta;
+        selection.end().index += end_delta;
+    }
 
     // updateCaretX();
 }
@@ -341,6 +349,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     end_line = std::clamp(end_line, 0_Z, table.lineCount());
 
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     std::vector<base::SyntaxHighlighter::Highlight> highlights;
     {
         PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
@@ -353,6 +362,9 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         // }
         // std::cerr << "Done\n";
     }
+
+    // TODO: Refactor code in draw() to only fetch caret [line, col] once.
+    auto [selection_line, selection_col] = table.lineColumnAt(selection.end().index);
     {
         PROFILE_BLOCK("TextViewWidget::renderText()");
         for (size_t line = start_line; line < end_line; ++line) {
@@ -370,6 +382,9 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             // coords.x += 3;  // Source Code Pro et al.
             // coords.x += 2;  // Chinese
 
+            // Gutter padding (matches Sublime Text's padding).
+            coords.x += 23 * 2;
+
             int min_x = scroll_offset.x;
             int max_x = scroll_offset.x + size.width;
 
@@ -381,6 +396,13 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             } else {
                 text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
                                                TextRenderer::FontType::kMain);
+            }
+
+            // Draw gutter.
+            if (line == selection_line) {
+                Point gutter_coords = position - scroll_offset;
+                gutter_coords.y += line * main_line_height;
+                rect_renderer.addRect(gutter_coords, {23 * 2, main_line_height}, {227, 230, 232});
             }
         }
     }
@@ -419,7 +441,13 @@ void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
             });
         }
     }
-    selection_renderer.renderSelections(selections, position - scroll_offset);
+
+    Point offset = position - scroll_offset;
+
+    // Gutter padding (matches Sublime Text's padding).
+    offset.x += 23 * 2;
+
+    selection_renderer.renderSelections(selections, offset);
 }
 
 void TextViewWidget::renderScrollBars(int main_line_height, size_t visible_lines) {
@@ -472,6 +500,10 @@ void TextViewWidget::renderCaret(int main_line_height) {
     caret_pos -= scroll_offset;
     caret_pos.x -= caret_width / 2;
     caret_pos.y -= extra_padding;
+
+    // Gutter padding (matches Sublime Text's padding).
+    caret_pos.x += 23 * 2;
+
     rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
 }
 

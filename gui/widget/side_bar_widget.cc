@@ -15,7 +15,7 @@ SideBarWidget::SideBarWidget(const Size& size)
 void SideBarWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
-    rect_renderer.addRect(position, size, kSideBarColor);
+    rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectType::kForeground);
 
     folder_label->draw();
 

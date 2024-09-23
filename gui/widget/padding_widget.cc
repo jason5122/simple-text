@@ -7,7 +7,7 @@ PaddingWidget::PaddingWidget(const Size& size, const Rgba& color) : Widget{size}
 
 void PaddingWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, color);
+    rect_renderer.addRect(position, size, color, RectRenderer::RectType::kForeground);
 }
 
 }

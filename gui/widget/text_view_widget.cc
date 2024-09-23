@@ -350,8 +350,12 @@ inline const font::LineLayout& TextViewWidget::layoutAt(size_t line, bool& exclu
 
 inline constexpr Point TextViewWidget::textOffset() const {
     Point text_offset = position - scroll_offset;
-    text_offset.x += kGutterPadding + temp_width;
+    text_offset.x += gutterWidth();
     return text_offset;
+}
+
+inline constexpr int TextViewWidget::gutterWidth() const {
+    return kGutterPadding + temp_width;
 }
 
 void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_line_height) {
@@ -379,9 +383,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         const auto& layout = layoutAt(line);
 
         Point coords = textOffset();
-        // TODO: Using `metrics.line_height` causes a use-after-free error??
-        //       The line with `line_layout_cache.getLineLayout()` is problematic.
-        coords.y += line * main_line_height;
+        coords.y += static_cast<int>(line) * main_line_height;
 
         // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
         coords.y -= main_line_height;
@@ -406,11 +408,9 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         // Draw gutter.
         if (line == selection_line) {
             Point gutter_coords = position - scroll_offset;
-            gutter_coords.y += line * main_line_height;
-            int gutter_width = kGutterPadding;
-            // int gutter_width = kGutterPadding + max_digit_width * 2;
-            rect_renderer.addRect(gutter_coords, {gutter_width, main_line_height},
-                                  {227, 230, 232});
+            gutter_coords.y += static_cast<int>(line) * main_line_height;
+            rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
+                                  RectRenderer::RectType::kBackground);
         }
 
         // Draw line numbers.
@@ -422,9 +422,10 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         line_number_coords.x += 11;
         std::string line_number_str = std::format("{}", line + 1);
+        const auto& color = line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         const auto& line_number_layout = line_layout_cache.getLineLayout(line_number_str);
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords, min_x, max_x,
-                                       {152, 152, 152}, TextRenderer::FontType::kMain);
+        text_renderer.renderLineLayout(line_number_layout, line_number_coords, min_x, max_x, color,
+                                       TextRenderer::FontType::kMain);
     }
 
     constexpr bool kDebugAtlas = false;
@@ -473,18 +474,19 @@ void TextViewWidget::renderScrollBars(int main_line_height, size_t visible_lines
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
-    int line_count = table.lineCount();
     int line_height = main_line_height;
     int vbar_width = 15;
-    int max_scrollbar_y = (line_count + visible_lines) * line_height;
-    int vbar_height = size.height * (static_cast<double>(size.height) / max_scrollbar_y);
+    int max_scrollbar_y = static_cast<int>(table.lineCount() + visible_lines) * line_height;
+    double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;
+    int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);
     double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
     Point vbar_coords{
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor, 5);
+    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
+                          RectRenderer::RectType::kForeground, 5);
 
     // Add horizontal scroll bar.
     // int hbar_height = 15;
@@ -518,7 +520,8 @@ void TextViewWidget::renderCaret(int main_line_height) {
     caret_pos.y -= extra_padding;
     caret_pos += textOffset();
 
-    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor);
+    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor,
+                          RectRenderer::RectType::kForeground);
 }
 
 }

@@ -16,20 +16,18 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    void draw(const Size& size,
-              const Point& scroll,
-              const Point& end_caret_pos,
-              float line_height,
-              size_t line_count,
-              float longest_x,
-              const Point& editor_offset,
-              int status_bar_height);
+    enum class RectType {
+        kBackground,
+        kForeground,
+    };
+
     void addRect(const Point& coords,
                  const Size& size,
                  const Rgba& color,
+                 RectType rect_type,
                  int corner_radius = 0,
                  int tab_corner_radius = 0);
-    void flush(const Size& screen_size);
+    void flush(const Size& screen_size, RectType rect_type);
 
 private:
     static constexpr int kBatchMax = 0x10000;
@@ -48,7 +46,8 @@ private:
         float tab_corner_radius = 0;
     };
 
-    std::vector<InstanceData> instances;
+    std::vector<InstanceData> background_instances;
+    std::vector<InstanceData> foreground_instances;
 };
 
 static_assert(!std::is_copy_constructible_v<RectRenderer>);

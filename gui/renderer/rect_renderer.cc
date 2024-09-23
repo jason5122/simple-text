@@ -18,7 +18,7 @@ const std::string kFragmentShaderSource =
 namespace gui {
 
 RectRenderer::RectRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
-    instances.reserve(kBatchMax);
+    foreground_instances.reserve(kBatchMax);
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo_instance);
@@ -81,7 +81,7 @@ RectRenderer::RectRenderer(RectRenderer&& other)
       vao{other.vao},
       vbo_instance{other.vbo_instance},
       ebo{other.ebo} {
-    instances.reserve(kBatchMax);
+    foreground_instances.reserve(kBatchMax);
     other.vao = 0;
     other.vbo_instance = 0;
     other.ebo = 0;
@@ -100,96 +100,15 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
     return *this;
 }
 
-void RectRenderer::draw(const Size& size,
-                        const Point& scroll,
-                        const Point& end_caret_pos,
-                        float line_height,
-                        size_t line_count,
-                        float longest_x,
-                        const Point& editor_offset,
-                        int status_bar_height) {
-    int caret_width = 4;
-    int caret_height = line_height;
-
-    int extra_padding = 8;
-    caret_height += extra_padding * 2;
-
-    int editor_width = size.width;
-    int editor_height = size.height - status_bar_height;
-
-    // Add caret.
-    Point caret_pos{
-        .x = end_caret_pos.x - caret_width / 2,
-        .y = end_caret_pos.y - extra_padding,
-    };
-    caret_pos -= scroll;
-    caret_pos -= editor_offset;
-    addRect(caret_pos, {caret_width, caret_height}, Rgba{95, 180, 180, 255});
-
-    // Add vertical scroll bar.
-    if (line_count > 0) {
-        float vertical_scroll_bar_width = 15;
-        float total_y = (line_count + (editor_height / line_height)) * line_height;
-        float vertical_scroll_bar_height = editor_height * (editor_height / total_y);
-        float vertical_scroll_bar_position_percentage = scroll.y / (line_count * line_height);
-        instances.emplace_back(InstanceData{
-            // TODO: Round floats.
-            .coords =
-                Vec2{
-                    .x = editor_width - vertical_scroll_bar_width,
-                    .y = std::round((editor_height - vertical_scroll_bar_height) *
-                                    vertical_scroll_bar_position_percentage),
-                },
-            .rect_size = Vec2{vertical_scroll_bar_width, vertical_scroll_bar_height},
-            .color = {190, 190, 190, 255},
-            .corner_radius = 5,
-        });
-    }
-
-    // Add horizontal scroll bar.
-    float horizontal_scroll_bar_width = editor_width * (editor_width / longest_x);
-    float horizontal_scroll_bar_height = 15;
-    float horizontal_scroll_bar_position_percentage = scroll.x / (longest_x - editor_width);
-    if (horizontal_scroll_bar_width < editor_width) {
-        instances.emplace_back(InstanceData{
-            // TODO: Round floats.
-            .coords =
-                Vec2{
-                    .x = std::round((editor_width - horizontal_scroll_bar_width) *
-                                    horizontal_scroll_bar_position_percentage),
-                    .y = editor_height - horizontal_scroll_bar_height,
-                },
-            .rect_size = Vec2{horizontal_scroll_bar_width, horizontal_scroll_bar_height},
-            .color = {190, 190, 190, 255},
-            .corner_radius = 5,
-        });
-    }
-
-    // Add tab bar.
-    addRect({0, 0}, {size.width, editor_offset.y}, Rgba{190, 190, 190, 255});
-
-    float tab_height = editor_offset.y - 5;  // Leave padding between window title bar and tab.
-    float tab_corner_radius = 10;
-
-    instances.emplace_back(InstanceData{
-        .coords = Vec2{0, -tab_height},
-        .rect_size = Vec2{kMinTabWidth, tab_height},
-        .color = Rgba{100, 100, 100, 255},
-        .tab_corner_radius = tab_corner_radius,
-    });
-
-    // Add side bar.
-    addRect({0, 0}, {editor_offset.x, size.height}, Rgba{235, 237, 239, 255});
-
-    // Add status bar.
-    addRect({0, editor_height}, size, Rgba{199, 203, 209, 255});
-}
-
 void RectRenderer::addRect(const Point& coords,
                            const Size& size,
                            const Rgba& color,
+                           RectType rect_type,
                            int corner_radius,
                            int tab_corner_radius) {
+    auto& instances =
+        rect_type == RectType::kForeground ? foreground_instances : background_instances;
+
     instances.emplace_back(InstanceData{
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(size.height)},
@@ -199,7 +118,10 @@ void RectRenderer::addRect(const Point& coords,
     });
 }
 
-void RectRenderer::flush(const Size& screen_size) {
+void RectRenderer::flush(const Size& screen_size, RectType rect_type) {
+    auto& instances =
+        rect_type == RectType::kForeground ? foreground_instances : background_instances;
+
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();

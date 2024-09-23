@@ -36,6 +36,9 @@ private:
     static constexpr int kMinScrollbarWidth = 100;
     static constexpr int kGutterPadding = 23 * 2;
     static constexpr Rgb kTextColor{51, 51, 51};
+    static constexpr Rgb kLineNumberColor{152, 152, 152};
+    static constexpr Rgb kSelectedLineNumberColor{81, 81, 81};
+    static constexpr Rgba kGutterColor{227, 230, 232, 255};
     static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
     static constexpr Rgba kCaretColor{95, 180, 180, 255};
 
@@ -51,6 +54,7 @@ private:
     inline const font::LineLayout& layoutAt(size_t line);
     inline const font::LineLayout& layoutAt(size_t line, bool& exclude_end);
     inline constexpr Point textOffset() const;
+    inline constexpr int gutterWidth() const;
 
     // Draw helpers.
     void renderText(size_t start_line, size_t end_line, int main_line_height);

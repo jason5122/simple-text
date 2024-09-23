@@ -26,7 +26,7 @@ TextViewWidget::TextViewWidget(std::string_view text) : table{text} {
     // }
     // temp_width = max_width;
     // std::cerr << std::format("temp_width = {}\n", temp_width);
-    temp_width = 46;
+    temp_width = 31;
 }
 
 void TextViewWidget::selectAll() {
@@ -355,7 +355,7 @@ inline constexpr Point TextViewWidget::textOffset() const {
 }
 
 inline constexpr int TextViewWidget::gutterWidth() const {
-    return kGutterPadding + temp_width;
+    return kGutterPadding + temp_width + 15;
 }
 
 void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_line_height) {
@@ -384,11 +384,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
-
-        // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
         coords.y -= main_line_height;
-        // TODO: Seems like Sublime Text adds something to the left edge no matter what.
-        // We could formalize this as padding, but we need selection to be flush...
         coords.x += 3;  // Source Code Pro et al.
         // coords.x += 2;  // Chinese
 
@@ -414,16 +410,17 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         }
 
         // Draw line numbers.
-        Point line_number_coords = coords;
+        Point line_number_coords = position - scroll_offset;
+        line_number_coords.y += static_cast<int>(line) * main_line_height;
+        line_number_coords.y -= main_line_height;
+        line_number_coords.x += kGutterPadding;
 
-        // TODO: Formalize this. Undo changes above.
-        line_number_coords.x -= temp_width;
-        line_number_coords.x -= 3;
-
-        line_number_coords.x += 11;
         std::string line_number_str = std::format("{}", line + 1);
         const auto& color = line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         const auto& line_number_layout = line_layout_cache.getLineLayout(line_number_str);
+
+        line_number_coords.x += temp_width - line_number_layout.width;
+
         text_renderer.renderLineLayout(line_number_layout, line_number_coords, min_x, max_x, color,
                                        TextRenderer::FontType::kMain);
     }

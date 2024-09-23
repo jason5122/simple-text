@@ -50,6 +50,7 @@ private:
     size_t lineAtY(int y);
     inline const font::LineLayout& layoutAt(size_t line);
     inline const font::LineLayout& layoutAt(size_t line, bool& exclude_end);
+    inline constexpr Point textOffset() const;
 
     // Draw helpers.
     void renderText(size_t start_line, size_t end_line, int main_line_height);

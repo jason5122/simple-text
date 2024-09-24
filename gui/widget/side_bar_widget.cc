@@ -17,7 +17,7 @@ void SideBarWidget::draw() {
 
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectType::kForeground);
 
-    folder_label->draw();
+    // folder_label->draw();
 
     // Add vertical scroll bar.
     // int vbar_width = 15;
@@ -29,6 +29,26 @@ void SideBarWidget::draw() {
     //     .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     // };
     // rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, kScrollBarColor, 5);
+
+    // TODO: Experimental; formalize this.
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
+    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+
+    int main_line_height = metrics.line_height;
+    for (size_t line = 0; line < strs.size(); ++line) {
+        const auto& layout = line_layout_cache.getLineLayout(strs[line]);
+
+        Point coords = position - scroll_offset;
+        coords.y += static_cast<int>(line) * main_line_height;
+        coords.y -= main_line_height;
+
+        int min_x = scroll_offset.x;
+        int max_x = scroll_offset.x + size.width;
+        text_renderer.renderLineLayout(layout, coords, min_x, max_x, {51, 51, 51},
+                                       TextRenderer::FontType::kUI);
+    }
 }
 
 void SideBarWidget::layout() {
@@ -36,8 +56,12 @@ void SideBarWidget::layout() {
 }
 
 void SideBarWidget::updateMaxScroll() {
-    // TODO: Debug use; remove this.
-    max_scroll_offset.y = 2400;
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& font_rasterizer = font::FontRasterizer::instance();
+    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
+
+    int line_count = strs.size() + 1;
+    max_scroll_offset.y = line_count * metrics.line_height;
 }
 
 }

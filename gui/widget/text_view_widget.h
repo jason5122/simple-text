@@ -34,7 +34,6 @@ public:
 
 private:
     static constexpr int kMinScrollbarWidth = 100;
-    static constexpr int kGutterPadding = 23 * 2;
     static constexpr Rgb kTextColor{51, 51, 51};
     static constexpr Rgb kLineNumberColor{152, 152, 152};
     static constexpr Rgb kSelectedLineNumberColor{81, 81, 81};
@@ -48,7 +47,9 @@ private:
     Selection selection{};
     base::SyntaxHighlighter highlighter;
 
-    int temp_width;
+    static constexpr int kGutterLeftPadding = 23 * 2;
+    int line_number_width;
+    static constexpr int kGutterRightPadding = 8 * 2;
 
     size_t lineAtY(int y);
     inline const font::LineLayout& layoutAt(size_t line);

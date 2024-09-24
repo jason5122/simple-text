@@ -12,7 +12,6 @@ struct RasterizedGlyph {
     int32_t top;
     int32_t width;
     int32_t height;
-    int32_t advance;
     std::vector<uint8_t> buffer;
 };
 

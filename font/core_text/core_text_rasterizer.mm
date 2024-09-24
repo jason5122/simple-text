@@ -116,16 +116,12 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
         }
     }
 
-    double advance =
-        CTFontGetAdvancesForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, nullptr, 1);
-
     return {
         .colored = colored,
         .left = rasterized_left,
         .top = top,
         .width = static_cast<int32_t>(rasterized_width),
         .height = static_cast<int32_t>(rasterized_height),
-        .advance = static_cast<int32_t>(std::ceil(advance)),
         .buffer = buffer,
     };
 }
@@ -215,9 +211,9 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
     // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
 
     // TODO: See if this is correct.
-    if (total_advance % 2 == 1) {
-        total_advance += 1;
-    }
+    // if (total_advance % 2 == 1) {
+    //     total_advance += 1;
+    // }
 
     return {
         .layout_font_id = font_id,

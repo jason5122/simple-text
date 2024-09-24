@@ -16,7 +16,6 @@ public:
         GLuint tex_id;
         Vec4 glyph;
         Vec4 uv;
-        int32_t advance;
         bool colored;
         size_t page;
     };

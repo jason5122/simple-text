@@ -381,7 +381,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         coords.y += static_cast<int>(line) * main_line_height;
         coords.y -= main_line_height;
 
-        coords.x += 3;  // Source Code Pro et al.
+        // coords.x += 3;  // Source Code Pro et al.
         // coords.x += 2;  // Chinese
 
         int min_x = scroll_offset.x;

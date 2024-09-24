@@ -81,4 +81,8 @@
     return app_window;
 }
 
+- (NSWindow*)getNsWindow {
+    return self.window;
+}
+
 @end

@@ -10,7 +10,7 @@ class SideBarWidget : public ScrollableWidget {
 public:
     SideBarWidget(const Size& size);
 
-    void draw() override;
+    void draw(const Point& mouse_pos) override;
     void layout() override;
 
     void updateMaxScroll() override;

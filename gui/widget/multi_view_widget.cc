@@ -92,9 +92,9 @@ void MultiViewWidget::removeTab(size_t index) {
     text_views.erase(text_views.begin() + index);
 }
 
-void MultiViewWidget::draw() {
+void MultiViewWidget::draw(const Point& mouse_pos) {
     if (!text_views.empty()) {
-        text_views[index]->draw();
+        text_views[index]->draw(mouse_pos);
     }
 }
 

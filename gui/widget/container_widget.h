@@ -16,7 +16,7 @@ public:
     void addChildStart(std::shared_ptr<Widget> widget);
     void addChildEnd(std::shared_ptr<Widget> widget);
 
-    void draw() override;
+    void draw(const Point& mouse_pos) override;
     void scroll(const Point& mouse_pos, const Point& delta) override;
     void leftMouseDown(const Point& mouse_pos,
                        app::ModifierKey modifiers,

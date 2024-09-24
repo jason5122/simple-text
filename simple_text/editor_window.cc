@@ -83,7 +83,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
 void EditorWindow::onDraw(int width, int height) {
     PROFILE_BLOCK("Total render time");
-    main_widget->draw();
+    auto [mouse_x, mouse_y] = mousePosition();
+    main_widget->draw({mouse_x, mouse_y});
     Renderer::instance().flush({width, height});
 }
 

@@ -90,4 +90,19 @@ std::optional<std::string> Window::openFilePicker() {
     //                   }];
 }
 
+// TODO: De-duplicate code with GLView GetPosition().
+std::pair<int, int> Window::mousePosition() {
+    NSWindow* ns_window = [pimpl->window_controller getNsWindow];
+    NSPoint mouse_pos = ns_window.mouseLocationOutsideOfEventStream;
+
+    int mouse_x = std::round(mouse_pos.x);
+    int mouse_y = std::round(mouse_pos.y);
+    mouse_y = [pimpl->window_controller getHeight] - mouse_y;  // Set origin at top left.
+
+    int scale = [pimpl->window_controller getScaleFactor];
+    int scaled_mouse_x = mouse_x * scale;
+    int scaled_mouse_y = mouse_y * scale;
+    return {scaled_mouse_x, scaled_mouse_y};
+}
+
 }

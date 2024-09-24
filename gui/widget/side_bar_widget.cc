@@ -12,7 +12,7 @@ SideBarWidget::SideBarWidget(const Size& size)
     folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
 }
 
-void SideBarWidget::draw() {
+void SideBarWidget::draw(const Point& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectType::kForeground);
@@ -49,6 +49,12 @@ void SideBarWidget::draw() {
         text_renderer.renderLineLayout(layout, coords, min_x, max_x, {51, 51, 51},
                                        TextRenderer::FontType::kUI);
     }
+
+    // TODO: Debug use; remove this.
+    std::cerr << std::format("SideBarWidget::draw() mouse position = {}, {}\n", mouse_pos.x,
+                             mouse_pos.y);
+    rect_renderer.addRect(mouse_pos, {20, 20}, {255, 0, 0, 255},
+                          RectRenderer::RectType::kForeground);
 }
 
 void SideBarWidget::layout() {

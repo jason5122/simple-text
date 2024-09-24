@@ -22,5 +22,6 @@
 - (void)setTitle:(const std::string&)title;
 - (void)setFilePath:(fs::path)path;
 - (app::Window*)getAppWindow;
+- (NSWindow*)getNsWindow;
 
 @end

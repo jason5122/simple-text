@@ -9,7 +9,7 @@ class StatusBarWidget : public Widget {
 public:
     StatusBarWidget(const Size& size);
 
-    void draw() override;
+    void draw(const Point& mouse_pos) override;
     void layout() override;
 
 private:

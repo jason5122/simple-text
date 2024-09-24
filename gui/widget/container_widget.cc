@@ -17,15 +17,15 @@ void ContainerWidget::addChildEnd(std::shared_ptr<Widget> widget) {
     layout();
 }
 
-void ContainerWidget::draw() {
+void ContainerWidget::draw(const Point& mouse_pos) {
     if (main_widget) {
-        main_widget->draw();
+        main_widget->draw(mouse_pos);
     }
     for (auto& child : children_start) {
-        child->draw();
+        child->draw(mouse_pos);
     }
     for (auto& child : children_end) {
-        child->draw();
+        child->draw(mouse_pos);
     }
 }
 

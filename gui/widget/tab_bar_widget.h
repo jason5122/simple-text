@@ -16,7 +16,7 @@ public:
     void addTab(std::string_view title);
     void removeTab(size_t index);
 
-    void draw() override;
+    void draw(const Point& mouse_pos) override;
     void layout() override;
 
 private:

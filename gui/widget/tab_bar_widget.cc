@@ -43,7 +43,7 @@ void TabBarWidget::removeTab(size_t index) {
     tab_name_labels.erase(tab_name_labels.begin() + index);
 }
 
-void TabBarWidget::draw() {
+void TabBarWidget::draw(const Point& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     constexpr Rgba tab_bar_color{190, 190, 190, 255};
@@ -53,7 +53,7 @@ void TabBarWidget::draw() {
     rect_renderer.addRect(position, size, tab_bar_color, RectRenderer::RectType::kForeground);
 
     for (const auto& tab_name_label : tab_name_labels) {
-        tab_name_label->draw();
+        tab_name_label->draw(mouse_pos);
     }
 
     Point tab_pos = position;

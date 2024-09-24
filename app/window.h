@@ -38,6 +38,7 @@ public:
     void setTitle(const std::string& title);
     void setFilePath(fs::path path);
     std::optional<std::string> openFilePicker();
+    std::pair<int, int> mousePosition();
 
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw(int width, int height) {}

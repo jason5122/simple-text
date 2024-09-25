@@ -53,6 +53,7 @@ public:
                                  int mouse_y,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}
+    virtual void onMouseMove() {}
     virtual bool onKeyDown(Key key, ModifierKey modifiers) {
         return false;
     }

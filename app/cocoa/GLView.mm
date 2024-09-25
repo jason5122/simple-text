@@ -173,6 +173,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 
 - (void)mouseMoved:(NSEvent*)event {
     [self setCursorStyle:event];
+    glLayer->appWindow->onMouseMove();
 }
 
 - (void)mouseEntered:(NSEvent*)event {

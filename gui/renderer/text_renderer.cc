@@ -108,6 +108,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     const Rgb& color,
                                     FontType font_type) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
+    const auto& metrics = font_rasterizer.getMetrics(line_layout.layout_font_id);
 
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {
@@ -126,6 +127,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 
             // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
             glyph_coords.y += line_layout.ascent;
+            glyph_coords.y -= metrics.line_height;
 
             GlyphCache::Glyph& rglyph = glyph_cache.getGlyph(
                 line_layout.layout_font_id, run.font_id, glyph.glyph_id, font_rasterizer);
@@ -151,6 +153,7 @@ void TextRenderer::renderLineLayout(
     const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
     size_t line) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
+    const auto& metrics = font_rasterizer.getMetrics(line_layout.layout_font_id);
 
     std::stack<base::SyntaxHighlighter::Highlight> stk;
 
@@ -198,6 +201,7 @@ void TextRenderer::renderLineLayout(
 
             // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
             glyph_coords.y += line_layout.ascent;
+            glyph_coords.y -= metrics.line_height;
 
             // TODO: Use unified Rgb struct.
             const auto& highlight_color = highlighter.getColor(capture_index);

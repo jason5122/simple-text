@@ -13,7 +13,8 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(std::string_view text) : table{text} {
+TextViewWidget::TextViewWidget(std::string_view text)
+    : table{text}, line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
     updateMaxScroll();
 
     highlighter.setJsonLanguage();
@@ -379,8 +380,6 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
-        coords.y -= main_line_height;
-
         // coords.x += 3;  // Source Code Pro et al.
         // coords.x += 2;  // Chinese
 
@@ -407,9 +406,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         // Draw line numbers.
         Point line_number_coords = position - scroll_offset;
-        line_number_coords.y += static_cast<int>(line) * main_line_height;
-        line_number_coords.y -= main_line_height;
         line_number_coords.x += kGutterLeftPadding;
+        line_number_coords.y += static_cast<int>(line) * main_line_height;
 
         std::string line_number_str = std::format("{}", line + 1);
         const auto& color = line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;

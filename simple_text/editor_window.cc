@@ -130,6 +130,11 @@ void EditorWindow::onLeftMouseDrag(int mouse_x,
     }
 }
 
+void EditorWindow::onMouseMove() {
+    // See if we can optimize this to only redraw when necessary.
+    redraw();
+}
+
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     bool handled = false;
     if (key == app::Key::kJ && modifiers == app::ModifierKey::kSuper) {

@@ -5,7 +5,9 @@
 namespace gui {
 
 SideBarWidget::SideBarWidget(const Size& size)
-    : ScrollableWidget{size}, folder_label{new LabelWidget{{size.width, 50}}} {
+    : ScrollableWidget{size},
+      line_layout_cache{Renderer::instance().getGlyphCache().uiFontId()},
+      folder_label{new LabelWidget{{size.width, 50}}} {
     updateMaxScroll();
 
     folder_label->setText("FOLDERS", {51, 51, 51});
@@ -42,19 +44,17 @@ void SideBarWidget::draw(const Point& mouse_pos) {
 
         Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * main_line_height;
-        coords.y -= main_line_height;
+
+        if (coords.y <= mouse_pos.y && mouse_pos.y < coords.y + main_line_height) {
+            rect_renderer.addRect(coords, {size.width, main_line_height}, {255, 255, 0, 255},
+                                  RectRenderer::RectType::kForeground);
+        }
 
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
         text_renderer.renderLineLayout(layout, coords, min_x, max_x, {51, 51, 51},
                                        TextRenderer::FontType::kUI);
     }
-
-    // TODO: Debug use; remove this.
-    std::cerr << std::format("SideBarWidget::draw() mouse position = {}, {}\n", mouse_pos.x,
-                             mouse_pos.y);
-    rect_renderer.addRect(mouse_pos, {20, 20}, {255, 0, 0, 255},
-                          RectRenderer::RectType::kForeground);
 }
 
 void SideBarWidget::layout() {

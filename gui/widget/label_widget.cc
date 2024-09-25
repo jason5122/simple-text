@@ -62,10 +62,6 @@ void LabelWidget::draw(const Point& mouse_pos) {
     Point coords = centerVertically(metrics.line_height) + left_offset;
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
-
-    // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
-    coords.y -= metrics.line_height;
-
     text_renderer.renderLineLayout(layout, coords, min_x, max_x, color,
                                    TextRenderer::FontType::kUI);
 }

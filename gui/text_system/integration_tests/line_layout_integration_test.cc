@@ -8,7 +8,7 @@ namespace gui {
 TEST(LineLayoutIntegrationTest, CaretMovement1) {
     base::PieceTable table{R"(Hi 🙂🙂 Hello world!
 This is a new line.)"};
-    LineLayoutCache line_layout_cache;
+    // LineLayoutCache line_layout_cache;
     // Caret caret{};
 
     // Cache all piece table lines.

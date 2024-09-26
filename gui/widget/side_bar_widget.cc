@@ -19,7 +19,7 @@ void SideBarWidget::draw(const Point& mouse_pos) {
 
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectType::kForeground);
 
-    // folder_label->draw();
+    // folder_label->draw(mouse_pos);
 
     // Add vertical scroll bar.
     // int vbar_width = 15;

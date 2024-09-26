@@ -183,6 +183,8 @@ void TextViewWidget::leftDelete() {
         highlighter.edit(start, end, start);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
     }
+
+    updateMaxScroll();
 }
 
 void TextViewWidget::rightDelete() {
@@ -206,6 +208,8 @@ void TextViewWidget::rightDelete() {
         highlighter.edit(start, end, start);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
     }
+
+    updateMaxScroll();
 }
 
 void TextViewWidget::deleteWord(bool forward) {
@@ -222,11 +226,10 @@ void TextViewWidget::deleteWord(bool forward) {
             delta = Caret::prevWordStart(layout, col, table.line(line));
             selection.decrementIndex(delta, false);
 
-            // Move to previous line if at beginning of line.
+            // Delete newline if at beginning of line.
             if (delta == 0 && line > 0) {
-                const auto& prev_layout = layoutAt(line - 1);
-                size_t index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
-                selection.setIndex(index, false);
+                selection.decrementIndex(1_Z, false);
+                delta = 1;
             }
         }
 
@@ -243,6 +246,8 @@ void TextViewWidget::deleteWord(bool forward) {
         highlighter.edit(start, end, start);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
     }
+
+    updateMaxScroll();
 }
 
 std::string TextViewWidget::getSelectionText() {
@@ -380,7 +385,9 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
-        // coords.x += 3;  // Source Code Pro et al.
+
+        std::cerr << std::format("coords.x = {}\n", coords.x);
+        coords.x += 3;  // Source Code Pro et al.
         // coords.x += 2;  // Chinese
 
         int min_x = scroll_offset.x;
@@ -448,8 +455,14 @@ void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
 
         if (end - start > 0) {
             // TODO: Formalize this. This matches Sublime Text's selections.
-            if (start > 0) start += 2;
-            end += 2;
+
+            // TODO: Does this do anything?
+            // std::cerr << std::format("start = {}, end = {}\n", start, end);
+            // if (start % 2 == 1) ++start;
+            // if (end % 2 == 1) ++end;
+
+            // if (start > 0) start += 2;
+            // end += 4;
 
             selections.emplace_back(SelectionRenderer::Selection{
                 .line = static_cast<int>(line),

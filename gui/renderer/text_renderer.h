@@ -59,9 +59,16 @@ private:
     };
 
     // TODO: Move batch code into a "Batch" class.
-    std::vector<std::vector<InstanceData>> main_batch_instances;
-    std::vector<std::vector<InstanceData>> ui_batch_instances;
+    std::vector<std::vector<InstanceData>> foreground_batch_instances;
+    std::vector<std::vector<InstanceData>> background_batch_instances;
 
+    void renderLineLayout(const font::LineLayout& line_layout,
+                          const Point& coords,
+                          int min_x,
+                          int max_x,
+                          TextLayer font_type,
+                          auto compute_color,
+                          size_t line);
     void insertIntoBatch(size_t page, const InstanceData& instance, TextLayer font_type);
 };
 

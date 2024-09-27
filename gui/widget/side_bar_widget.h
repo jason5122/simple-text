@@ -23,6 +23,12 @@ private:
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
     LineLayoutCache line_layout_cache;
     std::unique_ptr<LabelWidget> folder_label;
+
+    // Draw helpers.
+    // TODO: Rename these methods.
+    void renderOldLabel(int ui_line_height);
+    void renderNewLabel(const Point& mouse_pos);
+    void renderScrollBars();
 };
 
 }

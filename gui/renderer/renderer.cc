@@ -42,11 +42,11 @@ void Renderer::flush(const Size& size) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     selection_renderer.flush(size);
-    rect_renderer.flush(size, RectRenderer::RectType::kBackground);
-    text_renderer.flush(size, TextRenderer::FontType::kMain);
-    rect_renderer.flush(size, RectRenderer::RectType::kForeground);
+    rect_renderer.flush(size, RectRenderer::RectLayer::kBackground);
+    text_renderer.flush(size, TextRenderer::TextLayer::kForeground);
+    rect_renderer.flush(size, RectRenderer::RectLayer::kForeground);
     image_renderer.flush(size);
-    text_renderer.flush(size, TextRenderer::FontType::kUI);
+    text_renderer.flush(size, TextRenderer::TextLayer::kBackground);
 }
 
 }

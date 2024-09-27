@@ -106,7 +106,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     int min_x,
                                     int max_x,
                                     const Rgb& color,
-                                    FontType font_type) {
+                                    TextLayer font_type) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(line_layout.layout_font_id);
 
@@ -129,11 +129,16 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             glyph_coords.y += line_layout.ascent;
             glyph_coords.y -= metrics.line_height;
 
-            GlyphCache::Glyph& rglyph = glyph_cache.getGlyph(
-                line_layout.layout_font_id, run.font_id, glyph.glyph_id, font_rasterizer);
+            auto& rglyph = glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id,
+                                                glyph.glyph_id, font_rasterizer);
+
+            // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
+            Vec4 glyph_copy = rglyph.glyph;
+            glyph_copy.y = static_cast<float>(metrics.line_height) - glyph_copy.y;
+
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
-                .glyph = rglyph.glyph,
+                .glyph = glyph_copy,
                 .uv = rglyph.uv,
                 .color = Rgba::fromRgb(color, rglyph.colored),
             };
@@ -148,7 +153,7 @@ void TextRenderer::renderLineLayout(
     int min_x,
     int max_x,
     const Rgb& color,
-    FontType font_type,
+    TextLayer font_type,
     const base::SyntaxHighlighter& highlighter,
     const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
     size_t line) {
@@ -207,11 +212,16 @@ void TextRenderer::renderLineLayout(
             const auto& highlight_color = highlighter.getColor(capture_index);
             const Rgb rgb{.r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
 
-            GlyphCache::Glyph& rglyph = glyph_cache.getGlyph(
-                line_layout.layout_font_id, run.font_id, glyph.glyph_id, font_rasterizer);
+            auto& rglyph = glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id,
+                                                glyph.glyph_id, font_rasterizer);
+
+            // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
+            Vec4 glyph_copy = rglyph.glyph;
+            glyph_copy.y = static_cast<float>(metrics.line_height) - glyph_copy.y;
+
             const InstanceData instance{
                 .coords = glyph_coords.toVec2(),
-                .glyph = rglyph.glyph,
+                .glyph = glyph_copy,
                 .uv = rglyph.uv,
                 .color = Rgba::fromRgb(is_highlight ? rgb : color, rglyph.colored),
             };
@@ -220,20 +230,14 @@ void TextRenderer::renderLineLayout(
     }
 }
 
-void TextRenderer::flush(const Size& screen_size, FontType font_type) {
+void TextRenderer::flush(const Size& screen_size, TextLayer font_type) {
     auto& batch_instances =
-        font_type == FontType::kMain ? main_batch_instances : ui_batch_instances;
-
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    size_t font_id =
-        font_type == FontType::kMain ? glyph_cache.mainFontId() : glyph_cache.uiFontId();
-    const auto& metrics = font_rasterizer.getMetrics(font_id);
+        font_type == TextLayer::kForeground ? main_batch_instances : ui_batch_instances;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
-    glUniform1f(glGetUniformLocation(shader_id, "line_height"), metrics.line_height);
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
@@ -286,15 +290,17 @@ void TextRenderer::renderAtlasPages(const Point& coords) {
             .uv = Vec4{0, 0, 1.0, 1.0},
             .color = Rgba{255, 255, 255, true},
         };
-        insertIntoBatch(page, std::move(instance), FontType::kMain);
+        insertIntoBatch(page, std::move(instance), TextLayer::kForeground);
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
 }
 
-void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance, FontType font_type) {
+void TextRenderer::insertIntoBatch(size_t page,
+                                   const InstanceData& instance,
+                                   TextLayer font_type) {
     auto& batch_instances =
-        font_type == FontType::kMain ? main_batch_instances : ui_batch_instances;
+        font_type == TextLayer::kForeground ? main_batch_instances : ui_batch_instances;
 
     // TODO: Refactor this ugly hack.
     while (batch_instances.size() <= page) {

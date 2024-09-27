@@ -20,6 +20,7 @@ private:
     static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};
 
+    size_t label_font_id;
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
     LineLayoutCache line_layout_cache;
     std::unique_ptr<LabelWidget> folder_label;

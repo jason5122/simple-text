@@ -16,9 +16,9 @@ public:
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
 
-    enum class FontType {
-        kMain,
-        kUI,
+    enum class TextLayer {
+        kBackground,
+        kForeground,
     };
 
     void renderLineLayout(const font::LineLayout& line_layout,
@@ -26,17 +26,17 @@ public:
                           int min_x,
                           int max_x,
                           const Rgb& color,
-                          FontType font_type);
+                          TextLayer font_type);
     void renderLineLayout(const font::LineLayout& line_layout,
                           const Point& coords,
                           int min_x,
                           int max_x,
                           const Rgb& color,
-                          FontType font_type,
+                          TextLayer font_type,
                           const base::SyntaxHighlighter& highlighter,
                           const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
                           size_t line);
-    void flush(const Size& screen_size, FontType font_type);
+    void flush(const Size& screen_size, TextLayer font_type);
 
     // DEBUG: Draws all texture atlases.
     void renderAtlasPages(const Point& coords);
@@ -62,7 +62,7 @@ private:
     std::vector<std::vector<InstanceData>> main_batch_instances;
     std::vector<std::vector<InstanceData>> ui_batch_instances;
 
-    void insertIntoBatch(size_t page, const InstanceData& instance, FontType font_type);
+    void insertIntoBatch(size_t page, const InstanceData& instance, TextLayer font_type);
 };
 
 }

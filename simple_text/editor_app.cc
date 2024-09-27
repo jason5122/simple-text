@@ -52,13 +52,9 @@ void EditorApp::onLaunch() {
     opengl::FunctionsGL functions_gl{};
     functions_gl.loadGlobalFunctionPointers();
 
-    using FontStyle = font::FontRasterizer::FontStyle;
     auto& font_rasterizer = font::FontRasterizer::instance();
-    size_t main_font_id =
-        font_rasterizer.addFont(kMainFontFace, kMainFontSize, FontStyle::kItalic);
-    size_t ui_font_id = font_rasterizer.addFont(kUIFontFace, kUIFontSize, FontStyle::kBold);
-    // size_t main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
-    // size_t ui_font_id = font_rasterizer.addFont(kUIFontFace, kUIFontSize);
+    size_t main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
+    size_t ui_font_id = font_rasterizer.addFont(kUIFontFace, kUIFontSize);
 
     auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
     glyph_cache.setMainFontId(main_font_id);

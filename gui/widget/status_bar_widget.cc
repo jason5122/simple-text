@@ -10,8 +10,7 @@ StatusBarWidget::StatusBarWidget(const Size& size)
 
 void StatusBarWidget::draw(const Point& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, {199, 203, 209, 255},
-                          RectRenderer::RectType::kForeground);
+    rect_renderer.addRect(position, size, kStatusBarColor, RectRenderer::RectLayer::kForeground);
 
     line_column_label->draw(mouse_pos);
 }

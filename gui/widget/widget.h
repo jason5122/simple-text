@@ -2,6 +2,7 @@
 
 #include "app/modifier_key.h"
 #include "app/window.h"
+#include "font/font_rasterizer.h"
 #include "gui/renderer/types.h"
 
 namespace gui {
@@ -30,6 +31,10 @@ public:
     void setHeight(int width);
     Point getPosition();
     bool hitTest(const Point& point);
+
+    inline font::FontRasterizer& rasterizer() {
+        return font::FontRasterizer::instance();
+    };
 
 protected:
     Size size{};

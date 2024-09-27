@@ -103,11 +103,11 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
 void RectRenderer::addRect(const Point& coords,
                            const Size& size,
                            const Rgba& color,
-                           RectType rect_type,
+                           RectLayer rect_type,
                            int corner_radius,
                            int tab_corner_radius) {
     auto& instances =
-        rect_type == RectType::kForeground ? foreground_instances : background_instances;
+        rect_type == RectLayer::kForeground ? foreground_instances : background_instances;
 
     instances.emplace_back(InstanceData{
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
@@ -118,9 +118,9 @@ void RectRenderer::addRect(const Point& coords,
     });
 }
 
-void RectRenderer::flush(const Size& screen_size, RectType rect_type) {
+void RectRenderer::flush(const Size& screen_size, RectLayer rect_type) {
     auto& instances =
-        rect_type == RectType::kForeground ? foreground_instances : background_instances;
+        rect_type == RectLayer::kForeground ? foreground_instances : background_instances;
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 

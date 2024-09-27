@@ -16,7 +16,7 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    enum class RectType {
+    enum class RectLayer {
         kBackground,
         kForeground,
     };
@@ -24,10 +24,10 @@ public:
     void addRect(const Point& coords,
                  const Size& size,
                  const Rgba& color,
-                 RectType rect_type,
+                 RectLayer rect_type,
                  int corner_radius = 0,
                  int tab_corner_radius = 0);
-    void flush(const Size& screen_size, RectType rect_type);
+    void flush(const Size& screen_size, RectLayer rect_type);
 
 private:
     static constexpr int kBatchMax = 0x10000;

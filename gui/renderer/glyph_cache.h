@@ -20,10 +20,10 @@ public:
         size_t page;
     };
 
-    Glyph& getGlyph(size_t layout_font_id,
-                    size_t font_id,
-                    uint32_t glyph_id,
-                    const font::FontRasterizer& font_rasterizer);
+    const Glyph& getGlyph(size_t layout_font_id,
+                          size_t font_id,
+                          uint32_t glyph_id,
+                          const font::FontRasterizer& font_rasterizer);
 
     void setMainFontId(size_t font_id);
     void setUIFontId(size_t font_id);

@@ -5,80 +5,74 @@
 namespace gui {
 
 SideBarWidget::SideBarWidget(const Size& size)
-    : ScrollableWidget{size}, line_layout_cache{Renderer::instance().getGlyphCache().uiFontId()} {
+    : ScrollableWidget{size},
+      label_font_id{
+          rasterizer().addFont("SF Pro Text", 22 * 2, font::FontRasterizer::FontStyle::kBold)},
+      line_layout_cache{label_font_id} {
     updateMaxScroll();
 
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
-    int ui_line_height = metrics.line_height;
+    // const auto& metrics = rasterizer().getMetrics(label_font_id);
+    // int label_line_height = metrics.line_height;
 
-    folder_label.reset(new LabelWidget{{size.width, ui_line_height}});
-    folder_label->setText("FOLDERS", {128, 128, 128});
-    folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
+    // folder_label.reset(new LabelWidget{{size.width, label_line_height}});
+    // folder_label->setText("FOLDERS", {128, 128, 128});
+    // folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
 }
 
 void SideBarWidget::draw(const Point& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
-    int ui_line_height = metrics.line_height;
+    rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kForeground);
 
-    rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectType::kForeground);
+    // const auto& metrics = rasterizer().getMetrics(label_font_id);
+    // renderOldLabel(metrics.line_height);
 
-    renderOldLabel(ui_line_height);
     renderNewLabel(mouse_pos);
-    renderScrollBars();
+    // renderScrollBars();
 }
 
 void SideBarWidget::layout() {
-    Point label_pos = position - scroll_offset;
-    label_pos.y += 400;
-    folder_label->setPosition(label_pos);
+    // Point label_pos = position - scroll_offset;
+    // label_pos.y += 400;
+    // folder_label->setPosition(label_pos);
 }
 
 void SideBarWidget::updateMaxScroll() {
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
+    const auto& metrics = rasterizer().getMetrics(label_font_id);
 
     int line_count = strs.size() + 1;
     max_scroll_offset.y = line_count * metrics.line_height;
 }
 
-void SideBarWidget::renderOldLabel(int ui_line_height) {
-    folder_label->draw({});  // TODO: Make mouse position optional.
+void SideBarWidget::renderOldLabel(int label_line_height) {
+    // folder_label->draw({});  // TODO: Make mouse position optional.
     // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    // rect_renderer.addRect(folder_label->getPosition(), {size.width, ui_line_height},
+    // rect_renderer.addRect(folder_label->getPosition(), {size.width, label_line_height},
     //                       {255, 255, 0, 255}, RectRenderer::RectType::kForeground);
 }
 
 void SideBarWidget::renderNewLabel(const Point& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-
-    // TODO: Experimental; formalize this.
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 
-    int ui_line_height = metrics.line_height;
+    // TODO: Experimental; formalize this.
+    const auto& metrics = rasterizer().getMetrics(label_font_id);
+    int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
         const auto& layout = line_layout_cache.getLineLayout(strs[line]);
 
         Point coords = position - scroll_offset;
-        coords.y += static_cast<int>(line) * ui_line_height;
-
-        if (coords.y <= mouse_pos.y && mouse_pos.y < coords.y + ui_line_height) {
-            rect_renderer.addRect(coords, {size.width, ui_line_height}, {255, 255, 0, 255},
-                                  RectRenderer::RectType::kForeground);
-        }
+        coords.y += static_cast<int>(line) * label_line_height;
 
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
         text_renderer.renderLineLayout(layout, coords, min_x, max_x, {51, 51, 51},
-                                       TextRenderer::FontType::kUI);
+                                       TextRenderer::TextLayer::kBackground);
+
+        // Highlight on mouse hover.
+        if (coords.y <= mouse_pos.y && mouse_pos.y < coords.y + label_line_height) {
+            rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
+                                  RectRenderer::RectLayer::kForeground);
+        }
     }
 }
 
@@ -95,7 +89,7 @@ void SideBarWidget::renderScrollBars() {
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          RectRenderer::RectType::kForeground, 5);
+                          RectRenderer::RectLayer::kForeground, 5);
 }
 
 }

@@ -394,11 +394,11 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         constexpr bool kHighlight = true;
         if constexpr (kHighlight) {
             text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                           TextRenderer::FontType::kMain, highlighter, highlights,
-                                           line);
+                                           TextRenderer::TextLayer::kForeground, highlighter,
+                                           highlights, line);
         } else {
             text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                           TextRenderer::FontType::kMain);
+                                           TextRenderer::TextLayer::kForeground);
         }
 
         // Draw gutter.
@@ -406,7 +406,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             Point gutter_coords = position - scroll_offset;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
-                                  RectRenderer::RectType::kBackground);
+                                  RectRenderer::RectLayer::kBackground);
         }
 
         // Draw line numbers.
@@ -421,7 +421,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         line_number_coords.x += line_number_width - line_number_layout.width;
 
         text_renderer.renderLineLayout(line_number_layout, line_number_coords, min_x, max_x, color,
-                                       TextRenderer::FontType::kMain);
+                                       TextRenderer::TextLayer::kForeground);
     }
 
     constexpr bool kDebugAtlas = false;
@@ -488,7 +488,7 @@ void TextViewWidget::renderScrollBars(int main_line_height, size_t visible_lines
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          RectRenderer::RectType::kForeground, 5);
+                          RectRenderer::RectLayer::kForeground, 5);
 
     // Add horizontal scroll bar.
     // int hbar_height = 15;
@@ -523,7 +523,7 @@ void TextViewWidget::renderCaret(int main_line_height) {
     caret_pos += textOffset();
 
     rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor,
-                          RectRenderer::RectType::kForeground);
+                          RectRenderer::RectLayer::kForeground);
 }
 
 }

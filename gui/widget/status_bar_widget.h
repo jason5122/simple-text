@@ -14,6 +14,7 @@ public:
 
 private:
     static constexpr Point kLeftPadding{32, 0};
+    static constexpr Rgba kStatusBarColor{199, 203, 209, 255};
 
     std::unique_ptr<LabelWidget> line_column_label;
 };

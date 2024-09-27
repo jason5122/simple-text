@@ -50,7 +50,7 @@ void TabBarWidget::draw(const Point& mouse_pos) {
     constexpr Rgba tab_color{253, 253, 253, 255};
     constexpr Rgba tab_separator_color{148, 149, 149, 255};
 
-    rect_renderer.addRect(position, size, tab_bar_color, RectRenderer::RectType::kForeground);
+    rect_renderer.addRect(position, size, tab_bar_color, RectRenderer::RectLayer::kForeground);
 
     for (const auto& tab_name_label : tab_name_labels) {
         tab_name_label->draw(mouse_pos);
@@ -59,7 +59,7 @@ void TabBarWidget::draw(const Point& mouse_pos) {
     Point tab_pos = position;
     tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
     rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, tab_color,
-                          RectRenderer::RectType::kForeground, 0, kTabCornerRadius);
+                          RectRenderer::RectLayer::kForeground, 0, kTabCornerRadius);
 
     Point tab_separator_pos = position;
     tab_separator_pos.x += (kTabWidth - kTabCornerRadius) * 1;  // TODO: Don't hard code 1.
@@ -70,7 +70,7 @@ void TabBarWidget::draw(const Point& mouse_pos) {
     tab_separator_pos.y -= kTabSeparatorSize.height / 2;
 
     rect_renderer.addRect(tab_separator_pos, kTabSeparatorSize, tab_separator_color,
-                          RectRenderer::RectType::kForeground);
+                          RectRenderer::RectLayer::kForeground);
 }
 
 void TabBarWidget::layout() {

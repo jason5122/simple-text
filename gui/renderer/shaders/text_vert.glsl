@@ -12,7 +12,6 @@ out vec2 tex_coords;
 flat out vec4 text_color;
 
 uniform vec2 resolution;
-uniform float line_height;
 
 vec2 pixelToClipSpace(vec2 point) {
     point /= resolution;         // Normalize to [0.0, 1.0].
@@ -32,7 +31,6 @@ void main() {
     vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
     vec2 uv_size = uv.zw;          // <uv_width, uv_height>
 
-    glyph_offset.y = line_height - glyph_offset.y;
     cell_position += glyph_offset + glyph_size * position;
 
     gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);

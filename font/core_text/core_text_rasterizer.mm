@@ -20,12 +20,13 @@ using base::apple::ScopedTypeRef;
 namespace font {
 
 class FontRasterizer::impl {
-public:
+    friend class FontRasterizer;
+
     std::unordered_map<std::string, size_t> font_postscript_name_to_id;
     std::vector<ScopedCFTypeRef<CTFontRef>> font_id_to_native;
     std::vector<Metrics> font_id_to_metrics;
-    size_t cacheFont(CTFontRef ct_font);
 
+    size_t cacheFont(CTFontRef ct_font);
     ScopedCFTypeRef<CTLineRef> createCTLine(size_t font_id, std::string_view str8);
 };
 
@@ -33,10 +34,33 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size) {
+size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size) {
     ScopedCFTypeRef<CFStringRef> ct_font_name{
-        CFStringCreateWithCString(nullptr, font_name_utf8.c_str(), kCFStringEncodingUTF8)};
+        CFStringCreateWithCString(nullptr, font_name_utf8.data(), kCFStringEncodingUTF8)};
     CTFontRef ct_font = CTFontCreateWithName(ct_font_name.get(), font_size, nullptr);
+    return pimpl->cacheFont(ct_font);
+}
+
+size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
+    NSString* font_name = [[NSString alloc] initWithUTF8String:font_name_utf8.data()];
+    NSString* font_style;
+    if (style == FontStyle::kBold) {
+        font_style = @"Bold";
+    } else if (style == FontStyle::kItalic) {
+        font_style = @"Italic";
+    } else {
+        font_style = @"Regular";
+    }
+
+    NSDictionary* attributes = @{
+        (NSString*)kCTFontFamilyNameAttribute : font_name,
+        (NSString*)kCTFontStyleNameAttribute : font_style,
+        (NSString*)kCTFontSizeAttribute : [NSNumber numberWithInt:font_size]
+    };
+    ScopedCFTypeRef<CTFontDescriptorRef> descriptor =
+        CTFontDescriptorCreateWithAttributes((CFDictionaryRef)attributes);
+    CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
+
     return pimpl->cacheFont(ct_font);
 }
 
@@ -255,7 +279,7 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         int line_height = ascent + descent + leading;
 
         Metrics metrics{
-            .font_size = 0,  // TODO: Calculate font size correctly.
+            // .font_size = 0,  // TODO: Calculate font size correctly.
             .line_height = line_height,
             .descent = -descent,
             .ascent = ascent,

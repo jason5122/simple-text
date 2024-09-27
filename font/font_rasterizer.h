@@ -10,10 +10,15 @@ class FontRasterizer {
 public:
     static FontRasterizer& instance();
 
-    size_t addFont(const std::string& font_name_utf8, int font_size);
+    enum class FontStyle {
+        kBold,
+        kItalic,
+    };
+    size_t addFont(std::string_view font_name_utf8, int font_size);
+    size_t addFont(std::string_view font_name_utf8, int font_size, FontStyle style);
 
     struct Metrics {
-        int font_size;
+        // int font_size;
         int line_height;
         int descent;
         int ascent;

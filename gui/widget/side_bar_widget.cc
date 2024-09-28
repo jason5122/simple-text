@@ -71,7 +71,8 @@ void SideBarWidget::renderNewLabel(const Point& mouse_pos) {
                                        TextRenderer::TextLayer::kBackground);
 
         // Highlight on mouse hover.
-        if (coords.y <= mouse_pos.y && mouse_pos.y < coords.y + label_line_height) {
+        if ((coords.x <= mouse_pos.x && mouse_pos.x < coords.x + size.width) &&
+            (coords.y <= mouse_pos.y && mouse_pos.y < coords.y + label_line_height)) {
             rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
                                   RectRenderer::RectLayer::kForeground);
         }

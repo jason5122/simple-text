@@ -54,6 +54,7 @@ public:
                                  ModifierKey modifiers,
                                  ClickType click_type) {}
     virtual void onMouseMove() {}
+    virtual void onMouseExit() {}
     virtual bool onKeyDown(Key key, ModifierKey modifiers) {
         return false;
     }

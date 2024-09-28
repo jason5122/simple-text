@@ -24,6 +24,7 @@ public:
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;
     void onMouseMove() override;
+    void onMouseExit() override;
     bool onKeyDown(app::Key key, app::ModifierKey modifiers) override;
     void onInsertText(std::string_view text) override;
     void onAction(app::Action action, bool extend) override;

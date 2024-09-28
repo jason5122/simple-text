@@ -133,6 +133,10 @@ void EditorWindow::onMouseMove() {
     redraw();
 }
 
+void EditorWindow::onMouseExit() {
+    redraw();
+}
+
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     bool handled = false;
     if (key == app::Key::kJ && modifiers == app::ModifierKey::kSuper) {

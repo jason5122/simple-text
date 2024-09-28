@@ -190,6 +190,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 - (void)mouseExited:(NSEvent*)event {
     // TODO: Don't reset when cursor exits window while drag selecting text.
     // [NSCursor.arrowCursor set];
+    glLayer->appWindow->onMouseExit();
 }
 
 - (void)scrollWheel:(NSEvent*)event {

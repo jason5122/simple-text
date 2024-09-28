@@ -100,64 +100,6 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
-                                    const Point& coords,
-                                    int min_x,
-                                    int max_x,
-                                    const Rgb& color,
-                                    TextLayer font_type) {
-    auto compute_color = [&color](size_t line, size_t col) -> Rgb { return color; };
-    renderLineLayout(line_layout, coords, min_x, max_x, font_type, compute_color, 0);
-}
-
-void TextRenderer::renderLineLayout(
-    const font::LineLayout& line_layout,
-    const Point& coords,
-    int min_x,
-    int max_x,
-    const Rgb& color,
-    TextLayer font_type,
-    const base::SyntaxHighlighter& highlighter,
-    const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
-    size_t line) {
-    std::stack<base::SyntaxHighlighter::Highlight> stk;
-    auto it = highlights.begin();
-    auto compute_color = [&](size_t line, size_t col) -> Rgb {
-        TSPoint p{
-            .row = static_cast<uint32_t>(line),
-            .column = static_cast<uint32_t>(col),
-        };
-
-        // Use stack to parse highlights.
-        while (it != highlights.end() && p >= (*it).end) {
-            ++it;
-        }
-        while (it != highlights.end() && (*it).containsPoint(p)) {
-            // If multiple ranges are equal, prefer the one that comes first.
-            if (stk.empty() || stk.top() != *it) {
-                stk.push(*it);
-            }
-            ++it;
-        }
-        while (!stk.empty() && p >= stk.top().end) {
-            stk.pop();
-        }
-
-        size_t capture_index = 0;
-        if (!stk.empty() && stk.top().containsPoint(p)) {
-            capture_index = stk.top().capture_index;
-
-            // TODO: Use unified Rgb struct.
-            const auto& highlight_color = highlighter.getColor(capture_index);
-            const Rgb rgb{.r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
-            return rgb;
-        } else {
-            return color;
-        }
-    };
-    renderLineLayout(line_layout, coords, min_x, max_x, font_type, compute_color, line);
-}
-
 void TextRenderer::flush(const Size& screen_size, TextLayer font_type) {
     auto& batch_instances = font_type == TextLayer::kForeground ? foreground_batch_instances
                                                                 : background_batch_instances;
@@ -221,53 +163,6 @@ void TextRenderer::renderAtlasPages(const Point& coords) {
         insertIntoBatch(page, std::move(instance), TextLayer::kForeground);
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
-    }
-}
-
-void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
-                                    const Point& coords,
-                                    int min_x,
-                                    int max_x,
-                                    TextLayer font_type,
-                                    auto compute_color,
-                                    size_t line) {
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(line_layout.layout_font_id);
-
-    for (const auto& run : line_layout.runs) {
-        for (const auto& glyph : run.glyphs) {
-            // If we reach a glyph before the minimum x, skip it and continue.
-            // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
-            // This assumes glyph positions are monotonically increasing.
-            if (glyph.position.x + glyph.advance.x < min_x) {
-                continue;
-            }
-            if (glyph.position.x > max_x) {
-                break;
-            }
-
-            Point glyph_coords = coords;
-            glyph_coords.x += glyph.position.x;
-
-            // TODO: These changes are optimal to match Sublime Text's layout. Formalize this.
-            glyph_coords.y += line_layout.ascent;
-            glyph_coords.y -= metrics.line_height;
-
-            auto& rglyph = glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id,
-                                                glyph.glyph_id, font_rasterizer);
-
-            // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
-            Vec4 glyph_copy = rglyph.glyph;
-            glyph_copy.y = static_cast<float>(metrics.line_height) - glyph_copy.y;
-
-            const InstanceData instance{
-                .coords = glyph_coords.toVec2(),
-                .glyph = glyph_copy,
-                .uv = rglyph.uv,
-                .color = Rgba::fromRgb(compute_color(line, glyph.index), rglyph.colored),
-            };
-            insertIntoBatch(rglyph.page, std::move(instance), font_type);
-        }
     }
 }
 

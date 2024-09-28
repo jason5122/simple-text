@@ -21,21 +21,51 @@ public:
         kForeground,
     };
 
+    template <typename F>
     void renderLineLayout(const font::LineLayout& line_layout,
                           const Point& coords,
-                          int min_x,
-                          int max_x,
-                          const Rgb& color,
-                          TextLayer font_type);
-    void renderLineLayout(const font::LineLayout& line_layout,
-                          const Point& coords,
-                          int min_x,
-                          int max_x,
-                          const Rgb& color,
                           TextLayer font_type,
-                          const base::SyntaxHighlighter& highlighter,
-                          const std::vector<base::SyntaxHighlighter::Highlight>& highlights,
-                          size_t line);
+                          F&& highlight_callback,
+                          int min_x = std::numeric_limits<int>::min(),
+                          int max_x = std::numeric_limits<int>::max()) {
+        const auto& font_rasterizer = font::FontRasterizer::instance();
+        const auto& metrics = font_rasterizer.getMetrics(line_layout.layout_font_id);
+
+        for (const auto& run : line_layout.runs) {
+            for (const auto& glyph : run.glyphs) {
+                // If we reach a glyph before the minimum x, skip it and continue.
+                // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
+                // This assumes glyph positions are monotonically increasing.
+                if (glyph.position.x + glyph.advance.x < min_x) {
+                    continue;
+                }
+                if (glyph.position.x > max_x) {
+                    break;
+                }
+
+                Point glyph_coords = coords;
+                glyph_coords.x += glyph.position.x;
+                glyph_coords.y += line_layout.ascent;
+                glyph_coords.y -= metrics.line_height;
+
+                auto& rglyph = glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id,
+                                                    glyph.glyph_id, font_rasterizer);
+
+                // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
+                Vec4 glyph_copy = rglyph.glyph;
+                glyph_copy.y = static_cast<float>(metrics.line_height) - glyph_copy.y;
+
+                const InstanceData instance{
+                    .coords = glyph_coords.toVec2(),
+                    .glyph = glyph_copy,
+                    .uv = rglyph.uv,
+                    .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
+                };
+                insertIntoBatch(rglyph.page, std::move(instance), font_type);
+            }
+        }
+    }
+
     void flush(const Size& screen_size, TextLayer font_type);
 
     // DEBUG: Draws all texture atlases.
@@ -62,13 +92,6 @@ private:
     std::vector<std::vector<InstanceData>> foreground_batch_instances;
     std::vector<std::vector<InstanceData>> background_batch_instances;
 
-    void renderLineLayout(const font::LineLayout& line_layout,
-                          const Point& coords,
-                          int min_x,
-                          int max_x,
-                          TextLayer font_type,
-                          auto compute_color,
-                          size_t line);
     void insertIntoBatch(size_t page, const InstanceData& instance, TextLayer font_type);
 };
 

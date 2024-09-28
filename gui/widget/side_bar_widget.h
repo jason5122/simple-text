@@ -16,6 +16,7 @@ public:
     void updateMaxScroll() override;
 
 private:
+    static constexpr Rgb kTextColor{51, 51, 51};
     static constexpr Rgba kSideBarColor{235, 237, 239, 255};
     static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};

@@ -62,8 +62,9 @@ void LabelWidget::draw(const Point& mouse_pos) {
     Point coords = centerVertically(metrics.line_height) + left_offset;
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
-    text_renderer.renderLineLayout(layout, coords, min_x, max_x, color,
-                                   TextRenderer::TextLayer::kBackground);
+    const auto highlight_callback = [this](size_t) { return color; };
+    text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kBackground,
+                                   highlight_callback, min_x, max_x);
 }
 
 Point LabelWidget::centerVertically(int widget_height) {

@@ -390,37 +390,78 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
 
+        std::stack<base::SyntaxHighlighter::Highlight> stk;
+        auto it = highlights.begin();
+        const auto highlight_callback = [&](size_t col) {
+            TSPoint p{
+                .row = static_cast<uint32_t>(line),
+                .column = static_cast<uint32_t>(col),
+            };
+
+            // Use stack to parse highlights.
+            while (it != highlights.end() && p >= (*it).end) {
+                ++it;
+            }
+            while (it != highlights.end() && (*it).containsPoint(p)) {
+                // If multiple ranges are equal, prefer the one that comes first.
+                if (stk.empty() || stk.top() != *it) {
+                    stk.push(*it);
+                }
+                ++it;
+            }
+            while (!stk.empty() && p >= stk.top().end) {
+                stk.pop();
+            }
+
+            size_t capture_index = 0;
+            if (!stk.empty() && stk.top().containsPoint(p)) {
+                capture_index = stk.top().capture_index;
+
+                // TODO: Use unified Rgb struct.
+                const auto& highlight_color = highlighter.getColor(capture_index);
+                const Rgb rgb{
+                    .r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
+                return rgb;
+            } else {
+                return kTextColor;
+            }
+        };
+
         constexpr bool kHighlight = true;
         if constexpr (kHighlight) {
-            text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                           TextRenderer::TextLayer::kForeground, highlighter,
-                                           highlights, line);
+            text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kForeground,
+                                           highlight_callback, min_x, max_x);
         } else {
-            text_renderer.renderLineLayout(layout, coords, min_x, max_x, kTextColor,
-                                           TextRenderer::TextLayer::kForeground);
+            text_renderer.renderLineLayout(
+                layout, coords, TextRenderer::TextLayer::kForeground,
+                [](size_t) { return kTextColor; }, min_x, max_x);
         }
 
         // Draw gutter.
         if (line == selection_line) {
-            Point gutter_coords = position - scroll_offset;
+            Point gutter_coords = position;
+            gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
                                   RectRenderer::RectLayer::kBackground);
         }
 
         // Draw line numbers.
-        Point line_number_coords = position - scroll_offset;
+        Point line_number_coords = position;
+        line_number_coords.y -= scroll_offset.y;
         line_number_coords.x += kGutterLeftPadding;
         line_number_coords.y += static_cast<int>(line) * main_line_height;
 
         std::string line_number_str = std::format("{}", line + 1);
-        const auto& color = line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         const auto& line_number_layout = line_layout_cache.getLineLayout(line_number_str);
-
         line_number_coords.x += line_number_width - line_number_layout.width;
 
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords, min_x, max_x, color,
-                                       TextRenderer::TextLayer::kForeground);
+        const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
+            return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
+        };
+        text_renderer.renderLineLayout(line_number_layout, line_number_coords,
+                                       TextRenderer::TextLayer::kForeground,
+                                       line_number_highlight_callback);
     }
 
     constexpr bool kDebugAtlas = false;

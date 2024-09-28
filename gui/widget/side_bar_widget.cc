@@ -67,8 +67,9 @@ void SideBarWidget::renderNewLabel(const Point& mouse_pos) {
         int max_x = scroll_offset.x + size.width;
         Point text_coords = coords;
         text_coords.x += kLeftPadding;
-        text_renderer.renderLineLayout(layout, text_coords, min_x, max_x, {51, 51, 51},
-                                       TextRenderer::TextLayer::kBackground);
+        const auto highlight_callback = [](size_t) { return kTextColor; };
+        text_renderer.renderLineLayout(layout, text_coords, TextRenderer::TextLayer::kBackground,
+                                       highlight_callback, min_x, max_x);
 
         // Highlight on mouse hover.
         if ((coords.x <= mouse_pos.x && mouse_pos.x < coords.x + size.width) &&

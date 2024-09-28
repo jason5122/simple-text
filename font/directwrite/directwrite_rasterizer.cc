@@ -18,9 +18,8 @@
 using Microsoft::WRL::ComPtr;
 
 // TODO: Debug use; remove this.
+#include "util/std_print.h"
 #include <cassert>
-#include <format>
-#include <iostream>
 #include <ranges>
 
 namespace font {
@@ -35,7 +34,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
     if (FAILED(hr)) {
         // TODO: Make this work with `UNICODE`/`_UNICODE`.
         // _com_error err(hr);
-        // std::cerr << err.ErrorMessage() << '\n';
+        // std::println(err.ErrorMessage());
         std::abort();
     }
 }
@@ -113,8 +112,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
     LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
     UINT32 size = pixel_width * pixel_height * 3;
 
-    // std::cerr << std::format("pixel_width = {}, pixel_height = {}\n", pixel_width,
-    // pixel_height);
+    std::println("pixel_width = {}, pixel_height = {}", pixel_width, pixel_height);
 
     DWRITE_GLYPH_METRICS metrics;
     font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
@@ -304,18 +302,18 @@ void FontRasterizer::impl::drawColorRun(
         case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
         case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
         case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
-            // std::cerr << "DrawColorBitmapGlyphRun()\n";
+            std::println("DrawColorBitmapGlyphRun()");
             break;
 
         case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
-            // std::cerr << "DrawSvgGlyphRun()\n";
+            std::println("DrawSvgGlyphRun()");
             break;
 
         case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
         case DWRITE_GLYPH_IMAGE_FORMATS_CFF:
         case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
         default: {
-            // std::cerr << "DrawGlyphRun()\n";
+            std::println("DrawGlyphRun()");
 
             ComPtr<ID2D1SolidColorBrush> layer_brush;
             if (color_run->paletteIndex == 0xFFFF) {

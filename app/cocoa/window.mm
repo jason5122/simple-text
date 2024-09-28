@@ -1,9 +1,10 @@
 #include "app/cocoa/impl_cocoa.h"
 #include "app/window.h"
+#include "util/std_print.h"
 
 namespace app {
 
-Window::Window(App& app, int width, int height) : app{app}, pimpl{new impl{}} {
+Window::Window(App& app, int width, int height) : pimpl{new impl{}} {
     NSRect frame = NSMakeRect(0, 1000, width, height);
 
     // TODO: Debug; remove this.
@@ -85,7 +86,7 @@ std::optional<std::string> Window::openFilePicker() {
     // [openPanel beginSheetModalForWindow:pimpl->window_controller.window
     //                   completionHandler:^(NSInteger result) {
     //                     if (result == NSModalResponseOK) {
-    //                         std::cerr << openPanel.URL.fileSystemRepresentation << '\n';
+    //                         std::println(openPanel.URL.fileSystemRepresentation);
     //                     }
     //                   }];
 }

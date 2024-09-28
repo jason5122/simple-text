@@ -9,9 +9,8 @@
 #import <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.
+#include "util/std_print.h"
 #include <cassert>
-#include <format>
-#include <iostream>
 #include <ranges>
 
 using base::apple::ScopedCFTypeRef;
@@ -74,7 +73,7 @@ RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id)
     CGGlyph glyph_index = glyph_id;
 
     if (!font_ref) {
-        std::cerr << "FontRasterizer::rasterizeUTF8() error: CTFontRef is null!\n";
+        std::println("FontRasterizer::rasterizeUTF8() error: CTFontRef is null!");
         std::abort();
     }
 
@@ -156,7 +155,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     UTF16ToUTF8IndicesMap utf8IndicesMap;
     if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
-        std::cerr << "UTF16ToUTF8IndicesMap::setUTF8 error\n";
+        std::println("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }
 
@@ -257,7 +256,7 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
     // Sometimes, the CFStringRef isn't convertible to std::string. We need to bridge it to an
     // NSString first.
     if (font_name.empty()) {
-        std::cerr << "FontRasterizer::impl::cacheFont() error: font_name is empty\n";
+        std::println("FontRasterizer::impl::cacheFont() error: font_name is empty");
         std::abort();
     }
 

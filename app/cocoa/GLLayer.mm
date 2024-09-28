@@ -57,9 +57,6 @@
     int scaled_height = self.frame.size.height * self.contentsScale;
     appWindow->onDraw(scaled_width, scaled_height);
 
-    // TODO: For debugging; remove this.
-    // appWindow->stopLaunchTimer();
-
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext
                 pixelFormat:pixelFormat

@@ -5,9 +5,8 @@
 #include <vector>
 
 // TODO: Debug use; remove this.
+#include "util/std_print.h"
 #include <cassert>
-#include <format>
-#include <iostream>
 #include <ranges>
 
 namespace font {
@@ -34,14 +33,14 @@ size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size)
     pango_font_description_set_family(desc.get(), font_name_utf8.c_str());
     pango_font_description_set_size(desc.get(), font_size * PANGO_SCALE);
     if (!desc) {
-        std::cerr << "pango_font_description_from_string() error.\n";
+        std::println("pango_font_description_from_string() error.");
         // return false;
     }
 
     GObjectPtr<PangoFont> pango_font{
         pango_font_map_load_font(font_map, context.get(), desc.get())};
     if (!pango_font) {
-        std::cerr << "pango_font_map_load_font() error.\n";
+        std::println("pango_font_map_load_font() error.");
         std::abort();
     }
 
@@ -216,7 +215,7 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
 
         PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(font, nullptr)};
         if (!pango_metrics) {
-            std::cerr << "pango_font_get_metrics() error.\n";
+            std::println("pango_font_get_metrics() error.");
             std::abort();
         }
 

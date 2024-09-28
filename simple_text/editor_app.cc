@@ -5,8 +5,7 @@
 #include "opengl/functions_gl.h"
 
 // TODO: Debug; remove this.
-#include <format>
-#include <iostream>
+#include "util/std_print.h"
 
 // TODO: Properly load this from settings.
 namespace {
@@ -64,7 +63,7 @@ void EditorApp::onLaunch() {
 }
 
 void EditorApp::onQuit() {
-    std::cerr << "SimpleText::onQuit()\n";
+    std::println("SimpleText::onQuit()");
 }
 
 void EditorApp::onAppAction(app::AppAction action) {
@@ -92,6 +91,6 @@ void EditorApp::createWindow() {
 }
 
 void EditorApp::destroyWindow(int wid) {
-    std::cerr << std::format("SimpleText: destroy window {}", wid) << '\n';
+    std::println("SimpleText: destroy window {}", wid);
     editor_windows[wid] = nullptr;
 }

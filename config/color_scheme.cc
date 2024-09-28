@@ -1,6 +1,8 @@
 #include "base/rgb.h"
 #include "color_scheme.h"
-#include <iostream>
+
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
 
 namespace config {
 ColorScheme::ColorScheme(bool dark_mode) {
@@ -36,14 +38,14 @@ void ColorScheme::reload(bool dark_mode) {
         // TODO: Handle errors in a better way.
         glz::parse_error error = glz::read_file_json(schema, color_scheme_path.string(), buffer);
         if (error) {
-            std::cerr << glz::format_error(error, buffer) << '\n';
+            std::println(glz::format_error(error, buffer));
         }
     } else {
         std::filesystem::create_directory(color_scheme_path.parent_path());
         glz::write_error error =
             glz::write_file_json<kDefaultOptions>(schema, color_scheme_path.string(), buffer);
         if (error) {
-            std::cerr << "Could not write color scheme to " << color_scheme_path << ".\n";
+            std::println("Could not write color scheme to {}.", color_scheme_path);
         }
     }
 

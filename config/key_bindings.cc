@@ -1,6 +1,8 @@
 #include "app/modifier_key.h"
 #include "key_bindings.h"
-#include <iostream>
+
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
 
 namespace config {
 KeyBindings::KeyBindings() {
@@ -35,7 +37,7 @@ void KeyBindings::reload() {
         // TODO: Handle errors in a better way.
         glz::parse_error error = glz::read_file_json(schema, kKeyBindingsPath.string(), buffer);
         if (error) {
-            std::cerr << glz::format_error(error, buffer) << '\n';
+            std::println(glz::format_error(error, buffer));
         }
     } else {
         std::filesystem::create_directory(kKeyBindingsPath.parent_path());
@@ -43,7 +45,7 @@ void KeyBindings::reload() {
             glz::write_file_json<kDefaultOptions>(schema, kKeyBindingsPath.string(), buffer);
 
         if (error) {
-            std::cerr << "Could not write key bindings to " << kKeyBindingsPath << ".\n";
+            std::println("Could not write key bindings to {}.", kKeyBindingsPath);
         }
     }
 
@@ -88,25 +90,25 @@ void KeyBindings::addBinding(const std::string& keys, const std::string& command
     while ((next = keys.find(kDelimiter, last)) != std::string::npos) {
         substr = keys.substr(last, next - last);
         if (!parse_substring(substr)) {
-            std::cerr << "KeyBindings::addBinding() error: Invalid key.\n";
+            std::println("KeyBindings::addBinding() error: Invalid key.");
             return;
         }
         last = next + 1;
     }
     substr = keys.substr(last);
     if (!parse_substring(substr)) {
-        std::cerr << "KeyBindings::addBinding() error: Invalid key.\n";
+        std::println("KeyBindings::addBinding() error: Invalid key.");
         return;
     }
     if (key == app::Key::kNone) {
-        std::cerr << "KeyBindings::addBinding() error: No key provided.\n";
+        std::println("KeyBindings::addBinding() error: No key provided.");
         return;
     }
 
     if (action_map.contains(command)) {
         action = action_map.at(command);
     } else {
-        std::cerr << "KeyBindings::addBinding() error: Invalid command.\n";
+        std::println("KeyBindings::addBinding() error: Invalid command.");
         return;
     }
 

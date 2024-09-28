@@ -1,7 +1,8 @@
 #include "file_watcher.h"
 #include <CoreServices/CoreServices.h>
-#include <format>
-#include <iostream>
+
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
 
 static void FSEventsCallback(ConstFSEventStreamRef stream,
                              void* client_info,
@@ -13,8 +14,7 @@ static void FSEventsCallback(ConstFSEventStreamRef stream,
 
     char** paths = static_cast<char**>(event_paths);
     for (size_t i = 0; i < num_events; ++i) {
-        std::cerr << std::format("Change {} in {}, flags {}\n", event_ids[i], paths[i],
-                                 event_flags[i]);
+        std::println("Change {} in {}, flags {}", event_ids[i], paths[i], event_flags[i]);
 
         callback->onFileEvent();
     }

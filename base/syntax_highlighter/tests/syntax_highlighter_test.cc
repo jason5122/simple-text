@@ -2,6 +2,9 @@
 #include "base/syntax_highlighter/syntax_highlighter.h"
 #include <gtest/gtest.h>
 
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
+
 extern "C" TSLanguage* tree_sitter_json();
 
 namespace base {
@@ -22,12 +25,14 @@ TEST(SyntaxHighlighterTest, Basic) {
     highlighter.edit(i, i, i + str.length());
     highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 
-    // auto highlights = highlighter.getHighlights(0, table.lineCount());
-    // for (const auto& [start_byte, end_byte, capture_index] : highlights) {
-    //     auto rgb = highlighter.getColor(capture_index);
-    //     std::cerr << std::format("[{}, {}] {}\n", start_byte, end_byte, capture_index);
-    //     std::cerr << rgb << '\n';
-    // }
+    auto highlights = highlighter.getHighlights(0, table.lineCount());
+    for (const auto& [start_byte, end_byte, capture_index] : highlights) {
+        auto rgb = highlighter.getColor(capture_index);
+
+        // TODO: Replace this with std::format support.
+        std::cerr << start_byte << ' ' << end_byte << ' ' << capture_index << '\n';
+        std::cerr << rgb << '\n';
+    }
 }
 
 }

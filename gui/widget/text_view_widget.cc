@@ -6,9 +6,8 @@
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
+#include "util/std_print.h"
 #include <cassert>
-#include <format>
-#include <iostream>
 #include <tree_sitter/api.h>
 
 namespace gui {
@@ -455,7 +454,7 @@ void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
             // TODO: Formalize this. This matches Sublime Text's selections.
 
             // TODO: Does this do anything?
-            // std::cerr << std::format("start = {}, end = {}\n", start, end);
+            // std::println("start = {}, end = {}", start, end);
             // if (start % 2 == 1) ++start;
             // if (end % 2 == 1) ++end;
 

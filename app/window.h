@@ -64,8 +64,6 @@ public:
     virtual void onDarkModeToggle() {}
 
 private:
-    App& app;
-
     class impl;
     std::unique_ptr<impl> pimpl;
 };

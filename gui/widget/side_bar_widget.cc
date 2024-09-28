@@ -65,7 +65,9 @@ void SideBarWidget::renderNewLabel(const Point& mouse_pos) {
 
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
-        text_renderer.renderLineLayout(layout, coords, min_x, max_x, {51, 51, 51},
+        Point text_coords = coords;
+        text_coords.x += kLeftPadding;
+        text_renderer.renderLineLayout(layout, text_coords, min_x, max_x, {51, 51, 51},
                                        TextRenderer::TextLayer::kBackground);
 
         // Highlight on mouse hover.

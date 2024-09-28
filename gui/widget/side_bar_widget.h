@@ -19,6 +19,7 @@ private:
     static constexpr Rgba kSideBarColor{235, 237, 239, 255};
     static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};
+    static constexpr int kLeftPadding = 15 * 2;
 
     size_t label_font_id;
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};

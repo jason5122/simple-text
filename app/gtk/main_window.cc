@@ -1,5 +1,6 @@
 #include "main_window.h"
 #include "unicode/unicode.h"
+#include "util/std_print.h"
 #include <cmath>
 
 #include <format>
@@ -36,7 +37,7 @@ static constexpr const gchar* ConvertModifier(ModifierKey modifier) {
     case ModifierKey::kSuper:
         return "<Meta>";
     default:
-        std::cerr << "Error: Could not parse modifier.\n";
+        std::println("Error: Could not parse modifier.");
         std::abort();
     }
 }
@@ -107,7 +108,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
 }
 
 MainWindow::~MainWindow() {
-    std::cerr << "~MainWindow\n";
+    std::println("~MainWindow");
     // TODO: See if we need `g_object_unref` for any other object.
     // g_object_unref(dbus_settings_proxy);
 }
@@ -184,10 +185,10 @@ static void realize(GtkGLArea* self, gpointer user_data) {
 
     GdkGLAPI api = gtk_gl_area_get_api(self);
     if (api == GDK_GL_API_GL) {
-        std::cerr << "GDK_GL_API_GL\n";
+        std::println("GDK_GL_API_GL");
     }
     if (api == GDK_GL_API_GLES) {
-        std::cerr << "GDK_GL_API_GLES\n";
+        std::println("GDK_GL_API_GLES");
     }
 
     // FIXME: Getting the size of a widget doesn't seem to be possible during realization.
@@ -236,7 +237,7 @@ static gboolean scroll(GtkEventControllerScroll* self,
         dy *= 32;
     } else {
         // TODO: Figure out how to interpret scroll numbers (usually between 0.0-1.0).
-        std::cerr << std::format("dy = {}", dy) << '\n';
+        std::println("dy = {}", dy);
         // dx *= 32;
         // dy *= 32;
     }
@@ -326,7 +327,7 @@ static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointe
 }
 
 static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
-    std::cerr << "quit callback\n";
+    std::println("quit callback");
     g_application_quit(G_APPLICATION(app));
 }
 
@@ -344,7 +345,7 @@ static gboolean key_pressed(GtkEventControllerKey* self,
         Window* app_window = static_cast<Window*>(user_data);
         app_window->onInsertText(str8);
 
-        std::cerr << std::format("str8 = {}, codepoint = {}\n", str8, codepoint);
+        std::println("str8 = {}, codepoint = {}", str8, codepoint);
     }
     return false;
 }

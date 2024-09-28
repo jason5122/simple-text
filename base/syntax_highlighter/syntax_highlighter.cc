@@ -2,8 +2,7 @@
 #include "syntax_highlighter.h"
 
 // TODO: Debug use; remove this.
-#include <format>
-#include <iostream>
+#include "util/std_print.h"
 
 extern "C" TSLanguage* tree_sitter_json();
 
@@ -32,9 +31,8 @@ void SyntaxHighlighter::setJsonLanguage() {
     query = ts_query_new(language, src.data(), src.length(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        std::cerr << std::format("Error creating new TSQuery. error_offset: {}, error type:{}\n ",
-                                 error_offset,
-                                 static_cast<std::underlying_type_t<TSQueryError>>(error_type));
+        std::println("Error creating new TSQuery. error_offset: {}, error type:{} ", error_offset,
+                     static_cast<std::underlying_type_t<TSQueryError>>(error_type));
     }
 
     uint32_t capture_count = ts_query_capture_count(query);
@@ -42,7 +40,7 @@ void SyntaxHighlighter::setJsonLanguage() {
     for (size_t i = 0; i < capture_count; ++i) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
-        std::cerr << std::format("{}: {}\n", i, capture_name);
+        std::println("{}: {}", i, capture_name);
 
         if (capture_name == "string.special.key") {
             capture_index_color_table[i] = {249, 174, 88};

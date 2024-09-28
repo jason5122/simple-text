@@ -1,12 +1,12 @@
 #pragma once
 
 #include "util/non_copyable.h"
+#include "util/std_print.h"
 #include <chrono>
-#include <format>
-#include <iostream>
 
 // https://stackoverflow.com/a/37607676
-template <typename Duration = std::chrono::microseconds> class Profiler {
+template <typename Duration = std::chrono::microseconds>
+class Profiler {
 public:
     Profiler(std::string const& n) : name(n), t1(std::chrono::high_resolution_clock::now()) {}
     ~Profiler() {
@@ -19,7 +19,7 @@ public:
         } else if (std::is_same<Duration, std::chrono::milliseconds>::value) {
             unit = "ms";
         }
-        std::cerr << std::format("{}: {} {}", name, duration, unit) << '\n';
+        std::println("{}: {} {}", name, duration, unit);
     }
 
 private:

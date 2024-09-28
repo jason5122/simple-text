@@ -5,6 +5,7 @@
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
+#include "util/std_print.h"
 #include <format>
 #include <iostream>
 
@@ -185,7 +186,7 @@ size_t PieceTable::newlineCount() const {
 
 std::string PieceTable::line(size_t index) {
     if (index > newlineCount()) {
-        std::cerr << "PieceTable::line() out of range error: index > newlineCount()\n";
+        std::println("PieceTable::line() out of range error: index > newlineCount()");
         std::abort();
     }
 
@@ -371,7 +372,7 @@ PieceTable::const_iterator PieceTable::newline(size_t index) const {
 
 std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
     if (index > length()) {
-        std::cerr << "PieceTable::pieceAt() out of range error: index > length()\n";
+        std::println("PieceTable::pieceAt() out of range error: index > length()");
         std::abort();
     }
 
@@ -387,15 +388,15 @@ std::pair<PieceTable::PieceIterator, size_t> PieceTable::pieceAt(size_t index) {
         ++it;
     }
 
-    std::cerr << "PieceTable::pieceAt() internal error: index <= length(), but there was no "
-                 "corresponding piece\n";
+    std::println("PieceTable::pieceAt() internal error: index <= length(), but there was no "
+                 "corresponding piece");
     std::abort();
 }
 
 // TODO: Remove code duplication.
 std::pair<PieceTable::PieceConstIterator, size_t> PieceTable::pieceAt(size_t index) const {
     if (index > length()) {
-        std::cerr << "PieceTable::pieceAt() out of range error: index > length()\n";
+        std::println("PieceTable::pieceAt() out of range error: index > length()");
         std::abort();
     }
 
@@ -411,8 +412,8 @@ std::pair<PieceTable::PieceConstIterator, size_t> PieceTable::pieceAt(size_t ind
         ++it;
     }
 
-    std::cerr << "PieceTable::pieceAt() internal error: index <= length(), but there was no "
-                 "corresponding piece\n";
+    std::println("PieceTable::pieceAt() internal error: index <= length(), but there was no "
+                 "corresponding piece");
     std::abort();
 }
 
@@ -427,6 +428,7 @@ std::list<size_t> PieceTable::cacheNewlines(std::string_view str) {
     return newlines;
 }
 
+// TODO: Replace this with std::format support.
 std::ostream& operator<<(std::ostream& out, const PieceTable& table) {
     out << std::format("Original: \"{}\"\n", EscapeSpecialChars(table.original));
     out << std::format("Add: \"{}\"\n", EscapeSpecialChars(table.add));

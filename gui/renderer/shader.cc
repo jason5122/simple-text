@@ -3,8 +3,7 @@
 using namespace opengl;
 
 // TODO: Debug; remove this.
-#include <format>
-#include <iostream>
+#include "util/std_print.h"
 
 namespace gui {
 
@@ -27,7 +26,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
         std::string error;
         error.reserve(log_size);
         glGetShaderInfoLog(vertex_shader, log_size, nullptr, error.data());
-        std::cerr << std::format("vertex shader: {}", error);
+        std::println("vertex shader: {}", error);
 
         glDeleteShader(vertex_shader);
         // TODO: Handle errors in constructor.
@@ -42,7 +41,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
         std::string error;
         error.reserve(log_size);
         glGetShaderInfoLog(vertex_shader, log_size, nullptr, error.data());
-        std::cerr << std::format("fragment shader: {}", error);
+        std::println("fragment shader: {}", error);
 
         glDeleteShader(fragment_shader);
         // TODO: Handle errors in constructor.
@@ -58,7 +57,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
         // TODO: Do this in a more robust way.
         char info_log[512];
         glGetProgramInfoLog(id_, 512, nullptr, info_log);
-        std::cerr << "Shader linking error:\n" << info_log << '\n';
+        std::println("Shader linking error: {}", info_log);
 
         // TODO: Use RAII wrappers to automatically destruct shaders and program.
         // TODO: Handle errors in constructor.

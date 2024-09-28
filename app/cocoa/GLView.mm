@@ -1,5 +1,6 @@
 #include "GLView.h"
 #include "app/cocoa/GLLayer.h"
+#include "util/std_print.h"
 #include <iostream>
 
 #import <Carbon/Carbon.h>
@@ -239,7 +240,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 
     bool handled = [inputContext handleEvent:event];
     if (!handled) {
-        std::cerr << "keyDown was unhandled\n";
+        std::println("keyDown was unhandled.");
     }
 
     app::Key key = GetKey(event.keyCode);
@@ -344,7 +345,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     selector_str = [selector_str substringToIndex:selector_len - 1];
 
     std::string str = selector_str.UTF8String;
-    std::cerr << str << '\n';
+    std::println(str);
     if (str == "moveForward" || str == "moveRight") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters);
     }

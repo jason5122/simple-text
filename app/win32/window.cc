@@ -4,7 +4,7 @@
 namespace app {
 
 Window::Window(App& app, int width, int height)
-    : app{app}, pimpl{new impl{*this, app.pimpl->dummy_context}} {
+    : pimpl{new impl{*this, app.pimpl->dummy_context}} {
     // pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 }
 

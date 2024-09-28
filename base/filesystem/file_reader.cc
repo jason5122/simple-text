@@ -1,7 +1,7 @@
 #include "file_reader.h"
 
 // Debug use; remove this.
-#include <iostream>
+#include "util/std_print.h"
 
 namespace base {
 
@@ -10,7 +10,7 @@ std::string ReadFile(std::string_view file_name) {
 
     FILE* fp = fopen(file_name.data(), "rb");
     if (!fp) {
-        std::cerr << "ReadFile() error: file pointer is null\n";
+        std::println("ReadFile() error: file pointer is null");
         std::abort();
     }
 

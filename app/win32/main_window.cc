@@ -254,7 +254,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_KEYDOWN: {
-        std::cerr << std::format("WM_KEYDOWN: {}", wParam) << '\n';
+        std::println("WM_KEYDOWN: {}", wParam);
 
         app::Key key = GetKey(wParam);
         app::ModifierKey modifiers = GetModifiers();
@@ -278,9 +278,9 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     // TODO: Test light/dark mode switching on an activated Windows license.
     case WM_SETTINGCHANGE: {
         if (!lstrcmp(LPCTSTR(lParam), L"ImmersiveColorSet")) {
-            std::cerr << "ImmersiveColorSet\n";
+            std::println("ImmersiveColorSet");
         } else {
-            std::cerr << "WM_SETTINGCHANGE, but theme was not changed.\n";
+            std::println("WM_SETTINGCHANGE, but theme was not changed.");
         }
         return 0;
     }
@@ -315,7 +315,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             }
 
             std::string str8 = base::windows::ConvertToUTF8(utf16);
-            std::cerr << std::format("WM_CHAR: {}", EscapeSpecialChars(str8)) << '\n';
+            std::println("WM_CHAR: {}", EscapeSpecialChars(str8));
             app_window.onInsertText(str8);
 
             high_surrogate = '\0';
@@ -402,7 +402,7 @@ int MainWindow::scaleFactor() {
     HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
     DEVICE_SCALE_FACTOR scale_factor;
     GetScaleFactorForMonitor(hmon, &scale_factor);
-    // std::cerr << "scale_factor: " << scale_factor << '\n';
+    std::println("scale_factor: {}", scale_factor);
     // TODO: Don't hard code this.
     return 1;
 }

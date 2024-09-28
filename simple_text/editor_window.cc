@@ -8,6 +8,7 @@
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
+#include "util/std_print.h"
 
 using namespace gui;
 
@@ -84,6 +85,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 void EditorWindow::onDraw(int width, int height) {
     PROFILE_BLOCK("Total render time");
     auto [mouse_x, mouse_y] = mousePosition();
+    std::println("{}, {}", mouse_x, mouse_y);
     main_widget->draw({mouse_x, mouse_y});
     Renderer::instance().flush({width, height});
 }
@@ -120,10 +122,6 @@ void EditorWindow::onLeftMouseDrag(int mouse_x,
                                    int mouse_y,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    if (click_type == app::ClickType::kTripleClick) {
-        std::cerr << "triple click\n";
-    }
-
     if (drag_start_widget) {
         drag_start_widget->leftMouseDrag({mouse_x, mouse_y}, modifiers, click_type);
         redraw();

@@ -4,7 +4,7 @@
 namespace app {
 
 Window::Window(App& app, int width, int height)
-    : app{app}, pimpl{new impl{app.pimpl->app, this, app.pimpl->context}} {}
+    : pimpl{new impl{app.pimpl->app, this, app.pimpl->context}} {}
 
 Window::~Window() {}
 

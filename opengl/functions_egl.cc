@@ -2,7 +2,8 @@
 #include "opengl/egl_types.h"
 #include <dlfcn.h>
 
-#include <iostream>
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
 
 namespace {
 
@@ -21,13 +22,14 @@ public:
 FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
     pimpl->handle = dlopen(kDefaultEGLPath, RTLD_NOW);
     if (!pimpl->handle) {
-        std::cerr << "Could not dlopen native EGL.\n";
+        std::println("Could not dlopen native EGL.");
+        std::abort();
     }
 
     pimpl->mGetProcAddressPtr =
         reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(pimpl->handle, "eglGetProcAddress"));
     if (!pimpl->mGetProcAddressPtr) {
-        std::cerr << "Could not find eglGetProcAddress\n";
+        std::println("Could not find eglGetProcAddress");
     }
 }
 

@@ -3,8 +3,10 @@
 #include "unicode/SkTFitsIn.h"
 #include "unicode/unicode.h"
 #include <cassert>
-#include <iostream>
 #include <vector>
+
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
 
 namespace font {
 
@@ -18,13 +20,13 @@ public:
         assert(utf8 != nullptr);
 
         if (!SkTFitsIn<int32_t>(size)) {
-            std::cerr << "UTF16ToUTF8IndicesMap: text too long\n";
+            std::println("UTF16ToUTF8IndicesMap: text too long");
             return false;
         }
 
         auto utf16Size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
         if (utf16Size < 0) {
-            std::cerr << "UTF16ToUTF8IndicesMap: Invalid utf8 input\n";
+            std::println("UTF16ToUTF8IndicesMap: Invalid utf8 input");
             return false;
         }
 

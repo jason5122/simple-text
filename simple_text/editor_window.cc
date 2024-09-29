@@ -84,9 +84,16 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 
 void EditorWindow::onDraw(int width, int height) {
     PROFILE_BLOCK("Total render time");
-    auto [mouse_x, mouse_y] = mousePosition();
-    std::println("{}, {}", mouse_x, mouse_y);
-    main_widget->draw({mouse_x, mouse_y});
+
+    auto mouse_pos = mousePosition();
+    if (mouse_pos) {
+        auto [mouse_x, mouse_y] = mouse_pos.value();
+        std::println("{}, {}", mouse_x, mouse_y);
+        main_widget->draw({mouse_x, mouse_y});
+    } else {
+        std::println("Mouse is outside of window!");
+        main_widget->draw({500, 500});
+    }
     Renderer::instance().flush({width, height});
 }
 

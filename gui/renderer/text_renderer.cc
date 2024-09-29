@@ -100,6 +100,50 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
+void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
+                                    const Point& coords,
+                                    TextLayer font_type,
+                                    const std::function<Rgb(size_t)>& highlight_callback,
+                                    int min_x,
+                                    int max_x) {
+    const auto& font_rasterizer = font::FontRasterizer::instance();
+    const auto& metrics = font_rasterizer.getMetrics(line_layout.layout_font_id);
+
+    for (const auto& run : line_layout.runs) {
+        for (const auto& glyph : run.glyphs) {
+            // If we reach a glyph before the minimum x, skip it and continue.
+            // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
+            // This assumes glyph positions are monotonically increasing.
+            if (glyph.position.x + glyph.advance.x < min_x) {
+                continue;
+            }
+            if (glyph.position.x > max_x) {
+                break;
+            }
+
+            Point glyph_coords = coords;
+            glyph_coords.x += glyph.position.x;
+            glyph_coords.y += line_layout.ascent;
+            glyph_coords.y -= metrics.line_height;
+
+            auto& rglyph = glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id,
+                                                glyph.glyph_id, font_rasterizer);
+
+            // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
+            Vec4 glyph_copy = rglyph.glyph;
+            glyph_copy.y = static_cast<float>(metrics.line_height) - glyph_copy.y;
+
+            const InstanceData instance{
+                .coords = glyph_coords.toVec2(),
+                .glyph = glyph_copy,
+                .uv = rglyph.uv,
+                .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
+            };
+            insertIntoBatch(rglyph.page, std::move(instance), font_type);
+        }
+    }
+}
+
 void TextRenderer::flush(const Size& screen_size, TextLayer font_type) {
     auto& batch_instances = font_type == TextLayer::kForeground ? foreground_batch_instances
                                                                 : background_batch_instances;

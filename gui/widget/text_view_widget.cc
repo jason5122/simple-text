@@ -254,7 +254,7 @@ std::string TextViewWidget::getSelectionText() {
     return table.substr(start, end - start);
 }
 
-void TextViewWidget::draw(const Point& mouse_pos) {
+void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());

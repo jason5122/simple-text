@@ -13,7 +13,7 @@ public:
     void addLeftIcon(size_t icon_id);
     void addRightIcon(size_t icon_id);
 
-    void draw(const Point& mouse_pos) override;
+    void draw(const std::optional<Point>& mouse_pos) override;
 
 private:
     static constexpr Rgba kTempColor{223, 227, 230, 255};

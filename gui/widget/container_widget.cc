@@ -17,7 +17,7 @@ void ContainerWidget::addChildEnd(std::shared_ptr<Widget> widget) {
     layout();
 }
 
-void ContainerWidget::draw(const Point& mouse_pos) {
+void ContainerWidget::draw(const std::optional<Point>& mouse_pos) {
     if (main_widget) {
         main_widget->draw(mouse_pos);
     }

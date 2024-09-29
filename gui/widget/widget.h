@@ -13,7 +13,7 @@ public:
     Widget(const Size& size) : size{size} {}
     virtual ~Widget() {}
 
-    virtual void draw(const Point& mouse_pos) = 0;
+    virtual void draw(const std::optional<Point>& mouse_pos) = 0;
     virtual void scroll(const Point& mouse_pos, const Point& delta) {}
     virtual void leftMouseDown(const Point& mouse_pos,
                                app::ModifierKey modifiers,

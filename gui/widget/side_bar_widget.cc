@@ -19,7 +19,7 @@ SideBarWidget::SideBarWidget(const Size& size)
     // folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
 }
 
-void SideBarWidget::draw(const Point& mouse_pos) {
+void SideBarWidget::draw(const std::optional<Point>& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kForeground);
 
@@ -52,7 +52,7 @@ void SideBarWidget::renderOldLabel(int label_line_height) {
     //                       {255, 255, 0, 255}, RectRenderer::RectType::kForeground);
 }
 
-void SideBarWidget::renderNewLabel(const Point& mouse_pos) {
+void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 
@@ -74,10 +74,12 @@ void SideBarWidget::renderNewLabel(const Point& mouse_pos) {
                                        highlight_callback, min_x, max_x);
 
         // Highlight on mouse hover.
-        if ((coords.x <= mouse_pos.x && mouse_pos.x < coords.x + size.width) &&
-            (coords.y <= mouse_pos.y && mouse_pos.y < coords.y + label_line_height)) {
-            rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
-                                  RectRenderer::RectLayer::kForeground);
+        if (mouse_pos) {
+            if ((coords.x <= mouse_pos->x && mouse_pos->x < coords.x + size.width) &&
+                (coords.y <= mouse_pos->y && mouse_pos->y < coords.y + label_line_height)) {
+                rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
+                                      RectRenderer::RectLayer::kForeground);
+            }
         }
     }
 }

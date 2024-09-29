@@ -88,11 +88,9 @@ void EditorWindow::onDraw(int width, int height) {
     auto mouse_pos = mousePosition();
     if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
-        std::println("{}, {}", mouse_x, mouse_y);
-        main_widget->draw({mouse_x, mouse_y});
+        main_widget->draw(Point{mouse_x, mouse_y});
     } else {
-        std::println("Mouse is outside of window!");
-        main_widget->draw({500, 500});
+        main_widget->draw(std::nullopt);
     }
     Renderer::instance().flush({width, height});
 }

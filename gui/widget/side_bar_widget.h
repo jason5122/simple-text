@@ -10,7 +10,7 @@ class SideBarWidget : public ScrollableWidget {
 public:
     SideBarWidget(const Size& size);
 
-    void draw(const Point& mouse_pos) override;
+    void draw(const std::optional<Point>& mouse_pos) override;
     void layout() override;
 
     void updateMaxScroll() override;
@@ -30,7 +30,7 @@ private:
     // Draw helpers.
     // TODO: Rename these methods.
     void renderOldLabel(int label_line_height);
-    void renderNewLabel(const Point& mouse_pos);
+    void renderNewLabel(const std::optional<Point>& mouse_pos);
     void renderScrollBars(int line_height, size_t visible_lines);
 };
 

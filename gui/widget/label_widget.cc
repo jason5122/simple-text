@@ -25,7 +25,7 @@ void LabelWidget::addRightIcon(size_t icon_id) {
     right_side_icons.emplace_back(icon_id);
 }
 
-void LabelWidget::draw(const Point& mouse_pos) {
+void LabelWidget::draw(const std::optional<Point>& mouse_pos) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
 

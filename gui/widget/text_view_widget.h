@@ -22,7 +22,7 @@ public:
     void deleteWord(bool forward);
     std::string getSelectionText();
 
-    void draw(const Point& mouse_pos) override;
+    void draw(const std::optional<Point>& mouse_pos) override;
     void leftMouseDown(const Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;

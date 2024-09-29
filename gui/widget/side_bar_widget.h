@@ -29,9 +29,9 @@ private:
 
     // Draw helpers.
     // TODO: Rename these methods.
-    void renderOldLabel(int ui_line_height);
+    void renderOldLabel(int label_line_height);
     void renderNewLabel(const Point& mouse_pos);
-    void renderScrollBars();
+    void renderScrollBars(int line_height, size_t visible_lines);
 };
 
 }

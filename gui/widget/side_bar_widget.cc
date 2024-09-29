@@ -23,11 +23,13 @@ void SideBarWidget::draw(const Point& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kForeground);
 
-    // const auto& metrics = rasterizer().getMetrics(label_font_id);
+    const auto& metrics = rasterizer().getMetrics(label_font_id);
     // renderOldLabel(metrics.line_height);
 
     renderNewLabel(mouse_pos);
-    // renderScrollBars();
+
+    size_t visible_lines = std::ceil(static_cast<double>(size.height) / metrics.line_height);
+    renderScrollBars(metrics.line_height, visible_lines);
 }
 
 void SideBarWidget::layout() {
@@ -80,19 +82,33 @@ void SideBarWidget::renderNewLabel(const Point& mouse_pos) {
     }
 }
 
-void SideBarWidget::renderScrollBars() {
+void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
-    int vbar_width = 15;
-    int vbar_height = size.height * (static_cast<float>(size.height) / max_scroll_offset.y);
-    float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
+    // int vbar_width = 15;
+    // int vbar_height = size.height * (static_cast<float>(size.height) / max_scroll_offset.y);
+    // float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
 
-    Point coords{
+    // Point coords{
+    //     .x = size.width - vbar_width,
+    //     .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
+    // };
+    // rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, kScrollBarColor,
+    //                       RectRenderer::RectLayer::kForeground, 5);
+
+    // Add vertical scroll bar.
+    int vbar_width = 15;
+    int max_scrollbar_y = static_cast<int>(strs.size() + visible_lines) * line_height;
+    double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;
+    int vbar_height = static_cast<int>(size.height * vbar_height_percent);
+    vbar_height = std::max(30, vbar_height);
+    double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
+    Point vbar_coords{
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, kScrollBarColor,
+    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
                           RectRenderer::RectLayer::kForeground, 5);
 }
 

@@ -1,3 +1,9 @@
-static_library("rust_experiment") {
-  sources = [ "lib.rs" ]
+import("//build/rust/rust_static_library.gni")
+
+rust_static_library("rust_experiment") {
+  crate_type = "staticlib"
+  sources = [ "src/lib.rs" ]
+  allow_unsafe = true
+
+  deps = [ "//third_party/rust/hex/v0_4:lib" ]
 }

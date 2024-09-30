@@ -28,7 +28,7 @@ toolchain("clang") {
     rspfile = "{{output}}.rsp"
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
 
-    command = "$cxx {{ldflags}} -o {{output}} @$rspfile"
+    command = "$cxx {{ldflags}} -o {{output}} @$rspfile {{rlibs}}"
     description = "LINK {{output}}"
 
     outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
@@ -56,11 +56,11 @@ toolchain("clang") {
     rspfile = "{{output}}.rsp"
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
 
-    command = "$cxx -dynamiclib {{ldflags}} -o {{output}} @$rspfile"
+    command = "$cxx -dynamiclib {{ldflags}} -o {{output}} @$rspfile {{rlibs}}"
     description = "SOLINK {{output}}"
 
     outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
-    default_output_dir = "{{root_out_dir}}"
+    default_output_dir = "{{target_out_dir}}"
     default_output_extension = ".dylib"
     output_prefix = "lib"
   }
@@ -108,12 +108,33 @@ toolchain("clang") {
 
     default_output_extension = ".a"
     output_prefix = "lib"
-    default_output_dir = "{{root_out_dir}}"
+    default_output_dir = "{{target_out_dir}}"
     description = "RUST(STATICLIB) {{output}}"
     outputs = [ libname ]
 
     rspfile_content = "{{rustdeps}} {{externs}} SOURCES {{sources}}"
     command = "\"$python_path\" \"$rustc_wrapper\" --rustc=$rustc --depfile=$depfile --rsp=$rspfile -- -Clinker=\"$cxx\" $rustc_common_args --emit=dep-info=$depfile,link -o $libname LDFLAGS RUSTENV {{rustenv}}"
+    rust_sysroot = rust_sysroot_relative
+  }
+
+  tool("rust_rlib") {
+    # We must always prefix with `lib` even if the library already starts
+    # with that prefix or else our stdlib is unable to find libc.rlib (or
+    # actually liblibc.rlib).
+    rlibname = "{{output_dir}}/lib{{target_output_name}}{{output_extension}}"
+    rspfile = "$rlibname.rsp"
+    depfile = "$rlibname.d"
+
+    default_output_extension = ".rlib"
+
+    # This is prefixed unconditionally in `rlibname`.
+    # output_prefix = "lib"
+    default_output_dir = "{{target_out_dir}}"
+    description = "RUST {{output}}"
+    outputs = [ rlibname ]
+
+    rspfile_content = "{{rustdeps}} {{externs}} SOURCES {{sources}}"
+    command = "\"$python_path\" \"$rustc_wrapper\" --rustc=$rustc --depfile=$depfile --rsp=$rspfile -- -Clinker=\"$cxx\" $rustc_common_args {{rustdeps}} {{externs}} --emit=dep-info=$depfile,link -o $rlibname LDFLAGS RUSTENV {{rustenv}}"
     rust_sysroot = rust_sysroot_relative
   }
 

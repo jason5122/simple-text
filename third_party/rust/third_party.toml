@@ -1,0 +1,3 @@
+[dependencies]
+serde = "1"
+hex = "0.4"

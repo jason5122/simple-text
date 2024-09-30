@@ -1,4 +1,5 @@
 out/
+__pycache__/
 
 # Ignore clangd files.
 compile_commands.json

@@ -1,3 +1,5 @@
+import("//build/config/rust.gni")
+
 toolchain("clang") {
   if (target_cpu == "arm64") {
     prefix = "/opt/homebrew/opt/llvm/bin"
@@ -11,6 +13,16 @@ toolchain("clang") {
   cc = "${prefix}/clang"
   cxx = "${prefix}/clang++"
   ar = "${prefix}/llvm-ar"
+
+  # TODO: Clean Rust stuff up.
+  home_dir = getenv("HOME")
+  rust_sysroot_absolute =
+      "$home_dir/.local/share/rustup/toolchains/stable-aarch64-apple-darwin"
+  rust_sysroot = get_path_info(rust_sysroot_absolute, "abspath")
+  rust_sysroot_relative = rebase_path(rust_sysroot, root_build_dir)
+  rustc_bin = "$rust_sysroot_relative/bin/rustc"
+  rustc = "${rustc_bin}"
+  rustc_wrapper = rebase_path("//build/rust/rustc_wrapper.py", root_build_dir)
 
   tool("link") {
     rspfile = "{{output}}.rsp"
@@ -87,6 +99,22 @@ toolchain("clang") {
     command = "$cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{framework_dirs}} {{cflags}} {{cflags_objcc}} -c {{source}} -o {{output}}"
     description = "OBJCXX {{output}}"
     outputs = [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.o" ]
+  }
+
+  tool("rust_staticlib") {
+    libname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    rspfile = "$libname.rsp"
+    depfile = "$libname.d"
+
+    default_output_extension = ".a"
+    output_prefix = "lib"
+    default_output_dir = "{{root_out_dir}}"
+    description = "RUST(STATICLIB) {{output}}"
+    outputs = [ libname ]
+
+    rspfile_content = "{{rustdeps}} {{externs}} SOURCES {{sources}}"
+    command = "\"$python_path\" \"$rustc_wrapper\" --rustc=$rustc --depfile=$depfile --rsp=$rspfile -- -Clinker=\"$cxx\" $rustc_common_args --emit=dep-info=$depfile,link -o $libname LDFLAGS RUSTENV {{rustenv}}"
+    rust_sysroot = rust_sysroot_relative
   }
 
   tool("stamp") {

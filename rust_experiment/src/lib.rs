@@ -10,15 +10,14 @@ pub extern "C" fn hello_from_rust() {
     println!("{}", p);
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)] // PartialEq is probably the most important part here. You want to be able to compare numbers
+#[derive(Debug, Copy, Clone, PartialEq)]
 struct Point {
     x: i32,
     y: i32,
 }
 
 impl Add for Point {
-    type Output = Self; // Remember, this is called an "associated type": a "type that goes together".
-                        // In this case it's just another Point
+    type Output = Self;
 
     fn add(self, other: Self) -> Self {
         Self {

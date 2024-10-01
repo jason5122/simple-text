@@ -71,22 +71,28 @@ void Window::setFilePath(fs::path path) {
 }
 
 std::optional<std::string> Window::openFilePicker() {
-    NSOpenPanel* openPanel = [NSOpenPanel openPanel];
-    openPanel.title = @"Choose File";
-    openPanel.prompt = @"Choose";
-    openPanel.canChooseDirectories = false;
-    openPanel.canChooseFiles = true;
-    if ([openPanel runModal] != NSModalResponseCancel) {
-        return openPanel.URL.fileSystemRepresentation;
+    NSOpenPanel* panel = [NSOpenPanel openPanel];
+    panel.title = @"Choose File";
+    panel.prompt = @"Choose";
+    panel.canChooseDirectories = false;
+    panel.canChooseFiles = true;
+
+    // TODO: Make this a parameter.
+    // TODO: Expand tilde paths in a helper function (probably in //base/filesystem/) and implement
+    // for each OS.
+    panel.directoryURL = [NSURL fileURLWithPath:@"~".stringByExpandingTildeInPath];
+
+    if ([panel runModal] != NSModalResponseCancel) {
+        return panel.URL.fileSystemRepresentation;
     } else {
         return std::nullopt;
     }
 
     // TODO: Investigate how to open a sheet synchronously.
-    // [openPanel beginSheetModalForWindow:pimpl->window_controller.window
+    // [panel beginSheetModalForWindow:pimpl->window_controller.window
     //                   completionHandler:^(NSInteger result) {
     //                     if (result == NSModalResponseOK) {
-    //                         std::println(openPanel.URL.fileSystemRepresentation);
+    //                         std::println(panel.URL.fileSystemRepresentation);
     //                     }
     //                   }];
 }

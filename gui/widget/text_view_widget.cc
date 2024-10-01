@@ -268,7 +268,7 @@ void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
 
     renderText(start_line, end_line, main_line_height);
     renderSelections(start_line, end_line);
-    renderScrollBars(main_line_height, visible_lines);
+    renderScrollBars(main_line_height);
     renderCaret(main_line_height);
 }
 
@@ -512,13 +512,12 @@ void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
     selection_renderer.renderSelections(selections, textOffset());
 }
 
-void TextViewWidget::renderScrollBars(int main_line_height, size_t visible_lines) {
+void TextViewWidget::renderScrollBars(int main_line_height) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
-    int line_height = main_line_height;
     int vbar_width = 15;
-    int max_scrollbar_y = static_cast<int>(table.lineCount() + visible_lines) * line_height;
+    double max_scrollbar_y = size.height + table.lineCount() * main_line_height;
     double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);

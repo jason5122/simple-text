@@ -60,7 +60,7 @@ private:
     // Draw helpers.
     void renderText(size_t start_line, size_t end_line, int main_line_height);
     void renderSelections(size_t start_line, size_t end_line);
-    void renderScrollBars(int main_line_height, size_t visible_lines);
+    void renderScrollBars(int main_line_height);
     void renderCaret(int main_line_height);
 };
 

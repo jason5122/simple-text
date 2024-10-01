@@ -10,7 +10,7 @@
 | Feature              | macOS          | Linux      | Windows          |
 | -------------------- | -------------- | ---------- | ---------------- |
 | Text System          | ✅ (Core Text) | ✅ (Pango) | ✅ (DirectWrite) |
-| Window creation      | ✅ (Cocoa)     | ✅ (GTK 3) | ✅ (Win32)       |
+| Window creation      | ✅ (Cocoa)     | ✅ (GTK 4) | ✅ (Win32)       |
 | OpenGL context       | ✅             | ✅         | ✅               |
 | Keyboard/mouse input | ✅             | ✅         | ✅               |
 | Tabs                 | ✅             | ✅         | ✅               |

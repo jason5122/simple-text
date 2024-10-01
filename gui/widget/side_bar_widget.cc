@@ -101,7 +101,7 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
 
     // Add vertical scroll bar.
     int vbar_width = 15;
-    int max_scrollbar_y = static_cast<int>(strs.size() + visible_lines) * line_height;
+    double max_scrollbar_y = size.height + strs.size() * line_height;
     double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);

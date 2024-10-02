@@ -67,13 +67,13 @@ const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const 
     return pimpl->font_id_to_metrics.at(font_id);
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t font_id, uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
 
     CGGlyph glyph_index = glyph_id;
 
     if (!font_ref) {
-        std::println("FontRasterizer::rasterizeUTF8() error: CTFontRef is null!");
+        std::println("FontRasterizer::rasterize() error: CTFontRef is null!");
         std::abort();
     }
 

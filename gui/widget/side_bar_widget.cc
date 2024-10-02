@@ -88,18 +88,6 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
-    // int vbar_width = 15;
-    // int vbar_height = size.height * (static_cast<float>(size.height) / max_scroll_offset.y);
-    // float vbar_percent = static_cast<float>(scroll_offset.y) / max_scroll_offset.y;
-
-    // Point coords{
-    //     .x = size.width - vbar_width,
-    //     .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
-    // };
-    // rect_renderer.addRect(coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-    //                       RectRenderer::RectLayer::kForeground, 5);
-
-    // Add vertical scroll bar.
     int vbar_width = 15;
     double max_scrollbar_y = size.height + strs.size() * line_height;
     double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;

@@ -40,7 +40,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
     // Emojis should be colored and should have 4 channels.
     size_t emoji_font_id = layout.runs[1].font_id;
     for (const auto& glyph : emoji_glyphs) {
-        auto rglyph = rasterizer.rasterizeUTF8(emoji_font_id, glyph.glyph_id);
+        auto rglyph = rasterizer.rasterize(emoji_font_id, glyph.glyph_id);
         EXPECT_TRUE(rglyph.colored);
         EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 4_Z);
     }
@@ -48,7 +48,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
     // Regular text should not be colored and should have 3 channels.
     size_t monospace_font_id = layout.runs[2].font_id;
     for (const auto& glyph : hi_glyphs) {
-        auto rglyph = rasterizer.rasterizeUTF8(monospace_font_id, glyph.glyph_id);
+        auto rglyph = rasterizer.rasterize(monospace_font_id, glyph.glyph_id);
         EXPECT_FALSE(rglyph.colored);
         EXPECT_EQ(rglyph.buffer.size(), rglyph.width * rglyph.height * 3_Z);
     }

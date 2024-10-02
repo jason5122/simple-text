@@ -51,9 +51,9 @@ const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const 
     return pimpl->font_id_to_metrics.at(font_id);
 }
 
-RasterizedGlyph FontRasterizer::rasterizeUTF8(size_t layout_font_id,
-                                              size_t font_id,
-                                              uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterize(size_t layout_font_id,
+                                          size_t font_id,
+                                          uint32_t glyph_id) const {
     PangoFont* font = pimpl->font_id_to_native[font_id].get();
     int descent = getMetrics(layout_font_id).descent;
 

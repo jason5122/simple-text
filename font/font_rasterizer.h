@@ -25,7 +25,7 @@ public:
     };
     const Metrics& getMetrics(size_t font_id) const;
 
-    RasterizedGlyph rasterizeUTF8(size_t font_id, uint32_t glyph_id) const;
+    RasterizedGlyph rasterize(size_t font_id, uint32_t glyph_id) const;
     LineLayout layoutLine(size_t font_id, std::string_view str8) const;
 
     // TODO: Make these private. Currently, we make these public as a hack for DirectWrite.

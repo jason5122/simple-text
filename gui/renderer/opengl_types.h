@@ -1,7 +1,6 @@
 #pragma once
 
 #include <format>
-#include <ostream>
 
 namespace gui {
 
@@ -39,18 +38,37 @@ struct IVec4 {
 };
 static_assert(sizeof(IVec4) == sizeof(uint32_t) * 4);
 
-constexpr std::ostream& operator<<(std::ostream& out, const Vec2& vec) {
-    return out << std::format("Vec2{{{}, {}}}", vec.x, vec.y);
 }
 
-constexpr std::ostream& operator<<(std::ostream& out, const Vec4& vec) {
-    return out << std::format("Vec4{{{}, {}, {}, {}}}", vec.x, vec.y, vec.z, vec.w);
-}
+template <>
+struct std::formatter<gui::Vec2> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
 
-constexpr std::ostream& operator<<(std::ostream& out, const Rgba& color) {
-    // `+` operator promotes uint8_t to a type printable as a number.
-    // https://stackoverflow.com/a/28414758/14698275
-    return out << std::format("Rgba{{{}, {}, {}, {}}}", +color.r, +color.g, +color.b, +color.a);
-}
+    auto format(const auto& v, auto& ctx) const {
+        return std::format_to(ctx.out(), "Vec2({}, {})", v.x, v.y);
+    }
+};
 
-}
+template <>
+struct std::formatter<gui::Vec4> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const auto& v, auto& ctx) const {
+        return std::format_to(ctx.out(), "Vec4({}, {}, {}, {})", v.x, v.y, v.z, v.w);
+    }
+};
+
+template <>
+struct std::formatter<gui::Rgba> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const auto& c, auto& ctx) const {
+        return std::format_to(ctx.out(), "Rgba({}, {}, {}, {})", +c.r, +c.g, +c.b, +c.a);
+    }
+};

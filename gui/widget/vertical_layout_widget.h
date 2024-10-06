@@ -10,6 +10,10 @@ public:
     VerticalLayoutWidget(const Size& size);
 
     void layout() override;
+
+    std::string_view getClassName() const override {
+        return "VerticalLayoutWidget";
+    };
 };
 
 }

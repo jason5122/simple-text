@@ -127,4 +127,12 @@ void MultiViewWidget::layout() {
     }
 }
 
+Widget* MultiViewWidget::getWidgetAtPosition(const Point& pos) {
+    if (hitTest(pos) && !text_views.empty()) {
+        return text_views[index].get();
+    } else {
+        return nullptr;
+    }
+}
+
 }

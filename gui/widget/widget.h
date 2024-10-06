@@ -23,8 +23,10 @@ public:
                                app::ClickType click_type) {}
     virtual void layout() {}
     virtual void setPosition(const Point& pos);
-    virtual Widget* getWidgetAtPosition(const Point& pos);
     virtual CursorStyle getCursorStyle() const;
+
+    // Derived classes must override this for polymorphism to work correctly.
+    virtual Widget* getWidgetAtPosition(const Point& pos) = 0;
 
     Size getSize() const;
     void setSize(const Size& size);
@@ -33,6 +35,10 @@ public:
     Point getPosition() const;
     bool hitTest(const Point& point);
 
+    // TODO: Debug use; remove this.
+    virtual std::string_view getClassName() const = 0;
+
+    // TODO: Refactor singletons.
     inline font::FontRasterizer& rasterizer() {
         return font::FontRasterizer::instance();
     };
@@ -46,11 +52,11 @@ protected:
 
 template <>
 struct std::formatter<gui::Widget> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+    constexpr auto parse(auto& ctx) {
         return ctx.begin();
     }
 
-    auto format(const gui::Widget& widget, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "Widget({})", widget.getSize());
+    auto format(const auto& widget, auto& ctx) const {
+        return std::format_to(ctx.out(), "{}({})", widget.getClassName(), widget.getSize());
     }
 };

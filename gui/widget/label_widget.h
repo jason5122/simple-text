@@ -15,6 +15,13 @@ public:
 
     void draw(const std::optional<Point>& mouse_pos) override;
 
+    Widget* getWidgetAtPosition(const Point& pos) override {
+        return hitTest(pos) ? this : nullptr;
+    }
+    std::string_view getClassName() const override {
+        return "LabelWidget";
+    };
+
 private:
     static constexpr Rgba kTempColor{223, 227, 230, 255};
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};

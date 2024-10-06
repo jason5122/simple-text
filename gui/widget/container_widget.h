@@ -27,6 +27,10 @@ public:
     void setPosition(const Point& position) override;
     Widget* getWidgetAtPosition(const Point& pos) override;
 
+    std::string_view getClassName() const override {
+        return "ContainerWidget";
+    };
+
 protected:
     std::shared_ptr<Widget> main_widget;
     std::vector<std::shared_ptr<Widget>> children_start;

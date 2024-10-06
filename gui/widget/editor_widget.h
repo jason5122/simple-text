@@ -10,6 +10,10 @@ class EditorWidget : public VerticalLayoutWidget {
 public:
     EditorWidget();
 
+    std::string_view getClassName() const override {
+        return "EditorWidget";
+    };
+
     TextViewWidget* currentTextViewWidget() const;
     void setIndex(size_t index);
     void prevIndex();

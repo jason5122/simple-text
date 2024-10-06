@@ -81,21 +81,22 @@ void ContainerWidget::setPosition(const Point& position) {
 }
 
 Widget* ContainerWidget::getWidgetAtPosition(const Point& pos) {
-    Widget* result = nullptr;
     if (main_widget) {
-        result = main_widget->getWidgetAtPosition(pos);
+        if (main_widget->hitTest(pos)) {
+            return main_widget->getWidgetAtPosition(pos);
+        }
     }
     for (auto& child : children_start) {
-        if (!result) {
-            result = child->getWidgetAtPosition(pos);
+        if (child->hitTest(pos)) {
+            return child->getWidgetAtPosition(pos);
         }
     }
     for (auto& child : children_end) {
-        if (!result) {
-            result = child->getWidgetAtPosition(pos);
+        if (child->hitTest(pos)) {
+            return child->getWidgetAtPosition(pos);
         }
     }
-    return result;
+    return nullptr;
 }
 
 }

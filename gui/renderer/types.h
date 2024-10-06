@@ -3,7 +3,6 @@
 #include "gui/renderer/opengl_types.h"
 #include <cstddef>
 #include <format>
-#include <ostream>
 
 namespace gui {
 
@@ -29,10 +28,6 @@ struct Size {
         width -= rhs.width;
         height -= rhs.height;
         return *this;
-    }
-
-    friend std::ostream& operator<<(std::ostream& out, const Size& s) {
-        return out << std::format("Size{{{}, {}}}", s.width, s.height);
     }
 };
 
@@ -60,10 +55,6 @@ struct Point {
         return *this;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const Point& p) {
-        return out << std::format("Point{{{}, {}}}", p.x, p.y);
-    }
-
     Vec2 toVec2() {
         return Vec2{static_cast<float>(x), static_cast<float>(y)};
     }
@@ -75,11 +66,22 @@ enum class CursorStyle { kArrow, kIBeam };
 
 template <>
 struct std::formatter<gui::Size> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+    constexpr auto parse(auto& ctx) {
         return ctx.begin();
     }
 
-    auto format(const gui::Size& size, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "Size({}, {})", size.width, size.height);
+    auto format(const auto& s, auto& ctx) const {
+        return std::format_to(ctx.out(), "Size({}, {})", s.width, s.height);
+    }
+};
+
+template <>
+struct std::formatter<gui::Point> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const auto& p, auto& ctx) const {
+        return std::format_to(ctx.out(), "Point({}, {})", p.x, p.y);
     }
 };

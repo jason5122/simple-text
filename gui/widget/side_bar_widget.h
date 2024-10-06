@@ -15,6 +15,13 @@ public:
 
     void updateMaxScroll() override;
 
+    Widget* getWidgetAtPosition(const Point& pos) override {
+        return hitTest(pos) ? this : nullptr;
+    }
+    std::string_view getClassName() const override {
+        return "SideBarWidget";
+    };
+
 private:
     static constexpr Rgb kTextColor{51, 51, 51};
     static constexpr Rgba kSideBarColor{235, 237, 239, 255};

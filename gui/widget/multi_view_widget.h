@@ -30,6 +30,11 @@ public:
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
     void layout() override;
+    Widget* getWidgetAtPosition(const Point& pos) override;
+
+    std::string_view getClassName() const override {
+        return "MultiViewWidget";
+    };
 
 private:
     size_t index = 0;

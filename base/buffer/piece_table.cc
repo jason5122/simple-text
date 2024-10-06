@@ -257,7 +257,7 @@ std::string PieceTable::substr(size_t index, size_t count) const {
 }
 
 std::pair<size_t, size_t> PieceTable::lineColumnAt(size_t index) const {
-    PROFILE_BLOCK("PieceTable::lineColumnAt()");
+    // PROFILE_BLOCK("PieceTable::lineColumnAt()");
 
     if (index > m_length) {
         index = m_length;

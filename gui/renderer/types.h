@@ -69,4 +69,17 @@ struct Point {
     }
 };
 
+enum class CursorStyle { kArrow, kIBeam };
+
 }
+
+template <>
+struct std::formatter<gui::Size> {
+    constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const gui::Size& size, std::format_context& ctx) const {
+        return std::format_to(ctx.out(), "Size({}, {})", size.width, size.height);
+    }
+};

@@ -2,7 +2,6 @@
 
 #include "gui/widget/multi_view_widget.h"
 #include "gui/widget/tab_bar_widget.h"
-#include "gui/widget/types.h"
 #include "gui/widget/vertical_layout_widget.h"
 
 namespace gui {

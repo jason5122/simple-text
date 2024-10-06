@@ -24,12 +24,13 @@ public:
     virtual void layout() {}
     virtual void setPosition(const Point& pos);
     virtual Widget* getWidgetAtPosition(const Point& pos);
+    virtual CursorStyle getCursorStyle() const;
 
-    Size getSize();
+    Size getSize() const;
     void setSize(const Size& size);
     void setWidth(int width);
     void setHeight(int width);
-    Point getPosition();
+    Point getPosition() const;
     bool hitTest(const Point& point);
 
     inline font::FontRasterizer& rasterizer() {
@@ -42,3 +43,14 @@ protected:
 };
 
 }
+
+template <>
+struct std::formatter<gui::Widget> {
+    constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const gui::Widget& widget, std::format_context& ctx) const {
+        return std::format_to(ctx.out(), "Widget({})", widget.getSize());
+    }
+};

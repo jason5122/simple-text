@@ -106,13 +106,24 @@ std::optional<std::pair<int, int>> Window::mousePosition() {
     NSPoint mouse_pos = ns_window.mouseLocationOutsideOfEventStream;
     mouse_pos.y = window_height - mouse_pos.y;  // Set origin at top left.
 
-    if (mouse_pos.x < 0 || mouse_pos.x > window_width || mouse_pos.y < 0 ||
-        mouse_pos.y > window_height) {
+    if ((mouse_pos.x < 0 || mouse_pos.x > window_width - 1) ||
+        (mouse_pos.y < 0 || mouse_pos.y > window_height - 1)) {
         return std::nullopt;
     }
 
     int mouse_x = std::round(mouse_pos.x);
     int mouse_y = std::round(mouse_pos.y);
+
+    // TODO: Formalize this as a check in debug mode.
+    if (mouse_x < 0 || mouse_x >= window_width) {
+        std::println("Window::mousePosition() error: mouse_x < 0 || mouse_x >= window_width");
+        std::abort();
+    }
+    if (mouse_y < 0 || mouse_y >= window_height) {
+        std::println("Window::mousePosition() error: mouse_y < 0 || mouse_y >= window_height");
+        std::abort();
+    }
+
     int scale = [pimpl->window_controller getScaleFactor];
     int scaled_mouse_x = mouse_x * scale;
     int scaled_mouse_y = mouse_y * scale;

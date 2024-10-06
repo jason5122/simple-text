@@ -2,7 +2,7 @@
 
 namespace gui {
 
-Size Widget::getSize() {
+Size Widget::getSize() const {
     return size;
 }
 
@@ -18,7 +18,7 @@ void Widget::setHeight(int height) {
     this->size.height = height;
 }
 
-Point Widget::getPosition() {
+Point Widget::getPosition() const {
     return position;
 }
 
@@ -33,6 +33,10 @@ void Widget::setPosition(const Point& pos) {
 
 Widget* Widget::getWidgetAtPosition(const Point& pos) {
     return hitTest(pos) ? this : nullptr;
+}
+
+CursorStyle Widget::getCursorStyle() const {
+    return CursorStyle::kArrow;
 }
 
 }

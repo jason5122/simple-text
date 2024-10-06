@@ -83,11 +83,20 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw(int width, int height) {
-    PROFILE_BLOCK("Total render time");
+    // PROFILE_BLOCK("Total render time");
 
     auto mouse_pos = mousePosition();
     if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
+
+        Widget* hovered_widget = main_widget->getWidgetAtPosition(Point{mouse_x, mouse_y});
+        std::println("Widget class: {}", *hovered_widget);
+        if (hovered_widget->getCursorStyle() == CursorStyle::kArrow) {
+            std::println("Arrow cursor");
+        } else {
+            std::println("I-beam cursor");
+        }
+
         main_widget->draw(Point{mouse_x, mouse_y});
     } else {
         main_widget->draw(std::nullopt);

@@ -18,6 +18,9 @@ public:
     std::string getClipboardString();
     void setClipboardString(const std::string& str8);
 
+    enum class CursorStyle { kArrow, kIBeam };
+    void setCursorStyle(CursorStyle style);
+
     virtual void onLaunch() {}
     virtual void onQuit() {}
     virtual void onAppAction(AppAction action) {}

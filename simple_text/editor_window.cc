@@ -89,13 +89,15 @@ void EditorWindow::onDraw(int width, int height) {
     if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
 
+        // Update cursor style.
         auto hovered_widget = main_widget->getWidgetAtPosition(Point{mouse_x, mouse_y});
-        if (hovered_widget) {
-            std::println("{}", *hovered_widget);
-            if (hovered_widget->getCursorStyle() == CursorStyle::kArrow) {
-                std::println("Arrow cursor");
+        Widget* widget = drag_start_widget ? drag_start_widget : hovered_widget;
+        if (widget) {
+            std::println("{}", *widget);
+            if (widget->getCursorStyle() == CursorStyle::kArrow) {
+                parent.setCursorStyle(app::App::CursorStyle::kArrow);
             } else {
-                std::println("I-beam cursor");
+                parent.setCursorStyle(app::App::CursorStyle::kIBeam);
             }
         }
 

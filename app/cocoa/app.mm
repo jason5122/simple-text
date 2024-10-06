@@ -147,4 +147,12 @@ void App::setClipboardString(const std::string& str8) {
     [pboard setString:ns_string forType:NSPasteboardTypeString];
 }
 
+void App::setCursorStyle(CursorStyle style) {
+    if (style == CursorStyle::kArrow) {
+        [NSCursor.arrowCursor set];
+    } else if (style == CursorStyle::kIBeam) {
+        [NSCursor.IBeamCursor set];
+    }
+}
+
 }

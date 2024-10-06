@@ -162,34 +162,22 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     [self addTrackingArea:trackingArea];
 }
 
-// FIXME: Also set cursor style when clicking window to focus.
-// This can be reproduced by opening another window in front of this one, and clicking on this
-// without moving the mouse.
-- (void)setCursorStyle:(NSEvent*)event {
-    // CGFloat mouse_x = event.locationInWindow.x;
-    // CGFloat mouse_y = event.locationInWindow.y;
-
-    [NSCursor.IBeamCursor set];
-}
-
 - (void)mouseMoved:(NSEvent*)event {
-    [self setCursorStyle:event];
     glLayer->appWindow->onMouseMove();
 }
 
 - (void)mouseEntered:(NSEvent*)event {
-    [self setCursorStyle:event];
+    glLayer->appWindow->onMouseMove();
 }
 
 // We need to override `cursorUpdate` to stop the event from being passed up in the chain.
 // Without this, our `mouseEntered` NSCursor set will be overridden.
 // https://stackoverflow.com/a/20197686
 - (void)cursorUpdate:(NSEvent*)event {
+    glLayer->appWindow->onMouseMove();
 }
 
 - (void)mouseExited:(NSEvent*)event {
-    // TODO: Don't reset when cursor exits window while drag selecting text.
-    // [NSCursor.arrowCursor set];
     glLayer->appWindow->onMouseExit();
 }
 

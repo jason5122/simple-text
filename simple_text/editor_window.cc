@@ -86,21 +86,38 @@ void EditorWindow::onDraw(int width, int height) {
     // PROFILE_BLOCK("Total render time");
 
     auto mouse_pos = mousePosition();
-    if (mouse_pos) {
-        auto [mouse_x, mouse_y] = mouse_pos.value();
 
-        // Update cursor style.
+    // Update cursor style.
+    using CursorStyle = app::App::CursorStyle;
+
+    // Case 1: Dragging operation in progress.
+    if (drag_start_widget) {
+        if (drag_start_widget->getCursorStyle() == gui::CursorStyle::kArrow) {
+            parent.setCursorStyle(CursorStyle::kArrow);
+        } else {
+            parent.setCursorStyle(CursorStyle::kIBeam);
+        }
+    }
+    // Case 2: Mouse position is within window.
+    else if (mouse_pos) {
+        auto [mouse_x, mouse_y] = mouse_pos.value();
         auto hovered_widget = main_widget->getWidgetAtPosition(Point{mouse_x, mouse_y});
-        Widget* widget = drag_start_widget ? drag_start_widget : hovered_widget;
-        if (widget) {
-            std::println("{}", *widget);
-            if (widget->getCursorStyle() == CursorStyle::kArrow) {
-                parent.setCursorStyle(app::App::CursorStyle::kArrow);
+        if (hovered_widget) {
+            std::println("{}", *hovered_widget);
+            if (hovered_widget->getCursorStyle() == gui::CursorStyle::kArrow) {
+                parent.setCursorStyle(CursorStyle::kArrow);
             } else {
-                parent.setCursorStyle(app::App::CursorStyle::kIBeam);
+                parent.setCursorStyle(CursorStyle::kIBeam);
             }
         }
+    }
+    // Case 3: Mouse position is outside of window.
+    else {
+        parent.setCursorStyle(CursorStyle::kArrow);
+    }
 
+    if (mouse_pos) {
+        auto [mouse_x, mouse_y] = mouse_pos.value();
         main_widget->draw(Point{mouse_x, mouse_y});
     } else {
         main_widget->draw(std::nullopt);

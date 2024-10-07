@@ -35,4 +35,8 @@ CursorStyle Widget::getCursorStyle() const {
     return CursorStyle::kArrow;
 }
 
+Widget* Widget::getWidgetAtPosition(const Point& pos) {
+    return hitTest(pos) ? this : nullptr;
+}
+
 }

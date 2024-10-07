@@ -24,9 +24,7 @@ public:
     virtual void layout() {}
     virtual void setPosition(const Point& pos);
     virtual CursorStyle getCursorStyle() const;
-
-    // Derived classes must override this for polymorphism to work correctly.
-    virtual Widget* getWidgetAtPosition(const Point& pos) = 0;
+    virtual Widget* getWidgetAtPosition(const Point& pos);
 
     Size getSize() const;
     void setSize(const Size& size);

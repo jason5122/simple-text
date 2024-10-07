@@ -35,9 +35,6 @@ public:
     CursorStyle getCursorStyle() const override {
         return CursorStyle::kIBeam;
     }
-    Widget* getWidgetAtPosition(const Point& pos) override {
-        return hitTest(pos) ? this : nullptr;
-    }
     std::string_view getClassName() const override {
         return "TextViewWidget";
     };

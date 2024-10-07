@@ -346,9 +346,9 @@ void EditorWindow::updateCursorStyle() {
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
-        auto hovered_widget = main_widget->getWidgetAtPosition(Point{mouse_x, mouse_y});
+        Widget* hovered_widget = main_widget->getWidgetAtPosition(Point{mouse_x, mouse_y});
         if (hovered_widget) {
-            // std::println("{}", *hovered_widget);
+            std::println("{}", *hovered_widget);
             if (hovered_widget->getCursorStyle() == gui::CursorStyle::kArrow) {
                 parent.setCursorStyle(CursorStyle::kArrow);
             } else {

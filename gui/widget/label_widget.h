@@ -15,9 +15,6 @@ public:
 
     void draw(const std::optional<Point>& mouse_pos) override;
 
-    Widget* getWidgetAtPosition(const Point& pos) override {
-        return hitTest(pos) ? this : nullptr;
-    }
     std::string_view getClassName() const override {
         return "LabelWidget";
     };

@@ -15,9 +15,6 @@ public:
 
     void updateMaxScroll() override;
 
-    Widget* getWidgetAtPosition(const Point& pos) override {
-        return hitTest(pos) ? this : nullptr;
-    }
     std::string_view getClassName() const override {
         return "SideBarWidget";
     };

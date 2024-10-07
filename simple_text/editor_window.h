@@ -40,5 +40,5 @@ private:
     // Drag selection.
     gui::Widget* drag_start_widget = nullptr;
 
-    void updateWindowTitle();
+    void updateCursorStyle();
 };

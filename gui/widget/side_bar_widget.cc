@@ -74,13 +74,18 @@ void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
                                        highlight_callback, min_x, max_x);
 
         // Highlight on mouse hover.
-        if (mouse_pos) {
-            if ((coords.x <= mouse_pos->x && mouse_pos->x < coords.x + size.width) &&
-                (coords.y <= mouse_pos->y && mouse_pos->y < coords.y + label_line_height)) {
-                rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
-                                      RectRenderer::RectLayer::kForeground);
-            }
+        if (line == hovered_index) {
+            rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
+                                  RectRenderer::RectLayer::kForeground);
         }
+        // if (mouse_pos) {
+        //     if ((coords.x <= mouse_pos->x && mouse_pos->x < coords.x + size.width) &&
+        //         (coords.y <= mouse_pos->y && mouse_pos->y < coords.y + label_line_height)) {
+        //         rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0,
+        //         255},
+        //                               RectRenderer::RectLayer::kForeground);
+        //     }
+        // }
     }
 }
 

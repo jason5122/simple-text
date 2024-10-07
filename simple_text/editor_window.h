@@ -1,8 +1,8 @@
 #pragma once
 
 #include "app/window.h"
-#include "gui/widget/container_widget.h"
 #include "gui/widget/editor_widget.h"
+#include "gui/widget/layout_widget.h"
 
 class EditorApp;
 
@@ -34,7 +34,7 @@ public:
 private:
     int wid;
     EditorApp& parent;
-    std::shared_ptr<gui::ContainerWidget> main_widget;
+    std::shared_ptr<gui::LayoutWidget> main_widget;
     std::shared_ptr<gui::EditorWidget> editor_widget;
 
     // Drag selection.

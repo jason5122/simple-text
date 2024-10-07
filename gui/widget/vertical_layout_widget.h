@@ -1,10 +1,10 @@
 #pragma once
 
-#include "gui/widget/container_widget.h"
+#include "gui/widget/layout_widget.h"
 
 namespace gui {
 
-class VerticalLayoutWidget : public ContainerWidget {
+class VerticalLayoutWidget : public LayoutWidget {
 public:
     VerticalLayoutWidget() = default;
     VerticalLayoutWidget(const Size& size);

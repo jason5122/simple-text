@@ -1,24 +1,20 @@
 #pragma once
 
 #include "gui/widget/container_widget.h"
-#include "gui/widget/text_view_widget.h"
 #include <memory>
 #include <vector>
 
 namespace gui {
 
-class MultiViewWidget : public ContainerWidget {
+class LayoutWidget : public ContainerWidget {
 public:
-    MultiViewWidget();
+    LayoutWidget() = default;
+    LayoutWidget(const Size& size) : ContainerWidget{size} {}
+    virtual ~LayoutWidget() {}
 
-    TextViewWidget* currentTextViewWidget() const;
-    void setIndex(size_t index);
-    void prevIndex();
-    void nextIndex();
-    void lastIndex();
-    size_t getCurrentIndex();
-    void addTab(std::string_view text);
-    void removeTab(size_t index);
+    void setMainWidget(std::shared_ptr<Widget> widget);
+    void addChildStart(std::shared_ptr<Widget> widget);
+    void addChildEnd(std::shared_ptr<Widget> widget);
 
     void draw(const std::optional<Point>& mouse_pos) override;
     void scroll(const Point& mouse_pos, const Point& delta) override;
@@ -28,16 +24,17 @@ public:
     void leftMouseDrag(const Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
-    void layout() override;
+    void setPosition(const Point& position) override;
     Widget* getWidgetAtPosition(const Point& pos) override;
 
     std::string_view getClassName() const override {
-        return "MultiViewWidget";
+        return "ContainerWidget";
     };
 
-private:
-    size_t index = 0;
-    std::vector<std::shared_ptr<TextViewWidget>> text_views;
+protected:
+    std::shared_ptr<Widget> main_widget;
+    std::vector<std::shared_ptr<Widget>> children_start;
+    std::vector<std::shared_ptr<Widget>> children_end;
 };
 
 }

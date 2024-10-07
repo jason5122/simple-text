@@ -2,7 +2,7 @@
 
 namespace gui {
 
-HorizontalLayoutWidget::HorizontalLayoutWidget(const Size& size) : ContainerWidget{size} {}
+HorizontalLayoutWidget::HorizontalLayoutWidget(const Size& size) : LayoutWidget{size} {}
 
 void HorizontalLayoutWidget::layout() {
     int left_offset = position.x;

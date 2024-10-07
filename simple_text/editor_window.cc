@@ -66,8 +66,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
 
     // Main widgets.
-    std::shared_ptr<ContainerWidget> horizontal_layout{new HorizontalLayoutWidget{}};
-    std::shared_ptr<ContainerWidget> vertical_layout{new VerticalLayoutWidget{}};
+    std::shared_ptr<LayoutWidget> horizontal_layout{new HorizontalLayoutWidget{}};
+    std::shared_ptr<LayoutWidget> vertical_layout{new VerticalLayoutWidget{}};
 
     // These don't have default constructors since they are not intended to be main widgets.
     constexpr int kSideBarWidth = 250 * 2;

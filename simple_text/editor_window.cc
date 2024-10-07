@@ -184,7 +184,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->lastIndex();
         handled = true;
     } else if (key == app::Key::kA && modifiers == app::ModifierKey::kSuper) {
-        editor_widget->currentTextViewWidget()->selectAll();
+        editor_widget->currentWidget()->selectAll();
         handled = true;
     } else if (key == app::Key::kW && modifiers == app::ModifierKey::kSuper) {
         editor_widget->removeTab(editor_widget->getCurrentIndex());
@@ -196,15 +196,15 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         close();
         return true;
     } else if (key == app::Key::kC && modifiers == app::ModifierKey::kSuper) {
-        auto* text_view = editor_widget->currentTextViewWidget();
+        auto* text_view = editor_widget->currentWidget();
         parent.setClipboardString(text_view->getSelectionText());
         handled = true;
     } else if (key == app::Key::kV && modifiers == app::ModifierKey::kSuper) {
-        auto* text_view = editor_widget->currentTextViewWidget();
+        auto* text_view = editor_widget->currentWidget();
         text_view->insertText(parent.getClipboardString());
         handled = true;
     } else if (key == app::Key::kX && modifiers == app::ModifierKey::kSuper) {
-        auto* text_view = editor_widget->currentTextViewWidget();
+        auto* text_view = editor_widget->currentWidget();
         parent.setClipboardString(text_view->getSelectionText());
         text_view->leftDelete();
         handled = true;
@@ -226,7 +226,8 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 void EditorWindow::onInsertText(std::string_view text) {
     {
         PROFILE_BLOCK("EditorWindow::onInsertText()");
-        editor_widget->currentTextViewWidget()->insertText(text);
+        TextViewWidget* widget = editor_widget->currentWidget();
+        if (widget) widget->insertText(text);
     }
     redraw();
 }
@@ -235,7 +236,7 @@ void EditorWindow::onAction(app::Action action, bool extend) {
     bool handled = false;
     {
         PROFILE_BLOCK("EditorWindow::onAction()");
-        auto* text_view = editor_widget->currentTextViewWidget();
+        auto* text_view = editor_widget->currentWidget();
         if (action == app::Action::kMoveForwardByCharacters) {
             text_view->move(gui::MoveBy::kCharacters, true, extend);
             handled = true;

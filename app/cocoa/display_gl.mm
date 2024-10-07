@@ -1,6 +1,5 @@
 #include "display_gl.h"
 #include "util/std_print.h"
-#include <iostream>
 
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>

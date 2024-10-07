@@ -4,7 +4,6 @@
 #include "app/window.h"
 #include <Foundation/Foundation.h>
 #include <format>
-#include <iostream>
 #include <vector>
 
 #import <Cocoa/Cocoa.h>

@@ -4,7 +4,6 @@ source_set("widget") {
     "horizontal_layout_widget.cc",
     "label_widget.cc",
     "layout_widget.cc",
-    "multi_view_widget.cc",
     "padding_widget.cc",
     "scrollable_widget.cc",
     "side_bar_widget.cc",

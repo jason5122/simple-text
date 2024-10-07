@@ -1,10 +1,9 @@
 #include "main_window.h"
 #include "unicode/unicode.h"
-#include "util/std_print.h"
 #include <cmath>
 
-#include <format>
-#include <iostream>
+// Debug use; remove this.
+#include "util/std_print.h"
 
 namespace app {
 

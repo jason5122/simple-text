@@ -1,9 +1,10 @@
 #include "GLView.h"
 #include "app/cocoa/GLLayer.h"
-#include "util/std_print.h"
-#include <iostream>
 
 #import <Carbon/Carbon.h>
+
+// Debug use; remove this.
+#include "util/std_print.h"
 
 namespace {
 

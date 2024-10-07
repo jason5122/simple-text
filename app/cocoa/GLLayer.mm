@@ -1,9 +1,5 @@
 #include "GLLayer.h"
 
-// TODO: For debugging; remove this.
-#include <Cocoa/Cocoa.h>
-#include <iostream>
-
 @interface GLLayer () {
     app::DisplayGL* mDisplayGL;
 }

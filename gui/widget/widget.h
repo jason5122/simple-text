@@ -46,6 +46,8 @@ protected:
     Point position{};
 };
 
+static_assert(std::is_abstract<Widget>());
+
 }
 
 template <>

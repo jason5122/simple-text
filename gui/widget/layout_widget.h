@@ -37,4 +37,6 @@ protected:
     std::vector<std::shared_ptr<Widget>> children_end;
 };
 
+static_assert(std::is_abstract<LayoutWidget>());
+
 }

@@ -21,6 +21,7 @@ public:
     virtual void leftMouseDrag(const Point& mouse_pos,
                                app::ModifierKey modifiers,
                                app::ClickType click_type) {}
+    virtual void mousePositionChanged(const std::optional<Point>& mouse_pos) {};
     virtual void layout() {}
     virtual void setPosition(const Point& pos);
     virtual CursorStyle getCursorStyle() const;

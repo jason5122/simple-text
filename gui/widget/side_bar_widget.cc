@@ -2,6 +2,9 @@
 #include "side_bar_widget.h"
 #include <cmath>
 
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
+
 namespace gui {
 
 SideBarWidget::SideBarWidget(const Size& size)
@@ -30,6 +33,30 @@ void SideBarWidget::draw(const std::optional<Point>& mouse_pos) {
 
     size_t visible_lines = std::ceil(static_cast<double>(size.height) / metrics.line_height);
     renderScrollBars(metrics.line_height, visible_lines);
+}
+
+void SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+    if (!mouse_pos) {
+        hovered_index = std::nullopt;
+        return;
+    }
+
+    const auto& metrics = rasterizer().getMetrics(label_font_id);
+    int label_line_height = metrics.line_height;
+    for (size_t line = 0; line < strs.size(); ++line) {
+        Point coords = position - scroll_offset;
+        coords.y += static_cast<int>(line) * label_line_height;
+
+        if (mouse_pos) {
+            if ((coords.x <= mouse_pos->x && mouse_pos->x < coords.x + size.width) &&
+                (coords.y <= mouse_pos->y && mouse_pos->y < coords.y + label_line_height)) {
+                hovered_index = line;
+                return;
+            }
+        }
+    }
+
+    hovered_index = std::nullopt;
 }
 
 void SideBarWidget::layout() {
@@ -74,18 +101,10 @@ void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
                                        highlight_callback, min_x, max_x);
 
         // Highlight on mouse hover.
-        if (line == hovered_index) {
+        if (hovered_index && line == hovered_index) {
             rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
                                   RectRenderer::RectLayer::kForeground);
         }
-        // if (mouse_pos) {
-        //     if ((coords.x <= mouse_pos->x && mouse_pos->x < coords.x + size.width) &&
-        //         (coords.y <= mouse_pos->y && mouse_pos->y < coords.y + label_line_height)) {
-        //         rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0,
-        //         255},
-        //                               RectRenderer::RectLayer::kForeground);
-        //     }
-        // }
     }
 }
 

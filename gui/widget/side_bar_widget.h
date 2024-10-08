@@ -11,6 +11,7 @@ public:
     SideBarWidget(const Size& size);
 
     void draw(const std::optional<Point>& mouse_pos) override;
+    void mousePositionChanged(const std::optional<Point>& mouse_pos) override;
     void layout() override;
 
     void updateMaxScroll() override;
@@ -30,8 +31,7 @@ private:
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
     LineLayoutCache line_layout_cache;
     std::unique_ptr<LabelWidget> folder_label;
-    // std::optional<size_t> hovered_index = std::nullopt;
-    std::optional<size_t> hovered_index = 2;
+    std::optional<size_t> hovered_index = std::nullopt;
 
     // Draw helpers.
     // TODO: Rename these methods.

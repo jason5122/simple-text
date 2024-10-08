@@ -11,10 +11,6 @@ class EditorWidget : public VerticalLayoutWidget {
 public:
     EditorWidget();
 
-    std::string_view getClassName() const override {
-        return "EditorWidget";
-    };
-
     TextViewWidget* currentWidget() const;
     void setIndex(size_t index);
     void prevIndex();
@@ -24,6 +20,10 @@ public:
     void addTab(std::string_view tab_name, std::string_view text);
     void removeTab(size_t index);
     void openFile(std::string_view path);
+
+    std::string_view getClassName() const override {
+        return "EditorWidget";
+    };
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

@@ -74,6 +74,11 @@ public:
         if (widget) widget->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
 
+    void mousePositionChanged(const std::optional<Point>& mouse_pos) override {
+        Widget* widget = currentWidget();
+        if (widget) widget->mousePositionChanged(mouse_pos);
+    }
+
     void layout() override {
         for (auto& text_view : views) {
             text_view->setSize(size);

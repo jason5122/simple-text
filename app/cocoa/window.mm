@@ -80,7 +80,7 @@ std::optional<std::string> Window::openFilePicker() {
     // TODO: Make this a parameter.
     // TODO: Expand tilde paths in a helper function (probably in //base/filesystem/) and implement
     // for each OS.
-    panel.directoryURL = [NSURL fileURLWithPath:@"~".stringByExpandingTildeInPath];
+    // panel.directoryURL = [NSURL fileURLWithPath:@"~".stringByExpandingTildeInPath];
 
     if ([panel runModal] != NSModalResponseCancel) {
         return panel.URL.fileSystemRepresentation;

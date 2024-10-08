@@ -398,8 +398,17 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     auto [selection_line, selection_col] = table.lineColumnAt(selection.end().index);
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
+
+    long long total_layout_duration = 0;
+    long long total_text_render_duration = 0;
+
     for (size_t line = start_line; line < end_line; ++line) {
+        auto t1 = std::chrono::high_resolution_clock::now();
         const auto& layout = layoutAt(line);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        long long duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        total_layout_duration += duration;
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
@@ -448,6 +457,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         };
 #endif
 
+        t1 = std::chrono::high_resolution_clock::now();
 #ifdef ENABLE_HIGHLIGHTING
         text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kForeground,
                                        highlight_callback, min_x, max_x);
@@ -456,6 +466,9 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             layout, coords, TextRenderer::TextLayer::kForeground,
             [](size_t) { return kTextColor; }, min_x, max_x);
 #endif
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        total_text_render_duration += duration;
 
         // Draw gutter.
         if (line == selection_line) {
@@ -483,6 +496,9 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
                                        TextRenderer::TextLayer::kForeground,
                                        line_number_highlight_callback);
     }
+
+    std::println("Total layoutAt() time: {}", total_layout_duration);
+    std::println("Total TextRender time: {}", total_text_render_duration);
 
     constexpr bool kDebugAtlas = false;
     if constexpr (kDebugAtlas) {

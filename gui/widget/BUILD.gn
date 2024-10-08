@@ -1,16 +1,16 @@
 source_set("widget") {
   sources = [
+    "container/horizontal_layout_widget.cc",
+    "container/layout_widget.cc",
+    "container/vertical_layout_widget.cc",
     "editor_widget.cc",
-    "horizontal_layout_widget.cc",
     "label_widget.cc",
-    "layout_widget.cc",
     "padding_widget.cc",
     "scrollable_widget.cc",
     "side_bar_widget.cc",
     "status_bar_widget.cc",
     "tab_bar_widget.cc",
     "text_view_widget.cc",
-    "vertical_layout_widget.cc",
     "widget.cc",
   ]
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "gui/widget/multi_view_widget.h"
+#include "gui/widget/container/multi_view_widget.h"
+#include "gui/widget/container/vertical_layout_widget.h"
 #include "gui/widget/tab_bar_widget.h"
 #include "gui/widget/text_view_widget.h"
-#include "gui/widget/vertical_layout_widget.h"
 
 namespace gui {
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "app/window.h"
+#include "gui/widget/container/layout_widget.h"
 #include "gui/widget/editor_widget.h"
-#include "gui/widget/layout_widget.h"
 
 class EditorApp;
 

@@ -1,9 +1,9 @@
 #include "editor_window.h"
 #include "gui/renderer/renderer.h"
-#include "gui/widget/horizontal_layout_widget.h"
+#include "gui/widget/container/horizontal_layout_widget.h"
+#include "gui/widget/container/vertical_layout_widget.h"
 #include "gui/widget/side_bar_widget.h"
 #include "gui/widget/status_bar_widget.h"
-#include "gui/widget/vertical_layout_widget.h"
 #include "simple_text/editor_app.h"
 
 // TODO: Debug use; remove this.

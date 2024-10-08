@@ -35,10 +35,12 @@ void SideBarWidget::draw(const std::optional<Point>& mouse_pos) {
     renderScrollBars(metrics.line_height, visible_lines);
 }
 
-void SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+bool SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+    auto old_index = hovered_index;
+
     if (!mouse_pos) {
         hovered_index = std::nullopt;
-        return;
+        return hovered_index != old_index;
     }
 
     const auto& metrics = rasterizer().getMetrics(label_font_id);
@@ -51,12 +53,13 @@ void SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) 
             if ((coords.x <= mouse_pos->x && mouse_pos->x < coords.x + size.width) &&
                 (coords.y <= mouse_pos->y && mouse_pos->y < coords.y + label_line_height)) {
                 hovered_index = line;
-                return;
+                return hovered_index != old_index;
             }
         }
     }
 
     hovered_index = std::nullopt;
+    return hovered_index != old_index;
 }
 
 void SideBarWidget::layout() {
@@ -101,7 +104,7 @@ void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
                                        highlight_callback, min_x, max_x);
 
         // Highlight on mouse hover.
-        if (hovered_index && line == hovered_index) {
+        if (line == hovered_index) {
             rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
                                   RectRenderer::RectLayer::kForeground);
         }

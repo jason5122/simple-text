@@ -75,16 +75,18 @@ void LayoutWidget::leftMouseDrag(const Point& mouse_pos,
     }
 }
 
-void LayoutWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+bool LayoutWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+    bool result = false;
     if (main_widget) {
-        main_widget->mousePositionChanged(mouse_pos);
+        result = main_widget->mousePositionChanged(mouse_pos) || result;
     }
     for (auto& child : children_start) {
-        child->mousePositionChanged(mouse_pos);
+        result = child->mousePositionChanged(mouse_pos) || result;
     }
     for (auto& child : children_end) {
-        child->mousePositionChanged(mouse_pos);
+        result = child->mousePositionChanged(mouse_pos) || result;
     }
+    return result;
 }
 
 void LayoutWidget::setPosition(const Point& position) {

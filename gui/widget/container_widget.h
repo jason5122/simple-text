@@ -17,7 +17,7 @@ public:
     void leftMouseDrag(const Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override = 0;
-    void mousePositionChanged(const std::optional<Point>& mouse_pos) override = 0;
+    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override = 0;
     void layout() override = 0;
     Widget* getWidgetAtPosition(const Point& pos) override = 0;
 };

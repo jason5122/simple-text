@@ -11,7 +11,7 @@ public:
     SideBarWidget(const Size& size);
 
     void draw(const std::optional<Point>& mouse_pos) override;
-    void mousePositionChanged(const std::optional<Point>& mouse_pos) override;
+    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override;
     void layout() override;
 
     void updateMaxScroll() override;

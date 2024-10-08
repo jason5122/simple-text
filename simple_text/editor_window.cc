@@ -138,31 +138,35 @@ void EditorWindow::onLeftMouseDrag(int mouse_x,
 void EditorWindow::onMouseMove() {
     updateCursorStyle();
 
+    bool should_redraw = false;
     auto mouse_pos = mousePosition();
     if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
-        main_widget->mousePositionChanged(Point{mouse_x, mouse_y});
+        should_redraw = main_widget->mousePositionChanged(Point{mouse_x, mouse_y});
     } else {
-        main_widget->mousePositionChanged(std::nullopt);
+        should_redraw = main_widget->mousePositionChanged(std::nullopt);
     }
 
-    // See if we can optimize this to only redraw when necessary.
-    redraw();
+    if (should_redraw) {
+        redraw();
+    }
 }
 
 void EditorWindow::onMouseExit() {
     updateCursorStyle();
 
+    bool should_redraw = false;
     auto mouse_pos = mousePosition();
     if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
-        main_widget->mousePositionChanged(Point{mouse_x, mouse_y});
+        should_redraw = main_widget->mousePositionChanged(Point{mouse_x, mouse_y});
     } else {
-        main_widget->mousePositionChanged(std::nullopt);
+        should_redraw = main_widget->mousePositionChanged(std::nullopt);
     }
 
-    // See if we can optimize this to only redraw when necessary.
-    redraw();
+    if (should_redraw) {
+        redraw();
+    }
 }
 
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {

@@ -4,7 +4,13 @@
 #include <iterator>
 #include <list>
 #include <string>
+
+// TODO: Debug use; remove this.
+// #define ENABLE_LINE_CACHING
+
+#ifdef ENABLE_LINE_CACHING
 #include <unordered_map>
+#endif
 
 namespace base {
 
@@ -65,7 +71,9 @@ private:
     size_t m_length = 0;
     size_t newline_count = 0;
 
+#ifdef ENABLE_LINE_CACHING
     std::unordered_map<size_t, std::string> line_cache;
+#endif
 
     using PieceIterator = std::list<Piece>::iterator;
     using PieceConstIterator = std::list<Piece>::const_iterator;

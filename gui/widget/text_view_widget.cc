@@ -16,8 +16,10 @@ TextViewWidget::TextViewWidget(std::string_view text)
     : table{text}, line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
     updateMaxScroll();
 
+#ifdef ENABLE_HIGHLIGHTING
     highlighter.setJsonLanguage();
     highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
 
     // TODO: See if we need to change this for proportional fonts.
     const auto& line_number_layout = line_layout_cache.getLineLayout("11");
@@ -145,8 +147,10 @@ void TextViewWidget::insertText(std::string_view text) {
     table.insert(i, text);
     selection.incrementIndex(text.length(), false);
 
+#ifdef ENABLE_HIGHLIGHTING
     highlighter.edit(i, i, i + text.length());
     highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
 
     // TODO: Do we update caret `max_x` too?
 
@@ -172,15 +176,19 @@ void TextViewWidget::leftDelete() {
         size_t i = selection.end().index;
         table.erase(i, delta);
 
+#ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
     } else {
         auto [start, end] = selection.range();
         table.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
+#ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
     }
 
     updateMaxScroll();
@@ -197,15 +205,19 @@ void TextViewWidget::rightDelete() {
         size_t i = selection.end().index;
         table.erase(i, delta);
 
+#ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
     } else {
         auto [start, end] = selection.range();
         table.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
+#ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
     }
 
     updateMaxScroll();
@@ -235,15 +247,19 @@ void TextViewWidget::deleteWord(bool forward) {
         size_t i = selection.end().index;
         table.erase(i, delta);
 
+#ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
     } else {
         auto [start, end] = selection.range();
         table.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
+#ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
         highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+#endif
     }
 
     updateMaxScroll();
@@ -369,11 +385,14 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+
+#ifdef ENABLE_HIGHLIGHTING
     std::vector<base::SyntaxHighlighter::Highlight> highlights;
     {
         PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
         highlights = highlighter.getHighlights(start_line, end_line);
     }
+#endif
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     auto [selection_line, selection_col] = table.lineColumnAt(selection.end().index);
@@ -390,6 +409,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
 
+#ifdef ENABLE_HIGHLIGHTING
         std::stack<base::SyntaxHighlighter::Highlight> stk;
         auto it = highlights.begin();
         const auto highlight_callback = [&](size_t col) {
@@ -426,16 +446,16 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
                 return kTextColor;
             }
         };
+#endif
 
-        constexpr bool kHighlight = true;
-        if constexpr (kHighlight) {
-            text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kForeground,
-                                           highlight_callback, min_x, max_x);
-        } else {
-            text_renderer.renderLineLayout(
-                layout, coords, TextRenderer::TextLayer::kForeground,
-                [](size_t) { return kTextColor; }, min_x, max_x);
-        }
+#ifdef ENABLE_HIGHLIGHTING
+        text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kForeground,
+                                       highlight_callback, min_x, max_x);
+#else
+        text_renderer.renderLineLayout(
+            layout, coords, TextRenderer::TextLayer::kForeground,
+            [](size_t) { return kTextColor; }, min_x, max_x);
+#endif
 
         // Draw gutter.
         if (line == selection_line) {
@@ -564,5 +584,4 @@ void TextViewWidget::renderCaret(int main_line_height) {
     rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor,
                           RectRenderer::RectLayer::kForeground);
 }
-
 }

@@ -21,8 +21,10 @@ PieceTable::PieceTable(std::string_view str) : original{str}, m_length{str.lengt
 }
 
 void PieceTable::insert(size_t index, std::string_view str) {
+#ifdef ENABLE_LINE_CACHING
     // Invalidate line cache.
     line_cache.clear();
+#endif
 
     auto [it, offset] = pieceAt(index);
 
@@ -83,8 +85,10 @@ void PieceTable::insert(size_t index, std::string_view str) {
 }
 
 void PieceTable::erase(size_t index, size_t count) {
+#ifdef ENABLE_LINE_CACHING
     // Invalidate line cache.
     line_cache.clear();
+#endif
 
     auto [it, offset] = pieceAt(index);
 
@@ -190,10 +194,12 @@ std::string PieceTable::line(size_t index) {
         std::abort();
     }
 
+#ifdef ENABLE_LINE_CACHING
     // Memoize line strings.
     if (line_cache.contains(index)) {
         return line_cache.at(index);
     }
+#endif
 
     auto first = index == 0 ? begin() : std::next(newline(base::sub_sat(index, 1_Z)));
     auto last = index == newlineCount() ? end() : std::next(newline(index));
@@ -203,7 +209,9 @@ std::string PieceTable::line(size_t index) {
         line_str += *it;
     }
 
+#ifdef ENABLE_LINE_CACHING
     line_cache.emplace(index, line_str);
+#endif
     return line_str;
 }
 

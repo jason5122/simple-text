@@ -1,11 +1,17 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
-#include "base/syntax_highlighter/syntax_highlighter.h"
 #include "gui/text_system/line_layout_cache.h"
 #include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
+
+// TODO: Debug use; remove this.
+// #define ENABLE_HIGHLIGHTING
+
+#ifdef ENABLE_HIGHLIGHTING
+#include "base/syntax_highlighter/syntax_highlighter.h"
+#endif
 
 namespace gui {
 
@@ -52,7 +58,10 @@ private:
     LineLayoutCache line_layout_cache;
 
     Selection selection{};
+
+#ifdef ENABLE_HIGHLIGHTING
     base::SyntaxHighlighter highlighter;
+#endif
 
     static constexpr int kGutterLeftPadding = 23 * 2;
     int line_number_width;

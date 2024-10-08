@@ -4,7 +4,10 @@
 
 //! Utilities to process `cargo metadata` dependency graph.
 
+use crate::config::BuildConfig;
 use crate::crates;
+use crate::group::Group;
+use crate::inherit::find_inherited_privilege_group;
 use crate::platforms::{self, Platform, PlatformSet};
 
 use std::collections::{hash_map::Entry, HashMap, HashSet};
@@ -51,14 +54,16 @@ pub struct Package {
     /// The path in the dependency graph to this package. This is intended for
     /// human consumption when debugging missing packages.
     pub dependency_path: Vec<String>,
+    /// What privilege group the crate is a part of.
+    pub group: Group,
     /// Whether the source is a local path. Is `false` if cargo resolved this
     /// dependency from a registry (e.g. crates.io) or git. If `false` the
     /// package may still be locally vendored through cargo configuration (see
     /// https://doc.rust-lang.org/cargo/reference/source-replacement.html)
     pub is_local: bool,
-    /// Whether this package is a member of the cargo workspace the metadata
-    /// came from, as opposed to a third-party dependency.
-    pub is_workspace_member: bool,
+    /// Whether this package is depended on directly by the root Cargo.toml or
+    /// it is a transitive dependency.
+    pub is_toplevel_dep: bool,
 }
 
 impl Package {
@@ -95,7 +100,7 @@ impl DepOfDep {
 pub struct PerKindInfo {
     /// The set of platforms this kind is needed on.
     pub platforms: PlatformSet,
-    /// The resovled feature set for this kind.
+    /// The resolved feature set for this kind.
     pub features: Vec<String>,
 }
 
@@ -169,6 +174,7 @@ pub fn collect_dependencies(
     metadata: &cargo_metadata::Metadata,
     roots: Option<Vec<String>>,
     exclude: Option<Vec<String>>,
+    extra_config: &BuildConfig,
 ) -> Vec<Package> {
     // The metadata is split into two parts:
     // 1. A list of packages and associated info: targets (e.g. lib, bin, tests),
@@ -237,6 +243,9 @@ pub fn collect_dependencies(
         explore_node(&mut traversal_state, node_map.get(*root_id).unwrap());
     }
 
+    // TODO(danakj): Throw an error if any `safe` crate depends on a `sandbox`
+    // crate.
+
     // `traversal_state.dependencies` is the output of `explore_node`. Pull it
     // out for processing.
     let mut dependencies = traversal_state.dependencies;
@@ -250,8 +259,20 @@ pub fn collect_dependencies(
         dep.description = package.description.clone();
         dep.authors = package.authors.clone();
         dep.edition = package.edition.to_string();
+        // TODO(danakj): It would be nice to store the `manifest_dir` here and
+        // change all gnrt_config.toml relative paths to be relative to the
+        // manifest instead of relative to the crate root, to eliminate the
+        // chance for there being a different relative path from a lib root vs a
+        // bin root. It can be grabbed like:
+        //
+        // dep.manifest_dir = package
+        //     .manifest_path
+        //     .parent()
+        //     .expect("manifest_path has no directory?")
+        //     .to_path_buf()
+        //     .into_std_path_buf();
 
-        // TODO(crbug.com/1291994): Resolve features independently per kind
+        // TODO(crbug.com/40212956): Resolve features independently per kind
         // and platform. This may require using the unstable unit-graph feature:
         // https://doc.rust-lang.org/cargo/reference/unstable.html#unit-graph
         for (_, kind_info) in dep.dependency_kinds.iter_mut() {
@@ -261,13 +282,15 @@ pub fn collect_dependencies(
             // choose to check "default" directly, but virtually none actually
             // do this.
             //
-            // TODO(crbug.com/1291994): Revisit this behavior and maybe keep
+            // TODO(crbug.com/40212956): Revisit this behavior and maybe keep
             // "default" features.
             if let Some(pos) = kind_info.features.iter().position(|x| x == "default") {
                 kind_info.features.remove(pos);
             }
         }
 
+        let allowed_bin_targets: HashSet<&str> =
+            extra_config.get_combined_set(&package.name, |crate_cfg| &crate_cfg.bin_targets);
         for target in package.targets.iter() {
             let src_root = target.src_path.clone().into_std_path_buf();
             let target_type = match target.kind.iter().find_map(|s| TargetType::from_name(s)) {
@@ -288,7 +311,10 @@ pub fn collect_dependencies(
                     dep.lib_target = Some(LibTarget { root: src_root, lib_type });
                 }
                 TargetType::Bin => {
-                    dep.bin_targets.push(BinTarget { root: src_root, name: target.name.clone() });
+                    if allowed_bin_targets.contains(target.name.as_str()) {
+                        dep.bin_targets
+                            .push(BinTarget { root: src_root, name: target.name.clone() });
+                    }
                 }
                 TargetType::BuildScript => {
                     assert_eq!(
@@ -326,12 +352,23 @@ pub fn collect_dependencies(
             }
         }
 
+        dep.group = find_inherited_privilege_group(
+            id,
+            &dep_graph.nodes.get(fake_root).unwrap().id,
+            &dep_graph.packages,
+            &dep_graph.nodes,
+            extra_config,
+        );
+
         // Make sure the package comes from our vendored source. If not, report
         // the error for later.
         dep.is_local = package.source.is_none();
 
-        // Determine whether it's a workspace member or third-party dependency.
-        dep.is_workspace_member = dep_graph.workspace_members.contains(&package.id);
+        // Determine whether it's a direct or transitive dependency.
+        dep.is_toplevel_dep = {
+            let fake_root_node = dep_graph.nodes.get(fake_root).unwrap();
+            fake_root_node.dependencies.contains(id)
+        };
     }
 
     // Return a flat list of dependencies.
@@ -382,8 +419,9 @@ fn explore_node<'a>(state: &mut TraversalState<'a>, node: &'a cargo_metadata::No
         bin_targets: Vec::new(),
         build_script: None,
         dependency_path: path,
+        group: Group::Safe,
         is_local: false,
-        is_workspace_member: false,
+        is_toplevel_dep: false,
     };
 
     state.path.push(node.id.repr.clone());
@@ -473,7 +511,6 @@ fn iter_node_deps(node: &cargo_metadata::Node) -> impl Iterator<Item = Dependenc
 struct MetadataGraph<'a> {
     nodes: HashMap<&'a cargo_metadata::PackageId, &'a cargo_metadata::Node>,
     packages: HashMap<&'a cargo_metadata::PackageId, &'a cargo_metadata::Package>,
-    workspace_members: HashSet<&'a cargo_metadata::PackageId>,
     roots: Vec<&'a cargo_metadata::PackageId>,
 }
 
@@ -496,12 +533,7 @@ fn build_graph(metadata: &cargo_metadata::Metadata) -> MetadataGraph<'_> {
         .chain(metadata.workspace_members.iter())
         .collect();
 
-    MetadataGraph {
-        nodes: graph,
-        packages,
-        workspace_members: metadata.workspace_members.iter().collect(),
-        roots,
-    }
+    MetadataGraph { nodes: graph, packages, roots }
 }
 
 /// A crate target type we support.
@@ -543,10 +575,11 @@ mod tests {
     #[test]
     fn collect_dependencies_on_sample_output() {
         use std::str::FromStr;
+        let config = BuildConfig::default();
 
         let metadata: cargo_metadata::Metadata =
             serde_json::from_str(SAMPLE_CARGO_METADATA).unwrap();
-        let mut dependencies = collect_dependencies(&metadata, None, None);
+        let mut dependencies = collect_dependencies(&metadata, None, None, &config);
         dependencies.sort_by(|left, right| {
             left.package_name.cmp(&right.package_name).then(left.version.cmp(&right.version))
         });
@@ -850,11 +883,13 @@ mod tests {
 
     #[test]
     fn dependencies_for_workspace_member() {
+        let config = BuildConfig::default();
         let metadata: cargo_metadata::Metadata =
             serde_json::from_str(SAMPLE_CARGO_METADATA).unwrap();
 
         // Start from "foo" workspace member.
-        let mut dependencies = collect_dependencies(&metadata, Some(vec!["foo".to_string()]), None);
+        let mut dependencies =
+            collect_dependencies(&metadata, Some(vec!["foo".to_string()]), None, &config);
         dependencies.sort_by(|left, right| {
             left.package_name.cmp(&right.package_name).then(left.version.cmp(&right.version))
         });
@@ -885,10 +920,11 @@ mod tests {
     fn exclude_dependency() {
         let metadata: cargo_metadata::Metadata =
             serde_json::from_str(SAMPLE_CARGO_METADATA).unwrap();
+        let config = BuildConfig::default();
 
         let deps_with_exclude =
-            collect_dependencies(&metadata, None, Some(vec!["serde_derive".to_string()]));
-        let deps_without_exclude = collect_dependencies(&metadata, None, None);
+            collect_dependencies(&metadata, None, Some(vec!["serde_derive".to_string()]), &config);
+        let deps_without_exclude = collect_dependencies(&metadata, None, None, &config);
 
         let pkgs_with_exclude: HashSet<&str> =
             deps_with_exclude.iter().map(|dep| dep.package_name.as_str()).collect();

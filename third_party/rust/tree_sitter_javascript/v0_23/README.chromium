@@ -1,0 +1,9 @@
+Name: tree-sitter-javascript
+URL: https://crates.io/crates/tree-sitter-javascript
+Description: JavaScript grammar for tree-sitter
+Version: 0.23.0
+Security Critical: yes
+Shipped: yes
+License: MIT
+License File:
+Revision: 463fec0831011cab830429fbe1da2796cfc1cfb4

@@ -1,0 +1,9 @@
+Name: tree-sitter-language
+URL: https://crates.io/crates/tree-sitter-language
+Description: The tree-sitter Language type, used by the library and by language implementations
+Version: 0.1.2
+Security Critical: yes
+Shipped: yes
+License: MIT
+License File:
+Revision: dfc891a5ce7d340c67252178729890bd6c18bbbc

@@ -1,0 +1,32 @@
+# Copyright 2023 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
+import("//build/rust/cargo_crate.gni")
+
+cargo_crate("lib") {
+  crate_name = "tree_sitter_javascript"
+  epoch = "0.23"
+  crate_type = "rlib"
+  crate_root = "//third_party/rust/chromium_crates_io/vendor/tree-sitter-javascript-0.23.0/bindings/rust/lib.rs"
+  sources = [
+    "//third_party/rust/chromium_crates_io/vendor/tree-sitter-javascript-0.23.0/bindings/rust/build.rs",
+    "//third_party/rust/chromium_crates_io/vendor/tree-sitter-javascript-0.23.0/bindings/rust/lib.rs",
+  ]
+  inputs = []
+
+  build_native_rust_unit_tests = false
+  edition = "2021"
+  cargo_pkg_version = "0.23.0"
+  cargo_pkg_authors = "Max Brunsfeld <maxbrunsfeld@gmail.com>, Douglas Creager <dcreager@dcreager.net>, Amaan Qureshi <amaanq12@gmail.com>"
+  cargo_pkg_name = "tree-sitter-javascript"
+  cargo_pkg_description = "JavaScript grammar for tree-sitter"
+  deps = [ "//third_party/rust/tree_sitter_language/v0_1:lib" ]
+  build_deps = [ "//third_party/rust/cc/v1:buildrs_support" ]
+  build_root = "//third_party/rust/chromium_crates_io/vendor/tree-sitter-javascript-0.23.0/bindings/rust/build.rs"
+  build_sources = [ "//third_party/rust/chromium_crates_io/vendor/tree-sitter-javascript-0.23.0/bindings/rust/build.rs" ]
+}

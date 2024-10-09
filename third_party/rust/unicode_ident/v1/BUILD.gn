@@ -1,0 +1,21 @@
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
+rust_library("lib") {
+  crate_name = "unicode_ident"
+  crate_type = "rlib"
+  crate_root = "//third_party/rust/chromium_crates_io/vendor/unicode-ident-1.0.13/src/lib.rs"
+  sources = [
+    "//third_party/rust/chromium_crates_io/vendor/unicode-ident-1.0.13/src/lib.rs",
+    "//third_party/rust/chromium_crates_io/vendor/unicode-ident-1.0.13/src/tables.rs",
+  ]
+  inputs = []
+
+  rustflags = [ "--edition=2018" ]
+
+  # Only for usage from third-party crates. Add the crate to
+  # //third_party/rust/chromium_crates_io/Cargo.toml to use
+  # it from first-party code.
+  # visibility = [ "//third_party/rust/*" ]
+}

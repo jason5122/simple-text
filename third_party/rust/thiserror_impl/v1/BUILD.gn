@@ -1,0 +1,28 @@
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
+rust_library("lib") {
+  crate_name = "thiserror_impl"
+  crate_type = "proc-macro"
+  crate_root = "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/lib.rs"
+  sources = [
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/ast.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/attr.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/expand.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/fmt.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/generics.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/lib.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/prop.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/span.rs",
+    "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/valid.rs",
+  ]
+  inputs = []
+
+  deps = [
+    "//third_party/rust/proc_macro2/v1:lib",
+    "//third_party/rust/quote/v1:lib",
+    "//third_party/rust/syn/v2:lib",
+  ]
+  rustflags = [ "--edition=2021" ]
+}

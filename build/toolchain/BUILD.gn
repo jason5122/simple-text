@@ -1,0 +1,28 @@
+declare_args() {
+  # Pool for non remote tasks.
+  action_pool_depth = -1
+  concurrent_links = -1
+}
+
+if (current_toolchain == default_toolchain) {
+  if (action_pool_depth == -1) {
+    action_pool_depth = exec_script("get_cpu_count.py", [], "value")
+  }
+  if (concurrent_links == -1) {
+    _args = []
+    _command_dict = exec_script("get_concurrent_links.py", _args, "scope")
+    concurrent_links = _command_dict.primary_pool_size
+  }
+
+  pool("link_pool") {
+    depth = concurrent_links
+  }
+
+  pool("action_pool") {
+    depth = action_pool_depth
+  }
+
+  pool("remote_action_pool") {
+    depth = 1000
+  }
+}

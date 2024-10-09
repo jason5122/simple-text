@@ -1,0 +1,31 @@
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
+rust_library("lib") {
+  crate_name = "quote"
+  crate_type = "rlib"
+  crate_root =
+      "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/lib.rs"
+  sources = [
+    "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/ext.rs",
+    "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/format.rs",
+    "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/ident_fragment.rs",
+    "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/lib.rs",
+    "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/runtime.rs",
+    "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/spanned.rs",
+    "//third_party/rust/chromium_crates_io/vendor/quote-1.0.37/src/to_tokens.rs",
+  ]
+  inputs = []
+
+  deps = [ "//third_party/rust/proc_macro2/v1:lib" ]
+  rustflags = [
+    "--edition=2018",
+    "--cfg=feature=\"proc-macro\"",
+  ]
+
+  # Only for usage from third-party crates. Add the crate to
+  # //third_party/rust/chromium_crates_io/Cargo.toml to use
+  # it from first-party code.
+  # visibility = [ "//third_party/rust/*" ]
+}

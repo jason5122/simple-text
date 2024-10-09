@@ -48,45 +48,6 @@ rust_library("{{this.name}}") {
     {{/each}}
   }
   {{/if}}
-  {{#each build_deps}}
-  {{#if @first}}
-  build_deps = [
-    {{#each this.packages}}
-      "//third_party/rust/{{this.name}}/{{this.epoch}}:buildrs_support",
-    {{/each}}
-  ]
-  {{else}}
-  if ({{this.cond}}) {
-    build_deps += [
-    {{#each this.packages}}
-      "//third_party/rust/{{this.name}}/{{this.epoch}}:buildrs_support",
-    {{/each}}
-    ]
-  }
-  {{/if}}
-  {{/each}}
-  {{#if build_root}}
-  build_root = "{{build_root}}"
-  build_sources = [
-    {{#each build_script_sources}}
-    "{{this}}",
-    {{/each}}
-  ]
-  {{#with build_script_inputs}}
-  build_script_inputs = [
-    {{#each this}}
-    "{{this}}",
-    {{/each}}
-  ]
-  {{/with}}
-  {{#with build_script_outputs}}
-  build_script_outputs = [
-    {{#each this}}
-    "{{this}}",
-    {{/each}}
-  ]
-  {{/with}}
-  {{/if}}
   {{#if rustenv}}
   rustenv = [
     {{#each rustenv}}

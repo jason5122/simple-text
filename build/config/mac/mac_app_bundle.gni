@@ -1,9 +1,5 @@
 import("//build/config/mac/merge_plist.gni")
 
-declare_args() {
-  code_signing_identity = ""
-}
-
 template("mac_app_bundle") {
   _output_name = target_name
   if (defined(invoker.output_name)) {
@@ -15,17 +11,13 @@ template("mac_app_bundle") {
     _bundle_identifier = invoker.bundle_identifier
   }
 
-  _code_signing_identity = ""
-  if (defined(invoker.code_signing_identity)) {
-    _code_signing_identity = invoker.code_signing_identity
-  }
-
   _display_name = _output_name
   if (defined(invoker.display_name)) {
     _display_name = invoker.display_name
   }
 
   _executable_target = target_name + "_executable"
+  _executable_bundle_data = _executable_target + "_bundle_data"
   _plist_target = target_name + "_plist"
   _plist_bundle = target_name + "_plist_bundle"
 
@@ -45,7 +37,13 @@ template("mac_app_bundle") {
     output_extension = ""
     output_name = _output_name
     output_prefix_override = true
-    output_dir = "$target_gen_dir/$_executable_target"
+    output_dir = "$target_out_dir/$_executable_target"
+  }
+
+  bundle_data(_executable_bundle_data) {
+    sources = [ "$target_out_dir/$_executable_target/$_output_name" ]
+    outputs = [ "{{bundle_executable_dir}}/$_output_name" ]
+    public_deps = [ ":$_executable_target" ]
   }
 
   merge_plist(_plist_target) {
@@ -80,7 +78,7 @@ template("mac_app_bundle") {
                              "bundle_type",
                            ])
     public_deps = [
-      ":$_executable_target",
+      ":$_executable_bundle_data",
       ":$_plist_bundle",
     ]
 
@@ -88,19 +86,5 @@ template("mac_app_bundle") {
     bundle_contents_dir = "$bundle_root_dir/Contents"
     bundle_resources_dir = "$bundle_contents_dir/Resources"
     bundle_executable_dir = "$bundle_contents_dir/MacOS"
-
-    code_signing_script = "//build/config/mac/codesign.py"
-    code_signing_sources =
-        [ "$target_gen_dir/$_executable_target/$_output_name" ]
-    code_signing_outputs = [
-      "$bundle_executable_dir/$_output_name",
-      "$bundle_contents_dir/_CodeSignature/CodeResources",
-    ]
-    code_signing_args = [
-      "-i=" + _code_signing_identity,
-      "-b=" + rebase_path("$target_gen_dir/$_executable_target/$_output_name",
-                          root_build_dir),
-      rebase_path(bundle_root_dir, root_build_dir),
-    ]
   }
 }

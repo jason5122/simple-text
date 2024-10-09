@@ -1,0 +1,32 @@
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
+rust_library("lib") {
+  crate_name = "proc_macro2"
+  crate_type = "rlib"
+  crate_root = "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/lib.rs"
+  sources = [
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/detection.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/extra.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/fallback.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/lib.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/location.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/marker.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/parse.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/rcvec.rs",
+    "//third_party/rust/chromium_crates_io/vendor/proc-macro2-1.0.87/src/wrapper.rs",
+  ]
+  inputs = []
+
+  deps = [ "//third_party/rust/unicode_ident/v1:lib" ]
+  rustflags = [
+    "--edition=2021",
+    "--cfg=feature=\"proc-macro\"",
+  ]
+
+  # Only for usage from third-party crates. Add the crate to
+  # //third_party/rust/chromium_crates_io/Cargo.toml to use
+  # it from first-party code.
+  # visibility = [ "//third_party/rust/*" ]
+}

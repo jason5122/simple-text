@@ -27,6 +27,7 @@ toolchain("clang") {
   tool("link") {
     rspfile = "{{output}}.rsp"
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
+    pool = "//build/toolchain:link_pool($default_toolchain)"
 
     command = "$cxx {{ldflags}} -o {{output}} @$rspfile {{rlibs}}"
     description = "LINK {{output}}"
@@ -55,6 +56,7 @@ toolchain("clang") {
   tool("solink") {
     rspfile = "{{output}}.rsp"
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
+    pool = "//build/toolchain:link_pool($default_toolchain)"
 
     command = "$cxx -dynamiclib {{ldflags}} -o {{output}} @$rspfile {{rlibs}}"
     description = "SOLINK {{output}}"
@@ -135,6 +137,23 @@ toolchain("clang") {
 
     rspfile_content = "{{rustdeps}} {{externs}} SOURCES {{sources}}"
     command = "\"$python_path\" \"$rustc_wrapper\" --rustc=$rustc --depfile=$depfile --rsp=$rspfile -- -Clinker=\"$cxx\" $rustc_common_args {{rustdeps}} {{externs}} --emit=dep-info=$depfile,link -o $rlibname LDFLAGS RUSTENV {{rustenv}}"
+    rust_sysroot = rust_sysroot_relative
+  }
+
+  tool("rust_macro") {
+    dllname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    rspfile = "$dllname.rsp"
+    depfile = "$dllname.d"
+    pool = "//build/toolchain:link_pool($default_toolchain)"
+
+    default_output_extension = ".dylib"
+    output_prefix = "lib"
+    default_output_dir = "{{root_out_dir}}"
+    description = "RUST(MACRO) {{output}}"
+    outputs = [ dllname ]
+
+    rspfile_content = "{{rustdeps}} {{externs}} SOURCES {{sources}}"
+    command = "\"$python_path\" \"$rustc_wrapper\" --rustc=$rustc --depfile=$depfile --rsp=$rspfile -- -Clinker=\"$cxx\" $rustc_common_args --emit=dep-info=$depfile,link -o $dllname LDFLAGS {{ldflags}} RUSTENV {{rustenv}}"
     rust_sysroot = rust_sysroot_relative
   }
 

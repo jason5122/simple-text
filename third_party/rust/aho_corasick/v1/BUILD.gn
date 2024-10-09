@@ -1,3 +1,7 @@
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
 rust_library("lib") {
   crate_name = "aho_corasick"
   crate_type = "rlib"
@@ -36,9 +40,9 @@ rust_library("lib") {
     "//third_party/rust/chromium_crates_io/vendor/aho-corasick-1.1.3/src/util/search.rs",
     "//third_party/rust/chromium_crates_io/vendor/aho-corasick-1.1.3/src/util/special.rs",
   ]
+  inputs = [ "//third_party/rust/chromium_crates_io/vendor/aho-corasick-1.1.3/src/packed/teddy/README.md" ]
 
   deps = [ "//third_party/rust/memchr/v2:lib" ]
-
   rustflags = [
     "--edition=2021",
     "--cfg=feature=\"perf-literal\"",

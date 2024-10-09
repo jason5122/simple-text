@@ -1,9 +1,0 @@
-Name: tree-sitter
-URL: https://crates.io/crates/tree-sitter
-Description: Rust bindings to the Tree-sitter parsing library
-Version: 0.24.2
-Security Critical: yes
-Shipped: yes
-License: MIT
-License File:
-Revision: 0b167b0782a74e3702fb77cbef1486c6c01c24c8

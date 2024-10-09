@@ -1,3 +1,7 @@
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
 rust_library("lib") {
   crate_name = "hex"
   crate_type = "rlib"
@@ -8,9 +12,10 @@ rust_library("lib") {
     "//third_party/rust/chromium_crates_io/vendor/hex-0.4.3/src/lib.rs",
     "//third_party/rust/chromium_crates_io/vendor/hex-0.4.3/src/serde.rs",
   ]
+  inputs = []
 
   rustflags = [
-    "--edition=2021",
+    "--edition=2018",
     "--cfg=feature=\"alloc\"",
     "--cfg=feature=\"std\"",
   ]

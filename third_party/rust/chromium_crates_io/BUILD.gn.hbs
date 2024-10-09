@@ -1,21 +1,12 @@
-# Copyright 2023 The Chromium Authors
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
-
 # @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
 # tools/crates/gnrt.
 # Do not edit!
 
-import("//build/rust/cargo_crate.gni")
-
 {{#each rules}}
-cargo_crate("{{this.name}}") {
+rust_library("{{this.name}}") {
   {{#with this.detail}}
   {{#if crate_name}}
   crate_name = "{{crate_name}}"
-  {{/if}}
-  {{#if epoch}}
-  epoch = "{{epoch}}"
   {{/if}}
   crate_type = "{{crate_type}}"
   crate_root = "{{crate_root}}"
@@ -30,16 +21,6 @@ cargo_crate("{{this.name}}") {
     {{/each}}
   ]
 
-  build_native_rust_unit_tests = false
-  edition = "{{edition}}"
-  cargo_pkg_version = "{{cargo_pkg_version}}"
-  {{#with cargo_pkg_authors}}
-  cargo_pkg_authors = "{{gn_escape this}}"
-  {{/with}}
-  cargo_pkg_name = "{{cargo_pkg_name}}"
-  {{#with cargo_pkg_description}}
-  cargo_pkg_description = "{{gn_escape this}}"
-  {{/with}}
   {{#each deps}}
   {{#if @first}}
   deps = [
@@ -84,13 +65,6 @@ cargo_crate("{{this.name}}") {
   }
   {{/if}}
   {{/each}}
-  {{#if features}}
-  features = [
-    {{#each features}}
-    "{{this}}",
-    {{/each}}
-  ]
-  {{/if}}
   {{#if build_root}}
   build_root = "{{build_root}}"
   build_sources = [
@@ -120,13 +94,19 @@ cargo_crate("{{this.name}}") {
     {{/each}}
   ]
   {{/if}}
-  {{#if rustflags}}
   rustflags = [
+    "--edition={{edition}}",
+  {{#if features}}
+    {{#each features}}
+    "--cfg=feature=\"{{this}}\"",
+    {{/each}}
+  {{/if}}
+  {{#if rustflags}}
     {{#each rustflags}}
     "{{this}}",
     {{/each}}
-  ]
   {{/if}}
+  ]
   {{#if output_dir}}
   output_dir = "{{output_dir}}"
   {{/if}}

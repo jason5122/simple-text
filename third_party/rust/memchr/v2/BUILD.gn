@@ -1,3 +1,7 @@
+# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
+# tools/crates/gnrt.
+# Do not edit!
+
 rust_library("lib") {
   crate_name = "memchr"
   crate_type = "rlib"
@@ -50,10 +54,16 @@ rust_library("lib") {
     "//third_party/rust/chromium_crates_io/vendor/memchr-2.7.4/src/tests/substring/prop.rs",
     "//third_party/rust/chromium_crates_io/vendor/memchr-2.7.4/src/vector.rs",
   ]
+  inputs = []
 
   rustflags = [
     "--edition=2021",
     "--cfg=feature=\"alloc\"",
     "--cfg=feature=\"std\"",
   ]
+
+  # Only for usage from third-party crates. Add the crate to
+  # //third_party/rust/chromium_crates_io/Cargo.toml to use
+  # it from first-party code.
+  visibility = [ "//third_party/rust/*" ]
 }

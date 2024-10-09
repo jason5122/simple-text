@@ -99,5 +99,5 @@ remove_crates = [
   'wasi',
 ]
 
-[crate.unicode-ident]
-license_files = ['LICENSE-APACHE', 'LICENSE-UNICODE']
+# [crate.unicode-ident]
+# license_files = ['LICENSE-APACHE', 'LICENSE-UNICODE']

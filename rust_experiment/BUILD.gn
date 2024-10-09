@@ -3,7 +3,7 @@ rust_library("rust_experiment") {
   sources = [ "src/lib.rs" ]
 
   deps = [
+    "//third_party/rust/aho_corasick/v1:lib",
     "//third_party/rust/hex/v0_4:lib",
-    "//third_party/rust/memchr/v2:lib",
   ]
 }

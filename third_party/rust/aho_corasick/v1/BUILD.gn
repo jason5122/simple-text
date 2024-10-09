@@ -1,16 +1,5 @@
-# Copyright 2023 The Chromium Authors
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
-
-# @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
-# tools/crates/gnrt.
-# Do not edit!
-
-import("//build/rust/cargo_crate.gni")
-
-cargo_crate("lib") {
+rust_library("lib") {
   crate_name = "aho_corasick"
-  epoch = "1"
   crate_type = "rlib"
   crate_root = "//third_party/rust/chromium_crates_io/vendor/aho-corasick-1.1.3/src/lib.rs"
   sources = [
@@ -47,22 +36,12 @@ cargo_crate("lib") {
     "//third_party/rust/chromium_crates_io/vendor/aho-corasick-1.1.3/src/util/search.rs",
     "//third_party/rust/chromium_crates_io/vendor/aho-corasick-1.1.3/src/util/special.rs",
   ]
-  inputs = [ "//third_party/rust/chromium_crates_io/vendor/aho-corasick-1.1.3/src/packed/teddy/README.md" ]
 
-  build_native_rust_unit_tests = false
-  edition = "2021"
-  cargo_pkg_version = "1.1.3"
-  cargo_pkg_authors = "Andrew Gallant <jamslam@gmail.com>"
-  cargo_pkg_name = "aho-corasick"
-  cargo_pkg_description = "Fast multiple substring searching."
   deps = [ "//third_party/rust/memchr/v2:lib" ]
-  features = [
-    "perf-literal",
-    "std",
-  ]
 
-  # Only for usage from third-party crates. Add the crate to
-  # //third_party/rust/chromium_crates_io/Cargo.toml to use
-  # it from first-party code.
-  visibility = [ "//third_party/rust/*" ]
+  rustflags = [
+    "--edition=2021",
+    "--cfg=feature=\"perf-literal\"",
+    "--cfg=feature=\"std\"",
+  ]
 }

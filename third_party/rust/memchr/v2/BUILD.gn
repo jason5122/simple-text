@@ -1,6 +1,4 @@
-import("//build/rust/rust_static_library.gni")
-
-rust_static_library("lib") {
+rust_library("lib") {
   crate_name = "memchr"
   crate_type = "rlib"
   crate_root =
@@ -54,6 +52,7 @@ rust_static_library("lib") {
   ]
 
   rustflags = [
+    "--edition=2021",
     "--cfg=feature=\"alloc\"",
     "--cfg=feature=\"std\"",
   ]

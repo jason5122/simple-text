@@ -6,12 +6,6 @@ template("rust_target") {
   if (defined(invoker.crate_name)) {
     _crate_name = invoker.crate_name
   }
-  _generate_crate_root =
-      defined(invoker.generate_crate_root) && invoker.generate_crate_root
-
-  # Only one of `crate_root` or `generate_crate_root` can be specified, or
-  # neither.
-  assert(!defined(invoker.crate_root) || !_generate_crate_root)
 
   if (defined(invoker.output_dir) && invoker.output_dir != "") {
     # This is where the build target (.exe, .rlib, etc) goes.
@@ -21,38 +15,7 @@ template("rust_target") {
   # This is where the OUT_DIR environment variable points to when running a
   # build script and when compiling the build target, for consuming generated
   # files.
-  _env_out_dir = "$target_gen_dir/$_target_name"
-
-  if (_generate_crate_root) {
-    generated_file("${_target_name}_crate_root") {
-      outputs = [ "${target_gen_dir}/${target_name}.rs" ]
-      contents = [
-        "// Generated crate root for ${_target_name}.",
-        "// @generated",
-        "",
-      ]
-      foreach(rs, invoker.sources) {
-        rs_path_from_root = rebase_path(rs, target_gen_dir)
-        contents += [ "#[path = \"${rs_path_from_root}\"]" ]
-
-        # Drop the file extension from the module name.
-        rs_modname = string_replace(rs, ".rs", "")
-
-        # Replace invalid "/" chars in the source file path.
-        rs_modname = string_replace(rs_modname, "/", "_")
-
-        # Since source files are specified relative to the BUILD.gn they may
-        # also have ".." path components.
-        rs_modname = string_replace(rs_modname, "..", "dotdot")
-        contents += [
-          "mod ${rs_modname};",
-          "",
-        ]
-      }
-    }
-    _generated_crate_root = get_target_outputs(":${_target_name}_crate_root")
-    _crate_root = _generated_crate_root[0]
-  } else if (defined(invoker.crate_root)) {
+  if (defined(invoker.crate_root)) {
     _crate_root = invoker.crate_root
   } else if (invoker.target_type == "executable") {
     _crate_root = "src/main.rs"
@@ -72,29 +35,30 @@ template("rust_target") {
   if (defined(invoker.rustflags)) {
     _rustflags += invoker.rustflags
   }
-  if (defined(invoker.features)) {
-    foreach(i, invoker.features) {
-      _rustflags += [ "--cfg=feature=\"${i}\"" ]
-    }
-  }
-  _edition = "2021"
-  if (defined(invoker.edition)) {
-    _edition = invoker.edition
-  }
+  # if (defined(invoker.features)) {
+  #   foreach(i, invoker.features) {
+  #     _rustflags += [ "--cfg=feature=\"${i}\"" ]
+  #   }
+  # }
+  # _edition = "2021"
+  # if (defined(invoker.edition)) {
+  #   _edition = invoker.edition
+  # }
 
   assert(!defined(configs))
-  _configs = [ "//build/rust:edition_${_edition}" ]
-  _test_configs = []
-  if (invoker.target_type == "executable") {
-    _configs += invoker.executable_configs
-  } else if (invoker.target_type == "rust_proc_macro") {
-    _configs += invoker.proc_macro_configs
-    _test_configs += [ "//build/rust:proc_macro_extern" ]
-  } else if (invoker.target_type == "shared_library") {
-    _configs += invoker.shared_library_configs
-  } else {
-    _configs += invoker.library_configs
-  }
+  _configs = []
+  # _configs = [ "//build/rust:edition_${_edition}" ]
+  # _test_configs = []
+  # if (invoker.target_type == "executable") {
+  #   _configs += invoker.executable_configs
+  # } else if (invoker.target_type == "rust_proc_macro") {
+  #   _configs += invoker.proc_macro_configs
+  #   _test_configs += [ "//build/rust:proc_macro_extern" ]
+  # } else if (invoker.target_type == "shared_library") {
+  #   _configs += invoker.shared_library_configs
+  # } else {
+  #   _configs += invoker.library_configs
+  # }
 
   if (invoker.target_type == "rust_proc_macro") {
     _main_target_suffix = "${target_name}__proc_macro"
@@ -117,14 +81,6 @@ template("rust_target") {
     }
   }
 
-  _is_data_dep = defined(invoker.is_data_dep) && invoker.is_data_dep
-
-  _rustenv = [ "OUT_DIR=" +
-               rebase_path(_env_out_dir, get_path_info(_crate_root, "dir")) ]
-  if (defined(invoker.rustenv)) {
-    _rustenv += invoker.rustenv
-  }
-
   # We require that all source files are listed, even though this is
   # not a requirement for rustc. The reason is to ensure that tools
   # such as `gn deps` give the correct answer, and thus we trigger
@@ -132,125 +88,61 @@ template("rust_target") {
   # TODO(crbug.com/1256930) - verify this is correct
   assert(defined(invoker.sources), "sources must be listed")
 
-  if (invoker.target_type == "rust_proc_macro" &&
-      !toolchain_for_rust_host_build_tools) {
-    # Redirect to the proc macro toolchain, which uses prebuilt stdlib libraries
-    # that are not built with panic=abort.
-    group(_target_name) {
-      testonly = _testonly
-      if (defined(_visibility)) {
-        visibility = _visibility
-      }
-      public_deps =
-          [ ":${_target_name}${_main_target_suffix}($rust_macro_toolchain)" ]
-    }
-
-    not_needed(invoker, "*")
-    not_needed([
-                 "_crate_root",
-                 "_crate_name",
-                 "_deps",
-                 "_aliased_deps",
-                 "_is_data_dep",
-                 "_rustc_metadata",
-                 "_out_dir",
-                 "_public_deps",
-                 "_rustenv",
-                 "_rustflags",
-                 "_support_use_from_cpp",
-                 "_testonly",
-                 "_visibility",
-               ])
-  } else {
-    _rustc_metadata = ""
-    if (defined(invoker.rustc_metadata)) {
-      _rustc_metadata = invoker.rustc_metadata
-    }
-
-    # Add a metadata-influenced suffix to the output name for libraries only.
-    _output_suffix = ""
-    if (invoker.target_type == "rust_library" && _rustc_metadata != "") {
-      _output_suffix = "-${_rustc_metadata}"
-    }
-
-    group(_target_name) {
-      testonly = _testonly
-      if (defined(_visibility)) {
-        visibility = _visibility
-      }
-
-      # Both the C++ bindings (if present) and the Rust crate should be treated
-      # like direct dependencies, so we expose them both in public_deps.
-      public_deps = [ ":${_target_name}${_main_target_suffix}" ]
-
-      # TODO(danakj): This would not be needed if we stopped forwarding through
-      # a group in the common (non-procmacro) case.
-      if (_is_data_dep) {
-        data_deps = [ ":${_target_name}${_main_target_suffix}" ]
-      }
-    }
-
-    _rust_deps = _deps
-    _rust_aliased_deps = _aliased_deps
-    _rust_public_deps = _public_deps
-
-    # You must go through the groups above to get to these targets.
-    _visibility = []
-    _visibility = [ ":${_target_name}" ]
-
-    not_needed([
-                 "_crate_root",
-                 "_crate_name",
-                 "_rustc_metadata",
-                 "_test_configs",
-               ])
-    not_needed(invoker, [ "executable_configs" ])
-
-    target(invoker.target_type, "${_target_name}${_main_target_suffix}") {
-      forward_variables_from(invoker,
-                             "*",
-                             TESTONLY_AND_VISIBILITY + [
-                                   "features",
-                                   "deps",
-                                   "aliased_deps",
-                                   "public_deps",
-                                   "rustflags",
-                                   "rustenv",
-                                   "configs",
-                                   "unit_test_output_dir",
-                                   "unit_test_target",
-                                   "test_inputs",
-                                 ])
-
-      testonly = _testonly
+  group(_target_name) {
+    testonly = _testonly
+    if (defined(_visibility)) {
       visibility = _visibility
-      crate_name = _crate_name
-      crate_root = _crate_root
-      configs = []
-      configs = _configs
-      deps = _rust_deps
-      aliased_deps = _rust_aliased_deps
-      public_deps = _rust_public_deps
-      rustflags = _rustflags
-      if (_rustc_metadata != "") {
-        rustflags += [ "-Cmetadata=${_rustc_metadata}" ]
-      }
-      rustenv = _rustenv
+    }
+  }
 
-      if (_generate_crate_root) {
-        deps += [ ":${_target_name}_crate_root" ]
-        sources += [ _crate_root ]
-      }
+  _rust_deps = _deps
+  _rust_aliased_deps = _aliased_deps
+  _rust_public_deps = _public_deps
 
-      # The Rust tool() declarations, like C++ ones, use the output_name and
-      # output_dir, so that GN targets can override these if needed. Here we
-      # give them their default values, or allow them to be overridden.
-      if (defined(_output_dir)) {
-        output_dir = _output_dir
-      }
-      if (!defined(output_name) || output_name == "") {
-        output_name = "${crate_name}${_output_suffix}"
-      }
+  # You must go through the groups above to get to these targets.
+  _visibility = []
+  _visibility = [ ":${_target_name}" ]
+
+  not_needed([
+               "_crate_root",
+               "_crate_name",
+               "_rustc_metadata",
+               "_test_configs",
+             ])
+  not_needed(invoker, [ "executable_configs" ])
+
+  target(invoker.target_type, "${_target_name}${_main_target_suffix}") {
+    forward_variables_from(invoker,
+                           "*",
+                           TESTONLY_AND_VISIBILITY + [
+                                 "features",
+                                 "deps",
+                                 "aliased_deps",
+                                 "public_deps",
+                                 "rustflags",
+                                 "rustenv",
+                                 "configs",
+                                 "unit_test_output_dir",
+                                 "unit_test_target",
+                                 "test_inputs",
+                               ])
+
+    testonly = _testonly
+    visibility = _visibility
+    crate_name = _crate_name
+    crate_root = _crate_root
+    configs = []
+    configs = _configs
+    deps = _rust_deps
+    aliased_deps = _rust_aliased_deps
+    public_deps = _rust_public_deps
+    rustflags = _rustflags
+
+    # The Rust tool() declarations, like C++ ones, use the output_name and
+    # output_dir, so that GN targets can override these if needed. Here we
+    # give them their default values, or allow them to be overridden.
+    if (defined(_output_dir)) {
+      output_dir = _output_dir
     }
   }
 }

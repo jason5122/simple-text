@@ -146,7 +146,7 @@ template("rust_static_library") {
                            "*",
                            TESTONLY_AND_VISIBILITY + [ "configs" ])
     forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-    library_configs = invoker.configs
+    # library_configs = invoker.configs
     target_type = "rust_library"
   }
 }

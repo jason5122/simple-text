@@ -9,5 +9,9 @@ rust_library("lib") {
     "//third_party/rust/chromium_crates_io/vendor/hex-0.4.3/src/serde.rs",
   ]
 
-  rustflags = [ "--cfg=feature=\"alloc\"" ]
+  rustflags = [
+    "--edition=2021",
+    "--cfg=feature=\"alloc\"",
+    "--cfg=feature=\"std\"",
+  ]
 }

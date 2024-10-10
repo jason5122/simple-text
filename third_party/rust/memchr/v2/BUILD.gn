@@ -1,9 +1,16 @@
+# Copyright 2023 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 # @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
 # tools/crates/gnrt.
 # Do not edit!
 
-rust_library("lib") {
+import("//build/rust/cargo_crate.gni")
+
+cargo_crate("lib") {
   crate_name = "memchr"
+  epoch = "2"
   crate_type = "rlib"
   crate_root =
       "//third_party/rust/chromium_crates_io/vendor/memchr-2.7.4/src/lib.rs"
@@ -56,10 +63,15 @@ rust_library("lib") {
   ]
   inputs = []
 
-  rustflags = [
-    "--edition=2021",
-    "--cfg=feature=\"alloc\"",
-    "--cfg=feature=\"std\"",
+  build_native_rust_unit_tests = false
+  edition = "2021"
+  cargo_pkg_version = "2.7.4"
+  cargo_pkg_authors = "Andrew Gallant <jamslam@gmail.com>, bluss"
+  cargo_pkg_name = "memchr"
+  cargo_pkg_description = "Provides extremely fast (uses SIMD on x86_64, aarch64 and wasm32) routines for 1, 2 or 3 byte search and single substring search."
+  features = [
+    "alloc",
+    "std",
   ]
 
   # Only for usage from third-party crates. Add the crate to

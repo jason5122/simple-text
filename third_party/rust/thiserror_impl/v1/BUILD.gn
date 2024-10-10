@@ -1,9 +1,16 @@
+# Copyright 2023 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 # @generated from third_party/rust/chromium_crates_io/BUILD.gn.hbs by
 # tools/crates/gnrt.
 # Do not edit!
 
-rust_library("lib") {
+import("//build/rust/cargo_crate.gni")
+
+cargo_crate("lib") {
   crate_name = "thiserror_impl"
+  epoch = "1"
   crate_type = "proc-macro"
   crate_root = "//third_party/rust/chromium_crates_io/vendor/thiserror-impl-1.0.64/src/lib.rs"
   sources = [
@@ -19,10 +26,15 @@ rust_library("lib") {
   ]
   inputs = []
 
+  build_native_rust_unit_tests = false
+  edition = "2021"
+  cargo_pkg_version = "1.0.64"
+  cargo_pkg_authors = "David Tolnay <dtolnay@gmail.com>"
+  cargo_pkg_name = "thiserror-impl"
+  cargo_pkg_description = "Implementation detail of the `thiserror` crate"
   deps = [
     "//third_party/rust/proc_macro2/v1:lib",
     "//third_party/rust/quote/v1:lib",
     "//third_party/rust/syn/v2:lib",
   ]
-  rustflags = [ "--edition=2021" ]
 }

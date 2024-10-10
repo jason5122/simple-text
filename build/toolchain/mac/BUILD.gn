@@ -140,6 +140,21 @@ toolchain("clang") {
     rust_sysroot = rust_sysroot_relative
   }
 
+  tool("rust_bin") {
+    exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    rspfile = "$exename.rsp"
+    depfile = "$exename.d"
+    pool = "//build/toolchain:link_pool($default_toolchain)"
+
+    default_output_dir = "{{root_out_dir}}"
+    description = "RUST(BIN) {{output}}"
+    outputs = [ exename ]
+
+    rspfile_content = "{{rustdeps}} {{externs}} SOURCES {{sources}}"
+    command = "\"$python_path\" \"$rustc_wrapper\" --rustc=$rustc --depfile=$depfile --rsp=$rspfile -- $rustc_common_args --emit=dep-info=$depfile,link -o $exename LDFLAGS {{ldflags}} RUSTENV {{rustenv}}"
+    rust_sysroot = rust_sysroot_relative
+  }
+
   tool("rust_macro") {
     dllname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
     rspfile = "$dllname.rsp"

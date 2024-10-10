@@ -8,6 +8,13 @@ if (target_cpu == "") {
   target_cpu = host_cpu
 }
 
+if (current_cpu == "") {
+  current_cpu = target_cpu
+}
+if (current_os == "") {
+  current_os = target_os
+}
+
 # =============================================================================
 # BUILD FLAGS
 # =============================================================================
@@ -50,6 +57,13 @@ if (is_release) {
   default_compiler_configs += [ "//build/config:release" ]
 }
 
+# Executable defaults.
+default_executable_configs = default_compiler_configs
+
+# Shared library and loadable module defaults (also for components in component
+# mode).
+default_shared_library_configs = default_compiler_configs
+
 set_defaults("executable") {
   configs = default_compiler_configs
 }
@@ -62,5 +76,24 @@ set_defaults("shared_library") {
 set_defaults("source_set") {
   configs = default_compiler_configs
 }
+
+default_rust_proc_macro_configs =
+    default_shared_library_configs + [ "//build/rust:proc_macro_extern" ]
+
+set_defaults("rust_proc_macro") {
+  configs = default_rust_proc_macro_configs
+}
+
+# A helper for forwarding testonly and visibility.
+# Forwarding "*" does not include variables from outer scopes (to avoid copying
+# all globals into each template invocation), so it will not pick up
+# file-scoped or outer-template-scoped variables. Normally this behavior is
+# desired, but "visibility" and "testonly" are commonly defined in outer scopes.
+# Explicitly forwarding them in forward_variables_from() works around this
+# nuance. See //build/docs/writing_gn_templates.md#using-forward_variables_from
+TESTONLY_AND_VISIBILITY = [
+  "testonly",
+  "visibility",
+]
 
 set_default_toolchain("//build/toolchain/$target_os:clang")

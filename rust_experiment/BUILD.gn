@@ -2,8 +2,5 @@ rust_library("rust_experiment") {
   crate_type = "staticlib"
   sources = [ "src/lib.rs" ]
 
-  deps = [
-    "//third_party/rust/proc_macro2/v1:lib",
-    "//third_party/rust/unicode_ident/v1:lib",
-  ]
+  deps = [ "//third_party/rust/proc_macro2/v1:lib" ]
 }

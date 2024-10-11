@@ -14,15 +14,8 @@ static_library("tree_sitter") {
   libs = [ "wasmtime" ]
   lib_dirs = [ "/opt/homebrew/lib/" ]
   include_dirs = [ "/opt/homebrew/include/" ]
-
-  deps = [ ":tree_sitter_json" ]
 }
 
 config("tree_sitter_includes") {
-  include_dirs = [ "include" ]
-}
-
-source_set("tree_sitter_json") {
-  sources = [ "tree_sitter_json/src/parser.c" ]
   include_dirs = [ "include" ]
 }

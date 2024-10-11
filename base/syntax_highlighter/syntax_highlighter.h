@@ -75,6 +75,8 @@ private:
     TSTree* tree = nullptr;
 
     std::vector<Rgb> capture_index_color_table;
+
+    const TSLanguage* wasmtime_experiment();
 };
 
 }

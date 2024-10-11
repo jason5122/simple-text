@@ -1,17 +1,14 @@
 #include "base/filesystem/file_reader.h"
 #include "syntax_highlighter.h"
+#include <wasm.h>
+#include <wasmtime.h>
 
 // TODO: Debug use; remove this.
-#include "base/syntax_highlighter/wasmtime_experiment.h"
 #include "util/std_print.h"
-
-extern "C" TSLanguage* tree_sitter_json();
 
 namespace base {
 
-SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()} {
-    wasmtime_experiment();
-}
+SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()} {}
 
 SyntaxHighlighter::~SyntaxHighlighter() {
     // This causes segfaults for some reason if SyntaxHighlighter is stored in a std::vector
@@ -24,7 +21,7 @@ SyntaxHighlighter::~SyntaxHighlighter() {
 }
 
 void SyntaxHighlighter::setJsonLanguage() {
-    TSLanguage* language = tree_sitter_json();
+    const TSLanguage* language = wasmtime_experiment();
     ts_parser_set_language(parser, language);
 
     uint32_t error_offset = 0;
@@ -104,6 +101,43 @@ std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_
 
 const SyntaxHighlighter::Rgb& SyntaxHighlighter::getColor(size_t capture_index) const {
     return capture_index_color_table[capture_index];
+}
+
+const TSLanguage* SyntaxHighlighter::wasmtime_experiment() {
+    wasm_engine_t* engine = wasm_engine_new();
+
+    TSWasmError ts_wasm_error;
+    TSWasmStore* wasm_store = ts_wasm_store_new(engine, &ts_wasm_error);
+
+    fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-json.wasm";
+    FILE* file = fopen(wasm_path.c_str(), "rb");
+    fseek(file, 0L, SEEK_END);
+    size_t file_size = ftell(file);
+    fseek(file, 0L, SEEK_SET);
+
+    wasm_byte_vec_t binary;
+    wasm_byte_vec_new_uninitialized(&binary, file_size);
+    if (fread(binary.data, file_size, 1, file) != 1) {
+        std::println("> Error reading module!");
+        return nullptr;
+    }
+    fclose(file);
+
+    const TSLanguage* json_lang =
+        ts_wasm_store_load_language(wasm_store, "json", binary.data, binary.size, &ts_wasm_error);
+    if (!json_lang) {
+        std::println("language is null!");
+    } else if (ts_language_is_wasm(json_lang)) {
+        std::println("success!");
+    }
+
+    // TODO: Delete this in the destructor.
+    // ts_wasm_store_delete(wasm_store);
+    // wasm_engine_delete(engine);
+
+    ts_parser_set_wasm_store(parser, wasm_store);
+
+    return json_lang;
 }
 
 }

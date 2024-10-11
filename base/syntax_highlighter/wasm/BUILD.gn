@@ -1,13 +1,13 @@
 if (is_mac) {
   bundle_data("wasm") {
-    sources = [ "hello.wat" ]
+    sources = [ "tree-sitter-json.wasm" ]
     outputs = [ "{{bundle_resources_dir}}/wasm/{{source_file_part}}" ]
   }
 }
 
 if (is_linux || is_win) {
   copy("wasm") {
-    sources = [ "hello.wat" ]
+    sources = [ "tree-sitter-json.wasm" ]
     outputs = [ "$root_out_dir/wasm/{{source_file_part}}" ]
   }
 }

@@ -1,8 +1,5 @@
 source_set("syntax_highlighter") {
-  sources = [
-    "syntax_highlighter.cc",
-    "wasmtime_experiment.cc",
-  ]
+  sources = [ "syntax_highlighter.cc" ]
 
   # TODO: Support all platforms.
   libs = [ "wasmtime" ]

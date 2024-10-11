@@ -42,11 +42,14 @@ void Renderer::flush(const Size& size) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     selection_renderer.flush(size);
+
+    // TODO: Add arbitrarily many layers (or a fixed but larger set of layers).
     rect_renderer.flush(size, RectRenderer::RectLayer::kBackground);
-    text_renderer.flush(size, TextRenderer::TextLayer::kForeground);
-    rect_renderer.flush(size, RectRenderer::RectLayer::kForeground);
-    image_renderer.flush(size);
     text_renderer.flush(size, TextRenderer::TextLayer::kBackground);
+    rect_renderer.flush(size, RectRenderer::RectLayer::kForeground);
+    text_renderer.flush(size, TextRenderer::TextLayer::kForeground);
+
+    image_renderer.flush(size);
 }
 
 }

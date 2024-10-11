@@ -189,7 +189,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
             // glLayer.asynchronous = true;
         }
         if (event.momentumPhase & NSEventPhaseEnded) {
-            glLayer.asynchronous = false;
+            // glLayer.asynchronous = false;
         }
 
         int dx = 0;

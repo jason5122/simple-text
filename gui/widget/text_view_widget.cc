@@ -395,7 +395,12 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 #endif
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
-    auto [selection_line, selection_col] = table.lineColumnAt(selection.end().index);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto [selection_line, _] = table.lineColumnAt(selection.end().index);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    long long line_col_conversion_duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    std::println("Total line/column conversion time: {}", line_col_conversion_duration);
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
@@ -459,11 +464,11 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         t1 = std::chrono::high_resolution_clock::now();
 #ifdef ENABLE_HIGHLIGHTING
-        text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kForeground,
+        text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kBackground,
                                        highlight_callback, min_x, max_x);
 #else
         text_renderer.renderLineLayout(
-            layout, coords, TextRenderer::TextLayer::kForeground,
+            layout, coords, TextRenderer::TextLayer::kBackground,
             [](size_t) { return kTextColor; }, min_x, max_x);
 #endif
         t2 = std::chrono::high_resolution_clock::now();
@@ -493,7 +498,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
         text_renderer.renderLineLayout(line_number_layout, line_number_coords,
-                                       TextRenderer::TextLayer::kForeground,
+                                       TextRenderer::TextLayer::kBackground,
                                        line_number_highlight_callback);
     }
 

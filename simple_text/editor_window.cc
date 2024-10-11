@@ -83,30 +83,32 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
 }
 
 void EditorWindow::onDraw(int width, int height) {
-    // PROFILE_BLOCK("Total render time");
+    PROFILE_BLOCK("Total render time");
 
     updateCursorStyle();
 
     auto mouse_pos = mousePosition();
+    std::optional<Point> point{};
     if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
-        main_widget->draw(Point{mouse_x, mouse_y});
-    } else {
-        main_widget->draw(std::nullopt);
+        point = Point{mouse_x, mouse_y};
     }
+
+    main_widget->layout();
+    main_widget->mousePositionChanged(point);
+    main_widget->draw(point);
+
     Renderer::instance().flush({width, height});
 }
 
 void EditorWindow::onResize(int width, int height) {
     main_widget->setWidth(width);
     main_widget->setHeight(height);
-    main_widget->layout();
     redraw();
 }
 
 void EditorWindow::onScroll(int mouse_x, int mouse_y, int dx, int dy) {
     main_widget->scroll({mouse_x, mouse_y}, {dx, dy});
-    main_widget->layout();
     redraw();
 }
 
@@ -153,20 +155,7 @@ void EditorWindow::onMouseMove() {
 }
 
 void EditorWindow::onMouseExit() {
-    updateCursorStyle();
-
-    bool should_redraw = false;
-    auto mouse_pos = mousePosition();
-    if (mouse_pos) {
-        auto [mouse_x, mouse_y] = mouse_pos.value();
-        should_redraw = main_widget->mousePositionChanged(Point{mouse_x, mouse_y});
-    } else {
-        should_redraw = main_widget->mousePositionChanged(std::nullopt);
-    }
-
-    if (should_redraw) {
-        redraw();
-    }
+    onMouseMove();
 }
 
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {

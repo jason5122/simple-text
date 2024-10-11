@@ -63,7 +63,7 @@ void LabelWidget::draw(const std::optional<Point>& mouse_pos) {
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
     const auto highlight_callback = [this](size_t) { return color; };
-    text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kBackground,
+    text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kForeground,
                                    highlight_callback, min_x, max_x);
 }
 

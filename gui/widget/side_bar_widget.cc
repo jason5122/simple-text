@@ -24,7 +24,7 @@ SideBarWidget::SideBarWidget(const Size& size)
 
 void SideBarWidget::draw(const std::optional<Point>& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kForeground);
+    rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kBackground);
 
     const auto& metrics = rasterizer().getMetrics(label_font_id);
     // renderOldLabel(metrics.line_height);
@@ -33,6 +33,13 @@ void SideBarWidget::draw(const std::optional<Point>& mouse_pos) {
 
     size_t visible_lines = std::ceil(static_cast<double>(size.height) / metrics.line_height);
     renderScrollBars(metrics.line_height, visible_lines);
+}
+
+void SideBarWidget::leftMouseDrag(const Point& mouse_pos,
+                                  app::ModifierKey modifiers,
+                                  app::ClickType click_type) {
+    // TODO: Fully flesh this out. Consider moving this to a *LayoutWidget class?
+    setWidth(mouse_pos.x);
 }
 
 bool SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
@@ -79,7 +86,7 @@ void SideBarWidget::renderOldLabel(int label_line_height) {
     // folder_label->draw({});  // TODO: Make mouse position optional.
     // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     // rect_renderer.addRect(folder_label->getPosition(), {size.width, label_line_height},
-    //                       {255, 255, 0, 255}, RectRenderer::RectType::kForeground);
+    //                       {255, 255, 0, 255}, RectRenderer::RectType::kBackground);
 }
 
 void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
@@ -106,7 +113,7 @@ void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
         // Highlight on mouse hover.
         if (line == hovered_index) {
             rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
-                                  RectRenderer::RectLayer::kForeground);
+                                  RectRenderer::RectLayer::kBackground);
         }
     }
 }
@@ -126,7 +133,7 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          RectRenderer::RectLayer::kForeground, 5);
+                          RectRenderer::RectLayer::kBackground, 5);
 }
 
 }

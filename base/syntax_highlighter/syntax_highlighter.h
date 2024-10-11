@@ -81,7 +81,7 @@ private:
 
     std::vector<Rgb> capture_index_color_table;
 
-    const TSLanguage* readJsonLanguageFromWasm();
+    void loadJsonLanguageFromWasm();
 };
 
 }

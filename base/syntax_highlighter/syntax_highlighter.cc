@@ -15,10 +15,6 @@ SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()}, engine{wasm_en
 }
 
 SyntaxHighlighter::~SyntaxHighlighter() {
-    // This causes segfaults for some reason if SyntaxHighlighter is stored in a std::vector
-    // without using std::unique_ptr.
-    // https://stackoverflow.com/a/36928283/14698275
-    // https://stackoverflow.com/a/21646965/14698275
     if (parser) {
         ts_parser_take_wasm_store(parser);
         ts_parser_delete(parser);
@@ -32,7 +28,7 @@ SyntaxHighlighter::~SyntaxHighlighter() {
 }
 
 void SyntaxHighlighter::setJsonLanguage() {
-    json_language = readJsonLanguageFromWasm();
+    loadJsonLanguageFromWasm();
     ts_parser_set_language(parser, json_language);
 
     uint32_t error_offset = 0;
@@ -114,7 +110,7 @@ const SyntaxHighlighter::Rgb& SyntaxHighlighter::getColor(size_t capture_index) 
     return capture_index_color_table[capture_index];
 }
 
-const TSLanguage* SyntaxHighlighter::readJsonLanguageFromWasm() {
+void SyntaxHighlighter::loadJsonLanguageFromWasm() {
     fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-json.wasm";
     FILE* file = fopen(wasm_path.c_str(), "rb");
     fseek(file, 0L, SEEK_END);
@@ -125,20 +121,21 @@ const TSLanguage* SyntaxHighlighter::readJsonLanguageFromWasm() {
     wasm_byte_vec_new_uninitialized(&binary, file_size);
     if (fread(binary.data, file_size, 1, file) != 1) {
         std::println("> Error reading module!");
-        return nullptr;
+        return;
     }
-    fclose(file);
 
     TSWasmError ts_wasm_error;
-    const TSLanguage* json_lang =
+    json_language =
         ts_wasm_store_load_language(wasm_store, "json", binary.data, binary.size, &ts_wasm_error);
-    if (!json_lang) {
-        std::println("language is null!");
-    } else if (ts_language_is_wasm(json_lang)) {
-        std::println("success!");
-    }
 
-    return json_lang;
+    if (!json_language) {
+        std::println("language is null!");
+        std::abort();
+    }
+    assert(ts_language_is_wasm(json_language));
+
+    wasm_byte_vec_delete(&binary);
+    fclose(file);
 }
 
 }

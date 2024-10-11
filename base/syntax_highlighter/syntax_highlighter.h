@@ -1,17 +1,11 @@
 #pragma once
 
 #include "base/buffer/piece_table.h"
+#include <format>
 #include <string>
 #include <tree_sitter/api.h>
 #include <vector>
 
-// Debug use; remove this.
-#include <format>
-#include <iostream>
-
-inline constexpr std::ostream& operator<<(std::ostream& out, const TSPoint& p) {
-    return out << std::format("TSPoint{{{}, {}}}", p.row, p.column);
-}
 inline constexpr bool operator==(const TSPoint& p1, const TSPoint& p2) {
     return p1.row == p2.row && p1.column == p2.column;
 }
@@ -49,10 +43,6 @@ public:
     };
     struct Rgb {
         uint8_t r, g, b;
-
-        friend std::ostream& operator<<(std::ostream& out, const Rgb& rgb) {
-            return out << std::format("Rgb{{{}, {}, {}}}", rgb.r, rgb.g, rgb.b);
-        }
     };
     std::vector<Highlight> getHighlights(size_t start_line, size_t end_line) const;
     const Rgb& getColor(size_t capture_index) const;
@@ -88,3 +78,25 @@ private:
 };
 
 }
+
+template <>
+struct std::formatter<TSPoint> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const auto& p, auto& ctx) const {
+        return std::format_to(ctx.out(), "TSPoint({}, {})", p.row, p.column);
+    }
+};
+
+template <>
+struct std::formatter<base::SyntaxHighlighter::Rgb> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const auto& rgb, auto& ctx) const {
+        return std::format_to(ctx.out(), "Rgb({}, {}, {})", rgb.r, rgb.g, rgb.b);
+    }
+};

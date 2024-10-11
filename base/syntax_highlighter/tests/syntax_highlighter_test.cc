@@ -30,8 +30,8 @@ TEST(SyntaxHighlighterTest, Basic) {
         auto rgb = highlighter.getColor(capture_index);
 
         // TODO: Replace this with std::format support.
-        std::cerr << start_byte << ' ' << end_byte << ' ' << capture_index << '\n';
-        std::cerr << rgb << '\n';
+        std::println("{} {} {}", start_byte, end_byte, capture_index);
+        std::println("{}", rgb);
     }
 }
 

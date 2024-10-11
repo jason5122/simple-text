@@ -2,8 +2,8 @@
 #include "syntax_highlighter.h"
 
 // TODO: Debug use; remove this.
+#include "base/syntax_highlighter/wasmtime_experiment.h"
 #include "util/std_print.h"
-#include "wasmtime_experiment/wasmtime_experiment.h"
 
 extern "C" TSLanguage* tree_sitter_json();
 

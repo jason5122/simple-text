@@ -1,9 +1,17 @@
 source_set("syntax_highlighter") {
-  sources = [ "syntax_highlighter.cc" ]
+  sources = [
+    "syntax_highlighter.cc",
+    "wasmtime_experiment.cc",
+  ]
+
+  # TODO: Support all platforms.
+  libs = [ "wasmtime" ]
+  lib_dirs = [ "/opt/homebrew/lib/" ]
+  include_dirs = [ "/opt/homebrew/include/" ]
 
   deps = [
     "queries",
-    "//wasmtime_experiment",
+    "wasm",
   ]
   public_deps = [ "//third_party/tree_sitter" ]
 }

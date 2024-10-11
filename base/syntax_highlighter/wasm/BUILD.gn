@@ -1,0 +1,13 @@
+if (is_mac) {
+  bundle_data("wasm") {
+    sources = [ "hello.wat" ]
+    outputs = [ "{{bundle_resources_dir}}/wasm/{{source_file_part}}" ]
+  }
+}
+
+if (is_linux || is_win) {
+  copy("wasm") {
+    sources = [ "hello.wat" ]
+    outputs = [ "$root_out_dir/wasm/{{source_file_part}}" ]
+  }
+}

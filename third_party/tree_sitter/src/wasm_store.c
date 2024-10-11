@@ -21,7 +21,8 @@
 // The following symbols from the C and C++ standard libraries are available
 // for external scanners to use.
 const char *STDLIB_SYMBOLS[] = {
-  #include "./stdlib-symbols.txt"
+  // #include "./stdlib-symbols.txt"
+  #include "./wasm/stdlib-symbols.txt"
 };
 
 // The contents of the `dylink.0` custom section of a wasm module,

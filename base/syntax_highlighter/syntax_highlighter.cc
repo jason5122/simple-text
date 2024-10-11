@@ -3,12 +3,15 @@
 
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
+#include "wasmtime_experiment/wasmtime_experiment.h"
 
 extern "C" TSLanguage* tree_sitter_json();
 
 namespace base {
 
-SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()} {}
+SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()} {
+    wasmtime_experiment();
+}
 
 SyntaxHighlighter::~SyntaxHighlighter() {
     // This causes segfaults for some reason if SyntaxHighlighter is stored in a std::vector

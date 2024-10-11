@@ -1,6 +1,16 @@
 #include "build/build_config.h"
+#include "simple_text/editor_app.h"
 
-int SimpleTextMain(int argc, char* argv[]);
+namespace {
+
+int SimpleTextMain(int argc, char* argv[]) {
+    // TODO: Return proper status codes.
+    EditorApp editor_app;
+    editor_app.run();
+    return 0;
+}
+
+}
 
 #if BUILDFLAG(IS_WIN)
 #include <ole2.h>

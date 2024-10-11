@@ -80,6 +80,9 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     horizontal_layout->setMainWidget(vertical_layout);
     main_widget->setMainWidget(horizontal_layout);
     main_widget->addChildEnd(status_bar);
+
+    // editor_widget->openFile("/Users/jason/cs/side-projects/simple-text/temp/100mb.txt");
+    // editor_widget->lastIndex();
 }
 
 void EditorWindow::onDraw(int width, int height) {

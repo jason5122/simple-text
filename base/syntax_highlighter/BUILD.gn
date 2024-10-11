@@ -1,6 +1,9 @@
 source_set("syntax_highlighter") {
   sources = [ "syntax_highlighter.cc" ]
 
-  deps = [ "queries" ]
+  deps = [
+    "queries",
+    "//wasmtime_experiment",
+  ]
   public_deps = [ "//third_party/tree_sitter" ]
 }

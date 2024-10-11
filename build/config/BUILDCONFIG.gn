@@ -77,23 +77,4 @@ set_defaults("source_set") {
   configs = default_compiler_configs
 }
 
-default_rust_proc_macro_configs =
-    default_shared_library_configs + [ "//build/rust:proc_macro_extern" ]
-
-set_defaults("rust_proc_macro") {
-  configs = default_rust_proc_macro_configs
-}
-
-# A helper for forwarding testonly and visibility.
-# Forwarding "*" does not include variables from outer scopes (to avoid copying
-# all globals into each template invocation), so it will not pick up
-# file-scoped or outer-template-scoped variables. Normally this behavior is
-# desired, but "visibility" and "testonly" are commonly defined in outer scopes.
-# Explicitly forwarding them in forward_variables_from() works around this
-# nuance. See //build/docs/writing_gn_templates.md#using-forward_variables_from
-TESTONLY_AND_VISIBILITY = [
-  "testonly",
-  "visibility",
-]
-
 set_default_toolchain("//build/toolchain/$target_os:clang")

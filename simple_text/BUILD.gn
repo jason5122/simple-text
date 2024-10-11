@@ -5,7 +5,6 @@ common_sources = [
   "editor_app.cc",
   "editor_window.cc",
   "main.cc",
-  "main_app.cc",
 ]
 
 common_deps = [
@@ -13,10 +12,6 @@ common_deps = [
   "//base/filesystem",
   "//gui",
   "//opengl",
-
-  # TODO: Formalize this.
-  "//rust_experiment",
-  "//wasmtime_experiment",
 
   # TODO: Find a way to include Tree-sitter headers without listing the dependency here.
   "//third_party/tree_sitter",

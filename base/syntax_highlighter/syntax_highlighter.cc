@@ -8,27 +8,38 @@
 
 namespace base {
 
-SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()} {}
+SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()}, engine{wasm_engine_new()} {
+    TSWasmError ts_wasm_error;
+    wasm_store = ts_wasm_store_new(engine, &ts_wasm_error);
+    ts_parser_set_wasm_store(parser, wasm_store);
+}
 
 SyntaxHighlighter::~SyntaxHighlighter() {
     // This causes segfaults for some reason if SyntaxHighlighter is stored in a std::vector
     // without using std::unique_ptr.
     // https://stackoverflow.com/a/36928283/14698275
     // https://stackoverflow.com/a/21646965/14698275
-    if (parser) ts_parser_delete(parser);
+    if (parser) {
+        ts_parser_take_wasm_store(parser);
+        ts_parser_delete(parser);
+    }
     if (query) ts_query_delete(query);
     if (tree) ts_tree_delete(tree);
+
+    if (json_language) ts_language_delete(json_language);
+    if (engine) wasm_engine_delete(engine);
+    if (wasm_store) ts_wasm_store_delete(wasm_store);
 }
 
 void SyntaxHighlighter::setJsonLanguage() {
-    const TSLanguage* language = wasmtime_experiment();
-    ts_parser_set_language(parser, language);
+    json_language = readJsonLanguageFromWasm();
+    ts_parser_set_language(parser, json_language);
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
     auto query_path = ResourceDir() / "queries/highlights_json.scm";
     std::string src = base::ReadFile(query_path.c_str());
-    query = ts_query_new(language, src.data(), src.length(), &error_offset, &error_type);
+    query = ts_query_new(json_language, src.data(), src.length(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
         std::println("Error creating new TSQuery. error_offset: {}, error type:{} ", error_offset,
@@ -103,12 +114,7 @@ const SyntaxHighlighter::Rgb& SyntaxHighlighter::getColor(size_t capture_index) 
     return capture_index_color_table[capture_index];
 }
 
-const TSLanguage* SyntaxHighlighter::wasmtime_experiment() {
-    wasm_engine_t* engine = wasm_engine_new();
-
-    TSWasmError ts_wasm_error;
-    TSWasmStore* wasm_store = ts_wasm_store_new(engine, &ts_wasm_error);
-
+const TSLanguage* SyntaxHighlighter::readJsonLanguageFromWasm() {
     fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-json.wasm";
     FILE* file = fopen(wasm_path.c_str(), "rb");
     fseek(file, 0L, SEEK_END);
@@ -123,6 +129,7 @@ const TSLanguage* SyntaxHighlighter::wasmtime_experiment() {
     }
     fclose(file);
 
+    TSWasmError ts_wasm_error;
     const TSLanguage* json_lang =
         ts_wasm_store_load_language(wasm_store, "json", binary.data, binary.size, &ts_wasm_error);
     if (!json_lang) {
@@ -130,12 +137,6 @@ const TSLanguage* SyntaxHighlighter::wasmtime_experiment() {
     } else if (ts_language_is_wasm(json_lang)) {
         std::println("success!");
     }
-
-    // TODO: Delete this in the destructor.
-    // ts_wasm_store_delete(wasm_store);
-    // wasm_engine_delete(engine);
-
-    ts_parser_set_wasm_store(parser, wasm_store);
 
     return json_lang;
 }

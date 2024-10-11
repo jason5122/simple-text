@@ -74,9 +74,14 @@ private:
     TSQuery* query = nullptr;
     TSTree* tree = nullptr;
 
+    // TODO: Support multiple languages.
+    const TSLanguage* json_language = nullptr;
+    wasm_engine_t* engine = nullptr;
+    TSWasmStore* wasm_store = nullptr;
+
     std::vector<Rgb> capture_index_color_table;
 
-    const TSLanguage* wasmtime_experiment();
+    const TSLanguage* readJsonLanguageFromWasm();
 };
 
 }

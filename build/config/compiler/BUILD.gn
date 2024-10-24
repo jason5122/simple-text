@@ -22,6 +22,9 @@ config("compiler") {
   } else {
     cflags_c += [ "-std=c17" ]
     cflags_cc += [ "-std=c++20" ]
+
+    # TODO: Figure out why we need this.
+    cflags_cc += [ "-fexperimental-library" ]
   }
 
   # Pass the same C/C++ flags to the Objective-C/C++ compiler.

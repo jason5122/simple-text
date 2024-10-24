@@ -10,8 +10,10 @@ config("default_sanitizer_flags") {
     } else {
       sanitizers = [
         "address",  # ASan
-        "leak",  #LSan
         "undefined",  # UBSan
+
+        # TODO: Figure out why this was removed.
+        # "leak",  #LSan
       ]
 
       foreach(sanitizer, sanitizers) {

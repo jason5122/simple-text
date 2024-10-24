@@ -39,7 +39,7 @@ void SideBarWidget::leftMouseDrag(const Point& mouse_pos,
                                   app::ModifierKey modifiers,
                                   app::ClickType click_type) {
     // TODO: Fully flesh this out. Consider moving this to a *LayoutWidget class?
-    setWidth(mouse_pos.x);
+    setWidth(std::max(mouse_pos.x, 50 * 2));
 }
 
 bool SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {

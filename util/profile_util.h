@@ -27,8 +27,8 @@ private:
     std::chrono::high_resolution_clock::time_point t1;
 };
 
-#define PROFILE_BLOCK(name) Profiler _pfinstance(name)
-#define PROFILE_BLOCK_WITH_DURATION(name, duration) Profiler<duration> _pfinstance(name)
+#define PROFILE_BLOCK(name) const Profiler _pfinstance(name)
+#define PROFILE_BLOCK_WITH_DURATION(name, duration) const Profiler<duration> _pfinstance(name)
 
 // template <typename Duration = std::chrono::microseconds>
 // inline Profiler<Duration> ProfileBlock(std::string name) {

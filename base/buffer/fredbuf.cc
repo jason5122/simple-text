@@ -435,9 +435,11 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     // 3. We are inserting in the middle of the node.
     auto [node, remainder, node_start_offset, line] = result;
     assert(node != nullptr);
-    auto insert_pos = buffer_position(node->piece, remainder);
+
     // Case #1.
     if (node_start_offset == offset) {
+        std::println("============================Case 1: Insertion at beginning of "
+                     "node============================");
         // There's a bonus case here.  If our last insertion point was the same as this piece's
         // last and it inserted into the mod buffer, then we can simply 'extend' this piece by
         // the following process:
@@ -460,10 +462,11 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
         return;
     }
 
-    const bool inside_node = offset < node_start_offset + node->piece.length;
-
     // Case #2.
+    const bool inside_node = offset < node_start_offset + node->piece.length;
     if (!inside_node) {
+        std::println("============================Case 2: Insertion at end of "
+                     "node============================");
         // There's a bonus case here.  If our last insertion point was the same as this piece's
         // last and it inserted into the mod buffer, then we can simply 'extend' this piece by
         // the following process:
@@ -486,17 +489,18 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     // The basic approach here is to split the existing node into two pieces
     // and insert the new piece in between them.
     std::println("============================Case 3: Insertion at middle of "
-                 "piece============================");
+                 "node============================");
+    auto insert_pos = buffer_position(node->piece, remainder);
     auto new_len_right = buffers.buffer_offset(node->piece.buffer_type, node->piece.last) -
                          buffers.buffer_offset(node->piece.buffer_type, insert_pos);
     auto new_piece_right = node->piece;
     new_piece_right.first = insert_pos;
     new_piece_right.length = new_len_right;
     new_piece_right.newline_count =
-        line_feed_count(&buffers, node->piece.buffer_type, insert_pos, node->piece.last);
+        line_feed_count(node->piece.buffer_type, insert_pos, node->piece.last);
 
     // Remove the original node tail.
-    auto new_piece_left = trim_piece_right(&buffers, node->piece, insert_pos);
+    auto new_piece_left = trim_piece_right(node->piece, insert_pos);
 
     auto new_piece = build_piece(txt);
 
@@ -543,7 +547,7 @@ void Tree::internal_remove(size_t offset, size_t count) {
                 return;
             }
             // Shrink the node.
-            auto new_piece = trim_piece_left(&buffers, first_node->piece, end_split_pos);
+            auto new_piece = trim_piece_left(first_node->piece, end_split_pos);
             // Remove the old one and update.
             root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
             return;
@@ -551,15 +555,14 @@ void Tree::internal_remove(size_t offset, size_t count) {
 
         // Trim the tail of this piece.
         if (first.start_offset + first_node->piece.length == offset + count) {
-            auto new_piece = trim_piece_right(&buffers, first_node->piece, start_split_pos);
+            auto new_piece = trim_piece_right(first_node->piece, start_split_pos);
             // Remove the old one and update.
             root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
             return;
         }
 
         // The removed buffer is somewhere in the middle.  Trim it in both directions.
-        auto [left, right] =
-            shrink_piece(&buffers, first_node->piece, start_split_pos, end_split_pos);
+        auto [left, right] = shrink_piece(first_node->piece, start_split_pos, end_split_pos);
 
         // TODO: How is this working??
         {
@@ -585,7 +588,7 @@ void Tree::internal_remove(size_t offset, size_t count) {
     // 3. Part of the first node is deleted and part of the last node.
     // 4. The entire first node is deleted and part of the last node.
 
-    auto new_first = trim_piece_right(&buffers, first_node->piece, start_split_pos);
+    auto new_first = trim_piece_right(first_node->piece, start_split_pos);
     if (last_node == nullptr) {
         remove_node_range(first, count);
     } else {
@@ -596,7 +599,7 @@ void Tree::internal_remove(size_t offset, size_t count) {
         }
 
         auto end_split_pos = buffer_position(last_node->piece, last.remainder);
-        auto new_last = trim_piece_left(&buffers, last_node->piece, end_split_pos);
+        auto new_last = trim_piece_left(last_node->piece, end_split_pos);
         remove_node_range(first, count);
         // There's an edge case here where we delete all the nodes up to 'last' but
         // last itself remains untouched.  The test of 'remainder' in 'last' can identify
@@ -771,14 +774,13 @@ std::string Tree::get_line_content(size_t line) const {
     return buf;
 }
 
-size_t Tree::line_feed_count(const BufferCollection* buffers,
-                             BufferType buffer_type,
+size_t Tree::line_feed_count(BufferType buffer_type,
                              const BufferCursor& start,
-                             const BufferCursor& end) {
+                             const BufferCursor& end) const {
     // If the end position is the beginning of a new line, then we can just return the difference
     // in lines.
     if (end.column == 0) return end.line - start.line;
-    auto& starts = buffers->buffer_at(buffer_type)->line_starts;
+    auto& starts = buffers.buffer_at(buffer_type)->line_starts;
     // It means, there is no LF after end.
     if (end.line == starts.size() - 1) return end.line - start.line;
     // Due to the check above, we know that there's at least one more line after 'end.line'.
@@ -823,7 +825,7 @@ Piece Tree::build_piece(std::string_view txt) {
         .first = start,
         .last = end_pos,
         .length = end_offset - start_offset,
-        .newline_count = line_feed_count(&buffers, BufferType::Mod, start, end_pos),
+        .newline_count = line_feed_count(BufferType::Mod, start, end_pos),
     };
     // Update the last insertion.
     last_insert = end_pos;
@@ -847,10 +849,12 @@ NodePosition Tree::node_at(size_t off) const {
             // Note: since buffer_position will return us a newline relative to the buffer itself,
             // we need to retract it by the starting line of the piece to get the real difference.
             newline_count += pos.line - node.root().piece.first.line;
-            return {.node = &node.root(),
-                    .remainder = remainder,
-                    .start_offset = node_start_offset,
-                    .line = newline_count};
+            return {
+                .node = &node.root(),
+                .remainder = remainder,
+                .start_offset = node_start_offset,
+                .line = newline_count,
+            };
         } else {
             // If there are no more nodes to traverse to, return this final node.
             if (node.right().empty()) {
@@ -860,10 +864,12 @@ NodePosition Tree::node_at(size_t off) const {
                     node.root().left_subtree_lf_count + node.root().piece.newline_count;
                 // Now we find the line within this piece.
                 auto remainder = node.root().piece.length;
-                return {.node = &node.root(),
-                        .remainder = remainder,
-                        .start_offset = node_start_offset,
-                        .line = newline_count};
+                return {
+                    .node = &node.root(),
+                    .remainder = remainder,
+                    .start_offset = node_start_offset,
+                    .line = newline_count,
+                };
             }
             auto offset_amount = node.root().left_subtree_length + node.root().piece.length;
             off -= offset_amount;
@@ -907,13 +913,11 @@ BufferCursor Tree::buffer_position(const Piece& piece, size_t remainder) const {
     return {.line = mid, .column = offset - mid_start};
 }
 
-Piece Tree::trim_piece_right(const BufferCollection* buffers,
-                             const Piece& piece,
-                             const BufferCursor& pos) {
-    auto orig_end_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
+Piece Tree::trim_piece_right(const Piece& piece, const BufferCursor& pos) const {
+    auto orig_end_offset = buffers.buffer_offset(piece.buffer_type, piece.last);
 
-    auto new_end_offset = buffers->buffer_offset(piece.buffer_type, pos);
-    auto new_lf_count = line_feed_count(buffers, piece.buffer_type, piece.first, pos);
+    auto new_end_offset = buffers.buffer_offset(piece.buffer_type, pos);
+    auto new_lf_count = line_feed_count(piece.buffer_type, piece.first, pos);
 
     auto len_delta = orig_end_offset - new_end_offset;
     auto new_len = piece.length - len_delta;
@@ -926,13 +930,11 @@ Piece Tree::trim_piece_right(const BufferCollection* buffers,
     return new_piece;
 }
 
-Piece Tree::trim_piece_left(const BufferCollection* buffers,
-                            const Piece& piece,
-                            const BufferCursor& pos) {
-    auto orig_start_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
+Piece Tree::trim_piece_left(const Piece& piece, const BufferCursor& pos) const {
+    auto orig_start_offset = buffers.buffer_offset(piece.buffer_type, piece.first);
 
-    auto new_start_offset = buffers->buffer_offset(piece.buffer_type, pos);
-    auto new_lf_count = line_feed_count(buffers, piece.buffer_type, pos, piece.last);
+    auto new_start_offset = buffers.buffer_offset(piece.buffer_type, pos);
+    auto new_lf_count = line_feed_count(piece.buffer_type, pos, piece.last);
 
     auto len_delta = new_start_offset - orig_start_offset;
     auto new_len = piece.length - len_delta;
@@ -945,12 +947,11 @@ Piece Tree::trim_piece_left(const BufferCollection* buffers,
     return new_piece;
 }
 
-Tree::ShrinkResult Tree::shrink_piece(const BufferCollection* buffers,
-                                      const Piece& piece,
+Tree::ShrinkResult Tree::shrink_piece(const Piece& piece,
                                       const BufferCursor& first,
-                                      const BufferCursor& last) {
-    auto left = trim_piece_right(buffers, piece, first);
-    auto right = trim_piece_left(buffers, piece, last);
+                                      const BufferCursor& last) const {
+    auto left = trim_piece_right(piece, first);
+    auto right = trim_piece_left(piece, last);
 
     return {.left = left, .right = right};
 }

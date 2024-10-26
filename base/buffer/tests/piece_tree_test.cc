@@ -57,7 +57,13 @@ TEST(PieceTreeTest, FromScratch2) {
     std::println("tree.str() = \"{}\"", tree.str());
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
+
+    str.insert(str.length(), ".");
+    tree.insert(tree.length(), ".");
+    print_tree(tree.root, &tree);
     std::println("tree.str() = \"{}\"", tree.str());
+    EXPECT_EQ(str, tree.str());
+    EXPECT_EQ(str.length(), tree.length());
 }
 
 TEST(PieceTreeTest, Init) {
@@ -297,6 +303,18 @@ TEST(PieceTreeTest, InsertAtRandom) {
 
         str.insert(index, random_str);
         tree.insert(index, random_str);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        // Insert at beginning of piece.
+        str.insert(0, random_str);
+        tree.insert(0, random_str);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        // Insert at end of piece.
+        str.insert(str.length(), random_str);
+        tree.insert(tree.length(), random_str);
         EXPECT_EQ(str, tree.str());
         EXPECT_EQ(str.length(), tree.length());
     }

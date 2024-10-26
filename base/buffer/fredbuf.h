@@ -106,28 +106,22 @@ private:
     static size_t accumulate_value_no_lf(const BufferCollection* buffers,
                                          const Piece& piece,
                                          size_t index);
-    static size_t line_feed_count(const BufferCollection* buffers,
-                                  BufferType buffer_type,
-                                  const BufferCursor& start,
-                                  const BufferCursor& end);
+    size_t line_feed_count(BufferType buffer_type,
+                           const BufferCursor& start,
+                           const BufferCursor& end) const;
     NodePosition node_at(size_t off) const;
     BufferCursor buffer_position(const Piece& piece, size_t remainder) const;
-    static Piece trim_piece_right(const BufferCollection* buffers,
-                                  const Piece& piece,
-                                  const BufferCursor& pos);
-    static Piece trim_piece_left(const BufferCollection* buffers,
-                                 const Piece& piece,
-                                 const BufferCursor& pos);
+    Piece trim_piece_right(const Piece& piece, const BufferCursor& pos) const;
+    Piece trim_piece_left(const Piece& piece, const BufferCursor& pos) const;
 
     struct ShrinkResult {
         Piece left;
         Piece right;
     };
 
-    static ShrinkResult shrink_piece(const BufferCollection* buffers,
-                                     const Piece& piece,
-                                     const BufferCursor& first,
-                                     const BufferCursor& last);
+    ShrinkResult shrink_piece(const Piece& piece,
+                              const BufferCursor& first,
+                              const BufferCursor& last) const;
 
     // Direct mutations.
     void assemble_line(std::string* buf, const RedBlackTree& node, size_t line) const;

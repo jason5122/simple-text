@@ -65,7 +65,6 @@ struct UndoRedoResult {
 class Tree {
 public:
     explicit Tree();
-    explicit Tree(Buffers&& buffers);
     explicit Tree(std::string_view txt);
 
     // Manipulation.
@@ -149,7 +148,6 @@ private:
 public:  // TODO: Remove this public block.
     BufferCollection buffers;
     PieceTree::RedBlackTree root;
-    LineStarts scratch_starts;
     BufferCursor last_insert;
     // Note: This is absolute position.  Initialize to nonsense value.
     size_t end_last_insert = kSentinel;

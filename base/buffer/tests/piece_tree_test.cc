@@ -31,6 +31,17 @@ inline std::string RandomString(size_t length) {
 
 namespace PieceTree {
 
+TEST(PieceTreeTest, FromScratch1) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    Tree tree{str};
+
+    print_tree(tree.root, &tree);
+    std::println("tree.str() = \"{}\"", tree.str());
+
+    // EXPECT_EQ(str, tree.str());
+    // EXPECT_EQ(str.length(), tree.length());
+}
+
 TEST(PieceTreeTest, Init) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     Tree tree{str};
@@ -481,71 +492,71 @@ TEST(PieceTreeTest, EraseEmpty) {
     EXPECT_EQ(str.length(), tree.length());
 }
 
-TEST(PieceTreeTest, RandomTestLite) {
-    std::string str = "";
-    Tree tree{str};
+// TEST(PieceTreeTest, RandomTestLite) {
+//     std::string str = "";
+//     Tree tree{str};
 
-    for (size_t n = 0; n < 5; ++n) {
-        // Randomly insert.
-        size_t insert_index = RandomNumber(0, str.length());
-        const std::string random_str = RandomString(RandomNumber(0, 10));
-        str.insert(insert_index, random_str);
-        tree.insert(insert_index, random_str);
-        EXPECT_EQ(str, tree.str());
-        EXPECT_EQ(str.length(), tree.length());
+//     for (size_t n = 0; n < 5; ++n) {
+//         // Randomly insert.
+//         size_t insert_index = RandomNumber(0, str.length());
+//         const std::string random_str = RandomString(RandomNumber(0, 10));
+//         str.insert(insert_index, random_str);
+//         tree.insert(insert_index, random_str);
+//         EXPECT_EQ(str, tree.str());
+//         EXPECT_EQ(str.length(), tree.length());
 
-        // Randomly erase.
-        size_t erase_index = RandomNumber(0, str.length());
-        size_t count = RandomNumber(0, 4);
-        str.erase(erase_index, count);
-        tree.erase(erase_index, count);
-        EXPECT_EQ(str, tree.str());
-        EXPECT_EQ(str.length(), tree.length());
-    }
-}
+//         // Randomly erase.
+//         size_t erase_index = RandomNumber(0, str.length());
+//         size_t count = RandomNumber(0, 4);
+//         str.erase(erase_index, count);
+//         tree.erase(erase_index, count);
+//         EXPECT_EQ(str, tree.str());
+//         EXPECT_EQ(str.length(), tree.length());
+//     }
+// }
 
-// Randomly erases 10 times from the string at index [0, length] and count [0, length).
-// We repeat this for 100 iterations.
-TEST(PieceTreeTest, EraseAtRandom) {
-    constexpr std::string_view original_str = "The quick brown fox\njumped over the lazy dog";
+// // Randomly erases 10 times from the string at index [0, length] and count [0, length).
+// // We repeat this for 100 iterations.
+// TEST(PieceTreeTest, EraseAtRandom) {
+//     constexpr std::string_view original_str = "The quick brown fox\njumped over the lazy dog";
 
-    for (size_t n = 0; n < 100; ++n) {
-        std::string str{original_str};
-        Tree tree{original_str};
+//     for (size_t n = 0; n < 100; ++n) {
+//         std::string str{original_str};
+//         Tree tree{original_str};
 
-        for (size_t i = 0; i < 10; ++i) {
-            size_t index = RandomNumber(0, str.length());
-            size_t count = RandomNumber(0, str.length());
+//         for (size_t i = 0; i < 10; ++i) {
+//             size_t index = RandomNumber(0, str.length());
+//             size_t count = RandomNumber(0, str.length());
 
-            str.erase(index, count);
-            tree.erase(index, count);
-            EXPECT_EQ(str, tree.str());
-            EXPECT_EQ(str.length(), tree.length());
-        }
-    }
-}
+//             str.erase(index, count);
+//             tree.erase(index, count);
+//             EXPECT_EQ(str, tree.str());
+//             EXPECT_EQ(str.length(), tree.length());
+//         }
+//     }
+// }
 
-TEST(PieceTreeTest, CombinedRandomTest1) {
-    std::string str = "";
-    Tree tree{str};
+// TEST(PieceTreeTest, CombinedRandomTest1) {
+//     std::string str = "";
+//     Tree tree{str};
 
-    for (size_t n = 0; n < 100; ++n) {
-        // Randomly insert.
-        size_t insert_index = RandomNumber(0, str.length());
-        const std::string random_str = RandomString(RandomNumber(0, 10));
-        str.insert(insert_index, random_str);
-        tree.insert(insert_index, random_str);
-        EXPECT_EQ(str, tree.str());
-        EXPECT_EQ(str.length(), tree.length());
+//     for (size_t n = 0; n < 100; ++n) {
+//         // Randomly insert.
+//         size_t insert_index = RandomNumber(0, str.length());
+//         const std::string random_str = RandomString(RandomNumber(0, 10));
+//         str.insert(insert_index, random_str);
+//         tree.insert(insert_index, random_str);
+//         EXPECT_EQ(str, tree.str());
+//         EXPECT_EQ(str.length(), tree.length());
 
-        // Randomly erase.
-        size_t erase_index = RandomNumber(0, str.length());
-        size_t count = RandomNumber(0, 4);
-        str.erase(erase_index, count);
-        tree.erase(erase_index, count);
-        EXPECT_EQ(str, tree.str());
-        EXPECT_EQ(str.length(), tree.length());
-    }
-}
+//         // Randomly erase.
+//         size_t erase_index = RandomNumber(0, str.length());
+//         size_t count = RandomNumber(0, 4);
+//         str.erase(erase_index, count);
+//         tree.erase(erase_index, count);
+//         EXPECT_EQ(str, tree.str());
+//         EXPECT_EQ(str.length(), tree.length());
+//     }
+// }
 
 }

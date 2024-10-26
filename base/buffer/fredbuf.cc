@@ -348,17 +348,31 @@ size_t BufferCollection::buffer_offset(size_t index, const BufferCursor& cursor)
     return starts[cursor.line] + cursor.column;
 }
 
-Tree::Tree() : buffers{} {
+namespace {
+void populate_line_starts(LineStarts* starts, std::string_view buf) {
+    starts->push_back(0);
+    const auto len = buf.size();
+    for (size_t i = 0; i < len; ++i) {
+        char c = buf[i];
+        if (c == '\n') {
+            starts->push_back(i + 1);
+        }
+    }
+}
+}  // namespace [anon]
+
+Tree::Tree() {
     build_tree();
 }
 
-Tree::Tree(Buffers&& buffers) : buffers{std::move(buffers)} {
-    build_tree();
-}
+Tree::Tree(std::string_view txt) {
+    LineStarts scratch_starts;
+    populate_line_starts(&scratch_starts, txt);
+    Buffers bufs;
+    bufs.push_back(std::make_shared<CharBuffer>(std::string{txt}, scratch_starts));
+    buffers = BufferCollection{bufs};
 
-Tree::Tree(std::string_view txt) : buffers{} {
     build_tree();
-    insert(0, txt);
 }
 
 void Tree::build_tree() {
@@ -366,17 +380,16 @@ void Tree::build_tree() {
     buffers.mod_buffer.buffer.clear();
     // In order to maintain the invariant of other buffers, the mod_buffer needs a single
     // line-start of 0.
-    buffers.mod_buffer.line_starts.push_back({});
+    buffers.mod_buffer.line_starts.push_back(0);
     last_insert = {};
 
-    const auto buf_count = buffers.orig_buffers.size();
     size_t offset = 0;
-    for (size_t i = 0; i < buf_count; ++i) {
+    for (size_t i = 0; i < buffers.orig_buffers.size(); ++i) {
         const auto& buf = *buffers.orig_buffers[i];
         assert(!buf.line_starts.empty());
         // If this immutable buffer is empty, we can avoid creating a piece for it altogether.
         if (buf.buffer.empty()) continue;
-        auto last_line = buf.line_starts.size() - 1;
+        size_t last_line = buf.line_starts.size() - 1;
         // Create a new node that spans this buffer and retains an index to it.
         // Insert the node into the balanced tree.
         Piece piece{
@@ -384,8 +397,8 @@ void Tree::build_tree() {
             .first = {.line = 0, .column = 0},
             .last = {.line = last_line, .column = buf.buffer.size() - buf.line_starts[last_line]},
             .length = buf.buffer.size(),
-            // Note: the number of newlines
-            .newline_count = last_line};
+            .newline_count = last_line,
+        };
         root = root.insert({piece}, offset);
         offset += piece.length;
     }
@@ -404,7 +417,10 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
 #endif  // TEXTBUF_DEBUG
     }};
     if (root.empty()) {
+        std::println("============================Case 0: Empty Root============================");
+
         auto piece = build_piece(txt);
+        std::println("piece.length = {}", piece.length);
         root = root.insert({piece}, 0);
         return;
     }
@@ -804,26 +820,12 @@ size_t Tree::line_feed_count(const BufferCollection* buffers,
     return end.line - start.line;
 }
 
-namespace {
-void populate_line_starts(LineStarts* starts, std::string_view buf) {
-    starts->clear();
-    starts->push_back(0);
-    const auto len = buf.size();
-    for (size_t i = 0; i < len; ++i) {
-        char c = buf[i];
-        if (c == '\n') {
-            starts->push_back(i + 1);
-        }
-    }
-}
-}  // namespace [anon]
-
 Piece Tree::build_piece(std::string_view txt) {
     auto start_offset = buffers.mod_buffer.buffer.size();
+    LineStarts scratch_starts;
     populate_line_starts(&scratch_starts, txt);
     auto start = last_insert;
-    // TODO: Handle CRLF (where the new buffer starts with LF and the end of our buffer ends with
-    // CR). Offset the new starts relative to the existing buffer.
+    // Offset the new starts relative to the existing buffer.
     for (auto& new_start : scratch_starts) {
         new_start += start_offset;
     }

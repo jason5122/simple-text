@@ -27,46 +27,45 @@ inline std::string RandomString(size_t length) {
     return str;
 }
 
+// Like `RandomString()`, but the string is guaranteed to contain a specified number of newlines.
+inline std::string RandomNewlineString(size_t length, size_t newlines) {
+    std::string str = RandomString(base::sub_sat(length, newlines));
+    for (size_t k = 0; k < newlines; ++k) {
+        size_t i = RandomNumber(0, str.length());
+        str.insert(i, "\n");
+    }
+    return str;
+}
+
 }
 
 namespace PieceTree {
 
-TEST(PieceTreeTest, FromScratch1) {
+TEST(PieceTreeTest, CustomTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     Tree tree{str};
-
-    print_tree(tree.root, &tree);
-    std::println("tree.str() = \"{}\"", tree.str());
-
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 }
 
-TEST(PieceTreeTest, FromScratch2) {
+TEST(PieceTreeTest, CustomTest2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     Tree tree{str};
-
-    print_tree(tree.root, &tree);
-    std::println("tree.str() = \"{}\"", tree.str());
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
     str.insert(9, " and nimble");
     tree.insert(9, " and nimble");
-    print_tree(tree.root, &tree);
-    std::println("tree.str() = \"{}\"", tree.str());
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
     str.insert(str.length(), ".");
     tree.insert(tree.length(), ".");
-    print_tree(tree.root, &tree);
-    std::println("tree.str() = \"{}\"", tree.str());
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 }
 
-TEST(PieceTreeTest, FromScratch3) {
+TEST(PieceTreeTest, CustomTest3) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     Tree tree{str};
     EXPECT_EQ(str, tree.str());
@@ -76,18 +75,14 @@ TEST(PieceTreeTest, FromScratch3) {
     tree.insert(9, " and nimble");
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
-
-    print_tree(tree.root, &tree);
 
     str.erase(9, 13);
     tree.erase(9, 13);
-    print_tree(tree.root, &tree);
-    std::println("tree.str() = \"{}\"", tree.str());
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 }
 
-TEST(PieceTreeTest, FromScratch4) {
+TEST(PieceTreeTest, CustomTest4) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     Tree tree{str};
     EXPECT_EQ(str, tree.str());
@@ -98,12 +93,8 @@ TEST(PieceTreeTest, FromScratch4) {
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
-    print_tree(tree.root, &tree);
-
     str.erase(9, 4);
     tree.erase(9, 4);
-    print_tree(tree.root, &tree);
-    std::println("tree.str() = \"{}\"", tree.str());
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 }
@@ -419,19 +410,10 @@ TEST(PieceTreeTest, EraseBeyondOnePiece1) {
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
-    // std::println("=========================FIRST STEP=========================");
-    // print_tree(tree.root, &tree);
-
     str.erase(4, 17);
     tree.erase(4, 17);
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
-
-    // std::println("=========================SECOND STEP=========================");
-    // print_tree(tree.root, &tree);
-
-    // std::println("string: \"{}\"", str);
-    // std::println("tree: \"{}\"", tree.str());
 }
 
 TEST(PieceTreeTest, EraseBeyondOnePiece2) {
@@ -470,27 +452,15 @@ TEST(PieceTreeTest, EraseCustomTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     Tree tree{str};
 
-    std::println("=========================FIRST STEP=========================");
     str.erase(25, 44);
     tree.erase(25, 44);
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
-    print_tree(tree.root, &tree);
-    std::println("tree length = {}", tree_length(tree.root));
-
     str.erase(9, 14);
     tree.erase(9, 14);
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
-    // str.erase(9, 1);
-    // tree.erase(9, 1);
-
-    std::println("=========================SECOND STEP=========================");
-    print_tree(tree.root, &tree);
-    std::println("tree length = {}", tree_length(tree.root));
-    std::println("string: \"{}\"", str);
-    std::println("tree: \"{}\"", tree.str());
 }
 
 TEST(PieceTreeTest, EraseCustomTest2) {
@@ -506,8 +476,6 @@ TEST(PieceTreeTest, EraseCustomTest2) {
     tree.erase(7, 15);
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
-
-    // std::println("=========================THIRD STEP=========================");
 
     str.erase(4, 4);
     tree.erase(4, 4);
@@ -634,6 +602,114 @@ TEST(PieceTreeTest, CombinedRandomTest1) {
         tree.erase(erase_index, count);
         EXPECT_EQ(str, tree.str());
         EXPECT_EQ(str.length(), tree.length());
+    }
+}
+
+TEST(PieceTreeTest, LineColumnAt1) {
+    auto check = [](std::string_view str) {
+        Tree tree{str};
+
+        std::unordered_map<size_t, std::pair<size_t, size_t>> index_to_line_col_map;
+        size_t line = 0;
+        size_t col = 0;
+        for (size_t i = 0; i <= str.length(); i++) {
+            index_to_line_col_map[i] = {line, col};
+
+            if (str[i] == '\n') {
+                ++line;
+                col = 0;
+            } else {
+                ++col;
+            }
+        }
+
+        for (size_t i = 0; i <= tree.length(); i++) {
+            EXPECT_EQ(tree.line_column_at(i), index_to_line_col_map[i]);
+        }
+    };
+
+    check("Line 1\nLine 2");
+    check("Line 1\nLine 2\nLine 3\nLine 4");
+    check("\n\n\n");
+}
+
+TEST(PieceTreeTest, LineColumnAt2) {
+    std::string str1 = "Hello world!";
+    Tree tree1{str1};
+    auto [line1, col1] = tree1.line_column_at(99999);
+    EXPECT_EQ(line1, 0_Z);
+    EXPECT_EQ(col1, tree1.length());
+
+    std::string str2 = "Hello\nworld!";
+    Tree tree2{str2};
+    auto [line2, col2] = tree2.line_column_at(99999);
+    EXPECT_EQ(line2, 1_Z);
+    EXPECT_EQ(col2, tree2.length() - 6);
+}
+
+TEST(PieceTreeTest, LineColumnAt3) {
+    std::string str = "Hello\nworld!\nthis is a newline";
+    Tree tree{str};
+
+    str.insert(23, "\n");
+    tree.insert(23, "\n");
+    EXPECT_EQ(str, tree.str());
+
+    size_t line;
+    size_t col;
+    std::tie(line, col) = tree.line_column_at(2);
+    EXPECT_EQ(line, 0_Z);
+    EXPECT_EQ(col, 2_Z);
+
+    std::tie(line, col) = tree.line_column_at(7);
+    EXPECT_EQ(line, 1_Z);
+    EXPECT_EQ(col, 1_Z);
+}
+
+TEST(PieceTreeTest, LineColumnAtRandomTest) {
+    std::string str = "";
+    Tree tree{str};
+
+    auto check = [](std::string_view str) {
+        Tree tree{str};
+
+        std::unordered_map<size_t, std::pair<size_t, size_t>> index_to_line_col_map;
+        size_t line = 0;
+        size_t col = 0;
+        for (size_t i = 0; i <= str.length(); i++) {
+            index_to_line_col_map[i] = {line, col};
+
+            if (str[i] == '\n') {
+                ++line;
+                col = 0;
+            } else {
+                ++col;
+            }
+        }
+
+        for (size_t i = 0; i <= tree.length(); i++) {
+            EXPECT_EQ(tree.line_column_at(i), index_to_line_col_map[i]);
+        }
+    };
+
+    for (size_t n = 0; n < 50; ++n) {
+        // Randomly insert.
+        size_t insert_index = RandomNumber(0, str.length());
+        const std::string random_str = RandomNewlineString(RandomNumber(0, 10), 5);
+        str.insert(insert_index, random_str);
+        tree.insert(insert_index, random_str);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        // Randomly erase.
+        size_t erase_index = RandomNumber(0, str.length());
+        size_t erase_count = RandomNumber(0, 4);
+        str.erase(erase_index, erase_count);
+        tree.erase(erase_index, erase_count);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        check(str);
     }
 }
 

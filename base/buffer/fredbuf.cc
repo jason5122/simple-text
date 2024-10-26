@@ -412,7 +412,6 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     }};
     if (root.empty()) {
         auto piece = build_piece(txt);
-        std::println("piece.length = {}", piece.length);
         root = root.insert({piece}, 0);
         return;
     }
@@ -508,7 +507,7 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     root = root.insert({new_piece_right}, node_start_offset);
 }
 
-void Tree::internal_remove(size_t offset, size_t count) {
+void Tree::internal_erase(size_t offset, size_t count) {
     assert(count != 0 && !root.empty());
     ScopeGuard guard{[&] {
         compute_buffer_meta();
@@ -521,42 +520,13 @@ void Tree::internal_remove(size_t offset, size_t count) {
     auto first_node = first.node;
     auto last_node = last.node;
 
-    std::println("=======FIRST PIECE=======");
-    print_piece(first_node->piece, this, 0);
-    std::println("=======LAST PIECE=======");
-    print_piece(last_node->piece, this, 0);
-
     auto start_split_pos = buffer_position(first_node->piece, first.remainder);
 
     // Simple case: the range of characters we want to delete are
     // held directly within this node.  Remove the node, resize it
     // then add it back.
     if (first_node == last_node) {
-        std::println("============================Case 1: Deletion is constrained to one node"
-                     "============================");
         auto end_split_pos = buffer_position(first_node->piece, last.remainder);
-        // We're going to shrink the node starting from the beginning.
-        // if (first.start_offset == offset) {
-        //     // Delete the entire node.
-        //     if (count == first_node->piece.length) {
-        //         root = root.remove(first.start_offset);
-        //         return;
-        //     }
-        //     // Shrink the node.
-        //     auto new_piece = trim_piece_left(first_node->piece, end_split_pos);
-        //     // Remove the old one and update.
-        //     root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
-        //     return;
-        // }
-
-        // Trim the tail of this piece.
-        // if (first.start_offset + first_node->piece.length == offset + count) {
-        //     auto new_piece = trim_piece_right(first_node->piece, start_split_pos);
-        //     // Remove the old one and update.
-        //     root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
-        //     return;
-        // }
-
         // The removed buffer is somewhere in the middle.  Trim it in both directions.
         auto [left, right] = shrink_piece(first_node->piece, start_split_pos, end_split_pos);
 
@@ -565,12 +535,6 @@ void Tree::internal_remove(size_t offset, size_t count) {
         // left.
         if (right.length > 0) root = root.insert({right}, first.start_offset);
         if (left.length > 0) root = root.insert({left}, first.start_offset);
-
-        // root = root.remove(first.start_offset)
-        //            // Note: We insert right first so that the 'left' will be inserted
-        //            // to the right node's left.
-        //            .insert({right}, first.start_offset)
-        //            .insert({left}, first.start_offset);
         return;
     }
 
@@ -581,9 +545,6 @@ void Tree::internal_remove(size_t offset, size_t count) {
     // 2. Part of the first node is deleted and all of the last node.
     // 3. Part of the first node is deleted and part of the last node.
     // 4. The entire first node is deleted and part of the last node.
-
-    std::println("============================Case 2: Deletion spans multiple nodes"
-                 "============================");
 
     auto new_first = trim_piece_right(first_node->piece, start_split_pos);
     if (last_node == nullptr) {
@@ -724,7 +685,7 @@ std::pair<size_t, size_t> Tree::line_column_at(size_t offset) const {
     auto result = node_at(offset);
     size_t line = result.line;
     auto [first, last] = get_line_range(line);
-    size_t col = offset - first;
+    size_t col = std::min(offset, last) - first;
     return {line, col};
 }
 
@@ -999,7 +960,7 @@ void Tree::erase(size_t offset, size_t count) {
     // Rule out the obvious noop.
     if (count == 0 || root.empty()) return;
     append_undo(root, offset);
-    internal_remove(offset, count);
+    internal_erase(offset, count);
 }
 
 void Tree::compute_buffer_meta() {

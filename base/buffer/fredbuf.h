@@ -91,7 +91,7 @@ private:
     void build_tree();
 
     void internal_insert(size_t offset, std::string_view txt);
-    void internal_remove(size_t offset, size_t count);
+    void internal_erase(size_t offset, size_t count);
 
     using Accumulator = size_t (*)(const BufferCollection*, const Piece&, size_t);
 

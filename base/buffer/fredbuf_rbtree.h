@@ -13,9 +13,10 @@ struct BufferCursor {
     bool operator==(const BufferCursor&) const = default;
 };
 
+enum class BufferType { Original, Mod };
+
 struct Piece {
-    size_t index = 0;  // Index into a buffer in PieceTree.  This could be an immutable
-                       // buffer or the mutable buffer.
+    BufferType buffer_type = BufferType::Original;
     BufferCursor first = {};
     BufferCursor last = {};
     size_t length = 0;

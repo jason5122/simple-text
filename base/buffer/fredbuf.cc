@@ -338,13 +338,12 @@ void satisfies_rb_invariants(const RedBlackTree& root) {
 
 namespace PieceTree {
 
-const CharBuffer* BufferCollection::buffer_at(size_t index) const {
-    if (index == kModBuffer) return &mod_buffer;
-    return orig_buffers[index].get();
+const CharBuffer* BufferCollection::buffer_at(BufferType buffer_type) const {
+    return buffer_type == BufferType::Mod ? &mod_buffer : orig_buffer.get();
 }
 
-size_t BufferCollection::buffer_offset(size_t index, const BufferCursor& cursor) const {
-    auto& starts = buffer_at(index)->line_starts;
+size_t BufferCollection::buffer_offset(BufferType buffer_type, const BufferCursor& cursor) const {
+    auto& starts = buffer_at(buffer_type)->line_starts;
     return starts[cursor.line] + cursor.column;
 }
 
@@ -368,9 +367,8 @@ Tree::Tree() {
 Tree::Tree(std::string_view txt) {
     LineStarts scratch_starts;
     populate_line_starts(&scratch_starts, txt);
-    Buffers bufs;
-    bufs.push_back(std::make_shared<CharBuffer>(std::string{txt}, scratch_starts));
-    buffers = BufferCollection{bufs};
+    auto orig_buffer = std::make_shared<CharBuffer>(std::string{txt}, scratch_starts);
+    buffers = BufferCollection{orig_buffer};
 
     build_tree();
 }
@@ -383,24 +381,21 @@ void Tree::build_tree() {
     buffers.mod_buffer.line_starts.push_back(0);
     last_insert = {};
 
-    size_t offset = 0;
-    for (size_t i = 0; i < buffers.orig_buffers.size(); ++i) {
-        const auto& buf = *buffers.orig_buffers[i];
-        assert(!buf.line_starts.empty());
-        // If this immutable buffer is empty, we can avoid creating a piece for it altogether.
-        if (buf.buffer.empty()) continue;
+    const auto& buf = *buffers.orig_buffer;
+    assert(!buf.line_starts.empty());
+    // If this immutable buffer is empty, we can avoid creating a piece for it altogether.
+    if (!buf.buffer.empty()) {
         size_t last_line = buf.line_starts.size() - 1;
         // Create a new node that spans this buffer and retains an index to it.
         // Insert the node into the balanced tree.
         Piece piece{
-            .index = i,
+            .buffer_type = BufferType::Original,
             .first = {.line = 0, .column = 0},
             .last = {.line = last_line, .column = buf.buffer.size() - buf.line_starts[last_line]},
             .length = buf.buffer.size(),
             .newline_count = last_line,
         };
-        root = root.insert({piece}, offset);
-        offset += piece.length;
+        root = root.insert({piece}, 0);
     }
 
     compute_buffer_meta();
@@ -454,7 +449,7 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
         // 5. Re-insert the new piece.
         if (offset != 0) {
             auto prev_node_result = node_at(&buffers, root, offset - 1);
-            if (prev_node_result.node->piece.index == kModBuffer &&
+            if (prev_node_result.node->piece.buffer_type == BufferType::Mod &&
                 prev_node_result.node->piece.last == last_insert) {
                 auto new_piece = build_piece(txt);
                 combine_pieces(prev_node_result, new_piece);
@@ -477,7 +472,7 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
         // 2. Remove the old piece.
         // 3. Extend the old piece's length to the length of the newly created piece.
         // 4. Re-insert the new piece.
-        if (node->piece.index == kModBuffer && node->piece.last == last_insert) {
+        if (node->piece.buffer_type == BufferType::Mod && node->piece.last == last_insert) {
             auto new_piece = build_piece(txt);
             combine_pieces(result, new_piece);
             return;
@@ -491,13 +486,13 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     // Case #3.
     // The basic approach here is to split the existing node into two pieces
     // and insert the new piece in between them.
-    auto new_len_right = buffers.buffer_offset(node->piece.index, node->piece.last) -
-                         buffers.buffer_offset(node->piece.index, insert_pos);
+    auto new_len_right = buffers.buffer_offset(node->piece.buffer_type, node->piece.last) -
+                         buffers.buffer_offset(node->piece.buffer_type, insert_pos);
     auto new_piece_right = node->piece;
     new_piece_right.first = insert_pos;
     new_piece_right.length = new_len_right;
     new_piece_right.newline_count =
-        line_feed_count(&buffers, node->piece.index, insert_pos, node->piece.last);
+        line_feed_count(&buffers, node->piece.buffer_type, insert_pos, node->piece.last);
 
     // Remove the original node tail.
     auto new_piece_left = trim_piece_right(&buffers, node->piece, insert_pos);
@@ -641,7 +636,7 @@ void Tree::internal_remove(size_t offset, size_t count) {
 // Fetches the length of the piece starting from the first line to 'index' or to the end of
 // the piece.
 size_t Tree::accumulate_value(const BufferCollection* buffers, const Piece& piece, size_t index) {
-    auto* buffer = buffers->buffer_at(piece.index);
+    auto* buffer = buffers->buffer_at(piece.buffer_type);
     auto& line_starts = buffer->line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
@@ -659,7 +654,7 @@ size_t Tree::accumulate_value(const BufferCollection* buffers, const Piece& piec
 size_t Tree::accumulate_value_no_lf(const BufferCollection* buffers,
                                     const Piece& piece,
                                     size_t index) {
-    auto* buffer = buffers->buffer_at(piece.index);
+    auto* buffer = buffers->buffer_at(piece.buffer_type);
     auto& line_starts = buffer->line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
@@ -772,8 +767,9 @@ char Tree::at(size_t offset) const {
 char Tree::char_at(const BufferCollection* buffers, const RedBlackTree& node, size_t offset) {
     auto result = node_at(buffers, node, offset);
     if (result.node == nullptr) return '\0';
-    auto* buffer = buffers->buffer_at(result.node->piece.index);
-    auto buf_offset = buffers->buffer_offset(result.node->piece.index, result.node->piece.first);
+    auto* buffer = buffers->buffer_at(result.node->piece.buffer_type);
+    auto buf_offset =
+        buffers->buffer_offset(result.node->piece.buffer_type, result.node->piece.first);
     const char* p = buffer->buffer.data() + buf_offset + result.remainder;
     return *p;
 }
@@ -800,13 +796,13 @@ std::string Tree::get_line_content(size_t line) const {
 }
 
 size_t Tree::line_feed_count(const BufferCollection* buffers,
-                             size_t index,
+                             BufferType buffer_type,
                              const BufferCursor& start,
                              const BufferCursor& end) {
     // If the end position is the beginning of a new line, then we can just return the difference
     // in lines.
     if (end.column == 0) return end.line - start.line;
-    auto& starts = buffers->buffer_at(index)->line_starts;
+    auto& starts = buffers->buffer_at(buffer_type)->line_starts;
     // It means, there is no LF after end.
     if (end.line == starts.size() - 1) return end.line - start.line;
     // Due to the check above, we know that there's at least one more line after 'end.line'.
@@ -846,11 +842,13 @@ Piece Tree::build_piece(std::string_view txt) {
     auto end_index = buffers.mod_buffer.line_starts.size() - 1;
     auto end_col = end_offset - buffers.mod_buffer.line_starts[end_index];
     BufferCursor end_pos = {.line = end_index, .column = end_col};
-    Piece piece = {.index = kModBuffer,
-                   .first = start,
-                   .last = end_pos,
-                   .length = end_offset - start_offset,
-                   .newline_count = line_feed_count(&buffers, kModBuffer, start, end_pos)};
+    Piece piece = {
+        .buffer_type = BufferType::Mod,
+        .first = start,
+        .last = end_pos,
+        .length = end_offset - start_offset,
+        .newline_count = line_feed_count(&buffers, BufferType::Mod, start, end_pos),
+    };
     // Update the last insertion.
     last_insert = end_pos;
     return piece;
@@ -902,7 +900,7 @@ NodePosition Tree::node_at(const BufferCollection* buffers, RedBlackTree node, s
 BufferCursor Tree::buffer_position(const BufferCollection* buffers,
                                    const Piece& piece,
                                    size_t remainder) {
-    auto& starts = buffers->buffer_at(piece.index)->line_starts;
+    auto& starts = buffers->buffer_at(piece.buffer_type)->line_starts;
     auto start_offset = starts[piece.first.line] + piece.first.column;
     auto offset = start_offset + remainder;
 
@@ -936,10 +934,10 @@ BufferCursor Tree::buffer_position(const BufferCollection* buffers,
 Piece Tree::trim_piece_right(const BufferCollection* buffers,
                              const Piece& piece,
                              const BufferCursor& pos) {
-    auto orig_end_offset = buffers->buffer_offset(piece.index, piece.last);
+    auto orig_end_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
 
-    auto new_end_offset = buffers->buffer_offset(piece.index, pos);
-    auto new_lf_count = line_feed_count(buffers, piece.index, piece.first, pos);
+    auto new_end_offset = buffers->buffer_offset(piece.buffer_type, pos);
+    auto new_lf_count = line_feed_count(buffers, piece.buffer_type, piece.first, pos);
 
     auto len_delta = orig_end_offset - new_end_offset;
     auto new_len = piece.length - len_delta;
@@ -955,10 +953,10 @@ Piece Tree::trim_piece_right(const BufferCollection* buffers,
 Piece Tree::trim_piece_left(const BufferCollection* buffers,
                             const Piece& piece,
                             const BufferCursor& pos) {
-    auto orig_start_offset = buffers->buffer_offset(piece.index, piece.first);
+    auto orig_start_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
 
-    auto new_start_offset = buffers->buffer_offset(piece.index, pos);
-    auto new_lf_count = line_feed_count(buffers, piece.index, pos, piece.last);
+    auto new_start_offset = buffers->buffer_offset(piece.buffer_type, pos);
+    auto new_lf_count = line_feed_count(buffers, piece.buffer_type, pos, piece.last);
 
     auto len_delta = new_start_offset - orig_start_offset;
     auto new_len = piece.length - len_delta;
@@ -983,7 +981,7 @@ Tree::ShrinkResult Tree::shrink_piece(const BufferCollection* buffers,
 
 void Tree::combine_pieces(NodePosition existing, Piece new_piece) {
     // This transformation is only valid under the following conditions.
-    assert(existing.node->piece.index == kModBuffer);
+    assert(existing.node->piece.buffer_type == BufferType::Mod);
     // This assumes that the piece was just built.
     assert(existing.node->piece.last == new_piece.first);
     auto old_piece = existing.node->piece;
@@ -1153,9 +1151,9 @@ void TreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.root().piece;
-        auto* buffer = buffers->buffer_at(piece.index);
-        auto first_offset = buffers->buffer_offset(piece.index, piece.first);
-        auto last_offset = buffers->buffer_offset(piece.index, piece.last);
+        auto* buffer = buffers->buffer_at(piece.buffer_type);
+        auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
+        auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
         first_ptr = buffer->buffer.data() + first_offset;
         last_ptr = buffer->buffer.data() + last_offset;
         // Change this direction.
@@ -1185,9 +1183,9 @@ void TreeWalker::fast_forward_to(size_t offset) {
             // Make the offset relative to this piece.
             offset -= node.root().left_subtree_length;
             auto& piece = node.root().piece;
-            auto* buffer = buffers->buffer_at(piece.index);
-            auto first_offset = buffers->buffer_offset(piece.index, piece.first);
-            auto last_offset = buffers->buffer_offset(piece.index, piece.last);
+            auto* buffer = buffers->buffer_at(piece.buffer_type);
+            auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
+            auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
             first_ptr = buffer->buffer.data() + first_offset + offset;
             last_ptr = buffer->buffer.data() + last_offset;
             return;
@@ -1285,9 +1283,9 @@ void ReverseTreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.root().piece;
-        auto* buffer = buffers->buffer_at(piece.index);
-        auto first_offset = buffers->buffer_offset(piece.index, piece.first);
-        auto last_offset = buffers->buffer_offset(piece.index, piece.last);
+        auto* buffer = buffers->buffer_at(piece.buffer_type);
+        auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
+        auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
         last_ptr = buffer->buffer.data() + first_offset;
         first_ptr = buffer->buffer.data() + last_offset;
         // Change this direction.
@@ -1318,8 +1316,8 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             // Make the offset relative to this piece.
             offset -= node.root().left_subtree_length;
             auto& piece = node.root().piece;
-            auto* buffer = buffers->buffer_at(piece.index);
-            auto first_offset = buffers->buffer_offset(piece.index, piece.first);
+            auto* buffer = buffers->buffer_at(piece.buffer_type);
+            auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
             last_ptr = buffer->buffer.data() + first_offset;
             // We extend offset because it is the point where we want to start and because this
             // walker works by dereferencing 'first_ptr - 1', offset + 1 is our 'begin'.
@@ -1350,11 +1348,11 @@ inline const char* to_string(Color c) {
 
 void print_piece(const Piece& piece, const Tree* tree, int level) {
     const char* levels = "|||||||||||||||||||||||||||||||";
-    printf("%.*sidx{%zd}, first{l{%zd}, c{%zd}}, last{l{%zd}, c{%zd}}, len{%zd}, lf{%zd}\n", level,
-           levels, piece.index, piece.first.line, piece.first.column, piece.last.line,
+    printf("%.*sidx{%d}, first{l{%zd}, c{%zd}}, last{l{%zd}, c{%zd}}, len{%zd}, lf{%zd}\n", level,
+           levels, piece.buffer_type, piece.first.line, piece.first.column, piece.last.line,
            piece.last.column, piece.length, piece.newline_count);
-    auto* buffer = tree->buffers.buffer_at(piece.index);
-    auto offset = tree->buffers.buffer_offset(piece.index, piece.first);
+    auto* buffer = tree->buffers.buffer_at(piece.buffer_type);
+    auto offset = tree->buffers.buffer_offset(piece.buffer_type, piece.first);
     printf("%.*sPiece content: %.*s\n", level, levels, static_cast<int>(piece.length),
            buffer->buffer.data() + offset);
 }

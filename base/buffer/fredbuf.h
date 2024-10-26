@@ -15,7 +15,6 @@
 namespace PieceTree {
 
 constexpr auto kSentinel = std::numeric_limits<size_t>::max();
-constexpr auto kModBuffer = kSentinel;
 
 struct UndoRedoEntry {
     RedBlackTree root;
@@ -40,15 +39,11 @@ struct CharBuffer {
     LineStarts line_starts;
 };
 
-using BufferReference = std::shared_ptr<const CharBuffer>;
-
-using Buffers = std::vector<BufferReference>;
-
 struct BufferCollection {
-    const CharBuffer* buffer_at(size_t index) const;
-    size_t buffer_offset(size_t index, const BufferCursor& cursor) const;
+    const CharBuffer* buffer_at(BufferType buffer_type) const;
+    size_t buffer_offset(BufferType buffer_type, const BufferCursor& cursor) const;
 
-    Buffers orig_buffers;
+    std::shared_ptr<const CharBuffer> orig_buffer;
     CharBuffer mod_buffer;
 };
 
@@ -112,7 +107,7 @@ private:
                                          const Piece& piece,
                                          size_t index);
     static size_t line_feed_count(const BufferCollection* buffers,
-                                  size_t index,
+                                  BufferType buffer_type,
                                   const BufferCursor& start,
                                   const BufferCursor& end);
     static NodePosition node_at(const BufferCollection* buffers, RedBlackTree node, size_t off);

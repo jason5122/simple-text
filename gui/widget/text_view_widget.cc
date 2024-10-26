@@ -13,7 +13,7 @@
 namespace gui {
 
 TextViewWidget::TextViewWidget(std::string_view text)
-    : table{text}, line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
+    : line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
     tree.insert(0, text);
     updateMaxScroll();
 
@@ -28,7 +28,6 @@ TextViewWidget::TextViewWidget(std::string_view text)
 }
 
 void TextViewWidget::selectAll() {
-    // selection.setRange(0, table.length());
     selection.setRange(0, tree.length());
 
     // updateCaretX();
@@ -37,7 +36,7 @@ void TextViewWidget::selectAll() {
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     PROFILE_BLOCK("TextViewWidget::move()");
 
-    auto [line, col] = table.lineColumnAt(selection.end().index);
+    auto [line, col] = tree.line_column_at(selection.end().index);
     const auto& layout = layoutAt(line);
 
     if (by == MoveBy::kCharacters && !forward) {
@@ -52,7 +51,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         // Move to previous line if at beginning of line.
         if (delta == 0 && line > 0) {
             const auto& prev_layout = layoutAt(line - 1);
-            size_t index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
+            size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1_Z));
             selection.setIndex(index, extend);
         }
     }
@@ -66,18 +65,18 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         selection.incrementIndex(delta, extend);
     }
     if (by == MoveBy::kWords && !forward) {
-        size_t delta = Caret::prevWordStart(layout, col, table.line(line));
+        size_t delta = Caret::prevWordStart(layout, col, tree.get_line_content(line));
         selection.decrementIndex(delta, extend);
 
         // Move to previous line if at beginning of line.
         if (delta == 0 && line > 0) {
             const auto& prev_layout = layoutAt(line - 1);
-            size_t index = table.indexAt(line - 1, base::sub_sat(prev_layout.length, 1_Z));
+            size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1_Z));
             selection.setIndex(index, extend);
         }
     }
     if (by == MoveBy::kWords && forward) {
-        size_t delta = Caret::nextWordEnd(layout, col, table.line(line));
+        size_t delta = Caret::nextWordEnd(layout, col, tree.get_line_content(line));
         selection.incrementIndex(delta, extend);
     }
     // TODO: Find a clean way to combine vertical caret movement logic.
@@ -87,17 +86,17 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             const auto& prev_layout = layoutAt(line - 1, exclude_end);
             int x = Caret::xAtColumn(layout, col, false);
             size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
-            size_t index = table.indexAt(line - 1, new_col);
+            size_t index = tree.offset_at(line - 1, new_col);
             selection.setIndex(index, extend);
         }
     }
     if (by == MoveBy::kLines && forward) {
-        if (line < table.lineCount() - 1) {
+        if (line < tree.line_count() - 1) {
             bool exclude_end;
             const auto& prev_layout = layoutAt(line + 1, exclude_end);
             int x = Caret::xAtColumn(layout, col, false);
             size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
-            size_t index = table.indexAt(line + 1, new_col);
+            size_t index = tree.offset_at(line + 1, new_col);
             selection.setIndex(index, extend);
         }
     }
@@ -111,21 +110,21 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     PROFILE_BLOCK("TextViewWidget::moveTo()");
 
     if (to == MoveTo::kBOL || to == MoveTo::kHardBOL) {
-        auto [line, _] = table.lineColumnAt(selection.end().index);
+        auto [line, _] = tree.line_column_at(selection.end().index);
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
         size_t new_col = Caret::columnAtX(layout, 0, exclude_end);
-        selection.setIndex(table.indexAt(line, new_col), extend);
+        selection.setIndex(tree.offset_at(line, new_col), extend);
         // updateCaretX();
     }
     if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
-        auto [line, _] = table.lineColumnAt(selection.end().index);
+        auto [line, _] = tree.line_column_at(selection.end().index);
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
         size_t new_col = Caret::columnAtX(layout, layout.width, exclude_end);
-        selection.setIndex(table.indexAt(line, new_col), extend);
+        selection.setIndex(tree.offset_at(line, new_col), extend);
         // updateCaretX();
     }
     if (to == MoveTo::kBOF) {
@@ -133,7 +132,6 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
         // updateCaretX();
     }
     if (to == MoveTo::kEOF) {
-        // selection.setIndex(table.length(), extend);
         selection.setIndex(tree.length(), extend);
         // updateCaretX();
     }
@@ -147,11 +145,7 @@ void TextViewWidget::insertText(std::string_view text) {
     }
 
     size_t i = selection.end().index;
-    table.insert(i, text);
     tree.insert(i, text);
-    if (table.length() != tree.length()) {
-        std::println("table.length() = {}, tree.length() = {}", table.length(), tree.length());
-    }
     selection.incrementIndex(text.length(), false);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -168,7 +162,7 @@ void TextViewWidget::leftDelete() {
     PROFILE_BLOCK("TextViewWidget::leftDelete()");
 
     if (selection.empty()) {
-        auto [line, col] = table.lineColumnAt(selection.end().index);
+        auto [line, col] = tree.line_column_at(selection.end().index);
         const auto& layout = layoutAt(line);
 
         size_t delta = Caret::moveToPrevGlyph(layout, col);
@@ -181,7 +175,6 @@ void TextViewWidget::leftDelete() {
         }
 
         size_t i = selection.end().index;
-        table.erase(i, delta);
         tree.remove(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -190,7 +183,6 @@ void TextViewWidget::leftDelete() {
 #endif
     } else {
         auto [start, end] = selection.range();
-        table.erase(start, end - start);
         tree.remove(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
@@ -207,12 +199,11 @@ void TextViewWidget::rightDelete() {
     PROFILE_BLOCK("TextViewWidget::rightDelete()");
 
     if (selection.empty()) {
-        auto [line, col] = table.lineColumnAt(selection.end().index);
+        auto [line, col] = tree.line_column_at(selection.end().index);
         const auto& layout = layoutAt(line);
 
         size_t delta = Caret::moveToNextGlyph(layout, col);
         size_t i = selection.end().index;
-        table.erase(i, delta);
         tree.remove(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -221,7 +212,6 @@ void TextViewWidget::rightDelete() {
 #endif
     } else {
         auto [start, end] = selection.range();
-        table.erase(start, end - start);
         tree.remove(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
@@ -238,14 +228,14 @@ void TextViewWidget::deleteWord(bool forward) {
     PROFILE_BLOCK("TextViewWidget::deleteWord()");
 
     if (selection.empty()) {
-        auto [line, col] = table.lineColumnAt(selection.end().index);
+        auto [line, col] = tree.line_column_at(selection.end().index);
         const auto& layout = layoutAt(line);
 
         size_t delta;
         if (forward) {
-            delta = Caret::nextWordEnd(layout, col, table.line(line));
+            delta = Caret::nextWordEnd(layout, col, tree.get_line_content(line));
         } else {
-            delta = Caret::prevWordStart(layout, col, table.line(line));
+            delta = Caret::prevWordStart(layout, col, tree.get_line_content(line));
             selection.decrementIndex(delta, false);
 
             // Delete newline if at beginning of line.
@@ -256,7 +246,6 @@ void TextViewWidget::deleteWord(bool forward) {
         }
 
         size_t i = selection.end().index;
-        table.erase(i, delta);
         tree.remove(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -265,7 +254,6 @@ void TextViewWidget::deleteWord(bool forward) {
 #endif
     } else {
         auto [start, end] = selection.range();
-        table.erase(start, end - start);
         tree.remove(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
@@ -279,8 +267,9 @@ void TextViewWidget::deleteWord(bool forward) {
 }
 
 std::string TextViewWidget::getSelectionText() {
-    auto [start, end] = selection.range();
-    return table.substr(start, end - start);
+    // auto [start, end] = selection.range();
+    // return table.substr(start, end - start);
+    return "TODO: Implement getting substring of the piece tree.";
 }
 
 void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
@@ -313,11 +302,12 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos,
 
     if (click_type == app::ClickType::kSingleClick) {
         bool extend = modifiers == app::ModifierKey::kShift;
-        selection.setIndex(table.indexAt(new_line, new_col), extend);
+        selection.setIndex(tree.offset_at(new_line, new_col), extend);
     } else if (click_type == app::ClickType::kDoubleClick) {
-        selection.setIndex(table.indexAt(new_line, new_col), false);
-        size_t start_delta = Caret::prevWordStart(layout, new_col, table.line(new_line));
-        size_t end_delta = Caret::nextWordEnd(layout, new_col, table.line(new_line));
+        selection.setIndex(tree.offset_at(new_line, new_col), false);
+        size_t start_delta =
+            Caret::prevWordStart(layout, new_col, tree.get_line_content(new_line));
+        size_t end_delta = Caret::nextWordEnd(layout, new_col, tree.get_line_content(new_line));
         selection.start().index -= start_delta;
         selection.end().index += end_delta;
     }
@@ -334,7 +324,7 @@ void TextViewWidget::leftMouseDrag(const Point& mouse_pos,
     bool exclude_end;
     const auto& layout = layoutAt(new_line, exclude_end);
     size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
-    selection.setIndex(table.indexAt(new_line, new_col), true);
+    selection.setIndex(tree.offset_at(new_line, new_col), true);
 
     // updateCaretX();
 }
@@ -345,7 +335,7 @@ void TextViewWidget::updateMaxScroll() {
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     max_scroll_offset.x = line_layout_cache.maxWidth();
-    max_scroll_offset.y = table.lineCount() * metrics.line_height;
+    max_scroll_offset.y = tree.line_count() * metrics.line_height;
 }
 
 size_t TextViewWidget::lineAtY(int y) {
@@ -358,7 +348,7 @@ size_t TextViewWidget::lineAtY(int y) {
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
 
     size_t line = y / metrics.line_height;
-    return std::clamp(line, 0_Z, base::sub_sat(table.lineCount(), 1_Z));
+    return std::clamp(line, 0_Z, tree.line_count() - 1);
 }
 
 inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
@@ -367,7 +357,7 @@ inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
 }
 
 inline const font::LineLayout& TextViewWidget::layoutAt(size_t line, bool& exclude_end) {
-    std::string line_str = table.line(line);
+    std::string line_str = tree.get_line_content(line);
     exclude_end = !line_str.empty() && line_str.back() == '\n';
 
     if (exclude_end) {
@@ -393,8 +383,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     start_line = base::sub_sat(start_line, 2_Z);
     end_line = base::add_sat(end_line, 1_Z);
 
-    start_line = std::clamp(start_line, 0_Z, table.lineCount());
-    end_line = std::clamp(end_line, 0_Z, table.lineCount());
+    start_line = std::clamp(start_line, 0_Z, tree.line_count());
+    end_line = std::clamp(end_line, 0_Z, tree.line_count());
 
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
@@ -409,7 +399,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     auto t1 = std::chrono::high_resolution_clock::now();
-    auto [selection_line, _] = table.lineColumnAt(selection.end().index);
+    auto [selection_line, _] = tree.line_column_at(selection.end().index);
     auto t2 = std::chrono::high_resolution_clock::now();
     long long line_col_conversion_duration =
         std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
@@ -527,8 +517,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
     auto [start, end] = selection.range();
-    auto [c1_line, c1_col] = table.lineColumnAt(start);
-    auto [c2_line, c2_col] = table.lineColumnAt(end);
+    auto [c1_line, c1_col] = tree.line_column_at(start);
+    auto [c2_line, c2_col] = tree.line_column_at(end);
 
     const auto& c1_layout = layoutAt(c1_line);
     const auto& c2_layout = layoutAt(c2_line);
@@ -571,7 +561,7 @@ void TextViewWidget::renderScrollBars(int main_line_height) {
 
     // Add vertical scroll bar.
     int vbar_width = 15;
-    double max_scrollbar_y = size.height + table.lineCount() * main_line_height;
+    double max_scrollbar_y = size.height + tree.line_count() * main_line_height;
     double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);
@@ -603,7 +593,7 @@ void TextViewWidget::renderCaret(int main_line_height) {
     int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;
 
-    auto [line, col] = table.lineColumnAt(selection.end().index);
+    auto [line, col] = tree.line_column_at(selection.end().index);
     bool exclude_end;
     const auto& layout = layoutAt(line, exclude_end);
     int end_caret_x = Caret::xAtColumn(layout, col, exclude_end);

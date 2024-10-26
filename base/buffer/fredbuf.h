@@ -77,6 +77,8 @@ public:
     std::string get_line_content(size_t line) const;
     char at(size_t offset) const;
     size_t line_at(size_t offset) const;
+    std::pair<size_t, size_t> line_column_at(size_t offset) const;
+    size_t offset_at(size_t line, size_t column) const;
     LineRange get_line_range(size_t line) const;
     LineRange get_line_range_with_newline(size_t line) const;
 

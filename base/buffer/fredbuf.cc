@@ -683,6 +683,21 @@ size_t Tree::line_at(size_t offset) const {
     return result.line;
 }
 
+std::pair<size_t, size_t> Tree::line_column_at(size_t offset) const {
+    if (empty()) return {0, 0};
+    auto result = node_at(&buffers, root, offset);
+    size_t line = result.line;
+    auto [first, last] = get_line_range(line);
+    size_t col = offset - first;
+    return {line, col};
+}
+
+size_t Tree::offset_at(size_t line, size_t column) const {
+    auto [first, last] = get_line_range(line);
+    size_t offset = std::min(first + column, last);
+    return offset;
+}
+
 char Tree::at(size_t offset) const {
     return char_at(&buffers, root, offset);
 }

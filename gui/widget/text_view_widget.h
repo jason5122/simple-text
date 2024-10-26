@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/buffer/fredbuf.h"
-#include "base/buffer/piece_table.h"
 #include "gui/text_system/line_layout_cache.h"
 #include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
@@ -55,7 +54,6 @@ private:
     static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
     static constexpr Rgba kCaretColor{95, 180, 180, 255};
 
-    base::PieceTable table;
     PieceTree::Tree tree;
     LineLayoutCache line_layout_cache;
 

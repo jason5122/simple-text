@@ -411,9 +411,6 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
 #endif  // TEXTBUF_DEBUG
     }};
     if (root.empty()) {
-        std::println("============================Case 0: Insertion at empty "
-                     "root============================");
-
         auto piece = build_piece(txt);
         std::println("piece.length = {}", piece.length);
         root = root.insert({piece}, 0);
@@ -436,8 +433,6 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
 
     // Case #1.
     if (node_start_offset == offset) {
-        std::println("============================Case 1: Insertion at beginning of "
-                     "node============================");
         // There's a bonus case here.  If our last insertion point was the same as this piece's
         // last and it inserted into the mod buffer, then we can simply 'extend' this piece by
         // the following process:
@@ -463,8 +458,6 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     // Case #2.
     const bool inside_node = offset < node_start_offset + node->piece.length;
     if (!inside_node) {
-        std::println("============================Case 2: Insertion at end of "
-                     "node============================");
         // There's a bonus case here.  If our last insertion point was the same as this piece's
         // last and it inserted into the mod buffer, then we can simply 'extend' this piece by
         // the following process:
@@ -486,8 +479,6 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     // Case #3.
     // The basic approach here is to split the existing node into two pieces
     // and insert the new piece in between them.
-    std::println("============================Case 3: Insertion at middle of "
-                 "node============================");
     auto insert_pos = buffer_position(node->piece, remainder);
     auto new_len_right = buffers.buffer_offset(node->piece.buffer_type, node->piece.last) -
                          buffers.buffer_offset(node->piece.buffer_type, insert_pos);
@@ -530,45 +521,50 @@ void Tree::internal_remove(size_t offset, size_t count) {
     auto first_node = first.node;
     auto last_node = last.node;
 
+    std::println("=======FIRST PIECE=======");
+    print_piece(first_node->piece, this, 0);
+    std::println("=======LAST PIECE=======");
+    print_piece(last_node->piece, this, 0);
+
     auto start_split_pos = buffer_position(first_node->piece, first.remainder);
 
     // Simple case: the range of characters we want to delete are
     // held directly within this node.  Remove the node, resize it
     // then add it back.
     if (first_node == last_node) {
+        std::println("============================Case 1: Deletion is constrained to one node"
+                     "============================");
         auto end_split_pos = buffer_position(first_node->piece, last.remainder);
         // We're going to shrink the node starting from the beginning.
-        if (first.start_offset == offset) {
-            // Delete the entire node.
-            if (count == first_node->piece.length) {
-                root = root.remove(first.start_offset);
-                return;
-            }
-            // Shrink the node.
-            auto new_piece = trim_piece_left(first_node->piece, end_split_pos);
-            // Remove the old one and update.
-            root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
-            return;
-        }
+        // if (first.start_offset == offset) {
+        //     // Delete the entire node.
+        //     if (count == first_node->piece.length) {
+        //         root = root.remove(first.start_offset);
+        //         return;
+        //     }
+        //     // Shrink the node.
+        //     auto new_piece = trim_piece_left(first_node->piece, end_split_pos);
+        //     // Remove the old one and update.
+        //     root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
+        //     return;
+        // }
 
         // Trim the tail of this piece.
-        if (first.start_offset + first_node->piece.length == offset + count) {
-            auto new_piece = trim_piece_right(first_node->piece, start_split_pos);
-            // Remove the old one and update.
-            root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
-            return;
-        }
+        // if (first.start_offset + first_node->piece.length == offset + count) {
+        //     auto new_piece = trim_piece_right(first_node->piece, start_split_pos);
+        //     // Remove the old one and update.
+        //     root = root.remove(first.start_offset).insert({new_piece}, first.start_offset);
+        //     return;
+        // }
 
         // The removed buffer is somewhere in the middle.  Trim it in both directions.
         auto [left, right] = shrink_piece(first_node->piece, start_split_pos, end_split_pos);
 
-        // TODO: How is this working??
-        {
-            root = root.remove(first.start_offset);
-            root = root.remove(first.start_offset);
-            root = root.insert({right}, first.start_offset);
-            root = root.insert({left}, first.start_offset);
-        }
+        root = root.remove(first.start_offset);
+        // Note: We insert right first so that the 'left' will be inserted to the right node's
+        // left.
+        if (right.length > 0) root = root.insert({right}, first.start_offset);
+        if (left.length > 0) root = root.insert({left}, first.start_offset);
 
         // root = root.remove(first.start_offset)
         //            // Note: We insert right first so that the 'left' will be inserted
@@ -586,16 +582,13 @@ void Tree::internal_remove(size_t offset, size_t count) {
     // 3. Part of the first node is deleted and part of the last node.
     // 4. The entire first node is deleted and part of the last node.
 
+    std::println("============================Case 2: Deletion spans multiple nodes"
+                 "============================");
+
     auto new_first = trim_piece_right(first_node->piece, start_split_pos);
     if (last_node == nullptr) {
         remove_node_range(first, count);
     } else {
-        // TODO: How is this working??
-        {
-            root = root.remove(first.start_offset);
-            root = root.remove(first.start_offset);
-        }
-
         auto end_split_pos = buffer_position(last_node->piece, last.remainder);
         auto new_last = trim_piece_left(last_node->piece, end_split_pos);
         remove_node_range(first, count);
@@ -836,9 +829,9 @@ NodePosition Tree::node_at(size_t off) const {
 
     auto node = root;
     while (!node.empty()) {
-        if (node.data().left_subtree_length > off) {
+        if (off < node.data().left_subtree_length) {
             node = node.left();
-        } else if (node.data().left_subtree_length + node.data().piece.length > off) {
+        } else if (off < node.data().left_subtree_length + node.data().piece.length) {
             node_start_offset += node.data().left_subtree_length;
             newline_count += node.data().left_subtree_lf_count;
             // Now we find the line within this piece.
@@ -968,7 +961,6 @@ void Tree::combine_pieces(NodePosition existing, Piece new_piece) {
 
 void Tree::remove_node_range(NodePosition first, size_t length) {
     // Remove pieces until we reach the desired length.
-    size_t deleted_len = 0;
     // Because we could be deleting content in the range starting at 'first' where the piece
     // length could be much larger than 'length', we need to adjust 'length' to contain the
     // delta in length within the piece to the end where 'length' starts:
@@ -983,12 +975,10 @@ void Tree::remove_node_range(NodePosition first, size_t length) {
     // and believe that the entire range was deleted.
     assert(first.node != nullptr);
     auto total_length = first.node->piece.length;
-    // std::println("total_length = {}, first.remainder = {}", total_length, first.remainder);
-    // (total - remainder) is the section of 'length' where 'first' intersects.
-    // length -= (total_length - first.remainder) + total_length;
-    length = base::sub_sat(length, (total_length - first.remainder) + total_length);
+    length = length - (total_length - first.remainder) + total_length;
 
     auto delete_at_offset = first.start_offset;
+    size_t deleted_len = 0;
     while (deleted_len < length && first.node != nullptr) {
         deleted_len += first.node->piece.length;
         root = root.remove(delete_at_offset);

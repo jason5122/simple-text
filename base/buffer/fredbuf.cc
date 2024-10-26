@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 
+#include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "util/scope_guard.h"
 #include "util/std_print.h"
@@ -412,7 +413,8 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
 #endif  // TEXTBUF_DEBUG
     }};
     if (root.empty()) {
-        std::println("============================Case 0: Empty Root============================");
+        std::println("============================Case 0: Insertion at empty "
+                     "root============================");
 
         auto piece = build_piece(txt);
         std::println("piece.length = {}", piece.length);
@@ -420,14 +422,11 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
         return;
     }
 
-    auto result = node_at(&buffers, root, offset);
+    auto result = node_at(offset);
     // If the offset is beyond the buffer, just select the last node.
     if (result.node == nullptr) {
-        auto off = 0;
-        if (total_content_length != 0) {
-            off += total_content_length - 1;
-        }
-        result = node_at(&buffers, root, off);
+        auto off = base::sub_sat(total_content_length, 1_Z);
+        result = node_at(off);
     }
 
     // There are 3 cases:
@@ -436,7 +435,7 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     // 3. We are inserting in the middle of the node.
     auto [node, remainder, node_start_offset, line] = result;
     assert(node != nullptr);
-    auto insert_pos = buffer_position(&buffers, node->piece, remainder);
+    auto insert_pos = buffer_position(node->piece, remainder);
     // Case #1.
     if (node_start_offset == offset) {
         // There's a bonus case here.  If our last insertion point was the same as this piece's
@@ -448,7 +447,7 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
         // 4. Extend the old piece's length to the length of the newly created piece.
         // 5. Re-insert the new piece.
         if (offset != 0) {
-            auto prev_node_result = node_at(&buffers, root, offset - 1);
+            auto prev_node_result = node_at(offset - 1);
             if (prev_node_result.node->piece.buffer_type == BufferType::Mod &&
                 prev_node_result.node->piece.last == last_insert) {
                 auto new_piece = build_piece(txt);
@@ -486,6 +485,8 @@ void Tree::internal_insert(size_t offset, std::string_view txt) {
     // Case #3.
     // The basic approach here is to split the existing node into two pieces
     // and insert the new piece in between them.
+    std::println("============================Case 3: Insertion at middle of "
+                 "piece============================");
     auto new_len_right = buffers.buffer_offset(node->piece.buffer_type, node->piece.last) -
                          buffers.buffer_offset(node->piece.buffer_type, insert_pos);
     auto new_piece_right = node->piece;
@@ -522,18 +523,18 @@ void Tree::internal_remove(size_t offset, size_t count) {
         satisfies_rb_invariants(root);
 #endif  // TEXTBUF_DEBUG
     }};
-    auto first = node_at(&buffers, root, offset);
-    auto last = node_at(&buffers, root, offset + count);
+    auto first = node_at(offset);
+    auto last = node_at(offset + count);
     auto first_node = first.node;
     auto last_node = last.node;
 
-    auto start_split_pos = buffer_position(&buffers, first_node->piece, first.remainder);
+    auto start_split_pos = buffer_position(first_node->piece, first.remainder);
 
     // Simple case: the range of characters we want to delete are
     // held directly within this node.  Remove the node, resize it
     // then add it back.
     if (first_node == last_node) {
-        auto end_split_pos = buffer_position(&buffers, first_node->piece, last.remainder);
+        auto end_split_pos = buffer_position(first_node->piece, last.remainder);
         // We're going to shrink the node starting from the beginning.
         if (first.start_offset == offset) {
             // Delete the entire node.
@@ -594,7 +595,7 @@ void Tree::internal_remove(size_t offset, size_t count) {
             root = root.remove(first.start_offset);
         }
 
-        auto end_split_pos = buffer_position(&buffers, last_node->piece, last.remainder);
+        auto end_split_pos = buffer_position(last_node->piece, last.remainder);
         auto new_last = trim_piece_left(&buffers, last_node->piece, end_split_pos);
         remove_node_range(first, count);
         // There's an edge case here where we delete all the nodes up to 'last' but
@@ -720,13 +721,13 @@ size_t Tree::line_count() const {
 
 size_t Tree::line_at(size_t offset) const {
     if (empty()) return 0;
-    auto result = node_at(&buffers, root, offset);
+    auto result = node_at(offset);
     return result.line;
 }
 
 std::pair<size_t, size_t> Tree::line_column_at(size_t offset) const {
     if (empty()) return {0, 0};
-    auto result = node_at(&buffers, root, offset);
+    auto result = node_at(offset);
     size_t line = result.line;
     auto [first, last] = get_line_range(line);
     size_t col = offset - first;
@@ -740,15 +741,11 @@ size_t Tree::offset_at(size_t line, size_t column) const {
 }
 
 char Tree::at(size_t offset) const {
-    return char_at(&buffers, root, offset);
-}
-
-char Tree::char_at(const BufferCollection* buffers, const RedBlackTree& node, size_t offset) {
-    auto result = node_at(buffers, node, offset);
+    auto result = node_at(offset);
     if (result.node == nullptr) return '\0';
-    auto* buffer = buffers->buffer_at(result.node->piece.buffer_type);
+    auto* buffer = buffers.buffer_at(result.node->piece.buffer_type);
     auto buf_offset =
-        buffers->buffer_offset(result.node->piece.buffer_type, result.node->piece.first);
+        buffers.buffer_offset(result.node->piece.buffer_type, result.node->piece.first);
     const char* p = buffer->buffer.data() + buf_offset + result.remainder;
     return *p;
 }
@@ -833,9 +830,11 @@ Piece Tree::build_piece(std::string_view txt) {
     return piece;
 }
 
-NodePosition Tree::node_at(const BufferCollection* buffers, RedBlackTree node, size_t off) {
+NodePosition Tree::node_at(size_t off) const {
     size_t node_start_offset = 0;
     size_t newline_count = 0;
+
+    auto node = root;
     while (!node.empty()) {
         if (node.root().left_subtree_length > off) {
             node = node.left();
@@ -844,7 +843,7 @@ NodePosition Tree::node_at(const BufferCollection* buffers, RedBlackTree node, s
             newline_count += node.root().left_subtree_lf_count;
             // Now we find the line within this piece.
             auto remainder = off - node.root().left_subtree_length;
-            auto pos = buffer_position(buffers, node.root().piece, remainder);
+            auto pos = buffer_position(node.root().piece, remainder);
             // Note: since buffer_position will return us a newline relative to the buffer itself,
             // we need to retract it by the starting line of the piece to get the real difference.
             newline_count += pos.line - node.root().piece.first.line;
@@ -876,10 +875,8 @@ NodePosition Tree::node_at(const BufferCollection* buffers, RedBlackTree node, s
     return {};
 }
 
-BufferCursor Tree::buffer_position(const BufferCollection* buffers,
-                                   const Piece& piece,
-                                   size_t remainder) {
-    auto& starts = buffers->buffer_at(piece.buffer_type)->line_starts;
+BufferCursor Tree::buffer_position(const Piece& piece, size_t remainder) const {
+    auto& starts = buffers.buffer_at(piece.buffer_type)->line_starts;
     auto start_offset = starts[piece.first.line] + piece.first.column;
     auto offset = start_offset + remainder;
 
@@ -996,7 +993,7 @@ void Tree::remove_node_range(NodePosition first, size_t length) {
     while (deleted_len < length && first.node != nullptr) {
         deleted_len += first.node->piece.length;
         root = root.remove(delete_at_offset);
-        first = node_at(&buffers, root, delete_at_offset);
+        first = node_at(delete_at_offset);
     }
 }
 

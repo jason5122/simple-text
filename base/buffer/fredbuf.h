@@ -110,11 +110,8 @@ private:
                                   BufferType buffer_type,
                                   const BufferCursor& start,
                                   const BufferCursor& end);
-    static NodePosition node_at(const BufferCollection* buffers, RedBlackTree node, size_t off);
-    static BufferCursor buffer_position(const BufferCollection* buffers,
-                                        const Piece& piece,
-                                        size_t remainder);
-    static char char_at(const BufferCollection* buffers, const RedBlackTree& node, size_t offset);
+    NodePosition node_at(size_t off) const;
+    BufferCursor buffer_position(const Piece& piece, size_t remainder) const;
     static Piece trim_piece_right(const BufferCollection* buffers,
                                   const Piece& piece,
                                   const BufferCursor& pos);

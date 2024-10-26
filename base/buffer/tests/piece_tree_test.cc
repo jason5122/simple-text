@@ -42,6 +42,24 @@ TEST(PieceTreeTest, FromScratch1) {
     EXPECT_EQ(str.length(), tree.length());
 }
 
+TEST(PieceTreeTest, FromScratch2) {
+    std::string str = "The quick brown fox\njumped over the lazy dog";
+    Tree tree{str};
+
+    print_tree(tree.root, &tree);
+    std::println("tree.str() = \"{}\"", tree.str());
+    EXPECT_EQ(str, tree.str());
+    EXPECT_EQ(str.length(), tree.length());
+
+    str.insert(9, " and nimble");
+    tree.insert(9, " and nimble");
+    print_tree(tree.root, &tree);
+    std::println("tree.str() = \"{}\"", tree.str());
+    EXPECT_EQ(str, tree.str());
+    EXPECT_EQ(str.length(), tree.length());
+    std::println("tree.str() = \"{}\"", tree.str());
+}
+
 TEST(PieceTreeTest, Init) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
     Tree tree{str};

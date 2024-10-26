@@ -145,6 +145,7 @@ void TextViewWidget::insertText(std::string_view text) {
     }
 
     size_t i = selection.end().index;
+    std::println("Inserting {} at {}", text, i);
     tree.insert(i, text);
     selection.incrementIndex(text.length(), false);
 
@@ -175,7 +176,7 @@ void TextViewWidget::leftDelete() {
         }
 
         size_t i = selection.end().index;
-        tree.remove(i, delta);
+        tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
@@ -183,7 +184,7 @@ void TextViewWidget::leftDelete() {
 #endif
     } else {
         auto [start, end] = selection.range();
-        tree.remove(start, end - start);
+        tree.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -204,7 +205,7 @@ void TextViewWidget::rightDelete() {
 
         size_t delta = Caret::moveToNextGlyph(layout, col);
         size_t i = selection.end().index;
-        tree.remove(i, delta);
+        tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
@@ -212,7 +213,7 @@ void TextViewWidget::rightDelete() {
 #endif
     } else {
         auto [start, end] = selection.range();
-        tree.remove(start, end - start);
+        tree.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -246,7 +247,7 @@ void TextViewWidget::deleteWord(bool forward) {
         }
 
         size_t i = selection.end().index;
-        tree.remove(i, delta);
+        tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
@@ -254,7 +255,7 @@ void TextViewWidget::deleteWord(bool forward) {
 #endif
     } else {
         auto [start, end] = selection.range();
-        tree.remove(start, end - start);
+        tree.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -283,6 +284,17 @@ void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
 
     size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
+
+    std::string str;
+    str.reserve(tree.length());
+    for (char ch : tree) {
+        str.push_back(ch);
+    }
+    std::println("buffer = \"{}\"", str);
+    std::println("line count = {}", tree.line_count());
+    for (size_t line = 0; line < tree.line_count(); ++line) {
+        std::println("line {} = \"{}\"", line, tree.get_line_content(line));
+    }
 
     renderText(start_line, end_line, main_line_height);
     renderSelections(start_line, end_line);
@@ -398,25 +410,20 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 #endif
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
-    auto t1 = std::chrono::high_resolution_clock::now();
     auto [selection_line, _] = tree.line_column_at(selection.end().index);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    long long line_col_conversion_duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    std::println("Total line/column conversion time: {}", line_col_conversion_duration);
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
-    long long total_layout_duration = 0;
-    long long total_text_render_duration = 0;
+    // long long total_layout_duration = 0;
+    // long long total_text_render_duration = 0;
 
     for (size_t line = start_line; line < end_line; ++line) {
         auto t1 = std::chrono::high_resolution_clock::now();
         const auto& layout = layoutAt(line);
         auto t2 = std::chrono::high_resolution_clock::now();
-        long long duration =
-            std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-        total_layout_duration += duration;
+        // long long duration =
+        //     std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        // total_layout_duration += duration;
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
@@ -475,8 +482,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             [](size_t) { return kTextColor; }, min_x, max_x);
 #endif
         t2 = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-        total_text_render_duration += duration;
+        // duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        // total_text_render_duration += duration;
 
         // Draw gutter.
         if (line == selection_line) {
@@ -505,8 +512,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
                                        line_number_highlight_callback);
     }
 
-    std::println("Total layoutAt() time: {}", total_layout_duration);
-    std::println("Total TextRender time: {}", total_text_render_duration);
+    // std::println("Total layoutAt() time: {}", total_layout_duration);
+    // std::println("Total TextRender time: {}", total_text_render_duration);
 
     constexpr bool kDebugAtlas = false;
     if constexpr (kDebugAtlas) {

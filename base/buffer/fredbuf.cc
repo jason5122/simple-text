@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 
+#include "base/numeric/saturation_arithmetic.h"
 #include "util/scope_guard.h"
 #include "util/std_print.h"
 
@@ -355,6 +356,11 @@ Tree::Tree(Buffers&& buffers) : buffers{std::move(buffers)} {
     build_tree();
 }
 
+Tree::Tree(std::string_view txt) : buffers{} {
+    build_tree();
+    insert(0, txt);
+}
+
 void Tree::build_tree() {
     buffers.mod_buffer.line_starts.clear();
     buffers.mod_buffer.buffer.clear();
@@ -539,14 +545,46 @@ void Tree::internal_remove(size_t offset, size_t count) {
             return;
         }
 
+        // print_tree(root, this);
+
         // The removed buffer is somewhere in the middle.  Trim it in both directions.
         auto [left, right] =
             shrink_piece(&buffers, first_node->piece, start_split_pos, end_split_pos);
-        root = root.remove(first.start_offset)
-                   // Note: We insert right first so that the 'left' will be inserted
-                   // to the right node's left.
-                   .insert({right}, first.start_offset)
-                   .insert({left}, first.start_offset);
+
+        // std::println("left.first.line = {}, left.first.column = {}", left.first.line,
+        //              left.first.column);
+        // std::println("left.last.line = {}, left.last.column = {}", left.last.line,
+        //              left.last.column);
+        // std::println("right.first.line = {}, right.first.column = {}", right.first.line,
+        //              right.first.column);
+        // std::println("right.last.line = {}, right.last.column = {}", right.last.line,
+        //              right.last.column);
+
+        // if (count == 1) {
+        //     std::println("GOTCHU");
+        //     // print_piece(first_node->piece, this, 0);
+        //     root = root.remove(first.start_offset);
+        //     root = root.remove(first.start_offset);
+        //     root = root.insert({right}, first.start_offset);
+        //     root = root.insert({left}, first.start_offset);
+        // } else {
+        //     root = root.remove(first.start_offset)
+        //                .insert({right}, first.start_offset)
+        //                .insert({left}, first.start_offset);
+        // }
+
+        // TODO: How is this working??
+        root = root.remove(first.start_offset);
+        root = root.remove(first.start_offset);
+        root = root.insert({right}, first.start_offset);
+        root = root.insert({left}, first.start_offset);
+
+        // root = root.remove(first.start_offset)
+        //            // Note: We insert right first so that the 'left' will be inserted
+        //            // to the right node's left.
+        //            .insert({right}, first.start_offset)
+        //            .insert({left}, first.start_offset);
+        // print_tree(root, this);
         return;
     }
 
@@ -562,6 +600,10 @@ void Tree::internal_remove(size_t offset, size_t count) {
     if (last_node == nullptr) {
         remove_node_range(first, count);
     } else {
+        // TODO: How is this working??
+        root = root.remove(first.start_offset);
+        root = root.remove(first.start_offset);
+
         auto end_split_pos = buffer_position(&buffers, last_node->piece, last.remainder);
         auto new_last = trim_piece_left(&buffers, last_node->piece, end_split_pos);
         remove_node_range(first, count);
@@ -659,6 +701,15 @@ LineRange Tree::get_line_range_with_newline(size_t line) const {
     line_start<&Tree::accumulate_value>(&range.first, &buffers, root, line);
     line_start<&Tree::accumulate_value>(&range.last, &buffers, root, line + 1);
     return range;
+}
+
+std::string Tree::str() const {
+    std::string str;
+    str.reserve(length());
+    for (char ch : *this) {
+        str.push_back(ch);
+    }
+    return str;
 }
 
 size_t Tree::length() const {
@@ -957,8 +1008,11 @@ void Tree::remove_node_range(NodePosition first, size_t length) {
     // and believe that the entire range was deleted.
     assert(first.node != nullptr);
     auto total_length = first.node->piece.length;
+    // std::println("total_length = {}, first.remainder = {}", total_length, first.remainder);
     // (total - remainder) is the section of 'length' where 'first' intersects.
-    length -= (total_length - first.remainder) + total_length;
+    // length -= (total_length - first.remainder) + total_length;
+    length = base::sub_sat(length, (total_length - first.remainder) + total_length);
+
     auto delete_at_offset = first.start_offset;
     while (deleted_len < length && first.node != nullptr) {
         deleted_len += first.node->piece.length;
@@ -976,7 +1030,7 @@ void Tree::insert(size_t offset, std::string_view txt) {
     internal_insert(offset, txt);
 }
 
-void Tree::remove(size_t offset, size_t count) {
+void Tree::erase(size_t offset, size_t count) {
     // Rule out the obvious noop.
     if (count == 0 || root.empty()) return;
     append_undo(root, offset);
@@ -1278,6 +1332,47 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             stack.push_back({node});
         }
     }
+}
+
+inline const char* to_string(Color c) {
+    switch (c) {
+    case Color::Red:
+        return "Red";
+    case Color::Black:
+        return "Black";
+    case Color::DoubleBlack:
+        return "DoubleBlack";
+    }
+    return "unknown";
+}
+
+void print_piece(const Piece& piece, const Tree* tree, int level) {
+    const char* levels = "|||||||||||||||||||||||||||||||";
+    printf("%.*sidx{%zd}, first{l{%zd}, c{%zd}}, last{l{%zd}, c{%zd}}, len{%zd}, lf{%zd}\n", level,
+           levels, piece.index, piece.first.line, piece.first.column, piece.last.line,
+           piece.last.column, piece.length, piece.newline_count);
+    auto* buffer = tree->buffers.buffer_at(piece.index);
+    auto offset = tree->buffers.buffer_offset(piece.index, piece.first);
+    printf("%.*sPiece content: %.*s\n", level, levels, static_cast<int>(piece.length),
+           buffer->buffer.data() + offset);
+}
+
+void print_tree(const PieceTree::RedBlackTree& root,
+                const PieceTree::Tree* tree,
+                int level,
+                size_t node_offset) {
+    if (root.empty()) return;
+    const char* levels = "|||||||||||||||||||||||||||||||";
+    auto this_offset = node_offset + root.root().left_subtree_length;
+    printf("%.*sme: %p, left: %p, right: %p, color: %s\n", level, levels, root.root_ptr(),
+           root.left().root_ptr(), root.right().root_ptr(), to_string(root.root_color()));
+    print_piece(root.root().piece, tree, level);
+    printf("%.*sleft_len{%zd}, left_lf{%zd}, node_offset{%zd}\n", level, levels,
+           root.root().left_subtree_length, root.root().left_subtree_lf_count, this_offset);
+    printf("\n");
+    print_tree(root.left(), tree, level + 1, node_offset);
+    printf("\n");
+    print_tree(root.right(), tree, level + 1, this_offset + root.root().piece.length);
 }
 
 }  // namespace PieceTree

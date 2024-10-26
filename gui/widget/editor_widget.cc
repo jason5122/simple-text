@@ -58,7 +58,8 @@ EditorWidget::EditorWidget()
     // std::string text = flat_json;
     std::string text = json_with_escape;
     // std::string text = large_json;
-    multi_view->addTab(std::make_shared<TextViewWidget>(text));
+    // multi_view->addTab(std::make_shared<TextViewWidget>(text));
+    multi_view->addTab(std::make_shared<TextViewWidget>(""));
 
     addChildStart(std::move(tab_bar_padding));
     addChildStart(tab_bar);

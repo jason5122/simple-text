@@ -66,10 +66,11 @@ class Tree {
 public:
     explicit Tree();
     explicit Tree(Buffers&& buffers);
+    explicit Tree(std::string_view txt);
 
     // Manipulation.
     void insert(size_t offset, std::string_view txt);
-    void remove(size_t offset, size_t count);
+    void erase(size_t offset, size_t count);
     UndoRedoResult try_undo(size_t op_offset = 0);
     UndoRedoResult try_redo(size_t op_offset = 0);
 
@@ -81,6 +82,7 @@ public:
     size_t offset_at(size_t line, size_t column) const;
     LineRange get_line_range(size_t line) const;
     LineRange get_line_range_with_newline(size_t line) const;
+    std::string str() const;
 
     size_t length() const;
     bool empty() const;
@@ -144,6 +146,7 @@ private:
     void compute_buffer_meta();
     void append_undo(const RedBlackTree& old_root, size_t op_offset);
 
+public:  // TODO: Remove this public block.
     BufferCollection buffers;
     PieceTree::RedBlackTree root;
     LineStarts scratch_starts;
@@ -260,5 +263,12 @@ constexpr WalkSentinel end(const Tree&) {
 inline bool operator==(const TreeWalker& walker, WalkSentinel) {
     return walker.exhausted();
 }
+
+// TODO: Debug use; remove this.
+void print_piece(const Piece& piece, const Tree* tree, int level);
+void print_tree(const PieceTree::RedBlackTree& root,
+                const PieceTree::Tree* tree,
+                int level = 0,
+                size_t node_offset = 0);
 
 }  // namespace PieceTree

@@ -2,6 +2,7 @@
 
 #include "font/types.h"
 #include <cstddef>
+#include <string_view>
 
 namespace gui {
 

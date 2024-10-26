@@ -5,3 +5,4 @@ bugprone-*,
 # cppcoreguidelines-*,
 clang-analyzer-*,
 misc-*'
+-misc-const-correctness

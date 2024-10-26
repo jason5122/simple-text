@@ -1,3 +1,6 @@
 source_set("buffer") {
-  sources = [ "piece_table.cc" ]
+  sources = [
+    "fredbuf.cc",
+    "piece_table.cc",
+  ]
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/buffer/fredbuf.h"
 #include "base/buffer/piece_table.h"
 #include "gui/text_system/line_layout_cache.h"
 #include "gui/text_system/selection.h"
@@ -7,7 +8,7 @@
 #include "gui/widget/types.h"
 
 // TODO: Debug use; remove this.
-#define ENABLE_HIGHLIGHTING
+// #define ENABLE_HIGHLIGHTING
 
 #ifdef ENABLE_HIGHLIGHTING
 #include "base/syntax_highlighter/syntax_highlighter.h"
@@ -55,6 +56,7 @@ private:
     static constexpr Rgba kCaretColor{95, 180, 180, 255};
 
     base::PieceTable table;
+    PieceTree::Tree tree;
     LineLayoutCache line_layout_cache;
 
     Selection selection{};

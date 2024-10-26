@@ -14,6 +14,7 @@ namespace gui {
 
 TextViewWidget::TextViewWidget(std::string_view text)
     : table{text}, line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
+    tree.insert(0, text);
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -27,7 +28,8 @@ TextViewWidget::TextViewWidget(std::string_view text)
 }
 
 void TextViewWidget::selectAll() {
-    selection.setRange(0, table.length());
+    // selection.setRange(0, table.length());
+    selection.setRange(0, tree.length());
 
     // updateCaretX();
 }
@@ -90,7 +92,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         }
     }
     if (by == MoveBy::kLines && forward) {
-        if (line < base::sub_sat(table.lineCount(), 1_Z)) {
+        if (line < table.lineCount() - 1) {
             bool exclude_end;
             const auto& prev_layout = layoutAt(line + 1, exclude_end);
             int x = Caret::xAtColumn(layout, col, false);
@@ -131,7 +133,8 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
         // updateCaretX();
     }
     if (to == MoveTo::kEOF) {
-        selection.setIndex(table.length(), extend);
+        // selection.setIndex(table.length(), extend);
+        selection.setIndex(tree.length(), extend);
         // updateCaretX();
     }
 }
@@ -145,6 +148,10 @@ void TextViewWidget::insertText(std::string_view text) {
 
     size_t i = selection.end().index;
     table.insert(i, text);
+    tree.insert(i, text);
+    if (table.length() != tree.length()) {
+        std::println("table.length() = {}, tree.length() = {}", table.length(), tree.length());
+    }
     selection.incrementIndex(text.length(), false);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -175,6 +182,7 @@ void TextViewWidget::leftDelete() {
 
         size_t i = selection.end().index;
         table.erase(i, delta);
+        tree.remove(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
@@ -183,6 +191,7 @@ void TextViewWidget::leftDelete() {
     } else {
         auto [start, end] = selection.range();
         table.erase(start, end - start);
+        tree.remove(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -204,6 +213,7 @@ void TextViewWidget::rightDelete() {
         size_t delta = Caret::moveToNextGlyph(layout, col);
         size_t i = selection.end().index;
         table.erase(i, delta);
+        tree.remove(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
@@ -212,6 +222,7 @@ void TextViewWidget::rightDelete() {
     } else {
         auto [start, end] = selection.range();
         table.erase(start, end - start);
+        tree.remove(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -246,6 +257,7 @@ void TextViewWidget::deleteWord(bool forward) {
 
         size_t i = selection.end().index;
         table.erase(i, delta);
+        tree.remove(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
@@ -254,6 +266,7 @@ void TextViewWidget::deleteWord(bool forward) {
     } else {
         auto [start, end] = selection.range();
         table.erase(start, end - start);
+        tree.remove(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING

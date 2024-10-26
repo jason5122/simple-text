@@ -24,7 +24,7 @@ bool RedBlackTree::empty() const {
     return !root_node;
 }
 
-const NodeData& RedBlackTree::root() const {
+const NodeData& RedBlackTree::data() const {
     assert(!empty());
     return root_node->data;
 }
@@ -46,7 +46,7 @@ Color RedBlackTree::root_color() const {
 
 RedBlackTree RedBlackTree::insert(const NodeData& x, size_t at) const {
     RedBlackTree t = ins(x, at, 0);
-    return RedBlackTree(Color::Black, t.left(), t.root(), t.right());
+    return RedBlackTree(Color::Black, t.left(), t.data(), t.right());
 }
 
 RedBlackTree::RedBlackTree(Color c,
@@ -62,7 +62,7 @@ RedBlackTree RedBlackTree::ins(const NodeData& x, size_t at, size_t total_offset
         return RedBlackTree(Color::Red, RedBlackTree(), x, RedBlackTree());
     }
 
-    const NodeData& y = root();
+    const NodeData& y = data();
     if (at < total_offset + y.left_subtree_length + y.piece.length) {
         return balance(root_color(), left().ins(x, at, total_offset), y, right());
     }
@@ -75,18 +75,18 @@ RedBlackTree RedBlackTree::balance(Color c,
                                    const NodeData& x,
                                    const RedBlackTree& rgt) {
     if (c == Color::Black && lft.doubled_left())
-        return RedBlackTree(Color::Red, lft.left().paint(Color::Black), lft.root(),
+        return RedBlackTree(Color::Red, lft.left().paint(Color::Black), lft.data(),
                             RedBlackTree(Color::Black, lft.right(), x, rgt));
     else if (c == Color::Black && lft.doubled_right())
         return RedBlackTree(
-            Color::Red, RedBlackTree(Color::Black, lft.left(), lft.root(), lft.right().left()),
-            lft.right().root(), RedBlackTree(Color::Black, lft.right().right(), x, rgt));
+            Color::Red, RedBlackTree(Color::Black, lft.left(), lft.data(), lft.right().left()),
+            lft.right().data(), RedBlackTree(Color::Black, lft.right().right(), x, rgt));
     else if (c == Color::Black && rgt.doubled_left())
         return RedBlackTree(
-            Color::Red, RedBlackTree(Color::Black, lft, x, rgt.left().left()), rgt.left().root(),
-            RedBlackTree(Color::Black, rgt.left().right(), rgt.root(), rgt.right()));
+            Color::Red, RedBlackTree(Color::Black, lft, x, rgt.left().left()), rgt.left().data(),
+            RedBlackTree(Color::Black, rgt.left().right(), rgt.data(), rgt.right()));
     else if (c == Color::Black && rgt.doubled_right())
-        return RedBlackTree(Color::Red, RedBlackTree(Color::Black, lft, x, rgt.left()), rgt.root(),
+        return RedBlackTree(Color::Red, RedBlackTree(Color::Black, lft, x, rgt.left()), rgt.data(),
                             rgt.right().paint(Color::Black));
     return RedBlackTree(c, lft, x, rgt);
 }
@@ -103,17 +103,17 @@ bool RedBlackTree::doubled_right() const {
 
 RedBlackTree RedBlackTree::paint(Color c) const {
     assert(!empty());
-    return RedBlackTree(c, left(), root(), right());
+    return RedBlackTree(c, left(), data(), right());
 }
 
 size_t tree_length(const RedBlackTree& root) {
     if (root.empty()) return {};
-    return root.root().left_subtree_length + root.root().piece.length + tree_length(root.right());
+    return root.data().left_subtree_length + root.data().piece.length + tree_length(root.right());
 }
 
 size_t tree_lf_count(const RedBlackTree& root) {
     if (root.empty()) return {};
-    return root.root().left_subtree_lf_count + root.root().piece.newline_count +
+    return root.data().left_subtree_lf_count + root.data().piece.newline_count +
            tree_lf_count(root.right());
 }
 
@@ -153,18 +153,18 @@ struct WalkResult {
 WalkResult pred(const RedBlackTree& root, size_t start_offset) {
     RedBlackTree t = root.left();
     while (!t.right().empty()) {
-        start_offset = start_offset + t.root().left_subtree_length + t.root().piece.length;
+        start_offset = start_offset + t.data().left_subtree_length + t.data().piece.length;
         t = t.right();
     }
     // Add the final offset from the last right node.
-    start_offset = start_offset + t.root().left_subtree_length;
+    start_offset = start_offset + t.data().left_subtree_length;
     return {.tree = t, .accumulated_offset = start_offset};
 }
 
 RedBlackTree RedBlackTree::remove(size_t at) const {
     auto t = rem(*this, at, 0);
     if (t.empty()) return RedBlackTree();
-    return RedBlackTree(Color::Black, t.left(), t.root(), t.right());
+    return RedBlackTree(Color::Black, t.left(), t.data(), t.right());
 }
 
 RedBlackTree RedBlackTree::fuse(const RedBlackTree& left, const RedBlackTree& right) {
@@ -175,33 +175,33 @@ RedBlackTree RedBlackTree::fuse(const RedBlackTree& left, const RedBlackTree& ri
     // match: (left.color, right.color)
     // case: (B, R)
     if (left.root_color() == Color::Black && right.root_color() == Color::Red) {
-        return RedBlackTree(Color::Red, fuse(left, right.left()), right.root(), right.right());
+        return RedBlackTree(Color::Red, fuse(left, right.left()), right.data(), right.right());
     }
     // case: (R, B)
     if (left.root_color() == Color::Red && right.root_color() == Color::Black) {
-        return RedBlackTree(Color::Red, left.left(), left.root(), fuse(left.right(), right));
+        return RedBlackTree(Color::Red, left.left(), left.data(), fuse(left.right(), right));
     }
     // case: (R, R)
     if (left.root_color() == Color::Red && right.root_color() == Color::Red) {
         auto fused = fuse(left.right(), right.left());
         if (!fused.empty() && fused.root_color() == Color::Red) {
-            auto new_left = RedBlackTree(Color::Red, left.left(), left.root(), fused.left());
-            auto new_right = RedBlackTree(Color::Red, fused.right(), right.root(), right.right());
-            return RedBlackTree(Color::Red, new_left, fused.root(), new_right);
+            auto new_left = RedBlackTree(Color::Red, left.left(), left.data(), fused.left());
+            auto new_right = RedBlackTree(Color::Red, fused.right(), right.data(), right.right());
+            return RedBlackTree(Color::Red, new_left, fused.data(), new_right);
         }
-        auto new_right = RedBlackTree(Color::Red, fused, right.root(), right.right());
-        return RedBlackTree(Color::Red, left.left(), left.root(), new_right);
+        auto new_right = RedBlackTree(Color::Red, fused, right.data(), right.right());
+        return RedBlackTree(Color::Red, left.left(), left.data(), new_right);
     }
     // case: (B, B)
     assert(left.root_color() == right.root_color() && left.root_color() == Color::Black);
     auto fused = fuse(left.right(), right.left());
     if (!fused.empty() && fused.root_color() == Color::Red) {
-        auto new_left = RedBlackTree(Color::Black, left.left(), left.root(), fused.left());
-        auto new_right = RedBlackTree(Color::Black, fused.right(), right.root(), right.right());
-        return RedBlackTree(Color::Red, new_left, fused.root(), new_right);
+        auto new_left = RedBlackTree(Color::Black, left.left(), left.data(), fused.left());
+        auto new_right = RedBlackTree(Color::Black, fused.right(), right.data(), right.right());
+        return RedBlackTree(Color::Red, new_left, fused.data(), new_right);
     }
-    auto new_right = RedBlackTree(Color::Black, fused, right.root(), right.right());
-    auto new_node = RedBlackTree(Color::Red, left.left(), left.root(), new_right);
+    auto new_right = RedBlackTree(Color::Black, fused, right.data(), right.right());
+    auto new_node = RedBlackTree(Color::Red, left.left(), left.data(), new_right);
     return balance_left(new_node);
 }
 
@@ -211,36 +211,36 @@ RedBlackTree RedBlackTree::balance(const RedBlackTree& node) {
         node.right().root_color() == Color::Red) {
         auto l = node.left().paint(Color::Black);
         auto r = node.right().paint(Color::Black);
-        return RedBlackTree(Color::Red, l, node.root(), r);
+        return RedBlackTree(Color::Red, l, node.data(), r);
     }
 
     assert(node.root_color() == Color::Black);
-    return balance(node.root_color(), node.left(), node.root(), node.right());
+    return balance(node.root_color(), node.left(), node.data(), node.right());
 }
 
 RedBlackTree RedBlackTree::balance_left(const RedBlackTree& left) {
     // match: (color_l, color_r, color_r_l)
     // case: (Some(R), ..)
     if (!left.left().empty() && left.left().root_color() == Color::Red) {
-        return RedBlackTree(Color::Red, left.left().paint(Color::Black), left.root(),
+        return RedBlackTree(Color::Red, left.left().paint(Color::Black), left.data(),
                             left.right());
     }
     // case: (_, Some(B), _)
     if (!left.right().empty() && left.right().root_color() == Color::Black) {
         auto new_left =
-            RedBlackTree(Color::Black, left.left(), left.root(), left.right().paint(Color::Red));
+            RedBlackTree(Color::Black, left.left(), left.data(), left.right().paint(Color::Red));
         return balance(new_left);
     }
     // case: (_, Some(R), Some(B))
     if (!left.right().empty() && left.right().root_color() == Color::Red &&
         !left.right().left().empty() && left.right().left().root_color() == Color::Black) {
         auto unbalanced_new_right =
-            RedBlackTree(Color::Black, left.right().left().right(), left.right().root(),
+            RedBlackTree(Color::Black, left.right().left().right(), left.right().data(),
                          left.right().right().paint(Color::Red));
         auto new_right = balance(unbalanced_new_right);
         auto new_left =
-            RedBlackTree(Color::Black, left.left(), left.root(), left.right().left().left());
-        return RedBlackTree(Color::Red, new_left, left.right().left().root(), new_right);
+            RedBlackTree(Color::Black, left.left(), left.data(), left.right().left().left());
+        return RedBlackTree(Color::Red, new_left, left.right().left().data(), new_right);
     }
     assert(!"impossible");
     return left;
@@ -250,12 +250,12 @@ RedBlackTree RedBlackTree::balance_right(const RedBlackTree& right) {
     // match: (color_l, color_l_r, color_r)
     // case: (.., Some(R))
     if (!right.right().empty() && right.right().root_color() == Color::Red) {
-        return RedBlackTree(Color::Red, right.left(), right.root(),
+        return RedBlackTree(Color::Red, right.left(), right.data(),
                             right.right().paint(Color::Black));
     }
     // case: (Some(B), ..)
     if (!right.left().empty() && right.left().root_color() == Color::Black) {
-        auto new_right = RedBlackTree(Color::Black, right.left().paint(Color::Red), right.root(),
+        auto new_right = RedBlackTree(Color::Black, right.left().paint(Color::Red), right.data(),
                                       right.right());
         return balance(new_right);
     }
@@ -265,12 +265,12 @@ RedBlackTree RedBlackTree::balance_right(const RedBlackTree& right) {
         auto unbalanced_new_left =
             RedBlackTree(Color::Black,
                          // Note: Because 'left' is red, it must have a left child.
-                         right.left().left().paint(Color::Red), right.left().root(),
+                         right.left().left().paint(Color::Red), right.left().data(),
                          right.left().right().left());
         auto new_left = balance(unbalanced_new_left);
         auto new_right =
-            RedBlackTree(Color::Black, right.left().right().right(), right.root(), right.right());
-        return RedBlackTree(Color::Red, new_left, right.left().right().root(), new_right);
+            RedBlackTree(Color::Black, right.left().right().right(), right.data(), right.right());
+        return RedBlackTree(Color::Red, new_left, right.left().right().data(), new_right);
     }
     assert(!"impossible");
     return right;
@@ -278,7 +278,7 @@ RedBlackTree RedBlackTree::balance_right(const RedBlackTree& right) {
 
 RedBlackTree RedBlackTree::remove_left(const RedBlackTree& root, size_t at, size_t total) {
     auto new_left = rem(root.left(), at, total);
-    auto new_node = RedBlackTree(Color::Red, new_left, root.root(), root.right());
+    auto new_node = RedBlackTree(Color::Red, new_left, root.data(), root.right());
     // In this case, the root was a red node and must've had at least two children.
     if (!root.left().empty() && root.left().root_color() == Color::Black)
         return balance_left(new_node);
@@ -286,9 +286,9 @@ RedBlackTree RedBlackTree::remove_left(const RedBlackTree& root, size_t at, size
 }
 
 RedBlackTree RedBlackTree::remove_right(const RedBlackTree& root, size_t at, size_t total) {
-    const NodeData& y = root.root();
+    const NodeData& y = root.data();
     auto new_right = rem(root.right(), at, total + y.left_subtree_length + y.piece.length);
-    auto new_node = RedBlackTree(Color::Red, root.left(), root.root(), new_right);
+    auto new_node = RedBlackTree(Color::Red, root.left(), root.data(), new_right);
     // In this case, the root was a red node and must've had at least two children.
     if (!root.right().empty() && root.right().root_color() == Color::Black)
         return balance_right(new_node);
@@ -297,7 +297,7 @@ RedBlackTree RedBlackTree::remove_right(const RedBlackTree& root, size_t at, siz
 
 RedBlackTree RedBlackTree::rem(const RedBlackTree& root, size_t at, size_t total) {
     if (root.empty()) return RedBlackTree();
-    const NodeData& y = root.root();
+    const NodeData& y = root.data();
     if (at < total + y.left_subtree_length) return remove_left(root, at, total);
     if (at == total + y.left_subtree_length) return fuse(root.left(), root.right());
     return remove_right(root, at, total);
@@ -361,9 +361,7 @@ void populate_line_starts(LineStarts* starts, std::string_view buf) {
 }
 }  // namespace [anon]
 
-Tree::Tree() {
-    build_tree();
-}
+Tree::Tree() : Tree("") {}
 
 Tree::Tree(std::string_view txt) {
     LineStarts scratch_starts;
@@ -661,15 +659,15 @@ void Tree::line_start(size_t* offset,
                       size_t line) {
     if (node.empty()) return;
     auto line_index = line;
-    if (node.root().left_subtree_lf_count >= line_index) {
+    if (node.data().left_subtree_lf_count >= line_index) {
         line_start<accumulate>(offset, buffers, node.left(), line);
     }
     // The desired line is directly within the node.
-    else if (node.root().left_subtree_lf_count + node.root().piece.newline_count >= line_index) {
-        line_index -= node.root().left_subtree_lf_count;
-        size_t len = node.root().left_subtree_length;
+    else if (node.data().left_subtree_lf_count + node.data().piece.newline_count >= line_index) {
+        line_index -= node.data().left_subtree_lf_count;
+        size_t len = node.data().left_subtree_length;
         if (line_index != 0) {
-            len += (*accumulate)(buffers, node.root().piece, line_index - 1);
+            len += (*accumulate)(buffers, node.data().piece, line_index - 1);
         }
         *offset += len;
     }
@@ -677,8 +675,8 @@ void Tree::line_start(size_t* offset,
     else {
         // This case implies that 'left_subtree_lf_count' is strictly < line_index.
         // The content is somewhere in the middle.
-        line_index -= node.root().left_subtree_lf_count + node.root().piece.newline_count;
-        *offset += node.root().left_subtree_length + node.root().piece.length;
+        line_index -= node.data().left_subtree_lf_count + node.data().piece.newline_count;
+        *offset += node.data().left_subtree_length + node.data().piece.length;
         line_start<accumulate>(offset, buffers, node.right(), line_index + 1);
     }
 }
@@ -838,19 +836,19 @@ NodePosition Tree::node_at(size_t off) const {
 
     auto node = root;
     while (!node.empty()) {
-        if (node.root().left_subtree_length > off) {
+        if (node.data().left_subtree_length > off) {
             node = node.left();
-        } else if (node.root().left_subtree_length + node.root().piece.length > off) {
-            node_start_offset += node.root().left_subtree_length;
-            newline_count += node.root().left_subtree_lf_count;
+        } else if (node.data().left_subtree_length + node.data().piece.length > off) {
+            node_start_offset += node.data().left_subtree_length;
+            newline_count += node.data().left_subtree_lf_count;
             // Now we find the line within this piece.
-            auto remainder = off - node.root().left_subtree_length;
-            auto pos = buffer_position(node.root().piece, remainder);
+            auto remainder = off - node.data().left_subtree_length;
+            auto pos = buffer_position(node.data().piece, remainder);
             // Note: since buffer_position will return us a newline relative to the buffer itself,
             // we need to retract it by the starting line of the piece to get the real difference.
-            newline_count += pos.line - node.root().piece.first.line;
+            newline_count += pos.line - node.data().piece.first.line;
             return {
-                .node = &node.root(),
+                .node = &node.data(),
                 .remainder = remainder,
                 .start_offset = node_start_offset,
                 .line = newline_count,
@@ -858,23 +856,23 @@ NodePosition Tree::node_at(size_t off) const {
         } else {
             // If there are no more nodes to traverse to, return this final node.
             if (node.right().empty()) {
-                auto offset_amount = node.root().left_subtree_length;
+                auto offset_amount = node.data().left_subtree_length;
                 node_start_offset += offset_amount;
                 newline_count +=
-                    node.root().left_subtree_lf_count + node.root().piece.newline_count;
+                    node.data().left_subtree_lf_count + node.data().piece.newline_count;
                 // Now we find the line within this piece.
-                auto remainder = node.root().piece.length;
+                auto remainder = node.data().piece.length;
                 return {
-                    .node = &node.root(),
+                    .node = &node.data(),
                     .remainder = remainder,
                     .start_offset = node_start_offset,
                     .line = newline_count,
                 };
             }
-            auto offset_amount = node.root().left_subtree_length + node.root().piece.length;
+            auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
             off -= offset_amount;
             node_start_offset += offset_amount;
-            newline_count += node.root().left_subtree_lf_count + node.root().piece.newline_count;
+            newline_count += node.data().left_subtree_lf_count + node.data().piece.newline_count;
             node = node.right();
         }
     }
@@ -1127,7 +1125,7 @@ void TreeWalker::populate_ptrs() {
     }
 
     if (dir == Direction::Center) {
-        auto& piece = node.root().piece;
+        auto& piece = node.data().piece;
         auto* buffer = buffers->buffer_at(piece.buffer_type);
         auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
         auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
@@ -1148,18 +1146,18 @@ void TreeWalker::populate_ptrs() {
 void TreeWalker::fast_forward_to(size_t offset) {
     auto node = root;
     while (!node.empty()) {
-        if (node.root().left_subtree_length > offset) {
+        if (node.data().left_subtree_length > offset) {
             // For when we revisit this node.
             stack.back().dir = Direction::Center;
             node = node.left();
             stack.push_back({node});
         }
         // It is inside this node.
-        else if (node.root().left_subtree_length + node.root().piece.length > offset) {
+        else if (node.data().left_subtree_length + node.data().piece.length > offset) {
             stack.back().dir = Direction::Right;
             // Make the offset relative to this piece.
-            offset -= node.root().left_subtree_length;
-            auto& piece = node.root().piece;
+            offset -= node.data().left_subtree_length;
+            auto& piece = node.data().piece;
             auto* buffer = buffers->buffer_at(piece.buffer_type);
             auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
             auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
@@ -1170,7 +1168,7 @@ void TreeWalker::fast_forward_to(size_t offset) {
             assert(!stack.empty());
             // This parent is no longer relevant.
             stack.pop_back();
-            auto offset_amount = node.root().left_subtree_length + node.root().piece.length;
+            auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
             offset -= offset_amount;
             node = node.right();
             stack.push_back({node});
@@ -1259,7 +1257,7 @@ void ReverseTreeWalker::populate_ptrs() {
     }
 
     if (dir == Direction::Center) {
-        auto& piece = node.root().piece;
+        auto& piece = node.data().piece;
         auto* buffer = buffers->buffer_at(piece.buffer_type);
         auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
         auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
@@ -1280,7 +1278,7 @@ void ReverseTreeWalker::populate_ptrs() {
 void ReverseTreeWalker::fast_forward_to(size_t offset) {
     auto node = root;
     while (!node.empty()) {
-        if (node.root().left_subtree_length > offset) {
+        if (node.data().left_subtree_length > offset) {
             assert(!stack.empty());
             // This parent is no longer relevant.
             stack.pop_back();
@@ -1288,11 +1286,11 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             stack.push_back({node});
         }
         // It is inside this node.
-        else if (node.root().left_subtree_length + node.root().piece.length > offset) {
+        else if (node.data().left_subtree_length + node.data().piece.length > offset) {
             stack.back().dir = Direction::Left;
             // Make the offset relative to this piece.
-            offset -= node.root().left_subtree_length;
-            auto& piece = node.root().piece;
+            offset -= node.data().left_subtree_length;
+            auto& piece = node.data().piece;
             auto* buffer = buffers->buffer_at(piece.buffer_type);
             auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
             last_ptr = buffer->buffer.data() + first_offset;
@@ -1303,7 +1301,7 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
         } else {
             // For when we revisit this node.
             stack.back().dir = Direction::Center;
-            auto offset_amount = node.root().left_subtree_length + node.root().piece.length;
+            auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
             offset -= offset_amount;
             node = node.right();
             stack.push_back({node});
@@ -1340,16 +1338,16 @@ void print_tree(const PieceTree::RedBlackTree& root,
                 size_t node_offset) {
     if (root.empty()) return;
     const char* levels = "|||||||||||||||||||||||||||||||";
-    auto this_offset = node_offset + root.root().left_subtree_length;
+    auto this_offset = node_offset + root.data().left_subtree_length;
     printf("%.*sme: %p, left: %p, right: %p, color: %s\n", level, levels, root.root_ptr(),
            root.left().root_ptr(), root.right().root_ptr(), to_string(root.root_color()));
-    print_piece(root.root().piece, tree, level);
+    print_piece(root.data().piece, tree, level);
     printf("%.*sleft_len{%zd}, left_lf{%zd}, node_offset{%zd}\n", level, levels,
-           root.root().left_subtree_length, root.root().left_subtree_lf_count, this_offset);
+           root.data().left_subtree_length, root.data().left_subtree_lf_count, this_offset);
     printf("\n");
     print_tree(root.left(), tree, level + 1, node_offset);
     printf("\n");
-    print_tree(root.right(), tree, level + 1, this_offset + root.root().piece.length);
+    print_tree(root.right(), tree, level + 1, this_offset + root.data().piece.length);
 }
 
 }  // namespace PieceTree

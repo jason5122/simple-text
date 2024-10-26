@@ -13,8 +13,7 @@
 namespace gui {
 
 TextViewWidget::TextViewWidget(std::string_view text)
-    : line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
-    tree.insert(0, text);
+    : tree{text}, line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING

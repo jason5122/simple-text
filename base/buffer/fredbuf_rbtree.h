@@ -57,7 +57,7 @@ public:
     // Queries.
     const Node* root_ptr() const;
     bool empty() const;
-    const NodeData& root() const;
+    const NodeData& data() const;
     RedBlackTree left() const;
     RedBlackTree right() const;
     Color root_color() const;

@@ -77,6 +77,7 @@ public:
     LineRange get_line_range(size_t line) const;
     LineRange get_line_range_with_newline(size_t line) const;
     std::string str() const;
+    std::string substr(size_t offset, size_t count) const;
 
     size_t length() const;
     bool empty() const;

@@ -658,6 +658,16 @@ std::string Tree::str() const {
     return str;
 }
 
+std::string Tree::substr(size_t offset, size_t count) const {
+    std::string str;
+    PieceTree::TreeWalker walker{this, offset};
+    for (size_t i = 0; i < count; i++) {
+        if (walker.exhausted()) break;
+        str.push_back(walker.next());
+    }
+    return str;
+}
+
 size_t Tree::length() const {
     return total_content_length;
 }

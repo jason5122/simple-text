@@ -713,4 +713,91 @@ TEST(PieceTreeTest, LineColumnAtRandomTest) {
     }
 }
 
+TEST(PieceTreeTest, Substr1) {
+    std::string str = "Hello world!";
+    Tree tree{str};
+
+    EXPECT_EQ(tree.substr(0, tree.length()), str.substr(0, str.length()));
+    EXPECT_EQ(tree.substr(0, 5), str.substr(0, 5));
+    EXPECT_EQ(tree.substr(6, 5), str.substr(6, 5));
+    EXPECT_EQ(tree.substr(1, 1), str.substr(1, 1));
+    EXPECT_EQ(tree.substr(1, 0), str.substr(1, 0));
+    EXPECT_EQ(tree.substr(0, 99999), str.substr(0, 99999));
+    EXPECT_EQ(tree.substr(11, 99999), str.substr(11, 99999));
+}
+
+TEST(PieceTreeTest, Substr2) {
+    std::string str = "Hello world!";
+    Tree tree{str};
+
+    tree.insert(6, "brave new ");
+    str.insert(6, "brave new ");
+    EXPECT_EQ(tree.str(), str);
+
+    EXPECT_EQ(tree.substr(0, tree.length()), str.substr(0, str.length()));
+    EXPECT_EQ(tree.substr(0, 5), str.substr(0, 5));
+    EXPECT_EQ(tree.substr(6, 5), str.substr(6, 5));
+    EXPECT_EQ(tree.substr(1, 1), str.substr(1, 1));
+    EXPECT_EQ(tree.substr(1, 0), str.substr(1, 0));
+    EXPECT_EQ(tree.substr(0, 99999), str.substr(0, 99999));
+    EXPECT_EQ(tree.substr(11, 99999), str.substr(11, 99999));
+}
+
+TEST(PieceTreeTest, Substr3) {
+    std::string str = "Hello world!";
+    Tree tree{str};
+
+    tree.insert(0, "String1 ");
+    str.insert(0, "String1 ");
+    EXPECT_EQ(tree.str(), str);
+
+    tree.insert(20, "String2 ");
+    str.insert(20, "String2 ");
+    EXPECT_EQ(tree.str(), str);
+
+    tree.erase(6, 3);
+    str.erase(6, 3);
+    EXPECT_EQ(tree.str(), str);
+
+    tree.erase(0, 10);
+    str.erase(0, 10);
+    EXPECT_EQ(tree.str(), str);
+
+    EXPECT_EQ(tree.substr(0, tree.length()), str.substr(0, str.length()));
+    EXPECT_EQ(tree.substr(0, 5), str.substr(0, 5));
+    EXPECT_EQ(tree.substr(6, 5), str.substr(6, 5));
+    EXPECT_EQ(tree.substr(1, 1), str.substr(1, 1));
+    EXPECT_EQ(tree.substr(1, 0), str.substr(1, 0));
+    EXPECT_EQ(tree.substr(0, 99999), str.substr(0, 99999));
+    EXPECT_EQ(tree.substr(11, 99999), str.substr(11, 99999));
+}
+
+TEST(PieceTreeTest, SubstrRandomTest) {
+    std::string str = "";
+    Tree tree{str};
+
+    for (size_t n = 0; n < 100; ++n) {
+        // Randomly insert.
+        size_t insert_index = RandomNumber(0, str.length());
+        const std::string random_str = RandomString(RandomNumber(0, 10));
+        str.insert(insert_index, random_str);
+        tree.insert(insert_index, random_str);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        // Randomly erase.
+        size_t erase_index = RandomNumber(0, str.length());
+        size_t erase_count = RandomNumber(0, 4);
+        str.erase(erase_index, erase_count);
+        tree.erase(erase_index, erase_count);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        // Randomly get substrings.
+        size_t index = RandomNumber(0, str.length());
+        size_t count = RandomNumber(0, str.length());
+        EXPECT_EQ(str.substr(index, count), tree.substr(index, count));
+    }
+}
+
 }

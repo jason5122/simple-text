@@ -38,8 +38,8 @@ TEST(PieceTreeTest, FromScratch1) {
     print_tree(tree.root, &tree);
     std::println("tree.str() = \"{}\"", tree.str());
 
-    // EXPECT_EQ(str, tree.str());
-    // EXPECT_EQ(str.length(), tree.length());
+    EXPECT_EQ(str, tree.str());
+    EXPECT_EQ(str.length(), tree.length());
 }
 
 TEST(PieceTreeTest, Init) {

@@ -556,46 +556,23 @@ void Tree::internal_remove(size_t offset, size_t count) {
             return;
         }
 
-        // print_tree(root, this);
-
         // The removed buffer is somewhere in the middle.  Trim it in both directions.
         auto [left, right] =
             shrink_piece(&buffers, first_node->piece, start_split_pos, end_split_pos);
 
-        // std::println("left.first.line = {}, left.first.column = {}", left.first.line,
-        //              left.first.column);
-        // std::println("left.last.line = {}, left.last.column = {}", left.last.line,
-        //              left.last.column);
-        // std::println("right.first.line = {}, right.first.column = {}", right.first.line,
-        //              right.first.column);
-        // std::println("right.last.line = {}, right.last.column = {}", right.last.line,
-        //              right.last.column);
-
-        // if (count == 1) {
-        //     std::println("GOTCHU");
-        //     // print_piece(first_node->piece, this, 0);
-        //     root = root.remove(first.start_offset);
-        //     root = root.remove(first.start_offset);
-        //     root = root.insert({right}, first.start_offset);
-        //     root = root.insert({left}, first.start_offset);
-        // } else {
-        //     root = root.remove(first.start_offset)
-        //                .insert({right}, first.start_offset)
-        //                .insert({left}, first.start_offset);
-        // }
-
         // TODO: How is this working??
-        root = root.remove(first.start_offset);
-        root = root.remove(first.start_offset);
-        root = root.insert({right}, first.start_offset);
-        root = root.insert({left}, first.start_offset);
+        {
+            root = root.remove(first.start_offset);
+            root = root.remove(first.start_offset);
+            root = root.insert({right}, first.start_offset);
+            root = root.insert({left}, first.start_offset);
+        }
 
         // root = root.remove(first.start_offset)
         //            // Note: We insert right first so that the 'left' will be inserted
         //            // to the right node's left.
         //            .insert({right}, first.start_offset)
         //            .insert({left}, first.start_offset);
-        // print_tree(root, this);
         return;
     }
 
@@ -612,8 +589,10 @@ void Tree::internal_remove(size_t offset, size_t count) {
         remove_node_range(first, count);
     } else {
         // TODO: How is this working??
-        root = root.remove(first.start_offset);
-        root = root.remove(first.start_offset);
+        {
+            root = root.remove(first.start_offset);
+            root = root.remove(first.start_offset);
+        }
 
         auto end_split_pos = buffer_position(&buffers, last_node->piece, last.remainder);
         auto new_last = trim_piece_left(&buffers, last_node->piece, end_split_pos);

@@ -27,6 +27,8 @@ public:
     void rightDelete();
     void deleteWord(bool forward);
     std::string getSelectionText();
+    void undo();
+    void redo();
 
     void draw(const std::optional<Point>& mouse_pos) override;
     void leftMouseDown(const Point& mouse_pos,

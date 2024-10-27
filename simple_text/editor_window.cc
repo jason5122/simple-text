@@ -228,6 +228,15 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
             editor_widget->lastIndex();
             handled = true;
         }
+    } else if (key == app::Key::kZ && modifiers == app::ModifierKey::kSuper) {
+        auto* text_view = editor_widget->currentWidget();
+        text_view->undo();
+        handled = true;
+    } else if (key == app::Key::kZ &&
+               modifiers == (app::ModifierKey::kSuper | app::ModifierKey::kShift)) {
+        auto* text_view = editor_widget->currentWidget();
+        text_view->redo();
+        handled = true;
     }
 
     if (handled) {

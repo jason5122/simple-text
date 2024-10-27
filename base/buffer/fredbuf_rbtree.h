@@ -50,8 +50,6 @@ class RedBlackTree {
     };
 
 public:
-    struct ColorTree;
-
     explicit RedBlackTree() = default;
 
     // Queries.

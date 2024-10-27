@@ -800,4 +800,92 @@ TEST(PieceTreeTest, SubstrRandomTest) {
     }
 }
 
+TEST(PieceTreeTest, GetLineContentTest) {
+    Tree tree{};
+    tree.insert(tree.length(), "hello");
+    tree.insert(tree.length(), "\n\nworld");
+
+    // EXPECT_EQ(tree.get_line_content(0), "hello");
+    // EXPECT_EQ(tree.get_line_content(1), "");
+    EXPECT_EQ(tree.get_line_content(2), "world");
+    EXPECT_EQ(tree.line_feed_count(), 2_Z);
+    EXPECT_EQ(tree.line_count(), 3_Z);
+
+    print_tree(tree.root, &tree);
+    std::println("tree.str() = \"{}\"", tree.str());
+    {
+        auto [first0, last0] = tree.get_line_range(0);
+        std::println("first0 = {}, last0 = {}", first0, last0);
+        auto [first1, last1] = tree.get_line_range(1);
+        std::println("first1 = {}, last1 = {}", first1, last1);
+        auto [first2, last2] = tree.get_line_range(2);
+        std::println("first2 = {}, last2 = {}", first2, last2);
+    }
+
+    tree.insert(tree.offset_at(1, 0), "asdf");
+    // EXPECT_EQ(tree.get_line_content(0), "hello");
+    // EXPECT_EQ(tree.get_line_content(1), "asdf");
+    // EXPECT_EQ(tree.get_line_content(2), "world");
+    // EXPECT_EQ(tree.str(), "hello\nasdf\nworld");
+    EXPECT_EQ(tree.line_feed_count(), 2_Z);
+    EXPECT_EQ(tree.line_count(), 3_Z);
+
+    std::println("Mod buffer line starts:");
+    for (size_t start : tree.buffers.mod_buffer.line_starts) {
+        std::println("start = {}", start);
+    }
+    {
+        size_t mid = Tree::accumulate_value(&tree.buffers, tree.root.data().piece, 1);
+        std::println("mid accumulated value = {}", mid);
+        size_t left = Tree::accumulate_value(&tree.buffers, tree.root.left().data().piece, 1);
+        std::println("left accumulated value = {}", left);
+        size_t right = Tree::accumulate_value(&tree.buffers, tree.root.right().data().piece, 1);
+        std::println("right accumulated value = {}", right);
+    }
+
+    std::println("==========================AFTER=================================");
+    print_tree(tree.root, &tree);
+    std::println("tree.str() = \"{}\"", tree.str());
+    {
+        auto [first0, last0] = tree.get_line_range(0);
+        std::println("first0 = {}, last0 = {}", first0, last0);
+        auto [first1, last1] = tree.get_line_range(1);
+        std::println("first1 = {}, last1 = {}", first1, last1);
+        auto [first2, last2] = tree.get_line_range(2);
+        std::println("first2 = {}, last2 = {}", first2, last2);
+    }
+
+    std::println("Mod buffer line starts:");
+    for (size_t start : tree.buffers.mod_buffer.line_starts) {
+        std::println("start = {}", start);
+    }
+    {
+        size_t mid = Tree::accumulate_value(&tree.buffers, tree.root.data().piece, 1);
+        std::println("mid accumulated value = {}", mid);
+        size_t left = Tree::accumulate_value(&tree.buffers, tree.root.left().data().piece, 1);
+        std::println("left accumulated value = {}", left);
+        size_t right = Tree::accumulate_value(&tree.buffers, tree.root.right().data().piece, 1);
+        std::println("right accumulated value = {}", right);
+    }
+}
+
+TEST(PieceTreeTest, LineFeedCountRandomTest) {
+    std::string str;
+    Tree tree;
+    size_t total_newlines = 0;
+    for (size_t n = 0; n < 50; ++n) {
+        // Randomly insert.
+        size_t insert_index = RandomNumber(0, str.length());
+        const std::string random_str = RandomNewlineString(RandomNumber(0, 10), 5);
+        str.insert(insert_index, random_str);
+        tree.insert(insert_index, random_str);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        total_newlines += 5;
+        EXPECT_EQ(tree.line_feed_count(), total_newlines);
+        EXPECT_EQ(tree.line_count(), total_newlines + 1);
+    }
+}
+
 }

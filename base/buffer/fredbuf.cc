@@ -9,6 +9,7 @@
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "util/scope_guard.h"
+
 #include "util/std_print.h"
 
 namespace PieceTree {
@@ -123,27 +124,6 @@ NodeData attribute(const NodeData& data, const RedBlackTree& left) {
     new_data.left_subtree_lf_count = tree_lf_count(left);
     return new_data;
 }
-
-struct RedBlackTree::ColorTree {
-    const Color color;
-    const RedBlackTree tree;
-
-    static ColorTree double_black() {
-        return ColorTree();
-    }
-
-    explicit ColorTree(RedBlackTree const& tree)
-        : color(tree.empty() ? Color::Black : tree.root_color()), tree(tree) {}
-
-    explicit ColorTree(Color c,
-                       const RedBlackTree& lft,
-                       const NodeData& x,
-                       const RedBlackTree& rgt)
-        : color(c), tree(c, lft, x, rgt) {}
-
-private:
-    ColorTree() : color(Color::DoubleBlack) {}
-};
 
 struct WalkResult {
     RedBlackTree tree;
@@ -612,26 +592,25 @@ void Tree::line_start(size_t* offset,
                       const PieceTree::RedBlackTree& node,
                       size_t line) {
     if (node.empty()) return;
-    auto line_index = line;
-    if (node.data().left_subtree_lf_count >= line_index) {
+    if (node.data().left_subtree_lf_count >= line) {
         line_start<accumulate>(offset, buffers, node.left(), line);
     }
     // The desired line is directly within the node.
-    else if (node.data().left_subtree_lf_count + node.data().piece.newline_count >= line_index) {
-        line_index -= node.data().left_subtree_lf_count;
+    else if (node.data().left_subtree_lf_count + node.data().piece.newline_count >= line) {
+        line -= node.data().left_subtree_lf_count;
         size_t len = node.data().left_subtree_length;
-        if (line_index != 0) {
-            len += (*accumulate)(buffers, node.data().piece, line_index - 1);
+        if (line != 0) {
+            len += (*accumulate)(buffers, node.data().piece, line - 1);
         }
         *offset += len;
     }
     // Assemble the LHS and RHS.
     else {
-        // This case implies that 'left_subtree_lf_count' is strictly < line_index.
+        // This case implies that 'left_subtree_lf_count' is strictly < line.
         // The content is somewhere in the middle.
-        line_index -= node.data().left_subtree_lf_count + node.data().piece.newline_count;
+        line -= node.data().left_subtree_lf_count + node.data().piece.newline_count;
         *offset += node.data().left_subtree_length + node.data().piece.length;
-        line_start<accumulate>(offset, buffers, node.right(), line_index + 1);
+        line_start<accumulate>(offset, buffers, node.right(), line + 1);
     }
 }
 

@@ -267,9 +267,8 @@ void TextViewWidget::deleteWord(bool forward) {
 }
 
 std::string TextViewWidget::getSelectionText() {
-    // auto [start, end] = selection.range();
-    // return table.substr(start, end - start);
-    return "TODO: Implement getting substring of the piece tree.";
+    auto [start, end] = selection.range();
+    return tree.substr(start, end - start);
 }
 
 void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
@@ -284,16 +283,16 @@ void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
     size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
 
-    std::string str;
-    str.reserve(tree.length());
-    for (char ch : tree) {
-        str.push_back(ch);
-    }
-    std::println("buffer = \"{}\"", str);
-    std::println("line count = {}", tree.line_count());
-    for (size_t line = 0; line < tree.line_count(); ++line) {
-        std::println("line {} = \"{}\"", line, tree.get_line_content(line));
-    }
+    // std::string str;
+    // str.reserve(tree.length());
+    // for (char ch : tree) {
+    //     str.push_back(ch);
+    // }
+    // std::println("buffer = \"{}\"", str);
+    // std::println("line count = {}", tree.line_count());
+    // for (size_t line = 0; line < tree.line_count(); ++line) {
+    //     std::println("line {} = \"{}\"", line, tree.get_line_content(line));
+    // }
 
     renderText(start_line, end_line, main_line_height);
     renderSelections(start_line, end_line);

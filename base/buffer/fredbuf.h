@@ -84,7 +84,8 @@ public:
     size_t line_feed_count() const;
     size_t line_count() const;
 
-private:
+    // TODO: Make this private again after we're done debugging.
+    // private:
     friend class TreeWalker;
     friend class ReverseTreeWalker;
 

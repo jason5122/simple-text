@@ -70,11 +70,11 @@ public:
 
     // Queries.
     std::string get_line_content(size_t line) const;
+    std::string get_line_content_with_newline(size_t line) const;
     char at(size_t offset) const;
     size_t line_at(size_t offset) const;
     std::pair<size_t, size_t> line_column_at(size_t offset) const;
     size_t offset_at(size_t line, size_t column) const;
-    size_t get_newline_offset(size_t line) const;  // TODO: Consider removing this method.
     LineRange get_line_range(size_t line) const;
     LineRange get_line_range_with_newline(size_t line) const;
     std::string str() const;
@@ -127,7 +127,6 @@ public:
                               const BufferCursor& last) const;
 
     // Direct mutations.
-    void assemble_line(std::string* buf, const RedBlackTree& node, size_t line) const;
     Piece build_piece(std::string_view txt);
     void combine_pieces(NodePosition existing_piece, Piece new_piece);
     void remove_node_range(NodePosition first, size_t length);

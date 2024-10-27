@@ -64,7 +64,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         selection.incrementIndex(delta, extend);
     }
     if (by == MoveBy::kWords && !forward) {
-        size_t delta = Caret::prevWordStart(layout, col, tree.get_line_content(line));
+        size_t delta = Caret::prevWordStart(layout, col, tree.get_line_content_with_newline(line));
         selection.decrementIndex(delta, extend);
 
         // Move to previous line if at beginning of line.
@@ -75,7 +75,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         }
     }
     if (by == MoveBy::kWords && forward) {
-        size_t delta = Caret::nextWordEnd(layout, col, tree.get_line_content(line));
+        size_t delta = Caret::nextWordEnd(layout, col, tree.get_line_content_with_newline(line));
         selection.incrementIndex(delta, extend);
     }
     // TODO: Find a clean way to combine vertical caret movement logic.
@@ -144,7 +144,6 @@ void TextViewWidget::insertText(std::string_view text) {
     }
 
     size_t i = selection.end().index;
-    std::println("Inserting {} at {}", text, i);
     tree.insert(i, text);
     selection.incrementIndex(text.length(), false);
 
@@ -233,9 +232,9 @@ void TextViewWidget::deleteWord(bool forward) {
 
         size_t delta;
         if (forward) {
-            delta = Caret::nextWordEnd(layout, col, tree.get_line_content(line));
+            delta = Caret::nextWordEnd(layout, col, tree.get_line_content_with_newline(line));
         } else {
-            delta = Caret::prevWordStart(layout, col, tree.get_line_content(line));
+            delta = Caret::prevWordStart(layout, col, tree.get_line_content_with_newline(line));
             selection.decrementIndex(delta, false);
 
             // Delete newline if at beginning of line.
@@ -283,17 +282,6 @@ void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
     size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
 
-    // std::string str;
-    // str.reserve(tree.length());
-    // for (char ch : tree) {
-    //     str.push_back(ch);
-    // }
-    // std::println("buffer = \"{}\"", str);
-    // std::println("line count = {}", tree.line_count());
-    // for (size_t line = 0; line < tree.line_count(); ++line) {
-    //     std::println("line {} = \"{}\"", line, tree.get_line_content(line));
-    // }
-
     renderText(start_line, end_line, main_line_height);
     renderSelections(start_line, end_line);
     renderScrollBars(main_line_height);
@@ -316,8 +304,9 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos,
     } else if (click_type == app::ClickType::kDoubleClick) {
         selection.setIndex(tree.offset_at(new_line, new_col), false);
         size_t start_delta =
-            Caret::prevWordStart(layout, new_col, tree.get_line_content(new_line));
-        size_t end_delta = Caret::nextWordEnd(layout, new_col, tree.get_line_content(new_line));
+            Caret::prevWordStart(layout, new_col, tree.get_line_content_with_newline(new_line));
+        size_t end_delta =
+            Caret::nextWordEnd(layout, new_col, tree.get_line_content_with_newline(new_line));
         selection.start().index -= start_delta;
         selection.end().index += end_delta;
     }
@@ -367,7 +356,7 @@ inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
 }
 
 inline const font::LineLayout& TextViewWidget::layoutAt(size_t line, bool& exclude_end) {
-    std::string line_str = tree.get_line_content(line);
+    std::string line_str = tree.get_line_content_with_newline(line);
     exclude_end = !line_str.empty() && line_str.back() == '\n';
 
     if (exclude_end) {

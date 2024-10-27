@@ -591,24 +591,15 @@ void Tree::line_start(size_t* offset,
                       const BufferCollection* buffers,
                       const PieceTree::RedBlackTree& node,
                       size_t line) {
-    std::println("ptr = 0x{:x}", (size_t)node.root_ptr());
-
-    if (node.empty()) {
-        std::println("Case 0: empty");
-        return;
-    }
+    if (node.empty()) return;
     if (line <= node.data().left_subtree_lf_count) {
-        std::println("Case 1: left");
         line_start<accumulate>(offset, buffers, node.left(), line);
     }
     // The desired line is directly within the node.
     else if (line <= node.data().left_subtree_lf_count + node.data().piece.newline_count) {
         line -= node.data().left_subtree_lf_count;
         size_t len = node.data().left_subtree_length;
-        std::println("Case 2: middle, calling accumulate with offset = {}, line = {}, len = {}",
-                     *offset, line, len);
         if (line != 0) {
-            std::println("accumulate = {}", (*accumulate)(buffers, node.data().piece, line - 1));
             len += (*accumulate)(buffers, node.data().piece, line - 1);
         }
         *offset += len;
@@ -616,20 +607,12 @@ void Tree::line_start(size_t* offset,
     }
     // Assemble the LHS and RHS.
     else {
-        std::println("Case 3: right, line = {}", line);
         // This case implies that 'left_subtree_lf_count' is strictly < line.
         // The content is somewhere in the middle.
         line -= node.data().left_subtree_lf_count + node.data().piece.newline_count;
         *offset += node.data().left_subtree_length + node.data().piece.length;
         line_start<accumulate>(offset, buffers, node.right(), line);
     }
-}
-
-// TODO: Consider removing this method.
-size_t Tree::get_newline_offset(size_t line) const {
-    size_t offset = 0;
-    line_start<&Tree::accumulate_value>(&offset, &buffers, root, line);
-    return offset;
 }
 
 LineRange Tree::get_line_range(size_t line) const {
@@ -712,24 +695,33 @@ char Tree::at(size_t offset) const {
     return *p;
 }
 
-void Tree::assemble_line(std::string* buf,
-                         const PieceTree::RedBlackTree& node,
-                         size_t line) const {
-    if (node.empty()) return;
+std::string Tree::get_line_content(size_t line) const {
+    if (root.empty()) return "";
 
+    std::string buf;
     size_t line_offset = 0;
-    line_start<&Tree::accumulate_value>(&line_offset, &buffers, node, line);
+    line_start<&Tree::accumulate_value>(&line_offset, &buffers, root, line);
     TreeWalker walker{this, line_offset};
     while (!walker.exhausted()) {
         char c = walker.next();
         if (c == '\n') break;
-        buf->push_back(c);
+        buf.push_back(c);
     }
+    return buf;
 }
 
-std::string Tree::get_line_content(size_t line) const {
+std::string Tree::get_line_content_with_newline(size_t line) const {
+    if (root.empty()) return "";
+
     std::string buf;
-    assemble_line(&buf, root, line);
+    size_t line_offset = 0;
+    line_start<&Tree::accumulate_value>(&line_offset, &buffers, root, line);
+    TreeWalker walker{this, line_offset};
+    while (!walker.exhausted()) {
+        char c = walker.next();
+        buf.push_back(c);
+        if (c == '\n') break;
+    }
     return buf;
 }
 

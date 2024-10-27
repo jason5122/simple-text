@@ -2,6 +2,7 @@
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include <gtest/gtest.h>
+#include <list>
 #include <random>
 
 #include "util/std_print.h"
@@ -800,100 +801,6 @@ TEST(PieceTreeTest, SubstrRandomTest) {
     }
 }
 
-TEST(PieceTreeTest, GetLineContentAfterInsertTest1) {
-    Tree tree{};
-    tree.insert(tree.length(), "hello");
-    tree.insert(tree.length(), "\nwasd\nworld");
-
-    EXPECT_EQ(tree.get_line_content(0), "hello");
-    EXPECT_EQ(tree.get_line_content(1), "wasd");
-    EXPECT_EQ(tree.get_line_content(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), 2_Z);
-    EXPECT_EQ(tree.line_count(), 3_Z);
-}
-
-TEST(PieceTreeTest, GetLineContentAfterInsertTest2) {
-    Tree tree{};
-    tree.insert(tree.length(), "helloworld");
-    tree.insert(5, "\nwasd\n");
-
-    EXPECT_EQ(tree.get_line_content(0), "hello");
-    EXPECT_EQ(tree.get_line_content(1), "wasd");
-    EXPECT_EQ(tree.get_line_content(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), 2_Z);
-    EXPECT_EQ(tree.line_count(), 3_Z);
-}
-
-TEST(PieceTreeTest, GetLineContentAfterInsertTest3) {
-    Tree tree{};
-    tree.insert(tree.length(), "helloworld");
-    tree.insert(5, "\n");
-    tree.insert(6, "wasd\n");
-
-    EXPECT_EQ(tree.get_line_content(0), "hello");
-    EXPECT_EQ(tree.get_line_content(1), "wasd");
-    EXPECT_EQ(tree.get_line_content(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), 2_Z);
-    EXPECT_EQ(tree.line_count(), 3_Z);
-}
-
-TEST(PieceTreeTest, GetLineContentAfterInsertTest4) {
-    Tree tree{};
-    tree.insert(tree.length(), "helloworld");
-    tree.insert(5, "\n");
-    tree.insert(6, "wasd\n");
-
-    EXPECT_EQ(tree.get_line_content(0), "hello");
-    EXPECT_EQ(tree.get_line_content(1), "wasd");
-    EXPECT_EQ(tree.get_line_content(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), 2_Z);
-    EXPECT_EQ(tree.line_count(), 3_Z);
-
-    // print_tree(tree.root, &tree);
-    // std::println("tree.str() = \"{}\"", tree.str());
-    // std::println("================newline 0 offset = {}", tree.get_newline_offset(0));
-    // std::println("================newline 1 offset = {}", tree.get_newline_offset(1));
-    // std::println("================newline 2 offset = {}", tree.get_newline_offset(2));
-    // {
-    //     auto [first0, last0] = tree.get_line_range(0);
-    //     std::println("first0 = {}, last0 = {}", first0, last0);
-    //     auto [first1, last1] = tree.get_line_range(1);
-    //     std::println("first1 = {}, last1 = {}", first1, last1);
-    //     auto [first2, last2] = tree.get_line_range(2);
-    //     std::println("first2 = {}, last2 = {}", first2, last2);
-    //     std::println("length = {}, lines = {}, lf_count = {}", tree.length(), tree.line_count(),
-    //                  tree.line_feed_count());
-    // }
-}
-TEST(PieceTreeTest, GetLineContentAfterInsertTest5) {
-    Tree tree{};
-    tree.insert(tree.length(), "helloworld");
-    tree.insert(5, "\n");
-    tree.insert(7, "asd\nw");
-
-    EXPECT_EQ(tree.get_line_content(0), "hello");
-    EXPECT_EQ(tree.get_line_content(1), "wasd");
-    EXPECT_EQ(tree.get_line_content(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), 2_Z);
-    EXPECT_EQ(tree.line_count(), 3_Z);
-
-    // print_tree(tree.root, &tree);
-    // std::println("tree.str() = \"{}\"", tree.str());
-    // std::println("================newline 0 offset = {}", tree.get_newline_offset(0));
-    // std::println("================newline 1 offset = {}", tree.get_newline_offset(1));
-    // std::println("================newline 2 offset = {}", tree.get_newline_offset(2));
-    // {
-    //     auto [first0, last0] = tree.get_line_range(0);
-    //     std::println("first0 = {}, last0 = {}", first0, last0);
-    //     auto [first1, last1] = tree.get_line_range(1);
-    //     std::println("first1 = {}, last1 = {}", first1, last1);
-    //     auto [first2, last2] = tree.get_line_range(2);
-    //     std::println("first2 = {}, last2 = {}", first2, last2);
-    //     std::println("length = {}, lines = {}, lf_count = {}", tree.length(), tree.line_count(),
-    //                  tree.line_feed_count());
-    // }
-}
-
 TEST(PieceTreeTest, LineFeedCountRandomTest) {
     std::string str;
     Tree tree;
@@ -910,6 +817,121 @@ TEST(PieceTreeTest, LineFeedCountRandomTest) {
         total_newlines += 5;
         EXPECT_EQ(tree.line_feed_count(), total_newlines);
         EXPECT_EQ(tree.line_count(), total_newlines + 1);
+    }
+}
+
+TEST(PieceTreeTest, GetLineContentAfterInsertTest1) {
+    Tree tree{};
+    tree.insert(tree.length(), "hello");
+    tree.insert(tree.length(), "\nwasd\nworld");
+
+    EXPECT_EQ(tree.get_line_content(0), "hello");
+    EXPECT_EQ(tree.get_line_content(1), "wasd");
+    EXPECT_EQ(tree.get_line_content(2), "world");
+    EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
+    EXPECT_EQ(tree.line_feed_count(), 2_Z);
+    EXPECT_EQ(tree.line_count(), 3_Z);
+}
+
+TEST(PieceTreeTest, GetLineContentAfterInsertTest2) {
+    Tree tree{};
+    tree.insert(tree.length(), "helloworld");
+    tree.insert(5, "\nwasd\n");
+
+    EXPECT_EQ(tree.get_line_content(0), "hello");
+    EXPECT_EQ(tree.get_line_content(1), "wasd");
+    EXPECT_EQ(tree.get_line_content(2), "world");
+    EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
+    EXPECT_EQ(tree.line_feed_count(), 2_Z);
+    EXPECT_EQ(tree.line_count(), 3_Z);
+}
+
+TEST(PieceTreeTest, GetLineContentAfterInsertTest3) {
+    Tree tree{};
+    tree.insert(tree.length(), "helloworld");
+    tree.insert(5, "\n");
+    tree.insert(6, "wasd\n");
+
+    EXPECT_EQ(tree.get_line_content(0), "hello");
+    EXPECT_EQ(tree.get_line_content(1), "wasd");
+    EXPECT_EQ(tree.get_line_content(2), "world");
+    EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
+    EXPECT_EQ(tree.line_feed_count(), 2_Z);
+    EXPECT_EQ(tree.line_count(), 3_Z);
+}
+
+TEST(PieceTreeTest, GetLineContentAfterInsertTest4) {
+    Tree tree{};
+    tree.insert(tree.length(), "helloworld");
+    tree.insert(5, "\n");
+    tree.insert(6, "wasd\n");
+
+    EXPECT_EQ(tree.get_line_content(0), "hello");
+    EXPECT_EQ(tree.get_line_content(1), "wasd");
+    EXPECT_EQ(tree.get_line_content(2), "world");
+    EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
+    EXPECT_EQ(tree.line_feed_count(), 2_Z);
+    EXPECT_EQ(tree.line_count(), 3_Z);
+}
+TEST(PieceTreeTest, GetLineContentAfterInsertTest5) {
+    Tree tree{};
+    tree.insert(tree.length(), "helloworld");
+    tree.insert(5, "\n");
+    tree.insert(7, "asd\nw");
+
+    EXPECT_EQ(tree.get_line_content(0), "hello");
+    EXPECT_EQ(tree.get_line_content(1), "wasd");
+    EXPECT_EQ(tree.get_line_content(2), "world");
+    EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
+    EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
+    EXPECT_EQ(tree.line_feed_count(), 2_Z);
+    EXPECT_EQ(tree.line_count(), 3_Z);
+}
+
+TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
+    std::string str;
+    Tree tree;
+
+    constexpr size_t kNewlinesPerInsert = 2;
+    size_t total_newlines = 0;
+    for (size_t n = 0; n < 50; ++n) {
+        // Randomly insert.
+        size_t insert_index = RandomNumber(0, str.length());
+        const std::string random_str =
+            RandomNewlineString(RandomNumber(0, 100), kNewlinesPerInsert);
+        str.insert(insert_index, random_str);
+        tree.insert(insert_index, random_str);
+        EXPECT_EQ(str, tree.str());
+        EXPECT_EQ(str.length(), tree.length());
+
+        total_newlines += kNewlinesPerInsert;
+        EXPECT_EQ(tree.line_feed_count(), total_newlines);
+        EXPECT_EQ(tree.line_count(), total_newlines + 1);
+    }
+
+    size_t line_feed_count = std::ranges::count(str, '\n');
+    size_t line_count = line_feed_count + 1;
+    ASSERT_EQ(tree.line_feed_count(), line_feed_count);
+    ASSERT_EQ(tree.line_count(), line_count);
+
+    size_t first = 0;
+    size_t last = str.find('\n');
+    for (size_t line = 0; line < line_count; ++line) {
+        auto [tree_first, tree_last] = tree.get_line_range(line);
+        EXPECT_EQ(tree_first, first);
+        EXPECT_EQ(tree_last, last);
+        first = last + 1;
+        last = str.find('\n', first);
+        if (last == std::string::npos) last = str.length();
     }
 }
 

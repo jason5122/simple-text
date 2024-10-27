@@ -800,7 +800,7 @@ TEST(PieceTreeTest, SubstrRandomTest) {
     }
 }
 
-TEST(PieceTreeTest, GetLineContentWithInsertTest1) {
+TEST(PieceTreeTest, GetLineContentAfterInsertTest1) {
     Tree tree{};
     tree.insert(tree.length(), "hello");
     tree.insert(tree.length(), "\nwasd\nworld");
@@ -812,7 +812,7 @@ TEST(PieceTreeTest, GetLineContentWithInsertTest1) {
     EXPECT_EQ(tree.line_count(), 3_Z);
 }
 
-TEST(PieceTreeTest, GetLineContentWithInsertTest2) {
+TEST(PieceTreeTest, GetLineContentAfterInsertTest2) {
     Tree tree{};
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\nwasd\n");
@@ -824,7 +824,7 @@ TEST(PieceTreeTest, GetLineContentWithInsertTest2) {
     EXPECT_EQ(tree.line_count(), 3_Z);
 }
 
-TEST(PieceTreeTest, GetLineContentWithInsertTest3) {
+TEST(PieceTreeTest, GetLineContentAfterInsertTest3) {
     Tree tree{};
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\n");
@@ -837,7 +837,7 @@ TEST(PieceTreeTest, GetLineContentWithInsertTest3) {
     EXPECT_EQ(tree.line_count(), 3_Z);
 }
 
-TEST(PieceTreeTest, GetLineContentWithInsertTest4) {
+TEST(PieceTreeTest, GetLineContentAfterInsertTest4) {
     Tree tree{};
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\n");
@@ -848,8 +848,24 @@ TEST(PieceTreeTest, GetLineContentWithInsertTest4) {
     EXPECT_EQ(tree.get_line_content(2), "world");
     EXPECT_EQ(tree.line_feed_count(), 2_Z);
     EXPECT_EQ(tree.line_count(), 3_Z);
+
+    // print_tree(tree.root, &tree);
+    // std::println("tree.str() = \"{}\"", tree.str());
+    // std::println("================newline 0 offset = {}", tree.get_newline_offset(0));
+    // std::println("================newline 1 offset = {}", tree.get_newline_offset(1));
+    // std::println("================newline 2 offset = {}", tree.get_newline_offset(2));
+    // {
+    //     auto [first0, last0] = tree.get_line_range(0);
+    //     std::println("first0 = {}, last0 = {}", first0, last0);
+    //     auto [first1, last1] = tree.get_line_range(1);
+    //     std::println("first1 = {}, last1 = {}", first1, last1);
+    //     auto [first2, last2] = tree.get_line_range(2);
+    //     std::println("first2 = {}, last2 = {}", first2, last2);
+    //     std::println("length = {}, lines = {}, lf_count = {}", tree.length(), tree.line_count(),
+    //                  tree.line_feed_count());
+    // }
 }
-TEST(PieceTreeTest, GetLineContentWithInsertTest5) {
+TEST(PieceTreeTest, GetLineContentAfterInsertTest5) {
     Tree tree{};
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\n");
@@ -860,6 +876,22 @@ TEST(PieceTreeTest, GetLineContentWithInsertTest5) {
     EXPECT_EQ(tree.get_line_content(2), "world");
     EXPECT_EQ(tree.line_feed_count(), 2_Z);
     EXPECT_EQ(tree.line_count(), 3_Z);
+
+    // print_tree(tree.root, &tree);
+    // std::println("tree.str() = \"{}\"", tree.str());
+    // std::println("================newline 0 offset = {}", tree.get_newline_offset(0));
+    // std::println("================newline 1 offset = {}", tree.get_newline_offset(1));
+    // std::println("================newline 2 offset = {}", tree.get_newline_offset(2));
+    // {
+    //     auto [first0, last0] = tree.get_line_range(0);
+    //     std::println("first0 = {}, last0 = {}", first0, last0);
+    //     auto [first1, last1] = tree.get_line_range(1);
+    //     std::println("first1 = {}, last1 = {}", first1, last1);
+    //     auto [first2, last2] = tree.get_line_range(2);
+    //     std::println("first2 = {}, last2 = {}", first2, last2);
+    //     std::println("length = {}, lines = {}, lf_count = {}", tree.length(), tree.line_count(),
+    //                  tree.line_feed_count());
+    // }
 }
 
 TEST(PieceTreeTest, LineFeedCountRandomTest) {

@@ -591,27 +591,45 @@ void Tree::line_start(size_t* offset,
                       const BufferCollection* buffers,
                       const PieceTree::RedBlackTree& node,
                       size_t line) {
-    if (node.empty()) return;
-    if (node.data().left_subtree_lf_count >= line) {
+    std::println("ptr = 0x{:x}", (size_t)node.root_ptr());
+
+    if (node.empty()) {
+        std::println("Case 0: empty");
+        return;
+    }
+    if (line <= node.data().left_subtree_lf_count) {
+        std::println("Case 1: left");
         line_start<accumulate>(offset, buffers, node.left(), line);
     }
     // The desired line is directly within the node.
-    else if (node.data().left_subtree_lf_count + node.data().piece.newline_count >= line) {
+    else if (line <= node.data().left_subtree_lf_count + node.data().piece.newline_count) {
         line -= node.data().left_subtree_lf_count;
         size_t len = node.data().left_subtree_length;
+        std::println("Case 2: middle, calling accumulate with offset = {}, line = {}, len = {}",
+                     *offset, line, len);
         if (line != 0) {
+            std::println("accumulate = {}", (*accumulate)(buffers, node.data().piece, line - 1));
             len += (*accumulate)(buffers, node.data().piece, line - 1);
         }
         *offset += len;
+
     }
     // Assemble the LHS and RHS.
     else {
+        std::println("Case 3: right, line = {}", line);
         // This case implies that 'left_subtree_lf_count' is strictly < line.
         // The content is somewhere in the middle.
         line -= node.data().left_subtree_lf_count + node.data().piece.newline_count;
         *offset += node.data().left_subtree_length + node.data().piece.length;
-        line_start<accumulate>(offset, buffers, node.right(), line + 1);
+        line_start<accumulate>(offset, buffers, node.right(), line);
     }
+}
+
+// TODO: Consider removing this method.
+size_t Tree::get_newline_offset(size_t line) const {
+    size_t offset = 0;
+    line_start<&Tree::accumulate_value>(&offset, &buffers, root, line);
+    return offset;
 }
 
 LineRange Tree::get_line_range(size_t line) const {

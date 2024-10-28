@@ -117,7 +117,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
         glLayer->appWindow = appWindow;
 
         // glLayer.needsDisplayOnBoundsChange = true;
-        // glLayer.asynchronous = true;
+        glLayer.asynchronous = true;
         self.layer = glLayer;
 
         // Fixes blurriness on HiDPI displays.

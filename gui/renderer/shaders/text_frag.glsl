@@ -9,6 +9,7 @@ layout(location = 0, index = 0) out vec4 color;
 layout(location = 0, index = 1) out vec4 alpha_mask;
 
 uniform sampler2D mask;
+uniform float u_time;
 
 void main() {
     vec4 texel = texture(mask, tex_coords);
@@ -24,7 +25,8 @@ void main() {
         color = vec4(texel.rgb, 1.0);
     } else {
         alpha_mask = vec4(texel.rgb, texel.r);
-        color = vec4(text_color.rgb, 1.0);
+        // color = vec4(text_color.rgb, 1.0);
+        color = vec4(text_color.r, u_time, text_color.b, 1.0);
     }
 }
 

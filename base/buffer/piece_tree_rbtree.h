@@ -5,10 +5,8 @@
 namespace base {
 
 struct BufferCursor {
-    // Relative line in the current buffer.
-    size_t line = 0;
-    // Column into the current line.
-    size_t column = 0;
+    size_t line = 0;    // Relative line in the current buffer.
+    size_t column = 0;  // Column into the current line.
 
     bool operator==(const BufferCursor&) const = default;
 };

@@ -21,8 +21,6 @@ struct UndoRedoEntry {
     size_t op_offset;
 };
 
-using LineStarts = std::vector<size_t>;
-
 struct NodePosition {
     // Piece Index
     const NodeData* node = nullptr;
@@ -36,7 +34,7 @@ struct NodePosition {
 
 struct CharBuffer {
     std::string buffer;
-    LineStarts line_starts;
+    std::vector<size_t> line_starts;
 };
 
 struct BufferCollection {

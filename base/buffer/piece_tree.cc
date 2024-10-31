@@ -328,23 +328,24 @@ size_t BufferCollection::buffer_offset(BufferType buffer_type, const BufferCurso
 }
 
 namespace {
-void populate_line_starts(LineStarts* starts, std::string_view buf) {
-    starts->push_back(0);
+std::vector<size_t> populate_line_starts(std::string_view buf) {
+    std::vector<size_t> starts;
+    starts.push_back(0);
     const auto len = buf.size();
     for (size_t i = 0; i < len; ++i) {
         char c = buf[i];
         if (c == '\n') {
-            starts->push_back(i + 1);
+            starts.push_back(i + 1);
         }
     }
+    return starts;
 }
 }  // namespace
 
 PieceTree::PieceTree() : PieceTree("") {}
 
 PieceTree::PieceTree(std::string_view txt) {
-    LineStarts scratch_starts;
-    populate_line_starts(&scratch_starts, txt);
+    auto scratch_starts = populate_line_starts(txt);
     auto orig_buffer = std::make_shared<CharBuffer>(std::string{txt}, scratch_starts);
     buffers = BufferCollection{orig_buffer};
 
@@ -748,8 +749,7 @@ size_t PieceTree::line_feed_count(BufferType buffer_type,
 
 Piece PieceTree::build_piece(std::string_view txt) {
     auto start_offset = buffers.mod_buffer.buffer.size();
-    LineStarts scratch_starts;
-    populate_line_starts(&scratch_starts, txt);
+    auto scratch_starts = populate_line_starts(txt);
     auto start = last_insert;
     // Offset the new starts relative to the existing buffer.
     for (auto& new_start : scratch_starts) {

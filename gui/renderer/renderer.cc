@@ -9,7 +9,8 @@ Renderer::Renderer() : text_renderer{glyph_cache}, selection_renderer{glyph_cach
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 
-    glClearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);
+    // glClearColor(253.0f / 255, 253.0f / 255, 253.0f / 255, 1.0f);  // Light.
+    glClearColor(48.0f / 255, 56.0f / 255, 65.0f / 255, 1.0f);  // Dark.
 }
 
 Renderer& Renderer::instance() {

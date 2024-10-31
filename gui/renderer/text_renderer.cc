@@ -162,7 +162,7 @@ void TextRenderer::flush(const Size& screen_size, TextLayer font_type) {
                           std::chrono::high_resolution_clock::now())
                           .time_since_epoch())
                       .count();
-        float time = abs(sin(3.14 / 180.0f * (ms * 0.1)));
+        float time = (ms % 1000) / 1000.0f;
         glUniform1f(glGetUniformLocation(shader_id, "u_time"), time);
     }
 

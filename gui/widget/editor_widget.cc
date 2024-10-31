@@ -39,9 +39,15 @@ namespace gui {
 
 EditorWidget::EditorWidget()
     : multi_view{new MultiViewWidget<TextViewWidget>{}}, tab_bar{new TabBarWidget{kTabBarHeight}} {
+
+    // Light.
+    // constexpr Rgba kTabBarColor{190, 190, 190, 255};
+    // constexpr Rgba kTextViewColor{253, 253, 253, 255};
+    // Dark.
+    constexpr Rgba kTabBarColor{79, 86, 94, 255};
+    constexpr Rgba kTextViewColor{48, 56, 65, 255};
+
     // Leave padding between window title bar and tab.
-    constexpr Rgba kTabBarColor{190, 190, 190, 255};
-    constexpr Rgba kTextViewColor{253, 253, 253, 255};
     std::shared_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
     std::shared_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
 

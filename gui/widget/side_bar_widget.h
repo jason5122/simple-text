@@ -25,8 +25,10 @@ public:
 
 private:
     static constexpr Rgb kTextColor{51, 51, 51};
-    static constexpr Rgba kSideBarColor{235, 237, 239, 255};
-    static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
+    // static constexpr Rgba kSideBarColor{235, 237, 239, 255};  // Light.
+    // static constexpr Rgba kScrollBarColor{190, 190, 190, 255};  // Light.
+    static constexpr Rgba kSideBarColor{34, 38, 42, 255};       // Dark.
+    static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};
     static constexpr int kLeftPadding = 15 * 2;
 

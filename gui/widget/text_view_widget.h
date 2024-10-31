@@ -52,8 +52,10 @@ private:
     static constexpr Rgb kTextColor{51, 51, 51};
     static constexpr Rgb kLineNumberColor{152, 152, 152};
     static constexpr Rgb kSelectedLineNumberColor{81, 81, 81};
-    static constexpr Rgba kGutterColor{227, 230, 232, 255};
-    static constexpr Rgba kScrollBarColor{190, 190, 190, 255};
+    // static constexpr Rgba kGutterColor{227, 230, 232, 255};  // Light.
+    // static constexpr Rgba kScrollBarColor{190, 190, 190, 255};  // Light.
+    static constexpr Rgba kGutterColor{77, 88, 100, 255};       // Dark.
+    static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
     static constexpr Rgba kCaretColor{95, 180, 180, 255};
 
     PieceTree::Tree tree;

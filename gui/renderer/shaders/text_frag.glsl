@@ -32,7 +32,6 @@ void main() {
     } else {
         alpha_mask = vec4(texel.rgb, texel.r);
         // color = vec4(text_color.rgb, 1.0);
-        // color = vec4(text_color.r, u_time, text_color.b, 1.0);
 
         // https://github.com/tsoding/ded/blob/ea30e9d6ee1c0d52aa11f9386920b884987a6b55/shaders/simple_epic.frag
         vec2 frag_uv = gl_FragCoord.xy / resolution;

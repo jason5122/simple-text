@@ -133,8 +133,10 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& selection
                     .x = static_cast<float>(end - start),
                     .y = static_cast<float>(metrics.line_height + kBorderThickness),
                 },
-            .color = Rgba::fromRgb({227, 230, 232}, 0),
-            .border_color = Rgba::fromRgb({212, 217, 221}, 0),
+            // .color = Rgba::fromRgb({227, 230, 232}, 0),  // Light.
+            .color = Rgba::fromRgb({77, 88, 100}, 0),  // Dark.
+            // .border_color = Rgba::fromRgb({212, 217, 221}, 0),  // Light.
+            .border_color = Rgba::fromRgb({100, 115, 130}, 0),  // Dark.
             // .border_color = Rgba::fromRgb(base::colors::red, 0),
             // .color = Rgba::fromRgb(base::colors::yellow, 0),
             // .border_color = Rgba::fromRgb(base::Rgb{0, 0, 0}, 0),

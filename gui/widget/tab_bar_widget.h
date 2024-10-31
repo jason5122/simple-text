@@ -27,8 +27,10 @@ private:
     static constexpr int kTabWidth = 360;
     static constexpr int kTabCornerRadius = 10;
     static constexpr Size kTabSeparatorSize{.width = 2, .height = 38};
-    static constexpr Rgba kTabBarColor{190, 190, 190, 255};
-    static constexpr Rgba kTabColor{253, 253, 253, 255};
+    // static constexpr Rgba kTabBarColor{190, 190, 190, 255};  // Light.
+    // static constexpr Rgba kTabColor{253, 253, 253, 255};  // Light.
+    static constexpr Rgba kTabBarColor{79, 86, 94, 255};  // Dark.
+    static constexpr Rgba kTabColor{48, 56, 65, 255};     // Dark.
     static constexpr Rgba kTabSeparatorColor{148, 149, 149, 255};
     static constexpr Rgb kTabTextColor{92, 92, 92};
 

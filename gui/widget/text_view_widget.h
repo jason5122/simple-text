@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer/fredbuf.h"
+#include "base/buffer/piece_tree.h"
 #include "gui/text_system/line_layout_cache.h"
 #include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"

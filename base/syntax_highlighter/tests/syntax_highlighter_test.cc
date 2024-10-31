@@ -1,4 +1,4 @@
-#include "base/buffer/piece_table.h"
+#include "base/buffer/piece_tree.h"
 #include "base/syntax_highlighter/syntax_highlighter.h"
 #include <gtest/gtest.h>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer/piece_table.h"
+#include "base/buffer/piece_tree.h"
 #include <format>
 #include <string>
 #include <tree_sitter/api.h>
@@ -51,9 +51,9 @@ public:
                             uint32_t byte_index,
                             TSPoint position,
                             uint32_t* bytes_read) {
-        PieceTable* table = (PieceTable*)payload;
+        PieceTree::Tree* table = (PieceTree::Tree*)payload;
 
-        if (position.row >= table->lineCount()) {
+        if (position.row >= table->line_count()) {
             *bytes_read = 0;
             return "";
         }
@@ -61,7 +61,7 @@ public:
         static constexpr size_t kBufferSize = 256;
         static char buf[kBufferSize];
 
-        std::string line_str = table->line(position.row);
+        std::string line_str = table->get_line_content_with_newline(position.row);
         size_t bytes_copied = std::min(line_str.length() - position.column, kBufferSize);
 
         memcpy(buf, line_str.data() + position.column, bytes_copied);

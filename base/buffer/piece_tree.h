@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 
-#include "fredbuf_rbtree.h"
+#include "piece_tree_rbtree.h"
 
 #ifndef NDEBUG
 #define TEXTBUF_DEBUG

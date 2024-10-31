@@ -1,4 +1,4 @@
-#include "base/buffer/piece_table.h"
+#include "base/buffer/piece_tree.h"
 #include "font/font_rasterizer.h"
 #include "gui/text_system/caret.h"
 #include "gui/text_system/line_layout_cache.h"
@@ -17,13 +17,13 @@ TEST(LineLayoutIntegrationTest, CaretMovement1) {
     auto& font_rasterizer = font::FontRasterizer::instance();
     size_t font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
 
-    base::PieceTable table{"Hi 🙂🙂 Hello world!\nThis is a new line."};
+    PieceTree::Tree tree{"Hi 🙂🙂 Hello world!\nThis is a new line."};
     LineLayoutCache line_layout_cache{font_id};
     // Caret caret{};
 
-    // Cache all piece table lines.
-    for (size_t line = 0; line < table.lineCount(); ++line) {
-        std::string line_str = table.line(line);
+    // Cache all piece tree lines.
+    for (size_t line = 0; line < tree.line_count(); ++line) {
+        std::string line_str = tree.get_line_content_with_newline(line);
         if (!line_str.empty() && line_str.back() == '\n') {
             line_str.back() = ' ';
         }

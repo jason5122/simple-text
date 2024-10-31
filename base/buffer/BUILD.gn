@@ -1,3 +1,6 @@
 source_set("buffer") {
-  sources = [ "piece_tree.cc" ]
+  sources = [
+    "piece_tree.cc",
+    "piece_tree_rbtree.cc",
+  ]
 }

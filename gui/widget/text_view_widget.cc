@@ -610,4 +610,5 @@ void TextViewWidget::renderCaret(int main_line_height) {
     rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor,
                           RectRenderer::RectLayer::kForeground);
 }
+
 }

@@ -2,6 +2,7 @@
 
 #include "font/types.h"
 #include "third_party/xxhash/xxhash.h"
+#include <string_view>
 #include <unordered_map>
 
 namespace gui {

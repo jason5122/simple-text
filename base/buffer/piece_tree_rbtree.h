@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace PieceTree {
+namespace base {
 
 struct BufferCursor {
     // Relative line in the current buffer.
@@ -24,15 +24,10 @@ struct Piece {
 };
 
 struct NodeData {
-    PieceTree::Piece piece;
-
+    Piece piece;
     size_t left_subtree_length = 0;
     size_t left_subtree_lf_count = 0;
 };
-
-class RedBlackTree;
-
-NodeData attribute(const NodeData& data, const RedBlackTree& left);
 
 enum class Color { Red, Black, DoubleBlack };
 
@@ -59,6 +54,8 @@ public:
     RedBlackTree left() const;
     RedBlackTree right() const;
     Color root_color() const;
+    size_t length() const;
+    size_t lf_count() const;
 
     // Helpers.
     bool operator==(const RedBlackTree&) const = default;
@@ -81,7 +78,7 @@ private:
     static RedBlackTree rem(const RedBlackTree& root, size_t at, size_t total);
 
     // Insertion.
-    RedBlackTree ins(const NodeData& x, size_t at, size_t total_offset) const;
+    RedBlackTree internal_insert(const NodeData& x, size_t at, size_t total_offset) const;
     static RedBlackTree balance(Color c,
                                 const RedBlackTree& lft,
                                 const NodeData& x,
@@ -95,8 +92,4 @@ private:
     NodePtr root_node;
 };
 
-// Global queries.
-size_t tree_length(const RedBlackTree& root);
-size_t tree_lf_count(const RedBlackTree& root);
-
-}  // namespace PieceTree
+}  // namespace base

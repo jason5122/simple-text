@@ -611,4 +611,4 @@ void TextViewWidget::renderCaret(int main_line_height) {
                           RectRenderer::RectLayer::kForeground);
 }
 
-}
+}  // namespace gui

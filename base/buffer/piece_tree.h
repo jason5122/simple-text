@@ -12,7 +12,7 @@
 #define TEXTBUF_DEBUG
 #endif  // NDEBUG
 
-namespace PieceTree {
+namespace base {
 
 constexpr auto kSentinel = std::numeric_limits<size_t>::max();
 
@@ -25,7 +25,7 @@ using LineStarts = std::vector<size_t>;
 
 struct NodePosition {
     // Piece Index
-    const PieceTree::NodeData* node = nullptr;
+    const NodeData* node = nullptr;
     // Remainder in current piece.
     size_t remainder = 0;
     // Node start offset in document.
@@ -57,10 +57,10 @@ struct UndoRedoResult {
     size_t op_offset;
 };
 
-class Tree {
+class PieceTree {
 public:
-    explicit Tree();
-    explicit Tree(std::string_view txt);
+    explicit PieceTree();
+    explicit PieceTree(std::string_view txt);
 
     // Manipulation.
     void insert(size_t offset, std::string_view txt);
@@ -135,7 +135,7 @@ public:
 
 public:  // TODO: Remove this public block.
     BufferCollection buffers;
-    PieceTree::RedBlackTree root;
+    RedBlackTree root;
     BufferCursor last_insert;
     // Note: This is absolute position.  Initialize to nonsense value.
     size_t end_last_insert = kSentinel;
@@ -150,7 +150,7 @@ public:  // TODO: Remove this public block.
 
 class TreeWalker {
 public:
-    TreeWalker(const Tree* tree, size_t offset = 0);
+    TreeWalker(const PieceTree* tree, size_t offset = 0);
     TreeWalker(const TreeWalker&) = delete;
 
     char current();
@@ -178,7 +178,7 @@ private:
     enum class Direction { Left, Center, Right };
 
     struct StackEntry {
-        PieceTree::RedBlackTree node;
+        RedBlackTree node;
         Direction dir = Direction::Left;
     };
 
@@ -196,7 +196,7 @@ private:
 
 class ReverseTreeWalker {
 public:
-    ReverseTreeWalker(const Tree* tree, size_t offset = 0);
+    ReverseTreeWalker(const PieceTree* tree, size_t offset = 0);
     ReverseTreeWalker(const TreeWalker&) = delete;
 
     char current();
@@ -224,7 +224,7 @@ private:
     enum class Direction { Left, Center, Right };
 
     struct StackEntry {
-        PieceTree::RedBlackTree node;
+        RedBlackTree node;
         Direction dir = Direction::Right;
     };
 
@@ -238,11 +238,11 @@ private:
 
 struct WalkSentinel {};
 
-inline TreeWalker begin(const Tree& tree) {
+inline TreeWalker begin(const PieceTree& tree) {
     return TreeWalker{&tree};
 }
 
-constexpr WalkSentinel end(const Tree&) {
+constexpr WalkSentinel end(const PieceTree&) {
     return WalkSentinel{};
 }
 
@@ -251,10 +251,10 @@ inline bool operator==(const TreeWalker& walker, WalkSentinel) {
 }
 
 // TODO: Debug use; remove this.
-void print_piece(const Piece& piece, const Tree* tree, int level);
-void print_tree(const PieceTree::RedBlackTree& root,
-                const PieceTree::Tree* tree,
+void print_piece(const Piece& piece, const PieceTree* tree, int level);
+void print_tree(const RedBlackTree& root,
+                const PieceTree* tree,
                 int level = 0,
                 size_t node_offset = 0);
 
-}  // namespace PieceTree
+}  // namespace base

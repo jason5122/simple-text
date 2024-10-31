@@ -58,7 +58,7 @@ private:
     static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
     static constexpr Rgba kCaretColor{95, 180, 180, 255};
 
-    PieceTree::Tree tree;
+    base::PieceTree tree;
     LineLayoutCache line_layout_cache;
 
     Selection selection{};
@@ -84,4 +84,4 @@ private:
     void renderCaret(int main_line_height);
 };
 
-}
+}  // namespace gui

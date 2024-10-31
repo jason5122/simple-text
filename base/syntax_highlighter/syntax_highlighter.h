@@ -51,7 +51,7 @@ public:
                             uint32_t byte_index,
                             TSPoint position,
                             uint32_t* bytes_read) {
-        PieceTree::Tree* table = (PieceTree::Tree*)payload;
+        base::PieceTree* table = (base::PieceTree*)payload;
 
         if (position.row >= table->line_count()) {
             *bytes_read = 0;
@@ -84,7 +84,7 @@ private:
     void loadJsonLanguageFromWasm();
 };
 
-}
+}  // namespace base
 
 template <>
 struct std::formatter<TSPoint> {

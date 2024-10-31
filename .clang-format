@@ -9,10 +9,12 @@ SpacesBeforeTrailingComments: 2
 AccessModifierOffset: -4
 PointerAlignment: Left
 AlignTrailingComments: true
-FixNamespaceComments: false
 
 # Experimental options.
 BinPackParameters: false
 PackConstructorInitializers: NextLine
 PenaltyReturnTypeOnItsOwnLine: 200
 AlwaysBreakTemplateDeclarations: Yes
+
+# Removed options.
+# FixNamespaceComments: false

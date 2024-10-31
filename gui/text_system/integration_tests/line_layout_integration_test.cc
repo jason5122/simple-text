@@ -9,7 +9,7 @@ namespace {
 const std::string kMainFontFace = "Source Code Pro";
 constexpr int kMainFontSize = 12 * 2;
 
-}
+}  // namespace
 
 namespace gui {
 
@@ -17,7 +17,7 @@ TEST(LineLayoutIntegrationTest, CaretMovement1) {
     auto& font_rasterizer = font::FontRasterizer::instance();
     size_t font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
 
-    PieceTree::Tree tree{"Hi 🙂🙂 Hello world!\nThis is a new line."};
+    base::PieceTree tree{"Hi 🙂🙂 Hello world!\nThis is a new line."};
     LineLayoutCache line_layout_cache{font_id};
     // Caret caret{};
 
@@ -33,4 +33,4 @@ TEST(LineLayoutIntegrationTest, CaretMovement1) {
     }
 }
 
-}
+}  // namespace gui

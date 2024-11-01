@@ -14,22 +14,16 @@
 
 namespace base {
 
-constexpr auto kSentinel = std::numeric_limits<size_t>::max();
-
 struct UndoRedoEntry {
     RedBlackTree root;
     size_t op_offset;
 };
 
 struct NodePosition {
-    // Piece Index
     const NodeData* node = nullptr;
-    // Remainder in current piece.
-    size_t remainder = 0;
-    // Node start offset in document.
-    size_t start_offset = 0;
-    // The line (relative to the document) where this node starts.
-    size_t line = 0;
+    size_t remainder = 0;     // Remainder in current piece.
+    size_t start_offset = 0;  // Node start offset in document.
+    size_t line = 0;          // The line (relative to the document) where this node starts.
 };
 
 struct CharBuffer {
@@ -71,7 +65,7 @@ public:
     std::string get_line_content_with_newline(size_t line) const;
     char at(size_t offset) const;
     size_t line_at(size_t offset) const;
-    std::pair<size_t, size_t> line_column_at(size_t offset) const;
+    BufferCursor line_column_at(size_t offset) const;
     size_t offset_at(size_t line, size_t column) const;
     LineRange get_line_range(size_t line) const;
     LineRange get_line_range_with_newline(size_t line) const;
@@ -83,13 +77,9 @@ public:
     size_t line_feed_count() const;
     size_t line_count() const;
 
-    // TODO: Make this private again after we're done debugging.
-    // private:
+private:
     friend class TreeWalker;
     friend class ReverseTreeWalker;
-
-    // Initialization after populating initial immutable buffers from ctor.
-    void build_tree();
 
     void internal_insert(size_t offset, std::string_view txt);
     void internal_erase(size_t offset, size_t count);
@@ -131,12 +121,9 @@ public:
     void compute_buffer_meta();
     void append_undo(const RedBlackTree& old_root, size_t op_offset);
 
-public:  // TODO: Remove this public block.
     BufferCollection buffers;
     RedBlackTree root;
     BufferCursor last_insert;
-    // Note: This is absolute position.  Initialize to nonsense value.
-    size_t end_last_insert = kSentinel;
 
     // Buffer metadata.
     size_t lf_count = 0;
@@ -247,12 +234,5 @@ constexpr WalkSentinel end(const PieceTree&) {
 inline bool operator==(const TreeWalker& walker, WalkSentinel) {
     return walker.exhausted();
 }
-
-// TODO: Debug use; remove this.
-void print_piece(const Piece& piece, const PieceTree* tree, int level);
-void print_tree(const RedBlackTree& root,
-                const PieceTree* tree,
-                int level = 0,
-                size_t node_offset = 0);
 
 }  // namespace base

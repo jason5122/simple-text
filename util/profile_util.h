@@ -10,16 +10,16 @@ class Profiler {
 public:
     Profiler(std::string const& n) : name(n), t1(std::chrono::high_resolution_clock::now()) {}
     ~Profiler() {
-        // auto t2 = std::chrono::high_resolution_clock::now();
-        // auto duration = std::chrono::duration_cast<Duration>(t2 - t1).count();
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<Duration>(t2 - t1).count();
 
-        // std::string unit = "units";
-        // if (std::is_same<Duration, std::chrono::microseconds>::value) {
-        //     unit = "µs";
-        // } else if (std::is_same<Duration, std::chrono::milliseconds>::value) {
-        //     unit = "ms";
-        // }
-        // std::println("{}: {} {}", name, duration, unit);
+        std::string unit = "units";
+        if (std::is_same<Duration, std::chrono::microseconds>::value) {
+            unit = "µs";
+        } else if (std::is_same<Duration, std::chrono::milliseconds>::value) {
+            unit = "ms";
+        }
+        std::println("{}: {} {}", name, duration, unit);
     }
 
 private:

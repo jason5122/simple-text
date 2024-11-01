@@ -610,7 +610,7 @@ TEST(PieceTreeTest, LineColumnAt1) {
     auto check = [](std::string_view str) {
         PieceTree tree{str};
 
-        std::unordered_map<size_t, std::pair<size_t, size_t>> index_to_line_col_map;
+        std::unordered_map<size_t, BufferCursor> index_to_line_col_map;
         size_t line = 0;
         size_t col = 0;
         for (size_t i = 0; i <= str.length(); i++) {
@@ -637,15 +637,15 @@ TEST(PieceTreeTest, LineColumnAt1) {
 TEST(PieceTreeTest, LineColumnAt2) {
     std::string str1 = "Hello world!";
     PieceTree tree1{str1};
-    auto [line1, col1] = tree1.line_column_at(99999);
-    EXPECT_EQ(line1, 0_Z);
-    EXPECT_EQ(col1, tree1.length());
+    auto cursor1 = tree1.line_column_at(99999);
+    EXPECT_EQ(cursor1.line, 0_Z);
+    EXPECT_EQ(cursor1.column, tree1.length());
 
     std::string str2 = "Hello\nworld!";
     PieceTree tree2{str2};
-    auto [line2, col2] = tree2.line_column_at(99999);
-    EXPECT_EQ(line2, 1_Z);
-    EXPECT_EQ(col2, tree2.length() - 6);
+    auto cursor2 = tree2.line_column_at(99999);
+    EXPECT_EQ(cursor2.line, 1_Z);
+    EXPECT_EQ(cursor2.column, tree2.length() - 6);
 }
 
 TEST(PieceTreeTest, LineColumnAt3) {
@@ -656,15 +656,13 @@ TEST(PieceTreeTest, LineColumnAt3) {
     tree.insert(23, "\n");
     EXPECT_EQ(str, tree.str());
 
-    size_t line;
-    size_t col;
-    std::tie(line, col) = tree.line_column_at(2);
-    EXPECT_EQ(line, 0_Z);
-    EXPECT_EQ(col, 2_Z);
+    auto cursor1 = tree.line_column_at(2);
+    EXPECT_EQ(cursor1.line, 0_Z);
+    EXPECT_EQ(cursor1.column, 2_Z);
 
-    std::tie(line, col) = tree.line_column_at(7);
-    EXPECT_EQ(line, 1_Z);
-    EXPECT_EQ(col, 1_Z);
+    auto cursor2 = tree.line_column_at(7);
+    EXPECT_EQ(cursor2.line, 1_Z);
+    EXPECT_EQ(cursor2.column, 1_Z);
 }
 
 TEST(PieceTreeTest, LineColumnAtRandomTest) {
@@ -674,7 +672,7 @@ TEST(PieceTreeTest, LineColumnAtRandomTest) {
     auto check = [](std::string_view str) {
         PieceTree tree{str};
 
-        std::unordered_map<size_t, std::pair<size_t, size_t>> index_to_line_col_map;
+        std::unordered_map<size_t, BufferCursor> index_to_line_col_map;
         size_t line = 0;
         size_t col = 0;
         for (size_t i = 0; i <= str.length(); i++) {

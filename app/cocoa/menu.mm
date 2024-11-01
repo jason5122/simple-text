@@ -16,7 +16,10 @@ void Menu::addItem(ItemType type) {
 }
 
 void Menu::show(int x, int y) const {
-    NSPoint point{static_cast<CGFloat>(x), static_cast<CGFloat>(y)};
+    NSPoint point{
+        .x = static_cast<CGFloat>(x),
+        .y = static_cast<CGFloat>(y),
+    };
     [pimpl->ns_menu popUpMenuPositioningItem:nil atLocation:point inView:nullptr];
 }
 

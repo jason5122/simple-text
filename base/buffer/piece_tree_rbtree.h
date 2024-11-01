@@ -64,7 +64,6 @@ public:
 
 private:
     RedBlackTree(Color c, const RedBlackTree& lft, const NodeData& val, const RedBlackTree& rgt);
-
     RedBlackTree(const NodePtr& node);
 
     static RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right);

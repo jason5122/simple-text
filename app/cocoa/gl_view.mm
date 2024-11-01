@@ -188,14 +188,6 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 
 - (void)scrollWheel:(NSEvent*)event {
     if (event.type == NSEventTypeScrollWheel) {
-        if (event.momentumPhase & NSEventPhaseBegan) {
-            // TODO: Implement this as a timer.
-            // glLayer.asynchronous = true;
-        }
-        if (event.momentumPhase & NSEventPhaseEnded) {
-            // glLayer.asynchronous = false;
-        }
-
         int dx = std::round(-event.scrollingDeltaX);
         int dy = std::round(-event.scrollingDeltaY);
         app::Delta scroll{dx, dy};
@@ -277,15 +269,6 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     }
 
     glLayer->appWindow->onRightMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
-
-    // NSMenu* contextMenu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
-    // [contextMenu addItemWithTitle:@"Exit" action:@selector(terminate:) keyEquivalent:@""];
-    // [contextMenu popUpMenuPositioningItem:nil atLocation:event.locationInWindow inView:self];
-
-    // NSPoint point{static_cast<CGFloat>(scaled_mouse_x), static_cast<CGFloat>(scaled_mouse_y)};
-    // [contextMenu popUpMenuPositioningItem:nil atLocation:point inView:self];
-
-    // [contextMenu popUpMenuPositioningItem:nil atLocation:event.locationInWindow inView:nil];
 }
 
 - (void)viewDidChangeEffectiveAppearance {

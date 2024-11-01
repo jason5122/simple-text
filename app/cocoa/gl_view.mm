@@ -1,5 +1,5 @@
-#include "GLView.h"
-#include "app/cocoa/GLLayer.h"
+#include "app/cocoa/gl_layer.h"
+#include "gl_view.h"
 
 #import <Carbon/Carbon.h>
 
@@ -207,12 +207,6 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
             dx = std::round(-event.scrollingDeltaX) * 16;
             dy = std::round(-event.scrollingDeltaY) * 16;
         }
-
-        // TODO: Allow for easy pure vertical/horizontal scroll like Sublime Text.
-        //       Reject slight scrolling deviations in the orthogonal direction.
-        // if (abs(dx) <= 1) {
-        //     dx = 0;
-        // }
 
         int scale = glLayer.contentsScale;
         int scaled_dx = dx * scale;

@@ -1,6 +1,6 @@
 #include "app/app.h"
-#include "app/cocoa/WindowController.h"
 #include "app/cocoa/impl_cocoa.h"
+#include "app/cocoa/window_controller.h"
 #include "app/window.h"
 #include <Foundation/Foundation.h>
 #include <format>
@@ -154,4 +154,4 @@ void App::setCursorStyle(CursorStyle style) {
     }
 }
 
-}
+}  // namespace app

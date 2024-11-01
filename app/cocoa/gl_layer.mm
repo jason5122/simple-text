@@ -1,4 +1,4 @@
-#include "GLLayer.h"
+#include "gl_layer.h"
 
 @interface GLLayer () {
     app::DisplayGL* mDisplayGL;

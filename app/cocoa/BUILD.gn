@@ -1,12 +1,12 @@
 source_set("cocoa") {
   sources = [
-    "GLLayer.mm",
-    "GLView.mm",
-    "WindowController.mm",
     "app.mm",
     "display_gl.mm",
+    "gl_layer.mm",
+    "gl_view.mm",
     "menu.mm",
     "window.mm",
+    "window_controller.mm",
   ]
 
   frameworks = [

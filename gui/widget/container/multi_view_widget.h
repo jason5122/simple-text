@@ -48,6 +48,7 @@ public:
 
     void removeTab(size_t index) {
         views.erase(views.begin() + index);
+        this->index = std::clamp(index, 0_Z, base::sub_sat(views.size(), 1_Z));
     }
 
     void draw(const std::optional<Point>& mouse_pos) override {
@@ -108,4 +109,4 @@ private:
     std::vector<std::shared_ptr<WidgetType>> views;
 };
 
-}
+}  // namespace gui

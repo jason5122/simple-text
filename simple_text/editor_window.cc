@@ -47,7 +47,7 @@ const std::string kUnicode =
 
 🥲🥲🥲🥲🥲🥲)";
 
-}
+}  // namespace
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window{parent, width, height},

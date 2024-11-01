@@ -5,6 +5,7 @@ source_set("cocoa") {
     "WindowController.mm",
     "app.mm",
     "display_gl.mm",
+    "menu.mm",
     "window.mm",
   ]
 

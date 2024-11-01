@@ -13,7 +13,8 @@ enum class ModifierKey {
     kSuper = 1 << 3,
 };
 
-template <> struct is_bitmask_enum<app::ModifierKey> : std::true_type {};
+template <>
+struct is_bitmask_enum<app::ModifierKey> : std::true_type {};
 
 #if BUILDFLAG(IS_MAC)
 constexpr ModifierKey kPrimaryModifier = ModifierKey::kSuper;
@@ -21,4 +22,4 @@ constexpr ModifierKey kPrimaryModifier = ModifierKey::kSuper;
 constexpr ModifierKey kPrimaryModifier = ModifierKey::kControl;
 #endif
 
-}
+}  // namespace app

@@ -3,6 +3,7 @@
 #include "app/app.h"
 #include "app/cocoa/WindowController.h"
 #include "app/cocoa/display_gl.h"
+#include "app/menu.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -21,4 +22,9 @@ public:
     WindowController* window_controller;
 };
 
-}
+class Menu::impl {
+public:
+    NSMenu* ns_menu;
+};
+
+}  // namespace app

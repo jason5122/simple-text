@@ -23,6 +23,10 @@ public:
                          int mouse_y,
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;
+    void onRightMouseDown(int mouse_x,
+                          int mouse_y,
+                          app::ModifierKey modifiers,
+                          app::ClickType click_type) override;
     void onMouseMove() override;
     void onMouseExit() override;
     bool onKeyDown(app::Key key, app::ModifierKey modifiers) override;

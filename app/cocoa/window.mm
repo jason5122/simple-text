@@ -130,4 +130,12 @@ std::optional<std::pair<int, int>> Window::mousePosition() {
     return std::pair{scaled_mouse_x, scaled_mouse_y};
 }
 
+// TODO: Check for negative values?
+std::optional<std::pair<int, int>> Window::mousePositionRaw() {
+    NSPoint mouse_pos = NSEvent.mouseLocation;
+    int mouse_x = std::round(mouse_pos.x);
+    int mouse_y = std::round(mouse_pos.y);
+    return std::pair{mouse_x, mouse_y};
 }
+
+}  // namespace app

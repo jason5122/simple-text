@@ -39,6 +39,9 @@ public:
     void setFilePath(fs::path path);
     std::optional<std::string> openFilePicker();
     std::optional<std::pair<int, int>> mousePosition();
+    // TODO: Rename this to `mousePosition()` and the original `mousePosition()` to
+    // `mousePositionScaled()`.
+    std::optional<std::pair<int, int>> mousePositionRaw();
 
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw(int width, int height) {}
@@ -53,6 +56,10 @@ public:
                                  int mouse_y,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}
+    virtual void onRightMouseDown(int mouse_x,
+                                  int mouse_y,
+                                  ModifierKey modifiers,
+                                  ClickType click_type) {}
     virtual void onMouseMove() {}
     virtual void onMouseExit() {}
     virtual bool onKeyDown(Key key, ModifierKey modifiers) {
@@ -69,4 +76,4 @@ private:
     std::unique_ptr<impl> pimpl;
 };
 
-}
+}  // namespace app

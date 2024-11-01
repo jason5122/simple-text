@@ -1,3 +1,4 @@
+#include "app/menu.h"
 #include "editor_window.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
@@ -137,6 +138,23 @@ void EditorWindow::onLeftMouseDrag(int mouse_x,
     if (drag_start_widget) {
         drag_start_widget->leftMouseDrag({mouse_x, mouse_y}, modifiers, click_type);
         redraw();
+    }
+}
+
+void EditorWindow::onRightMouseDown(int mouse_x,
+                                    int mouse_y,
+                                    app::ModifierKey modifiers,
+                                    app::ClickType click_type) {
+    auto mouse_pos = mousePositionRaw();
+    if (mouse_pos) {
+        parent.setCursorStyle(app::App::CursorStyle::kArrow);
+
+        auto [mouse_x_raw, mouse_y_raw] = mouse_pos.value();
+        app::Menu menu{};
+        menu.addItem(app::Menu::ItemType::kCommand);
+        menu.show(mouse_x_raw, mouse_y_raw);
+
+        std::println("Pop-up menu closed.");
     }
 }
 

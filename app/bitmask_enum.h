@@ -4,13 +4,15 @@
 
 namespace app {
 
-template <typename T> struct is_bitmask_enum : std::false_type {};
+template <typename T>
+struct is_bitmask_enum : std::false_type {};
 
-template <typename E> std::enable_if_t<app::is_bitmask_enum<E>::value, bool> constexpr Any(E e) {
+template <typename E>
+std::enable_if_t<app::is_bitmask_enum<E>::value, bool> constexpr Any(E e) {
     return static_cast<std::underlying_type_t<E>>(e) != 0;
 }
 
-}
+}  // namespace app
 
 template <typename E>
 std::enable_if_t<app::is_bitmask_enum<E>::value, E> constexpr operator|(E l, E r) {

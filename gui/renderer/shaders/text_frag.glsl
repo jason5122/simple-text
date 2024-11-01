@@ -35,7 +35,8 @@ void main() {
 
         // https://github.com/tsoding/ded/blob/ea30e9d6ee1c0d52aa11f9386920b884987a6b55/shaders/simple_epic.frag
         vec2 frag_uv = gl_FragCoord.xy / resolution;
-        vec3 rainbow = hsl2rgb(vec3((u_time + frag_uv.x + frag_uv.y), 0.5, 0.5));
+        // vec3 rainbow = hsl2rgb(vec3((u_time + frag_uv.x + frag_uv.y), 0.5, 0.5));
+        vec3 rainbow = hsl2rgb(vec3((frag_uv.x + frag_uv.y), 0.5, 0.5));
         color = vec4(rainbow, 1.0);
     }
 }

@@ -1,4 +1,5 @@
 #include "app/cocoa/gl_layer.h"
+#include "app/types.h"
 #include "gl_view.h"
 
 #import <Carbon/Carbon.h>
@@ -8,17 +9,20 @@
 
 namespace {
 
-inline void GetPosition(NSEvent* event,
-                        GLLayer* glLayer,
-                        int& scaled_mouse_x,
-                        int& scaled_mouse_y) {
+inline app::Point GetMousePosition(NSEvent* event) {
     int mouse_x = std::round(event.locationInWindow.x);
     int mouse_y = std::round(event.locationInWindow.y);
-    mouse_y = glLayer.frame.size.height - mouse_y;  // Set origin at top left.
+    return {mouse_x, mouse_y};
+}
 
+inline app::Point ScaleAndInvertPosition(const app::Point& point, GLLayer* glLayer) {
     int scale = glLayer.contentsScale;
-    scaled_mouse_x = mouse_x * scale;
-    scaled_mouse_y = mouse_y * scale;
+    int window_height = glLayer.frame.size.height;
+
+    app::Point new_point = point;
+    new_point.y = window_height - new_point.y;  // Set origin at top left.
+    new_point *= scale;
+    return new_point;
 }
 
 constexpr app::Key GetKey(unsigned short vk) {
@@ -192,30 +196,25 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
             // glLayer.asynchronous = false;
         }
 
-        int dx = 0;
-        int dy = 0;
-        if (event.hasPreciseScrollingDeltas) {
-            dx = std::round(-event.scrollingDeltaX);
-            dy = std::round(-event.scrollingDeltaY);
-        } else {
+        int dx = std::round(-event.scrollingDeltaX);
+        int dy = std::round(-event.scrollingDeltaY);
+        app::Delta scroll{dx, dy};
+        if (!event.hasPreciseScrollingDeltas) {
             // Taken from ///chromium/src/ui/events/cocoa/events_mac.mm.
             // static constexpr double kScrollbarPixelsPerCocoaTick = 40.0;
-            // dx = -event.deltaX * kScrollbarPixelsPerCocoaTick;
-            // dy = -event.deltaY * kScrollbarPixelsPerCocoaTick;
+            // int dx = -event.deltaX * kScrollbarPixelsPerCocoaTick;
+            // int dy = -event.deltaY * kScrollbarPixelsPerCocoaTick;
 
             // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
-            dx = std::round(-event.scrollingDeltaX) * 16;
-            dy = std::round(-event.scrollingDeltaY) * 16;
+            scroll *= 16;
         }
 
         int scale = glLayer.contentsScale;
-        int scaled_dx = dx * scale;
-        int scaled_dy = dy * scale;
+        scroll *= scale;
 
-        int scaled_mouse_x, scaled_mouse_y;
-        GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
+        auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
 
-        glLayer->appWindow->onScroll(scaled_mouse_x, scaled_mouse_y, scaled_dx, scaled_dy);
+        glLayer->appWindow->onScroll(mouse_pos.x, mouse_pos.y, scroll.dx, scroll.dy);
     }
 }
 
@@ -234,8 +233,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 
 - (void)mouseDown:(NSEvent*)event {
     // TODO: De-duplicate this with rightMouseDown:.
-    int scaled_mouse_x, scaled_mouse_y;
-    GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
+    auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
 
     app::ClickType click_type = app::ClickType::kSingleClick;
@@ -245,7 +243,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
         click_type = app::ClickType::kTripleClick;
     }
 
-    glLayer->appWindow->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
+    glLayer->appWindow->onLeftMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
 - (void)mouseUp:(NSEvent*)event {
@@ -253,8 +251,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 }
 
 - (void)mouseDragged:(NSEvent*)event {
-    int scaled_mouse_x, scaled_mouse_y;
-    GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
+    auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
 
     app::ClickType click_type = app::ClickType::kSingleClick;
@@ -264,13 +261,12 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
         click_type = app::ClickType::kTripleClick;
     }
 
-    glLayer->appWindow->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
+    glLayer->appWindow->onLeftMouseDrag(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
     // TODO: De-duplicate this with mouseDown:.
-    int scaled_mouse_x, scaled_mouse_y;
-    GetPosition(event, glLayer, scaled_mouse_x, scaled_mouse_y);
+    auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
 
     app::ClickType click_type = app::ClickType::kSingleClick;
@@ -280,7 +276,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
         click_type = app::ClickType::kTripleClick;
     }
 
-    glLayer->appWindow->onRightMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
+    glLayer->appWindow->onRightMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 
     // NSMenu* contextMenu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
     // [contextMenu addItemWithTitle:@"Exit" action:@selector(terminate:) keyEquivalent:@""];

@@ -101,6 +101,16 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     return modifiers;
 }
 
+constexpr app::ClickType GetClickType(NSInteger click_count) {
+    if (click_count == 1) {
+        return app::ClickType::kSingleClick;
+    } else if (click_count == 2) {
+        return app::ClickType::kDoubleClick;
+    } else {
+        return app::ClickType::kTripleClick;
+    }
+}
+
 }  // namespace
 
 @interface GLView () {
@@ -211,9 +221,7 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 }
 
 - (void)keyDown:(NSEvent*)event {
-    NSTextInputContext* inputContext = [self inputContext];
-
-    bool handled = [inputContext handleEvent:event];
+    bool handled = [self.inputContext handleEvent:event];
     if (!handled) {
         std::println("keyDown was unhandled.");
     }
@@ -224,17 +232,9 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 }
 
 - (void)mouseDown:(NSEvent*)event {
-    // TODO: De-duplicate this with rightMouseDown:.
     auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-
-    app::ClickType click_type = app::ClickType::kSingleClick;
-    if (event.clickCount == 2) {
-        click_type = app::ClickType::kDoubleClick;
-    } else if (event.clickCount >= 3) {
-        click_type = app::ClickType::kTripleClick;
-    }
-
+    app::ClickType click_type = GetClickType(event.clickCount);
     glLayer->appWindow->onLeftMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
@@ -245,29 +245,14 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 - (void)mouseDragged:(NSEvent*)event {
     auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-
-    app::ClickType click_type = app::ClickType::kSingleClick;
-    if (event.clickCount == 2) {
-        click_type = app::ClickType::kDoubleClick;
-    } else if (event.clickCount >= 3) {
-        click_type = app::ClickType::kTripleClick;
-    }
-
+    app::ClickType click_type = GetClickType(event.clickCount);
     glLayer->appWindow->onLeftMouseDrag(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
-    // TODO: De-duplicate this with mouseDown:.
     auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
     app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-
-    app::ClickType click_type = app::ClickType::kSingleClick;
-    if (event.clickCount == 2) {
-        click_type = app::ClickType::kDoubleClick;
-    } else if (event.clickCount >= 3) {
-        click_type = app::ClickType::kTripleClick;
-    }
-
+    app::ClickType click_type = GetClickType(event.clickCount);
     glLayer->appWindow->onRightMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
@@ -317,7 +302,13 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
 }
 
 - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actualRange {
-    return NSZeroRect;
+    // return NSZeroRect;
+
+    // TODO: This determines the coordinates of where the IME box appears. Implement this.
+    return {
+        .origin = {500, 500},
+        .size = {0, 0},
+    };
 }
 
 - (void)doCommandBySelector:(SEL)selector {
@@ -331,86 +322,59 @@ constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
     std::println(str);
     if (str == "moveForward" || str == "moveRight") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters);
-    }
-    if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {
+    } else if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters, true);
-    }
-    if (str == "moveBackward" || str == "moveLeft") {
+    } else if (str == "moveBackward" || str == "moveLeft") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacters);
-    }
-    if (str == "moveBackwardAndModifySelection" || str == "moveLeftAndModifySelection") {
+    } else if (str == "moveBackwardAndModifySelection" || str == "moveLeftAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacters, true);
-    }
-    if (str == "moveDown") {
+    } else if (str == "moveDown") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByLines);
-    }
-    if (str == "moveDownAndModifySelection") {
+    } else if (str == "moveDownAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByLines, true);
-    }
-    if (str == "moveUp") {
+    } else if (str == "moveUp") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines);
-    }
-    if (str == "moveUpAndModifySelection") {
+    } else if (str == "moveUpAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines, true);
-    }
-    if (str == "moveWordRight") {
+    } else if (str == "moveWordRight") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByWords);
-    }
-    if (str == "moveWordRightAndModifySelection") {
+    } else if (str == "moveWordRightAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByWords, true);
-    }
-    if (str == "moveWordLeft") {
+    } else if (str == "moveWordLeft") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByWords);
-    }
-    if (str == "moveWordLeftAndModifySelection") {
+    } else if (str == "moveWordLeftAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveBackwardByWords, true);
-    }
-    if (str == "moveToLeftEndOfLine") {
+    } else if (str == "moveToLeftEndOfLine") {
         glLayer->appWindow->onAction(app::Action::kMoveToBOL);
-    }
-    if (str == "moveToLeftEndOfLineAndModifySelection") {
+    } else if (str == "moveToLeftEndOfLineAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveToBOL, true);
-    }
-    if (str == "moveToRightEndOfLine") {
+    } else if (str == "moveToRightEndOfLine") {
         glLayer->appWindow->onAction(app::Action::kMoveToEOL);
-    }
-    if (str == "moveToRightEndOfLineAndModifySelection") {
+    } else if (str == "moveToRightEndOfLineAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveToEOL, true);
-    }
-    if (str == "moveToBeginningOfParagraph") {
+    } else if (str == "moveToBeginningOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardBOL);
-    }
-    if (str == "moveToBeginningOfParagraphAndModifySelection") {
+    } else if (str == "moveToBeginningOfParagraphAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardBOL, true);
-    }
-    if (str == "moveToEndOfParagraph") {
+    } else if (str == "moveToEndOfParagraph") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardEOL);
-    }
-    if (str == "moveToEndOfParagraphAndModifySelection") {
+    } else if (str == "moveToEndOfParagraphAndModifySelection") {
         glLayer->appWindow->onAction(app::Action::kMoveToHardEOL, true);
-    }
-    if (str == "moveToBeginningOfDocument") {
+    } else if (str == "moveToBeginningOfDocument") {
         glLayer->appWindow->onAction(app::Action::kMoveToBOF);
-    }
-    if (str == "moveToEndOfDocument") {
+    } else if (str == "moveToEndOfDocument") {
         glLayer->appWindow->onAction(app::Action::kMoveToEOF);
-    }
-    if (str == "deleteBackward") {
+    } else if (str == "deleteBackward") {
         glLayer->appWindow->onAction(app::Action::kLeftDelete);
-    }
-    if (str == "deleteForward") {
+    } else if (str == "deleteForward") {
         glLayer->appWindow->onAction(app::Action::kRightDelete);
-    }
-    if (str == "deleteWordBackward") {
+    } else if (str == "deleteWordBackward") {
         glLayer->appWindow->onAction(app::Action::kDeleteWordBackward);
-    }
-    if (str == "deleteWordForward") {
+    } else if (str == "deleteWordForward") {
         glLayer->appWindow->onAction(app::Action::kDeleteWordForward);
-    }
-    if (str == "insertNewline") {
+    } else if (str == "insertNewline") {
         glLayer->appWindow->onAction(app::Action::kInsertNewline);
-    }
-    if (str == "insertTab") {
+    } else if (str == "insertTab") {
         glLayer->appWindow->onAction(app::Action::kInsertTab);
     }
 }

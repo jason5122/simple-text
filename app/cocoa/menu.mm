@@ -15,11 +15,8 @@ void Menu::addItem(ItemType type) {
     [pimpl->ns_menu addItemWithTitle:@"Exit" action:@selector(terminate:) keyEquivalent:@""];
 }
 
-void Menu::show(int x, int y) const {
-    NSPoint point{
-        .x = static_cast<CGFloat>(x),
-        .y = static_cast<CGFloat>(y),
-    };
+void Menu::show(const Point& mouse_pos) const {
+    NSPoint point = {static_cast<CGFloat>(mouse_pos.x), static_cast<CGFloat>(mouse_pos.y)};
     [pimpl->ns_menu popUpMenuPositioningItem:nil atLocation:point inView:nullptr];
 }
 

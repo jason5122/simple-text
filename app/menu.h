@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app/types.h"
 #include <memory>
 
 namespace app {
@@ -15,7 +16,7 @@ public:
     };
 
     void addItem(ItemType type);
-    void show(int x, int y) const;
+    void show(const Point& mouse_pos) const;
 
 private:
     class impl;

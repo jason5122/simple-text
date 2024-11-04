@@ -4,6 +4,7 @@
 #include "app/app_action.h"
 #include "app/key.h"
 #include "app/modifier_key.h"
+#include "app/types.h"
 #include "util/non_copyable.h"
 #include <filesystem>
 #include <memory>
@@ -38,10 +39,10 @@ public:
     void setTitle(const std::string& title);
     void setFilePath(fs::path path);
     std::optional<std::string> openFilePicker();
-    std::optional<std::pair<int, int>> mousePosition();
+    std::optional<app::Point> mousePosition();
     // TODO: Rename this to `mousePosition()` and the original `mousePosition()` to
     // `mousePositionScaled()`.
-    std::optional<std::pair<int, int>> mousePositionRaw();
+    std::optional<app::Point> mousePositionRaw();
 
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw(int width, int height) {}

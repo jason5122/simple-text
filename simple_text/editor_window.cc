@@ -149,10 +149,9 @@ void EditorWindow::onRightMouseDown(int mouse_x,
     if (mouse_pos) {
         parent.setCursorStyle(app::App::CursorStyle::kArrow);
 
-        auto [mouse_x_raw, mouse_y_raw] = mouse_pos.value();
         app::Menu menu{};
         menu.addItem(app::Menu::ItemType::kCommand);
-        menu.show(mouse_x_raw, mouse_y_raw);
+        menu.show(mouse_pos.value());
 
         std::println("Pop-up menu closed.");
     }

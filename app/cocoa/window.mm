@@ -98,7 +98,7 @@ std::optional<std::string> Window::openFilePicker() {
 }
 
 // TODO: De-duplicate code with GLView GetPosition().
-std::optional<std::pair<int, int>> Window::mousePosition() {
+std::optional<app::Point> Window::mousePosition() {
     int window_width = [pimpl->window_controller getWidth];
     int window_height = [pimpl->window_controller getHeight];
     NSWindow* ns_window = [pimpl->window_controller getNsWindow];
@@ -114,28 +114,21 @@ std::optional<std::pair<int, int>> Window::mousePosition() {
     int mouse_x = std::round(mouse_pos.x);
     int mouse_y = std::round(mouse_pos.y);
 
-    // TODO: Formalize this as a check in debug mode.
-    if (mouse_x < 0 || mouse_x >= window_width) {
-        std::println("Window::mousePosition() error: mouse_x < 0 || mouse_x >= window_width");
-        std::abort();
-    }
-    if (mouse_y < 0 || mouse_y >= window_height) {
-        std::println("Window::mousePosition() error: mouse_y < 0 || mouse_y >= window_height");
-        std::abort();
-    }
+    assert(!(mouse_x < 0 || mouse_x >= window_width));
+    assert(!(mouse_y < 0 || mouse_y >= window_height));
 
     int scale = [pimpl->window_controller getScaleFactor];
     int scaled_mouse_x = mouse_x * scale;
     int scaled_mouse_y = mouse_y * scale;
-    return std::pair{scaled_mouse_x, scaled_mouse_y};
+    return app::Point{scaled_mouse_x, scaled_mouse_y};
 }
 
 // TODO: Check for negative values?
-std::optional<std::pair<int, int>> Window::mousePositionRaw() {
+std::optional<app::Point> Window::mousePositionRaw() {
     NSPoint mouse_pos = NSEvent.mouseLocation;
     int mouse_x = std::round(mouse_pos.x);
     int mouse_y = std::round(mouse_pos.y);
-    return std::pair{mouse_x, mouse_y};
+    return app::Point{mouse_x, mouse_y};
 }
 
 }  // namespace app

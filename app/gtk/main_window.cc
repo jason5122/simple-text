@@ -320,8 +320,10 @@ static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointe
 
         ModifierKey modifiers = ConvertGdkModifiers(event_state);
 
+        // TODO: Track click type. Consider having a member that tracks it from GtkGesture.
         Window* app_window = main_window->appWindow();
-        app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers);
+        app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers,
+                                    ClickType::kSingleClick);
     }
 }
 
@@ -349,4 +351,4 @@ static gboolean key_pressed(GtkEventControllerKey* self,
     return false;
 }
 
-}
+}  // namespace app

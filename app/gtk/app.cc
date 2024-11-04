@@ -38,4 +38,15 @@ App::~App() {
     g_object_unref(pimpl->app);
 }
 
+// TODO: Implement this.
+std::string App::getClipboardString() {
+    return "";
 }
+
+// TODO: Implement this.
+void App::setClipboardString(const std::string& str8) {}
+
+// TODO: Implement this.
+void App::setCursorStyle(CursorStyle style) {}
+
+}  // namespace app

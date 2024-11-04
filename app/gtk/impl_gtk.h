@@ -2,6 +2,7 @@
 
 #include "app/app.h"
 #include "app/gtk/main_window.h"
+#include "app/menu.h"
 #include "app/window.h"
 #include <gtk/gtk.h>
 
@@ -21,4 +22,8 @@ public:
     MainWindow main_window;
 };
 
-}
+class Menu::impl {
+public:
+};
+
+}  // namespace app

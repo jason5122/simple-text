@@ -40,6 +40,8 @@ void TabBarWidget::addTab(std::string_view title) {
 }
 
 void TabBarWidget::removeTab(size_t index) {
+    if (tab_name_labels.empty()) return;
+
     tab_name_labels.erase(tab_name_labels.begin() + index);
     this->index = std::clamp(index, 0_Z, base::sub_sat(tab_name_labels.size(), 1_Z));
 }

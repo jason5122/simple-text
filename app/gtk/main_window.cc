@@ -5,6 +5,13 @@
 // Debug use; remove this.
 #include "util/std_print.h"
 
+namespace {
+
+static constexpr app::Key KeyFromKeyval(guint keyval);
+static constexpr app::ModifierKey ModifierFromState(guint state);
+
+}  // namespace
+
 namespace app {
 
 // GtkWindow callbacks.
@@ -256,23 +263,6 @@ static gboolean scroll(GtkEventControllerScroll* self,
     return true;
 }
 
-static constexpr ModifierKey ConvertGdkModifiers(guint state) {
-    ModifierKey modifiers = ModifierKey::kNone;
-    if (state & GDK_SHIFT_MASK) {
-        modifiers |= ModifierKey::kShift;
-    }
-    if (state & GDK_CONTROL_MASK) {
-        modifiers |= ModifierKey::kControl;
-    }
-    if (state & GDK_ALT_MASK) {
-        modifiers |= ModifierKey::kAlt;
-    }
-    if (state & GDK_SUPER_MASK) {
-        modifiers |= ModifierKey::kSuper;
-    }
-    return modifiers;
-}
-
 static void pressed(
     GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
@@ -286,7 +276,7 @@ static void pressed(
 
     GdkModifierType event_state =
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
-    ModifierKey modifiers = ConvertGdkModifiers(event_state);
+    ModifierKey modifiers = ModifierFromState(event_state);
 
     ClickType click_type = ClickType::kSingleClick;
     if (n_press == 2) {
@@ -318,7 +308,7 @@ static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointe
         int scaled_mouse_x = mouse_x * scale_factor;
         int scaled_mouse_y = mouse_y * scale_factor;
 
-        ModifierKey modifiers = ConvertGdkModifiers(event_state);
+        ModifierKey modifiers = ModifierFromState(event_state);
 
         // TODO: Track click type. Consider having a member that tracks it from GtkGesture.
         Window* app_window = main_window->appWindow();
@@ -337,18 +327,108 @@ static gboolean key_pressed(GtkEventControllerKey* self,
                             guint keycode,
                             GdkModifierType state,
                             gpointer user_data) {
-    guint32 codepoint = gdk_keyval_to_unicode(keyval);
-    if (codepoint > 0) {
-        char utf8[unicode::kMaxBytesInUTF8Sequence];
-        size_t utf8_len = unicode::ToUTF8(codepoint, utf8);
+    // TODO: Why does this occur?
+    if (keyval == GDK_KEY_VoidSymbol) return false;
 
-        std::string str8(utf8, utf8_len);
-        Window* app_window = static_cast<Window*>(user_data);
-        app_window->onInsertText(str8);
+    Window* app_window = static_cast<Window*>(user_data);
 
-        std::println("str8 = {}, codepoint = {}", str8, codepoint);
+    Key key = KeyFromKeyval(keyval);
+    ModifierKey modifiers = ModifierFromState(state);
+    bool handled = app_window->onKeyDown(key, modifiers);
+
+    if (!handled) {
+        guint32 codepoint = gdk_keyval_to_unicode(keyval);
+        if (codepoint > 0) {
+            char utf8[unicode::kMaxBytesInUTF8Sequence];
+            size_t utf8_len = unicode::ToUTF8(codepoint, utf8);
+
+            std::string str8(utf8, utf8_len);
+            app_window->onInsertText(str8);
+
+            std::println("str8 = {}, codepoint = {}", str8, codepoint);
+        }
     }
-    return false;
+    return false;  // TODO: See if we should return true/false here.
 }
 
 }  // namespace app
+
+namespace {
+
+static constexpr app::Key KeyFromKeyval(guint keyval) {
+    // Convert to uppercase since GTK key events are case-sensitive.
+    keyval = gdk_keyval_to_upper(keyval);
+
+    constexpr struct {
+        guint keyval;
+        app::Key key;
+    } kKeyMap[] = {
+        {GDK_KEY_A, app::Key::kA},
+        {GDK_KEY_B, app::Key::kB},
+        {GDK_KEY_C, app::Key::kC},
+        {GDK_KEY_D, app::Key::kD},
+        {GDK_KEY_E, app::Key::kE},
+        {GDK_KEY_F, app::Key::kF},
+        {GDK_KEY_G, app::Key::kG},
+        {GDK_KEY_H, app::Key::kH},
+        {GDK_KEY_I, app::Key::kI},
+        {GDK_KEY_J, app::Key::kJ},
+        {GDK_KEY_K, app::Key::kK},
+        {GDK_KEY_L, app::Key::kL},
+        {GDK_KEY_M, app::Key::kM},
+        {GDK_KEY_N, app::Key::kN},
+        {GDK_KEY_O, app::Key::kO},
+        {GDK_KEY_P, app::Key::kP},
+        {GDK_KEY_Q, app::Key::kQ},
+        {GDK_KEY_R, app::Key::kR},
+        {GDK_KEY_S, app::Key::kS},
+        {GDK_KEY_T, app::Key::kT},
+        {GDK_KEY_U, app::Key::kU},
+        {GDK_KEY_V, app::Key::kV},
+        {GDK_KEY_W, app::Key::kW},
+        {GDK_KEY_X, app::Key::kX},
+        {GDK_KEY_Y, app::Key::kY},
+        {GDK_KEY_Z, app::Key::kZ},
+        {GDK_KEY_0, app::Key::k0},
+        {GDK_KEY_1, app::Key::k1},
+        {GDK_KEY_2, app::Key::k2},
+        {GDK_KEY_3, app::Key::k3},
+        {GDK_KEY_4, app::Key::k4},
+        {GDK_KEY_5, app::Key::k5},
+        {GDK_KEY_6, app::Key::k6},
+        {GDK_KEY_7, app::Key::k7},
+        {GDK_KEY_8, app::Key::k8},
+        {GDK_KEY_9, app::Key::k9},
+        {GDK_KEY_Return, app::Key::kEnter},
+        {GDK_KEY_BackSpace, app::Key::kBackspace},
+        {GDK_KEY_Left, app::Key::kLeftArrow},
+        {GDK_KEY_Right, app::Key::kRightArrow},
+        {GDK_KEY_Down, app::Key::kDownArrow},
+        {GDK_KEY_Up, app::Key::kUpArrow},
+    };
+    for (size_t i = 0; i < std::size(kKeyMap); ++i) {
+        if (kKeyMap[i].keyval == keyval) {
+            return kKeyMap[i].key;
+        }
+    }
+    return app::Key::kNone;
+}
+
+static constexpr app::ModifierKey ModifierFromState(guint state) {
+    app::ModifierKey modifiers = app::ModifierKey::kNone;
+    if (state & GDK_SHIFT_MASK) {
+        modifiers |= app::ModifierKey::kShift;
+    }
+    if (state & GDK_CONTROL_MASK) {
+        modifiers |= app::ModifierKey::kControl;
+    }
+    if (state & GDK_ALT_MASK) {
+        modifiers |= app::ModifierKey::kAlt;
+    }
+    if (state & GDK_SUPER_MASK || state & GDK_META_MASK) {
+        modifiers |= app::ModifierKey::kSuper;
+    }
+    return modifiers;
+}
+
+}  // namespace

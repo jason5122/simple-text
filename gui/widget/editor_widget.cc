@@ -33,7 +33,7 @@ const std::string long_json_line =
 )";
 const std::string large_json = "{\n" + long_json_line * 50 + "}";
 
-}
+}  // namespace
 
 namespace gui {
 
@@ -118,4 +118,4 @@ void EditorWidget::openFile(std::string_view path) {
     addTab(path, contents);
 }
 
-}
+}  // namespace gui

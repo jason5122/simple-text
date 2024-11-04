@@ -62,7 +62,7 @@ struct Point {
 
 enum class CursorStyle { kArrow, kIBeam };
 
-}
+}  // namespace gui
 
 template <>
 struct std::formatter<gui::Size> {

@@ -47,6 +47,8 @@ public:
     }
 
     void removeTab(size_t index) {
+        if (views.empty()) return;
+
         views.erase(views.begin() + index);
         this->index = std::clamp(index, 0_Z, base::sub_sat(views.size(), 1_Z));
     }

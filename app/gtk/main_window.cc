@@ -5,33 +5,33 @@
 // Debug use; remove this.
 #include "util/std_print.h"
 
-namespace {
-
-constexpr app::Key KeyFromKeyval(guint keyval);
-constexpr app::ModifierKey ModifierFromState(guint state);
-// TODO: Make this work with multiple modifiers.
-constexpr const gchar* GtkAccelStringFromModifier(app::ModifierKey modifier);
-
-}  // namespace
-
 namespace app {
 
+namespace {
+
+constexpr Key KeyFromKeyval(guint keyval);
+constexpr ModifierKey ModifierFromState(guint state);
+// TODO: Make this work with multiple modifiers.
+constexpr const gchar* GtkAccelStringFromModifier(ModifierKey modifier);
+
 // GtkWindow callbacks.
-static void destroy(GtkWidget* self, gpointer user_data);
+void destroy(GtkWidget* self, gpointer user_data);
 // GtkGLArea callbacks.
-static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
-static void realize(GtkGLArea* self, gpointer user_data);
-static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
-static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
-static gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
-static void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
-static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data);
-static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app);
-static gboolean key_pressed(GtkEventControllerKey* self,
-                            guint keyval,
-                            guint keycode,
-                            GdkModifierType state,
-                            gpointer user_data);
+GdkGLContext* create_context(GtkGLArea* self, gpointer user_data);
+void realize(GtkGLArea* self, gpointer user_data);
+gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
+void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
+gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
+void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
+void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data);
+void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app);
+gboolean key_pressed(GtkEventControllerKey* self,
+                     guint keyval,
+                     guint keycode,
+                     GdkModifierType state,
+                     gpointer user_data);
+
+}  // namespace
 
 MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context)
     : app_window{app_window},
@@ -161,17 +161,19 @@ Window* MainWindow::appWindow() {
     return app_window;
 }
 
-static void destroy(GtkWidget* self, gpointer user_data) {
+namespace {
+
+void destroy(GtkWidget* self, gpointer user_data) {
     Window* app_window = static_cast<Window*>(user_data);
     app_window->onClose();
 }
 
-static GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
+GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
     GdkGLContext* context = static_cast<GdkGLContext*>(user_data);
     return g_object_ref(context);
 }
 
-static void realize(GtkGLArea* self, gpointer user_data) {
+void realize(GtkGLArea* self, gpointer user_data) {
     gtk_gl_area_make_current(self);
     if (gtk_gl_area_get_error(self) != nullptr) return;
 
@@ -193,14 +195,14 @@ static void realize(GtkGLArea* self, gpointer user_data) {
     app_window->onOpenGLActivate(scaled_width, scaled_height);
 }
 
-static void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
+void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
     gtk_gl_area_make_current(self);
 
     Window* app_window = static_cast<Window*>(user_data);
     app_window->onResize(width, height);
 }
 
-static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
+gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     gtk_gl_area_make_current(self);
 
     int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
@@ -214,10 +216,7 @@ static gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_dat
     return true;
 }
 
-static gboolean scroll(GtkEventControllerScroll* self,
-                       gdouble dx,
-                       gdouble dy,
-                       gpointer user_data) {
+gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
 
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
@@ -249,8 +248,7 @@ static gboolean scroll(GtkEventControllerScroll* self,
     return true;
 }
 
-static void pressed(
-    GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
+void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
 
     int mouse_x = std::round(x);
@@ -275,7 +273,7 @@ static void pressed(
     app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
 }
 
-static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
+void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     main_window->mouse_x = x;
     main_window->mouse_y = y;
@@ -303,16 +301,16 @@ static void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointe
     }
 }
 
-static void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
+void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
     std::println("quit callback");
     g_application_quit(G_APPLICATION(app));
 }
 
-static gboolean key_pressed(GtkEventControllerKey* self,
-                            guint keyval,
-                            guint keycode,
-                            GdkModifierType state,
-                            gpointer user_data) {
+gboolean key_pressed(GtkEventControllerKey* self,
+                     guint keyval,
+                     guint keycode,
+                     GdkModifierType state,
+                     gpointer user_data) {
     // TODO: Why does this occur?
     if (keyval == GDK_KEY_VoidSymbol) return false;
 
@@ -337,99 +335,95 @@ static gboolean key_pressed(GtkEventControllerKey* self,
     return false;  // TODO: See if we should return true/false here.
 }
 
-}  // namespace app
-
-namespace {
-
-constexpr app::Key KeyFromKeyval(guint keyval) {
+constexpr Key KeyFromKeyval(guint keyval) {
     // Convert to uppercase since GTK key events are case-sensitive.
     keyval = gdk_keyval_to_upper(keyval);
 
     constexpr struct {
         guint keyval;
-        app::Key key;
+        Key key;
     } kKeyMap[] = {
-        {GDK_KEY_A, app::Key::kA},
-        {GDK_KEY_B, app::Key::kB},
-        {GDK_KEY_C, app::Key::kC},
-        {GDK_KEY_D, app::Key::kD},
-        {GDK_KEY_E, app::Key::kE},
-        {GDK_KEY_F, app::Key::kF},
-        {GDK_KEY_G, app::Key::kG},
-        {GDK_KEY_H, app::Key::kH},
-        {GDK_KEY_I, app::Key::kI},
-        {GDK_KEY_J, app::Key::kJ},
-        {GDK_KEY_K, app::Key::kK},
-        {GDK_KEY_L, app::Key::kL},
-        {GDK_KEY_M, app::Key::kM},
-        {GDK_KEY_N, app::Key::kN},
-        {GDK_KEY_O, app::Key::kO},
-        {GDK_KEY_P, app::Key::kP},
-        {GDK_KEY_Q, app::Key::kQ},
-        {GDK_KEY_R, app::Key::kR},
-        {GDK_KEY_S, app::Key::kS},
-        {GDK_KEY_T, app::Key::kT},
-        {GDK_KEY_U, app::Key::kU},
-        {GDK_KEY_V, app::Key::kV},
-        {GDK_KEY_W, app::Key::kW},
-        {GDK_KEY_X, app::Key::kX},
-        {GDK_KEY_Y, app::Key::kY},
-        {GDK_KEY_Z, app::Key::kZ},
-        {GDK_KEY_0, app::Key::k0},
-        {GDK_KEY_1, app::Key::k1},
-        {GDK_KEY_2, app::Key::k2},
-        {GDK_KEY_3, app::Key::k3},
-        {GDK_KEY_4, app::Key::k4},
-        {GDK_KEY_5, app::Key::k5},
-        {GDK_KEY_6, app::Key::k6},
-        {GDK_KEY_7, app::Key::k7},
-        {GDK_KEY_8, app::Key::k8},
-        {GDK_KEY_9, app::Key::k9},
-        {GDK_KEY_Return, app::Key::kEnter},
-        {GDK_KEY_BackSpace, app::Key::kBackspace},
-        {GDK_KEY_Tab, app::Key::kTab},
-        {GDK_KEY_Left, app::Key::kLeftArrow},
-        {GDK_KEY_Right, app::Key::kRightArrow},
-        {GDK_KEY_Down, app::Key::kDownArrow},
-        {GDK_KEY_Up, app::Key::kUpArrow},
+        {GDK_KEY_A, Key::kA},
+        {GDK_KEY_B, Key::kB},
+        {GDK_KEY_C, Key::kC},
+        {GDK_KEY_D, Key::kD},
+        {GDK_KEY_E, Key::kE},
+        {GDK_KEY_F, Key::kF},
+        {GDK_KEY_G, Key::kG},
+        {GDK_KEY_H, Key::kH},
+        {GDK_KEY_I, Key::kI},
+        {GDK_KEY_J, Key::kJ},
+        {GDK_KEY_K, Key::kK},
+        {GDK_KEY_L, Key::kL},
+        {GDK_KEY_M, Key::kM},
+        {GDK_KEY_N, Key::kN},
+        {GDK_KEY_O, Key::kO},
+        {GDK_KEY_P, Key::kP},
+        {GDK_KEY_Q, Key::kQ},
+        {GDK_KEY_R, Key::kR},
+        {GDK_KEY_S, Key::kS},
+        {GDK_KEY_T, Key::kT},
+        {GDK_KEY_U, Key::kU},
+        {GDK_KEY_V, Key::kV},
+        {GDK_KEY_W, Key::kW},
+        {GDK_KEY_X, Key::kX},
+        {GDK_KEY_Y, Key::kY},
+        {GDK_KEY_Z, Key::kZ},
+        {GDK_KEY_0, Key::k0},
+        {GDK_KEY_1, Key::k1},
+        {GDK_KEY_2, Key::k2},
+        {GDK_KEY_3, Key::k3},
+        {GDK_KEY_4, Key::k4},
+        {GDK_KEY_5, Key::k5},
+        {GDK_KEY_6, Key::k6},
+        {GDK_KEY_7, Key::k7},
+        {GDK_KEY_8, Key::k8},
+        {GDK_KEY_9, Key::k9},
+        {GDK_KEY_Return, Key::kEnter},
+        {GDK_KEY_BackSpace, Key::kBackspace},
+        {GDK_KEY_Tab, Key::kTab},
+        {GDK_KEY_Left, Key::kLeftArrow},
+        {GDK_KEY_Right, Key::kRightArrow},
+        {GDK_KEY_Down, Key::kDownArrow},
+        {GDK_KEY_Up, Key::kUpArrow},
     };
     for (size_t i = 0; i < std::size(kKeyMap); ++i) {
         if (kKeyMap[i].keyval == keyval) {
             return kKeyMap[i].key;
         }
     }
-    return app::Key::kNone;
+    return Key::kNone;
 }
 
-constexpr app::ModifierKey ModifierFromState(guint state) {
-    app::ModifierKey modifiers = app::ModifierKey::kNone;
+constexpr ModifierKey ModifierFromState(guint state) {
+    ModifierKey modifiers = ModifierKey::kNone;
     if (state & GDK_SHIFT_MASK) {
-        modifiers |= app::ModifierKey::kShift;
+        modifiers |= ModifierKey::kShift;
     }
     if (state & GDK_CONTROL_MASK) {
-        modifiers |= app::ModifierKey::kControl;
+        modifiers |= ModifierKey::kControl;
     }
     if (state & GDK_ALT_MASK) {
-        modifiers |= app::ModifierKey::kAlt;
+        modifiers |= ModifierKey::kAlt;
     }
     if (state & GDK_SUPER_MASK || state & GDK_META_MASK) {
-        modifiers |= app::ModifierKey::kSuper;
+        modifiers |= ModifierKey::kSuper;
     }
     return modifiers;
 }
 
 // TODO: Make this work with multiple modifiers.
-constexpr const gchar* GtkAccelStringFromModifier(app::ModifierKey modifier) {
+constexpr const gchar* GtkAccelStringFromModifier(ModifierKey modifier) {
     switch (modifier) {
-    case app::ModifierKey::kShift:
+    case ModifierKey::kShift:
         return "<Shift>";
-    case app::ModifierKey::kControl:
+    case ModifierKey::kControl:
         return "<Control>";
-    case app::ModifierKey::kAlt:
+    case ModifierKey::kAlt:
         return "<Alt>";
     // TODO: Change this to <Super> after we finish testing. macOS's Command key maps to <Meta>.
     // https://docs.gtk.org/gdk4/flags.ModifierType.html
-    case app::ModifierKey::kSuper:
+    case ModifierKey::kSuper:
         return "<Meta>";
     default:
         std::println("Error: Could not parse modifier.");
@@ -438,3 +432,5 @@ constexpr const gchar* GtkAccelStringFromModifier(app::ModifierKey modifier) {
 }
 
 }  // namespace
+
+}  // namespace app

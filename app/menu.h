@@ -3,6 +3,7 @@
 #include "app/types.h"
 #include <memory>
 #include <optional>
+#include <string_view>
 
 namespace app {
 
@@ -11,12 +12,7 @@ public:
     Menu();
     virtual ~Menu();
 
-    enum class ItemType {
-        kCommand,
-        kCheck,
-    };
-
-    void addItem(ItemType type);
+    void addItem(std::string_view label);
     std::optional<size_t> show(const Point& mouse_pos) const;
     void setSelectedIndex(size_t index);
 

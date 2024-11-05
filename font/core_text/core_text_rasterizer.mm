@@ -1,5 +1,6 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
+#include "base/apple/string_conversions.h"
 #include "font/font_rasterizer.h"
 #include "font/utf16_to_utf8_indices_map.h"
 #include "unicode/SkTFitsIn.h"
@@ -296,9 +297,7 @@ ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(size_t font_id,
                                                               std::string_view str8) {
     CTFontRef ct_font = font_id_to_native[font_id].get();
 
-    ScopedCFTypeRef<CFStringRef> text_string{CFStringCreateWithBytesNoCopy(
-        kCFAllocatorDefault, (const uint8_t*)str8.data(), str8.length(), kCFStringEncodingUTF8,
-        false, kCFAllocatorNull)};
+    ScopedCFTypeRef<CFStringRef> text_string = base::apple::StringToCFStringNoCopy(str8);
 
     ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
@@ -310,4 +309,4 @@ ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(size_t font_id,
     return CTLineCreateWithAttributedString(attr_string.get());
 }
 
-}
+}  // namespace font

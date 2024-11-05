@@ -15,15 +15,26 @@ enum class OwnershipPolicy {
     RETAIN
 };
 
-template <typename T> struct ScopedTypeRefTraits;
+template <typename T>
+struct ScopedTypeRefTraits;
 
-template <typename T, typename Traits = ScopedTypeRefTraits<T>> class ScopedTypeRef {
+template <typename T, typename Traits = ScopedTypeRefTraits<T>>
+class ScopedTypeRef {
 public:
     using element_type = T;
 
     // explicit constexpr ScopedTypeRef(element_type object = Traits::InvalidValue())
     //     : object_(object) {}
-    constexpr ScopedTypeRef(element_type object = Traits::InvalidValue()) : object_(object) {}
+    // constexpr ScopedTypeRef(element_type object = Traits::InvalidValue()) : object_(object) {}
+
+    // TODO: Investigate adding `explicit`.
+    constexpr ScopedTypeRef(element_type object = Traits::InvalidValue(),
+                            OwnershipPolicy policy = OwnershipPolicy::ASSUME)
+        : object_(object) {
+        if (object_ != Traits::InvalidValue() && policy == OwnershipPolicy::RETAIN) {
+            object_ = Traits::Retain(object_);
+        }
+    }
 
     // Copy construction
     ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) : object_(that.get()) {
@@ -124,4 +135,4 @@ bool operator==(const T& that, std::nullptr_t) {
     return false;
 }
 
-}
+}  // namespace base::apple

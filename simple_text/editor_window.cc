@@ -144,8 +144,9 @@ void EditorWindow::onRightMouseDown(int mouse_x,
     if (mouse_pos) {
         parent.setCursorStyle(app::App::CursorStyle::kArrow);
 
-        app::Menu menu{};
-        menu.addItem(app::Menu::ItemType::kCommand);
+        app::Menu menu;
+        std::string temp = "TODO: Change this";
+        menu.addItem(temp);
         auto selected_index = menu.show(mouse_pos.value());
         if (selected_index) {
             std::println("Selected menu index = {}", selected_index.value());

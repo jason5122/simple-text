@@ -9,6 +9,10 @@
 
 ## Unordered
 
+### Blog Posts
+
+- [Code folding by default](https://matklad.github.io/2024/10/14/missing-ide-feature.html)
+
 ### Linux
 
 - Load GTK 3 using `dlopen()` instead of adding it as a link-time dependency.

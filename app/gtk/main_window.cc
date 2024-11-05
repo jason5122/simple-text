@@ -7,8 +7,10 @@
 
 namespace {
 
-static constexpr app::Key KeyFromKeyval(guint keyval);
-static constexpr app::ModifierKey ModifierFromState(guint state);
+constexpr app::Key KeyFromKeyval(guint keyval);
+constexpr app::ModifierKey ModifierFromState(guint state);
+// TODO: Make this work with multiple modifiers.
+constexpr const gchar* GtkAccelStringFromModifier(app::ModifierKey modifier);
 
 }  // namespace
 
@@ -31,27 +33,11 @@ static gboolean key_pressed(GtkEventControllerKey* self,
                             GdkModifierType state,
                             gpointer user_data);
 
-static constexpr const gchar* ConvertModifier(ModifierKey modifier) {
-    switch (modifier) {
-    case ModifierKey::kShift:
-        return "<Shift>";
-    case ModifierKey::kControl:
-        return "<Control>";
-    case ModifierKey::kAlt:
-        return "<Alt>";
-    // TODO: Figure out why this is <Meta> and not <Super>. We use GDK_SUPER_MASK elsewhere.
-    case ModifierKey::kSuper:
-        return "<Meta>";
-    default:
-        std::println("Error: Could not parse modifier.");
-        std::abort();
-    }
-}
-
 MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context)
     : app_window{app_window},
       window{gtk_application_window_new(gtk_app)},
       gl_area{gtk_gl_area_new()} {
+
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
     GtkWidget* gtk_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -77,7 +63,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
         g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
                                         gtk_app);
 
-        std::string quit_accel = std::format("{}q", ConvertModifier(kPrimaryModifier), "q");
+        std::string quit_accel = std::format("{}q", GtkAccelStringFromModifier(kPrimaryModifier));
         const gchar* quit_accels[2] = {quit_accel.data(), NULL};
         gtk_application_set_accels_for_action(gtk_app, "app.quit", quit_accels);
     }
@@ -355,7 +341,7 @@ static gboolean key_pressed(GtkEventControllerKey* self,
 
 namespace {
 
-static constexpr app::Key KeyFromKeyval(guint keyval) {
+constexpr app::Key KeyFromKeyval(guint keyval) {
     // Convert to uppercase since GTK key events are case-sensitive.
     keyval = gdk_keyval_to_upper(keyval);
 
@@ -415,7 +401,7 @@ static constexpr app::Key KeyFromKeyval(guint keyval) {
     return app::Key::kNone;
 }
 
-static constexpr app::ModifierKey ModifierFromState(guint state) {
+constexpr app::ModifierKey ModifierFromState(guint state) {
     app::ModifierKey modifiers = app::ModifierKey::kNone;
     if (state & GDK_SHIFT_MASK) {
         modifiers |= app::ModifierKey::kShift;
@@ -430,6 +416,25 @@ static constexpr app::ModifierKey ModifierFromState(guint state) {
         modifiers |= app::ModifierKey::kSuper;
     }
     return modifiers;
+}
+
+// TODO: Make this work with multiple modifiers.
+constexpr const gchar* GtkAccelStringFromModifier(app::ModifierKey modifier) {
+    switch (modifier) {
+    case app::ModifierKey::kShift:
+        return "<Shift>";
+    case app::ModifierKey::kControl:
+        return "<Control>";
+    case app::ModifierKey::kAlt:
+        return "<Alt>";
+    // TODO: Change this to <Super> after we finish testing. macOS's Command key maps to <Meta>.
+    // https://docs.gtk.org/gdk4/flags.ModifierType.html
+    case app::ModifierKey::kSuper:
+        return "<Meta>";
+    default:
+        std::println("Error: Could not parse modifier.");
+        std::abort();
+    }
 }
 
 }  // namespace

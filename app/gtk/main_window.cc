@@ -23,6 +23,7 @@ gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
 gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
 void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
+void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
 void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data);
 void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app);
 gboolean key_pressed(GtkEventControllerKey* self,
@@ -84,6 +85,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
     GtkGesture* gesture = gtk_gesture_click_new();
     gtk_widget_add_controller(gl_area, GTK_EVENT_CONTROLLER(gesture));
     g_signal_connect(gesture, "pressed", G_CALLBACK(pressed), app_window);
+    g_signal_connect(gesture, "released", G_CALLBACK(released), app_window);
 
     GtkEventController* motion_event_controller = gtk_event_controller_motion_new();
     gtk_widget_add_controller(gl_area, motion_event_controller);
@@ -157,8 +159,12 @@ void MainWindow::setTitle(const std::string& title) {
     gtk_window_set_title(GTK_WINDOW(window), title.data());
 }
 
-Window* MainWindow::appWindow() {
+Window* MainWindow::appWindow() const {
     return app_window;
+}
+
+GtkWidget* MainWindow::gtkWindow() const {
+    return window;
 }
 
 namespace {
@@ -265,6 +271,11 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
 
     Window* app_window = static_cast<Window*>(user_data);
     app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
+}
+
+void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
+    Window* app_window = static_cast<Window*>(user_data);
+    app_window->onLeftMouseUp();
 }
 
 void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {

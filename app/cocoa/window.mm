@@ -70,7 +70,7 @@ void Window::setFilePath(fs::path path) {
     [pimpl->window_controller setFilePath:path];
 }
 
-std::optional<std::string> Window::openFilePicker() {
+std::optional<std::string> Window::openFilePicker() const {
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Choose File";
     panel.prompt = @"Choose";
@@ -98,7 +98,7 @@ std::optional<std::string> Window::openFilePicker() {
 }
 
 // TODO: De-duplicate code with GLView GetPosition().
-std::optional<app::Point> Window::mousePosition() {
+std::optional<app::Point> Window::mousePosition() const {
     int window_width = [pimpl->window_controller getWidth];
     int window_height = [pimpl->window_controller getHeight];
     NSWindow* ns_window = [pimpl->window_controller getNsWindow];
@@ -124,7 +124,7 @@ std::optional<app::Point> Window::mousePosition() {
 }
 
 // TODO: Check for negative values?
-std::optional<app::Point> Window::mousePositionRaw() {
+std::optional<app::Point> Window::mousePositionRaw() const {
     NSPoint mouse_pos = NSEvent.mouseLocation;
     int mouse_x = std::round(mouse_pos.x);
     int mouse_y = std::round(mouse_pos.y);

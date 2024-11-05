@@ -22,7 +22,8 @@ public:
     int scaleFactor();
     bool isDarkMode();
     void setTitle(const std::string& title);
-    Window* appWindow();
+    Window* appWindow() const;
+    GtkWidget* gtkWindow() const;
 
 private:
     Window* app_window;
@@ -31,4 +32,4 @@ private:
     // GDBusProxy* dbus_settings_proxy;
 };
 
-}
+}  // namespace app

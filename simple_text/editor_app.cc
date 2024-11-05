@@ -43,7 +43,7 @@ const std::string kUIFontFace = "Arial";
 // const std::string kMainFontFace = "Source Code Pro";
 // const std::string kMainFontFace = "Fira Code";
 
-}
+}  // namespace
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.

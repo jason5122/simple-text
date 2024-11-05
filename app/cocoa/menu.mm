@@ -8,9 +8,8 @@
 // This Objective-C class wraps a app::Menu object, which allows it to be stored in the
 // representedObject field of an NSMenuItem.
 @interface PtrToMenuAsNSObject : NSObject
-+ (instancetype)weakPtrForMenu:(app::Menu*)menu;
-+ (app::Menu*)getFrom:(id)instance;
 - (instancetype)initWithMenu:(app::Menu*)menu;
++ (app::Menu*)getFrom:(id)instance;
 @end
 
 namespace app {
@@ -32,7 +31,7 @@ void Menu::addItem(std::string_view label) {
                                            keyEquivalent:@""];
     item.target = pimpl->menu_controller;
     item.tag = 42;
-    item.representedObject = [PtrToMenuAsNSObject weakPtrForMenu:this];
+    item.representedObject = [[PtrToMenuAsNSObject alloc] initWithMenu:this];
     [pimpl->ns_menu addItem:item];
 }
 
@@ -66,14 +65,6 @@ void Menu::setSelectedIndex(size_t index) {
     app::Menu* _menu;
 }
 
-+ (instancetype)weakPtrForMenu:(app::Menu*)menu {
-    return [[PtrToMenuAsNSObject alloc] initWithMenu:menu];
-}
-
-+ (app::Menu*)getFrom:(id)instance {
-    return [base::apple::ObjCCastStrict<PtrToMenuAsNSObject>(instance) menu];
-}
-
 - (instancetype)initWithMenu:(app::Menu*)menu {
     if ((self = [super init])) {
         _menu = menu;
@@ -81,8 +72,8 @@ void Menu::setSelectedIndex(size_t index) {
     return self;
 }
 
-- (app::Menu*)menu {
-    return _menu;
++ (app::Menu*)getFrom:(id)instance {
+    return base::apple::ObjCCastStrict<PtrToMenuAsNSObject>(instance)->_menu;
 }
 
 @end

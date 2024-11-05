@@ -53,9 +53,9 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
     }
 
     NSDictionary* attributes = @{
-        (NSString*)kCTFontFamilyNameAttribute : font_name,
-        (NSString*)kCTFontStyleNameAttribute : font_style,
-        (NSString*)kCTFontSizeAttribute : [NSNumber numberWithInt:font_size]
+        static_cast<NSString*>(kCTFontFamilyNameAttribute) : font_name,
+        static_cast<NSString*>(kCTFontStyleNameAttribute) : font_style,
+        static_cast<NSString*>(kCTFontSizeAttribute) : [NSNumber numberWithInt:font_size]
     };
     ScopedCFTypeRef<CTFontDescriptorRef> descriptor =
         CTFontDescriptorCreateWithAttributes((CFDictionaryRef)attributes);
@@ -251,7 +251,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
 size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
     CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
-    NSString* ns_font_name = (NSString*)ct_font_name;
+    NSString* ns_font_name = static_cast<NSString*>(ct_font_name);
     std::string font_name(ns_font_name.UTF8String);
 
     // Sometimes, the CFStringRef isn't convertible to std::string. We need to bridge it to an
@@ -263,18 +263,15 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
 
     if (!font_postscript_name_to_id.contains(font_name)) {
         // TODO: Figure out how to automatically retain using ScopedCFTypeRef.
-        ct_font = (CTFontRef)CFRetain(ct_font);
+        ct_font = static_cast<CTFontRef>(CFRetain(ct_font));
 
         int ascent = std::ceil(CTFontGetAscent(ct_font));
         int descent = std::ceil(CTFontGetDescent(ct_font));
         int leading = std::ceil(CTFontGetLeading(ct_font));
 
-        if (ascent % 2 == 1) {
-            ascent += 1;
-        }
-        if (descent % 2 == 1) {
-            descent += 1;
-        }
+        // Round up to the next even number if odd.
+        if (ascent % 2 == 1) ascent += 1;
+        if (descent % 2 == 1) descent += 1;
 
         int line_height = ascent + descent + leading;
 

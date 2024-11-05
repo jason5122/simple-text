@@ -24,6 +24,7 @@ public:
 
 class Menu::impl {
 public:
+    GMenu* menu;  // TODO: Use smart pointer.
 };
 
 }  // namespace app

@@ -115,6 +115,8 @@ void EditorWindow::onLeftMouseDown(int mouse_x,
                                    int mouse_y,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
+    // createMenuDebug();
+
     drag_start_widget = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
     if (drag_start_widget) {
         drag_start_widget->leftMouseDown({mouse_x, mouse_y}, modifiers, click_type);

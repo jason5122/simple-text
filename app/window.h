@@ -48,11 +48,12 @@ public:
     bool isDarkMode();
     void setTitle(const std::string& title);
     void setFilePath(fs::path path);
-    std::optional<std::string> openFilePicker();
-    std::optional<app::Point> mousePosition();
+    std::optional<std::string> openFilePicker() const;
+    std::optional<app::Point> mousePosition() const;
     // TODO: Rename this to `mousePosition()` and the original `mousePosition()` to
     // `mousePositionScaled()`.
-    std::optional<app::Point> mousePositionRaw();
+    std::optional<app::Point> mousePositionRaw() const;
+    void createMenuDebug() const;
 
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw(int width, int height) {}

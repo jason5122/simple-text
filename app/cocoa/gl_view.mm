@@ -69,6 +69,7 @@ constexpr app::Key GetKey(unsigned short vk) {
         {kVK_ANSI_9, app::Key::k9},
         {kVK_Return, app::Key::kEnter},
         {kVK_Delete, app::Key::kBackspace},
+        {kVK_Tab, app::Key::kTab},
         {kVK_LeftArrow, app::Key::kLeftArrow},
         {kVK_RightArrow, app::Key::kRightArrow},
         {kVK_DownArrow, app::Key::kDownArrow},

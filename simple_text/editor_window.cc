@@ -263,6 +263,18 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         auto* text_view = editor_widget->currentWidget();
         text_view->redo();
         handled = true;
+    } else if (key == app::Key::kBackspace) {
+        auto* text_view = editor_widget->currentWidget();
+        text_view->leftDelete();
+        handled = true;
+    } else if (key == app::Key::kEnter) {
+        auto* text_view = editor_widget->currentWidget();
+        text_view->insertText("\n");
+        handled = true;
+    } else if (key == app::Key::kTab) {
+        auto* text_view = editor_widget->currentWidget();
+        text_view->insertText("    ");
+        handled = true;
     }
 
     if (handled) {

@@ -60,6 +60,7 @@ constexpr app::Key GetKey(WPARAM vk) {
         {'9', app::Key::k9},
         {VK_RETURN, app::Key::kEnter},
         {VK_BACK, app::Key::kBackspace},
+        {VK_TAB, app::Key::kTab},
         {VK_LEFT, app::Key::kLeftArrow},
         {VK_RIGHT, app::Key::kRightArrow},
         {VK_DOWN, app::Key::kDownArrow},
@@ -103,7 +104,7 @@ inline void AddMenu(HWND hwnd) {
     SetMenu(hwnd, menubar);
 }
 
-}
+}  // namespace
 
 namespace app {
 
@@ -412,4 +413,4 @@ void MainWindow::setTitle(const std::string& title) {
     SetWindowText(m_hwnd, str16.data());
 }
 
-}
+}  // namespace app

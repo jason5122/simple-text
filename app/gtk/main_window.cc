@@ -401,6 +401,7 @@ static constexpr app::Key KeyFromKeyval(guint keyval) {
         {GDK_KEY_9, app::Key::k9},
         {GDK_KEY_Return, app::Key::kEnter},
         {GDK_KEY_BackSpace, app::Key::kBackspace},
+        {GDK_KEY_Tab, app::Key::kTab},
         {GDK_KEY_Left, app::Key::kLeftArrow},
         {GDK_KEY_Right, app::Key::kRightArrow},
         {GDK_KEY_Down, app::Key::kDownArrow},

@@ -7,6 +7,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+@interface MenuController : NSObject
+- (void)itemSelected:(id)sender;
+@end
+
 namespace app {
 
 class App::impl {
@@ -25,6 +29,7 @@ public:
 class Menu::impl {
 public:
     NSMenu* ns_menu;
+    MenuController* menu_controller;
 };
 
 }  // namespace app

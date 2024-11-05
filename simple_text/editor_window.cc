@@ -71,8 +71,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::shared_ptr<LayoutWidget> vertical_layout{new VerticalLayoutWidget{}};
 
     // These don't have default constructors since they are not intended to be main widgets.
-    constexpr int kSideBarWidth = 250 * 2;
-    constexpr int kStatusBarHeight = 22 * 2;
     std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, height})};
     std::shared_ptr<Widget> status_bar{new StatusBarWidget({width, kStatusBarHeight})};
 
@@ -81,9 +79,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     horizontal_layout->setMainWidget(vertical_layout);
     main_widget->setMainWidget(horizontal_layout);
     main_widget->addChildEnd(status_bar);
-
-    // editor_widget->openFile("/Users/jason/cs/side-projects/simple-text/temp/100mb.txt");
-    // editor_widget->lastIndex();
 }
 
 void EditorWindow::onDraw(int width, int height) {
@@ -151,9 +146,12 @@ void EditorWindow::onRightMouseDown(int mouse_x,
 
         app::Menu menu{};
         menu.addItem(app::Menu::ItemType::kCommand);
-        menu.show(mouse_pos.value());
-
-        std::println("Pop-up menu closed.");
+        auto selected_index = menu.show(mouse_pos.value());
+        if (selected_index) {
+            std::println("Selected menu index = {}", selected_index.value());
+        } else {
+            std::println("Menu was closed without a selection.");
+        }
     }
 }
 

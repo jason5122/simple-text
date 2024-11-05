@@ -2,6 +2,7 @@
 
 #include "app/types.h"
 #include <memory>
+#include <optional>
 
 namespace app {
 
@@ -16,9 +17,12 @@ public:
     };
 
     void addItem(ItemType type);
-    void show(const Point& mouse_pos) const;
+    std::optional<size_t> show(const Point& mouse_pos) const;
+    void setSelectedIndex(size_t index);
 
 private:
+    size_t index;
+
     class impl;
     std::unique_ptr<impl> pimpl;
 };

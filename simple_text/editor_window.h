@@ -36,6 +36,9 @@ public:
     void onClose() override;
 
 private:
+    static constexpr int kSideBarWidth = 250 * 2;
+    static constexpr int kStatusBarHeight = 22 * 2;
+
     int wid;
     EditorApp& parent;
     std::shared_ptr<gui::LayoutWidget> main_widget;

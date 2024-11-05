@@ -261,13 +261,7 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
     GdkModifierType event_state =
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
     ModifierKey modifiers = ModifierFromState(event_state);
-
-    ClickType click_type = ClickType::kSingleClick;
-    if (n_press == 2) {
-        click_type = ClickType::kDoubleClick;
-    } else if (n_press >= 3) {
-        click_type = ClickType::kTripleClick;
-    }
+    ClickType click_type = ClickTypeFromCount(n_press);
 
     Window* app_window = static_cast<Window*>(user_data);
     app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);

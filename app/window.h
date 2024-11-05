@@ -22,6 +22,16 @@ enum class ClickType {
     kTripleClick,
 };
 
+constexpr ClickType ClickTypeFromCount(int click_count) {
+    if (click_count == 1) {
+        return ClickType::kSingleClick;
+    } else if (click_count == 2) {
+        return ClickType::kDoubleClick;
+    } else {
+        return ClickType::kTripleClick;
+    }
+}
+
 class App;
 
 class Window {

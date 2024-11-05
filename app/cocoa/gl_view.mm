@@ -7,112 +7,16 @@
 // Debug use; remove this.
 #include "util/std_print.h"
 
+namespace app {
 namespace {
 
-inline app::Point GetMousePosition(NSEvent* event) {
-    int mouse_x = std::round(event.locationInWindow.x);
-    int mouse_y = std::round(event.locationInWindow.y);
-    return {mouse_x, mouse_y};
-}
-
-inline app::Point ScaleAndInvertPosition(const app::Point& point, GLLayer* glLayer) {
-    int scale = glLayer.contentsScale;
-    int window_height = glLayer.frame.size.height;
-
-    app::Point new_point = point;
-    new_point.y = window_height - new_point.y;  // Set origin at top left.
-    new_point *= scale;
-    return new_point;
-}
-
-constexpr app::Key GetKey(unsigned short vk) {
-    constexpr struct {
-        unsigned short fVK;
-        app::Key fKey;
-    } gPair[] = {
-        // These constants are located in the <Carbon/Carbon.h> header.
-        {kVK_ANSI_A, app::Key::kA},
-        {kVK_ANSI_B, app::Key::kB},
-        {kVK_ANSI_C, app::Key::kC},
-        {kVK_ANSI_D, app::Key::kD},
-        {kVK_ANSI_E, app::Key::kE},
-        {kVK_ANSI_F, app::Key::kF},
-        {kVK_ANSI_G, app::Key::kG},
-        {kVK_ANSI_H, app::Key::kH},
-        {kVK_ANSI_I, app::Key::kI},
-        {kVK_ANSI_J, app::Key::kJ},
-        {kVK_ANSI_K, app::Key::kK},
-        {kVK_ANSI_L, app::Key::kL},
-        {kVK_ANSI_M, app::Key::kM},
-        {kVK_ANSI_N, app::Key::kN},
-        {kVK_ANSI_O, app::Key::kO},
-        {kVK_ANSI_P, app::Key::kP},
-        {kVK_ANSI_Q, app::Key::kQ},
-        {kVK_ANSI_R, app::Key::kR},
-        {kVK_ANSI_S, app::Key::kS},
-        {kVK_ANSI_T, app::Key::kT},
-        {kVK_ANSI_U, app::Key::kU},
-        {kVK_ANSI_V, app::Key::kV},
-        {kVK_ANSI_W, app::Key::kW},
-        {kVK_ANSI_X, app::Key::kX},
-        {kVK_ANSI_Y, app::Key::kY},
-        {kVK_ANSI_Z, app::Key::kZ},
-        {kVK_ANSI_0, app::Key::k0},
-        {kVK_ANSI_1, app::Key::k1},
-        {kVK_ANSI_2, app::Key::k2},
-        {kVK_ANSI_3, app::Key::k3},
-        {kVK_ANSI_4, app::Key::k4},
-        {kVK_ANSI_5, app::Key::k5},
-        {kVK_ANSI_6, app::Key::k6},
-        {kVK_ANSI_7, app::Key::k7},
-        {kVK_ANSI_8, app::Key::k8},
-        {kVK_ANSI_9, app::Key::k9},
-        {kVK_Return, app::Key::kEnter},
-        {kVK_Delete, app::Key::kBackspace},
-        {kVK_Tab, app::Key::kTab},
-        {kVK_LeftArrow, app::Key::kLeftArrow},
-        {kVK_RightArrow, app::Key::kRightArrow},
-        {kVK_DownArrow, app::Key::kDownArrow},
-        {kVK_UpArrow, app::Key::kUpArrow},
-    };
-
-    for (size_t i = 0; i < std::size(gPair); ++i) {
-        if (gPair[i].fVK == vk) {
-            return gPair[i].fKey;
-        }
-    }
-
-    return app::Key::kNone;
-}
-
-constexpr app::ModifierKey GetModifiers(NSEventModifierFlags flags) {
-    app::ModifierKey modifiers = app::ModifierKey::kNone;
-    if (flags & NSEventModifierFlagShift) {
-        modifiers |= app::ModifierKey::kShift;
-    }
-    if (flags & NSEventModifierFlagControl) {
-        modifiers |= app::ModifierKey::kControl;
-    }
-    if (flags & NSEventModifierFlagOption) {
-        modifiers |= app::ModifierKey::kAlt;
-    }
-    if (flags & NSEventModifierFlagCommand) {
-        modifiers |= app::ModifierKey::kSuper;
-    }
-    return modifiers;
-}
-
-constexpr app::ClickType GetClickType(NSInteger click_count) {
-    if (click_count == 1) {
-        return app::ClickType::kSingleClick;
-    } else if (click_count == 2) {
-        return app::ClickType::kDoubleClick;
-    } else {
-        return app::ClickType::kTripleClick;
-    }
-}
+constexpr Key KeyFromKeyCode(unsigned short vk);
+constexpr ModifierKey ModifierFromFlags(NSEventModifierFlags flags);
+inline Point MousePositionFromEvent(NSEvent* event);
+inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 
 }  // namespace
+}  // namespace app
 
 @interface GLView () {
 @public
@@ -215,7 +119,7 @@ constexpr app::ClickType GetClickType(NSInteger click_count) {
         int scale = glLayer.contentsScale;
         scroll *= scale;
 
-        auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
+        auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
 
         glLayer->appWindow->onScroll(mouse_pos.x, mouse_pos.y, scroll.dx, scroll.dy);
     }
@@ -227,15 +131,15 @@ constexpr app::ClickType GetClickType(NSInteger click_count) {
         std::println("keyDown was unhandled.");
     }
 
-    app::Key key = GetKey(event.keyCode);
-    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
+    app::Key key = app::KeyFromKeyCode(event.keyCode);
+    app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
     glLayer->appWindow->onKeyDown(key, modifiers);
 }
 
 - (void)mouseDown:(NSEvent*)event {
-    auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
-    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    app::ClickType click_type = GetClickType(event.clickCount);
+    auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
+    app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
+    app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
     glLayer->appWindow->onLeftMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
@@ -244,16 +148,16 @@ constexpr app::ClickType GetClickType(NSInteger click_count) {
 }
 
 - (void)mouseDragged:(NSEvent*)event {
-    auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
-    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    app::ClickType click_type = GetClickType(event.clickCount);
+    auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
+    app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
+    app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
     glLayer->appWindow->onLeftMouseDrag(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
-    auto mouse_pos = ScaleAndInvertPosition(GetMousePosition(event), glLayer);
-    app::ModifierKey modifiers = GetModifiers(event.modifierFlags);
-    app::ClickType click_type = GetClickType(event.clickCount);
+    auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
+    app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
+    app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
     glLayer->appWindow->onRightMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
 }
 
@@ -381,3 +285,102 @@ constexpr app::ClickType GetClickType(NSInteger click_count) {
 }
 
 @end
+
+namespace app {
+namespace {
+
+constexpr Key KeyFromKeyCode(unsigned short vk) {
+    constexpr struct {
+        unsigned short fVK;
+        Key fKey;
+    } gPair[] = {
+        // These constants are located in the <Carbon/Carbon.h> header.
+        {kVK_ANSI_A, Key::kA},
+        {kVK_ANSI_B, Key::kB},
+        {kVK_ANSI_C, Key::kC},
+        {kVK_ANSI_D, Key::kD},
+        {kVK_ANSI_E, Key::kE},
+        {kVK_ANSI_F, Key::kF},
+        {kVK_ANSI_G, Key::kG},
+        {kVK_ANSI_H, Key::kH},
+        {kVK_ANSI_I, Key::kI},
+        {kVK_ANSI_J, Key::kJ},
+        {kVK_ANSI_K, Key::kK},
+        {kVK_ANSI_L, Key::kL},
+        {kVK_ANSI_M, Key::kM},
+        {kVK_ANSI_N, Key::kN},
+        {kVK_ANSI_O, Key::kO},
+        {kVK_ANSI_P, Key::kP},
+        {kVK_ANSI_Q, Key::kQ},
+        {kVK_ANSI_R, Key::kR},
+        {kVK_ANSI_S, Key::kS},
+        {kVK_ANSI_T, Key::kT},
+        {kVK_ANSI_U, Key::kU},
+        {kVK_ANSI_V, Key::kV},
+        {kVK_ANSI_W, Key::kW},
+        {kVK_ANSI_X, Key::kX},
+        {kVK_ANSI_Y, Key::kY},
+        {kVK_ANSI_Z, Key::kZ},
+        {kVK_ANSI_0, Key::k0},
+        {kVK_ANSI_1, Key::k1},
+        {kVK_ANSI_2, Key::k2},
+        {kVK_ANSI_3, Key::k3},
+        {kVK_ANSI_4, Key::k4},
+        {kVK_ANSI_5, Key::k5},
+        {kVK_ANSI_6, Key::k6},
+        {kVK_ANSI_7, Key::k7},
+        {kVK_ANSI_8, Key::k8},
+        {kVK_ANSI_9, Key::k9},
+        {kVK_Return, Key::kEnter},
+        {kVK_Delete, Key::kBackspace},
+        {kVK_Tab, Key::kTab},
+        {kVK_LeftArrow, Key::kLeftArrow},
+        {kVK_RightArrow, Key::kRightArrow},
+        {kVK_DownArrow, Key::kDownArrow},
+        {kVK_UpArrow, Key::kUpArrow},
+    };
+
+    for (size_t i = 0; i < std::size(gPair); ++i) {
+        if (gPair[i].fVK == vk) {
+            return gPair[i].fKey;
+        }
+    }
+
+    return Key::kNone;
+}
+
+constexpr ModifierKey ModifierFromFlags(NSEventModifierFlags flags) {
+    ModifierKey modifiers = ModifierKey::kNone;
+    if (flags & NSEventModifierFlagShift) {
+        modifiers |= ModifierKey::kShift;
+    }
+    if (flags & NSEventModifierFlagControl) {
+        modifiers |= ModifierKey::kControl;
+    }
+    if (flags & NSEventModifierFlagOption) {
+        modifiers |= ModifierKey::kAlt;
+    }
+    if (flags & NSEventModifierFlagCommand) {
+        modifiers |= ModifierKey::kSuper;
+    }
+    return modifiers;
+}
+
+inline Point MousePositionFromEvent(NSEvent* event) {
+    int mouse_x = std::round(event.locationInWindow.x);
+    int mouse_y = std::round(event.locationInWindow.y);
+    return {mouse_x, mouse_y};
+}
+
+inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer) {
+    int scale = glLayer.contentsScale;
+    int window_height = glLayer.frame.size.height;
+
+    Point new_point = point;
+    new_point.y = window_height - new_point.y;  // Set origin at top left.
+    new_point *= scale;
+    return new_point;
+}
+
+}  // namespace
+}  // namespace app

@@ -227,12 +227,18 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         parent.createWindow();
         handled = true;
     } else if (key == app::Key::kW && modifiers == app::kPrimaryModifier) {
+        // If we are dragging on the current TextViewWidget, invalidate the pointer to prevent a
+        // use-after-free crash.
+        if (drag_start_widget == editor_widget->currentWidget()) {
+            drag_start_widget = nullptr;
+        }
+
         editor_widget->removeTab(editor_widget->getCurrentIndex());
         handled = true;
     } else if (key == app::Key::kW &&
                modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        // Immediately exit this function and don't let redraw() get called! The window smart
-        // pointer will be deallocated at this point.
+        // Immediately exit this function and don't let redraw() get called! This window's smart
+        // pointer will be deallocated after `close()`.
         close();
         return true;
     } else if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {

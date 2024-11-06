@@ -61,16 +61,16 @@ struct std::formatter<app::ModifierKey> {
 
     auto format(const auto& modifiers, auto& ctx) const {
         std::string modifiers_str;
-        if ((modifiers & app::ModifierKey::kShift) == app::ModifierKey::kShift) {
+        if ((modifiers & app::ModifierKey::kShift) != app::ModifierKey::kNone) {
             modifiers_str += "Shift";
         }
-        if ((modifiers & app::ModifierKey::kControl) == app::ModifierKey::kControl) {
+        if ((modifiers & app::ModifierKey::kControl) != app::ModifierKey::kNone) {
             modifiers_str += "Control";
         }
-        if ((modifiers & app::ModifierKey::kAlt) == app::ModifierKey::kAlt) {
+        if ((modifiers & app::ModifierKey::kAlt) != app::ModifierKey::kNone) {
             modifiers_str += "Alt";
         }
-        if ((modifiers & app::ModifierKey::kSuper) == app::ModifierKey::kSuper) {
+        if ((modifiers & app::ModifierKey::kSuper) != app::ModifierKey::kNone) {
             modifiers_str += "Super";
         }
         return std::format_to(ctx.out(), "ModifierKey({})", modifiers_str);

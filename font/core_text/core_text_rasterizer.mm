@@ -64,7 +64,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
     return pimpl->cacheFont(ct_font);
 }
 
-const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const {
+const Metrics& FontRasterizer::getMetrics(size_t font_id) const {
     return pimpl->font_id_to_metrics.at(font_id);
 }
 

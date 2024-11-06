@@ -9,8 +9,7 @@ namespace gui {
 
 SideBarWidget::SideBarWidget(const Size& size)
     : ScrollableWidget{size},
-      label_font_id{
-          rasterizer().addFont("SF Pro Text", 22 * 2, font::FontRasterizer::FontStyle::kBold)},
+      label_font_id{rasterizer().addFont("SF Pro Text", 22 * 2, font::FontStyle::kBold)},
       line_layout_cache{label_font_id} {
     updateMaxScroll();
 
@@ -136,4 +135,4 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
                           RectRenderer::RectLayer::kBackground, 5);
 }
 
-}
+}  // namespace gui

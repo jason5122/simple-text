@@ -5,7 +5,50 @@
 
 namespace font {
 
-// TODO: Consider unnesting these inner classes.
+enum class FontStyle {
+    kNone = 0,
+    kBold = 1 << 0,
+    kItalic = 1 << 1,
+};
+
+inline constexpr auto operator|(FontStyle l, FontStyle r) {
+    using U = std::underlying_type_t<FontStyle>;
+    return static_cast<FontStyle>(static_cast<U>(l) | static_cast<U>(r));
+}
+
+inline constexpr auto& operator|=(FontStyle& l, FontStyle r) {
+    return l = l | r;
+}
+
+inline constexpr auto operator&(FontStyle l, FontStyle r) {
+    using U = std::underlying_type_t<FontStyle>;
+    return static_cast<FontStyle>(static_cast<U>(l) & static_cast<U>(r));
+}
+
+inline constexpr auto& operator&=(FontStyle& l, FontStyle r) {
+    return l = l & r;
+}
+
+inline constexpr auto operator^(FontStyle l, FontStyle r) {
+    using U = std::underlying_type_t<FontStyle>;
+    return static_cast<FontStyle>(static_cast<U>(l) ^ static_cast<U>(r));
+}
+
+inline constexpr auto& operator^=(FontStyle& l, FontStyle r) {
+    return l = l ^ r;
+}
+
+inline constexpr auto operator~(FontStyle m) {
+    using U = std::underlying_type_t<FontStyle>;
+    return static_cast<FontStyle>(~static_cast<U>(m));
+}
+
+struct Metrics {
+    int line_height;
+    int descent;
+    int ascent;
+};
+
 struct RasterizedGlyph {
     bool colored;
     int32_t left;
@@ -86,4 +129,4 @@ private:
 static_assert(std::is_trivially_copy_constructible_v<LineLayout::ConstIterator>);
 static_assert(std::is_trivially_copy_assignable_v<LineLayout::ConstIterator>);
 
-}
+}  // namespace font

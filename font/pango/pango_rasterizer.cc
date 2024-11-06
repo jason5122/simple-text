@@ -25,16 +25,19 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size) {
+size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
     PangoFontMap* font_map = pango_cairo_font_map_get_default();
     GObjectPtr<PangoContext> context{pango_font_map_create_context(font_map)};
 
     PangoFontDescriptionPtr desc{pango_font_description_new()};
-    pango_font_description_set_family(desc.get(), font_name_utf8.data());
+    pango_font_description_set_family_static(desc.get(), font_name_utf8.data());
     pango_font_description_set_size(desc.get(), font_size * PANGO_SCALE);
-    if (!desc) {
-        std::println("pango_font_description_from_string() error.");
-        // return false;
+
+    if ((style & FontStyle::kBold) != FontStyle::kNone) {
+        pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
+    }
+    if ((style & FontStyle::kItalic) != FontStyle::kNone) {
+        pango_font_description_set_style(desc.get(), PANGO_STYLE_ITALIC);
     }
 
     GObjectPtr<PangoFont> pango_font{
@@ -47,12 +50,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size) {
     return pimpl->cacheFont(pango_font.get());
 }
 
-// TODO: Implement this.
-size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
-    return addFont(font_name_utf8, font_size);
-}
-
-const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const {
+const Metrics& FontRasterizer::getMetrics(size_t font_id) const {
     return pimpl->font_id_to_metrics.at(font_id);
 }
 

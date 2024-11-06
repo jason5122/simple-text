@@ -34,22 +34,15 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size) {
-    ScopedCFTypeRef<CFStringRef> ct_font_name{
-        CFStringCreateWithCString(nullptr, font_name_utf8.data(), kCFStringEncodingUTF8)};
-    CTFontRef ct_font = CTFontCreateWithName(ct_font_name.get(), font_size, nullptr);
-    return pimpl->cacheFont(ct_font);
-}
-
 size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
-    NSString* font_name = [[NSString alloc] initWithUTF8String:font_name_utf8.data()];
-    NSString* font_style;
+    NSString* font_name = base::apple::StringToNSString(font_name_utf8.data());
+    NSString* font_style = @"Regular";
     if (style == FontStyle::kBold) {
         font_style = @"Bold";
     } else if (style == FontStyle::kItalic) {
         font_style = @"Italic";
-    } else {
-        font_style = @"Regular";
+    } else if (style == (FontStyle::kBold | FontStyle::kItalic)) {
+        font_style = @"Bold Italic";
     }
 
     NSDictionary* attributes = @{
@@ -58,9 +51,8 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
         static_cast<NSString*>(kCTFontSizeAttribute) : [NSNumber numberWithInt:font_size]
     };
     ScopedCFTypeRef<CTFontDescriptorRef> descriptor =
-        CTFontDescriptorCreateWithAttributes((CFDictionaryRef)attributes);
+        CTFontDescriptorCreateWithAttributes(static_cast<CFDictionaryRef>(attributes));
     CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
-
     return pimpl->cacheFont(ct_font);
 }
 

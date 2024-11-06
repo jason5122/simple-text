@@ -75,6 +75,9 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         surface_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
     CairoContextPtr render_context{cairo_create(surface.get())};
 
+    int descent = getMetrics(font_id).descent;
+    cairo_translate(render_context.get(), 0, -descent);
+
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
     pango_cairo_show_glyph_string(render_context.get(), font, glyph_string.get());
 
@@ -93,7 +96,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     return {
         .colored = colored,
         .left = 0,
-        .top = height,
+        .top = height - descent,
         .width = width,
         .height = height,
         .buffer = std::move(buffer),
@@ -214,6 +217,11 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
         int ascent = pango_font_metrics_get_ascent(pango_metrics.get()) / PANGO_SCALE;
         int descent = pango_font_metrics_get_descent(pango_metrics.get()) / PANGO_SCALE;
         int height = pango_font_metrics_get_height(pango_metrics.get()) / PANGO_SCALE;
+
+        // Round up to the next even number if odd.
+        if (ascent % 2 == 1) ascent += 1;
+        if (descent % 2 == 1) descent += 1;
+
         int line_height = std::max(ascent + descent, height);
 
         Metrics metrics{

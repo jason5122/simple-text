@@ -126,14 +126,14 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 }
 
 - (void)keyDown:(NSEvent*)event {
-    bool handled = [self.inputContext handleEvent:event];
-    if (!handled) {
-        std::println("keyDown was unhandled.");
-    }
-
     app::Key key = app::KeyFromKeyCode(event.keyCode);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
-    glLayer->appWindow->onKeyDown(key, modifiers);
+    bool handled = glLayer->appWindow->onKeyDown(key, modifiers);
+
+    if (!handled) {
+        // TODO: Should we ignore the return value of this?
+        [self.inputContext handleEvent:event];
+    }
 }
 
 - (void)mouseDown:(NSEvent*)event {

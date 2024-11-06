@@ -18,7 +18,6 @@ public:
     size_t addFont(std::string_view font_name_utf8, int font_size, FontStyle style);
 
     struct Metrics {
-        // int font_size;
         int line_height;
         int descent;
         int ascent;
@@ -37,4 +36,4 @@ private:
     ~FontRasterizer();
 };
 
-}
+}  // namespace font

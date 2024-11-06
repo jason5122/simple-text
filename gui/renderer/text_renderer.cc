@@ -15,7 +15,7 @@ const std::string kFragmentShaderSource =
 #include "gui/renderer/shaders/text_frag.glsl"
     ;
 
-}
+}  // namespace
 
 // TODO: Debug; remove this.
 #include "util/profile_util.h"
@@ -241,4 +241,4 @@ void TextRenderer::insertIntoBatch(size_t page,
     }
 }
 
-}
+}  // namespace gui

@@ -18,19 +18,19 @@ public:
     std::vector<Metrics> font_id_to_metrics;
     size_t cacheFont(PangoFont* font);
 
-    std::vector<std::vector<std::unordered_map<PangoGlyph, PangoGlyphInfo>>> glyph_info_cache;
+    std::vector<std::unordered_map<PangoGlyph, PangoGlyphInfo>> glyph_info_cache;
 };
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size) {
+size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size) {
     PangoFontMap* font_map = pango_cairo_font_map_get_default();
     GObjectPtr<PangoContext> context{pango_font_map_create_context(font_map)};
 
     PangoFontDescriptionPtr desc{pango_font_description_new()};
-    pango_font_description_set_family(desc.get(), font_name_utf8.c_str());
+    pango_font_description_set_family(desc.get(), font_name_utf8.data());
     pango_font_description_set_size(desc.get(), font_size * PANGO_SCALE);
     if (!desc) {
         std::println("pango_font_description_from_string() error.");
@@ -47,35 +47,28 @@ size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size)
     return pimpl->cacheFont(pango_font.get());
 }
 
+// TODO: Implement this.
+size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
+    return addFont(font_name_utf8, font_size);
+}
+
 const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const {
     return pimpl->font_id_to_metrics.at(font_id);
 }
 
-RasterizedGlyph FontRasterizer::rasterize(size_t layout_font_id,
-                                          size_t font_id,
-                                          uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     PangoFont* font = pimpl->font_id_to_native[font_id].get();
-    int descent = getMetrics(layout_font_id).descent;
 
     PangoRectangle ink_rect;
     PangoRectangle logical_rect;
     pango_font_get_glyph_extents(font, glyph_id, &ink_rect, &logical_rect);
     int width = PANGO_PIXELS(logical_rect.width);
-    // TODO: Make sure descent is correct here. We already checked once, but good to verify.
-    int height = PANGO_PIXELS(logical_rect.height) + descent;
+    int height = PANGO_PIXELS(logical_rect.height);
 
     PangoGlyphStringPtr glyph_string{pango_glyph_string_new()};
     pango_glyph_string_set_size(glyph_string.get(), 1);
 
-    // TODO: Refactor this ugly hack.
-    while (pimpl->glyph_info_cache.size() <= layout_font_id) {
-        pimpl->glyph_info_cache.emplace_back();
-    }
-    while (pimpl->glyph_info_cache[layout_font_id].size() <= font_id) {
-        pimpl->glyph_info_cache[layout_font_id].emplace_back();
-    }
-
-    PangoGlyphInfo gi = pimpl->glyph_info_cache[layout_font_id][font_id][glyph_id];
+    PangoGlyphInfo gi = pimpl->glyph_info_cache[font_id][glyph_id];
     bool colored = gi.attr.is_color;
     glyph_string->glyphs[0] = std::move(gi);
 
@@ -105,7 +98,6 @@ RasterizedGlyph FontRasterizer::rasterize(size_t layout_font_id,
         .top = height,
         .width = width,
         .height = height,
-        .advance = width,
         .buffer = std::move(buffer),
     };
 }
@@ -168,13 +160,10 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
             // Cache glyph info struct.
             // TODO: Refactor this ugly hack.
-            while (pimpl->glyph_info_cache.size() <= font_id) {
+            while (pimpl->glyph_info_cache.size() <= run_font_id) {
                 pimpl->glyph_info_cache.emplace_back();
             }
-            while (pimpl->glyph_info_cache[font_id].size() <= run_font_id) {
-                pimpl->glyph_info_cache[font_id].emplace_back();
-            }
-            pimpl->glyph_info_cache[font_id][run_font_id][gi.glyph] = gi;
+            pimpl->glyph_info_cache[run_font_id][gi.glyph] = gi;
 
             const PangoGlyphGeometry& geometry = gi.geometry;
             int x_offset = PANGO_PIXELS(geometry.x_offset);
@@ -194,12 +183,17 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
+    // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
+    // when fonts with different ascents mix (e.g., emoji being taller than plain text).
+    int ascent = getMetrics(font_id).ascent;
+
     return {
         .layout_font_id = font_id,
         // We shouldn't use Pango's width since we make our own slight adjustments.
         .width = total_advance,
         .length = str8.length(),
         .runs = std::move(runs),
+        .ascent = ascent,
     };
 }
 
@@ -225,9 +219,9 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
         int line_height = std::max(ascent + descent, height);
 
         Metrics metrics{
-            .font_size = 0,  // TODO: Calculate font size correctly.
             .line_height = line_height,
             .descent = descent,
+            .ascent = ascent,
         };
 
         size_t font_id = font_id_to_native.size();
@@ -238,4 +232,4 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
     return font_postscript_name_to_id.at(font_name);
 }
 
-}
+}  // namespace font

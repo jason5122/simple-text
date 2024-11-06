@@ -353,9 +353,9 @@ size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font,
         line_height += 1;
 
         Metrics metrics{
-            .font_size = 0,  // TODO: Calculate font size correctly.
             .line_height = line_height,
             .descent = descent,
+            .ascent = ascent,
         };
         DWriteInfo dwrite_info{
             .font_name_utf16 = font_name_utf16,
@@ -397,4 +397,4 @@ std::wstring FontRasterizer::impl::getPostScriptName(ComPtr<IDWriteFont> font) {
     return localized_name;
 }
 
-}
+}  // namespace font

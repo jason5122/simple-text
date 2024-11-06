@@ -5,7 +5,8 @@ source_set("font") {
   ]
 
   if (is_mac) {
-    deps = [ "core_text" ]
+    # deps = [ "core_text" ]
+    deps = [ "pango" ]
   }
   if (is_linux) {
     deps = [ "pango" ]

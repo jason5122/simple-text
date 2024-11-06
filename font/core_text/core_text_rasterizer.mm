@@ -276,7 +276,6 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         int line_height = ascent + descent + leading;
 
         Metrics metrics{
-            // .font_size = 0,  // TODO: Calculate font size correctly.
             .line_height = line_height,
             .descent = -descent,
             .ascent = ascent,

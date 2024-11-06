@@ -2,7 +2,6 @@
 #include "font/pango/pango_helper.h"
 #include <algorithm>
 #include <cairo-ft.h>
-#include <ranges>
 #include <unordered_map>
 #include <vector>
 
@@ -150,10 +149,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             pango_font_get_glyph_extents(run_font, glyph_infos[i].glyph, &ink_rect, &logical_rect);
             int width = PANGO_PIXELS(logical_rect.width);
             int height = PANGO_PIXELS(logical_rect.height);
-
-            // Seems like Sublime Text adds some pixels?
-            // width += 1;
-            // height += 2;
 
             // Make some adjustments to glyph info struct.
             PangoGlyphInfo gi = glyph_infos[i];

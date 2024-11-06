@@ -8,7 +8,6 @@
 #include "simple_text/editor_app.h"
 
 // TODO: Debug use; remove this.
-#include "base/filesystem/file_reader.h"
 #include "util/profile_util.h"
 #include "util/std_print.h"
 
@@ -62,7 +61,6 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->setHeight(height);
 
     editor_widget = std::make_shared<EditorWidget>();
-    editor_widget->addTab("emoji-data.txt", base::ReadFile("emoji-data.txt"));
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
     // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);

@@ -6,16 +6,18 @@ static_library("tree_sitter") {
 
   sources = [ "src/lib.c" ]
 
-  defines = [ "TREE_SITTER_FEATURE_WASM" ]
-
-  configs -= [ "//build/config/compiler:default_warnings" ]
+  configs -= [
+    "//build/config/compiler:default_warnings",
+    "//build/config/sanitizers:default_sanitizer_flags",
+  ]
 
   public_configs = [ ":tree_sitter_includes" ]
 
   # TODO: Support all platforms.
-  libs = [ "wasmtime" ]
-  lib_dirs = [ "/opt/homebrew/lib/" ]
-  include_dirs = [ "/opt/homebrew/include/" ]
+  # defines = [ "TREE_SITTER_FEATURE_WASM" ]
+  # libs = [ "wasmtime" ]
+  # lib_dirs = [ "/opt/homebrew/lib/" ]
+  # include_dirs = [ "/opt/homebrew/include/" ]
 }
 
 config("tree_sitter_includes") {

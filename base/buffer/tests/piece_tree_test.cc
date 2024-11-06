@@ -1,11 +1,9 @@
 #include "base/buffer/piece_tree.h"
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
+#include <algorithm>
 #include <gtest/gtest.h>
-#include <list>
 #include <random>
-
-#include "util/std_print.h"
 
 namespace {
 

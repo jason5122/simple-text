@@ -4,6 +4,7 @@
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
+#include <functional>
 #include <vector>
 
 namespace gui {
@@ -56,4 +57,4 @@ private:
     void insertIntoBatch(size_t page, const InstanceData& instance, TextLayer font_type);
 };
 
-}
+}  // namespace gui

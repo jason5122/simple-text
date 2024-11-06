@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/buffer/piece_tree.h"
+#include <cstring>
 #include <format>
 #include <string>
 #include <tree_sitter/api.h>

@@ -61,7 +61,7 @@ struct std::formatter<app::Key> {
     }
 
     auto format(const auto& key, auto& ctx) const {
-        constexpr struct {
+        static constexpr struct {
             app::Key key;
             std::string str;
         } kKeyMap[] = {

@@ -1,13 +1,14 @@
 #include "font/font_rasterizer.h"
 #include "font/pango/pango_helper.h"
+#include <algorithm>
 #include <cairo-ft.h>
+#include <ranges>
 #include <unordered_map>
 #include <vector>
 
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
 #include <cassert>
-#include <ranges>
 
 namespace font {
 
@@ -75,7 +76,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         surface_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
     CairoContextPtr render_context{cairo_create(surface.get())};
 
-    int descent = getMetrics(font_id).descent;
+    int descent = PANGO_PIXELS(PANGO_DESCENT(logical_rect));
     cairo_translate(render_context.get(), 0, -descent);
 
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
@@ -219,8 +220,8 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
         int height = pango_font_metrics_get_height(pango_metrics.get()) / PANGO_SCALE;
 
         // Round up to the next even number if odd.
-        if (ascent % 2 == 1) ascent += 1;
-        if (descent % 2 == 1) descent += 1;
+        if (ascent % 2 == 1) ++ascent;
+        if (descent % 2 == 1) ++descent;
 
         int line_height = std::max(ascent + descent, height);
 

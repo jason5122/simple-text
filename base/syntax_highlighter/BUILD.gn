@@ -1,14 +1,14 @@
 source_set("syntax_highlighter") {
-  sources = [ "syntax_highlighter.cc" ]
+  # sources = [ "syntax_highlighter.cc" ]
 
-  # TODO: Support all platforms.
-  libs = [ "wasmtime" ]
-  lib_dirs = [ "/opt/homebrew/lib/" ]
-  include_dirs = [ "/opt/homebrew/include/" ]
+  # # TODO: Support all platforms.
+  # libs = [ "wasmtime" ]
+  # lib_dirs = [ "/opt/homebrew/lib/" ]
+  # include_dirs = [ "/opt/homebrew/include/" ]
 
-  deps = [
-    "queries",
-    "wasm",
-  ]
+  # deps = [
+  #   "queries",
+  #   "wasm",
+  # ]
   public_deps = [ "//third_party/tree_sitter" ]
 }

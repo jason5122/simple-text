@@ -46,19 +46,19 @@ void Window::redraw() {
     [pimpl->window_controller redraw];
 }
 
-int Window::width() {
+int Window::width() const {
     return [pimpl->window_controller getWidth];
 }
 
-int Window::height() {
+int Window::height() const {
     return [pimpl->window_controller getHeight];
 }
 
-int Window::scaleFactor() {
+int Window::scale() const {
     return [pimpl->window_controller getScaleFactor];
 }
 
-bool Window::isDarkMode() {
+bool Window::isDarkMode() const {
     return [pimpl->window_controller isDarkMode];
 }
 
@@ -97,35 +97,10 @@ std::optional<std::string> Window::openFilePicker() const {
     //                   }];
 }
 
-// TODO: De-duplicate code with GLView GetPosition().
-std::optional<Point> Window::mousePositionScaled() const {
-    int window_width = width();
-    int window_height = height();
+Point Window::mousePositionRaw() const {
     NSWindow* ns_window = [pimpl->window_controller getNsWindow];
-
     NSPoint mouse_pos = ns_window.mouseLocationOutsideOfEventStream;
-    mouse_pos.y = window_height - mouse_pos.y;  // Set origin at top left.
-
-    if ((mouse_pos.x < 0 || mouse_pos.x > window_width - 1) ||
-        (mouse_pos.y < 0 || mouse_pos.y > window_height - 1)) {
-        return std::nullopt;
-    }
-
-    int mouse_x = std::round(mouse_pos.x);
-    int mouse_y = std::round(mouse_pos.y);
-
-    assert(!(mouse_x < 0 || mouse_x >= window_width));
-    assert(!(mouse_y < 0 || mouse_y >= window_height));
-
-    int scale = [pimpl->window_controller getScaleFactor];
-    int scaled_mouse_x = mouse_x * scale;
-    int scaled_mouse_y = mouse_y * scale;
-    return Point{scaled_mouse_x, scaled_mouse_y};
-}
-
-// TODO: Check for negative values?
-std::optional<Point> Window::mousePositionRaw() const {
-    NSPoint mouse_pos = NSEvent.mouseLocation;
+    mouse_pos.y = height() - mouse_pos.y;  // Set origin at top left.
     int mouse_x = std::round(mouse_pos.x);
     int mouse_y = std::round(mouse_pos.y);
     return Point{mouse_x, mouse_y};

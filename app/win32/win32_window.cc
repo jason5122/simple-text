@@ -1,8 +1,9 @@
+#include "win32_window.h"
+
 #include "app/app_action.h"
 #include "app/modifier_key.h"
 #include "app/win32/resources.h"
 #include "base/windows/unicode.h"
-#include "main_window.h"
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <string>
@@ -26,7 +27,7 @@ inline void AddMenu(HWND hwnd);  // TODO: Clean this up.
 
 namespace app {
 
-LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
 
     case WM_CREATE: {
@@ -252,16 +253,16 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    MainWindow* pThis = nullptr;
+    Win32Window* pThis = nullptr;
 
     if (uMsg == WM_NCCREATE) {
         CREATESTRUCT* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
-        pThis = static_cast<MainWindow*>(pCreate->lpCreateParams);
+        pThis = static_cast<Win32Window*>(pCreate->lpCreateParams);
         SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 
         pThis->m_hwnd = hwnd;
     } else {
-        pThis = reinterpret_cast<MainWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        pThis = reinterpret_cast<Win32Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
     if (pThis) {
         return pThis->handleMessage(uMsg, wParam, lParam);
@@ -270,11 +271,11 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
     }
 }
 
-void MainWindow::redraw() {
+void Win32Window::redraw() {
     InvalidateRect(m_hwnd, nullptr, false);
 }
 
-BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
+BOOL Win32Window::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
     std::wstring class_name = L"ClassName";
     class_name += std::to_wstring(wid);
 
@@ -298,27 +299,27 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
     return m_hwnd ? true : false;
 }
 
-BOOL MainWindow::destroy() {
+BOOL Win32Window::destroy() {
     return DestroyWindow(m_hwnd);
 }
 
-void MainWindow::quit() {
+void Win32Window::quit() {
     PostQuitMessage(0);
 }
 
-int MainWindow::width() {
+int Win32Window::width() {
     RECT size;
     GetClientRect(m_hwnd, &size);
     return size.right;
 }
 
-int MainWindow::height() {
+int Win32Window::height() {
     RECT size;
     GetClientRect(m_hwnd, &size);
     return size.bottom;
 }
 
-int MainWindow::scaleFactor() {
+int Win32Window::scaleFactor() {
     HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
     DEVICE_SCALE_FACTOR scale_factor;
     GetScaleFactorForMonitor(hmon, &scale_factor);
@@ -327,7 +328,7 @@ int MainWindow::scaleFactor() {
     return 1;
 }
 
-void MainWindow::setTitle(const std::string& title) {
+void Win32Window::setTitle(const std::string& title) {
     std::wstring str16 = base::windows::ConvertToUTF16(title);
     SetWindowText(m_hwnd, str16.data());
 }

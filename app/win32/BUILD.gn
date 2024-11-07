@@ -2,8 +2,8 @@ source_set("win32") {
   sources = [
     "app.cc",
     "dummy_context.cc",
-    "main_window.cc",
     "menu.cc",
+    "win32_window.cc",
     "window.cc",
   ]
 

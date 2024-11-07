@@ -3,7 +3,7 @@
 #include "app/app.h"
 #include "app/menu.h"
 #include "app/win32/dummy_context.h"
-#include "app/win32/main_window.h"
+#include "app/win32/win32_window.h"
 #include "app/window.h"
 
 namespace app {
@@ -16,9 +16,9 @@ public:
 class Window::impl {
 public:
     impl(Window& app_window, DummyContext& dummy_context)
-        : main_window(app_window, dummy_context) {}
+        : win32_window(app_window, dummy_context) {}
 
-    MainWindow main_window;
+    Win32Window win32_window;
 
     // TODO: Implement unique class name creation in a better way.
     int wid = 0;

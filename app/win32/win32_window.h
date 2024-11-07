@@ -6,11 +6,11 @@
 
 namespace app {
 
-class MainWindow {
+class Win32Window {
 public:
     HWND m_hwnd;
 
-    MainWindow(Window& app_window, DummyContext& dummy_context)
+    Win32Window(Window& app_window, DummyContext& dummy_context)
         : app_window{app_window}, dummy_context{dummy_context} {}
     BOOL create(PCWSTR lpWindowName, DWORD dwStyle, int wid);
     LRESULT handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -32,4 +32,4 @@ private:
     int click_count = 0;
 };
 
-}
+}  // namespace app

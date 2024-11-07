@@ -307,19 +307,19 @@ void FontRasterizer::impl::drawColorRun(
         case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
         case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
         case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
-            std::println("DrawColorBitmapGlyphRun()");
+            std::println("Error: DrawColorBitmapGlyphRun() is unimplemented!");
+            std::abort();
             break;
 
         case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
-            std::println("DrawSvgGlyphRun()");
+            std::println("Error: DrawSvgGlyphRun() is unimplemented!");
+            std::abort();
             break;
 
         case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
         case DWRITE_GLYPH_IMAGE_FORMATS_CFF:
         case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
         default: {
-            std::println("DrawGlyphRun()");
-
             ComPtr<ID2D1SolidColorBrush> layer_brush;
             if (color_run->paletteIndex == 0xFFFF) {
                 layer_brush = blue_brush;

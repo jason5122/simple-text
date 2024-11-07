@@ -4,14 +4,12 @@
 namespace app {
 
 Window::Window(App& app, int width, int height)
-    : pimpl{new impl{*this, app.pimpl->dummy_context}} {
-    // pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
-}
+    : pimpl{new impl{*this, app.pimpl->dummy_context}} {}
 
 Window::~Window() {}
 
 void Window::show() {
-    pimpl->main_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
+    pimpl->win32_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 
     // TODO: Sync this with requested width/height.
     int width = 1200;
@@ -24,27 +22,27 @@ void Window::show() {
         .showCmd = SW_NORMAL,
         .rcNormalPosition = RECT{0, 0, width * 2, height * 2},
     };
-    SetWindowPlacement(pimpl->main_window.m_hwnd, &placement);
+    SetWindowPlacement(pimpl->win32_window.m_hwnd, &placement);
 }
 
 void Window::close() {
-    pimpl->main_window.destroy();
+    pimpl->win32_window.destroy();
 }
 
 void Window::redraw() {
-    pimpl->main_window.redraw();
+    pimpl->win32_window.redraw();
 }
 
 int Window::width() {
-    return pimpl->main_window.width();
+    return pimpl->win32_window.width();
 }
 
 int Window::height() {
-    return pimpl->main_window.height();
+    return pimpl->win32_window.height();
 }
 
 int Window::scaleFactor() {
-    return pimpl->main_window.scaleFactor();
+    return pimpl->win32_window.scaleFactor();
 }
 
 bool Window::isDarkMode() {
@@ -52,7 +50,7 @@ bool Window::isDarkMode() {
 }
 
 void Window::setTitle(const std::string& title) {
-    pimpl->main_window.setTitle(title);
+    pimpl->win32_window.setTitle(title);
 }
 
 // TODO: Implement this.

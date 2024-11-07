@@ -82,7 +82,6 @@ const Metrics& FontRasterizer::getMetrics(size_t font_id) const {
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     ComPtr<IDWriteFont> font = pimpl->font_id_to_native[font_id];
-    // const auto& dwrite_info = pimpl->getDWriteInfo(layout_font_id);
     const auto& dwrite_info = pimpl->getDWriteInfo(font_id);
 
     ComPtr<IDWriteFontFace> font_face;
@@ -339,9 +338,13 @@ void FontRasterizer::impl::drawColorRun(
 size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font,
                                        std::wstring font_name_utf16,
                                        FLOAT em_size) {
-    std::wstring font_name = getPostScriptName(font);
+    std::wstring postscript_name = getPostScriptName(font);
 
-    if (!font_postscript_name_to_id.contains(font_name)) {
+    // TODO: Note that `postscript_name != font_name_utf16`. `postscript_name` gives different
+    // results when stored in DWriteInfo.
+    // std::wcerr << font_name << L" vs. " << font_name_utf16 << '\n';
+
+    if (!font_postscript_name_to_id.contains(postscript_name)) {
         ComPtr<IDWriteFontFace> font_face;
         font->CreateFontFace(&font_face);
 
@@ -371,12 +374,12 @@ size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font,
         };
 
         size_t font_id = font_id_to_native.size();
-        font_postscript_name_to_id.emplace(font_name, font_id);
+        font_postscript_name_to_id.emplace(postscript_name, font_id);
         font_id_to_native.emplace_back(font);
         font_id_to_metrics.emplace_back(std::move(metrics));
         font_id_to_dwrite_info.emplace_back(std::move(dwrite_info));
     }
-    return font_postscript_name_to_id.at(font_name);
+    return font_postscript_name_to_id.at(postscript_name);
 }
 
 const FontRasterizer::impl::DWriteInfo& FontRasterizer::impl::getDWriteInfo(size_t font_id) {

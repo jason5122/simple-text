@@ -171,8 +171,13 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             Point advance = {.x = width};
             size_t index = offset + log_clusters[i];
 
-            glyphs.emplace_back(
-                ShapedGlyph{glyph_id, std::move(position), std::move(advance), index});
+            ShapedGlyph glyph{
+                .glyph_id = glyph_id,
+                .position = std::move(position),
+                .advance = std::move(advance),
+                .index = index,
+            };
+            glyphs.push_back(std::move(glyph));
 
             total_advance += advance.x;
         }

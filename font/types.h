@@ -69,7 +69,6 @@ struct ShapedGlyph {
     Point position;
     Point advance;
     size_t index;  // UTF-8 index in the original text.
-    size_t length;
 };
 
 struct ShapedRun {

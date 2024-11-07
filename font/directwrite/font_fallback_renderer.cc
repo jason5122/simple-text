@@ -4,6 +4,7 @@
 using Microsoft::WRL::ComPtr;
 
 // TODO: Debug use; remove this.
+#include "font/directwrite/directwrite_helper.h"
 #include "util/std_print.h"
 
 namespace font {
@@ -59,8 +60,9 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     auto pimpl = static_cast<FontRasterizer::impl*>(clientDrawingContext);
     ComPtr<IDWriteFont> font;
     font_collection->GetFontFromFontFace(glyphRun->fontFace, &font);
-    // TODO: Pass font name/size.
-    size_t font_id = pimpl->cacheFont(font, L"", 0);
+
+    std::wstring font_name_utf16 = GetFontFamilyName(font.Get());
+    size_t font_id = pimpl->cacheFont(font, font_name_utf16, glyphRun->fontEmSize);
 
     size_t glyph_count = glyphRun->glyphCount;
     std::vector<ShapedGlyph> glyphs;
@@ -152,4 +154,4 @@ SK_STDMETHODIMP FontFallbackRenderer::GetPixelsPerDip(void* clientDrawingContext
     return S_OK;
 }
 
-}
+}  // namespace font

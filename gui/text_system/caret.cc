@@ -1,10 +1,6 @@
 #include "caret.h"
 #include <numeric>
 
-// TODO: Debug use; remove this.
-#include <format>
-#include <iostream>
-
 namespace gui {
 
 size_t Caret::columnAtX(const font::LineLayout& layout, int x, bool exclude_end) {
@@ -66,42 +62,44 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
 size_t Caret::prevWordStart(const font::LineLayout& layout,
                             size_t col,
                             std::string_view line_str) {
-    auto it = std::make_reverse_iterator(iteratorAtColumn(layout, col));
-    auto prev_it = layout.rend();  // Invalid/"null" iterator.
-    for (; it != layout.rend(); ++it) {
-        if (prev_it != layout.rend()) {
-            std::string_view left_str = line_str.substr((*it).index, (*it).length);
-            std::string_view right_str = line_str.substr((*prev_it).index, (*prev_it).length);
+    // TODO: Fix this.
+    // auto it = std::make_reverse_iterator(iteratorAtColumn(layout, col));
+    // auto prev_it = layout.rend();  // Invalid/"null" iterator.
+    // for (; it != layout.rend(); ++it) {
+    //     if (prev_it != layout.rend()) {
+    //         std::string_view left_str = line_str.substr((*it).index, (*it).length);
+    //         std::string_view right_str = line_str.substr((*prev_it).index, (*prev_it).length);
 
-            // TODO: Properly implement this.
-            bool left_kind = std::isalpha(left_str[0]);
-            bool right_kind = std::isalpha(right_str[0]);
-            if (left_kind != right_kind && right_str != " ") {
-                return col - (*prev_it).index;
-            }
-        }
-        prev_it = it;
-    }
+    //         // TODO: Properly implement this.
+    //         bool left_kind = std::isalpha(left_str[0]);
+    //         bool right_kind = std::isalpha(right_str[0]);
+    //         if (left_kind != right_kind && right_str != " ") {
+    //             return col - (*prev_it).index;
+    //         }
+    //     }
+    //     prev_it = it;
+    // }
     return col;
 }
 
 size_t Caret::nextWordEnd(const font::LineLayout& layout, size_t col, std::string_view line_str) {
-    auto it = iteratorAtColumn(layout, col);
-    auto prev_it = layout.end();  // Invalid/"null" iterator.
-    for (; it != layout.end(); ++it) {
-        if (prev_it != layout.end()) {
-            std::string_view left_str = line_str.substr((*prev_it).index, (*prev_it).length);
-            std::string_view right_str = line_str.substr((*it).index, (*it).length);
+    // TODO: Fix this.
+    // auto it = iteratorAtColumn(layout, col);
+    // auto prev_it = layout.end();  // Invalid/"null" iterator.
+    // for (; it != layout.end(); ++it) {
+    //     if (prev_it != layout.end()) {
+    //         std::string_view left_str = line_str.substr((*prev_it).index, (*prev_it).length);
+    //         std::string_view right_str = line_str.substr((*it).index, (*it).length);
 
-            // TODO: Properly implement this.
-            bool left_kind = std::isalpha(left_str[0]);
-            bool right_kind = std::isalpha(right_str[0]);
-            if (left_kind != right_kind && left_str != " ") {
-                return (*it).index - col;
-            }
-        }
-        prev_it = it;
-    }
+    //         // TODO: Properly implement this.
+    //         bool left_kind = std::isalpha(left_str[0]);
+    //         bool right_kind = std::isalpha(right_str[0]);
+    //         if (left_kind != right_kind && left_str != " ") {
+    //             return (*it).index - col;
+    //         }
+    //     }
+    //     prev_it = it;
+    // }
     return layout.length - col;
 }
 
@@ -115,4 +113,4 @@ font::LineLayout::const_iterator Caret::iteratorAtColumn(const font::LineLayout&
     return layout.end();
 }
 
-}
+}  // namespace gui

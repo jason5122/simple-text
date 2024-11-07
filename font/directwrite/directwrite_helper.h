@@ -1,14 +1,12 @@
 #pragma once
 
 #include <dwrite_3.h>
+#include <string>
 #include <wrl/client.h>
-
-#include <format>
-#include <iostream>
 
 namespace font {
 
-inline void PrintFontFamilyName(IDWriteFont* font) {
+inline std::wstring GetFontFamilyName(IDWriteFont* font) {
     Microsoft::WRL::ComPtr<IDWriteFontFamily> font_family;
     font->GetFontFamily(&font_family);
 
@@ -16,7 +14,7 @@ inline void PrintFontFamilyName(IDWriteFont* font) {
     font_family->GetFamilyNames(&family_names);
 
     wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
-    int defaultLocaleSuccess = GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
+    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
 
     UINT32 index = 0;
     BOOL exists = false;
@@ -28,7 +26,7 @@ inline void PrintFontFamilyName(IDWriteFont* font) {
     std::wstring name;
     name.resize(length + 1);
     family_names->GetString(index, name.data(), length + 1);
-    std::wcerr << std::format(L"family name: {}\n", name.data());
+    return name;
 }
 
-}
+}  // namespace font

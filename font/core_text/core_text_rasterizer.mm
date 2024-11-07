@@ -159,8 +159,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
 
-    ShapedGlyph* prev_glyph = nullptr;
-
     for (CFIndex i = 0; i < run_count; ++i) {
         CTRunRef ct_run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
 
@@ -202,20 +200,10 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             };
             glyphs.push_back(std::move(glyph));
 
-            // Set previous glyph's length. We require the next index, so we have to do this late.
-            if (prev_glyph) {
-                prev_glyph->length = utf8_index - prev_glyph->index;
-            }
-            prev_glyph = &glyphs[i];
-
             total_advance += advance.x;
         }
 
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
-    }
-    // Set previous glyph's length. We require the next index, so we have to do this late.
-    if (prev_glyph) {
-        prev_glyph->length = str8.length() - prev_glyph->index;
     }
 
     // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down

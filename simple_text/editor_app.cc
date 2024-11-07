@@ -37,7 +37,7 @@ const std::string kUIFontFace = "Segoe UI";
 constexpr int kMainFontSize = 12 * 2;
 constexpr int kUIFontSize = 11 * 2;
 const std::string kMainFontFace = "Monospace";
-const std::string kUIFontFace = "Arial";
+const std::string kUIFontFace = "Droid Sans Ethiopic";
 #endif
 
 // const std::string kMainFontFace = "Source Code Pro";

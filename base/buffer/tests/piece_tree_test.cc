@@ -614,7 +614,7 @@ TEST(PieceTreeTest, LineColumnAt1) {
         for (size_t i = 0; i <= str.length(); i++) {
             index_to_line_col_map[i] = {line, col};
 
-            if (str[i] == '\n') {
+            if (i < str.length() && str[i] == '\n') {
                 ++line;
                 col = 0;
             } else {
@@ -676,7 +676,7 @@ TEST(PieceTreeTest, LineColumnAtRandomTest) {
         for (size_t i = 0; i <= str.length(); i++) {
             index_to_line_col_map[i] = {line, col};
 
-            if (str[i] == '\n') {
+            if (i < str.length() && str[i] == '\n') {
                 ++line;
                 col = 0;
             } else {

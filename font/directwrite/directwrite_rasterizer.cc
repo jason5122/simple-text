@@ -121,8 +121,6 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
     UINT32 size = pixel_width * pixel_height * 3;
 
-    std::println("pixel_width = {}, pixel_height = {}", pixel_width, pixel_height);
-
     DWRITE_GLYPH_METRICS metrics;
     font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
 

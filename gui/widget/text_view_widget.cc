@@ -309,15 +309,17 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos,
     if (click_type == app::ClickType::kSingleClick) {
         bool extend = modifiers == app::ModifierKey::kShift;
         selection.setIndex(tree.offset_at(new_line, new_col), extend);
-    } else if (click_type == app::ClickType::kDoubleClick) {
-        selection.setIndex(tree.offset_at(new_line, new_col), false);
-        size_t start_delta =
-            Caret::prevWordStart(layout, new_col, tree.get_line_content_with_newline(new_line));
-        size_t end_delta =
-            Caret::nextWordEnd(layout, new_col, tree.get_line_content_with_newline(new_line));
-        selection.start().index -= start_delta;
-        selection.end().index += end_delta;
     }
+    // TODO: Implement double clicks.
+    // else if (click_type == app::ClickType::kDoubleClick) {
+    //     selection.setIndex(tree.offset_at(new_line, new_col), false);
+    //     size_t start_delta =
+    //         Caret::prevWordStart(layout, new_col, tree.get_line_content_with_newline(new_line));
+    //     size_t end_delta =
+    //         Caret::nextWordEnd(layout, new_col, tree.get_line_content_with_newline(new_line));
+    //     selection.start().index -= start_delta;
+    //     selection.end().index += end_delta;
+    // }
 
     // updateCaretX();
 }

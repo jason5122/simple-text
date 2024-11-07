@@ -30,7 +30,7 @@ int Window::height() {
     return pimpl->main_window.height();
 }
 
-int Window::scaleFactor() {
+int Window::scale() {
     return pimpl->main_window.scaleFactor();
 }
 
@@ -52,7 +52,7 @@ std::optional<std::string> Window::openFilePicker() const {
 }
 
 // TODO: Implement this.
-std::optional<Point> Window::mousePosition() const {
+std::optional<Point> Window::mousePositionScaled() const {
     return {};
 }
 

@@ -19,7 +19,7 @@ public:
     void quit();
     int width();
     int height();
-    int scaleFactor();
+    int scale();
     void setTitle(const std::string& title);
 
 private:

@@ -98,7 +98,7 @@ std::optional<std::string> Window::openFilePicker() const {
 }
 
 // TODO: De-duplicate code with GLView GetPosition().
-std::optional<Point> Window::mousePosition() const {
+std::optional<Point> Window::mousePositionScaled() const {
     int window_width = width();
     int window_height = height();
     NSWindow* ns_window = [pimpl->window_controller getNsWindow];

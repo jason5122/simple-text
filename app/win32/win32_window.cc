@@ -336,7 +336,7 @@ int Win32Window::height() {
     return size.bottom;
 }
 
-int Win32Window::scaleFactor() {
+int Win32Window::scale() {
     HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
     DEVICE_SCALE_FACTOR scale_factor;
     GetScaleFactorForMonitor(hmon, &scale_factor);

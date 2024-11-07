@@ -90,7 +90,7 @@ void EditorWindow::onDraw(int width, int height) {
 
     updateCursorStyle();
 
-    auto mouse_pos = mousePosition();
+    auto mouse_pos = mousePositionScaled();
     std::optional<Point> point{};
     if (mouse_pos) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
@@ -146,28 +146,28 @@ void EditorWindow::onRightMouseDown(int mouse_x,
                                     int mouse_y,
                                     app::ModifierKey modifiers,
                                     app::ClickType click_type) {
-    auto mouse_pos = mousePositionRaw();
-    if (mouse_pos) {
-        parent.setCursorStyle(app::App::CursorStyle::kArrow);
+    // auto mouse_pos = mousePositionRaw();
+    // if (mouse_pos) {
+    //     parent.setCursorStyle(app::App::CursorStyle::kArrow);
 
-        app::Menu menu;
-        std::string temp = "TODO: Change this";
-        menu.addItem(temp);
-        auto selected_index = menu.show(mouse_pos.value());
-        if (selected_index) {
-            std::println("Selected menu index = {}", selected_index.value());
-        } else {
-            std::println("Menu was closed without a selection.");
-        }
-    }
+    //     app::Menu menu;
+    //     std::string temp = "TODO: Change this";
+    //     menu.addItem(temp);
+    //     auto selected_index = menu.show(mouse_pos.value());
+    //     if (selected_index) {
+    //         std::println("Selected menu index = {}", selected_index.value());
+    //     } else {
+    //         std::println("Menu was closed without a selection.");
+    //     }
+    // }
 }
 
+// This represents the mouse moving *without* being a click+drag.
 void EditorWindow::onMouseMove() {
     updateCursorStyle();
 
-    bool should_redraw = false;
-    auto mouse_pos = mousePosition();
-    if (mouse_pos) {
+    bool should_redraw;
+    if (auto mouse_pos = mousePositionScaled()) {
         auto [mouse_x, mouse_y] = mouse_pos.value();
         should_redraw = main_widget->mousePositionChanged(Point{mouse_x, mouse_y});
     } else {
@@ -179,6 +179,7 @@ void EditorWindow::onMouseMove() {
     }
 }
 
+// Mouse position is guaranteed to be outside of the window here.
 void EditorWindow::onMouseExit() {
     onMouseMove();
 }
@@ -404,7 +405,7 @@ void EditorWindow::onClose() {
 void EditorWindow::updateCursorStyle() {
     using CursorStyle = app::App::CursorStyle;
 
-    auto mouse_pos = mousePosition();
+    auto mouse_pos = mousePositionScaled();
 
     // Update cursor style.
     // Case 1: Dragging operation in progress.

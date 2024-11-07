@@ -5,7 +5,6 @@
 #include "app/key.h"
 #include "app/modifier_key.h"
 #include "app/types.h"
-#include "util/non_copyable.h"
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -44,15 +43,22 @@ public:
     void redraw();
     int width() const;
     int height() const;
-    int scaleFactor() const;
-    bool isDarkMode();
+    int scale() const;
+    bool isDarkMode() const;
     void setTitle(const std::string& title);
     void setFilePath(fs::path path);
     std::optional<std::string> openFilePicker() const;
-    std::optional<app::Point> mousePosition() const;
-    // TODO: Rename this to `mousePosition()` and the original `mousePosition()` to
-    // `mousePositionScaled()`.
-    std::optional<app::Point> mousePositionRaw() const;
+
+    std::optional<app::Point> mousePositionScaled() const {
+        Point mouse_pos = mousePositionRaw();
+        if ((mouse_pos.x < 0 || mouse_pos.x > width() - 1) ||
+            (mouse_pos.y < 0 || mouse_pos.y > height() - 1)) {
+            return std::nullopt;
+        } else {
+            return mouse_pos * scale();
+        }
+    }
+
     void createMenuDebug() const;
 
     virtual void onOpenGLActivate(int width, int height) {}
@@ -86,6 +92,8 @@ public:
 private:
     class impl;
     std::unique_ptr<impl> pimpl;
+
+    Point mousePositionRaw() const;
 };
 
 }  // namespace app

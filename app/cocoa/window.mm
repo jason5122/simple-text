@@ -98,9 +98,9 @@ std::optional<std::string> Window::openFilePicker() const {
 }
 
 // TODO: De-duplicate code with GLView GetPosition().
-std::optional<app::Point> Window::mousePosition() const {
-    int window_width = [pimpl->window_controller getWidth];
-    int window_height = [pimpl->window_controller getHeight];
+std::optional<Point> Window::mousePosition() const {
+    int window_width = width();
+    int window_height = height();
     NSWindow* ns_window = [pimpl->window_controller getNsWindow];
 
     NSPoint mouse_pos = ns_window.mouseLocationOutsideOfEventStream;
@@ -120,15 +120,15 @@ std::optional<app::Point> Window::mousePosition() const {
     int scale = [pimpl->window_controller getScaleFactor];
     int scaled_mouse_x = mouse_x * scale;
     int scaled_mouse_y = mouse_y * scale;
-    return app::Point{scaled_mouse_x, scaled_mouse_y};
+    return Point{scaled_mouse_x, scaled_mouse_y};
 }
 
 // TODO: Check for negative values?
-std::optional<app::Point> Window::mousePositionRaw() const {
+std::optional<Point> Window::mousePositionRaw() const {
     NSPoint mouse_pos = NSEvent.mouseLocation;
     int mouse_x = std::round(mouse_pos.x);
     int mouse_y = std::round(mouse_pos.y);
-    return app::Point{mouse_x, mouse_y};
+    return Point{mouse_x, mouse_y};
 }
 
 }  // namespace app

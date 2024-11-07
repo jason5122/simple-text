@@ -30,6 +30,7 @@ private:
     WCHAR high_surrogate = '\0';
     LONG last_click_time = 0;
     int click_count = 0;
+    bool tracking_mouse = false;
 };
 
 }  // namespace app

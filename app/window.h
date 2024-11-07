@@ -42,9 +42,9 @@ public:
     void show();
     void close();
     void redraw();
-    int width();
-    int height();
-    int scaleFactor();
+    int width() const;
+    int height() const;
+    int scaleFactor() const;
     bool isDarkMode();
     void setTitle(const std::string& title);
     void setFilePath(fs::path path);

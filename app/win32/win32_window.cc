@@ -164,13 +164,30 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_MOUSEMOVE: {
+        int mouse_x = GET_X_LPARAM(lParam);
+        int mouse_y = GET_Y_LPARAM(lParam);
         if (wParam & MK_LBUTTON) {
-            int mouse_x = GET_X_LPARAM(lParam);
-            int mouse_y = GET_Y_LPARAM(lParam);
             ModifierKey modifiers = ModifierFromState();
             ClickType click_type = ClickTypeFromCount(click_count);
             app_window.onLeftMouseDrag(mouse_x, mouse_y, modifiers, click_type);
+        } else {
+            if (!tracking_mouse) {
+                TRACKMOUSEEVENT tme{
+                    .cbSize = sizeof(TRACKMOUSEEVENT),
+                    .dwFlags = TME_LEAVE,
+                    .hwndTrack = m_hwnd,
+                };
+                tracking_mouse = TrackMouseEvent(&tme);
+            }
+            app_window.onMouseMove();
         }
+        return 0;
+    }
+
+    // Microsoft-endorsed implementation: https://stackoverflow.com/a/68029657/14698275
+    case WM_MOUSELEAVE: {
+        tracking_mouse = false;
+        app_window.onMouseExit();
         return 0;
     }
 

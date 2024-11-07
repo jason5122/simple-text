@@ -52,12 +52,12 @@ std::optional<std::string> Window::openFilePicker() const {
 }
 
 // TODO: Implement this.
-std::optional<app::Point> Window::mousePosition() const {
+std::optional<Point> Window::mousePosition() const {
     return {};
 }
 
 // TODO: Implement this.
-std::optional<app::Point> Window::mousePositionRaw() const {
+std::optional<Point> Window::mousePositionRaw() const {
     return {};
 }
 

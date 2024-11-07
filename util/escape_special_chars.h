@@ -2,7 +2,9 @@
 
 #include <string>
 
-constexpr std::string EscapeSpecialChars(const std::string& str) {
+namespace util {
+
+constexpr std::string EscapeSpecialChars(std::string_view str) {
     std::string result;
     for (auto c : str) {
         switch (c) {
@@ -25,3 +27,5 @@ constexpr std::string EscapeSpecialChars(const std::string& str) {
     }
     return result;
 }
+
+}  // namespace util

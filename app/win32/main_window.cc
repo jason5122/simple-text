@@ -3,7 +3,6 @@
 #include "app/win32/resources.h"
 #include "base/windows/unicode.h"
 #include "main_window.h"
-#include "util/escape_special_chars.h"
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <string>
@@ -12,6 +11,7 @@
 #include <winuser.h>
 
 // TODO: Debug use; remove this.
+#include "util/escape_special_chars.h"
 #include "util/std_print.h"
 
 namespace app {
@@ -47,7 +47,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         wglMakeCurrent(m_hdc, dummy_context.m_context);
 
-        RECT rect{};
+        RECT rect;
         GetClientRect(m_hwnd, &rect);
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
@@ -67,7 +67,7 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
 
-        RECT rect{};
+        RECT rect;
         GetClientRect(m_hwnd, &rect);
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
@@ -83,8 +83,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_SIZE: {
         wglMakeCurrent(m_hdc, dummy_context.m_context);
 
-        int width = (int)(short)LOWORD(lParam);
-        int height = (int)(short)HIWORD(lParam);
+        int width = LOWORD(lParam);
+        int height = HIWORD(lParam);
 
         app_window.onResize(width, height);
         return 0;
@@ -229,13 +229,13 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
             if (high_surrogate) {
                 utf16[0] = high_surrogate;
-                utf16[1] = (WCHAR)wParam;
+                utf16[1] = static_cast<WCHAR>(wParam);
             } else {
-                utf16[0] = (WCHAR)wParam;
+                utf16[0] = static_cast<WCHAR>(wParam);
             }
 
             std::string str8 = base::windows::ConvertToUTF8(utf16);
-            std::println("WM_CHAR: {}", EscapeSpecialChars(str8));
+            std::println("WM_CHAR: {}", util::EscapeSpecialChars(str8));
             app_window.onInsertText(str8);
 
             high_surrogate = '\0';
@@ -252,16 +252,16 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    MainWindow* pThis = NULL;
+    MainWindow* pThis = nullptr;
 
     if (uMsg == WM_NCCREATE) {
-        CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
-        pThis = (MainWindow*)pCreate->lpCreateParams;
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+        CREATESTRUCT* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
+        pThis = static_cast<MainWindow*>(pCreate->lpCreateParams);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 
         pThis->m_hwnd = hwnd;
     } else {
-        pThis = (MainWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        pThis = reinterpret_cast<MainWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
     if (pThis) {
         return pThis->handleMessage(uMsg, wParam, lParam);
@@ -271,7 +271,7 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 }
 
 void MainWindow::redraw() {
-    InvalidateRect(m_hwnd, NULL, FALSE);
+    InvalidateRect(m_hwnd, nullptr, false);
 }
 
 BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
@@ -280,8 +280,8 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
 
     WNDCLASS wc{
         .lpfnWndProc = WindowProc,
-        .hInstance = GetModuleHandle(NULL),
-        .hCursor = LoadCursor(NULL, IDC_IBEAM),
+        .hInstance = GetModuleHandle(nullptr),
+        .hCursor = LoadCursor(nullptr, IDC_IBEAM),
         // TODO: Change this color based on the editor background color.
         .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
         .lpszClassName = class_name.data(),
@@ -291,11 +291,11 @@ BOOL MainWindow::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
 
     m_hwnd =
         CreateWindowEx(0, class_name.data(), lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
-                       CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), this);
+                       CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(nullptr), this);
 
     AddMenu(m_hwnd);
 
-    return (m_hwnd ? TRUE : FALSE);
+    return m_hwnd ? true : false;
 }
 
 BOOL MainWindow::destroy() {
@@ -416,7 +416,7 @@ inline void AddMenu(HWND hwnd) {
     AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File\tCtrl+N");
     AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window\tCtrl+Shift+N");
     AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"E&xit\tCtrl+Q");
-    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"&File");
+    AppendMenu(menubar, MF_POPUP, reinterpret_cast<UINT_PTR>(file_menu), L"&File");
 
     SetMenu(hwnd, menubar);
 }

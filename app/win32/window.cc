@@ -55,8 +55,22 @@ void Window::setTitle(const std::string& title) {
     pimpl->main_window.setTitle(title);
 }
 
-void Window::setFilePath(fs::path path) {
-    // UNIMPLEMENTED
+// TODO: Implement this.
+void Window::setFilePath(fs::path path) {}
+
+// TODO: Implement this.
+std::optional<std::string> Window::openFilePicker() const {
+    return {};
 }
 
+// TODO: Implement this.
+std::optional<app::Point> Window::mousePosition() const {
+    return {};
 }
+
+// TODO: Implement this.
+std::optional<app::Point> Window::mousePositionRaw() const {
+    return {};
+}
+
+}  // namespace app

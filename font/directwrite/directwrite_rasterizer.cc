@@ -2,11 +2,11 @@
 #include "font/directwrite/font_fallback_renderer.h"
 #include "font/directwrite/impl_directwrite.h"
 #include "font/font_rasterizer.h"
+#include <algorithm>
 #include <combaseapi.h>
 #include <comdef.h>
 #include <cwchar>
 #include <d2d1.h>
-#include <iostream>
 #include <unknwnbase.h>
 #include <vector>
 #include <wincodec.h>
@@ -20,7 +20,6 @@ using Microsoft::WRL::ComPtr;
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
 #include <cassert>
-#include <ranges>
 
 namespace font {
 
@@ -41,7 +40,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size) {
+size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
     std::wstring font_name_utf16 = base::windows::ConvertToUTF16(font_name_utf8);
 
     // TODO: Verify that this is correct.
@@ -53,28 +52,38 @@ size_t FontRasterizer::addFont(const std::string& font_name_utf8, int font_size)
     // https://stackoverflow.com/q/40365439/14698275
     UINT32 index;
     BOOL exists;
-    font_collection->FindFamilyName(font_name_utf16.data(), &index, &exists);
+    HRESULT hr;
+    hr = font_collection->FindFamilyName(font_name_utf16.data(), &index, &exists);
+    if (FAILED(hr)) {
+        std::println("Could not create font family with name {} and size {}.", font_name_utf8,
+                     font_size);
+    }
 
     ComPtr<IDWriteFontFamily> font_family;
-    font_collection->GetFontFamily(index, &font_family);
+    hr = font_collection->GetFontFamily(index, &font_family);
+    if (FAILED(hr)) {
+        std::println("Could not create font family with name {} and size {}.", font_name_utf8,
+                     font_size);
+    }
 
     ComPtr<IDWriteFont> font;
-    font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STRETCH_NORMAL,
-                                      DWRITE_FONT_STYLE_NORMAL, &font);
+    hr = font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STRETCH_NORMAL,
+                                           DWRITE_FONT_STYLE_NORMAL, &font);
+    if (FAILED(hr)) {
+        std::println("Could not create font with name {} and size {}.", font_name_utf8, font_size);
+    }
 
     return pimpl->cacheFont(font, font_name_utf16, em_size);
 }
 
-const FontRasterizer::Metrics& FontRasterizer::getMetrics(size_t font_id) const {
+const Metrics& FontRasterizer::getMetrics(size_t font_id) const {
     return pimpl->font_id_to_metrics.at(font_id);
 }
 
-RasterizedGlyph FontRasterizer::rasterize(size_t layout_font_id,
-                                          size_t font_id,
-                                          uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     ComPtr<IDWriteFont> font = pimpl->font_id_to_native[font_id];
-    int descent = getMetrics(layout_font_id).descent;
-    const auto& dwrite_info = pimpl->getDWriteInfo(layout_font_id);
+    // const auto& dwrite_info = pimpl->getDWriteInfo(layout_font_id);
+    const auto& dwrite_info = pimpl->getDWriteInfo(font_id);
 
     ComPtr<IDWriteFontFace> font_face;
     font->CreateFontFace(&font_face);
@@ -120,11 +129,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t layout_font_id,
     DWRITE_FONT_METRICS font_metrics;
     font_face->GetMetrics(&font_metrics);
 
-    FLOAT scale = dwrite_info.em_size / font_metrics.designUnitsPerEm;
-    FLOAT advance = metrics.advanceWidth * scale;
-
     int32_t top = -texture_bounds.top;
-    top -= descent;
 
     HRESULT hr = DWRITE_E_NOCOLOR;
     ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
@@ -150,7 +155,6 @@ RasterizedGlyph FontRasterizer::rasterize(size_t layout_font_id,
             .top = top,
             .width = static_cast<int32_t>(pixel_width),
             .height = static_cast<int32_t>(pixel_height),
-            .advance = static_cast<int32_t>(std::ceil(advance)),
             .buffer = std::move(buffer),
         };
     }
@@ -202,7 +206,6 @@ RasterizedGlyph FontRasterizer::rasterize(size_t layout_font_id,
             .top = top,
             .width = static_cast<int32_t>(bw),
             .height = static_cast<int32_t>(bh),
-            .advance = static_cast<int32_t>(std::ceil(advance)),
             .buffer = std::move(temp_buffer),
         };
     }
@@ -264,11 +267,16 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         new FontFallbackRenderer{font_collection, str8};
     text_layout->Draw(pimpl.get(), font_fallback_renderer.Get(), 0.0f, 0.0f);
 
+    // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
+    // when fonts with different ascents mix (e.g., emoji being taller than plain text).
+    int ascent = getMetrics(font_id).ascent;
+
     return {
         .layout_font_id = font_id,
         .width = font_fallback_renderer->total_advance,
         .length = str8.length(),
         .runs = font_fallback_renderer->runs,
+        .ascent = ascent,
     };
 }
 
@@ -346,11 +354,13 @@ size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font,
 
         int ascent = std::ceil(dwrite_metrics.ascent * scale);
         int descent = std::ceil(-dwrite_metrics.descent * scale);
+
+        // Round up to the next even number if odd.
+        if (ascent % 2 == 1) ++ascent;
+        if (descent % 2 == 1) ++descent;
+
         int line_gap = std::ceil(dwrite_metrics.lineGap * scale);
         int line_height = ascent - descent + line_gap;
-
-        // TODO: Remove magic numbers that emulate Sublime Text.
-        line_height += 1;
 
         Metrics metrics{
             .line_height = line_height,

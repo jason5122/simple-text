@@ -180,7 +180,7 @@ void EditorWindow::onMouseExit() {
 }
 
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
-    std::println("key = {}, modifiers = {}", key, modifiers);
+    // std::println("key = {}, modifiers = {}", key, modifiers);
 
     bool handled = false;
     if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {

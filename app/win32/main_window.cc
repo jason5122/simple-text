@@ -4,7 +4,6 @@
 #include "base/windows/unicode.h"
 #include "main_window.h"
 #include "util/escape_special_chars.h"
-#include "util/profile_util.h"
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <string>
@@ -12,99 +11,18 @@
 #include <wingdi.h>
 #include <winuser.h>
 
-#include <format>
-#include <iostream>
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
 
+namespace app {
 namespace {
 
-constexpr app::Key GetKey(WPARAM vk) {
-    constexpr struct {
-        WPARAM fVK;
-        app::Key fKey;
-    } gPair[] = {
-        {'A', app::Key::kA},
-        {'B', app::Key::kB},
-        {'C', app::Key::kC},
-        {'D', app::Key::kD},
-        {'E', app::Key::kE},
-        {'F', app::Key::kF},
-        {'G', app::Key::kG},
-        {'H', app::Key::kH},
-        {'I', app::Key::kI},
-        {'J', app::Key::kJ},
-        {'K', app::Key::kK},
-        {'L', app::Key::kL},
-        {'M', app::Key::kM},
-        {'N', app::Key::kN},
-        {'O', app::Key::kO},
-        {'P', app::Key::kP},
-        {'Q', app::Key::kQ},
-        {'R', app::Key::kR},
-        {'S', app::Key::kS},
-        {'T', app::Key::kT},
-        {'U', app::Key::kU},
-        {'V', app::Key::kV},
-        {'W', app::Key::kW},
-        {'X', app::Key::kX},
-        {'Y', app::Key::kY},
-        {'Z', app::Key::kZ},
-        {'0', app::Key::k0},
-        {'1', app::Key::k1},
-        {'2', app::Key::k2},
-        {'3', app::Key::k3},
-        {'4', app::Key::k4},
-        {'5', app::Key::k5},
-        {'6', app::Key::k6},
-        {'7', app::Key::k7},
-        {'8', app::Key::k8},
-        {'9', app::Key::k9},
-        {VK_RETURN, app::Key::kEnter},
-        {VK_BACK, app::Key::kBackspace},
-        {VK_TAB, app::Key::kTab},
-        {VK_LEFT, app::Key::kLeftArrow},
-        {VK_RIGHT, app::Key::kRightArrow},
-        {VK_DOWN, app::Key::kDownArrow},
-        {VK_UP, app::Key::kUpArrow},
-    };
-    for (size_t i = 0; i < std::size(gPair); ++i) {
-        if (gPair[i].fVK == vk) {
-            return gPair[i].fKey;
-        }
-    }
-    return app::Key::kNone;
-}
-
-inline app::ModifierKey GetModifiers() {
-    app::ModifierKey modifiers = app::ModifierKey::kNone;
-    if (GetKeyState(VK_SHIFT) & 0x8000) {
-        modifiers |= app::ModifierKey::kShift;
-    }
-    if (GetKeyState(VK_CONTROL) & 0x8000) {
-        modifiers |= app::ModifierKey::kControl;
-    }
-    if (GetKeyState(VK_MENU) & 0x8000) {
-        modifiers |= app::ModifierKey::kAlt;
-    }
-    if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) {
-        modifiers |= app::ModifierKey::kSuper;
-    }
-    return modifiers;
-}
-
-inline void AddMenu(HWND hwnd) {
-    HMENU menubar = CreateMenu();
-    HMENU file_menu = CreateMenu();
-
-    // https://learn.microsoft.com/en-us/windows/win32/menurc/about-menus#menu-shortcut-keys
-    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File\tCtrl+N");
-    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window\tCtrl+Shift+N");
-    AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"E&xit\tCtrl+Q");
-    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"&File");
-
-    SetMenu(hwnd, menubar);
-}
+constexpr Key KeyFromKeyCode(WPARAM vk);
+inline ModifierKey ModifierFromState();
+inline void AddMenu(HWND hwnd);  // TODO: Clean this up.
 
 }  // namespace
+}  // namespace app
 
 namespace app {
 
@@ -225,15 +143,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
-        app::ModifierKey modifiers = GetModifiers();
-
-        app::ClickType click_type = app::ClickType::kSingleClick;
-        if (click_count == 2) {
-            click_type = app::ClickType::kDoubleClick;
-        } else if (click_count >= 3) {
-            click_type = app::ClickType::kTripleClick;
-        }
-
+        ModifierKey modifiers = ModifierFromState();
+        ClickType click_type = ClickTypeFromCount(click_count);
         app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers, click_type);
         return 0;
     }
@@ -247,9 +158,9 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (wParam & MK_LBUTTON) {
             int mouse_x = GET_X_LPARAM(lParam);
             int mouse_y = GET_Y_LPARAM(lParam);
-            app::ModifierKey modifiers = GetModifiers();
-
-            app_window.onLeftMouseDrag(mouse_x, mouse_y, modifiers);
+            ModifierKey modifiers = ModifierFromState();
+            ClickType click_type = ClickTypeFromCount(click_count);
+            app_window.onLeftMouseDrag(mouse_x, mouse_y, modifiers, click_type);
         }
         return 0;
     }
@@ -257,8 +168,8 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_KEYDOWN: {
         std::println("WM_KEYDOWN: {}", wParam);
 
-        app::Key key = GetKey(wParam);
-        app::ModifierKey modifiers = GetModifiers();
+        Key key = KeyFromKeyCode(wParam);
+        ModifierKey modifiers = ModifierFromState();
 
         bool handled = app_window.onKeyDown(key, modifiers);
 
@@ -289,10 +200,10 @@ LRESULT MainWindow::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
         case ID_FILE_NEW_FILE:
-            app_window.onAppAction(app::AppAction::kNewFile);
+            app_window.onAppAction(AppAction::kNewFile);
             break;
         case ID_FILE_NEW_WINDOW:
-            app_window.onAppAction(app::AppAction::kNewWindow);
+            app_window.onAppAction(AppAction::kNewWindow);
             break;
         case ID_FILE_EXIT:
             PostQuitMessage(0);
@@ -403,7 +314,7 @@ int MainWindow::scaleFactor() {
     HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
     DEVICE_SCALE_FACTOR scale_factor;
     GetScaleFactorForMonitor(hmon, &scale_factor);
-    std::println("scale_factor: {}", scale_factor);
+    // std::println("scale_factor: {}", scale_factor);
     // TODO: Don't hard code this.
     return 1;
 }
@@ -412,5 +323,96 @@ void MainWindow::setTitle(const std::string& title) {
     std::wstring str16 = base::windows::ConvertToUTF16(title);
     SetWindowText(m_hwnd, str16.data());
 }
+
+namespace {
+
+constexpr Key KeyFromKeyCode(WPARAM vk) {
+    constexpr struct {
+        WPARAM vk;
+        Key key;
+    } kKeyMap[] = {
+        {'A', Key::kA},
+        {'B', Key::kB},
+        {'C', Key::kC},
+        {'D', Key::kD},
+        {'E', Key::kE},
+        {'F', Key::kF},
+        {'G', Key::kG},
+        {'H', Key::kH},
+        {'I', Key::kI},
+        {'J', Key::kJ},
+        {'K', Key::kK},
+        {'L', Key::kL},
+        {'M', Key::kM},
+        {'N', Key::kN},
+        {'O', Key::kO},
+        {'P', Key::kP},
+        {'Q', Key::kQ},
+        {'R', Key::kR},
+        {'S', Key::kS},
+        {'T', Key::kT},
+        {'U', Key::kU},
+        {'V', Key::kV},
+        {'W', Key::kW},
+        {'X', Key::kX},
+        {'Y', Key::kY},
+        {'Z', Key::kZ},
+        {'0', Key::k0},
+        {'1', Key::k1},
+        {'2', Key::k2},
+        {'3', Key::k3},
+        {'4', Key::k4},
+        {'5', Key::k5},
+        {'6', Key::k6},
+        {'7', Key::k7},
+        {'8', Key::k8},
+        {'9', Key::k9},
+        {VK_RETURN, Key::kEnter},
+        {VK_BACK, Key::kBackspace},
+        {VK_TAB, Key::kTab},
+        {VK_LEFT, Key::kLeftArrow},
+        {VK_RIGHT, Key::kRightArrow},
+        {VK_DOWN, Key::kDownArrow},
+        {VK_UP, Key::kUpArrow},
+    };
+    for (size_t i = 0; i < std::size(kKeyMap); ++i) {
+        if (kKeyMap[i].vk == vk) {
+            return kKeyMap[i].key;
+        }
+    }
+    return Key::kNone;
+}
+
+inline ModifierKey ModifierFromState() {
+    ModifierKey modifiers = ModifierKey::kNone;
+    if (GetKeyState(VK_SHIFT) & 0x8000) {
+        modifiers |= ModifierKey::kShift;
+    }
+    if (GetKeyState(VK_CONTROL) & 0x8000) {
+        modifiers |= ModifierKey::kControl;
+    }
+    if (GetKeyState(VK_MENU) & 0x8000) {
+        modifiers |= ModifierKey::kAlt;
+    }
+    if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) {
+        modifiers |= ModifierKey::kSuper;
+    }
+    return modifiers;
+}
+
+inline void AddMenu(HWND hwnd) {
+    HMENU menubar = CreateMenu();
+    HMENU file_menu = CreateMenu();
+
+    // https://learn.microsoft.com/en-us/windows/win32/menurc/about-menus#menu-shortcut-keys
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_FILE, L"New File\tCtrl+N");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_NEW_WINDOW, L"New Window\tCtrl+Shift+N");
+    AppendMenu(file_menu, MF_STRING, ID_FILE_EXIT, L"E&xit\tCtrl+Q");
+    AppendMenu(menubar, MF_POPUP, (UINT_PTR)file_menu, L"&File");
+
+    SetMenu(hwnd, menubar);
+}
+
+}  // namespace
 
 }  // namespace app

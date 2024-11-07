@@ -3,6 +3,7 @@
 #include "gui/text_system/line_layout_cache.h"
 #include "gui/widget/label_widget.h"
 #include "gui/widget/scrollable_widget.h"
+#include <array>
 
 namespace gui {
 
@@ -45,4 +46,4 @@ private:
     void renderScrollBars(int line_height, size_t visible_lines);
 };
 
-}
+}  // namespace gui

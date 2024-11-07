@@ -228,7 +228,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     // TODO: See if this is correct.
     // if (total_advance % 2 == 1) {
-    //     total_advance += 1;
+    //     ++total_advance;
     // }
 
     return {
@@ -262,8 +262,8 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
         int leading = std::ceil(CTFontGetLeading(ct_font));
 
         // Round up to the next even number if odd.
-        if (ascent % 2 == 1) ascent += 1;
-        if (descent % 2 == 1) descent += 1;
+        if (ascent % 2 == 1) ++ascent;
+        if (descent % 2 == 1) ++descent;
 
         int line_height = ascent + descent + leading;
 

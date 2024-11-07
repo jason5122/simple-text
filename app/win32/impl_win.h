@@ -1,6 +1,7 @@
 #pragma once
 
 #include "app/app.h"
+#include "app/menu.h"
 #include "app/win32/dummy_context.h"
 #include "app/win32/main_window.h"
 #include "app/window.h"
@@ -23,4 +24,8 @@ public:
     int wid = 0;
 };
 
-}
+class Menu::impl {
+public:
+};
+
+}  // namespace app

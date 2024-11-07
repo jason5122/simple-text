@@ -8,6 +8,8 @@ namespace app {
 
 App::App() : pimpl{new impl{}} {}
 
+App::~App() {}
+
 void App::run() {
     pimpl->dummy_context.initialize();
 
@@ -32,6 +34,15 @@ void App::quit() {
     PostQuitMessage(0);
 }
 
-App::~App() {}
-
+// TODO: Implement this.
+std::string App::getClipboardString() {
+    return "";
 }
+
+// TODO: Implement this.
+void App::setClipboardString(const std::string& str8) {}
+
+// TODO: Implement this.
+void App::setCursorStyle(CursorStyle style) {}
+
+}  // namespace app

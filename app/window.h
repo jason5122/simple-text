@@ -61,9 +61,9 @@ public:
 
     void createMenuDebug() const;
 
-    virtual void onOpenGLActivate(int width, int height) {}
-    virtual void onDraw(int width, int height) {}
-    virtual void onResize(int width, int height) {}
+    virtual void onOpenGLActivate(const Size& size) {}
+    virtual void onDraw(const Size& size) {}
+    virtual void onResize(const Size& size) {}
     virtual void onScroll(const Point& mouse_pos, const Delta& delta) {}
     virtual void onLeftMouseDown(const Point& mouse_pos,
                                  ModifierKey modifiers,

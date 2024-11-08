@@ -57,9 +57,8 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
       parent{parent},
       main_widget{new VerticalLayoutWidget{}} {}
 
-void EditorWindow::onOpenGLActivate(int width, int height) {
-    main_widget->setWidth(width);
-    main_widget->setHeight(height);
+void EditorWindow::onOpenGLActivate(const app::Size& size) {
+    main_widget->setSize(size);
 
     editor_widget = std::make_shared<EditorWidget>();
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
@@ -75,8 +74,8 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     std::shared_ptr<LayoutWidget> vertical_layout{new VerticalLayoutWidget{}};
 
     // These don't have default constructors since they are not intended to be main widgets.
-    std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, height})};
-    std::shared_ptr<Widget> status_bar{new StatusBarWidget({width, kStatusBarHeight})};
+    std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, size.height})};
+    std::shared_ptr<Widget> status_bar{new StatusBarWidget({size.width, kStatusBarHeight})};
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);
@@ -85,7 +84,7 @@ void EditorWindow::onOpenGLActivate(int width, int height) {
     main_widget->addChildEnd(status_bar);
 }
 
-void EditorWindow::onDraw(int width, int height) {
+void EditorWindow::onDraw(const app::Size& size) {
     PROFILE_BLOCK("Total render time");
 
     updateCursorStyle();
@@ -97,12 +96,11 @@ void EditorWindow::onDraw(int width, int height) {
     main_widget->mousePositionChanged(mouse_pos);
     main_widget->draw(mouse_pos);
 
-    Renderer::instance().flush({width, height});
+    Renderer::instance().flush(size);
 }
 
-void EditorWindow::onResize(int width, int height) {
-    main_widget->setWidth(width);
-    main_widget->setHeight(height);
+void EditorWindow::onResize(const app::Size& size) {
+    main_widget->setSize(size);
     redraw();
 }
 

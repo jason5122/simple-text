@@ -28,7 +28,11 @@
     CGLSetCurrentContext(mDisplayGL->context());
     int scaled_width = self.frame.size.width * self.contentsScale;
     int scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onOpenGLActivate(scaled_width, scaled_height);
+    const app::Size scaled_size{
+        .width = static_cast<int>(scaled_width),
+        .height = static_cast<int>(scaled_height),
+    };
+    appWindow->onOpenGLActivate(scaled_size);
 
     return mDisplayGL->context();
 }
@@ -51,7 +55,11 @@
 
     int scaled_width = self.frame.size.width * self.contentsScale;
     int scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onDraw(scaled_width, scaled_height);
+    const app::Size scaled_size{
+        .width = static_cast<int>(scaled_width),
+        .height = static_cast<int>(scaled_height),
+    };
+    appWindow->onDraw(scaled_size);
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext
@@ -68,7 +76,11 @@
 
     float scaled_width = self.frame.size.width * self.contentsScale;
     float scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onResize(scaled_width, scaled_height);
+    const app::Size scaled_size{
+        .width = static_cast<int>(scaled_width),
+        .height = static_cast<int>(scaled_height),
+    };
+    appWindow->onResize(scaled_size);
 }
 
 // We shouldn't release the CGLContextObj since it isn't owned by this object.

@@ -10,9 +10,9 @@ class EditorWindow : public app::Window {
 public:
     EditorWindow(EditorApp& parent, int width, int height, int wid);
 
-    void onOpenGLActivate(int width, int height) override;
-    void onDraw(int width, int height) override;
-    void onResize(int width, int height) override;
+    void onOpenGLActivate(const app::Size& size) override;
+    void onDraw(const app::Size& size) override;
+    void onResize(const app::Size& size) override;
     void onScroll(const app::Point& mouse_pos, const app::Delta& delta) override;
     void onLeftMouseDown(const app::Point& mouse_pos,
                          app::ModifierKey modifiers,

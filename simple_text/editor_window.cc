@@ -383,13 +383,13 @@ void EditorWindow::onClose() {
 void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos) {
     // Case 1: Dragging operation in progress.
     if (dragged_widget) {
-        parent.setCursorStyle(dragged_widget->getCursorStyle());
+        parent.setCursorStyle(dragged_widget->cursorStyle());
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
             // std::println("{}", *hovered_widget);
-            parent.setCursorStyle(hovered_widget->getCursorStyle());
+            parent.setCursorStyle(hovered_widget->cursorStyle());
         }
     }
     // Case 3: Mouse position is outside of window.

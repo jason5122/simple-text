@@ -28,7 +28,7 @@ TEST(LineLayoutIntegrationTest, CaretMovement1) {
             line_str.back() = ' ';
         }
 
-        const auto& line_layout = line_layout_cache.getLineLayout(line_str);
+        const auto& line_layout = line_layout_cache[line_str];
         EXPECT_GT(line_layout.width, 0);
     }
 }

@@ -5,7 +5,7 @@ namespace gui {
 
 LineLayoutCache::LineLayoutCache(size_t font_id) : font_id{font_id} {}
 
-const font::LineLayout& LineLayoutCache::getLineLayout(std::string_view str8) {
+const font::LineLayout& LineLayoutCache::operator[](std::string_view str8) {
     static constexpr XXH64_hash_t seed = 0;
     XXH64_hash_t hash = XXH64(str8.data(), str8.length(), seed);
 
@@ -27,4 +27,4 @@ int LineLayoutCache::maxWidth() const {
     return max_width;
 }
 
-}
+}  // namespace gui

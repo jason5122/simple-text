@@ -35,7 +35,7 @@ void Widget::setPosition(const app::Point& pos) {
     position = pos;
 }
 
-app::CursorStyle Widget::getCursorStyle() const {
+app::CursorStyle Widget::cursorStyle() const {
     return app::CursorStyle::kArrow;
 }
 

@@ -24,7 +24,7 @@ public:
     virtual bool mousePositionChanged(const std::optional<app::Point>& mouse_pos);
     virtual void layout() {}
     virtual void setPosition(const app::Point& pos);
-    virtual app::CursorStyle getCursorStyle() const;
+    virtual app::CursorStyle cursorStyle() const;
     virtual Widget* widgetAt(const app::Point& pos);
 
     app::Size getSize() const;

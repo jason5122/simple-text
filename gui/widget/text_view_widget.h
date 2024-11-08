@@ -41,7 +41,7 @@ public:
 
     void updateMaxScroll() override;
 
-    app::CursorStyle getCursorStyle() const override {
+    app::CursorStyle cursorStyle() const override {
         return app::CursorStyle::kIBeam;
     }
     std::string_view className() const override {
@@ -68,15 +68,15 @@ private:
     base::SyntaxHighlighter highlighter;
 #endif
 
-    static constexpr int kGutterLeftPadding = 23 * 2;
-    int line_number_width;
+    static constexpr int kGutterLeftPadding = 18 * 2;
     static constexpr int kGutterRightPadding = 8 * 2;
 
-    size_t lineAtY(int y);
+    size_t lineAtY(int y) const;
     inline const font::LineLayout& layoutAt(size_t line);
     inline const font::LineLayout& layoutAt(size_t line, bool& exclude_end);
-    inline constexpr app::Point textOffset() const;
-    inline constexpr int gutterWidth() const;
+    inline constexpr app::Point textOffset();
+    inline constexpr int gutterWidth();
+    inline constexpr int lineNumberWidth();
 
     // Draw helpers.
     void renderText(size_t start_line, size_t end_line, int main_line_height);

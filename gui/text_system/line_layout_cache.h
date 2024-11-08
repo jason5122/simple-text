@@ -11,7 +11,7 @@ class LineLayoutCache {
 public:
     LineLayoutCache(size_t font_id);
 
-    const font::LineLayout& getLineLayout(std::string_view str8);
+    const font::LineLayout& operator[](std::string_view str8);
     int maxWidth() const;
 
 private:
@@ -22,4 +22,4 @@ private:
     int max_width = 0;
 };
 
-}
+}  // namespace gui

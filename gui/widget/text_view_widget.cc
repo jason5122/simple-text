@@ -20,10 +20,6 @@ TextViewWidget::TextViewWidget(std::string_view text)
     highlighter.setJsonLanguage();
     highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
-
-    // TODO: See if we need to change this for proportional fonts.
-    const auto& line_number_layout = line_layout_cache.getLineLayout("11");
-    line_number_width = line_number_layout.width;
 }
 
 void TextViewWidget::selectAll() {
@@ -347,7 +343,7 @@ void TextViewWidget::updateMaxScroll() {
     max_scroll_offset.y = tree.line_count() * metrics.line_height;
 }
 
-size_t TextViewWidget::lineAtY(int y) {
+size_t TextViewWidget::lineAtY(int y) const {
     if (y < 0) {
         y = 0;
     }
@@ -373,17 +369,23 @@ inline const font::LineLayout& TextViewWidget::layoutAt(size_t line, bool& exclu
         line_str.back() = ' ';
     }
 
-    return line_layout_cache.getLineLayout(line_str);
+    return line_layout_cache[line_str];
 }
 
-inline constexpr app::Point TextViewWidget::textOffset() const {
+inline constexpr app::Point TextViewWidget::textOffset() {
     app::Point text_offset = position - scroll_offset;
     text_offset.x += gutterWidth();
     return text_offset;
 }
 
-inline constexpr int TextViewWidget::gutterWidth() const {
-    return kGutterLeftPadding + line_number_width + kGutterRightPadding;
+inline constexpr int TextViewWidget::gutterWidth() {
+    return kGutterLeftPadding + lineNumberWidth() + kGutterRightPadding;
+}
+
+inline constexpr int TextViewWidget::lineNumberWidth() {
+    int digit_width = line_layout_cache["0"].width;
+    int log = std::log10(tree.line_count());
+    return digit_width * std::max(log + 1, 2);
 }
 
 void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_line_height) {
@@ -498,8 +500,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         line_number_coords.y += static_cast<int>(line) * main_line_height;
 
         std::string line_number_str = std::format("{}", line + 1);
-        const auto& line_number_layout = line_layout_cache.getLineLayout(line_number_str);
-        line_number_coords.x += line_number_width - line_number_layout.width;
+        const auto& line_number_layout = line_layout_cache[line_number_str];
+        line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;

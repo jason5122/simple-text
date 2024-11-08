@@ -87,14 +87,8 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 void EditorWindow::onDraw(const app::Size& size) {
     PROFILE_BLOCK("Total render time");
 
-    updateCursorStyle();
-
-    auto mouse_pos = mousePosition();
-    if (mouse_pos) mouse_pos.value() *= scale();
-
     main_widget->layout();
-    main_widget->mousePositionChanged(mouse_pos);
-    main_widget->draw(mouse_pos);
+    main_widget->draw(std::nullopt);
 
     Renderer::instance().flush(size);
 }
@@ -105,6 +99,7 @@ void EditorWindow::onResize(const app::Size& size) {
 }
 
 void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {
+    main_widget->mousePositionChanged(mouse_pos);
     main_widget->scroll(mouse_pos, delta);
     redraw();
 }
@@ -112,24 +107,22 @@ void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta
 void EditorWindow::onLeftMouseDown(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    // createMenuDebug();
-
-    drag_start_widget = main_widget->getWidgetAtPosition(mouse_pos);
-    if (drag_start_widget) {
-        drag_start_widget->leftMouseDown(mouse_pos, modifiers, click_type);
+    dragged_widget = main_widget->getWidgetAtPosition(mouse_pos);
+    if (dragged_widget) {
+        dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
         redraw();
     }
 }
 
 void EditorWindow::onLeftMouseUp() {
-    drag_start_widget = nullptr;
+    dragged_widget = nullptr;
 }
 
 void EditorWindow::onLeftMouseDrag(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    if (drag_start_widget) {
-        drag_start_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
+    if (dragged_widget) {
+        dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
         redraw();
     }
 }
@@ -154,21 +147,21 @@ void EditorWindow::onRightMouseDown(const app::Point& mouse_pos,
 }
 
 // This represents the mouse moving *without* being a click+drag.
-void EditorWindow::onMouseMove() {
-    updateCursorStyle();
+void EditorWindow::onMouseMove(const app::Point& mouse_pos) {
+    updateCursorStyle(mouse_pos);
 
-    auto mouse_pos = mousePosition();
-    if (mouse_pos) mouse_pos.value() *= scale();
-
-    bool requires_redraw = main_widget->mousePositionChanged(mouse_pos);
-    if (requires_redraw) {
+    if (main_widget->mousePositionChanged(mouse_pos)) {
         redraw();
     }
 }
 
 // Mouse position is guaranteed to be outside of the window here.
 void EditorWindow::onMouseExit() {
-    onMouseMove();
+    updateCursorStyle(std::nullopt);
+
+    if (main_widget->mousePositionChanged(std::nullopt)) {
+        redraw();
+    }
 }
 
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
@@ -221,8 +214,8 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     } else if (key == app::Key::kW && modifiers == app::kPrimaryModifier) {
         // If we are dragging on the current TextViewWidget, invalidate the pointer to prevent a
         // use-after-free crash.
-        if (drag_start_widget == editor_widget->currentWidget()) {
-            drag_start_widget = nullptr;
+        if (dragged_widget == editor_widget->currentWidget()) {
+            dragged_widget = nullptr;
         }
 
         editor_widget->removeTab(editor_widget->getCurrentIndex());
@@ -283,12 +276,11 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 }
 
 void EditorWindow::onInsertText(std::string_view text) {
-    {
+    if (auto widget = editor_widget->currentWidget()) {
         PROFILE_BLOCK("EditorWindow::onInsertText()");
-        TextViewWidget* widget = editor_widget->currentWidget();
-        if (widget) widget->insertText(text);
+        widget->insertText(text);
+        redraw();
     }
-    redraw();
 }
 
 void EditorWindow::onAction(app::Action action, bool extend) {
@@ -388,18 +380,14 @@ void EditorWindow::onClose() {
     parent.destroyWindow(wid);
 }
 
-void EditorWindow::updateCursorStyle() {
-    auto mouse_pos = mousePosition();
-    if (mouse_pos) mouse_pos.value() *= scale();
-
-    // Update cursor style.
+void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos) {
     // Case 1: Dragging operation in progress.
-    if (drag_start_widget) {
-        parent.setCursorStyle(drag_start_widget->getCursorStyle());
+    if (dragged_widget) {
+        parent.setCursorStyle(dragged_widget->getCursorStyle());
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
-        if (Widget* hovered_widget = main_widget->getWidgetAtPosition(mouse_pos.value())) {
+        if (auto hovered_widget = main_widget->getWidgetAtPosition(mouse_pos.value())) {
             // std::println("{}", *hovered_widget);
             parent.setCursorStyle(hovered_widget->getCursorStyle());
         }

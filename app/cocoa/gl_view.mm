@@ -83,18 +83,21 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 }
 
 - (void)mouseMoved:(NSEvent*)event {
-    glLayer->appWindow->onMouseMove();
+    auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
+    glLayer->appWindow->onMouseMove(mouse_pos);
 }
 
 - (void)mouseEntered:(NSEvent*)event {
-    glLayer->appWindow->onMouseMove();
+    auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
+    glLayer->appWindow->onMouseMove(mouse_pos);
 }
 
 // We need to override `cursorUpdate` to stop the event from being passed up in the chain.
 // Without this, our `mouseEntered` NSCursor set will be overridden.
 // https://stackoverflow.com/a/20197686
 - (void)cursorUpdate:(NSEvent*)event {
-    glLayer->appWindow->onMouseMove();
+    auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
+    glLayer->appWindow->onMouseMove(mouse_pos);
 }
 
 - (void)mouseExited:(NSEvent*)event {

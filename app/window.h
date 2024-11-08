@@ -75,7 +75,7 @@ public:
     virtual void onRightMouseDown(const Point& mouse_pos,
                                   ModifierKey modifiers,
                                   ClickType click_type) {}
-    virtual void onMouseMove() {}
+    virtual void onMouseMove(const Point& mouse_pos) {}
     virtual void onMouseExit() {}
     virtual bool onKeyDown(Key key, ModifierKey modifiers) {
         return false;

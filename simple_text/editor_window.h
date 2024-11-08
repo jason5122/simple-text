@@ -24,7 +24,7 @@ public:
     void onRightMouseDown(const app::Point& mouse_pos,
                           app::ModifierKey modifiers,
                           app::ClickType click_type) override;
-    void onMouseMove() override;
+    void onMouseMove(const app::Point& mouse_pos) override;
     void onMouseExit() override;
     bool onKeyDown(app::Key key, app::ModifierKey modifiers) override;
     void onInsertText(std::string_view text) override;
@@ -41,8 +41,9 @@ private:
     std::shared_ptr<gui::LayoutWidget> main_widget;
     std::shared_ptr<gui::EditorWidget> editor_widget;
 
-    // Drag selection.
-    gui::Widget* drag_start_widget = nullptr;
+    // The widget that the drag operation was performed on. If there currently isn't a drag
+    // operation, this is null.
+    gui::Widget* dragged_widget = nullptr;
 
-    void updateCursorStyle();
+    void updateCursorStyle(const std::optional<app::Point>& mouse_pos);
 };

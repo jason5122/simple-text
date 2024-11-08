@@ -19,8 +19,8 @@
 - (int)getHeight;
 - (int)getScaleFactor;
 - (bool)isDarkMode;
-- (void)setTitle:(const std::string&)title;
-- (void)setFilePath:(fs::path)path;
+- (void)setTitle:(std::string_view)title;
+- (void)setFilePath:(std::string_view)path;
 - (app::Window*)getAppWindow;
 - (NSWindow*)getNsWindow;
 

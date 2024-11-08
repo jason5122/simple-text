@@ -62,11 +62,11 @@ bool Window::isDarkMode() const {
     return [pimpl->window_controller isDarkMode];
 }
 
-void Window::setTitle(const std::string& title) {
+void Window::setTitle(std::string_view title) {
     [pimpl->window_controller setTitle:title];
 }
 
-void Window::setFilePath(fs::path path) {
+void Window::setFilePath(std::string_view path) {
     [pimpl->window_controller setFilePath:path];
 }
 
@@ -95,15 +95,6 @@ std::optional<std::string> Window::openFilePicker() const {
     //                         std::println(panel.URL.fileSystemRepresentation);
     //                     }
     //                   }];
-}
-
-Point Window::mousePositionRaw() const {
-    NSWindow* ns_window = [pimpl->window_controller getNsWindow];
-    NSPoint mouse_pos = ns_window.mouseLocationOutsideOfEventStream;
-    mouse_pos.y = height() - mouse_pos.y;  // Set origin at top left.
-    int mouse_x = std::round(mouse_pos.x);
-    int mouse_y = std::round(mouse_pos.y);
-    return Point{mouse_x, mouse_y};
 }
 
 }  // namespace app

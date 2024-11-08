@@ -5,13 +5,10 @@
 #include "app/key.h"
 #include "app/modifier_key.h"
 #include "app/types.h"
-#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-
-namespace fs = std::filesystem;
 
 namespace app {
 
@@ -45,19 +42,9 @@ public:
     int height() const;
     int scale() const;
     bool isDarkMode() const;
-    void setTitle(const std::string& title);
-    void setFilePath(fs::path path);
+    void setTitle(std::string_view title);
+    void setFilePath(std::string_view path);
     std::optional<std::string> openFilePicker() const;
-
-    std::optional<Point> mousePosition() const {
-        Point mouse_pos = mousePositionRaw();
-        if ((mouse_pos.x < 0 || mouse_pos.x > width() - 1) ||
-            (mouse_pos.y < 0 || mouse_pos.y > height() - 1)) {
-            return std::nullopt;
-        } else {
-            return mouse_pos;
-        }
-    }
 
     void createMenuDebug() const;
 
@@ -89,8 +76,6 @@ public:
 private:
     class impl;
     std::unique_ptr<impl> pimpl;
-
-    Point mousePositionRaw() const;
 };
 
 }  // namespace app

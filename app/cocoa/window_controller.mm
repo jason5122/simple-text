@@ -69,12 +69,12 @@
     return opengl_view.effectiveAppearance.name == NSAppearanceNameDarkAqua;
 }
 
-- (void)setTitle:(const std::string&)title {
+- (void)setTitle:(std::string_view)title {
     self.window.title = [NSString stringWithUTF8String:title.data()];
 }
 
-- (void)setFilePath:(fs::path)path {
-    self.window.representedFilename = [NSString stringWithUTF8String:path.string().c_str()];
+- (void)setFilePath:(std::string_view)path {
+    self.window.representedFilename = [NSString stringWithUTF8String:path.data()];
 }
 
 - (app::Window*)getAppWindow {

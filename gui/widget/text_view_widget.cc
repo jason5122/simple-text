@@ -278,7 +278,7 @@ void TextViewWidget::redo() {
     tree.try_redo();
 }
 
-void TextViewWidget::draw(const std::optional<app::Point>& mouse_pos) {
+void TextViewWidget::draw() {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());

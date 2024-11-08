@@ -8,11 +8,11 @@ StatusBarWidget::StatusBarWidget(const app::Size& size)
     line_column_label->setText("clangd, Line 1, Column 1", {64, 64, 64});
 }
 
-void StatusBarWidget::draw(const std::optional<app::Point>& mouse_pos) {
+void StatusBarWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kStatusBarColor, RectRenderer::RectLayer::kForeground);
 
-    line_column_label->draw(mouse_pos);
+    line_column_label->draw();
 }
 
 void StatusBarWidget::layout() {

@@ -53,9 +53,9 @@ public:
         this->index = std::clamp(index, 0_Z, base::sub_sat(views.size(), 1_Z));
     }
 
-    void draw(const std::optional<app::Point>& mouse_pos) override {
+    void draw() override {
         Widget* widget = currentWidget();
-        if (widget) widget->draw(mouse_pos);
+        if (widget) widget->draw();
     }
 
     void scroll(const app::Point& mouse_pos, const app::Delta& delta) override {
@@ -93,16 +93,16 @@ public:
         }
     }
 
-    Widget* getWidgetAtPosition(const app::Point& pos) override {
+    Widget* widgetAt(const app::Point& pos) override {
         Widget* widget = currentWidget();
         if (widget) {
-            return widget->getWidgetAtPosition(pos);
+            return widget->widgetAt(pos);
         } else {
             return nullptr;
         }
     }
 
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "MultiViewWidget";
     };
 

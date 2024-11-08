@@ -11,7 +11,7 @@ public:
 
     void layout() override;
 
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "VerticalLayoutWidget";
     };
 };

@@ -9,10 +9,10 @@ class StatusBarWidget : public Widget {
 public:
     StatusBarWidget(const app::Size& size);
 
-    void draw(const std::optional<app::Point>& mouse_pos) override;
+    void draw() override;
     void layout() override;
 
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "StatusBarWidget";
     };
 

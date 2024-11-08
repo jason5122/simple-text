@@ -39,7 +39,7 @@ app::CursorStyle Widget::getCursorStyle() const {
     return app::CursorStyle::kArrow;
 }
 
-Widget* Widget::getWidgetAtPosition(const app::Point& pos) {
+Widget* Widget::widgetAt(const app::Point& pos) {
     return hitTest(pos) ? this : nullptr;
 }
 

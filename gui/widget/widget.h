@@ -13,7 +13,7 @@ public:
     Widget(const app::Size& size) : size{size} {}
     virtual ~Widget() {}
 
-    virtual void draw(const std::optional<app::Point>& mouse_pos) = 0;
+    virtual void draw() = 0;
     virtual void scroll(const app::Point& mouse_pos, const app::Delta& delta) {}
     virtual void leftMouseDown(const app::Point& mouse_pos,
                                app::ModifierKey modifiers,
@@ -25,17 +25,17 @@ public:
     virtual void layout() {}
     virtual void setPosition(const app::Point& pos);
     virtual app::CursorStyle getCursorStyle() const;
-    virtual Widget* getWidgetAtPosition(const app::Point& pos);
+    virtual Widget* widgetAt(const app::Point& pos);
 
     app::Size getSize() const;
     void setSize(const app::Size& size);
     void setWidth(int width);
-    void setHeight(int width);
+    void setHeight(int height);
     app::Point getPosition() const;
     bool hitTest(const app::Point& point);
 
     // TODO: Debug use; remove this.
-    virtual std::string_view getClassName() const = 0;
+    virtual std::string_view className() const = 0;
 
     // TODO: Refactor singletons.
     inline font::FontRasterizer& rasterizer() {

@@ -46,13 +46,13 @@ void TabBarWidget::removeTab(size_t index) {
     this->index = std::clamp(index, 0_Z, base::sub_sat(tab_name_labels.size(), 1_Z));
 }
 
-void TabBarWidget::draw(const std::optional<app::Point>& mouse_pos) {
+void TabBarWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     rect_renderer.addRect(position, size, kTabBarColor, RectRenderer::RectLayer::kForeground);
 
     for (const auto& tab_name_label : tab_name_labels) {
-        tab_name_label->draw(mouse_pos);
+        tab_name_label->draw();
     }
 
     app::Point tab_pos = position;

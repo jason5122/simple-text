@@ -1,6 +1,7 @@
 #pragma once
 
 #include "font/types.h"
+#include "gui/renderer/opengl_types.h"
 #include "gui/widget/widget.h"
 
 namespace gui {
@@ -13,9 +14,9 @@ public:
     void addLeftIcon(size_t icon_id);
     void addRightIcon(size_t icon_id);
 
-    void draw(const std::optional<app::Point>& mouse_pos) override;
+    void draw() override;
 
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "LabelWidget";
     };
 

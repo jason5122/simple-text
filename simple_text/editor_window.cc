@@ -88,7 +88,7 @@ void EditorWindow::onDraw(const app::Size& size) {
     PROFILE_BLOCK("Total render time");
 
     main_widget->layout();
-    main_widget->draw(std::nullopt);
+    main_widget->draw();
 
     Renderer::instance().flush(size);
 }
@@ -107,7 +107,7 @@ void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta
 void EditorWindow::onLeftMouseDown(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    dragged_widget = main_widget->getWidgetAtPosition(mouse_pos);
+    dragged_widget = main_widget->widgetAt(mouse_pos);
     if (dragged_widget) {
         dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
         redraw();
@@ -387,7 +387,7 @@ void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos)
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
-        if (auto hovered_widget = main_widget->getWidgetAtPosition(mouse_pos.value())) {
+        if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
             // std::println("{}", *hovered_widget);
             parent.setCursorStyle(hovered_widget->getCursorStyle());
         }

@@ -16,7 +16,7 @@ public:
     void addChildStart(std::shared_ptr<Widget> widget);
     void addChildEnd(std::shared_ptr<Widget> widget);
 
-    void draw(const std::optional<app::Point>& mouse_pos) override;
+    void draw() override;
     void scroll(const app::Point& mouse_pos, const app::Delta& delta) override;
     void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
@@ -26,9 +26,9 @@ public:
                        app::ClickType click_type) override;
     bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override;
     void setPosition(const app::Point& position) override;
-    Widget* getWidgetAtPosition(const app::Point& pos) override;
+    Widget* widgetAt(const app::Point& pos) override;
 
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "ContainerWidget";
     };
 

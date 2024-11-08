@@ -31,14 +31,14 @@ SideBarWidget::SideBarWidget(const app::Size& size)
     // folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
 }
 
-void SideBarWidget::draw(const std::optional<app::Point>& mouse_pos) {
+void SideBarWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kBackground);
 
     const auto& metrics = rasterizer().getMetrics(label_font_id);
     // renderOldLabel(metrics.line_height);
 
-    renderNewLabel(mouse_pos);
+    renderNewLabel();
 
     size_t visible_lines = std::ceil(static_cast<double>(size.height) / metrics.line_height);
     renderScrollBars(metrics.line_height, visible_lines);
@@ -98,7 +98,7 @@ void SideBarWidget::renderOldLabel(int label_line_height) {
     //                       {255, 255, 0, 255}, RectRenderer::RectType::kBackground);
 }
 
-void SideBarWidget::renderNewLabel(const std::optional<app::Point>& mouse_pos) {
+void SideBarWidget::renderNewLabel() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 

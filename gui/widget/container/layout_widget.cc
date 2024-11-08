@@ -17,15 +17,15 @@ void LayoutWidget::addChildEnd(std::shared_ptr<Widget> widget) {
     layout();
 }
 
-void LayoutWidget::draw(const std::optional<app::Point>& mouse_pos) {
+void LayoutWidget::draw() {
     if (main_widget) {
-        main_widget->draw(mouse_pos);
+        main_widget->draw();
     }
     for (auto& child : children_start) {
-        child->draw(mouse_pos);
+        child->draw();
     }
     for (auto& child : children_end) {
-        child->draw(mouse_pos);
+        child->draw();
     }
 }
 
@@ -94,20 +94,20 @@ void LayoutWidget::setPosition(const app::Point& position) {
     layout();
 }
 
-Widget* LayoutWidget::getWidgetAtPosition(const app::Point& pos) {
+Widget* LayoutWidget::widgetAt(const app::Point& pos) {
     if (main_widget) {
         if (main_widget->hitTest(pos)) {
-            return main_widget->getWidgetAtPosition(pos);
+            return main_widget->widgetAt(pos);
         }
     }
     for (auto& child : children_start) {
         if (child->hitTest(pos)) {
-            return child->getWidgetAtPosition(pos);
+            return child->widgetAt(pos);
         }
     }
     for (auto& child : children_end) {
         if (child->hitTest(pos)) {
-            return child->getWidgetAtPosition(pos);
+            return child->widgetAt(pos);
         }
     }
     return nullptr;

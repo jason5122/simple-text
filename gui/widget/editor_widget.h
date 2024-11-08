@@ -21,7 +21,7 @@ public:
     void removeTab(size_t index);
     void openFile(std::string_view path);
 
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "EditorWidget";
     };
 
@@ -32,4 +32,4 @@ private:
     std::shared_ptr<TabBarWidget> tab_bar;
 };
 
-}
+}  // namespace gui

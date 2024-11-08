@@ -31,7 +31,7 @@ public:
     void undo();
     void redo();
 
-    void draw(const std::optional<app::Point>& mouse_pos) override;
+    void draw() override;
     void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
@@ -44,7 +44,7 @@ public:
     app::CursorStyle getCursorStyle() const override {
         return app::CursorStyle::kIBeam;
     }
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "TextViewWidget";
     };
 

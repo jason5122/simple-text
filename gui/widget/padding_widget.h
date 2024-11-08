@@ -9,9 +9,9 @@ class PaddingWidget : public Widget {
 public:
     PaddingWidget(const app::Size& size, const Rgba& color);
 
-    void draw(const std::optional<app::Point>& mouse_pos) override;
+    void draw() override;
 
-    std::string_view getClassName() const override {
+    std::string_view className() const override {
         return "PaddingWidget";
     };
 

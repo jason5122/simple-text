@@ -19,7 +19,7 @@ public:
                        app::ClickType click_type) override = 0;
     bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override = 0;
     void layout() override = 0;
-    Widget* getWidgetAtPosition(const app::Point& pos) override = 0;
+    Widget* widgetAt(const app::Point& pos) override = 0;
 };
 
 static_assert(std::is_abstract<ContainerWidget>());

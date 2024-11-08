@@ -106,20 +106,19 @@ void EditorWindow::onResize(int width, int height) {
     redraw();
 }
 
-void EditorWindow::onScroll(int mouse_x, int mouse_y, int dx, int dy) {
-    main_widget->scroll({mouse_x, mouse_y}, {dx, dy});
+void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {
+    main_widget->scroll(mouse_pos, delta);
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(int mouse_x,
-                                   int mouse_y,
+void EditorWindow::onLeftMouseDown(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     // createMenuDebug();
 
-    drag_start_widget = main_widget->getWidgetAtPosition({mouse_x, mouse_y});
+    drag_start_widget = main_widget->getWidgetAtPosition(mouse_pos);
     if (drag_start_widget) {
-        drag_start_widget->leftMouseDown({mouse_x, mouse_y}, modifiers, click_type);
+        drag_start_widget->leftMouseDown(mouse_pos, modifiers, click_type);
         redraw();
     }
 }
@@ -128,18 +127,16 @@ void EditorWindow::onLeftMouseUp() {
     drag_start_widget = nullptr;
 }
 
-void EditorWindow::onLeftMouseDrag(int mouse_x,
-                                   int mouse_y,
+void EditorWindow::onLeftMouseDrag(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     if (drag_start_widget) {
-        drag_start_widget->leftMouseDrag({mouse_x, mouse_y}, modifiers, click_type);
+        drag_start_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
         redraw();
     }
 }
 
-void EditorWindow::onRightMouseDown(int mouse_x,
-                                    int mouse_y,
+void EditorWindow::onRightMouseDown(const app::Point& mouse_pos,
                                     app::ModifierKey modifiers,
                                     app::ClickType click_type) {
     // auto mouse_pos = mousePositionRaw();

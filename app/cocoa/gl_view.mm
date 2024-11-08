@@ -120,8 +120,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
         scroll *= scale;
 
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
-
-        glLayer->appWindow->onScroll(mouse_pos.x, mouse_pos.y, scroll.dx, scroll.dy);
+        glLayer->appWindow->onScroll(mouse_pos, scroll);
     }
 }
 
@@ -140,7 +139,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
     app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
-    glLayer->appWindow->onLeftMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
+    glLayer->appWindow->onLeftMouseDown(mouse_pos, modifiers, click_type);
 }
 
 - (void)mouseUp:(NSEvent*)event {
@@ -151,14 +150,14 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
     app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
-    glLayer->appWindow->onLeftMouseDrag(mouse_pos.x, mouse_pos.y, modifiers, click_type);
+    glLayer->appWindow->onLeftMouseDrag(mouse_pos, modifiers, click_type);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
     app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
-    glLayer->appWindow->onRightMouseDown(mouse_pos.x, mouse_pos.y, modifiers, click_type);
+    glLayer->appWindow->onRightMouseDown(mouse_pos, modifiers, click_type);
 }
 
 - (void)viewDidChangeEffectiveAppearance {

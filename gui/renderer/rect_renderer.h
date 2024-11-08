@@ -1,8 +1,8 @@
 #pragma once
 
+#include "app/types.h"
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
-#include "gui/renderer/types.h"
 #include "util/non_copyable.h"
 #include <cstddef>
 #include <vector>

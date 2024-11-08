@@ -13,18 +13,15 @@ public:
     void onOpenGLActivate(int width, int height) override;
     void onDraw(int width, int height) override;
     void onResize(int width, int height) override;
-    void onScroll(int mouse_x, int mouse_y, int dx, int dy) override;
-    void onLeftMouseDown(int mouse_x,
-                         int mouse_y,
+    void onScroll(const app::Point& mouse_pos, const app::Delta& delta) override;
+    void onLeftMouseDown(const app::Point& mouse_pos,
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;
     void onLeftMouseUp() override;
-    void onLeftMouseDrag(int mouse_x,
-                         int mouse_y,
+    void onLeftMouseDrag(const app::Point& mouse_pos,
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;
-    void onRightMouseDown(int mouse_x,
-                          int mouse_y,
+    void onRightMouseDown(const app::Point& mouse_pos,
                           app::ModifierKey modifiers,
                           app::ClickType click_type) override;
     void onMouseMove() override;

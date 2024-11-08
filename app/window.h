@@ -64,18 +64,15 @@ public:
     virtual void onOpenGLActivate(int width, int height) {}
     virtual void onDraw(int width, int height) {}
     virtual void onResize(int width, int height) {}
-    virtual void onScroll(int mouse_x, int mouse_y, int dx, int dy) {}
-    virtual void onLeftMouseDown(int mouse_x,
-                                 int mouse_y,
+    virtual void onScroll(const Point& mouse_pos, const Delta& delta) {}
+    virtual void onLeftMouseDown(const Point& mouse_pos,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}
     virtual void onLeftMouseUp() {}
-    virtual void onLeftMouseDrag(int mouse_x,
-                                 int mouse_y,
+    virtual void onLeftMouseDrag(const Point& mouse_pos,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}
-    virtual void onRightMouseDown(int mouse_x,
-                                  int mouse_y,
+    virtual void onRightMouseDown(const Point& mouse_pos,
                                   ModifierKey modifiers,
                                   ClickType click_type) {}
     virtual void onMouseMove() {}

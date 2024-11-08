@@ -1,9 +1,9 @@
 #pragma once
 
 #include "app/modifier_key.h"
+#include "app/types.h"
 #include "app/window.h"
 #include "font/font_rasterizer.h"
-#include "gui/renderer/types.h"
 
 namespace gui {
 

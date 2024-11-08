@@ -1,8 +1,8 @@
 #pragma once
 
+#include "app/types.h"
 #include "gui/renderer/glyph_cache.h"
 #include "gui/renderer/shader.h"
-#include "gui/renderer/types.h"
 #include "util/non_copyable.h"
 
 namespace gui {

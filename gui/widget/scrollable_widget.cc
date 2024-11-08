@@ -6,7 +6,7 @@ namespace gui {
 ScrollableWidget::ScrollableWidget(const Size& size)
     : Widget{size}, prev_scroll{std::chrono::system_clock::now()} {}
 
-void ScrollableWidget::scroll(const Point& mouse_pos, const Point& delta) {
+void ScrollableWidget::scroll(const app::Point& mouse_pos, const app::Delta& delta) {
     auto curr_scroll = std::chrono::system_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(curr_scroll - prev_scroll).count();
@@ -14,8 +14,8 @@ void ScrollableWidget::scroll(const Point& mouse_pos, const Point& delta) {
     // Update previous scroll time.
     prev_scroll = curr_scroll;
 
-    int x = std::abs(delta.x);
-    int y = std::abs(delta.y);
+    int x = std::abs(delta.dx);
+    int y = std::abs(delta.dy);
 
     if (duration > kScrollEventSeparation) {
         axis = x <= y ? ScrollAxis::Vertical : ScrollAxis::Horizontal;
@@ -32,15 +32,15 @@ void ScrollableWidget::scroll(const Point& mouse_pos, const Point& delta) {
     }
 
     if (axis == ScrollAxis::Vertical) {
-        scroll_offset.y += delta.y;
+        scroll_offset.y += delta.dy;
     } else if (axis == ScrollAxis::Horizontal) {
-        scroll_offset.x += delta.x;
+        scroll_offset.x += delta.dx;
     } else {
-        scroll_offset.x += delta.x;
-        scroll_offset.y += delta.y;
+        scroll_offset.x += delta.dx;
+        scroll_offset.y += delta.dy;
     }
     scroll_offset.x = std::clamp(scroll_offset.x, 0, max_scroll_offset.x);
     scroll_offset.y = std::clamp(scroll_offset.y, 0, max_scroll_offset.y);
 }
 
-}
+}  // namespace gui

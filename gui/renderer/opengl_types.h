@@ -38,7 +38,7 @@ struct IVec4 {
 };
 static_assert(sizeof(IVec4) == sizeof(uint32_t) * 4);
 
-}
+}  // namespace gui
 
 template <>
 struct std::formatter<gui::Vec2> {

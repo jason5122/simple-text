@@ -30,4 +30,4 @@ private:
     ImageRenderer image_renderer;
 };
 
-}
+}  // namespace gui

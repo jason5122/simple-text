@@ -13,7 +13,7 @@ const std::string kFragmentShaderSource =
 #include "gui/renderer/shaders/rect_frag.glsl"
     ;
 
-}
+}  // namespace
 
 namespace gui {
 
@@ -100,7 +100,7 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
     return *this;
 }
 
-void RectRenderer::addRect(const Point& coords,
+void RectRenderer::addRect(const app::Point& coords,
                            const Size& size,
                            const Rgba& color,
                            RectLayer rect_type,
@@ -141,4 +141,4 @@ void RectRenderer::flush(const Size& screen_size, RectLayer rect_type) {
     instances.clear();
 }
 
-}
+}  // namespace gui

@@ -19,7 +19,7 @@ public:
         int start;
         int end;
     };
-    void renderSelections(const std::vector<Selection>& selections, const Point& offset);
+    void renderSelections(const std::vector<Selection>& selections, const app::Point& offset);
     void flush(const Size& screen_size);
 
 private:
@@ -63,4 +63,4 @@ private:
 static_assert(!std::is_copy_constructible_v<SelectionRenderer>);
 static_assert(!std::is_trivially_copy_constructible_v<SelectionRenderer>);
 
-}
+}  // namespace gui

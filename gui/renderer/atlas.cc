@@ -135,4 +135,4 @@ bool Atlas::advanceRow() {
     return true;
 }
 
-}
+}  // namespace gui

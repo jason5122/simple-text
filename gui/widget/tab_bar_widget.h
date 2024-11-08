@@ -16,7 +16,7 @@ public:
     void addTab(std::string_view title);
     void removeTab(size_t index);
 
-    void draw(const std::optional<Point>& mouse_pos) override;
+    void draw(const std::optional<app::Point>& mouse_pos) override;
     void layout() override;
 
     std::string_view getClassName() const override {
@@ -38,4 +38,4 @@ private:
     std::vector<std::unique_ptr<LabelWidget>> tab_name_labels;
 };
 
-}
+}  // namespace gui

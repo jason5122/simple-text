@@ -15,7 +15,7 @@ const std::string kFragmentShaderSource =
 #include "gui/renderer/shaders/selection_frag.glsl"
     ;
 
-}
+}  // namespace
 
 namespace gui {
 
@@ -113,7 +113,7 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 void SelectionRenderer::renderSelections(const std::vector<Selection>& selections,
-                                         const Point& offset) {
+                                         const app::Point& offset) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
@@ -229,4 +229,4 @@ void SelectionRenderer::flush(const Size& screen_size) {
     instances.clear();
 }
 
-}
+}  // namespace gui

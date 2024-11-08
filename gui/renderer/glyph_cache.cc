@@ -81,4 +81,4 @@ const std::vector<Atlas>& GlyphCache::atlasPages() const {
     return atlas_pages;
 }
 
-}
+}  // namespace gui

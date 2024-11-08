@@ -46,7 +46,7 @@ void TabBarWidget::removeTab(size_t index) {
     this->index = std::clamp(index, 0_Z, base::sub_sat(tab_name_labels.size(), 1_Z));
 }
 
-void TabBarWidget::draw(const std::optional<Point>& mouse_pos) {
+void TabBarWidget::draw(const std::optional<app::Point>& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
     rect_renderer.addRect(position, size, kTabBarColor, RectRenderer::RectLayer::kForeground);
@@ -55,7 +55,7 @@ void TabBarWidget::draw(const std::optional<Point>& mouse_pos) {
         tab_name_label->draw(mouse_pos);
     }
 
-    Point tab_pos = position;
+    app::Point tab_pos = position;
     tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
     rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, kTabColor,
                           RectRenderer::RectLayer::kForeground, 0, kTabCornerRadius);
@@ -69,7 +69,7 @@ void TabBarWidget::draw(const std::optional<Point>& mouse_pos) {
             continue;
         }
 
-        Point tab_separator_pos = position;
+        app::Point tab_separator_pos = position;
         tab_separator_pos.x -= kTabSeparatorSize.width;
         tab_separator_pos.x += (kTabWidth - kTabCornerRadius * 2) * (i + 1) + kTabCornerRadius;
 
@@ -83,10 +83,10 @@ void TabBarWidget::draw(const std::optional<Point>& mouse_pos) {
 }
 
 void TabBarWidget::layout() {
-    Point left_width_offset{};
+    app::Point left_width_offset{};
     for (const auto& tab_name_label : tab_name_labels) {
-        Point label_pos = position;
-        label_pos += Point{kTabCornerRadius, 0};
+        app::Point label_pos = position;
+        label_pos += app::Point{kTabCornerRadius, 0};
         label_pos += left_width_offset;
         tab_name_label->setPosition(label_pos);
 

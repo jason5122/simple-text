@@ -44,4 +44,4 @@ private:
     Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
 };
 
-}
+}  // namespace gui

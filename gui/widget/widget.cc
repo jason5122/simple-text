@@ -2,7 +2,7 @@
 
 namespace gui {
 
-bool Widget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+bool Widget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
     return false;
 };
 
@@ -22,16 +22,16 @@ void Widget::setHeight(int height) {
     this->size.height = height;
 }
 
-Point Widget::getPosition() const {
+app::Point Widget::getPosition() const {
     return position;
 }
 
-bool Widget::hitTest(const Point& point) {
+bool Widget::hitTest(const app::Point& point) {
     return (position.x <= point.x && point.x < position.x + size.width) &&
            (position.y <= point.y && point.y < position.y + size.height);
 }
 
-void Widget::setPosition(const Point& pos) {
+void Widget::setPosition(const app::Point& pos) {
     position = pos;
 }
 
@@ -39,7 +39,7 @@ app::CursorStyle Widget::getCursorStyle() const {
     return app::CursorStyle::kArrow;
 }
 
-Widget* Widget::getWidgetAtPosition(const Point& pos) {
+Widget* Widget::getWidgetAtPosition(const app::Point& pos) {
     return hitTest(pos) ? this : nullptr;
 }
 

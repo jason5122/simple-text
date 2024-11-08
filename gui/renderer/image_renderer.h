@@ -23,7 +23,7 @@ public:
     ImageRenderer& operator=(ImageRenderer&& other);
 
     Size getImageSize(size_t image_index);
-    void addImage(size_t image_index, const Point& coords, const Rgba& color);
+    void addImage(size_t image_index, const app::Point& coords, const Rgba& color);
     void flush(const Size& screen_size);
 
 private:
@@ -55,4 +55,4 @@ private:
 static_assert(!std::is_copy_constructible_v<ImageRenderer>);
 static_assert(!std::is_trivially_copy_constructible_v<ImageRenderer>);
 
-}
+}  // namespace gui

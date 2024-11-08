@@ -278,7 +278,7 @@ void TextViewWidget::redo() {
     tree.try_redo();
 }
 
-void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
+void TextViewWidget::draw(const std::optional<app::Point>& mouse_pos) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
@@ -296,10 +296,10 @@ void TextViewWidget::draw(const std::optional<Point>& mouse_pos) {
     renderCaret(main_line_height);
 }
 
-void TextViewWidget::leftMouseDown(const Point& mouse_pos,
+void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    Point new_coords = mouse_pos - textOffset();
+    app::Point new_coords = mouse_pos - textOffset();
     size_t new_line = lineAtY(new_coords.y);
 
     bool exclude_end;
@@ -324,10 +324,10 @@ void TextViewWidget::leftMouseDown(const Point& mouse_pos,
     // updateCaretX();
 }
 
-void TextViewWidget::leftMouseDrag(const Point& mouse_pos,
+void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    Point new_coords = mouse_pos - textOffset();
+    app::Point new_coords = mouse_pos - textOffset();
     size_t new_line = lineAtY(new_coords.y);
 
     bool exclude_end;
@@ -376,8 +376,8 @@ inline const font::LineLayout& TextViewWidget::layoutAt(size_t line, bool& exclu
     return line_layout_cache.getLineLayout(line_str);
 }
 
-inline constexpr Point TextViewWidget::textOffset() const {
-    Point text_offset = position - scroll_offset;
+inline constexpr app::Point TextViewWidget::textOffset() const {
+    app::Point text_offset = position - scroll_offset;
     text_offset.x += gutterWidth();
     return text_offset;
 }
@@ -422,7 +422,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         //     std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
         // total_layout_duration += duration;
 
-        Point coords = textOffset();
+        app::Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
         // coords.x += 3;  // Source Code Pro et al.
         // coords.x += 2;  // Chinese
@@ -484,7 +484,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         // Draw gutter.
         if (line == selection_line) {
-            Point gutter_coords = position;
+            app::Point gutter_coords = position;
             gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
@@ -492,7 +492,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         }
 
         // Draw line numbers.
-        Point line_number_coords = position;
+        app::Point line_number_coords = position;
         line_number_coords.y -= scroll_offset.y;
         line_number_coords.x += kGutterLeftPadding;
         line_number_coords.y += static_cast<int>(line) * main_line_height;
@@ -570,7 +570,7 @@ void TextViewWidget::renderScrollBars(int main_line_height) {
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);
     double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
-    Point vbar_coords{
+    app::Point vbar_coords{
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
@@ -602,7 +602,7 @@ void TextViewWidget::renderCaret(int main_line_height) {
     const auto& layout = layoutAt(line, exclude_end);
     int end_caret_x = Caret::xAtColumn(layout, col, exclude_end);
 
-    Point caret_pos{
+    app::Point caret_pos{
         .x = end_caret_x,
         .y = static_cast<int>(line) * main_line_height,
     };

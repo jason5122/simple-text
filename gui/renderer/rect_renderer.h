@@ -21,7 +21,7 @@ public:
         kForeground,
     };
 
-    void addRect(const Point& coords,
+    void addRect(const app::Point& coords,
                  const Size& size,
                  const Rgba& color,
                  RectLayer rect_type,
@@ -53,4 +53,4 @@ private:
 static_assert(!std::is_copy_constructible_v<RectRenderer>);
 static_assert(!std::is_trivially_copy_constructible_v<RectRenderer>);
 
-}
+}  // namespace gui

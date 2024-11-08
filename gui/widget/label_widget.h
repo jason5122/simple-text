@@ -13,7 +13,7 @@ public:
     void addLeftIcon(size_t icon_id);
     void addRightIcon(size_t icon_id);
 
-    void draw(const std::optional<Point>& mouse_pos) override;
+    void draw(const std::optional<app::Point>& mouse_pos) override;
 
     std::string_view getClassName() const override {
         return "LabelWidget";
@@ -31,7 +31,7 @@ private:
     std::vector<size_t> left_side_icons;
     std::vector<size_t> right_side_icons;
 
-    Point centerVertically(int widget_height);
+    app::Point centerVertically(int widget_height);
 };
 
-}
+}  // namespace gui

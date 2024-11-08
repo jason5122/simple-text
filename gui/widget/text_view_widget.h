@@ -30,11 +30,11 @@ public:
     void undo();
     void redo();
 
-    void draw(const std::optional<Point>& mouse_pos) override;
-    void leftMouseDown(const Point& mouse_pos,
+    void draw(const std::optional<app::Point>& mouse_pos) override;
+    void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
-    void leftMouseDrag(const Point& mouse_pos,
+    void leftMouseDrag(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
 
@@ -74,7 +74,7 @@ private:
     size_t lineAtY(int y);
     inline const font::LineLayout& layoutAt(size_t line);
     inline const font::LineLayout& layoutAt(size_t line, bool& exclude_end);
-    inline constexpr Point textOffset() const;
+    inline constexpr app::Point textOffset() const;
     inline constexpr int gutterWidth() const;
 
     // Draw helpers.

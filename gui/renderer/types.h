@@ -32,43 +32,43 @@ struct Size {
     }
 };
 
-struct Point {
-    int x;
-    int y;
+// struct Point {
+//     int x;
+//     int y;
 
-    friend Point operator+(const Point& p1, const Point& p2) {
-        return {p1.x + p2.x, p1.y + p2.y};
-    }
+//     friend Point operator+(const Point& p1, const Point& p2) {
+//         return {p1.x + p2.x, p1.y + p2.y};
+//     }
 
-    Point& operator+=(const Point& rhs) {
-        x += rhs.x;
-        y += rhs.y;
-        return *this;
-    }
+//     Point& operator+=(const Point& rhs) {
+//         x += rhs.x;
+//         y += rhs.y;
+//         return *this;
+//     }
 
-    friend Point operator-(const Point& p1, const Point& p2) {
-        return {p1.x - p2.x, p1.y - p2.y};
-    }
+//     friend Point operator-(const Point& p1, const Point& p2) {
+//         return {p1.x - p2.x, p1.y - p2.y};
+//     }
 
-    Point& operator-=(const Point& rhs) {
-        x -= rhs.x;
-        y -= rhs.y;
-        return *this;
-    }
+//     Point& operator-=(const Point& rhs) {
+//         x -= rhs.x;
+//         y -= rhs.y;
+//         return *this;
+//     }
 
-    constexpr Vec2 toVec2() {
-        return Vec2{static_cast<float>(x), static_cast<float>(y)};
-    }
+//     constexpr Vec2 toVec2() {
+//         return Vec2{static_cast<float>(x), static_cast<float>(y)};
+//     }
 
-    static constexpr std::optional<Point> fromAppPoint(const std::optional<app::Point>& p) {
-        if (!p) return std::nullopt;
-        return Point{p.value().x, p.value().y};
-    }
+//     static constexpr std::optional<Point> fromAppPoint(const std::optional<app::Point>& p) {
+//         if (!p) return std::nullopt;
+//         return Point{p.value().x, p.value().y};
+//     }
 
-    static constexpr Point fromAppPoint(const app::Point& p) {
-        return Point{p.x, p.y};
-    }
-};
+//     static constexpr Point fromAppPoint(const app::Point& p) {
+//         return Point{p.x, p.y};
+//     }
+// };
 
 }  // namespace gui
 
@@ -83,13 +83,13 @@ struct std::formatter<gui::Size> {
     }
 };
 
-template <>
-struct std::formatter<gui::Point> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.begin();
-    }
+// template <>
+// struct std::formatter<gui::Point> {
+//     constexpr auto parse(auto& ctx) {
+//         return ctx.begin();
+//     }
 
-    auto format(const auto& p, auto& ctx) const {
-        return std::format_to(ctx.out(), "Point({}, {})", p.x, p.y);
-    }
-};
+//     auto format(const auto& p, auto& ctx) const {
+//         return std::format_to(ctx.out(), "Point({}, {})", p.x, p.y);
+//     }
+// };

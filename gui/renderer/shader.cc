@@ -87,4 +87,4 @@ GLuint Shader::id() {
     return id_;
 }
 
-}
+}  // namespace gui

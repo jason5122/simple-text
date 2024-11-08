@@ -25,7 +25,7 @@ void LabelWidget::addRightIcon(size_t icon_id) {
     right_side_icons.emplace_back(icon_id);
 }
 
-void LabelWidget::draw(const std::optional<Point>& mouse_pos) {
+void LabelWidget::draw(const std::optional<app::Point>& mouse_pos) {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
 
@@ -33,25 +33,25 @@ void LabelWidget::draw(const std::optional<Point>& mouse_pos) {
     // rect_renderer.addRect(position, size, kTempColor);
 
     // Draw all left side icons.
-    Point left_offset{.x = left_padding};
+    app::Point left_offset{.x = left_padding};
     for (size_t icon_id : left_side_icons) {
         Size image_size = image_renderer.getImageSize(icon_id);
 
-        Point icon_position = centerVertically(image_size.height) + left_offset;
+        app::Point icon_position = centerVertically(image_size.height) + left_offset;
         image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image_size.width;
     }
 
     // Draw all right side icons.
-    Point right_offset{.x = right_padding};
+    app::Point right_offset{.x = right_padding};
     for (size_t icon_id : right_side_icons) {
         Size image_size = image_renderer.getImageSize(icon_id);
 
         right_offset.x += image_size.width;
 
-        Point icon_position = centerVertically(image_size.height) - right_offset;
-        icon_position += Point{size.width, 0};
+        app::Point icon_position = centerVertically(image_size.height) - right_offset;
+        icon_position += app::Point{size.width, 0};
         image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
@@ -59,7 +59,7 @@ void LabelWidget::draw(const std::optional<Point>& mouse_pos) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
 
-    Point coords = centerVertically(metrics.line_height) + left_offset;
+    app::Point coords = centerVertically(metrics.line_height) + left_offset;
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
     const auto highlight_callback = [this](size_t) { return color; };
@@ -67,11 +67,11 @@ void LabelWidget::draw(const std::optional<Point>& mouse_pos) {
                                    highlight_callback, min_x, max_x);
 }
 
-Point LabelWidget::centerVertically(int widget_height) {
-    Point centered_point = position;
+app::Point LabelWidget::centerVertically(int widget_height) {
+    app::Point centered_point = position;
     centered_point.y += size.height / 2;
     centered_point.y -= widget_height / 2;
     return centered_point;
 }
 
-}
+}  // namespace gui

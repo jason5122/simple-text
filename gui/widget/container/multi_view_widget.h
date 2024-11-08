@@ -53,31 +53,31 @@ public:
         this->index = std::clamp(index, 0_Z, base::sub_sat(views.size(), 1_Z));
     }
 
-    void draw(const std::optional<Point>& mouse_pos) override {
+    void draw(const std::optional<app::Point>& mouse_pos) override {
         Widget* widget = currentWidget();
         if (widget) widget->draw(mouse_pos);
     }
 
-    void scroll(const Point& mouse_pos, const Point& delta) override {
+    void scroll(const app::Point& mouse_pos, const app::Delta& delta) override {
         Widget* widget = currentWidget();
         if (widget) widget->scroll(mouse_pos, delta);
     }
 
-    void leftMouseDown(const Point& mouse_pos,
+    void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override {
         Widget* widget = currentWidget();
         if (widget) widget->leftMouseDown(mouse_pos, modifiers, click_type);
     }
 
-    void leftMouseDrag(const Point& mouse_pos,
+    void leftMouseDrag(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override {
         Widget* widget = currentWidget();
         if (widget) widget->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
 
-    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override {
+    bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override {
         Widget* widget = currentWidget();
         if (widget) {
             return widget->mousePositionChanged(mouse_pos);
@@ -93,7 +93,7 @@ public:
         }
     }
 
-    Widget* getWidgetAtPosition(const Point& pos) override {
+    Widget* getWidgetAtPosition(const app::Point& pos) override {
         Widget* widget = currentWidget();
         if (widget) {
             return widget->getWidgetAtPosition(pos);

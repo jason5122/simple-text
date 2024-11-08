@@ -8,7 +8,7 @@ StatusBarWidget::StatusBarWidget(const Size& size)
     line_column_label->setText("clangd, Line 1, Column 1", {64, 64, 64});
 }
 
-void StatusBarWidget::draw(const std::optional<Point>& mouse_pos) {
+void StatusBarWidget::draw(const std::optional<app::Point>& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kStatusBarColor, RectRenderer::RectLayer::kForeground);
 
@@ -20,4 +20,4 @@ void StatusBarWidget::layout() {
     line_column_label->setPosition(position + kLeftPadding);
 }
 
-}
+}  // namespace gui

@@ -22,7 +22,7 @@ public:
     };
 
     void renderLineLayout(const font::LineLayout& line_layout,
-                          const Point& coords,
+                          const app::Point& coords,
                           TextLayer font_type,
                           const std::function<Rgb(size_t)>& highlight_callback,
                           int min_x = std::numeric_limits<int>::min(),
@@ -31,7 +31,7 @@ public:
     void flush(const Size& screen_size, TextLayer font_type);
 
     // DEBUG: Draws all texture atlases.
-    void renderAtlasPages(const Point& coords);
+    void renderAtlasPages(const app::Point& coords);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

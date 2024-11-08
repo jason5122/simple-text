@@ -101,7 +101,7 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 }
 
 void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
-                                    const Point& coords,
+                                    const app::Point& coords,
                                     TextLayer font_type,
                                     const std::function<Rgb(size_t)>& highlight_callback,
                                     int min_x,
@@ -121,7 +121,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                 break;
             }
 
-            Point glyph_coords = coords;
+            app::Point glyph_coords = coords;
             glyph_coords.x += glyph.position.x;
             glyph_coords.y += line_layout.ascent;
             glyph_coords.y -= metrics.line_height;
@@ -133,8 +133,12 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             Vec4 glyph_copy = rglyph.glyph;
             glyph_copy.y = static_cast<float>(metrics.line_height) - glyph_copy.y;
 
+            const Vec2 coords_vec = Vec2{
+                .x = static_cast<float>(glyph_coords.x),
+                .y = static_cast<float>(glyph_coords.y),
+            };
             const InstanceData instance{
-                .coords = glyph_coords.toVec2(),
+                .coords = coords_vec,
                 .glyph = glyph_copy,
                 .uv = rglyph.uv,
                 .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
@@ -200,17 +204,21 @@ void TextRenderer::flush(const Size& screen_size, TextLayer font_type) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextRenderer::renderAtlasPages(const Point& coords) {
+void TextRenderer::renderAtlasPages(const app::Point& coords) {
     int atlas_x_offset = 0;
     for (size_t page = 0; page < glyph_cache.atlasPages().size(); ++page) {
-        Point atlas_coords{
+        app::Point atlas_coords{
             .x = atlas_x_offset,
             .y = 0,
         };
         atlas_coords += coords;
 
+        const Vec2 coords_vec = Vec2{
+            .x = static_cast<float>(atlas_coords.x),
+            .y = static_cast<float>(atlas_coords.y),
+        };
         InstanceData instance{
-            .coords = atlas_coords.toVec2(),
+            .coords = coords_vec,
             .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
             .uv = Vec4{0, 0, 1.0, 1.0},
             .color = Rgba{255, 255, 255, true},

@@ -31,7 +31,7 @@ SideBarWidget::SideBarWidget(const Size& size)
     // folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
 }
 
-void SideBarWidget::draw(const std::optional<Point>& mouse_pos) {
+void SideBarWidget::draw(const std::optional<app::Point>& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kBackground);
 
@@ -44,14 +44,14 @@ void SideBarWidget::draw(const std::optional<Point>& mouse_pos) {
     renderScrollBars(metrics.line_height, visible_lines);
 }
 
-void SideBarWidget::leftMouseDrag(const Point& mouse_pos,
+void SideBarWidget::leftMouseDrag(const app::Point& mouse_pos,
                                   app::ModifierKey modifiers,
                                   app::ClickType click_type) {
     // TODO: Fully flesh this out. Consider moving this to a *LayoutWidget class?
     setWidth(std::max(mouse_pos.x, 50 * 2));
 }
 
-bool SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+bool SideBarWidget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
     auto old_index = hovered_index;
 
     if (!mouse_pos) {
@@ -62,7 +62,7 @@ bool SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) 
     const auto& metrics = rasterizer().getMetrics(label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
-        Point coords = position - scroll_offset;
+        app::Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * label_line_height;
 
         if (mouse_pos) {
@@ -98,7 +98,7 @@ void SideBarWidget::renderOldLabel(int label_line_height) {
     //                       {255, 255, 0, 255}, RectRenderer::RectType::kBackground);
 }
 
-void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
+void SideBarWidget::renderNewLabel(const std::optional<app::Point>& mouse_pos) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 
@@ -108,12 +108,12 @@ void SideBarWidget::renderNewLabel(const std::optional<Point>& mouse_pos) {
     for (size_t line = 0; line < strs.size(); ++line) {
         const auto& layout = line_layout_cache.getLineLayout(strs[line]);
 
-        Point coords = position - scroll_offset;
+        app::Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * label_line_height;
 
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
-        Point text_coords = coords;
+        app::Point text_coords = coords;
         text_coords.x += kLeftPadding;
         const auto highlight_callback = [](size_t) { return kTextColor; };
         text_renderer.renderLineLayout(layout, text_coords, TextRenderer::TextLayer::kBackground,
@@ -137,7 +137,7 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);
     double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
-    Point vbar_coords{
+    app::Point vbar_coords{
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };

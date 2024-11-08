@@ -17,7 +17,7 @@ void LayoutWidget::addChildEnd(std::shared_ptr<Widget> widget) {
     layout();
 }
 
-void LayoutWidget::draw(const std::optional<Point>& mouse_pos) {
+void LayoutWidget::draw(const std::optional<app::Point>& mouse_pos) {
     if (main_widget) {
         main_widget->draw(mouse_pos);
     }
@@ -29,7 +29,7 @@ void LayoutWidget::draw(const std::optional<Point>& mouse_pos) {
     }
 }
 
-void LayoutWidget::scroll(const Point& mouse_pos, const Point& delta) {
+void LayoutWidget::scroll(const app::Point& mouse_pos, const app::Delta& delta) {
     if (main_widget) {
         if (main_widget->hitTest(mouse_pos)) {
             main_widget->scroll(mouse_pos, delta);
@@ -47,7 +47,7 @@ void LayoutWidget::scroll(const Point& mouse_pos, const Point& delta) {
     }
 }
 
-void LayoutWidget::leftMouseDown(const Point& mouse_pos,
+void LayoutWidget::leftMouseDown(const app::Point& mouse_pos,
                                  app::ModifierKey modifiers,
                                  app::ClickType click_type) {
     if (main_widget) {
@@ -61,7 +61,7 @@ void LayoutWidget::leftMouseDown(const Point& mouse_pos,
     }
 }
 
-void LayoutWidget::leftMouseDrag(const Point& mouse_pos,
+void LayoutWidget::leftMouseDrag(const app::Point& mouse_pos,
                                  app::ModifierKey modifiers,
                                  app::ClickType click_type) {
     if (main_widget) {
@@ -75,7 +75,7 @@ void LayoutWidget::leftMouseDrag(const Point& mouse_pos,
     }
 }
 
-bool LayoutWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+bool LayoutWidget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
     bool result = false;
     if (main_widget) {
         result = main_widget->mousePositionChanged(mouse_pos) || result;
@@ -89,12 +89,12 @@ bool LayoutWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
     return result;
 }
 
-void LayoutWidget::setPosition(const Point& position) {
+void LayoutWidget::setPosition(const app::Point& position) {
     this->position = position;
     layout();
 }
 
-Widget* LayoutWidget::getWidgetAtPosition(const Point& pos) {
+Widget* LayoutWidget::getWidgetAtPosition(const app::Point& pos) {
     if (main_widget) {
         if (main_widget->hitTest(pos)) {
             return main_widget->getWidgetAtPosition(pos);
@@ -113,4 +113,4 @@ Widget* LayoutWidget::getWidgetAtPosition(const Point& pos) {
     return nullptr;
 }
 
-}
+}  // namespace gui

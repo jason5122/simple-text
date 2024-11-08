@@ -9,6 +9,26 @@ enum class CursorStyle { kArrow, kIBeam };
 struct Point {
     int x, y;
 
+    friend Point operator+(const Point& p1, const Point& p2) {
+        return {p1.x + p2.x, p1.y + p2.y};
+    }
+
+    Point& operator+=(const Point& rhs) {
+        x += rhs.x;
+        y += rhs.y;
+        return *this;
+    }
+
+    friend Point operator-(const Point& p1, const Point& p2) {
+        return {p1.x - p2.x, p1.y - p2.y};
+    }
+
+    Point& operator-=(const Point& rhs) {
+        x -= rhs.x;
+        y -= rhs.y;
+        return *this;
+    }
+
     friend constexpr Point operator*(const Point& p, int val) {
         return {p.x * val, p.y * val};
     }

@@ -93,10 +93,9 @@ void EditorWindow::onDraw(int width, int height) {
     auto mouse_pos = mousePosition();
     if (mouse_pos) mouse_pos.value() *= scale();
 
-    auto pos = Point::fromAppPoint(mouse_pos);
     main_widget->layout();
-    main_widget->mousePositionChanged(pos);
-    main_widget->draw(pos);
+    main_widget->mousePositionChanged(mouse_pos);
+    main_widget->draw(mouse_pos);
 
     Renderer::instance().flush({width, height});
 }
@@ -166,7 +165,7 @@ void EditorWindow::onMouseMove() {
     auto mouse_pos = mousePosition();
     if (mouse_pos) mouse_pos.value() *= scale();
 
-    bool requires_redraw = main_widget->mousePositionChanged(Point::fromAppPoint(mouse_pos));
+    bool requires_redraw = main_widget->mousePositionChanged(mouse_pos);
     if (requires_redraw) {
         redraw();
     }
@@ -405,8 +404,7 @@ void EditorWindow::updateCursorStyle() {
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
-        auto pos = Point::fromAppPoint(mouse_pos.value());
-        if (Widget* hovered_widget = main_widget->getWidgetAtPosition(pos)) {
+        if (Widget* hovered_widget = main_widget->getWidgetAtPosition(mouse_pos.value())) {
             // std::println("{}", *hovered_widget);
             parent.setCursorStyle(hovered_widget->getCursorStyle());
         }

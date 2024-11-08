@@ -53,4 +53,4 @@ void Renderer::flush(const Size& size) {
     image_renderer.flush(size);
 }
 
-}
+}  // namespace gui

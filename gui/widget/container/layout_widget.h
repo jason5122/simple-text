@@ -16,17 +16,17 @@ public:
     void addChildStart(std::shared_ptr<Widget> widget);
     void addChildEnd(std::shared_ptr<Widget> widget);
 
-    void draw(const std::optional<Point>& mouse_pos) override;
-    void scroll(const Point& mouse_pos, const Point& delta) override;
-    void leftMouseDown(const Point& mouse_pos,
+    void draw(const std::optional<app::Point>& mouse_pos) override;
+    void scroll(const app::Point& mouse_pos, const app::Delta& delta) override;
+    void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
-    void leftMouseDrag(const Point& mouse_pos,
+    void leftMouseDrag(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
-    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override;
-    void setPosition(const Point& position) override;
-    Widget* getWidgetAtPosition(const Point& pos) override;
+    bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override;
+    void setPosition(const app::Point& position) override;
+    Widget* getWidgetAtPosition(const app::Point& pos) override;
 
     std::string_view getClassName() const override {
         return "ContainerWidget";
@@ -40,4 +40,4 @@ protected:
 
 static_assert(std::is_abstract<LayoutWidget>());
 
-}
+}  // namespace gui

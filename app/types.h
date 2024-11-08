@@ -1,6 +1,10 @@
 #pragma once
 
+#include <format>
+
 namespace app {
+
+enum class CursorStyle { kArrow, kIBeam };
 
 struct Point {
     int x, y;
@@ -39,3 +43,14 @@ struct Delta {
 };
 
 }  // namespace app
+
+template <>
+struct std::formatter<app::Point> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const auto& p, auto& ctx) const {
+        return std::format_to(ctx.out(), "Point({}, {})", p.x, p.y);
+    }
+};

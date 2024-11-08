@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app/types.h"
 #include "gui/renderer/opengl_types.h"
 #include <cstddef>
 #include <format>
@@ -55,12 +56,19 @@ struct Point {
         return *this;
     }
 
-    Vec2 toVec2() {
+    constexpr Vec2 toVec2() {
         return Vec2{static_cast<float>(x), static_cast<float>(y)};
     }
-};
 
-enum class CursorStyle { kArrow, kIBeam };
+    static constexpr std::optional<Point> fromAppPoint(const std::optional<app::Point>& p) {
+        if (!p) return std::nullopt;
+        return Point{p.value().x, p.value().y};
+    }
+
+    static constexpr Point fromAppPoint(const app::Point& p) {
+        return Point{p.x, p.y};
+    }
+};
 
 }  // namespace gui
 

@@ -90,16 +90,13 @@ void EditorWindow::onDraw(int width, int height) {
 
     updateCursorStyle();
 
-    auto mouse_pos = mousePositionScaled();
-    std::optional<Point> point{};
-    if (mouse_pos) {
-        auto [mouse_x, mouse_y] = mouse_pos.value();
-        point = Point{mouse_x, mouse_y};
-    }
+    auto mouse_pos = mousePosition();
+    if (mouse_pos) mouse_pos.value() *= scale();
 
+    auto pos = Point::fromAppPoint(mouse_pos);
     main_widget->layout();
-    main_widget->mousePositionChanged(point);
-    main_widget->draw(point);
+    main_widget->mousePositionChanged(pos);
+    main_widget->draw(pos);
 
     Renderer::instance().flush({width, height});
 }
@@ -166,15 +163,11 @@ void EditorWindow::onRightMouseDown(int mouse_x,
 void EditorWindow::onMouseMove() {
     updateCursorStyle();
 
-    bool should_redraw;
-    if (auto mouse_pos = mousePositionScaled()) {
-        auto [mouse_x, mouse_y] = mouse_pos.value();
-        should_redraw = main_widget->mousePositionChanged(Point{mouse_x, mouse_y});
-    } else {
-        should_redraw = main_widget->mousePositionChanged(std::nullopt);
-    }
+    auto mouse_pos = mousePosition();
+    if (mouse_pos) mouse_pos.value() *= scale();
 
-    if (should_redraw) {
+    bool requires_redraw = main_widget->mousePositionChanged(Point::fromAppPoint(mouse_pos));
+    if (requires_redraw) {
         redraw();
     }
 }
@@ -305,82 +298,81 @@ void EditorWindow::onInsertText(std::string_view text) {
 }
 
 void EditorWindow::onAction(app::Action action, bool extend) {
+    PROFILE_BLOCK("EditorWindow::onAction()");
+
     bool handled = false;
-    {
-        PROFILE_BLOCK("EditorWindow::onAction()");
-        auto* text_view = editor_widget->currentWidget();
-        if (action == app::Action::kMoveForwardByCharacters) {
-            text_view->move(gui::MoveBy::kCharacters, true, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveBackwardByCharacters) {
-            text_view->move(gui::MoveBy::kCharacters, false, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveForwardByLines) {
-            text_view->move(gui::MoveBy::kLines, true, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveBackwardByLines) {
-            text_view->move(gui::MoveBy::kLines, false, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveForwardByWords) {
-            text_view->move(gui::MoveBy::kWords, true, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveBackwardByWords) {
-            text_view->move(gui::MoveBy::kWords, false, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveToBOL) {
-            text_view->moveTo(gui::MoveTo::kBOL, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveToEOL) {
-            text_view->moveTo(gui::MoveTo::kEOL, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveToHardBOL) {
-            text_view->moveTo(gui::MoveTo::kHardBOL, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveToHardEOL) {
-            text_view->moveTo(gui::MoveTo::kHardEOL, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveToBOF) {
-            text_view->moveTo(gui::MoveTo::kBOF, extend);
-            handled = true;
-        }
-        if (action == app::Action::kMoveToEOF) {
-            text_view->moveTo(gui::MoveTo::kEOF, extend);
-            handled = true;
-        }
-        if (action == app::Action::kInsertNewline) {
-            text_view->insertText("\n");
-            handled = true;
-        }
-        if (action == app::Action::kInsertTab) {
-            text_view->insertText("    ");
-            handled = true;
-        }
-        if (action == app::Action::kLeftDelete) {
-            text_view->leftDelete();
-            handled = true;
-        }
-        if (action == app::Action::kRightDelete) {
-            text_view->rightDelete();
-            handled = true;
-        }
-        if (action == app::Action::kDeleteWordForward) {
-            text_view->deleteWord(true);
-            handled = true;
-        }
-        if (action == app::Action::kDeleteWordBackward) {
-            text_view->deleteWord(false);
-            handled = true;
-        }
+    auto* text_view = editor_widget->currentWidget();
+    if (action == app::Action::kMoveForwardByCharacters) {
+        text_view->move(gui::MoveBy::kCharacters, true, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveBackwardByCharacters) {
+        text_view->move(gui::MoveBy::kCharacters, false, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveForwardByLines) {
+        text_view->move(gui::MoveBy::kLines, true, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveBackwardByLines) {
+        text_view->move(gui::MoveBy::kLines, false, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveForwardByWords) {
+        text_view->move(gui::MoveBy::kWords, true, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveBackwardByWords) {
+        text_view->move(gui::MoveBy::kWords, false, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveToBOL) {
+        text_view->moveTo(gui::MoveTo::kBOL, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveToEOL) {
+        text_view->moveTo(gui::MoveTo::kEOL, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveToHardBOL) {
+        text_view->moveTo(gui::MoveTo::kHardBOL, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveToHardEOL) {
+        text_view->moveTo(gui::MoveTo::kHardEOL, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveToBOF) {
+        text_view->moveTo(gui::MoveTo::kBOF, extend);
+        handled = true;
+    }
+    if (action == app::Action::kMoveToEOF) {
+        text_view->moveTo(gui::MoveTo::kEOF, extend);
+        handled = true;
+    }
+    if (action == app::Action::kInsertNewline) {
+        text_view->insertText("\n");
+        handled = true;
+    }
+    if (action == app::Action::kInsertTab) {
+        text_view->insertText("    ");
+        handled = true;
+    }
+    if (action == app::Action::kLeftDelete) {
+        text_view->leftDelete();
+        handled = true;
+    }
+    if (action == app::Action::kRightDelete) {
+        text_view->rightDelete();
+        handled = true;
+    }
+    if (action == app::Action::kDeleteWordForward) {
+        text_view->deleteWord(true);
+        handled = true;
+    }
+    if (action == app::Action::kDeleteWordBackward) {
+        text_view->deleteWord(false);
+        handled = true;
     }
 
     if (handled) {
@@ -403,34 +395,24 @@ void EditorWindow::onClose() {
 }
 
 void EditorWindow::updateCursorStyle() {
-    using CursorStyle = app::App::CursorStyle;
-
-    auto mouse_pos = mousePositionScaled();
+    auto mouse_pos = mousePosition();
+    if (mouse_pos) mouse_pos.value() *= scale();
 
     // Update cursor style.
     // Case 1: Dragging operation in progress.
     if (drag_start_widget) {
-        if (drag_start_widget->getCursorStyle() == gui::CursorStyle::kArrow) {
-            parent.setCursorStyle(CursorStyle::kArrow);
-        } else {
-            parent.setCursorStyle(CursorStyle::kIBeam);
-        }
+        parent.setCursorStyle(drag_start_widget->getCursorStyle());
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
-        auto [mouse_x, mouse_y] = mouse_pos.value();
-        Widget* hovered_widget = main_widget->getWidgetAtPosition(Point{mouse_x, mouse_y});
-        if (hovered_widget) {
+        auto pos = Point::fromAppPoint(mouse_pos.value());
+        if (Widget* hovered_widget = main_widget->getWidgetAtPosition(pos)) {
             // std::println("{}", *hovered_widget);
-            if (hovered_widget->getCursorStyle() == gui::CursorStyle::kArrow) {
-                parent.setCursorStyle(CursorStyle::kArrow);
-            } else {
-                parent.setCursorStyle(CursorStyle::kIBeam);
-            }
+            parent.setCursorStyle(hovered_widget->getCursorStyle());
         }
     }
     // Case 3: Mouse position is outside of window.
     else {
-        parent.setCursorStyle(CursorStyle::kArrow);
+        parent.setCursorStyle(app::CursorStyle::kArrow);
     }
 }

@@ -17,8 +17,6 @@ public:
     void quit();
     std::string getClipboardString();
     void setClipboardString(const std::string& str8);
-
-    enum class CursorStyle { kArrow, kIBeam };
     void setCursorStyle(CursorStyle style);
 
     virtual void onLaunch() {}
@@ -36,4 +34,4 @@ private:
     // std::unique_ptr<impl> pimpl;
 };
 
-}
+}  // namespace app

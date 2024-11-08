@@ -24,7 +24,7 @@ public:
     virtual bool mousePositionChanged(const std::optional<Point>& mouse_pos);
     virtual void layout() {}
     virtual void setPosition(const Point& pos);
-    virtual CursorStyle getCursorStyle() const;
+    virtual app::CursorStyle getCursorStyle() const;
     virtual Widget* getWidgetAtPosition(const Point& pos);
 
     Size getSize() const;
@@ -49,7 +49,7 @@ protected:
 
 static_assert(std::is_abstract<Widget>());
 
-}
+}  // namespace gui
 
 template <>
 struct std::formatter<gui::Widget> {

@@ -49,13 +49,13 @@ public:
     void setFilePath(fs::path path);
     std::optional<std::string> openFilePicker() const;
 
-    std::optional<app::Point> mousePositionScaled() const {
+    std::optional<Point> mousePosition() const {
         Point mouse_pos = mousePositionRaw();
         if ((mouse_pos.x < 0 || mouse_pos.x > width() - 1) ||
             (mouse_pos.y < 0 || mouse_pos.y > height() - 1)) {
             return std::nullopt;
         } else {
-            return mouse_pos * scale();
+            return mouse_pos;
         }
     }
 

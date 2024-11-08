@@ -28,7 +28,7 @@ public:
                           int min_x = std::numeric_limits<int>::min(),
                           int max_x = std::numeric_limits<int>::max());
 
-    void flush(const Size& screen_size, TextLayer font_type);
+    void flush(const app::Size& screen_size, TextLayer font_type);
 
     // DEBUG: Draws all texture atlases.
     void renderAtlasPages(const app::Point& coords);

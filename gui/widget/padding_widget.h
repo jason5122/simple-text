@@ -6,7 +6,7 @@ namespace gui {
 
 class PaddingWidget : public Widget {
 public:
-    PaddingWidget(const Size& size, const Rgba& color);
+    PaddingWidget(const app::Size& size, const Rgba& color);
 
     void draw(const std::optional<app::Point>& mouse_pos) override;
 

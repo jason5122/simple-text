@@ -38,7 +38,7 @@ ImageRenderer& Renderer::getImageRenderer() {
     return image_renderer;
 }
 
-void Renderer::flush(const Size& size) {
+void Renderer::flush(const app::Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 

@@ -9,7 +9,7 @@ namespace gui {
 
 class SideBarWidget : public ScrollableWidget {
 public:
-    SideBarWidget(const Size& size);
+    SideBarWidget(const app::Size& size);
 
     void draw(const std::optional<app::Point>& mouse_pos) override;
     void leftMouseDrag(const app::Point& mouse_pos,

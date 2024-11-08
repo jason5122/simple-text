@@ -22,12 +22,12 @@ public:
     };
 
     void addRect(const app::Point& coords,
-                 const Size& size,
+                 const app::Size& size,
                  const Rgba& color,
                  RectLayer rect_type,
                  int corner_radius = 0,
                  int tab_corner_radius = 0);
-    void flush(const Size& screen_size, RectLayer rect_type);
+    void flush(const app::Size& screen_size, RectLayer rect_type);
 
 private:
     static constexpr int kBatchMax = 0x10000;

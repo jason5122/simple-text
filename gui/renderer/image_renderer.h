@@ -22,9 +22,9 @@ public:
     ImageRenderer(ImageRenderer&& other);
     ImageRenderer& operator=(ImageRenderer&& other);
 
-    Size getImageSize(size_t image_index);
+    app::Size getImageSize(size_t image_index);
     void addImage(size_t image_index, const app::Point& coords, const Rgba& color);
-    void flush(const Size& screen_size);
+    void flush(const app::Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

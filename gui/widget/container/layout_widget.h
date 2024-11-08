@@ -9,7 +9,7 @@ namespace gui {
 class LayoutWidget : public ContainerWidget {
 public:
     LayoutWidget() = default;
-    LayoutWidget(const Size& size) : ContainerWidget{size} {}
+    LayoutWidget(const app::Size& size) : ContainerWidget{size} {}
     virtual ~LayoutWidget() {}
 
     void setMainWidget(std::shared_ptr<Widget> widget);

@@ -29,7 +29,7 @@ void TabBarWidget::lastIndex() {
 }
 
 void TabBarWidget::addTab(std::string_view title) {
-    Size label_size{
+    app::Size label_size{
         .width = kTabWidth - kTabCornerRadius * 2,
         .height = size.height,
     };

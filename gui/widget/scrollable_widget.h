@@ -8,7 +8,7 @@ namespace gui {
 class ScrollableWidget : public Widget {
 public:
     ScrollableWidget() {}
-    ScrollableWidget(const Size& size);
+    ScrollableWidget(const app::Size& size);
 
     virtual void updateMaxScroll() = 0;
 

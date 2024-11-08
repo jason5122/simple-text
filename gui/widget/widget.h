@@ -10,7 +10,7 @@ namespace gui {
 class Widget {
 public:
     Widget() {}
-    Widget(const Size& size) : size{size} {}
+    Widget(const app::Size& size) : size{size} {}
     virtual ~Widget() {}
 
     virtual void draw(const std::optional<app::Point>& mouse_pos) = 0;
@@ -27,8 +27,8 @@ public:
     virtual app::CursorStyle getCursorStyle() const;
     virtual Widget* getWidgetAtPosition(const app::Point& pos);
 
-    Size getSize() const;
-    void setSize(const Size& size);
+    app::Size getSize() const;
+    void setSize(const app::Size& size);
     void setWidth(int width);
     void setHeight(int width);
     app::Point getPosition() const;
@@ -43,7 +43,7 @@ public:
     };
 
 protected:
-    Size size{};
+    app::Size size{};
     app::Point position{};
 };
 

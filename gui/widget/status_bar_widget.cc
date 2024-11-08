@@ -3,7 +3,7 @@
 
 namespace gui {
 
-StatusBarWidget::StatusBarWidget(const Size& size)
+StatusBarWidget::StatusBarWidget(const app::Size& size)
     : Widget{size}, line_column_label{new LabelWidget{{0, size.height}}} {
     line_column_label->setText("clangd, Line 1, Column 1", {64, 64, 64});
 }

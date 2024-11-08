@@ -62,6 +62,31 @@ struct Delta {
     }
 };
 
+struct Size {
+    int width;
+    int height;
+
+    friend Size operator+(const Size& s1, const Size& s2) {
+        return {s1.width + s2.width, s1.height + s2.height};
+    }
+
+    Size& operator+=(const Size& rhs) {
+        width += rhs.width;
+        height += rhs.height;
+        return *this;
+    }
+
+    friend Size operator-(const Size& s1, const Size& s2) {
+        return {s1.width - s2.width, s1.height - s2.height};
+    }
+
+    Size& operator-=(const Size& rhs) {
+        width -= rhs.width;
+        height -= rhs.height;
+        return *this;
+    }
+};
+
 }  // namespace app
 
 template <>
@@ -72,5 +97,16 @@ struct std::formatter<app::Point> {
 
     auto format(const auto& p, auto& ctx) const {
         return std::format_to(ctx.out(), "Point({}, {})", p.x, p.y);
+    }
+};
+
+template <>
+struct std::formatter<app::Size> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const auto& s, auto& ctx) const {
+        return std::format_to(ctx.out(), "Size({}, {})", s.width, s.height);
     }
 };

@@ -101,7 +101,7 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
 }
 
 void RectRenderer::addRect(const app::Point& coords,
-                           const Size& size,
+                           const app::Size& size,
                            const Rgba& color,
                            RectLayer rect_type,
                            int corner_radius,
@@ -118,7 +118,7 @@ void RectRenderer::addRect(const app::Point& coords,
     });
 }
 
-void RectRenderer::flush(const Size& screen_size, RectLayer rect_type) {
+void RectRenderer::flush(const app::Size& screen_size, RectLayer rect_type) {
     auto& instances =
         rect_type == RectLayer::kForeground ? foreground_instances : background_instances;
 

@@ -6,7 +6,7 @@
 
 namespace gui {
 
-LabelWidget::LabelWidget(const Size& size, int left_padding, int right_padding)
+LabelWidget::LabelWidget(const app::Size& size, int left_padding, int right_padding)
     : Widget{size}, left_padding{left_padding}, right_padding{right_padding} {}
 
 void LabelWidget::setText(std::string_view str8, const Rgb& color) {
@@ -35,7 +35,7 @@ void LabelWidget::draw(const std::optional<app::Point>& mouse_pos) {
     // Draw all left side icons.
     app::Point left_offset{.x = left_padding};
     for (size_t icon_id : left_side_icons) {
-        Size image_size = image_renderer.getImageSize(icon_id);
+        app::Size image_size = image_renderer.getImageSize(icon_id);
 
         app::Point icon_position = centerVertically(image_size.height) + left_offset;
         image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
@@ -46,7 +46,7 @@ void LabelWidget::draw(const std::optional<app::Point>& mouse_pos) {
     // Draw all right side icons.
     app::Point right_offset{.x = right_padding};
     for (size_t icon_id : right_side_icons) {
-        Size image_size = image_renderer.getImageSize(icon_id);
+        app::Size image_size = image_renderer.getImageSize(icon_id);
 
         right_offset.x += image_size.width;
 

@@ -20,7 +20,7 @@ public:
         int end;
     };
     void renderSelections(const std::vector<Selection>& selections, const app::Point& offset);
-    void flush(const Size& screen_size);
+    void flush(const app::Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

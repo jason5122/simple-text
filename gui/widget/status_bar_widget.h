@@ -7,7 +7,7 @@ namespace gui {
 
 class StatusBarWidget : public Widget {
 public:
-    StatusBarWidget(const Size& size);
+    StatusBarWidget(const app::Size& size);
 
     void draw(const std::optional<app::Point>& mouse_pos) override;
     void layout() override;

@@ -108,7 +108,7 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
 }
 
 // TODO: Store image size as Size (ints) instead of Vec2 (floats).
-Size ImageRenderer::getImageSize(size_t image_index) {
+app::Size ImageRenderer::getImageSize(size_t image_index) {
     AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
     return {
         .width = static_cast<int>(atlas_entry.rect_size.x),
@@ -126,7 +126,7 @@ void ImageRenderer::addImage(size_t image_index, const app::Point& coords, const
     });
 }
 
-void ImageRenderer::flush(const Size& screen_size) {
+void ImageRenderer::flush(const app::Size& screen_size) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();

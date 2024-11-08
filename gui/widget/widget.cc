@@ -6,11 +6,11 @@ bool Widget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
     return false;
 };
 
-Size Widget::getSize() const {
+app::Size Widget::getSize() const {
     return size;
 }
 
-void Widget::setSize(const Size& size) {
+void Widget::setSize(const app::Size& size) {
     this->size = size;
 }
 

@@ -148,7 +148,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
     }
 }
 
-void TextRenderer::flush(const Size& screen_size, TextLayer font_type) {
+void TextRenderer::flush(const app::Size& screen_size, TextLayer font_type) {
     auto& batch_instances = font_type == TextLayer::kForeground ? foreground_batch_instances
                                                                 : background_batch_instances;
 

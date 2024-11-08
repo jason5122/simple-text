@@ -7,7 +7,7 @@ namespace gui {
 class ContainerWidget : public Widget {
 public:
     ContainerWidget() = default;
-    ContainerWidget(const Size& size) : Widget{size} {}
+    ContainerWidget(const app::Size& size) : Widget{size} {}
     virtual ~ContainerWidget() {}
 
     void scroll(const app::Point& mouse_pos, const app::Delta& delta) override = 0;

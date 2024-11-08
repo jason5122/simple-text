@@ -7,7 +7,7 @@ namespace gui {
 
 class LabelWidget : public Widget {
 public:
-    LabelWidget(const Size& size, int left_padding = 0, int right_padding = 0);
+    LabelWidget(const app::Size& size, int left_padding = 0, int right_padding = 0);
 
     void setText(std::string_view str8, const Rgb& color);
     void addLeftIcon(size_t icon_id);

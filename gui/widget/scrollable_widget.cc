@@ -3,7 +3,7 @@
 
 namespace gui {
 
-ScrollableWidget::ScrollableWidget(const Size& size)
+ScrollableWidget::ScrollableWidget(const app::Size& size)
     : Widget{size}, prev_scroll{std::chrono::system_clock::now()} {}
 
 void ScrollableWidget::scroll(const app::Point& mouse_pos, const app::Delta& delta) {

@@ -17,7 +17,7 @@ const std::string kUIFontFace = "Arial";
 
 namespace gui {
 
-SideBarWidget::SideBarWidget(const Size& size)
+SideBarWidget::SideBarWidget(const app::Size& size)
     : ScrollableWidget{size},
       label_font_id{rasterizer().addFont(kUIFontFace, 22 * 2, font::FontStyle::kBold)},
       line_layout_cache{label_font_id} {

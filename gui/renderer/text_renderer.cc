@@ -126,8 +126,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             glyph_coords.y += line_layout.ascent;
             glyph_coords.y -= metrics.line_height;
 
-            auto& rglyph = glyph_cache.getGlyph(line_layout.layout_font_id, run.font_id,
-                                                glyph.glyph_id, font_rasterizer);
+            auto& rglyph = glyph_cache.getGlyph(run.font_id, glyph.glyph_id, font_rasterizer);
 
             // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
             Vec4 glyph_copy = rglyph.glyph;

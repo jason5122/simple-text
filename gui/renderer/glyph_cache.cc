@@ -6,23 +6,18 @@ GlyphCache::GlyphCache() {
     atlas_pages.emplace_back();
 }
 
-const GlyphCache::Glyph& GlyphCache::getGlyph(size_t layout_font_id,
-                                              size_t font_id,
+const GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id,
                                               uint32_t glyph_id,
                                               const font::FontRasterizer& font_rasterizer) {
-    // TODO: Refactor this ugly hack.
-    while (cache.size() <= layout_font_id) {
-        cache.emplace_back();
-    }
-    while (cache[layout_font_id].size() <= font_id) {
-        cache[layout_font_id].emplace_back();
+    if (cache.size() <= font_id) {
+        cache.resize(font_id + 1);
     }
 
-    if (!cache[layout_font_id][font_id].contains(glyph_id)) {
+    if (!cache[font_id].contains(glyph_id)) {
         auto rglyph = font_rasterizer.rasterize(font_id, glyph_id);
-        cache[layout_font_id][font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
+        cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
     }
-    return cache[layout_font_id][font_id][glyph_id];
+    return cache[font_id][glyph_id];
 }
 
 GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {

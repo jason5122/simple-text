@@ -20,8 +20,7 @@ public:
         size_t page;
     };
 
-    const Glyph& getGlyph(size_t layout_font_id,
-                          size_t font_id,
+    const Glyph& getGlyph(size_t font_id,
                           uint32_t glyph_id,
                           const font::FontRasterizer& font_rasterizer);
 
@@ -38,8 +37,7 @@ private:
     std::vector<Atlas> atlas_pages;
     size_t current_page = 0;
 
-    // [layout_font_id, run_font_id, glyph_id] -> Glyph
-    std::vector<std::vector<std::unordered_map<uint32_t, Glyph>>> cache;
+    std::vector<std::unordered_map<uint32_t, Glyph>> cache;
 
     Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
 };

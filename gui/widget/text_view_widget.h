@@ -62,6 +62,7 @@ private:
     static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
     // static constexpr Rgba kCaretColor{95, 180, 180, 255};       // Light.
     static constexpr Rgba kCaretColor{249, 174, 88, 255};  // Dark.
+    static constexpr int kCaretWidth = 4;
 
     base::PieceTree tree;
     LineLayoutCache line_layout_cache;

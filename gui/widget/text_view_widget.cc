@@ -426,10 +426,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         app::Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
-        coords.x += 3;  // Source Code Pro et al.
-        // coords.x += 2;  // Chinese
-
-        std::println("coords.x = {}, og = {}", coords.x, textOffset().x);
+        coords.x += kCaretWidth / 2;  // Match Sublime Text.
 
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
@@ -544,15 +541,9 @@ void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
         int end = line == c2_line ? c2_x : layout.width;
 
         if (end - start > 0) {
-            // TODO: Formalize this. This matches Sublime Text's selections.
-
-            // TODO: Does this do anything?
-            // std::println("start = {}, end = {}", start, end);
-            // if (start % 2 == 1) ++start;
-            // if (end % 2 == 1) ++end;
-
-            // if (start > 0) start += 2;
-            // end += 4;
+            // Match Sublime Text.
+            if (start > 0) start += kCaretWidth / 2;
+            end += kCaretWidth / 2;
 
             selections.emplace_back(SelectionRenderer::Selection{
                 .line = static_cast<int>(line),
@@ -597,7 +588,6 @@ void TextViewWidget::renderScrollBars(int main_line_height) {
 void TextViewWidget::renderCaret(int main_line_height) {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
-    int caret_width = 4;
     int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;
 
@@ -613,7 +603,7 @@ void TextViewWidget::renderCaret(int main_line_height) {
     caret_pos.y -= extra_padding;
     caret_pos += textOffset();
 
-    rect_renderer.addRect(caret_pos, {caret_width, caret_height}, kCaretColor,
+    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor,
                           RectRenderer::RectLayer::kForeground);
 }
 

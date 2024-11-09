@@ -84,7 +84,7 @@ void EditorApp::createWindow() {
     editor_window->setTitle(std::format("Simple Text ({})", debug_or_release));
 
     editor_window->show();
-    editor_windows.push_back(std::move(editor_window));
+    editor_windows.emplace_back(std::move(editor_window));
 }
 
 void EditorApp::destroyWindow(int wid) {

@@ -36,7 +36,7 @@ void TabBarWidget::addTab(std::string_view title) {
     std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget{label_size, 22, 16}};
     tab_name_label->setText(title, kTabTextColor);
     tab_name_label->addRightIcon(ImageRenderer::kPanelClose2xIndex);
-    tab_name_labels.push_back(std::move(tab_name_label));
+    tab_name_labels.emplace_back(std::move(tab_name_label));
 }
 
 void TabBarWidget::removeTab(size_t index) {

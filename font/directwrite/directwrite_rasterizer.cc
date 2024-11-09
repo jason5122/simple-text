@@ -40,8 +40,8 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
-    std::wstring font_name_utf16 = base::windows::ConvertToUTF16(font_name_utf8);
+size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontStyle style) {
+    std::wstring font_name_utf16 = base::windows::ConvertToUTF16(font_name8);
 
     // TODO: Verify that this is correct.
     FLOAT em_size = static_cast<FLOAT>(font_size) * 96 / 72;
@@ -55,14 +55,14 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
     HRESULT hr;
     hr = font_collection->FindFamilyName(font_name_utf16.data(), &index, &exists);
     if (FAILED(hr)) {
-        std::println("Could not create font family with name {} and size {}.", font_name_utf8,
+        std::println("Could not create font family with name {} and size {}.", font_name8,
                      font_size);
     }
 
     ComPtr<IDWriteFontFamily> font_family;
     hr = font_collection->GetFontFamily(index, &font_family);
     if (FAILED(hr)) {
-        std::println("Could not create font family with name {} and size {}.", font_name_utf8,
+        std::println("Could not create font family with name {} and size {}.", font_name8,
                      font_size);
     }
 
@@ -70,7 +70,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
     hr = font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STRETCH_NORMAL,
                                            DWRITE_FONT_STYLE_NORMAL, &font);
     if (FAILED(hr)) {
-        std::println("Could not create font with name {} and size {}.", font_name_utf8, font_size);
+        std::println("Could not create font with name {} and size {}.", font_name8, font_size);
     }
 
     return pimpl->cacheFont(font, font_name_utf16, em_size);

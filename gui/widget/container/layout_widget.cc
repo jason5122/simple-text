@@ -8,12 +8,12 @@ void LayoutWidget::setMainWidget(std::shared_ptr<Widget> widget) {
 }
 
 void LayoutWidget::addChildStart(std::shared_ptr<Widget> widget) {
-    children_start.push_back(std::move(widget));
+    children_start.emplace_back(std::move(widget));
     layout();
 }
 
 void LayoutWidget::addChildEnd(std::shared_ptr<Widget> widget) {
-    children_end.push_back(std::move(widget));
+    children_end.emplace_back(std::move(widget));
     layout();
 }
 

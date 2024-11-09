@@ -7,4 +7,8 @@ FontRasterizer& FontRasterizer::instance() {
     return renderer;
 }
 
+const Metrics& FontRasterizer::metrics(size_t font_id) const {
+    return font_id_to_metrics.at(font_id);
 }
+
+}  // namespace font

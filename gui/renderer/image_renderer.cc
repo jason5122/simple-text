@@ -118,7 +118,7 @@ app::Size ImageRenderer::getImageSize(size_t image_index) {
 
 void ImageRenderer::addImage(size_t image_index, const app::Point& coords, const Rgba& color) {
     AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
-    instances.push_back(InstanceData{
+    instances.emplace_back(InstanceData{
         .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .rect_size = atlas_entry.rect_size,
         .uv = atlas_entry.uv,

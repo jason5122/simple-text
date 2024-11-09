@@ -177,7 +177,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
                 .advance = std::move(advance),
                 .index = index,
             };
-            glyphs.push_back(std::move(glyph));
+            glyphs.emplace_back(std::move(glyph));
 
             total_advance += advance.x;
         }

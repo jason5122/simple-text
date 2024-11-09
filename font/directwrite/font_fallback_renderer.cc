@@ -95,7 +95,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
             .advance = {.x = advance},
             .index = utf8IndicesMap.mapIndex(text_position + inverted_cluster_map[i]),
         };
-        glyphs.push_back(std::move(glyph));
+        glyphs.emplace_back(std::move(glyph));
 
         total_advance += advance;
     }

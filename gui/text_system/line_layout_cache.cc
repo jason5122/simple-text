@@ -12,7 +12,7 @@ const font::LineLayout& LineLayoutCache::operator[](std::string_view str8) {
     if (auto it = cache.find(hash); it != cache.end()) {
         return it->second;
     } else {
-        const auto& font_rasterizer = font::FontRasterizer::instance();
+        auto& font_rasterizer = font::FontRasterizer::instance();
         auto layout = font_rasterizer.layoutLine(font_id, str8);
         auto inserted = cache.emplace(hash, std::move(layout));
 

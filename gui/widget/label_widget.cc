@@ -11,7 +11,7 @@ LabelWidget::LabelWidget(const app::Size& size, int left_padding, int right_padd
 
 void LabelWidget::setText(std::string_view str8, const Rgb& color) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = font::FontRasterizer::instance();
+    auto& font_rasterizer = font::FontRasterizer::instance();
 
     layout = font_rasterizer.layoutLine(glyph_cache.uiFontId(), str8);
     this->color = color;

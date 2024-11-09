@@ -16,22 +16,15 @@ using base::apple::ScopedTypeRef;
 
 namespace font {
 
-class FontRasterizer::impl {
-    friend class FontRasterizer;
+namespace {
+ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8);
+}
 
-    std::unordered_map<std::string, size_t> font_postscript_name_to_id;
-    std::vector<ScopedCFTypeRef<CTFontRef>> font_id_to_native;
-    std::vector<Metrics> font_id_to_metrics;
-
-    size_t cacheFont(ScopedCFTypeRef<CTFontRef> ct_font);
-    ScopedCFTypeRef<CTLineRef> createCTLine(size_t font_id, std::string_view str8);
-};
-
-FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
+FontRasterizer::FontRasterizer() {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
+size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontStyle style) {
     std::string font_style;
     if (style == FontStyle::kNone) {
         font_style = "Regular";
@@ -43,7 +36,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
         font_style = "Bold Italic";
     }
 
-    auto font_name_cfstring = base::apple::StringToCFString(font_name_utf8);
+    auto font_name_cfstring = base::apple::StringToCFString(font_name8);
     auto font_style_cfstring = base::apple::StringToCFString(font_style);
     CFTypeRef keys[] = {
         kCTFontFamilyNameAttribute,
@@ -62,7 +55,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
         CTFontDescriptorCreateWithAttributes(attributes.get());
 
     CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
-    return pimpl->cacheFont(ct_font);
+    return cacheFont(ct_font);
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
@@ -70,15 +63,11 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
-    return pimpl->cacheFont(sys_font);
-}
-
-const Metrics& FontRasterizer::metrics(size_t font_id) const {
-    return pimpl->font_id_to_metrics.at(font_id);
+    return cacheFont(sys_font);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
-    CTFontRef font_ref = pimpl->font_id_to_native[font_id].get();
+    CTFontRef font_ref = font_id_to_native[font_id].get();
 
     CGGlyph glyph_index = glyph_id;
 
@@ -128,7 +117,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
-    uint8_t* bitmap_data = (uint8_t*)CGBitmapContextGetData(context.get());
+    uint8_t* bitmap_data = static_cast<uint8_t*>(CGBitmapContextGetData(context.get()));
     size_t height = CGBitmapContextGetHeight(context.get());
     size_t bytes_per_row = CGBitmapContextGetBytesPerRow(context.get());
     size_t len = height * bytes_per_row;
@@ -137,7 +126,6 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     std::vector<uint8_t> buffer;
     size_t size = colored ? pixels * 4 : pixels * 3;
 
-    // TODO: This assumes little endian; detect and support big endian.
     buffer.reserve(size);
     for (size_t i = 0; i < pixels; ++i) {
         size_t offset = i * 4;
@@ -160,7 +148,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 }
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
-LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
+LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     assert(std::ranges::count(str8, '\n') == 0);
 
     UTF16ToUTF8IndicesMap utf8IndicesMap;
@@ -169,7 +157,8 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         std::abort();
     }
 
-    ScopedCFTypeRef<CTLineRef> ct_line = pimpl->createCTLine(font_id, str8);
+    CTFontRef ct_font = font_id_to_native[font_id].get();
+    ScopedCFTypeRef<CTLineRef> ct_line = CreateCTLine(ct_font, font_id, str8);
 
     int total_advance = 0;
     std::vector<ShapedRun> runs;
@@ -183,7 +172,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
             CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName));
         auto scoped_ct_font =
             ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
-        size_t run_font_id = pimpl->cacheFont(std::move(scoped_ct_font));
+        size_t run_font_id = cacheFont(std::move(scoped_ct_font));
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -217,7 +206,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
                 .advance = advance,
                 .index = utf8_index,
             };
-            glyphs.push_back(std::move(glyph));
+            glyphs.emplace_back(std::move(glyph));
 
             total_advance += advance.x;
         }
@@ -248,7 +237,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
     };
 }
 
-size_t FontRasterizer::impl::cacheFont(ScopedCFTypeRef<CTFontRef> ct_font) {
+size_t FontRasterizer::cacheFont(NativeFontType ct_font) {
     ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font.get());
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
@@ -282,10 +271,8 @@ size_t FontRasterizer::impl::cacheFont(ScopedCFTypeRef<CTFontRef> ct_font) {
     return font_postscript_name_to_id.at(font_name);
 }
 
-ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(size_t font_id,
-                                                              std::string_view str8) {
-    CTFontRef ct_font = font_id_to_native[font_id].get();
-
+namespace {
+ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8) {
     ScopedCFTypeRef<CFStringRef> text_string = base::apple::StringToCFStringNoCopy(str8);
 
     ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
@@ -297,5 +284,6 @@ ScopedCFTypeRef<CTLineRef> FontRasterizer::impl::createCTLine(size_t font_id,
 
     return CTLineCreateWithAttributedString(attr_string.get());
 }
+}  // namespace
 
 }  // namespace font

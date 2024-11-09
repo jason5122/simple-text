@@ -110,7 +110,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
         int dy = std::round(-event.scrollingDeltaY);
         app::Delta scroll{dx, dy};
         if (!event.hasPreciseScrollingDeltas) {
-            // Taken from ///chromium/src/ui/events/cocoa/events_mac.mm.
+            // Taken from //chromium/src/ui/events/cocoa/events_mac.mm.
             // static constexpr double kScrollbarPixelsPerCocoaTick = 40.0;
             // int dx = -event.deltaX * kScrollbarPixelsPerCocoaTick;
             // int dy = -event.deltaY * kScrollbarPixelsPerCocoaTick;

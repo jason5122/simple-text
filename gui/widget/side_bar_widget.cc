@@ -5,21 +5,11 @@
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
 
-namespace {
-#if BUILDFLAG(IS_MAC)
-const std::string kUIFontFace = "SF Pro Text";
-#elif BUILDFLAG(IS_WIN)
-const std::string kUIFontFace = "Segoe UI";
-#elif BUILDFLAG(IS_LINUX)
-const std::string kUIFontFace = "Arial";
-#endif
-}  // namespace
-
 namespace gui {
 
 SideBarWidget::SideBarWidget(const app::Size& size)
     : ScrollableWidget{size},
-      label_font_id{rasterizer().addFont(kUIFontFace, 22 * 2, font::FontStyle::kBold)},
+      label_font_id{rasterizer().addSystemFont(22 * 2, font::FontStyle::kBold)},
       line_layout_cache{label_font_id} {
     updateMaxScroll();
 

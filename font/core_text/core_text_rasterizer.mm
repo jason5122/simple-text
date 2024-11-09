@@ -56,6 +56,14 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
     return pimpl->cacheFont(ct_font);
 }
 
+size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
+    bool is_bold = (style & FontStyle::kBold) != FontStyle::kNone;
+    CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
+
+    CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
+    return pimpl->cacheFont(sys_font);
+}
+
 const Metrics& FontRasterizer::getMetrics(size_t font_id) const {
     return pimpl->font_id_to_metrics.at(font_id);
 }
@@ -230,12 +238,9 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 }
 
 size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
-    CFStringRef ct_font_name = CTFontCopyPostScriptName(ct_font);
-    NSString* ns_font_name = static_cast<NSString*>(ct_font_name);
-    std::string font_name(ns_font_name.UTF8String);
+    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font);
+    std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
-    // Sometimes, the CFStringRef isn't convertible to std::string. We need to bridge it to an
-    // NSString first.
     if (font_name.empty()) {
         std::println("FontRasterizer::impl::cacheFont() error: font_name is empty");
         std::abort();

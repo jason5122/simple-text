@@ -25,19 +25,16 @@ const std::string kMainFontFace = "Source Code Pro";
 // const std::string kMainFontFace = "Charter";
 // const std::string kMainFontFace = "Times New Roman";
 // const std::string kUIFontFace = "SF Pro Text";
-const std::string kUIFontFace = "SF Pro Text";
 #elif BUILDFLAG(IS_WIN)
 constexpr int kMainFontSize = 11 * 2;
 constexpr int kUIFontSize = 8 * 2;
 const std::string kMainFontFace = "Source Code Pro";
 // const std::string kMainFontFace = "Consolas";
 // const std::string kMainFontFace = "Cascadia Code";
-const std::string kUIFontFace = "Segoe UI";
 #elif BUILDFLAG(IS_LINUX)
 constexpr int kMainFontSize = 12 * 2;
 constexpr int kUIFontSize = 11 * 2;
 const std::string kMainFontFace = "Monospace";
-const std::string kUIFontFace = "Droid Sans Ethiopic";
 #endif
 
 // const std::string kMainFontFace = "Source Code Pro";
@@ -53,7 +50,7 @@ void EditorApp::onLaunch() {
 
     auto& font_rasterizer = font::FontRasterizer::instance();
     size_t main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
-    size_t ui_font_id = font_rasterizer.addFont(kUIFontFace, kUIFontSize);
+    size_t ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
 
     auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
     glyph_cache.setMainFontId(main_font_id);

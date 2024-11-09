@@ -14,7 +14,7 @@ public:
                    int font_size,
                    FontStyle style = FontStyle::kNone);
     size_t addSystemFont(int font_size, FontStyle style = FontStyle::kNone);
-    const Metrics& getMetrics(size_t font_id) const;
+    const Metrics& metrics(size_t font_id) const;
 
     RasterizedGlyph rasterize(size_t font_id, uint32_t glyph_id) const;
     LineLayout layoutLine(size_t font_id, std::string_view str8) const;

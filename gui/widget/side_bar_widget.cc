@@ -25,7 +25,7 @@ void SideBarWidget::draw() {
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kBackground);
 
-    const auto& metrics = rasterizer().getMetrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(label_font_id);
     // renderOldLabel(metrics.line_height);
 
     renderNewLabel();
@@ -49,7 +49,7 @@ bool SideBarWidget::mousePositionChanged(const std::optional<app::Point>& mouse_
         return hovered_index != old_index;
     }
 
-    const auto& metrics = rasterizer().getMetrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
         app::Point coords = position - scroll_offset;
@@ -75,7 +75,7 @@ void SideBarWidget::layout() {
 }
 
 void SideBarWidget::updateMaxScroll() {
-    const auto& metrics = rasterizer().getMetrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(label_font_id);
 
     int line_count = strs.size() + 1;
     max_scroll_offset.y = line_count * metrics.line_height;
@@ -93,7 +93,7 @@ void SideBarWidget::renderNewLabel() {
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
 
     // TODO: Experimental; formalize this.
-    const auto& metrics = rasterizer().getMetrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
         const auto& layout = line_layout_cache[strs[line]];

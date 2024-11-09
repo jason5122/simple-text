@@ -25,11 +25,6 @@ inline ScopedCFTypeRef<CFStringRef> StringToCFStringNoCopy(std::string_view str8
         kCFStringEncodingUTF8, false, kCFAllocatorNull);
 }
 
-inline NSString* StringToNSString(std::string_view str8) {
-    return static_cast<NSString*>(StringToCFString(str8).release());
-    // return static_cast<NSString*>(StringToCFStringNoCopy(str8).release());
-}
-
 inline std::string CFStringToString(CFStringRef cfstring) {
     CFIndex length = CFStringGetLength(cfstring);
     if (length == 0) {
@@ -68,9 +63,15 @@ inline std::string CFStringToString(CFStringRef cfstring) {
     return std::string(&out_buffer[0], elements - 1);
 }
 
+#ifdef __OBJC__
+inline NSString* StringToNSString(std::string_view str8) {
+    return static_cast<NSString*>(StringToCFStringNoCopy(str8).release());
+}
+
 inline std::string NSStringToString(NSString* nsstring) {
     if (!nsstring) return std::string();
     return CFStringToString(static_cast<CFStringRef>(nsstring));
 }
+#endif
 
 }  // namespace base::apple

@@ -277,7 +277,7 @@ void TextViewWidget::redo() {
 void TextViewWidget::draw() {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
+    const auto& metrics = font_rasterizer.metrics(glyph_cache.mainFontId());
 
     // Calculate start and end lines.
     int main_line_height = metrics.line_height;
@@ -337,7 +337,7 @@ void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
 void TextViewWidget::updateMaxScroll() {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
+    const auto& metrics = font_rasterizer.metrics(glyph_cache.mainFontId());
 
     max_scroll_offset.x = line_layout_cache.maxWidth();
     max_scroll_offset.y = tree.line_count() * metrics.line_height;
@@ -350,7 +350,7 @@ size_t TextViewWidget::lineAtY(int y) const {
 
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
+    const auto& metrics = font_rasterizer.metrics(glyph_cache.mainFontId());
 
     size_t line = y / metrics.line_height;
     return std::clamp(line, 0_Z, tree.line_count() - 1);

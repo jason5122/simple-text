@@ -1,12 +1,13 @@
 #pragma once
 
 #include "base/apple/scoped_typeref.h"
-
-#import <Cocoa/Cocoa.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <OpenGL/OpenGL.h>
 
 namespace base::apple {
 
-template <> struct ScopedTypeRefTraits<CGLContextObj> {
+template <>
+struct ScopedTypeRefTraits<CGLContextObj> {
     static CGLContextObj InvalidValue() {
         return nullptr;
     }
@@ -18,7 +19,8 @@ template <> struct ScopedTypeRefTraits<CGLContextObj> {
     }
 };
 
-template <> struct ScopedTypeRefTraits<CGLPixelFormatObj> {
+template <>
+struct ScopedTypeRefTraits<CGLPixelFormatObj> {
     static CGLPixelFormatObj InvalidValue() {
         return nullptr;
     }
@@ -30,7 +32,8 @@ template <> struct ScopedTypeRefTraits<CGLPixelFormatObj> {
     }
 };
 
-template <> struct ScopedTypeRefTraits<CGColorSpaceRef> {
+template <>
+struct ScopedTypeRefTraits<CGColorSpaceRef> {
     static CGColorSpaceRef InvalidValue() {
         return nullptr;
     }
@@ -42,7 +45,8 @@ template <> struct ScopedTypeRefTraits<CGColorSpaceRef> {
     }
 };
 
-template <> struct ScopedTypeRefTraits<CGContextRef> {
+template <>
+struct ScopedTypeRefTraits<CGContextRef> {
     static CGContextRef InvalidValue() {
         return nullptr;
     }
@@ -54,4 +58,4 @@ template <> struct ScopedTypeRefTraits<CGContextRef> {
     }
 };
 
-}
+}  // namespace base::apple

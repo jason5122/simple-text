@@ -1,18 +1,15 @@
+#include "font/font_rasterizer.h"
+
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
 #include "base/apple/string_conversions.h"
-#include "font/font_rasterizer.h"
 #include "font/utf16_to_utf8_indices_map.h"
-#include "unicode/SkTFitsIn.h"
-#include "unicode/unicode.h"
-
-#import <Cocoa/Cocoa.h>
-#import <CoreText/CoreText.h>
+#include <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
+#include <algorithm>
 #include <cassert>
-#include <ranges>
 
 using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
@@ -35,23 +32,35 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 FontRasterizer::~FontRasterizer() {}
 
 size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, FontStyle style) {
-    NSString* font_name = base::apple::StringToNSString(font_name_utf8.data());
-    NSString* font_style = @"Regular";
-    if (style == FontStyle::kBold) {
-        font_style = @"Bold";
+    std::string font_style;
+    if (style == FontStyle::kNone) {
+        font_style = "Regular";
+    } else if (style == FontStyle::kBold) {
+        font_style = "Bold";
     } else if (style == FontStyle::kItalic) {
-        font_style = @"Italic";
+        font_style = "Italic";
     } else if (style == (FontStyle::kBold | FontStyle::kItalic)) {
-        font_style = @"Bold Italic";
+        font_style = "Bold Italic";
     }
 
-    NSDictionary* attributes = @{
-        static_cast<NSString*>(kCTFontFamilyNameAttribute) : font_name,
-        static_cast<NSString*>(kCTFontStyleNameAttribute) : font_style,
-        static_cast<NSString*>(kCTFontSizeAttribute) : [NSNumber numberWithInt:font_size]
+    auto font_name_cfstring = base::apple::StringToCFString(font_name_utf8);
+    auto font_style_cfstring = base::apple::StringToCFString(font_style);
+    CFTypeRef keys[] = {
+        kCTFontFamilyNameAttribute,
+        kCTFontStyleNameAttribute,
     };
+    CFTypeRef values[] = {
+        font_name_cfstring.get(),
+        font_style_cfstring.get(),
+    };
+    assert(std::size(keys) == std::size(values));
+    ScopedCFTypeRef<CFDictionaryRef> attributes =
+        CFDictionaryCreate(kCFAllocatorDefault, keys, values, std::size(keys),
+                           &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
     ScopedCFTypeRef<CTFontDescriptorRef> descriptor =
-        CTFontDescriptorCreateWithAttributes(static_cast<CFDictionaryRef>(attributes));
+        CTFontDescriptorCreateWithAttributes(attributes.get());
+
     CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
     return pimpl->cacheFont(ct_font);
 }
@@ -64,7 +73,7 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     return pimpl->cacheFont(sys_font);
 }
 
-const Metrics& FontRasterizer::getMetrics(size_t font_id) const {
+const Metrics& FontRasterizer::metrics(size_t font_id) const {
     return pimpl->font_id_to_metrics.at(font_id);
 }
 
@@ -218,7 +227,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
     // when fonts with different ascents mix (e.g., emoji being taller than plain text).
-    int ascent = getMetrics(font_id).ascent;
+    int ascent = metrics(font_id).ascent;
 
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.

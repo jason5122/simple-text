@@ -80,4 +80,13 @@ TEST(FontRasterizerTest, LayoutLine2) {
     EXPECT_EQ(total_advance, layout.width);
 }
 
+TEST(FontRasterizerTest, MetricsPerformance) {
+    auto& rasterizer = FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    for (int i = 0; i < 1e6; ++i) {
+        rasterizer.metrics(font_id);
+    }
+}
+
 }  // namespace font

@@ -57,7 +57,7 @@ void LabelWidget::draw() {
 
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.uiFontId());
+    const auto& metrics = font_rasterizer.metrics(glyph_cache.uiFontId());
 
     app::Point coords = centerVertically(metrics.line_height) + left_offset;
     int min_x = 0;

@@ -1,5 +1,3 @@
 source_set("core_text") {
-  sources = [ "core_text_rasterizer.mm" ]
-
-  frameworks = [ "Cocoa.framework" ]
+  sources = [ "core_text_rasterizer.cc" ]
 }

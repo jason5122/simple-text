@@ -1,6 +1,6 @@
 #pragma once
 
-#import <Foundation/Foundation.h>
+#include <Foundation/Foundation.h>
 
 namespace base::apple {
 

@@ -107,7 +107,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     int min_x,
                                     int max_x) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(line_layout.layout_font_id);
+    const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
 
     for (const auto& run : line_layout.runs) {
         for (const auto& glyph : run.glyphs) {

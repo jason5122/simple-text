@@ -116,7 +116,7 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& selection
                                          const app::Point& offset) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.getMetrics(glyph_cache.mainFontId());
+    const auto& metrics = font_rasterizer.metrics(glyph_cache.mainFontId());
 
     auto create = [&, this](int start, int end, int line,
                             uint32_t border_flags = kLeft | kRight | kTop | kBottom,

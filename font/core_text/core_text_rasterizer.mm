@@ -26,7 +26,7 @@ class FontRasterizer::impl {
     std::vector<ScopedCFTypeRef<CTFontRef>> font_id_to_native;
     std::vector<Metrics> font_id_to_metrics;
 
-    size_t cacheFont(CTFontRef ct_font);
+    size_t cacheFont(ScopedCFTypeRef<CTFontRef> ct_font);
     ScopedCFTypeRef<CTLineRef> createCTLine(size_t font_id, std::string_view str8);
 };
 
@@ -168,11 +168,13 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
     CFIndex run_count = CFArrayGetCount(run_array);
 
     for (CFIndex i = 0; i < run_count; ++i) {
-        CTRunRef ct_run = (CTRunRef)CFArrayGetValueAtIndex(run_array, i);
+        CTRunRef ct_run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(run_array, i));
 
-        CTFontRef ct_font =
-            (CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName);
-        size_t run_font_id = pimpl->cacheFont(ct_font);
+        auto ct_font = static_cast<CTFontRef>(
+            CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName));
+        auto scoped_ct_font =
+            ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
+        size_t run_font_id = pimpl->cacheFont(std::move(scoped_ct_font));
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -237,8 +239,8 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
     };
 }
 
-size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
-    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font);
+size_t FontRasterizer::impl::cacheFont(ScopedCFTypeRef<CTFontRef> ct_font) {
+    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font.get());
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
     if (font_name.empty()) {
@@ -247,12 +249,9 @@ size_t FontRasterizer::impl::cacheFont(CTFontRef ct_font) {
     }
 
     if (!font_postscript_name_to_id.contains(font_name)) {
-        // TODO: Figure out how to automatically retain using ScopedCFTypeRef.
-        ct_font = static_cast<CTFontRef>(CFRetain(ct_font));
-
-        int ascent = std::ceil(CTFontGetAscent(ct_font));
-        int descent = std::ceil(CTFontGetDescent(ct_font));
-        int leading = std::ceil(CTFontGetLeading(ct_font));
+        int ascent = std::ceil(CTFontGetAscent(ct_font.get()));
+        int descent = std::ceil(CTFontGetDescent(ct_font.get()));
+        int leading = std::ceil(CTFontGetLeading(ct_font.get()));
 
         // Round up to the next even number if odd.
         if (ascent % 2 == 1) ++ascent;

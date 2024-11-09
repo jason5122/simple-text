@@ -159,17 +159,6 @@ void TextRenderer::flush(const app::Size& screen_size, TextLayer font_type) {
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
-    // TODO: For fun; remove this.
-    {
-        long ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                      std::chrono::time_point_cast<std::chrono::milliseconds>(
-                          std::chrono::high_resolution_clock::now())
-                          .time_since_epoch())
-                      .count();
-        float time = (ms % 1000) / 1000.0f;
-        glUniform1f(glGetUniformLocation(shader_id, "u_time"), time);
-    }
-
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 

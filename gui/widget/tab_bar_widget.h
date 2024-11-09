@@ -33,7 +33,8 @@ private:
     static constexpr Rgba kTabBarColor{79, 86, 94, 255};  // Dark.
     static constexpr Rgba kTabColor{48, 56, 65, 255};     // Dark.
     static constexpr Rgba kTabSeparatorColor{148, 149, 149, 255};
-    static constexpr Rgb kTabTextColor{92, 92, 92};
+    // static constexpr Rgb kTabTextColor{92, 92, 92};  // Light.
+    static constexpr Rgb kTabTextColor{255, 255, 255};  // Dark.
 
     size_t index = 0;
     std::vector<std::unique_ptr<LabelWidget>> tab_name_labels;

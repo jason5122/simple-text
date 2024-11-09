@@ -50,14 +50,18 @@ public:
 
 private:
     static constexpr int kMinScrollbarWidth = 100;
-    static constexpr Rgb kTextColor{51, 51, 51};
-    static constexpr Rgb kLineNumberColor{152, 152, 152};
-    static constexpr Rgb kSelectedLineNumberColor{81, 81, 81};
+    // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
+    static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
+    // static constexpr Rgb kLineNumberColor{152, 152, 152};  // Light.
+    static constexpr Rgb kLineNumberColor{130, 139, 150};  // Dark.
+    // static constexpr Rgb kSelectedLineNumberColor{81, 81, 81};     // Light.
+    static constexpr Rgb kSelectedLineNumberColor{190, 197, 209};  // Dark.
     // static constexpr Rgba kGutterColor{227, 230, 232, 255};  // Light.
     // static constexpr Rgba kScrollBarColor{190, 190, 190, 255};  // Light.
     static constexpr Rgba kGutterColor{77, 88, 100, 255};       // Dark.
     static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
-    static constexpr Rgba kCaretColor{95, 180, 180, 255};
+    // static constexpr Rgba kCaretColor{95, 180, 180, 255};       // Light.
+    static constexpr Rgba kCaretColor{249, 174, 88, 255};  // Dark.
 
     base::PieceTree tree;
     LineLayoutCache line_layout_cache;
@@ -68,8 +72,10 @@ private:
     base::SyntaxHighlighter highlighter;
 #endif
 
-    static constexpr int kGutterLeftPadding = 18 * 2;
-    static constexpr int kGutterRightPadding = 8 * 2;
+    // static constexpr int kGutterLeftPadding = 18 * 2;
+    // static constexpr int kGutterRightPadding = 8 * 2;
+    static constexpr int kGutterLeftPadding = 37;
+    static constexpr int kGutterRightPadding = 15;
 
     size_t lineAtY(int y) const;
     inline const font::LineLayout& layoutAt(size_t line);

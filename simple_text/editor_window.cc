@@ -67,7 +67,14 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
 
     auto* text_view = editor_widget->currentWidget();
-    text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
+    // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
+    text_view->insertText(
+        R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.)");
 
     // Main widgets.
     std::shared_ptr<LayoutWidget> horizontal_layout{new HorizontalLayoutWidget{}};

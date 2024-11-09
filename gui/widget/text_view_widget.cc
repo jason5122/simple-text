@@ -105,7 +105,7 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     PROFILE_BLOCK("TextViewWidget::moveTo()");
 
     if (to == MoveTo::kBOL || to == MoveTo::kHardBOL) {
-        auto [line, _] = tree.line_column_at(selection.end().index);
+        size_t line = tree.line_at(selection.end().index);
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
@@ -114,7 +114,7 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
         // updateCaretX();
     }
     if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
-        auto [line, _] = tree.line_column_at(selection.end().index);
+        size_t line = tree.line_at(selection.end().index);
 
         bool exclude_end;
         const auto& layout = layoutAt(line, exclude_end);
@@ -409,7 +409,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 #endif
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
-    auto [selection_line, _] = tree.line_column_at(selection.end().index);
+    size_t selection_line = tree.line_at(selection.end().index);
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
@@ -426,8 +426,10 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
         app::Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
-        // coords.x += 3;  // Source Code Pro et al.
+        coords.x += 3;  // Source Code Pro et al.
         // coords.x += 2;  // Chinese
+
+        std::println("coords.x = {}, og = {}", coords.x, textOffset().x);
 
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;

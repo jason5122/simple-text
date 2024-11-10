@@ -19,22 +19,21 @@ public:
     RasterizedGlyph rasterize(size_t font_id, uint32_t glyph_id) const;
     LineLayout layoutLine(size_t font_id, std::string_view str8);
 
+    // Although public, this is only intended to be called internally.
+    // TODO: This is a hack for DirectWrite. Figure out a way to make this private.
+    struct NativeFontType;
+    size_t cacheFont(NativeFontType font, int font_size);
+
 private:
     FontRasterizer();
     ~FontRasterizer();
 
-    struct NativeFontType;
     std::unordered_map<std::string, size_t> font_postscript_name_to_id;
     std::vector<NativeFontType> font_id_to_native;
     std::vector<Metrics> font_id_to_metrics;
-    size_t cacheFont(NativeFontType font);
 
     class impl;
     std::unique_ptr<impl> pimpl;
-
-public:
-    // TODO: Windows-specific; refactor this.
-    size_t cacheFont(NativeFontType font, float em_size);
 };
 
 }  // namespace font

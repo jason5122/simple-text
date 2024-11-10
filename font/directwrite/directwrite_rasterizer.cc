@@ -46,10 +46,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
 FontRasterizer::~FontRasterizer() {}
 
 size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontStyle style) {
-    std::wstring font_name_utf16 = base::windows::ConvertToUTF16(font_name8);
-
-    // TODO: Verify that this is correct.
-    FLOAT em_size = static_cast<FLOAT>(font_size) * 96 / 72;
+    std::wstring font_name16 = base::windows::ConvertToUTF16(font_name8);
 
     ComPtr<IDWriteFontCollection> font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
@@ -58,7 +55,7 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
     UINT32 index;
     BOOL exists;
     HRESULT hr;
-    hr = font_collection->FindFamilyName(font_name_utf16.data(), &index, &exists);
+    hr = font_collection->FindFamilyName(font_name16.data(), &index, &exists);
     if (FAILED(hr)) {
         std::println("Could not create font family with name {} and size {}.", font_name8,
                      font_size);
@@ -78,7 +75,7 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
         std::println("Could not create font with name {} and size {}.", font_name8, font_size);
     }
 
-    return cacheFont({font}, em_size);
+    return cacheFont({font}, font_size);
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
@@ -224,7 +221,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
     ComPtr<IDWriteTextFormat> text_format;
-    pimpl->dwrite_factory->CreateTextFormat(dwrite_info.font_name_utf16.data(), font_collection,
+    pimpl->dwrite_factory->CreateTextFormat(dwrite_info.font_name16.data(), font_collection,
                                             DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL,
                                             DWRITE_FONT_STRETCH_NORMAL, dwrite_info.em_size,
                                             L"en-us", &text_format);
@@ -282,7 +279,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     };
 }
 
-size_t FontRasterizer::cacheFont(NativeFontType font, float em_size) {
+size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     ComPtr<IDWriteFont> dwrite_font = font.font;
     std::string postscript_name = PostScriptName(dwrite_font);
 
@@ -293,7 +290,8 @@ size_t FontRasterizer::cacheFont(NativeFontType font, float em_size) {
         DWRITE_FONT_METRICS dwrite_metrics;
         font_face->GetMetrics(&dwrite_metrics);
 
-        FLOAT scale = em_size / dwrite_metrics.designUnitsPerEm;
+        float em_size = font_size * 96.f / 72;
+        float scale = em_size / dwrite_metrics.designUnitsPerEm;
 
         int ascent = std::ceil(dwrite_metrics.ascent * scale);
         int descent = std::ceil(-dwrite_metrics.descent * scale);
@@ -311,7 +309,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, float em_size) {
             .ascent = ascent,
         };
         impl::DWriteInfo dwrite_info{
-            .font_name_utf16 = GetFontFamilyName(dwrite_font.Get()),
+            .font_name16 = GetFontFamilyName(dwrite_font.Get()),
             .em_size = em_size,
         };
 

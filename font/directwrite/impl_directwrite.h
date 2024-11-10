@@ -23,8 +23,8 @@ public:
                       UINT origin_y);
 
     struct DWriteInfo {
-        std::wstring font_name_utf16;
-        FLOAT em_size;
+        std::wstring font_name16;
+        float em_size;
     };
     std::vector<DWriteInfo> font_id_to_dwrite_info;
     const DWriteInfo& getDWriteInfo(size_t font_id);

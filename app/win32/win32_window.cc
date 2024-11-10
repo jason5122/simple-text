@@ -165,6 +165,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_LBUTTONUP: {
         ReleaseCapture();
+        click_count = 0;
         return 0;
     }
 

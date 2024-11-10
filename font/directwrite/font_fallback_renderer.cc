@@ -1,5 +1,6 @@
-#include "font/directwrite/impl_directwrite.h"
 #include "font_fallback_renderer.h"
+
+#include "font/directwrite/impl_directwrite.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -35,7 +36,7 @@ SK_STDMETHODIMP_(ULONG) FontFallbackRenderer::AddRef() {
 
 SK_STDMETHODIMP_(ULONG) FontFallbackRenderer::Release() {
     ULONG newCount = InterlockedDecrement(&fRefCount);
-    if (0 == newCount) {
+    if (newCount == 0) {
         delete this;
     }
     return newCount;
@@ -56,11 +57,11 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     }
 
     // Cache font.
-    auto font_rasterizer = static_cast<FontRasterizer*>(clientDrawingContext);
     ComPtr<IDWriteFont> font;
     font_collection->GetFontFromFontFace(glyphRun->fontFace, &font);
-
-    size_t font_id = font_rasterizer->cacheFont({font}, glyphRun->fontEmSize);
+    int font_size = glyphRun->fontEmSize * 72 / 96;
+    auto font_rasterizer = static_cast<FontRasterizer*>(clientDrawingContext);
+    size_t font_id = font_rasterizer->cacheFont({font}, font_size);
 
     size_t glyph_count = glyphRun->glyphCount;
     std::vector<ShapedGlyph> glyphs;
@@ -141,7 +142,7 @@ SK_STDMETHODIMP FontFallbackRenderer::IsPixelSnappingDisabled(void* clientDrawin
 
 SK_STDMETHODIMP FontFallbackRenderer::GetCurrentTransform(void* clientDrawingContext,
                                                           DWRITE_MATRIX* transform) {
-    const DWRITE_MATRIX ident = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+    static constexpr DWRITE_MATRIX ident = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
     *transform = ident;
     return S_OK;
 }

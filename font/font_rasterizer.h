@@ -1,21 +1,12 @@
 #pragma once
 
-#include "build/build_config.h"
 #include "font/types.h"
+#include <memory>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
-#if BUILDFLAG(IS_MAC)
-#include "base/apple/scoped_cftyperef.h"
-#include <CoreText/CoreText.h>
-#endif
-
 namespace font {
-
-#if BUILDFLAG(IS_MAC)
-using NativeFontType = base::apple::ScopedCFTypeRef<CTFontRef>;
-#endif
 
 class FontRasterizer {
 public:
@@ -32,10 +23,14 @@ private:
     FontRasterizer();
     ~FontRasterizer();
 
+    struct NativeFontType;
     std::unordered_map<std::string, size_t> font_postscript_name_to_id;
     std::vector<NativeFontType> font_id_to_native;
     std::vector<Metrics> font_id_to_metrics;
     size_t cacheFont(NativeFontType ct_font);
+
+    class impl;
+    std::unique_ptr<impl> pimpl;
 };
 
 }  // namespace font

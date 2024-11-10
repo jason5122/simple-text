@@ -7,9 +7,5 @@ source_set("pango") {
 }
 
 pkg_config("linux_font_libs") {
-  packages = [
-    "freetype2",
-    "pango",
-    "pangocairo",
-  ]
+  packages = [ "pangocairo" ]
 }

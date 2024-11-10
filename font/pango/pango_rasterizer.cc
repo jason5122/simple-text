@@ -1,23 +1,20 @@
 #include "font/font_rasterizer.h"
+
 #include "font/pango/pango_helper.h"
-#include <algorithm>
-#include <cairo-ft.h>
-#include <unordered_map>
-#include <vector>
 
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
+#include <algorithm>
 #include <cassert>
 
 namespace font {
 
+struct FontRasterizer::NativeFontType {
+    GObjectPtr<PangoFont> font;
+};
+
 class FontRasterizer::impl {
 public:
-    std::unordered_map<std::string, size_t> font_postscript_name_to_id;
-    std::vector<GObjectPtr<PangoFont>> font_id_to_native;
-    std::vector<Metrics> font_id_to_metrics;
-    size_t cacheFont(PangoFont* font);
-
     std::vector<std::unordered_map<PangoGlyph, PangoGlyphInfo>> glyph_info_cache;
 };
 
@@ -47,15 +44,15 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
         std::abort();
     }
 
-    return pimpl->cacheFont(pango_font.get());
+    return cacheFont({std::move(pango_font)});
 }
 
-const Metrics& FontRasterizer::getMetrics(size_t font_id) const {
-    return pimpl->font_id_to_metrics.at(font_id);
+size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
+    return addFont("sans", font_size, style);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
-    PangoFont* font = pimpl->font_id_to_native[font_id].get();
+    PangoFont* font = font_id_to_native[font_id].font.get();
 
     PangoRectangle ink_rect;
     PangoRectangle logical_rect;
@@ -103,10 +100,10 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     };
 }
 
-LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
+LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     assert(std::ranges::count(str8, '\n') == 0);
 
-    PangoFont* font = pimpl->font_id_to_native[font_id].get();
+    PangoFont* font = font_id_to_native[font_id].font.get();
 
     CairoSurfacePtr temp_surface{cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0)};
     CairoContextPtr layout_context{cairo_create(temp_surface.get())};
@@ -132,7 +129,9 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         PangoItem* item = glyph_item->item;
 
         PangoFont* run_font = item->analysis.font;
-        size_t run_font_id = pimpl->cacheFont(run_font);
+        g_object_ref(run_font);
+        GObjectPtr<PangoFont> run_font_ptr{run_font};
+        size_t run_font_id = cacheFont({std::move(run_font_ptr)});
 
         PangoGlyphString* glyph_string = glyph_item->glyphs;
         PangoGlyphInfo* glyph_infos = glyph_string->glyphs;
@@ -187,7 +186,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
     // when fonts with different ascents mix (e.g., emoji being taller than plain text).
-    int ascent = getMetrics(font_id).ascent;
+    int ascent = metrics(font_id).ascent;
 
     return {
         .layout_font_id = font_id,
@@ -199,17 +198,14 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
     };
 }
 
-size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
-    PangoFontDescription* run_font_desc = pango_font_describe(font);
+size_t FontRasterizer::cacheFont(NativeFontType font) {
+    PangoFontDescription* run_font_desc = pango_font_describe(font.font.get());
     char* font_str = pango_font_description_to_string(run_font_desc);
     std::string font_name = font_str;
     g_free(font_str);
 
     if (!font_postscript_name_to_id.contains(font_name)) {
-        // TODO: Incorporate this into a smart pointer.
-        g_object_ref(font);
-
-        PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(font, nullptr)};
+        PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(font.font.get(), nullptr)};
         if (!pango_metrics) {
             std::println("pango_font_get_metrics() error.");
             std::abort();
@@ -233,7 +229,7 @@ size_t FontRasterizer::impl::cacheFont(PangoFont* font) {
 
         size_t font_id = font_id_to_native.size();
         font_postscript_name_to_id.emplace(font_name, font_id);
-        font_id_to_native.emplace_back(font);
+        font_id_to_native.emplace_back(std::move(font));
         font_id_to_metrics.emplace_back(std::move(metrics));
     }
     return font_postscript_name_to_id.at(font_name);

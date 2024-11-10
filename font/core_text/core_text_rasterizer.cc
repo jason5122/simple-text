@@ -241,7 +241,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         // .width = static_cast<int>(std::ceil(width)),
         .length = str8.length(),
         .runs = std::move(runs),
-        .ascent = static_cast<int>(ascent),
+        .ascent = ascent,
     };
 }
 

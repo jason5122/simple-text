@@ -1,13 +1,18 @@
+wasm_files = [
+  "tree-sitter-cpp.wasm",
+  "tree-sitter-json.wasm",
+]
+
 if (is_mac) {
   bundle_data("wasm") {
-    sources = [ "tree-sitter-json.wasm" ]
+    sources = wasm_files
     outputs = [ "{{bundle_resources_dir}}/wasm/{{source_file_part}}" ]
   }
 }
 
 if (is_linux || is_win) {
   copy("wasm") {
-    sources = [ "tree-sitter-json.wasm" ]
+    sources = wasm_files
     outputs = [ "$root_out_dir/wasm/{{source_file_part}}" ]
   }
 }

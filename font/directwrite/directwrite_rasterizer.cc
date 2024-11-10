@@ -83,7 +83,17 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
-    return addFont("Segoe UI", font_size, style);
+    NONCLIENTMETRICS ncm = {
+        .cbSize = sizeof(ncm),
+    };
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
+
+    IDWriteGdiInterop* gdi_interop = NULL;
+    pimpl->dwrite_factory->GetGdiInterop(&gdi_interop);
+
+    ComPtr<IDWriteFont> sys_font;
+    gdi_interop->CreateFontFromLOGFONT(&ncm.lfMessageFont, &sys_font);
+    return cacheFont({sys_font}, font_size);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {

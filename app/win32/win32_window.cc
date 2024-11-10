@@ -206,9 +206,11 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         ModifierKey modifiers = ModifierFromState();
 
         bool handled = app_window.onKeyDown(key, modifiers);
+        bool can_be_char = CanBeChar(key) && modifiers == ModifierKey::kNone;
 
-        // Remove translated WM_CHAR if we've already handled the keybind.
-        if (handled) {
+        // Remove translated WM_CHAR if we've already handled the keybind or if it is not
+        // representable as a char.
+        if (handled || !can_be_char) {
             MSG msg;
             PeekMessage(&msg, m_hwnd, WM_CHAR, WM_CHAR, PM_REMOVE);
         }

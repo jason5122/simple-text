@@ -61,7 +61,7 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
         CTFontDescriptorCreateWithAttributes(attributes.get());
 
     CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
-    return cacheFont({ct_font});
+    return cacheFont({ct_font}, font_size);
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
@@ -69,7 +69,7 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
-    return cacheFont({sys_font});
+    return cacheFont({sys_font}, font_size);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
@@ -178,7 +178,8 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
             CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName));
         auto scoped_ct_font =
             ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
-        size_t run_font_id = cacheFont({std::move(scoped_ct_font)});
+        int font_size = CTFontGetSize(ct_font);
+        size_t run_font_id = cacheFont({std::move(scoped_ct_font)}, font_size);
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -243,7 +244,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     };
 }
 
-size_t FontRasterizer::cacheFont(NativeFontType font) {
+size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     CTFontRef ct_font = font.font.get();
     ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font);
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
@@ -266,7 +267,6 @@ size_t FontRasterizer::cacheFont(NativeFontType font) {
 
         Metrics metrics{
             .line_height = line_height,
-            .descent = -descent,
             .ascent = ascent,
         };
 

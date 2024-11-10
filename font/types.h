@@ -45,7 +45,6 @@ inline constexpr auto operator~(FontStyle m) {
 
 struct Metrics {
     int line_height;
-    int descent;
     int ascent;
 };
 

@@ -44,7 +44,8 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
         std::abort();
     }
 
-    return cacheFont({std::move(pango_font)});
+    // TODO: Implement font size.
+    return cacheFont({std::move(pango_font)}, -1);
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
@@ -131,7 +132,8 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         PangoFont* run_font = item->analysis.font;
         g_object_ref(run_font);
         GObjectPtr<PangoFont> run_font_ptr{run_font};
-        size_t run_font_id = cacheFont({std::move(run_font_ptr)});
+        // TODO: Implement font size.
+        size_t run_font_id = cacheFont({std::move(run_font_ptr)}, -1);
 
         PangoGlyphString* glyph_string = glyph_item->glyphs;
         PangoGlyphInfo* glyph_infos = glyph_string->glyphs;
@@ -198,7 +200,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     };
 }
 
-size_t FontRasterizer::cacheFont(NativeFontType font) {
+size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     PangoFontDescription* run_font_desc = pango_font_describe(font.font.get());
     char* font_str = pango_font_description_to_string(run_font_desc);
     std::string font_name = font_str;

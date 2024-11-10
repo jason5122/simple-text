@@ -34,11 +34,9 @@ const std::string kMainFontFace = "Source Code Pro";
 #elif BUILDFLAG(IS_LINUX)
 constexpr int kMainFontSize = 12 * 2;
 constexpr int kUIFontSize = 11 * 2;
-const std::string kMainFontFace = "Monospace";
+// const std::string kMainFontFace = "Monospace";
+const std::string kMainFontFace = "Source Code Pro";
 #endif
-
-// const std::string kMainFontFace = "Source Code Pro";
-// const std::string kMainFontFace = "Fira Code";
 
 }  // namespace
 

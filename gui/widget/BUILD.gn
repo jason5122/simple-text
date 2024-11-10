@@ -16,7 +16,7 @@ source_set("widget") {
 
   deps = [
     "//base/buffer",
-    "//base/syntax_highlighter",
     "//gui/renderer",
+    "//syntax_highlighter",
   ]
 }

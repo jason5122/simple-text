@@ -14,10 +14,10 @@ static_library("tree_sitter") {
   public_configs = [ ":tree_sitter_includes" ]
 
   # TODO: Support all platforms.
-  # defines = [ "TREE_SITTER_FEATURE_WASM" ]
-  # libs = [ "wasmtime" ]
-  # lib_dirs = [ "/opt/homebrew/lib/" ]
-  # include_dirs = [ "/opt/homebrew/include/" ]
+  defines = [ "TREE_SITTER_FEATURE_WASM" ]
+  libs = [ "wasmtime" ]
+  lib_dirs = [ "/opt/homebrew/lib/" ]
+  include_dirs = [ "/opt/homebrew/include/" ]
 }
 
 config("tree_sitter_includes") {

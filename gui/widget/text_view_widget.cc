@@ -18,7 +18,7 @@ TextViewWidget::TextViewWidget(std::string_view text)
 
 #ifdef ENABLE_HIGHLIGHTING
     highlighter.setJsonLanguage();
-    highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
 }
 
@@ -145,7 +145,7 @@ void TextViewWidget::insertText(std::string_view text) {
 
 #ifdef ENABLE_HIGHLIGHTING
     highlighter.edit(i, i, i + text.length());
-    highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
 
     // TODO: Do we update caret `max_x` too?
@@ -174,7 +174,7 @@ void TextViewWidget::leftDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
-        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -183,7 +183,7 @@ void TextViewWidget::leftDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
-        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
     }
 
@@ -203,7 +203,7 @@ void TextViewWidget::rightDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
-        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -212,7 +212,7 @@ void TextViewWidget::rightDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
-        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
     }
 
@@ -245,7 +245,7 @@ void TextViewWidget::deleteWord(bool forward) {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
-        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -254,7 +254,7 @@ void TextViewWidget::deleteWord(bool forward) {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
-        highlighter.parse({&table, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
     }
 

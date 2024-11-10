@@ -33,7 +33,7 @@ void SyntaxHighlighter::setJsonLanguage() {
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    auto query_path = ResourceDir() / "queries/highlights_json.scm";
+    auto query_path = ResourceDir() / "queries/highlights_cpp.scm";
     std::string src = base::ReadFile(query_path.c_str());
     query = ts_query_new(json_language, src.data(), src.length(), &error_offset, &error_type);
 
@@ -111,7 +111,8 @@ const SyntaxHighlighter::Rgb& SyntaxHighlighter::getColor(size_t capture_index) 
 }
 
 void SyntaxHighlighter::loadJsonLanguageFromWasm() {
-    fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-json.wasm";
+    // fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-json.wasm";
+    fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-cpp.wasm";
     FILE* file = fopen(wasm_path.c_str(), "rb");
     fseek(file, 0L, SEEK_END);
     size_t file_size = ftell(file);
@@ -126,7 +127,7 @@ void SyntaxHighlighter::loadJsonLanguageFromWasm() {
 
     TSWasmError ts_wasm_error;
     json_language =
-        ts_wasm_store_load_language(wasm_store, "json", binary.data, binary.size, &ts_wasm_error);
+        ts_wasm_store_load_language(wasm_store, "cpp", binary.data, binary.size, &ts_wasm_error);
 
     if (!json_language) {
         std::println("language is null!");
@@ -138,4 +139,4 @@ void SyntaxHighlighter::loadJsonLanguageFromWasm() {
     fclose(file);
 }
 
-}
+}  // namespace base

@@ -13,8 +13,8 @@ source_set("renderer") {
   deps = [
     "icons",
     "//base/buffer",
-    "//base/syntax_highlighter",
     "//font",
+    "//syntax_highlighter",
     "//third_party/libpng",
   ]
 }

@@ -8,10 +8,10 @@
 #include "gui/widget/types.h"
 
 // TODO: Debug use; remove this.
-// #define ENABLE_HIGHLIGHTING
+#define ENABLE_HIGHLIGHTING
 
 #ifdef ENABLE_HIGHLIGHTING
-#include "base/syntax_highlighter/syntax_highlighter.h"
+#include "syntax_highlighter/syntax_highlighter.h"
 #endif
 
 namespace gui {

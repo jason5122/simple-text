@@ -49,7 +49,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
-    return addFont("sans", font_size, style);
+    return addFont("system-ui", font_size, style);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {

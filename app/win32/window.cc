@@ -1,10 +1,6 @@
 #include "app/win32/impl_win.h"
 #include "app/window.h"
 
-// TODO: Debug use; remove this.
-#include "util/std_print.h"
-#include <cassert>
-
 namespace app {
 
 Window::Window(App& app, int width, int height)
@@ -53,23 +49,16 @@ bool Window::isDarkMode() const {
     return false;
 }
 
-void Window::setTitle(const std::string& title) {
+void Window::setTitle(std::string_view title) {
     pimpl->win32_window.setTitle(title);
 }
 
 // TODO: Implement this.
-void Window::setFilePath(fs::path path) {}
+void Window::setFilePath(std::string_view path) {}
 
 // TODO: Implement this.
 std::optional<std::string> Window::openFilePicker() const {
     return {};
-}
-
-Point Window::mousePositionRaw() const {
-    POINT mouse_pos;
-    GetCursorPos(&mouse_pos);
-    ScreenToClient(pimpl->win32_window.m_hwnd, &mouse_pos);
-    return Point{mouse_pos.x, mouse_pos.y};
 }
 
 }  // namespace app

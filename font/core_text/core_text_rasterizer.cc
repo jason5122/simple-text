@@ -249,7 +249,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font) {
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
     if (font_name.empty()) {
-        std::println("FontRasterizer::impl::cacheFont() error: font_name is empty");
+        std::println("FontRasterizer::cacheFont() error: font_name is empty");
         std::abort();
     }
 

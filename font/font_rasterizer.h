@@ -31,6 +31,10 @@ private:
 
     class impl;
     std::unique_ptr<impl> pimpl;
+
+public:
+    // TODO: Windows-specific; refactor this.
+    size_t cacheFont(NativeFontType font, float em_size);
 };
 
 }  // namespace font

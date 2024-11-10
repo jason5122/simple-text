@@ -20,7 +20,7 @@ public:
     int width();
     int height();
     int scale();
-    void setTitle(const std::string& title);
+    void setTitle(std::string_view title);
 
 private:
     HDC m_hdc;

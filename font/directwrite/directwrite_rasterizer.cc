@@ -1,4 +1,5 @@
 #include "base/windows/unicode.h"
+#include "font/directwrite/directwrite_helper.h"
 #include "font/directwrite/font_fallback_renderer.h"
 #include "font/directwrite/impl_directwrite.h"
 #include "font/font_rasterizer.h"
@@ -22,6 +23,10 @@ using Microsoft::WRL::ComPtr;
 #include <cassert>
 
 namespace font {
+
+namespace {
+inline std::string PostScriptName(ComPtr<IDWriteFont> font);
+}
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
@@ -73,15 +78,15 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
         std::println("Could not create font with name {} and size {}.", font_name8, font_size);
     }
 
-    return pimpl->cacheFont(font, font_name_utf16, em_size);
+    return cacheFont({font}, em_size);
 }
 
-const Metrics& FontRasterizer::metrics(size_t font_id) const {
-    return pimpl->font_id_to_metrics.at(font_id);
+size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
+    return addFont("Segoe UI", font_size, style);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
-    ComPtr<IDWriteFont> font = pimpl->font_id_to_native[font_id];
+    ComPtr<IDWriteFont> font = font_id_to_native[font_id].font;
     const auto& dwrite_info = pimpl->getDWriteInfo(font_id);
 
     ComPtr<IDWriteFontFace> font_face;
@@ -208,7 +213,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     }
 }
 
-LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) const {
+LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     assert(std::ranges::count(str8, '\n') == 0);
 
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
@@ -262,11 +267,11 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
 
     ComPtr<FontFallbackRenderer> font_fallback_renderer =
         new FontFallbackRenderer{font_collection, str8};
-    text_layout->Draw(pimpl.get(), font_fallback_renderer.Get(), 0.0f, 0.0f);
+    text_layout->Draw(this, font_fallback_renderer.Get(), 0.0f, 0.0f);
 
     // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
     // when fonts with different ascents mix (e.g., emoji being taller than plain text).
-    int ascent = getMetrics(font_id).ascent;
+    int ascent = metrics(font_id).ascent;
 
     return {
         .layout_font_id = font_id,
@@ -275,6 +280,48 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) con
         .runs = font_fallback_renderer->runs,
         .ascent = ascent,
     };
+}
+
+size_t FontRasterizer::cacheFont(NativeFontType font, float em_size) {
+    ComPtr<IDWriteFont> dwrite_font = font.font;
+    std::string postscript_name = PostScriptName(dwrite_font);
+
+    if (!font_postscript_name_to_id.contains(postscript_name)) {
+        ComPtr<IDWriteFontFace> font_face;
+        dwrite_font->CreateFontFace(&font_face);
+
+        DWRITE_FONT_METRICS dwrite_metrics;
+        font_face->GetMetrics(&dwrite_metrics);
+
+        FLOAT scale = em_size / dwrite_metrics.designUnitsPerEm;
+
+        int ascent = std::ceil(dwrite_metrics.ascent * scale);
+        int descent = std::ceil(-dwrite_metrics.descent * scale);
+
+        // Round up to the next even number if odd.
+        if (ascent % 2 == 1) ++ascent;
+        if (descent % 2 == 1) ++descent;
+
+        int line_gap = std::ceil(dwrite_metrics.lineGap * scale);
+        int line_height = ascent - descent + line_gap;
+
+        Metrics metrics{
+            .line_height = line_height,
+            .descent = descent,
+            .ascent = ascent,
+        };
+        impl::DWriteInfo dwrite_info{
+            .font_name_utf16 = GetFontFamilyName(dwrite_font.Get()),
+            .em_size = em_size,
+        };
+
+        size_t font_id = font_id_to_native.size();
+        font_postscript_name_to_id.emplace(postscript_name, font_id);
+        font_id_to_native.emplace_back(font);
+        font_id_to_metrics.emplace_back(std::move(metrics));
+        pimpl->font_id_to_dwrite_info.emplace_back(std::move(dwrite_info));
+    }
+    return font_postscript_name_to_id.at(postscript_name);
 }
 
 void FontRasterizer::impl::drawColorRun(
@@ -335,58 +382,12 @@ void FontRasterizer::impl::drawColorRun(
     target->EndDraw();
 }
 
-size_t FontRasterizer::impl::cacheFont(ComPtr<IDWriteFont> font,
-                                       std::wstring font_name_utf16,
-                                       FLOAT em_size) {
-    std::wstring postscript_name = getPostScriptName(font);
-
-    // TODO: Note that `postscript_name != font_name_utf16`. `postscript_name` gives different
-    // results when stored in DWriteInfo.
-    // std::wcerr << font_name << L" vs. " << font_name_utf16 << '\n';
-
-    if (!font_postscript_name_to_id.contains(postscript_name)) {
-        ComPtr<IDWriteFontFace> font_face;
-        font->CreateFontFace(&font_face);
-
-        DWRITE_FONT_METRICS dwrite_metrics;
-        font_face->GetMetrics(&dwrite_metrics);
-
-        FLOAT scale = em_size / dwrite_metrics.designUnitsPerEm;
-
-        int ascent = std::ceil(dwrite_metrics.ascent * scale);
-        int descent = std::ceil(-dwrite_metrics.descent * scale);
-
-        // Round up to the next even number if odd.
-        if (ascent % 2 == 1) ++ascent;
-        if (descent % 2 == 1) ++descent;
-
-        int line_gap = std::ceil(dwrite_metrics.lineGap * scale);
-        int line_height = ascent - descent + line_gap;
-
-        Metrics metrics{
-            .line_height = line_height,
-            .descent = descent,
-            .ascent = ascent,
-        };
-        DWriteInfo dwrite_info{
-            .font_name_utf16 = font_name_utf16,
-            .em_size = em_size,
-        };
-
-        size_t font_id = font_id_to_native.size();
-        font_postscript_name_to_id.emplace(postscript_name, font_id);
-        font_id_to_native.emplace_back(font);
-        font_id_to_metrics.emplace_back(std::move(metrics));
-        font_id_to_dwrite_info.emplace_back(std::move(dwrite_info));
-    }
-    return font_postscript_name_to_id.at(postscript_name);
-}
-
 const FontRasterizer::impl::DWriteInfo& FontRasterizer::impl::getDWriteInfo(size_t font_id) {
     return font_id_to_dwrite_info[font_id];
 }
 
-std::wstring FontRasterizer::impl::getPostScriptName(ComPtr<IDWriteFont> font) {
+namespace {
+std::string PostScriptName(ComPtr<IDWriteFont> font) {
     ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
     BOOL has_id_keyed_names;
     font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
@@ -405,7 +406,8 @@ std::wstring FontRasterizer::impl::getPostScriptName(ComPtr<IDWriteFont> font) {
     std::wstring localized_name;
     localized_name.resize(length + 1);
     font_id_keyed_names->GetString(index, localized_name.data(), length + 1);
-    return localized_name;
+    return base::windows::ConvertToUTF8(localized_name);
 }
+}  // namespace
 
 }  // namespace font

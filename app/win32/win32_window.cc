@@ -53,7 +53,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
 
-        app_window.onOpenGLActivate(scaled_width, scaled_height);
+        app_window.onOpenGLActivate({scaled_width, scaled_height});
 
         return 0;
     }
@@ -73,7 +73,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
 
-        app_window.onDraw(scaled_width, scaled_height);
+        app_window.onDraw({scaled_width, scaled_height});
 
         SwapBuffers(m_hdc);
 
@@ -87,7 +87,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int width = LOWORD(lParam);
         int height = HIWORD(lParam);
 
-        app_window.onResize(width, height);
+        app_window.onResize({width, height});
         return 0;
     }
 
@@ -110,8 +110,10 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         ScreenToClient(m_hwnd, &pt);
         int mouse_x = pt.x;
         int mouse_y = pt.y;
+        Point mouse_pos = {mouse_x, mouse_y};
+        Delta delta = {0, static_cast<int>(std::round(dy))};
 
-        app_window.onScroll(mouse_x, mouse_y, 0, std::round(dy));
+        app_window.onScroll(mouse_pos, delta);
         return 0;
     }
 
@@ -132,8 +134,10 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         ScreenToClient(m_hwnd, &pt);
         int mouse_x = pt.x;
         int mouse_y = pt.y;
+        Point mouse_pos = {mouse_x, mouse_y};
+        Delta delta = {static_cast<int>(std::round(dx)), 0};
 
-        app_window.onScroll(mouse_x, mouse_y, std::round(dx), 0);
+        app_window.onScroll(mouse_pos, delta);
         return 0;
     }
 
@@ -152,9 +156,10 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
+        Point mouse_pos = {mouse_x, mouse_y};
         ModifierKey modifiers = ModifierFromState();
         ClickType click_type = ClickTypeFromCount(click_count);
-        app_window.onLeftMouseDown(mouse_x, mouse_y, modifiers, click_type);
+        app_window.onLeftMouseDown(mouse_pos, modifiers, click_type);
         return 0;
     }
 
@@ -166,10 +171,12 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_MOUSEMOVE: {
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
+        Point mouse_pos = {mouse_x, mouse_y};
+
         if (wParam & MK_LBUTTON) {
             ModifierKey modifiers = ModifierFromState();
             ClickType click_type = ClickTypeFromCount(click_count);
-            app_window.onLeftMouseDrag(mouse_x, mouse_y, modifiers, click_type);
+            app_window.onLeftMouseDrag(mouse_pos, modifiers, click_type);
         } else {
             if (!tracking_mouse) {
                 TRACKMOUSEEVENT tme{
@@ -179,7 +186,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 };
                 tracking_mouse = TrackMouseEvent(&tme);
             }
-            app_window.onMouseMove();
+            app_window.onMouseMove(mouse_pos);
         }
         return 0;
     }
@@ -345,7 +352,7 @@ int Win32Window::scale() {
     return 1;
 }
 
-void Win32Window::setTitle(const std::string& title) {
+void Win32Window::setTitle(std::string_view title) {
     std::wstring str16 = base::windows::ConvertToUTF16(title);
     SetWindowText(m_hwnd, str16.data());
 }

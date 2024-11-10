@@ -243,8 +243,9 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     };
 }
 
-size_t FontRasterizer::cacheFont(NativeFontType ct_font) {
-    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font.font.get());
+size_t FontRasterizer::cacheFont(NativeFontType font) {
+    CTFontRef ct_font = font.font.get();
+    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font);
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
     if (font_name.empty()) {
@@ -253,9 +254,9 @@ size_t FontRasterizer::cacheFont(NativeFontType ct_font) {
     }
 
     if (!font_postscript_name_to_id.contains(font_name)) {
-        int ascent = std::ceil(CTFontGetAscent(ct_font.font.get()));
-        int descent = std::ceil(CTFontGetDescent(ct_font.font.get()));
-        int leading = std::ceil(CTFontGetLeading(ct_font.font.get()));
+        int ascent = std::ceil(CTFontGetAscent(ct_font));
+        int descent = std::ceil(CTFontGetDescent(ct_font));
+        int leading = std::ceil(CTFontGetLeading(ct_font));
 
         // Round up to the next even number if odd.
         if (ascent % 2 == 1) ++ascent;
@@ -271,7 +272,7 @@ size_t FontRasterizer::cacheFont(NativeFontType ct_font) {
 
         size_t font_id = font_id_to_native.size();
         font_postscript_name_to_id.emplace(font_name, font_id);
-        font_id_to_native.emplace_back(ct_font);
+        font_id_to_native.emplace_back(std::move(font));
         font_id_to_metrics.emplace_back(std::move(metrics));
     }
     return font_postscript_name_to_id.at(font_name);

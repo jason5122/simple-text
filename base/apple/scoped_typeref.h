@@ -37,30 +37,32 @@ public:
     }
 
     // Copy construction
-    ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) : object_(that.get()) {
-        if (object_ != Traits::InvalidValue()) {
-            object_ = Traits::Retain(object_);
-        }
-    }
+    ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) = delete;
+    // ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) : object_(that.get()) {
+    //     if (object_ != Traits::InvalidValue()) {
+    //         object_ = Traits::Retain(object_);
+    //     }
+    // }
 
-    template <typename R, typename RTraits>
-    ScopedTypeRef(const ScopedTypeRef<R, RTraits>& that) : object_(that.get()) {
-        if (object_ != Traits::InvalidValue()) {
-            object_ = Traits::Retain(object_);
-        }
-    }
+    // template <typename R, typename RTraits>
+    // ScopedTypeRef(const ScopedTypeRef<R, RTraits>& that) : object_(that.get()) {
+    //     if (object_ != Traits::InvalidValue()) {
+    //         object_ = Traits::Retain(object_);
+    //     }
+    // }
 
     // Copy assignment
-    ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) {
-        reset(that.get(), OwnershipPolicy::RETAIN);
-        return *this;
-    }
+    ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) = delete;
+    // ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) {
+    //     reset(that.get(), OwnershipPolicy::RETAIN);
+    //     return *this;
+    // }
 
-    template <typename R, typename RTraits>
-    ScopedTypeRef& operator=(const ScopedTypeRef<R, RTraits>& that) {
-        reset(that.get(), OwnershipPolicy::RETAIN);
-        return *this;
-    }
+    // template <typename R, typename RTraits>
+    // ScopedTypeRef& operator=(const ScopedTypeRef<R, RTraits>& that) {
+    //     reset(that.get(), OwnershipPolicy::RETAIN);
+    //     return *this;
+    // }
 
     // Move construction
     ScopedTypeRef(ScopedTypeRef<T, Traits>&& that) : object_(that.release()) {}

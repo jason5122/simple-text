@@ -21,7 +21,7 @@ public:
     int height();
     int scaleFactor();
     bool isDarkMode();
-    void setTitle(const std::string& title);
+    void setTitle(std::string_view title);
     Window* appWindow() const;
     GtkWidget* gtkWindow() const;
 

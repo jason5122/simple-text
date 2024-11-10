@@ -155,7 +155,7 @@ bool MainWindow::isDarkMode() {
     return false;
 }
 
-void MainWindow::setTitle(const std::string& title) {
+void MainWindow::setTitle(std::string_view title) {
     gtk_window_set_title(GTK_WINDOW(window), title.data());
 }
 
@@ -198,14 +198,14 @@ void realize(GtkGLArea* self, gpointer user_data) {
     int scaled_height = gtk_widget_get_height(GTK_WIDGET(self)) * scale_factor;
 
     Window* app_window = static_cast<Window*>(user_data);
-    app_window->onOpenGLActivate(scaled_width, scaled_height);
+    app_window->onOpenGLActivate({scaled_width, scaled_height});
 }
 
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
     gtk_gl_area_make_current(self);
 
     Window* app_window = static_cast<Window*>(user_data);
-    app_window->onResize(width, height);
+    app_window->onResize({width, height});
 }
 
 gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
@@ -216,7 +216,7 @@ gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     int scaled_height = gtk_widget_get_height(GTK_WIDGET(self)) * scale_factor;
 
     Window* app_window = static_cast<Window*>(user_data);
-    app_window->onDraw(scaled_width, scaled_height);
+    app_window->onDraw({scaled_width, scaled_height});
 
     // Draw commands are flushed after returning.
     return true;
@@ -243,13 +243,16 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
     int mouse_y = std::round(main_window->mouse_y);
 
     int scale_factor = gtk_widget_get_scale_factor(gl_area);
-    int scaled_mouse_x = mouse_x * scale_factor;
-    int scaled_mouse_y = mouse_y * scale_factor;
+    Point mouse_pos = {mouse_x, mouse_y};
+    mouse_pos *= scale_factor;
 
-    int delta_x = std::round(dx);
-    int delta_y = std::round(dy);
+    Delta delta = {
+        .dx = static_cast<int>(std::round(dx)),
+        .dy = static_cast<int>(std::round(dy)),
+    };
+
     Window* app_window = main_window->appWindow();
-    app_window->onScroll(scaled_mouse_x, scaled_mouse_y, delta_x, delta_y);
+    app_window->onScroll(mouse_pos, delta);
 
     return true;
 }
@@ -261,8 +264,8 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
     int mouse_y = std::round(y);
 
     int scale_factor = gtk_widget_get_scale_factor(gl_area);
-    int scaled_mouse_x = mouse_x * scale_factor;
-    int scaled_mouse_y = mouse_y * scale_factor;
+    Point mouse_pos = {mouse_x, mouse_y};
+    mouse_pos *= scale_factor;
 
     GdkModifierType event_state =
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
@@ -270,7 +273,7 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
     ClickType click_type = ClickTypeFromCount(n_press);
 
     Window* app_window = static_cast<Window*>(user_data);
-    app_window->onLeftMouseDown(scaled_mouse_x, scaled_mouse_y, modifiers, click_type);
+    app_window->onLeftMouseDown(mouse_pos, modifiers, click_type);
 }
 
 void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
@@ -294,15 +297,14 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         int mouse_y = std::round(y);
 
         int scale_factor = gtk_widget_get_scale_factor(gl_area);
-        int scaled_mouse_x = mouse_x * scale_factor;
-        int scaled_mouse_y = mouse_y * scale_factor;
+        Point mouse_pos = {mouse_x, mouse_y};
+        mouse_pos *= scale_factor;
 
         ModifierKey modifiers = ModifierFromState(event_state);
 
         // TODO: Track click type. Consider having a member that tracks it from GtkGesture.
         Window* app_window = main_window->appWindow();
-        app_window->onLeftMouseDrag(scaled_mouse_x, scaled_mouse_y, modifiers,
-                                    ClickType::kSingleClick);
+        app_window->onLeftMouseDrag(mouse_pos, modifiers, ClickType::kSingleClick);
     }
 }
 

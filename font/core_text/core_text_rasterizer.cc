@@ -20,6 +20,12 @@ namespace {
 ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8);
 }
 
+struct FontRasterizer::NativeFontType {
+    ScopedCFTypeRef<CTFontRef> font;
+};
+
+class FontRasterizer::impl {};
+
 FontRasterizer::FontRasterizer() {}
 
 FontRasterizer::~FontRasterizer() {}
@@ -55,7 +61,7 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
         CTFontDescriptorCreateWithAttributes(attributes.get());
 
     CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
-    return cacheFont(ct_font);
+    return cacheFont({ct_font});
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
@@ -63,11 +69,11 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
-    return cacheFont(sys_font);
+    return cacheFont({sys_font});
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
-    CTFontRef font_ref = font_id_to_native[font_id].get();
+    CTFontRef font_ref = font_id_to_native[font_id].font.get();
 
     CGGlyph glyph_index = glyph_id;
 
@@ -157,7 +163,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         std::abort();
     }
 
-    CTFontRef ct_font = font_id_to_native[font_id].get();
+    CTFontRef ct_font = font_id_to_native[font_id].font.get();
     ScopedCFTypeRef<CTLineRef> ct_line = CreateCTLine(ct_font, font_id, str8);
 
     int total_advance = 0;
@@ -172,7 +178,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
             CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName));
         auto scoped_ct_font =
             ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
-        size_t run_font_id = cacheFont(std::move(scoped_ct_font));
+        size_t run_font_id = cacheFont({std::move(scoped_ct_font)});
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -238,7 +244,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
 }
 
 size_t FontRasterizer::cacheFont(NativeFontType ct_font) {
-    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font.get());
+    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font.font.get());
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
     if (font_name.empty()) {
@@ -247,9 +253,9 @@ size_t FontRasterizer::cacheFont(NativeFontType ct_font) {
     }
 
     if (!font_postscript_name_to_id.contains(font_name)) {
-        int ascent = std::ceil(CTFontGetAscent(ct_font.get()));
-        int descent = std::ceil(CTFontGetDescent(ct_font.get()));
-        int leading = std::ceil(CTFontGetLeading(ct_font.get()));
+        int ascent = std::ceil(CTFontGetAscent(ct_font.font.get()));
+        int descent = std::ceil(CTFontGetDescent(ct_font.font.get()));
+        int leading = std::ceil(CTFontGetLeading(ct_font.font.get()));
 
         // Round up to the next even number if odd.
         if (ascent % 2 == 1) ++ascent;

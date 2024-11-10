@@ -27,7 +27,7 @@ private:
     std::unordered_map<std::string, size_t> font_postscript_name_to_id;
     std::vector<NativeFontType> font_id_to_native;
     std::vector<Metrics> font_id_to_metrics;
-    size_t cacheFont(NativeFontType ct_font);
+    size_t cacheFont(NativeFontType font);
 
     class impl;
     std::unique_ptr<impl> pimpl;

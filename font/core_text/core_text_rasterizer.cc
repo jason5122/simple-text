@@ -18,7 +18,8 @@ namespace font {
 
 namespace {
 ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8);
-}
+bool FontSmoothingEnabled();
+}  // namespace
 
 struct FontRasterizer::NativeFontType {
     ScopedCFTypeRef<CTFontRef> font;
@@ -110,7 +111,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
     CGContextSetAllowsFontSmoothing(context.get(), true);
-    CGContextSetShouldSmoothFonts(context.get(), false);
+    CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
     CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
     CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
     CGContextSetAllowsFontSubpixelPositioning(context.get(), true);
@@ -290,6 +291,32 @@ ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::
         CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
 
     return CTLineCreateWithAttributedString(attr_string.get());
+}
+
+// https://github.com/alacritty/crossfont/blob/9cd8ed05c9cc7ec17fe69183912560f97c050a1a/src/darwin/mod.rs#L275
+bool FontSmoothingEnabled() {
+    ScopedCFTypeRef<CFPropertyListRef> pref =
+        CFPreferencesCopyAppValue(CFSTR("AppleFontSmoothing"), kCFPreferencesCurrentApplication);
+
+    // Case 0: The preference does not exist. By default, macOS smooths fonts.
+    if (!pref.get()) {
+        return true;
+    }
+    // Case 1: The preference is an integer. Anything greater than 0 enables smoothing.
+    else if (CFGetTypeID(pref.get()) == CFNumberGetTypeID()) {
+        CFNumberRef cfnumber = static_cast<CFNumberRef>(pref.get());
+        int value;
+        CFNumberGetValue(cfnumber, kCFNumberIntType, &value);
+        return value != 0;
+    }
+    // Case 2: The preference is a string. Parse it as an integer.
+    else if (CFGetTypeID(pref.get()) == CFStringGetTypeID()) {
+        CFStringRef cfstring = static_cast<CFStringRef>(pref.get());
+        int value = CFStringGetIntValue(cfstring);
+        return value != 0;
+    } else {
+        return true;
+    }
 }
 }  // namespace
 

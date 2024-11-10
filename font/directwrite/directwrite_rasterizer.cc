@@ -26,7 +26,11 @@ namespace font {
 
 namespace {
 inline std::string PostScriptName(ComPtr<IDWriteFont> font);
-}
+inline void DrawColorRun(
+    ID2D1RenderTarget* target,
+    Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+    UINT origin_y);
+}  // namespace
 
 FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
@@ -84,7 +88,7 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     ComPtr<IDWriteFont> font = font_id_to_native[font_id].font;
-    const auto& dwrite_info = pimpl->getDWriteInfo(font_id);
+    const auto& dwrite_info = pimpl->font_id_to_dwrite_info[font_id];
 
     ComPtr<IDWriteFontFace> font_face;
     font->CreateFontFace(&font_face);
@@ -173,8 +177,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         ComPtr<ID2D1RenderTarget> target;
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
-
-        pimpl->drawColorRun(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
+        DrawColorRun(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
 
         IWICBitmapLock* bitmap_lock;
         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
@@ -215,7 +218,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
 
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
 
-    const auto& dwrite_info = pimpl->getDWriteInfo(font_id);
+    const auto& dwrite_info = pimpl->font_id_to_dwrite_info[font_id];
 
     IDWriteFontCollection* font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
@@ -322,10 +325,32 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     return font_postscript_name_to_id.at(postscript_name);
 }
 
-void FontRasterizer::impl::drawColorRun(
-    ID2D1RenderTarget* target,
-    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
-    UINT origin_y) {
+namespace {
+std::string PostScriptName(ComPtr<IDWriteFont> font) {
+    ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
+    BOOL has_id_keyed_names;
+    font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
+                                  &font_id_keyed_names, &has_id_keyed_names);
+
+    wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
+    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
+
+    UINT32 index = 0;
+    BOOL exists = false;
+    font_id_keyed_names->FindLocaleName(localeName, &index, &exists);
+
+    UINT32 length = 0;
+    font_id_keyed_names->GetStringLength(index, &length);
+
+    std::wstring localized_name;
+    localized_name.resize(length + 1);
+    font_id_keyed_names->GetString(index, localized_name.data(), length + 1);
+    return base::windows::ConvertToUTF8(localized_name);
+}
+
+void DrawColorRun(ID2D1RenderTarget* target,
+                  ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+                  UINT origin_y) {
     // TODO: Find a way to reuse render target and brushes.
     ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
@@ -378,33 +403,6 @@ void FontRasterizer::impl::drawColorRun(
         }
     }
     target->EndDraw();
-}
-
-const FontRasterizer::impl::DWriteInfo& FontRasterizer::impl::getDWriteInfo(size_t font_id) {
-    return font_id_to_dwrite_info[font_id];
-}
-
-namespace {
-std::string PostScriptName(ComPtr<IDWriteFont> font) {
-    ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
-    BOOL has_id_keyed_names;
-    font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
-                                  &font_id_keyed_names, &has_id_keyed_names);
-
-    wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
-    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
-
-    UINT32 index = 0;
-    BOOL exists = false;
-    font_id_keyed_names->FindLocaleName(localeName, &index, &exists);
-
-    UINT32 length = 0;
-    font_id_keyed_names->GetStringLength(index, &length);
-
-    std::wstring localized_name;
-    localized_name.resize(length + 1);
-    font_id_keyed_names->GetString(index, localized_name.data(), length + 1);
-    return base::windows::ConvertToUTF8(localized_name);
 }
 }  // namespace
 

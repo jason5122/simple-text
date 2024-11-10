@@ -18,18 +18,11 @@ public:
     Microsoft::WRL::ComPtr<ID2D1Factory> d2d_factory;
     Microsoft::WRL::ComPtr<IWICImagingFactory2> wic_factory;
 
-    void drawColorRun(ID2D1RenderTarget* target,
-                      Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
-                      UINT origin_y);
-
     struct DWriteInfo {
         std::wstring font_name16;
         float em_size;
     };
     std::vector<DWriteInfo> font_id_to_dwrite_info;
-    const DWriteInfo& getDWriteInfo(size_t font_id);
-
-    std::wstring getPostScriptName(Microsoft::WRL::ComPtr<IDWriteFont> font);
 };
 
 }  // namespace font

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/buffer/piece_tree.h"
 #include <cstring>
 #include <format>
 #include <string>
@@ -21,7 +22,7 @@ public:
     ~SyntaxHighlighter();
 
     void setCppLanguage();
-    void parse(const TSInput& input);
+    void parse(const PieceTree& piece_tree);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
 
     struct Highlight {

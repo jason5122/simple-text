@@ -28,6 +28,39 @@ SyntaxHighlighter::~SyntaxHighlighter() {
     if (wasm_store) ts_wasm_store_delete(wasm_store);
 }
 
+namespace {
+// static constexpr Rgb kTextColor{51, 51, 51};     // Light.
+static constexpr SyntaxHighlighter::Rgb kTextColor{216, 222, 233};  // Dark.
+
+SyntaxHighlighter::Rgb ColorForCaptureName(std::string_view name) {
+    if (name == "string.special.key") {
+        return {249, 174, 88};
+    } else if (name == "string") {
+        return {128, 185, 121};
+    } else if (name == "number") {
+        return {249, 174, 88};
+    } else if (name == "constant") {
+        return {236, 95, 102};
+    } else if (name == "escape") {
+        return {198, 149, 198};
+    } else if (name == "comment") {
+        return {128, 128, 128};
+    } else if (name == "operator") {
+        return {249, 123, 88};
+    } else if (name == "function") {
+        return {102, 153, 204};
+    } else if (name == "type") {
+        return {198, 149, 198};
+    } else if (name == "keyword") {
+        return {198, 149, 198};
+    } else if (name == "punctuation.delimiter") {
+        return {172, 122, 104};
+    } else {
+        return kTextColor;
+    }
+}
+}  // namespace
+
 void SyntaxHighlighter::setCppLanguage() {
     loadFromWasm();
 
@@ -46,25 +79,13 @@ void SyntaxHighlighter::setCppLanguage() {
     }
 
     uint32_t capture_count = ts_query_capture_count(query);
-    capture_index_color_table = std::vector(capture_count, Rgb{0, 0, 0});
+    capture_index_color_table = std::vector(capture_count, kTextColor);
     for (size_t i = 0; i < capture_count; ++i) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
-        // std::println("{}: {}", i, capture_name);
+        std::println("{}: {}", i, capture_name);
 
-        if (capture_name == "string.special.key") {
-            capture_index_color_table[i] = {249, 174, 88};
-        } else if (capture_name == "string") {
-            capture_index_color_table[i] = {128, 185, 121};
-        } else if (capture_name == "number") {
-            capture_index_color_table[i] = {249, 174, 88};
-        } else if (capture_name == "constant.builtin") {
-            capture_index_color_table[i] = {236, 95, 102};
-        } else if (capture_name == "escape") {
-            capture_index_color_table[i] = {198, 149, 198};
-        } else if (capture_name == "comment") {
-            capture_index_color_table[i] = {128, 128, 128};
-        }
+        capture_index_color_table[i] = ColorForCaptureName(capture_name);
     }
 }
 
@@ -162,7 +183,7 @@ void SyntaxHighlighter::loadFromWasm() {
     wasm_byte_vec_t binary;
     wasm_byte_vec_new_uninitialized(&binary, file_size);
     if (fread(binary.data, file_size, 1, file) != 1) {
-        std::println("> Error reading module!");
+        std::println("SyntaxHighlighter::loadFromWasm(): Error reading module!");
         return;
     }
 
@@ -171,7 +192,7 @@ void SyntaxHighlighter::loadFromWasm() {
         ts_wasm_store_load_language(wasm_store, "cpp", binary.data, binary.size, &ts_wasm_error);
 
     if (!json_language) {
-        std::println("language is null!");
+        std::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
         std::abort();
     }
     assert(ts_language_is_wasm(json_language));

@@ -21,7 +21,7 @@ public:
     SyntaxHighlighter();
     ~SyntaxHighlighter();
 
-    void setJsonLanguage();
+    void setCppLanguage();
     void parse(const TSInput& input);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
 
@@ -52,7 +52,7 @@ public:
                             uint32_t byte_index,
                             TSPoint position,
                             uint32_t* bytes_read) {
-        base::PieceTree* table = (base::PieceTree*)payload;
+        PieceTree* table = static_cast<PieceTree*>(payload);
 
         if (position.row >= table->line_count()) {
             *bytes_read = 0;
@@ -82,7 +82,7 @@ private:
 
     std::vector<Rgb> capture_index_color_table;
 
-    void loadJsonLanguageFromWasm();
+    void loadFromWasm();
 };
 
 }  // namespace base

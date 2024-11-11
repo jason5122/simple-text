@@ -14,7 +14,6 @@ source_set("renderer") {
     "icons",
     "//base/buffer",
     "//font",
-    "//syntax_highlighter",
     "//third_party/libpng",
   ]
 }

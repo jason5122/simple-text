@@ -17,7 +17,8 @@ TextViewWidget::TextViewWidget(std::string_view text)
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING
-    highlighter.setJsonLanguage();
+    highlighter.setCppLanguage();
+    PROFILE_BLOCK("TextViewWidget: highlighter.parse()");
     highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
 #endif
 }

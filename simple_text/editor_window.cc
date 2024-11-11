@@ -284,7 +284,6 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
 void EditorWindow::onInsertText(std::string_view text) {
     if (auto widget = editor_widget->currentWidget()) {
-        PROFILE_BLOCK("EditorWindow::onInsertText()");
         widget->insertText(text);
         redraw();
     }

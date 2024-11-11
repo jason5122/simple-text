@@ -18,5 +18,6 @@ source_set("widget") {
     "//base/buffer",
     "//gui/renderer",
     "//syntax_highlighter",
+    "//third_party/tree_sitter",
   ]
 }

@@ -4,6 +4,7 @@
 #include <wasmtime.h>
 
 // TODO: Debug use; remove this.
+#include "util/profile_util.h"
 #include "util/std_print.h"
 
 namespace base {
@@ -27,8 +28,10 @@ SyntaxHighlighter::~SyntaxHighlighter() {
     if (wasm_store) ts_wasm_store_delete(wasm_store);
 }
 
-void SyntaxHighlighter::setJsonLanguage() {
-    loadJsonLanguageFromWasm();
+void SyntaxHighlighter::setCppLanguage() {
+    loadFromWasm();
+
+    PROFILE_BLOCK("SyntaxHighlighter::setCppLanguage()");
     ts_parser_set_language(parser, json_language);
 
     uint32_t error_offset = 0;
@@ -47,7 +50,7 @@ void SyntaxHighlighter::setJsonLanguage() {
     for (size_t i = 0; i < capture_count; ++i) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
-        std::println("{}: {}", i, capture_name);
+        // std::println("{}: {}", i, capture_name);
 
         if (capture_name == "string.special.key") {
             capture_index_color_table[i] = {249, 174, 88};
@@ -110,7 +113,9 @@ const SyntaxHighlighter::Rgb& SyntaxHighlighter::getColor(size_t capture_index) 
     return capture_index_color_table[capture_index];
 }
 
-void SyntaxHighlighter::loadJsonLanguageFromWasm() {
+void SyntaxHighlighter::loadFromWasm() {
+    PROFILE_BLOCK("SyntaxHighlighter::loadFromWasm()");
+
     // fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-json.wasm";
     fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-cpp.wasm";
     FILE* file = fopen(wasm_path.c_str(), "rb");

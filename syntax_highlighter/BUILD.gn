@@ -1,11 +1,6 @@
 source_set("syntax_highlighter") {
   sources = [ "syntax_highlighter.cc" ]
 
-  # TODO: Support all platforms.
-  libs = [ "wasmtime" ]
-  lib_dirs = [ "/opt/homebrew/lib/" ]
-  include_dirs = [ "/opt/homebrew/include/" ]
-
   deps = [
     "queries",
     "wasm",

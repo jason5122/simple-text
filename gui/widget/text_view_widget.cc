@@ -12,6 +12,35 @@
 
 namespace gui {
 
+namespace {
+constexpr int kBufferLen = 1024;
+
+struct ParseData {
+    base::TreeWalker* walker;
+    size_t last_offset = 0;
+    char buf[kBufferLen + 1];
+};
+
+const char* ReadCallback(void* opaque_data, uint32_t offset, TSPoint, uint32_t* bytes_read) {
+    ParseData* data = static_cast<ParseData*>(opaque_data);
+    // Try to use a cached value if possible.
+    if (offset >= data->last_offset and data->walker->offset() > offset) {
+        const char* str = data->buf + (data->last_offset - offset);
+        *bytes_read = static_cast<uint32_t>(std::strlen(str));
+        return str;
+    }
+    data->last_offset = offset;
+    data->walker->seek(offset);
+    *bytes_read = 0;
+    for (int i = 0; i < kBufferLen && !data->walker->exhausted(); ++i) {
+        data->buf[i] = data->walker->next();
+        ++*bytes_read;
+    }
+    data->buf[*bytes_read] = '\0';
+    return static_cast<const char*>(data->buf);
+};
+}  // namespace
+
 TextViewWidget::TextViewWidget(std::string_view text)
     : tree{text}, line_layout_cache{Renderer::instance().getGlyphCache().mainFontId()} {
     updateMaxScroll();
@@ -19,7 +48,9 @@ TextViewWidget::TextViewWidget(std::string_view text)
 #ifdef ENABLE_HIGHLIGHTING
     highlighter.setCppLanguage();
     PROFILE_BLOCK("TextViewWidget: highlighter.parse()");
-    highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    base::TreeWalker walker{&tree};
+    ParseData parse_data{&walker};
+    highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
 }
 
@@ -146,7 +177,9 @@ void TextViewWidget::insertText(std::string_view text) {
 
 #ifdef ENABLE_HIGHLIGHTING
     highlighter.edit(i, i, i + text.length());
-    highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+    base::TreeWalker walker{&tree};
+    ParseData parse_data{&walker};
+    highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
 
     // TODO: Do we update caret `max_x` too?
@@ -175,7 +208,9 @@ void TextViewWidget::leftDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
-        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        base::TreeWalker walker{&tree};
+        ParseData parse_data{&walker};
+        highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -184,7 +219,9 @@ void TextViewWidget::leftDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
-        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        base::TreeWalker walker{&tree};
+        ParseData parse_data{&walker};
+        highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
     }
 
@@ -204,7 +241,9 @@ void TextViewWidget::rightDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
-        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        base::TreeWalker walker{&tree};
+        ParseData parse_data{&walker};
+        highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -213,7 +252,9 @@ void TextViewWidget::rightDelete() {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
-        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        base::TreeWalker walker{&tree};
+        ParseData parse_data{&walker};
+        highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
     }
 
@@ -246,7 +287,9 @@ void TextViewWidget::deleteWord(bool forward) {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(i, i + delta, i);
-        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        base::TreeWalker walker{&tree};
+        ParseData parse_data{&walker};
+        highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -255,7 +298,9 @@ void TextViewWidget::deleteWord(bool forward) {
 
 #ifdef ENABLE_HIGHLIGHTING
         highlighter.edit(start, end, start);
-        highlighter.parse({&tree, base::SyntaxHighlighter::read, TSInputEncodingUTF8});
+        base::TreeWalker walker{&tree};
+        ParseData parse_data{&walker};
+        highlighter.parse({&parse_data, ReadCallback, TSInputEncodingUTF8});
 #endif
     }
 

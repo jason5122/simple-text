@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/buffer/piece_tree.h"
 #include <cstring>
 #include <format>
 #include <string>
@@ -47,28 +46,6 @@ public:
     };
     std::vector<Highlight> getHighlights(size_t start_line, size_t end_line) const;
     const Rgb& getColor(size_t capture_index) const;
-
-    static const char* read(void* payload,
-                            uint32_t byte_index,
-                            TSPoint position,
-                            uint32_t* bytes_read) {
-        PieceTree* table = static_cast<PieceTree*>(payload);
-
-        if (position.row >= table->line_count()) {
-            *bytes_read = 0;
-            return "";
-        }
-
-        static constexpr size_t kBufferSize = 256;
-        static char buf[kBufferSize];
-
-        std::string line_str = table->get_line_content_with_newline(position.row);
-        size_t bytes_copied = std::min(line_str.length() - position.column, kBufferSize);
-
-        memcpy(buf, line_str.data() + position.column, bytes_copied);
-        *bytes_read = bytes_copied;
-        return buf;
-    }
 
 private:
     TSParser* parser = nullptr;

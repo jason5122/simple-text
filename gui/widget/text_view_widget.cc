@@ -401,7 +401,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
 #ifdef ENABLE_HIGHLIGHTING
-    std::vector<base::SyntaxHighlighter::Highlight> highlights;
+    std::vector<highlight::Highlight> highlights;
     {
         PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
         highlights = highlighter.getHighlights(start_line, end_line);
@@ -432,7 +432,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
         int max_x = scroll_offset.x + size.width;
 
 #ifdef ENABLE_HIGHLIGHTING
-        std::stack<base::SyntaxHighlighter::Highlight> stk;
+        std::stack<highlight::Highlight> stk;
         auto it = highlights.begin();
         const auto highlight_callback = [&](size_t col) {
             TSPoint p{

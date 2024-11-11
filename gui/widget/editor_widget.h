@@ -28,6 +28,13 @@ public:
 private:
     static constexpr int kTabBarHeight = 29 * 2;
 
+    // Light.
+    // static constexpr Rgba kTabBarColor{190, 190, 190, 255};
+    // static constexpr Rgba kTextViewColor{253, 253, 253, 255};
+    // Dark.
+    static constexpr Rgba kTabBarColor{79, 86, 94, 255};
+    static constexpr Rgba kTextViewColor{48, 56, 65, 255};
+
     std::shared_ptr<MultiViewWidget<TextViewWidget>> multi_view;
     std::shared_ptr<TabBarWidget> tab_bar;
 };

@@ -70,7 +70,7 @@ private:
     Selection selection{};
 
 #ifdef ENABLE_HIGHLIGHTING
-    base::SyntaxHighlighter highlighter;
+    highlight::SyntaxHighlighter highlighter;
 #endif
 
     // static constexpr int kGutterLeftPadding = 18 * 2;

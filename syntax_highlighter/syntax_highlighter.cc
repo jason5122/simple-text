@@ -7,7 +7,7 @@
 #include "util/profile_util.h"
 #include "util/std_print.h"
 
-namespace base {
+namespace highlight {
 
 SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()}, engine{wasm_engine_new()} {
     TSWasmError ts_wasm_error;
@@ -30,9 +30,9 @@ SyntaxHighlighter::~SyntaxHighlighter() {
 
 namespace {
 // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
-static constexpr SyntaxHighlighter::Rgb kTextColor{216, 222, 233};  // Dark.
+static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
 
-SyntaxHighlighter::Rgb ColorForCaptureName(std::string_view name) {
+Rgb ColorForCaptureName(std::string_view name) {
     if (name == "string.special.key") {
         return {249, 174, 88};
     } else if (name == "string") {
@@ -69,7 +69,7 @@ void SyntaxHighlighter::setCppLanguage() {
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    auto query_path = ResourceDir() / "queries/highlights_cpp.scm";
+    auto query_path = base::ResourceDir() / "queries/highlights_cpp.scm";
     std::string src = base::ReadFile(query_path.c_str());
     query = ts_query_new(json_language, src.data(), src.length(), &error_offset, &error_type);
 
@@ -118,7 +118,7 @@ const char* ReadCallback(void* opaque_data, uint32_t offset, TSPoint, uint32_t* 
 };
 }  // namespace
 
-void SyntaxHighlighter::parse(const PieceTree& piece_tree) {
+void SyntaxHighlighter::parse(const base::PieceTree& piece_tree) {
     base::TreeWalker walker{&piece_tree};
     ParseData parse_data{&walker};
     TSInput input{
@@ -138,8 +138,7 @@ void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_
     ts_tree_edit(tree, &edit);
 }
 
-std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_t start_line,
-                                                                           size_t end_line) const {
+std::vector<Highlight> SyntaxHighlighter::getHighlights(size_t start_line, size_t end_line) const {
     std::vector<Highlight> highlights;
 
     TSNode root_node = ts_tree_root_node(tree);
@@ -166,7 +165,7 @@ std::vector<SyntaxHighlighter::Highlight> SyntaxHighlighter::getHighlights(size_
     return highlights;
 }
 
-const SyntaxHighlighter::Rgb& SyntaxHighlighter::getColor(size_t capture_index) const {
+const Rgb& SyntaxHighlighter::getColor(size_t capture_index) const {
     return capture_index_color_table[capture_index];
 }
 
@@ -201,4 +200,4 @@ void SyntaxHighlighter::loadFromWasm() {
     fclose(file);
 }
 
-}  // namespace base
+}  // namespace highlight

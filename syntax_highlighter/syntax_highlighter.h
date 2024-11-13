@@ -13,7 +13,7 @@ class QueryCursor {
 public:
     ~QueryCursor();
 
-    bool nextMatch(TSPoint& start, TSPoint& end, uint32_t& capture_index);
+    bool nextMatch(Highlight& h);
 
 private:
     friend class SyntaxHighlighter;
@@ -32,7 +32,6 @@ public:
     void parse(const base::PieceTree& piece_tree);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
 
-    std::vector<Highlight> getHighlights(size_t start_line, size_t end_line) const;
     QueryCursor startQuery(size_t start_line, size_t end_line) const;
     const Rgb& getColor(size_t capture_index) const;
 

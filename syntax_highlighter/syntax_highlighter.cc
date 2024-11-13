@@ -21,13 +21,15 @@ QueryCursor::~QueryCursor() {
     ts_query_cursor_delete(cursor);
 }
 
-bool QueryCursor::nextMatch(TSPoint& start, TSPoint& end, uint32_t& capture_index) {
+bool QueryCursor::nextMatch(Highlight& h) {
     TSQueryMatch match;
+    uint32_t capture_index;
     if (ts_query_cursor_next_capture(cursor, &match, &capture_index)) {
         const TSQueryCapture& capture = match.captures[capture_index];
         const TSNode& node = capture.node;
-        start = ts_node_start_point(node);
-        end = ts_node_end_point(node);
+        h.start = ts_node_start_point(node);
+        h.end = ts_node_end_point(node);
+        h.capture_index = capture.index;
         return true;
     } else {
         return false;
@@ -161,31 +163,6 @@ void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_
         .new_end_byte = static_cast<uint32_t>(new_end_byte),
     };
     ts_tree_edit(tree, &edit);
-}
-
-std::vector<Highlight> SyntaxHighlighter::getHighlights(size_t start_line, size_t end_line) const {
-    std::vector<Highlight> highlights;
-
-    TSNode root_node = ts_tree_root_node(tree);
-    TSQueryCursor* cursor = ts_query_cursor_new();
-
-    ts_query_cursor_set_point_range(cursor, {static_cast<uint32_t>(start_line), 0},
-                                    {static_cast<uint32_t>(end_line + 1), 0});
-    ts_query_cursor_exec(cursor, query, root_node);
-
-    TSQueryMatch match;
-    uint32_t capture_index;
-    // TODO: Profile this code and optimize it to be as fast as Tree-sitter's CLI.
-    while (ts_query_cursor_next_capture(cursor, &match, &capture_index)) {
-        const TSQueryCapture& capture = match.captures[capture_index];
-        const TSNode& node = capture.node;
-        TSPoint start = ts_node_start_point(node);
-        TSPoint end = ts_node_end_point(node);
-        highlights.emplace_back(Highlight{start, end, capture.index});
-    }
-
-    ts_query_cursor_delete(cursor);
-    return highlights;
 }
 
 QueryCursor SyntaxHighlighter::startQuery(size_t start_line, size_t end_line) const {

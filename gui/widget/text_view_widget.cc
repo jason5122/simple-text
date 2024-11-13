@@ -400,6 +400,14 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
 
+#ifdef ENABLE_HIGHLIGHTING
+    std::vector<highlight::Highlight> highlights;
+    {
+        PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
+        highlights = highlighter.getHighlights(start_line, end_line);
+    }
+#endif
+
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     size_t selection_line = tree.line_at(selection.end().index);
 
@@ -425,11 +433,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
 #ifdef ENABLE_HIGHLIGHTING
         std::stack<highlight::Highlight> stk;
-        auto query_cursor = highlighter.startQuery(start_line, end_line);
-
-        highlight::Highlight h;
-        bool has_match = query_cursor.nextMatch(h);
-
+        auto it = highlights.begin();
         const auto highlight_callback = [&](size_t col) {
             TSPoint p{
                 .row = static_cast<uint32_t>(line),
@@ -437,15 +441,15 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
             };
 
             // Use stack to parse highlights.
-            while (has_match && p >= h.end) {
-                has_match = query_cursor.nextMatch(h);
+            while (it != highlights.end() && p >= (*it).end) {
+                ++it;
             }
-            while (has_match && h.containsPoint(p)) {
+            while (it != highlights.end() && (*it).containsPoint(p)) {
                 // If multiple ranges are equal, prefer the one that comes first.
-                if (stk.empty() || stk.top() != h) {
-                    stk.push(h);
+                if (stk.empty() || stk.top() != *it) {
+                    stk.push(*it);
                 }
-                has_match = query_cursor.nextMatch(h);
+                ++it;
             }
             while (!stk.empty() && p >= stk.top().end) {
                 stk.pop();

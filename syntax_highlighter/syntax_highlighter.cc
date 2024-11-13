@@ -9,33 +9,6 @@
 
 namespace highlight {
 
-QueryCursor::QueryCursor(size_t start_line, size_t end_line, TSTree* tree, TSQuery* query)
-    : cursor{ts_query_cursor_new()} {
-    ts_query_cursor_set_point_range(cursor, {static_cast<uint32_t>(start_line), 0},
-                                    {static_cast<uint32_t>(end_line + 1), 0});
-    TSNode root_node = ts_tree_root_node(tree);
-    ts_query_cursor_exec(cursor, query, root_node);
-}
-
-QueryCursor::~QueryCursor() {
-    ts_query_cursor_delete(cursor);
-}
-
-bool QueryCursor::nextMatch(Highlight& h) {
-    TSQueryMatch match;
-    uint32_t capture_index;
-    if (ts_query_cursor_next_capture(cursor, &match, &capture_index)) {
-        const TSQueryCapture& capture = match.captures[capture_index];
-        const TSNode& node = capture.node;
-        h.start = ts_node_start_point(node);
-        h.end = ts_node_end_point(node);
-        h.capture_index = capture.index;
-        return true;
-    } else {
-        return false;
-    }
-}
-
 SyntaxHighlighter::SyntaxHighlighter() : parser{ts_parser_new()}, engine{wasm_engine_new()} {
     TSWasmError ts_wasm_error;
     wasm_store = ts_wasm_store_new(engine, &ts_wasm_error);
@@ -165,8 +138,29 @@ void SyntaxHighlighter::edit(size_t start_byte, size_t old_end_byte, size_t new_
     ts_tree_edit(tree, &edit);
 }
 
-QueryCursor SyntaxHighlighter::startQuery(size_t start_line, size_t end_line) const {
-    return {start_line, end_line, tree, query};
+std::vector<Highlight> SyntaxHighlighter::getHighlights(size_t start_line, size_t end_line) const {
+    std::vector<Highlight> highlights;
+
+    TSNode root_node = ts_tree_root_node(tree);
+    TSQueryCursor* cursor = ts_query_cursor_new();
+    for (size_t line = start_line; line <= end_line; line++) {
+        ts_query_cursor_exec(cursor, query, root_node);
+        ts_query_cursor_set_point_range(cursor, {static_cast<uint32_t>(line), 0},
+                                        {static_cast<uint32_t>(line + 1), 0});
+
+        TSQueryMatch match;
+        uint32_t capture_index;
+        // TODO: Profile this code and optimize it to be as fast as Tree-sitter's CLI.
+        while (ts_query_cursor_next_capture(cursor, &match, &capture_index)) {
+            const TSQueryCapture& capture = match.captures[capture_index];
+            const TSNode& node = capture.node;
+            TSPoint start = ts_node_start_point(node);
+            TSPoint end = ts_node_end_point(node);
+            highlights.emplace_back(Highlight{start, end, capture.index});
+        }
+    }
+    ts_query_cursor_delete(cursor);
+    return highlights;
 }
 
 const Rgb& SyntaxHighlighter::getColor(size_t capture_index) const {

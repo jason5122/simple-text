@@ -9,20 +9,6 @@
 
 namespace highlight {
 
-class QueryCursor {
-public:
-    ~QueryCursor();
-
-    bool nextMatch(Highlight& h);
-
-private:
-    friend class SyntaxHighlighter;
-
-    QueryCursor(size_t start_line, size_t end_line, TSTree* tree, TSQuery* query);
-
-    TSQueryCursor* cursor;
-};
-
 class SyntaxHighlighter {
 public:
     SyntaxHighlighter();
@@ -32,7 +18,7 @@ public:
     void parse(const base::PieceTree& piece_tree);
     void edit(size_t start_byte, size_t old_end_byte, size_t new_end_byte);
 
-    QueryCursor startQuery(size_t start_line, size_t end_line) const;
+    std::vector<Highlight> getHighlights(size_t start_line, size_t end_line) const;
     const Rgb& getColor(size_t capture_index) const;
 
 private:

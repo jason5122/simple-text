@@ -73,10 +73,11 @@ private:
     highlight::SyntaxHighlighter highlighter;
 #endif
 
-    // static constexpr int kGutterLeftPadding = 18 * 2;
-    // static constexpr int kGutterRightPadding = 8 * 2;
-    static constexpr int kGutterLeftPadding = 37;
-    static constexpr int kGutterRightPadding = 15;
+    static constexpr int kGutterLeftPadding = 18 * 2;
+    static constexpr int kGutterRightPadding = 8 * 2;
+    // TODO: Why is this more accurate?
+    // static constexpr int kGutterLeftPadding = 37;
+    // static constexpr int kGutterRightPadding = 15;
 
     size_t lineAtY(int y) const;
     inline const font::LineLayout& layoutAt(size_t line);

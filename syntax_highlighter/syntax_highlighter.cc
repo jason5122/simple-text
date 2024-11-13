@@ -145,10 +145,8 @@ std::vector<Highlight> SyntaxHighlighter::getHighlights(size_t start_line, size_
     TSQueryCursor* cursor = ts_query_cursor_new();
     for (size_t line = start_line; line <= end_line; line++) {
         ts_query_cursor_exec(cursor, query, root_node);
-        // ts_query_cursor_set_point_range(cursor, {static_cast<uint32_t>(start_line), 0},
-        //                                 {static_cast<uint32_t>(end_line) + 1, 0});
         ts_query_cursor_set_point_range(cursor, {static_cast<uint32_t>(line), 0},
-                                        {static_cast<uint32_t>(line), 150});
+                                        {static_cast<uint32_t>(line + 1), 0});
 
         TSQueryMatch match;
         uint32_t capture_index;
@@ -158,7 +156,7 @@ std::vector<Highlight> SyntaxHighlighter::getHighlights(size_t start_line, size_
             const TSNode& node = capture.node;
             TSPoint start = ts_node_start_point(node);
             TSPoint end = ts_node_end_point(node);
-            highlights.emplace_back(start, end, capture.index);
+            highlights.emplace_back(Highlight{start, end, capture.index});
         }
     }
     ts_query_cursor_delete(cursor);

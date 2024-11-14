@@ -31,14 +31,14 @@ void Selection::setRange(size_t start_index, size_t end_index) {
     end_caret.index = end_index;
 }
 
-void Selection::incrementIndex(size_t inc, bool extend) {
+void Selection::increment(size_t inc, bool extend) {
     end_caret.index += inc;
     if (!extend) {
         start_caret = end_caret;
     }
 }
 
-void Selection::decrementIndex(size_t dec, bool extend) {
+void Selection::decrement(size_t dec, bool extend) {
     end_caret.index = base::sub_sat(end_caret.index, dec);
     if (!extend) {
         start_caret = end_caret;
@@ -55,4 +55,4 @@ void Selection::collapse(Direction direction) {
     }
 }
 
-}
+}  // namespace gui

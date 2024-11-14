@@ -42,7 +42,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         }
 
         size_t delta = Caret::moveToPrevGlyph(layout, col);
-        selection.decrementIndex(delta, extend);
+        selection.decrement(delta, extend);
 
         // Move to previous line if at beginning of line.
         if (delta == 0 && line > 0) {
@@ -58,40 +58,33 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         }
 
         size_t delta = Caret::moveToNextGlyph(layout, col);
-        selection.incrementIndex(delta, extend);
+        selection.increment(delta, extend);
     }
-    if (by == MoveBy::kWords && !forward) {
-        size_t delta = Caret::prevWordStart(layout, col, tree.get_line_content_with_newline(line));
-        selection.decrementIndex(delta, extend);
+    if (by == MoveBy::kLines) {
+        size_t new_line = forward ? line + 1 : line - 1;
+        if (0 <= new_line && new_line < tree.line_count()) {
+            int x = Caret::xAtColumn(layout, col);
+            size_t new_col = Caret::columnAtX(layoutAt(new_line), x);
+            size_t index = tree.offset_at(new_line, new_col);
+            selection.setIndex(index, extend);
+        }
+    }
+    // TODO: Implement this properly.
+    // if (by == MoveBy::kWords && !forward) {
+    //     size_t delta = Caret::prevWordStart(layout, col,
+    //     tree.get_line_content_with_newline(line)); selection.decrementIndex(delta, extend);
 
-        // Move to previous line if at beginning of line.
-        if (delta == 0 && line > 0) {
-            const auto& prev_layout = layoutAt(line - 1);
-            size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1_Z));
-            selection.setIndex(index, extend);
-        }
-    }
-    if (by == MoveBy::kWords && forward) {
-        size_t delta = Caret::nextWordEnd(layout, col, tree.get_line_content_with_newline(line));
-        selection.incrementIndex(delta, extend);
-    }
-    // TODO: Find a clean way to combine vertical caret movement logic.
-    if (by == MoveBy::kLines && !forward) {
-        if (line > 0) {
-            int x = Caret::xAtColumn(layout, col);
-            size_t new_col = Caret::columnAtX(layoutAt(line - 1), x);
-            size_t index = tree.offset_at(line - 1, new_col);
-            selection.setIndex(index, extend);
-        }
-    }
-    if (by == MoveBy::kLines && forward) {
-        if (line < tree.line_count() - 1) {
-            int x = Caret::xAtColumn(layout, col);
-            size_t new_col = Caret::columnAtX(layoutAt(line + 1), x);
-            size_t index = tree.offset_at(line + 1, new_col);
-            selection.setIndex(index, extend);
-        }
-    }
+    //     // Move to previous line if at beginning of line.
+    //     if (delta == 0 && line > 0) {
+    //         const auto& prev_layout = layoutAt(line - 1);
+    //         size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1_Z));
+    //         selection.setIndex(index, extend);
+    //     }
+    // }
+    // if (by == MoveBy::kWords && forward) {
+    //     size_t delta = Caret::nextWordEnd(layout, col,
+    //     tree.get_line_content_with_newline(line)); selection.incrementIndex(delta, extend);
+    // }
 
     if (by == MoveBy::kCharacters) {
         // updateCaretX();
@@ -134,7 +127,7 @@ void TextViewWidget::insertText(std::string_view text) {
 
     size_t i = selection.end().index;
     tree.insert(i, text);
-    selection.incrementIndex(text.length(), false);
+    selection.increment(text.length(), false);
 
 #ifdef ENABLE_HIGHLIGHTING
     PROFILE_BLOCK("TextViewWidget::insertText() edit + parse");
@@ -155,11 +148,11 @@ void TextViewWidget::leftDelete() {
         const auto& layout = layoutAt(line);
 
         size_t delta = Caret::moveToPrevGlyph(layout, col);
-        selection.decrementIndex(delta, false);
+        selection.decrement(delta, false);
 
         // Delete newline if at beginning of line.
         if (delta == 0 && line > 0) {
-            selection.decrementIndex(1_Z, false);
+            selection.decrement(1_Z, false);
             delta = 1;
         }
 
@@ -225,11 +218,11 @@ void TextViewWidget::deleteWord(bool forward) {
             delta = Caret::nextWordEnd(layout, col, tree.get_line_content_with_newline(line));
         } else {
             delta = Caret::prevWordStart(layout, col, tree.get_line_content_with_newline(line));
-            selection.decrementIndex(delta, false);
+            selection.decrement(delta, false);
 
             // Delete newline if at beginning of line.
             if (delta == 0 && line > 0) {
-                selection.decrementIndex(1_Z, false);
+                selection.decrement(1_Z, false);
                 delta = 1;
             }
         }

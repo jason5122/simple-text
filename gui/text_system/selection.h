@@ -12,8 +12,8 @@ public:
     std::pair<size_t, size_t> range() const;
     void setIndex(size_t index, bool extend);
     void setRange(size_t start_index, size_t end_index);
-    void incrementIndex(size_t inc, bool extend);
-    void decrementIndex(size_t dec, bool extend);
+    void increment(size_t inc, bool extend);
+    void decrement(size_t dec, bool extend);
 
     enum class Direction {
         kLeft,
@@ -26,4 +26,4 @@ private:
     Caret end_caret{};
 };
 
-}
+}  // namespace gui

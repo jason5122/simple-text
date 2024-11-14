@@ -3,6 +3,7 @@
 #include "font/font_rasterizer.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/opengl_types.h"
+#include "third_party/emhash/hash_table5.hpp"
 #include <unordered_map>
 #include <vector>
 
@@ -37,7 +38,7 @@ private:
     std::vector<Atlas> atlas_pages;
     size_t current_page = 0;
 
-    std::vector<std::unordered_map<uint32_t, Glyph>> cache;
+    std::vector<emhash5::HashMap<uint32_t, Glyph>> cache;
 
     Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
 };

@@ -17,9 +17,6 @@ public:
 private:
     size_t font_id;
     std::unordered_map<XXH64_hash_t, font::LineLayout> cache;
-
-    // TODO: Use a data structure (priority queue) for efficient updating.
-    int max_width = 0;
 };
 
 }  // namespace gui

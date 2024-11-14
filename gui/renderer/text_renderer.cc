@@ -132,7 +132,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             Vec4 glyph_copy = rglyph.glyph;
             glyph_copy.y = static_cast<float>(metrics.line_height) - glyph_copy.y;
 
-            const Vec2 coords_vec = Vec2{
+            const Vec2 coords_vec = {
                 .x = static_cast<float>(glyph_coords.x),
                 .y = static_cast<float>(glyph_coords.y),
             };

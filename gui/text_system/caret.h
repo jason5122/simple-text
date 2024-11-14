@@ -8,7 +8,7 @@ namespace gui {
 
 class Caret {
 public:
-    size_t index;
+    size_t index = 0;
 
     static size_t columnAtX(const font::LineLayout& layout, int x);
     static int xAtColumn(const font::LineLayout& layout, size_t col);
@@ -26,8 +26,20 @@ public:
     friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
         return c1.index == c2.index;
     }
-    friend constexpr auto operator<=>(const Caret& c1, const Caret& c2) {
-        return c1.index <=> c2.index;
+    friend constexpr bool operator!=(const Caret& c1, const Caret& c2) {
+        return !(c1.index == c2.index);
+    }
+    friend constexpr bool operator<(const Caret& c1, const Caret& c2) {
+        return c1.index < c2.index;
+    }
+    friend constexpr bool operator>(const Caret& c1, const Caret& c2) {
+        return c2.index > c1.index;
+    }
+    friend constexpr bool operator<=(const Caret& c1, const Caret& c2) {
+        return !(c1.index > c2.index);
+    }
+    friend constexpr bool operator>=(const Caret& c1, const Caret& c2) {
+        return !(c1.index < c2.index);
     }
 
 private:

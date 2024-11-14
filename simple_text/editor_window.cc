@@ -68,8 +68,8 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
-    //     text_view->insertText(
-    //         R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+    // text_view->insertText(
+    //     R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
     // tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
     // quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
     // consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
@@ -127,7 +127,12 @@ int main() {
   ts_tree_delete(tree);
   ts_parser_delete(parser);
   return 0;
-})");
+}
+)");
+
+    // TODO: Maybe use this case to optimize stuff. This could detect if we're doing line/col ->
+    // offset conversions too much, for example.
+    // text_view->insertText(kLongLine * 10000);
 
     // Main widgets.
     std::shared_ptr<LayoutWidget> horizontal_layout{new HorizontalLayoutWidget{}};

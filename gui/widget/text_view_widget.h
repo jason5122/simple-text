@@ -81,7 +81,6 @@ private:
 
     size_t lineAtY(int y) const;
     inline const font::LineLayout& layoutAt(size_t line);
-    inline const font::LineLayout& layoutAt(size_t line, bool& exclude_end);
     inline constexpr app::Point textOffset();
     inline constexpr int gutterWidth();
     inline constexpr int lineNumberWidth();

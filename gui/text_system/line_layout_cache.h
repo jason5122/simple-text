@@ -1,9 +1,13 @@
 #pragma once
 
 #include "font/types.h"
-#include "third_party/xxhash/xxhash.h"
 #include <string_view>
 #include <unordered_map>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-builtins"
+#include "third_party/robin_hood/robin_hood.h"
+#pragma clang diagnostic pop
 
 namespace gui {
 
@@ -16,7 +20,7 @@ public:
 
 private:
     size_t font_id;
-    std::unordered_map<XXH64_hash_t, font::LineLayout> cache;
+    robin_hood::unordered_map<uint64_t, font::LineLayout> cache;
 };
 
 }  // namespace gui

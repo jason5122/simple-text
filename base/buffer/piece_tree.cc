@@ -451,6 +451,25 @@ std::string PieceTree::get_line_content_with_newline(size_t line) const {
     return buf;
 }
 
+std::string PieceTree::get_line_content_for_layout_use(size_t line) const {
+    if (root.empty()) return "";
+
+    std::string buf;
+    size_t line_offset = 0;
+    line_start<&PieceTree::accumulate_value>(&line_offset, &buffers, root, line);
+    TreeWalker walker{this, line_offset};
+    while (!walker.exhausted()) {
+        char c = walker.next();
+        if (c == '\n') {
+            buf.push_back(' ');
+            break;
+        } else {
+            buf.push_back(c);
+        }
+    }
+    return buf;
+}
+
 size_t PieceTree::line_feed_count(BufferType buffer_type,
                                   const BufferCursor& start,
                                   const BufferCursor& end) const {

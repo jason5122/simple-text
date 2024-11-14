@@ -63,6 +63,8 @@ public:
     // Queries.
     std::string get_line_content(size_t line) const;
     std::string get_line_content_with_newline(size_t line) const;
+    // This is similar to `get_line_content_with_newline`, except newlines are replaced by spaces.
+    std::string get_line_content_for_layout_use(size_t line) const;
     char at(size_t offset) const;
     size_t line_at(size_t offset) const;
     BufferCursor line_column_at(size_t offset) const;

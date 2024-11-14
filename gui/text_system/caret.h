@@ -10,8 +10,8 @@ class Caret {
 public:
     size_t index;
 
-    static size_t columnAtX(const font::LineLayout& layout, int x, bool exclude_end = false);
-    static int xAtColumn(const font::LineLayout& layout, size_t col, bool exclude_end = false);
+    static size_t columnAtX(const font::LineLayout& layout, int x);
+    static int xAtColumn(const font::LineLayout& layout, size_t col);
 
     static size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col);
     static size_t moveToNextGlyph(const font::LineLayout& layout, size_t col);
@@ -35,4 +35,4 @@ private:
                                                              size_t col);
 };
 
-}
+}  // namespace gui

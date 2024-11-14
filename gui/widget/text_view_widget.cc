@@ -78,20 +78,16 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     // TODO: Find a clean way to combine vertical caret movement logic.
     if (by == MoveBy::kLines && !forward) {
         if (line > 0) {
-            bool exclude_end;
-            const auto& prev_layout = layoutAt(line - 1, exclude_end);
-            int x = Caret::xAtColumn(layout, col, false);
-            size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
+            int x = Caret::xAtColumn(layout, col);
+            size_t new_col = Caret::columnAtX(layoutAt(line - 1), x);
             size_t index = tree.offset_at(line - 1, new_col);
             selection.setIndex(index, extend);
         }
     }
     if (by == MoveBy::kLines && forward) {
         if (line < tree.line_count() - 1) {
-            bool exclude_end;
-            const auto& prev_layout = layoutAt(line + 1, exclude_end);
-            int x = Caret::xAtColumn(layout, col, false);
-            size_t new_col = Caret::columnAtX(prev_layout, x, exclude_end);
+            int x = Caret::xAtColumn(layout, col);
+            size_t new_col = Caret::columnAtX(layoutAt(line + 1), x);
             size_t index = tree.offset_at(line + 1, new_col);
             selection.setIndex(index, extend);
         }
@@ -108,18 +104,16 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     if (to == MoveTo::kBOL || to == MoveTo::kHardBOL) {
         size_t line = tree.line_at(selection.end().index);
 
-        bool exclude_end;
-        const auto& layout = layoutAt(line, exclude_end);
-        size_t new_col = Caret::columnAtX(layout, 0, exclude_end);
+        const auto& layout = layoutAt(line);
+        size_t new_col = Caret::columnAtX(layout, 0);
         selection.setIndex(tree.offset_at(line, new_col), extend);
         // updateCaretX();
     }
     if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
         size_t line = tree.line_at(selection.end().index);
 
-        bool exclude_end;
-        const auto& layout = layoutAt(line, exclude_end);
-        size_t new_col = Caret::columnAtX(layout, layout.width, exclude_end);
+        const auto& layout = layoutAt(line);
+        size_t new_col = Caret::columnAtX(layout, layout.width);
         selection.setIndex(tree.offset_at(line, new_col), extend);
         // updateCaretX();
     }
@@ -297,10 +291,7 @@ void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
                                    app::ClickType click_type) {
     app::Point new_coords = mouse_pos - textOffset();
     size_t new_line = lineAtY(new_coords.y);
-
-    bool exclude_end;
-    const auto& layout = layoutAt(new_line, exclude_end);
-    size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
+    size_t new_col = Caret::columnAtX(layoutAt(new_line), new_coords.x);
 
     if (click_type == app::ClickType::kSingleClick) {
         bool extend = modifiers == app::ModifierKey::kShift;
@@ -325,10 +316,7 @@ void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
                                    app::ClickType click_type) {
     app::Point new_coords = mouse_pos - textOffset();
     size_t new_line = lineAtY(new_coords.y);
-
-    bool exclude_end;
-    const auto& layout = layoutAt(new_line, exclude_end);
-    size_t new_col = Caret::columnAtX(layout, new_coords.x, exclude_end);
+    size_t new_col = Caret::columnAtX(layoutAt(new_line), new_coords.x);
     selection.setIndex(tree.offset_at(new_line, new_col), true);
 
     // updateCaretX();
@@ -357,18 +345,7 @@ size_t TextViewWidget::lineAtY(int y) const {
 }
 
 inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
-    bool unused;
-    return layoutAt(line, unused);
-}
-
-inline const font::LineLayout& TextViewWidget::layoutAt(size_t line, bool& exclude_end) {
-    std::string line_str = tree.get_line_content_with_newline(line);
-    exclude_end = !line_str.empty() && line_str.back() == '\n';
-
-    if (exclude_end) {
-        line_str.back() = ' ';
-    }
-
+    std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache[line_str];
 }
 
@@ -426,7 +403,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 #ifdef ENABLE_HIGHLIGHTING
         std::stack<highlight::Highlight> stk;
         auto it = highlights.begin();
-        const auto highlight_callback = [&](size_t col) {
+        const auto highlight_callback = [&](size_t col) -> Rgb {
             TSPoint p = {
                 .row = static_cast<uint32_t>(line),
                 .column = static_cast<uint32_t>(col),
@@ -453,9 +430,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
                 // TODO: Use unified Rgb struct.
                 const auto& highlight_color = highlighter.getColor(capture_index);
-                const Rgb rgb{
-                    .r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
-                return rgb;
+                return {.r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
             } else {
                 return kTextColor;
             }
@@ -580,9 +555,7 @@ void TextViewWidget::renderCaret(int main_line_height) {
     int caret_height = main_line_height + extra_padding * 2;
 
     auto [line, col] = tree.line_column_at(selection.end().index);
-    bool exclude_end;
-    const auto& layout = layoutAt(line, exclude_end);
-    int end_caret_x = Caret::xAtColumn(layout, col, exclude_end);
+    int end_caret_x = Caret::xAtColumn(layoutAt(line), col);
 
     app::Point caret_pos{
         .x = end_caret_x,

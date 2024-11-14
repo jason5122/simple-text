@@ -27,7 +27,7 @@ private:
     TSTree* tree = nullptr;
 
     // TODO: Support multiple languages.
-    const TSLanguage* json_language = nullptr;
+    const TSLanguage* cpp_language = nullptr;
     wasm_engine_t* engine = nullptr;
     TSWasmStore* wasm_store = nullptr;
 

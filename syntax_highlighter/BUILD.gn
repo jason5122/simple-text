@@ -1,9 +1,24 @@
 source_set("syntax_highlighter") {
   sources = [ "syntax_highlighter.cc" ]
 
-  deps = [
-    "queries",
-    "wasm",
-  ]
+  deps = [ ":languages" ]
   public_deps = [ "//third_party/tree_sitter" ]
+}
+
+if (is_mac) {
+  bundle_data("languages") {
+    sources = [
+      "languages/cpp",
+      "languages/json",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/languages/{{source_file_part}}" ]
+  }
+} else {
+  copy("languages") {
+    sources = [
+      "languages/cpp",
+      "languages/json",
+    ]
+    outputs = [ "$root_out_dir/languages/{{source_file_part}}" ]
+  }
 }

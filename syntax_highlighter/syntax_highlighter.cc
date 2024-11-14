@@ -23,7 +23,7 @@ SyntaxHighlighter::~SyntaxHighlighter() {
     if (query) ts_query_delete(query);
     if (tree) ts_tree_delete(tree);
 
-    if (json_language) ts_language_delete(json_language);
+    if (cpp_language) ts_language_delete(cpp_language);
     if (engine) wasm_engine_delete(engine);
     if (wasm_store) ts_wasm_store_delete(wasm_store);
 }
@@ -65,13 +65,13 @@ void SyntaxHighlighter::setCppLanguage() {
     loadFromWasm();
 
     PROFILE_BLOCK("SyntaxHighlighter::setCppLanguage()");
-    ts_parser_set_language(parser, json_language);
+    ts_parser_set_language(parser, cpp_language);
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    auto query_path = base::ResourceDir() / "queries/highlights_cpp.scm";
+    auto query_path = base::ResourceDir() / "languages/cpp/highlights.scm";
     std::string src = base::ReadFile(query_path.c_str());
-    query = ts_query_new(json_language, src.data(), src.length(), &error_offset, &error_type);
+    query = ts_query_new(cpp_language, src.data(), src.length(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
         std::println("Error creating new TSQuery. error_offset: {}, error type:{} ", error_offset,
@@ -169,8 +169,7 @@ const Rgb& SyntaxHighlighter::getColor(size_t capture_index) const {
 void SyntaxHighlighter::loadFromWasm() {
     PROFILE_BLOCK("SyntaxHighlighter::loadFromWasm()");
 
-    // fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-json.wasm";
-    fs::path wasm_path = base::ResourceDir() / "wasm/tree-sitter-cpp.wasm";
+    fs::path wasm_path = base::ResourceDir() / "languages/cpp/language.wasm";
     FILE* file = fopen(wasm_path.c_str(), "rb");
     fseek(file, 0L, SEEK_END);
     size_t file_size = ftell(file);
@@ -184,14 +183,14 @@ void SyntaxHighlighter::loadFromWasm() {
     }
 
     TSWasmError ts_wasm_error;
-    json_language =
+    cpp_language =
         ts_wasm_store_load_language(wasm_store, "cpp", binary.data, binary.size, &ts_wasm_error);
 
-    if (!json_language) {
+    if (!cpp_language) {
         std::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
         std::abort();
     }
-    assert(ts_language_is_wasm(json_language));
+    assert(ts_language_is_wasm(cpp_language));
 
     wasm_byte_vec_delete(&binary);
     fclose(file);

@@ -62,7 +62,29 @@ Rgb ColorForCaptureName(std::string_view name) {
 }  // namespace
 
 void SyntaxHighlighter::setCppLanguage() {
-    loadFromWasm();
+    {
+        PROFILE_BLOCK("SyntaxHighlighter::loadFromWasm()");
+
+        fs::path wasm_path = base::ResourceDir() / "languages/cpp/language.wasm";
+        size_t file_size;
+        void* data = base::ReadFileBinary(wasm_path.c_str(), file_size);
+
+        wasm_byte_vec_t binary;
+        wasm_byte_vec_new_uninitialized(&binary, file_size);
+        binary.data = static_cast<char*>(data);
+
+        TSWasmError ts_wasm_error;
+        cpp_language = ts_wasm_store_load_language(wasm_store, "cpp", binary.data, binary.size,
+                                                   &ts_wasm_error);
+
+        if (!cpp_language) {
+            std::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
+            std::abort();
+        }
+        assert(ts_language_is_wasm(cpp_language));
+
+        wasm_byte_vec_delete(&binary);
+    }
 
     PROFILE_BLOCK("SyntaxHighlighter::setCppLanguage()");
     ts_parser_set_language(parser, cpp_language);
@@ -164,36 +186,6 @@ std::vector<Highlight> SyntaxHighlighter::getHighlights(size_t start_line, size_
 
 const Rgb& SyntaxHighlighter::getColor(size_t capture_index) const {
     return capture_index_color_table[capture_index];
-}
-
-void SyntaxHighlighter::loadFromWasm() {
-    PROFILE_BLOCK("SyntaxHighlighter::loadFromWasm()");
-
-    fs::path wasm_path = base::ResourceDir() / "languages/cpp/language.wasm";
-    FILE* file = fopen(wasm_path.c_str(), "rb");
-    fseek(file, 0L, SEEK_END);
-    size_t file_size = ftell(file);
-    fseek(file, 0L, SEEK_SET);
-
-    wasm_byte_vec_t binary;
-    wasm_byte_vec_new_uninitialized(&binary, file_size);
-    if (fread(binary.data, file_size, 1, file) != 1) {
-        std::println("SyntaxHighlighter::loadFromWasm(): Error reading module!");
-        return;
-    }
-
-    TSWasmError ts_wasm_error;
-    cpp_language =
-        ts_wasm_store_load_language(wasm_store, "cpp", binary.data, binary.size, &ts_wasm_error);
-
-    if (!cpp_language) {
-        std::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
-        std::abort();
-    }
-    assert(ts_language_is_wasm(cpp_language));
-
-    wasm_byte_vec_delete(&binary);
-    fclose(file);
 }
 
 }  // namespace highlight

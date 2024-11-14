@@ -29,4 +29,17 @@ void WriteFile(std::string_view file_name, std::string_view contents) {
     fclose(fp);
 }
 
+void* ReadFileBinary(std::string_view file_name, size_t& file_size) {
+    FILE* file = fopen(file_name.data(), "rb");
+    fseek(file, 0L, SEEK_END);
+    file_size = ftell(file);
+    fseek(file, 0L, SEEK_SET);
+
+    // TODO: Verify this is correct. Free this pointer later!
+    void* data = malloc(file_size);
+    fread(data, file_size, 1, file);
+    fclose(file);
+    return data;
 }
+
+}  // namespace base

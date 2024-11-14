@@ -25,4 +25,4 @@ fs::path DataDir() {
     return app_dir.fileSystemRepresentation;
 }
 
-}
+}  // namespace base

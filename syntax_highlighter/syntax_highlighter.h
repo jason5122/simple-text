@@ -32,8 +32,6 @@ private:
     TSWasmStore* wasm_store = nullptr;
 
     std::vector<Rgb> capture_index_color_table;
-
-    void loadFromWasm();
 };
 
 }  // namespace highlight

@@ -219,46 +219,47 @@ void TextViewWidget::rightDelete() {
 void TextViewWidget::deleteWord(bool forward) {
     PROFILE_BLOCK("TextViewWidget::deleteWord()");
 
-    auto& highlighter = highlight::Highlighter::instance();
-    auto& language = highlighter.getLanguage("cpp");
+    //     auto& highlighter = highlight::Highlighter::instance();
+    //     auto& language = highlighter.getLanguage("cpp");
 
-    if (selection.empty()) {
-        auto [line, col] = tree.line_column_at(selection.end().index);
-        const auto& layout = layoutAt(line);
+    //     if (selection.empty()) {
+    //         auto [line, col] = tree.line_column_at(selection.end().index);
+    //         const auto& layout = layoutAt(line);
 
-        size_t delta;
-        if (forward) {
-            delta = Caret::nextWordEnd(layout, col, tree.get_line_content_with_newline(line));
-        } else {
-            delta = Caret::prevWordStart(layout, col, tree.get_line_content_with_newline(line));
-            selection.decrement(delta, false);
+    //         size_t delta;
+    //         if (forward) {
+    //             delta = Caret::nextWordEnd(layout, col,
+    //             tree.get_line_content_with_newline(line));
+    //         } else {
+    //             delta = Caret::prevWordStart(layout, col,
+    //             tree.get_line_content_with_newline(line)); selection.decrement(delta, false);
 
-            // Delete newline if at beginning of line.
-            if (delta == 0 && line > 0) {
-                selection.decrement(1_Z, false);
-                delta = 1;
-            }
-        }
+    //             // Delete newline if at beginning of line.
+    //             if (delta == 0 && line > 0) {
+    //                 selection.decrement(1_Z, false);
+    //                 delta = 1;
+    //             }
+    //         }
 
-        size_t i = selection.end().index;
-        tree.erase(i, delta);
+    //         size_t i = selection.end().index;
+    //         tree.erase(i, delta);
 
-#ifdef ENABLE_HIGHLIGHTING
-        parse_tree.edit(i, i + delta, i);
-        parse_tree.parse(tree, language);
-#endif
-    } else {
-        auto [start, end] = selection.range();
-        tree.erase(start, end - start);
-        selection.collapse(Selection::Direction::kLeft);
+    // #ifdef ENABLE_HIGHLIGHTING
+    //         parse_tree.edit(i, i + delta, i);
+    //         parse_tree.parse(tree, language);
+    // #endif
+    //     } else {
+    //         auto [start, end] = selection.range();
+    //         tree.erase(start, end - start);
+    //         selection.collapse(Selection::Direction::kLeft);
 
-#ifdef ENABLE_HIGHLIGHTING
-        parse_tree.edit(start, end, start);
-        parse_tree.parse(tree, language);
-#endif
-    }
+    // #ifdef ENABLE_HIGHLIGHTING
+    //         parse_tree.edit(start, end, start);
+    //         parse_tree.parse(tree, language);
+    // #endif
+    //     }
 
-    updateMaxScroll();
+    // updateMaxScroll();
 }
 
 std::string TextViewWidget::getSelectionText() {

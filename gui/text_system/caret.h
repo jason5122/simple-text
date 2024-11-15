@@ -27,19 +27,19 @@ public:
         return c1.index == c2.index;
     }
     friend constexpr bool operator!=(const Caret& c1, const Caret& c2) {
-        return !(c1.index == c2.index);
+        return c1.index != c2.index;
     }
     friend constexpr bool operator<(const Caret& c1, const Caret& c2) {
         return c1.index < c2.index;
     }
     friend constexpr bool operator>(const Caret& c1, const Caret& c2) {
-        return c2.index > c1.index;
+        return c1.index > c2.index;
     }
     friend constexpr bool operator<=(const Caret& c1, const Caret& c2) {
-        return !(c1.index > c2.index);
+        return c1.index <= c2.index;
     }
     friend constexpr bool operator>=(const Caret& c1, const Caret& c2) {
-        return !(c1.index < c2.index);
+        return c1.index >= c2.index;
     }
 
 private:

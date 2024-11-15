@@ -1,6 +1,7 @@
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
+#include "syntax_highlighter/highlighter.h"
 #include "text_view_widget.h"
 #include <cmath>
 #include <tree_sitter/api.h>
@@ -17,7 +18,8 @@ TextViewWidget::TextViewWidget(std::string_view text)
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING
-    language.load("cpp");
+    auto& highlighter = highlight::Highlighter::instance();
+    auto& language = highlighter.getLanguage("cpp");
     PROFILE_BLOCK("TextViewWidget: highlighter.parse()");
     parse_tree.parse(tree, language);
 #endif
@@ -131,6 +133,8 @@ void TextViewWidget::insertText(std::string_view text) {
 
 #ifdef ENABLE_HIGHLIGHTING
     PROFILE_BLOCK("TextViewWidget::insertText() edit + parse");
+    auto& highlighter = highlight::Highlighter::instance();
+    auto& language = highlighter.getLanguage("cpp");
     parse_tree.edit(i, i, i + text.length());
     parse_tree.parse(tree, language);
 #endif
@@ -142,6 +146,9 @@ void TextViewWidget::insertText(std::string_view text) {
 
 void TextViewWidget::leftDelete() {
     PROFILE_BLOCK("TextViewWidget::leftDelete()");
+
+    auto& highlighter = highlight::Highlighter::instance();
+    auto& language = highlighter.getLanguage("cpp");
 
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end().index);
@@ -180,6 +187,9 @@ void TextViewWidget::leftDelete() {
 void TextViewWidget::rightDelete() {
     PROFILE_BLOCK("TextViewWidget::rightDelete()");
 
+    auto& highlighter = highlight::Highlighter::instance();
+    auto& language = highlighter.getLanguage("cpp");
+
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end().index);
         const auto& layout = layoutAt(line);
@@ -208,6 +218,9 @@ void TextViewWidget::rightDelete() {
 
 void TextViewWidget::deleteWord(bool forward) {
     PROFILE_BLOCK("TextViewWidget::deleteWord()");
+
+    auto& highlighter = highlight::Highlighter::instance();
+    auto& language = highlighter.getLanguage("cpp");
 
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end().index);
@@ -369,6 +382,8 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& highlighter = highlight::Highlighter::instance();
+    auto& language = highlighter.getLanguage("cpp");
 
 #ifdef ENABLE_HIGHLIGHTING
     std::vector<highlight::Highlight> highlights;

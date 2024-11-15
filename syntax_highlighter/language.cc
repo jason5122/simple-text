@@ -8,18 +8,48 @@
 
 namespace highlight {
 
-Language::Language() : engine{wasm_engine_new()}, parser{ts_parser_new()} {
+Language::Language(wasm_engine_t* engine, std::string_view name)
+    : name{name}, parser{ts_parser_new()} {
     TSWasmError ts_wasm_error;
     wasm_store = ts_wasm_store_new(engine, &ts_wasm_error);
     ts_parser_set_wasm_store(parser, wasm_store);
 }
 
 Language::~Language() {
-    ts_parser_take_wasm_store(parser);
+    if (parser) ts_parser_take_wasm_store(parser);
     ts_parser_delete(parser);
     ts_language_delete(language);
     ts_query_delete(query);
     ts_wasm_store_delete(wasm_store);
+}
+
+Language::Language(Language&& other)
+    : name{other.name},
+      parser{other.parser},
+      wasm_store{other.wasm_store},
+      language{other.language},
+      query{other.query},
+      capture_index_color_table{other.capture_index_color_table} {
+    other.parser = nullptr;
+    other.wasm_store = nullptr;
+    other.language = nullptr;
+    other.query = nullptr;
+}
+
+Language& Language::operator=(Language&& other) {
+    if (&other != this) {
+        name = other.name;
+        parser = other.parser;
+        wasm_store = other.wasm_store;
+        language = other.language;
+        query = other.query;
+        capture_index_color_table = other.capture_index_color_table;
+        other.parser = nullptr;
+        other.wasm_store = nullptr;
+        other.language = nullptr;
+        other.query = nullptr;
+    }
+    return *this;
 }
 
 namespace {
@@ -29,12 +59,11 @@ static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
 constexpr Rgb ColorForCaptureName(std::string_view name);
 }  // namespace
 
-void Language::load(std::string_view language_name) {
+void Language::load() {
     {
         PROFILE_BLOCK("SyntaxHighlighter::loadFromWasm()");
 
-        fs::path wasm_path =
-            base::ResourceDir() / std::format("languages/{}/language.wasm", language_name);
+        fs::path wasm_path = base::ResourceDir() / std::format("languages/{}/language.wasm", name);
         size_t file_size;
         auto data = base::ReadFileBinary(wasm_path.c_str(), file_size);
 
@@ -43,8 +72,8 @@ void Language::load(std::string_view language_name) {
         binary.data = data.release();  // Release the pointer so we don't double free.
 
         TSWasmError ts_wasm_error;
-        language = ts_wasm_store_load_language(wasm_store, language_name.data(), binary.data,
-                                               binary.size, &ts_wasm_error);
+        language = ts_wasm_store_load_language(wasm_store, name.data(), binary.data, binary.size,
+                                               &ts_wasm_error);
 
         if (!language) {
             std::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
@@ -60,7 +89,7 @@ void Language::load(std::string_view language_name) {
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    auto query_path = base::ResourceDir() / "languages/cpp/highlights.scm";
+    auto query_path = base::ResourceDir() / std::format("languages/{}/highlights.scm", name);
     std::string src = base::ReadFile(query_path.c_str());
     query = ts_query_new(language, src.data(), src.length(), &error_offset, &error_type);
 

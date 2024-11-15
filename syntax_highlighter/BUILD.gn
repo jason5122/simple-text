@@ -1,5 +1,6 @@
 source_set("syntax_highlighter") {
   sources = [
+    "highlighter.cc",
     "language.cc",
     "parse_tree.cc",
   ]

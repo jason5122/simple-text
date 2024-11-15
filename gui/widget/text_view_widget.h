@@ -72,7 +72,6 @@ private:
 
 #ifdef ENABLE_HIGHLIGHTING
     highlight::ParseTree parse_tree;
-    highlight::Language language;
 #endif
 
     static constexpr int kGutterLeftPadding = 18 * 2;

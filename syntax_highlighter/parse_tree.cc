@@ -31,7 +31,7 @@ const char* ReadCallback(void* opaque_data, uint32_t offset, TSPoint, uint32_t* 
         ++*bytes_read;
     }
     data->buf[*bytes_read] = '\0';
-    return static_cast<const char*>(data->buf);
+    return data->buf;
 };
 }  // namespace
 

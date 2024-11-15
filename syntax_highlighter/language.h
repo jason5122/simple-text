@@ -8,17 +8,21 @@ namespace highlight {
 
 class Language {
 public:
-    Language();
+    Language(wasm_engine_t* engine, std::string_view name);
     ~Language();
+    Language(Language&& other);
+    Language& operator=(Language&& other);
 
-    void load(std::string_view language_name);
+    void load();
     std::vector<Highlight> highlight(TSTree* tree, size_t start_line, size_t end_line) const;
     const Rgb& getColor(size_t capture_index) const;
     TSParser* getParser() const;
 
 private:
-    wasm_engine_t* engine;  // TODO: Refactor this.
+    Language(const Language&) = delete;
+    void operator=(const Language&) = delete;
 
+    std::string name;
     TSParser* parser = nullptr;
     TSWasmStore* wasm_store = nullptr;
 

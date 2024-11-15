@@ -427,7 +427,8 @@ void EditorWindow::onAction(app::Action action, bool extend) {
 
 void EditorWindow::onAppAction(app::AppAction action) {
     if (action == app::AppAction::kNewFile) {
-        editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
+        // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
+        editor_widget->addTab("sample.cc", kCppExample);
         redraw();
     }
     if (action == app::AppAction::kNewWindow) {

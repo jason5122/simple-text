@@ -11,6 +11,8 @@ namespace font {
 class FontRasterizer {
 public:
     static FontRasterizer& instance();
+    FontRasterizer(const FontRasterizer&) = delete;
+    FontRasterizer& operator=(const FontRasterizer&) = delete;
 
     size_t addFont(std::string_view font_name8, int font_size, FontStyle style = FontStyle::kNone);
     size_t addSystemFont(int font_size, FontStyle style = FontStyle::kNone);

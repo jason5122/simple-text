@@ -6,6 +6,18 @@ ParseTree::~ParseTree() {
     ts_tree_delete(tree);
 }
 
+ParseTree::ParseTree(ParseTree&& other) : tree{other.tree} {
+    other.tree = nullptr;
+}
+
+ParseTree& ParseTree::operator=(ParseTree&& other) {
+    if (&other != this) {
+        tree = other.tree;
+        other.tree = nullptr;
+    }
+    return *this;
+}
+
 namespace {
 constexpr int kBufferLen = 1024;
 

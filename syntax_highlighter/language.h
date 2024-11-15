@@ -12,6 +12,8 @@ public:
     ~Language();
     Language(Language&& other);
     Language& operator=(Language&& other);
+    Language(const Language&) = delete;
+    void operator=(const Language&) = delete;
 
     void load();
     std::vector<Highlight> highlight(TSTree* tree, size_t start_line, size_t end_line) const;
@@ -19,9 +21,6 @@ public:
     TSParser* getParser() const;
 
 private:
-    Language(const Language&) = delete;
-    void operator=(const Language&) = delete;
-
     std::string name;
     TSParser* parser = nullptr;
     TSWasmStore* wasm_store = nullptr;

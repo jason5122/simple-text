@@ -3,12 +3,12 @@
 #include "gui/renderer/renderer.h"
 #include "text_view_widget.h"
 #include <cmath>
+#include <tree_sitter/api.h>
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
 #include "util/std_print.h"
 #include <cassert>
-#include <tree_sitter/api.h>
 
 namespace gui {
 
@@ -17,9 +17,9 @@ TextViewWidget::TextViewWidget(std::string_view text)
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING
-    highlighter.setCppLanguage();
+    language.load("cpp");
     PROFILE_BLOCK("TextViewWidget: highlighter.parse()");
-    highlighter.parse(tree);
+    parse_tree.parse(tree, language);
 #endif
 }
 
@@ -131,8 +131,8 @@ void TextViewWidget::insertText(std::string_view text) {
 
 #ifdef ENABLE_HIGHLIGHTING
     PROFILE_BLOCK("TextViewWidget::insertText() edit + parse");
-    highlighter.edit(i, i, i + text.length());
-    highlighter.parse(tree);
+    parse_tree.edit(i, i, i + text.length());
+    parse_tree.parse(tree, language);
 #endif
 
     // TODO: Do we update caret `max_x` too?
@@ -160,8 +160,8 @@ void TextViewWidget::leftDelete() {
         tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
-        highlighter.edit(i, i + delta, i);
-        highlighter.parse(tree);
+        parse_tree.edit(i, i + delta, i);
+        parse_tree.parse(tree, language);
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -169,8 +169,8 @@ void TextViewWidget::leftDelete() {
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
-        highlighter.edit(start, end, start);
-        highlighter.parse(tree);
+        parse_tree.edit(start, end, start);
+        parse_tree.parse(tree, language);
 #endif
     }
 
@@ -189,8 +189,8 @@ void TextViewWidget::rightDelete() {
         tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
-        highlighter.edit(i, i + delta, i);
-        highlighter.parse(tree);
+        parse_tree.edit(i, i + delta, i);
+        parse_tree.parse(tree, language);
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -198,8 +198,8 @@ void TextViewWidget::rightDelete() {
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
-        highlighter.edit(start, end, start);
-        highlighter.parse(tree);
+        parse_tree.edit(start, end, start);
+        parse_tree.parse(tree, language);
 #endif
     }
 
@@ -231,8 +231,8 @@ void TextViewWidget::deleteWord(bool forward) {
         tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
-        highlighter.edit(i, i + delta, i);
-        highlighter.parse(tree);
+        parse_tree.edit(i, i + delta, i);
+        parse_tree.parse(tree, language);
 #endif
     } else {
         auto [start, end] = selection.range();
@@ -240,8 +240,8 @@ void TextViewWidget::deleteWord(bool forward) {
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
-        highlighter.edit(start, end, start);
-        highlighter.parse(tree);
+        parse_tree.edit(start, end, start);
+        parse_tree.parse(tree, language);
 #endif
     }
 
@@ -374,7 +374,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     std::vector<highlight::Highlight> highlights;
     {
         PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
-        highlights = highlighter.getHighlights(start_line, end_line);
+        highlights = language.highlight(parse_tree.getTree(), start_line, end_line);
     }
 #endif
 
@@ -422,7 +422,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
                 capture_index = stk.top().capture_index;
 
                 // TODO: Use unified Rgb struct.
-                const auto& highlight_color = highlighter.getColor(capture_index);
+                const auto& highlight_color = language.getColor(capture_index);
                 return {.r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
             } else {
                 return kTextColor;

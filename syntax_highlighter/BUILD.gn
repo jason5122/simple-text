@@ -1,5 +1,8 @@
 source_set("syntax_highlighter") {
-  sources = [ "syntax_highlighter.cc" ]
+  sources = [
+    "language.cc",
+    "parse_tree.cc",
+  ]
 
   deps = [ ":languages" ]
   public_deps = [ "//third_party/tree_sitter" ]

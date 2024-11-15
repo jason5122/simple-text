@@ -11,7 +11,8 @@
 #define ENABLE_HIGHLIGHTING
 
 #ifdef ENABLE_HIGHLIGHTING
-#include "syntax_highlighter/syntax_highlighter.h"
+#include "syntax_highlighter/language.h"
+#include "syntax_highlighter/parse_tree.h"
 #endif
 
 namespace gui {
@@ -70,7 +71,8 @@ private:
     Selection selection{};
 
 #ifdef ENABLE_HIGHLIGHTING
-    highlight::SyntaxHighlighter highlighter;
+    highlight::ParseTree parse_tree;
+    highlight::Language language;
 #endif
 
     static constexpr int kGutterLeftPadding = 18 * 2;

@@ -5,6 +5,7 @@ source_set("tests") {
 
   deps = [
     "//third_party/googletest:gtest",
+    "//third_party/uni_algo",
     "//unicode",
   ]
 }

@@ -148,6 +148,10 @@ public:
         return total_offset;
     }
 
+    // Unicode.
+    // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
+    int32_t nextCodePoint();
+
 private:
     void populate_ptrs();
     void fast_forward_to(size_t offset);

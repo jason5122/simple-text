@@ -1,23 +1,18 @@
 #pragma once
 
+#include "base/buffer/piece_tree_rbtree.h"
+
 #include <forward_list>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include "piece_tree_rbtree.h"
-
 #ifndef NDEBUG
 #define TEXTBUF_DEBUG
 #endif  // NDEBUG
 
 namespace base {
-
-struct UndoRedoEntry {
-    RedBlackTree root;
-    size_t op_offset;
-};
 
 struct NodePosition {
     const NodeData* node = nullptr;
@@ -42,6 +37,11 @@ struct BufferCollection {
 struct LineRange {
     size_t first;
     size_t last;
+};
+
+struct UndoRedoEntry {
+    RedBlackTree root;
+    size_t op_offset;
 };
 
 struct UndoRedoResult {
@@ -138,7 +138,6 @@ private:
 class TreeWalker {
 public:
     TreeWalker(const PieceTree* tree, size_t offset = 0);
-    TreeWalker(const TreeWalker&) = delete;
 
     char current();
     char next();
@@ -147,15 +146,6 @@ public:
     size_t remaining() const;
     size_t offset() const {
         return total_offset;
-    }
-
-    // For Iterator-like behavior.
-    TreeWalker& operator++() {
-        return *this;
-    }
-
-    char operator*() {
-        return next();
     }
 
 private:
@@ -184,7 +174,6 @@ private:
 class ReverseTreeWalker {
 public:
     ReverseTreeWalker(const PieceTree* tree, size_t offset = 0);
-    ReverseTreeWalker(const TreeWalker&) = delete;
 
     char current();
     char next();
@@ -193,15 +182,6 @@ public:
     size_t remaining() const;
     size_t offset() const {
         return total_offset;
-    }
-
-    // For Iterator-like behavior.
-    ReverseTreeWalker& operator++() {
-        return *this;
-    }
-
-    char operator*() {
-        return next();
     }
 
 private:
@@ -233,7 +213,7 @@ constexpr WalkSentinel end(const PieceTree&) {
     return WalkSentinel{};
 }
 
-inline bool operator==(const TreeWalker& walker, WalkSentinel) {
+constexpr bool operator==(const TreeWalker& walker, WalkSentinel) {
     return walker.exhausted();
 }
 

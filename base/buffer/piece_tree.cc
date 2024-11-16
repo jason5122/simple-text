@@ -1,16 +1,13 @@
 #include "piece_tree.h"
 
-#include <cassert>
-#include <memory>
-#include <string>
-#include <string_view>
-#include <vector>
-
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "util/scope_guard.h"
 
-#include "util/std_print.h"
+#include <cassert>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace base {
 
@@ -358,17 +355,18 @@ LineRange PieceTree::get_line_range_with_newline(size_t line) const {
 std::string PieceTree::str() const {
     std::string str;
     str.reserve(length());
-    for (char ch : *this) {
-        str.push_back(ch);
+    TreeWalker walker{this};
+    while (!walker.exhausted()) {
+        str.push_back(walker.next());
     }
     return str;
 }
 
 std::string PieceTree::substr(size_t offset, size_t count) const {
     std::string str;
+    str.reserve(count);
     TreeWalker walker{this, offset};
-    for (size_t i = 0; i < count; i++) {
-        if (walker.exhausted()) break;
+    for (size_t i = 0; i < count && !walker.exhausted(); ++i) {
         str.push_back(walker.next());
     }
     return str;

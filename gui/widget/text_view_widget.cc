@@ -83,10 +83,12 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     //         selection.setIndex(index, extend);
     //     }
     // }
-    // if (by == MoveBy::kWords && forward) {
-    //     size_t delta = Caret::nextWordEnd(layout, col,
-    //     tree.get_line_content_with_newline(line)); selection.incrementIndex(delta, extend);
-    // }
+    if (by == MoveBy::kWords && forward) {
+        selection.end().nextWordEnd(tree);
+        if (!extend) {
+            selection.start() = selection.end();
+        }
+    }
 
     if (by == MoveBy::kCharacters) {
         // updateCaretX();

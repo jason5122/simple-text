@@ -1,10 +1,17 @@
 #pragma once
 
+#include "base/buffer/piece_tree.h"
 #include "font/types.h"
 #include <cstddef>
 #include <string_view>
 
 namespace gui {
+
+enum class CharKind {
+    kWhitespace,
+    kWord,
+    KPunctuation,
+};
 
 class Caret {
 public:
@@ -19,9 +26,9 @@ public:
     static size_t prevWordStart(const font::LineLayout& layout,
                                 size_t col,
                                 std::string_view line_str);
-    static size_t nextWordEnd(const font::LineLayout& layout,
-                              size_t col,
-                              std::string_view line_str);
+    void nextWordEnd(const base::PieceTree& tree);
+
+    static constexpr CharKind codepointToCharKind(int32_t codepoint);
 
     friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
         return c1.index == c2.index;

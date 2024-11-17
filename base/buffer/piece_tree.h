@@ -150,7 +150,7 @@ public:
 
     // Unicode.
     // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
-    int32_t nextCodePoint();
+    int32_t next_codepoint();
 
 private:
     void populate_ptrs();

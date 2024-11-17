@@ -821,7 +821,7 @@ constexpr int32_t left_shift(int32_t value, int32_t shift) {
 }
 }  // namespace
 
-int32_t TreeWalker::nextCodePoint() {
+int32_t TreeWalker::next_codepoint() {
     int c = current();
     int hic = c << 24;
 

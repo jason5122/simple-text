@@ -7,6 +7,7 @@ source_set("text_system") {
 
   deps = [
     "//font",
+    "//third_party/uni_algo",
     "//third_party/xxhash",
   ]
   public_deps = [ "//third_party/tree_sitter" ]

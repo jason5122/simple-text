@@ -1,5 +1,8 @@
 #include "caret.h"
+
+#include "third_party/uni_algo/include/uni_algo/prop.h"
 #include <numeric>
+#include <optional>
 
 namespace gui {
 
@@ -70,25 +73,36 @@ size_t Caret::prevWordStart(const font::LineLayout& layout,
     return col;
 }
 
-size_t Caret::nextWordEnd(const font::LineLayout& layout, size_t col, std::string_view line_str) {
-    // TODO: Fix this.
-    // auto it = iteratorAtColumn(layout, col);
-    // auto prev_it = layout.end();  // Invalid/"null" iterator.
-    // for (; it != layout.end(); ++it) {
-    //     if (prev_it != layout.end()) {
-    //         std::string_view left_str = line_str.substr((*prev_it).index, (*prev_it).length);
-    //         std::string_view right_str = line_str.substr((*it).index, (*it).length);
+void Caret::nextWordEnd(const base::PieceTree& tree) {
+    base::TreeWalker walker{&tree, index};
 
-    //         // TODO: Properly implement this.
-    //         bool left_kind = std::isalpha(left_str[0]);
-    //         bool right_kind = std::isalpha(right_str[0]);
-    //         if (left_kind != right_kind && left_str != " ") {
-    //             return (*it).index - col;
-    //         }
-    //     }
-    //     prev_it = it;
-    // }
-    return layout.length - col;
+    std::optional<int32_t> prev_cp;
+    size_t prev_offset = index;
+
+    while (!walker.exhausted()) {
+        int32_t cp = walker.next_codepoint();
+        if (prev_cp) {
+            auto prev_kind = codepointToCharKind(prev_cp.value());
+            auto kind = codepointToCharKind(cp);
+            bool prev_is_whitespace = una::codepoint::is_whitespace(prev_cp.value());
+            if ((prev_kind != kind && !prev_is_whitespace) || cp == '\n') {
+                index = prev_offset;
+                return;
+            }
+        }
+        prev_cp = cp;
+        prev_offset = walker.offset();
+    }
+}
+
+constexpr CharKind Caret::codepointToCharKind(int32_t codepoint) {
+    if (una::codepoint::is_whitespace(codepoint)) {
+        return CharKind::kWhitespace;
+    } else if (una::codepoint::is_alphabetic(codepoint) || codepoint == '_') {
+        return CharKind::kWord;
+    } else {
+        return CharKind::KPunctuation;
+    }
 }
 
 font::LineLayout::const_iterator Caret::iteratorAtColumn(const font::LineLayout& layout,

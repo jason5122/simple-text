@@ -12,23 +12,23 @@ TEST(TreeWalkerTest, TreeWalkerNextUTF8Test1) {
     TreeWalker walker{&tree};
 
     while (!walker.exhausted()) {
-        int32_t codepoint = walker.nextCodePoint();
+        int32_t codepoint = walker.next_codepoint();
         EXPECT_TRUE(una::codepoint::is_alphabetic(codepoint));
     }
-    EXPECT_EQ(walker.nextCodePoint(), 0);
+    EXPECT_EQ(walker.next_codepoint(), 0);
 }
 
 TEST(TreeWalkerTest, TreeWalkerNextUTF8Test2) {
     PieceTree tree1{"﷽"};
     TreeWalker walker1{&tree1};
-    EXPECT_EQ(walker1.nextCodePoint(), static_cast<int32_t>(U'\U0000FDFD'));
+    EXPECT_EQ(walker1.next_codepoint(), static_cast<int32_t>(U'\U0000FDFD'));
     EXPECT_TRUE(walker1.exhausted());
 
     PieceTree tree2{"☃️"};
     TreeWalker walker2{&tree2};
-    EXPECT_EQ(walker2.nextCodePoint(), static_cast<int32_t>(U'\U00002603'));
+    EXPECT_EQ(walker2.next_codepoint(), static_cast<int32_t>(U'\U00002603'));
     EXPECT_FALSE(walker2.exhausted());
-    EXPECT_EQ(walker2.nextCodePoint(), static_cast<int32_t>(U'\U0000FE0F'));
+    EXPECT_EQ(walker2.next_codepoint(), static_cast<int32_t>(U'\U0000FE0F'));
     EXPECT_TRUE(walker2.exhausted());
 }
 

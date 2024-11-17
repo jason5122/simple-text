@@ -16,7 +16,7 @@ using namespace gui;
 
 namespace {
 
-constexpr auto operator*(const std::string_view& sv, size_t times) {
+constexpr auto operator* [[maybe_unused]] (const std::string_view& sv, size_t times) {
     std::string result;
     for (size_t i = 0; i < times; ++i) {
         result += sv;
@@ -265,7 +265,9 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->currentWidget()->selectAll();
         handled = true;
     } else if (key == app::Key::kN && modifiers == app::kPrimaryModifier) {
-        editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
+        PROFILE_BLOCK("Add new tab (modifier key)");
+        // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
+        editor_widget->addTab("untitled", "");
         handled = true;
     } else if (key == app::Key::kN &&
                modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
@@ -327,6 +329,8 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         auto* text_view = editor_widget->currentWidget();
         text_view->insertText("    ");
         handled = true;
+    } else if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
+        parent.quit();
     }
 
     if (handled) {
@@ -427,7 +431,7 @@ void EditorWindow::onAction(app::Action action, bool extend) {
 
 void EditorWindow::onAppAction(app::AppAction action) {
     if (action == app::AppAction::kNewFile) {
-        PROFILE_BLOCK("Add new tab");
+        PROFILE_BLOCK("Add new tab (app action)");
         // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
         // editor_widget->addTab("sample.cc", kCppExample);
         editor_widget->addTab("untitled", "");

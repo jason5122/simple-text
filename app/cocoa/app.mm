@@ -54,7 +54,7 @@
         setKeyEquivalentModifierMask:NSEventModifierFlagShift | NSEventModifierFlagCommand];
     [menu addItem:fileMenu];
 
-    NSApp.mainMenu = menu;
+    // NSApp.mainMenu = menu;
 
     app->onLaunch();
 }

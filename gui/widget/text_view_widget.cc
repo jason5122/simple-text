@@ -141,9 +141,6 @@ void TextViewWidget::insertText(std::string_view text) {
 void TextViewWidget::leftDelete() {
     PROFILE_BLOCK("TextViewWidget::leftDelete()");
 
-    auto& highlighter = highlight::Highlighter::instance();
-    auto& language = highlighter.getLanguage("cpp");
-
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end().index);
         const auto& layout = layoutAt(line);
@@ -161,6 +158,8 @@ void TextViewWidget::leftDelete() {
         tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
+        auto& highlighter = highlight::Highlighter::instance();
+        auto& language = highlighter.getLanguage("cpp");
         parse_tree.edit(i, i + delta, i);
         parse_tree.parse(tree, language);
 #endif
@@ -170,6 +169,8 @@ void TextViewWidget::leftDelete() {
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
+        auto& highlighter = highlight::Highlighter::instance();
+        auto& language = highlighter.getLanguage("cpp");
         parse_tree.edit(start, end, start);
         parse_tree.parse(tree, language);
 #endif
@@ -181,9 +182,6 @@ void TextViewWidget::leftDelete() {
 void TextViewWidget::rightDelete() {
     PROFILE_BLOCK("TextViewWidget::rightDelete()");
 
-    auto& highlighter = highlight::Highlighter::instance();
-    auto& language = highlighter.getLanguage("cpp");
-
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end().index);
         const auto& layout = layoutAt(line);
@@ -193,6 +191,8 @@ void TextViewWidget::rightDelete() {
         tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
+        auto& highlighter = highlight::Highlighter::instance();
+        auto& language = highlighter.getLanguage("cpp");
         parse_tree.edit(i, i + delta, i);
         parse_tree.parse(tree, language);
 #endif
@@ -202,6 +202,8 @@ void TextViewWidget::rightDelete() {
         selection.collapse(Selection::Direction::kLeft);
 
 #ifdef ENABLE_HIGHLIGHTING
+        auto& highlighter = highlight::Highlighter::instance();
+        auto& language = highlighter.getLanguage("cpp");
         parse_tree.edit(start, end, start);
         parse_tree.parse(tree, language);
 #endif
@@ -377,10 +379,10 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
 
     TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
     RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& highlighter = highlight::Highlighter::instance();
-    auto& language = highlighter.getLanguage("cpp");
 
 #ifdef ENABLE_HIGHLIGHTING
+    auto& highlighter = highlight::Highlighter::instance();
+    auto& language = highlighter.getLanguage("cpp");
     std::vector<highlight::Highlight> highlights;
     {
         PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");

@@ -148,7 +148,6 @@ public:
         return total_offset;
     }
 
-    // Unicode.
     // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
     int32_t next_codepoint();
 
@@ -188,6 +187,9 @@ public:
         return total_offset;
     }
 
+    // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
+    int32_t next_codepoint();
+
 private:
     void populate_ptrs();
     void fast_forward_to(size_t offset);
@@ -206,19 +208,5 @@ private:
     const char* first_ptr = nullptr;
     const char* last_ptr = nullptr;
 };
-
-struct WalkSentinel {};
-
-inline TreeWalker begin(const PieceTree& tree) {
-    return TreeWalker{&tree};
-}
-
-constexpr WalkSentinel end(const PieceTree&) {
-    return WalkSentinel{};
-}
-
-constexpr bool operator==(const TreeWalker& walker, WalkSentinel) {
-    return walker.exhausted();
-}
 
 }  // namespace base

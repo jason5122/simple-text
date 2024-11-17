@@ -71,20 +71,12 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             selection.setIndex(index, extend);
         }
     }
-    // TODO: Implement this properly.
-    // if (by == MoveBy::kWords && !forward) {
-    //     size_t delta = Caret::prevWordStart(layout, col,
-    //     tree.get_line_content_with_newline(line)); selection.decrementIndex(delta, extend);
-
-    //     // Move to previous line if at beginning of line.
-    //     if (delta == 0 && line > 0) {
-    //         const auto& prev_layout = layoutAt(line - 1);
-    //         size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1_Z));
-    //         selection.setIndex(index, extend);
-    //     }
-    // }
-    if (by == MoveBy::kWords && forward) {
-        selection.end().nextWordEnd(tree);
+    if (by == MoveBy::kWords) {
+        if (forward) {
+            selection.end().nextWordEnd(tree);
+        } else {
+            selection.end().prevWordStart(tree);
+        }
         if (!extend) {
             selection.start() = selection.end();
         }

@@ -4,6 +4,9 @@
 #include <numeric>
 #include <optional>
 
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
+
 namespace gui {
 
 size_t Caret::columnAtX(const font::LineLayout& layout, int x) {
@@ -50,27 +53,28 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     }
 }
 
-size_t Caret::prevWordStart(const font::LineLayout& layout,
-                            size_t col,
-                            std::string_view line_str) {
-    // TODO: Fix this.
-    // auto it = std::make_reverse_iterator(iteratorAtColumn(layout, col));
-    // auto prev_it = layout.rend();  // Invalid/"null" iterator.
-    // for (; it != layout.rend(); ++it) {
-    //     if (prev_it != layout.rend()) {
-    //         std::string_view left_str = line_str.substr((*it).index, (*it).length);
-    //         std::string_view right_str = line_str.substr((*prev_it).index, (*prev_it).length);
+void Caret::prevWordStart(const base::PieceTree& tree) {
+    base::ReverseTreeWalker walker{&tree, index};
 
-    //         // TODO: Properly implement this.
-    //         bool left_kind = std::isalpha(left_str[0]);
-    //         bool right_kind = std::isalpha(right_str[0]);
-    //         if (left_kind != right_kind && right_str != " ") {
-    //             return col - (*prev_it).index;
-    //         }
-    //     }
-    //     prev_it = it;
-    // }
-    return col;
+    std::optional<int32_t> prev_cp;
+    size_t prev_offset = index;
+
+    while (!walker.exhausted()) {
+        size_t offset = walker.offset();
+        int32_t cp = walker.next_codepoint();
+        if (prev_cp) {
+            auto prev_kind = codepointToCharKind(prev_cp.value());
+            auto kind = codepointToCharKind(cp);
+            bool prev_is_whitespace = una::codepoint::is_whitespace(prev_cp.value());
+
+            if ((prev_kind != kind && !prev_is_whitespace) || cp == '\n') {
+                index = prev_offset;
+                return;
+            }
+        }
+        prev_cp = cp;
+        prev_offset = offset;
+    }
 }
 
 void Caret::nextWordEnd(const base::PieceTree& tree) {

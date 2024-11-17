@@ -23,9 +23,7 @@ public:
     static size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col);
     static size_t moveToNextGlyph(const font::LineLayout& layout, size_t col);
 
-    static size_t prevWordStart(const font::LineLayout& layout,
-                                size_t col,
-                                std::string_view line_str);
+    void prevWordStart(const base::PieceTree& tree);
     void nextWordEnd(const base::PieceTree& tree);
 
     static constexpr CharKind codepointToCharKind(int32_t codepoint);

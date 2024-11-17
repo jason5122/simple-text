@@ -427,8 +427,10 @@ void EditorWindow::onAction(app::Action action, bool extend) {
 
 void EditorWindow::onAppAction(app::AppAction action) {
     if (action == app::AppAction::kNewFile) {
+        PROFILE_BLOCK("Add new tab");
         // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
-        editor_widget->addTab("sample.cc", kCppExample);
+        // editor_widget->addTab("sample.cc", kCppExample);
+        editor_widget->addTab("untitled", "");
         redraw();
     }
     if (action == app::AppAction::kNewWindow) {

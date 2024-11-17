@@ -738,9 +738,9 @@ TreeWalker::TreeWalker(const PieceTree* tree, size_t offset)
     : buffers{&tree->buffers},
       root{tree->root},
       total_content_length{tree->total_content_length},
-      stack{{root}},
-      total_offset{offset} {
-    fast_forward_to(offset);
+      stack{{root}} {
+    total_offset = std::min(offset, tree->length());
+    fast_forward_to(total_offset);
 }
 
 char TreeWalker::next() {
@@ -926,8 +926,9 @@ void TreeWalker::fast_forward_to(size_t offset) {
 }
 
 ReverseTreeWalker::ReverseTreeWalker(const PieceTree* tree, size_t offset)
-    : buffers{&tree->buffers}, root{tree->root}, stack{{root}}, total_offset{offset} {
-    fast_forward_to(offset);
+    : buffers{&tree->buffers}, root{tree->root}, stack{{root}} {
+    total_offset = std::min(offset, base::sub_sat(tree->length(), 1_Z));
+    fast_forward_to(total_offset);
 }
 
 char ReverseTreeWalker::next() {
@@ -940,6 +941,7 @@ char ReverseTreeWalker::next() {
     }
     // Since CharOffset is unsigned, this will end up wrapping, both 'exhausted' and 'remaining'
     // will return 'true' and '0' respectively.
+    // TODO: Consider changing wrapping behavior.
     total_offset--;
     // A dereference is the pointer value _before_ this actual pointer, just like STL reverse
     // iterator models.
@@ -980,6 +982,84 @@ bool ReverseTreeWalker::exhausted() const {
 
 size_t ReverseTreeWalker::remaining() const {
     return total_offset + 1;
+}
+
+// TODO: Find an alternative to the state-based reverse decoder.
+// Or, switch to a state-based forward decoder:
+// https://github.com/gershnik/sys_string/blob/f6d5127da833ecf99b499156a9bc0f2093f2f745/lib/inc/sys_string/impl/unicode/utf_encoding.h#L232
+namespace {
+// https://gershnik.github.io/2021/03/24/reverse-utf8-decoding.html
+class ReverseUTF8Decoder {
+public:
+    constexpr void put(uint8_t byte) {
+        uint32_t type = kStateTable[byte];
+        m_state = kStateTable[256 + m_state + type];
+
+        if (m_state <= kRejectState) {
+            m_collect |= (((0xffu >> type) & (byte)) << m_shift);
+            m_value = char32_t(m_collect);
+            m_shift = 0;
+            m_collect = 0;
+        } else {
+            m_collect |= ((byte & 0x3fu) << m_shift);
+            m_shift += 6;
+        }
+    }
+
+    constexpr bool done() const {
+        return m_state == kAcceptState;
+    }
+
+    constexpr bool error() const {
+        return m_state == kRejectState;
+    }
+
+    constexpr char32_t value() const {
+        return m_value;
+    }
+
+private:
+    static constexpr uint8_t kAcceptState = 0;
+    static constexpr uint8_t kRejectState = 12;
+    char32_t m_value = 0;
+    uint32_t m_collect = 0;
+    uint8_t m_shift = 0;
+    uint8_t m_state = kAcceptState;
+
+    // TODO: Format state table correctly.
+    static constexpr const uint8_t kStateTable[] = {
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+        1,  1,  1,  1,  1,  1,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  7,
+        7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,
+        7,  7,  7,  7,  7,  7,  7,  7,  8,  8,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+        2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  10, 3,  3,  3,  3,  3,
+        3,  3,  3,  3,  3,  3,  3,  4,  3,  3,  11, 6,  6,  6,  5,  8,  8,  8,  8,  8,  8,  8,  8,
+        8,  8,  8,  0,  24, 12, 12, 12, 12, 12, 24, 12, 24, 12, 12, 0,  24, 12, 12, 12, 12, 12, 24,
+        12, 24, 12, 12, 12, 36, 0,  12, 12, 12, 12, 48, 12, 36, 12, 12, 12, 60, 12, 0,  0,  12, 12,
+        72, 12, 72, 12, 12, 12, 60, 12, 0,  12, 12, 12, 72, 12, 72, 0,  12, 12, 12, 12, 12, 12, 0,
+        0,  12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 0};
+};
+}  // namespace
+
+int32_t ReverseTreeWalker::next_codepoint() {
+    ReverseUTF8Decoder decoder;
+    while (!exhausted()) {
+        decoder.put(next());
+        if (decoder.done()) {
+            return decoder.value();
+        } else if (decoder.error()) {
+            return 0;
+        }
+    }
+    if (!decoder.done()) {
+        return 0;
+    }
+    return decoder.value();
 }
 
 void ReverseTreeWalker::populate_ptrs() {

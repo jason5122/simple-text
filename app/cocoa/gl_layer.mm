@@ -63,6 +63,8 @@
                 displayTime:timeStamp];
 }
 
+// TODO: GLLayer calling `onResize()` is currently known to redraw after the window has closed if
+// NSWindowTabbingMode is enabled. Fix this.
 - (void)observeValueForKeyPath:(NSString*)keyPath
                       ofObject:(id)object
                         change:(NSDictionary*)change

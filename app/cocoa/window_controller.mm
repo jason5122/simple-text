@@ -1,5 +1,6 @@
-#include "app/cocoa/gl_view.h"
 #include "window_controller.h"
+
+#include "app/cocoa/gl_view.h"
 
 @interface WindowController () {
     GLView* opengl_view;

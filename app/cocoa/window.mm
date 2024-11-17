@@ -1,5 +1,8 @@
-#include "app/cocoa/impl_cocoa.h"
 #include "app/window.h"
+
+#include "app/cocoa/impl_cocoa.h"
+
+// TODO: Debug use; remove this.
 #include "util/std_print.h"
 
 namespace app {
@@ -39,10 +42,20 @@ void Window::show() {
 }
 
 void Window::close() {
+    has_been_closed = true;
     [pimpl->window_controller close];
 }
 
 void Window::redraw() {
+    // Prevent crashes/freezes when trying to redraw after being closed.
+    // TODO: Look into more robust ways to prevent this class of bugs.
+    // TODO: GLLayer calling `onResize()` is currently known to do this if NSWindowTabbingMode is
+    // enabled. Fix this.
+    if (has_been_closed) {
+        std::println("Warning: Window::redraw() called after Window::close(). This redraw has "
+                     "become a no-op, but investigate why redraw() was called.");
+        return;
+    }
     [pimpl->window_controller redraw];
 }
 

@@ -1,12 +1,16 @@
 #include "app/app.h"
+
 #include "app/cocoa/impl_cocoa.h"
 #include "app/cocoa/window_controller.h"
 #include "app/window.h"
+
+#include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>
 #include <format>
 #include <vector>
 
-#import <Cocoa/Cocoa.h>
+// TODO: Debug use; remove this.
+#include "util/std_print.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
@@ -54,7 +58,7 @@
         setKeyEquivalentModifierMask:NSEventModifierFlagShift | NSEventModifierFlagCommand];
     [menu addItem:fileMenu];
 
-    // NSApp.mainMenu = menu;
+    NSApp.mainMenu = menu;
 
     app->onLaunch();
 }
@@ -94,12 +98,12 @@
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item {
-    // if (item.action == @selector(newFile)) {
-    //     return NO;
-    // }
-    // if (item.action == @selector(newWindow)) {
-    //     return NO;
-    // }
+    if (item.action == @selector(newFile)) {
+        return NO;
+    }
+    if (item.action == @selector(newWindow)) {
+        return NO;
+    }
     return YES;
 }
 

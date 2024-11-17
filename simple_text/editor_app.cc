@@ -86,6 +86,6 @@ void EditorApp::createWindow() {
 }
 
 void EditorApp::destroyWindow(int wid) {
-    std::println("SimpleText: destroy window {}", wid);
+    std::println("EditorApp::destroyWindow({})", wid);
     editor_windows[wid] = nullptr;
 }

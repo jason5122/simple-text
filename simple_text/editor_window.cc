@@ -284,8 +284,8 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         handled = true;
     } else if (key == app::Key::kW &&
                modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
-        // Immediately exit this function and don't let redraw() get called! This window's smart
-        // pointer will be deallocated after `close()`.
+        // Immediately exit this function and don't let any other methods get called! This window's
+        // smart pointer will be deallocated after `close()`.
         close();
         return true;
     } else if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {

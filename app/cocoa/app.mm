@@ -83,18 +83,18 @@ NSMenu* BuildHelpMenu() {
     return menu;
 }
 
-NSMenu* BuildMainMenu() {
+void BuildMainMenu() {
     NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@""];
 
     using Builder = NSMenu* (*)();
     static const Builder kBuilderFuncs[] = {&BuildAppMenu, &BuildViewMenu, &BuildWindowMenu,
                                             &BuildHelpMenu};
     for (auto* builder : kBuilderFuncs) {
-        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nullptr keyEquivalent:@""];
+        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
         item.submenu = builder();
         [main_menu addItem:item];
     }
-    return main_menu;
+    NSApp.mainMenu = main_menu;
 }
 }  // namespace
 
@@ -120,7 +120,7 @@ NSMenu* BuildMainMenu() {
 - (void)applicationWillFinishLaunching:(NSNotification*)notification {
     NSWindow.allowsAutomaticWindowTabbing = NO;
 
-    NSApp.mainMenu = BuildMainMenu();
+    BuildMainMenu();
 
     app->onLaunch();
 }

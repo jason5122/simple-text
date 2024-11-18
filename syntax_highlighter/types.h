@@ -6,24 +6,9 @@
 constexpr bool operator==(const TSPoint& p1, const TSPoint& p2) {
     return p1.row == p2.row && p1.column == p2.column;
 }
-constexpr bool operator!=(const TSPoint& p1, const TSPoint& p2) {
-    return !(p1 == p2);
-}
-constexpr bool operator<(const TSPoint& p1, const TSPoint& p2) {
-    if (p1.row == p2.row) {
-        return p1.column < p2.column;
-    } else {
-        return p1.row < p2.row;
-    }
-}
-constexpr bool operator>(const TSPoint& p1, const TSPoint& p2) {
-    return p2 < p1;
-}
-constexpr bool operator<=(const TSPoint& p1, const TSPoint& p2) {
-    return !(p1 > p2);
-}
-constexpr bool operator>=(const TSPoint& p1, const TSPoint& p2) {
-    return !(p1 < p2);
+constexpr auto operator<=>(const TSPoint& p1, const TSPoint& p2) {
+    if (auto c = p1.row <=> p2.row; c != 0) return c;
+    return p1.column <=> p2.column;
 }
 
 namespace highlight {

@@ -28,24 +28,8 @@ public:
 
     static constexpr CharKind codepointToCharKind(int32_t codepoint);
 
-    friend constexpr bool operator==(const Caret& c1, const Caret& c2) {
-        return c1.index == c2.index;
-    }
-    friend constexpr bool operator!=(const Caret& c1, const Caret& c2) {
-        return c1.index != c2.index;
-    }
-    friend constexpr bool operator<(const Caret& c1, const Caret& c2) {
-        return c1.index < c2.index;
-    }
-    friend constexpr bool operator>(const Caret& c1, const Caret& c2) {
-        return c1.index > c2.index;
-    }
-    friend constexpr bool operator<=(const Caret& c1, const Caret& c2) {
-        return c1.index <= c2.index;
-    }
-    friend constexpr bool operator>=(const Caret& c1, const Caret& c2) {
-        return c1.index >= c2.index;
-    }
+    // https://brevzin.github.io/c++/2019/07/28/comparisons-cpp20/
+    constexpr auto operator<=>(const Caret& rhs) const = default;
 
 private:
     static font::LineLayout::const_iterator iteratorAtColumn(const font::LineLayout& layout,

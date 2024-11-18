@@ -29,10 +29,6 @@
         self.window.contentView = opengl_view;
         [self.window makeFirstResponder:opengl_view];
 
-        // Bypass the user's tabbing preference.
-        // https://stackoverflow.com/a/40826761/14698275
-        self.window.tabbingMode = NSWindowTabbingModeDisallowed;
-
         self.window.delegate = self;
     }
     return self;

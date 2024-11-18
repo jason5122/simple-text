@@ -32,6 +32,8 @@
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification*)notification {
+    NSWindow.allowsAutomaticWindowTabbing = NO;
+
     NSString* appName = NSBundle.mainBundle.infoDictionary[@"CFBundleName"];
     menu = [[[NSMenu alloc] init] autorelease];
 
@@ -50,12 +52,20 @@
                                                        action:NULL
                                                 keyEquivalent:@""] autorelease];
     fileMenu.submenu = [[[NSMenu alloc] init] autorelease];
-    [fileMenu.submenu addItemWithTitle:@"New File" action:@selector(newFile) keyEquivalent:@"n"];
-    [fileMenu.submenu addItem:[NSMenuItem separatorItem]];
-    [[fileMenu.submenu addItemWithTitle:@"New Window"
-                                 action:@selector(newWindow)
-                          keyEquivalent:@"n"]
-        setKeyEquivalentModifierMask:NSEventModifierFlagShift | NSEventModifierFlagCommand];
+
+    NSString* f2 = [NSString stringWithFormat:@"%C", static_cast<unichar>(NSF2FunctionKey)];
+    NSMenuItem* newFileMenuItem = [[NSMenuItem alloc] initWithTitle:@"New File"
+                                                             action:@selector(newFile)
+                                                      keyEquivalent:f2];
+    newFileMenuItem.keyEquivalentModifierMask = 0;
+
+    NSMenuItem* newWindowMenuItem = [[NSMenuItem alloc] initWithTitle:@"New Window"
+                                                               action:@selector(newWindow)
+                                                        keyEquivalent:@""];
+
+    [fileMenu.submenu addItem:newFileMenuItem];
+    [fileMenu.submenu addItem:NSMenuItem.separatorItem];
+    [fileMenu.submenu addItem:newWindowMenuItem];
     [menu addItem:fileMenu];
 
     NSApp.mainMenu = menu;
@@ -98,12 +108,12 @@
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item {
-    if (item.action == @selector(newFile)) {
-        return NO;
-    }
-    if (item.action == @selector(newWindow)) {
-        return NO;
-    }
+    // if (item.action == @selector(newFile)) {
+    //     return NO;
+    // }
+    // if (item.action == @selector(newWindow)) {
+    //     return NO;
+    // }
     return YES;
 }
 

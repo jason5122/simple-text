@@ -12,6 +12,92 @@
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
 
+namespace {
+NSMenuItem* CreateMenuItem(NSString* title, SEL action, NSString* key_equivalent) {
+    return [[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:key_equivalent];
+}
+
+NSMenu* BuildAppMenu() {
+    // The title is not used, as the title will always be the name of the app.
+    NSMenu* menu = [[NSMenu alloc] initWithTitle:@""];
+
+    NSMenuItem* item;
+    item = CreateMenuItem(@"About Simple Text", @selector(showAboutPanel), @"");
+    [menu addItem:item];
+
+    [menu addItem:NSMenuItem.separatorItem];
+
+    item = CreateMenuItem(@"Hide Simple Text", @selector(hide:), @"h");
+    [menu addItem:item];
+
+    item = CreateMenuItem(@"Hide Others", @selector(hideOtherApplications:), @"h");
+    item.keyEquivalentModifierMask = NSEventModifierFlagOption | NSEventModifierFlagCommand;
+    [menu addItem:item];
+
+    item = CreateMenuItem(@"Show All", @selector(unhideAllApplications:), @"");
+    [menu addItem:item];
+
+    [menu addItem:NSMenuItem.separatorItem];
+
+    item = CreateMenuItem(@"Quit Simple Text", @selector(terminate:), @"q");
+    [menu addItem:item];
+
+    return menu;
+}
+
+NSMenu* BuildViewMenu() {
+    NSMenu* menu = [[NSMenu alloc] initWithTitle:@"View"];
+
+    NSMenuItem* item;
+    // The title is not used, as the title will always become "Enter Full Screen".
+    // This entry is part of `NSApp.windowsMenu` by default, but defining it elsewhere will
+    // actually prevent it from showing up by default.
+    item = CreateMenuItem(@"", @selector(toggleFullScreen:), @"f");
+    item.keyEquivalentModifierMask = NSEventModifierFlagFunction;
+    [menu addItem:item];
+    NSApp.helpMenu = menu;
+    return menu;
+}
+
+NSMenu* BuildWindowMenu() {
+    NSMenu* menu = [[NSMenu alloc] initWithTitle:@"Window"];
+
+    NSMenuItem* item;
+    item = CreateMenuItem(@"Minimize", @selector(performMiniaturize:), @"m");
+    [menu addItem:item];
+    item = CreateMenuItem(@"Zoom", @selector(performZoom:), @"");
+    [menu addItem:item];
+    item = CreateMenuItem(@"Bring All To Front", @selector(arrangeInFront:), @"");
+    [menu addItem:item];
+    NSApp.windowsMenu = menu;
+    return menu;
+}
+
+NSMenu* BuildHelpMenu() {
+    NSMenu* menu = [[NSMenu alloc] initWithTitle:@"Help"];
+
+    NSMenuItem* item;
+    item = CreateMenuItem(@"Simple Text Help", @selector(showHelp:), @"");
+    [menu addItem:item];
+    NSApp.helpMenu = menu;
+    return menu;
+}
+
+NSMenu* BuildMainMenu() {
+    NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@""];
+
+    using Builder = NSMenu* (*)();
+    static const Builder kBuilderFuncs[] = {&BuildAppMenu, &BuildViewMenu, &BuildWindowMenu,
+                                            &BuildHelpMenu};
+    for (auto* builder : kBuilderFuncs) {
+        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nullptr keyEquivalent:@""];
+        item.submenu = builder();
+        [main_menu addItem:item];
+    }
+    return main_menu;
+}
+}  // namespace
+
 @interface AppDelegate : NSObject <NSApplicationDelegate> {
     NSMenu* menu;
     app::App* app;
@@ -34,41 +120,7 @@
 - (void)applicationWillFinishLaunching:(NSNotification*)notification {
     NSWindow.allowsAutomaticWindowTabbing = NO;
 
-    NSString* appName = NSBundle.mainBundle.infoDictionary[@"CFBundleName"];
-    menu = [[[NSMenu alloc] init] autorelease];
-
-    NSMenuItem* appMenu = [[[NSMenuItem alloc] init] autorelease];
-    appMenu.submenu = [[[NSMenu alloc] init] autorelease];
-    [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"About %@", appName]
-                               action:@selector(showAboutPanel)
-                        keyEquivalent:@""];
-    [appMenu.submenu addItem:[NSMenuItem separatorItem]];
-    [appMenu.submenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
-                               action:@selector(terminate:)
-                        keyEquivalent:@"q"];
-    [menu addItem:appMenu];
-
-    NSMenuItem* fileMenu = [[[NSMenuItem alloc] initWithTitle:@"File"
-                                                       action:NULL
-                                                keyEquivalent:@""] autorelease];
-    fileMenu.submenu = [[[NSMenu alloc] init] autorelease];
-
-    NSString* f2 = [NSString stringWithFormat:@"%C", static_cast<unichar>(NSF2FunctionKey)];
-    NSMenuItem* newFileMenuItem = [[NSMenuItem alloc] initWithTitle:@"New File"
-                                                             action:@selector(newFile)
-                                                      keyEquivalent:f2];
-    newFileMenuItem.keyEquivalentModifierMask = 0;
-
-    NSMenuItem* newWindowMenuItem = [[NSMenuItem alloc] initWithTitle:@"New Window"
-                                                               action:@selector(newWindow)
-                                                        keyEquivalent:@""];
-
-    [fileMenu.submenu addItem:newFileMenuItem];
-    [fileMenu.submenu addItem:NSMenuItem.separatorItem];
-    [fileMenu.submenu addItem:newWindowMenuItem];
-    [menu addItem:fileMenu];
-
-    NSApp.mainMenu = menu;
+    NSApp.mainMenu = BuildMainMenu();
 
     app->onLaunch();
 }

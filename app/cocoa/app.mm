@@ -13,7 +13,7 @@
 #include "util/std_print.h"
 
 namespace {
-NSMenuItem* CreateMenuItem(NSString* title, SEL action, NSString* key_equivalent) {
+inline NSMenuItem* CreateMenuItem(NSString* title, SEL action, NSString* key_equivalent) {
     return [[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:key_equivalent];
 }
 
@@ -22,7 +22,7 @@ NSMenu* BuildAppMenu() {
     NSMenu* menu = [[NSMenu alloc] initWithTitle:@""];
 
     NSMenuItem* item;
-    item = CreateMenuItem(@"About Simple Text", @selector(showAboutPanel), @"");
+    item = CreateMenuItem(@"About Simple Text", @selector(orderFrontStandardAboutPanel:), @"");
     [menu addItem:item];
 
     [menu addItem:NSMenuItem.separatorItem];
@@ -41,6 +41,26 @@ NSMenu* BuildAppMenu() {
 
     item = CreateMenuItem(@"Quit Simple Text", @selector(terminate:), @"q");
     [menu addItem:item];
+
+    return menu;
+}
+
+NSMenu* BuildEditMenu() {
+    NSMenu* menu = [[NSMenu alloc] initWithTitle:@"Edit"];
+
+    NSMenuItem* item;
+
+    // In order for AppKit to provide the default "Emoji & Symbols" entry (among others), the menu
+    // needs to implement the `copy:` selector.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1478347#c62
+    item = CreateMenuItem(@"Copy", @selector(copy:), @"c");
+    [menu addItem:item];
+
+    // TODO: Consider just inserting the "Emoji & Symbols" entry ourselves when detecting a menu
+    // named "Edit". We don't need the rest.
+    // item = CreateMenuItem(@"Emoji & Symbols", @selector(orderFrontCharacterPalette:), @"e");
+    // item.keyEquivalentModifierMask = NSEventModifierFlagFunction;
+    // [menu addItem:item];
 
     return menu;
 }
@@ -87,8 +107,8 @@ void BuildMainMenu() {
     NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@""];
 
     using Builder = NSMenu* (*)();
-    static const Builder kBuilderFuncs[] = {&BuildAppMenu, &BuildViewMenu, &BuildWindowMenu,
-                                            &BuildHelpMenu};
+    static const Builder kBuilderFuncs[] = {&BuildAppMenu, &BuildEditMenu, &BuildViewMenu,
+                                            &BuildWindowMenu, &BuildHelpMenu};
     for (auto* builder : kBuilderFuncs) {
         NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
         item.submenu = builder();
@@ -128,11 +148,6 @@ void BuildMainMenu() {
 
 - (void)applicationWillTerminate:(NSNotification*)notification {
     app->onQuit();
-}
-
-- (void)showAboutPanel {
-    [NSApp orderFrontStandardAboutPanel:menu];
-    [NSApp activateIgnoringOtherApps:true];
 }
 
 - (void)callAppAction:(app::AppAction)appAction {

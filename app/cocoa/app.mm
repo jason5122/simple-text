@@ -12,6 +12,7 @@
 // TODO: Debug use; remove this.
 #include "util/std_print.h"
 
+// Taken from `//chromium/src/chrome/browser/ui/cocoa/main_menu_builder.mm.
 namespace {
 inline NSMenuItem* CreateMenuItem(NSString* title, SEL action, NSString* key_equivalent) {
     return [[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:key_equivalent];
@@ -49,18 +50,9 @@ NSMenu* BuildEditMenu() {
     NSMenu* menu = [[NSMenu alloc] initWithTitle:@"Edit"];
 
     NSMenuItem* item;
-
-    // In order for AppKit to provide the default "Emoji & Symbols" entry (among others), the menu
-    // needs to implement the `copy:` selector.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1478347#c62
-    item = CreateMenuItem(@"Copy", @selector(copy:), @"c");
+    item = CreateMenuItem(@"Emoji & Symbols", @selector(orderFrontCharacterPalette:), @"e");
+    item.keyEquivalentModifierMask = NSEventModifierFlagFunction;
     [menu addItem:item];
-
-    // TODO: Consider just inserting the "Emoji & Symbols" entry ourselves when detecting a menu
-    // named "Edit". We don't need the rest.
-    // item = CreateMenuItem(@"Emoji & Symbols", @selector(orderFrontCharacterPalette:), @"e");
-    // item.keyEquivalentModifierMask = NSEventModifierFlagFunction;
-    // [menu addItem:item];
 
     return menu;
 }

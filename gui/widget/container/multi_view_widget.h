@@ -27,10 +27,12 @@ public:
     }
 
     void prevIndex() {
+        if (index >= views.size()) return;
         index = base::dec_wrap(index, views.size());
     }
 
     void nextIndex() {
+        if (index >= views.size()) return;
         index = base::inc_wrap(index, views.size());
     }
 

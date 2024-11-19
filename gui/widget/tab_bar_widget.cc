@@ -17,10 +17,12 @@ void TabBarWidget::setIndex(size_t index) {
 }
 
 void TabBarWidget::prevIndex() {
+    if (index >= tab_name_labels.size()) return;
     index = base::dec_wrap(index, tab_name_labels.size());
 }
 
 void TabBarWidget::nextIndex() {
+    if (index >= tab_name_labels.size()) return;
     index = base::inc_wrap(index, tab_name_labels.size());
 }
 

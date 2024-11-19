@@ -103,6 +103,7 @@ void BuildMainMenu() {
     app::App* app;
 }
 
+// TODO: Refactor this.
 - (void)callAppAction:(app::AppAction)appAction;
 
 @end
@@ -151,10 +152,12 @@ void BuildMainMenu() {
     }
 }
 
+// TODO: Refactor this.
 - (void)newFile {
     [self callAppAction:app::AppAction::kNewFile];
 }
 
+// TODO: Refactor this.
 - (void)newWindow {
     [self callAppAction:app::AppAction::kNewWindow];
 }
@@ -181,10 +184,8 @@ App::App() : pimpl{new impl{}} {
     // We must create the application instance once before using `NSApp`.
     [NSApplication sharedApplication];
 
-    AppDelegate* appDelegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
-
-    NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
-    NSApp.delegate = appDelegate;
+    AppDelegate* app_delegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
+    NSApp.delegate = app_delegate;
 }
 
 App::~App() {}

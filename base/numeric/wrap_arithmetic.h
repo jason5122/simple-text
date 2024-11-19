@@ -25,4 +25,4 @@ constexpr size_t dec_wrap(size_t i, size_t size) noexcept {
     }
 }
 
-}
+}  // namespace base

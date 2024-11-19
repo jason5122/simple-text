@@ -199,7 +199,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 }
 
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
-    BOOL isAttributedString = [string isKindOfClass:[NSAttributedString class]];
+    BOOL isAttributedString = [string isKindOfClass:NSAttributedString.class];
     NSString* text = isAttributedString ? [string string] : string;
     glLayer->appWindow->onInsertText(text.UTF8String);
 }
@@ -281,7 +281,9 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
         glLayer->appWindow->onAction(app::Action::kDeleteWordForward);
     } else if (str == "insertNewline") {
         glLayer->appWindow->onAction(app::Action::kInsertNewline);
-    } else if (str == "insertTab") {
+    } else if (str == "insertNewlineIgnoringFieldEditor") {
+        glLayer->appWindow->onAction(app::Action::kInsertNewlineIgnoringFieldEditor);
+    } else if (str == "insertTab" || str == "insertTabIgnoringFieldEditor") {
         glLayer->appWindow->onAction(app::Action::kInsertTab);
     }
 }

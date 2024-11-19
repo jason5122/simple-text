@@ -403,6 +403,11 @@ void EditorWindow::onAction(app::Action action, bool extend) {
         text_view->insertText("\n");
         handled = true;
     }
+    if (action == app::Action::kInsertNewlineIgnoringFieldEditor) {
+        text_view->insertText("\n");
+        // This command is sent as the first part of the `ctrl+o` keybind. We shouldn't redraw.
+        return;
+    }
     if (action == app::Action::kInsertTab) {
         text_view->insertText("    ");
         handled = true;

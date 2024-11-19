@@ -21,6 +21,7 @@ enum class Action {
     kDeleteWordForward,
     kDeleteWordBackward,
     kInsertNewline,
+    kInsertNewlineIgnoringFieldEditor,
     kInsertTab,
 };
 

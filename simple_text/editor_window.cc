@@ -49,7 +49,7 @@ const std::string kUnicode =
 
 🥲🥲🥲🥲🥲🥲)";
 
-const std::string kCppExample = R"(#include <assert.h>
+const std::string kCppExample = R"(🥲🥲🥲🥲🥲🥲#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <tree_sitter/api.h>

@@ -96,8 +96,7 @@ bool Atlas::insertTexture(
 
     // Load data into OpenGL.
     glBindTexture(GL_TEXTURE_2D, tex_id);
-    GLenum format = colored ? GL_RGBA : GL_RGB;
-    glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, format,
+    glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, GL_BGRA,
                     GL_UNSIGNED_BYTE, data.data());
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 

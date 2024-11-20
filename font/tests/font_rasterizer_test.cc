@@ -3,6 +3,9 @@
 #include "font/font_rasterizer.h"
 #include <gtest/gtest.h>
 
+// TODO: Remove this.
+#include <CoreText/CoreText.h>
+
 namespace {
 
 #if BUILDFLAG(IS_MAC)
@@ -86,6 +89,66 @@ TEST(FontRasterizerTest, LayoutLine2) {
     }
 
     EXPECT_EQ(total_advance, layout.width);
+}
+
+namespace {
+void ExtractPixels(CGContextRef context) {
+    uint8_t* bitmap_data = static_cast<uint8_t*>(CGBitmapContextGetData(context));
+    // size_t height = CGBitmapContextGetHeight(context);
+    // size_t bytes_per_row = CGBitmapContextGetBytesPerRow(context);
+    // size_t len = height * bytes_per_row;
+
+    // size_t pixels = len / 4;
+    // std::vector<uint8_t> buffer;
+    // size_t size = pixels * 3;
+
+    // buffer.reserve(size);
+    // for (size_t i = 0; i < pixels; ++i) {
+    //     size_t offset = i * 4;
+    //     buffer.emplace_back(bitmap_data[offset + 2]);
+    //     buffer.emplace_back(bitmap_data[offset + 1]);
+    //     buffer.emplace_back(bitmap_data[offset]);
+    // }
+
+    auto buffer = std::make_unique<uint8_t*>(bitmap_data);
+}
+}  // namespace
+
+TEST(FontRasterizerTest, RasterizePerformance) {
+    auto& rasterizer = FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    auto layout = rasterizer.layoutLine(font_id, "a");
+    uint32_t glyph_id = layout.runs[0].glyphs[0].glyph_id;
+
+    // for (size_t i = 0; i < 10000; ++i) {
+    //     auto rglyph = rasterizer.rasterize(font_id, glyph_id);
+    //     EXPECT_GT(rglyph.width, 0);
+    //     EXPECT_GT(rglyph.height, 0);
+    // }
+
+    CTFontRef ct_font = CTFontCreateUIFontForLanguage(kCTFontUIFontSystem, 32, nullptr);
+    for (size_t i = 0; i < 10000; i++) {
+        CGGlyph glyph_index = glyph_id;
+
+        CGRect bounds;
+        CTFontGetBoundingRectsForGlyphs(ct_font, kCTFontOrientationDefault, &glyph_index, &bounds,
+                                        1);
+        int32_t rasterized_left = std::floor(bounds.origin.x);
+        uint32_t rasterized_width =
+            std::ceil(bounds.origin.x - rasterized_left + bounds.size.width);
+        int32_t rasterized_descent = std::ceil(-bounds.origin.y);
+        int32_t rasterized_ascent = std::ceil(bounds.size.height + bounds.origin.y);
+        uint32_t rasterized_height = rasterized_descent + rasterized_ascent;
+
+        CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context = CGBitmapContextCreate(
+            nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4, color_space,
+            kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+        CGPoint rasterization_origin = CGPointZero;
+        CTFontDrawGlyphs(ct_font, &glyph_index, &rasterization_origin, 1, context);
+        ExtractPixels(context);
+    }
 }
 
 }  // namespace font

@@ -126,21 +126,12 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     uint8_t* bitmap_data = static_cast<uint8_t*>(CGBitmapContextGetData(context.get()));
     size_t height = CGBitmapContextGetHeight(context.get());
     size_t bytes_per_row = CGBitmapContextGetBytesPerRow(context.get());
-    size_t len = height * bytes_per_row;
+    size_t size = height * bytes_per_row;
 
-    size_t pixels = len / 4;
     std::vector<uint8_t> buffer;
-    size_t size = colored ? pixels * 4 : pixels * 3;
-
     buffer.reserve(size);
-    for (size_t i = 0; i < pixels; ++i) {
-        size_t offset = i * 4;
-        buffer.emplace_back(bitmap_data[offset + 2]);
-        buffer.emplace_back(bitmap_data[offset + 1]);
-        buffer.emplace_back(bitmap_data[offset]);
-        if (colored) {
-            buffer.emplace_back(bitmap_data[offset + 3]);
-        }
+    for (size_t i = 0; i < size; ++i) {
+        buffer.emplace_back(bitmap_data[i]);
     }
 
     return {

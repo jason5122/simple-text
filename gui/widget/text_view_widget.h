@@ -8,7 +8,7 @@
 #include "gui/widget/types.h"
 
 // TODO: Debug use; remove this.
-#define ENABLE_HIGHLIGHTING
+// #define ENABLE_HIGHLIGHTING
 
 #ifdef ENABLE_HIGHLIGHTING
 #include "syntax_highlighter/language.h"

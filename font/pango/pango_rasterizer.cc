@@ -186,17 +186,12 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
-    // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
-    // when fonts with different ascents mix (e.g., emoji being taller than plain text).
-    int ascent = metrics(font_id).ascent;
-
     return {
         .layout_font_id = font_id,
         // We shouldn't use Pango's width since we make our own slight adjustments.
         .width = total_advance,
         .length = str8.length(),
         .runs = std::move(runs),
-        .ascent = ascent,
     };
 }
 
@@ -225,8 +220,8 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
 
         Metrics metrics{
             .line_height = line_height,
-            .descent = descent,
             .ascent = ascent,
+            .descent = descent,
         };
 
         size_t font_id = font_id_to_native.size();

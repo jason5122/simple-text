@@ -46,6 +46,7 @@ inline constexpr auto operator~(FontStyle m) {
 struct Metrics {
     int line_height;
     int ascent;
+    int descent;
 };
 
 struct RasterizedGlyph {
@@ -80,7 +81,6 @@ struct LineLayout {
     int width;
     size_t length;
     std::vector<ShapedRun> runs;
-    int ascent;
 
     struct ConstIterator;
     using const_iterator = ConstIterator;

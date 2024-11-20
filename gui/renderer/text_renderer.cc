@@ -123,8 +123,15 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 
             app::Point glyph_coords = coords;
             glyph_coords.x += glyph.position.x;
-            glyph_coords.y += line_layout.ascent;
-            glyph_coords.y -= metrics.line_height;
+
+            // Fetch descent from the line layout font. Otherwise, the baseline will shift up and
+            // down when run fonts with different baselines mix.
+            glyph_coords.y -= metrics.descent;
+
+            // TODO: Consider using the run font descent instead of the layout descent for emojis.
+            // This helps vertically center them. I'm unsure if doing this for all *colored* glyph
+            // runs is problematic or not. We really should just be targeting emojis.
+            // glyph_coords.y -= font_rasterizer.metrics(run.font_id).descent;
 
             auto& rglyph = glyph_cache.getGlyph(run.font_id, glyph.glyph_id, font_rasterizer);
 

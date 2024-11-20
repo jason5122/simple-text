@@ -279,16 +279,11 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         new FontFallbackRenderer{font_collection, str8};
     text_layout->Draw(this, font_fallback_renderer.Get(), 0.0f, 0.0f);
 
-    // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
-    // when fonts with different ascents mix (e.g., emoji being taller than plain text).
-    int ascent = metrics(font_id).ascent;
-
     return {
         .layout_font_id = font_id,
         .width = font_fallback_renderer->total_advance,
         .length = str8.length(),
         .runs = font_fallback_renderer->runs,
-        .ascent = ascent,
     };
 }
 
@@ -318,8 +313,8 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
 
         Metrics metrics{
             .line_height = line_height,
-            .descent = descent,
             .ascent = ascent,
+            .descent = descent,
         };
         impl::DWriteInfo dwrite_info{
             .font_name16 = GetFontFamilyName(dwrite_font.Get()),

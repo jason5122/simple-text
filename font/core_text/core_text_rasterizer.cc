@@ -94,8 +94,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
 
-    // If the font is a color font and the glyph doesn't have an outline, it is
-    // a color glyph.
+    // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
     // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
     bool colored_font = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
     bool has_outline = CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr);
@@ -222,10 +221,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
-    // Fetch ascent from the main line layout font. Otherwise, the baseline will shift up and down
-    // when fonts with different ascents mix (e.g., emoji being taller than plain text).
-    int ascent = metrics(font_id).ascent;
-
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
     // variants, this should no longer be an issue.
     // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
@@ -241,7 +236,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         // .width = static_cast<int>(std::ceil(width)),
         .length = str8.length(),
         .runs = std::move(runs),
-        .ascent = ascent,
     };
 }
 
@@ -269,6 +263,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
         Metrics metrics{
             .line_height = line_height,
             .ascent = ascent,
+            .descent = descent,
         };
 
         size_t font_id = font_id_to_native.size();

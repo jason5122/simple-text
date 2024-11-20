@@ -56,6 +56,9 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
 void Caret::prevWordStart(const base::PieceTree& tree) {
     base::ReverseTreeWalker walker{&tree, index};
 
+    // Move back at least once.
+    walker.next_codepoint();
+
     std::optional<int32_t> prev_cp;
     size_t prev_offset = index;
 
@@ -65,16 +68,14 @@ void Caret::prevWordStart(const base::PieceTree& tree) {
         if (prev_cp) {
             auto prev_kind = codepointToCharKind(prev_cp.value());
             auto kind = codepointToCharKind(cp);
-            bool prev_is_whitespace = una::codepoint::is_whitespace(prev_cp.value());
-
-            if ((prev_kind != kind && !prev_is_whitespace) || cp == '\n') {
-                index = prev_offset;
-                return;
+            if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
+                break;
             }
         }
         prev_cp = cp;
         prev_offset = offset;
     }
+    index = prev_offset;
 }
 
 void Caret::nextWordEnd(const base::PieceTree& tree) {
@@ -88,15 +89,14 @@ void Caret::nextWordEnd(const base::PieceTree& tree) {
         if (prev_cp) {
             auto prev_kind = codepointToCharKind(prev_cp.value());
             auto kind = codepointToCharKind(cp);
-            bool prev_is_whitespace = una::codepoint::is_whitespace(prev_cp.value());
-            if ((prev_kind != kind && !prev_is_whitespace) || cp == '\n') {
-                index = prev_offset;
-                return;
+            if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
+                break;
             }
         }
         prev_cp = cp;
         prev_offset = walker.offset();
     }
+    index = prev_offset;
 }
 
 constexpr CharKind Caret::codepointToCharKind(int32_t codepoint) {

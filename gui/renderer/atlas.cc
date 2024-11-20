@@ -17,7 +17,7 @@ Atlas::Atlas() {
 
     // TODO: Incorporate this into the build system.
     constexpr bool kDebugAtlas = false;
-    if (kDebugAtlas) {
+    if constexpr (kDebugAtlas) {
         std::random_device dev;
         std::mt19937 rng(dev());
         std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);
@@ -29,7 +29,7 @@ Atlas::Atlas() {
         // DEBUG: Color atlas background to spot incorrect shaders easier.
         // This helped with debugging the fractional pixel scrolling bug.
         // TODO: Creating this` vector is quite slow, so disable during release.
-        atlas_background = std::vector<uint8_t>(kAtlasSize * kAtlasSize * 4, 0);
+        atlas_background = std::vector<uint8_t>(kAtlasSize * kAtlasSize * 4);
         size_t pixels = kAtlasSize * kAtlasSize;
         for (size_t i = 0; i < pixels; ++i) {
             size_t offset = i * 4;
@@ -73,8 +73,7 @@ GLuint Atlas::tex() const {
     return tex_id;
 }
 
-bool Atlas::insertTexture(
-    int width, int height, bool colored, const std::vector<GLubyte>& data, Vec4& out_uv) {
+bool Atlas::insertTexture(int width, int height, bool colored, const GLubyte* data, Vec4& out_uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
         std::println("Glyph is too large.");
         return false;
@@ -97,7 +96,7 @@ bool Atlas::insertTexture(
     // Load data into OpenGL.
     glBindTexture(GL_TEXTURE_2D, tex_id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, GL_BGRA,
-                    GL_UNSIGNED_BYTE, data.data());
+                    GL_UNSIGNED_BYTE, data);
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
     // Generate UV coordinates.

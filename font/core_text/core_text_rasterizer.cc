@@ -101,38 +101,35 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool colored = colored_font && !has_outline;
 
     ScopedTypeRef<CGColorSpaceRef> color_space_ref{CGColorSpaceCreateDeviceRGB()};
-    ScopedTypeRef<CGContextRef> context{CGBitmapContextCreate(
+
+    // ScopedTypeRef<CGContextRef> context{CGBitmapContextCreate(
+    //     nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4,
+    //     color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)};
+
+    // TODO: Release this when we are finished loading the data into OpenGL. We can't release this
+    // at the end of this scope since this would invalidate the buffer's unique_ptr.
+    CGContextRef context = CGBitmapContextCreate(
         nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4,
-        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)};
+        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
 
     CGFloat alpha = colored ? 0.0 : 1.0;
-    CGContextSetRGBFillColor(context.get(), 0.0, 0.0, 0.0, alpha);
+    CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, alpha);
 
-    CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
-    CGContextSetAllowsFontSmoothing(context.get(), true);
-    CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
-    CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
-    CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
-    CGContextSetAllowsFontSubpixelPositioning(context.get(), true);
-    CGContextSetShouldSubpixelPositionFonts(context.get(), true);
-    CGContextSetAllowsAntialiasing(context.get(), true);
-    CGContextSetShouldAntialias(context.get(), true);
+    CGContextFillRect(context, CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
+    CGContextSetAllowsFontSmoothing(context, true);
+    CGContextSetShouldSmoothFonts(context, FontSmoothingEnabled());
+    CGContextSetAllowsFontSubpixelQuantization(context, true);
+    CGContextSetShouldSubpixelQuantizeFonts(context, true);
+    CGContextSetAllowsFontSubpixelPositioning(context, true);
+    CGContextSetShouldSubpixelPositionFonts(context, true);
+    CGContextSetAllowsAntialiasing(context, true);
+    CGContextSetShouldAntialias(context, true);
 
-    CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
+    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
     CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
 
-    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
-
-    uint8_t* bitmap_data = static_cast<uint8_t*>(CGBitmapContextGetData(context.get()));
-    size_t height = CGBitmapContextGetHeight(context.get());
-    size_t bytes_per_row = CGBitmapContextGetBytesPerRow(context.get());
-    size_t size = height * bytes_per_row;
-
-    std::vector<uint8_t> buffer;
-    buffer.reserve(size);
-    for (size_t i = 0; i < size; ++i) {
-        buffer.emplace_back(bitmap_data[i]);
-    }
+    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context);
+    uint8_t* bitmap_data = static_cast<uint8_t*>(CGBitmapContextGetData(context));
 
     return {
         .colored = colored,
@@ -140,7 +137,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         .top = top,
         .width = static_cast<int32_t>(rasterized_width),
         .height = static_cast<int32_t>(rasterized_height),
-        .buffer = buffer,
+        .buffer = std::make_unique<uint8_t*>(bitmap_data),
     };
 }
 

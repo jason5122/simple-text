@@ -199,7 +199,7 @@ bool ImageRenderer::loadPng(size_t index, fs::path file_name) {
     }
 
     Vec4 uv;
-    atlas.insertTexture(width, height, color_type == PNG_COLOR_TYPE_RGBA, buffer, uv);
+    atlas.insertTexture(width, height, color_type == PNG_COLOR_TYPE_RGBA, buffer.data(), uv);
     image_atlas_entries[index] = {
         .rect_size = Vec2{static_cast<float>(width), static_cast<float>(height)},
         .uv = uv,

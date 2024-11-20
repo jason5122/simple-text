@@ -13,8 +13,8 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(std::string_view text, size_t font_id, int font_size)
-    : font_id(font_id), font_size(font_size), tree(text), line_layout_cache(font_id) {
+TextViewWidget::TextViewWidget(std::string_view text, size_t font_id)
+    : font_id(font_id), tree(text), line_layout_cache(font_id) {
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -342,7 +342,7 @@ size_t TextViewWidget::lineAtY(int y) const {
 
 inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
     std::string line_str = tree.get_line_content_for_layout_use(line);
-    return line_layout_cache.get(line_str, font_size);
+    return line_layout_cache[line_str];
 }
 
 inline constexpr app::Point TextViewWidget::textOffset() {
@@ -356,7 +356,7 @@ inline constexpr int TextViewWidget::gutterWidth() {
 }
 
 inline constexpr int TextViewWidget::lineNumberWidth() {
-    int digit_width = line_layout_cache.get("0", font_size).width;
+    int digit_width = line_layout_cache["0"].width;
     int log = std::log10(tree.line_count());
     return digit_width * std::max(log + 1, 2);
 }
@@ -460,7 +460,7 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
         line_number_coords.y += static_cast<int>(line) * main_line_height;
 
         std::string line_number_str = std::format("{}", line + 1);
-        const auto& line_number_layout = line_layout_cache.get(line_number_str, font_size);
+        const auto& line_number_layout = line_layout_cache[line_number_str];
         line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {

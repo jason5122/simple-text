@@ -19,7 +19,7 @@ namespace gui {
 
 class TextViewWidget : public ScrollableWidget {
 public:
-    TextViewWidget(std::string_view text, size_t font_id, int font_size);
+    TextViewWidget(std::string_view text, size_t font_id);
 
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
@@ -66,7 +66,6 @@ private:
     static constexpr int kCaretWidth = 4;
 
     size_t font_id;
-    int font_size;
 
     base::PieceTree tree;
     LineLayoutCache line_layout_cache;

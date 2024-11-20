@@ -315,6 +315,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
             .line_height = line_height,
             .ascent = ascent,
             .descent = descent,
+            .font_size = font_size,
         };
         impl::DWriteInfo dwrite_info{
             .font_name16 = GetFontFamilyName(dwrite_font.Get()),

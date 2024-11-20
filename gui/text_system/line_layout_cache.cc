@@ -8,9 +8,8 @@ namespace gui {
 
 LineLayoutCache::LineLayoutCache(size_t font_id) : font_id{font_id} {}
 
-const font::LineLayout& LineLayoutCache::get(std::string_view str8, int font_size) {
-    uint64_t str_hash = rapidhash(str8.data(), str8.length());
-    size_t hash = base::hash_combine(str_hash, font_size);
+const font::LineLayout& LineLayoutCache::operator[](std::string_view str8) {
+    uint64_t hash = rapidhash(str8.data(), str8.length());
     if (auto it = cache.find(hash); it != cache.end()) {
         return it->second;
     } else {

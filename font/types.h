@@ -47,6 +47,7 @@ struct Metrics {
     int line_height;
     int ascent;
     int descent;
+    int font_size;
 };
 
 struct RasterizedGlyph {

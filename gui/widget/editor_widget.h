@@ -9,7 +9,7 @@ namespace gui {
 
 class EditorWidget : public VerticalLayoutWidget {
 public:
-    EditorWidget(size_t main_font_id, int main_font_size, size_t ui_font_size);
+    EditorWidget(size_t main_font_id, size_t ui_font_size);
 
     TextViewWidget* currentWidget() const;
     void setIndex(size_t index);
@@ -36,7 +36,6 @@ private:
     static constexpr Rgba kTextViewColor{48, 56, 65, 255};
 
     size_t main_font_id;
-    int main_font_size;
 
     std::shared_ptr<MultiViewWidget<TextViewWidget>> multi_view;
     std::shared_ptr<TabBarWidget> tab_bar;

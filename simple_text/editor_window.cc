@@ -115,8 +115,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
 
-    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, EditorApp::kMainFontSize,
-                                                   parent.ui_font_id);
+    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, parent.ui_font_id);
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
     // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);

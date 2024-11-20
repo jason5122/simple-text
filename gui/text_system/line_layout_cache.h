@@ -15,12 +15,12 @@ class LineLayoutCache {
 public:
     LineLayoutCache(size_t font_id);
 
-    const font::LineLayout& operator[](std::string_view str8);
+    const font::LineLayout& get(std::string_view str8, int font_size);
     int maxWidth() const;
 
 private:
     size_t font_id;
-    robin_hood::unordered_map<uint64_t, font::LineLayout> cache;
+    robin_hood::unordered_map<size_t, font::LineLayout> cache;
 };
 
 }  // namespace gui

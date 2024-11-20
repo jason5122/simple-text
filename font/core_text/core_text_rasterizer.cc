@@ -249,29 +249,33 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
         std::abort();
     }
 
-    if (!font_postscript_name_to_id.contains(font_name)) {
-        int ascent = std::ceil(CTFontGetAscent(ct_font));
-        int descent = std::ceil(CTFontGetDescent(ct_font));
-        int leading = std::ceil(CTFontGetLeading(ct_font));
-
-        // Round up to the next even number if odd.
-        if (ascent % 2 == 1) ++ascent;
-        if (descent % 2 == 1) ++descent;
-
-        int line_height = ascent + descent + leading;
-
-        Metrics metrics{
-            .line_height = line_height,
-            .ascent = ascent,
-            .descent = descent,
-        };
-
-        size_t font_id = font_id_to_native.size();
-        font_postscript_name_to_id.emplace(font_name, font_id);
-        font_id_to_native.emplace_back(std::move(font));
-        font_id_to_metrics.emplace_back(std::move(metrics));
+    // If the font is already present, return its ID.
+    size_t hash = hashFont(font_name, font_size);
+    if (auto it = font_hash_to_id.find(hash); it != font_hash_to_id.end()) {
+        return it->second;
     }
-    return font_postscript_name_to_id.at(font_name);
+
+    int ascent = std::ceil(CTFontGetAscent(ct_font));
+    int descent = std::ceil(CTFontGetDescent(ct_font));
+    int leading = std::ceil(CTFontGetLeading(ct_font));
+
+    // Round up to the next even number if odd.
+    if (ascent % 2 == 1) ++ascent;
+    if (descent % 2 == 1) ++descent;
+
+    int line_height = ascent + descent + leading;
+
+    Metrics metrics{
+        .line_height = line_height,
+        .ascent = ascent,
+        .descent = descent,
+    };
+
+    size_t font_id = font_hash_to_id.size();
+    font_hash_to_id.emplace(hash, font_id);
+    font_id_to_native.emplace_back(std::move(font));
+    font_id_to_metrics.emplace_back(std::move(metrics));
+    return font_id;
 }
 
 namespace {

@@ -1,44 +1,11 @@
-#include "build/build_config.h"
 #include "editor_app.h"
+
 #include "font/font_rasterizer.h"
 #include "gui/renderer/renderer.h"
 #include "opengl/functions_gl.h"
 
 // TODO: Debug; remove this.
 #include "util/std_print.h"
-
-// TODO: Properly load this from settings.
-namespace {
-
-#if BUILDFLAG(IS_MAC)
-constexpr int kMainFontSize = 16 * 2;
-constexpr int kUIFontSize = 11 * 2;
-// const std::string kMainFontFace = "Monaco";
-// const std::string kMainFontFace = "Fira Code";
-const std::string kMainFontFace = "Source Code Pro";
-// const std::string kMainFontFace = "SF Pro Text";
-// const std::string kMainFontFace = "Courier";
-// const std::string kMainFontFace = "Courier New";
-// const std::string kMainFontFace = "Andale Mono";
-// const std::string kMainFontFace = "Arial";
-// const std::string kMainFontFace = "Menlo";
-// const std::string kMainFontFace = "Charter";
-// const std::string kMainFontFace = "Times New Roman";
-// const std::string kUIFontFace = "SF Pro Text";
-#elif BUILDFLAG(IS_WIN)
-constexpr int kMainFontSize = 11 * 2;
-constexpr int kUIFontSize = 8 * 2;
-const std::string kMainFontFace = "Source Code Pro";
-// const std::string kMainFontFace = "Consolas";
-// const std::string kMainFontFace = "Cascadia Code";
-#elif BUILDFLAG(IS_LINUX)
-constexpr int kMainFontSize = 12 * 2;
-constexpr int kUIFontSize = 11 * 2;
-// const std::string kMainFontFace = "Monospace";
-const std::string kMainFontFace = "Source Code Pro";
-#endif
-
-}  // namespace
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
@@ -47,8 +14,8 @@ void EditorApp::onLaunch() {
     functions_gl.loadGlobalFunctionPointers();
 
     auto& font_rasterizer = font::FontRasterizer::instance();
-    size_t main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
-    size_t ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
+    main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
+    ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
 
     auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
     glyph_cache.setMainFontId(main_font_id);

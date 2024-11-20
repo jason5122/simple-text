@@ -9,7 +9,7 @@ namespace gui {
 
 SideBarWidget::SideBarWidget(const app::Size& size)
     : ScrollableWidget{size},
-      label_font_id{rasterizer().addSystemFont(22 * 2, font::FontStyle::kBold)},
+      label_font_id{rasterizer().addSystemFont(kLabelFontSize, font::FontStyle::kBold)},
       line_layout_cache{label_font_id} {
     updateMaxScroll();
 
@@ -96,7 +96,7 @@ void SideBarWidget::renderNewLabel() {
     const auto& metrics = rasterizer().metrics(label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
-        const auto& layout = line_layout_cache[strs[line]];
+        const auto& layout = line_layout_cache.get(strs[line], kLabelFontSize);
 
         app::Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * label_line_height;

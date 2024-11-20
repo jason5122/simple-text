@@ -19,7 +19,7 @@ namespace gui {
 
 class TextViewWidget : public ScrollableWidget {
 public:
-    TextViewWidget(std::string_view text);
+    TextViewWidget(std::string_view text, size_t font_id, int font_size);
 
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
@@ -64,6 +64,9 @@ private:
     // static constexpr Rgba kCaretColor{95, 180, 180, 255};       // Light.
     static constexpr Rgba kCaretColor{249, 174, 88, 255};  // Dark.
     static constexpr int kCaretWidth = 4;
+
+    size_t font_id;
+    int font_size;
 
     base::PieceTree tree;
     LineLayoutCache line_layout_cache;

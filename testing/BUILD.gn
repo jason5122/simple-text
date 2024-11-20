@@ -10,6 +10,7 @@ executable("test_runner") {
   deps = [
     "//base/buffer/tests",
     "//base/filesystem/tests",
+    "//base/hash/tests",
     "//base/numeric/tests",
     "//font/tests",
     "//gui/text_system/integration_tests",

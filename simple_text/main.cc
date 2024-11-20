@@ -10,7 +10,7 @@ int SimpleTextMain(int argc, char* argv[]) {
     return 0;
 }
 
-}
+}  // namespace
 
 #if BUILDFLAG(IS_WIN)
 #include <ole2.h>

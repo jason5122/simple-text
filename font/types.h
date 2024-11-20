@@ -124,7 +124,4 @@ private:
     size_t run_glyph_index;
 };
 
-static_assert(std::is_trivially_copy_constructible_v<LineLayout::ConstIterator>);
-static_assert(std::is_trivially_copy_assignable_v<LineLayout::ConstIterator>);
-
 }  // namespace font

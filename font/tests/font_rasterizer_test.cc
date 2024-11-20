@@ -17,6 +17,14 @@ const std::string kOSFontFace = "Consolas";
 
 namespace font {
 
+static_assert(!std::is_copy_constructible_v<FontRasterizer>);
+static_assert(!std::is_copy_assignable_v<FontRasterizer>);
+static_assert(!std::is_move_constructible_v<FontRasterizer>);
+static_assert(!std::is_move_assignable_v<FontRasterizer>);
+
+static_assert(std::is_trivially_copy_constructible_v<LineLayout::ConstIterator>);
+static_assert(std::is_trivially_copy_assignable_v<LineLayout::ConstIterator>);
+
 TEST(FontRasterizerTest, LayoutLine1) {
     auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addFont(kOSFontFace, 32);

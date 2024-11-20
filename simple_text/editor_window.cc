@@ -317,15 +317,15 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         auto* text_view = editor_widget->currentWidget();
         text_view->redo();
         handled = true;
-    } else if (key == app::Key::kBackspace) {
+    } else if (key == app::Key::kBackspace && modifiers == app::ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
         text_view->leftDelete();
         handled = true;
-    } else if (key == app::Key::kEnter) {
+    } else if (key == app::Key::kEnter && modifiers == app::ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
         text_view->insertText("\n");
         handled = true;
-    } else if (key == app::Key::kTab) {
+    } else if (key == app::Key::kTab && modifiers == app::ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
         text_view->insertText("    ");
         handled = true;

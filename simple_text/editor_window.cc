@@ -115,7 +115,8 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
 
-    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, EditorApp::kMainFontSize);
+    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, EditorApp::kMainFontSize,
+                                                   parent.ui_font_id);
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
     // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);
@@ -135,7 +136,8 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     // These don't have default constructors since they are not intended to be main widgets.
     std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, size.height})};
-    std::shared_ptr<Widget> status_bar{new StatusBarWidget({size.width, kStatusBarHeight})};
+    std::shared_ptr<Widget> status_bar{
+        new StatusBarWidget({size.width, kStatusBarHeight}, parent.ui_font_id)};
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);

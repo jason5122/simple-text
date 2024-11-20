@@ -3,8 +3,8 @@
 
 namespace gui {
 
-StatusBarWidget::StatusBarWidget(const app::Size& size)
-    : Widget{size}, line_column_label{new LabelWidget{{0, size.height}}} {
+StatusBarWidget::StatusBarWidget(const app::Size& size, size_t font_id)
+    : Widget{size}, line_column_label{new LabelWidget{font_id, {0, size.height}}} {
     line_column_label->setText("clangd, Line 1, Column 1", kTextColor);
 }
 

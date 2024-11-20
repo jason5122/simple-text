@@ -1,5 +1,5 @@
-#include "gui/renderer/renderer.h"
 #include "selection_renderer.h"
+
 #include <cassert>
 #include <cstdint>
 
@@ -113,11 +113,8 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 void SelectionRenderer::renderSelections(const std::vector<Selection>& selections,
-                                         const app::Point& offset) {
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(glyph_cache.mainFontId());
-
+                                         const app::Point& offset,
+                                         int line_height) {
     auto create = [&, this](int start, int end, int line,
                             uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                             uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -126,12 +123,12 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& selection
             .coords =
                 {
                     .x = static_cast<float>(start) + offset.x,
-                    .y = static_cast<float>(metrics.line_height * line) + offset.y,
+                    .y = static_cast<float>(line_height * line) + offset.y,
                 },
             .size =
                 {
                     .x = static_cast<float>(end - start),
-                    .y = static_cast<float>(metrics.line_height + kBorderThickness),
+                    .y = static_cast<float>(line_height + kBorderThickness),
                 },
             // .color = Rgba::fromRgb({227, 230, 232}, 0),  // Light.
             .color = Rgba::fromRgb({77, 88, 100}, 0),  // Dark.

@@ -6,14 +6,13 @@ GlyphCache::GlyphCache() {
     atlas_pages.emplace_back();
 }
 
-const GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id,
-                                              uint32_t glyph_id,
-                                              const font::FontRasterizer& font_rasterizer) {
+const GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id) {
     if (cache.size() <= font_id) {
         cache.resize(font_id + 1);
     }
 
     if (!cache[font_id].contains(glyph_id)) {
+        const auto& font_rasterizer = font::FontRasterizer::instance();
         auto rglyph = font_rasterizer.rasterize(font_id, glyph_id);
         cache[font_id].emplace(glyph_id, loadGlyph(std::move(rglyph)));
     }
@@ -46,30 +45,6 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
         .page = current_page,
     };
     return glyph;
-}
-
-void GlyphCache::setMainFontId(size_t font_id) {
-    // TODO: Refactor this ugly hack.
-    while (cache.size() <= font_id) {
-        cache.emplace_back();
-    }
-    main_font_id = font_id;
-}
-
-void GlyphCache::setUIFontId(size_t font_id) {
-    // TODO: Refactor this ugly hack.
-    while (cache.size() <= font_id) {
-        cache.emplace_back();
-    }
-    ui_font_id = font_id;
-}
-
-size_t GlyphCache::mainFontId() const {
-    return main_font_id;
-}
-
-size_t GlyphCache::uiFontId() const {
-    return ui_font_id;
 }
 
 const std::vector<Atlas>& GlyphCache::atlasPages() const {

@@ -278,8 +278,8 @@ void TextViewWidget::draw() {
     size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
 
-    renderText(start_line, end_line, main_line_height);
-    renderSelections(start_line, end_line);
+    renderText(main_line_height, start_line, end_line);
+    renderSelections(main_line_height, start_line, end_line);
     renderScrollBars(main_line_height);
     renderCaret(main_line_height);
 }
@@ -361,7 +361,7 @@ inline constexpr int TextViewWidget::lineNumberWidth() {
     return digit_width * std::max(log + 1, 2);
 }
 
-void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_line_height) {
+void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t end_line) {
     // Render two lines before start and one line after end. This ensures no sudden cutoff of
     // rendered text.
     start_line = base::sub_sat(start_line, 2_Z);
@@ -480,7 +480,7 @@ void TextViewWidget::renderText(size_t start_line, size_t end_line, int main_lin
     }
 }
 
-void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
+void TextViewWidget::renderSelections(int main_line_height, size_t start_line, size_t end_line) {
     SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
     auto [start, end] = selection.range();
     auto [c1_line, c1_col] = tree.line_column_at(start);
@@ -513,7 +513,7 @@ void TextViewWidget::renderSelections(size_t start_line, size_t end_line) {
             });
         }
     }
-    selection_renderer.renderSelections(selections, textOffset());
+    selection_renderer.renderSelections(selections, textOffset(), main_line_height);
 }
 
 void TextViewWidget::renderScrollBars(int main_line_height) {

@@ -17,10 +17,6 @@ void EditorApp::onLaunch() {
     main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
     ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
 
-    auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
-    glyph_cache.setMainFontId(main_font_id);
-    glyph_cache.setUIFontId(ui_font_id);
-
     createWindow();
 }
 

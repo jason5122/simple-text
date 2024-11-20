@@ -90,8 +90,8 @@ private:
     inline constexpr int lineNumberWidth();
 
     // Draw helpers.
-    void renderText(size_t start_line, size_t end_line, int main_line_height);
-    void renderSelections(size_t start_line, size_t end_line);
+    void renderText(int main_line_height, size_t start_line, size_t end_line);
+    void renderSelections(int main_line_height, size_t start_line, size_t end_line);
     void renderScrollBars(int main_line_height);
     void renderCaret(int main_line_height);
 };

@@ -8,7 +8,10 @@ namespace gui {
 
 class LabelWidget : public Widget {
 public:
-    LabelWidget(const app::Size& size, int left_padding = 0, int right_padding = 0);
+    LabelWidget(size_t font_id,
+                const app::Size& size,
+                int left_padding = 0,
+                int right_padding = 0);
 
     void setText(std::string_view str8, const Rgb& color);
     void addLeftIcon(size_t icon_id);
@@ -24,6 +27,7 @@ private:
     static constexpr Rgba kTempColor{223, 227, 230, 255};
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};
 
+    size_t font_id;
     int left_padding;
     int right_padding;
 

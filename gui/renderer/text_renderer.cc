@@ -133,7 +133,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             // runs is problematic or not. We really should just be targeting emojis.
             // glyph_coords.y -= font_rasterizer.metrics(run.font_id).descent;
 
-            auto& rglyph = glyph_cache.getGlyph(run.font_id, glyph.glyph_id, font_rasterizer);
+            auto& rglyph = glyph_cache.getGlyph(run.font_id, glyph.glyph_id);
 
             // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
             Vec4 glyph_copy = rglyph.glyph;

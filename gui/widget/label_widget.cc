@@ -6,14 +6,15 @@
 
 namespace gui {
 
-LabelWidget::LabelWidget(const app::Size& size, int left_padding, int right_padding)
-    : Widget{size}, left_padding{left_padding}, right_padding{right_padding} {}
+LabelWidget::LabelWidget(size_t font_id,
+                         const app::Size& size,
+                         int left_padding,
+                         int right_padding)
+    : Widget{size}, font_id(font_id), left_padding(left_padding), right_padding(right_padding) {}
 
 void LabelWidget::setText(std::string_view str8, const Rgb& color) {
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
     auto& font_rasterizer = font::FontRasterizer::instance();
-
-    layout = font_rasterizer.layoutLine(glyph_cache.uiFontId(), str8);
+    layout = font_rasterizer.layoutLine(font_id, str8);
     this->color = color;
 }
 
@@ -55,9 +56,8 @@ void LabelWidget::draw() {
         image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(glyph_cache.uiFontId());
+    const auto& metrics = font_rasterizer.metrics(font_id);
 
     app::Point coords = centerVertically(metrics.line_height) + left_offset;
     int min_x = 0;

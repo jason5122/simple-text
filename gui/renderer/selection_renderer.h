@@ -19,7 +19,9 @@ public:
         int start;
         int end;
     };
-    void renderSelections(const std::vector<Selection>& selections, const app::Point& offset);
+    void renderSelections(const std::vector<Selection>& selections,
+                          const app::Point& offset,
+                          int line_height);
     void flush(const app::Size& screen_size);
 
 private:

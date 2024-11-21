@@ -43,9 +43,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
         std::println("pango_font_map_load_font() error.");
         std::abort();
     }
-
-    // TODO: Implement font size.
-    return cacheFont({std::move(pango_font)}, -1);
+    return cacheFont({std::move(pango_font)}, font_size);
 }
 
 size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
@@ -120,8 +118,8 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         PangoFont* run_font = item->analysis.font;
         g_object_ref(run_font);
         GObjectPtr<PangoFont> run_font_ptr{run_font};
-        // TODO: Implement font size.
-        size_t run_font_id = cacheFont({std::move(run_font_ptr)}, -1);
+        int font_size = metrics(font_id).font_size;
+        size_t run_font_id = cacheFont({std::move(run_font_ptr)}, font_size);
 
         PangoGlyphString* glyph_string = glyph_item->glyphs;
         PangoGlyphInfo* glyph_infos = glyph_string->glyphs;
@@ -145,9 +143,8 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
             gi.geometry.y_offset = PANGO_SCALE * height;
 
             // Cache glyph info struct.
-            // TODO: Refactor this ugly hack.
-            while (pimpl->glyph_info_cache.size() <= run_font_id) {
-                pimpl->glyph_info_cache.emplace_back();
+            if (pimpl->glyph_info_cache.size() <= run_font_id) {
+                pimpl->glyph_info_cache.resize(run_font_id + 1);
             }
             pimpl->glyph_info_cache[run_font_id][gi.glyph] = gi;
 

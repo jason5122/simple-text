@@ -19,7 +19,8 @@ public:
     Atlas& operator=(Atlas&& other);
 
     GLuint tex() const;
-    bool insertTexture(int width, int height, bool colored, const GLubyte* data, Vec4& out_uv);
+    bool insertTexture(
+        int width, int height, bool colored, const std::vector<GLubyte>& data, Vec4& out_uv);
 
 private:
     GLuint tex_id = 0;

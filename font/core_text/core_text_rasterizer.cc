@@ -76,13 +76,12 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     CTFontRef font_ref = font_id_to_native[font_id].font.get();
 
-    CGGlyph glyph_index = glyph_id;
-
     if (!font_ref) {
         std::println("FontRasterizer::rasterize() error: CTFontRef is null!");
         std::abort();
     }
 
+    CGGlyph glyph_index = glyph_id;
     CGRect bounds;
     CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
 
@@ -100,36 +99,29 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool has_outline = CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr);
     bool colored = colored_font && !has_outline;
 
+    std::vector<uint8_t> bitmap_data(rasterized_height * rasterized_width * 4);
     ScopedTypeRef<CGColorSpaceRef> color_space_ref{CGColorSpaceCreateDeviceRGB()};
-
-    // ScopedTypeRef<CGContextRef> context{CGBitmapContextCreate(
-    //     nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4,
-    //     color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)};
-
-    // TODO: Release this when we are finished loading the data into OpenGL. We can't release this
-    // at the end of this scope since this would invalidate the buffer's unique_ptr.
-    CGContextRef context = CGBitmapContextCreate(
-        nullptr, rasterized_width, rasterized_height, 8, rasterized_width * 4,
-        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    ScopedTypeRef<CGContextRef> context{CGBitmapContextCreate(
+        bitmap_data.data(), rasterized_width, rasterized_height, 8, rasterized_width * 4,
+        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)};
 
     CGFloat alpha = colored ? 0.0 : 1.0;
-    CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, alpha);
+    CGContextSetRGBFillColor(context.get(), 0.0, 0.0, 0.0, alpha);
 
-    CGContextFillRect(context, CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
-    CGContextSetAllowsFontSmoothing(context, true);
-    CGContextSetShouldSmoothFonts(context, FontSmoothingEnabled());
-    CGContextSetAllowsFontSubpixelQuantization(context, true);
-    CGContextSetShouldSubpixelQuantizeFonts(context, true);
-    CGContextSetAllowsFontSubpixelPositioning(context, true);
-    CGContextSetShouldSubpixelPositionFonts(context, true);
-    CGContextSetAllowsAntialiasing(context, true);
-    CGContextSetShouldAntialias(context, true);
+    CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
+    CGContextSetAllowsFontSmoothing(context.get(), true);
+    CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
+    CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
+    CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
+    CGContextSetAllowsFontSubpixelPositioning(context.get(), true);
+    CGContextSetShouldSubpixelPositionFonts(context.get(), true);
+    CGContextSetAllowsAntialiasing(context.get(), true);
+    CGContextSetShouldAntialias(context.get(), true);
 
-    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
     CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
 
-    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context);
-    uint8_t* bitmap_data = static_cast<uint8_t*>(CGBitmapContextGetData(context));
+    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
     return {
         .colored = colored,
@@ -137,7 +129,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         .top = top,
         .width = static_cast<int32_t>(rasterized_width),
         .height = static_cast<int32_t>(rasterized_height),
-        .buffer = std::make_unique<uint8_t*>(bitmap_data),
+        .buffer = bitmap_data,
     };
 }
 

@@ -56,7 +56,7 @@ struct RasterizedGlyph {
     int32_t top;
     int32_t width;
     int32_t height;
-    std::unique_ptr<uint8_t*> buffer;
+    std::vector<uint8_t> buffer;
 };
 
 // TODO: Consider making a global "geometry" namespace and moving Point there.

@@ -68,9 +68,9 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool colored = gi.attr.is_color;
     glyph_string->glyphs[0] = std::move(gi);
 
-    std::vector<uint8_t> surface_data(width * height * 4);
+    std::vector<uint8_t> pixel_data(width * height * 4);
     CairoSurfacePtr surface{cairo_image_surface_create_for_data(
-        surface_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
+        pixel_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
     CairoContextPtr render_context{cairo_create(surface.get())};
 
     int descent = PANGO_PIXELS(PANGO_DESCENT(logical_rect));
@@ -79,25 +79,13 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
     pango_cairo_show_glyph_string(render_context.get(), font, glyph_string.get());
 
-    std::vector<uint8_t> buffer;
-    size_t pixels = width * height * 4;
-    buffer.reserve(pixels);
-    for (size_t i = 0; i < pixels; i += 4) {
-        buffer.emplace_back(surface_data[i + 2]);
-        buffer.emplace_back(surface_data[i + 1]);
-        buffer.emplace_back(surface_data[i]);
-        if (colored) {
-            buffer.emplace_back(surface_data[i + 3]);
-        }
-    }
-
     return {
         .colored = colored,
         .left = 0,
         .top = height - descent,
         .width = width,
         .height = height,
-        .buffer = std::move(buffer),
+        .buffer = std::move(pixel_data),
     };
 }
 
@@ -201,36 +189,40 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     std::string font_name = font_str;
     g_free(font_str);
 
-    if (!font_postscript_name_to_id.contains(font_name)) {
-        PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(font.font.get(), nullptr)};
-        if (!pango_metrics) {
-            std::println("pango_font_get_metrics() error.");
-            std::abort();
-        }
-
-        int ascent = pango_font_metrics_get_ascent(pango_metrics.get()) / PANGO_SCALE;
-        int descent = pango_font_metrics_get_descent(pango_metrics.get()) / PANGO_SCALE;
-        int height = pango_font_metrics_get_height(pango_metrics.get()) / PANGO_SCALE;
-
-        // Round up to the next even number if odd.
-        if (ascent % 2 == 1) ++ascent;
-        if (descent % 2 == 1) ++descent;
-
-        int line_height = std::max(ascent + descent, height);
-
-        Metrics metrics{
-            .line_height = line_height,
-            .ascent = ascent,
-            .descent = descent,
-            .font_size = font_size,
-        };
-
-        size_t font_id = font_id_to_native.size();
-        font_postscript_name_to_id.emplace(font_name, font_id);
-        font_id_to_native.emplace_back(std::move(font));
-        font_id_to_metrics.emplace_back(std::move(metrics));
+    // If the font is already present, return its ID.
+    size_t hash = hashFont(font_name, font_size);
+    if (auto it = font_hash_to_id.find(hash); it != font_hash_to_id.end()) {
+        return it->second;
     }
-    return font_postscript_name_to_id.at(font_name);
+
+    PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(font.font.get(), nullptr)};
+    if (!pango_metrics) {
+        std::println("pango_font_get_metrics() error.");
+        std::abort();
+    }
+
+    int ascent = pango_font_metrics_get_ascent(pango_metrics.get()) / PANGO_SCALE;
+    int descent = pango_font_metrics_get_descent(pango_metrics.get()) / PANGO_SCALE;
+    int height = pango_font_metrics_get_height(pango_metrics.get()) / PANGO_SCALE;
+
+    // Round up to the next even number if odd.
+    if (ascent % 2 == 1) ++ascent;
+    if (descent % 2 == 1) ++descent;
+
+    int line_height = std::max(ascent + descent, height);
+
+    Metrics metrics{
+        .line_height = line_height,
+        .ascent = ascent,
+        .descent = descent,
+        .font_size = font_size,
+    };
+
+    size_t font_id = font_hash_to_id.size();
+    font_hash_to_id.emplace(hash, font_id);
+    font_id_to_native.emplace_back(std::move(font));
+    font_id_to_metrics.emplace_back(std::move(metrics));
+    return font_id;
 }
 
 }  // namespace font

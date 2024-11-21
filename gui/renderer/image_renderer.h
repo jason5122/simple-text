@@ -16,6 +16,7 @@ class ImageRenderer : util::NonCopyable {
 public:
     static constexpr size_t kPanelClose2xIndex = 0;
     static constexpr size_t kFolderOpen2xIndex = 1;
+    static constexpr size_t kStanfordBunny = 2;
 
     ImageRenderer();
     ~ImageRenderer();

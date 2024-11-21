@@ -5,6 +5,7 @@ R"(
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
 layout(location = 2) in vec4 uv;
+// The `colored` flag is packed along with color.
 layout(location = 3) in vec4 in_color;
 
 out vec2 tex_coords;
@@ -30,7 +31,7 @@ void main() {
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
     tex_coords = uv_offset + uv_size * position;
-    image_color = in_color / 255.0;
+    image_color = vec4(in_color.rgb / 255.0, in_color.a);
 }
 
 )"

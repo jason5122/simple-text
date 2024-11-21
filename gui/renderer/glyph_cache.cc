@@ -25,7 +25,8 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
     // TODO: Handle the case when a texture is too large for the atlas.
     //       Return an enum classifying the error instead of using a boolean.
     Vec4 uv;
-    bool success = atlas.insertTexture(rglyph.width, rglyph.height, rglyph.buffer, uv);
+    // TODO: Fix the `colored` parameter. This should be more about the number of channels.
+    bool success = atlas.insertTexture(rglyph.width, rglyph.height, true, rglyph.buffer, uv);
 
     // The current page is full, so create a new page and try again.
     if (!success) {

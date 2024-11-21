@@ -13,8 +13,14 @@ uniform sampler2D mask;
 void main() {
     vec4 texel = texture(mask, tex_coords);
 
-    alpha_mask = vec4(1.0);
-    color = vec4(image_color.rgb, texel.a);
+    int colored = int(image_color.a);
+    if (colored == 1) {
+        alpha_mask = vec4(1.0);
+        color = texel;
+    } else {
+        alpha_mask = vec4(1.0);
+        color = vec4(image_color.rgb, texel.a);
+    }
 }
 
 )"

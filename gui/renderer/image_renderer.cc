@@ -7,9 +7,8 @@
 using namespace opengl;
 
 // TODO: Debug use; remove this.
+#include "util/std_print.h"
 #include <cassert>
-#include <format>
-#include <iostream>
 
 namespace {
 
@@ -73,9 +72,10 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     fs::path folder_open_2x = base::ResourceDir() / "icons/folder_open@2x.png";
 
     // TODO: Figure out a better way to do this.
-    image_atlas_entries.resize(2);
+    image_atlas_entries.resize(4);
     loadPng(kPanelClose2xIndex, panel_close_2x);
     loadPng(kFolderOpen2xIndex, folder_open_2x);
+    loadPng(kStanfordBunny, base::ResourceDir() / "icons/stanford_bunny.png");
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -150,18 +150,17 @@ void ImageRenderer::flush(const app::Size& screen_size) {
 
 bool ImageRenderer::loadPng(size_t index, fs::path file_name) {
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.string().c_str(), "rb"), fclose};
-
     if (!fp) {
         return false;
     }
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (png_ptr == nullptr) {
+    if (!png_ptr) {
         return false;
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == nullptr) {
+    if (!info_ptr) {
         png_destroy_read_struct(&png_ptr, nullptr, nullptr);
         return false;
     }
@@ -173,10 +172,9 @@ bool ImageRenderer::loadPng(size_t index, fs::path file_name) {
 
     png_init_io(png_ptr, fp.get());
 
-    png_set_sig_bytes(png_ptr, 0);
-
-    png_read_png(png_ptr, info_ptr,
-                 PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, nullptr);
+    int transforms =
+        PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_BGR;
+    png_read_png(png_ptr, info_ptr, transforms, nullptr);
 
     png_uint_32 width, height;
     int bit_depth, color_type, interlace_type;
@@ -187,19 +185,17 @@ bool ImageRenderer::loadPng(size_t index, fs::path file_name) {
     png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
 
     std::vector<uint8_t> buffer(row_bytes * height);
-    for (png_uint_32 i = 0; i < height; ++i) {
-        for (size_t j = 0; j < row_bytes; ++j) {
+    for (png_uint_32 row = 0; row < height; ++row) {
+        for (size_t col = 0; col < row_bytes; ++col) {
             // PNG is ordered top to bottom, but OpenGL expects bottom to top. This is fine!
             // We want to load the image flipped, since we flip y-coordinates in the vertex shader.
-            // int row = height - 1 - i;
-
-            int row = i;
-            buffer[row_bytes * row + j] = row_pointers[i][j];
+            buffer[row_bytes * row + col] = row_pointers[row][col];
         }
     }
 
+    bool has_alpha = color_type & PNG_COLOR_MASK_ALPHA;
     Vec4 uv;
-    atlas.insertTexture(width, height, buffer, uv);
+    atlas.insertTexture(width, height, has_alpha, buffer, uv);
     image_atlas_entries[index] = {
         .rect_size = Vec2{static_cast<float>(width), static_cast<float>(height)},
         .uv = uv,

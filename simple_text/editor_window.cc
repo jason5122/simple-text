@@ -151,6 +151,13 @@ void EditorWindow::onDraw(const app::Size& size) {
     main_widget->layout();
     main_widget->draw();
 
+    ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
+    // image_renderer.addImage(ImageRenderer::kTestImageM, {500, 500}, {255, 255, 255, true});
+
+    app::Point coords = {size.width - 1426, 0};
+    Rgba color = {255, 255, 255, true};
+    image_renderer.addImage(ImageRenderer::kStanfordBunny, coords, color);
+
     Renderer::instance().flush(size);
 }
 

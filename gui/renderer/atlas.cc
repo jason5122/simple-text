@@ -73,7 +73,8 @@ GLuint Atlas::tex() const {
     return tex_id;
 }
 
-bool Atlas::insertTexture(int width, int height, const std::vector<GLubyte>& data, Vec4& out_uv) {
+bool Atlas::insertTexture(
+    int width, int height, bool colored, const std::vector<GLubyte>& data, Vec4& out_uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
         std::println("Glyph is too large.");
         return false;
@@ -94,8 +95,9 @@ bool Atlas::insertTexture(int width, int height, const std::vector<GLubyte>& dat
     }
 
     // Load data into OpenGL.
+    GLenum format = colored ? GL_BGRA : GL_BGR;
     glBindTexture(GL_TEXTURE_2D, tex_id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, GL_BGRA,
+    glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, format,
                     GL_UNSIGNED_BYTE, data.data());
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 

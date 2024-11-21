@@ -129,7 +129,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         .top = top,
         .width = static_cast<int32_t>(rasterized_width),
         .height = static_cast<int32_t>(rasterized_height),
-        .buffer = bitmap_data,
+        .buffer = std::move(bitmap_data),
     };
 }
 

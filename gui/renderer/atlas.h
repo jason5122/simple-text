@@ -11,7 +11,7 @@ class Atlas : util::NonCopyable {
 public:
     // 1024 is a conservative size.
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
-    static constexpr int kAtlasSize = 4096;
+    static constexpr int kAtlasSize = 2048;
 
     Atlas();
     ~Atlas();

@@ -63,7 +63,9 @@ void Language::load() {
     {
         PROFILE_BLOCK("SyntaxHighlighter::loadFromWasm()");
 
-        fs::path wasm_path = base::ResourceDir() / std::format("languages/{}/language.wasm", name);
+        std::string wasm_path =
+            std::format("{}/languages/{}/language.wasm", base::ResourceDir(), name);
+
         size_t file_size;
         auto data = base::ReadFileBinary(wasm_path.c_str(), file_size);
 
@@ -89,7 +91,7 @@ void Language::load() {
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    auto query_path = base::ResourceDir() / std::format("languages/{}/highlights.scm", name);
+    auto query_path = std::format("languages/{}/highlights.scm", name);
     std::string src = base::ReadFile(query_path.c_str());
     query = ts_query_new(language, src.data(), src.length(), &error_offset, &error_type);
 

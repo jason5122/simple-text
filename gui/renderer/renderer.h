@@ -12,7 +12,6 @@ class Renderer {
 public:
     static Renderer& instance();
 
-    GlyphCache& getGlyphCache();
     TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();

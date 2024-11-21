@@ -68,14 +68,15 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    fs::path panel_close_2x = base::ResourceDir() / "icons/panel_close@2x.png";
-    fs::path folder_open_2x = base::ResourceDir() / "icons/folder_open@2x.png";
+    std::string panel_close_2x = std::format("{}/icons/panel_close@2x.png", base::ResourceDir());
+    std::string folder_open_2x = std::format("{}/icons/folder_open@2x.png", base::ResourceDir());
+    std::string stanford_bunny = std::format("{}/icons/stanford_bunny.png", base::ResourceDir());
 
     // TODO: Figure out a better way to do this.
     image_atlas_entries.resize(4);
     loadPng(kPanelClose2xIndex, panel_close_2x);
     loadPng(kFolderOpen2xIndex, folder_open_2x);
-    loadPng(kStanfordBunny, base::ResourceDir() / "icons/stanford_bunny.png");
+    loadPng(kStanfordBunny, stanford_bunny);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -148,8 +149,8 @@ void ImageRenderer::flush(const app::Size& screen_size) {
     instances.clear();
 }
 
-bool ImageRenderer::loadPng(size_t index, fs::path file_name) {
-    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.string().c_str(), "rb"), fclose};
+bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
+    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
     if (!fp) {
         return false;
     }

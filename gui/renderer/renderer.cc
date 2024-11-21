@@ -18,10 +18,6 @@ Renderer& Renderer::instance() {
     return renderer;
 }
 
-GlyphCache& Renderer::getGlyphCache() {
-    return glyph_cache;
-}
-
 TextRenderer& Renderer::getTextRenderer() {
     return text_renderer;
 }

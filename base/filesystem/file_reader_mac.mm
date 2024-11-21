@@ -1,15 +1,15 @@
-#import <Foundation/Foundation.h>
-
 #include "file_reader.h"
+
+#include <Foundation/Foundation.h>
 
 namespace base {
 
-fs::path ResourceDir() {
+std::string ResourceDir() {
     return NSBundle.mainBundle.resourcePath.fileSystemRepresentation;
 }
 
 // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/AccessingFilesandDirectories/AccessingFilesandDirectories.html
-fs::path DataDir() {
+std::string DataDir() {
     NSFileManager* shared_fm = NSFileManager.defaultManager;
     NSArray* possible_urls = [shared_fm URLsForDirectory:NSApplicationSupportDirectory
                                                inDomains:NSUserDomainMask];

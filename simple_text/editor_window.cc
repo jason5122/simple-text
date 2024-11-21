@@ -309,7 +309,8 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         parent.setClipboardString(text_view->getSelectionText());
         text_view->leftDelete();
         handled = true;
-    } else if (key == app::Key::kO && modifiers == app::kPrimaryModifier) {
+    } else if (key == app::Key::kO &&
+               modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
         auto path = openFilePicker();
         if (path) {
             editor_widget->openFile(*path);

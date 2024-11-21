@@ -5,10 +5,8 @@
 #include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
 #include "util/non_copyable.h"
+#include <string_view>
 #include <vector>
-
-#include <filesystem>
-namespace fs = std::filesystem;
 
 namespace gui {
 
@@ -42,7 +40,7 @@ private:
     };
     std::vector<AtlasImage> image_atlas_entries;
 
-    bool loadPng(size_t index, fs::path file_name);
+    bool loadPng(size_t index, std::string_view file_name);
 
     struct InstanceData {
         Vec2 coords;

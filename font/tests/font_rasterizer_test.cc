@@ -1,6 +1,7 @@
 #include "base/numeric/literals.h"
 #include "build/build_config.h"
 #include "font/font_rasterizer.h"
+#include "util/random_util.h"
 #include <gtest/gtest.h>
 
 namespace {
@@ -97,10 +98,20 @@ TEST(FontRasterizerTest, RasterizePerformance) {
     auto layout = rasterizer.layoutLine(font_id, "a");
     uint32_t glyph_id = layout.runs[0].glyphs[0].glyph_id;
 
-    for (size_t i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         auto rglyph = rasterizer.rasterize(font_id, glyph_id);
         EXPECT_GT(rglyph.width, 0);
         EXPECT_GT(rglyph.height, 0);
+    }
+}
+
+TEST(FontRasterizerTest, LineLayoutPerformance) {
+    auto& rasterizer = FontRasterizer::instance();
+    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+
+    for (int i = 0; i < 1000; ++i) {
+        std::string str = util::RandomString(100);
+        auto layout = rasterizer.layoutLine(font_id, str);
     }
 }
 

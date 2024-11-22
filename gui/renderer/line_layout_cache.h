@@ -13,13 +13,9 @@ namespace gui {
 
 class LineLayoutCache {
 public:
-    LineLayoutCache(size_t font_id);
-
-    const font::LineLayout& operator[](std::string_view str8);
-    int maxWidth() const;
+    const font::LineLayout& get(size_t font_id, std::string_view str8);
 
 private:
-    size_t font_id;
     robin_hood::unordered_map<uint64_t, font::LineLayout> cache;
 };
 

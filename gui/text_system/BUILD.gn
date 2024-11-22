@@ -1,14 +1,11 @@
 source_set("text_system") {
   sources = [
     "caret.cc",
-    "line_layout_cache.cc",
     "selection.cc",
   ]
 
   deps = [
     "//font",
     "//third_party/uni_algo",
-    "//third_party/xxhash",
   ]
-  public_deps = [ "//third_party/tree_sitter" ]
 }

@@ -14,7 +14,7 @@
 namespace gui {
 
 TextViewWidget::TextViewWidget(std::string_view text, size_t font_id)
-    : font_id(font_id), tree(text), line_layout_cache(font_id) {
+    : font_id(font_id), tree(text) {
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -324,7 +324,8 @@ void TextViewWidget::updateMaxScroll() {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
 
-    max_scroll_offset.x = line_layout_cache.maxWidth();
+    // TODO: Figure out how to update max width.
+    max_scroll_offset.x = 0;
     max_scroll_offset.y = tree.line_count() * metrics.line_height;
 }
 
@@ -341,8 +342,9 @@ size_t TextViewWidget::lineAtY(int y) const {
 }
 
 inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
-    return line_layout_cache[line_str];
+    return line_layout_cache.get(font_id, line_str);
 }
 
 inline constexpr app::Point TextViewWidget::textOffset() {
@@ -355,8 +357,9 @@ inline constexpr int TextViewWidget::gutterWidth() {
     return kGutterLeftPadding + lineNumberWidth() + kGutterRightPadding;
 }
 
-inline constexpr int TextViewWidget::lineNumberWidth() {
-    int digit_width = line_layout_cache["0"].width;
+inline int TextViewWidget::lineNumberWidth() {
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    int digit_width = line_layout_cache.get(font_id, "0").width;
     int log = std::log10(tree.line_count());
     return digit_width * std::max(log + 1, 2);
 }
@@ -370,8 +373,9 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
     start_line = std::clamp(start_line, 0_Z, tree.line_count());
     end_line = std::clamp(end_line, 0_Z, tree.line_count());
 
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
 #ifdef ENABLE_HIGHLIGHTING
     auto& highlighter = highlight::Highlighter::instance();
@@ -460,7 +464,7 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
         line_number_coords.y += static_cast<int>(line) * main_line_height;
 
         std::string line_number_str = std::format("{}", line + 1);
-        const auto& line_number_layout = line_layout_cache[line_number_str];
+        const auto& line_number_layout = line_layout_cache.get(font_id, line_number_str);
         line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
@@ -517,7 +521,7 @@ void TextViewWidget::renderSelections(int main_line_height, size_t start_line, s
 }
 
 void TextViewWidget::renderScrollBars(int main_line_height) {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
     int vbar_width = 15;
@@ -547,7 +551,7 @@ void TextViewWidget::renderScrollBars(int main_line_height) {
 }
 
 void TextViewWidget::renderCaret(int main_line_height) {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;

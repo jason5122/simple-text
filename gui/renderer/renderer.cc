@@ -18,6 +18,10 @@ Renderer& Renderer::instance() {
     return renderer;
 }
 
+LineLayoutCache& Renderer::getLineLayoutCache() {
+    return line_layout_cache;
+}
+
 TextRenderer& Renderer::getTextRenderer() {
     return text_renderer;
 }

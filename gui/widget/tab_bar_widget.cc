@@ -50,7 +50,7 @@ void TabBarWidget::removeTab(size_t index) {
 }
 
 void TabBarWidget::draw() {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     rect_renderer.addRect(position, size, kTabBarColor, RectRenderer::RectLayer::kForeground);
 

@@ -9,7 +9,7 @@ StatusBarWidget::StatusBarWidget(const app::Size& size, size_t font_id)
 }
 
 void StatusBarWidget::draw() {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kStatusBarColor, RectRenderer::RectLayer::kForeground);
 
     line_column_label->draw();

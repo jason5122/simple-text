@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gui/text_system/line_layout_cache.h"
 #include "gui/widget/label_widget.h"
 #include "gui/widget/scrollable_widget.h"
 #include <array>
@@ -38,7 +37,6 @@ private:
     static constexpr int kLabelFontSize = 22 * 2;
 
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
-    LineLayoutCache line_layout_cache;
     std::unique_ptr<LabelWidget> folder_label;
     std::optional<size_t> hovered_index = std::nullopt;
 

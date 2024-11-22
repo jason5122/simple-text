@@ -9,8 +9,7 @@ namespace gui {
 
 SideBarWidget::SideBarWidget(const app::Size& size)
     : ScrollableWidget{size},
-      label_font_id{rasterizer().addSystemFont(kLabelFontSize, font::FontStyle::kBold)},
-      line_layout_cache{label_font_id} {
+      label_font_id{rasterizer().addSystemFont(kLabelFontSize, font::FontStyle::kBold)} {
     updateMaxScroll();
 
     // const auto& metrics = rasterizer().getMetrics(label_font_id);
@@ -22,7 +21,7 @@ SideBarWidget::SideBarWidget(const app::Size& size)
 }
 
 void SideBarWidget::draw() {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kBackground);
 
     const auto& metrics = rasterizer().metrics(label_font_id);
@@ -89,14 +88,15 @@ void SideBarWidget::renderOldLabel(int label_line_height) {
 }
 
 void SideBarWidget::renderNewLabel() {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
     // TODO: Experimental; formalize this.
     const auto& metrics = rasterizer().metrics(label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
-        const auto& layout = line_layout_cache[strs[line]];
+        const auto& layout = line_layout_cache.get(label_font_id, strs[line]);
 
         app::Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * label_line_height;
@@ -118,7 +118,7 @@ void SideBarWidget::renderNewLabel() {
 }
 
 void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
-    RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
     int vbar_width = 15;

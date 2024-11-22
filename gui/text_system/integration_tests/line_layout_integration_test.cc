@@ -1,7 +1,7 @@
 #include "base/buffer/piece_tree.h"
 #include "font/font_rasterizer.h"
+#include "gui/renderer/line_layout_cache.h"
 #include "gui/text_system/caret.h"
-#include "gui/text_system/line_layout_cache.h"
 #include <gtest/gtest.h>
 
 namespace {
@@ -18,7 +18,7 @@ TEST(LineLayoutIntegrationTest, CaretMovement1) {
     size_t font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
 
     base::PieceTree tree{"Hi 🙂🙂 Hello world!\nThis is a new line."};
-    LineLayoutCache line_layout_cache{font_id};
+    LineLayoutCache line_layout_cache;
     // Caret caret{};
 
     // Cache all piece tree lines.
@@ -28,7 +28,7 @@ TEST(LineLayoutIntegrationTest, CaretMovement1) {
             line_str.back() = ' ';
         }
 
-        const auto& line_layout = line_layout_cache[line_str];
+        const auto& line_layout = line_layout_cache.get(font_id, line_str);
         EXPECT_GT(line_layout.width, 0);
     }
 }

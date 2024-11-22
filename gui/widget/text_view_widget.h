@@ -2,7 +2,6 @@
 
 #include "base/buffer/piece_tree.h"
 #include "gui/renderer/opengl_types.h"
-#include "gui/text_system/line_layout_cache.h"
 #include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
@@ -68,7 +67,6 @@ private:
     size_t font_id;
 
     base::PieceTree tree;
-    LineLayoutCache line_layout_cache;
 
     Selection selection{};
 
@@ -86,7 +84,7 @@ private:
     inline const font::LineLayout& layoutAt(size_t line);
     inline constexpr app::Point textOffset();
     inline constexpr int gutterWidth();
-    inline constexpr int lineNumberWidth();
+    inline int lineNumberWidth();
 
     // Draw helpers.
     void renderText(int main_line_height, size_t start_line, size_t end_line);

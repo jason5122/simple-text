@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gui/renderer/glyph_cache.h"
 #include "gui/renderer/image_renderer.h"
 #include "gui/renderer/rect_renderer.h"
 #include "gui/renderer/selection_renderer.h"
@@ -22,7 +21,6 @@ public:
 private:
     Renderer();
 
-    GlyphCache glyph_cache;
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
     SelectionRenderer selection_renderer;

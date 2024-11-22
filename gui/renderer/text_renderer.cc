@@ -23,8 +23,7 @@ const std::string kFragmentShaderSource =
 
 namespace gui {
 
-TextRenderer::TextRenderer(GlyphCache& glyph_cache)
-    : glyph_cache{glyph_cache}, shader_program{kVertexShaderSource, kFragmentShaderSource} {
+TextRenderer::TextRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo_instance);
     glGenBuffers(1, &ebo);
@@ -77,8 +76,7 @@ TextRenderer::~TextRenderer() {
 }
 
 TextRenderer::TextRenderer(TextRenderer&& other)
-    : glyph_cache{other.glyph_cache},
-      shader_program{std::move(other.shader_program)},
+    : shader_program{std::move(other.shader_program)},
       vao{other.vao},
       vbo_instance{other.vbo_instance},
       ebo{other.ebo} {

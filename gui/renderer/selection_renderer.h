@@ -1,7 +1,7 @@
 #pragma once
 
 #include "app/types.h"
-#include "gui/renderer/glyph_cache.h"
+#include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
 #include "util/non_copyable.h"
 
@@ -9,7 +9,7 @@ namespace gui {
 
 class SelectionRenderer : util::NonCopyable {
 public:
-    SelectionRenderer(GlyphCache& glyph_cache);
+    SelectionRenderer();
     ~SelectionRenderer();
     SelectionRenderer(SelectionRenderer&& other);
     SelectionRenderer& operator=(SelectionRenderer&& other);
@@ -28,8 +28,6 @@ private:
     static constexpr size_t kBatchMax = 0x10000;
     static constexpr int kCornerRadius = 6;
     static constexpr int kBorderThickness = 2;
-
-    GlyphCache& glyph_cache;
 
     Shader shader_program;
     GLuint vao = 0;

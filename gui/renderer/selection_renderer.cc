@@ -19,8 +19,8 @@ const std::string kFragmentShaderSource =
 
 namespace gui {
 
-SelectionRenderer::SelectionRenderer(GlyphCache& glyph_cache)
-    : glyph_cache{glyph_cache}, shader_program{kVertexShaderSource, kFragmentShaderSource} {
+SelectionRenderer::SelectionRenderer()
+    : shader_program{kVertexShaderSource, kFragmentShaderSource} {
     instances.reserve(kBatchMax);
 
     GLuint shader_id = shader_program.id();
@@ -88,8 +88,7 @@ SelectionRenderer::~SelectionRenderer() {
 }
 
 SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
-    : glyph_cache{other.glyph_cache},
-      shader_program{std::move(other.shader_program)},
+    : shader_program{std::move(other.shader_program)},
       vao{other.vao},
       vbo_instance{other.vbo_instance},
       ebo{other.ebo} {

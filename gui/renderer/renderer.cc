@@ -5,7 +5,7 @@ using namespace opengl;
 
 namespace gui {
 
-Renderer::Renderer() : text_renderer{glyph_cache}, selection_renderer{glyph_cache} {
+Renderer::Renderer() {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
 

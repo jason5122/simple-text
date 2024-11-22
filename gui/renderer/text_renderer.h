@@ -11,7 +11,7 @@ namespace gui {
 
 class TextRenderer {
 public:
-    TextRenderer(GlyphCache& glyph_cache);
+    TextRenderer();
     ~TextRenderer();
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
@@ -36,7 +36,7 @@ public:
 private:
     static constexpr size_t kBatchMax = 0x10000;
 
-    GlyphCache& glyph_cache;
+    GlyphCache glyph_cache;
 
     Shader shader_program;
     GLuint vao = 0;

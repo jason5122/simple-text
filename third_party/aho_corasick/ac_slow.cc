@@ -32,10 +32,9 @@ ACS_State* ACS_Constructor::new_state() {
     return t;
 }
 
-void ACS_Constructor::Add_Pattern(const char* str, unsigned int str_len, int pattern_idx) {
+void ACS_Constructor::Add_Pattern(std::string_view str, int pattern_idx) {
     ACS_State* state = _root;
-    for (unsigned int i = 0; i < str_len; i++) {
-        const char c = str[i];
+    for (char c : str) {
         ACS_State* new_s = state->Get_Goto(c);
         if (!new_s) {
             new_s = new_state();
@@ -96,9 +95,9 @@ void ACS_Constructor::Propagate_faillink() {
     r->_goto_map = goto_save;
 }
 
-void ACS_Constructor::Construct(const char** strv, unsigned int* strlenv, uint32_t strnum) {
-    for (uint32_t i = 0; i < strnum; i++) {
-        Add_Pattern(strv[i], strlenv[i], i);
+void ACS_Constructor::Construct(const std::vector<std::string>& patterns) {
+    for (size_t i = 0; i < patterns.size(); ++i) {
+        Add_Pattern(patterns[i], i);
     }
 
     Propagate_faillink();

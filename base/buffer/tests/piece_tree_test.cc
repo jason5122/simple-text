@@ -903,25 +903,10 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
     }
 }
 
-TEST(PieceTreeTest, AhoCorasickTest) {
-    std::string needle = "ello";
-    const char* pattern = needle.data();
-    unsigned int pattern_len = needle.length();
-    ac_t* ac = ac_create(&pattern, &pattern_len, 1);
-
-    std::string haystack = "hello world!";
-    int offset = ac_match(ac, haystack.data(), haystack.length());
-
-    std::println("{}", offset);
-    EXPECT_EQ(haystack.substr(offset, needle.length()), needle);
-}
-
 namespace {
 int AhoCorasickMatch(std::string_view str, std::string_view pattern) {
-    const char* c_str = pattern.data();
-    unsigned int pattern_len = pattern.length();
-    ac_t* ac = ac_create(&c_str, &pattern_len, 1);
-    int offset = ac_match(ac, str.data(), str.length());
+    ac_t* ac = ac_create({std::string(pattern)});
+    int offset = ac_match(ac, str, str.length());
     ac_free(ac);
     return offset;
 }

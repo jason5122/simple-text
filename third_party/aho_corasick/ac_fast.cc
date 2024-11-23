@@ -203,7 +203,7 @@ static inline bool Binary_Search_Input(unsigned char* input_vect,
     return false;
 }
 
-int Match(AC_Buffer* buf, const char* str, uint32_t len) {
+int Match(AC_Buffer* buf, std::string_view str, uint32_t len) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
     uint32_t* states_ofst_vect = (uint32_t*)(buf_base + buf->states_ofst_ofst);
@@ -221,8 +221,8 @@ int Match(AC_Buffer* buf, const char* str, uint32_t len) {
             }
         }
     } else {
-        idx = 1;
-        state = Get_State_Addr(buf_base, states_ofst_vect, *str);
+        state = Get_State_Addr(buf_base, states_ofst_vect, str[idx]);
+        ++idx;
     }
 
     if (state != 0) [[likely]] {

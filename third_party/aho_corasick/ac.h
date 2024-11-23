@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 struct ac_t;
 
 /* Create an AC instance. "pattern_v" is a vector of patterns, the length of
@@ -8,8 +11,8 @@ struct ac_t;
  *
  * Return the instance on success, or NUL otherwise.
  */
-ac_t* ac_create(const char** pattern_v, unsigned int* pattern_len_v, unsigned int vect_len);
+ac_t* ac_create(const std::vector<std::string>& patterns);
 
-int ac_match(ac_t*, const char* str, unsigned int len);
+int ac_match(ac_t*, std::string_view str, unsigned int len);
 
-void ac_free(void*);
+void ac_free(void* ac);

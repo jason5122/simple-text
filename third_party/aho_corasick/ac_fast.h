@@ -106,4 +106,4 @@ private:
     std::vector<uint32_t> _ofst_map;
 };
 
-int Match(AC_Buffer* buf, const char* str, uint32_t len);
+int Match(AC_Buffer* buf, std::string_view str, uint32_t len);

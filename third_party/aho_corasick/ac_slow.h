@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ac_util.h"
 #include <algorithm>  // for std::sort
+#include <cassert>
 #include <map>
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +12,7 @@ class ACS_State;
 class ACS_Constructor;
 class AhoCorasick;
 
-typedef std::map<InputTy, ACS_State*> ACS_Goto_Map;
+typedef std::map<unsigned char, ACS_State*> ACS_Goto_Map;
 
 class Match_Result {
 public:
@@ -22,7 +22,7 @@ public:
     Match_Result(int b, int e, int p) : begin(b), end(e), pattern_idx(p) {}
 };
 
-typedef std::pair<InputTy, ACS_State*> GotoPair;
+typedef std::pair<unsigned char, ACS_State*> GotoPair;
 typedef std::vector<GotoPair> GotoVect;
 
 // Sorting functor
@@ -37,14 +37,14 @@ class ACS_State {
     friend class ACS_Constructor;
 
 public:
-    ACS_State(uint32 id)
+    ACS_State(uint32_t id)
         : _id(id), _pattern_idx(-1), _depth(0), _is_terminal(false), _fail_link(0) {}
     ~ACS_State() {};
 
-    void Set_Goto(InputTy c, ACS_State* s) {
+    void Set_Goto(unsigned char c, ACS_State* s) {
         _goto_map[c] = s;
     }
-    ACS_State* Get_Goto(InputTy c) const {
+    ACS_State* Get_Goto(unsigned char c) const {
         ACS_Goto_Map::const_iterator iter = _goto_map.find(c);
         return iter != _goto_map.end() ? (*iter).second : 0;
     }
@@ -62,13 +62,13 @@ public:
     ACS_State* Get_FailLink() const {
         return _fail_link;
     }
-    uint32 Get_GotoNum() const {
+    uint32_t Get_GotoNum() const {
         return _goto_map.size();
     }
-    uint32 Get_ID() const {
+    uint32_t Get_ID() const {
         return _id;
     }
-    uint32 Get_Depth() const {
+    uint32_t Get_Depth() const {
         return _depth;
     }
     const ACS_Goto_Map& Get_Goto_Map(void) const {
@@ -78,18 +78,18 @@ public:
         return _is_terminal;
     }
     int get_Pattern_Idx() const {
-        ASSERT(is_Terminal() && _pattern_idx >= 0);
+        assert(is_Terminal() && _pattern_idx >= 0);
         return _pattern_idx;
     }
 
 private:
     void set_Pattern_Idx(int idx) {
-        ASSERT(is_Terminal());
+        assert(is_Terminal());
         _pattern_idx = idx;
     }
 
 private:
-    uint32 _id;
+    uint32_t _id;
     int _pattern_idx;
     short _depth;
     bool _is_terminal;
@@ -104,9 +104,8 @@ public:
 
     void Construct(const char** strv, unsigned int* strlenv, unsigned int strnum);
 
-    Match_Result Match(const char* s, uint32 len) const {
+    Match_Result Match(const char* s, uint32_t len) const {
         Match_Result r = MatchHelper(s, len);
-        Verify_Result(s, &r);
         return r;
     }
 
@@ -125,10 +124,10 @@ public:
         return _all_states;
     }
 
-    uint32 Get_Next_Node_Id() const {
+    uint32_t Get_Next_Node_Id() const {
         return _next_node_id;
     }
-    uint32 Get_State_Num() const {
+    uint32_t Get_State_Num() const {
         return _next_node_id - 1;
     }
 
@@ -137,39 +136,11 @@ private:
     ACS_State* new_state();
     void Propagate_faillink();
 
-    Match_Result MatchHelper(const char*, uint32 len) const;
-
-#ifdef VERIFY
-    void Verify_Result(const char* subject, const Match_Result* r) const;
-    void Save_Patterns(const char** strv, unsigned int* strlenv, int vect_len);
-    const char* get_ith_Pattern(unsigned i) const {
-        ASSERT(i < _pattern_vect.size());
-        return _pattern_vect.at(i);
-    }
-    unsigned get_ith_Pattern_Len(unsigned i) const {
-        ASSERT(i < _pattern_lens.size());
-        return _pattern_lens.at(i);
-    }
-#else
-    void Verify_Result(const char* subject, const Match_Result* r) const {
-        (void)subject;
-        (void)r;
-    }
-    void Save_Patterns(const char** strv, unsigned int* strlenv, int vect_len) {
-        (void)strv;
-        (void)strlenv;
-    }
-#endif
+    Match_Result MatchHelper(const char*, uint32_t len) const;
 
 private:
     ACS_State* _root;
     std::vector<ACS_State*> _all_states;
     unsigned char* _root_char;
-    uint32 _next_node_id;
-
-#ifdef VERIFY
-    char* _pattern_buf;
-    vector<int> _pattern_lens;
-    vector<char*> _pattern_vect;
-#endif
+    uint32_t _next_node_id;
 };

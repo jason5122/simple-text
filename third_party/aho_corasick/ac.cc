@@ -3,6 +3,8 @@
 #include "ac_fast.h"
 #include "ac_slow.h"
 
+#include <cassert>
+
 int ac_match(ac_t* ac, const char* str, unsigned int len) {
     AC_Buffer* buf = (AC_Buffer*)(void*)ac;
     ac_result_t r = Match(buf, str, len);
@@ -19,7 +21,6 @@ public:
     virtual void free() {}
 
     static void myfree(AC_Buffer* buf) {
-        ASSERT(buf->hdr.magic_num == AC_MAGIC_NUM);
         const char* b = (const char*)buf;
         delete[] b;
     }

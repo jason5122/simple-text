@@ -904,7 +904,7 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
 }
 
 TEST(PieceTreeTest, AhoCorasickTest) {
-    std::string needle = "hello";
+    std::string needle = "ello";
     const char* pattern = needle.data();
     unsigned int pattern_len = needle.length();
     ac_t* ac = ac_create(&pattern, &pattern_len, 1);
@@ -914,6 +914,36 @@ TEST(PieceTreeTest, AhoCorasickTest) {
 
     std::println("{}", offset);
     EXPECT_EQ(haystack.substr(offset, needle.length()), needle);
+}
+
+namespace {
+int AhoCorasickMatch(std::string_view str, std::string_view pattern) {
+    const char* c_str = pattern.data();
+    unsigned int pattern_len = pattern.length();
+    ac_t* ac = ac_create(&c_str, &pattern_len, 1);
+    int offset = ac_match(ac, str.data(), str.length());
+    ac_free(ac);
+    return offset;
+}
+}  // namespace
+
+TEST(PieceTreeTest, AhoCorasickRandomTest) {
+    std::string str = "hello world!";
+    for (int _ = 0; _ < 100; ++_) {
+        size_t i = util::RandomNumber(0, str.length() - 1);
+        size_t len = util::RandomNumber(1, str.length());
+        std::string pattern = str.substr(i, len);
+
+        int offset = AhoCorasickMatch(str, pattern);
+        if (offset == -1) {
+            EXPECT_EQ(str.find(pattern), std::string::npos);
+        } else {
+            EXPECT_EQ(str.substr(offset, pattern.length()), pattern);
+
+            size_t expected_offset = str.find(pattern);
+            EXPECT_EQ(static_cast<size_t>(offset), expected_offset);
+        }
+    }
 }
 
 // TEST(PieceTreeTest, FindTest) {

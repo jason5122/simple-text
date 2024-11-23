@@ -910,15 +910,10 @@ TEST(PieceTreeTest, AhoCorasickTest) {
     ac_t* ac = ac_create(&pattern, &pattern_len, 1);
 
     std::string haystack = "hello world!";
-    ac_result_t r = ac_match(ac, haystack.data(), haystack.length());
+    int offset = ac_match(ac, haystack.data(), haystack.length());
 
-    int begin = r.match_begin;
-    int end = r.match_end;
-    std::println("{}, {}", begin, end);
-
-    size_t len = end - begin + 1;
-    ASSERT_EQ(len, needle.length());
-    EXPECT_EQ(haystack.substr(begin, len), needle);
+    std::println("{}", offset);
+    EXPECT_EQ(haystack.substr(offset, needle.length()), needle);
 }
 
 // TEST(PieceTreeTest, FindTest) {

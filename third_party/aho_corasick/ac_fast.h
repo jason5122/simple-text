@@ -118,4 +118,3 @@ private:
 };
 
 ac_result_t Match(AC_Buffer* buf, const char* str, uint32 len);
-ac_result_t Match_Longest_L(AC_Buffer* buf, const char* str, uint32 len);

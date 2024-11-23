@@ -167,9 +167,6 @@ AC_Buffer* AC_Converter::Convert() {
             fast_s->fail_link = id;
         } else fast_s->fail_link = 0;
     }
-#ifdef DEBUG
-    // dump_buffer(buf, stderr);
-#endif
     return buf;
 }
 
@@ -181,67 +178,14 @@ static inline AC_State* Get_State_Addr(unsigned char* buf_base,
     return (AC_State*)(buf_base + StateOfstVect[state_id]);
 }
 
-// The performance of the binary search is critical to this work.
-//
-// Here we provide two versions of binary-search functions.
-// The non-pristine version seems to consistently out-perform "pristine" one on
-// bunch of benchmarks we tested.  With the benchmark under tests/testinput/
-//
-//   The speedup is following on my laptop (core i7, ubuntu):
-//
-//   benchmark       was                is
-//  ----------------------------------------
-//  image.bin       2.3s               2.0s
-//  test.tar        6.7s               5.7s
-//
-//  NOTE: As of I write this comment, we only measure the performance on about
-// 10+ benchmarks. It's still too early to say which one works better.
-//
-#if !defined(BS_MULTI_VER)
-static bool __attribute__((always_inline)) inline Binary_Search_Input(InputTy* input_vect,
-                                                                      int vect_len,
-                                                                      InputTy input,
-                                                                      int& idx) {
-    if (vect_len <= 8) {
-        for (int i = 0; i < vect_len; i++) {
-            if (input_vect[i] == input) {
-                idx = i;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // The "low" and "high" must be signed integers, as they could become -1.
-    // Also since they are signed integer, "(low + high)/2" is slightly more
-    // expensive than (low+high)>>1 or ((unsigned)(low + high))/2.
-    //
-    int low = 0, high = vect_len - 1;
-    while (low <= high) {
-        int mid = (low + high) >> 1;
-        InputTy mid_c = input_vect[mid];
-
-        if (input < mid_c) high = mid - 1;
-        else if (input > mid_c) low = mid + 1;
-        else {
-            idx = mid;
-            return true;
-        }
-    }
-    return false;
-}
-
-#else
-
-/* Let us call this version "pristine" version. */
-static inline bool Binary_Search_Input(InputTy* input_vect,
+static inline bool Binary_Search_Input(unsigned char* input_vect,
                                        int vect_len,
-                                       InputTy input,
+                                       unsigned char input,
                                        int& idx) {
     int low = 0, high = vect_len - 1;
     while (low <= high) {
         int mid = (low + high) >> 1;
-        InputTy mid_c = input_vect[mid];
+        auto mid_c = input_vect[mid];
 
         if (input < mid_c) high = mid - 1;
         else if (input > mid_c) low = mid + 1;
@@ -252,42 +196,8 @@ static inline bool Binary_Search_Input(InputTy* input_vect,
     }
     return false;
 }
-#endif
 
-typedef enum {
-    // Look for the first match. e.g. pattern set = {"ab", "abc", "def"},
-    // subject string "ababcdef". The first match would be "ab" at the
-    // beginning of the subject string.
-    MV_FIRST_MATCH,
-
-    // Look for the left-most longest match. Follow above example; there are
-    // two longest matches, "abc" and "def", and the left-most longest match
-    // is "abc".
-    MV_LEFT_LONGEST,
-
-    // Similar to the left-most longest match, except that it returns the
-    // *right* most longest match. Follow above example, the match would
-    // be "def". NYI.
-    MV_RIGHT_LONGEST,
-
-    // Return all patterns that match that given subject string. NYI.
-    MV_ALL_MATCHES,
-} MATCH_VARIANT;
-
-/* The Match_Tmpl is the template for vairants MV_FIRST_MATCH, MV_LEFT_LONGEST,
- * MV_RIGHT_LONGEST (If we really really need MV_RIGHT_LONGEST variant, we are
- * better off implementing it in a separate function).
- *
- * The Match_Tmpl supports three variants at once "symbolically", once it's
- * instanced to a particular variants, all the code irrelevant to the variants
- * will be statically removed. So don't worry about the code like
- * "if (variant == MV_XXXX)"; they will not incur any penalty.
- *
- * The drawback of using template is increased code size. Unfortunately, there
- * is no silver bullet.
- */
-template <MATCH_VARIANT variant>
-static ac_result_t Match_Tmpl(AC_Buffer* buf, const char* str, uint32 len) {
+ac_result_t Match(AC_Buffer* buf, const char* str, uint32 len) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
     AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
@@ -316,10 +226,7 @@ static ac_result_t Match_Tmpl(AC_Buffer* buf, const char* str, uint32 len) {
             r.match_begin = idx - state->depth;
             r.match_end = idx - 1;
             r.pattern_idx = state->is_term - 1;
-
-            if (variant == MV_FIRST_MATCH) {
-                return r;
-            }
+            return r;
         }
     }
 
@@ -356,90 +263,13 @@ static ac_result_t Match_Tmpl(AC_Buffer* buf, const char* str, uint32 len) {
 
         // Check to see if the state is terminal state?
         if (state->is_term) {
-            if (variant == MV_FIRST_MATCH) {
-                ac_result_t r;
-                r.match_begin = idx - state->depth;
-                r.match_end = idx - 1;
-                r.pattern_idx = state->is_term - 1;
-                return r;
-            }
-
-            if (variant == MV_LEFT_LONGEST) {
-                int match_begin = idx - state->depth;
-                int match_end = idx - 1;
-
-                if (r.match_begin == -1 || match_end - match_begin > r.match_end - r.match_begin) {
-                    r.match_begin = match_begin;
-                    r.match_end = match_end;
-                    r.pattern_idx = state->is_term - 1;
-                }
-                continue;
-            }
-
-            ASSERT(false && "NYI");
+            ac_result_t r;
+            r.match_begin = idx - state->depth;
+            r.match_end = idx - 1;
+            r.pattern_idx = state->is_term - 1;
+            return r;
         }
     }
 
     return r;
 }
-
-ac_result_t Match(AC_Buffer* buf, const char* str, uint32 len) {
-    return Match_Tmpl<MV_FIRST_MATCH>(buf, str, len);
-}
-
-ac_result_t Match_Longest_L(AC_Buffer* buf, const char* str, uint32 len) {
-    return Match_Tmpl<MV_LEFT_LONGEST>(buf, str, len);
-}
-
-#ifdef DEBUG
-void AC_Converter::dump_buffer(AC_Buffer* buf, FILE* f) {
-    vector<AC_Ofst> state_ofst;
-    state_ofst.resize(_id_map.size());
-
-    fprintf(f, "Id maps between old/slow and new/fast graphs\n");
-    int old_id = 0;
-    for (auto i = _id_map.begin(), e = _id_map.end(); i != e; i++, old_id++) {
-        State_ID new_id = *i;
-        if (new_id != 0) {
-            fprintf(f, "%d -> %d, ", old_id, new_id);
-        }
-    }
-    fprintf(f, "\n");
-
-    int idx = 0;
-    for (auto i = _id_map.begin(), e = _id_map.end(); i != e; i++, idx++) {
-        uint32 id = *i;
-        if (id == 0) continue;
-        state_ofst[id] = _ofst_map[idx];
-    }
-
-    unsigned char* buf_base = (unsigned char*)buf;
-
-    // dump root goto-function.
-    fprintf(f, "root, fanout:%d goto {", buf->root_goto_num);
-    if (buf->root_goto_num != 255) {
-        unsigned char* root_goto = buf_base + buf->root_goto_ofst;
-        for (uint32 i = 0; i < 255; i++) {
-            if (root_goto[i] != 0) fprintf(f, "%c->S:%d, ", (unsigned char)i, root_goto[i]);
-        }
-    } else {
-        fprintf(f, "full fanout\n");
-    }
-    fprintf(f, "}\n");
-
-    // dump remaining states.
-    AC_Ofst* state_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
-    for (uint32 i = 1, e = buf->state_num; i < e; i++) {
-        AC_Ofst ofst = state_ofst_vect[i];
-        ASSERT(ofst == state_ofst[i]);
-        fprintf(f, "S:%d, ofst:%d, goto={", i, ofst);
-
-        AC_State* s = (AC_State*)(buf_base + ofst);
-        State_ID kid = s->first_kid;
-        for (uint32 k = 0, ke = s->goto_num; k < ke; k++, kid++)
-            fprintf(f, "%c->S:%d, ", s->input_vect[k], kid);
-
-        fprintf(f, "}, fail-link = S:%d, %s\n", s->fail_link, s->is_term ? "terminal" : "");
-    }
-}
-#endif

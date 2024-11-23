@@ -19,9 +19,6 @@ public:
 private:
     friend class EditorWindow;
 
-    size_t main_font_id;
-    size_t ui_font_id;
-
     // TODO: Properly load this from settings.
 #if BUILDFLAG(IS_MAC)
     static constexpr int kMainFontSize = 16 * 2;
@@ -41,5 +38,7 @@ private:
     // const std::string kMainFontFace = "Monospace";
 #endif
 
+    size_t main_font_id;
+    size_t ui_font_id;
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 };

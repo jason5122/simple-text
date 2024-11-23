@@ -260,11 +260,11 @@ std::string TextViewWidget::getSelectionText() {
 }
 
 void TextViewWidget::undo() {
-    tree.try_undo();
+    tree.undo();
 }
 
 void TextViewWidget::redo() {
-    tree.try_redo();
+    tree.redo();
 }
 
 void TextViewWidget::draw() {

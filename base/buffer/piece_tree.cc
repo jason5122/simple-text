@@ -409,16 +409,6 @@ size_t PieceTree::offset_at(size_t line, size_t column) const {
     return offset;
 }
 
-char PieceTree::at(size_t offset) const {
-    auto result = node_at(offset);
-    if (result.node == nullptr) return '\0';
-    auto* buffer = buffers.buffer_at(result.node->piece.buffer_type);
-    auto buf_offset =
-        buffers.buffer_offset(result.node->piece.buffer_type, result.node->piece.first);
-    const char* p = buffer->buffer.data() + buf_offset + result.remainder;
-    return *p;
-}
-
 std::string PieceTree::get_line_content(size_t line) const {
     if (root.empty()) return "";
 
@@ -690,14 +680,14 @@ void PieceTree::remove_node_range(NodePosition first, size_t length) {
 
 void PieceTree::insert(size_t offset, std::string_view txt) {
     if (txt.empty()) return;
-    append_undo(root, offset);
+    append_undo();
     internal_insert(offset, txt);
 }
 
 void PieceTree::erase(size_t offset, size_t count) {
     // Rule out the obvious noop.
     if (count == 0 || root.empty()) return;
-    append_undo(root, offset);
+    append_undo();
     internal_erase(offset, count);
 }
 
@@ -706,32 +696,30 @@ void PieceTree::compute_buffer_meta() {
     total_content_length = root.length();
 }
 
-void PieceTree::append_undo(const RedBlackTree& old_root, size_t op_offset) {
+void PieceTree::append_undo() {
     // Can't redo if we're creating a new undo entry.
     if (!redo_stack.empty()) {
         redo_stack.clear();
     }
-    undo_stack.push_front({.root = old_root, .op_offset = op_offset});
+    undo_stack.push_front(root);
 }
 
-UndoRedoResult PieceTree::try_undo(size_t op_offset) {
-    if (undo_stack.empty()) return {.success = false, .op_offset = 0};
-    redo_stack.push_front({.root = root, .op_offset = op_offset});
-    auto [node, undo_offset] = undo_stack.front();
-    root = node;
+bool PieceTree::undo() {
+    if (undo_stack.empty()) return false;
+    redo_stack.push_front(root);
+    root = undo_stack.front();
     undo_stack.pop_front();
     compute_buffer_meta();
-    return {.success = true, .op_offset = undo_offset};
+    return true;
 }
 
-UndoRedoResult PieceTree::try_redo(size_t op_offset) {
-    if (redo_stack.empty()) return {.success = false, .op_offset = 0};
-    undo_stack.push_front({.root = root, .op_offset = op_offset});
-    auto [node, redo_offset] = redo_stack.front();
-    root = node;
+bool PieceTree::redo() {
+    if (redo_stack.empty()) return false;
+    undo_stack.push_front(root);
+    root = redo_stack.front();
     redo_stack.pop_front();
     compute_buffer_meta();
-    return {.success = true, .op_offset = redo_offset};
+    return true;
 }
 
 TreeWalker::TreeWalker(const PieceTree* tree, size_t offset)

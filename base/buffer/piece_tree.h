@@ -39,16 +39,6 @@ struct LineRange {
     size_t last;
 };
 
-struct UndoRedoEntry {
-    RedBlackTree root;
-    size_t op_offset;
-};
-
-struct UndoRedoResult {
-    bool success;
-    size_t op_offset;
-};
-
 class PieceTree {
 public:
     explicit PieceTree();
@@ -57,15 +47,14 @@ public:
     // Manipulation.
     void insert(size_t offset, std::string_view txt);
     void erase(size_t offset, size_t count);
-    UndoRedoResult try_undo(size_t op_offset = 0);
-    UndoRedoResult try_redo(size_t op_offset = 0);
+    bool undo();
+    bool redo();
 
     // Queries.
     std::string get_line_content(size_t line) const;
     std::string get_line_content_with_newline(size_t line) const;
     // This is similar to `get_line_content_with_newline`, except newlines are replaced by spaces.
     std::string get_line_content_for_layout_use(size_t line) const;
-    char at(size_t offset) const;
     size_t line_at(size_t offset) const;
     BufferCursor line_column_at(size_t offset) const;
     size_t offset_at(size_t line, size_t column) const;
@@ -121,7 +110,7 @@ private:
     void combine_pieces(NodePosition existing_piece, Piece new_piece);
     void remove_node_range(NodePosition first, size_t length);
     void compute_buffer_meta();
-    void append_undo(const RedBlackTree& old_root, size_t op_offset);
+    void append_undo();
 
     BufferCollection buffers;
     RedBlackTree root;
@@ -131,8 +120,8 @@ private:
     size_t lf_count = 0;
     size_t total_content_length = 0;
 
-    std::forward_list<UndoRedoEntry> undo_stack;
-    std::forward_list<UndoRedoEntry> redo_stack;
+    std::forward_list<RedBlackTree> undo_stack;
+    std::forward_list<RedBlackTree> redo_stack;
 };
 
 class TreeWalker {

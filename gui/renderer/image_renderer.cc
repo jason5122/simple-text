@@ -76,7 +76,7 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     image_atlas_entries.resize(4);
     loadPng(kPanelClose2xIndex, panel_close_2x);
     loadPng(kFolderOpen2xIndex, folder_open_2x);
-    loadPng(kStanfordBunny, stanford_bunny);
+    // loadPng(kStanfordBunny, stanford_bunny);
 }
 
 ImageRenderer::~ImageRenderer() {

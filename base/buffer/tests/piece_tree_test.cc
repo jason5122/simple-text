@@ -903,40 +903,22 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
     }
 }
 
-struct StrPair {
-    const char* str;
-    const char* match;
-};
+TEST(PieceTreeTest, AhoCorasickTest) {
+    std::string needle = "hello";
+    const char* pattern = needle.data();
+    unsigned int pattern_len = needle.length();
+    ac_t* ac = ac_create(&pattern, &pattern_len, 1);
 
-TEST(PieceTreeTest, KMPTest) {
-    const char* dict[] = {"he", "she", "his", "her"};
-    StrPair strpair[] = {{"he", "he"},  {"she", "she"}, {"his", "his"},   {"hers", "he"},
-                         {"ahe", "he"}, {"shhe", "he"}, {"shis2", "his"}, {"ahhe", "he"}};
+    std::string haystack = "hello world!";
+    ac_result_t r = ac_match(ac, haystack.data(), haystack.length());
 
-    int dict_len = std::size(dict);
-    unsigned int* strlen_v = new unsigned int[dict_len];
-    for (int i = 0; i < dict_len; i++) {
-        const char* s = dict[i];
-        strlen_v[i] = strlen(s);
-    }
+    int begin = r.match_begin;
+    int end = r.match_end;
+    std::println("{}, {}", begin, end);
 
-    ac_t* ac = ac_create(dict, strlen_v, dict_len);
-
-    for (const auto& sp : strpair) {
-        const char* str = sp.str;  // the string to be matched
-        const char* match = sp.match;
-
-        int len = strlen(str);
-        ac_result_t r = ac_match(ac, str, len);
-
-        int m_b = r.match_begin;
-        int m_e = r.match_end;
-        std::println("{}, {}", r.match_begin, r.match_end);
-
-        int mlen = strlen(match);
-        ASSERT_EQ(mlen, m_e - m_b + 1);
-        EXPECT_EQ(strncmp(str + m_b, match, mlen), 0);
-    }
+    size_t len = end - begin + 1;
+    ASSERT_EQ(len, needle.length());
+    EXPECT_EQ(haystack.substr(begin, len), needle);
 }
 
 // TEST(PieceTreeTest, FindTest) {

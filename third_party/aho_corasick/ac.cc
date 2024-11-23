@@ -1,44 +1,38 @@
-// Interface functions for libac.so
-//
-#include "ac_slow.h"
-#include "ac_fast.h"
 #include "ac.h"
 
-static inline ac_result_t
-_match(buf_header_t* ac, const char* str, unsigned int len) {
+#include "ac_fast.h"
+#include "ac_slow.h"
+
+static inline ac_result_t _match(buf_header_t* ac, const char* str, unsigned int len) {
     AC_Buffer* buf = (AC_Buffer*)(void*)ac;
     ASSERT(ac->magic_num == AC_MAGIC_NUM);
 
     ac_result_t r = Match(buf, str, len);
 
-    #ifdef VERIFY
+#ifdef VERIFY
     {
         Match_Result r2 = buf->slow_impl->Match(str, len);
         if (r.match_begin != r2.begin) {
             ASSERT(0);
         } else {
             ASSERT((r.match_begin < 0) ||
-                   (r.match_end == r2.end &&
-                    r.pattern_idx == r2.pattern_idx));
+                   (r.match_end == r2.end && r.pattern_idx == r2.pattern_idx));
         }
     }
-    #endif
+#endif
     return r;
 }
 
-extern "C" int
-ac_match2(ac_t* ac, const char* str, unsigned int len) {
+int ac_match2(ac_t* ac, const char* str, unsigned int len) {
     ac_result_t r = _match((buf_header_t*)(void*)ac, str, len);
     return r.match_begin;
 }
 
-extern "C" ac_result_t
-ac_match(ac_t* ac, const char* str, unsigned int len) {
+ac_result_t ac_match(ac_t* ac, const char* str, unsigned int len) {
     return _match((buf_header_t*)(void*)ac, str, len);
 }
 
-extern "C" ac_result_t
-ac_match_longest_l(ac_t* ac, const char* str, unsigned int len) {
+ac_result_t ac_match_longest_l(ac_t* ac, const char* str, unsigned int len) {
     AC_Buffer* buf = (AC_Buffer*)(void*)ac;
     ASSERT(((buf_header_t*)ac)->magic_num == AC_MAGIC_NUM);
 
@@ -62,8 +56,7 @@ public:
     }
 };
 
-extern "C" ac_t*
-ac_create(const char** strv, unsigned int* strlenv, unsigned int v_len) {
+ac_t* ac_create(const char** strv, unsigned int* strlenv, unsigned int v_len) {
     if (v_len >= 65535) {
         // TODO: Currently we use 16-bit to encode pattern-index (see the
         //  comment to AC_State::is_term), therefore we are not able to
@@ -71,7 +64,7 @@ ac_create(const char** strv, unsigned int* strlenv, unsigned int v_len) {
         return 0;
     }
 
-    ACS_Constructor *acc;
+    ACS_Constructor* acc;
 #ifdef VERIFY
     acc = new ACS_Constructor;
 #else
@@ -90,8 +83,7 @@ ac_create(const char** strv, unsigned int* strlenv, unsigned int v_len) {
     return (ac_t*)(void*)buf;
 }
 
-extern "C" void
-ac_free(void* ac) {
+void ac_free(void* ac) {
     AC_Buffer* buf = (AC_Buffer*)ac;
 #ifdef VERIFY
     delete buf->slow_impl;

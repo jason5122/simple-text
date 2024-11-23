@@ -1,0 +1,7 @@
+source_set("aho_corasick") {
+  sources = [
+    "ac.cc",
+    "ac_fast.cc",
+    "ac_slow.cc",
+  ]
+}

@@ -62,6 +62,7 @@ public:
     LineRange get_line_range_with_newline(size_t line) const;
     std::string str() const;
     std::string substr(size_t offset, size_t count) const;
+    std::optional<size_t> find(std::string_view str) const;
 
     size_t length() const;
     bool empty() const;

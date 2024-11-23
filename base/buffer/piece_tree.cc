@@ -372,6 +372,10 @@ std::string PieceTree::substr(size_t offset, size_t count) const {
     return str;
 }
 
+// std::optional<size_t> PieceTree::find(std::string_view str) const {
+//     ;
+// }
+
 size_t PieceTree::length() const {
     return total_content_length;
 }

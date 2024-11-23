@@ -8,6 +8,7 @@ source_set("tests") {
 
   deps = [
     "//base/buffer",
+    "//third_party/aho_corasick",  # TODO: Clean this up.
     "//third_party/googletest:gtest",
     "//third_party/uni_algo",
   ]

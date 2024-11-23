@@ -6,6 +6,10 @@
 #include <gtest/gtest.h>
 #include <random>
 
+// TODO: Consider cleaning this up.
+#include "third_party/aho_corasick/ac.h"
+#include "util/std_print.h"
+
 namespace base {
 
 TEST(PieceTreeTest, CustomTest1) {
@@ -898,5 +902,53 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
         if (last == std::string::npos) last = str.length();
     }
 }
+
+struct StrPair {
+    const char* str;
+    const char* match;
+};
+
+TEST(PieceTreeTest, KMPTest) {
+    const char* dict[] = {"he", "she", "his", "her"};
+    StrPair strpair[] = {{"he", "he"},  {"she", "she"}, {"his", "his"},   {"hers", "he"},
+                         {"ahe", "he"}, {"shhe", "he"}, {"shis2", "his"}, {"ahhe", "he"}};
+
+    int dict_len = std::size(dict);
+    unsigned int* strlen_v = new unsigned int[dict_len];
+    for (int i = 0; i < dict_len; i++) {
+        const char* s = dict[i];
+        strlen_v[i] = strlen(s);
+    }
+
+    ac_t* ac = ac_create(dict, strlen_v, dict_len);
+
+    for (const auto& sp : strpair) {
+        const char* str = sp.str;  // the string to be matched
+        const char* match = sp.match;
+
+        int len = strlen(str);
+        ac_result_t r = ac_match(ac, str, len);
+
+        int m_b = r.match_begin;
+        int m_e = r.match_end;
+        std::println("{}, {}", r.match_begin, r.match_end);
+
+        int mlen = strlen(match);
+        ASSERT_EQ(mlen, m_e - m_b + 1);
+        EXPECT_EQ(strncmp(str + m_b, match, mlen), 0);
+    }
+}
+
+// TEST(PieceTreeTest, FindTest) {
+//     PieceTree tree{"hello world"};
+
+//     ASSERT_TRUE(tree.find("world").has_value());
+//     EXPECT_EQ(*tree.find("world"), 6_Z);
+
+//     EXPECT_FALSE(tree.find("z").has_value());
+
+//     ASSERT_TRUE(tree.find("hello world").has_value());
+//     EXPECT_EQ(*tree.find("hello world"), 0_Z);
+// }
 
 }  // namespace base

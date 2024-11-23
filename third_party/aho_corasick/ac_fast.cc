@@ -203,7 +203,7 @@ static inline bool Binary_Search_Input(unsigned char* input_vect,
     return false;
 }
 
-ac_result_t Match(AC_Buffer* buf, const char* str, uint32_t len) {
+int Match(AC_Buffer* buf, const char* str, uint32_t len) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
     uint32_t* states_ofst_vect = (uint32_t*)(buf_base + buf->states_ofst_ofst);
@@ -225,22 +225,17 @@ ac_result_t Match(AC_Buffer* buf, const char* str, uint32_t len) {
         state = Get_State_Addr(buf_base, states_ofst_vect, *str);
     }
 
-    ac_result_t r = {-1, -1};
     if (state != 0) [[likely]] {
         if (state->is_term) [[unlikely]] {
             /* Dictionary may have string of length 1 */
-            r.match_begin = idx - state->depth;
-            r.match_end = idx - 1;
-            r.pattern_idx = state->is_term - 1;
-            return r;
+            return idx - state->depth;
         }
     }
 
     while (idx < len) {
         unsigned char c = str[idx];
         int res;
-        bool found;
-        found = Binary_Search_Input(state->input_vect, state->goto_num, c, res);
+        bool found = Binary_Search_Input(state->input_vect, state->goto_num, c, res);
         if (found) {
             // The "t = goto(c, current_state)" is valid, advance to state "t".
             uint32_t kid = state->first_kid + res;
@@ -269,13 +264,8 @@ ac_result_t Match(AC_Buffer* buf, const char* str, uint32_t len) {
 
         // Check to see if the state is terminal state?
         if (state->is_term) {
-            ac_result_t r;
-            r.match_begin = idx - state->depth;
-            r.match_end = idx - 1;
-            r.pattern_idx = state->is_term - 1;
-            return r;
+            return idx - state->depth;
         }
     }
-
-    return r;
+    return -1;
 }

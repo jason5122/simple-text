@@ -2,12 +2,6 @@
 
 struct ac_t;
 
-struct ac_result_t {
-    int match_begin;
-    int match_end;
-    int pattern_idx;
-};
-
 /* Create an AC instance. "pattern_v" is a vector of patterns, the length of
  * i-th pattern is specified by "pattern_len_v[i]"; the number of patterns
  * is specified by "vect_len".

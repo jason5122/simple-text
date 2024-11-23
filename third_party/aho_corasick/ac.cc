@@ -7,8 +7,7 @@
 
 int ac_match(ac_t* ac, const char* str, unsigned int len) {
     AC_Buffer* buf = (AC_Buffer*)(void*)ac;
-    ac_result_t r = Match(buf, str, len);
-    return r.match_begin;
+    return Match(buf, str, len);
 }
 
 class BufAlloc : public Buf_Allocator {
@@ -34,13 +33,11 @@ ac_t* ac_create(const char** strv, unsigned int* strlenv, unsigned int v_len) {
         return 0;
     }
 
-    ACS_Constructor* acc;
-    ACS_Constructor tmp;
-    acc = &tmp;
-    acc->Construct(strv, strlenv, v_len);
+    ACS_Constructor acc;
+    acc.Construct(strv, strlenv, v_len);
 
     BufAlloc ba;
-    AC_Converter cvt(*acc, ba);
+    AC_Converter cvt(acc, ba);
     AC_Buffer* buf = cvt.Convert();
     return (ac_t*)(void*)buf;
 }

@@ -113,10 +113,6 @@ public:
         return Match(s, strlen(s));
     }
 
-#ifdef DEBUG
-    void dump_text(const char* = "ac.txt") const;
-    void dump_dot(const char* = "ac.dot") const;
-#endif
     const ACS_State* Get_Root_State() const {
         return _root;
     }

@@ -95,10 +95,6 @@ private:
     AC_Buffer* Alloc_Buffer();
     void Populate_Root_Goto_Func(AC_Buffer*, GotoVect&);
 
-#ifdef DEBUG
-    void dump_buffer(AC_Buffer*, FILE*);
-#endif
-
 private:
     ACS_Constructor& _acs;
     Buf_Allocator& _buf_alloc;
@@ -110,4 +106,4 @@ private:
     std::vector<uint32_t> _ofst_map;
 };
 
-ac_result_t Match(AC_Buffer* buf, const char* str, uint32_t len);
+int Match(AC_Buffer* buf, const char* str, uint32_t len);

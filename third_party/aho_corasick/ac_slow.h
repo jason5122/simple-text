@@ -1,10 +1,11 @@
 #pragma once
 
+#include "ac_util.h"
+
 #include <algorithm>  // for std::sort
 #include <cassert>
 #include <map>
 #include <stdio.h>
-#include <string.h>
 #include <string>
 #include <vector>
 
@@ -13,7 +14,7 @@ class ACS_State;
 class ACS_Constructor;
 class AhoCorasick;
 
-typedef std::map<unsigned char, ACS_State*> ACS_Goto_Map;
+using ACS_Goto_Map = std::map<InputTy, ACS_State*>;
 
 class Match_Result {
 public:
@@ -23,8 +24,8 @@ public:
     Match_Result(int b, int e, int p) : begin(b), end(e), pattern_idx(p) {}
 };
 
-typedef std::pair<unsigned char, ACS_State*> GotoPair;
-typedef std::vector<GotoPair> GotoVect;
+using GotoPair = std::pair<InputTy, ACS_State*>;
+using GotoVect = std::vector<GotoPair>;
 
 // Sorting functor
 class GotoSort {
@@ -38,15 +39,15 @@ class ACS_State {
     friend class ACS_Constructor;
 
 public:
-    ACS_State(uint32_t id)
+    ACS_State(uint32 id)
         : _id(id), _pattern_idx(-1), _depth(0), _is_terminal(false), _fail_link(0) {}
     ~ACS_State() {};
 
-    void Set_Goto(unsigned char c, ACS_State* s) {
+    void Set_Goto(InputTy c, ACS_State* s) {
         _goto_map[c] = s;
     }
-    ACS_State* Get_Goto(unsigned char c) const {
-        ACS_Goto_Map::const_iterator iter = _goto_map.find(c);
+    ACS_State* Get_Goto(InputTy c) const {
+        auto iter = _goto_map.find(c);
         return iter != _goto_map.end() ? (*iter).second : 0;
     }
 
@@ -54,7 +55,7 @@ public:
     void Get_Sorted_Gotos(GotoVect& Gotos) const {
         const ACS_Goto_Map& m = _goto_map;
         Gotos.clear();
-        for (ACS_Goto_Map::const_iterator i = m.begin(), e = m.end(); i != e; i++) {
+        for (auto i = m.begin(), e = m.end(); i != e; i++) {
             Gotos.push_back(GotoPair(i->first, i->second));
         }
         sort(Gotos.begin(), Gotos.end(), GotoSort());
@@ -63,13 +64,13 @@ public:
     ACS_State* Get_FailLink() const {
         return _fail_link;
     }
-    uint32_t Get_GotoNum() const {
+    uint32 Get_GotoNum() const {
         return _goto_map.size();
     }
-    uint32_t Get_ID() const {
+    uint32 Get_ID() const {
         return _id;
     }
-    uint32_t Get_Depth() const {
+    uint32 Get_Depth() const {
         return _depth;
     }
     const ACS_Goto_Map& Get_Goto_Map(void) const {
@@ -90,7 +91,7 @@ private:
     }
 
 private:
-    uint32_t _id;
+    uint32 _id;
     int _pattern_idx;
     short _depth;
     bool _is_terminal;
@@ -105,7 +106,7 @@ public:
 
     void Construct(const std::vector<std::string>& patterns);
 
-    Match_Result Match(const char* s, uint32_t len) const {
+    Match_Result Match(const char* s, uint32 len) const {
         Match_Result r = MatchHelper(s, len);
         return r;
     }
@@ -121,10 +122,10 @@ public:
         return _all_states;
     }
 
-    uint32_t Get_Next_Node_Id() const {
+    uint32 Get_Next_Node_Id() const {
         return _next_node_id;
     }
-    uint32_t Get_State_Num() const {
+    uint32 Get_State_Num() const {
         return _next_node_id - 1;
     }
 
@@ -133,11 +134,11 @@ private:
     ACS_State* new_state();
     void Propagate_faillink();
 
-    Match_Result MatchHelper(const char*, uint32_t len) const;
+    Match_Result MatchHelper(const char*, uint32 len) const;
 
 private:
     ACS_State* _root;
     std::vector<ACS_State*> _all_states;
     unsigned char* _root_char;
-    uint32_t _next_node_id;
+    uint32 _next_node_id;
 };

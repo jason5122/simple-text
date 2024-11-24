@@ -904,30 +904,52 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
 }
 
 namespace {
-int AhoCorasickMatch(std::string_view str, std::string_view pattern) {
+ac_result_t AhoCorasickMatch(std::string_view str, std::string_view pattern) {
     ac_t* ac = ac_create({std::string(pattern)});
-    int offset = ac_match(ac, str, str.length());
+    auto result = ac_match(ac, str, str.length());
     ac_free(ac);
-    return offset;
+    return result;
+}
+
+void AhoCorasickCheckRandom(std::string_view str) {
+    size_t i = util::RandomNumber(0, str.length() - 1);
+    size_t len = util::RandomNumber(1, str.length());
+    std::string_view pattern = str.substr(i, len);
+
+    auto result = AhoCorasickMatch(str, pattern);
+
+    int begin = result.match_begin;
+    int end = result.match_end;
+
+    size_t pos = str.find(pattern);
+    if (pos == std::string::npos) {
+        EXPECT_EQ(begin, -1);
+        EXPECT_EQ(end, -1);
+    } else {
+        std::string_view substr = str.substr(begin, end - begin + 1);
+        EXPECT_EQ(substr, pattern);
+        EXPECT_EQ(static_cast<size_t>(begin), pos);
+    }
 }
 }  // namespace
 
 TEST(PieceTreeTest, AhoCorasickRandomTest) {
     std::string str = "hello world!";
-    for (int _ = 0; _ < 100; ++_) {
-        size_t i = util::RandomNumber(0, str.length() - 1);
-        size_t len = util::RandomNumber(1, str.length());
-        std::string pattern = str.substr(i, len);
+    for (int i = 0; i < 100; ++i) {
+        AhoCorasickCheckRandom(str);
+    }
+}
 
-        int offset = AhoCorasickMatch(str, pattern);
-        if (offset == -1) {
-            EXPECT_EQ(str.find(pattern), std::string::npos);
-        } else {
-            EXPECT_EQ(str.substr(offset, pattern.length()), pattern);
+TEST(PieceTreeTest, AhoCorasickRandomCharTest) {
+    // This string contains chars of *any* value. This is not necessarily valid Unicode.
+    auto random_char_str = []() {
+        std::string str;
+        for (int j = 0; j < 100; ++j) str += util::RandomChar();
+        return str;
+    };
 
-            size_t expected_offset = str.find(pattern);
-            EXPECT_EQ(static_cast<size_t>(offset), expected_offset);
-        }
+    for (int i = 0; i < 100; ++i) {
+        AhoCorasickCheckRandom(random_char_str());
     }
 }
 

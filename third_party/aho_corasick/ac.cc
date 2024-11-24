@@ -3,13 +3,6 @@
 #include "ac_fast.h"
 #include "ac_slow.h"
 
-#include <cassert>
-
-int ac_match(ac_t* ac, std::string_view str, unsigned int len) {
-    AC_Buffer* buf = (AC_Buffer*)(void*)ac;
-    return Match(buf, str, len);
-}
-
 class BufAlloc : public Buf_Allocator {
 public:
     virtual AC_Buffer* alloc(int sz) {
@@ -30,7 +23,7 @@ ac_t* ac_create(const std::vector<std::string>& patterns) {
         // TODO: Currently we use 16-bit to encode pattern-index (see the
         //  comment to AC_State::is_term), therefore we are not able to
         //  handle pattern set with more than 65535 entries.
-        return 0;
+        return nullptr;
     }
 
     ACS_Constructor acc;
@@ -40,6 +33,11 @@ ac_t* ac_create(const std::vector<std::string>& patterns) {
     AC_Converter cvt(acc, ba);
     AC_Buffer* buf = cvt.Convert();
     return (ac_t*)(void*)buf;
+}
+
+ac_result_t ac_match(ac_t* ac, std::string_view str, unsigned int len) {
+    AC_Buffer* buf = (AC_Buffer*)(void*)ac;
+    return Match(buf, str, len);
 }
 
 void ac_free(void* ac) {

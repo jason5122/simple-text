@@ -2,20 +2,12 @@
 
 #include "ac.h"
 
-#include <algorithm>
-#include <ctype.h>
-#include <strings.h>  // for bzero
+#include <cassert>
 
-//////////////////////////////////////////////////////////////////////////
-//
-//      Implementation of AhoCorasick_Slow
-//
-//////////////////////////////////////////////////////////////////////////
-//
 ACS_Constructor::ACS_Constructor() : _next_node_id(1) {
     _root = new_state();
-    _root_char = new unsigned char[256];
-    bzero((void*)_root_char, 256);
+    _root_char = new InputTy[256];
+    memset((void*)_root_char, '\0', 256);
 }
 
 ACS_Constructor::~ACS_Constructor() {
@@ -61,19 +53,19 @@ void ACS_Constructor::Propagate_faillink() {
     // For any input c, make sure "goto(root, c)" is valid, which make the
     // fail-link propagation lot easier.
     ACS_Goto_Map goto_save = r->_goto_map;
-    for (uint32_t i = 0; i <= 255; i++) {
+    for (uint32 i = 0; i <= 255; i++) {
         ACS_State* s = r->Get_Goto(i);
         if (!s) r->Set_Goto(i, r);
     }
 
-    for (uint32_t i = 0; i < wl.size(); i++) {
+    for (uint32 i = 0; i < wl.size(); i++) {
         ACS_State* s = wl[i];
         ACS_State* fl = s->_fail_link;
 
         const ACS_Goto_Map& tran_map = s->Get_Goto_Map();
 
         for (auto ii = tran_map.begin(), ee = tran_map.end(); ii != ee; ii++) {
-            unsigned char c = ii->first;
+            InputTy c = ii->first;
             ACS_State* tran = ii->second;
 
             ACS_State* tran_fl = 0;
@@ -109,13 +101,13 @@ void ACS_Constructor::Construct(const std::vector<std::string>& patterns) {
     }
 }
 
-Match_Result ACS_Constructor::MatchHelper(const char* str, uint32_t len) const {
+Match_Result ACS_Constructor::MatchHelper(const char* str, uint32 len) const {
     const ACS_State* root = _root;
     const ACS_State* state = root;
 
-    uint32_t idx = 0;
+    uint32 idx = 0;
     while (idx < len) {
-        unsigned char c = str[idx];
+        InputTy c = str[idx];
         idx++;
         if (_root_char[c]) {
             state = root->Get_Goto(c);
@@ -125,20 +117,20 @@ Match_Result ACS_Constructor::MatchHelper(const char* str, uint32_t len) const {
 
     if (state->is_Terminal()) [[unlikely]] {
         // This could happen if the one of the pattern has only one char!
-        uint32_t pos = idx - 1;
+        uint32 pos = idx - 1;
         Match_Result r(pos - state->Get_Depth() + 1, pos, state->get_Pattern_Idx());
         return r;
     }
 
     while (idx < len) {
-        unsigned char c = str[idx];
+        InputTy c = str[idx];
         ACS_State* gs = state->Get_Goto(c);
 
         if (!gs) {
             ACS_State* fl = state->Get_FailLink();
             if (fl == root) {
                 while (idx < len) {
-                    unsigned char c = str[idx];
+                    InputTy c = str[idx];
                     idx++;
                     if (_root_char[c]) {
                         state = root->Get_Goto(c);
@@ -154,7 +146,7 @@ Match_Result ACS_Constructor::MatchHelper(const char* str, uint32_t len) const {
         }
 
         if (state->is_Terminal()) {
-            uint32_t pos = idx - 1;
+            uint32 pos = idx - 1;
             Match_Result r =
                 Match_Result(pos - state->Get_Depth() + 1, pos, state->get_Pattern_Idx());
             return r;

@@ -33,4 +33,10 @@ inline std::string RandomNewlineString(size_t length, size_t newlines) {
     return str;
 }
 
+inline char RandomChar() {
+    static constexpr auto low = std::numeric_limits<char>::min();
+    static constexpr auto high = std::numeric_limits<char>::max();
+    return RandomNumber(low, high);
+}
+
 }  // namespace util

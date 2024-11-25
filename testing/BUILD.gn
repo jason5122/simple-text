@@ -8,6 +8,7 @@ executable("test_runner") {
   }
 
   deps = [
+    "//base/buffer/aho_corasick/tests",
     "//base/buffer/tests",
     "//base/filesystem/tests",
     "//base/hash/tests",

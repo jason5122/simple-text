@@ -2,14 +2,12 @@ source_set("tests") {
   testonly = true
 
   sources = [
-    "aho_corasick_test.cc",
     "piece_tree_test.cc",
     "tree_walker_test.cc",
   ]
 
   deps = [
     "//base/buffer",
-    "//third_party/aho_corasick",  # TODO: Clean this up.
     "//third_party/googletest:gtest",
     "//third_party/uni_algo",
   ]

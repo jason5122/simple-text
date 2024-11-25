@@ -1,0 +1,10 @@
+source_set("tests") {
+  testonly = true
+
+  sources = [ "aho_corasick_test.cc" ]
+
+  deps = [
+    "//base/buffer/aho_corasick",
+    "//third_party/googletest:gtest",
+  ]
+}

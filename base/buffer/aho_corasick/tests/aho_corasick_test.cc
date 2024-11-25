@@ -1,10 +1,7 @@
+#include "base/buffer/aho_corasick/ac.h"
 #include "util/random_util.h"
 
 #include <gtest/gtest.h>
-
-// TODO: Consider cleaning this up.
-#include "third_party/aho_corasick/ac.h"
-#include "util/std_print.h"
 
 namespace {
 ac_result_t MatchPattern(std::string_view str, std::string_view pattern) {

@@ -2,6 +2,7 @@ source_set("tests") {
   testonly = true
 
   sources = [
+    "aho_corasick_test.cc",
     "piece_tree_test.cc",
     "tree_walker_test.cc",
   ]

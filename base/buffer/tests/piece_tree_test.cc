@@ -2,13 +2,10 @@
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "util/random_util.h"
+
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <random>
-
-// TODO: Consider cleaning this up.
-#include "third_party/aho_corasick/ac.h"
-#include "util/std_print.h"
 
 namespace base {
 
@@ -900,56 +897,6 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
         first = last + 1;
         last = str.find('\n', first);
         if (last == std::string::npos) last = str.length();
-    }
-}
-
-namespace {
-ac_result_t AhoCorasickMatch(std::string_view str, std::string_view pattern) {
-    ac_t* ac = ac_create({std::string(pattern)});
-    auto result = ac_match(ac, str, str.length());
-    ac_free(ac);
-    return result;
-}
-
-void AhoCorasickCheckRandom(std::string_view str) {
-    size_t i = util::RandomNumber(0, str.length() - 1);
-    size_t len = util::RandomNumber(1, str.length());
-    std::string_view pattern = str.substr(i, len);
-
-    auto result = AhoCorasickMatch(str, pattern);
-
-    int begin = result.match_begin;
-    int end = result.match_end;
-
-    size_t pos = str.find(pattern);
-    if (pos == std::string::npos) {
-        EXPECT_EQ(begin, -1);
-        EXPECT_EQ(end, -1);
-    } else {
-        std::string_view substr = str.substr(begin, end - begin + 1);
-        EXPECT_EQ(substr, pattern);
-        EXPECT_EQ(static_cast<size_t>(begin), pos);
-    }
-}
-}  // namespace
-
-TEST(PieceTreeTest, AhoCorasickRandomTest) {
-    std::string str = "hello world!";
-    for (int i = 0; i < 100; ++i) {
-        AhoCorasickCheckRandom(str);
-    }
-}
-
-TEST(PieceTreeTest, AhoCorasickRandomCharTest) {
-    // This string contains chars of *any* value. This is not necessarily valid Unicode.
-    auto random_char_str = []() {
-        std::string str;
-        for (int j = 0; j < 100; ++j) str += util::RandomChar();
-        return str;
-    };
-
-    for (int i = 0; i < 100; ++i) {
-        AhoCorasickCheckRandom(random_char_str());
     }
 }
 

@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+namespace base {
+
 // Forward decl. the acronym "ACS" stands for "Aho-Corasick Slow implementation"
 class ACS_State;
 class ACS_Constructor;
@@ -58,7 +60,7 @@ public:
         for (auto i = m.begin(), e = m.end(); i != e; i++) {
             Gotos.push_back(GotoPair(i->first, i->second));
         }
-        sort(Gotos.begin(), Gotos.end(), GotoSort());
+        std::sort(Gotos.begin(), Gotos.end(), GotoSort());
     }
 
     ACS_State* Get_FailLink() const {
@@ -142,3 +144,5 @@ private:
     unsigned char* _root_char;
     uint32 _next_node_id;
 };
+
+}  // namespace base

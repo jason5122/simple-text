@@ -900,16 +900,33 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
     }
 }
 
-// TEST(PieceTreeTest, FindTest) {
-//     PieceTree tree{"hello world"};
+TEST(PieceTreeTest, FindTest1) {
+    PieceTree tree{"hello world"};
 
-//     ASSERT_TRUE(tree.find("world").has_value());
-//     EXPECT_EQ(*tree.find("world"), 6_Z);
+    ASSERT_TRUE(tree.find("world"));
+    EXPECT_EQ(*tree.find("world"), 6_Z);
 
-//     EXPECT_FALSE(tree.find("z").has_value());
+    EXPECT_FALSE(tree.find("z"));
 
-//     ASSERT_TRUE(tree.find("hello world").has_value());
-//     EXPECT_EQ(*tree.find("hello world"), 0_Z);
-// }
+    ASSERT_TRUE(tree.find("hello world"));
+    EXPECT_EQ(*tree.find("hello world"), 0_Z);
+}
+
+TEST(PieceTreeTest, FindTest2) {
+    PieceTree tree{"‼️😀🙂↕️"};
+
+    ASSERT_TRUE(tree.find("😀"));
+    EXPECT_EQ(*tree.find("😀"), 6_Z);
+
+    EXPECT_FALSE(tree.find("Ò"));
+
+    ASSERT_TRUE(tree.find("🙂↕️"));
+    EXPECT_EQ(*tree.find("🙂↕️"), 10_Z);
+
+    ASSERT_TRUE(tree.find("\x8F"));
+    EXPECT_EQ(*tree.find("\x8F"), 5_Z);
+
+    ASSERT_FALSE(tree.find("\x8F\x9F"));
+}
 
 }  // namespace base

@@ -4,6 +4,8 @@
 
 #include <cassert>
 
+namespace base {
+
 ACS_Constructor::ACS_Constructor() : _next_node_id(1) {
     _root = new_state();
     _root_char = new InputTy[256];
@@ -155,3 +157,5 @@ Match_Result ACS_Constructor::MatchHelper(const char* str, uint32 len) const {
 
     return Match_Result(-1, -1, -1);
 }
+
+}  // namespace base

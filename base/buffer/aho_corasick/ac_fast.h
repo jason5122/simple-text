@@ -5,6 +5,8 @@
 
 #include <vector>
 
+namespace base {
+
 class ACS_Constructor;
 
 using AC_Ofst = uint32;
@@ -24,7 +26,7 @@ using State_ID = uint32;
 //      transition state (aka kid). To save space, we used 8-bit to represent
 //      the IDs. ID of root's kids starts with 1.
 //
-//        Root may have 255 valid inputs. In this speical case, i-th element
+//        Root may have 255 valid inputs. In this special case, i-th element
 //      stores value i -- i.e the i-th state. So, we don't need such array
 //      at all. On the other hand, 8-bit is insufficient to encode kids' ID.
 //
@@ -111,3 +113,6 @@ private:
 };
 
 ac_result_t Match(AC_Buffer* buf, std::string_view str, uint32 len);
+ac_result_t Match(AC_Buffer* buf, const PieceTree& tree);
+
+}  // namespace base

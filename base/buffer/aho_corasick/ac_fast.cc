@@ -5,6 +5,8 @@
 #include <algorithm>  // for std::sort
 #include <cassert>
 
+namespace base {
+
 uint32 AC_Converter::Calc_State_Sz(const ACS_State* s) const {
     AC_State dummy;
     uint32 sz = offsetof(AC_State, input_vect);
@@ -297,3 +299,87 @@ ac_result_t Match(AC_Buffer* buf, std::string_view str, uint32 len) {
 
     return r;
 }
+
+ac_result_t Match(AC_Buffer* buf, const PieceTree& tree) {
+    unsigned char* buf_base = (unsigned char*)(buf);
+    unsigned char* root_goto = buf_base + buf->root_goto_ofst;
+    AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
+
+    AC_State* state = 0;
+    // TODO: Implement starting/stopping at a specific index.
+    TreeWalker walker{&tree};
+
+    // Skip leading chars that are not valid input of root-nodes.
+    if (buf->root_goto_num != 255) [[likely]] {
+        while (!walker.exhausted()) {
+            unsigned char c = walker.next();
+            if (unsigned char kid_id = root_goto[c]) {
+                state = Get_State_Addr(buf_base, states_ofst_vect, kid_id);
+                break;
+            }
+        }
+    } else {
+        // TODO: Is this correct? Reference the original implementation to see if we transcribed it
+        // correctly.
+        unsigned char c = walker.next();
+        state = Get_State_Addr(buf_base, states_ofst_vect, c);
+    }
+
+    ac_result_t r = {-1, -1};
+    if (state != 0) [[likely]] {
+        if (state->is_term) [[unlikely]] {
+            uint32 idx = walker.offset();
+            /* Dictionary may have string of length 1 */
+            r.match_begin = idx - state->depth;
+            r.match_end = idx - 1;
+            r.pattern_idx = state->is_term - 1;
+            return r;
+        }
+    }
+
+    while (!walker.exhausted()) {
+        unsigned char c = walker.current();
+        int res;
+        bool found;
+        found = Binary_Search_Input(state->input_vect, state->goto_num, c, res);
+        if (found) {
+            // The "t = goto(c, current_state)" is valid, advance to state "t".
+            uint32 kid = state->first_kid + res;
+            state = Get_State_Addr(buf_base, states_ofst_vect, kid);
+            walker.next();
+        } else {
+            // Follow the fail-link.
+            State_ID fl = state->fail_link;
+            if (fl == 0) {
+                // fail-link is root-node, which implies the root-node doesn't
+                // have 255 valid transitions (otherwise, the fail-link should
+                // points to "goto(root, c)"), so we don't need speical handling
+                // as we did before this while-loop is entered.
+                //
+                while (!walker.exhausted()) {
+                    InputTy c = walker.next();
+                    if (unsigned char kid_id = root_goto[c]) {
+                        state = Get_State_Addr(buf_base, states_ofst_vect, kid_id);
+                        break;
+                    }
+                }
+            } else {
+                state = Get_State_Addr(buf_base, states_ofst_vect, fl);
+            }
+        }
+
+        // Check to see if the state is terminal state?
+        if (state->is_term) {
+            uint32 idx = walker.offset();
+            ac_result_t r;
+            r.match_begin = idx - state->depth;
+            r.match_end = idx - 1;
+            r.pattern_idx = state->is_term - 1;
+            return r;
+        }
+    }
+
+    return r;
+}
+
+}  // namespace base

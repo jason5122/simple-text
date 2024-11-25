@@ -1,7 +1,11 @@
 #pragma once
 
+#include "base/buffer/piece_tree.h"
+
 #include <string>
 #include <vector>
+
+namespace base {
 
 /* If the subject-string doesn't match any of the given patterns, "match_begin"
  * should be a negative; otherwise the substring of the subject-string,
@@ -21,6 +25,9 @@ struct ac_t;
 // Return the instance on success, or null otherwise.
 ac_t* ac_create(const std::vector<std::string>& patterns);
 
-ac_result_t ac_match(ac_t*, std::string_view str, unsigned int len);
+ac_result_t ac_match(ac_t* ac, std::string_view str, unsigned int len);
+ac_result_t ac_match(ac_t* ac, const PieceTree& tree, unsigned int len);
 
 void ac_free(void*);
+
+}  // namespace base

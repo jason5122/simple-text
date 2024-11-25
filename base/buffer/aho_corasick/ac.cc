@@ -3,6 +3,8 @@
 #include "ac_fast.h"
 #include "ac_slow.h"
 
+namespace base {
+
 class BufAlloc : public Buf_Allocator {
 public:
     virtual AC_Buffer* alloc(int sz) {
@@ -40,7 +42,14 @@ ac_result_t ac_match(ac_t* ac, std::string_view str, unsigned int len) {
     return Match(buf, str, len);
 }
 
+ac_result_t ac_match(ac_t* ac, const PieceTree& tree, unsigned int len) {
+    AC_Buffer* buf = (AC_Buffer*)(void*)ac;
+    return Match(buf, tree);
+}
+
 void ac_free(void* ac) {
     AC_Buffer* buf = (AC_Buffer*)ac;
     BufAlloc::myfree(buf);
 }
+
+}  // namespace base

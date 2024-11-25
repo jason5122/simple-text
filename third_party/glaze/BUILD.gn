@@ -1,7 +1,0 @@
-source_set("glaze") {
-  public_configs = [ ":glaze_includes" ]
-}
-
-config("glaze_includes") {
-  include_dirs = [ "include" ]
-}

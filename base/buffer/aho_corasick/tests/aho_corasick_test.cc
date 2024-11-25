@@ -187,3 +187,26 @@ TEST(AhoCorasickTest, Test14) {
     StrPairs str_pairs = {{"abc123", "3"}, {"3", "3"}};
     TestCase(str_pairs, dict);
 }
+
+namespace {
+constexpr auto operator*(const std::string_view& sv, size_t times) {
+    std::string result;
+    for (size_t i = 0; i < times; ++i) {
+        result += sv;
+    }
+    return result;
+}
+
+const std::string kX = "x";
+const std::string kLongLine = kX * 100;
+const std::string kStr1Gb = kLongLine * 10000000;
+const std::string kLongStr = "needle" + kStr1Gb;
+}  // namespace
+
+// Test that matching quits as soon as possible. We don't want to load the entire string if we
+// don't have to.
+TEST(AhoCorasickTest, LongStringTest) {
+    // This match should happen immediately since "needle" appears in front!
+    auto result = MatchPattern(kLongStr, "needle");
+    CheckResult(result, kLongStr, "needle");
+}

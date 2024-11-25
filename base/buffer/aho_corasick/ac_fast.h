@@ -89,7 +89,7 @@ private:
     // Return the size in byte needed to to save the specified state.
     uint32 Calc_State_Sz(const ACS_State*) const;
 
-    // In fast-AC-graph, the ID is bit tricyy. Given a state of slow-graph,
+    // In fast-AC-graph, the ID is bit tricky. Given a state of slow-graph,
     // this function is to return the ID of its counterpart in the fast-graph.
     State_ID Get_Renumbered_Id(const ACS_State* s) const {
         const std::vector<uint32>& m = _id_map;

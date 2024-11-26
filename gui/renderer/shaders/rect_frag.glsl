@@ -8,8 +8,7 @@ flat in vec2 size;
 flat in float corner_radius;      // TODO: Consider making this a uniform.
 flat in float tab_corner_radius;  // TODO: Remove the `tab_corner_radius` experiment.
 
-layout(location = 0, index = 0) out vec4 color;
-layout(location = 0, index = 1) out vec4 alpha_mask;
+out vec4 out_color;
 
 // https://www.reddit.com/r/opengl/comments/sbrykq/comment/hu4dqj9/?utm_source=share&utm_medium=web2x&context=3
 float roundedBoxSDF(vec2 center, vec2 size, float radius) {
@@ -66,8 +65,7 @@ void main() {
         }
     }
 
-    alpha_mask = vec4(1.0);
-    color = vec4(rect_color.rgb, computed_alpha);
+    out_color = vec4(rect_color.rgb, computed_alpha);
 }
 
 )"

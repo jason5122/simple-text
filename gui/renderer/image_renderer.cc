@@ -108,20 +108,22 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
     return *this;
 }
 
-// TODO: Store image size as Size (ints) instead of Vec2 (floats).
+// TODO: Find a way to not have to cast here.
 app::Size ImageRenderer::getImageSize(size_t image_index) {
-    AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
+    const AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
     return {
-        .width = static_cast<int>(atlas_entry.rect_size.x),
-        .height = static_cast<int>(atlas_entry.rect_size.y),
+        .width = static_cast<int>(atlas_entry.width),
+        .height = static_cast<int>(atlas_entry.height),
     };
 }
 
+// TODO: Find a way to not have to cast here.
 void ImageRenderer::addImage(size_t image_index, const app::Point& coords, const Rgba& color) {
-    AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
+    const AtlasImage& atlas_entry = image_atlas_entries.at(image_index);
     instances.emplace_back(InstanceData{
-        .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
-        .rect_size = atlas_entry.rect_size,
+        .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
+        .rect_size = {static_cast<float>(atlas_entry.width),
+                      static_cast<float>(atlas_entry.height)},
         .uv = atlas_entry.uv,
         .color = color,
     });
@@ -198,7 +200,8 @@ bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
     Vec4 uv;
     atlas.insertTexture(width, height, has_alpha, buffer, uv);
     image_atlas_entries[index] = {
-        .rect_size = Vec2{static_cast<float>(width), static_cast<float>(height)},
+        .width = width,
+        .height = height,
         .uv = uv,
     };
 

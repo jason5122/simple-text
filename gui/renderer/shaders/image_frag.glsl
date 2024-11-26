@@ -5,8 +5,7 @@ R"(
 in vec2 tex_coords;
 flat in vec4 image_color;
 
-layout(location = 0, index = 0) out vec4 color;
-layout(location = 0, index = 1) out vec4 alpha_mask;
+out vec4 out_color;
 
 uniform sampler2D mask;
 
@@ -15,11 +14,9 @@ void main() {
 
     int colored = int(image_color.a);
     if (colored == 1) {
-        alpha_mask = vec4(1.0);
-        color = texel;
+        out_color = texel;
     } else {
-        alpha_mask = vec4(1.0);
-        color = vec4(image_color.rgb, texel.a);
+        out_color = vec4(image_color.rgb, texel.a);
     }
 }
 

@@ -15,8 +15,7 @@ uniform int rendering_pass;
 uniform int r;
 uniform int thickness;
 
-layout(location = 0, index = 0) out vec4 out_color;
-layout(location = 0, index = 1) out vec4 out_alpha_mask;
+out vec4 out_color;
 
 // Border flags.
 const int kLeft = 1;
@@ -190,7 +189,6 @@ void main() {
         discard;
     }
 
-    out_alpha_mask = vec4(1.0);
     out_color = vec4(computed_color, computed_alpha);
 }
 

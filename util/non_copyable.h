@@ -16,15 +16,4 @@ private:
     void operator=(const NonCopyable&) = delete;
 };
 
-// A base class to make a class non-movable.
-class NonMovable : NonCopyable {
-protected:
-    constexpr NonMovable() = default;
-    ~NonMovable() = default;
-
-private:
-    NonMovable(NonMovable&&) = delete;
-    void operator=(NonMovable&&) = delete;
-};
-
-}
+}  // namespace util

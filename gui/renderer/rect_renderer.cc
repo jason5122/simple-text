@@ -119,9 +119,6 @@ void RectRenderer::addRect(const app::Point& coords,
 }
 
 void RectRenderer::flush(const app::Size& screen_size, RectLayer rect_type) {
-    auto& instances =
-        rect_type == RectLayer::kForeground ? foreground_instances : background_instances;
-
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
@@ -129,6 +126,8 @@ void RectRenderer::flush(const app::Size& screen_size, RectLayer rect_type) {
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
+    bool is_foreground = rect_type == RectLayer::kForeground;
+    auto& instances = is_foreground ? foreground_instances : background_instances;
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), instances.data());

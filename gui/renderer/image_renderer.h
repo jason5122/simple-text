@@ -35,7 +35,8 @@ private:
 
     Atlas atlas;
     struct AtlasImage {
-        Vec2 rect_size;
+        unsigned int width;
+        unsigned int height;
         Vec4 uv;
     };
     std::vector<AtlasImage> image_atlas_entries;

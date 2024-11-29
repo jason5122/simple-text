@@ -2,15 +2,13 @@ import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
 common_sources = [
-  "editor_app.cc",
-  "editor_window.cc",
+  "fast_startup_app.cc",
+  "fast_startup_window.cc",
   "main.cc",
 ]
 
 common_deps = [
   "//app",
-  "//base/filesystem",
-  "//gui",
   "//opengl",
 ]
 

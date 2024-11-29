@@ -1,14 +1,14 @@
-#include "editor_window.h"
+#include "fast_startup_window.h"
 
-#include "experiments/fast_startup/editor_app.h"
+#include "experiments/fast_startup/fast_startup_app.h"
 
 #include "opengl/gl.h"
 using namespace opengl;
 
-EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
+FastStartupWindow::FastStartupWindow(FastStartupApp& parent, int width, int height, int wid)
     : Window{parent, width, height} {}
 
-void EditorWindow::onDraw(const app::Size& size) {
+void FastStartupWindow::onDraw(const app::Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 

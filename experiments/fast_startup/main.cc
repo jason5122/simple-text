@@ -1,12 +1,12 @@
 #include "build/build_config.h"
-#include "simple_text/editor_app.h"
+#include "experiments/fast_startup/fast_startup_app.h"
 
 namespace {
 
 int SimpleTextMain(int argc, char* argv[]) {
     // TODO: Return proper status codes.
-    EditorApp editor_app;
-    editor_app.run();
+    FastStartupApp fast_startup_app;
+    fast_startup_app.run();
     return 0;
 }
 

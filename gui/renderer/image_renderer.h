@@ -15,6 +15,7 @@ public:
     static constexpr size_t kPanelClose2xIndex = 0;
     static constexpr size_t kFolderOpen2xIndex = 1;
     static constexpr size_t kStanfordBunny = 2;
+    static constexpr size_t kDice = 3;
 
     ImageRenderer();
     ~ImageRenderer();
@@ -47,6 +48,7 @@ private:
 
     bool loadPng(std::string_view file_name, Image& image);
     bool loadPng(size_t index, std::string_view file_name);
+    bool loadPngNew(size_t index, std::string_view file_name);
 
     struct InstanceData {
         Vec2 coords;

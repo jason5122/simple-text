@@ -16,7 +16,7 @@ void FastStartupWindow::onDraw(const app::Size& size) {
     auto& image_renderer = gui::Renderer::instance().getImageRenderer();
     app::Point coords = {size.width - 1426, 0};
     gui::Rgba color = {255, 255, 255, true};
-    image_renderer.addImage(gui::ImageRenderer::kStanfordBunny, coords, color);
+    image_renderer.addImage(gui::ImageRenderer::kDice, coords, color);
 
     gui::Renderer::instance().flush(size);
 }

@@ -6,6 +6,7 @@ icons = [
 
   # TODO: Remove this.
   "stanford_bunny.png",
+  "dice.png",
 ]
 
 if (is_mac) {

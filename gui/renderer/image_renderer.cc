@@ -1,10 +1,13 @@
-#include "base/filesystem/file_reader.h"
 #include "image_renderer.h"
-#include <cstring>
-#include <png.h>
+
+#include "base/filesystem/file_reader.h"
 
 #include "opengl/gl.h"
 using namespace opengl;
+
+#include <cstring>
+#include <png.h>
+#include <spng.h>
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
@@ -72,12 +75,14 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     std::string panel_close_2x = std::format("{}/icons/panel_close@2x.png", base::ResourceDir());
     std::string folder_open_2x = std::format("{}/icons/folder_open@2x.png", base::ResourceDir());
     std::string stanford_bunny = std::format("{}/icons/stanford_bunny.png", base::ResourceDir());
+    std::string dice = std::format("{}/icons/dice.png", base::ResourceDir());
 
     // TODO: Figure out a better way to do this.
     cache.resize(4);
-    loadPng(kPanelClose2xIndex, panel_close_2x);
-    loadPng(kFolderOpen2xIndex, folder_open_2x);
-    loadPng(kStanfordBunny, stanford_bunny);
+    loadPngNew(kPanelClose2xIndex, panel_close_2x);
+    loadPngNew(kFolderOpen2xIndex, folder_open_2x);
+    loadPngNew(kStanfordBunny, stanford_bunny);
+    loadPngNew(kDice, dice);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -226,7 +231,45 @@ bool ImageRenderer::loadPng(std::string_view file_name, Image& image) {
     return true;
 }
 
+bool ImageRenderer::loadPngNew(size_t index, std::string_view file_name) {
+    PROFILE_BLOCK("ImageRenderer::loadPngNew()");
+
+    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
+    std::unique_ptr<spng_ctx, void (*)(spng_ctx*)> ctx{spng_ctx_new(0), spng_ctx_free};
+    spng_ihdr ihdr;
+    size_t size;
+
+    if (!fp) return false;
+    if (!ctx) return false;
+
+    if (spng_set_png_file(ctx.get(), fp.get())) return false;
+
+    if (spng_get_ihdr(ctx.get(), &ihdr)) return false;
+
+    if (spng_decoded_image_size(ctx.get(), SPNG_FMT_RGBA8, &size)) return false;
+
+    std::vector<uint8_t> buffer(size);
+    if (spng_decode_image(ctx.get(), buffer.data(), size, SPNG_FMT_RGBA8, SPNG_DECODE_TRNS)) {
+        return false;
+    }
+
+    uint32_t width = ihdr.width;
+    uint32_t height = ihdr.height;
+
+    // TODO: Accept the RGBA format in Atlas.
+    Vec4 uv;
+    atlas.insertTexture(width, height, true, buffer, uv);
+    cache[index] = {
+        .width = width,
+        .height = height,
+        .uv = uv,
+    };
+    return true;
+}
+
 bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
+    PROFILE_BLOCK("ImageRenderer::loadPng()");
+
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
     if (!fp) {
         return false;

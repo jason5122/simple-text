@@ -16,5 +16,6 @@ source_set("renderer") {
     "//base/filesystem",
     "//font",
     "//third_party/libpng",
+    "//third_party/libspng",
   ]
 }

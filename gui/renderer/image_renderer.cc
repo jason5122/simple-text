@@ -72,23 +72,6 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    // std::string panel_close_2x = std::format("{}/icons/panel_close@2x.png",
-    // base::ResourceDir()); std::string folder_open_2x =
-    // std::format("{}/icons/folder_open@2x.png", base::ResourceDir()); std::string stanford_bunny
-    // = std::format("{}/icons/stanford_bunny.png", base::ResourceDir()); std::string dice =
-    // std::format("{}/icons/dice.png", base::ResourceDir()); std::string example_jpg =
-    // std::format("{}/icons/example.jpg", base::ResourceDir()); std::string lcd =
-    // std::format("{}/icons/lcd.jpg", base::ResourceDir());
-
-    // TODO: Figure out a better way to do this.
-    cache.resize(6);
-    // loadPng(kPanelClose2xIndex, panel_close_2x);
-    // loadPng(kFolderOpen2xIndex, folder_open_2x);
-    // loadPng(kStanfordBunny, stanford_bunny);
-    // loadPng(kDice, dice);
-    // loadJpeg(kExampleJpg, example_jpg);
-    // loadJpeg(kLCD, lcd);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -120,18 +103,32 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
     return *this;
 }
 
+// TODO: De-duplicate this code in a clean way.
 size_t ImageRenderer::addPng(std::string_view image_path) {
-    auto callback = [this](std::string_view file_name, Image& image) {
-        return loadPng(file_name, image);
-    };
-    return addImage(image_path, callback);
+    Image image;
+    bool success = loadPng(image_path, image);
+    // TODO: Handle image load failure in a more robust way.
+    if (!success) {
+        std::println("ImageRenderer::addJpeg() error: Could not load image.");
+    }
+
+    size_t image_id = cache.size();
+    cache.emplace_back(std::move(image));
+    return image_id;
 }
 
+// TODO: De-duplicate this code in a clean way.
 size_t ImageRenderer::addJpeg(std::string_view image_path) {
-    auto callback = [this](std::string_view file_name, Image& image) {
-        return loadJpeg(file_name, image);
-    };
-    return addImage(image_path, callback);
+    Image image;
+    bool success = loadJpeg(image_path, image);
+    // TODO: Handle image load failure in a more robust way.
+    if (!success) {
+        std::println("ImageRenderer::addJpeg() error: Could not load image.");
+    }
+
+    size_t image_id = cache.size();
+    cache.emplace_back(std::move(image));
+    return image_id;
 }
 
 const ImageRenderer::Image& ImageRenderer::get(size_t image_id) const {
@@ -171,20 +168,6 @@ void ImageRenderer::renderBatch(const app::Size& screen_size) {
     glBindVertexArray(0);
 
     instances.clear();
-}
-
-size_t ImageRenderer::addImage(std::string_view image_path,
-                               const std::function<bool(std::string_view, Image&)>& load_func) {
-    Image image;
-    bool success = load_func(image_path, image);
-    // TODO: Handle image load failure in a more robust way.
-    if (!success) {
-        std::println("ImageRenderer::addJpeg() error: Could not load image.");
-    }
-
-    size_t image_id = cache.size();
-    cache.emplace_back(std::move(image));
-    return image_id;
 }
 
 // TODO: Handle errors.

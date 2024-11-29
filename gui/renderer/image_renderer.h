@@ -41,8 +41,6 @@ private:
     Atlas atlas;
     std::vector<Image> cache;
 
-    size_t addImage(std::string_view image_path,
-                    const std::function<bool(std::string_view, Image&)>& load_func);
     bool loadPng(std::string_view file_name, Image& image);
     bool loadJpeg(std::string_view file_name, Image& image);
 

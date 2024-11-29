@@ -23,6 +23,7 @@ public:
     enum class Format {
         kBGRA,
         kRGBA,
+        kRGB,
     };
     bool insertTexture(
         int width, int height, Format format, const std::vector<GLubyte>& data, Vec4& out_uv);

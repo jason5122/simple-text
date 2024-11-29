@@ -98,6 +98,7 @@ bool Atlas::insertTexture(
     GLenum gl_format;
     if (format == Format::kBGRA) gl_format = GL_BGRA;
     if (format == Format::kRGBA) gl_format = GL_RGBA;
+    if (format == Format::kRGB) gl_format = GL_RGB;
 
     glBindTexture(GL_TEXTURE_2D, tex_id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, gl_format,

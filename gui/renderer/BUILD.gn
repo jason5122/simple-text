@@ -15,6 +15,7 @@ source_set("renderer") {
     "icons",
     "//base/filesystem",
     "//font",
+    "//third_party/libjpeg",
     "//third_party/libspng",
   ]
 }

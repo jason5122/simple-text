@@ -20,6 +20,8 @@ void FastStartupWindow::onDraw(const app::Size& size) {
     image_renderer.addImage(gui::ImageRenderer::kDice, dice_coords, color);
     app::Point bunny_coords = {size.width - 1426, size.height - 500};
     image_renderer.addImage(gui::ImageRenderer::kStanfordBunny, bunny_coords, color);
+    app::Point example_jpg_coords = {size.width - 300, size.height / 2};
+    image_renderer.addImage(gui::ImageRenderer::kExampleJpg, example_jpg_coords, color);
 
     gui::Renderer::instance().flush(size);
 }

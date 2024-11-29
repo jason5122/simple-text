@@ -5,8 +5,10 @@
 #include "opengl/gl.h"
 using namespace opengl;
 
-#include <cstring>
 #include <spng.h>
+
+#include <jerror.h>
+#include <jpeglib.h>
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
@@ -75,13 +77,15 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     std::string folder_open_2x = std::format("{}/icons/folder_open@2x.png", base::ResourceDir());
     std::string stanford_bunny = std::format("{}/icons/stanford_bunny.png", base::ResourceDir());
     std::string dice = std::format("{}/icons/dice.png", base::ResourceDir());
+    std::string example_jpg = std::format("{}/icons/example.jpg", base::ResourceDir());
 
     // TODO: Figure out a better way to do this.
-    cache.resize(4);
+    cache.resize(5);
     loadPng(kPanelClose2xIndex, panel_close_2x);
     loadPng(kFolderOpen2xIndex, folder_open_2x);
     loadPng(kStanfordBunny, stanford_bunny);
     loadPng(kDice, dice);
+    loadJpeg(kExampleJpg, example_jpg);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -199,6 +203,50 @@ bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
 
     Vec4 uv;
     atlas.insertTexture(width, height, Atlas::Format::kRGBA, buffer, uv);
+    cache[index] = {
+        .width = width,
+        .height = height,
+        .uv = uv,
+    };
+    return true;
+}
+
+bool ImageRenderer::loadJpeg(size_t index, std::string_view file_name) {
+    PROFILE_BLOCK("ImageRenderer::loadJpeg()");
+
+    jpeg_decompress_struct info;
+    jpeg_error_mgr err;
+
+    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
+    if (!fp) {
+        return false;
+    }
+
+    info.err = jpeg_std_error(&err);
+    jpeg_create_decompress(&info);
+
+    jpeg_stdio_src(&info, fp.get());
+    jpeg_read_header(&info, TRUE);
+
+    jpeg_start_decompress(&info);
+    JDIMENSION width = info.output_width;
+    JDIMENSION height = info.output_height;
+    int num_components = info.num_components;
+
+    std::println("width = {}, height = {}, num_components = {}", width, height, num_components);
+
+    std::vector<uint8_t> buffer(width * height * num_components);
+    unsigned char* row_buffer[1];
+    while (info.output_scanline < info.output_height) {
+        row_buffer[0] = &buffer[num_components * info.output_width * info.output_scanline];
+        jpeg_read_scanlines(&info, row_buffer, 1);
+    }
+
+    jpeg_finish_decompress(&info);
+    jpeg_destroy_decompress(&info);
+
+    Vec4 uv;
+    atlas.insertTexture(width, height, Atlas::Format::kRGB, buffer, uv);
     cache[index] = {
         .width = width,
         .height = height,

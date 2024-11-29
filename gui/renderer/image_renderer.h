@@ -16,6 +16,7 @@ public:
     static constexpr size_t kFolderOpen2xIndex = 1;
     static constexpr size_t kStanfordBunny = 2;
     static constexpr size_t kDice = 3;
+    static constexpr size_t kExampleJpg = 4;
 
     ImageRenderer();
     ~ImageRenderer();
@@ -47,6 +48,7 @@ private:
     std::vector<Image> cache;
 
     bool loadPng(size_t index, std::string_view file_name);
+    bool loadJpeg(size_t index, std::string_view file_name);
 
     struct InstanceData {
         Vec2 coords;

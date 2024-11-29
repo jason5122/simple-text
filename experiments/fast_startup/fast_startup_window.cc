@@ -22,6 +22,8 @@ void FastStartupWindow::onDraw(const app::Size& size) {
     image_renderer.addImage(gui::ImageRenderer::kStanfordBunny, bunny_coords, color);
     app::Point example_jpg_coords = {size.width - 300, size.height / 2};
     image_renderer.addImage(gui::ImageRenderer::kExampleJpg, example_jpg_coords, color);
+    app::Point temp_coords = {0, 0};
+    image_renderer.addImage(gui::ImageRenderer::kLCD, temp_coords, color);
 
     gui::Renderer::instance().flush(size);
 }

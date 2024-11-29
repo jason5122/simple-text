@@ -78,14 +78,16 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     std::string stanford_bunny = std::format("{}/icons/stanford_bunny.png", base::ResourceDir());
     std::string dice = std::format("{}/icons/dice.png", base::ResourceDir());
     std::string example_jpg = std::format("{}/icons/example.jpg", base::ResourceDir());
+    std::string lcd = std::format("{}/icons/lcd.jpg", base::ResourceDir());
 
     // TODO: Figure out a better way to do this.
-    cache.resize(5);
+    cache.resize(6);
     loadPng(kPanelClose2xIndex, panel_close_2x);
     loadPng(kFolderOpen2xIndex, folder_open_2x);
     loadPng(kStanfordBunny, stanford_bunny);
     loadPng(kDice, dice);
     loadJpeg(kExampleJpg, example_jpg);
+    loadJpeg(kLCD, lcd);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -232,13 +234,12 @@ bool ImageRenderer::loadJpeg(size_t index, std::string_view file_name) {
     JDIMENSION width = info.output_width;
     JDIMENSION height = info.output_height;
     int num_components = info.num_components;
-
-    std::println("width = {}, height = {}, num_components = {}", width, height, num_components);
+    size_t row_bytes = width * num_components;
 
     std::vector<uint8_t> buffer(width * height * num_components);
-    unsigned char* row_buffer[1];
-    while (info.output_scanline < info.output_height) {
-        row_buffer[0] = &buffer[num_components * info.output_width * info.output_scanline];
+    uint8_t* row_buffer[1];
+    while (info.output_scanline < height) {
+        row_buffer[0] = &buffer[info.output_scanline * row_bytes];
         jpeg_read_scanlines(&info, row_buffer, 1);
     }
 

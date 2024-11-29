@@ -8,6 +8,7 @@ icons = [
   "stanford_bunny.png",
   "dice.png",
   "example.jpg",
+  "lcd.jpg",
 ]
 
 if (is_mac) {

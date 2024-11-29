@@ -17,6 +17,7 @@ public:
     static constexpr size_t kStanfordBunny = 2;
     static constexpr size_t kDice = 3;
     static constexpr size_t kExampleJpg = 4;
+    static constexpr size_t kLCD = 5;
 
     ImageRenderer();
     ~ImageRenderer();

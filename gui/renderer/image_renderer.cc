@@ -197,9 +197,8 @@ bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
     uint32_t width = ihdr.width;
     uint32_t height = ihdr.height;
 
-    // TODO: Accept the RGBA format in Atlas.
     Vec4 uv;
-    atlas.insertTexture(width, height, true, buffer, uv);
+    atlas.insertTexture(width, height, Atlas::Format::kRGBA, buffer, uv);
     cache[index] = {
         .width = width,
         .height = height,

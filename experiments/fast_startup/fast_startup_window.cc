@@ -14,9 +14,12 @@ void FastStartupWindow::onDraw(const app::Size& size) {
                           gui::RectRenderer::RectLayer::kForeground);
 
     auto& image_renderer = gui::Renderer::instance().getImageRenderer();
-    app::Point coords = {size.width - 1426, 0};
     gui::Rgba color = {255, 255, 255, true};
-    image_renderer.addImage(gui::ImageRenderer::kDice, coords, color);
+
+    app::Point dice_coords = {size.width - 1426, 0};
+    image_renderer.addImage(gui::ImageRenderer::kDice, dice_coords, color);
+    app::Point bunny_coords = {size.width - 1426, size.height - 500};
+    image_renderer.addImage(gui::ImageRenderer::kStanfordBunny, bunny_coords, color);
 
     gui::Renderer::instance().flush(size);
 }

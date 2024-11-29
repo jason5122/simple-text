@@ -6,7 +6,6 @@
 using namespace opengl;
 
 #include <cstring>
-#include <png.h>
 #include <spng.h>
 
 // TODO: Debug use; remove this.
@@ -79,10 +78,10 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
 
     // TODO: Figure out a better way to do this.
     cache.resize(4);
-    loadPngNew(kPanelClose2xIndex, panel_close_2x);
-    loadPngNew(kFolderOpen2xIndex, folder_open_2x);
-    loadPngNew(kStanfordBunny, stanford_bunny);
-    loadPngNew(kDice, dice);
+    loadPng(kPanelClose2xIndex, panel_close_2x);
+    loadPng(kFolderOpen2xIndex, folder_open_2x);
+    loadPng(kStanfordBunny, stanford_bunny);
+    loadPng(kDice, dice);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -114,18 +113,18 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
     return *this;
 }
 
-size_t ImageRenderer::addPng(std::string_view image_path) {
-    Image image;
-    bool success = loadPng(image_path, image);
-    // TODO: Handle image load failure in a more robust way.
-    if (!success) {
-        std::println("ImageRenderer::addPng() error: Could not load image.");
-    }
+// size_t ImageRenderer::addPng(std::string_view image_path) {
+//     Image image;
+//     bool success = loadPng(image_path, image);
+//     // TODO: Handle image load failure in a more robust way.
+//     if (!success) {
+//         std::println("ImageRenderer::addPng() error: Could not load image.");
+//     }
 
-    size_t image_id = cache.size();
-    cache.emplace_back(std::move(image));
-    return image_id;
-}
+//     size_t image_id = cache.size();
+//     cache.emplace_back(std::move(image));
+//     return image_id;
+// }
 
 const ImageRenderer::Image& ImageRenderer::get(size_t image_id) const {
     return cache[image_id];
@@ -173,66 +172,8 @@ void ImageRenderer::flush(const app::Size& screen_size) {
     instances.clear();
 }
 
-bool ImageRenderer::loadPng(std::string_view file_name, Image& image) {
-    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
-    if (!fp) {
-        return false;
-    }
-
-    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (!png_ptr) {
-        return false;
-    }
-
-    png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr) {
-        png_destroy_read_struct(&png_ptr, nullptr, nullptr);
-        return false;
-    }
-
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
-        return false;
-    }
-
-    png_init_io(png_ptr, fp.get());
-
-    int transforms =
-        PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_BGR;
-    png_read_png(png_ptr, info_ptr, transforms, nullptr);
-
-    png_uint_32 width, height;
-    int bit_depth, color_type, interlace_type;
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type,
-                 nullptr, nullptr);
-
-    size_t row_bytes = png_get_rowbytes(png_ptr, info_ptr);
-    png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
-
-    std::vector<uint8_t> buffer(row_bytes * height);
-    for (png_uint_32 row = 0; row < height; ++row) {
-        for (size_t col = 0; col < row_bytes; ++col) {
-            // PNG is ordered top to bottom, but OpenGL expects bottom to top. This is fine!
-            // We want to load the image flipped, since we flip y-coordinates in the vertex shader.
-            buffer[row_bytes * row + col] = row_pointers[row][col];
-        }
-    }
-
-    bool has_alpha = color_type & PNG_COLOR_MASK_ALPHA;
-    Vec4 uv;
-    atlas.insertTexture(width, height, has_alpha, buffer, uv);
-    image = {
-        .width = width,
-        .height = height,
-        .uv = uv,
-    };
-
-    png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
-    return true;
-}
-
-bool ImageRenderer::loadPngNew(size_t index, std::string_view file_name) {
-    PROFILE_BLOCK("ImageRenderer::loadPngNew()");
+bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
+    PROFILE_BLOCK("ImageRenderer::loadPng()");
 
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
     std::unique_ptr<spng_ctx, void (*)(spng_ctx*)> ctx{spng_ctx_new(0), spng_ctx_free};
@@ -264,77 +205,6 @@ bool ImageRenderer::loadPngNew(size_t index, std::string_view file_name) {
         .height = height,
         .uv = uv,
     };
-    return true;
-}
-
-bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
-    PROFILE_BLOCK("ImageRenderer::loadPng()");
-
-    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
-    if (!fp) {
-        return false;
-    }
-
-    // Check if the file really is a PNG image.
-    unsigned char sig[8];
-    fread(sig, 1, 8, fp.get());
-    if (!png_check_sig(sig, 8)) {
-        return false;
-    }
-
-    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (!png_ptr) {
-        return false;
-    }
-
-    png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr) {
-        png_destroy_read_struct(&png_ptr, nullptr, nullptr);
-        return false;
-    }
-
-    // setjmp() must be called in every function that calls a PNG-reading libpng function.
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
-        return false;
-    }
-
-    png_init_io(png_ptr, fp.get());
-    png_set_sig_bytes(png_ptr, 8);  // We already read the 8 signature bytes.
-
-    // Read all PNG info up to image data.
-    png_read_info(png_ptr, info_ptr);
-    png_uint_32 width = png_get_image_width(png_ptr, info_ptr);
-    png_uint_32 height = png_get_image_height(png_ptr, info_ptr);
-    png_byte color_type = png_get_color_type(png_ptr, info_ptr);
-    size_t row_bytes = png_get_rowbytes(png_ptr, info_ptr);
-
-    std::vector<uint8_t> buffer(row_bytes * height);
-
-    // PNG is ordered top to bottom, but OpenGL expects bottom to top. This is fine!
-    // We want to load the image flipped, since we flip y-coordinates in the vertex shader.
-    std::vector<png_bytep> row_pointers(height);
-    for (size_t i = 0; i < height; ++i) {
-        row_pointers[i] = buffer.data() + i * row_bytes;
-    }
-
-    png_set_strip_16(png_ptr);
-    png_set_bgr(png_ptr);
-    png_set_packing(png_ptr);
-    png_set_expand(png_ptr);
-
-    png_read_image(png_ptr, row_pointers.data());
-
-    bool has_alpha = color_type & PNG_COLOR_MASK_ALPHA;
-    Vec4 uv;
-    atlas.insertTexture(width, height, has_alpha, buffer, uv);
-    cache[index] = {
-        .width = width,
-        .height = height,
-        .uv = uv,
-    };
-
-    png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
     return true;
 }
 

@@ -1,0 +1,13 @@
+static_library("libspng") {
+  sources = [ "src/spng.c" ]
+
+  # https://libspng.org/docs/build/#miniz
+  defines = [ "SPNG_USE_MINIZ" ]
+  sources += [ "src/miniz.c" ]
+
+  public_configs = [ ":libspng_includes" ]
+}
+
+config("libspng_includes") {
+  include_dirs = [ "include" ]
+}

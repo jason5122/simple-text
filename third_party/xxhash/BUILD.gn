@@ -1,3 +1,0 @@
-static_library("xxhash") {
-  sources = [ "xxhash.c" ]
-}

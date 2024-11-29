@@ -46,9 +46,7 @@ private:
     Atlas atlas;
     std::vector<Image> cache;
 
-    bool loadPng(std::string_view file_name, Image& image);
     bool loadPng(size_t index, std::string_view file_name);
-    bool loadPngNew(size_t index, std::string_view file_name);
 
     struct InstanceData {
         Vec2 coords;

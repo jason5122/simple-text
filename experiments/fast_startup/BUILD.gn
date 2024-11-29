@@ -12,28 +12,21 @@ common_deps = [
   "//base/filesystem",
   "//gui",
   "//opengl",
-
-  # TODO: Find a way to include Tree-sitter headers without listing the dependency here.
-  "//third_party/tree_sitter",
 ]
 
 if (is_mac) {
-  mac_app_bundle("simple_text") {
-    output_name = "Simple Text"
+  mac_app_bundle("fast_startup") {
+    output_name = "Fast Startup"
     bundle_identifier = "com.jason5122.simple-text"
     info_plist = "resources/Info.plist"
 
     sources = common_sources
     deps = common_deps
   }
-
-  icon("icon") {
-    sources = [ "resources/app.iconset" ]
-  }
 }
 
 if (is_linux || is_win) {
-  executable("simple_text") {
+  executable("fast_startup") {
     sources = common_sources
 
     deps = common_deps

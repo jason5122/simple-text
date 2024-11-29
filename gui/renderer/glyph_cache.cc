@@ -37,7 +37,6 @@ GlyphCache::Glyph GlyphCache::loadGlyph(const font::RasterizedGlyph& rglyph) {
     }
 
     Glyph glyph{
-        .tex_id = atlas.tex(),
         .glyph = Vec4{static_cast<float>(rglyph.left), static_cast<float>(rglyph.top),
                       static_cast<float>(rglyph.width), static_cast<float>(rglyph.height)},
         .uv = uv,

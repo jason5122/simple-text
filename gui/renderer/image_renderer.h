@@ -21,6 +21,15 @@ public:
     ImageRenderer(ImageRenderer&& other);
     ImageRenderer& operator=(ImageRenderer&& other);
 
+    struct Image {
+        unsigned int width;
+        unsigned int height;
+        Vec4 uv;
+    };
+
+    size_t addPng(std::string_view image_path);
+    const Image& get(size_t image_id) const;
+
     app::Size getImageSize(size_t image_index);
     void addImage(size_t image_index, const app::Point& coords, const Rgba& color);
     void flush(const app::Size& screen_size);
@@ -34,13 +43,9 @@ private:
     GLuint ebo = 0;
 
     Atlas atlas;
-    struct AtlasImage {
-        unsigned int width;
-        unsigned int height;
-        Vec4 uv;
-    };
-    std::vector<AtlasImage> image_atlas_entries;
+    std::vector<Image> cache;
 
+    bool loadPng(std::string_view file_name, Image& image);
     bool loadPng(size_t index, std::string_view file_name);
 
     struct InstanceData {

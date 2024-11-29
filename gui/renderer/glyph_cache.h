@@ -13,7 +13,6 @@ public:
     GlyphCache();
 
     struct Glyph {
-        GLuint tex_id;
         Vec4 glyph;
         Vec4 uv;
         bool colored;

@@ -50,7 +50,7 @@ void Renderer::flush(const app::Size& size) {
     rect_renderer.flush(size, RectRenderer::RectLayer::kForeground);
     text_renderer.flush(size, TextRenderer::TextLayer::kForeground);
 
-    image_renderer.flush(size);
+    image_renderer.renderBatch(size);
 }
 
 }  // namespace gui

@@ -36,24 +36,24 @@ void LabelWidget::draw() {
     // Draw all left side icons.
     app::Point left_offset{.x = left_padding};
     for (size_t icon_id : left_side_icons) {
-        app::Size image_size = image_renderer.getImageSize(icon_id);
+        auto& image = image_renderer.get(icon_id);
 
-        app::Point icon_position = centerVertically(image_size.height) + left_offset;
-        image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
+        app::Point icon_position = centerVertically(image.height) + left_offset;
+        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor);
 
-        left_offset.x += image_size.width;
+        left_offset.x += image.width;
     }
 
     // Draw all right side icons.
     app::Point right_offset{.x = right_padding};
     for (size_t icon_id : right_side_icons) {
-        app::Size image_size = image_renderer.getImageSize(icon_id);
+        auto& image = image_renderer.get(icon_id);
 
-        right_offset.x += image_size.width;
+        right_offset.x += image.width;
 
-        app::Point icon_position = centerVertically(image_size.height) - right_offset;
+        app::Point icon_position = centerVertically(image.height) - right_offset;
         icon_position += app::Point{size.width, 0};
-        image_renderer.addImage(icon_id, icon_position, kFolderIconColor);
+        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor);
     }
 
     const auto& font_rasterizer = font::FontRasterizer::instance();

@@ -6,7 +6,7 @@
 #include "util/std_print.h"
 
 FastStartupWindow::FastStartupWindow(FastStartupApp& parent, int width, int height, int wid)
-    : Window{parent, width, height} {}
+    : Window(parent, width, height), parent(parent) {}
 
 void FastStartupWindow::onDraw(const app::Size& size) {
     auto& rect_renderer = gui::Renderer::instance().getRectRenderer();
@@ -17,13 +17,13 @@ void FastStartupWindow::onDraw(const app::Size& size) {
     gui::Rgba color = {255, 255, 255, true};
 
     app::Point dice_coords = {size.width - 1426, 0};
-    image_renderer.addImage(gui::ImageRenderer::kDice, dice_coords, color);
+    image_renderer.insertInBatch(parent.kDice, dice_coords, color);
     app::Point bunny_coords = {size.width - 1426, size.height - 500};
-    image_renderer.addImage(gui::ImageRenderer::kStanfordBunny, bunny_coords, color);
+    image_renderer.insertInBatch(parent.kStanfordBunny, bunny_coords, color);
     app::Point example_jpg_coords = {size.width - 300, size.height / 2};
-    image_renderer.addImage(gui::ImageRenderer::kExampleJpg, example_jpg_coords, color);
+    image_renderer.insertInBatch(parent.kExampleJpg, example_jpg_coords, color);
     app::Point temp_coords = {0, 0};
-    image_renderer.addImage(gui::ImageRenderer::kLCD, temp_coords, color);
+    image_renderer.insertInBatch(parent.kLCD, temp_coords, color);
 
     gui::Renderer::instance().flush(size);
 }

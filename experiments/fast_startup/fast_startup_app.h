@@ -14,5 +14,14 @@ public:
     void onLaunch() override;
 
 private:
+    friend class FastStartupWindow;
+
+    size_t kPanelClose2xIndex;
+    size_t kFolderOpen2xIndex;
+    size_t kStanfordBunny;
+    size_t kDice;
+    size_t kExampleJpg;
+    size_t kLCD;
+
     std::vector<std::unique_ptr<FastStartupWindow>> editor_windows;
 };

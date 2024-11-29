@@ -73,21 +73,22 @@ ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentSh
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    std::string panel_close_2x = std::format("{}/icons/panel_close@2x.png", base::ResourceDir());
-    std::string folder_open_2x = std::format("{}/icons/folder_open@2x.png", base::ResourceDir());
-    std::string stanford_bunny = std::format("{}/icons/stanford_bunny.png", base::ResourceDir());
-    std::string dice = std::format("{}/icons/dice.png", base::ResourceDir());
-    std::string example_jpg = std::format("{}/icons/example.jpg", base::ResourceDir());
-    std::string lcd = std::format("{}/icons/lcd.jpg", base::ResourceDir());
+    // std::string panel_close_2x = std::format("{}/icons/panel_close@2x.png",
+    // base::ResourceDir()); std::string folder_open_2x =
+    // std::format("{}/icons/folder_open@2x.png", base::ResourceDir()); std::string stanford_bunny
+    // = std::format("{}/icons/stanford_bunny.png", base::ResourceDir()); std::string dice =
+    // std::format("{}/icons/dice.png", base::ResourceDir()); std::string example_jpg =
+    // std::format("{}/icons/example.jpg", base::ResourceDir()); std::string lcd =
+    // std::format("{}/icons/lcd.jpg", base::ResourceDir());
 
     // TODO: Figure out a better way to do this.
     cache.resize(6);
-    loadPng(kPanelClose2xIndex, panel_close_2x);
-    loadPng(kFolderOpen2xIndex, folder_open_2x);
-    loadPng(kStanfordBunny, stanford_bunny);
-    loadPng(kDice, dice);
-    loadJpeg(kExampleJpg, example_jpg);
-    loadJpeg(kLCD, lcd);
+    // loadPng(kPanelClose2xIndex, panel_close_2x);
+    // loadPng(kFolderOpen2xIndex, folder_open_2x);
+    // loadPng(kStanfordBunny, stanford_bunny);
+    // loadPng(kDice, dice);
+    // loadJpeg(kExampleJpg, example_jpg);
+    // loadJpeg(kLCD, lcd);
 }
 
 ImageRenderer::~ImageRenderer() {
@@ -119,34 +120,28 @@ ImageRenderer& ImageRenderer::operator=(ImageRenderer&& other) {
     return *this;
 }
 
-// size_t ImageRenderer::addPng(std::string_view image_path) {
-//     Image image;
-//     bool success = loadPng(image_path, image);
-//     // TODO: Handle image load failure in a more robust way.
-//     if (!success) {
-//         std::println("ImageRenderer::addPng() error: Could not load image.");
-//     }
+size_t ImageRenderer::addPng(std::string_view image_path) {
+    auto callback = [this](std::string_view file_name, Image& image) {
+        return loadPng(file_name, image);
+    };
+    return addImage(image_path, callback);
+}
 
-//     size_t image_id = cache.size();
-//     cache.emplace_back(std::move(image));
-//     return image_id;
-// }
+size_t ImageRenderer::addJpeg(std::string_view image_path) {
+    auto callback = [this](std::string_view file_name, Image& image) {
+        return loadJpeg(file_name, image);
+    };
+    return addImage(image_path, callback);
+}
 
 const ImageRenderer::Image& ImageRenderer::get(size_t image_id) const {
     return cache[image_id];
 }
 
 // TODO: Find a way to not have to cast here.
-app::Size ImageRenderer::getImageSize(size_t image_index) {
-    const Image& image = cache.at(image_index);
-    return {
-        .width = static_cast<int>(image.width),
-        .height = static_cast<int>(image.height),
-    };
-}
-
-// TODO: Find a way to not have to cast here.
-void ImageRenderer::addImage(size_t image_index, const app::Point& coords, const Rgba& color) {
+void ImageRenderer::insertInBatch(size_t image_index,
+                                  const app::Point& coords,
+                                  const Rgba& color) {
     const Image& image = cache.at(image_index);
     instances.emplace_back(InstanceData{
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
@@ -156,7 +151,7 @@ void ImageRenderer::addImage(size_t image_index, const app::Point& coords, const
     });
 }
 
-void ImageRenderer::flush(const app::Size& screen_size) {
+void ImageRenderer::renderBatch(const app::Size& screen_size) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
@@ -178,7 +173,22 @@ void ImageRenderer::flush(const app::Size& screen_size) {
     instances.clear();
 }
 
-bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
+size_t ImageRenderer::addImage(std::string_view image_path,
+                               const std::function<bool(std::string_view, Image&)>& load_func) {
+    Image image;
+    bool success = load_func(image_path, image);
+    // TODO: Handle image load failure in a more robust way.
+    if (!success) {
+        std::println("ImageRenderer::addJpeg() error: Could not load image.");
+    }
+
+    size_t image_id = cache.size();
+    cache.emplace_back(std::move(image));
+    return image_id;
+}
+
+// TODO: Handle errors.
+bool ImageRenderer::loadPng(std::string_view file_name, Image& image) {
     PROFILE_BLOCK("ImageRenderer::loadPng()");
 
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
@@ -205,7 +215,7 @@ bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
 
     Vec4 uv;
     atlas.insertTexture(width, height, Atlas::Format::kRGBA, buffer, uv);
-    cache[index] = {
+    image = {
         .width = width,
         .height = height,
         .uv = uv,
@@ -213,7 +223,8 @@ bool ImageRenderer::loadPng(size_t index, std::string_view file_name) {
     return true;
 }
 
-bool ImageRenderer::loadJpeg(size_t index, std::string_view file_name) {
+// TODO: Handle errors.
+bool ImageRenderer::loadJpeg(std::string_view file_name, Image& image) {
     PROFILE_BLOCK("ImageRenderer::loadJpeg()");
 
     jpeg_decompress_struct info;
@@ -248,7 +259,7 @@ bool ImageRenderer::loadJpeg(size_t index, std::string_view file_name) {
 
     Vec4 uv;
     atlas.insertTexture(width, height, Atlas::Format::kRGB, buffer, uv);
-    cache[index] = {
+    image = {
         .width = width,
         .height = height,
         .uv = uv,

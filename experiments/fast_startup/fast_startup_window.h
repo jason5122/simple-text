@@ -10,4 +10,7 @@ public:
 
     void onDraw(const app::Size& size) override;
     void onResize(const app::Size& size) override;
+
+private:
+    FastStartupApp& parent;
 };

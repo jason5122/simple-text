@@ -12,13 +12,6 @@ namespace gui {
 
 class ImageRenderer : util::NonCopyable {
 public:
-    static constexpr size_t kPanelClose2xIndex = 0;
-    static constexpr size_t kFolderOpen2xIndex = 1;
-    static constexpr size_t kStanfordBunny = 2;
-    static constexpr size_t kDice = 3;
-    static constexpr size_t kExampleJpg = 4;
-    static constexpr size_t kLCD = 5;
-
     ImageRenderer();
     ~ImageRenderer();
     ImageRenderer(ImageRenderer&& other);
@@ -31,11 +24,11 @@ public:
     };
 
     size_t addPng(std::string_view image_path);
+    size_t addJpeg(std::string_view image_path);
     const Image& get(size_t image_id) const;
 
-    app::Size getImageSize(size_t image_index);
-    void addImage(size_t image_index, const app::Point& coords, const Rgba& color);
-    void flush(const app::Size& screen_size);
+    void insertInBatch(size_t image_index, const app::Point& coords, const Rgba& color);
+    void renderBatch(const app::Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -48,8 +41,10 @@ private:
     Atlas atlas;
     std::vector<Image> cache;
 
-    bool loadPng(size_t index, std::string_view file_name);
-    bool loadJpeg(size_t index, std::string_view file_name);
+    size_t addImage(std::string_view image_path,
+                    const std::function<bool(std::string_view, Image&)>& load_func);
+    bool loadPng(std::string_view file_name, Image& image);
+    bool loadJpeg(std::string_view file_name, Image& image);
 
     struct InstanceData {
         Vec2 coords;

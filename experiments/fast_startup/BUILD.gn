@@ -9,6 +9,7 @@ common_sources = [
 
 common_deps = [
   "//app",
+  "//gui/renderer",
   "//opengl",
 ]
 

@@ -40,5 +40,9 @@ private:
 
     size_t main_font_id;
     size_t ui_font_id;
+
+    size_t panel_close_image_id;
+    size_t folder_open_image_id;
+
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 };

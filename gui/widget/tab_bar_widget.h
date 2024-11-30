@@ -8,7 +8,7 @@ namespace gui {
 
 class TabBarWidget : public Widget {
 public:
-    TabBarWidget(size_t font_id, int height);
+    TabBarWidget(size_t font_id, int height, size_t panel_close_image_id);
 
     void setIndex(size_t index);
     void prevIndex();
@@ -37,6 +37,7 @@ private:
     static constexpr Rgb kTabTextColor{255, 255, 255};  // Dark.
 
     size_t font_id;
+    size_t panel_close_image_id;
     size_t index = 0;
     std::vector<std::unique_ptr<LabelWidget>> tab_name_labels;
 };

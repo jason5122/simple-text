@@ -9,7 +9,7 @@ namespace gui {
 
 class EditorWidget : public VerticalLayoutWidget {
 public:
-    EditorWidget(size_t main_font_id, size_t ui_font_size);
+    EditorWidget(size_t main_font_id, size_t ui_font_size, size_t panel_close_image_id);
 
     TextViewWidget* currentWidget() const;
     void setIndex(size_t index);

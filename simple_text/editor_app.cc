@@ -1,5 +1,6 @@
 #include "editor_app.h"
 
+#include "base/filesystem/file_reader.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/renderer.h"
 #include "opengl/functions_gl.h"
@@ -13,9 +14,17 @@ void EditorApp::onLaunch() {
     opengl::FunctionsGL functions_gl{};
     functions_gl.loadGlobalFunctionPointers();
 
+    // Load fonts.
     auto& font_rasterizer = font::FontRasterizer::instance();
     main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
     ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
+
+    // Load images.
+    auto& image_renderer = gui::Renderer::instance().getImageRenderer();
+    std::string panel_close_2x = std::format("{}/icons/panel_close@2x.png", base::ResourceDir());
+    std::string folder_open_2x = std::format("{}/icons/folder_open@2x.png", base::ResourceDir());
+    panel_close_image_id = image_renderer.addPng(panel_close_2x);
+    folder_open_image_id = image_renderer.addPng(folder_open_2x);
 
     createWindow();
 }

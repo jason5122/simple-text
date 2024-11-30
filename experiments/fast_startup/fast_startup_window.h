@@ -12,5 +12,5 @@ public:
     void onResize(const app::Size& size) override;
 
 private:
-    FastStartupApp& parent;
+    FastStartupApp& parent [[maybe_unused]];
 };

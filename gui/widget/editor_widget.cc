@@ -4,10 +4,10 @@
 
 namespace gui {
 
-EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size)
+EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size, size_t panel_close_image_id)
     : main_font_id(main_font_id),
       multi_view{new MultiViewWidget<TextViewWidget>{}},
-      tab_bar{new TabBarWidget(ui_font_size, kTabBarHeight)} {
+      tab_bar{new TabBarWidget(ui_font_size, kTabBarHeight, panel_close_image_id)} {
     // Leave padding between window title bar and tab.
     std::shared_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
     std::shared_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};

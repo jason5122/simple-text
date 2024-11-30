@@ -6,8 +6,8 @@
 
 namespace gui {
 
-TabBarWidget::TabBarWidget(size_t font_id, int height)
-    : Widget{{.height = height}}, font_id(font_id) {
+TabBarWidget::TabBarWidget(size_t font_id, int height, size_t panel_close_image_id)
+    : Widget{{.height = height}}, font_id(font_id), panel_close_image_id(panel_close_image_id) {
     addTab("untitled");
 }
 
@@ -38,8 +38,7 @@ void TabBarWidget::addTab(std::string_view title) {
     };
     std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget(font_id, label_size, 22, 16)};
     tab_name_label->setText(title, kTabTextColor);
-    // TODO: Fix this.
-    // tab_name_label->addRightIcon(ImageRenderer::kPanelClose2xIndex);
+    tab_name_label->addRightIcon(panel_close_image_id);
     tab_name_labels.emplace_back(std::move(tab_name_label));
 }
 

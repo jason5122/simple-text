@@ -47,10 +47,10 @@
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    CGLSetCurrentContext(glContext);
-
     // TODO: For debugging; remove this.
     // [NSApp terminate:nil];
+
+    CGLSetCurrentContext(glContext);
 
     int scaled_width = self.frame.size.width * self.contentsScale;
     int scaled_height = self.frame.size.height * self.contentsScale;
@@ -61,6 +61,9 @@
                 pixelFormat:pixelFormat
                forLayerTime:timeInterval
                 displayTime:timeStamp];
+
+    // TODO: For debugging; remove this.
+    // [NSApp terminate:nil];
 }
 
 // TODO: GLLayer calling `onResize()` is currently known to redraw after the window has closed if

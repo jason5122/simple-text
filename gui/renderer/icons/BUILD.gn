@@ -3,12 +3,6 @@ icons = [
   "panel_close@2x.png",
   "folder_open@2x.png",
   "folder_closed@2x.png",
-
-  # TODO: Remove this.
-  "stanford_bunny.png",
-  "dice.png",
-  "example.jpg",
-  "lcd.jpg",
 ]
 
 if (is_mac) {

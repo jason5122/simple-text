@@ -40,7 +40,7 @@ public:
     // TODO: Refactor singletons.
     inline font::FontRasterizer& rasterizer() {
         return font::FontRasterizer::instance();
-    };
+    }
 
 protected:
     app::Size size{};

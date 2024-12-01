@@ -22,7 +22,7 @@ public:
 
     std::string_view className() const override {
         return "TabBarWidget";
-    };
+    }
 
 private:
     static constexpr int kTabWidth = 360;

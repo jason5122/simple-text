@@ -106,7 +106,7 @@ public:
 
     std::string_view className() const override {
         return "MultiViewWidget";
-    };
+    }
 
 private:
     size_t index = 0;

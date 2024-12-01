@@ -13,7 +13,7 @@ public:
 
     std::string_view className() const override {
         return "HorizontalLayoutWidget";
-    };
+    }
 };
 
 }  // namespace gui

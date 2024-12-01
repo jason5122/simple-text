@@ -75,7 +75,7 @@ public:
     }
 
     virtual AC_Buffer* alloc(int sz) = 0;
-    virtual void free() {};
+    virtual void free() {}
 
 protected:
     AC_Buffer* _buf;

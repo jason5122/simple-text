@@ -14,7 +14,7 @@ public:
 
     std::string_view className() const override {
         return "StatusBarWidget";
-    };
+    }
 
 private:
     static constexpr app::Point kLeftPadding{32, 0};

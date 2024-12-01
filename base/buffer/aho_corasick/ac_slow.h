@@ -43,7 +43,7 @@ class ACS_State {
 public:
     ACS_State(uint32 id)
         : _id(id), _pattern_idx(-1), _depth(0), _is_terminal(false), _fail_link(0) {}
-    ~ACS_State() {};
+    ~ACS_State() {}
 
     void Set_Goto(InputTy c, ACS_State* s) {
         _goto_map[c] = s;

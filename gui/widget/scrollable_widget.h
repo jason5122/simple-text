@@ -16,7 +16,7 @@ public:
 
     std::string_view className() const override {
         return "ScrollableWidget";
-    };
+    }
 
 protected:
     app::Point scroll_offset{};

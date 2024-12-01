@@ -1,10 +1,12 @@
 #pragma once
 
+#include "build/build_config.h"
 #include "third_party/khronos/KHR/khrplatform.h"
+
 #include <stdint.h>
 
 #ifndef INTERNAL_GL_APIENTRY
-#ifdef ANGLE_PLATFORM_WINDOWS
+#if BUILDFLAG(IS_WIN)
 #define INTERNAL_GL_APIENTRY __stdcall
 #else
 #define INTERNAL_GL_APIENTRY
@@ -35,7 +37,7 @@ typedef khronos_int64_t GLint64;
 typedef khronos_uint64_t GLuint64;
 typedef struct __GLsync* GLsync;
 
-// TODO(jmadill): It's likely we can auto-generate this file from gl.xml.
+// TODO: It's likely we can auto-generate this file from gl.xml.
 
 namespace opengl {
 typedef void(INTERNAL_GL_APIENTRY* GLDEBUGPROC)(GLenum source,
@@ -1468,4 +1470,4 @@ typedef void(INTERNAL_GL_APIENTRY* PFNGLFRAMEBUFFERFETCHBARRIEREXTPROC)();
 // GL_MESA_framebuffer_flip_y
 typedef void(INTERNAL_GL_APIENTRY* PFNGLFRAMEBUFFERPARAMETERIMESAPROC)(GLenum, GLenum, GLint);
 
-}  // namespace rx
+}  // namespace opengl

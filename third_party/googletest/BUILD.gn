@@ -1,17 +1,8 @@
-source_set("gtest_main") {
-  testonly = true
-
-  configs -= [ "//build/config/compiler:default_warnings" ]
-
-  sources = [ "src/googletest/src/gtest_main.cc" ]
-
-  deps = [ ":gtest" ]
-}
-
 static_library("gtest") {
   testonly = true
 
-  configs -= [ "//build/config/compiler:default_warnings" ]
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
 
   sources = [
     "src/googletest/src/gtest-assertion-result.cc",

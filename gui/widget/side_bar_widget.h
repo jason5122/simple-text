@@ -21,7 +21,7 @@ public:
 
     std::string_view className() const override {
         return "SideBarWidget";
-    };
+    }
 
 private:
     // static constexpr Rgb kTextColor{51, 51, 51};     // Light.

@@ -38,7 +38,7 @@ public:
     }
     std::string_view className() const override {
         return "CustomWidget";
-    };
+    }
 
 private:
     static constexpr int kMinScrollbarWidth = 100;

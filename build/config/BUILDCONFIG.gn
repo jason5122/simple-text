@@ -33,12 +33,12 @@ is_win = target_os == "win"
 # TARGET DEFAULTS
 # =============================================================================
 default_compiler_configs = [
-  "//build/config/compiler",
+  "//build/config/compiler:compiler",
   "//build/config/compiler:default_include_dirs",
   "//build/config/compiler:default_optimization",
-  "//build/config/compiler:default_warnings",
   "//build/config/compiler:no_exceptions",
   "//build/config/compiler:no_rtti",
+  "//build/config/compiler:simple_text_code",
   "//build/config/sanitizers:default_sanitizer_flags",
 ]
 
@@ -56,13 +56,6 @@ if (is_win) {
 if (is_release) {
   default_compiler_configs += [ "//build/config:release" ]
 }
-
-# Executable defaults.
-default_executable_configs = default_compiler_configs
-
-# Shared library and loadable module defaults (also for components in component
-# mode).
-default_shared_library_configs = default_compiler_configs
 
 set_defaults("executable") {
   configs = default_compiler_configs

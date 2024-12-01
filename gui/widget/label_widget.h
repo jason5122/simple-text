@@ -21,7 +21,7 @@ public:
 
     std::string_view className() const override {
         return "LabelWidget";
-    };
+    }
 
 private:
     static constexpr Rgba kTempColor{223, 227, 230, 255};

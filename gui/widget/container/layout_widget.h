@@ -30,7 +30,7 @@ public:
 
     std::string_view className() const override {
         return "ContainerWidget";
-    };
+    }
 
 protected:
     std::shared_ptr<Widget> main_widget;

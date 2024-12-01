@@ -23,7 +23,7 @@ public:
 
     std::string_view className() const override {
         return "EditorWidget";
-    };
+    }
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

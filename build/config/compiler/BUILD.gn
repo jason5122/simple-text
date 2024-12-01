@@ -82,40 +82,6 @@ config("default_optimization") {
   }
 }
 
-config("treat_warnings_as_errors") {
-  if (is_win) {
-    cflags = [ "/WX" ]
-  } else {
-    cflags = [ "-Werror" ]
-    ldflags = [ "-Werror" ]
-  }
-}
-
-config("default_warnings") {
-  cflags = []
-
-  if (is_win) {
-    cflags += [ "/W4" ]
-
-    # Opt in to additional [[nodiscard]] on standard library methods.
-    defines = [ "_HAS_NODISCARD" ]
-  } else {
-    cflags += [ "-Wall" ]
-
-    # Clang-specific.
-    cflags += [ "-Wextra" ]
-  }
-
-  # Disable specific warnings.
-  cflags += [
-    "-Wno-missing-field-initializers",
-    "-Wno-unused-parameter",
-    "-Wno-unused-variable",
-  ]
-
-  configs = [ ":treat_warnings_as_errors" ]
-}
-
 config("no_exceptions") {
   if (is_win) {
     defines = [ "_HAS_EXCEPTIONS=0" ]
@@ -134,11 +100,83 @@ config("no_rtti") {
   }
 }
 
-config("c99") {
+config("simple_text_code") {
+  cflags = []
+
   if (is_win) {
-    # FIXME: Figure out how to override C standard flag on Windows.
-    # cflags_c = [ "/std:c99" ]
+    cflags += [ "/W4" ]
+
+    # Opt in to additional [[nodiscard]] on standard library methods.
+    defines = [ "_HAS_NODISCARD" ]
   } else {
-    cflags_c = [ "-std=c99" ]
+    cflags += [ "-Wall" ]
+    cflags += [ "-Wextra" ]  # Clang-specific.
+  }
+
+  if (is_mac) {
+    cflags_objc = [
+      "-Wimplicit-retain-self",
+      "-Wobjc-missing-property-synthesis",
+    ]
+    cflags_objcc = cflags_objc
+  }
+
+  cflags += [
+    # Warn on missing break statements at the end of switch cases.
+    # For intentional fallthrough, use [[fallthrough]].
+    "-Wimplicit-fallthrough",
+
+    # Warn on unnecessary extra semicolons outside of function definitions.
+    "-Wextra-semi",
+
+    # Warn on unreachable code, including unreachable breaks and returns.
+    "-Wunreachable-code-aggressive",
+  ]
+
+  configs = [
+    ":default_warnings",
+    ":treat_warnings_as_errors",
+  ]
+}
+
+config("no_simple_text_code") {
+  # Lots of third-party libraries violate these warnings. Instead of suppressing them individually,
+  # we just blanket suppress them here.
+  cflags = [
+    "-Wno-unused-variable",
+    "-Wno-c++11-narrowing",
+    "-Wno-unused-but-set-variable",
+    "-Wno-misleading-indentation",
+  ]
+
+  configs = [ ":default_warnings" ]
+}
+
+# Collects all warning flags that are used by default.  This is used as a subconfig of both
+# simple_text_code and no_simple_text_code.  This way these flags are guaranteed to appear on the
+# compile command line after -Wall.
+config("default_warnings") {
+  cflags = []
+
+  if (is_mac) {
+    # When compiling Objective-C, warns if a method is used whose availability is newer than the
+    # deployment target.
+    cflags += [ "-Wunguarded-availability" ]
+  }
+
+  # Disable specific warnings.
+  cflags += [
+    "-Wno-missing-field-initializers",
+    "-Wno-unused-parameter",
+    "-Wno-unused-variable",
+  ]
+}
+
+config("treat_warnings_as_errors") {
+  if (is_win) {
+    cflags = [ "/WX" ]
+  } else {
+    cflags = [ "-Werror" ]
+    ldflags = [ "-Werror" ]
   }
 }

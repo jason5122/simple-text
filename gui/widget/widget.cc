@@ -4,7 +4,7 @@ namespace gui {
 
 bool Widget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
     return false;
-};
+}
 
 app::Size Widget::getSize() const {
     return size;

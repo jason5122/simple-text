@@ -47,6 +47,9 @@ static_library("libjpeg") {
     "jutils.c",
   ]
 
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
   public_configs = [ ":libjpeg_config" ]
 }
 

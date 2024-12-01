@@ -47,7 +47,7 @@ public:
     }
     std::string_view className() const override {
         return "TextViewWidget";
-    };
+    }
 
 private:
     static constexpr int kMinScrollbarWidth = 100;

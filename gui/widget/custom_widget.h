@@ -6,20 +6,11 @@
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"
 
-// TODO: Debug use; remove this.
-// #define ENABLE_HIGHLIGHTING
-
-#ifdef ENABLE_HIGHLIGHTING
-#include "syntax_highlighter/highlighter.h"
-#include "syntax_highlighter/language.h"
-#include "syntax_highlighter/parse_tree.h"
-#endif
-
 namespace gui {
 
-class TextViewWidget : public ScrollableWidget {
+class CustomWidget : public ScrollableWidget {
 public:
-    TextViewWidget(std::string_view text, size_t font_id);
+    CustomWidget(std::string_view text, size_t font_id);
 
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
@@ -46,7 +37,7 @@ public:
         return app::CursorStyle::kIBeam;
     }
     std::string_view className() const override {
-        return "TextViewWidget";
+        return "CustomWidget";
     };
 
 private:
@@ -71,15 +62,8 @@ private:
 
     Selection selection{};
 
-#ifdef ENABLE_HIGHLIGHTING
-    highlight::ParseTree parse_tree;
-#endif
-
     static constexpr int kGutterLeftPadding = 18 * 2;
     static constexpr int kGutterRightPadding = 8 * 2;
-    // TODO: Why is this more accurate?
-    // static constexpr int kGutterLeftPadding = 37;
-    // static constexpr int kGutterRightPadding = 15;
 
     size_t lineAtY(int y) const;
     inline const font::LineLayout& layoutAt(size_t line);

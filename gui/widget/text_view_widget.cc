@@ -1,10 +1,10 @@
+#include "text_view_widget.h"
+
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
-#include "syntax_highlighter/highlighter.h"
-#include "text_view_widget.h"
+
 #include <cmath>
-#include <tree_sitter/api.h>
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"

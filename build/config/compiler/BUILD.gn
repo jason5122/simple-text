@@ -110,6 +110,7 @@ config("default_warnings") {
   cflags += [
     "-Wno-missing-field-initializers",
     "-Wno-unused-parameter",
+    "-Wno-unused-variable",
   ]
 
   configs = [ ":treat_warnings_as_errors" ]

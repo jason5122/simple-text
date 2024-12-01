@@ -6,7 +6,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-builtins"
-#include "third_party/robin_hood/robin_hood.h"
+#include "third_party/hash_maps/robin_hood.h"
 #pragma clang diagnostic pop
 
 namespace gui {

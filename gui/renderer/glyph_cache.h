@@ -3,7 +3,7 @@
 #include "font/font_rasterizer.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/opengl_types.h"
-#include "third_party/emhash/hash_table5.hpp"
+#include "third_party/hash_maps/hash_table5.hpp"
 #include <vector>
 
 namespace gui {

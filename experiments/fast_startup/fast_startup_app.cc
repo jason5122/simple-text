@@ -12,6 +12,11 @@ void FastStartupApp::onLaunch() {
     opengl::FunctionsGL functions_gl{};
     functions_gl.loadGlobalFunctionPointers();
 
+    // Load fonts.
+    auto& font_rasterizer = font::FontRasterizer::instance();
+    main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
+    ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
+
     createWindow();
 }
 

@@ -12,12 +12,17 @@ source_set("widget") {
     "tab_bar_widget.cc",
     "text_view_widget.cc",
     "widget.cc",
+
+    # TODO: Remove this.
+    "custom_widget.cc",
   ]
 
   deps = [
     "//base/buffer",
     "//gui/renderer",
-    "//syntax_highlighter",
-    "//third_party/tree_sitter",
+
+    # TODO: Put this behind a feature flag. Or even better, consider refactoring this out of //gui.
+    # "//syntax_highlighter",
+    # "//third_party/tree_sitter",
   ]
 }

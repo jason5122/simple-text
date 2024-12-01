@@ -2,7 +2,7 @@
 
 #include "base/hash/hash_combine.h"
 #include "gui/renderer/renderer.h"
-#include "third_party/rapidhash/rapidhash.h"
+#include "third_party/hash_maps/rapidhash.h"
 
 namespace gui {
 

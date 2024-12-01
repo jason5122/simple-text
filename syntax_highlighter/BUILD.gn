@@ -5,8 +5,10 @@ source_set("syntax_highlighter") {
     "parse_tree.cc",
   ]
 
-  deps = [ ":languages" ]
-  public_deps = [ "//third_party/tree_sitter" ]
+  deps = [
+    ":languages",
+    "//third_party/tree_sitter",
+  ]
 }
 
 if (is_mac) {

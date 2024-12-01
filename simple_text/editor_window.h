@@ -40,7 +40,6 @@ private:
     EditorApp& parent;
     std::shared_ptr<gui::LayoutWidget> main_widget;
     std::shared_ptr<gui::EditorWidget> editor_widget;
-    std::shared_ptr<gui::TextViewWidget> text_view_widget;
 
     // The widget that the drag operation was performed on. If there currently isn't a drag
     // operation, this is null.

@@ -8,6 +8,9 @@ static_library("libspng") {
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
 
+  # Silence message.
+  cflags = [ "-Wno-#pragma-messages" ]
+
   public_configs = [ ":libspng_includes" ]
 }
 

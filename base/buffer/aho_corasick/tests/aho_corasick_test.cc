@@ -19,7 +19,7 @@ ac_result_t MatchPattern(std::string_view str, std::string_view pattern) {
 [[maybe_unused]]
 ac_result_t MatchPattern(const PieceTree& tree, std::string_view pattern) {
     ac_t* ac = ac_create({std::string(pattern)});
-    auto result = ac_match(ac, tree, tree.length());
+    auto result = ac_match(ac, tree);
     ac_free(ac);
     return result;
 }
@@ -33,7 +33,7 @@ ac_result_t MatchDict(std::string_view str, const std::vector<std::string>& dict
 
 ac_result_t MatchDict(const PieceTree& tree, const std::vector<std::string>& dict) {
     ac_t* ac = ac_create(dict);
-    auto result = ac_match(ac, tree, tree.length());
+    auto result = ac_match(ac, tree);
     ac_free(ac);
     return result;
 }

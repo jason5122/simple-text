@@ -4,5 +4,7 @@ source_set("buffer") {
     "piece_tree_rbtree.cc",
   ]
 
+  # configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
   deps = [ "aho_corasick" ]
 }

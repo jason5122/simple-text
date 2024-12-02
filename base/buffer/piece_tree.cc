@@ -375,7 +375,7 @@ std::string PieceTree::substr(size_t offset, size_t count) const {
 
 std::optional<size_t> PieceTree::find(std::string_view str) const {
     ac_t* ac = ac_create({std::string(str)});
-    auto result = ac_match(ac, *this, length());
+    auto result = ac_match(ac, *this);
     ac_free(ac);
 
     if (result.match_begin == -1) {

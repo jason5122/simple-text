@@ -3,6 +3,7 @@ source_set("tests") {
 
   sources = [
     "literals_test.cc",
+    "safe_conversions_test.cc",
     "saturation_arithmetic_test.cc",
     "wrap_arithmetic_test.cc",
   ]

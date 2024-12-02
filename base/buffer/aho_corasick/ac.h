@@ -26,7 +26,7 @@ struct ac_t;
 ac_t* ac_create(const std::vector<std::string>& patterns);
 
 ac_result_t ac_match(ac_t* ac, std::string_view str, unsigned int len);
-ac_result_t ac_match(ac_t* ac, const PieceTree& tree, unsigned int len);
+ac_result_t ac_match(ac_t* ac, const PieceTree& tree);
 
 void ac_free(void*);
 

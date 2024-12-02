@@ -42,7 +42,7 @@ ac_result_t ac_match(ac_t* ac, std::string_view str, unsigned int len) {
     return Match(buf, str, len);
 }
 
-ac_result_t ac_match(ac_t* ac, const PieceTree& tree, unsigned int len) {
+ac_result_t ac_match(ac_t* ac, const PieceTree& tree) {
     AC_Buffer* buf = (AC_Buffer*)(void*)ac;
     return Match(buf, tree);
 }

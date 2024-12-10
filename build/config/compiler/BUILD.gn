@@ -147,6 +147,7 @@ config("no_simple_text_code") {
     "-Wno-c++11-narrowing",
     "-Wno-unused-but-set-variable",
     "-Wno-misleading-indentation",
+    "-Wno-deprecated-declarations",
   ]
 
   configs = [ ":default_warnings" ]

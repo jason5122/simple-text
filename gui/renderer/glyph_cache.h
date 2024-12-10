@@ -3,7 +3,9 @@
 #include "font/font_rasterizer.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/opengl_types.h"
-#include "third_party/hash_maps/hash_table5.hpp"
+
+#include "third_party/hash_maps/robin_hood.h"
+
 #include <vector>
 
 namespace gui {
@@ -27,9 +29,10 @@ private:
     std::vector<Atlas> atlas_pages;
     size_t current_page = 0;
 
-    std::vector<emhash5::HashMap<uint32_t, Glyph>> cache;
+    // We use a node-based map since we need to keep references stable.
+    std::vector<robin_hood::unordered_node_map<uint32_t, Glyph>> cache;
 
-    Glyph loadGlyph(const font::RasterizedGlyph& rglyph);
+    Glyph insertIntoAtlas(const font::RasterizedGlyph& rglyph);
 };
 
 }  // namespace gui

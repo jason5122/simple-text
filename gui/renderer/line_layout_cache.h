@@ -1,13 +1,10 @@
 #pragma once
 
 #include "font/types.h"
-#include <string_view>
-#include <unordered_map>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-builtins"
 #include "third_party/hash_maps/robin_hood.h"
-#pragma clang diagnostic pop
+
+#include <string_view>
 
 namespace gui {
 
@@ -16,7 +13,8 @@ public:
     const font::LineLayout& get(size_t font_id, std::string_view str8);
 
 private:
-    robin_hood::unordered_map<uint64_t, font::LineLayout> cache;
+    // We use a node-based map since we need to keep references stable.
+    robin_hood::unordered_node_map<uint64_t, font::LineLayout> cache;
 };
 
 }  // namespace gui

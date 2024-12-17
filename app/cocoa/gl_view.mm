@@ -23,6 +23,9 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
     GLLayer* glLayer;
     NSTrackingArea* trackingArea;
 }
+
+- (void)onScrollerStyleChanged:(NSNotification*)notification;
+
 @end
 
 @implementation GLView
@@ -56,6 +59,15 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
                                                        owner:self
                                                     userInfo:nil] autorelease];
         [self addTrackingArea:trackingArea];
+
+        // Listen for changes to "Show scroll bars" setting.
+        [NSNotificationCenter.defaultCenter
+            addObserver:self
+               selector:@selector(onScrollerStyleChanged:)
+                   name:NSPreferredScrollerStyleDidChangeNotification
+                 object:nil];
+        // Seems that we need to call NSScroller.preferredScrollerStyle once to listen to updates.
+        [NSScroller preferredScrollerStyle];
     }
     return self;
 }
@@ -165,6 +177,15 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 
 - (void)viewDidChangeEffectiveAppearance {
     glLayer->appWindow->onDarkModeToggle();
+}
+
+- (void)onScrollerStyleChanged:(NSNotification*)notification {
+    auto style = NSScroller.preferredScrollerStyle;
+    if (style == NSScrollerStyleLegacy) {
+        std::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleLegacy.");
+    } else if (style == NSScrollerStyleOverlay) {
+        std::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleOverlay.");
+    }
 }
 
 // NSTextInputClient protocol implementation.

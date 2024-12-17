@@ -3,6 +3,7 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
 #include "base/apple/string_conversions.h"
+#include "base/numeric/saturation_arithmetic.h"
 #include "font/utf16_to_utf8_indices_map.h"
 #include <CoreText/CoreText.h>
 
@@ -19,6 +20,19 @@ namespace font {
 namespace {
 ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8);
 bool FontSmoothingEnabled();
+
+// Mimic italics by skewing 15 degrees.
+// https://mitchellh.com/writing/ghostty-devlog-001#better-make-italics-programmatically
+constexpr CGAffineTransform kSyntheticItalicMatrix = {
+    .a = 1,
+    .b = 0,
+    .c = 0.267949,  // Approximately tan(15).
+    .d = 1,
+    .tx = 0,
+    .ty = 0,
+};
+constexpr bool kUseSyntheticItalic = false;
+constexpr bool kUseSyntheticBold = false;
 }  // namespace
 
 struct FontRasterizer::NativeFontType {
@@ -61,7 +75,9 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
     ScopedCFTypeRef<CTFontDescriptorRef> descriptor =
         CTFontDescriptorCreateWithAttributes(attributes.get());
 
-    CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
+    const CGAffineTransform* matrix_ptr = kUseSyntheticItalic ? &kSyntheticItalicMatrix : nullptr;
+
+    CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, matrix_ptr);
     return cacheFont({ct_font}, font_size);
 }
 
@@ -70,7 +86,14 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
-    return cacheFont({sys_font}, font_size);
+    if constexpr (kUseSyntheticItalic) {
+        const CGAffineTransform* matrix_ptr =
+            kUseSyntheticItalic ? &kSyntheticItalicMatrix : nullptr;
+        CTFontRef copy = CTFontCreateCopyWithAttributes(sys_font, 0.0, matrix_ptr, nullptr);
+        return cacheFont({copy}, font_size);
+    } else {
+        return cacheFont({sys_font}, font_size);
+    }
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
@@ -86,11 +109,20 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
 
     int32_t rasterized_left = std::floor(bounds.origin.x);
+    if constexpr (kUseSyntheticBold) {
+        // Add width padding for synthetic bold to prevent cutting off.
+        // TODO: Check if right side is still being cut off.
+        rasterized_left = base::sub_sat(rasterized_left, 2);
+    }
     uint32_t rasterized_width = std::ceil(bounds.origin.x - rasterized_left + bounds.size.width);
     int32_t rasterized_descent = std::ceil(-bounds.origin.y);
     int32_t rasterized_ascent = std::ceil(bounds.size.height + bounds.origin.y);
     uint32_t rasterized_height = rasterized_descent + rasterized_ascent;
-
+    if constexpr (kUseSyntheticBold) {
+        // Add height padding for synthetic bold to prevent cutting off.
+        // TODO: Check if bottom is still being cut off.
+        rasterized_height += 2;
+    }
     int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
 
     // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
@@ -107,8 +139,8 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CGFloat alpha = colored ? 0.0 : 1.0;
     CGContextSetRGBFillColor(context.get(), 0.0, 0.0, 0.0, alpha);
-
     CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
+
     CGContextSetAllowsFontSmoothing(context.get(), true);
     CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
     CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
@@ -120,6 +152,13 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
     CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
+
+    // TODO: Fully implement this.
+    if constexpr (kUseSyntheticBold) {
+        CGContextSetStrokeColorWithColor(context.get(), CGColorGetConstantColor(kCGColorWhite));
+        CGContextSetTextDrawingMode(context.get(), kCGTextFillStroke);
+        CGContextSetLineWidth(context.get(), 1.0);
+    }
 
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 

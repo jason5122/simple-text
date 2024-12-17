@@ -1,13 +1,14 @@
 static_library("tree_sitter") {
   sources = [ "src/lib.c" ]
 
-  defines = [ "TREE_SITTER_FEATURE_WASM" ]
-  public_deps = [ "//third_party/wasmtime" ]
-
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
 
   public_configs = [ ":tree_sitter_includes" ]
+
+  # Enable Wasmtime feature for loading languages.
+  defines = [ "TREE_SITTER_FEATURE_WASM" ]
+  public_deps = [ "//third_party/wasmtime" ]
 }
 
 config("tree_sitter_includes") {

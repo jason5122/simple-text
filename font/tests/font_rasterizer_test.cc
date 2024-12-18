@@ -1,20 +1,9 @@
+#include <gtest/gtest.h>
+
 #include "base/numeric/literals.h"
 #include "build/build_config.h"
 #include "font/font_rasterizer.h"
 #include "util/random_util.h"
-#include <gtest/gtest.h>
-
-namespace {
-
-#if BUILDFLAG(IS_MAC)
-const std::string kOSFontFace = "Menlo";
-#elif BUILDFLAG(IS_LINUX)
-const std::string kOSFontFace = "Monospace";
-#elif BUILDFLAG(IS_WIN)
-const std::string kOSFontFace = "Consolas";
-#endif
-
-}  // namespace
 
 namespace font {
 
@@ -28,7 +17,7 @@ static_assert(std::is_trivially_copy_assignable_v<LineLayout::ConstIterator>);
 
 TEST(FontRasterizerTest, LayoutLine1) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+    size_t font_id = rasterizer.addSystemFont(32);
 
     const std::string line = "Hello😄🙂hi";
     auto layout = rasterizer.layoutLine(font_id, line);
@@ -74,7 +63,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
 
 TEST(FontRasterizerTest, LayoutLine2) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+    size_t font_id = rasterizer.addSystemFont(32);
 
     const std::string line = "Hello😄🙂hi";
     auto layout = rasterizer.layoutLine(font_id, line);
@@ -93,7 +82,7 @@ TEST(FontRasterizerTest, LayoutLine2) {
 // via rearranging pixels will be too slow.
 TEST(FontRasterizerTest, RasterizePerformance) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+    size_t font_id = rasterizer.addSystemFont(32);
 
     auto layout = rasterizer.layoutLine(font_id, "a");
     uint32_t glyph_id = layout.runs[0].glyphs[0].glyph_id;
@@ -107,7 +96,7 @@ TEST(FontRasterizerTest, RasterizePerformance) {
 
 TEST(FontRasterizerTest, LineLayoutPerformance) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+    size_t font_id = rasterizer.addSystemFont(32);
 
     for (int i = 0; i < 1000; ++i) {
         std::string str = util::RandomString(100);

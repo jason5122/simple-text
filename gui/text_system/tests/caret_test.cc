@@ -1,160 +1,118 @@
+#include <gtest/gtest.h>
+
 #include "base/numeric/literals.h"
 #include "build/build_config.h"
 #include "font/font_rasterizer.h"
 #include "gui/text_system/caret.h"
-#include <gtest/gtest.h>
-
-// namespace {
-
-// #if BUILDFLAG(IS_MAC)
-// const std::string kOSFontFace = "Menlo";
-// #elif BUILDFLAG(IS_LINUX)
-// const std::string kOSFontFace = "Monospace";
-// #elif BUILDFLAG(IS_WIN)
-// const std::string kOSFontFace = "Consolas";
-// #endif
-
-// }
+#include "util/std_print.h"
 
 namespace gui {
 
-// TEST(CaretTest, MoveToX) {
-//     auto& rasterizer = font::FontRasterizer::instance();
-//     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+TEST(CaretTest, ColumnAtX) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addSystemFont(32);
 
-//     const std::string line = "Hello😄🙂hi";
-//     const auto layout = rasterizer.layoutLine(font_id, line);
-//     Caret caret;
+    const std::string line = "Hello😄🙂hi";
+    const auto layout = rasterizer.layoutLine(font_id, line);
 
-//     size_t prev_index = 0;
-//     // int prev_x = 0;
-//     for (int x = 0; x < layout.width; ++x) {
-//         caret.moveToX(layout, 0, x);
+    size_t prev_index = 0;
+    for (int x = 0; x < layout.width; ++x) {
+        size_t index = Caret::columnAtX(layout, x);
+        EXPECT_GE(index, prev_index);
+        prev_index = index;
+    }
 
-//         EXPECT_GE(caret.index, prev_index);
-//         // EXPECT_GE(caret.x, prev_x);
+    EXPECT_EQ(Caret::columnAtX(layout, 99999), layout.length);
+    EXPECT_EQ(Caret::columnAtX(layout, 0), 0_Z);
+}
 
-//         prev_index = caret.index;
-//         // prev_x = caret.x;
-//     }
+TEST(CaretTest, XAtColumn) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addSystemFont(32);
 
-//     caret.moveToX(layout, 99999);
-//     EXPECT_EQ(caret.index, layout.length);
-//     // EXPECT_EQ(caret.x, layout.width);
+    const std::string line = "Hello😄🙂hi";
+    const auto layout = rasterizer.layoutLine(font_id, line);
+    Caret caret;
 
-//     caret.moveToX(layout, 0);
-//     EXPECT_EQ(caret.index, 0_Z);
-//     // EXPECT_EQ(caret.x, 0);
-// }
+    int prev_x = 0;
+    for (size_t index = 0; index < line.length(); ++index) {
+        int x = Caret::xAtColumn(layout, index);
+        EXPECT_GE(x, prev_x);
+        prev_x = x;
+    }
 
-// TEST(CaretTest, MoveToIndex) {
-//     auto& rasterizer = font::FontRasterizer::instance();
-//     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+    EXPECT_EQ(Caret::xAtColumn(layout, 99999), layout.width);
+    EXPECT_EQ(Caret::xAtColumn(layout, 0), 0);
+}
 
-//     const std::string line = "Hello😄🙂hi";
-//     const auto layout = rasterizer.layoutLine(font_id, line);
-//     Caret caret;
+// Ensure moving while at the beginning does nothing.
+TEST(CaretTest, MoveToPrevGlyphAtBeginning) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addSystemFont(32);
+    const auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
 
-//     size_t prev_index = 0;
-//     // int prev_x = 0;
-//     for (size_t index = 0; index < line.length(); ++index) {
-//         caret.moveToIndex(layout, index);
+    for (size_t i = 0; i < 10; i++) {
+        EXPECT_EQ(Caret::moveToPrevGlyph(layout, 0), 0_Z);
+    }
+}
 
-//         EXPECT_GE(caret.index, prev_index);
-//         // EXPECT_GE(caret.x, prev_x);
+TEST(CaretTest, MoveToPrevGlyph) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addSystemFont(32);
 
-//         prev_index = caret.index;
-//         // prev_x = caret.x;
-//     }
+    const std::string line = "abc🙂def";
+    const auto layout = rasterizer.layoutLine(font_id, line);
 
-//     caret.moveToIndex(layout, 99999);
-//     EXPECT_EQ(caret.index, layout.length);
-//     // EXPECT_EQ(caret.x, layout.width);
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length), 1_Z);      // f
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 1), 1_Z);  // e
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 2), 1_Z);  // d
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 3), 4_Z);  // 🙂
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 7), 1_Z);  // c
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 8), 1_Z);  // b
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 9), 1_Z);  // a
+    EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 10), 0_Z);
+}
 
-//     caret.moveToIndex(layout, 0);
-//     EXPECT_EQ(caret.index, 0_Z);
-//     // EXPECT_EQ(caret.x, 0);
-// }
+// Ensure moving while at the end does nothing.
+TEST(CaretTest, MoveToNextGlyphAtEnd) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addSystemFont(32);
+    const auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
 
-// TEST(CaretTest, MoveToPrevGlyph) {
-//     auto& rasterizer = font::FontRasterizer::instance();
-//     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
+    for (size_t i = 0; i < 10; i++) {
+        EXPECT_EQ(Caret::moveToNextGlyph(layout, layout.length), 0_Z);
+    }
+}
 
-//     const std::string line = "Hello😄🙂hi";
-//     const auto layout = rasterizer.layoutLine(font_id, line);
-//     Caret caret;
+TEST(CaretTest, MoveToNextGlyph) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addSystemFont(32);
 
-//     caret.moveToIndex(layout, 0, 99999);
-//     size_t prev_index = caret.col;
-//     int prev_x = caret.x;
-//     while (caret.col > 0) {
-//         caret.moveToPrevGlyph(layout, 0, caret.col);
+    const std::string line = "abc🙂def";
+    const auto layout = rasterizer.layoutLine(font_id, line);
 
-//         EXPECT_LT(caret.col, prev_index);
-//         EXPECT_LT(caret.x, prev_x);
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 0), 1_Z);  // a
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 1), 1_Z);  // b
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 2), 1_Z);  // c
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 3), 4_Z);  // 🙂
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 7), 1_Z);  // d
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 8), 1_Z);  // e
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 9), 1_Z);  // f
+    EXPECT_EQ(Caret::moveToNextGlyph(layout, 10), 0_Z);
+}
 
-//         prev_index = caret.col;
-//         prev_x = caret.x;
-//     }
+TEST(CaretTest, MoveInEmptyLayout) {
+    auto& rasterizer = font::FontRasterizer::instance();
+    size_t font_id = rasterizer.addSystemFont(32);
 
-//     // Ensure moving while at the beginning does nothing.
-//     for (size_t i = 0; i < 10; i++) {
-//         caret.moveToPrevGlyph(layout, 0, 0);
-//         EXPECT_EQ(caret.col, 0_Z);
-//         EXPECT_EQ(caret.x, 0);
-//     }
-// }
+    const std::string line = "";
+    const auto layout = rasterizer.layoutLine(font_id, line);
 
-// TEST(CaretTest, MoveToNextGlyph) {
-//     auto& rasterizer = font::FontRasterizer::instance();
-//     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
-
-//     const std::string line = "Hello😄🙂hi";
-//     const auto layout = rasterizer.layoutLine(font_id, line);
-//     Caret caret;
-
-//     caret.moveToIndex(layout, 0, 0);
-//     size_t prev_index = caret.col;
-//     int prev_x = caret.x;
-//     while (caret.col < layout.length) {
-//         caret.moveToNextGlyph(layout, 0, caret.col);
-
-//         EXPECT_GT(caret.col, prev_index);
-//         EXPECT_GT(caret.x, prev_x);
-
-//         prev_index = caret.col;
-//         prev_x = caret.x;
-//     }
-
-//     // Ensure moving while at the end does nothing.
-//     for (size_t i = 0; i < 10; i++) {
-//         caret.moveToNextGlyph(layout, 0, layout.length);
-//         EXPECT_EQ(caret.col, layout.length);
-//         EXPECT_EQ(caret.x, layout.width);
-//     }
-// }
-
-// TEST(CaretTest, MoveInEmptyLayout) {
-//     auto& rasterizer = font::FontRasterizer::instance();
-//     size_t font_id = rasterizer.addFont(kOSFontFace, 32);
-
-//     const std::string line = "";
-//     const auto layout = rasterizer.layoutLine(font_id, line);
-//     Caret caret;
-
-//     caret.moveToIndex(layout, 0, 0);
-
-//     for (size_t i = 0; i < 10; i++) {
-//         caret.moveToPrevGlyph(layout, 0, caret.col);
-//         EXPECT_EQ(caret.col, layout.length);
-//         EXPECT_EQ(caret.x, layout.width);
-//     }
-//     for (size_t i = 0; i < 10; i++) {
-//         caret.moveToNextGlyph(layout, 0, caret.col);
-//         EXPECT_EQ(caret.col, layout.length);
-//         EXPECT_EQ(caret.x, layout.width);
-//     }
-// }
+    for (size_t i = 0; i < 10; i++) {
+        EXPECT_EQ(Caret::moveToPrevGlyph(layout, 0), 0_Z);
+        EXPECT_EQ(Caret::moveToNextGlyph(layout, 0), 0_Z);
+    }
+}
 
 TEST(CaretTest, ComparisonOperators) {
     EXPECT_TRUE(Caret{5} == Caret{5});
@@ -178,4 +136,4 @@ TEST(CaretTest, ComparisonOperators) {
     EXPECT_FALSE(Caret{0} >= Caret{5});
 }
 
-}
+}  // namespace gui

@@ -8,12 +8,17 @@
 
 namespace gui {
 
-TEST(CaretTest, ColumnAtX) {
+namespace {
+font::LineLayout CreateLayout(std::string_view str) {
     auto& rasterizer = font::FontRasterizer::instance();
     size_t font_id = rasterizer.addSystemFont(32);
+    return rasterizer.layoutLine(font_id, str);
+}
+}  // namespace
 
-    const std::string line = "Hello😄🙂hi";
-    const auto layout = rasterizer.layoutLine(font_id, line);
+TEST(CaretTest, ColumnAtX) {
+    std::string line = "Hello😄🙂hi";
+    auto layout = CreateLayout(line);
 
     size_t prev_index = 0;
     for (int x = 0; x < layout.width; ++x) {
@@ -27,12 +32,8 @@ TEST(CaretTest, ColumnAtX) {
 }
 
 TEST(CaretTest, XAtColumn) {
-    auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-
-    const std::string line = "Hello😄🙂hi";
-    const auto layout = rasterizer.layoutLine(font_id, line);
-    Caret caret;
+    std::string line = "Hello😄🙂hi";
+    auto layout = CreateLayout(line);
 
     int prev_x = 0;
     for (size_t index = 0; index < line.length(); ++index) {
@@ -47,9 +48,8 @@ TEST(CaretTest, XAtColumn) {
 
 // Ensure moving while at the beginning does nothing.
 TEST(CaretTest, MoveToPrevGlyphAtBeginning) {
-    auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-    const auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
+    std::string line = "Hello😄🙂hi";
+    auto layout = CreateLayout(line);
 
     for (size_t i = 0; i < 10; i++) {
         EXPECT_EQ(Caret::moveToPrevGlyph(layout, 0), 0_Z);
@@ -57,11 +57,8 @@ TEST(CaretTest, MoveToPrevGlyphAtBeginning) {
 }
 
 TEST(CaretTest, MoveToPrevGlyph) {
-    auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-
-    const std::string line = "abc🙂def";
-    const auto layout = rasterizer.layoutLine(font_id, line);
+    std::string line = "abc🙂def";
+    auto layout = CreateLayout(line);
 
     EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length), 1_Z);      // f
     EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 1), 1_Z);  // e
@@ -75,9 +72,8 @@ TEST(CaretTest, MoveToPrevGlyph) {
 
 // Ensure moving while at the end does nothing.
 TEST(CaretTest, MoveToNextGlyphAtEnd) {
-    auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-    const auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
+    std::string line = "Hello😄🙂hi";
+    auto layout = CreateLayout(line);
 
     for (size_t i = 0; i < 10; i++) {
         EXPECT_EQ(Caret::moveToNextGlyph(layout, layout.length), 0_Z);
@@ -85,11 +81,8 @@ TEST(CaretTest, MoveToNextGlyphAtEnd) {
 }
 
 TEST(CaretTest, MoveToNextGlyph) {
-    auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-
-    const std::string line = "abc🙂def";
-    const auto layout = rasterizer.layoutLine(font_id, line);
+    std::string line = "abc🙂def";
+    auto layout = CreateLayout(line);
 
     EXPECT_EQ(Caret::moveToNextGlyph(layout, 0), 1_Z);  // a
     EXPECT_EQ(Caret::moveToNextGlyph(layout, 1), 1_Z);  // b
@@ -102,11 +95,7 @@ TEST(CaretTest, MoveToNextGlyph) {
 }
 
 TEST(CaretTest, MoveInEmptyLayout) {
-    auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-
-    const std::string line = "";
-    const auto layout = rasterizer.layoutLine(font_id, line);
+    auto layout = CreateLayout("");
 
     for (size_t i = 0; i < 10; i++) {
         EXPECT_EQ(Caret::moveToPrevGlyph(layout, 0), 0_Z);

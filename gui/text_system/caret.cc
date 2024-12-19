@@ -10,8 +10,18 @@
 namespace gui {
 
 namespace {
+
 font::LineLayout::const_iterator IteratorAtColumn(const font::LineLayout& layout, size_t col);
-}
+
+enum class CharKind {
+    kWhitespace,
+    kWord,
+    KPunctuation,
+};
+
+constexpr CharKind CodepointToCharKind(int32_t codepoint);
+
+}  // namespace
 
 size_t Caret::columnAtX(const font::LineLayout& layout, int x) {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
@@ -66,9 +76,13 @@ size_t Caret::prevWordStart(const base::PieceTree& tree, size_t offset) {
     while (!reverse_walker.exhausted()) {
         int32_t cp = reverse_walker.next_codepoint();
         size_t offset = reverse_walker.offset();
+
+        // TODO: Properly handle errors.
+        if (cp == -1) std::abort();
+
         if (prev_cp) {
-            auto prev_kind = codepointToCharKind(prev_cp.value());
-            auto kind = codepointToCharKind(cp);
+            auto prev_kind = CodepointToCharKind(prev_cp.value());
+            auto kind = CodepointToCharKind(cp);
             if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
                 break;
             }
@@ -86,11 +100,15 @@ size_t Caret::nextWordEnd(const base::PieceTree& tree, size_t offset) {
     size_t prev_offset = offset;
 
     while (!walker.exhausted()) {
-        size_t offset = walker.offset();
         int32_t cp = walker.next_codepoint();
+        size_t offset = walker.offset();
+
+        // TODO: Properly handle errors.
+        if (cp == -1) std::abort();
+
         if (prev_cp) {
-            auto prev_kind = codepointToCharKind(prev_cp.value());
-            auto kind = codepointToCharKind(cp);
+            auto prev_kind = CodepointToCharKind(prev_cp.value());
+            auto kind = CodepointToCharKind(cp);
             if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
                 break;
             }
@@ -101,51 +119,18 @@ size_t Caret::nextWordEnd(const base::PieceTree& tree, size_t offset) {
     return prev_offset;
 }
 
-void Caret::prevWordStartOld(const base::PieceTree& tree) {
-    base::ReverseTreeWalker reverse_walker{&tree, index};
+namespace {
 
-    std::optional<int32_t> prev_cp;
-    size_t prev_offset = index;
-
-    while (!reverse_walker.exhausted()) {
-        int32_t cp = reverse_walker.next_codepoint();
-        size_t offset = reverse_walker.offset();
-        if (prev_cp) {
-            auto prev_kind = codepointToCharKind(prev_cp.value());
-            auto kind = codepointToCharKind(cp);
-            if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
-                break;
-            }
+font::LineLayout::const_iterator IteratorAtColumn(const font::LineLayout& layout, size_t col) {
+    for (auto it = layout.begin(); it != layout.end(); ++it) {
+        if ((*it).index >= col) {
+            return it;
         }
-        prev_cp = cp;
-        prev_offset = offset;
     }
-    index = prev_offset;
+    return layout.end();
 }
 
-void Caret::nextWordEndOld(const base::PieceTree& tree) {
-    base::TreeWalker walker{&tree, index};
-
-    std::optional<int32_t> prev_cp;
-    size_t prev_offset = index;
-
-    while (!walker.exhausted()) {
-        size_t offset = walker.offset();
-        int32_t cp = walker.next_codepoint();
-        if (prev_cp) {
-            auto prev_kind = codepointToCharKind(prev_cp.value());
-            auto kind = codepointToCharKind(cp);
-            if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
-                break;
-            }
-        }
-        prev_offset = offset;
-        prev_cp = cp;
-    }
-    index = prev_offset;
-}
-
-constexpr CharKind Caret::codepointToCharKind(int32_t codepoint) {
+constexpr CharKind CodepointToCharKind(int32_t codepoint) {
     if (una::codepoint::is_whitespace(codepoint)) {
         return CharKind::kWhitespace;
     } else if (una::codepoint::is_alphabetic(codepoint) || codepoint == '_') {
@@ -155,15 +140,6 @@ constexpr CharKind Caret::codepointToCharKind(int32_t codepoint) {
     }
 }
 
-namespace {
-font::LineLayout::const_iterator IteratorAtColumn(const font::LineLayout& layout, size_t col) {
-    for (auto it = layout.begin(); it != layout.end(); ++it) {
-        if ((*it).index >= col) {
-            return it;
-        }
-    }
-    return layout.end();
-}
 }  // namespace
 
 }  // namespace gui

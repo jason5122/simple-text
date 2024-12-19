@@ -71,9 +71,9 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     }
     if (by == MoveBy::kWords) {
         if (forward) {
-            selection.end().nextWordEndOld(tree);
+            selection.end().index = Caret::nextWordEnd(tree, selection.end().index);
         } else {
-            selection.end().prevWordStartOld(tree);
+            selection.end().index = Caret::prevWordStart(tree, selection.end().index);
         }
         if (!extend) {
             selection.start() = selection.end();
@@ -212,17 +212,24 @@ void TextViewWidget::deleteWord(bool forward) {
         size_t prev_offset = selection.end().index;
         size_t offset, delta;
         if (forward) {
-            selection.end().nextWordEndOld(tree);
-            offset = selection.end().index;
+            offset = Caret::nextWordEnd(tree, prev_offset);
             delta = offset - prev_offset;
-        } else {
-            selection.end().prevWordStartOld(tree);
-            offset = selection.end().index;
-            delta = prev_offset - offset;
-        }
-        tree.erase(offset, delta);
+            tree.erase(prev_offset, delta);
 
-        selection.start() = selection.end();
+            // TODO: Clean up selection/caret code.
+            // TODO: After clean up, move this out of TextViewWidget.
+            selection.end().index = prev_offset;
+            selection.start() = selection.end();
+        } else {
+            offset = Caret::prevWordStart(tree, prev_offset);
+            delta = prev_offset - offset;
+            tree.erase(offset, delta);
+
+            // TODO: Clean up selection/caret code.
+            // TODO: After clean up, move this out of TextViewWidget.
+            selection.end().index = offset;
+            selection.start() = selection.end();
+        }
 
         // #ifdef ENABLE_HIGHLIGHTING
         //         auto& highlighter = highlight::Highlighter::instance();

@@ -1054,11 +1054,11 @@ int32_t ReverseTreeWalker::next_codepoint() {
         if (decoder.done()) {
             return decoder.value();
         } else if (decoder.error()) {
-            return 0;
+            return -1;
         }
     }
     if (!decoder.done()) {
-        return 0;
+        return -1;
     }
     return decoder.value();
 }

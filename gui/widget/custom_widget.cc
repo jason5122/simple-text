@@ -65,9 +65,9 @@ void CustomWidget::move(MoveBy by, bool forward, bool extend) {
     }
     if (by == MoveBy::kWords) {
         if (forward) {
-            selection.end().nextWordEndOld(tree);
+            selection.end().index = Caret::nextWordEnd(tree, selection.end().index);
         } else {
-            selection.end().prevWordStartOld(tree);
+            selection.end().index = Caret::prevWordStart(tree, selection.end().index);
         }
         if (!extend) {
             selection.start() = selection.end();
@@ -174,11 +174,11 @@ void CustomWidget::deleteWord(bool forward) {
         size_t prev_offset = selection.end().index;
         size_t offset, delta;
         if (forward) {
-            selection.end().nextWordEndOld(tree);
+            selection.end().index = Caret::nextWordEnd(tree, selection.end().index);
             offset = selection.end().index;
             delta = offset - prev_offset;
         } else {
-            selection.end().prevWordStartOld(tree);
+            selection.end().index = Caret::prevWordStart(tree, selection.end().index);
             offset = selection.end().index;
             delta = prev_offset - offset;
         }

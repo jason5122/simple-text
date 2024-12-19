@@ -39,6 +39,7 @@
 
 ## C++
 
+- [Comparisons in C++20](https://brevzin.github.io/c++/2019/07/28/comparisons-cpp20/)
 - [Writing a custom iterator in modern C++](https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp)
 - [Effortless Performance Improvements in C++: std::string_view](https://julien.jorge.st/posts/en/effortless-performance-improvements-in-cpp-std-string_view/)
   - [Reddit discussion](https://www.reddit.com/r/cpp/comments/11rs81y/effortless_performance_improvements_in_c/)

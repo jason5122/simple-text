@@ -108,9 +108,30 @@ TEST(CaretTest, PrevWordStart1) {
 
 TEST(CaretTest, PrevWordStart2) {
     base::PieceTree tree{"🙂🙂🙂"};
-    for (size_t i = 0; i <= tree.length(); ++i) {
-        EXPECT_EQ(Caret::prevWordStart(tree, i), 0_Z);
-    }
+    EXPECT_EQ(Caret::prevWordStart(tree, 0), 0_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 4), 0_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 8), 0_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, tree.length()), 0_Z);
+}
+
+TEST(CaretTest, NextWordEnd1) {
+    base::PieceTree tree{"abc🙂def"};
+    EXPECT_EQ(Caret::nextWordEnd(tree, 0), 3_Z);
+    EXPECT_EQ(Caret::nextWordEnd(tree, 1), 3_Z);
+    EXPECT_EQ(Caret::nextWordEnd(tree, 2), 3_Z);
+    EXPECT_EQ(Caret::nextWordEnd(tree, 3), 7_Z);
+    EXPECT_EQ(Caret::nextWordEnd(tree, 7), 10_Z);
+    EXPECT_EQ(Caret::nextWordEnd(tree, 8), 10_Z);
+    EXPECT_EQ(Caret::nextWordEnd(tree, 9), 10_Z);
+    EXPECT_EQ(Caret::nextWordEnd(tree, 10), 10_Z);
+}
+
+TEST(CaretTest, NextWordEnd2) {
+    base::PieceTree tree{"🙂🙂🙂"};
+    EXPECT_EQ(Caret::nextWordEnd(tree, 0), tree.length());
+    EXPECT_EQ(Caret::nextWordEnd(tree, 4), tree.length());
+    EXPECT_EQ(Caret::nextWordEnd(tree, 8), tree.length());
+    EXPECT_EQ(Caret::nextWordEnd(tree, tree.length()), tree.length());
 }
 
 TEST(CaretTest, ComparisonOperators) {

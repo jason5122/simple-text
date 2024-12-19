@@ -3,9 +3,6 @@
 #include "third_party/uni_algo/include/uni_algo/prop.h"
 #include <gtest/gtest.h>
 
-// TODO: Debug use; remove this.
-#include "util/std_print.h"
-
 namespace base {
 
 TEST(TreeWalkerTest, TreeWalkerNextUTF8Test1) {
@@ -75,7 +72,7 @@ TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test3) {
 
 TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test4) {
     PieceTree tree{"a bc\u205Fxyz"};
-    ReverseTreeWalker walker{&tree, 3};
+    ReverseTreeWalker walker{&tree, 4};
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U'c'));
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U'b'));
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U' '));
@@ -116,48 +113,64 @@ TEST(TreeWalkerTest, TreeWalkerOffsetTest2) {
     EXPECT_TRUE(walker.exhausted());
 }
 
+TEST(TreeWalkerTest, Exhausted) {
+    PieceTree tree{"abcd"};
+
+    TreeWalker walker{&tree};
+    ReverseTreeWalker reverse_walker{&tree};
+
+    walker = {&tree, tree.length()};
+    EXPECT_TRUE(walker.exhausted());
+    walker = {&tree, 1};
+    EXPECT_FALSE(walker.exhausted());
+
+    reverse_walker = {&tree, 0};
+    EXPECT_TRUE(reverse_walker.exhausted());
+    reverse_walker = {&tree, 1};
+    EXPECT_FALSE(reverse_walker.exhausted());
+}
+
 TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest1) {
     std::string str = "012345";
     PieceTree tree{str};
 
-    for (size_t start = 0; start < tree.length(); ++start) {
+    for (size_t start = 0; start <= tree.length(); ++start) {
         size_t i = start;
-        ReverseTreeWalker walker{&tree, start};
-        while (!walker.exhausted()) {
-            EXPECT_EQ(walker.offset(), i);
-            EXPECT_EQ(walker.next(), str[i]);
+        ReverseTreeWalker reverse_walker{&tree, start};
+        while (!reverse_walker.exhausted()) {
+            char ch = reverse_walker.next();
+            size_t offset = reverse_walker.offset();
             --i;
+
+            EXPECT_EQ(ch, str[i]);
+            EXPECT_EQ(offset, i);
         }
-        // TODO: Consider changing wrapping behavior of `ReverseTreeWalker::next()`.
-        EXPECT_EQ(walker.offset(), std::numeric_limits<size_t>::max());
+        EXPECT_EQ(reverse_walker.offset(), 0_Z);
     }
 }
 
 TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest2) {
     PieceTree tree{"abcd"};
-    ReverseTreeWalker walker{&tree};
 
-    EXPECT_EQ(walker.offset(), 0_Z);
-    EXPECT_FALSE(walker.exhausted());
-    EXPECT_EQ(walker.next(), 'a');
-    EXPECT_TRUE(walker.exhausted());
+    ReverseTreeWalker reverse_walker{&tree};
+    EXPECT_EQ(reverse_walker.offset(), 0_Z);
+    EXPECT_TRUE(reverse_walker.exhausted());
 
-    walker = {&tree, 3};
-    EXPECT_EQ(walker.offset(), 3_Z);
-    EXPECT_FALSE(walker.exhausted());
-    EXPECT_EQ(walker.next(), 'd');
-    EXPECT_EQ(walker.next(), 'c');
-    EXPECT_EQ(walker.next(), 'b');
-    EXPECT_EQ(walker.next(), 'a');
-    EXPECT_TRUE(walker.exhausted());
+    reverse_walker = {&tree, 3};  // abc|d
+    EXPECT_EQ(reverse_walker.offset(), 3_Z);
+    EXPECT_FALSE(reverse_walker.exhausted());
+    EXPECT_EQ(reverse_walker.next(), 'c');
+    EXPECT_EQ(reverse_walker.next(), 'b');
+    EXPECT_EQ(reverse_walker.next(), 'a');
+    EXPECT_TRUE(reverse_walker.exhausted());
 
-    walker = {&tree, 4};
-    EXPECT_EQ(walker.offset(), tree.length());
-    EXPECT_EQ(walker.next(), 'd');
+    reverse_walker = {&tree, 4};  // abcd|
+    EXPECT_EQ(reverse_walker.offset(), tree.length());
+    EXPECT_EQ(reverse_walker.next(), 'd');
 
-    walker = {&tree, 100};
-    EXPECT_EQ(walker.offset(), tree.length());
-    EXPECT_EQ(walker.next(), 'd');
+    reverse_walker = {&tree, 100};  // abcd|
+    EXPECT_EQ(reverse_walker.offset(), tree.length());
+    EXPECT_EQ(reverse_walker.next(), 'd');
 }
 
 // Check that the forward and reverse walkers have the same offsets and codepoints.
@@ -190,6 +203,104 @@ TEST(TreeWalkerTest, UTF8OffsetsAndCodepointsMatch) {
 
     EXPECT_TRUE(offset_stk.empty());
     EXPECT_TRUE(cp_stk.empty());
+}
+
+// Offsets/codepoints should be the same no matter which offset the walker starts on.
+TEST(TreeWalkerTest, WalkerConsistency) {
+    PieceTree tree{"abc🙂def"};
+
+    auto get_codepoints = [](const PieceTree& tree, size_t offset) {
+        std::vector<int32_t> codepoints;
+        auto walker = TreeWalker{&tree, offset};
+        while (!walker.exhausted()) {
+            int32_t cp = walker.next_codepoint();
+            codepoints.emplace_back(cp);
+        }
+        return codepoints;
+    };
+
+    std::vector<int32_t> codepoints, expected;
+
+    codepoints = get_codepoints(tree, 0);
+    expected = {0x61, 0x62, 0x63, 0x1F642, 0x64, 0x65, 0x66};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 1);
+    expected = {0x62, 0x63, 0x1F642, 0x64, 0x65, 0x66};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 2);
+    expected = {0x63, 0x1F642, 0x64, 0x65, 0x66};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 3);
+    expected = {0x1F642, 0x64, 0x65, 0x66};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 7);
+    expected = {0x64, 0x65, 0x66};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 8);
+    expected = {0x65, 0x66};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 9);
+    expected = {0x66};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, tree.length());
+    expected = {};
+    EXPECT_EQ(codepoints, expected);
+}
+
+// Offsets/codepoints should be the same no matter which offset the walker starts on.
+TEST(TreeWalkerTest, ReverseWalkerConsistency) {
+    PieceTree tree{"abc🙂def"};
+
+    auto get_codepoints = [](const PieceTree& tree, size_t offset) {
+        std::vector<int32_t> codepoints;
+        auto reverse_walker = ReverseTreeWalker{&tree, offset};
+        while (!reverse_walker.exhausted()) {
+            int32_t cp = reverse_walker.next_codepoint();
+            codepoints.emplace_back(cp);
+        }
+        return codepoints;
+    };
+
+    std::vector<int32_t> codepoints, expected;
+
+    codepoints = get_codepoints(tree, tree.length());
+    expected = {0x66, 0x65, 0x64, 0x1F642, 0x63, 0x62, 0x61};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 9);
+    expected = {0x65, 0x64, 0x1F642, 0x63, 0x62, 0x61};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 8);
+    expected = {0x64, 0x1F642, 0x63, 0x62, 0x61};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 7);
+    expected = {0x1F642, 0x63, 0x62, 0x61};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 3);
+    expected = {0x63, 0x62, 0x61};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 2);
+    expected = {0x62, 0x61};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 1);
+    expected = {0x61};
+    EXPECT_EQ(codepoints, expected);
+
+    codepoints = get_codepoints(tree, 0);
+    expected = {};
+    EXPECT_EQ(codepoints, expected);
 }
 
 }  // namespace base

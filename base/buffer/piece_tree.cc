@@ -1124,9 +1124,7 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             auto* buffer = buffers->buffer_at(piece.buffer_type);
             auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
             last_ptr = buffer->buffer.data() + first_offset;
-            // We extend offset because it is the point where we want to start and because this
-            // walker works by dereferencing 'first_ptr - 1', offset + 1 is our 'begin'.
-            first_ptr = buffer->buffer.data() + first_offset + (offset + 1);
+            first_ptr = buffer->buffer.data() + first_offset + offset;
             return;
         } else {
             // For when we revisit this node.

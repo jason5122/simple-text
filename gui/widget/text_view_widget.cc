@@ -27,8 +27,6 @@ TextViewWidget::TextViewWidget(std::string_view text, size_t font_id)
 
 void TextViewWidget::selectAll() {
     selection.setRange(0, tree.length());
-
-    // updateCaretX();
 }
 
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
@@ -82,9 +80,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
         }
     }
 
-    if (by == MoveBy::kCharacters) {
-        // updateCaretX();
-    }
+    if (by == MoveBy::kCharacters) {}
 }
 
 void TextViewWidget::moveTo(MoveTo to, bool extend) {
@@ -96,7 +92,6 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
         const auto& layout = layoutAt(line);
         size_t new_col = Caret::columnAtX(layout, 0);
         selection.setIndex(tree.offset_at(line, new_col), extend);
-        // updateCaretX();
     }
     if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
         size_t line = tree.line_at(selection.end().index);
@@ -104,15 +99,12 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
         const auto& layout = layoutAt(line);
         size_t new_col = Caret::columnAtX(layout, layout.width);
         selection.setIndex(tree.offset_at(line, new_col), extend);
-        // updateCaretX();
     }
     if (to == MoveTo::kBOF) {
         selection.setIndex(0, extend);
-        // updateCaretX();
     }
     if (to == MoveTo::kEOF) {
         selection.setIndex(tree.length(), extend);
-        // updateCaretX();
     }
 }
 
@@ -250,8 +242,6 @@ void TextViewWidget::deleteWord(bool forward) {
         //         parse_tree.parse(tree, language);
         // #endif
     }
-
-    // updateMaxScroll();
 }
 
 std::string TextViewWidget::getSelectionText() {
@@ -296,17 +286,9 @@ void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
         selection.setIndex(tree.offset_at(new_line, new_col), extend);
     }
     // TODO: Implement double clicks.
-    // else if (click_type == app::ClickType::kDoubleClick) {
-    //     selection.setIndex(tree.offset_at(new_line, new_col), false);
-    //     size_t start_delta =
-    //         Caret::prevWordStart(layout, new_col, tree.get_line_content_with_newline(new_line));
-    //     size_t end_delta =
-    //         Caret::nextWordEnd(layout, new_col, tree.get_line_content_with_newline(new_line));
-    //     selection.start().index -= start_delta;
-    //     selection.end().index += end_delta;
-    // }
-
-    // updateCaretX();
+    else if (click_type == app::ClickType::kDoubleClick) {
+        ;
+    }
 }
 
 void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
@@ -316,8 +298,6 @@ void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
     size_t new_line = lineAtY(new_coords.y);
     size_t new_col = Caret::columnAtX(layoutAt(new_line), new_coords.x);
     selection.setIndex(tree.offset_at(new_line, new_col), true);
-
-    // updateCaretX();
 }
 
 void TextViewWidget::updateMaxScroll() {

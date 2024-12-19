@@ -928,7 +928,7 @@ void TreeWalker::fast_forward_to(size_t offset) {
 
 ReverseTreeWalker::ReverseTreeWalker(const PieceTree* tree, size_t offset)
     : buffers{&tree->buffers}, root{tree->root}, stack{{root}} {
-    total_offset = std::min(offset, base::sub_sat(tree->length(), 1_Z));
+    total_offset = std::min(offset, tree->length());
     fast_forward_to(total_offset);
 }
 

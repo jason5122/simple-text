@@ -30,10 +30,6 @@ public:
 
     // https://brevzin.github.io/c++/2019/07/28/comparisons-cpp20/
     constexpr auto operator<=>(const Caret& rhs) const = default;
-
-private:
-    static font::LineLayout::const_iterator iteratorAtColumn(const font::LineLayout& layout,
-                                                             size_t col);
 };
 
 }  // namespace gui

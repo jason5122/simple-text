@@ -9,6 +9,10 @@
 
 namespace gui {
 
+namespace {
+font::LineLayout::const_iterator IteratorAtColumn(const font::LineLayout& layout, size_t col);
+}
+
 size_t Caret::columnAtX(const font::LineLayout& layout, int x) {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
@@ -32,7 +36,7 @@ int Caret::xAtColumn(const font::LineLayout& layout, size_t col) {
 }
 
 size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
-    auto it = iteratorAtColumn(layout, col);
+    auto it = IteratorAtColumn(layout, col);
     if (it != layout.begin()) it--;
 
     if (layout.begin() != layout.end()) {
@@ -43,7 +47,7 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
 }
 
 size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
-    auto it = iteratorAtColumn(layout, col);
+    auto it = IteratorAtColumn(layout, col);
     if (it != layout.end()) it++;
 
     if (it != layout.end()) {
@@ -109,8 +113,8 @@ constexpr CharKind Caret::codepointToCharKind(int32_t codepoint) {
     }
 }
 
-font::LineLayout::const_iterator Caret::iteratorAtColumn(const font::LineLayout& layout,
-                                                         size_t col) {
+namespace {
+font::LineLayout::const_iterator IteratorAtColumn(const font::LineLayout& layout, size_t col) {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         if ((*it).index >= col) {
             return it;
@@ -118,5 +122,6 @@ font::LineLayout::const_iterator Caret::iteratorAtColumn(const font::LineLayout&
     }
     return layout.end();
 }
+}  // namespace
 
 }  // namespace gui

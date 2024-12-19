@@ -152,12 +152,44 @@ TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest2) {
     EXPECT_TRUE(walker.exhausted());
 
     walker = {&tree, 4};
-    EXPECT_EQ(walker.offset(), tree.length() - 1);
+    EXPECT_EQ(walker.offset(), tree.length());
     EXPECT_EQ(walker.next(), 'd');
 
     walker = {&tree, 100};
-    EXPECT_EQ(walker.offset(), tree.length() - 1);
+    EXPECT_EQ(walker.offset(), tree.length());
     EXPECT_EQ(walker.next(), 'd');
+}
+
+// Check that the forward and reverse walkers have the same offsets and codepoints.
+TEST(TreeWalkerTest, UTF8OffsetsAndCodepointsMatch) {
+    PieceTree tree{"abc🙂def"};
+
+    auto walker = TreeWalker{&tree};
+    auto reverse_walker = ReverseTreeWalker{&tree, tree.length()};
+
+    std::stack<size_t> offset_stk;
+    std::stack<int32_t> cp_stk;
+
+    while (!walker.exhausted()) {
+        size_t offset = walker.offset();
+        int32_t cp = walker.next_codepoint();
+
+        offset_stk.push(offset);
+        cp_stk.push(cp);
+    }
+
+    while (!reverse_walker.exhausted()) {
+        int32_t cp = reverse_walker.next_codepoint();
+        size_t offset = reverse_walker.offset();
+
+        EXPECT_EQ(offset, offset_stk.top());
+        EXPECT_EQ(cp, cp_stk.top());
+        offset_stk.pop();
+        cp_stk.pop();
+    }
+
+    EXPECT_TRUE(offset_stk.empty());
+    EXPECT_TRUE(cp_stk.empty());
 }
 
 }  // namespace base

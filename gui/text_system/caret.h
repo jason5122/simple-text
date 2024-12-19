@@ -20,11 +20,18 @@ public:
     static size_t columnAtX(const font::LineLayout& layout, int x);
     static int xAtColumn(const font::LineLayout& layout, size_t col);
 
+    // These return *deltas*.
+    // TODO: Make documentation more clear. Consider using type aliases.
     static size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col);
     static size_t moveToNextGlyph(const font::LineLayout& layout, size_t col);
 
-    void prevWordStart(const base::PieceTree& tree);
-    void nextWordEnd(const base::PieceTree& tree);
+    // These return *offsets*.
+    // TODO: Make documentation more clear. Consider using type aliases.
+    static size_t prevWordStart(const base::PieceTree& tree, size_t offset);
+    static size_t nextWordEnd(const base::PieceTree& tree, size_t offset);
+
+    void prevWordStartOld(const base::PieceTree& tree);
+    void nextWordEndOld(const base::PieceTree& tree);
 
     static constexpr CharKind codepointToCharKind(int32_t codepoint);
 

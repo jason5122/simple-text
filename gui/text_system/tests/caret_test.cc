@@ -17,9 +17,7 @@ font::LineLayout CreateLayout(std::string_view str) {
 }  // namespace
 
 TEST(CaretTest, ColumnAtX) {
-    std::string line = "Hello😄🙂hi";
-    auto layout = CreateLayout(line);
-
+    auto layout = CreateLayout("Hello😄🙂hi");
     size_t prev_index = 0;
     for (int x = 0; x < layout.width; ++x) {
         size_t index = Caret::columnAtX(layout, x);
@@ -32,11 +30,9 @@ TEST(CaretTest, ColumnAtX) {
 }
 
 TEST(CaretTest, XAtColumn) {
-    std::string line = "Hello😄🙂hi";
-    auto layout = CreateLayout(line);
-
+    auto layout = CreateLayout("Hello😄🙂hi");
     int prev_x = 0;
-    for (size_t index = 0; index < line.length(); ++index) {
+    for (size_t index = 0; index < layout.length; ++index) {
         int x = Caret::xAtColumn(layout, index);
         EXPECT_GE(x, prev_x);
         prev_x = x;
@@ -46,39 +42,36 @@ TEST(CaretTest, XAtColumn) {
     EXPECT_EQ(Caret::xAtColumn(layout, 0), 0);
 }
 
-// Ensure moving while at the beginning does nothing.
-TEST(CaretTest, MoveToPrevGlyphAtBeginning) {
-    std::string line = "Hello😄🙂hi";
-    auto layout = CreateLayout(line);
-
+// Ensure moving while at the beginning/end does nothing.
+TEST(CaretTest, PreventMovingByGlyphAtBeginningOrEnd) {
+    auto layout1 = CreateLayout("Hello😄🙂hi");
     for (int i = 0; i < 10; ++i) {
-        EXPECT_EQ(Caret::moveToPrevGlyph(layout, 0), 0_Z);
+        EXPECT_EQ(Caret::moveToPrevGlyph(layout1, 0), 0_Z);
+        EXPECT_EQ(Caret::moveToNextGlyph(layout1, layout1.length), 0_Z);
+    }
+    auto layout2 = CreateLayout("");
+    for (int i = 0; i < 10; ++i) {
+        EXPECT_EQ(Caret::moveToPrevGlyph(layout2, 0), 0_Z);
+        EXPECT_EQ(Caret::moveToNextGlyph(layout2, 0), 0_Z);
     }
 }
 
-// Ensure moving while at the end does nothing.
-TEST(CaretTest, MoveToNextGlyphAtEnd) {
-    std::string line = "Hello😄🙂hi";
-    auto layout = CreateLayout(line);
-
+// Ensure moving while at the beginning/end does nothing.
+TEST(CaretTest, PreventMovingByWordAtBeginningOrEnd) {
+    base::PieceTree tree1{"abc🙂def"};
     for (int i = 0; i < 10; ++i) {
-        EXPECT_EQ(Caret::moveToNextGlyph(layout, layout.length), 0_Z);
+        EXPECT_EQ(Caret::prevWordStart(tree1, 0), 0_Z);
+        EXPECT_EQ(Caret::nextWordEnd(tree1, tree1.length()), tree1.length());
     }
-}
-
-TEST(CaretTest, MoveInEmptyLayout) {
-    auto layout = CreateLayout("");
-
+    base::PieceTree tree2{""};
     for (int i = 0; i < 10; ++i) {
-        EXPECT_EQ(Caret::moveToPrevGlyph(layout, 0), 0_Z);
-        EXPECT_EQ(Caret::moveToNextGlyph(layout, 0), 0_Z);
+        EXPECT_EQ(Caret::prevWordStart(tree2, 0), 0_Z);
+        EXPECT_EQ(Caret::nextWordEnd(tree2, 0), 0_Z);
     }
 }
 
 TEST(CaretTest, MoveToPrevGlyph) {
-    std::string line = "abc🙂def";
-    auto layout = CreateLayout(line);
-
+    auto layout = CreateLayout("abc🙂def");
     EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length), 1_Z);      // f
     EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 1), 1_Z);  // e
     EXPECT_EQ(Caret::moveToPrevGlyph(layout, layout.length - 2), 1_Z);  // d
@@ -90,9 +83,7 @@ TEST(CaretTest, MoveToPrevGlyph) {
 }
 
 TEST(CaretTest, MoveToNextGlyph) {
-    std::string line = "abc🙂def";
-    auto layout = CreateLayout(line);
-
+    auto layout = CreateLayout("abc🙂def");
     EXPECT_EQ(Caret::moveToNextGlyph(layout, 0), 1_Z);  // a
     EXPECT_EQ(Caret::moveToNextGlyph(layout, 1), 1_Z);  // b
     EXPECT_EQ(Caret::moveToNextGlyph(layout, 2), 1_Z);  // c
@@ -103,74 +94,23 @@ TEST(CaretTest, MoveToNextGlyph) {
     EXPECT_EQ(Caret::moveToNextGlyph(layout, 10), 0_Z);
 }
 
-// Ensure moving while at the beginning does nothing.
-TEST(CaretTest, PrevWordStartAtBeginning) {
-    std::string line = "abc🙂def";
-    auto layout = CreateLayout(line);
-
-    base::PieceTree tree{line};
-    Caret caret;
-    for (int i = 0; i < 10; ++i) {
-        caret.prevWordStart(tree);
-        EXPECT_EQ(caret.index, 0_Z);
-    }
+TEST(CaretTest, PrevWordStart1) {
+    base::PieceTree tree{"abc🙂def"};
+    EXPECT_EQ(Caret::prevWordStart(tree, 10), 7_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 9), 7_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 8), 7_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 7), 3_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 3), 0_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 2), 0_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 1), 0_Z);
+    EXPECT_EQ(Caret::prevWordStart(tree, 0), 0_Z);
 }
 
-// Ensure moving while at the end does nothing.
-TEST(CaretTest, NextWordEndAtEnd) {
-    std::string line = "abc🙂def";
-    auto layout = CreateLayout(line);
-
-    base::PieceTree tree{line};
-    Caret caret{layout.length};
-    for (int i = 0; i < 10; ++i) {
-        caret.nextWordEnd(tree);
-        EXPECT_EQ(caret.index, layout.length);
+TEST(CaretTest, PrevWordStart2) {
+    base::PieceTree tree{"🙂🙂🙂"};
+    for (size_t i = 0; i <= tree.length(); ++i) {
+        EXPECT_EQ(Caret::prevWordStart(tree, i), 0_Z);
     }
-}
-
-TEST(CaretTest, MoveByWordInEmptyLayout) {
-    auto layout = CreateLayout("");
-
-    base::PieceTree tree{""};
-    Caret caret;
-    for (int i = 0; i < 10; ++i) {
-        caret.prevWordStart(tree);
-        EXPECT_EQ(caret.index, 0_Z);
-        caret.nextWordEnd(tree);
-        EXPECT_EQ(caret.index, 0_Z);
-    }
-}
-
-TEST(CaretTest, PrevWordStart) {
-    std::string line = "abc🙂def";
-    auto layout = CreateLayout(line);
-
-    base::PieceTree tree{line};
-
-    std::println("layout.length = {}", layout.length);
-    base::TreeWalker walker{&tree};
-    base::ReverseTreeWalker reverse_walker{&tree, layout.length};
-
-    while (!walker.exhausted()) {
-        size_t offset = walker.offset();
-        int32_t cp = walker.next_codepoint();
-        std::println("cp = {:#x}, index = {}", cp, offset);
-    }
-    while (!reverse_walker.exhausted()) {
-        int32_t cp = reverse_walker.next_codepoint();
-        size_t offset = reverse_walker.offset();
-        std::println("cp = {:#x}, index = {}", cp, offset);
-    }
-
-    // Caret caret{layout.length};
-
-    // caret.prevWordStart(tree);
-    // EXPECT_EQ(caret.index, 7_Z);  // abc🙂|def
-    // caret.prevWordStart(tree);
-    // EXPECT_EQ(caret.index, 3_Z);  // abc|🙂def
-    // caret.prevWordStart(tree);
-    // EXPECT_EQ(caret.index, 0_Z);  // |abc🙂def
 }
 
 TEST(CaretTest, ComparisonOperators) {

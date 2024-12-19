@@ -1,7 +1,10 @@
+#include <gtest/gtest.h>
+
+#include <stack>
+
 #include "base/buffer/piece_tree.h"
 #include "base/numeric/literals.h"
 #include "third_party/uni_algo/include/uni_algo/prop.h"
-#include <gtest/gtest.h>
 
 namespace base {
 

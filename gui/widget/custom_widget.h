@@ -12,17 +12,6 @@ class CustomWidget : public ScrollableWidget {
 public:
     CustomWidget(std::string_view text, size_t font_id);
 
-    void selectAll();
-    void move(MoveBy by, bool forward, bool extend);
-    void moveTo(MoveTo to, bool extend);
-    void insertText(std::string_view text);
-    void leftDelete();
-    void rightDelete();
-    void deleteWord(bool forward);
-    std::string getSelectionText();
-    void undo();
-    void redo();
-
     void draw() override;
     void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
@@ -59,8 +48,6 @@ private:
     size_t font_id;
 
     base::PieceTree tree;
-
-    Selection selection{};
 
     static constexpr int kGutterLeftPadding = 18 * 2;
     static constexpr int kGutterRightPadding = 8 * 2;

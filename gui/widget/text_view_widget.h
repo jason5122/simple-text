@@ -31,6 +31,7 @@ public:
     std::string getSelectionText();
     void undo();
     void redo();
+    void find(std::string_view text);
 
     void draw() override;
     void leftMouseDown(const app::Point& mouse_pos,

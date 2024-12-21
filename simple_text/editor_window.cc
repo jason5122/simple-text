@@ -330,10 +330,16 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         handled = true;
     } else if (key == app::Key::kTab && modifiers == app::ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
+        // TODO: Don't hard code this.
         text_view->insertText("    ");
         handled = true;
     } else if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
         parent.quit();
+    } else if (key == app::Key::kF && modifiers == app::kPrimaryModifier) {
+        auto* text_view = editor_widget->currentWidget();
+        // TODO: Don't hard code this.
+        text_view->find("needle");
+        handled = true;
     }
 
     if (handled) {

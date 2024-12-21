@@ -264,6 +264,14 @@ void TextViewWidget::redo() {
     tree.redo();
 }
 
+void TextViewWidget::find(std::string_view text) {
+    std::optional<size_t> result = tree.find(text);
+    if (result) {
+        size_t offset = *result;
+        selection.setRange(offset, offset + text.length());
+    }
+}
+
 void TextViewWidget::draw() {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
@@ -284,9 +292,9 @@ void TextViewWidget::draw() {
 void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    app::Point new_coords = mouse_pos - textOffset();
-    size_t line = lineAtY(new_coords.y);
-    size_t col = Caret::columnAtX(layoutAt(line), new_coords.x);
+    app::Point coords = mouse_pos - textOffset();
+    size_t line = lineAtY(coords.y);
+    size_t col = Caret::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
     if (click_type == app::ClickType::kSingleClick) {
@@ -306,10 +314,19 @@ void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
 void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
-    app::Point new_coords = mouse_pos - textOffset();
-    size_t new_line = lineAtY(new_coords.y);
-    size_t new_col = Caret::columnAtX(layoutAt(new_line), new_coords.x);
-    selection.setIndex(tree.offset_at(new_line, new_col), true);
+    app::Point coords = mouse_pos - textOffset();
+    size_t line = lineAtY(coords.y);
+    size_t col = Caret::columnAtX(layoutAt(line), coords.x);
+    size_t offset = tree.offset_at(line, col);
+
+    if (click_type == app::ClickType::kSingleClick) {
+        selection.setIndex(offset, true);
+    } else if (click_type == app::ClickType::kDoubleClick) {
+        // TODO: Implement.
+    } else if (click_type == app::ClickType::kTripleClick) {
+        auto [left, right] = tree.get_line_range_with_newline(line);
+        selection.setIndex(right, true);
+    }
 }
 
 void TextViewWidget::updateMaxScroll() {

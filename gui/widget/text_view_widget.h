@@ -19,19 +19,21 @@ namespace gui {
 
 class TextViewWidget : public ScrollableWidget {
 public:
-    TextViewWidget(std::string_view text, size_t font_id);
+    TextViewWidget(std::string_view str8, size_t font_id);
 
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
-    void insertText(std::string_view text);
+    void insertText(std::string_view str8);
     void leftDelete();
     void rightDelete();
     void deleteWord(bool forward);
     std::string getSelectionText();
     void undo();
     void redo();
-    void find(std::string_view text);
+    void find(std::string_view str8);
+    // TODO: Use a struct type for clarity.
+    std::pair<size_t, size_t> getLineColumn();
 
     void draw() override;
     void leftMouseDown(const app::Point& mouse_pos,

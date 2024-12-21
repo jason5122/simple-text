@@ -1,6 +1,5 @@
 #pragma once
 
-#include "font/types.h"
 #include "gui/renderer/opengl_types.h"
 #include "gui/widget/widget.h"
 
@@ -13,7 +12,8 @@ public:
                 int left_padding = 0,
                 int right_padding = 0);
 
-    void setText(std::string_view str8, const Rgb& color);
+    void setText(std::string_view str8);
+    void setColor(const Rgb& color);
     void addLeftIcon(size_t icon_id);
     void addRightIcon(size_t icon_id);
 
@@ -31,7 +31,7 @@ private:
     int left_padding;
     int right_padding;
 
-    font::LineLayout layout;
+    std::string label_str;
     Rgb color{};
     std::vector<size_t> left_side_icons;
     std::vector<size_t> right_side_icons;

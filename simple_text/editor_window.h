@@ -3,6 +3,7 @@
 #include "app/window.h"
 #include "gui/widget/container/layout_widget.h"
 #include "gui/widget/editor_widget.h"
+#include "gui/widget/status_bar_widget.h"
 
 class EditorApp;
 
@@ -40,6 +41,7 @@ private:
     EditorApp& parent;
     std::shared_ptr<gui::LayoutWidget> main_widget;
     std::shared_ptr<gui::EditorWidget> editor_widget;
+    std::shared_ptr<gui::StatusBarWidget> status_bar;
 
     // The widget that the drag operation was performed on. If there currently isn't a drag
     // operation, this is null.

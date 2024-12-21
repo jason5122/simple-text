@@ -37,7 +37,7 @@ private:
     static constexpr int kLabelFontSize = 22 * 2;
 
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
-    std::unique_ptr<LabelWidget> folder_label;
+    // std::unique_ptr<LabelWidget> folder_label;
     std::optional<size_t> hovered_index = std::nullopt;
 
     // Draw helpers.

@@ -1,5 +1,6 @@
-#include "gui/renderer/renderer.h"
 #include "label_widget.h"
+
+#include "gui/renderer/renderer.h"
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
@@ -12,9 +13,11 @@ LabelWidget::LabelWidget(size_t font_id,
                          int right_padding)
     : Widget{size}, font_id(font_id), left_padding(left_padding), right_padding(right_padding) {}
 
-void LabelWidget::setText(std::string_view str8, const Rgb& color) {
-    auto& font_rasterizer = font::FontRasterizer::instance();
-    layout = font_rasterizer.layoutLine(font_id, str8);
+void LabelWidget::setText(std::string_view str8) {
+    this->label_str = str8;
+}
+
+void LabelWidget::setColor(const Rgb& color) {
     this->color = color;
 }
 
@@ -27,11 +30,12 @@ void LabelWidget::addRightIcon(size_t icon_id) {
 }
 
 void LabelWidget::draw() {
-    TextRenderer& text_renderer = Renderer::instance().getTextRenderer();
-    ImageRenderer& image_renderer = Renderer::instance().getImageRenderer();
+    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& image_renderer = Renderer::instance().getImageRenderer();
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
-    // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    // rect_renderer.addRect(position, size, kTempColor);
+    // auto& rect_renderer = Renderer::instance().getRectRenderer();
+    // rect_renderer.addRect(position, size, {255, 0, 0, 0}, RectRenderer::RectLayer::kForeground);
 
     // Draw all left side icons.
     app::Point left_offset{.x = left_padding};
@@ -58,6 +62,7 @@ void LabelWidget::draw() {
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto& layout = line_layout_cache.get(font_id, label_str);
 
     app::Point coords = centerVertically(metrics.line_height) + left_offset;
     int min_x = 0;

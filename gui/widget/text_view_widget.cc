@@ -15,8 +15,8 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(std::string_view text, size_t font_id)
-    : font_id(font_id), tree(text) {
+TextViewWidget::TextViewWidget(std::string_view str8, size_t font_id)
+    : font_id(font_id), tree(str8) {
     updateMaxScroll();
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -110,20 +110,20 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     }
 }
 
-void TextViewWidget::insertText(std::string_view text) {
+void TextViewWidget::insertText(std::string_view str8) {
     if (!selection.empty()) {
         leftDelete();
     }
 
     size_t i = selection.end();
-    tree.insert(i, text);
-    selection.increment(text.length(), false);
+    tree.insert(i, str8);
+    selection.increment(str8.length(), false);
 
 #ifdef ENABLE_HIGHLIGHTING
     PROFILE_BLOCK("TextViewWidget::insertText() edit + parse");
     auto& highlighter = highlight::Highlighter::instance();
     auto& language = highlighter.getLanguage("cpp");
-    parse_tree.edit(i, i, i + text.length());
+    parse_tree.edit(i, i, i + str8.length());
     parse_tree.parse(tree, language);
 #endif
 
@@ -266,12 +266,19 @@ void TextViewWidget::redo() {
     tree.redo();
 }
 
-void TextViewWidget::find(std::string_view text) {
-    std::optional<size_t> result = tree.find(text);
+void TextViewWidget::find(std::string_view str8) {
+    std::optional<size_t> result = tree.find(str8);
     if (result) {
         size_t offset = *result;
-        selection.setRange(offset, offset + text.length());
+        selection.setRange(offset, offset + str8.length());
     }
+}
+
+// TODO: Use a struct type for clarity.
+std::pair<size_t, size_t> TextViewWidget::getLineColumn() {
+    size_t offset = selection.end();
+    auto cursor = tree.line_column_at(offset);
+    return {cursor.line, cursor.column};
 }
 
 void TextViewWidget::draw() {

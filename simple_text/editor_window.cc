@@ -5,12 +5,12 @@
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/vertical_layout_widget.h"
 #include "gui/widget/side_bar_widget.h"
-#include "gui/widget/status_bar_widget.h"
 #include "simple_text/editor_app.h"
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
 #include <fmt/base.h>
+#include <fmt/format.h>
 
 using namespace gui;
 
@@ -115,8 +115,8 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
 
-    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, parent.ui_font_id,
-                                                   parent.panel_close_image_id);
+    editor_widget.reset(
+        new EditorWidget(parent.main_font_id, parent.ui_font_id, parent.panel_close_image_id));
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
     // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);
@@ -136,8 +136,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     // These don't have default constructors since they are not intended to be main widgets.
     std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, size.height})};
-    std::shared_ptr<Widget> status_bar{
-        new StatusBarWidget({size.width, kStatusBarHeight}, parent.ui_font_id)};
+    status_bar.reset(new StatusBarWidget({size.width, kStatusBarHeight}, parent.ui_font_id));
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);
@@ -148,6 +147,9 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
 void EditorWindow::onDraw(const app::Size& size) {
     PROFILE_BLOCK("Total render time");
+
+    // TODO: Debug use; remove this.
+    status_bar->setText(fmt::format("{}x{}", size.width, size.height));
 
     main_widget->layout();
     main_widget->draw();

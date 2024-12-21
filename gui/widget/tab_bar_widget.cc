@@ -37,7 +37,8 @@ void TabBarWidget::addTab(std::string_view title) {
         .height = size.height,
     };
     std::unique_ptr<LabelWidget> tab_name_label{new LabelWidget(font_id, label_size, 22, 16)};
-    tab_name_label->setText(title, kTabTextColor);
+    tab_name_label->setText(title);
+    tab_name_label->setColor(kTabTextColor);
     tab_name_label->addRightIcon(panel_close_image_id);
     tab_name_labels.emplace_back(std::move(tab_name_label));
 }

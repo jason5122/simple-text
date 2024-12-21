@@ -12,6 +12,8 @@ public:
     void draw() override;
     void layout() override;
 
+    void setText(std::string_view str8);
+
     std::string_view className() const override {
         return "StatusBarWidget";
     }

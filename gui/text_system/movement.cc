@@ -1,6 +1,7 @@
-#include "caret.h"
+#include "movement.h"
 
 #include "third_party/uni_algo/include/uni_algo/prop.h"
+
 #include <numeric>
 #include <optional>
 
@@ -23,7 +24,7 @@ constexpr CharKind CodepointToCharKind(int32_t codepoint);
 
 }  // namespace
 
-size_t Caret::columnAtX(const font::LineLayout& layout, int x) {
+size_t Movement::columnAtX(const font::LineLayout& layout, int x) {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
         int glyph_x = glyph.position.x;
@@ -35,7 +36,7 @@ size_t Caret::columnAtX(const font::LineLayout& layout, int x) {
     return layout.length;
 }
 
-int Caret::xAtColumn(const font::LineLayout& layout, size_t col) {
+int Movement::xAtColumn(const font::LineLayout& layout, size_t col) {
     for (auto it = layout.begin(); it != layout.end(); ++it) {
         const auto& glyph = *it;
         if (glyph.index >= col) {
@@ -45,7 +46,7 @@ int Caret::xAtColumn(const font::LineLayout& layout, size_t col) {
     return layout.width;
 }
 
-size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
+size_t Movement::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     auto it = IteratorAtColumn(layout, col);
     if (it != layout.begin()) it--;
 
@@ -56,7 +57,7 @@ size_t Caret::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     }
 }
 
-size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
+size_t Movement::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     auto it = IteratorAtColumn(layout, col);
     if (it != layout.end()) it++;
 
@@ -67,7 +68,7 @@ size_t Caret::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     }
 }
 
-size_t Caret::prevWordStart(const base::PieceTree& tree, size_t offset) {
+size_t Movement::prevWordStart(const base::PieceTree& tree, size_t offset) {
     base::ReverseTreeWalker reverse_walker{&tree, offset};
 
     std::optional<int32_t> prev_cp;
@@ -79,7 +80,7 @@ size_t Caret::prevWordStart(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            std::println("Caret::prevWordStart() error: invalid codepoint.");
+            std::println("Movement::prevWordStart() error: invalid codepoint.");
             std::abort();
         }
 
@@ -96,7 +97,7 @@ size_t Caret::prevWordStart(const base::PieceTree& tree, size_t offset) {
     return prev_offset;
 }
 
-size_t Caret::nextWordEnd(const base::PieceTree& tree, size_t offset) {
+size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
     base::TreeWalker walker{&tree, offset};
 
     std::optional<int32_t> prev_cp;
@@ -108,7 +109,7 @@ size_t Caret::nextWordEnd(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            std::println("Caret::nextWordEnd() error: invalid codepoint.");
+            std::println("Movement::nextWordEnd() error: invalid codepoint.");
             std::abort();
         }
 

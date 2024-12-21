@@ -1,13 +1,14 @@
 #pragma once
 
-#include "gui/text_system/caret.h"
+#include <cstddef>
+#include <utility>
 
 namespace gui {
 
 class Selection {
 public:
-    Caret& start();
-    Caret& end();  // TODO: Rename this to avoid collision with range end() function.
+    size_t& start();
+    size_t& end();  // TODO: Rename this to avoid collision with range end() function.
     bool empty() const;
     std::pair<size_t, size_t> range() const;
     void setIndex(size_t index, bool extend);
@@ -22,8 +23,8 @@ public:
     void collapse(Direction direction);
 
 private:
-    Caret start_caret{};
-    Caret end_caret{};
+    size_t start_caret;
+    size_t end_caret;
 };
 
 }  // namespace gui

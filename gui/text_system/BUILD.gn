@@ -1,6 +1,6 @@
 source_set("text_system") {
   sources = [
-    "caret.cc",
+    "movement.cc",
     "selection.cc",
   ]
 

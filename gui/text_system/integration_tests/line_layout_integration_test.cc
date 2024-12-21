@@ -1,8 +1,9 @@
+#include <gtest/gtest.h>
+
 #include "base/buffer/piece_tree.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/line_layout_cache.h"
-#include "gui/text_system/caret.h"
-#include <gtest/gtest.h>
+#include "gui/text_system/movement.h"
 
 namespace {
 
@@ -13,7 +14,7 @@ constexpr int kMainFontSize = 12 * 2;
 
 namespace gui {
 
-TEST(LineLayoutIntegrationTest, CaretMovement1) {
+TEST(LineLayoutIntegrationTest, Movement1) {
     auto& font_rasterizer = font::FontRasterizer::instance();
     size_t font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
 

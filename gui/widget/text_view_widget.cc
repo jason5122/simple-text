@@ -3,6 +3,7 @@
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "gui/renderer/renderer.h"
+#include "gui/text_system/movement.h"
 
 #include <cmath>
 
@@ -32,7 +33,7 @@ void TextViewWidget::selectAll() {
 void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     PROFILE_BLOCK("TextViewWidget::move()");
 
-    auto [line, col] = tree.line_column_at(selection.end().index);
+    auto [line, col] = tree.line_column_at(selection.end());
     const auto& layout = layoutAt(line);
 
     if (by == MoveBy::kCharacters && !forward) {
@@ -41,7 +42,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        size_t delta = Caret::moveToPrevGlyph(layout, col);
+        size_t delta = Movement::moveToPrevGlyph(layout, col);
         selection.decrement(delta, extend);
 
         // Move to previous line if at beginning of line.
@@ -57,23 +58,23 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        size_t delta = Caret::moveToNextGlyph(layout, col);
+        size_t delta = Movement::moveToNextGlyph(layout, col);
         selection.increment(delta, extend);
     }
     if (by == MoveBy::kLines) {
         size_t new_line = forward ? line + 1 : line - 1;
         if (0 <= new_line && new_line < tree.line_count()) {
-            int x = Caret::xAtColumn(layout, col);
-            size_t new_col = Caret::columnAtX(layoutAt(new_line), x);
+            int x = Movement::xAtColumn(layout, col);
+            size_t new_col = Movement::columnAtX(layoutAt(new_line), x);
             size_t index = tree.offset_at(new_line, new_col);
             selection.setIndex(index, extend);
         }
     }
     if (by == MoveBy::kWords) {
         if (forward) {
-            selection.end().index = Caret::nextWordEnd(tree, selection.end().index);
+            selection.end() = Movement::nextWordEnd(tree, selection.end());
         } else {
-            selection.end().index = Caret::prevWordStart(tree, selection.end().index);
+            selection.end() = Movement::prevWordStart(tree, selection.end());
         }
         if (!extend) {
             selection.start() = selection.end();
@@ -87,17 +88,17 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     PROFILE_BLOCK("TextViewWidget::moveTo()");
 
     if (to == MoveTo::kBOL || to == MoveTo::kHardBOL) {
-        size_t line = tree.line_at(selection.end().index);
+        size_t line = tree.line_at(selection.end());
 
         const auto& layout = layoutAt(line);
-        size_t new_col = Caret::columnAtX(layout, 0);
+        size_t new_col = Movement::columnAtX(layout, 0);
         selection.setIndex(tree.offset_at(line, new_col), extend);
     }
     if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
-        size_t line = tree.line_at(selection.end().index);
+        size_t line = tree.line_at(selection.end());
 
         const auto& layout = layoutAt(line);
-        size_t new_col = Caret::columnAtX(layout, layout.width);
+        size_t new_col = Movement::columnAtX(layout, layout.width);
         selection.setIndex(tree.offset_at(line, new_col), extend);
     }
     if (to == MoveTo::kBOF) {
@@ -113,7 +114,7 @@ void TextViewWidget::insertText(std::string_view text) {
         leftDelete();
     }
 
-    size_t i = selection.end().index;
+    size_t i = selection.end();
     tree.insert(i, text);
     selection.increment(text.length(), false);
 
@@ -134,10 +135,10 @@ void TextViewWidget::leftDelete() {
     PROFILE_BLOCK("TextViewWidget::leftDelete()");
 
     if (selection.empty()) {
-        auto [line, col] = tree.line_column_at(selection.end().index);
+        auto [line, col] = tree.line_column_at(selection.end());
         const auto& layout = layoutAt(line);
 
-        size_t delta = Caret::moveToPrevGlyph(layout, col);
+        size_t delta = Movement::moveToPrevGlyph(layout, col);
         selection.decrement(delta, false);
 
         // Delete newline if at beginning of line.
@@ -146,7 +147,7 @@ void TextViewWidget::leftDelete() {
             delta = 1;
         }
 
-        size_t i = selection.end().index;
+        size_t i = selection.end();
         tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -175,11 +176,11 @@ void TextViewWidget::rightDelete() {
     PROFILE_BLOCK("TextViewWidget::rightDelete()");
 
     if (selection.empty()) {
-        auto [line, col] = tree.line_column_at(selection.end().index);
+        auto [line, col] = tree.line_column_at(selection.end());
         const auto& layout = layoutAt(line);
 
-        size_t delta = Caret::moveToNextGlyph(layout, col);
-        size_t i = selection.end().index;
+        size_t delta = Movement::moveToNextGlyph(layout, col);
+        size_t i = selection.end();
         tree.erase(i, delta);
 
 #ifdef ENABLE_HIGHLIGHTING
@@ -209,25 +210,25 @@ void TextViewWidget::deleteWord(bool forward) {
     PROFILE_BLOCK("TextViewWidget::deleteWord()");
 
     if (selection.empty()) {
-        size_t prev_offset = selection.end().index;
+        size_t prev_offset = selection.end();
         size_t offset, delta;
         if (forward) {
-            offset = Caret::nextWordEnd(tree, prev_offset);
+            offset = Movement::nextWordEnd(tree, prev_offset);
             delta = offset - prev_offset;
             tree.erase(prev_offset, delta);
 
             // TODO: Clean up selection/caret code.
             // TODO: After clean up, move this out of TextViewWidget.
-            selection.end().index = prev_offset;
+            selection.end() = prev_offset;
             selection.start() = selection.end();
         } else {
-            offset = Caret::prevWordStart(tree, prev_offset);
+            offset = Movement::prevWordStart(tree, prev_offset);
             delta = prev_offset - offset;
             tree.erase(offset, delta);
 
             // TODO: Clean up selection/caret code.
             // TODO: After clean up, move this out of TextViewWidget.
-            selection.end().index = offset;
+            selection.end() = offset;
             selection.start() = selection.end();
         }
 
@@ -294,7 +295,7 @@ void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
                                    app::ClickType click_type) {
     app::Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
-    size_t col = Caret::columnAtX(layoutAt(line), coords.x);
+    size_t col = Movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
     if (click_type == app::ClickType::kSingleClick) {
@@ -302,8 +303,8 @@ void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
         selection.setIndex(offset, extend);
     } else if (click_type == app::ClickType::kDoubleClick) {
         // TODO: Refine double click implementation.
-        size_t left = Caret::prevWordStart(tree, offset);
-        size_t right = Caret::nextWordEnd(tree, offset);
+        size_t left = Movement::prevWordStart(tree, offset);
+        size_t right = Movement::nextWordEnd(tree, offset);
         selection.setRange(left, right);
     } else if (click_type == app::ClickType::kTripleClick) {
         auto [left, right] = tree.get_line_range_with_newline(line);
@@ -316,7 +317,7 @@ void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
                                    app::ClickType click_type) {
     app::Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
-    size_t col = Caret::columnAtX(layoutAt(line), coords.x);
+    size_t col = Movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
     if (click_type == app::ClickType::kSingleClick) {
@@ -397,7 +398,7 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
 #endif
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
-    size_t selection_line = tree.line_at(selection.end().index);
+    size_t selection_line = tree.line_at(selection.end());
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
@@ -501,8 +502,8 @@ void TextViewWidget::renderSelections(int main_line_height, size_t start_line, s
 
     const auto& c1_layout = layoutAt(c1_line);
     const auto& c2_layout = layoutAt(c2_line);
-    int c1_x = Caret::xAtColumn(c1_layout, c1_col);
-    int c2_x = Caret::xAtColumn(c2_layout, c2_col);
+    int c1_x = Movement::xAtColumn(c1_layout, c1_col);
+    int c2_x = Movement::xAtColumn(c2_layout, c2_col);
 
     // Don't render off-screen selections.
     if (c1_line < start_line) c1_line = start_line;
@@ -565,8 +566,8 @@ void TextViewWidget::renderCaret(int main_line_height) {
     int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;
 
-    auto [line, col] = tree.line_column_at(selection.end().index);
-    int end_caret_x = Caret::xAtColumn(layoutAt(line), col);
+    auto [line, col] = tree.line_column_at(selection.end());
+    int end_caret_x = Movement::xAtColumn(layoutAt(line), col);
 
     app::Point caret_pos{
         .x = end_caret_x,

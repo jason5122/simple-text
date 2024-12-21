@@ -1,13 +1,16 @@
-#include "base/numeric/saturation_arithmetic.h"
 #include "selection.h"
+
+#include "base/numeric/saturation_arithmetic.h"
+
+#include <algorithm>
 
 namespace gui {
 
-Caret& Selection::start() {
+size_t& Selection::start() {
     return start_caret;
 }
 
-Caret& Selection::end() {
+size_t& Selection::end() {
     return end_caret;
 }
 
@@ -16,30 +19,30 @@ bool Selection::empty() const {
 }
 
 std::pair<size_t, size_t> Selection::range() const {
-    return {std::min(start_caret, end_caret).index, std::max(start_caret, end_caret).index};
+    return {std::min(start_caret, end_caret), std::max(start_caret, end_caret)};
 }
 
 void Selection::setIndex(size_t index, bool extend) {
-    end_caret.index = index;
+    end_caret = index;
     if (!extend) {
         start_caret = end_caret;
     }
 }
 
 void Selection::setRange(size_t start_index, size_t end_index) {
-    start_caret.index = start_index;
-    end_caret.index = end_index;
+    start_caret = start_index;
+    end_caret = end_index;
 }
 
 void Selection::increment(size_t inc, bool extend) {
-    end_caret.index += inc;
+    end_caret += inc;
     if (!extend) {
         start_caret = end_caret;
     }
 }
 
 void Selection::decrement(size_t dec, bool extend) {
-    end_caret.index = base::sub_sat(end_caret.index, dec);
+    end_caret = base::sub_sat(end_caret, dec);
     if (!extend) {
         start_caret = end_caret;
     }

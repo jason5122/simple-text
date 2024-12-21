@@ -2,17 +2,14 @@
 
 #include "base/buffer/piece_tree.h"
 #include "font/types.h"
+
 #include <cstddef>
 #include <string_view>
 
 namespace gui {
 
-class Caret {
+class Movement {
 public:
-    // TODO: Remove this.
-    size_t index = 0;
-    constexpr auto operator<=>(const Caret& rhs) const = default;
-
     static size_t columnAtX(const font::LineLayout& layout, int x);
     static int xAtColumn(const font::LineLayout& layout, size_t col);
 

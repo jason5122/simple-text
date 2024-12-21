@@ -1,7 +1,7 @@
 #include "app/gtk/impl_gtk.h"
 #include "app/window.h"
 
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace app {
 
@@ -73,7 +73,7 @@ std::optional<std::string> Window::openFilePicker() const {
 //     // gtk_widget_set_visible(popover_menu, true);
 //     gtk_popover_popup(GTK_POPOVER(popover_menu));
 
-//     std::println("Context menu closed.");
+//     fmt::println("Context menu closed.");
 // }
 
 }  // namespace app

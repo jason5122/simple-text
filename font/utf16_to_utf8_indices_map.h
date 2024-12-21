@@ -6,7 +6,7 @@
 #include <vector>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace font {
 
@@ -20,13 +20,13 @@ public:
         assert(utf8 != nullptr);
 
         if (!SkTFitsIn<int32_t>(size)) {
-            std::println("UTF16ToUTF8IndicesMap: text too long");
+            fmt::println("UTF16ToUTF8IndicesMap: text too long");
             return false;
         }
 
         auto utf16Size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
         if (utf16Size < 0) {
-            std::println("UTF16ToUTF8IndicesMap: Invalid utf8 input");
+            fmt::println("UTF16ToUTF8IndicesMap: Invalid utf8 input");
             return false;
         }
 

@@ -2,7 +2,7 @@
 #include <dlfcn.h>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace {
 
@@ -21,7 +21,7 @@ public:
 FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
     pimpl->handle = dlopen(kDefaultOpenGLDylibName, RTLD_NOW);
     if (!pimpl->handle) {
-        std::println("Could not open the OpenGL Framework.");
+        fmt::println("Could not open the OpenGL Framework.");
         std::abort();
     }
 }

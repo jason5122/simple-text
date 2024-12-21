@@ -3,7 +3,7 @@
 #include <cmath>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace gui {
 

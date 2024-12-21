@@ -19,7 +19,7 @@ const std::string kFragmentShaderSource =
 
 // TODO: Debug; remove this.
 #include "util/profile_util.h"
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace gui {
 
@@ -238,7 +238,7 @@ void TextRenderer::insertIntoBatch(size_t page,
 
     instances.emplace_back(std::move(instance));
     if (instances.size() == kBatchMax) {
-        std::println("TextRenderer error: attempted to insert into a full batch!");
+        fmt::println("TextRenderer error: attempted to insert into a full batch!");
     }
 }
 

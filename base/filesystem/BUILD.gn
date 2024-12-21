@@ -26,4 +26,6 @@ source_set("filesystem") {
     ]
     libs = [ "shell32.lib" ]
   }
+
+  deps = [ "//third_party/fmt" ]
 }

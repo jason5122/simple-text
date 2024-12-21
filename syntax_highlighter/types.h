@@ -1,6 +1,6 @@
 #pragma once
 
-#include <format>
+#include <cstdint>
 #include <tree_sitter/api.h>
 
 constexpr bool operator==(const TSPoint& p1, const TSPoint& p2) {
@@ -34,25 +34,3 @@ struct Rgb {
 };
 
 }  // namespace highlight
-
-template <>
-struct std::formatter<TSPoint> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.begin();
-    }
-
-    auto format(const auto& p, auto& ctx) const {
-        return std::format_to(ctx.out(), "TSPoint({}, {})", p.row, p.column);
-    }
-};
-
-template <>
-struct std::formatter<highlight::Rgb> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.begin();
-    }
-
-    auto format(const auto& rgb, auto& ctx) const {
-        return std::format_to(ctx.out(), "Rgb({}, {}, {})", rgb.r, rgb.g, rgb.b);
-    }
-};

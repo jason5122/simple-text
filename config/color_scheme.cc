@@ -2,7 +2,7 @@
 #include "color_scheme.h"
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace config {
 ColorScheme::ColorScheme(bool dark_mode) {
@@ -38,14 +38,14 @@ void ColorScheme::reload(bool dark_mode) {
         // TODO: Handle errors in a better way.
         glz::parse_error error = glz::read_file_json(schema, color_scheme_path.string(), buffer);
         if (error) {
-            std::println(glz::format_error(error, buffer));
+            fmt::println(glz::format_error(error, buffer));
         }
     } else {
         std::filesystem::create_directory(color_scheme_path.parent_path());
         glz::write_error error =
             glz::write_file_json<kDefaultOptions>(schema, color_scheme_path.string(), buffer);
         if (error) {
-            std::println("Could not write color scheme to {}.", color_scheme_path);
+            fmt::println("Could not write color scheme to {}.", color_scheme_path);
         }
     }
 

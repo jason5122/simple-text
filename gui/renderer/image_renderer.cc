@@ -12,7 +12,7 @@ using namespace opengl;
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
-#include "util/std_print.h"
+#include <fmt/base.h>
 #include <cassert>
 
 namespace {
@@ -109,7 +109,7 @@ size_t ImageRenderer::addPng(std::string_view image_path) {
     bool success = loadPng(image_path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
-        std::println("ImageRenderer::addJpeg() error: Could not load image.");
+        fmt::println("ImageRenderer::addJpeg() error: Could not load image.");
     }
 
     size_t image_id = cache.size();
@@ -123,7 +123,7 @@ size_t ImageRenderer::addJpeg(std::string_view image_path) {
     bool success = loadJpeg(image_path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
-        std::println("ImageRenderer::addJpeg() error: Could not load image.");
+        fmt::println("ImageRenderer::addJpeg() error: Could not load image.");
     }
 
     size_t image_id = cache.size();

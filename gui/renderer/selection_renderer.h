@@ -5,6 +5,8 @@
 #include "gui/renderer/shader.h"
 #include "util/non_copyable.h"
 
+#include <vector>
+
 namespace gui {
 
 class SelectionRenderer : util::NonCopyable {

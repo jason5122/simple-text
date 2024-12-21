@@ -19,7 +19,7 @@
 using Microsoft::WRL::ComPtr;
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 #include <cassert>
 
 namespace font {
@@ -42,7 +42,7 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
     if (FAILED(hr)) {
         // TODO: Make this work with `UNICODE`/`_UNICODE`.
         // _com_error err(hr);
-        // std::println(err.ErrorMessage());
+        // fmt::println(err.ErrorMessage());
         std::abort();
     }
 }
@@ -61,14 +61,14 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
     HRESULT hr;
     hr = font_collection->FindFamilyName(font_name16.data(), &index, &exists);
     if (FAILED(hr)) {
-        std::println("Could not create font family with name {} and size {}.", font_name8,
+        fmt::println("Could not create font family with name {} and size {}.", font_name8,
                      font_size);
     }
 
     ComPtr<IDWriteFontFamily> font_family;
     hr = font_collection->GetFontFamily(index, &font_family);
     if (FAILED(hr)) {
-        std::println("Could not create font family with name {} and size {}.", font_name8,
+        fmt::println("Could not create font family with name {} and size {}.", font_name8,
                      font_size);
     }
 
@@ -76,7 +76,7 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
     hr = font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STRETCH_NORMAL,
                                            DWRITE_FONT_STYLE_NORMAL, &font);
     if (FAILED(hr)) {
-        std::println("Could not create font with name {} and size {}.", font_name8, font_size);
+        fmt::println("Could not create font with name {} and size {}.", font_name8, font_size);
     }
 
     return cacheFont({font}, font_size);
@@ -383,12 +383,12 @@ void DrawColorRun(ID2D1RenderTarget* target,
         case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
         case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
         case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
-            std::println("Error: DrawColorBitmapGlyphRun() is unimplemented!");
+            fmt::println("Error: DrawColorBitmapGlyphRun() is unimplemented!");
             std::abort();
             break;
 
         case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
-            std::println("Error: DrawSvgGlyphRun() is unimplemented!");
+            fmt::println("Error: DrawSvgGlyphRun() is unimplemented!");
             std::abort();
             break;
 

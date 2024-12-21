@@ -6,7 +6,8 @@
 #include "opengl/functions_gl.h"
 
 // TODO: Debug; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
@@ -21,8 +22,8 @@ void EditorApp::onLaunch() {
 
     // Load images.
     auto& image_renderer = gui::Renderer::instance().getImageRenderer();
-    std::string panel_close_2x = std::format("{}/icons/panel_close@2x.png", base::ResourceDir());
-    std::string folder_open_2x = std::format("{}/icons/folder_open@2x.png", base::ResourceDir());
+    std::string panel_close_2x = fmt::format("{}/icons/panel_close@2x.png", base::ResourceDir());
+    std::string folder_open_2x = fmt::format("{}/icons/folder_open@2x.png", base::ResourceDir());
     panel_close_image_id = image_renderer.addPng(panel_close_2x);
     folder_open_image_id = image_renderer.addPng(folder_open_2x);
 
@@ -30,7 +31,7 @@ void EditorApp::onLaunch() {
 }
 
 void EditorApp::onQuit() {
-    std::println("SimpleText::onQuit()");
+    fmt::println("SimpleText::onQuit()");
 }
 
 void EditorApp::onAppAction(app::AppAction action) {
@@ -51,13 +52,13 @@ void EditorApp::createWindow() {
 #else
     const std::string& debug_or_release = "Debug";
 #endif
-    editor_window->setTitle(std::format("Simple Text ({})", debug_or_release));
+    editor_window->setTitle(fmt::format("Simple Text ({})", debug_or_release));
 
     editor_window->show();
     editor_windows.emplace_back(std::move(editor_window));
 }
 
 void EditorApp::destroyWindow(int wid) {
-    std::println("EditorApp::destroyWindow({})", wid);
+    fmt::println("EditorApp::destroyWindow({})", wid);
     editor_windows[wid] = nullptr;
 }

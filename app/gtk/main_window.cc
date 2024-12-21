@@ -3,7 +3,8 @@
 #include <cmath>
 
 // Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 namespace app {
 
@@ -64,7 +65,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
         g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
                                         gtk_app);
 
-        std::string quit_accel = std::format("{}q", GtkAccelStringFromModifier(kPrimaryModifier));
+        std::string quit_accel = fmt::format("{}q", GtkAccelStringFromModifier(kPrimaryModifier));
         const gchar* quit_accels[2] = {quit_accel.data(), NULL};
         gtk_application_set_accels_for_action(gtk_app, "app.quit", quit_accels);
     }
@@ -102,7 +103,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
 }
 
 MainWindow::~MainWindow() {
-    std::println("~MainWindow");
+    fmt::println("~MainWindow");
     // TODO: See if we need `g_object_unref` for any other object.
     // g_object_unref(dbus_settings_proxy);
 }
@@ -185,10 +186,10 @@ void realize(GtkGLArea* self, gpointer user_data) {
 
     GdkGLAPI api = gtk_gl_area_get_api(self);
     if (api == GDK_GL_API_GL) {
-        std::println("GDK_GL_API_GL");
+        fmt::println("GDK_GL_API_GL");
     }
     if (api == GDK_GL_API_GLES) {
-        std::println("GDK_GL_API_GLES");
+        fmt::println("GDK_GL_API_GLES");
     }
 
     // FIXME: Getting the size of a widget doesn't seem to be possible during realization.
@@ -234,7 +235,7 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
         dy *= 32;
     } else {
         // TODO: Figure out how to interpret scroll numbers (usually between 0.0-1.0).
-        std::println("dy = {}", dy);
+        fmt::println("dy = {}", dy);
         // dx *= 32;
         // dy *= 32;
     }
@@ -309,7 +310,7 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
 }
 
 void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
-    std::println("quit callback");
+    fmt::println("quit callback");
     g_application_quit(G_APPLICATION(app));
 }
 
@@ -336,7 +337,7 @@ gboolean key_pressed(GtkEventControllerKey* self,
             std::string str8(utf8, utf8_len);
             app_window->onInsertText(str8);
 
-            std::println("str8 = {}, codepoint = {}", str8, codepoint);
+            fmt::println("str8 = {}, codepoint = {}", str8, codepoint);
         }
     }
     return false;  // TODO: See if we should return true/false here.
@@ -433,7 +434,7 @@ constexpr const gchar* GtkAccelStringFromModifier(ModifierKey modifier) {
     case ModifierKey::kSuper:
         return "<Meta>";
     default:
-        std::println("Error: Could not parse modifier.");
+        fmt::println("Error: Could not parse modifier.");
         std::abort();
     }
 }

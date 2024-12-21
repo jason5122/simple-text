@@ -3,7 +3,7 @@
 #include <windows.h>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace opengl {
 
@@ -16,7 +16,7 @@ FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
     pimpl->module = LoadLibraryExA("opengl32.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 
     if (!pimpl->module) {
-        std::println("could not load opengl32.dll");
+        fmt::println("could not load opengl32.dll");
     }
 }
 
@@ -34,7 +34,7 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
         DWORD error = GetLastError();
         if (error != 0) {
             std::string error_str = GetLastErrorAsString(error);
-            std::println("Error loading function `{}`: {}", function, error_str);
+            fmt::println("Error loading function `{}`: {}", function, error_str);
         }
     }
     return p;

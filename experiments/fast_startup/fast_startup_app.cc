@@ -4,7 +4,7 @@
 #include "gui/renderer/renderer.h"
 #include "opengl/functions_gl.h"
 
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.

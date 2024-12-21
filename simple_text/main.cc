@@ -4,6 +4,9 @@
 namespace {
 
 int SimpleTextMain(int argc, char* argv[]) {
+    // Disable stdout buffering.
+    std::setbuf(stdout, nullptr);
+
     // TODO: Return proper status codes.
     EditorApp editor_app;
     editor_app.run();

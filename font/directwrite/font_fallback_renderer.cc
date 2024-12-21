@@ -5,7 +5,7 @@
 using Microsoft::WRL::ComPtr;
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace font {
 
@@ -13,7 +13,7 @@ FontFallbackRenderer::FontFallbackRenderer(ComPtr<IDWriteFontCollection> font_co
                                            std::string_view str8)
     : fRefCount(1), font_collection{font_collection} {
     if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
-        std::println("UTF16ToUTF8IndicesMap::setUTF8 error");
+        fmt::println("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }
 }
@@ -52,7 +52,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
     IUnknown* clientDrawingEffect) {
     if (!glyphRun->fontFace) {
-        std::println("Glyph run without font face.");
+        fmt::println("Glyph run without font face.");
         std::abort();
     }
 

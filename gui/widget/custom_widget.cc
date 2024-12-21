@@ -5,10 +5,11 @@
 #include "gui/renderer/renderer_lite.h"
 
 #include <cmath>
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
-#include "util/std_print.h"
 #include <cassert>
 
 namespace gui {
@@ -118,7 +119,7 @@ void CustomWidget::renderText(int main_line_height, size_t start_line, size_t en
         line_number_coords.x += kGutterLeftPadding;
         line_number_coords.y += static_cast<int>(line) * main_line_height;
 
-        std::string line_number_str = std::format("{}", line + 1);
+        std::string line_number_str = fmt::format("{}", line + 1);
         const auto& line_number_layout = line_layout_cache.get(font_id, line_number_str);
         line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 

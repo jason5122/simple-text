@@ -8,7 +8,7 @@
 #include <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 #include <algorithm>
 #include <cassert>
 
@@ -100,7 +100,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     CTFontRef font_ref = font_id_to_native[font_id].font.get();
 
     if (!font_ref) {
-        std::println("FontRasterizer::rasterize() error: CTFontRef is null!");
+        fmt::println("FontRasterizer::rasterize() error: CTFontRef is null!");
         std::abort();
     }
 
@@ -178,7 +178,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
 
     UTF16ToUTF8IndicesMap utf8IndicesMap;
     if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
-        std::println("UTF16ToUTF8IndicesMap::setUTF8 error");
+        fmt::println("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }
 
@@ -264,7 +264,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
     if (font_name.empty()) {
-        std::println("FontRasterizer::cacheFont() error: font_name is empty");
+        fmt::println("FontRasterizer::cacheFont() error: font_name is empty");
         std::abort();
     }
 

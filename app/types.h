@@ -1,7 +1,5 @@
 #pragma once
 
-#include <format>
-
 namespace app {
 
 enum class CursorStyle { kArrow, kIBeam };
@@ -88,25 +86,3 @@ struct Size {
 };
 
 }  // namespace app
-
-template <>
-struct std::formatter<app::Point> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.begin();
-    }
-
-    auto format(const auto& p, auto& ctx) const {
-        return std::format_to(ctx.out(), "Point({}, {})", p.x, p.y);
-    }
-};
-
-template <>
-struct std::formatter<app::Size> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.begin();
-    }
-
-    auto format(const auto& s, auto& ctx) const {
-        return std::format_to(ctx.out(), "Size({}, {})", s.width, s.height);
-    }
-};

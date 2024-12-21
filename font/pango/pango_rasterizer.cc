@@ -3,7 +3,7 @@
 #include "font/pango/pango_helper.h"
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 #include <algorithm>
 #include <cassert>
 
@@ -40,7 +40,7 @@ size_t FontRasterizer::addFont(std::string_view font_name_utf8, int font_size, F
     GObjectPtr<PangoFont> pango_font{
         pango_font_map_load_font(font_map, context.get(), desc.get())};
     if (!pango_font) {
-        std::println("pango_font_map_load_font() error.");
+        fmt::println("pango_font_map_load_font() error.");
         std::abort();
     }
     return cacheFont({std::move(pango_font)}, font_size);
@@ -194,7 +194,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
 
     PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(font.font.get(), nullptr)};
     if (!pango_metrics) {
-        std::println("pango_font_get_metrics() error.");
+        fmt::println("pango_font_get_metrics() error.");
         std::abort();
     }
 

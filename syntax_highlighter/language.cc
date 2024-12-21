@@ -64,7 +64,7 @@ void Language::load() {
         PROFILE_BLOCK("SyntaxHighlighter::loadFromWasm()");
 
         std::string wasm_path =
-            std::format("{}/languages/{}/language.wasm", base::ResourceDir(), name);
+            fmt::format("{}/languages/{}/language.wasm", base::ResourceDir(), name);
 
         size_t file_size;
         auto data = base::ReadFileBinary(wasm_path.c_str(), file_size);
@@ -78,7 +78,7 @@ void Language::load() {
                                                &ts_wasm_error);
 
         if (!language) {
-            std::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
+            fmt::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
             std::abort();
         }
         assert(ts_language_is_wasm(language));
@@ -91,12 +91,12 @@ void Language::load() {
 
     uint32_t error_offset = 0;
     TSQueryError error_type = TSQueryErrorNone;
-    auto query_path = std::format("languages/{}/highlights.scm", name);
+    auto query_path = fmt::format("languages/{}/highlights.scm", name);
     std::string src = base::ReadFile(query_path.c_str());
     query = ts_query_new(language, src.data(), src.length(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        std::println("Error creating new TSQuery. error_offset: {}, error type:{} ", error_offset,
+        fmt::println("Error creating new TSQuery. error_offset: {}, error type:{} ", error_offset,
                      static_cast<std::underlying_type_t<TSQueryError>>(error_type));
     }
 
@@ -105,7 +105,7 @@ void Language::load() {
     for (size_t i = 0; i < capture_count; ++i) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
-        std::println("{}: {}", i, capture_name);
+        fmt::println("{}: {}", i, capture_name);
 
         capture_index_color_table[i] = ColorForCaptureName(capture_name);
     }

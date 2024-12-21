@@ -5,7 +5,7 @@
 #import <Carbon/Carbon.h>
 
 // Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace app {
 namespace {
@@ -182,9 +182,9 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 - (void)onScrollerStyleChanged:(NSNotification*)notification {
     auto style = NSScroller.preferredScrollerStyle;
     if (style == NSScrollerStyleLegacy) {
-        std::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleLegacy.");
+        fmt::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleLegacy.");
     } else if (style == NSScrollerStyleOverlay) {
-        std::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleOverlay.");
+        fmt::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleOverlay.");
     }
 }
 
@@ -247,7 +247,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
     selector_str = [selector_str substringToIndex:selector_len - 1];
 
     std::string str = selector_str.UTF8String;
-    std::println(str);
+    fmt::println("{}", str);
     if (str == "moveForward" || str == "moveRight") {
         glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters);
     } else if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {

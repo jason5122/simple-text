@@ -6,7 +6,7 @@
 #include <optional>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace gui {
 
@@ -80,7 +80,7 @@ size_t Movement::prevWordStart(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            std::println("Movement::prevWordStart() error: invalid codepoint.");
+            fmt::println("Movement::prevWordStart() error: invalid codepoint.");
             std::abort();
         }
 
@@ -109,7 +109,7 @@ size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            std::println("Movement::nextWordEnd() error: invalid codepoint.");
+            fmt::println("Movement::nextWordEnd() error: invalid codepoint.");
             std::abort();
         }
 

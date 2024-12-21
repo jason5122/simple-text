@@ -3,7 +3,7 @@
 #include "experiments/fast_startup/fast_startup_app.h"
 #include "gui/renderer/renderer_lite.h"
 
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 FastStartupWindow::FastStartupWindow(FastStartupApp& parent, int width, int height, int wid)
     : Window(parent, width, height), parent(parent) {

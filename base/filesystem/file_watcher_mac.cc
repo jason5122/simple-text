@@ -2,7 +2,7 @@
 #include <CoreServices/CoreServices.h>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 static void FSEventsCallback(ConstFSEventStreamRef stream,
                              void* client_info,
@@ -14,7 +14,7 @@ static void FSEventsCallback(ConstFSEventStreamRef stream,
 
     char** paths = static_cast<char**>(event_paths);
     for (size_t i = 0; i < num_events; ++i) {
-        std::println("Change {} in {}, flags {}", event_ids[i], paths[i], event_flags[i]);
+        fmt::println("Change {} in {}, flags {}", event_ids[i], paths[i], event_flags[i]);
 
         callback->onFileEvent();
     }

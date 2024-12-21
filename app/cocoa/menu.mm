@@ -3,7 +3,7 @@
 #include "base/apple/string_conversions.h"
 #include "menu.h"
 
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 // This Objective-C class wraps a app::Menu object, which allows it to be stored in the
 // representedObject field of an NSMenuItem.

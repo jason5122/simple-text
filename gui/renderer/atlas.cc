@@ -3,7 +3,7 @@
 using namespace opengl;
 
 // TODO: For debugging; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 #include <random>
 
 namespace gui {
@@ -76,20 +76,20 @@ GLuint Atlas::tex() const {
 bool Atlas::insertTexture(
     int width, int height, Format format, const std::vector<GLubyte>& data, Vec4& out_uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
-        std::println("Glyph is too large.");
+        fmt::println("Glyph is too large.");
         return false;
     }
 
     // If there's not enough room in current row, advance to the next one.
     if (!roomInRow(width, height)) {
         if (!advanceRow()) {
-            std::println("Atlas is full.");
+            fmt::println("Atlas is full.");
             return false;
         }
 
         // If there's still not enough room, then atlas is full.
         if (!roomInRow(width, height)) {
-            std::println("Could not insert into atlas.");
+            fmt::println("Could not insert into atlas.");
             return false;
         }
     }

@@ -6,11 +6,10 @@
 
 #include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>
-#include <format>
 #include <vector>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 // Taken from `//chromium/src/chrome/browser/ui/cocoa/main_menu_builder.mm.
 namespace {

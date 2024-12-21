@@ -17,4 +17,6 @@ source_set("cocoa") {
     "OpenGL.framework",
   ]
   defines = [ "GL_SILENCE_DEPRECATION" ]
+
+  deps = [ "//third_party/fmt" ]
 }

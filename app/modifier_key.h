@@ -1,7 +1,6 @@
 #pragma once
 
 #include "build/build_config.h"
-#include <format>
 #include <type_traits>
 
 namespace app {
@@ -53,27 +52,3 @@ inline constexpr auto operator~(ModifierKey m) {
 }
 
 }  // namespace app
-
-template <>
-struct std::formatter<app::ModifierKey> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.begin();
-    }
-
-    auto format(const auto& modifiers, auto& ctx) const {
-        std::string modifiers_str;
-        if ((modifiers & app::ModifierKey::kShift) != app::ModifierKey::kNone) {
-            modifiers_str += "Shift";
-        }
-        if ((modifiers & app::ModifierKey::kControl) != app::ModifierKey::kNone) {
-            modifiers_str += "Control";
-        }
-        if ((modifiers & app::ModifierKey::kAlt) != app::ModifierKey::kNone) {
-            modifiers_str += "Alt";
-        }
-        if ((modifiers & app::ModifierKey::kSuper) != app::ModifierKey::kNone) {
-            modifiers_str += "Super";
-        }
-        return std::format_to(ctx.out(), "ModifierKey({})", modifiers_str);
-    }
-};

@@ -6,5 +6,8 @@ source_set("buffer") {
 
   # configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
-  deps = [ "aho_corasick" ]
+  deps = [
+    "aho_corasick",
+    "//third_party/fmt",
+  ]
 }

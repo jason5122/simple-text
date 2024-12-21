@@ -50,14 +50,3 @@ protected:
 static_assert(std::is_abstract<Widget>());
 
 }  // namespace gui
-
-template <>
-struct std::formatter<gui::Widget> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.begin();
-    }
-
-    auto format(const auto& widget, auto& ctx) const {
-        return std::format_to(ctx.out(), "{}({})", widget.getClassName(), widget.getSize());
-    }
-};

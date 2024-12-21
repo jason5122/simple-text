@@ -10,7 +10,7 @@
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 using namespace gui;
 
@@ -201,9 +201,9 @@ void EditorWindow::onRightMouseDown(const app::Point& mouse_pos,
     //     menu.addItem(temp);
     //     auto selected_index = menu.show(mouse_pos.value());
     //     if (selected_index) {
-    //         std::println("Selected menu index = {}", selected_index.value());
+    //         fmt::println("Selected menu index = {}", selected_index.value());
     //     } else {
-    //         std::println("Menu was closed without a selection.");
+    //         fmt::println("Menu was closed without a selection.");
     //     }
     // }
 }
@@ -227,7 +227,7 @@ void EditorWindow::onMouseExit() {
 }
 
 bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
-    // std::println("key = {}, modifiers = {}", key, modifiers);
+    // fmt::println("key = {}, modifiers = {}", key, modifiers);
 
     bool handled = false;
     if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {
@@ -468,7 +468,7 @@ void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos)
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
-            // std::println("{}", *hovered_widget);
+            // fmt::println("{}", *hovered_widget);
             parent.setCursorStyle(hovered_widget->cursorStyle());
         }
     }

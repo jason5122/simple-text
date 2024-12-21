@@ -1,5 +1,5 @@
 #include "display_gl.h"
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl3.h>
@@ -26,18 +26,18 @@ std::unique_ptr<DisplayGL> DisplayGL::Create() {
 
     CGLChoosePixelFormat(attribs, &pixel_format, &nVirtualScreens);
     if (pixel_format == nullptr) {
-        std::println("Could not create the context's pixel format.");
+        fmt::println("Could not create the context's pixel format.");
         return nullptr;
     }
 
     CGLCreateContext(pixel_format, nullptr, &context);
     if (pixel_format == nullptr) {
-        std::println("Could not create the CGL context.");
+        fmt::println("Could not create the CGL context.");
         return nullptr;
     }
 
     if (CGLSetCurrentContext(context) != kCGLNoError) {
-        std::println("Could not make the CGL context current.");
+        fmt::println("Could not make the CGL context current.");
         return nullptr;
     }
 

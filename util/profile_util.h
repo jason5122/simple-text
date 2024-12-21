@@ -1,7 +1,8 @@
 #pragma once
 
-#include "util/std_print.h"
 #include <chrono>
+#include <iostream>
+#include <string>
 
 // https://stackoverflow.com/a/37607676
 template <typename Duration = std::chrono::microseconds>
@@ -18,7 +19,7 @@ public:
         } else if (std::is_same<Duration, std::chrono::milliseconds>::value) {
             unit = "ms";
         }
-        std::println("{}: {} {}", name, duration, unit);
+        std::cout << name << ": " << duration << ' ' << unit << '\n';
     }
 
 private:

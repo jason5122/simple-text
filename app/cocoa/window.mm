@@ -3,7 +3,7 @@
 #include "app/cocoa/impl_cocoa.h"
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace app {
 
@@ -52,7 +52,7 @@ void Window::redraw() {
     // TODO: GLLayer calling `onResize()` is currently known to do this if NSWindowTabbingMode is
     // enabled. Fix this.
     if (has_been_closed) {
-        std::println("Warning: Window::redraw() called after Window::close(). This redraw has "
+        fmt::println("Warning: Window::redraw() called after Window::close(). This redraw has "
                      "become a no-op, but investigate why redraw() was called.");
         return;
     }
@@ -105,7 +105,7 @@ std::optional<std::string> Window::openFilePicker() const {
     // [panel beginSheetModalForWindow:pimpl->window_controller.window
     //                   completionHandler:^(NSInteger result) {
     //                     if (result == NSModalResponseOK) {
-    //                         std::println(panel.URL.fileSystemRepresentation);
+    //                         fmt::println(panel.URL.fileSystemRepresentation);
     //                     }
     //                   }];
 }

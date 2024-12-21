@@ -3,7 +3,7 @@
 #include <dlfcn.h>
 
 // TODO: Debug use; remove this.
-#include "util/std_print.h"
+#include <fmt/base.h>
 
 namespace {
 
@@ -22,14 +22,14 @@ public:
 FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
     pimpl->handle = dlopen(kDefaultEGLPath, RTLD_NOW);
     if (!pimpl->handle) {
-        std::println("Could not dlopen native EGL.");
+        fmt::println("Could not dlopen native EGL.");
         std::abort();
     }
 
     pimpl->mGetProcAddressPtr =
         reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(pimpl->handle, "eglGetProcAddress"));
     if (!pimpl->mGetProcAddressPtr) {
-        std::println("Could not find eglGetProcAddress");
+        fmt::println("Could not find eglGetProcAddress");
     }
 }
 

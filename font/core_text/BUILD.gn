@@ -1,3 +1,5 @@
 source_set("core_text") {
   sources = [ "core_text_rasterizer.cc" ]
+
+  deps = [ "//third_party/fmt" ]
 }

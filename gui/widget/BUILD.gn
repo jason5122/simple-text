@@ -20,6 +20,7 @@ source_set("widget") {
   deps = [
     "//base/buffer",
     "//gui/renderer",
+    "//third_party/fmt",
 
     # TODO: Put this behind a feature flag. Or even better, consider refactoring this out of //gui.
     # "//syntax_highlighter",

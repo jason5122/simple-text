@@ -78,7 +78,10 @@ size_t Caret::prevWordStart(const base::PieceTree& tree, size_t offset) {
         size_t offset = reverse_walker.offset();
 
         // TODO: Properly handle errors.
-        if (cp == -1) std::abort();
+        if (cp == -1) {
+            std::println("Caret::prevWordStart() error: invalid codepoint.");
+            std::abort();
+        }
 
         if (prev_cp) {
             auto prev_kind = CodepointToCharKind(prev_cp.value());
@@ -104,7 +107,10 @@ size_t Caret::nextWordEnd(const base::PieceTree& tree, size_t offset) {
         size_t offset = walker.offset();
 
         // TODO: Properly handle errors.
-        if (cp == -1) std::abort();
+        if (cp == -1) {
+            std::println("Caret::nextWordEnd() error: invalid codepoint.");
+            std::abort();
+        }
 
         if (prev_cp) {
             auto prev_kind = CodepointToCharKind(prev_cp.value());

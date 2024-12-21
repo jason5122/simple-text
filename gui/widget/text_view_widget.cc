@@ -285,16 +285,21 @@ void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     app::Point new_coords = mouse_pos - textOffset();
-    size_t new_line = lineAtY(new_coords.y);
-    size_t new_col = Caret::columnAtX(layoutAt(new_line), new_coords.x);
+    size_t line = lineAtY(new_coords.y);
+    size_t col = Caret::columnAtX(layoutAt(line), new_coords.x);
+    size_t offset = tree.offset_at(line, col);
 
     if (click_type == app::ClickType::kSingleClick) {
         bool extend = modifiers == app::ModifierKey::kShift;
-        selection.setIndex(tree.offset_at(new_line, new_col), extend);
-    }
-    // TODO: Implement double clicks.
-    else if (click_type == app::ClickType::kDoubleClick) {
-        ;
+        selection.setIndex(offset, extend);
+    } else if (click_type == app::ClickType::kDoubleClick) {
+        // TODO: Refine double click implementation.
+        size_t left = Caret::prevWordStart(tree, offset);
+        size_t right = Caret::nextWordEnd(tree, offset);
+        selection.setRange(left, right);
+    } else if (click_type == app::ClickType::kTripleClick) {
+        auto [left, right] = tree.get_line_range_with_newline(line);
+        selection.setRange(left, right);
     }
 }
 

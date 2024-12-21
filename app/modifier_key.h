@@ -2,6 +2,7 @@
 
 #include "build/build_config.h"
 #include <format>
+#include <type_traits>
 
 namespace app {
 

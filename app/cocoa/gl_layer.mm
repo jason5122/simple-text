@@ -5,7 +5,7 @@
 #include <fmt/base.h>
 
 @interface GLLayer () {
-    app::Window* app_window;
+    std::weak_ptr<app::Window> app_window_ptr;
     app::DisplayGL* display_gl;
 }
 
@@ -13,10 +13,11 @@
 
 @implementation GLLayer
 
-- (instancetype)initWithAppWindow:(app::Window*)appWindow displayGL:(app::DisplayGL*)displayGL {
+- (instancetype)initWithAppWindow:(std::weak_ptr<app::Window>)appWindow
+                        displayGL:(app::DisplayGL*)displayGL {
     self = [super init];
     if (self) {
-        app_window = appWindow;
+        app_window_ptr = appWindow;
         display_gl = displayGL;
     }
     return self;
@@ -32,9 +33,11 @@
 
     // Call OpenGL activation callback.
     CGLSetCurrentContext(display_gl->context());
-    int scaled_width = self.frame.size.width * self.contentsScale;
-    int scaled_height = self.frame.size.height * self.contentsScale;
-    app_window->onOpenGLActivate({scaled_width, scaled_height});
+    if (auto app_window = app_window_ptr.lock()) {
+        int scaled_width = self.frame.size.width * self.contentsScale;
+        int scaled_height = self.frame.size.height * self.contentsScale;
+        app_window->onOpenGLActivate({scaled_width, scaled_height});
+    }
     return display_gl->context();
 }
 
@@ -54,9 +57,11 @@
 
     CGLSetCurrentContext(glContext);
 
-    int scaled_width = self.frame.size.width * self.contentsScale;
-    int scaled_height = self.frame.size.height * self.contentsScale;
-    app_window->onDraw({scaled_width, scaled_height});
+    if (auto app_window = app_window_ptr.lock()) {
+        int scaled_width = self.frame.size.width * self.contentsScale;
+        int scaled_height = self.frame.size.height * self.contentsScale;
+        app_window->onDraw({scaled_width, scaled_height});
+    }
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext
@@ -76,9 +81,11 @@
                        context:(void*)context {
     CGLSetCurrentContext(display_gl->context());
 
-    int scaled_width = self.frame.size.width * self.contentsScale;
-    int scaled_height = self.frame.size.height * self.contentsScale;
-    app_window->onResize({scaled_width, scaled_height});
+    if (auto app_window = app_window_ptr.lock()) {
+        int scaled_width = self.frame.size.width * self.contentsScale;
+        int scaled_height = self.frame.size.height * self.contentsScale;
+        app_window->onResize({scaled_width, scaled_height});
+    }
 }
 
 // We shouldn't release the CGLContextObj since it isn't owned by this object.

@@ -8,10 +8,10 @@
 
 @interface WindowController : NSWindowController <NSWindowDelegate>
 
-@property(nonatomic) app::Window* appWindow;
+@property(nonatomic) std::weak_ptr<app::Window> appWindow;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(app::Window*)appWindow
+                    appWindow:(std::weak_ptr<app::Window>)appWindow
                     displayGL:(app::DisplayGL*)displayGL;
 
 - (void)show;

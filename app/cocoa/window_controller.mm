@@ -16,7 +16,7 @@
 @synthesize appWindow;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(app::Window*)theAppWindow
+                    appWindow:(std::weak_ptr<app::Window>)theAppWindow
                     displayGL:(app::DisplayGL*)displayGL {
     self = [super init];
     if (self) {
@@ -40,7 +40,9 @@
 }
 
 - (void)windowWillClose:(NSNotification*)notification {
-    appWindow->onClose();
+    if (auto app_window = appWindow.lock()) {
+        app_window->onClose();
+    }
 }
 
 - (void)show {

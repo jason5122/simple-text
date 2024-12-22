@@ -5,6 +5,8 @@
 #include "app/key.h"
 #include "app/modifier_key.h"
 #include "app/types.h"
+#include "base/memory/weak_ptr_factory.h"
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -78,6 +80,8 @@ private:
 
     class impl;
     std::unique_ptr<impl> pimpl;
+
+    base::weak_ptr_factory<Window> weak_ptr_factory;
 };
 
 }  // namespace app

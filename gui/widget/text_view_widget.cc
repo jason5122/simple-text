@@ -281,6 +281,10 @@ std::pair<size_t, size_t> TextViewWidget::getLineColumn() {
     return {cursor.line, cursor.column};
 }
 
+size_t TextViewWidget::getSelectionLength() {
+    return selection.length();
+}
+
 void TextViewWidget::draw() {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);

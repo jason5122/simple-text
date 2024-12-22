@@ -34,6 +34,7 @@ public:
     void find(std::string_view str8);
     // TODO: Use a struct type for clarity.
     std::pair<size_t, size_t> getLineColumn();
+    size_t getSelectionLength();
 
     void draw() override;
     void leftMouseDown(const app::Point& mouse_pos,

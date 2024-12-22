@@ -4,6 +4,9 @@
 
 #include <algorithm>
 
+// TODO: Debug use; remove this.
+#include <cassert>
+
 namespace gui {
 
 size_t& Selection::start() {
@@ -20,6 +23,12 @@ bool Selection::empty() const {
 
 std::pair<size_t, size_t> Selection::range() const {
     return {std::min(start_caret, end_caret), std::max(start_caret, end_caret)};
+}
+
+size_t Selection::length() const {
+    auto [left, right] = range();
+    assert(right >= left);
+    return right - left;
 }
 
 void Selection::setIndex(size_t index, bool extend) {

@@ -149,7 +149,19 @@ void EditorWindow::onDraw(const app::Size& size) {
     PROFILE_BLOCK("Total render time");
 
     // TODO: Debug use; remove this.
-    status_bar->setText(fmt::format("{}x{}", size.width, size.height));
+    auto* text_view = editor_widget->currentWidget();
+    if (text_view) {
+        size_t length = text_view->getSelectionLength();
+        if (length > 0) {
+            status_bar->setText(
+                fmt::format("{} character{} selected", length, length != 1 ? "s" : ""));
+        } else {
+            auto [line, col] = text_view->getLineColumn();
+            status_bar->setText(fmt::format("Line {}, Column {}", line + 1, col + 1));
+        }
+    } else {
+        status_bar->setText("No file open");
+    }
 
     main_widget->layout();
     main_widget->draw();

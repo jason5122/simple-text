@@ -110,13 +110,13 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window{parent, width, height},
       wid{wid},
       parent{parent},
-      main_widget{new VerticalLayoutWidget{}} {}
+      main_widget{std::make_shared<VerticalLayoutWidget>()} {}
 
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
 
-    editor_widget.reset(
-        new EditorWidget(parent.main_font_id, parent.ui_font_id, parent.panel_close_image_id));
+    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, parent.ui_font_id,
+                                                   parent.panel_close_image_id);
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
     // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);
@@ -131,18 +131,23 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     // text_view->insertText(kLongLine * 10000);
 
     // Main widgets.
-    std::shared_ptr<LayoutWidget> horizontal_layout{new HorizontalLayoutWidget{}};
-    std::shared_ptr<LayoutWidget> vertical_layout{new VerticalLayoutWidget{}};
+    auto horizontal_layout = std::make_shared<HorizontalLayoutWidget>();
+    auto vertical_layout = std::make_shared<VerticalLayoutWidget>();
 
     // These don't have default constructors since they are not intended to be main widgets.
-    std::shared_ptr<Widget> side_bar{new SideBarWidget({kSideBarWidth, size.height})};
-    status_bar.reset(new StatusBarWidget({size.width, kStatusBarHeight}, parent.ui_font_id));
+    auto side_bar = std::make_shared<SideBarWidget>(app::Size{kSideBarWidth, size.height});
+    status_bar = std::make_shared<StatusBarWidget>(app::Size{size.width, kStatusBarHeight},
+                                                   parent.ui_font_id);
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);
     horizontal_layout->setMainWidget(vertical_layout);
     main_widget->setMainWidget(horizontal_layout);
     main_widget->addChildEnd(status_bar);
+
+    // auto temp = std::make_shared<StatusBarWidget>(app::Size{size.width, kStatusBarHeight},
+    //                                               parent.ui_font_id);
+    // main_widget->addChildEnd(temp);
 }
 
 void EditorWindow::onDraw(const app::Size& size) {

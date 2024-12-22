@@ -4,6 +4,7 @@ source_set("widget") {
     "container/layout_widget.cc",
     "container/vertical_layout_widget.cc",
     "editor_widget.cc",
+    "find_panel_widget.cc",
     "label_widget.cc",
     "padding_widget.cc",
     "scrollable_widget.cc",

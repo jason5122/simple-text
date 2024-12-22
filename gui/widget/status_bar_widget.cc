@@ -1,5 +1,6 @@
-#include "gui/renderer/renderer.h"
 #include "status_bar_widget.h"
+
+#include "gui/renderer/renderer.h"
 
 namespace gui {
 

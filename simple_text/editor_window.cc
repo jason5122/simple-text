@@ -4,6 +4,7 @@
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/vertical_layout_widget.h"
+#include "gui/widget/find_panel_widget.h"
 #include "gui/widget/side_bar_widget.h"
 #include "simple_text/editor_app.h"
 
@@ -145,9 +146,9 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setMainWidget(horizontal_layout);
     main_widget->addChildEnd(status_bar);
 
-    // auto temp = std::make_shared<StatusBarWidget>(app::Size{size.width, kStatusBarHeight},
-    //                                               parent.ui_font_id);
-    // main_widget->addChildEnd(temp);
+    // TODO: Formalize this.
+    auto temp = std::make_shared<FindPanelWidget>(app::Size{size.width, kFindPanelHeight});
+    main_widget->addChildEnd(temp);
 }
 
 void EditorWindow::onDraw(const app::Size& size) {

@@ -2,20 +2,25 @@
 
 #include "app/cocoa/gl_view.h"
 
+// Debug use; remove this.
+#include <fmt/base.h>
+
 @interface WindowController () {
     GLView* opengl_view;
-    app::Window* app_window;
 }
+
 @end
 
 @implementation WindowController
 
+@synthesize appWindow;
+
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(app::Window*)appWindow
-                    displayGl:(app::DisplayGL*)displayGl {
+                    appWindow:(app::Window*)theAppWindow
+                    displayGL:(app::DisplayGL*)displayGL {
     self = [super init];
     if (self) {
-        app_window = appWindow;
+        appWindow = theAppWindow;
 
         NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                                  NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
@@ -24,8 +29,8 @@
                                                      backing:NSBackingStoreBuffered
                                                        defer:false] autorelease];
         opengl_view = [[[GLView alloc] initWithFrame:frameRect
-                                           appWindow:appWindow
-                                           displaygl:displayGl] autorelease];
+                                           appWindow:theAppWindow
+                                           displayGL:displayGL] autorelease];
         self.window.contentView = opengl_view;
         [self.window makeFirstResponder:opengl_view];
 
@@ -35,7 +40,7 @@
 }
 
 - (void)windowWillClose:(NSNotification*)notification {
-    app_window->onClose();
+    appWindow->onClose();
 }
 
 - (void)show {
@@ -72,14 +77,6 @@
 
 - (void)setFilePath:(std::string_view)path {
     self.window.representedFilename = [NSString stringWithUTF8String:path.data()];
-}
-
-- (app::Window*)getAppWindow {
-    return app_window;
-}
-
-- (NSWindow*)getNsWindow {
-    return self.window;
 }
 
 @end

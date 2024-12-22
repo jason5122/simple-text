@@ -4,13 +4,15 @@
 #include "app/window.h"
 #include <string>
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
 @interface WindowController : NSWindowController <NSWindowDelegate>
 
+@property(nonatomic) app::Window* appWindow;
+
 - (instancetype)initWithFrame:(NSRect)frameRect
                     appWindow:(app::Window*)appWindow
-                    displayGl:(app::DisplayGL*)displayGl;
+                    displayGL:(app::DisplayGL*)displayGL;
 
 - (void)show;
 - (void)close;
@@ -21,7 +23,5 @@
 - (bool)isDarkMode;
 - (void)setTitle:(std::string_view)title;
 - (void)setFilePath:(std::string_view)path;
-- (app::Window*)getAppWindow;
-- (NSWindow*)getNsWindow;
 
 @end

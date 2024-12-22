@@ -5,7 +5,7 @@
 #include "app/cocoa/window_controller.h"
 #include "app/menu.h"
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
 @interface MenuController : NSObject
 - (void)itemSelected:(id)sender;
@@ -16,9 +16,9 @@ namespace app {
 class App::impl {
 public:
     NSPoint cascading_point = NSZeroPoint;
-    std::unique_ptr<DisplayGL> displaygl;
+    std::unique_ptr<DisplayGL> display_gl;
 
-    impl() : displaygl(DisplayGL::Create()) {}
+    impl() : display_gl(DisplayGL::Create()) {}
 };
 
 class Window::impl {

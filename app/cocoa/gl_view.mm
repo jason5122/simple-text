@@ -2,7 +2,7 @@
 #include "app/types.h"
 #include "gl_view.h"
 
-#import <Carbon/Carbon.h>
+#include <Carbon/Carbon.h>
 
 // Debug use; remove this.
 #include <fmt/base.h>
@@ -22,6 +22,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 @public
     GLLayer* glLayer;
     NSTrackingArea* trackingArea;
+    app::Window* app_window;
 }
 
 - (void)onScrollerStyleChanged:(NSNotification*)notification;
@@ -32,11 +33,11 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 
 - (instancetype)initWithFrame:(NSRect)frame
                     appWindow:(app::Window*)appWindow
-                    displaygl:(app::DisplayGL*)displayGL {
+                    displayGL:(app::DisplayGL*)displayGL {
     self = [super initWithFrame:frame];
     if (self) {
-        glLayer = [[[GLLayer alloc] initWithDisplayGL:displayGL] autorelease];
-        glLayer->appWindow = appWindow;
+        glLayer = [[[GLLayer alloc] initWithAppWindow:appWindow displayGL:displayGL] autorelease];
+        app_window = appWindow;
 
         // glLayer.needsDisplayOnBoundsChange = true;
         // glLayer.asynchronous = true;
@@ -96,12 +97,12 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 
 - (void)mouseMoved:(NSEvent*)event {
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
-    glLayer->appWindow->onMouseMove(mouse_pos);
+    app_window->onMouseMove(mouse_pos);
 }
 
 - (void)mouseEntered:(NSEvent*)event {
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
-    glLayer->appWindow->onMouseMove(mouse_pos);
+    app_window->onMouseMove(mouse_pos);
 }
 
 // We need to override `cursorUpdate` to stop the event from being passed up in the chain.
@@ -109,11 +110,11 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 // https://stackoverflow.com/a/20197686
 - (void)cursorUpdate:(NSEvent*)event {
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
-    glLayer->appWindow->onMouseMove(mouse_pos);
+    app_window->onMouseMove(mouse_pos);
 }
 
 - (void)mouseExited:(NSEvent*)event {
-    glLayer->appWindow->onMouseExit();
+    app_window->onMouseExit();
 }
 
 - (void)scrollWheel:(NSEvent*)event {
@@ -135,14 +136,14 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
         scroll *= scale;
 
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
-        glLayer->appWindow->onScroll(mouse_pos, scroll);
+        app_window->onScroll(mouse_pos, scroll);
     }
 }
 
 - (void)keyDown:(NSEvent*)event {
     app::Key key = app::KeyFromKeyCode(event.keyCode);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
-    bool handled = glLayer->appWindow->onKeyDown(key, modifiers);
+    bool handled = app_window->onKeyDown(key, modifiers);
 
     if (!handled) {
         // TODO: Should we ignore the return value of this?
@@ -154,29 +155,29 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
     app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
-    glLayer->appWindow->onLeftMouseDown(mouse_pos, modifiers, click_type);
+    app_window->onLeftMouseDown(mouse_pos, modifiers, click_type);
 }
 
 - (void)mouseUp:(NSEvent*)event {
-    glLayer->appWindow->onLeftMouseUp();
+    app_window->onLeftMouseUp();
 }
 
 - (void)mouseDragged:(NSEvent*)event {
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
     app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
-    glLayer->appWindow->onLeftMouseDrag(mouse_pos, modifiers, click_type);
+    app_window->onLeftMouseDrag(mouse_pos, modifiers, click_type);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
     auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), glLayer);
     app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
     app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
-    glLayer->appWindow->onRightMouseDown(mouse_pos, modifiers, click_type);
+    app_window->onRightMouseDown(mouse_pos, modifiers, click_type);
 }
 
 - (void)viewDidChangeEffectiveAppearance {
-    glLayer->appWindow->onDarkModeToggle();
+    app_window->onDarkModeToggle();
 }
 
 - (void)onScrollerStyleChanged:(NSNotification*)notification {
@@ -222,7 +223,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
     BOOL isAttributedString = [string isKindOfClass:NSAttributedString.class];
     NSString* text = isAttributedString ? [string string] : string;
-    glLayer->appWindow->onInsertText(text.UTF8String);
+    app_window->onInsertText(text.UTF8String);
 }
 
 - (NSUInteger)characterIndexForPoint:(NSPoint)point {
@@ -249,63 +250,63 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* glLayer);
     std::string str = selector_str.UTF8String;
     fmt::println("{}", str);
     if (str == "moveForward" || str == "moveRight") {
-        glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters);
+        app_window->onAction(app::Action::kMoveForwardByCharacters);
     } else if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveForwardByCharacters, true);
+        app_window->onAction(app::Action::kMoveForwardByCharacters, true);
     } else if (str == "moveBackward" || str == "moveLeft") {
-        glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacters);
+        app_window->onAction(app::Action::kMoveBackwardByCharacters);
     } else if (str == "moveBackwardAndModifySelection" || str == "moveLeftAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveBackwardByCharacters, true);
+        app_window->onAction(app::Action::kMoveBackwardByCharacters, true);
     } else if (str == "moveDown") {
-        glLayer->appWindow->onAction(app::Action::kMoveForwardByLines);
+        app_window->onAction(app::Action::kMoveForwardByLines);
     } else if (str == "moveDownAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveForwardByLines, true);
+        app_window->onAction(app::Action::kMoveForwardByLines, true);
     } else if (str == "moveUp") {
-        glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines);
+        app_window->onAction(app::Action::kMoveBackwardByLines);
     } else if (str == "moveUpAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveBackwardByLines, true);
+        app_window->onAction(app::Action::kMoveBackwardByLines, true);
     } else if (str == "moveWordRight") {
-        glLayer->appWindow->onAction(app::Action::kMoveForwardByWords);
+        app_window->onAction(app::Action::kMoveForwardByWords);
     } else if (str == "moveWordRightAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveForwardByWords, true);
+        app_window->onAction(app::Action::kMoveForwardByWords, true);
     } else if (str == "moveWordLeft") {
-        glLayer->appWindow->onAction(app::Action::kMoveBackwardByWords);
+        app_window->onAction(app::Action::kMoveBackwardByWords);
     } else if (str == "moveWordLeftAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveBackwardByWords, true);
+        app_window->onAction(app::Action::kMoveBackwardByWords, true);
     } else if (str == "moveToLeftEndOfLine") {
-        glLayer->appWindow->onAction(app::Action::kMoveToBOL);
+        app_window->onAction(app::Action::kMoveToBOL);
     } else if (str == "moveToLeftEndOfLineAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveToBOL, true);
+        app_window->onAction(app::Action::kMoveToBOL, true);
     } else if (str == "moveToRightEndOfLine") {
-        glLayer->appWindow->onAction(app::Action::kMoveToEOL);
+        app_window->onAction(app::Action::kMoveToEOL);
     } else if (str == "moveToRightEndOfLineAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveToEOL, true);
+        app_window->onAction(app::Action::kMoveToEOL, true);
     } else if (str == "moveToBeginningOfParagraph") {
-        glLayer->appWindow->onAction(app::Action::kMoveToHardBOL);
+        app_window->onAction(app::Action::kMoveToHardBOL);
     } else if (str == "moveToBeginningOfParagraphAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveToHardBOL, true);
+        app_window->onAction(app::Action::kMoveToHardBOL, true);
     } else if (str == "moveToEndOfParagraph") {
-        glLayer->appWindow->onAction(app::Action::kMoveToHardEOL);
+        app_window->onAction(app::Action::kMoveToHardEOL);
     } else if (str == "moveToEndOfParagraphAndModifySelection") {
-        glLayer->appWindow->onAction(app::Action::kMoveToHardEOL, true);
+        app_window->onAction(app::Action::kMoveToHardEOL, true);
     } else if (str == "moveToBeginningOfDocument") {
-        glLayer->appWindow->onAction(app::Action::kMoveToBOF);
+        app_window->onAction(app::Action::kMoveToBOF);
     } else if (str == "moveToEndOfDocument") {
-        glLayer->appWindow->onAction(app::Action::kMoveToEOF);
+        app_window->onAction(app::Action::kMoveToEOF);
     } else if (str == "deleteBackward") {
-        glLayer->appWindow->onAction(app::Action::kLeftDelete);
+        app_window->onAction(app::Action::kLeftDelete);
     } else if (str == "deleteForward") {
-        glLayer->appWindow->onAction(app::Action::kRightDelete);
+        app_window->onAction(app::Action::kRightDelete);
     } else if (str == "deleteWordBackward") {
-        glLayer->appWindow->onAction(app::Action::kDeleteWordBackward);
+        app_window->onAction(app::Action::kDeleteWordBackward);
     } else if (str == "deleteWordForward") {
-        glLayer->appWindow->onAction(app::Action::kDeleteWordForward);
+        app_window->onAction(app::Action::kDeleteWordForward);
     } else if (str == "insertNewline") {
-        glLayer->appWindow->onAction(app::Action::kInsertNewline);
+        app_window->onAction(app::Action::kInsertNewline);
     } else if (str == "insertNewlineIgnoringFieldEditor") {
-        glLayer->appWindow->onAction(app::Action::kInsertNewlineIgnoringFieldEditor);
+        app_window->onAction(app::Action::kInsertNewlineIgnoringFieldEditor);
     } else if (str == "insertTab" || str == "insertTabIgnoringFieldEditor") {
-        glLayer->appWindow->onAction(app::Action::kInsertTab);
+        app_window->onAction(app::Action::kInsertTab);
     }
 }
 

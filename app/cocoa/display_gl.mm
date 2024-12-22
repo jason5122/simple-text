@@ -1,8 +1,8 @@
 #include "display_gl.h"
 #include <fmt/base.h>
 
-#import <Cocoa/Cocoa.h>
-#import <OpenGL/gl3.h>
+#include <Cocoa/Cocoa.h>
+#include <OpenGL/gl3.h>
 
 namespace app {
 
@@ -52,4 +52,4 @@ CGLContextObj DisplayGL::context() {
     return context_.get();
 }
 
-}
+}  // namespace app

@@ -16,10 +16,10 @@ Window::Window(App& app, int width, int height) : pimpl{new impl{}} {
     // frame.size.height -= 300;
     // frame.size.width -= 300;
 
-    DisplayGL* displaygl = app.pimpl->displaygl.get();
+    DisplayGL* display_gl = app.pimpl->display_gl.get();
     pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
                                                              appWindow:this
-                                                             displayGl:displaygl];
+                                                             displayGL:display_gl];
 
     // Implement window cascading.
     // if (NSEqualPoints(parent.pimpl->cascading_point, NSZeroPoint)) {

@@ -2,13 +2,11 @@
 
 #include "app/cocoa/display_gl.h"
 #include "app/window.h"
-#import <QuartzCore/QuartzCore.h>
 
-@interface GLLayer : CAOpenGLLayer {
-@public
-    app::Window* appWindow;
-}
+#include <QuartzCore/QuartzCore.h>
 
-- (instancetype)initWithDisplayGL:(app::DisplayGL*)displayGL;
+@interface GLLayer : CAOpenGLLayer
+
+- (instancetype)initWithAppWindow:(app::Window*)appWindow displayGL:(app::DisplayGL*)displayGL;
 
 @end

@@ -2,25 +2,28 @@
 
 // TODO: Debug use; remove this.
 #include <Cocoa/Cocoa.h>
+#include <fmt/base.h>
 
 @interface GLLayer () {
-    app::DisplayGL* mDisplayGL;
+    app::Window* app_window;
+    app::DisplayGL* display_gl;
 }
 
 @end
 
 @implementation GLLayer
 
-- (instancetype)initWithDisplayGL:(app::DisplayGL*)displayGL {
+- (instancetype)initWithAppWindow:(app::Window*)appWindow displayGL:(app::DisplayGL*)displayGL {
     self = [super init];
     if (self) {
-        mDisplayGL = displayGL;
+        app_window = appWindow;
+        display_gl = displayGL;
     }
     return self;
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return mDisplayGL->pixelFormat();
+    return display_gl->pixelFormat();
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
@@ -28,12 +31,11 @@
     [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
 
     // Call OpenGL activation callback.
-    CGLSetCurrentContext(mDisplayGL->context());
+    CGLSetCurrentContext(display_gl->context());
     int scaled_width = self.frame.size.width * self.contentsScale;
     int scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onOpenGLActivate({scaled_width, scaled_height});
-
-    return mDisplayGL->context();
+    app_window->onOpenGLActivate({scaled_width, scaled_height});
+    return display_gl->context();
 }
 
 - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
@@ -54,7 +56,7 @@
 
     int scaled_width = self.frame.size.width * self.contentsScale;
     int scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onDraw({scaled_width, scaled_height});
+    app_window->onDraw({scaled_width, scaled_height});
 
     // Calls glFlush() by default.
     [super drawInCGLContext:glContext
@@ -72,11 +74,11 @@
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-    CGLSetCurrentContext(mDisplayGL->context());
+    CGLSetCurrentContext(display_gl->context());
 
     int scaled_width = self.frame.size.width * self.contentsScale;
     int scaled_height = self.frame.size.height * self.contentsScale;
-    appWindow->onResize({scaled_width, scaled_height});
+    app_window->onResize({scaled_width, scaled_height});
 }
 
 // We shouldn't release the CGLContextObj since it isn't owned by this object.

@@ -1,15 +1,15 @@
 #include "build/build_config.h"
-#include "simple_text/editor_app.h"
+#include "experiments/fast_startup/fast_startup_app.h"
 
 namespace {
 
-int EditorMain(int argc, char* argv[]) {
+int FastStartupAppMain(int argc, char* argv[]) {
     // Disable stdout buffering.
     std::setbuf(stdout, nullptr);
 
     // TODO: Return proper status codes.
-    EditorApp editor_app;
-    editor_app.run();
+    FastStartupApp fast_startup_app;
+    fast_startup_app.run();
     return 0;
 }
 
@@ -23,12 +23,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    int status_code = EditorMain(0, nullptr);
+    int status_code = FastStartupAppMain(0, nullptr);
     CoUninitialize();
     return status_code;
 }
 #else
 int main(int argc, char* argv[]) {
-    return EditorMain(argc, argv);
+    return FastStartupAppMain(argc, argv);
 }
 #endif

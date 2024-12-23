@@ -17,8 +17,6 @@ RendererLite::RendererLite() {
 }
 
 RendererLite& RendererLite::instance() {
-    PROFILE_BLOCK("RendererLite::instance()");
-
     static RendererLite renderer;
     return renderer;
 }

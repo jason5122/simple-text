@@ -3,7 +3,7 @@
 
 namespace {
 
-int SimpleTextMain(int argc, char* argv[]) {
+int FastStartupAppMain(int argc, char* argv[]) {
     // TODO: Return proper status codes.
     FastStartupApp fast_startup_app;
     fast_startup_app.run();
@@ -20,12 +20,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, INT nCmdShow) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    int status_code = SimpleTextMain(0, nullptr);
+    int status_code = FastStartupAppMain(0, nullptr);
     CoUninitialize();
     return status_code;
 }
 #else
 int main(int argc, char* argv[]) {
-    return SimpleTextMain(argc, argv);
+    return FastStartupAppMain(argc, argv);
 }
 #endif

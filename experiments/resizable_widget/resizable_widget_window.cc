@@ -2,30 +2,36 @@
 
 #include "experiments/resizable_widget/resizable_widget_app.h"
 #include "gui/renderer/renderer_lite.h"
+#include "util/profile_util.h"
 
 #include <fmt/base.h>
 
-FastStartupWindow::FastStartupWindow(FastStartupApp& parent, int width, int height, int wid)
-    : Window(parent, width, height), parent(parent) {
-    main_widget = std::make_shared<gui::CustomWidget>("hello world!", parent.main_font_id);
+using namespace gui;
+
+ResizableWidgetWindow::ResizableWidgetWindow(ResizableWidgetApp& parent,
+                                             int width,
+                                             int height,
+                                             int wid)
+    : Window(parent, width, height), parent(parent) {}
+
+void ResizableWidgetWindow::onOpenGLActivate(const app::Size& size) {
+    main_widget = std::make_shared<SolidColorWidget>(size, Rgba{255, 215, 0, 255});
 }
 
-void FastStartupWindow::onOpenGLActivate(const app::Size& size) {
-    main_widget->setSize(size);
-}
+void ResizableWidgetWindow::onDraw(const app::Size& size) {
+    PROFILE_BLOCK("Total render time");
 
-void FastStartupWindow::onDraw(const app::Size& size) {
     main_widget->layout();
     main_widget->draw();
 
     gui::RendererLite::instance().flush(size);
 }
 
-void FastStartupWindow::onResize(const app::Size& size) {
-    redraw();
+void ResizableWidgetWindow::onResize(const app::Size& size) {
+    main_widget->setSize(size);
 }
 
-void FastStartupWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {
+void ResizableWidgetWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {
     main_widget->mousePositionChanged(mouse_pos);
     main_widget->scroll(mouse_pos, delta);
     redraw();

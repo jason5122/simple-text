@@ -3,6 +3,7 @@ source_set("widget") {
     "container/horizontal_layout_widget.cc",
     "container/layout_widget.cc",
     "container/vertical_layout_widget.cc",
+    "debug/solid_color_widget.cc",
     "editor_widget.cc",
     "find_panel_widget.cc",
     "label_widget.cc",

@@ -8,26 +8,21 @@
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
-void FastStartupApp::onLaunch() {
+void ResizableWidgetApp::onLaunch() {
     opengl::FunctionsGL functions_gl{};
     functions_gl.loadGlobalFunctionPointers();
-
-    // Load fonts.
-    auto& font_rasterizer = font::FontRasterizer::instance();
-    main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
-    ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
 
     createWindow();
 }
 
-void FastStartupApp::createWindow() {
-    std::unique_ptr<FastStartupWindow> editor_window =
-        std::make_unique<FastStartupWindow>(*this, 1200, 800, 0);
+void ResizableWidgetApp::createWindow() {
+    std::unique_ptr<ResizableWidgetWindow> editor_window =
+        std::make_unique<ResizableWidgetWindow>(*this, 1200, 800, 0);
 
     editor_window->show();
     editor_windows.emplace_back(std::move(editor_window));
 }
 
-void FastStartupApp::destroyWindow(int wid) {
+void ResizableWidgetApp::destroyWindow(int wid) {
     editor_windows[wid] = nullptr;
 }

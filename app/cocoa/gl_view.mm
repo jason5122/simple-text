@@ -39,7 +39,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
         gl_layer = [[[GLLayer alloc] initWithAppWindow:appWindow displayGL:displayGL] autorelease];
         app_window = appWindow;
 
-        // gl_layer.needsDisplayOnBoundsChange = true;
+        gl_layer.needsDisplayOnBoundsChange = true;
         // gl_layer.asynchronous = true;
         self.layer = gl_layer;
 

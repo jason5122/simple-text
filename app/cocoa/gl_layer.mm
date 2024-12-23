@@ -7,6 +7,8 @@
 @interface GLLayer () {
     app::Window* app_window;
     app::DisplayGL* display_gl;
+    int old_width;
+    int old_height;
 }
 
 @end
@@ -18,16 +20,14 @@
     if (self) {
         app_window = appWindow;
         display_gl = displayGL;
-
-        // Set up KVO to detect resizing.
-        [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
+        old_width = -1;
+        old_height = -1;
     }
     return self;
 }
 
 - (void)invalidateAppWindowPointer {
     app_window = nullptr;
-    [self removeObserver:self forKeyPath:@"bounds"];
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
@@ -61,9 +61,18 @@
 
     CGLSetCurrentContext(glContext);
 
+    int scaled_width = self.frame.size.width * self.contentsScale;
+    int scaled_height = self.frame.size.height * self.contentsScale;
+
+    if (old_width != self.frame.size.width || old_height != self.frame.size.height) {
+        if (app_window) {
+            app_window->onResize({scaled_width, scaled_height});
+        }
+        old_width = self.frame.size.width;
+        old_height = self.frame.size.height;
+    }
+
     if (app_window) {
-        int scaled_width = self.frame.size.width * self.contentsScale;
-        int scaled_height = self.frame.size.height * self.contentsScale;
         app_window->onDraw({scaled_width, scaled_height});
     }
 
@@ -75,21 +84,6 @@
 
     // TODO: For debugging; remove this.
     // [NSApp terminate:nil];
-}
-
-// TODO: GLLayer calling `onResize()` is currently known to redraw after the window has closed if
-// NSWindowTabbingMode is enabled. Fix this.
-- (void)observeValueForKeyPath:(NSString*)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary*)change
-                       context:(void*)context {
-    CGLSetCurrentContext(display_gl->context());
-
-    if (app_window) {
-        int scaled_width = self.frame.size.width * self.contentsScale;
-        int scaled_height = self.frame.size.height * self.contentsScale;
-        app_window->onResize({scaled_width, scaled_height});
-    }
 }
 
 // We shouldn't release the CGLContextObj since it isn't owned by this object.

@@ -177,7 +177,7 @@ void EditorWindow::onDraw(const app::Size& size) {
 
 void EditorWindow::onResize(const app::Size& size) {
     main_widget->setSize(size);
-    redraw();
+    // Resizes are followed by redraw calls in the GUI framework. No need to call `redraw()`.
 }
 
 void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {

@@ -1,7 +1,8 @@
 #include "resizable_widget_window.h"
 
 #include "experiments/resizable_widget/resizable_widget_app.h"
-#include "gui/renderer/renderer_lite.h"
+#include "gui/widget/debug/horizontal_partition_widget.h"
+#include "gui/widget/debug/solid_color_widget.h"
 #include "util/profile_util.h"
 
 #include <fmt/base.h>
@@ -12,10 +13,18 @@ ResizableWidgetWindow::ResizableWidgetWindow(ResizableWidgetApp& parent,
                                              int width,
                                              int height,
                                              int wid)
-    : Window(parent, width, height), parent(parent) {}
+    : Window(parent, width, height),
+      parent(parent),
+      main_widget{std::make_shared<HorizontalPartitionWidget>()} {}
 
 void ResizableWidgetWindow::onOpenGLActivate(const app::Size& size) {
-    main_widget = std::make_shared<SolidColorWidget>(size, Rgba{255, 215, 0, 255});
+    auto gold_widget = std::make_shared<SolidColorWidget>(size, kGold);
+    auto purple_widget = std::make_shared<SolidColorWidget>(size, kPurple);
+    auto sandy_brown_widget = std::make_shared<SolidColorWidget>(size, kSandyBrown);
+
+    main_widget->addChildStart(gold_widget);
+    main_widget->addChildStart(purple_widget);
+    main_widget->addChildStart(sandy_brown_widget);
 }
 
 void ResizableWidgetWindow::onDraw(const app::Size& size) {

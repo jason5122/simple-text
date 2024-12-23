@@ -147,12 +147,11 @@ void BuildMainMenu() {
         app->onAppAction(appAction);
     } else {
         WindowController* wc = NSApp.keyWindow.windowController;
-        auto app_window_ptr = wc.appWindow;
-        // app::Window* app_window = [NSApp.keyWindow.windowController getAppWindow];
+        app::Window* app_window = wc.appWindow;
 
         // `app_window` is null if we are in the about panel.
         // TODO: Create our own "About ..." panel.
-        if (auto app_window = app_window_ptr.lock()) {
+        if (app_window) {
             app_window->onAppAction(appAction);
         } else {
             app->onAppAction(appAction);

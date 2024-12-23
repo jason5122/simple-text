@@ -7,7 +7,7 @@
 
 namespace app {
 
-Window::Window(App& app, int width, int height) : pimpl{new impl{}}, weak_ptr_factory(this) {
+Window::Window(App& app, int width, int height) : pimpl{new impl{}} {
     NSRect frame = NSMakeRect(0, 1000, width, height);
 
     // TODO: Debug; remove this.
@@ -16,10 +16,9 @@ Window::Window(App& app, int width, int height) : pimpl{new impl{}}, weak_ptr_fa
     // frame.size.height -= 300;
     // frame.size.width -= 300;
 
-    auto app_window_ptr = weak_ptr_factory.get_weak_ptr();
     DisplayGL* display_gl = app.pimpl->display_gl.get();
     pimpl->window_controller = [[WindowController alloc] initWithFrame:frame
-                                                             appWindow:app_window_ptr
+                                                             appWindow:this
                                                              displayGL:display_gl];
 
     // Implement window cascading.
@@ -35,6 +34,7 @@ Window::Window(App& app, int width, int height) : pimpl{new impl{}}, weak_ptr_fa
 }
 
 Window::~Window() {
+    [pimpl->window_controller invalidateAppWindowPointer];
     [pimpl->window_controller release];
 }
 

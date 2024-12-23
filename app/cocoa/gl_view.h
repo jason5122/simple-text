@@ -8,9 +8,10 @@
 @interface GLView : NSView <NSTextInputClient>
 
 - (instancetype)initWithFrame:(NSRect)frame
-                    appWindow:(std::weak_ptr<app::Window>)appWindow
+                    appWindow:(app::Window*)appWindow
                     displayGL:(app::DisplayGL*)displayGL;
 
 - (void)redraw;
+- (void)invalidateAppWindowPointer;
 
 @end

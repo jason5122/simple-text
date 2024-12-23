@@ -5,7 +5,7 @@
 #include <fmt/base.h>
 
 @interface GLLayer () {
-    std::weak_ptr<app::Window> app_window_ptr;
+    app::Window* app_window;
     app::DisplayGL* display_gl;
 }
 
@@ -13,14 +13,21 @@
 
 @implementation GLLayer
 
-- (instancetype)initWithAppWindow:(std::weak_ptr<app::Window>)appWindow
-                        displayGL:(app::DisplayGL*)displayGL {
+- (instancetype)initWithAppWindow:(app::Window*)appWindow displayGL:(app::DisplayGL*)displayGL {
     self = [super init];
     if (self) {
-        app_window_ptr = appWindow;
+        app_window = appWindow;
         display_gl = displayGL;
+
+        // Set up KVO to detect resizing.
+        [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
     }
     return self;
+}
+
+- (void)invalidateAppWindowPointer {
+    app_window = nullptr;
+    [self removeObserver:self forKeyPath:@"bounds"];
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
@@ -28,12 +35,9 @@
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    // Set up KVO to detect resizing.
-    [self addObserver:self forKeyPath:@"bounds" options:0 context:nil];
-
     // Call OpenGL activation callback.
     CGLSetCurrentContext(display_gl->context());
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         int scaled_width = self.frame.size.width * self.contentsScale;
         int scaled_height = self.frame.size.height * self.contentsScale;
         app_window->onOpenGLActivate({scaled_width, scaled_height});
@@ -57,7 +61,7 @@
 
     CGLSetCurrentContext(glContext);
 
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         int scaled_width = self.frame.size.width * self.contentsScale;
         int scaled_height = self.frame.size.height * self.contentsScale;
         app_window->onDraw({scaled_width, scaled_height});
@@ -81,7 +85,7 @@
                        context:(void*)context {
     CGLSetCurrentContext(display_gl->context());
 
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         int scaled_width = self.frame.size.width * self.contentsScale;
         int scaled_height = self.frame.size.height * self.contentsScale;
         app_window->onResize({scaled_width, scaled_height});

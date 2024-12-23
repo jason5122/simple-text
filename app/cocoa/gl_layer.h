@@ -7,7 +7,7 @@
 
 @interface GLLayer : CAOpenGLLayer
 
-- (instancetype)initWithAppWindow:(std::weak_ptr<app::Window>)appWindow
-                        displayGL:(app::DisplayGL*)displayGL;
+- (instancetype)initWithAppWindow:(app::Window*)appWindow displayGL:(app::DisplayGL*)displayGL;
+- (void)invalidateAppWindowPointer;
 
 @end

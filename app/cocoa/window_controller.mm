@@ -16,7 +16,7 @@
 @synthesize appWindow;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(std::weak_ptr<app::Window>)theAppWindow
+                    appWindow:(app::Window*)theAppWindow
                     displayGL:(app::DisplayGL*)displayGL {
     self = [super init];
     if (self) {
@@ -40,8 +40,8 @@
 }
 
 - (void)windowWillClose:(NSNotification*)notification {
-    if (auto app_window = appWindow.lock()) {
-        app_window->onClose();
+    if (appWindow) {
+        appWindow->onClose();
     }
 }
 
@@ -79,6 +79,11 @@
 
 - (void)setFilePath:(std::string_view)path {
     self.window.representedFilename = [NSString stringWithUTF8String:path.data()];
+}
+
+- (void)invalidateAppWindowPointer {
+    appWindow = nullptr;
+    [opengl_view invalidateAppWindowPointer];
 }
 
 @end

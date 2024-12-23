@@ -22,7 +22,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 @public
     GLLayer* gl_layer;
     NSTrackingArea* trackingArea;
-    std::weak_ptr<app::Window> app_window_ptr;
+    app::Window* app_window;
 }
 
 - (void)onScrollerStyleChanged:(NSNotification*)notification;
@@ -32,12 +32,12 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 @implementation GLView
 
 - (instancetype)initWithFrame:(NSRect)frame
-                    appWindow:(std::weak_ptr<app::Window>)appWindow
+                    appWindow:(app::Window*)appWindow
                     displayGL:(app::DisplayGL*)displayGL {
     self = [super initWithFrame:frame];
     if (self) {
         gl_layer = [[[GLLayer alloc] initWithAppWindow:appWindow displayGL:displayGL] autorelease];
-        app_window_ptr = appWindow;
+        app_window = appWindow;
 
         // gl_layer.needsDisplayOnBoundsChange = true;
         // gl_layer.asynchronous = true;
@@ -82,6 +82,11 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     // [CATransaction flush];
 }
 
+- (void)invalidateAppWindowPointer {
+    app_window = nullptr;
+    [gl_layer invalidateAppWindowPointer];
+}
+
 - (void)updateTrackingAreas {
     [super updateTrackingAreas];
     [self removeTrackingArea:trackingArea];
@@ -96,14 +101,14 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)mouseMoved:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), gl_layer);
         app_window->onMouseMove(mouse_pos);
     }
 }
 
 - (void)mouseEntered:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), gl_layer);
         app_window->onMouseMove(mouse_pos);
     }
@@ -113,20 +118,19 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 // Without this, our `mouseEntered` NSCursor set will be overridden.
 // https://stackoverflow.com/a/20197686
 - (void)cursorUpdate:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), gl_layer);
         app_window->onMouseMove(mouse_pos);
     }
 }
 
 - (void)mouseExited:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         app_window->onMouseExit();
     }
 }
 
 - (void)scrollWheel:(NSEvent*)event {
-    auto app_window = app_window_ptr.lock();
     if (!app_window) return;
 
     if (event.type == NSEventTypeScrollWheel) {
@@ -152,7 +156,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)keyDown:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         app::Key key = app::KeyFromKeyCode(event.keyCode);
         app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
         bool handled = app_window->onKeyDown(key, modifiers);
@@ -165,7 +169,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)mouseDown:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), gl_layer);
         app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
         app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
@@ -174,13 +178,13 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)mouseUp:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         app_window->onLeftMouseUp();
     }
 }
 
 - (void)mouseDragged:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), gl_layer);
         app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
         app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
@@ -189,7 +193,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), gl_layer);
         app::ModifierKey modifiers = app::ModifierFromFlags(event.modifierFlags);
         app::ClickType click_type = app::ClickTypeFromCount(event.clickCount);
@@ -198,7 +202,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)viewDidChangeEffectiveAppearance {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         app_window->onDarkModeToggle();
     }
 }
@@ -244,7 +248,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
-    if (auto app_window = app_window_ptr.lock()) {
+    if (app_window) {
         BOOL isAttributedString = [string isKindOfClass:NSAttributedString.class];
         NSString* text = isAttributedString ? [string string] : string;
         app_window->onInsertText(text.UTF8String);
@@ -266,7 +270,6 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)doCommandBySelector:(SEL)selector {
-    auto app_window = app_window_ptr.lock();
     if (!app_window) return;
 
     NSString* selector_str = NSStringFromSelector(selector);

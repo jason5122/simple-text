@@ -8,10 +8,10 @@
 
 @interface WindowController : NSWindowController <NSWindowDelegate>
 
-@property(nonatomic) std::weak_ptr<app::Window> appWindow;
+@property(nonatomic) app::Window* appWindow;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(std::weak_ptr<app::Window>)appWindow
+                    appWindow:(app::Window*)appWindow
                     displayGL:(app::DisplayGL*)displayGL;
 
 - (void)show;
@@ -23,5 +23,6 @@
 - (bool)isDarkMode;
 - (void)setTitle:(std::string_view)title;
 - (void)setFilePath:(std::string_view)path;
+- (void)invalidateAppWindowPointer;
 
 @end

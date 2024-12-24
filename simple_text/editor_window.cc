@@ -148,8 +148,9 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->addChildEnd(status_bar);
 
     // TODO: Formalize this.
-    auto temp = std::make_shared<FindPanelWidget>(app::Size{size.width, kFindPanelHeight});
-    main_widget->addChildEnd(temp);
+    auto find_panel_widget = std::make_shared<FindPanelWidget>(
+        app::Size{size.width, kFindPanelHeight}, parent.main_font_id);
+    main_widget->addChildEnd(find_panel_widget);
 }
 
 void EditorWindow::onDraw(const app::Size& size) {

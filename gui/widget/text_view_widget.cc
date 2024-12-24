@@ -414,15 +414,15 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
+    int min_x = scroll_offset.x;
+    int max_x = scroll_offset.x + size.width;
+
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
 
         app::Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
         coords.x += kCaretWidth / 2;  // Match Sublime Text.
-
-        int min_x = scroll_offset.x;
-        int max_x = scroll_offset.x + size.width;
 
 #ifdef ENABLE_HIGHLIGHTING
         std::stack<highlight::Highlight> stk;
@@ -507,7 +507,7 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
 }
 
 void TextViewWidget::renderSelections(int main_line_height, size_t start_line, size_t end_line) {
-    SelectionRenderer& selection_renderer = Renderer::instance().getSelectionRenderer();
+    auto& selection_renderer = Renderer::instance().getSelectionRenderer();
     auto [start, end] = selection.range();
     auto [c1_line, c1_col] = tree.line_column_at(start);
     auto [c2_line, c2_col] = tree.line_column_at(end);

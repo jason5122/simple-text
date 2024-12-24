@@ -225,6 +225,8 @@ void App::setCursorStyle(CursorStyle style) {
         [NSCursor.arrowCursor set];
     } else if (style == CursorStyle::kIBeam) {
         [NSCursor.IBeamCursor set];
+    } else if (style == CursorStyle::kResizeLeftRight) {
+        [NSCursor.resizeLeftRightCursor set];
     }
 }
 

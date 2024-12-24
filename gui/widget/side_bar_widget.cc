@@ -33,13 +33,6 @@ void SideBarWidget::draw() {
     renderScrollBars(metrics.line_height, visible_lines);
 }
 
-void SideBarWidget::leftMouseDrag(const app::Point& mouse_pos,
-                                  app::ModifierKey modifiers,
-                                  app::ClickType click_type) {
-    // TODO: Fully flesh this out. Consider moving this to a *LayoutWidget class?
-    setWidth(std::max(mouse_pos.x, 50 * 2));
-}
-
 bool SideBarWidget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
     auto old_index = hovered_index;
 

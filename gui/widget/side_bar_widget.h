@@ -11,9 +11,6 @@ public:
     SideBarWidget(const app::Size& size);
 
     void draw() override;
-    void leftMouseDrag(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
     bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override;
     void layout() override;
 

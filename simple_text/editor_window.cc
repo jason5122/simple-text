@@ -4,6 +4,7 @@
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/vertical_layout_widget.h"
+#include "gui/widget/debug/horizontal_resizing_widget.h"
 #include "gui/widget/find_panel_widget.h"
 #include "gui/widget/side_bar_widget.h"
 #include "simple_text/editor_app.h"
@@ -132,7 +133,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     // text_view->insertText(kLongLine * 10000);
 
     // Main widgets.
-    auto horizontal_layout = std::make_shared<HorizontalLayoutWidget>();
+    auto horizontal_layout = std::make_shared<HorizontalResizingWidget>();
     auto vertical_layout = std::make_shared<VerticalLayoutWidget>();
 
     // These don't have default constructors since they are not intended to be main widgets.

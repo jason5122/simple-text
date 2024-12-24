@@ -25,11 +25,14 @@ void ResizableWidgetWindow::onOpenGLActivate(const app::Size& size) {
         std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kSandyBrown);
     auto light_blue_widget =
         std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kLightBlue);
+    auto sea_green_widget =
+        std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kSeaGreen);
 
     main_widget->setMainWidget(gold_widget);
     main_widget->addChildStart(purple_widget);
     main_widget->addChildStart(sandy_brown_widget);
-    main_widget->addChildStart(light_blue_widget);
+    main_widget->addChildEnd(light_blue_widget);
+    main_widget->addChildEnd(sea_green_widget);
 }
 
 void ResizableWidgetWindow::onDraw(const app::Size& size) {
@@ -72,5 +75,32 @@ void ResizableWidgetWindow::onLeftMouseDrag(const app::Point& mouse_pos,
     if (dragged_widget) {
         dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
         redraw();
+    }
+}
+
+// This represents the mouse moving *without* being a click+drag.
+void ResizableWidgetWindow::onMouseMove(const app::Point& mouse_pos) {
+    updateCursorStyle(mouse_pos);
+
+    if (main_widget->mousePositionChanged(mouse_pos)) {
+        redraw();
+    }
+}
+
+void ResizableWidgetWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos) {
+    // Case 1: Dragging operation in progress.
+    if (dragged_widget) {
+        parent.setCursorStyle(dragged_widget->cursorStyle());
+    }
+    // Case 2: Mouse position is within window.
+    else if (mouse_pos) {
+        if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
+            // fmt::println("{}", *hovered_widget);
+            parent.setCursorStyle(hovered_widget->cursorStyle());
+        }
+    }
+    // Case 3: Mouse position is outside of window.
+    else {
+        parent.setCursorStyle(app::CursorStyle::kArrow);
     }
 }

@@ -1,7 +1,5 @@
 #include "horizontal_resizing_widget.h"
 
-#include <fmt/core.h>
-
 namespace gui {
 
 HorizontalResizingWidget::HorizontalResizingWidget(const app::Size& size) : LayoutWidget{size} {}
@@ -43,15 +41,24 @@ void HorizontalResizingWidget::layout() {
 void HorizontalResizingWidget::leftMouseDown(const app::Point& mouse_pos,
                                              app::ModifierKey modifiers,
                                              app::ClickType click_type) {
-    fmt::println("mouse_pos.x = {}", mouse_pos.x);
-
-    int x = position.x;
+    int left_offset = position.x;
+    int right_offset = position.x + size.width;
     for (auto& child : children_start) {
-        x += child->getSize().width;
+        left_offset += child->getSize().width;
 
-        if (abs(mouse_pos.x - x) < 40) {
-            fmt::println("x = {}", x);
+        if (std::abs(mouse_pos.x - left_offset) <= kResizeDistance) {
             dragged_widget = child.get();
+            is_dragged_widget_start = true;
+            return;
+        }
+    }
+    for (auto& child : children_end) {
+        right_offset -= child->getSize().width;
+
+        if (std::abs(mouse_pos.x - right_offset) <= kResizeDistance) {
+            dragged_widget = child.get();
+            is_dragged_widget_start = false;
+            return;
         }
     }
 }
@@ -60,23 +67,42 @@ void HorizontalResizingWidget::leftMouseDrag(const app::Point& mouse_pos,
                                              app::ModifierKey modifiers,
                                              app::ClickType click_type) {
     if (dragged_widget) {
+        auto widget_size = dragged_widget->getSize();
         auto widget_pos = dragged_widget->getPosition();
-        int new_width = std::max(mouse_pos.x - widget_pos.x, 50 * 2);
+
+        // TODO: Consider refactoring this. We probably don't need children at both start and end.
+        int new_width;
+        if (is_dragged_widget_start) {
+            new_width = mouse_pos.x - widget_pos.x;
+        } else {
+            new_width = (widget_pos.x + widget_size.width) - mouse_pos.x;
+        }
+        new_width = std::max(new_width, 50 * 2);
+
         dragged_widget->setWidth(new_width);
     }
 }
 
+app::CursorStyle HorizontalResizingWidget::cursorStyle() const {
+    return app::CursorStyle::kResizeLeftRight;
+}
+
 Widget* HorizontalResizingWidget::widgetAt(const app::Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.
-    int x = position.x;
+    int left_offset = position.x;
+    int right_offset = position.x + size.width;
     for (auto& child : children_start) {
-        x += child->getSize().width;
-
-        if (abs(pos.x - x) < 40) {
+        left_offset += child->getSize().width;
+        if (std::abs(pos.x - left_offset) <= kResizeDistance) {
             return this;
         }
     }
-    // TODO: Also do this for `children_end`.
+    for (auto& child : children_end) {
+        right_offset -= child->getSize().width;
+        if (std::abs(pos.x - right_offset) <= kResizeDistance) {
+            return this;
+        }
+    }
 
     // Otherwise, propagate as normal.
     if (main_widget) {

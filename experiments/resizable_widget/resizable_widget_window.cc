@@ -2,6 +2,7 @@
 
 #include "experiments/resizable_widget/resizable_widget_app.h"
 #include "gui/widget/debug/horizontal_partition_widget.h"
+#include "gui/widget/debug/horizontal_resizing_widget.h"
 #include "gui/widget/debug/solid_color_widget.h"
 #include "util/profile_util.h"
 
@@ -15,21 +16,23 @@ ResizableWidgetWindow::ResizableWidgetWindow(ResizableWidgetApp& parent,
                                              int wid)
     : Window(parent, width, height),
       parent(parent),
-      main_widget{std::make_shared<HorizontalPartitionWidget>()} {}
+      main_widget{std::make_shared<HorizontalResizingWidget>()} {}
 
 void ResizableWidgetWindow::onOpenGLActivate(const app::Size& size) {
     auto gold_widget = std::make_shared<SolidColorWidget>(size, kGold);
-    auto purple_widget = std::make_shared<SolidColorWidget>(size, kPurple);
-    auto sandy_brown_widget = std::make_shared<SolidColorWidget>(size, kSandyBrown);
+    auto purple_widget = std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kPurple);
+    auto sandy_brown_widget =
+        std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kSandyBrown);
+    auto light_blue_widget =
+        std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kLightBlue);
 
-    main_widget->addChildStart(gold_widget);
+    main_widget->setMainWidget(gold_widget);
     main_widget->addChildStart(purple_widget);
     main_widget->addChildStart(sandy_brown_widget);
+    main_widget->addChildStart(light_blue_widget);
 }
 
 void ResizableWidgetWindow::onDraw(const app::Size& size) {
-    PROFILE_BLOCK("Total render time");
-
     main_widget->layout();
     main_widget->draw();
 
@@ -44,4 +47,30 @@ void ResizableWidgetWindow::onScroll(const app::Point& mouse_pos, const app::Del
     main_widget->mousePositionChanged(mouse_pos);
     main_widget->scroll(mouse_pos, delta);
     redraw();
+}
+
+void ResizableWidgetWindow::onLeftMouseDown(const app::Point& mouse_pos,
+                                            app::ModifierKey modifiers,
+                                            app::ClickType click_type) {
+    dragged_widget = main_widget->widgetAt(mouse_pos);
+    if (dragged_widget) {
+        fmt::println("dragged_widget = {}", dragged_widget->className());
+        dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
+        redraw();
+    } else {
+        fmt::println("no widget being dragged");
+    }
+}
+
+void ResizableWidgetWindow::onLeftMouseUp() {
+    dragged_widget = nullptr;
+}
+
+void ResizableWidgetWindow::onLeftMouseDrag(const app::Point& mouse_pos,
+                                            app::ModifierKey modifiers,
+                                            app::ClickType click_type) {
+    if (dragged_widget) {
+        dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
+        redraw();
+    }
 }

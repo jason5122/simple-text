@@ -117,7 +117,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
 
-    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, parent.ui_font_id,
+    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, parent.ui_font_small_id,
                                                    parent.panel_close_image_id);
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
@@ -139,7 +139,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     // These don't have default constructors since they are not intended to be main widgets.
     auto side_bar = std::make_shared<SideBarWidget>(app::Size{kSideBarWidth, size.height});
     status_bar = std::make_shared<StatusBarWidget>(app::Size{size.width, kStatusBarHeight},
-                                                   parent.ui_font_id);
+                                                   parent.ui_font_small_id);
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);
@@ -149,9 +149,10 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     // TODO: Formalize this.
     auto find_panel_widget = std::make_shared<FindPanelWidget>(
-        app::Size{size.width, kFindPanelHeight}, parent.main_font_id, parent.icon_regex_image_id,
-        parent.icon_case_sensitive_image_id, parent.icon_whole_word_image_id,
-        parent.icon_wrap_image_id, parent.icon_in_selection_id, parent.icon_highlight_matches_id);
+        app::Size{size.width, kFindPanelHeight}, parent.main_font_id, parent.ui_font_regular_id,
+        parent.icon_regex_image_id, parent.icon_case_sensitive_image_id,
+        parent.icon_whole_word_image_id, parent.icon_wrap_image_id, parent.icon_in_selection_id,
+        parent.icon_highlight_matches_id);
     main_widget->addChildEnd(find_panel_widget);
 }
 

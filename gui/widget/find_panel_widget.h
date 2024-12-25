@@ -3,7 +3,6 @@
 #include "base/buffer/piece_tree.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
-#include "gui/widget/debug/button_widget.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/widget.h"
 
@@ -12,7 +11,8 @@ namespace gui {
 class FindPanelWidget : public ScrollableWidget {
 public:
     FindPanelWidget(const app::Size& size,
-                    size_t font_id,
+                    size_t main_font_id,
+                    size_t ui_font_id,
                     size_t icon_regex_image_id,
                     size_t icon_case_sensitive_image_id,
                     size_t icon_whole_word_image_id,
@@ -42,7 +42,7 @@ private:
     static constexpr Rgba kIconColor{236, 237, 238, false};  // Dark.
     static constexpr int kTextInputPadding = 8;
 
-    size_t font_id;
+    size_t main_font_id;
     base::PieceTree tree;
 
     std::vector<size_t> image_ids;

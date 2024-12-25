@@ -18,7 +18,8 @@ void EditorApp::onLaunch() {
     // Load fonts.
     auto& font_rasterizer = font::FontRasterizer::instance();
     main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
-    ui_font_id = font_rasterizer.addSystemFont(kUIFontSize);
+    ui_font_small_id = font_rasterizer.addSystemFont(kUIFontSizeSmall);
+    ui_font_regular_id = font_rasterizer.addSystemFont(kUIFontSizeRegular);
 
     // Load images.
     auto& image_renderer = gui::Renderer::instance().getImageRenderer();

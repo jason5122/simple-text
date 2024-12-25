@@ -1,10 +1,10 @@
-#include "button_widget.h"
+#include "image_button_widget.h"
 
 #include "gui/renderer/renderer.h"
 
 namespace gui {
 
-ButtonWidget::ButtonWidget(size_t image_id, Rgba bg_color)
+ImageButtonWidget::ImageButtonWidget(size_t image_id, Rgba bg_color)
     : image_id(image_id), bg_color(bg_color) {
     auto& image_renderer = Renderer::instance().getImageRenderer();
     auto& image = image_renderer.get(image_id);
@@ -12,7 +12,7 @@ ButtonWidget::ButtonWidget(size_t image_id, Rgba bg_color)
     setSize(image.size);
 }
 
-void ButtonWidget::draw() {
+void ImageButtonWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& image_renderer = Renderer::instance().getImageRenderer();
 

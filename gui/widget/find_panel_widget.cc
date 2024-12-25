@@ -1,13 +1,16 @@
 #include "find_panel_widget.h"
 
 #include "gui/renderer/renderer.h"
+#include "gui/widget/debug/image_button_widget.h"
+#include "gui/widget/debug/text_button_widget.h"
 
 #include <fmt/base.h>
 
 namespace gui {
 
 FindPanelWidget::FindPanelWidget(const app::Size& size,
-                                 size_t font_id,
+                                 size_t main_font_id,
+                                 size_t ui_font_id,
                                  size_t icon_regex_image_id,
                                  size_t icon_case_sensitive_image_id,
                                  size_t icon_whole_word_image_id,
@@ -15,16 +18,38 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
                                  size_t icon_in_selection_id,
                                  size_t icon_highlight_matches_id)
     : ScrollableWidget(size),
-      font_id(font_id),
+      main_font_id(main_font_id),
       horizontal_layout(std::make_shared<HorizontalLayoutWidget>()) {
 
-    auto regex_button = std::make_shared<ButtonWidget>(icon_regex_image_id, Rgba{255, 0, 0, 255});
+    auto regex_button =
+        std::make_shared<ImageButtonWidget>(icon_regex_image_id, Rgba{255, 0, 0, 255});
     auto case_sensitive_button =
-        std::make_shared<ButtonWidget>(icon_case_sensitive_image_id, Rgba{255, 255, 0, 255});
+        std::make_shared<ImageButtonWidget>(icon_case_sensitive_image_id, Rgba{255, 255, 0, 255});
+    auto whole_word_button =
+        std::make_shared<ImageButtonWidget>(icon_whole_word_image_id, Rgba{0, 255, 0, 255});
+    auto wrap_button =
+        std::make_shared<ImageButtonWidget>(icon_wrap_image_id, Rgba{0, 255, 255, 255});
+    auto in_selection_button =
+        std::make_shared<ImageButtonWidget>(icon_in_selection_id, Rgba{255, 0, 255, 255});
+    auto highlight_matches_button =
+        std::make_shared<ImageButtonWidget>(icon_highlight_matches_id, Rgba{255, 127, 0, 255});
     regex_button->setAutoresizing(false);
     case_sensitive_button->setAutoresizing(false);
+    whole_word_button->setAutoresizing(false);
+    wrap_button->setAutoresizing(false);
+    in_selection_button->setAutoresizing(false);
+    highlight_matches_button->setAutoresizing(false);
     horizontal_layout->addChildStart(regex_button);
     horizontal_layout->addChildStart(case_sensitive_button);
+    horizontal_layout->addChildStart(whole_word_button);
+    horizontal_layout->addChildStart(wrap_button);
+    horizontal_layout->addChildStart(in_selection_button);
+    horizontal_layout->addChildStart(highlight_matches_button);
+
+    auto temp = std::make_shared<TextButtonWidget>(ui_font_id, "Find All", Rgba{255, 127, 0, 255});
+    temp->setAutoresizing(false);
+    temp->setSize({200, 52});
+    horizontal_layout->addChildEnd(temp);
 
     tree.insert(0, "needle");
 
@@ -78,7 +103,7 @@ void FindPanelWidget::updateMaxScroll() {}
 inline const font::LineLayout& FindPanelWidget::layoutAt(size_t line) {
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
-    return line_layout_cache.get(font_id, line_str);
+    return line_layout_cache.get(main_font_id, line_str);
 }
 
 constexpr app::Point FindPanelWidget::textInputOffset() {

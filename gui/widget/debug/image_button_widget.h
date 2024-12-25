@@ -5,14 +5,14 @@
 
 namespace gui {
 
-class ButtonWidget : public Widget {
+class ImageButtonWidget : public Widget {
 public:
-    ButtonWidget(size_t image_id, Rgba bg_color);
+    ImageButtonWidget(size_t image_id, Rgba bg_color);
 
     void draw() override;
 
     std::string_view className() const override {
-        return "ButtonWidget";
+        return "ImageButtonWidget";
     }
 
 private:

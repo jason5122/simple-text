@@ -22,10 +22,16 @@ void EditorApp::onLaunch() {
 
     // Load images.
     auto& image_renderer = gui::Renderer::instance().getImageRenderer();
+    // TODO: Replace this with an actual file path class.
     std::string panel_close_2x = fmt::format("{}/icons/panel_close@2x.png", base::ResourceDir());
     std::string folder_open_2x = fmt::format("{}/icons/folder_open@2x.png", base::ResourceDir());
+    std::string icon_regex_2x = fmt::format("{}/icons/icon_regex@2x.png", base::ResourceDir());
+    std::string icon_case_sensitive_2x =
+        fmt::format("{}/icons/icon_case_sensitive@2x.png", base::ResourceDir());
     panel_close_image_id = image_renderer.addPng(panel_close_2x);
     folder_open_image_id = image_renderer.addPng(folder_open_2x);
+    icon_regex_image_id = image_renderer.addPng(icon_regex_2x);
+    icon_case_sensitive_image_id = image_renderer.addPng(icon_case_sensitive_2x);
 
     createWindow();
 }

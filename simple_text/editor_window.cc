@@ -149,7 +149,8 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     // TODO: Formalize this.
     auto find_panel_widget = std::make_shared<FindPanelWidget>(
-        app::Size{size.width, kFindPanelHeight}, parent.main_font_id);
+        app::Size{size.width, kFindPanelHeight}, parent.main_font_id, parent.icon_regex_image_id,
+        parent.icon_case_sensitive_image_id);
     main_widget->addChildEnd(find_panel_widget);
 }
 

@@ -3,6 +3,8 @@ icons = [
   "panel_close@2x.png",
   "folder_open@2x.png",
   "folder_closed@2x.png",
+  "icon_regex@2x.png",
+  "icon_case_sensitive@2x.png",
 ]
 
 if (is_mac) {

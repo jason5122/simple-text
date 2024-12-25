@@ -2,6 +2,8 @@
 
 #include "base/buffer/piece_tree.h"
 #include "gui/renderer/renderer.h"
+#include "gui/widget/container/horizontal_layout_widget.h"
+#include "gui/widget/debug/button_widget.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/widget.h"
 
@@ -19,6 +21,7 @@ public:
                     size_t icon_highlight_matches_id);
 
     void draw() override;
+    void layout() override;
     void updateMaxScroll() override;
 
     std::string_view className() const override {
@@ -44,6 +47,10 @@ private:
 
     std::vector<size_t> image_ids;
     int image_offset_x = 0;
+
+    std::shared_ptr<ButtonWidget> regex_button;
+    std::shared_ptr<ButtonWidget> case_sensitive_button;
+    std::shared_ptr<HorizontalLayoutWidget> horizontal_layout;
 
     inline const font::LineLayout& layoutAt(size_t line);
     constexpr app::Point textInputOffset();

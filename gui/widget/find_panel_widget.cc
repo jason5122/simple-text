@@ -14,7 +14,15 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
                                  size_t icon_wrap_image_id,
                                  size_t icon_in_selection_id,
                                  size_t icon_highlight_matches_id)
-    : ScrollableWidget(size), font_id(font_id) {
+    : ScrollableWidget(size),
+      font_id(font_id),
+      regex_button(std::make_shared<ButtonWidget>(icon_regex_image_id, Rgba{255, 0, 0, 255})),
+      case_sensitive_button(
+          std::make_shared<ButtonWidget>(icon_case_sensitive_image_id, Rgba{255, 255, 0, 255})),
+      horizontal_layout(std::make_shared<HorizontalLayoutWidget>()) {
+    horizontal_layout->addChildStart(regex_button);
+    horizontal_layout->addChildStart(case_sensitive_button);
+
     tree.insert(0, "needle");
 
     image_ids.emplace_back(icon_regex_image_id);
@@ -33,26 +41,36 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
 }
 
 void FindPanelWidget::draw() {
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
-    int line_height = metrics.line_height;
+    horizontal_layout->draw();
 
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& image_renderer = Renderer::instance().getImageRenderer();
-    auto& text_renderer = Renderer::instance().getTextRenderer();
-    auto& selection_renderer = Renderer::instance().getSelectionRenderer();
+    // temp_color_widget->draw();
 
-    rect_renderer.addRect(position, size, kFindPanelColor, Layer::kTwo);
+    // const auto& font_rasterizer = font::FontRasterizer::instance();
+    // const auto& metrics = font_rasterizer.metrics(font_id);
+    // int line_height = metrics.line_height;
 
-    app::Size text_input_size = {size.width, line_height};
-    text_input_size.height += kTextInputPadding * 2;  // Pad top and bottom.
-    text_input_size.height += 2;                      // Add padding for selection border.
+    // auto& rect_renderer = Renderer::instance().getRectRenderer();
+    // auto& image_renderer = Renderer::instance().getImageRenderer();
+    // auto& text_renderer = Renderer::instance().getTextRenderer();
+    // auto& selection_renderer = Renderer::instance().getSelectionRenderer();
 
-    rect_renderer.addRect(textInputOffset(), text_input_size, kTextInputColor, Layer::kTwo);
+    // rect_renderer.addRect(position, size, kFindPanelColor, Layer::kTwo);
 
-    renderText(line_height);
-    renderSelections(line_height);
-    renderImages();
+    // app::Size text_input_size = {size.width, line_height};
+    // text_input_size.height += kTextInputPadding * 2;  // Pad top and bottom.
+    // text_input_size.height += 2;                      // Add padding for selection border.
+
+    // rect_renderer.addRect(textInputOffset(), text_input_size, kTextInputColor, Layer::kTwo);
+
+    // renderText(line_height);
+    // renderSelections(line_height);
+    // renderImages();
+}
+
+void FindPanelWidget::layout() {
+    horizontal_layout->setSize(size);
+    horizontal_layout->setPosition(position);
+    // regex_button->setPosition(position);
 }
 
 void FindPanelWidget::updateMaxScroll() {}

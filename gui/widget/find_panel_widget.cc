@@ -48,7 +48,8 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
 
     auto temp = std::make_shared<TextButtonWidget>(ui_font_id, "Find All", Rgba{255, 127, 0, 255});
     temp->setAutoresizing(false);
-    temp->setSize({200, 52});
+    // temp->setSize({200, 52});
+    temp->setWidth(200);
     horizontal_layout->addChildEnd(temp);
 
     tree.insert(0, "needle");

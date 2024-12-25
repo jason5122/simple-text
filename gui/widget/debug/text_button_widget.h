@@ -22,6 +22,10 @@ private:
 
     Rgba bg_color;
     font::LineLayout line_layout;
+    int line_height;
+
+    int centerHorizontally(int widget_width);
+    int centerVertically(int widget_height);
 };
 
 }  // namespace gui

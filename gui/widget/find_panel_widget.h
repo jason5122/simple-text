@@ -48,8 +48,6 @@ private:
     std::vector<size_t> image_ids;
     int image_offset_x = 0;
 
-    std::shared_ptr<ButtonWidget> regex_button;
-    std::shared_ptr<ButtonWidget> case_sensitive_button;
     std::shared_ptr<HorizontalLayoutWidget> horizontal_layout;
 
     inline const font::LineLayout& layoutAt(size_t line);

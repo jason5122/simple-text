@@ -10,7 +10,9 @@ void VerticalLayoutWidget::layout() {
 
     for (auto& child : children_start) {
         child->setPosition({position.x, top_offset});
-        child->setWidth(size.width);
+        if (child->isAutoresizing()) {
+            child->setWidth(size.width);
+        }
 
         // Recursively layout children.
         child->layout();
@@ -22,7 +24,9 @@ void VerticalLayoutWidget::layout() {
         bottom_offset -= child->getSize().height;
 
         child->setPosition({position.x, bottom_offset});
-        child->setWidth(size.width);
+        if (child->isAutoresizing()) {
+            child->setWidth(size.width);
+        }
 
         // Recursively layout children.
         child->layout();

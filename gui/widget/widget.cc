@@ -31,6 +31,14 @@ bool Widget::hitTest(const app::Point& point) {
            (position.y <= point.y && point.y < position.y + size.height);
 }
 
+bool Widget::isAutoresizing() const {
+    return autoresizing;
+}
+
+void Widget::setAutoresizing(bool autoresizing) {
+    this->autoresizing = autoresizing;
+}
+
 void Widget::setPosition(const app::Point& pos) {
     position = pos;
 }

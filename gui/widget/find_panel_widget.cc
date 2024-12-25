@@ -16,10 +16,13 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
                                  size_t icon_highlight_matches_id)
     : ScrollableWidget(size),
       font_id(font_id),
-      regex_button(std::make_shared<ButtonWidget>(icon_regex_image_id, Rgba{255, 0, 0, 255})),
-      case_sensitive_button(
-          std::make_shared<ButtonWidget>(icon_case_sensitive_image_id, Rgba{255, 255, 0, 255})),
       horizontal_layout(std::make_shared<HorizontalLayoutWidget>()) {
+
+    auto regex_button = std::make_shared<ButtonWidget>(icon_regex_image_id, Rgba{255, 0, 0, 255});
+    auto case_sensitive_button =
+        std::make_shared<ButtonWidget>(icon_case_sensitive_image_id, Rgba{255, 255, 0, 255});
+    regex_button->setAutoresizing(false);
+    case_sensitive_button->setAutoresizing(false);
     horizontal_layout->addChildStart(regex_button);
     horizontal_layout->addChildStart(case_sensitive_button);
 
@@ -42,8 +45,6 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
 
 void FindPanelWidget::draw() {
     horizontal_layout->draw();
-
-    // temp_color_widget->draw();
 
     // const auto& font_rasterizer = font::FontRasterizer::instance();
     // const auto& metrics = font_rasterizer.metrics(font_id);
@@ -70,7 +71,6 @@ void FindPanelWidget::draw() {
 void FindPanelWidget::layout() {
     horizontal_layout->setSize(size);
     horizontal_layout->setPosition(position);
-    // regex_button->setPosition(position);
 }
 
 void FindPanelWidget::updateMaxScroll() {}

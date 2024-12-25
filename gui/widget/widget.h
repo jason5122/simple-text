@@ -33,6 +33,8 @@ public:
     void setHeight(int height);
     app::Point getPosition() const;
     bool hitTest(const app::Point& point);
+    bool isAutoresizing() const;
+    void setAutoresizing(bool autoresizing);
 
     // TODO: Debug use; remove this.
     virtual std::string_view className() const = 0;
@@ -45,6 +47,7 @@ public:
 protected:
     app::Size size{};
     app::Point position{};
+    bool autoresizing = true;  // TODO: Consider making this false by default.
 };
 
 static_assert(std::is_abstract<Widget>());

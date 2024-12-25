@@ -10,7 +10,9 @@ void HorizontalLayoutWidget::layout() {
 
     for (auto& child : children_start) {
         child->setPosition({left_offset, position.y});
-        child->setHeight(size.height);
+        if (child->isAutoresizing()) {
+            child->setHeight(size.height);
+        }
 
         // Recursively layout children.
         child->layout();
@@ -22,7 +24,9 @@ void HorizontalLayoutWidget::layout() {
         right_offset -= child->getSize().width;
 
         child->setPosition({right_offset, position.y});
-        child->setHeight(size.height);
+        if (child->isAutoresizing()) {
+            child->setHeight(size.height);
+        }
 
         // Recursively layout children.
         child->layout();

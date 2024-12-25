@@ -22,7 +22,7 @@ SideBarWidget::SideBarWidget(const app::Size& size)
 
 void SideBarWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kSideBarColor, RectRenderer::RectLayer::kBackground);
+    rect_renderer.addRect(position, size, kSideBarColor, Layer::kOne);
 
     const auto& metrics = rasterizer().metrics(label_font_id);
     // renderOldLabel(metrics.line_height);
@@ -99,13 +99,13 @@ void SideBarWidget::renderNewLabel() {
         app::Point text_coords = coords;
         text_coords.x += kLeftPadding;
         const auto highlight_callback = [](size_t) { return kTextColor; };
-        text_renderer.renderLineLayout(layout, text_coords, TextRenderer::TextLayer::kBackground,
-                                       highlight_callback, min_x, max_x);
+        text_renderer.renderLineLayout(layout, text_coords, Layer::kOne, highlight_callback, min_x,
+                                       max_x);
 
         // Highlight on mouse hover.
         if (line == hovered_index) {
             rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
-                                  RectRenderer::RectLayer::kBackground);
+                                  Layer::kOne);
         }
     }
 }
@@ -125,7 +125,7 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          RectRenderer::RectLayer::kBackground, 5);
+                          Layer::kOne, 5);
 }
 
 }  // namespace gui

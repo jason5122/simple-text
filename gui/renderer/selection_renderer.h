@@ -1,8 +1,8 @@
 #pragma once
 
 #include "app/types.h"
-#include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
+#include "gui/renderer/types.h"
 #include "util/non_copyable.h"
 
 #include <vector>
@@ -23,8 +23,9 @@ public:
     };
     void renderSelections(const std::vector<Selection>& selections,
                           const app::Point& offset,
-                          int line_height);
-    void flush(const app::Size& screen_size);
+                          int line_height,
+                          Layer layer);
+    void flush(const app::Size& screen_size, Layer layer);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -44,7 +45,9 @@ private:
         // <border_flags, bottom_border_offset, top_border_offset, hide_background>
         IVec4 border_info;
     };
-    std::vector<InstanceData> instances;
+
+    std::vector<InstanceData> layer_one_instances;
+    std::vector<InstanceData> layer_two_instances;
 
     enum BorderFlags {
         kLeft = 1,

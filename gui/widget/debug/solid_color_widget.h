@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/renderer/opengl_types.h"
+#include "gui/renderer/types.h"
 #include "gui/widget/widget.h"
 
 namespace gui {

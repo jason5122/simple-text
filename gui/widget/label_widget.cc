@@ -42,10 +42,10 @@ void LabelWidget::draw() {
     for (size_t icon_id : left_side_icons) {
         auto& image = image_renderer.get(icon_id);
 
-        app::Point icon_position = centerVertically(image.height) + left_offset;
-        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor);
+        app::Point icon_position = centerVertically(image.size.height) + left_offset;
+        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor, Layer::kTwo);
 
-        left_offset.x += image.width;
+        left_offset.x += image.size.width;
     }
 
     // Draw all right side icons.
@@ -53,11 +53,11 @@ void LabelWidget::draw() {
     for (size_t icon_id : right_side_icons) {
         auto& image = image_renderer.get(icon_id);
 
-        right_offset.x += image.width;
+        right_offset.x += image.size.width;
 
-        app::Point icon_position = centerVertically(image.height) - right_offset;
+        app::Point icon_position = centerVertically(image.size.height) - right_offset;
         icon_position += app::Point{size.width, 0};
-        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor);
+        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor, Layer::kTwo);
     }
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
@@ -68,8 +68,7 @@ void LabelWidget::draw() {
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
     const auto highlight_callback = [this](size_t) { return color; };
-    text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kForeground,
-                                   highlight_callback, min_x, max_x);
+    text_renderer.renderLineLayout(layout, coords, Layer::kTwo, highlight_callback, min_x, max_x);
 }
 
 app::Point LabelWidget::centerVertically(int widget_height) {

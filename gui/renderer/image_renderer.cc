@@ -12,15 +12,15 @@ using namespace opengl;
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
-#include <fmt/base.h>
 #include <cassert>
+#include <fmt/base.h>
 
 namespace {
 
-const std::string kVertexShaderSource =
+const std::string kVertexShader =
 #include "gui/renderer/shaders/image_vert.glsl"
     ;
-const std::string kFragmentShaderSource =
+const std::string kFragmentShader =
 #include "gui/renderer/shaders/image_frag.glsl"
     ;
 
@@ -28,8 +28,8 @@ const std::string kFragmentShaderSource =
 
 namespace gui {
 
-ImageRenderer::ImageRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
-    GLuint indices[] = {
+ImageRenderer::ImageRenderer() : shader_program{kVertexShader, kFragmentShader} {
+    constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
     };
@@ -138,17 +138,19 @@ const ImageRenderer::Image& ImageRenderer::get(size_t image_id) const {
 // TODO: Find a way to not have to cast here.
 void ImageRenderer::insertInBatch(size_t image_index,
                                   const app::Point& coords,
-                                  const Rgba& color) {
+                                  const Rgba& color,
+                                  Layer layer) {
+    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
     const Image& image = cache.at(image_index);
     instances.emplace_back(InstanceData{
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
-        .rect_size = {static_cast<float>(image.width), static_cast<float>(image.height)},
+        .rect_size = {static_cast<float>(image.size.width), static_cast<float>(image.size.height)},
         .uv = image.uv,
         .color = color,
     });
 }
 
-void ImageRenderer::renderBatch(const app::Size& screen_size) {
+void ImageRenderer::renderBatch(const app::Size& screen_size, Layer layer) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
@@ -156,6 +158,7 @@ void ImageRenderer::renderBatch(const app::Size& screen_size) {
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
+    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
@@ -199,8 +202,7 @@ bool ImageRenderer::loadPng(std::string_view file_name, Image& image) {
     Vec4 uv;
     atlas.insertTexture(width, height, Atlas::Format::kRGBA, buffer, uv);
     image = {
-        .width = width,
-        .height = height,
+        .size = {static_cast<int>(width), static_cast<int>(height)},
         .uv = uv,
     };
     return true;
@@ -243,8 +245,7 @@ bool ImageRenderer::loadJpeg(std::string_view file_name, Image& image) {
     Vec4 uv;
     atlas.insertTexture(width, height, Atlas::Format::kRGB, buffer, uv);
     image = {
-        .width = width,
-        .height = height,
+        .size = {static_cast<int>(width), static_cast<int>(height)},
         .uv = uv,
     };
     return true;

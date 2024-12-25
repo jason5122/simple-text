@@ -462,12 +462,11 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
 #endif
 
 #ifdef ENABLE_HIGHLIGHTING
-        text_renderer.renderLineLayout(layout, coords, TextRenderer::TextLayer::kBackground,
-                                       highlight_callback, min_x, max_x);
+        text_renderer.renderLineLayout(layout, coords, Layer::kOne, highlight_callback, min_x,
+                                       max_x);
 #else
         text_renderer.renderLineLayout(
-            layout, coords, TextRenderer::TextLayer::kBackground,
-            [](size_t) { return kTextColor; }, min_x, max_x);
+            layout, coords, Layer::kOne, [](size_t) { return kTextColor; }, min_x, max_x);
 #endif
 
         // Draw gutter.
@@ -476,7 +475,7 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
             gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
-                                  RectRenderer::RectLayer::kBackground);
+                                  Layer::kOne);
         }
 
         // Draw line numbers.
@@ -492,8 +491,7 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords,
-                                       TextRenderer::TextLayer::kBackground,
+        text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
                                        line_number_highlight_callback);
     }
 
@@ -539,7 +537,7 @@ void TextViewWidget::renderSelections(int main_line_height, size_t start_line, s
             });
         }
     }
-    selection_renderer.renderSelections(selections, textOffset(), main_line_height);
+    selection_renderer.renderSelections(selections, textOffset(), main_line_height, Layer::kOne);
 }
 
 void TextViewWidget::renderScrollBars(int main_line_height) {
@@ -557,7 +555,7 @@ void TextViewWidget::renderScrollBars(int main_line_height) {
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          RectRenderer::RectLayer::kForeground, 5);
+                          Layer::kTwo, 5);
 
     // Add horizontal scroll bar.
     // int hbar_height = 15;
@@ -588,8 +586,7 @@ void TextViewWidget::renderCaret(int main_line_height) {
     caret_pos.y -= extra_padding;
     caret_pos += textOffset();
 
-    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor,
-                          RectRenderer::RectLayer::kForeground);
+    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kTwo);
 }
 
 }  // namespace gui

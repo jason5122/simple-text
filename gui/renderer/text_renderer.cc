@@ -1,4 +1,5 @@
 #include "text_renderer.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -8,10 +9,10 @@ using namespace opengl;
 
 namespace {
 
-const std::string kVertexShaderSource =
+const std::string kVertexShader =
 #include "gui/renderer/shaders/text_vert.glsl"
     ;
-const std::string kFragmentShaderSource =
+const std::string kFragmentShader =
 #include "gui/renderer/shaders/text_frag.glsl"
     ;
 
@@ -23,15 +24,15 @@ const std::string kFragmentShaderSource =
 
 namespace gui {
 
-TextRenderer::TextRenderer() : shader_program{kVertexShaderSource, kFragmentShaderSource} {
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo_instance);
-    glGenBuffers(1, &ebo);
-
-    GLuint indices[] = {
+TextRenderer::TextRenderer() : shader_program{kVertexShader, kFragmentShader} {
+    constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
     };
+
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo_instance);
+    glGenBuffers(1, &ebo);
 
     glBindVertexArray(vao);
 
@@ -100,7 +101,7 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 
 void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     const app::Point& coords,
-                                    TextLayer font_type,
+                                    Layer layer,
                                     const std::function<Rgb(size_t)>& highlight_callback,
                                     int min_x,
                                     int max_x) {
@@ -147,14 +148,13 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                 .uv = rglyph.uv,
                 .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
             };
-            insertIntoBatch(rglyph.page, std::move(instance), font_type);
+            insertIntoBatch(rglyph.page, std::move(instance), layer);
         }
     }
 }
 
-void TextRenderer::flush(const app::Size& screen_size, TextLayer font_type) {
-    auto& batch_instances = font_type == TextLayer::kForeground ? foreground_batch_instances
-                                                                : background_batch_instances;
+void TextRenderer::flush(const app::Size& screen_size, Layer layer) {
+    auto& batch_instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
 
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
@@ -216,17 +216,14 @@ void TextRenderer::renderAtlasPages(const app::Point& coords) {
             .uv = Vec4{0, 0, 1.0, 1.0},
             .color = Rgba{255, 255, 255, true},
         };
-        insertIntoBatch(page, std::move(instance), TextLayer::kForeground);
+        insertIntoBatch(page, std::move(instance), Layer::kOne);
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
 }
 
-void TextRenderer::insertIntoBatch(size_t page,
-                                   const InstanceData& instance,
-                                   TextLayer font_type) {
-    auto& batch_instances = font_type == TextLayer::kForeground ? foreground_batch_instances
-                                                                : background_batch_instances;
+void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance, Layer layer) {
+    auto& batch_instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
 
     // TODO: Refactor this ugly hack.
     while (batch_instances.size() <= page) {

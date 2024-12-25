@@ -42,17 +42,17 @@ void Renderer::flush(const app::Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // TODO: Figure out where to flush selections. Consider it on top with added transparency.
-    // selection_renderer.flush(size);
-
     // TODO: Add arbitrarily many layers (or a fixed but larger set of layers).
-    rect_renderer.flush(size, RectRenderer::RectLayer::kBackground);
-    selection_renderer.flush(size);  // TODO: Is this good?
-    text_renderer.flush(size, TextRenderer::TextLayer::kBackground);
-    rect_renderer.flush(size, RectRenderer::RectLayer::kForeground);
-    text_renderer.flush(size, TextRenderer::TextLayer::kForeground);
 
-    image_renderer.renderBatch(size);
+    rect_renderer.flush(size, Layer::kOne);
+    selection_renderer.flush(size, Layer::kOne);
+    text_renderer.flush(size, Layer::kOne);
+    image_renderer.renderBatch(size, Layer::kOne);
+
+    rect_renderer.flush(size, Layer::kTwo);
+    selection_renderer.flush(size, Layer::kTwo);
+    text_renderer.flush(size, Layer::kTwo);
+    image_renderer.renderBatch(size, Layer::kTwo);
 }
 
 }  // namespace gui

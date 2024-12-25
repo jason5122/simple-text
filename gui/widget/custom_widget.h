@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/buffer/piece_tree.h"
-#include "gui/renderer/opengl_types.h"
+#include "gui/renderer/types.h"
 #include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
 #include "gui/widget/types.h"

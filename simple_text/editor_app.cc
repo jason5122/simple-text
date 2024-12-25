@@ -28,10 +28,22 @@ void EditorApp::onLaunch() {
     std::string icon_regex_2x = fmt::format("{}/icons/icon_regex@2x.png", base::ResourceDir());
     std::string icon_case_sensitive_2x =
         fmt::format("{}/icons/icon_case_sensitive@2x.png", base::ResourceDir());
+    std::string icon_whole_word_2x =
+        fmt::format("{}/icons/icon_whole_word@2x.png", base::ResourceDir());
+    std::string icon_wrap_2x = fmt::format("{}/icons/icon_wrap@2x.png", base::ResourceDir());
+    std::string icon_in_selection_2x =
+        fmt::format("{}/icons/icon_in_selection@2x.png", base::ResourceDir());
+    std::string icon_highlight_matches_2x =
+        fmt::format("{}/icons/icon_highlight_matches@2x.png", base::ResourceDir());
+
     panel_close_image_id = image_renderer.addPng(panel_close_2x);
     folder_open_image_id = image_renderer.addPng(folder_open_2x);
     icon_regex_image_id = image_renderer.addPng(icon_regex_2x);
     icon_case_sensitive_image_id = image_renderer.addPng(icon_case_sensitive_2x);
+    icon_whole_word_image_id = image_renderer.addPng(icon_whole_word_2x);
+    icon_wrap_image_id = image_renderer.addPng(icon_wrap_2x);
+    icon_in_selection_id = image_renderer.addPng(icon_in_selection_2x);
+    icon_highlight_matches_id = image_renderer.addPng(icon_highlight_matches_2x);
 
     createWindow();
 }

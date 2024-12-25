@@ -45,6 +45,10 @@ private:
     size_t folder_open_image_id;
     size_t icon_regex_image_id;
     size_t icon_case_sensitive_image_id;
+    size_t icon_whole_word_image_id;
+    size_t icon_wrap_image_id;
+    size_t icon_in_selection_id;
+    size_t icon_highlight_matches_id;
 
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 };

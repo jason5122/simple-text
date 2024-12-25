@@ -1,8 +1,9 @@
 #pragma once
 
-#include "gui/renderer/opengl_types.h"
+#include "gui/renderer/types.h"
 #include "opengl/gl.h"
 #include "util/non_copyable.h"
+
 #include <vector>
 
 namespace gui {

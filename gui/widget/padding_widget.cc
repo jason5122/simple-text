@@ -9,7 +9,7 @@ PaddingWidget::PaddingWidget(const app::Size& size, const Rgba& color)
 
 void PaddingWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, color, RectRenderer::RectLayer::kForeground);
+    rect_renderer.addRect(position, size, color, Layer::kTwo);
 }
 
 }  // namespace gui

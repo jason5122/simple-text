@@ -2,8 +2,8 @@
 
 #include "app/types.h"
 #include "gui/renderer/glyph_cache.h"
-#include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
+#include "gui/renderer/types.h"
 #include <functional>
 #include <vector>
 
@@ -16,19 +16,14 @@ public:
     TextRenderer(TextRenderer&& other);
     TextRenderer& operator=(TextRenderer&& other);
 
-    enum class TextLayer {
-        kBackground,
-        kForeground,
-    };
-
     void renderLineLayout(const font::LineLayout& line_layout,
                           const app::Point& coords,
-                          TextLayer font_type,
+                          Layer layer,
                           const std::function<Rgb(size_t)>& highlight_callback,
                           int min_x = std::numeric_limits<int>::min(),
                           int max_x = std::numeric_limits<int>::max());
 
-    void flush(const app::Size& screen_size, TextLayer font_type);
+    void flush(const app::Size& screen_size, Layer layer);
 
     // DEBUG: Draws all texture atlases.
     void renderAtlasPages(const app::Point& coords);
@@ -50,11 +45,10 @@ private:
         Rgba color;
     };
 
-    // TODO: Move batch code into a "Batch" class.
-    std::vector<std::vector<InstanceData>> foreground_batch_instances;
-    std::vector<std::vector<InstanceData>> background_batch_instances;
+    std::vector<std::vector<InstanceData>> layer_one_instances;
+    std::vector<std::vector<InstanceData>> layer_two_instances;
 
-    void insertIntoBatch(size_t page, const InstanceData& instance, TextLayer font_type);
+    void insertIntoBatch(size_t page, const InstanceData& instance, Layer layer);
 };
 
 }  // namespace gui

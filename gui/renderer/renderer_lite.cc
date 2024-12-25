@@ -38,10 +38,11 @@ void RendererLite::flush(const app::Size& size) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // TODO: Add arbitrarily many layers (or a fixed but larger set of layers).
-    rect_renderer.flush(size, RectRenderer::RectLayer::kBackground);
-    text_renderer.flush(size, TextRenderer::TextLayer::kBackground);
-    rect_renderer.flush(size, RectRenderer::RectLayer::kForeground);
-    text_renderer.flush(size, TextRenderer::TextLayer::kForeground);
+    rect_renderer.flush(size, Layer::kOne);
+    text_renderer.flush(size, Layer::kOne);
+
+    rect_renderer.flush(size, Layer::kTwo);
+    text_renderer.flush(size, Layer::kTwo);
 }
 
 }  // namespace gui

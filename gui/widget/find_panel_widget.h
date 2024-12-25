@@ -12,7 +12,11 @@ public:
     FindPanelWidget(const app::Size& size,
                     size_t font_id,
                     size_t icon_regex_image_id,
-                    size_t icon_case_sensitive_image_id);
+                    size_t icon_case_sensitive_image_id,
+                    size_t icon_whole_word_image_id,
+                    size_t icon_wrap_image_id,
+                    size_t icon_in_selection_id,
+                    size_t icon_highlight_matches_id);
 
     void draw() override;
     void updateMaxScroll() override;
@@ -38,8 +42,7 @@ private:
     size_t font_id;
     base::PieceTree tree;
 
-    size_t icon_regex_image_id;
-    size_t icon_case_sensitive_image_id;
+    std::vector<size_t> image_ids;
     int image_offset_x = 0;
 
     inline const font::LineLayout& layoutAt(size_t line);

@@ -38,4 +38,9 @@ struct IVec4 {
 };
 static_assert(sizeof(IVec4) == sizeof(uint32_t) * 4);
 
+enum class Layer {
+    kOne,
+    kTwo,
+};
+
 }  // namespace gui

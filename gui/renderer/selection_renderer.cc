@@ -8,10 +8,10 @@ using namespace opengl;
 
 namespace {
 
-const std::string kVertexShaderSource =
+const std::string kVertexShader =
 #include "gui/renderer/shaders/selection_vert.glsl"
     ;
-const std::string kFragmentShaderSource =
+const std::string kFragmentShader =
 #include "gui/renderer/shaders/selection_frag.glsl"
     ;
 
@@ -19,16 +19,13 @@ const std::string kFragmentShaderSource =
 
 namespace gui {
 
-SelectionRenderer::SelectionRenderer()
-    : shader_program{kVertexShaderSource, kFragmentShaderSource} {
-    instances.reserve(kBatchMax);
-
+SelectionRenderer::SelectionRenderer() : shader_program{kVertexShader, kFragmentShader} {
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
     glUniform1i(glGetUniformLocation(shader_id, "r"), kCornerRadius);
     glUniform1i(glGetUniformLocation(shader_id, "thickness"), kBorderThickness);
 
-    GLuint indices[] = {
+    constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
     };
@@ -92,7 +89,6 @@ SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
       vao{other.vao},
       vbo_instance{other.vbo_instance},
       ebo{other.ebo} {
-    instances.reserve(kBatchMax);
     other.vao = 0;
     other.vbo_instance = 0;
     other.ebo = 0;
@@ -113,11 +109,14 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 
 void SelectionRenderer::renderSelections(const std::vector<Selection>& selections,
                                          const app::Point& offset,
-                                         int line_height) {
-    auto create = [&, this](int start, int end, int line,
-                            uint32_t border_flags = kLeft | kRight | kTop | kBottom,
-                            uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
-                            uint32_t hide_background = 0) {
+                                         int line_height,
+                                         Layer layer) {
+    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
+
+    auto create = [&](int start, int end, int line,
+                      uint32_t border_flags = kLeft | kRight | kTop | kBottom,
+                      uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
+                      uint32_t hide_background = 0) {
         instances.emplace_back(InstanceData{
             .coords =
                 {
@@ -201,7 +200,7 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& selection
     }
 }
 
-void SelectionRenderer::flush(const app::Size& screen_size) {
+void SelectionRenderer::flush(const app::Size& screen_size, Layer layer) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
@@ -209,6 +208,7 @@ void SelectionRenderer::flush(const app::Size& screen_size) {
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
+    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), instances.data());

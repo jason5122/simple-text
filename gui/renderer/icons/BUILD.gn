@@ -5,6 +5,10 @@ icons = [
   "folder_closed@2x.png",
   "icon_regex@2x.png",
   "icon_case_sensitive@2x.png",
+  "icon_whole_word@2x.png",
+  "icon_wrap@2x.png",
+  "icon_in_selection@2x.png",
+  "icon_highlight_matches@2x.png",
 ]
 
 if (is_mac) {

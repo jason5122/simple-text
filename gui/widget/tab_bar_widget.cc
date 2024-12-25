@@ -1,8 +1,9 @@
+#include "tab_bar_widget.h"
+
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "base/numeric/wrap_arithmetic.h"
 #include "gui/renderer/renderer.h"
-#include "tab_bar_widget.h"
 
 namespace gui {
 
@@ -53,7 +54,7 @@ void TabBarWidget::removeTab(size_t index) {
 void TabBarWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
-    rect_renderer.addRect(position, size, kTabBarColor, RectRenderer::RectLayer::kForeground);
+    rect_renderer.addRect(position, size, kTabBarColor, Layer::kTwo);
 
     for (const auto& tab_name_label : tab_name_labels) {
         tab_name_label->draw();
@@ -61,8 +62,8 @@ void TabBarWidget::draw() {
 
     app::Point tab_pos = position;
     tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
-    rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, kTabColor,
-                          RectRenderer::RectLayer::kForeground, 0, kTabCornerRadius);
+    rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, kTabColor, Layer::kTwo, 0,
+                          kTabCornerRadius);
 
     size_t num_labels = tab_name_labels.size();
     for (size_t i = 0; i < num_labels; ++i) {
@@ -82,7 +83,7 @@ void TabBarWidget::draw() {
         tab_separator_pos.y -= kTabSeparatorSize.height / 2;
 
         rect_renderer.addRect(tab_separator_pos, kTabSeparatorSize, kTabSeparatorColor,
-                              RectRenderer::RectLayer::kForeground);
+                              Layer::kTwo);
     }
 }
 

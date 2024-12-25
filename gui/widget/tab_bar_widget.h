@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/renderer/opengl_types.h"
+#include "gui/renderer/types.h"
 #include "gui/widget/label_widget.h"
 #include "gui/widget/widget.h"
 

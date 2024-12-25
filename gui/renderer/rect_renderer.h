@@ -1,9 +1,10 @@
 #pragma once
 
 #include "app/types.h"
-#include "gui/renderer/opengl_types.h"
 #include "gui/renderer/shader.h"
+#include "gui/renderer/types.h"
 #include "util/non_copyable.h"
+
 #include <cstddef>
 #include <vector>
 
@@ -16,18 +17,13 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    enum class RectLayer {
-        kBackground,
-        kForeground,
-    };
-
     void addRect(const app::Point& coords,
                  const app::Size& size,
                  const Rgba& color,
-                 RectLayer rect_type,
+                 Layer layer,
                  int corner_radius = 0,
                  int tab_corner_radius = 0);
-    void flush(const app::Size& screen_size, RectLayer rect_type);
+    void flush(const app::Size& screen_size, Layer layer);
 
 private:
     static constexpr int kBatchMax = 0x10000;
@@ -46,8 +42,8 @@ private:
         float tab_corner_radius = 0;
     };
 
-    std::vector<InstanceData> background_instances;
-    std::vector<InstanceData> foreground_instances;
+    std::vector<InstanceData> layer_one_instances;
+    std::vector<InstanceData> layer_two_instances;
 };
 
 static_assert(!std::is_copy_constructible_v<RectRenderer>);

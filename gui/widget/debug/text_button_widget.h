@@ -7,8 +7,11 @@ namespace gui {
 
 class TextButtonWidget : public Widget {
 public:
-    // TODO: Accept a "minimum size" argument.
-    TextButtonWidget(size_t font_id, std::string_view str8, Rgba bg_color);
+    TextButtonWidget(size_t font_id,
+                     std::string_view str8,
+                     Rgba bg_color,
+                     const app::Size& padding,
+                     const app::Size& min_size);
 
     void draw() override;
 
@@ -24,8 +27,7 @@ private:
     font::LineLayout line_layout;
     int line_height;
 
-    int centerHorizontally(int widget_width);
-    int centerVertically(int widget_height);
+    constexpr app::Point textCenter();
 };
 
 }  // namespace gui

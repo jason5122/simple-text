@@ -152,7 +152,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
         app::Size{size.width, kFindPanelHeight}, parent.main_font_id, parent.ui_font_regular_id,
         parent.icon_regex_image_id, parent.icon_case_sensitive_image_id,
         parent.icon_whole_word_image_id, parent.icon_wrap_image_id, parent.icon_in_selection_id,
-        parent.icon_highlight_matches_id);
+        parent.icon_highlight_matches_id, parent.panel_close_image_id);
     main_widget->addChildEnd(find_panel_widget);
 }
 

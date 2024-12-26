@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/buffer/piece_tree.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/scrollable_widget.h"
@@ -18,7 +17,8 @@ public:
                     size_t icon_whole_word_image_id,
                     size_t icon_wrap_image_id,
                     size_t icon_in_selection_id,
-                    size_t icon_highlight_matches_id);
+                    size_t icon_highlight_matches_id,
+                    size_t panel_close_image_id);
 
     void draw() override;
     void layout() override;
@@ -42,21 +42,7 @@ private:
     static constexpr Rgba kIconColor{236, 237, 238, false};  // Dark.
     static constexpr int kTextInputPadding = 8;
 
-    size_t main_font_id;
-    base::PieceTree tree;
-
-    std::vector<size_t> image_ids;
-    int image_offset_x = 0;
-
     std::shared_ptr<HorizontalLayoutWidget> horizontal_layout;
-
-    inline const font::LineLayout& layoutAt(size_t line);
-    constexpr app::Point textInputOffset();
-
-    // Draw helpers.
-    void renderText(int line_height);
-    void renderSelections(int line_height);
-    void renderImages();
 };
 
 }  // namespace gui

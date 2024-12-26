@@ -7,7 +7,7 @@ namespace gui {
 
 class ImageButtonWidget : public Widget {
 public:
-    ImageButtonWidget(size_t image_id, Rgba bg_color);
+    ImageButtonWidget(size_t image_id, Rgba bg_color, int padding);
 
     void draw() override;
 
@@ -18,6 +18,7 @@ public:
 private:
     size_t image_id;
     Rgba bg_color;
+    int padding;
 };
 
 }  // namespace gui

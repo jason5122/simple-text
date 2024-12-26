@@ -2,13 +2,16 @@
 
 namespace gui {
 
-HorizontalLayoutWidget::HorizontalLayoutWidget(const app::Size& size) : LayoutWidget{size} {}
+HorizontalLayoutWidget::HorizontalLayoutWidget(int padding_in_between)
+    : padding_in_between(padding_in_between) {}
 
 void HorizontalLayoutWidget::layout() {
     int left_offset = position.x;
     int right_offset = position.x + size.width;
 
     for (auto& child : children_start) {
+        left_offset += padding_in_between;
+
         child->setPosition({left_offset, position.y});
         if (child->isAutoresizing()) {
             child->setHeight(size.height);
@@ -21,6 +24,8 @@ void HorizontalLayoutWidget::layout() {
     }
 
     for (auto& child : children_end) {
+        right_offset -= padding_in_between;
+
         right_offset -= child->getSize().width;
 
         child->setPosition({right_offset, position.y});

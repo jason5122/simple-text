@@ -66,8 +66,14 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     text_input_widget->setAutoresizing(false);
     horizontal_layout->setMainWidget(text_input_widget);
 
-    size.height += text_input_widget->getSize().height;
-    size.height += kVerticalPadding * 2;  // Pad top and bottom.
+    // Calculate max height. We assume all buttons have the same height.
+    int text_input_height = text_input_widget->getSize().height;
+    text_input_height += kVerticalPadding * 2;  // Pad top and bottom.
+
+    int button_height = find_button->getSize().height;
+    button_height += kVerticalPadding * 2;  // Pad top and bottom.
+
+    size.height = std::max(text_input_height, button_height);
 }
 
 void FindPanelWidget::draw() {

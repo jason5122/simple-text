@@ -2,15 +2,14 @@
 
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
-#include "gui/widget/scrollable_widget.h"
+#include "gui/widget/debug/text_input_widget.h"
 #include "gui/widget/widget.h"
 
 namespace gui {
 
-class FindPanelWidget : public ScrollableWidget {
+class FindPanelWidget : public Widget {
 public:
-    FindPanelWidget(const app::Size& size,
-                    size_t main_font_id,
+    FindPanelWidget(size_t main_font_id,
                     size_t ui_font_id,
                     size_t icon_regex_image_id,
                     size_t icon_case_sensitive_image_id,
@@ -22,27 +21,28 @@ public:
 
     void draw() override;
     void layout() override;
-    void updateMaxScroll() override;
 
     std::string_view className() const override {
-        return "FindWidget";
+        return "FindPanelWidget";
     }
 
 private:
     // static constexpr Rgba kFindPanelColor{199, 203, 209, 255};  // Light.
     static constexpr Rgba kFindPanelColor{46, 50, 56, 255};  // Dark.
-    // static constexpr Rgba kFindPanelColor{255, 0, 0, 255};  // TODO: Remove this.
-    // static constexpr Rgba kTextInputColor{255, 255, 255, 255};  // Light.
-    static constexpr Rgba kTextInputColor{69, 75, 84, 255};  // Dark.
-    // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
-    static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
-    // static constexpr Rgba kIconBackgroundColor{216, 222, 233, 255};  // Light.
-    static constexpr Rgba kIconBackgroundColor{69, 75, 84, 255};  // Dark.
-
+    // static constexpr Rgba kIconBackgroundFocusedColor{216, 222, 233, 255};  // Light.
+    static constexpr Rgba kIconBackgroundFocusedColor{69, 75, 84, 255};  // Dark.
+    // TODO: Add light variant.
+    static constexpr Rgba kIconBackgroundColor{60, 65, 73, 255};  // Dark.
+    // TODO: Add light variant.
     static constexpr Rgba kIconColor{236, 237, 238, false};  // Dark.
-    static constexpr int kTextInputPadding = 8;
+    // TODO: Add light variant.
+    static constexpr Rgba kCloseIconColor{130, 132, 136, false};  // Dark.
+
+    static constexpr int kHorizontalPadding = 4;
+    static constexpr int kVerticalPadding = 12;
 
     std::shared_ptr<HorizontalLayoutWidget> horizontal_layout;
+    std::shared_ptr<TextInputWidget> text_input_widget;
 };
 
 }  // namespace gui

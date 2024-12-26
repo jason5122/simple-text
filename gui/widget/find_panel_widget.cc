@@ -8,8 +8,7 @@
 
 namespace gui {
 
-FindPanelWidget::FindPanelWidget(const app::Size& size,
-                                 size_t main_font_id,
+FindPanelWidget::FindPanelWidget(size_t main_font_id,
                                  size_t ui_font_id,
                                  size_t icon_regex_image_id,
                                  size_t icon_case_sensitive_image_id,
@@ -18,20 +17,21 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
                                  size_t icon_in_selection_id,
                                  size_t icon_highlight_matches_id,
                                  size_t panel_close_image_id)
-    : ScrollableWidget(size), horizontal_layout(std::make_shared<HorizontalLayoutWidget>(8)) {
+    : horizontal_layout(std::make_shared<HorizontalLayoutWidget>(8)),
+      text_input_widget(std::make_shared<TextInputWidget>(main_font_id)) {
 
-    auto regex_button =
-        std::make_shared<ImageButtonWidget>(icon_regex_image_id, Rgba{255, 0, 0, 255}, 4);
-    auto case_sensitive_button = std::make_shared<ImageButtonWidget>(icon_case_sensitive_image_id,
-                                                                     Rgba{255, 255, 0, 255}, 4);
-    auto whole_word_button =
-        std::make_shared<ImageButtonWidget>(icon_whole_word_image_id, Rgba{0, 255, 0, 255}, 4);
-    auto wrap_button =
-        std::make_shared<ImageButtonWidget>(icon_wrap_image_id, Rgba{0, 255, 255, 255}, 4);
-    auto in_selection_button =
-        std::make_shared<ImageButtonWidget>(icon_in_selection_id, Rgba{255, 0, 255, 255}, 4);
-    auto highlight_matches_button =
-        std::make_shared<ImageButtonWidget>(icon_highlight_matches_id, Rgba{255, 127, 0, 255}, 4);
+    auto regex_button = std::make_shared<ImageButtonWidget>(icon_regex_image_id, kIconColor,
+                                                            kIconBackgroundFocusedColor, 4);
+    auto case_sensitive_button = std::make_shared<ImageButtonWidget>(
+        icon_case_sensitive_image_id, kIconColor, kIconBackgroundFocusedColor, 4);
+    auto whole_word_button = std::make_shared<ImageButtonWidget>(
+        icon_whole_word_image_id, kIconColor, kIconBackgroundFocusedColor, 4);
+    auto wrap_button = std::make_shared<ImageButtonWidget>(icon_wrap_image_id, kIconColor,
+                                                           kIconBackgroundFocusedColor, 4);
+    auto in_selection_button = std::make_shared<ImageButtonWidget>(
+        icon_in_selection_id, kIconColor, kIconBackgroundFocusedColor, 4);
+    auto highlight_matches_button = std::make_shared<ImageButtonWidget>(
+        icon_highlight_matches_id, kIconColor, kIconBackgroundFocusedColor, 4);
     regex_button->setAutoresizing(false);
     case_sensitive_button->setAutoresizing(false);
     whole_word_button->setAutoresizing(false);
@@ -46,16 +46,16 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
     horizontal_layout->addChildStart(highlight_matches_button);
 
     auto panel_close_button =
-        std::make_shared<ImageButtonWidget>(panel_close_image_id, Rgba{255, 0, 0, 255}, 0);
+        std::make_shared<ImageButtonWidget>(panel_close_image_id, kCloseIconColor, Rgba{}, 0);
     panel_close_button->setAutoresizing(false);
     horizontal_layout->addChildEnd(panel_close_button);
 
     auto find_all_button = std::make_shared<TextButtonWidget>(
-        ui_font_id, "Find All", Rgba{255, 127, 0, 255}, app::Size{20, 8}, app::Size{200, 52});
+        ui_font_id, "Find All", kIconBackgroundColor, app::Size{20, 8}, app::Size{200, 52});
     auto find_prev_button = std::make_shared<TextButtonWidget>(
-        ui_font_id, "Find Prev", Rgba{255, 80, 0, 255}, app::Size{20, 8}, app::Size{200, 52});
-    auto find_button = std::make_shared<TextButtonWidget>(
-        ui_font_id, "Find", Rgba{255, 20, 0, 255}, app::Size{20, 8}, app::Size{200, 52});
+        ui_font_id, "Find Prev", kIconBackgroundColor, app::Size{20, 8}, app::Size{200, 52});
+    auto find_button = std::make_shared<TextButtonWidget>(ui_font_id, "Find", kIconBackgroundColor,
+                                                          app::Size{20, 8}, app::Size{200, 52});
     find_all_button->setAutoresizing(false);
     find_prev_button->setAutoresizing(false);
     find_button->setAutoresizing(false);
@@ -63,7 +63,11 @@ FindPanelWidget::FindPanelWidget(const app::Size& size,
     horizontal_layout->addChildEnd(find_prev_button);
     horizontal_layout->addChildEnd(find_button);
 
-    // tree.insert(0, "needle");
+    text_input_widget->setAutoresizing(false);
+    horizontal_layout->setMainWidget(text_input_widget);
+
+    size.height += text_input_widget->getSize().height;
+    size.height += kVerticalPadding * 2;  // Pad top and bottom.
 }
 
 void FindPanelWidget::draw() {
@@ -78,15 +82,13 @@ void FindPanelWidget::layout() {
     auto pos = position;
 
     // Horizontal padding.
-    layout_size.width -= 4 * 2;
-    pos.x += 4;
+    layout_size.width -= kHorizontalPadding * 2;
+    pos.x += kHorizontalPadding;
     // Top padding.
-    pos.y += 6 * 2;
+    pos.y += kVerticalPadding;
 
     horizontal_layout->setSize(layout_size);
     horizontal_layout->setPosition(pos);
 }
-
-void FindPanelWidget::updateMaxScroll() {}
 
 }  // namespace gui

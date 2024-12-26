@@ -38,9 +38,15 @@ void HorizontalLayoutWidget::layout() {
     }
 
     if (main_widget) {
+        // Add padding between main widget and children.
+        left_offset += padding_in_between;
+        right_offset -= padding_in_between;
+
         main_widget->setPosition({left_offset, position.y});
         main_widget->setWidth(std::max(right_offset - left_offset, 0));
-        main_widget->setHeight(size.height);
+        if (main_widget->isAutoresizing()) {
+            main_widget->setHeight(size.height);
+        }
 
         // Recursively layout main widget.
         main_widget->layout();

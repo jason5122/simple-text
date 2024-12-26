@@ -35,7 +35,9 @@ void HorizontalResizingWidget::layout() {
     if (main_widget) {
         main_widget->setPosition({left_offset, position.y});
         main_widget->setWidth(std::max(right_offset - left_offset, 0));
-        main_widget->setHeight(size.height);
+        if (main_widget->isAutoresizing()) {
+            main_widget->setHeight(size.height);
+        }
 
         // Recursively layout main widget.
         main_widget->layout();

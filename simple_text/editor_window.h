@@ -35,8 +35,6 @@ public:
 
 private:
     static constexpr int kSideBarWidth = 250 * 2;
-    static constexpr int kStatusBarHeight = 22 * 2;
-    static constexpr int kFindPanelHeight = 42 * 2;
 
     int wid;
     EditorApp& parent;

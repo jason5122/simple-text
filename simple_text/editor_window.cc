@@ -138,6 +138,8 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     // These don't have default constructors since they are not intended to be main widgets.
     auto side_bar = std::make_shared<SideBarWidget>(app::Size{kSideBarWidth, size.height});
+    // TODO: Don't hard code this. Let it resize.
+    constexpr int kStatusBarHeight = 22 * 2;
     status_bar = std::make_shared<StatusBarWidget>(app::Size{size.width, kStatusBarHeight},
                                                    parent.ui_font_small_id);
 
@@ -147,12 +149,11 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setMainWidget(horizontal_layout);
     main_widget->addChildEnd(status_bar);
 
-    // TODO: Formalize this.
     auto find_panel_widget = std::make_shared<FindPanelWidget>(
-        app::Size{size.width, kFindPanelHeight}, parent.main_font_id, parent.ui_font_regular_id,
-        parent.icon_regex_image_id, parent.icon_case_sensitive_image_id,
-        parent.icon_whole_word_image_id, parent.icon_wrap_image_id, parent.icon_in_selection_id,
-        parent.icon_highlight_matches_id, parent.panel_close_image_id);
+        parent.main_font_id, parent.ui_font_regular_id, parent.icon_regex_image_id,
+        parent.icon_case_sensitive_image_id, parent.icon_whole_word_image_id,
+        parent.icon_wrap_image_id, parent.icon_in_selection_id, parent.icon_highlight_matches_id,
+        parent.panel_close_image_id);
     main_widget->addChildEnd(find_panel_widget);
 }
 

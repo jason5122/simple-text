@@ -6,7 +6,7 @@ namespace gui {
 
 class HorizontalLayoutWidget : public LayoutWidget {
 public:
-    HorizontalLayoutWidget(int padding_in_between,
+    HorizontalLayoutWidget(int padding_in_between = 0,
                            int left_padding = 0,
                            int right_padding = 0,
                            int top_padding = 0);

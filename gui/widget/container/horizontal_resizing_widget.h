@@ -1,15 +1,16 @@
 #pragma once
 
-#include "gui/widget/container/layout_widget.h"
+#include "gui/widget/container/horizontal_layout_widget.h"
 
 namespace gui {
 
-class HorizontalResizingWidget : public LayoutWidget {
+class HorizontalResizingWidget : public HorizontalLayoutWidget {
 public:
-    HorizontalResizingWidget() = default;
-    HorizontalResizingWidget(const app::Size& size);
+    HorizontalResizingWidget(int padding_in_between = 0,
+                             int left_padding = 0,
+                             int right_padding = 0,
+                             int top_padding = 0);
 
-    void layout() override;
     void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;

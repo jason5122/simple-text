@@ -179,6 +179,13 @@ config("treat_warnings_as_errors") {
   }
 }
 
+config("runtime_library") {
+  configs = []
+  if (is_mac) {
+    configs += [ "//build/config/mac:runtime_library" ]
+  }
+}
+
 # Warnings that prevent narrowing or comparisons of integer types that are likely to cause
 # out-of-bound read/writes or Undefined Behaviour. In particular, size_t is used for memory sizes,
 # allocation, indexing, and offsets. Using other integer types along with size_t produces risk of

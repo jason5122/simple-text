@@ -1,0 +1,10 @@
+declare_args() {
+  # This variable corresponds to the `MACOSX_DEPLOYMENT_TARGET` define. Changing this controls which
+  # symbols the macOS SDK marks as available (via `__builtin_available` and `@available`) and
+  # deprecated (producing a warning if called).
+  #
+  # This also controls the value of the `LSMinimumSystemVersion` in `Info.plist` files. This value
+  # controls the minimum OS version that may launch the application, and OS releases older than this
+  # will refuse to launch the application.
+  mac_deployment_target = "10.14"
+}

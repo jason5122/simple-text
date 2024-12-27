@@ -1,3 +1,4 @@
+import("//build/config/mac/mac_sdk.gni")
 import("//build/config/mac/merge_plist.gni")
 
 template("mac_app_bundle") {
@@ -53,6 +54,7 @@ template("mac_app_bundle") {
       PRODUCT_BUNDLE_IDENTIFIER = "$_bundle_identifier"
       PRODUCT_BUNDLE_PACKAGE_TYPE = "AAPL"
       PRODUCT_NAME = "$_display_name"
+      MACOSX_DEPLOYMENT_TARGET = "$mac_deployment_target"
     }
 
     output = "$target_out_dir/$_plist_target/Info.plist"

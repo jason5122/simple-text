@@ -38,6 +38,7 @@ default_compiler_configs = [
   "//build/config/compiler:default_optimization",
   "//build/config/compiler:no_exceptions",
   "//build/config/compiler:no_rtti",
+  "//build/config/compiler:runtime_library",
   "//build/config/compiler:simple_text_code",
   "//build/config/sanitizers:default_sanitizer_flags",
 ]

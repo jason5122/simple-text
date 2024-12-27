@@ -4,7 +4,7 @@
 
 namespace app {
 
-enum class CursorStyle { kArrow, kIBeam, kResizeLeftRight };
+enum class CursorStyle { kArrow, kIBeam, kResizeLeftRight, kResizeUpDown };
 
 struct Point {
     int x, y;

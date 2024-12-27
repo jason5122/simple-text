@@ -5,4 +5,6 @@ bugprone-*,
 # FIXME: Adding `cppcoreguidelines` crashes clangd.
 # cppcoreguidelines-*,
 clang-analyzer-*,
-misc-*'
+misc-*,
+-misc-unused-parameters,
+-misc-const-correctness'

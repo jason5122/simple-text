@@ -34,7 +34,6 @@ void HorizontalResizingWidget::leftMouseDrag(const app::Point& mouse_pos,
         auto widget_size = dragged_widget->getSize();
         auto widget_pos = dragged_widget->getPosition();
 
-        // TODO: Consider refactoring this. We probably don't need children at both start and end.
         int new_width;
         if (is_dragged_widget_start) {
             new_width = mouse_pos.x - widget_pos.x;

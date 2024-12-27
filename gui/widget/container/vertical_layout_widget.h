@@ -7,7 +7,6 @@ namespace gui {
 class VerticalLayoutWidget : public LayoutWidget {
 public:
     VerticalLayoutWidget() = default;
-    VerticalLayoutWidget(const app::Size& size);
 
     void layout() override;
 

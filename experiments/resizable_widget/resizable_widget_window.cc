@@ -1,7 +1,7 @@
 #include "resizable_widget_window.h"
 
 #include "experiments/resizable_widget/resizable_widget_app.h"
-#include "gui/widget/container/horizontal_resizing_widget.h"
+#include "gui/widget/container/vertical_resizing_widget.h"
 #include "gui/widget/solid_color_widget.h"
 #include "util/profile_util.h"
 
@@ -15,17 +15,17 @@ ResizableWidgetWindow::ResizableWidgetWindow(ResizableWidgetApp& parent,
                                              int wid)
     : Window(parent, width, height),
       parent(parent),
-      main_widget{std::make_unique<HorizontalResizingWidget>()} {}
+      main_widget(std::make_unique<VerticalResizingWidget>()) {}
 
 void ResizableWidgetWindow::onOpenGLActivate(const app::Size& size) {
     auto gold_widget = std::make_unique<SolidColorWidget>(size, kGold);
-    auto purple_widget = std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kPurple);
+    auto purple_widget = std::make_unique<SolidColorWidget>(app::Size{size.width, 200}, kPurple);
     auto sandy_brown_widget =
-        std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kSandyBrown);
+        std::make_unique<SolidColorWidget>(app::Size{size.width, 200}, kSandyBrown);
     auto light_blue_widget =
-        std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kLightBlue);
+        std::make_unique<SolidColorWidget>(app::Size{size.width, 200}, kLightBlue);
     auto sea_green_widget =
-        std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kSeaGreen);
+        std::make_unique<SolidColorWidget>(app::Size{size.width, 200}, kSeaGreen);
 
     main_widget->setMainWidget(std::move(gold_widget));
     main_widget->addChildStart(std::move(purple_widget));

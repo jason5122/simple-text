@@ -16,8 +16,7 @@ void ResizableWidgetApp::onLaunch() {
 }
 
 void ResizableWidgetApp::createWindow() {
-    std::unique_ptr<ResizableWidgetWindow> editor_window =
-        std::make_unique<ResizableWidgetWindow>(*this, 1200, 800, 0);
+    auto editor_window = std::make_unique<ResizableWidgetWindow>(*this, 1200, 800, 0);
 
     editor_window->show();
     editor_windows.emplace_back(std::move(editor_window));

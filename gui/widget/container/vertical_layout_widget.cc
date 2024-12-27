@@ -2,8 +2,6 @@
 
 namespace gui {
 
-VerticalLayoutWidget::VerticalLayoutWidget(const app::Size& size) : LayoutWidget{size} {}
-
 void VerticalLayoutWidget::layout() {
     int top_offset = position.y;
     int bottom_offset = position.y + size.height;

@@ -49,6 +49,8 @@ public:
     constexpr bool hitTest(const app::Point& point) const;
     constexpr bool leftEdgeTest(const app::Point& point, int distance) const;
     constexpr bool rightEdgeTest(const app::Point& point, int distance) const;
+    constexpr bool topEdgeTest(const app::Point& point, int distance) const;
+    constexpr bool bottomEdgeTest(const app::Point& point, int distance) const;
 
     // TODO: Refactor singletons.
     inline font::FontRasterizer& rasterizer() {
@@ -157,6 +159,18 @@ constexpr bool Widget::rightEdgeTest(const app::Point& point, int distance) cons
     int right_offset = position.x + size.width;
     return (std::abs(point.x - right_offset) <= distance) &&
            (position.y <= point.y && point.y < position.y + size.height);
+}
+
+constexpr bool Widget::topEdgeTest(const app::Point& point, int distance) const {
+    int top_offset = position.y;
+    return (std::abs(point.y - top_offset) <= distance) &&
+           (position.x <= point.x && point.x < position.x + size.width);
+}
+
+constexpr bool Widget::bottomEdgeTest(const app::Point& point, int distance) const {
+    int bottom_offset = position.y + size.height;
+    return (std::abs(point.y - bottom_offset) <= distance) &&
+           (position.x <= point.x && point.x < position.x + size.width);
 }
 
 }  // namespace gui

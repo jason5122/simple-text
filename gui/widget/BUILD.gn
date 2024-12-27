@@ -3,6 +3,7 @@ source_set("widget") {
     "container/horizontal_layout_widget.cc",
     "container/layout_widget.cc",
     "container/vertical_layout_widget.cc",
+    "debug/button_widget.cc",
     "debug/horizontal_partition_widget.cc",
     "debug/horizontal_resizing_widget.cc",
     "debug/image_button_widget.cc",

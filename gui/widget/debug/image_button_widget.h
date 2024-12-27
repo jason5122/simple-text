@@ -1,11 +1,11 @@
 #pragma once
 
 #include "gui/renderer/types.h"
-#include "gui/widget/widget.h"
+#include "gui/widget/debug/button_widget.h"
 
 namespace gui {
 
-class ImageButtonWidget : public Widget {
+class ImageButtonWidget : public ButtonWidget {
 public:
     ImageButtonWidget(size_t image_id, const Rgba& text_color, const Rgba& bg_color, int padding);
 

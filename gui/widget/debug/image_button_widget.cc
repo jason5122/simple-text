@@ -21,7 +21,7 @@ void ImageButtonWidget::draw() {
     auto& image_renderer = Renderer::instance().getImageRenderer();
 
     // TODO: Formalize this.
-    if (bg_color.a > 0) {
+    if (getState() && bg_color.a > 0) {
         rect_renderer.addRect(position, size, bg_color, Layer::kTwo, 4);
     }
 

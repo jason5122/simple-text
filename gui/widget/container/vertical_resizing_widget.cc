@@ -60,12 +60,12 @@ app::CursorStyle VerticalResizingWidget::cursorStyle() const {
 Widget* VerticalResizingWidget::widgetAt(const app::Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.
     for (auto& child : children_start) {
-        if (child->bottomEdgeTest(pos, kResizeDistance)) {
+        if (child->isResizable() && child->bottomEdgeTest(pos, kResizeDistance)) {
             return this;
         }
     }
     for (auto& child : children_end) {
-        if (child->topEdgeTest(pos, kResizeDistance)) {
+        if (child->isResizable() && child->topEdgeTest(pos, kResizeDistance)) {
             return this;
         }
     }

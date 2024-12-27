@@ -46,8 +46,11 @@ public:
     constexpr void setMaximumWidth(int max_width);
     constexpr void setMaximumHeight(int max_height);
     constexpr app::Point getPosition() const;
+
     constexpr bool isAutoresizing() const;
     constexpr void setAutoresizing(bool autoresizing);
+    constexpr bool isResizable() const;
+    constexpr void setResizable(bool resizable);
 
     constexpr bool hitTest(const app::Point& point) const;
     constexpr bool leftEdgeTest(const app::Point& point, int distance) const;
@@ -66,6 +69,7 @@ protected:
     app::Size max_size = app::Size::maxValue();
     app::Point position{};
     bool autoresizing = true;  // TODO: Consider making this false by default.
+    bool resizable = true;
 };
 
 static_assert(std::is_abstract_v<Widget>);
@@ -157,6 +161,14 @@ constexpr bool Widget::isAutoresizing() const {
 
 constexpr void Widget::setAutoresizing(bool autoresizing) {
     this->autoresizing = autoresizing;
+}
+
+constexpr bool Widget::isResizable() const {
+    return resizable;
+}
+
+constexpr void Widget::setResizable(bool resizable) {
+    this->resizable = resizable;
 }
 
 constexpr bool Widget::hitTest(const app::Point& point) const {

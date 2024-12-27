@@ -51,12 +51,12 @@ app::CursorStyle HorizontalResizingWidget::cursorStyle() const {
 Widget* HorizontalResizingWidget::widgetAt(const app::Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.
     for (auto& child : children_start) {
-        if (child->rightEdgeTest(pos, kResizeDistance)) {
+        if (child->isResizable() && child->rightEdgeTest(pos, kResizeDistance)) {
             return this;
         }
     }
     for (auto& child : children_end) {
-        if (child->leftEdgeTest(pos, kResizeDistance)) {
+        if (child->isResizable() && child->leftEdgeTest(pos, kResizeDistance)) {
             return this;
         }
     }

@@ -141,6 +141,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     horizontal_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
 
     main_widget->setMainWidget(std::move(horizontal_layout));
+    status_bar->setResizable(false);
     main_widget->addChildEnd(std::unique_ptr<StatusBarWidget>(status_bar));
 
     auto find_panel_widget = std::make_unique<FindPanelWidget>(

@@ -7,7 +7,7 @@ namespace gui {
 
 class TextInputWidget : public ScrollableWidget {
 public:
-    TextInputWidget(size_t font_id);
+    TextInputWidget(size_t font_id, int top_padding, int left_padding);
 
     void draw() override;
     void updateMaxScroll() override;
@@ -24,6 +24,9 @@ private:
     static constexpr Rgba kBackgroundColor{69, 75, 84, 255};  // Dark.
 
     size_t font_id;
+    int top_padding;
+    int left_padding;
+
     int line_height;
     std::string find_str = "needle";
 };

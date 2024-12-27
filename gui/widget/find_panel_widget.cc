@@ -18,7 +18,7 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
                                  size_t icon_highlight_matches_id,
                                  size_t panel_close_image_id)
     : HorizontalLayoutWidget(8, kHorizontalPadding, kHorizontalPadding, kVerticalPadding),
-      text_input_widget(std::make_shared<TextInputWidget>(main_font_id)) {
+      text_input_widget(std::make_shared<TextInputWidget>(main_font_id, 8, 10)) {
 
     auto regex_button = std::make_shared<ImageButtonWidget>(icon_regex_image_id, kIconColor,
                                                             kIconBackgroundFocusedColor, 4);

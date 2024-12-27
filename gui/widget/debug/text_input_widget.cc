@@ -6,14 +6,15 @@
 
 namespace gui {
 
-TextInputWidget::TextInputWidget(size_t font_id) : font_id(font_id) {
+TextInputWidget::TextInputWidget(size_t font_id, int top_padding, int left_padding)
+    : font_id(font_id), top_padding(top_padding), left_padding(left_padding) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
     line_height = metrics.line_height;
 
     size.height = line_height;
-    size.height += 8 * 2;
-    size.height += 2;
+    size.height += top_padding * 2;
+    size.height += 2;  // Selection width.
 }
 
 void TextInputWidget::draw() {
@@ -26,9 +27,9 @@ void TextInputWidget::draw() {
     rect_renderer.addRect(position, size, kBackgroundColor, Layer::kTwo, 4);
 
     auto pos = position;
-    pos.y += 8;
-    pos.x += 10;  // Left padding.
-    pos.x += 2;   // Caret width.
+    pos.y += top_padding;
+    pos.x += left_padding;
+    pos.x += 2;  // Caret width.
     text_renderer.renderLineLayout(
         layout, pos, Layer::kTwo, [](size_t) { return kTextColor; }, 0, size.width);
 }

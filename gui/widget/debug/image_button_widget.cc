@@ -17,16 +17,16 @@ ImageButtonWidget::ImageButtonWidget(size_t image_id,
 }
 
 void ImageButtonWidget::draw() {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& image_renderer = Renderer::instance().getImageRenderer();
-
     // TODO: Formalize this.
     if (getState() && bg_color.a > 0) {
+        auto& rect_renderer = Renderer::instance().getRectRenderer();
         rect_renderer.addRect(position, size, bg_color, Layer::kTwo, 4);
     }
 
     auto pos = position;
     pos += {padding, padding};
+
+    auto& image_renderer = Renderer::instance().getImageRenderer();
     image_renderer.insertInBatch(image_id, pos, text_color, Layer::kTwo);
 }
 

@@ -14,9 +14,11 @@ public:
     void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,
                        app::ClickType click_type) override;
-    app::CursorStyle cursorStyle() const override;
 
-    std::string_view className() const override {
+    constexpr app::CursorStyle cursorStyle() const final override {
+        return app::CursorStyle::kIBeam;
+    }
+    constexpr std::string_view className() const final override {
         return "TextInputWidget";
     }
 

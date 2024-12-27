@@ -14,7 +14,7 @@ public:
 
     void scroll(const app::Point& mouse_pos, const app::Delta& delta) override;
 
-    std::string_view className() const override {
+    constexpr std::string_view className() const override {
         return "ScrollableWidget";
     }
 

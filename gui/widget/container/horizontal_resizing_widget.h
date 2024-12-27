@@ -20,7 +20,7 @@ public:
     app::CursorStyle cursorStyle() const override;
     Widget* widgetAt(const app::Point& pos) override;
 
-    std::string_view className() const override {
+    constexpr std::string_view className() const override {
         return "HorizontalResizingWidget";
     }
 

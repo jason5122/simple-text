@@ -21,7 +21,7 @@ public:
     void removeTab(size_t index);
     void openFile(std::string_view path);
 
-    std::string_view className() const override {
+    constexpr std::string_view className() const final override {
         return "EditorWidget";
     }
 

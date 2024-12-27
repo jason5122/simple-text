@@ -20,7 +20,7 @@ public:
     void draw() override;
     void layout() override;
 
-    std::string_view className() const override {
+    constexpr std::string_view className() const final override {
         return "TabBarWidget";
     }
 

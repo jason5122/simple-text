@@ -15,18 +15,20 @@ public:
 
     virtual void draw() = 0;
     virtual constexpr void layout() {}
-    virtual void scroll(const app::Point& mouse_pos, const app::Delta& delta) {}
-    virtual void leftMouseDown(const app::Point& mouse_pos,
-                               app::ModifierKey modifiers,
-                               app::ClickType click_type) {}
-    virtual void leftMouseDrag(const app::Point& mouse_pos,
-                               app::ModifierKey modifiers,
-                               app::ClickType click_type) {}
+    virtual constexpr void scroll(const app::Point& mouse_pos, const app::Delta& delta) {}
+    virtual constexpr void leftMouseDown(const app::Point& mouse_pos,
+                                         app::ModifierKey modifiers,
+                                         app::ClickType click_type) {}
+    virtual constexpr void leftMouseDrag(const app::Point& mouse_pos,
+                                         app::ModifierKey modifiers,
+                                         app::ClickType click_type) {}
 
     virtual constexpr Widget* widgetAt(const app::Point& pos);
     virtual constexpr bool mousePositionChanged(const std::optional<app::Point>& mouse_pos);
     virtual constexpr void setPosition(const app::Point& pos);
     virtual constexpr app::CursorStyle cursorStyle() const;
+    // TODO: Debug use; remove this.
+    virtual constexpr std::string_view className() const = 0;
 
     constexpr app::Size getSize() const;
     constexpr int getWidth() const;
@@ -47,9 +49,6 @@ public:
     constexpr bool hitTest(const app::Point& point) const;
     constexpr bool leftEdgeTest(const app::Point& point, int distance) const;
     constexpr bool rightEdgeTest(const app::Point& point, int distance) const;
-
-    // TODO: Debug use; remove this.
-    virtual constexpr std::string_view className() const = 0;
 
     // TODO: Refactor singletons.
     inline font::FontRasterizer& rasterizer() {

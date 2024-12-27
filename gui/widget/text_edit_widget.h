@@ -46,10 +46,10 @@ public:
 
     void updateMaxScroll() override;
 
-    app::CursorStyle cursorStyle() const override {
+    constexpr app::CursorStyle cursorStyle() const final override {
         return app::CursorStyle::kIBeam;
     }
-    std::string_view className() const override {
+    constexpr std::string_view className() const final override {
         return "TextViewWidget";
     }
 

@@ -55,10 +55,6 @@ void TextInputWidget::leftMouseDown(const app::Point& mouse_pos,
     // fmt::println("caret = {}", caret);
 }
 
-app::CursorStyle TextInputWidget::cursorStyle() const {
-    return app::CursorStyle::kIBeam;
-}
-
 inline const font::LineLayout& TextInputWidget::getLayout() const {
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     return line_layout_cache.get(font_id, find_str);

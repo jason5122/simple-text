@@ -13,7 +13,7 @@ public:
 
     void draw() override;
 
-    std::string_view className() const override {
+    constexpr std::string_view className() const final override {
         return "LabelWidget";
     }
 

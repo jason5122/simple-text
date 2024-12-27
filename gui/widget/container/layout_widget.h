@@ -28,7 +28,7 @@ public:
     void setPosition(const app::Point& position) override;
     Widget* widgetAt(const app::Point& pos) override;
 
-    std::string_view className() const override {
+    constexpr std::string_view className() const override {
         return "ContainerWidget";
     }
 

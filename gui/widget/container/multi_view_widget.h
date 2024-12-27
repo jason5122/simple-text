@@ -104,7 +104,7 @@ public:
         }
     }
 
-    std::string_view className() const override {
+    constexpr std::string_view className() const override {
         return "MultiViewWidget";
     }
 

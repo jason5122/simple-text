@@ -37,4 +37,8 @@ void TextInputWidget::updateMaxScroll() {
     ;
 }
 
+app::CursorStyle TextInputWidget::cursorStyle() const {
+    return app::CursorStyle::kIBeam;
+}
+
 }  // namespace gui

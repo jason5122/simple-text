@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gui/renderer/types.h"
 #include "gui/widget/scrollable_widget.h"
 #include <array>
 
@@ -7,7 +8,7 @@ namespace gui {
 
 class SideBarWidget : public ScrollableWidget {
 public:
-    SideBarWidget(const app::Size& size);
+    SideBarWidget(int width);
 
     void draw() override;
     bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override;

@@ -11,6 +11,7 @@ public:
 
     void draw() override;
     void updateMaxScroll() override;
+    app::CursorStyle cursorStyle() const override;
 
     std::string_view className() const override {
         return "TextInputWidget";

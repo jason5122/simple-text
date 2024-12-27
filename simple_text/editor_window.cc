@@ -109,16 +109,17 @@ int main() {
 }  // namespace
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
-    : Window{parent, width, height},
-      wid{wid},
-      parent{parent},
-      main_widget{std::make_shared<VerticalLayoutWidget>()} {}
+    : Window(parent, width, height),
+      wid(wid),
+      parent(parent),
+      main_widget(std::make_shared<VerticalLayoutWidget>()),
+      editor_widget(std::make_shared<EditorWidget>(
+          parent.main_font_id, parent.ui_font_small_id, parent.panel_close_image_id)),
+      status_bar(std::make_shared<StatusBarWidget>(44, parent.ui_font_small_id)) {}
 
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
 
-    editor_widget = std::make_shared<EditorWidget>(parent.main_font_id, parent.ui_font_small_id,
-                                                   parent.panel_close_image_id);
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
     // editor_widget->addTab("unicode.txt", kUnicode);
     // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);
@@ -136,9 +137,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     auto horizontal_layout = std::make_shared<HorizontalResizingWidget>();
     auto vertical_layout = std::make_shared<VerticalLayoutWidget>();
 
-    // These don't have default constructors since they are not intended to be main widgets.
-    auto side_bar = std::make_shared<SideBarWidget>(app::Size{kSideBarWidth, 0});
-    status_bar = std::make_shared<StatusBarWidget>(44, parent.ui_font_small_id);
+    auto side_bar = std::make_shared<SideBarWidget>(kSideBarWidth);
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);
@@ -491,8 +490,11 @@ void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos)
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
-            // fmt::println("{}", *hovered_widget);
+            // fmt::println("{}", hovered_widget->className());
             parent.setCursorStyle(hovered_widget->cursorStyle());
+        } else {
+            // fmt::println("No widget hovered");
+            parent.setCursorStyle(app::CursorStyle::kArrow);
         }
     }
     // Case 3: Mouse position is outside of window.

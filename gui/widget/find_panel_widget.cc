@@ -17,7 +17,8 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
                                  size_t icon_in_selection_id,
                                  size_t icon_highlight_matches_id,
                                  size_t panel_close_image_id)
-    : HorizontalLayoutWidget(8, kHorizontalPadding, kHorizontalPadding, kVerticalPadding),
+    : HorizontalLayoutWidget(
+          8, kHorizontalPadding, kHorizontalPadding, kVerticalPadding, kVerticalPadding),
       text_input_widget(new TextInputWidget(main_font_id, 8, 10)) {
 
     auto regex_button = std::make_unique<ImageButtonWidget>(icon_regex_image_id, kIconColor,
@@ -64,14 +65,14 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     addChildEnd(std::move(find_prev_button));
     addChildEnd(std::move(find_button));
 
-    text_input_widget->setAutoresizing(false);
     int text_input_height = text_input_widget->getHeight();
     setMainWidget(std::unique_ptr<TextInputWidget>(text_input_widget));
 
     // Calculate max height. We assume all buttons have the same height.
     text_input_height += kVerticalPadding * 2;  // Pad top and bottom.
     button_height += kVerticalPadding * 2;      // Pad top and bottom.
-    size.height = std::max(text_input_height, button_height);
+    setHeight(std::max(text_input_height, button_height));
+    setMinimumHeight(getHeight());
 }
 
 void FindPanelWidget::draw() {

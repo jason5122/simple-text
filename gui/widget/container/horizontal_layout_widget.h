@@ -9,7 +9,8 @@ public:
     HorizontalLayoutWidget(int padding_in_between = 0,
                            int left_padding = 0,
                            int right_padding = 0,
-                           int top_padding = 0);
+                           int top_padding = 0,
+                           int bottom_padding = 0);
 
     void layout() override;
 
@@ -22,6 +23,7 @@ private:
     int left_padding;
     int right_padding;
     int top_padding;
+    int bottom_padding;
 };
 
 }  // namespace gui

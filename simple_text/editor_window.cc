@@ -4,7 +4,7 @@
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/horizontal_resizing_widget.h"
-#include "gui/widget/container/vertical_layout_widget.h"
+#include "gui/widget/container/vertical_resizing_widget.h"
 #include "gui/widget/find_panel_widget.h"
 #include "simple_text/editor_app.h"
 
@@ -113,7 +113,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window(parent, width, height),
       wid(wid),
       parent(parent),
-      main_widget(std::make_unique<VerticalLayoutWidget>()),
+      main_widget(std::make_unique<VerticalResizingWidget>()),
       editor_widget(new EditorWidget(
           parent.main_font_id, parent.ui_font_small_id, parent.panel_close_image_id)),
       status_bar(new StatusBarWidget(44, parent.ui_font_small_id)),
@@ -137,11 +137,9 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     // Main widgets.
     auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
-    auto vertical_layout = std::make_unique<VerticalLayoutWidget>();
-
     horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
-    vertical_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
-    horizontal_layout->setMainWidget(std::move(vertical_layout));
+    horizontal_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
+
     main_widget->setMainWidget(std::move(horizontal_layout));
     main_widget->addChildEnd(std::unique_ptr<StatusBarWidget>(status_bar));
 

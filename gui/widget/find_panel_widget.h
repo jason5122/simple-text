@@ -7,7 +7,7 @@
 
 namespace gui {
 
-class FindPanelWidget : public Widget {
+class FindPanelWidget : public HorizontalLayoutWidget {
 public:
     FindPanelWidget(size_t main_font_id,
                     size_t ui_font_id,
@@ -20,7 +20,6 @@ public:
                     size_t panel_close_image_id);
 
     void draw() override;
-    void layout() override;
 
     std::string_view className() const override {
         return "FindPanelWidget";
@@ -41,7 +40,6 @@ private:
     static constexpr int kHorizontalPadding = 4;
     static constexpr int kVerticalPadding = 12;
 
-    std::shared_ptr<HorizontalLayoutWidget> horizontal_layout;
     std::shared_ptr<TextInputWidget> text_input_widget;
 };
 

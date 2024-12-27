@@ -17,7 +17,7 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
                                  size_t icon_in_selection_id,
                                  size_t icon_highlight_matches_id,
                                  size_t panel_close_image_id)
-    : horizontal_layout(std::make_shared<HorizontalLayoutWidget>(8)),
+    : HorizontalLayoutWidget(8, kHorizontalPadding, kHorizontalPadding, kVerticalPadding),
       text_input_widget(std::make_shared<TextInputWidget>(main_font_id)) {
 
     auto regex_button = std::make_shared<ImageButtonWidget>(icon_regex_image_id, kIconColor,
@@ -38,17 +38,17 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     wrap_button->setAutoresizing(false);
     in_selection_button->setAutoresizing(false);
     highlight_matches_button->setAutoresizing(false);
-    horizontal_layout->addChildStart(regex_button);
-    horizontal_layout->addChildStart(case_sensitive_button);
-    horizontal_layout->addChildStart(whole_word_button);
-    horizontal_layout->addChildStart(wrap_button);
-    horizontal_layout->addChildStart(in_selection_button);
-    horizontal_layout->addChildStart(highlight_matches_button);
+    addChildStart(regex_button);
+    addChildStart(case_sensitive_button);
+    addChildStart(whole_word_button);
+    addChildStart(wrap_button);
+    addChildStart(in_selection_button);
+    addChildStart(highlight_matches_button);
 
     auto panel_close_button =
         std::make_shared<ImageButtonWidget>(panel_close_image_id, kCloseIconColor, Rgba{}, 0);
     panel_close_button->setAutoresizing(false);
-    horizontal_layout->addChildEnd(panel_close_button);
+    addChildEnd(panel_close_button);
 
     auto find_all_button = std::make_shared<TextButtonWidget>(
         ui_font_id, "Find All", kIconBackgroundColor, app::Size{20, 8}, app::Size{200, 52});
@@ -59,12 +59,12 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     find_all_button->setAutoresizing(false);
     find_prev_button->setAutoresizing(false);
     find_button->setAutoresizing(false);
-    horizontal_layout->addChildEnd(find_all_button);
-    horizontal_layout->addChildEnd(find_prev_button);
-    horizontal_layout->addChildEnd(find_button);
+    addChildEnd(find_all_button);
+    addChildEnd(find_prev_button);
+    addChildEnd(find_button);
 
     text_input_widget->setAutoresizing(false);
-    horizontal_layout->setMainWidget(text_input_widget);
+    setMainWidget(text_input_widget);
 
     // Calculate max height. We assume all buttons have the same height.
     int text_input_height = text_input_widget->getSize().height;
@@ -80,21 +80,7 @@ void FindPanelWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kFindPanelColor, Layer::kTwo);
 
-    horizontal_layout->draw();
-}
-
-void FindPanelWidget::layout() {
-    auto layout_size = size;
-    auto pos = position;
-
-    // Horizontal padding.
-    layout_size.width -= kHorizontalPadding * 2;
-    pos.x += kHorizontalPadding;
-    // Top padding.
-    pos.y += kVerticalPadding;
-
-    horizontal_layout->setSize(layout_size);
-    horizontal_layout->setPosition(pos);
+    HorizontalLayoutWidget::draw();
 }
 
 }  // namespace gui

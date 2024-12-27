@@ -2,12 +2,19 @@
 
 namespace gui {
 
-HorizontalLayoutWidget::HorizontalLayoutWidget(int padding_in_between)
-    : padding_in_between(padding_in_between) {}
+HorizontalLayoutWidget::HorizontalLayoutWidget(int padding_in_between,
+                                               int left_padding,
+                                               int right_padding)
+    : padding_in_between(padding_in_between),
+      left_padding(left_padding),
+      right_padding(right_padding) {}
 
 void HorizontalLayoutWidget::layout() {
     int left_offset = position.x;
     int right_offset = position.x + size.width;
+
+    left_offset += left_padding;
+    right_offset -= right_padding;
 
     for (auto& child : children_start) {
         left_offset += padding_in_between;

@@ -137,11 +137,8 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     auto vertical_layout = std::make_shared<VerticalLayoutWidget>();
 
     // These don't have default constructors since they are not intended to be main widgets.
-    auto side_bar = std::make_shared<SideBarWidget>(app::Size{kSideBarWidth, size.height});
-    // TODO: Don't hard code this. Let it resize.
-    constexpr int kStatusBarHeight = 22 * 2;
-    status_bar = std::make_shared<StatusBarWidget>(app::Size{size.width, kStatusBarHeight},
-                                                   parent.ui_font_small_id);
+    auto side_bar = std::make_shared<SideBarWidget>(app::Size{kSideBarWidth, 0});
+    status_bar = std::make_shared<StatusBarWidget>(44, parent.ui_font_small_id);
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);

@@ -23,7 +23,7 @@ void TextInputWidget::draw() {
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     const auto& layout = line_layout_cache.get(font_id, find_str);
 
-    rect_renderer.addRect(position, size, {69, 75, 84}, Layer::kTwo, 4);
+    rect_renderer.addRect(position, size, kBackgroundColor, Layer::kTwo, 4);
 
     auto pos = position;
     pos.y += 8;

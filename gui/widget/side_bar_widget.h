@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gui/widget/label_widget.h"
 #include "gui/widget/scrollable_widget.h"
 #include <array>
 

@@ -19,6 +19,8 @@ public:
 private:
     // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
     static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
+    // TODO: Add light variant.
+    static constexpr Rgba kBackgroundColor{69, 75, 84, 255};  // Dark.
 
     size_t font_id;
     int line_height;

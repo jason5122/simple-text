@@ -7,15 +7,9 @@ namespace gui {
 
 class LabelWidget : public Widget {
 public:
-    LabelWidget(size_t font_id,
-                const app::Size& size,
-                int left_padding = 0,
-                int right_padding = 0);
+    LabelWidget(size_t font_id, const Rgb& color, int left_padding = 0, int right_padding = 0);
 
     void setText(std::string_view str8);
-    void setColor(const Rgb& color);
-    void addLeftIcon(size_t icon_id);
-    void addRightIcon(size_t icon_id);
 
     void draw() override;
 
@@ -28,13 +22,9 @@ private:
     static constexpr Rgba kFolderIconColor{142, 142, 142, false};
 
     size_t font_id;
-    int left_padding;
-    int right_padding;
 
     std::string label_str;
-    Rgb color{};
-    std::vector<size_t> left_side_icons;
-    std::vector<size_t> right_side_icons;
+    Rgb color;
 
     app::Point centerVertically(int widget_height);
 };

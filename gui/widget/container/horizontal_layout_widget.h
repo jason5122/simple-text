@@ -6,7 +6,7 @@ namespace gui {
 
 class HorizontalLayoutWidget : public LayoutWidget {
 public:
-    HorizontalLayoutWidget(int padding_in_between);
+    HorizontalLayoutWidget(int padding_in_between, int left_padding = 0, int right_padding = 0);
 
     void layout() override;
 
@@ -16,6 +16,8 @@ public:
 
 private:
     int padding_in_between;
+    int left_padding;
+    int right_padding;
 };
 
 }  // namespace gui

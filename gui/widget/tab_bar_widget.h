@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gui/renderer/types.h"
-#include "gui/widget/label_widget.h"
+#include "gui/widget/tab_bar_label_widget.h"
 #include "gui/widget/widget.h"
 
 namespace gui {
@@ -39,7 +39,7 @@ private:
     size_t font_id;
     size_t panel_close_image_id;
     size_t index = 0;
-    std::vector<std::unique_ptr<LabelWidget>> tab_name_labels;
+    std::vector<std::unique_ptr<TabBarLabelWidget>> tab_name_labels;
 };
 
 }  // namespace gui

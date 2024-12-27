@@ -4,22 +4,21 @@
 
 namespace gui {
 
-StatusBarWidget::StatusBarWidget(const app::Size& size, size_t font_id)
-    : Widget{size}, line_column_label{new LabelWidget{font_id, {0, size.height}}} {
-    line_column_label->setText("clangd, Line 1, Column 1");
-    line_column_label->setColor(kTextColor);
+StatusBarWidget::StatusBarWidget(int min_height, size_t font_id)
+    : HorizontalLayoutWidget(0, 32, 0),
+      line_column_label(std::make_unique<LabelWidget>(font_id, kTextColor)) {
+
+    int label_height = line_column_label->getSize().height;
+    setHeight(std::max(label_height, min_height));
+
+    addChildStart(line_column_label);
 }
 
 void StatusBarWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     rect_renderer.addRect(position, size, kStatusBarColor, Layer::kTwo);
 
-    line_column_label->draw();
-}
-
-void StatusBarWidget::layout() {
-    line_column_label->setSize(size);
-    line_column_label->setPosition(position + kLeftPadding);
+    HorizontalLayoutWidget::draw();
 }
 
 void StatusBarWidget::setText(std::string_view str8) {

@@ -1,16 +1,16 @@
 #pragma once
 
-#include "gui/widget/label_widget.h"
+#include "container/horizontal_layout_widget.h"
+#include "gui/widget/debug/label_widget.h"
 #include "gui/widget/widget.h"
 
 namespace gui {
 
-class StatusBarWidget : public Widget {
+class StatusBarWidget : public HorizontalLayoutWidget {
 public:
-    StatusBarWidget(const app::Size& size, size_t font_id);
+    StatusBarWidget(int min_height, size_t font_id);
 
     void draw() override;
-    void layout() override;
 
     void setText(std::string_view str8);
 
@@ -25,7 +25,7 @@ private:
     // static constexpr Rgb kTextColor{64, 64, 64};     // Light.
     static constexpr Rgb kTextColor{217, 217, 217};  // Dark.
 
-    std::unique_ptr<LabelWidget> line_column_label;
+    std::shared_ptr<LabelWidget> line_column_label;
 };
 
 }  // namespace gui

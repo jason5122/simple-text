@@ -25,7 +25,9 @@ private:
     // static constexpr Rgb kTextColor{64, 64, 64};     // Light.
     static constexpr Rgb kTextColor{217, 217, 217};  // Dark.
 
-    std::shared_ptr<LabelWidget> line_column_label;
+    // These cache unique_ptrs. These are guaranteed to be non-null since they are owned by
+    // HorizontalLayoutWidget.
+    LabelWidget* line_column_label;
 };
 
 }  // namespace gui

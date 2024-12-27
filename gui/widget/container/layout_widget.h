@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/widget/container/container_widget.h"
+
 #include <memory>
 #include <vector>
 
@@ -12,9 +13,9 @@ public:
     LayoutWidget(const app::Size& size) : ContainerWidget{size} {}
     virtual ~LayoutWidget() {}
 
-    void setMainWidget(std::shared_ptr<Widget> widget);
-    void addChildStart(std::shared_ptr<Widget> widget);
-    void addChildEnd(std::shared_ptr<Widget> widget);
+    void setMainWidget(std::unique_ptr<Widget> widget);
+    void addChildStart(std::unique_ptr<Widget> widget);
+    void addChildEnd(std::unique_ptr<Widget> widget);
 
     void draw() override;
     void scroll(const app::Point& mouse_pos, const app::Delta& delta) override;
@@ -33,9 +34,9 @@ public:
     }
 
 protected:
-    std::shared_ptr<Widget> main_widget;
-    std::vector<std::shared_ptr<Widget>> children_start;
-    std::vector<std::shared_ptr<Widget>> children_end;
+    std::unique_ptr<Widget> main_widget;
+    std::vector<std::unique_ptr<Widget>> children_start;
+    std::vector<std::unique_ptr<Widget>> children_end;
 };
 
 static_assert(std::is_abstract_v<LayoutWidget>);

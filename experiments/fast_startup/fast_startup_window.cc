@@ -7,7 +7,7 @@
 
 FastStartupWindow::FastStartupWindow(FastStartupApp& parent, int width, int height, int wid)
     : Window(parent, width, height), parent(parent) {
-    main_widget = std::make_shared<gui::CustomWidget>("hello world!", parent.main_font_id);
+    main_widget = std::make_unique<gui::CustomWidget>("hello world!", parent.main_font_id);
 }
 
 void FastStartupWindow::onOpenGLActivate(const app::Size& size) {

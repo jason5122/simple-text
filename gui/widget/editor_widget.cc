@@ -6,18 +6,18 @@ namespace gui {
 
 EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size, size_t panel_close_image_id)
     : main_font_id(main_font_id),
-      multi_view{new MultiViewWidget<TextEditWidget>{}},
-      tab_bar{new TabBarWidget(ui_font_size, kTabBarHeight, panel_close_image_id)} {
+      multi_view(new MultiViewWidget<TextEditWidget>()),
+      tab_bar(new TabBarWidget(ui_font_size, kTabBarHeight, panel_close_image_id)) {
     // Leave padding between window title bar and tab.
-    std::shared_ptr<Widget> tab_bar_padding{new PaddingWidget({0, 3 * 2}, kTabBarColor)};
-    std::shared_ptr<Widget> text_view_padding{new PaddingWidget({0, 2 * 2}, kTextViewColor)};
+    auto tab_bar_padding = std::make_unique<PaddingWidget>(app::Size{0, 3 * 2}, kTabBarColor);
+    auto text_view_padding = std::make_unique<PaddingWidget>(app::Size{0, 2 * 2}, kTextViewColor);
 
-    multi_view->addTab(std::make_shared<TextEditWidget>("", main_font_id));
+    multi_view->addTab(std::make_unique<TextEditWidget>("", main_font_id));
 
     addChildStart(std::move(tab_bar_padding));
-    addChildStart(tab_bar);
+    addChildStart(std::unique_ptr<TabBarWidget>(tab_bar));
     addChildStart(std::move(text_view_padding));
-    setMainWidget(multi_view);
+    setMainWidget(std::unique_ptr<MultiViewWidget<TextEditWidget>>(multi_view));
 }
 
 TextEditWidget* EditorWidget::currentWidget() const {
@@ -49,7 +49,7 @@ size_t EditorWidget::getCurrentIndex() {
 }
 
 void EditorWidget::addTab(std::string_view tab_name, std::string_view text) {
-    multi_view->addTab(std::make_shared<TextEditWidget>(text, main_font_id));
+    multi_view->addTab(std::make_unique<TextEditWidget>(text, main_font_id));
     tab_bar->addTab(tab_name);
     layout();
 }

@@ -5,13 +5,12 @@
 namespace gui {
 
 StatusBarWidget::StatusBarWidget(int min_height, size_t font_id)
-    : HorizontalLayoutWidget(0, 32, 0),
-      line_column_label(std::make_unique<LabelWidget>(font_id, kTextColor)) {
+    : HorizontalLayoutWidget(0, 32, 0), line_column_label(new LabelWidget(font_id, kTextColor)) {
 
     int label_height = line_column_label->getHeight();
     setHeight(std::max(label_height, min_height));
 
-    addChildStart(line_column_label);
+    addChildStart(std::unique_ptr<LabelWidget>(line_column_label));
 }
 
 void StatusBarWidget::draw() {

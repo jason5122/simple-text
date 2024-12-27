@@ -8,6 +8,8 @@
 #include "gui/widget/find_panel_widget.h"
 #include "simple_text/editor_app.h"
 
+#include <string>
+
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
 #include <fmt/base.h>
@@ -111,11 +113,11 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
     : Window(parent, width, height),
       wid(wid),
       parent(parent),
-      main_widget(std::make_shared<VerticalLayoutWidget>()),
-      editor_widget(std::make_shared<EditorWidget>(
+      main_widget(std::make_unique<VerticalLayoutWidget>()),
+      editor_widget(new EditorWidget(
           parent.main_font_id, parent.ui_font_small_id, parent.panel_close_image_id)),
-      status_bar(std::make_shared<StatusBarWidget>(44, parent.ui_font_small_id)),
-      side_bar(std::make_shared<SideBarWidget>(kSideBarWidth)) {}
+      status_bar(new StatusBarWidget(44, parent.ui_font_small_id)),
+      side_bar(new SideBarWidget(kSideBarWidth)) {}
 
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
@@ -134,21 +136,21 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     // text_view->insertText(kLongLine * 10000);
 
     // Main widgets.
-    auto horizontal_layout = std::make_shared<HorizontalResizingWidget>();
-    auto vertical_layout = std::make_shared<VerticalLayoutWidget>();
+    auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
+    auto vertical_layout = std::make_unique<VerticalLayoutWidget>();
 
-    horizontal_layout->addChildStart(side_bar);
-    vertical_layout->setMainWidget(editor_widget);
-    horizontal_layout->setMainWidget(vertical_layout);
-    main_widget->setMainWidget(horizontal_layout);
-    main_widget->addChildEnd(status_bar);
+    horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
+    vertical_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
+    horizontal_layout->setMainWidget(std::move(vertical_layout));
+    main_widget->setMainWidget(std::move(horizontal_layout));
+    main_widget->addChildEnd(std::unique_ptr<StatusBarWidget>(status_bar));
 
-    auto find_panel_widget = std::make_shared<FindPanelWidget>(
+    auto find_panel_widget = std::make_unique<FindPanelWidget>(
         parent.main_font_id, parent.ui_font_regular_id, parent.icon_regex_image_id,
         parent.icon_case_sensitive_image_id, parent.icon_whole_word_image_id,
         parent.icon_wrap_image_id, parent.icon_in_selection_id, parent.icon_highlight_matches_id,
         parent.panel_close_image_id);
-    main_widget->addChildEnd(find_panel_widget);
+    main_widget->addChildEnd(std::move(find_panel_widget));
 }
 
 void EditorWindow::onDraw(const app::Size& size) {
@@ -180,7 +182,7 @@ void EditorWindow::onDraw(const app::Size& size) {
 void EditorWindow::onResize(const app::Size& size) {
     main_widget->setSize(size);
     side_bar->setMinimumWidth(100);
-    side_bar->setMaximumWidth(size.width - 100 * 2);
+    side_bar->setMaximumWidth(size.width - 100);
 }
 
 void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {

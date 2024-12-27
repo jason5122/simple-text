@@ -39,10 +39,13 @@ private:
 
     int wid;
     EditorApp& parent;
-    std::shared_ptr<gui::LayoutWidget> main_widget;
-    std::shared_ptr<gui::EditorWidget> editor_widget;
-    std::shared_ptr<gui::StatusBarWidget> status_bar;
-    std::shared_ptr<gui::SideBarWidget> side_bar;
+    std::unique_ptr<gui::LayoutWidget> main_widget;
+
+    // These cache unique_ptrs. These are guaranteed to be non-null since they are owned by
+    // `main_widget`.
+    gui::EditorWidget* editor_widget;
+    gui::StatusBarWidget* status_bar;
+    gui::SideBarWidget* side_bar;
 
     // The widget that the drag operation was performed on. If there currently isn't a drag
     // operation, this is null.

@@ -63,8 +63,7 @@ void EditorApp::onAppAction(app::AppAction action) {
 }
 
 void EditorApp::createWindow() {
-    std::unique_ptr<EditorWindow> editor_window =
-        std::make_unique<EditorWindow>(*this, 1200, 800, editor_windows.size());
+    auto editor_window = std::make_unique<EditorWindow>(*this, 1200, 800, editor_windows.size());
 
 #ifdef NDEBUG
     const std::string& debug_or_release = "Release";

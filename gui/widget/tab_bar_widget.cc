@@ -37,8 +37,7 @@ void TabBarWidget::addTab(std::string_view title) {
         .width = kTabWidth - kTabCornerRadius * 2,
         .height = size.height,
     };
-    std::unique_ptr<TabBarLabelWidget> tab_name_label{
-        new TabBarLabelWidget(font_id, label_size, 22, 16)};
+    auto tab_name_label = std::make_unique<TabBarLabelWidget>(font_id, label_size, 22, 16);
     tab_name_label->setText(title);
     tab_name_label->setColor(kTabTextColor);
     tab_name_label->addRightIcon(panel_close_image_id);

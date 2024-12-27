@@ -15,23 +15,23 @@ ResizableWidgetWindow::ResizableWidgetWindow(ResizableWidgetApp& parent,
                                              int wid)
     : Window(parent, width, height),
       parent(parent),
-      main_widget{std::make_shared<HorizontalResizingWidget>()} {}
+      main_widget{std::make_unique<HorizontalResizingWidget>()} {}
 
 void ResizableWidgetWindow::onOpenGLActivate(const app::Size& size) {
-    auto gold_widget = std::make_shared<SolidColorWidget>(size, kGold);
-    auto purple_widget = std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kPurple);
+    auto gold_widget = std::make_unique<SolidColorWidget>(size, kGold);
+    auto purple_widget = std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kPurple);
     auto sandy_brown_widget =
-        std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kSandyBrown);
+        std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kSandyBrown);
     auto light_blue_widget =
-        std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kLightBlue);
+        std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kLightBlue);
     auto sea_green_widget =
-        std::make_shared<SolidColorWidget>(app::Size{400, size.height}, kSeaGreen);
+        std::make_unique<SolidColorWidget>(app::Size{400, size.height}, kSeaGreen);
 
-    main_widget->setMainWidget(gold_widget);
-    main_widget->addChildStart(purple_widget);
-    main_widget->addChildStart(sandy_brown_widget);
-    main_widget->addChildEnd(light_blue_widget);
-    main_widget->addChildEnd(sea_green_widget);
+    main_widget->setMainWidget(std::move(gold_widget));
+    main_widget->addChildStart(std::move(purple_widget));
+    main_widget->addChildStart(std::move(sandy_brown_widget));
+    main_widget->addChildEnd(std::move(light_blue_widget));
+    main_widget->addChildEnd(std::move(sea_green_widget));
 }
 
 void ResizableWidgetWindow::onDraw(const app::Size& size) {

@@ -1,8 +1,8 @@
 # Checks: 'cppcoreguidelines-special-member-functions'
 Checks: '-*,
 bugprone-*,
+-bugprone-easily-swappable-parameters,
 # FIXME: Adding `cppcoreguidelines` crashes clangd.
 # cppcoreguidelines-*,
 clang-analyzer-*,
 misc-*'
--misc-const-correctness

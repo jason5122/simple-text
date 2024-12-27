@@ -44,7 +44,7 @@ public:
         return index;
     }
 
-    void addTab(std::shared_ptr<WidgetType> widget) {
+    void addTab(std::unique_ptr<WidgetType> widget) {
         views.emplace_back(std::move(widget));
     }
 
@@ -110,7 +110,7 @@ public:
 
 private:
     size_t index = 0;
-    std::vector<std::shared_ptr<WidgetType>> views;
+    std::vector<std::unique_ptr<WidgetType>> views;
 };
 
 }  // namespace gui

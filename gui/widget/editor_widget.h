@@ -37,8 +37,10 @@ private:
 
     size_t main_font_id;
 
-    std::shared_ptr<MultiViewWidget<TextEditWidget>> multi_view;
-    std::shared_ptr<TabBarWidget> tab_bar;
+    // These cache unique_ptrs. These are guaranteed to be non-null since they are owned by
+    // MultiViewWidget.
+    MultiViewWidget<TextEditWidget>* multi_view;
+    TabBarWidget* tab_bar;
 };
 
 }  // namespace gui

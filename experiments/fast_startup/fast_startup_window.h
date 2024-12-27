@@ -18,5 +18,5 @@ public:
 private:
     FastStartupApp& parent [[maybe_unused]];
 
-    std::shared_ptr<gui::CustomWidget> main_widget;
+    std::unique_ptr<gui::CustomWidget> main_widget;
 };

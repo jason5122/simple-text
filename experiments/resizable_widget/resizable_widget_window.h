@@ -34,7 +34,7 @@ private:
 
     ResizableWidgetApp& parent [[maybe_unused]];
 
-    std::shared_ptr<gui::LayoutWidget> main_widget;
+    std::unique_ptr<gui::LayoutWidget> main_widget;
 
     // The widget that the drag operation was performed on. If there currently isn't a drag
     // operation, this is null.

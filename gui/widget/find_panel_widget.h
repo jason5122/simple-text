@@ -40,7 +40,9 @@ private:
     static constexpr int kHorizontalPadding = 4;
     static constexpr int kVerticalPadding = 12;
 
-    std::shared_ptr<TextInputWidget> text_input_widget;
+    // These cache unique_ptrs. These are guaranteed to be non-null since they are owned by
+    // HorizontalLayoutWidget.
+    TextInputWidget* text_input_widget;
 };
 
 }  // namespace gui

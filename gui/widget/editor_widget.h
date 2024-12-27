@@ -3,7 +3,7 @@
 #include "gui/widget/container/multi_view_widget.h"
 #include "gui/widget/container/vertical_layout_widget.h"
 #include "gui/widget/tab_bar_widget.h"
-#include "gui/widget/text_view_widget.h"
+#include "gui/widget/text_edit_widget.h"
 
 namespace gui {
 
@@ -11,7 +11,7 @@ class EditorWidget : public VerticalLayoutWidget {
 public:
     EditorWidget(size_t main_font_id, size_t ui_font_size, size_t panel_close_image_id);
 
-    TextViewWidget* currentWidget() const;
+    TextEditWidget* currentWidget() const;
     void setIndex(size_t index);
     void prevIndex();
     void nextIndex();
@@ -37,7 +37,7 @@ private:
 
     size_t main_font_id;
 
-    std::shared_ptr<MultiViewWidget<TextViewWidget>> multi_view;
+    std::shared_ptr<MultiViewWidget<TextEditWidget>> multi_view;
     std::shared_ptr<TabBarWidget> tab_bar;
 };
 

@@ -11,6 +11,9 @@ public:
 
     void draw() override;
     void updateMaxScroll() override;
+    void leftMouseDown(const app::Point& mouse_pos,
+                       app::ModifierKey modifiers,
+                       app::ClickType click_type) override;
     app::CursorStyle cursorStyle() const override;
 
     std::string_view className() const override {
@@ -23,12 +26,20 @@ private:
     // TODO: Add light variant.
     static constexpr Rgba kBackgroundColor{69, 75, 84, 255};  // Dark.
 
+    // static constexpr Rgba kCaretColor{95, 180, 180, 255};       // Light.
+    static constexpr Rgba kCaretColor{249, 174, 88, 255};  // Dark.
+    static constexpr int kCaretWidth = 4;
+
     size_t font_id;
     int top_padding;
     int left_padding;
 
     int line_height;
     std::string find_str = "needle";
+
+    size_t caret = 0;
+
+    inline const font::LineLayout& getLayout() const;
 };
 
 }  // namespace gui

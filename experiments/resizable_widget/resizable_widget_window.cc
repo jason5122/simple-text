@@ -1,9 +1,8 @@
 #include "resizable_widget_window.h"
 
 #include "experiments/resizable_widget/resizable_widget_app.h"
-#include "gui/widget/debug/horizontal_partition_widget.h"
-#include "gui/widget/debug/horizontal_resizing_widget.h"
-#include "gui/widget/debug/solid_color_widget.h"
+#include "gui/widget/container/horizontal_resizing_widget.h"
+#include "gui/widget/solid_color_widget.h"
 #include "util/profile_util.h"
 
 #include <fmt/base.h>

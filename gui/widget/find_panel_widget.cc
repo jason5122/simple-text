@@ -1,8 +1,8 @@
 #include "find_panel_widget.h"
 
 #include "gui/renderer/renderer.h"
-#include "gui/widget/debug/image_button_widget.h"
-#include "gui/widget/debug/text_button_widget.h"
+#include "gui/widget/image_button_widget.h"
+#include "gui/widget/text_button_widget.h"
 
 #include <fmt/base.h>
 

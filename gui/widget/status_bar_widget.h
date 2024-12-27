@@ -1,7 +1,7 @@
 #pragma once
 
 #include "container/horizontal_layout_widget.h"
-#include "gui/widget/debug/label_widget.h"
+#include "gui/widget/label_widget.h"
 #include "gui/widget/widget.h"
 
 namespace gui {

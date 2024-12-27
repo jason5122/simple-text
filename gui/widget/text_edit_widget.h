@@ -17,9 +17,9 @@
 
 namespace gui {
 
-class TextViewWidget : public ScrollableWidget {
+class TextEditWidget : public ScrollableWidget {
 public:
-    TextViewWidget(std::string_view str8, size_t font_id);
+    TextEditWidget(std::string_view str8, size_t font_id);
 
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);

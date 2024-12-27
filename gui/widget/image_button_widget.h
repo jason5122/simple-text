@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gui/renderer/types.h"
-#include "gui/widget/debug/button_widget.h"
+#include "gui/widget/button_widget.h"
 
 namespace gui {
 

@@ -7,8 +7,8 @@ static_library("tree_sitter") {
   public_configs = [ ":tree_sitter_includes" ]
 
   # Enable Wasmtime feature for loading languages.
-  defines = [ "TREE_SITTER_FEATURE_WASM" ]
-  public_deps = [ "//third_party/wasmtime" ]
+  # defines = [ "TREE_SITTER_FEATURE_WASM" ]
+  # public_deps = [ "//third_party/wasmtime" ]
 }
 
 config("tree_sitter_includes") {

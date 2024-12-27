@@ -1,4 +1,4 @@
-#include "text_view_widget.h"
+#include "text_edit_widget.h"
 
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
@@ -15,7 +15,7 @@
 
 namespace gui {
 
-TextViewWidget::TextViewWidget(std::string_view str8, size_t font_id)
+TextEditWidget::TextEditWidget(std::string_view str8, size_t font_id)
     : font_id(font_id), tree(str8) {
     updateMaxScroll();
 
@@ -27,11 +27,11 @@ TextViewWidget::TextViewWidget(std::string_view str8, size_t font_id)
 #endif
 }
 
-void TextViewWidget::selectAll() {
+void TextEditWidget::selectAll() {
     selection.setRange(0, tree.length());
 }
 
-void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
+void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
     PROFILE_BLOCK("TextViewWidget::move()");
 
     auto [line, col] = tree.line_column_at(selection.end());
@@ -85,7 +85,7 @@ void TextViewWidget::move(MoveBy by, bool forward, bool extend) {
     if (by == MoveBy::kCharacters) {}
 }
 
-void TextViewWidget::moveTo(MoveTo to, bool extend) {
+void TextEditWidget::moveTo(MoveTo to, bool extend) {
     PROFILE_BLOCK("TextViewWidget::moveTo()");
 
     if (to == MoveTo::kBOL || to == MoveTo::kHardBOL) {
@@ -110,7 +110,7 @@ void TextViewWidget::moveTo(MoveTo to, bool extend) {
     }
 }
 
-void TextViewWidget::insertText(std::string_view str8) {
+void TextEditWidget::insertText(std::string_view str8) {
     if (!selection.empty()) {
         leftDelete();
     }
@@ -132,7 +132,7 @@ void TextViewWidget::insertText(std::string_view str8) {
     updateMaxScroll();
 }
 
-void TextViewWidget::leftDelete() {
+void TextEditWidget::leftDelete() {
     PROFILE_BLOCK("TextViewWidget::leftDelete()");
 
     if (selection.empty()) {
@@ -173,7 +173,7 @@ void TextViewWidget::leftDelete() {
     updateMaxScroll();
 }
 
-void TextViewWidget::rightDelete() {
+void TextEditWidget::rightDelete() {
     PROFILE_BLOCK("TextViewWidget::rightDelete()");
 
     if (selection.empty()) {
@@ -207,7 +207,7 @@ void TextViewWidget::rightDelete() {
 }
 
 // TODO: Make this delete newlines without going past them into the previous line.
-void TextViewWidget::deleteWord(bool forward) {
+void TextEditWidget::deleteWord(bool forward) {
     PROFILE_BLOCK("TextViewWidget::deleteWord()");
 
     if (selection.empty()) {
@@ -253,20 +253,20 @@ void TextViewWidget::deleteWord(bool forward) {
     }
 }
 
-std::string TextViewWidget::getSelectionText() {
+std::string TextEditWidget::getSelectionText() {
     auto [start, end] = selection.range();
     return tree.substr(start, end - start);
 }
 
-void TextViewWidget::undo() {
+void TextEditWidget::undo() {
     tree.undo();
 }
 
-void TextViewWidget::redo() {
+void TextEditWidget::redo() {
     tree.redo();
 }
 
-void TextViewWidget::find(std::string_view str8) {
+void TextEditWidget::find(std::string_view str8) {
     std::optional<size_t> result = tree.find(str8);
     if (result) {
         size_t offset = *result;
@@ -275,17 +275,17 @@ void TextViewWidget::find(std::string_view str8) {
 }
 
 // TODO: Use a struct type for clarity.
-std::pair<size_t, size_t> TextViewWidget::getLineColumn() {
+std::pair<size_t, size_t> TextEditWidget::getLineColumn() {
     size_t offset = selection.end();
     auto cursor = tree.line_column_at(offset);
     return {cursor.line, cursor.column};
 }
 
-size_t TextViewWidget::getSelectionLength() {
+size_t TextEditWidget::getSelectionLength() {
     return selection.length();
 }
 
-void TextViewWidget::draw() {
+void TextEditWidget::draw() {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
 
@@ -302,7 +302,7 @@ void TextViewWidget::draw() {
     renderCaret(main_line_height);
 }
 
-void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
+void TextEditWidget::leftMouseDown(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     app::Point coords = mouse_pos - textOffset();
@@ -324,7 +324,7 @@ void TextViewWidget::leftMouseDown(const app::Point& mouse_pos,
     }
 }
 
-void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
+void TextEditWidget::leftMouseDrag(const app::Point& mouse_pos,
                                    app::ModifierKey modifiers,
                                    app::ClickType click_type) {
     app::Point coords = mouse_pos - textOffset();
@@ -342,7 +342,7 @@ void TextViewWidget::leftMouseDrag(const app::Point& mouse_pos,
     }
 }
 
-void TextViewWidget::updateMaxScroll() {
+void TextEditWidget::updateMaxScroll() {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
 
@@ -351,7 +351,7 @@ void TextViewWidget::updateMaxScroll() {
     max_scroll_offset.y = tree.line_count() * metrics.line_height;
 }
 
-size_t TextViewWidget::lineAtY(int y) const {
+size_t TextEditWidget::lineAtY(int y) const {
     if (y < 0) {
         y = 0;
     }
@@ -363,30 +363,30 @@ size_t TextViewWidget::lineAtY(int y) const {
     return std::clamp(line, 0_Z, tree.line_count() - 1);
 }
 
-inline const font::LineLayout& TextViewWidget::layoutAt(size_t line) {
+inline const font::LineLayout& TextEditWidget::layoutAt(size_t line) {
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache.get(font_id, line_str);
 }
 
-inline constexpr app::Point TextViewWidget::textOffset() {
+inline constexpr app::Point TextEditWidget::textOffset() {
     app::Point text_offset = position - scroll_offset;
     text_offset.x += gutterWidth();
     return text_offset;
 }
 
-inline constexpr int TextViewWidget::gutterWidth() {
+inline constexpr int TextEditWidget::gutterWidth() {
     return kGutterLeftPadding + lineNumberWidth() + kGutterRightPadding;
 }
 
-inline int TextViewWidget::lineNumberWidth() {
+inline int TextEditWidget::lineNumberWidth() {
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     int digit_width = line_layout_cache.get(font_id, "0").width;
     int log = std::log10(tree.line_count());
     return digit_width * std::max(log + 1, 2);
 }
 
-void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t end_line) {
+void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t end_line) {
     // Render two lines before start and one line after end. This ensures no sudden cutoff of
     // rendered text.
     start_line = base::sub_sat(start_line, 2_Z);
@@ -504,7 +504,7 @@ void TextViewWidget::renderText(int main_line_height, size_t start_line, size_t 
     }
 }
 
-void TextViewWidget::renderSelections(int main_line_height, size_t start_line, size_t end_line) {
+void TextEditWidget::renderSelections(int main_line_height, size_t start_line, size_t end_line) {
     auto& selection_renderer = Renderer::instance().getSelectionRenderer();
     auto [start, end] = selection.range();
     auto [c1_line, c1_col] = tree.line_column_at(start);
@@ -540,7 +540,7 @@ void TextViewWidget::renderSelections(int main_line_height, size_t start_line, s
     selection_renderer.renderSelections(selections, textOffset(), main_line_height, Layer::kOne);
 }
 
-void TextViewWidget::renderScrollBars(int main_line_height) {
+void TextEditWidget::renderScrollBars(int main_line_height) {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
@@ -570,7 +570,7 @@ void TextViewWidget::renderScrollBars(int main_line_height) {
     // 5);
 }
 
-void TextViewWidget::renderCaret(int main_line_height) {
+void TextEditWidget::renderCaret(int main_line_height) {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     int extra_padding = 8;

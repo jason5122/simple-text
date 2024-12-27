@@ -31,13 +31,13 @@ void HorizontalLayoutWidget::layout() {
         // Recursively layout children.
         child->layout();
 
-        left_offset += child->getSize().width;
+        left_offset += child->getWidth();
     }
 
     for (auto& child : children_end) {
         right_offset -= padding_in_between;
 
-        right_offset -= child->getSize().width;
+        right_offset -= child->getWidth();
 
         child->setPosition({right_offset, top_offset});
         if (child->isAutoresizing()) {

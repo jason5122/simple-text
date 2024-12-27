@@ -22,6 +22,6 @@ public:
     Widget* widgetAt(const app::Point& pos) override = 0;
 };
 
-static_assert(std::is_abstract<ContainerWidget>());
+static_assert(std::is_abstract_v<ContainerWidget>);
 
 }  // namespace gui

@@ -11,21 +11,15 @@ HorizontalResizingWidget::HorizontalResizingWidget(int padding_in_between,
 void HorizontalResizingWidget::leftMouseDown(const app::Point& mouse_pos,
                                              app::ModifierKey modifiers,
                                              app::ClickType click_type) {
-    int left_offset = position.x;
-    int right_offset = position.x + size.width;
     for (auto& child : children_start) {
-        left_offset += child->getSize().width;
-
-        if (std::abs(mouse_pos.x - left_offset) <= kResizeDistance) {
+        if (child->rightEdgeTest(mouse_pos, kResizeDistance)) {
             dragged_widget = child.get();
             is_dragged_widget_start = true;
             return;
         }
     }
     for (auto& child : children_end) {
-        right_offset -= child->getSize().width;
-
-        if (std::abs(mouse_pos.x - right_offset) <= kResizeDistance) {
+        if (child->leftEdgeTest(mouse_pos, kResizeDistance)) {
             dragged_widget = child.get();
             is_dragged_widget_start = false;
             return;
@@ -47,8 +41,6 @@ void HorizontalResizingWidget::leftMouseDrag(const app::Point& mouse_pos,
         } else {
             new_width = (widget_pos.x + widget_size.width) - mouse_pos.x;
         }
-        new_width = std::max(new_width, 50 * 2);
-
         dragged_widget->setWidth(new_width);
     }
 }
@@ -59,38 +51,19 @@ app::CursorStyle HorizontalResizingWidget::cursorStyle() const {
 
 Widget* HorizontalResizingWidget::widgetAt(const app::Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.
-    int left_offset = position.x;
-    int right_offset = position.x + size.width;
     for (auto& child : children_start) {
-        left_offset += child->getSize().width;
-        if (std::abs(pos.x - left_offset) <= kResizeDistance) {
+        if (child->rightEdgeTest(pos, kResizeDistance)) {
             return this;
         }
     }
     for (auto& child : children_end) {
-        right_offset -= child->getSize().width;
-        if (std::abs(pos.x - right_offset) <= kResizeDistance) {
+        if (child->leftEdgeTest(pos, kResizeDistance)) {
             return this;
         }
     }
 
     // Otherwise, propagate as normal.
-    if (main_widget) {
-        if (main_widget->hitTest(pos)) {
-            return main_widget->widgetAt(pos);
-        }
-    }
-    for (auto& child : children_start) {
-        if (child->hitTest(pos)) {
-            return child->widgetAt(pos);
-        }
-    }
-    for (auto& child : children_end) {
-        if (child->hitTest(pos)) {
-            return child->widgetAt(pos);
-        }
-    }
-    return nullptr;
+    return LayoutWidget::widgetAt(pos);
 }
 
 }  // namespace gui

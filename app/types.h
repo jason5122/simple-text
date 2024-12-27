@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 namespace app {
 
 enum class CursorStyle { kArrow, kIBeam, kResizeLeftRight };
@@ -82,6 +84,17 @@ struct Size {
         width -= rhs.width;
         height -= rhs.height;
         return *this;
+    }
+
+    static constexpr Size minValue() {
+        return {};
+    }
+
+    static constexpr Size maxValue() {
+        return {
+            .width = std::numeric_limits<int>::max(),
+            .height = std::numeric_limits<int>::max(),
+        };
     }
 };
 

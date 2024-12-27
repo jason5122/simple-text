@@ -19,7 +19,6 @@ source_set("widget") {
     "text_button_widget.cc",
     "text_edit_widget.cc",
     "text_input_widget.cc",
-    "widget.cc",
 
     # TODO: Remove this.
     "custom_widget.cc",

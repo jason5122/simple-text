@@ -6,7 +6,6 @@
 #include "gui/widget/container/horizontal_resizing_widget.h"
 #include "gui/widget/container/vertical_layout_widget.h"
 #include "gui/widget/find_panel_widget.h"
-#include "gui/widget/side_bar_widget.h"
 #include "simple_text/editor_app.h"
 
 // TODO: Debug use; remove this.
@@ -115,7 +114,8 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
       main_widget(std::make_shared<VerticalLayoutWidget>()),
       editor_widget(std::make_shared<EditorWidget>(
           parent.main_font_id, parent.ui_font_small_id, parent.panel_close_image_id)),
-      status_bar(std::make_shared<StatusBarWidget>(44, parent.ui_font_small_id)) {}
+      status_bar(std::make_shared<StatusBarWidget>(44, parent.ui_font_small_id)),
+      side_bar(std::make_shared<SideBarWidget>(kSideBarWidth)) {}
 
 void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->setSize(size);
@@ -136,8 +136,6 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     // Main widgets.
     auto horizontal_layout = std::make_shared<HorizontalResizingWidget>();
     auto vertical_layout = std::make_shared<VerticalLayoutWidget>();
-
-    auto side_bar = std::make_shared<SideBarWidget>(kSideBarWidth);
 
     horizontal_layout->addChildStart(side_bar);
     vertical_layout->setMainWidget(editor_widget);
@@ -177,9 +175,12 @@ void EditorWindow::onDraw(const app::Size& size) {
     Renderer::instance().flush(size);
 }
 
+// TODO: Verify that resize is always called on all platforms when the window is created.
+// TODO: Verify that resizes are followed by redraw calls in the GUI framework.
 void EditorWindow::onResize(const app::Size& size) {
     main_widget->setSize(size);
-    // Resizes are followed by redraw calls in the GUI framework. No need to call `redraw()`.
+    side_bar->setMinimumWidth(100);
+    side_bar->setMaximumWidth(size.width - 100 * 2);
 }
 
 void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {

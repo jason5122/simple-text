@@ -8,7 +8,7 @@ StatusBarWidget::StatusBarWidget(int min_height, size_t font_id)
     : HorizontalLayoutWidget(0, 32, 0),
       line_column_label(std::make_unique<LabelWidget>(font_id, kTextColor)) {
 
-    int label_height = line_column_label->getSize().height;
+    int label_height = line_column_label->getHeight();
     setHeight(std::max(label_height, min_height));
 
     addChildStart(line_column_label);

@@ -19,7 +19,7 @@ public:
     void onLeftMouseDown(const app::Point& mouse_pos,
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;
-    void onLeftMouseUp() override;
+    void onLeftMouseUp(const app::Point& mouse_pos) override;
     void onLeftMouseDrag(const app::Point& mouse_pos,
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;

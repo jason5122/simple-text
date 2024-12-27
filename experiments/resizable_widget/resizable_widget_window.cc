@@ -64,7 +64,7 @@ void ResizableWidgetWindow::onLeftMouseDown(const app::Point& mouse_pos,
     }
 }
 
-void ResizableWidgetWindow::onLeftMouseUp() {
+void ResizableWidgetWindow::onLeftMouseUp(const app::Point& mouse_pos) {
     dragged_widget = nullptr;
 }
 

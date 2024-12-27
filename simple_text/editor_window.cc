@@ -195,12 +195,15 @@ void EditorWindow::onLeftMouseDown(const app::Point& mouse_pos,
     dragged_widget = main_widget->widgetAt(mouse_pos);
     if (dragged_widget) {
         dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
+        // TODO: See if we should call `updateCursorStyle()` here.
+        // TODO: Not all widgets should initiate a drag.
         redraw();
     }
 }
 
-void EditorWindow::onLeftMouseUp() {
+void EditorWindow::onLeftMouseUp(const app::Point& mouse_pos) {
     dragged_widget = nullptr;
+    updateCursorStyle(mouse_pos);
 }
 
 void EditorWindow::onLeftMouseDrag(const app::Point& mouse_pos,
@@ -208,6 +211,8 @@ void EditorWindow::onLeftMouseDrag(const app::Point& mouse_pos,
                                    app::ClickType click_type) {
     if (dragged_widget) {
         dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
+        // TODO: See if we should call `updateCursorStyle()` here.
+        // TODO: Not all widgets should initiate a drag.
         redraw();
     }
 }

@@ -36,6 +36,9 @@ public:
     constexpr void setSize(const app::Size& size);
     constexpr void setWidth(int width);
     constexpr void setHeight(int height);
+    constexpr app::Size getMinimumSize() const;
+    constexpr int getMinimumWidth() const;
+    constexpr int getMinimumHeight() const;
     constexpr void setMinimumSize(const app::Size& min_size);
     constexpr void setMinimumWidth(int min_width);
     constexpr void setMinimumHeight(int min_height);
@@ -95,6 +98,31 @@ constexpr int Widget::getHeight() const {
     return size.height;
 }
 
+constexpr void Widget::setSize(const app::Size& size) {
+    setWidth(size.width);
+    setHeight(size.height);
+}
+
+constexpr void Widget::setWidth(int width) {
+    size.width = std::clamp(width, min_size.width, max_size.width);
+}
+
+constexpr void Widget::setHeight(int height) {
+    size.height = std::clamp(height, min_size.height, max_size.height);
+}
+
+constexpr app::Size Widget::getMinimumSize() const {
+    return min_size;
+}
+
+constexpr int Widget::getMinimumWidth() const {
+    return min_size.width;
+}
+
+constexpr int Widget::getMinimumHeight() const {
+    return min_size.height;
+}
+
 constexpr void Widget::setMinimumSize(const app::Size& min_size) {
     this->min_size = min_size;
 }
@@ -129,19 +157,6 @@ constexpr bool Widget::isAutoresizing() const {
 
 constexpr void Widget::setAutoresizing(bool autoresizing) {
     this->autoresizing = autoresizing;
-}
-
-constexpr void Widget::setSize(const app::Size& size) {
-    setWidth(size.width);
-    setHeight(size.height);
-}
-
-constexpr void Widget::setWidth(int width) {
-    size.width = std::clamp(width, min_size.width, max_size.width);
-}
-
-constexpr void Widget::setHeight(int height) {
-    size.height = std::clamp(height, min_size.height, max_size.height);
 }
 
 constexpr bool Widget::hitTest(const app::Point& point) const {

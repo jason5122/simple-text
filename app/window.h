@@ -56,7 +56,7 @@ public:
     virtual void onLeftMouseDown(const Point& mouse_pos,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}
-    virtual void onLeftMouseUp() {}
+    virtual void onLeftMouseUp(const app::Point& mouse_pos) {}
     virtual void onLeftMouseDrag(const Point& mouse_pos,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}

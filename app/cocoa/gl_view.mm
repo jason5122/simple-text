@@ -179,7 +179,8 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 
 - (void)mouseUp:(NSEvent*)event {
     if (app_window) {
-        app_window->onLeftMouseUp();
+        auto mouse_pos = app::ScaleAndInvertPosition(app::MousePositionFromEvent(event), gl_layer);
+        app_window->onLeftMouseUp(mouse_pos);
     }
 }
 

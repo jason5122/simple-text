@@ -15,7 +15,10 @@ public:
     GlyphCache();
 
     struct Glyph {
-        Vec4 glyph;
+        int32_t left;
+        int32_t top;
+        int32_t width;
+        int32_t height;
         Vec4 uv;
         bool colored;
         size_t page;

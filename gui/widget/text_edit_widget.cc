@@ -400,16 +400,6 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
-#ifdef ENABLE_HIGHLIGHTING
-    auto& highlighter = highlight::Highlighter::instance();
-    auto& language = highlighter.getLanguage("cpp");
-    std::vector<highlight::Highlight> highlights;
-    {
-        PROFILE_BLOCK("SyntaxHighlighter::getHighlights()");
-        highlights = language.highlight(parse_tree.getTree(), start_line, end_line);
-    }
-#endif
-
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     size_t selection_line = tree.line_at(selection.end());
 

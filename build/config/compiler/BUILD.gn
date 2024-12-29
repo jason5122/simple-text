@@ -167,6 +167,9 @@ config("default_warnings") {
     "-Wno-missing-field-initializers",
     "-Wno-unused-parameter",
     "-Wno-unused-variable",
+
+    # https://staticthinking.wordpress.com/2023/07/25/wsign-compare-is-garbage/
+    "-Wno-sign-compare",
   ]
 }
 

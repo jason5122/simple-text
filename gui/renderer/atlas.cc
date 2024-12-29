@@ -97,8 +97,9 @@ bool Atlas::insertTexture(
     // Load data into OpenGL.
     GLenum gl_format;
     if (format == Format::kBGRA) gl_format = GL_BGRA;
-    if (format == Format::kRGBA) gl_format = GL_RGBA;
-    if (format == Format::kRGB) gl_format = GL_RGB;
+    else if (format == Format::kRGBA) gl_format = GL_RGBA;
+    else if (format == Format::kRGB) gl_format = GL_RGB;
+    else std::abort();
 
     glBindTexture(GL_TEXTURE_2D, tex_id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, gl_format,
@@ -115,7 +116,7 @@ bool Atlas::insertTexture(
     row_extent += width;
     row_tallest = std::max(height, row_tallest);
 
-    out_uv = Vec4{uv_left, uv_bot, uv_width, uv_height};
+    out_uv = {uv_left, uv_bot, uv_width, uv_height};
     return true;
 }
 

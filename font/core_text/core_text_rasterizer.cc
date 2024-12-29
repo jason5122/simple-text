@@ -163,12 +163,12 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
     return {
-        .colored = colored,
         .left = rasterized_left,
         .top = top,
         .width = static_cast<int32_t>(rasterized_width),
         .height = static_cast<int32_t>(rasterized_height),
         .buffer = std::move(bitmap_data),
+        .colored = colored,
     };
 }
 

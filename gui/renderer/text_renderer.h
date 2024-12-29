@@ -21,7 +21,9 @@ public:
                           Layer layer,
                           const std::function<Rgb(size_t)>& highlight_callback,
                           int min_x = std::numeric_limits<int>::min(),
-                          int max_x = std::numeric_limits<int>::max());
+                          int max_x = std::numeric_limits<int>::max(),
+                          int min_y = std::numeric_limits<int>::min(),
+                          int max_y = std::numeric_limits<int>::max());
 
     void flush(const app::Size& screen_size, Layer layer);
 

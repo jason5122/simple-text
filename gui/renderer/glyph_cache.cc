@@ -19,6 +19,7 @@ const GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id)
     return cache[font_id][glyph_id];
 }
 
+// TODO: Refactor recursion.
 GlyphCache::Glyph GlyphCache::insertIntoAtlas(const font::RasterizedGlyph& rglyph) {
     Atlas& atlas = atlas_pages[current_page];
 
@@ -32,18 +33,18 @@ GlyphCache::Glyph GlyphCache::insertIntoAtlas(const font::RasterizedGlyph& rglyp
     if (!success) {
         atlas_pages.emplace_back();
         ++current_page;
-
         return insertIntoAtlas(rglyph);
     }
 
-    Glyph glyph{
-        .glyph = Vec4{static_cast<float>(rglyph.left), static_cast<float>(rglyph.top),
-                      static_cast<float>(rglyph.width), static_cast<float>(rglyph.height)},
+    return {
+        .left = rglyph.left,
+        .top = rglyph.top,
+        .width = rglyph.width,
+        .height = rglyph.height,
         .uv = uv,
         .colored = rglyph.colored,
         .page = current_page,
     };
-    return glyph;
 }
 
 const std::vector<Atlas>& GlyphCache::atlasPages() const {

@@ -104,69 +104,77 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     Layer layer,
                                     const std::function<Rgb(size_t)>& highlight_callback,
                                     int min_x,
-                                    int max_x) {
+                                    int max_x,
+                                    int min_y,
+                                    int max_y) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
 
-    for (const auto& glyph : line_layout.glyphs) {
-        // If we reach a glyph before the minimum x, skip it and continue.
-        // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
-        // This assumes glyph positions are monotonically increasing.
+    // TODO: Consider using binary search to locate the starting point. This assumes glyph
+    // positions are monotonically increasing.
+
+    // If we reach a glyph before the minimum x, skip it and continue.
+    // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
+    // This assumes glyph positions are monotonically increasing.
+    for (size_t i = 0; i < line_layout.glyphs.size(); ++i) {
+        const auto& glyph = line_layout.glyphs[i];
 
         auto& rglyph = glyph_cache.getGlyph(glyph.font_id, glyph.glyph_id);
+        int32_t left = rglyph.left;
+        int32_t top = rglyph.top;
+        int32_t width = rglyph.width;
+        int32_t height = rglyph.height;
 
         // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
-        auto glyph_info = rglyph.glyph;
-        glyph_info.y = metrics.line_height - glyph_info.y;
+        top = metrics.line_height - top;
 
         // TODO: Refactor this whole thing... it's messy.
-        int temp1 = static_cast<int>(glyph_info.x);
-        int temp2 = static_cast<int>(glyph_info.z);
-        int total = glyph.position.x + temp1 + temp2;
+        int left_edge = glyph.position.x;
+        int right_edge = left_edge + left + width;
 
-        if (total < min_x) {
+        if (right_edge < min_x) {
             continue;
         }
-        if (glyph.position.x >= max_x) {
+        if (left_edge >= max_x) {
             return;
         }
 
-        app::Point glyph_coords = coords;
-        glyph_coords.x += glyph.position.x;
+        auto pos = coords;
+        pos.x += left_edge;
+        pos.y -= metrics.descent;
 
-        // Fetch descent from the line layout font. Otherwise, the baseline will shift up and
-        // down when run fonts with different baselines mix.
-        glyph_coords.y -= metrics.descent;
+        float uv_left = rglyph.uv.x;
+        float uv_bot = rglyph.uv.y;
+        float uv_width = rglyph.uv.z;
+        float uv_height = rglyph.uv.w;
 
-        // TODO: Consider using the run font descent instead of the layout descent for emojis.
-        // This helps vertically center them. I'm unsure if doing this for all *colored* glyph
-        // runs is problematic or not. We really should just be targeting emojis.
-        // glyph_coords.y -= font_rasterizer.metrics(run.font_id).descent;
-
-        auto uv = rglyph.uv;
-
-        if (total > max_x) {
-            int diff = total - max_x;
-            glyph_info.z -= diff;
-            uv.z -= static_cast<float>(diff) / Atlas::kAtlasSize;
+        if (right_edge > max_x) {
+            int diff = std::max(right_edge - max_x, 0);
+            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+            // if (diff > width) {
+            //     fmt::println("WHAT #1 {} {}", diff, width);
+            // }
+            width -= diff;
+            uv_width -= uv_diff;
         }
-        if (glyph.position.x < min_x) {
-            int diff = min_x - (glyph.position.x);
-            glyph_info.z -= diff;
-            uv.z -= static_cast<float>(diff) / Atlas::kAtlasSize;
-            glyph_info.x += diff;
-            uv.x += static_cast<float>(diff) / Atlas::kAtlasSize;
+        if (left_edge < min_x) {
+            int diff = std::max(min_x - glyph.position.x, 0);
+            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+            // if (diff > width) {
+            //     fmt::println("WHAT #2 {} {}", diff, width);
+            // }
+            width -= diff;
+            uv_width -= uv_diff;
+            left += diff;
+            uv_left += uv_diff;
         }
 
-        const Vec2 coords_vec = {
-            .x = static_cast<float>(glyph_coords.x),
-            .y = static_cast<float>(glyph_coords.y),
-        };
-        const InstanceData instance{
-            .coords = coords_vec,
-            .glyph = glyph_info,
-            // .uv = rglyph.uv,
-            .uv = uv,
+        InstanceData instance = {
+            .coords = {static_cast<float>(pos.x), static_cast<float>(pos.y)},
+            // TODO: Refactor these casts.
+            .glyph = {static_cast<float>(left), static_cast<float>(top), static_cast<float>(width),
+                      static_cast<float>(height)},
+            .uv = {uv_left, uv_bot, uv_width, uv_height},
             .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
         };
         insertIntoBatch(rglyph.page, std::move(instance), layer);

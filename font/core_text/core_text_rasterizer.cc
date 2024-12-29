@@ -8,9 +8,9 @@
 #include <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.
-#include <fmt/base.h>
 #include <algorithm>
 #include <cassert>
+#include <fmt/base.h>
 
 using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
@@ -186,7 +186,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     ScopedCFTypeRef<CTLineRef> ct_line = CreateCTLine(ct_font, font_id, str8);
 
     int total_advance = 0;
-    std::vector<ShapedRun> runs;
+    std::vector<ShapedGlyph> glyphs;
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
 
@@ -211,8 +211,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         CTRunGetPositions(ct_run, {0, glyph_count}, positions.data());
         CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
 
-        std::vector<ShapedGlyph> glyphs;
-        glyphs.reserve(glyph_count);
         for (CFIndex i = 0; i < glyph_count; ++i) {
             // TODO: Use subpixel variants instead of rounding.
             Point position = {
@@ -227,6 +225,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
 
             size_t utf8_index = utf8IndicesMap.mapIndex(indices[i]);
             ShapedGlyph glyph{
+                .font_id = run_font_id,
                 .glyph_id = glyph_ids[i],
                 .position = position,
                 .advance = advance,
@@ -236,8 +235,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
 
             total_advance += advance.x;
         }
-
-        runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
     // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
@@ -254,7 +251,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         .width = total_advance,
         // .width = static_cast<int>(std::ceil(width)),
         .length = str8.length(),
-        .runs = std::move(runs),
+        .glyphs = std::move(glyphs),
     };
 }
 

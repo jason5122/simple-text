@@ -108,48 +108,68 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
 
-    for (const auto& run : line_layout.runs) {
-        for (const auto& glyph : run.glyphs) {
-            // If we reach a glyph before the minimum x, skip it and continue.
-            // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
-            // This assumes glyph positions are monotonically increasing.
-            if (glyph.position.x + glyph.advance.x < min_x) {
-                continue;
-            }
-            if (glyph.position.x > max_x) {
-                break;
-            }
+    for (const auto& glyph : line_layout.glyphs) {
+        // If we reach a glyph before the minimum x, skip it and continue.
+        // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
+        // This assumes glyph positions are monotonically increasing.
 
-            app::Point glyph_coords = coords;
-            glyph_coords.x += glyph.position.x;
+        auto& rglyph = glyph_cache.getGlyph(glyph.font_id, glyph.glyph_id);
 
-            // Fetch descent from the line layout font. Otherwise, the baseline will shift up and
-            // down when run fonts with different baselines mix.
-            glyph_coords.y -= metrics.descent;
+        // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
+        auto glyph_info = rglyph.glyph;
+        glyph_info.y = metrics.line_height - glyph_info.y;
 
-            // TODO: Consider using the run font descent instead of the layout descent for emojis.
-            // This helps vertically center them. I'm unsure if doing this for all *colored* glyph
-            // runs is problematic or not. We really should just be targeting emojis.
-            // glyph_coords.y -= font_rasterizer.metrics(run.font_id).descent;
+        // TODO: Refactor this whole thing... it's messy.
+        int temp1 = static_cast<int>(glyph_info.x);
+        int temp2 = static_cast<int>(glyph_info.z);
+        int total = glyph.position.x + temp1 + temp2;
 
-            auto& rglyph = glyph_cache.getGlyph(run.font_id, glyph.glyph_id);
-
-            // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
-            Vec4 glyph_copy = rglyph.glyph;
-            glyph_copy.y = metrics.line_height - glyph_copy.y;
-
-            const Vec2 coords_vec = {
-                .x = static_cast<float>(glyph_coords.x),
-                .y = static_cast<float>(glyph_coords.y),
-            };
-            const InstanceData instance{
-                .coords = coords_vec,
-                .glyph = glyph_copy,
-                .uv = rglyph.uv,
-                .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
-            };
-            insertIntoBatch(rglyph.page, std::move(instance), layer);
+        if (total < min_x) {
+            continue;
         }
+        if (glyph.position.x >= max_x) {
+            return;
+        }
+
+        app::Point glyph_coords = coords;
+        glyph_coords.x += glyph.position.x;
+
+        // Fetch descent from the line layout font. Otherwise, the baseline will shift up and
+        // down when run fonts with different baselines mix.
+        glyph_coords.y -= metrics.descent;
+
+        // TODO: Consider using the run font descent instead of the layout descent for emojis.
+        // This helps vertically center them. I'm unsure if doing this for all *colored* glyph
+        // runs is problematic or not. We really should just be targeting emojis.
+        // glyph_coords.y -= font_rasterizer.metrics(run.font_id).descent;
+
+        auto uv = rglyph.uv;
+
+        if (total > max_x) {
+            int diff = total - max_x;
+            glyph_info.z -= diff;
+            uv.z -= static_cast<float>(diff) / Atlas::kAtlasSize;
+        }
+        if (glyph.position.x < min_x) {
+            int diff = min_x - (glyph.position.x);
+            glyph_info.z -= diff;
+            uv.z -= static_cast<float>(diff) / Atlas::kAtlasSize;
+            glyph_info.x += diff;
+            uv.x += static_cast<float>(diff) / Atlas::kAtlasSize;
+        }
+
+        const Vec2 coords_vec = {
+            .x = static_cast<float>(glyph_coords.x),
+            .y = static_cast<float>(glyph_coords.y),
+        };
+        const InstanceData instance{
+            .coords = coords_vec,
+            .glyph = glyph_info,
+            // .uv = rglyph.uv,
+            .uv = uv,
+            .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
+        };
+        insertIntoBatch(rglyph.page, std::move(instance), layer);
     }
 }
 

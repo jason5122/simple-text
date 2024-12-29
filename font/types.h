@@ -66,63 +66,18 @@ struct Point {
 };
 
 struct ShapedGlyph {
+    size_t font_id;
     uint32_t glyph_id;
     Point position;
     Point advance;
     size_t index;  // UTF-8 index in the original text.
 };
 
-struct ShapedRun {
-    size_t font_id;
-    std::vector<ShapedGlyph> glyphs;
-};
-
 struct LineLayout {
     size_t layout_font_id;
     int width;
     size_t length;
-    std::vector<ShapedRun> runs;
-
-    struct ConstIterator;
-    using const_iterator = ConstIterator;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-
-    const_iterator begin() const;
-    const_iterator end() const;
-    const_reverse_iterator rbegin() const;
-    const_reverse_iterator rend() const;
-};
-
-struct LineLayout::ConstIterator {
-    using iterator_category = std::bidirectional_iterator_tag;
-    using difference_type = std::ptrdiff_t;
-    using value_type = const ShapedGlyph;
-    using pointer = const ShapedGlyph*;
-    using reference = const ShapedGlyph&;
-
-    reference operator*() const;
-    pointer operator->();
-    ConstIterator& operator++();
-    ConstIterator operator++(int);
-    ConstIterator& operator--();
-    ConstIterator operator--(int);
-
-    friend constexpr bool operator==(const ConstIterator& a, const ConstIterator& b) {
-        return a.run_index == b.run_index && a.run_glyph_index == b.run_glyph_index;
-    }
-
-    friend constexpr bool operator!=(const ConstIterator& a, const ConstIterator& b) {
-        return !(operator==(a, b));
-    }
-
-private:
-    friend struct LineLayout;
-
-    ConstIterator(const LineLayout* layout, size_t run_index, size_t run_glyph_index);
-
-    const LineLayout* layout;
-    size_t run_index;
-    size_t run_glyph_index;
+    std::vector<ShapedGlyph> glyphs;
 };
 
 }  // namespace font

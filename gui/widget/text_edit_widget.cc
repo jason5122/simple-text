@@ -347,7 +347,8 @@ void TextEditWidget::updateMaxScroll() {
     const auto& metrics = font_rasterizer.metrics(font_id);
 
     // TODO: Figure out how to update max width.
-    max_scroll_offset.x = 0;
+    max_scroll_offset.x = 2000;
+    // max_scroll_offset.x = 0;
     max_scroll_offset.y = tree.line_count() * metrics.line_height;
 }
 
@@ -415,7 +416,18 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
     int min_x = scroll_offset.x;
-    int max_x = scroll_offset.x + size.width;
+    // int max_x = scroll_offset.x + size.width;
+
+    // TODO: Remove this.
+    int max_x = scroll_offset.x + 1000;
+    {
+        auto left_p = textOffset() + scroll_offset + app::Point{.x = 0 + kCaretWidth / 2};
+        auto right_p = textOffset() + scroll_offset + app::Point{.x = 1000 + kCaretWidth / 2};
+        auto top_p = textOffset() + scroll_offset;
+        rect_renderer.addRect(left_p, {1, 5000}, {255}, Layer::kOne);
+        rect_renderer.addRect(right_p, {1, 5000}, {255}, Layer::kOne);
+        rect_renderer.addRect(top_p, {5000, 1}, {255}, Layer::kOne);
+    }
 
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
@@ -424,50 +436,8 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         coords.y += static_cast<int>(line) * main_line_height;
         coords.x += kCaretWidth / 2;  // Match Sublime Text.
 
-#ifdef ENABLE_HIGHLIGHTING
-        std::stack<highlight::Highlight> stk;
-        auto it = highlights.begin();
-        const auto highlight_callback = [&](size_t col) -> Rgb {
-            TSPoint p = {
-                .row = static_cast<uint32_t>(line),
-                .column = static_cast<uint32_t>(col),
-            };
-
-            // Use stack to parse highlights.
-            while (it != highlights.end() && p >= (*it).end) {
-                ++it;
-            }
-            while (it != highlights.end() && (*it).contains(p)) {
-                // If multiple ranges are equal, prefer the one that comes first.
-                if (stk.empty() || stk.top() != *it) {
-                    stk.push(*it);
-                }
-                ++it;
-            }
-            while (!stk.empty() && p >= stk.top().end) {
-                stk.pop();
-            }
-
-            size_t capture_index = 0;
-            if (!stk.empty() && stk.top().contains(p)) {
-                capture_index = stk.top().capture_index;
-
-                // TODO: Use unified Rgb struct.
-                const auto& highlight_color = language.getColor(capture_index);
-                return {.r = highlight_color.r, .g = highlight_color.g, .b = highlight_color.b};
-            } else {
-                return kTextColor;
-            }
-        };
-#endif
-
-#ifdef ENABLE_HIGHLIGHTING
-        text_renderer.renderLineLayout(layout, coords, Layer::kOne, highlight_callback, min_x,
-                                       max_x);
-#else
         text_renderer.renderLineLayout(
             layout, coords, Layer::kOne, [](size_t) { return kTextColor; }, min_x, max_x);
-#endif
 
         // Draw gutter.
         if (line == selection_line) {
@@ -494,9 +464,6 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
                                        line_number_highlight_callback);
     }
-
-    // fmt::println("Total layoutAt() time: {}", total_layout_duration);
-    // fmt::println("Total TextRender time: {}", total_text_render_duration);
 
     constexpr bool kDebugAtlas = false;
     if constexpr (kDebugAtlas) {

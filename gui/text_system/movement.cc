@@ -4,6 +4,7 @@
 
 #include <numeric>
 #include <optional>
+#include <vector>
 
 // TODO: Debug use; remove this.
 #include <fmt/base.h>
@@ -11,8 +12,6 @@
 namespace gui {
 
 namespace {
-
-font::LineLayout::const_iterator IteratorAtColumn(const font::LineLayout& layout, size_t col);
 
 enum class CharKind {
     kWhitespace,
@@ -25,8 +24,8 @@ constexpr CharKind CodepointToCharKind(int32_t codepoint);
 }  // namespace
 
 size_t Movement::columnAtX(const font::LineLayout& layout, int x) {
-    for (auto it = layout.begin(); it != layout.end(); ++it) {
-        const auto& glyph = *it;
+    for (size_t i = 0; i < layout.glyphs.size(); ++i) {
+        const auto& glyph = layout.glyphs[i];
         int glyph_x = glyph.position.x;
         int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
         if (glyph_center >= x) {
@@ -37,8 +36,8 @@ size_t Movement::columnAtX(const font::LineLayout& layout, int x) {
 }
 
 int Movement::xAtColumn(const font::LineLayout& layout, size_t col) {
-    for (auto it = layout.begin(); it != layout.end(); ++it) {
-        const auto& glyph = *it;
+    for (size_t i = 0; i < layout.glyphs.size(); ++i) {
+        const auto& glyph = layout.glyphs[i];
         if (glyph.index >= col) {
             return glyph.position.x;
         }
@@ -46,11 +45,23 @@ int Movement::xAtColumn(const font::LineLayout& layout, size_t col) {
     return layout.width;
 }
 
+// TODO: Refactor this! Don't use iterators at all.
+namespace {
+auto IteratorAtColumn(const font::LineLayout& layout, size_t col) {
+    for (auto it = layout.glyphs.begin(); it != layout.glyphs.end(); ++it) {
+        if ((*it).index >= col) {
+            return it;
+        }
+    }
+    return layout.glyphs.end();
+}
+}  // namespace
+
 size_t Movement::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     auto it = IteratorAtColumn(layout, col);
-    if (it != layout.begin()) it--;
+    if (it != layout.glyphs.begin()) it--;
 
-    if (layout.begin() != layout.end()) {
+    if (layout.glyphs.begin() != layout.glyphs.end()) {
         return col - (*it).index;
     } else {
         return 0;
@@ -59,9 +70,9 @@ size_t Movement::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
 
 size_t Movement::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     auto it = IteratorAtColumn(layout, col);
-    if (it != layout.end()) it++;
+    if (it != layout.glyphs.end()) it++;
 
-    if (it != layout.end()) {
+    if (it != layout.glyphs.end()) {
         return (*it).index - col;
     } else {
         return layout.length - col;
@@ -127,15 +138,6 @@ size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
 }
 
 namespace {
-
-font::LineLayout::const_iterator IteratorAtColumn(const font::LineLayout& layout, size_t col) {
-    for (auto it = layout.begin(); it != layout.end(); ++it) {
-        if ((*it).index >= col) {
-            return it;
-        }
-    }
-    return layout.end();
-}
 
 constexpr CharKind CodepointToCharKind(int32_t codepoint) {
     if (una::codepoint::is_whitespace(codepoint)) {

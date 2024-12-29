@@ -45,35 +45,34 @@ int Movement::xAtColumn(const font::LineLayout& layout, size_t col) {
     return layout.width;
 }
 
-// TODO: Refactor this! Don't use iterators at all.
 namespace {
-auto IteratorAtColumn(const font::LineLayout& layout, size_t col) {
-    for (auto it = layout.glyphs.begin(); it != layout.glyphs.end(); ++it) {
-        if ((*it).index >= col) {
-            return it;
+inline size_t GlyphAtColumn(const std::vector<font::ShapedGlyph>& glyphs, size_t col) {
+    for (size_t i = 0; i < glyphs.size(); ++i) {
+        if (glyphs[i].index >= col) {
+            return i;
         }
     }
-    return layout.glyphs.end();
+    return glyphs.size();
 }
 }  // namespace
 
 size_t Movement::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
-    auto it = IteratorAtColumn(layout, col);
-    if (it != layout.glyphs.begin()) it--;
+    const auto& glyphs = layout.glyphs;
+    if (glyphs.empty()) return 0;
 
-    if (layout.glyphs.begin() != layout.glyphs.end()) {
-        return col - (*it).index;
-    } else {
-        return 0;
-    }
+    size_t i = GlyphAtColumn(glyphs, col);
+    if (i > 0) --i;
+    return col - glyphs[i].index;
 }
 
 size_t Movement::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
-    auto it = IteratorAtColumn(layout, col);
-    if (it != layout.glyphs.end()) it++;
+    const auto& glyphs = layout.glyphs;
 
-    if (it != layout.glyphs.end()) {
-        return (*it).index - col;
+    size_t i = GlyphAtColumn(glyphs, col);
+    if (i < glyphs.size()) ++i;
+
+    if (i < glyphs.size()) {
+        return glyphs[i].index - col;
     } else {
         return layout.length - col;
     }

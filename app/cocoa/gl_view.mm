@@ -276,11 +276,13 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     NSString* selector_str = NSStringFromSelector(selector);
 
     // Remove the trailing colon.
-    int selector_len = selector_str.length;
-    selector_str = [selector_str substringToIndex:selector_len - 1];
+    auto len = selector_str.length;
+    if (len > 0) {
+        selector_str = [selector_str substringToIndex:len - 1];
+    }
 
     std::string str = selector_str.UTF8String;
-    fmt::println("{}", str);
+    fmt::println("selector: {}", str);
     if (str == "moveForward" || str == "moveRight") {
         app_window->onAction(app::Action::kMoveForwardByCharacters);
     } else if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {

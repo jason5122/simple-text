@@ -20,6 +20,7 @@ const std::string kFragmentShader =
 
 // TODO: Debug; remove this.
 #include "util/profile_util.h"
+#include <cassert>
 #include <fmt/base.h>
 
 namespace gui {
@@ -113,9 +114,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
     // TODO: Consider using binary search to locate the starting point. This assumes glyph
     // positions are monotonically increasing.
 
-    // If we reach a glyph before the minimum x, skip it and continue.
-    // If we reach a glyph *after* the maximum x, break out of the loop — we are done.
-    // This assumes glyph positions are monotonically increasing.
+    // TODO: Consider cleaning this up.
     for (size_t i = 0; i < line_layout.glyphs.size(); ++i) {
         const auto& glyph = line_layout.glyphs[i];
 
@@ -144,9 +143,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         float uv_width = rglyph.uv.z;
         float uv_height = rglyph.uv.w;
 
-        // TODO: Clean this up.
         if (left_edge < min_x) {
-            int diff = std::max(min_x - left_edge, 0);
+            int diff = min_x - left_edge;
             float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
             width -= diff;
             uv_width -= uv_diff;
@@ -154,14 +152,15 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             uv_left += uv_diff;
         }
         if (right_edge > max_x) {
-            int diff = std::max(right_edge - max_x, 0);
+            int diff = right_edge - max_x;
             float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
             width -= diff;
             uv_width -= uv_diff;
         }
         if (top_edge < min_y) {
-            int diff = std::max(min_y - top_edge, 0);
-            int diff2 = std::max(line_height - rglyph.top, 0);
+            int diff = min_y - top_edge;
+            int diff2 = line_height - rglyph.top;
+            assert(line_height >= rglyph.top);
             int ans = std::max(diff - diff2, 0);
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
             height -= ans;
@@ -170,7 +169,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             uv_bot += uv_diff;
         }
         if (bottom_edge > max_y) {
-            int diff = std::max(bottom_edge - max_y, 0);
+            int diff = bottom_edge - max_y;
             int diff2 = std::max(line_height - (height + top), 0);
             int ans = std::max(diff - diff2, 0);
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
@@ -187,9 +186,9 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             continue;
         }
 
+        // TODO: Refactor these casts.
         InstanceData instance = {
             .coords = {static_cast<float>(pos.x), static_cast<float>(pos.y)},
-            // TODO: Refactor these casts.
             .glyph = {static_cast<float>(left), static_cast<float>(top), static_cast<float>(width),
                       static_cast<float>(height)},
             .uv = {uv_left, uv_bot, uv_width, uv_height},

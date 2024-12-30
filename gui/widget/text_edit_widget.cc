@@ -298,8 +298,9 @@ void TextEditWidget::draw() {
 
     renderText(main_line_height, start_line, end_line);
     renderSelections(main_line_height, start_line, end_line);
-    renderScrollBars(main_line_height);
+    // Render caret first so scroll bar draws over it.
     renderCaret(main_line_height);
+    renderScrollBars(main_line_height);
 }
 
 void TextEditWidget::leftMouseDown(const app::Point& mouse_pos,
@@ -406,22 +407,9 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
     int min_x = scroll_offset.x;
-    // int max_x = scroll_offset.x + size.width;
-
-    // TODO: Remove this.
-    int max_x = scroll_offset.x + 1000;
+    int max_x = scroll_offset.x + (size.width - gutterWidth() - kCaretWidth / 2);
     int min_y = position.y;
-    int max_y = position.y + 1000;
-    {
-        auto left_p = textOffset() + scroll_offset + app::Point{.x = 0 + kCaretWidth / 2};
-        auto right_p = textOffset() + scroll_offset + app::Point{.x = 1000 + kCaretWidth / 2};
-        auto top_p = textOffset() + scroll_offset + app::Point{.x = kCaretWidth / 2};
-        auto bottom_p = textOffset() + scroll_offset + app::Point{.x = kCaretWidth / 2, .y = 1000};
-        rect_renderer.addRect(left_p, {1, 1000}, {255}, Layer::kOne);
-        rect_renderer.addRect(right_p, {1, 1000}, {255}, Layer::kOne);
-        rect_renderer.addRect(top_p, {1000, 1}, {255}, Layer::kOne);
-        rect_renderer.addRect(bottom_p, {1000, 1}, {255}, Layer::kOne);
-    }
+    int max_y = position.y + size.height;
 
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
@@ -552,9 +540,9 @@ void TextEditWidget::renderCaret(int main_line_height) {
     caret_pos += textOffset();
 
     int min_x = gutterWidth() + kCaretWidth / 2 + position.x;
-    int max_x = gutterWidth() + kCaretWidth / 2 + position.x + 1000;
+    int max_x = position.x + size.width;
     int min_y = position.y;
-    int max_y = position.y + 1000;
+    int max_y = position.y + size.height;
 
     rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kTwo, 0, 0,
                           min_x, max_x, min_y, max_y);

@@ -140,6 +140,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
     horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
     horizontal_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
+    horizontal_layout->addChildEnd(std::make_unique<SideBarWidget>(kSideBarWidth));
 
     main_widget->setMainWidget(std::move(horizontal_layout));
     status_bar->setResizable(false);

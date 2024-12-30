@@ -138,9 +138,7 @@ const ImageRenderer::Image& ImageRenderer::get(size_t image_id) const {
 // TODO: Find a way to not have to cast here.
 void ImageRenderer::insertInBatch(size_t image_index,
                                   const app::Point& coords,
-                                  const Rgba& color,
-                                  Layer layer) {
-    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
+                                  const Rgba& color) {
     const Image& image = cache.at(image_index);
     instances.emplace_back(InstanceData{
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
@@ -150,7 +148,7 @@ void ImageRenderer::insertInBatch(size_t image_index,
     });
 }
 
-void ImageRenderer::renderBatch(const app::Size& screen_size, Layer layer) {
+void ImageRenderer::renderBatch(const app::Size& screen_size) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
@@ -158,7 +156,6 @@ void ImageRenderer::renderBatch(const app::Size& screen_size, Layer layer) {
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
-    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);

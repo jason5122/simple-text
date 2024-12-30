@@ -37,12 +37,9 @@ void RendererLite::flush(const app::Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // TODO: Add arbitrarily many layers (or a fixed but larger set of layers).
     rect_renderer.flush(size, Layer::kOne);
-    text_renderer.flush(size, Layer::kOne);
-
+    text_renderer.flush(size);
     rect_renderer.flush(size, Layer::kTwo);
-    text_renderer.flush(size, Layer::kTwo);
 }
 
 }  // namespace gui

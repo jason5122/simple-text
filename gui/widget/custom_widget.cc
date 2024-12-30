@@ -110,7 +110,7 @@ void CustomWidget::renderText(int main_line_height, size_t start_line, size_t en
         int max_x = scroll_offset.x + size.width;
 
         text_renderer.renderLineLayout(
-            layout, coords, Layer::kOne, [](size_t) { return kTextColor; }, min_x, max_x);
+            layout, coords, [](size_t) { return kTextColor; }, min_x, max_x);
 
         // Draw line numbers.
         app::Point line_number_coords = position;
@@ -123,7 +123,7 @@ void CustomWidget::renderText(int main_line_height, size_t start_line, size_t en
         line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 
         const auto line_number_highlight_callback = [](size_t) { return kLineNumberColor; };
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
+        text_renderer.renderLineLayout(line_number_layout, line_number_coords,
                                        line_number_highlight_callback);
     }
 }

@@ -33,7 +33,7 @@ void LabelWidget::draw() {
     int min_x = 0;
     int max_x = size.width;
     const auto highlight_callback = [this](size_t) { return color; };
-    text_renderer.renderLineLayout(layout, coords, Layer::kTwo, highlight_callback, min_x, max_x);
+    text_renderer.renderLineLayout(layout, coords, highlight_callback, min_x, max_x);
 }
 
 app::Point LabelWidget::centerVertically(int widget_height) {

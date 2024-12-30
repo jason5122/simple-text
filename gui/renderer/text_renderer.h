@@ -18,14 +18,13 @@ public:
 
     void renderLineLayout(const font::LineLayout& line_layout,
                           const app::Point& coords,
-                          Layer layer,
                           const std::function<Rgb(size_t)>& highlight_callback,
                           int min_x = std::numeric_limits<int>::min(),
                           int max_x = std::numeric_limits<int>::max(),
                           int min_y = std::numeric_limits<int>::min(),
                           int max_y = std::numeric_limits<int>::max());
 
-    void flush(const app::Size& screen_size, Layer layer);
+    void flush(const app::Size& screen_size);
 
     // DEBUG: Draws all texture atlases.
     void renderAtlasPages(const app::Point& coords);
@@ -47,10 +46,9 @@ private:
         Rgba color;
     };
 
-    std::vector<std::vector<InstanceData>> layer_one_instances;
-    std::vector<std::vector<InstanceData>> layer_two_instances;
+    std::vector<std::vector<InstanceData>> batches;
 
-    void insertIntoBatch(size_t page, const InstanceData& instance, Layer layer);
+    void insertIntoBatch(size_t page, const InstanceData& instance);
 };
 
 }  // namespace gui

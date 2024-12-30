@@ -27,9 +27,9 @@ void TextButtonWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& text_renderer = Renderer::instance().getTextRenderer();
 
-    rect_renderer.addRect(position, size, bg_color, Layer::kTwo, 4);
+    rect_renderer.addRect(position, size, bg_color, Layer::kOne, 4);
     text_renderer.renderLineLayout(
-        line_layout, textCenter(), Layer::kTwo, [](size_t) { return kTextColor; }, 0, size.width);
+        line_layout, textCenter(), [](size_t) { return kTextColor; }, 0, size.width);
 }
 
 constexpr app::Point TextButtonWidget::textCenter() {

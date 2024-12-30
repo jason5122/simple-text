@@ -431,8 +431,7 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         coords.x += kCaretWidth / 2;  // Match Sublime Text.
 
         text_renderer.renderLineLayout(
-            layout, coords, Layer::kOne, [](size_t) { return kTextColor; }, min_x, max_x, min_y,
-            max_y);
+            layout, coords, [](size_t) { return kTextColor; }, min_x, max_x, min_y, max_y);
 
         // Draw gutter.
         if (line == selection_line) {
@@ -456,8 +455,11 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
-                                       line_number_highlight_callback);
+        // TODO: Change this.
+        int min_x = std::numeric_limits<int>::min();
+        int max_x = std::numeric_limits<int>::max();
+        text_renderer.renderLineLayout(line_number_layout, line_number_coords,
+                                       line_number_highlight_callback, min_x, max_x, min_y, max_y);
     }
 
     constexpr bool kDebugAtlas = false;
@@ -499,7 +501,7 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
             });
         }
     }
-    selection_renderer.renderSelections(selections, textOffset(), main_line_height, Layer::kOne);
+    selection_renderer.renderSelections(selections, textOffset(), main_line_height);
 }
 
 void TextEditWidget::renderScrollBars(int main_line_height) {

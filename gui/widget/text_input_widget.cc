@@ -29,7 +29,7 @@ void TextInputWidget::draw() {
 
     auto& text_renderer = Renderer::instance().getTextRenderer();
     text_renderer.renderLineLayout(
-        getLayout(), pos, Layer::kOne, [](size_t) { return kTextColor; }, 0, size.width);
+        getLayout(), pos, [](size_t) { return kTextColor; }, 0, size.width);
 
     int caret_x = Movement::xAtColumn(getLayout(), caret);
     app::Point caret_pos = pos;

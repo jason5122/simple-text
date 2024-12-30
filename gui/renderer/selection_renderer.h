@@ -23,9 +23,8 @@ public:
     };
     void renderSelections(const std::vector<Selection>& selections,
                           const app::Point& offset,
-                          int line_height,
-                          Layer layer);
-    void flush(const app::Size& screen_size, Layer layer);
+                          int line_height);
+    void flush(const app::Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -46,8 +45,7 @@ private:
         IVec4 border_info;
     };
 
-    std::vector<InstanceData> layer_one_instances;
-    std::vector<InstanceData> layer_two_instances;
+    std::vector<InstanceData> instances;
 
     enum BorderFlags {
         kLeft = 1,

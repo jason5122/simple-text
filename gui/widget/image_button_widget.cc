@@ -27,7 +27,7 @@ void ImageButtonWidget::draw() {
     pos += {padding, padding};
 
     auto& image_renderer = Renderer::instance().getImageRenderer();
-    image_renderer.insertInBatch(image_id, pos, text_color, Layer::kTwo);
+    image_renderer.insertInBatch(image_id, pos, text_color);
 }
 
 }  // namespace gui

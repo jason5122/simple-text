@@ -101,7 +101,6 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
 
 void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     const app::Point& coords,
-                                    Layer layer,
                                     const std::function<Rgb(size_t)>& highlight_callback,
                                     int min_x,
                                     int max_x,
@@ -153,6 +152,7 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         float uv_width = rglyph.uv.z;
         float uv_height = rglyph.uv.w;
 
+        // TODO: Clean this up.
         if (right_edge > max_x) {
             int diff = std::max(right_edge - max_x, 0);
             float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
@@ -203,13 +203,11 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             .uv = {uv_left, uv_bot, uv_width, uv_height},
             .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
         };
-        insertIntoBatch(rglyph.page, std::move(instance), layer);
+        insertIntoBatch(rglyph.page, std::move(instance));
     }
 }
 
-void TextRenderer::flush(const app::Size& screen_size, Layer layer) {
-    auto& batch_instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
-
+void TextRenderer::flush(const app::Size& screen_size) {
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
@@ -222,27 +220,26 @@ void TextRenderer::flush(const app::Size& screen_size, Layer layer) {
 
     for (size_t page = 0; page < glyph_cache.atlasPages().size(); ++page) {
         // TODO: Refactor this ugly hack.
-        while (batch_instances.size() <= page) {
-            batch_instances.emplace_back();
-            batch_instances.back().reserve(kBatchMax);
+        while (batches.size() <= page) {
+            batches.emplace_back();
+            batches.back().reserve(kBatchMax);
         }
 
         GLuint batch_tex = glyph_cache.atlasPages().at(page).tex();
-        std::vector<InstanceData>& instances = batch_instances.at(page);
+        std::vector<InstanceData>& batch = batches.at(page);
 
-        if (instances.empty()) {
+        if (batch.empty()) {
             return;
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(),
-                        instances.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * batch.size(), batch.data());
 
         glBindTexture(GL_TEXTURE_2D, batch_tex);
 
-        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances.size());
+        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, batch.size());
 
-        instances.clear();
+        batch.clear();
     }
 
     // Unbind.
@@ -270,25 +267,23 @@ void TextRenderer::renderAtlasPages(const app::Point& coords) {
             .uv = Vec4{0, 0, 1.0, 1.0},
             .color = Rgba{255, 255, 255, true},
         };
-        insertIntoBatch(page, std::move(instance), Layer::kOne);
+        insertIntoBatch(page, std::move(instance));
 
         atlas_x_offset += Atlas::kAtlasSize + 100;
     }
 }
 
-void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance, Layer layer) {
-    auto& batch_instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
-
+void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance) {
     // TODO: Refactor this ugly hack.
-    while (batch_instances.size() <= page) {
-        batch_instances.emplace_back();
-        batch_instances.back().reserve(kBatchMax);
+    while (batches.size() <= page) {
+        batches.emplace_back();
+        batches.back().reserve(kBatchMax);
     }
 
-    std::vector<InstanceData>& instances = batch_instances.at(page);
+    std::vector<InstanceData>& batch = batches.at(page);
 
-    instances.emplace_back(std::move(instance));
-    if (instances.size() == kBatchMax) {
+    batch.emplace_back(std::move(instance));
+    if (batch.size() == kBatchMax) {
         fmt::println("TextRenderer error: attempted to insert into a full batch!");
     }
 }

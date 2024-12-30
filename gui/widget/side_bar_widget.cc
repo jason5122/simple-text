@@ -94,13 +94,13 @@ void SideBarWidget::renderNewLabel() {
         app::Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * label_line_height;
 
-        int min_x = scroll_offset.x;
-        int max_x = scroll_offset.x + size.width;
         app::Point text_coords = coords;
         text_coords.x += kLeftPadding;
         const auto highlight_callback = [](size_t) { return kTextColor; };
-        text_renderer.renderLineLayout(layout, text_coords, Layer::kOne, highlight_callback, min_x,
-                                       max_x);
+
+        int min_x = scroll_offset.x - kLeftPadding;
+        int max_x = scroll_offset.x + size.width - kLeftPadding;
+        text_renderer.renderLineLayout(layout, text_coords, highlight_callback, min_x, max_x);
 
         // Highlight on mouse hover.
         if (line == hovered_index) {

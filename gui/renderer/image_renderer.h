@@ -27,11 +27,8 @@ public:
     size_t addJpeg(std::string_view image_path);
     const Image& get(size_t image_id) const;
 
-    void insertInBatch(size_t image_index,
-                       const app::Point& coords,
-                       const Rgba& color,
-                       Layer layer);
-    void renderBatch(const app::Size& screen_size, Layer layer);
+    void insertInBatch(size_t image_index, const app::Point& coords, const Rgba& color);
+    void renderBatch(const app::Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -54,8 +51,7 @@ private:
         Rgba color;
     };
 
-    std::vector<InstanceData> layer_one_instances;
-    std::vector<InstanceData> layer_two_instances;
+    std::vector<InstanceData> instances;
 };
 
 static_assert(!std::is_copy_constructible_v<ImageRenderer>);

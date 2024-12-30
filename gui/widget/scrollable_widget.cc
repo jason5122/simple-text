@@ -39,8 +39,8 @@ void ScrollableWidget::scroll(const app::Point& mouse_pos, const app::Delta& del
         scroll_offset.x += delta.dx;
         scroll_offset.y += delta.dy;
     }
-    // scroll_offset.x = std::clamp(scroll_offset.x, 0, max_scroll_offset.x);
-    // scroll_offset.y = std::clamp(scroll_offset.y, 0, max_scroll_offset.y);
+    scroll_offset.x = std::clamp(scroll_offset.x, 0, max_scroll_offset.x);
+    scroll_offset.y = std::clamp(scroll_offset.y, 0, max_scroll_offset.y);
 }
 
 }  // namespace gui

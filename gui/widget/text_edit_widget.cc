@@ -433,13 +433,17 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         text_renderer.renderLineLayout(
             layout, coords, [](size_t) { return kTextColor; }, min_x, max_x, min_y, max_y);
 
+        // TODO: Change this.
+        int min_x = std::numeric_limits<int>::min();
+        int max_x = std::numeric_limits<int>::max();
+
         // Draw gutter.
         if (line == selection_line) {
             app::Point gutter_coords = position;
             gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
-                                  Layer::kOne);
+                                  Layer::kOne, 0, 0, min_x, max_x, min_y, max_y);
         }
 
         // Draw line numbers.
@@ -455,9 +459,6 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
-        // TODO: Change this.
-        int min_x = std::numeric_limits<int>::min();
-        int max_x = std::numeric_limits<int>::max();
         text_renderer.renderLineLayout(line_number_layout, line_number_coords,
                                        line_number_highlight_callback, min_x, max_x, min_y, max_y);
     }
@@ -537,8 +538,7 @@ void TextEditWidget::renderScrollBars(int main_line_height) {
 void TextEditWidget::renderCaret(int main_line_height) {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
-    int extra_padding = 0;
-    // int extra_padding = 8;
+    int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;
 
     auto [line, col] = tree.line_column_at(selection.end());
@@ -556,11 +556,8 @@ void TextEditWidget::renderCaret(int main_line_height) {
     int min_y = position.y;
     int max_y = position.y + 1000;
 
-    // rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kTwo, 0,
-    // 0,
-    //                       min_x, max_x, min_y, max_y);
-    rect_renderer.addRect(caret_pos, {100, 50}, kCaretColor, Layer::kTwo, 0, 0, min_x, max_x,
-                          min_y, max_y);
+    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kTwo, 0, 0,
+                          min_x, max_x, min_y, max_y);
 }
 
 }  // namespace gui

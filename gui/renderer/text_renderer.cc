@@ -134,18 +134,10 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         int top_edge = glyph.position.y + coords.y - metrics.descent;
         int bottom_edge = top_edge + std::max(height + top, line_height);
 
-        if (right_edge < min_x) {
-            continue;
-        }
-        if (left_edge >= max_x) {
-            return;
-        }
-        if (bottom_edge < min_y) {
-            continue;
-        }
-        if (top_edge >= max_y) {
-            return;
-        }
+        if (right_edge <= min_x) continue;
+        if (left_edge > max_x) return;
+        if (bottom_edge <= min_y) continue;
+        if (top_edge > max_y) return;
 
         float uv_left = rglyph.uv.x;
         float uv_bot = rglyph.uv.y;

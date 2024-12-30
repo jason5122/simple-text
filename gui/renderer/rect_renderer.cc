@@ -145,6 +145,11 @@ void RectRenderer::addRect(const app::Point& coords,
         height -= diff;
     }
 
+    // TODO: Remove this.
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+
     auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
     instances.emplace_back(InstanceData{
         .coords = {static_cast<float>(x), static_cast<float>(y)},

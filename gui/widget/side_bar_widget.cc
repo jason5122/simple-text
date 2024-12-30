@@ -125,7 +125,7 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          Layer::kOne, 5);
+                          Layer::kTwo, 5);
 }
 
 }  // namespace gui

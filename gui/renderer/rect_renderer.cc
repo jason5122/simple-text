@@ -5,6 +5,9 @@ using namespace opengl;
 
 #include <cmath>
 
+// TODO: Debug use; remove this.
+#include <fmt/base.h>
+
 namespace {
 
 const std::string kVertexShader =
@@ -103,12 +106,49 @@ void RectRenderer::addRect(const app::Point& coords,
                            const Rgba& color,
                            Layer layer,
                            int corner_radius,
-                           int tab_corner_radius) {
-    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
+                           int tab_corner_radius,
+                           int min_x,
+                           int max_x,
+                           int min_y,
+                           int max_y) {
+    int x = coords.x;
+    int y = coords.y;
+    int width = size.width;
+    int height = size.height;
 
+    int left_edge = x;
+    int right_edge = left_edge + width;
+    int top_edge = y;
+    int bottom_edge = y + height;
+
+    if (right_edge <= min_x) return;
+    if (left_edge > max_x) return;
+    if (bottom_edge <= min_y) return;
+    if (top_edge > max_y) return;
+
+    if (left_edge < min_x) {
+        int diff = min_x - left_edge;
+        width -= diff;
+        x += diff;
+    }
+    if (right_edge > max_x) {
+        int diff = right_edge - max_x;
+        width -= diff;
+    }
+    if (top_edge < min_y) {
+        int diff = min_y - top_edge;
+        height -= diff;
+        y += diff;
+    }
+    if (bottom_edge > max_y) {
+        int diff = bottom_edge - max_y;
+        height -= diff;
+    }
+
+    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
     instances.emplace_back(InstanceData{
-        .coords = Vec2{static_cast<float>(coords.x), static_cast<float>(coords.y)},
-        .rect_size = Vec2{static_cast<float>(size.width), static_cast<float>(size.height)},
+        .coords = {static_cast<float>(x), static_cast<float>(y)},
+        .rect_size = {static_cast<float>(width), static_cast<float>(height)},
         .color = color,
         .corner_radius = static_cast<float>(corner_radius),
         .tab_corner_radius = static_cast<float>(tab_corner_radius),

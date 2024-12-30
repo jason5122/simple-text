@@ -22,7 +22,11 @@ public:
                  const Rgba& color,
                  Layer layer,
                  int corner_radius = 0,
-                 int tab_corner_radius = 0);
+                 int tab_corner_radius = 0,
+                 int min_x = std::numeric_limits<int>::min(),
+                 int max_x = std::numeric_limits<int>::max(),
+                 int min_y = std::numeric_limits<int>::min(),
+                 int max_y = std::numeric_limits<int>::max());
     void flush(const app::Size& screen_size, Layer layer);
 
 private:

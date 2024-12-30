@@ -153,12 +153,6 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         float uv_height = rglyph.uv.w;
 
         // TODO: Clean this up.
-        if (right_edge > max_x) {
-            int diff = std::max(right_edge - max_x, 0);
-            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-            width -= diff;
-            uv_width -= uv_diff;
-        }
         if (left_edge < min_x) {
             int diff = std::max(min_x - left_edge, 0);
             float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
@@ -166,6 +160,12 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             uv_width -= uv_diff;
             left += diff;
             uv_left += uv_diff;
+        }
+        if (right_edge > max_x) {
+            int diff = std::max(right_edge - max_x, 0);
+            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+            width -= diff;
+            uv_width -= uv_diff;
         }
         if (top_edge < min_y) {
             int diff = std::max(min_y - top_edge, 0);

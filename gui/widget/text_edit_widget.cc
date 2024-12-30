@@ -551,7 +551,16 @@ void TextEditWidget::renderCaret(int main_line_height) {
     caret_pos.y -= extra_padding;
     caret_pos += textOffset();
 
-    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kTwo);
+    int min_x = gutterWidth() + kCaretWidth / 2 + position.x;
+    int max_x = gutterWidth() + kCaretWidth / 2 + position.x + 1000;
+    int min_y = position.y;
+    int max_y = position.y + 1000;
+
+    // rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kTwo, 0,
+    // 0,
+    //                       min_x, max_x, min_y, max_y);
+    rect_renderer.addRect(caret_pos, {100, 50}, kCaretColor, Layer::kTwo, 0, 0, min_x, max_x,
+                          min_y, max_y);
 }
 
 }  // namespace gui

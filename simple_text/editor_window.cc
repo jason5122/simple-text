@@ -370,6 +370,12 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         // TODO: Don't hard code this.
         text_view->find("needle");
         handled = true;
+    } else if (key == app::Key::kU && modifiers == app::kPrimaryModifier) {
+        // TODO: Remove this.
+        onScroll({500, 200}, {0, -1});
+    } else if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
+        // TODO: Remove this.
+        onScroll({500, 200}, {0, 1});
     }
 
     if (handled) {

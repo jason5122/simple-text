@@ -142,12 +142,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 
         // This is weird and different than the x-axis, but it seems to make sense.
         top_edge += coords.y;
+        top_edge -= metrics.descent;
         bottom_edge += coords.y;
-
-        // Why does this work?
-        // int temp = rglyph.height - rglyph.top;
-        // top_edge += temp;
-        // bottom_edge += temp;
 
         if (right_edge < min_x) {
             continue;
@@ -161,10 +157,6 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         if (top_edge >= max_y) {
             return;
         }
-
-        auto pos = coords;
-        pos.x += left_edge;
-        // pos.y -= metrics.descent;
 
         float uv_left = rglyph.uv.x;
         float uv_bot = rglyph.uv.y;
@@ -185,18 +177,18 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             left += diff;
             uv_left += uv_diff;
         }
-        // fmt::println("min_y = {}, line height = {}, top = {}, top_edge = {}, tmp = {}", min_y,
-        //              line_height, rglyph.top, top_edge, tmp);
+        // fmt::println("line height = {}, top_edge = {}, height = {}, top = {}", line_height,
+        //              top_edge, height, rglyph.top);
         if (top_edge < min_y) {
             int diff = std::max(min_y - top_edge, 0);
-            int diff2 = std::max(line_height - height, 0);
+            int diff2 = std::max(line_height - rglyph.top, 0);
             int ans = std::max(diff - diff2, 0);
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
             height -= ans;
             uv_height -= uv_diff;
             top += ans;
             uv_bot += uv_diff;
-            fmt::println("diff = {}, diff2 = {}, {}", diff, diff2, ans);
+            // fmt::println("diff = {}, diff2 = {}, {}", diff, diff2, ans);
         }
         // if (top_edge < min_y) {
         //     int diff = std::max(min_y - top_edge, 0);
@@ -212,6 +204,10 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         //     height -= diff;
         //     uv_height -= uv_diff;
         // }
+
+        auto pos = coords;
+        pos.x += left_edge;
+        pos.y -= metrics.descent;
 
         InstanceData instance = {
             .coords = {static_cast<float>(pos.x), static_cast<float>(pos.y)},

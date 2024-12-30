@@ -417,10 +417,10 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         auto right_p = textOffset() + scroll_offset + app::Point{.x = 1000 + kCaretWidth / 2};
         auto top_p = textOffset() + scroll_offset + app::Point{.x = kCaretWidth / 2};
         auto bottom_p = textOffset() + scroll_offset + app::Point{.x = kCaretWidth / 2, .y = 1000};
-        rect_renderer.addRect(left_p, {1, 5000}, {255}, Layer::kOne);
-        rect_renderer.addRect(right_p, {1, 5000}, {255}, Layer::kOne);
-        rect_renderer.addRect(top_p, {5000, 1}, {255}, Layer::kOne);
-        rect_renderer.addRect(bottom_p, {5000, 1}, {255}, Layer::kOne);
+        rect_renderer.addRect(left_p, {1, 1000}, {255}, Layer::kOne);
+        rect_renderer.addRect(right_p, {1, 1000}, {255}, Layer::kOne);
+        rect_renderer.addRect(top_p, {1000, 1}, {255}, Layer::kOne);
+        rect_renderer.addRect(bottom_p, {1000, 1}, {255}, Layer::kOne);
     }
 
     for (size_t line = start_line; line < end_line; ++line) {
@@ -443,21 +443,21 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
                                   Layer::kOne);
         }
 
-        // // Draw line numbers.
-        // app::Point line_number_coords = position;
-        // line_number_coords.y -= scroll_offset.y;
-        // line_number_coords.x += kGutterLeftPadding;
-        // line_number_coords.y += static_cast<int>(line) * main_line_height;
+        // Draw line numbers.
+        app::Point line_number_coords = position;
+        line_number_coords.y -= scroll_offset.y;
+        line_number_coords.x += kGutterLeftPadding;
+        line_number_coords.y += static_cast<int>(line) * main_line_height;
 
-        // std::string line_number_str = fmt::format("{}", line + 1);
-        // const auto& line_number_layout = line_layout_cache.get(font_id, line_number_str);
-        // line_number_coords.x += lineNumberWidth() - line_number_layout.width;
+        std::string line_number_str = fmt::format("{}", line + 1);
+        const auto& line_number_layout = line_layout_cache.get(font_id, line_number_str);
+        line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 
-        // const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
-        //     return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
-        // };
-        // text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
-        //                                line_number_highlight_callback);
+        const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
+            return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
+        };
+        text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
+                                       line_number_highlight_callback);
     }
 
     constexpr bool kDebugAtlas = false;

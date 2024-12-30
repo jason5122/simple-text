@@ -127,13 +127,10 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);
     // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
 
+    using namespace std::literals;
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
     text_view->insertText(kCppExample);
-    // using namespace std::literals;
-    // text_view->insertText(("🥲"sv * 100 + "\n") * 50);
-    // text_view->insertText("hello world!_^°");
-    // text_view->insertText("^");
 
     // TODO: Maybe use this case to optimize stuff. This could detect if we're doing line/col ->
     // offset conversions too much, for example.

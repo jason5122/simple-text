@@ -107,9 +107,6 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
                                     int max_x,
                                     int min_y,
                                     int max_y) {
-    // TODO: Remove this.
-    if (min_y == std::numeric_limits<int>::min()) return;
-
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
     int line_height = metrics.line_height;
@@ -135,15 +132,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         // TODO: Refactor this whole thing... it's messy.
         int left_edge = glyph.position.x;
         int right_edge = left_edge + left + width;
-        int top_edge = glyph.position.y;
-        // int bottom_edge = top_edge + top + height;
-        // int bottom_edge = top_edge + height;
-        int bottom_edge = top_edge + line_height;
-
-        // This is weird and different than the x-axis, but it seems to make sense.
-        top_edge += coords.y;
-        top_edge -= metrics.descent;
-        bottom_edge += coords.y;
+        int top_edge = glyph.position.y + coords.y - metrics.descent;
+        int bottom_edge = top_edge + std::max(height + top, line_height);
 
         if (right_edge < min_x) {
             continue;
@@ -177,8 +167,6 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             left += diff;
             uv_left += uv_diff;
         }
-        // fmt::println("line height = {}, top_edge = {}, height = {}, top = {}", line_height,
-        //              top_edge, height, rglyph.top);
         if (top_edge < min_y) {
             int diff = std::max(min_y - top_edge, 0);
             int diff2 = std::max(line_height - rglyph.top, 0);
@@ -188,26 +176,24 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             uv_height -= uv_diff;
             top += ans;
             uv_bot += uv_diff;
-            // fmt::println("diff = {}, diff2 = {}, {}", diff, diff2, ans);
         }
-        // if (top_edge < min_y) {
-        //     int diff = std::max(min_y - top_edge, 0);
-        //     float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-        //     height -= diff;
-        //     uv_height -= uv_diff;
-        //     top += diff;
-        //     uv_bot += uv_diff;
-        // }
-        // if (bottom_edge > max_y) {
-        //     int diff = std::max(bottom_edge - max_y, 0);
-        //     float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-        //     height -= diff;
-        //     uv_height -= uv_diff;
-        // }
+        if (bottom_edge > max_y) {
+            int diff = std::max(bottom_edge - max_y, 0);
+            int diff2 = std::max(line_height - (height + top), 0);
+            int ans = std::max(diff - diff2, 0);
+            float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
+            height -= ans;
+            uv_height -= uv_diff;
+        }
 
         auto pos = coords;
         pos.x += left_edge;
         pos.y -= metrics.descent;
+
+        // TODO: Remove this.
+        if (width <= 0 || height <= 0) {
+            continue;
+        }
 
         InstanceData instance = {
             .coords = {static_cast<float>(pos.x), static_cast<float>(pos.y)},

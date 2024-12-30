@@ -129,7 +129,11 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
 
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
-    text_view->insertText(kCppExample);
+    // text_view->insertText(kCppExample);
+    // using namespace std::literals;
+    // text_view->insertText(("🥲"sv * 100 + "\n") * 50);
+    text_view->insertText("hello world!_^°");
+    // text_view->insertText("^");
 
     // TODO: Maybe use this case to optimize stuff. This could detect if we're doing line/col ->
     // offset conversions too much, for example.

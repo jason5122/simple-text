@@ -23,8 +23,7 @@ void main() {
         alpha_mask = vec4(texel.a);
         color = vec4(texel.rgb, 1.0);
     } else {
-        alpha_mask = vec4(1.0);
-        // alpha_mask = vec4(texel.rgb, texel.r);
+        alpha_mask = vec4(texel.rgb, texel.r);
         color = vec4(text_color.rgb, 1.0);
     }
 }

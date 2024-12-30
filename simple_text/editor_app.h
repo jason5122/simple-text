@@ -21,7 +21,7 @@ private:
 
     // TODO: Properly load this from settings.
 #if BUILDFLAG(IS_MAC)
-    static constexpr int kMainFontSize = 16 * 2;
+    static constexpr int kMainFontSize = 26 * 2;
     static constexpr int kUIFontSizeSmall = 11 * 2;
     static constexpr int kUIFontSizeRegular = 12 * 2;
     const std::string kMainFontFace = "Source Code Pro";

@@ -410,13 +410,17 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
 
     // TODO: Remove this.
     int max_x = scroll_offset.x + 1000;
+    int min_y = position.y;
+    int max_y = position.y + 1000;
     {
         auto left_p = textOffset() + scroll_offset + app::Point{.x = 0 + kCaretWidth / 2};
         auto right_p = textOffset() + scroll_offset + app::Point{.x = 1000 + kCaretWidth / 2};
-        auto top_p = textOffset() + scroll_offset;
+        auto top_p = textOffset() + scroll_offset + app::Point{.x = kCaretWidth / 2};
+        auto bottom_p = textOffset() + scroll_offset + app::Point{.x = kCaretWidth / 2, .y = 1000};
         rect_renderer.addRect(left_p, {1, 5000}, {255}, Layer::kOne);
         rect_renderer.addRect(right_p, {1, 5000}, {255}, Layer::kOne);
         rect_renderer.addRect(top_p, {5000, 1}, {255}, Layer::kOne);
+        rect_renderer.addRect(bottom_p, {5000, 1}, {255}, Layer::kOne);
     }
 
     for (size_t line = start_line; line < end_line; ++line) {
@@ -427,7 +431,8 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         coords.x += kCaretWidth / 2;  // Match Sublime Text.
 
         text_renderer.renderLineLayout(
-            layout, coords, Layer::kOne, [](size_t) { return kTextColor; }, min_x, max_x);
+            layout, coords, Layer::kOne, [](size_t) { return kTextColor; }, min_x, max_x, min_y,
+            max_y);
 
         // Draw gutter.
         if (line == selection_line) {
@@ -438,21 +443,21 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
                                   Layer::kOne);
         }
 
-        // Draw line numbers.
-        app::Point line_number_coords = position;
-        line_number_coords.y -= scroll_offset.y;
-        line_number_coords.x += kGutterLeftPadding;
-        line_number_coords.y += static_cast<int>(line) * main_line_height;
+        // // Draw line numbers.
+        // app::Point line_number_coords = position;
+        // line_number_coords.y -= scroll_offset.y;
+        // line_number_coords.x += kGutterLeftPadding;
+        // line_number_coords.y += static_cast<int>(line) * main_line_height;
 
-        std::string line_number_str = fmt::format("{}", line + 1);
-        const auto& line_number_layout = line_layout_cache.get(font_id, line_number_str);
-        line_number_coords.x += lineNumberWidth() - line_number_layout.width;
+        // std::string line_number_str = fmt::format("{}", line + 1);
+        // const auto& line_number_layout = line_layout_cache.get(font_id, line_number_str);
+        // line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 
-        const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
-            return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
-        };
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
-                                       line_number_highlight_callback);
+        // const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
+        //     return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
+        // };
+        // text_renderer.renderLineLayout(line_number_layout, line_number_coords, Layer::kOne,
+        //                                line_number_highlight_callback);
     }
 
     constexpr bool kDebugAtlas = false;
@@ -530,7 +535,8 @@ void TextEditWidget::renderScrollBars(int main_line_height) {
 void TextEditWidget::renderCaret(int main_line_height) {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
-    int extra_padding = 8;
+    int extra_padding = 0;
+    // int extra_padding = 8;
     int caret_height = main_line_height + extra_padding * 2;
 
     auto [line, col] = tree.line_column_at(selection.end());

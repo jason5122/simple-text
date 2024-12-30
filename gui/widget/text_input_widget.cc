@@ -20,7 +20,7 @@ TextInputWidget::TextInputWidget(size_t font_id, int top_padding, int left_paddi
 
 void TextInputWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kBackgroundColor, Layer::kTwo, 4);
+    rect_renderer.addRect(position, size, kBackgroundColor, Layer::kOne, 4);
 
     auto pos = position;
     pos.y += top_padding;
@@ -29,12 +29,12 @@ void TextInputWidget::draw() {
 
     auto& text_renderer = Renderer::instance().getTextRenderer();
     text_renderer.renderLineLayout(
-        getLayout(), pos, Layer::kTwo, [](size_t) { return kTextColor; }, 0, size.width);
+        getLayout(), pos, Layer::kOne, [](size_t) { return kTextColor; }, 0, size.width);
 
     int caret_x = Movement::xAtColumn(getLayout(), caret);
     app::Point caret_pos = pos;
     caret_pos.x += caret_x;
-    rect_renderer.addRect(caret_pos, {kCaretWidth, line_height}, kCaretColor, Layer::kTwo);
+    rect_renderer.addRect(caret_pos, {kCaretWidth, line_height}, kCaretColor, Layer::kOne);
     // fmt::println("caret_x = {}", caret_x);
 }
 

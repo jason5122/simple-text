@@ -175,7 +175,7 @@ void ImageRenderer::renderBatch(const app::Size& screen_size, Layer layer) {
 
 // TODO: Handle errors.
 bool ImageRenderer::loadPng(std::string_view file_name, Image& image) {
-    PROFILE_BLOCK("ImageRenderer::loadPng()");
+    // PROFILE_BLOCK("ImageRenderer::loadPng()");
 
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
     std::unique_ptr<spng_ctx, void (*)(spng_ctx*)> ctx{spng_ctx_new(0), spng_ctx_free};

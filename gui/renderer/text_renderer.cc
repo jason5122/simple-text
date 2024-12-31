@@ -242,21 +242,14 @@ void TextRenderer::flush(const app::Size& screen_size) {
 void TextRenderer::renderAtlasPages(const app::Point& coords) {
     int atlas_x_offset = 0;
     for (size_t page = 0; page < glyph_cache.atlasPages().size(); ++page) {
-        app::Point atlas_coords{
-            .x = atlas_x_offset,
-            .y = 0,
-        };
-        atlas_coords += coords;
+        auto atlas_coords = coords;
+        atlas_coords.x += atlas_x_offset;
 
-        const Vec2 coords_vec = Vec2{
-            .x = static_cast<float>(atlas_coords.x),
-            .y = static_cast<float>(atlas_coords.y),
-        };
         InstanceData instance{
-            .coords = coords_vec,
-            .glyph = Vec4{0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-            .uv = Vec4{0, 0, 1.0, 1.0},
-            .color = Rgba{255, 255, 255, true},
+            .coords = {static_cast<float>(atlas_coords.x), static_cast<float>(atlas_coords.y)},
+            .glyph = {0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
+            .uv = {0, 0, 1.0, 1.0},
+            .color = {255, 255, 255, true},
         };
         insertIntoBatch(page, std::move(instance));
 

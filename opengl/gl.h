@@ -11,6 +11,7 @@ extern PFNGLCLEARCOLORPROC glClearColor;
 extern PFNGLDEPTHMASKPROC glDepthMask;
 extern PFNGLENABLEPROC glEnable;
 extern PFNGLGETERRORPROC glGetError;
+extern PFNGLGETINTEGERVPROC glGetIntegerv;
 extern PFNGLVIEWPORTPROC glViewport;
 extern PFNGLPIXELSTOREIPROC glPixelStorei;
 extern PFNGLTEXIMAGE2DPROC glTexImage2D;
@@ -71,4 +72,4 @@ extern PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;
 // 3.3
 extern PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor;
 
-}
+}  // namespace opengl

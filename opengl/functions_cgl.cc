@@ -1,4 +1,5 @@
 #include "functions_gl.h"
+
 #include <dlfcn.h>
 
 // TODO: Debug use; remove this.
@@ -34,4 +35,4 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
     return dlsym(pimpl->handle, function.c_str());
 }
 
-}
+}  // namespace opengl

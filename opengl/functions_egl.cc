@@ -1,5 +1,7 @@
 #include "functions_gl.h"
+
 #include "opengl/egl_types.h"
+
 #include <dlfcn.h>
 
 // TODO: Debug use; remove this.
@@ -45,4 +47,4 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
     return p;
 }
 
-}
+}  // namespace opengl

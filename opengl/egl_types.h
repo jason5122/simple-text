@@ -118,4 +118,4 @@ typedef EGLSurface (*PFNEGLCREATEPLATFORMPIXMAPSURFACEPROC)(EGLDisplay dpy,
                                                             const EGLAttrib* attrib_list);
 typedef EGLBoolean (*PFNEGLWAITSYNCPROC)(EGLDisplay dpy, EGLSync sync, EGLint flags);
 
-}  // namespace rx
+}  // namespace opengl

@@ -1,4 +1,5 @@
 #include "functions_gl.h"
+
 #include "opengl/gl.h"
 
 namespace opengl {
@@ -12,6 +13,7 @@ void FunctionsGL::loadGlobalFunctionPointers() {
     ASSIGN("glDepthMask", glDepthMask);
     ASSIGN("glEnable", glEnable);
     ASSIGN("glGetError", glGetError);
+    ASSIGN("glGetIntegerv", glGetIntegerv);
     ASSIGN("glViewport", glViewport);
     ASSIGN("glPixelStorei", glPixelStorei);
     ASSIGN("glTexImage2D", glTexImage2D);
@@ -73,4 +75,4 @@ void FunctionsGL::loadGlobalFunctionPointers() {
     ASSIGN("glVertexAttribDivisor", glVertexAttribDivisor);
 }
 
-}
+}  // namespace opengl

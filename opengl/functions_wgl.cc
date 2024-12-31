@@ -1,5 +1,7 @@
-#include "base/windows/win32_error.h"
 #include "functions_gl.h"
+
+#include "base/windows/win32_error.h"
+
 #include <windows.h>
 
 // TODO: Debug use; remove this.
@@ -40,4 +42,4 @@ void* FunctionsGL::loadProcAddress(const std::string& function) const {
     return p;
 }
 
-}
+}  // namespace opengl

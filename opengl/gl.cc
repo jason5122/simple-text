@@ -8,6 +8,7 @@ PFNGLCLEARCOLORPROC glClearColor = nullptr;
 PFNGLDEPTHMASKPROC glDepthMask = nullptr;
 PFNGLENABLEPROC glEnable = nullptr;
 PFNGLGETERRORPROC glGetError = nullptr;
+PFNGLGETINTEGERVPROC glGetIntegerv = nullptr;
 PFNGLVIEWPORTPROC glViewport = nullptr;
 PFNGLPIXELSTOREIPROC glPixelStorei = nullptr;
 PFNGLTEXIMAGE2DPROC glTexImage2D = nullptr;
@@ -68,4 +69,4 @@ PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced = nullptr;
 // 3.3
 PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor = nullptr;
 
-}
+}  // namespace opengl

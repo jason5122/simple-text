@@ -9,13 +9,23 @@ using namespace opengl;
 namespace gui {
 
 Atlas::Atlas() {
+    constexpr bool kPrintMaxTextureSize = false;
+    if constexpr (kPrintMaxTextureSize) {
+        GLint max_texture_size;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+        fmt::println("GL_MAX_TEXTURE_SIZE = {}", max_texture_size);
+    }
+
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
     const void* data = nullptr;
 
-    // TODO: Incorporate this into the build system.
+    // DEBUG: Color atlas background to spot incorrect shaders easier.
+    // This helped with debugging the fractional pixel scrolling bug.
+    //
+    // Creating this vector is very slow, so disable when not debugging (even during debug builds).
     constexpr bool kDebugAtlas = false;
     if constexpr (kDebugAtlas) {
         std::random_device dev;
@@ -26,11 +36,8 @@ Atlas::Atlas() {
         uint8_t g = dist(rng);
         uint8_t b = dist(rng);
 
-        // DEBUG: Color atlas background to spot incorrect shaders easier.
-        // This helped with debugging the fractional pixel scrolling bug.
-        // TODO: Creating this` vector is quite slow, so disable during release.
-        atlas_background = std::vector<uint8_t>(kAtlasSize * kAtlasSize * 4);
         size_t pixels = kAtlasSize * kAtlasSize;
+        atlas_background.resize(pixels * 4);
         for (size_t i = 0; i < pixels; ++i) {
             size_t offset = i * 4;
             atlas_background[offset] = r;
@@ -112,7 +119,7 @@ bool Atlas::insertTexture(
     float uv_width = static_cast<float>(width) / kAtlasSize;
     float uv_height = static_cast<float>(height) / kAtlasSize;
 
-    // Update Atlas state.
+    // Update atlas state.
     row_extent += width;
     row_tallest = std::max(height, row_tallest);
 

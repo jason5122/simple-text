@@ -301,6 +301,12 @@ void TextEditWidget::draw() {
     // Render caret first so scroll bar draws over it.
     renderCaret(main_line_height);
     renderScrollBars(main_line_height);
+
+    constexpr bool kDebugAtlas = true;
+    if constexpr (kDebugAtlas) {
+        auto& text_renderer = Renderer::instance().getTextRenderer();
+        text_renderer.renderAtlasPages(position);
+    }
 }
 
 void TextEditWidget::leftMouseDown(const app::Point& mouse_pos,
@@ -449,11 +455,6 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         };
         text_renderer.renderLineLayout(line_number_layout, line_number_coords,
                                        line_number_highlight_callback, min_x, max_x, min_y, max_y);
-    }
-
-    constexpr bool kDebugAtlas = false;
-    if constexpr (kDebugAtlas) {
-        text_renderer.renderAtlasPages(position);
     }
 }
 

@@ -30,11 +30,12 @@ void TabBarLabelWidget::draw() {
     auto& text_renderer = Renderer::instance().getTextRenderer();
     auto& image_renderer = Renderer::instance().getImageRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    const auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
 
     // Draw all left side icons.
     app::Point left_offset{.x = left_padding};
     for (size_t icon_id : left_side_icons) {
-        auto& image = image_renderer.get(icon_id);
+        auto& image = glyph_cache.getImage(icon_id);
 
         app::Point icon_position = centerVertically(image.size.height) + left_offset;
         image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor);
@@ -45,7 +46,7 @@ void TabBarLabelWidget::draw() {
     // Draw all right side icons.
     app::Point right_offset{.x = right_padding};
     for (size_t icon_id : right_side_icons) {
-        auto& image = image_renderer.get(icon_id);
+        auto& image = glyph_cache.getImage(icon_id);
 
         right_offset.x += image.size.width;
 

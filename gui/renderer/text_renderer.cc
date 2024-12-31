@@ -213,26 +213,24 @@ void TextRenderer::flush(const app::Size& screen_size) {
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
 
-    for (size_t page = 0; page < glyph_cache.pages().size(); ++page) {
+    for (size_t page = 0; page < glyph_cache.pageCount(); ++page) {
         // TODO: Refactor this ugly hack.
         while (batches.size() <= page) {
             batches.emplace_back();
             batches.back().reserve(kBatchMax);
         }
 
-        GLuint batch_tex = glyph_cache.pages().at(page).tex();
         std::vector<InstanceData>& batch = batches.at(page);
-
         if (batch.empty()) {
             return;
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * batch.size(), batch.data());
-
+        GLuint batch_tex = glyph_cache.pages().at(page).tex();
         glBindTexture(GL_TEXTURE_2D, batch_tex);
 
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * batch.size(), batch.data());
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, batch.size());
 
         batch.clear();

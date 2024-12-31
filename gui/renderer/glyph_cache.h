@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app/types.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/types.h"
@@ -10,6 +11,7 @@
 
 namespace gui {
 
+// TODO: Consider moving glyph/image loading code outside of this.
 class GlyphCache {
 public:
     GlyphCache();
@@ -23,10 +25,17 @@ public:
         bool colored;
         size_t page;
     };
-
     const Glyph& getGlyph(size_t font_id, uint32_t glyph_id);
 
-    const std::vector<Atlas>& pages() const;
+    struct Image {
+        app::Size size;
+        Vec4 uv;
+    };
+    size_t addPng(std::string_view image_path);
+    size_t addJpeg(std::string_view image_path);
+    const Image& getImage(size_t image_id) const;
+
+    constexpr const std::vector<Atlas>& pages() const;
     constexpr size_t pageCount() const;
 
 private:
@@ -35,9 +44,16 @@ private:
 
     // We use a node-based map since we need to keep references stable.
     std::vector<robin_hood::unordered_node_map<uint32_t, Glyph>> cache;
+    std::vector<Image> image_cache;
 
     Glyph insertIntoAtlas(const font::RasterizedGlyph& rglyph);
+    bool loadPng(std::string_view file_name, Image& image);
+    bool loadJpeg(std::string_view file_name, Image& image);
 };
+
+constexpr const std::vector<Atlas>& GlyphCache::pages() const {
+    return atlas_pages;
+}
 
 constexpr size_t GlyphCache::pageCount() const {
     return atlas_pages.size();

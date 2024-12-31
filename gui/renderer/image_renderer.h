@@ -1,7 +1,6 @@
 #pragma once
 
 #include "app/types.h"
-#include "gui/renderer/atlas.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "util/non_copyable.h"
@@ -18,15 +17,6 @@ public:
     ImageRenderer(ImageRenderer&& other);
     ImageRenderer& operator=(ImageRenderer&& other);
 
-    struct Image {
-        app::Size size;
-        Vec4 uv;
-    };
-
-    size_t addPng(std::string_view image_path);
-    size_t addJpeg(std::string_view image_path);
-    const Image& get(size_t image_id) const;
-
     void insertInBatch(size_t image_index, const app::Point& coords, const Rgba& color);
     void renderBatch(const app::Size& screen_size);
 
@@ -37,12 +27,6 @@ private:
     GLuint vao = 0;
     GLuint vbo_instance = 0;
     GLuint ebo = 0;
-
-    Atlas atlas;
-    std::vector<Image> cache;
-
-    bool loadPng(std::string_view file_name, Image& image);
-    bool loadJpeg(std::string_view file_name, Image& image);
 
     struct InstanceData {
         Vec2 coords;

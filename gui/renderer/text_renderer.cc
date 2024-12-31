@@ -1,5 +1,7 @@
 #include "text_renderer.h"
 
+#include "gui/renderer/renderer.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -111,6 +113,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
     int line_height = metrics.line_height;
 
+    auto& glyph_cache = Renderer::instance().getGlyphCache();
+
     // TODO: Consider using binary search to locate the starting point. This assumes glyph
     // positions are monotonically increasing.
 
@@ -138,18 +142,21 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
         if (bottom_edge <= min_y) continue;
         if (top_edge > max_y) return;
 
-        float uv_left = rglyph.uv.x;
-        float uv_bot = rglyph.uv.y;
+        float uv_x = rglyph.uv.x;
+        float uv_y = rglyph.uv.y;
         float uv_width = rglyph.uv.z;
         float uv_height = rglyph.uv.w;
+
+        int pos_x = coords.x + left_edge;
+        int pos_y = coords.y - metrics.descent;
 
         if (left_edge < min_x) {
             int diff = min_x - left_edge;
             float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
             width -= diff;
             uv_width -= uv_diff;
-            left += diff;
-            uv_left += uv_diff;
+            pos_x += diff;
+            uv_x += uv_diff;
         }
         if (right_edge > max_x) {
             int diff = right_edge - max_x;
@@ -165,8 +172,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
             height -= ans;
             uv_height -= uv_diff;
-            top += ans;
-            uv_bot += uv_diff;
+            pos_y += ans;
+            uv_y += uv_diff;
         }
         if (bottom_edge > max_y) {
             int diff = bottom_edge - max_y;
@@ -177,10 +184,6 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
             uv_height -= uv_diff;
         }
 
-        auto pos = coords;
-        pos.x += left_edge;
-        pos.y -= metrics.descent;
-
         // TODO: Remove this.
         if (width <= 0 || height <= 0) {
             continue;
@@ -188,10 +191,10 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 
         // TODO: Refactor these casts.
         InstanceData instance = {
-            .coords = {static_cast<float>(pos.x), static_cast<float>(pos.y)},
+            .coords = {static_cast<float>(pos_x), static_cast<float>(pos_y)},
             .glyph = {static_cast<float>(left), static_cast<float>(top), static_cast<float>(width),
                       static_cast<float>(height)},
-            .uv = {uv_left, uv_bot, uv_width, uv_height},
+            .uv = {uv_x, uv_y, uv_width, uv_height},
             .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
         };
         insertIntoBatch(rglyph.page, std::move(instance));
@@ -199,6 +202,8 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
 }
 
 void TextRenderer::flush(const app::Size& screen_size) {
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+
     glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
 
     GLuint shader_id = shader_program.id();
@@ -209,14 +214,14 @@ void TextRenderer::flush(const app::Size& screen_size) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    for (size_t page = 0; page < glyph_cache.atlasPages().size(); ++page) {
+    for (size_t page = 0; page < glyph_cache.pages().size(); ++page) {
         // TODO: Refactor this ugly hack.
         while (batches.size() <= page) {
             batches.emplace_back();
             batches.back().reserve(kBatchMax);
         }
 
-        GLuint batch_tex = glyph_cache.atlasPages().at(page).tex();
+        GLuint batch_tex = glyph_cache.pages().at(page).tex();
         std::vector<InstanceData>& batch = batches.at(page);
 
         if (batch.empty()) {
@@ -246,15 +251,15 @@ void TextRenderer::renderAtlasPage(
     int width = Atlas::kAtlasSize;
     int height = Atlas::kAtlasSize;
 
-    float uv_left = 0;
-    float uv_bot = 0;
+    float uv_x = 0;
+    float uv_y = 0;
     float uv_width = 1;
     float uv_height = 1;
 
     int left_edge = x;
     int right_edge = left_edge + width;
     int top_edge = y;
-    int bottom_edge = y + height;
+    int bottom_edge = top_edge + height;
 
     if (right_edge <= min_x) return;
     if (left_edge > max_x) return;
@@ -267,7 +272,7 @@ void TextRenderer::renderAtlasPage(
         width -= diff;
         uv_width -= uv_diff;
         x += diff;
-        uv_left += uv_diff;
+        uv_x += uv_diff;
     }
     if (right_edge > max_x) {
         int diff = right_edge - max_x;
@@ -281,7 +286,7 @@ void TextRenderer::renderAtlasPage(
         height -= diff;
         uv_height -= uv_diff;
         y += diff;
-        uv_bot += uv_diff;
+        uv_y += uv_diff;
     }
     if (bottom_edge > max_y) {
         int diff = bottom_edge - max_y;
@@ -298,7 +303,7 @@ void TextRenderer::renderAtlasPage(
     InstanceData instance{
         .coords = {static_cast<float>(x), static_cast<float>(y)},
         .glyph = {0, 0, static_cast<float>(width), static_cast<float>(height)},
-        .uv = {uv_left, uv_bot, uv_width, uv_height},
+        .uv = {uv_x, uv_y, uv_width, uv_height},
         .color = {255, 255, 255, true},
     };
     insertIntoBatch(page, std::move(instance));

@@ -114,8 +114,8 @@ bool Atlas::insertTexture(
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 
     // Generate UV coordinates.
-    float uv_left = static_cast<float>(row_extent) / kAtlasSize;
-    float uv_bot = static_cast<float>(row_baseline) / kAtlasSize;
+    float uv_x = static_cast<float>(row_extent) / kAtlasSize;
+    float uv_y = static_cast<float>(row_baseline) / kAtlasSize;
     float uv_width = static_cast<float>(width) / kAtlasSize;
     float uv_height = static_cast<float>(height) / kAtlasSize;
 
@@ -123,7 +123,7 @@ bool Atlas::insertTexture(
     row_extent += width;
     row_tallest = std::max(height, row_tallest);
 
-    out_uv = {uv_left, uv_bot, uv_width, uv_height};
+    out_uv = {uv_x, uv_y, uv_width, uv_height};
     return true;
 }
 

@@ -47,7 +47,7 @@ GlyphCache::Glyph GlyphCache::insertIntoAtlas(const font::RasterizedGlyph& rglyp
     };
 }
 
-const std::vector<Atlas>& GlyphCache::atlasPages() const {
+const std::vector<Atlas>& GlyphCache::pages() const {
     return atlas_pages;
 }
 

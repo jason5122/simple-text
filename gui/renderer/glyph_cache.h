@@ -26,7 +26,8 @@ public:
 
     const Glyph& getGlyph(size_t font_id, uint32_t glyph_id);
 
-    const std::vector<Atlas>& atlasPages() const;
+    const std::vector<Atlas>& pages() const;
+    constexpr size_t pageCount() const;
 
 private:
     std::vector<Atlas> atlas_pages;
@@ -37,5 +38,9 @@ private:
 
     Glyph insertIntoAtlas(const font::RasterizedGlyph& rglyph);
 };
+
+constexpr size_t GlyphCache::pageCount() const {
+    return atlas_pages.size();
+}
 
 }  // namespace gui

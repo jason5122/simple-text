@@ -29,8 +29,6 @@ public:
 private:
     static constexpr size_t kBatchMax = 0x10000;
 
-    GlyphCache glyph_cache;
-
     Shader shader_program;
     GLuint vao = 0;
     GLuint vbo_instance = 0;
@@ -49,7 +47,6 @@ private:
 
     // DEBUG: Draws all texture atlases.
     friend class AtlasWidget;
-    constexpr size_t atlasPageCount() const;
     void renderAtlasPage(size_t page,
                          const app::Point& coords,
                          int min_x = std::numeric_limits<int>::min(),
@@ -57,9 +54,5 @@ private:
                          int min_y = std::numeric_limits<int>::min(),
                          int max_y = std::numeric_limits<int>::max());
 };
-
-constexpr size_t TextRenderer::atlasPageCount() const {
-    return glyph_cache.atlasPages().size();
-}
 
 }  // namespace gui

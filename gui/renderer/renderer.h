@@ -12,7 +12,9 @@ class Renderer {
 public:
     static Renderer& instance();
 
+    GlyphCache& getGlyphCache();
     LineLayoutCache& getLineLayoutCache();
+
     TextRenderer& getTextRenderer();
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();
@@ -23,7 +25,9 @@ public:
 private:
     Renderer();
 
-    LineLayoutCache line_layout_cache;  // TODO: Consider making this a member in TextRenderer.
+    GlyphCache glyph_cache;
+    LineLayoutCache line_layout_cache;
+
     TextRenderer text_renderer;
     RectRenderer rect_renderer;
     SelectionRenderer selection_renderer;

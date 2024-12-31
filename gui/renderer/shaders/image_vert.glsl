@@ -26,8 +26,8 @@ void main() {
 
     vec2 final_position = coords + rect_size * position;
 
-    vec2 uv_offset = uv.xy;  // <uv_left, uv_bot>
-    vec2 uv_size = uv.zw;    // <uv_width, uv_height>
+    vec2 uv_offset = uv.xy;
+    vec2 uv_size = uv.zw;
 
     gl_Position = vec4(pixelToClipSpace(final_position), 0.0, 1.0);
     tex_coords = uv_offset + uv_size * position;

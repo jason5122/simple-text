@@ -7,7 +7,8 @@ namespace gui {
 
 AtlasWidget::AtlasWidget() : ScrollableWidget({.width = Atlas::kAtlasSize}) {
     auto& text_renderer = Renderer::instance().getTextRenderer();
-    size_t count = text_renderer.atlasPageCount();
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    size_t count = glyph_cache.pageCount();
     max_scroll_offset.y = count * Atlas::kAtlasSize;
 }
 
@@ -26,6 +27,7 @@ inline Rgba RandomColor() {
 void AtlasWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& text_renderer = Renderer::instance().getTextRenderer();
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
 
     rect_renderer.addRect(position, size, kSideBarColor, Layer::kOne);
 
@@ -34,7 +36,7 @@ void AtlasWidget::draw() {
         .height = Atlas::kAtlasSize,
     };
 
-    size_t count = text_renderer.atlasPageCount();
+    size_t count = glyph_cache.pageCount();
 
     // TODO: Refactor this ugly hack.
     while (page_colors.size() < count) {

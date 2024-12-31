@@ -26,10 +26,10 @@ void main() {
 
     vec2 cell_position = coords;
 
-    vec2 glyph_offset = glyph.xy;  // <left, top>
-    vec2 glyph_size = glyph.zw;    // <width, height>
-    vec2 uv_offset = uv.xy;        // <uv_left, uv_bot>
-    vec2 uv_size = uv.zw;          // <uv_width, uv_height>
+    vec2 glyph_offset = glyph.xy;
+    vec2 glyph_size = glyph.zw;
+    vec2 uv_offset = uv.xy;
+    vec2 uv_size = uv.zw;
 
     cell_position += glyph_offset + glyph_size * position;
 

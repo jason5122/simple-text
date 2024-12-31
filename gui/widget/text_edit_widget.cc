@@ -301,12 +301,6 @@ void TextEditWidget::draw() {
     // Render caret first so scroll bar draws over it.
     renderCaret(main_line_height);
     renderScrollBars(main_line_height);
-
-    constexpr bool kDebugAtlas = true;
-    if constexpr (kDebugAtlas) {
-        auto& text_renderer = Renderer::instance().getTextRenderer();
-        text_renderer.renderAtlasPages(position);
-    }
 }
 
 void TextEditWidget::leftMouseDown(const app::Point& mouse_pos,

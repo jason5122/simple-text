@@ -5,6 +5,7 @@
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/horizontal_resizing_widget.h"
 #include "gui/widget/container/vertical_resizing_widget.h"
+#include "gui/widget/debug/atlas_widget.h"
 #include "gui/widget/find_panel_widget.h"
 #include "simple_text/editor_app.h"
 
@@ -140,7 +141,12 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
     horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
     horizontal_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
-    horizontal_layout->addChildEnd(std::make_unique<SideBarWidget>(kSideBarWidth));
+    constexpr bool kShowAtlas = true;
+    if constexpr (kShowAtlas) {
+        auto atlas_widget = std::make_unique<AtlasWidget>();
+        atlas_widget->setResizable(false);
+        horizontal_layout->addChildEnd(std::move(atlas_widget));
+    }
 
     main_widget->setMainWidget(std::move(horizontal_layout));
     status_bar->setResizable(false);

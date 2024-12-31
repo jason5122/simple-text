@@ -26,8 +26,8 @@ Atlas::Atlas() {
     // This helped with debugging the fractional pixel scrolling bug.
     //
     // Creating this vector is very slow, so disable when not debugging (even during debug builds).
-    constexpr bool kDebugAtlas = false;
-    if constexpr (kDebugAtlas) {
+    constexpr bool kDebugTextureBleeding = false;
+    if constexpr (kDebugTextureBleeding) {
         std::random_device dev;
         std::mt19937 rng(dev());
         std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);

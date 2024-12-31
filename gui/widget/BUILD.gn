@@ -6,6 +6,7 @@ source_set("widget") {
     "container/layout_widget.cc",
     "container/vertical_layout_widget.cc",
     "container/vertical_resizing_widget.cc",
+    "debug/atlas_widget.cc",
     "editor_widget.cc",
     "find_panel_widget.cc",
     "image_button_widget.cc",

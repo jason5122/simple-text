@@ -1,5 +1,7 @@
-#include "gui/renderer/renderer.h"
 #include "side_bar_widget.h"
+
+#include "gui/renderer/renderer.h"
+
 #include <cmath>
 
 // TODO: Debug use; remove this.

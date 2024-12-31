@@ -1,10 +1,27 @@
 #include "atlas_widget.h"
 
+// TODO: Debug use; remove this.
+#include <random>
+
 namespace gui {
 
 AtlasWidget::AtlasWidget() : ScrollableWidget({.width = Atlas::kAtlasSize}) {
-    // max_scroll_offset.y = 2000;
+    auto& text_renderer = Renderer::instance().getTextRenderer();
+    size_t count = text_renderer.atlasPageCount();
+    max_scroll_offset.y = count * Atlas::kAtlasSize;
 }
+
+namespace {
+inline Rgba RandomColor() {
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);
+    uint8_t r = dist(rng);
+    uint8_t g = dist(rng);
+    uint8_t b = dist(rng);
+    return {r, g, b};
+}
+}  // namespace
 
 void AtlasWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
@@ -17,9 +34,26 @@ void AtlasWidget::draw() {
         .height = Atlas::kAtlasSize,
     };
 
+    size_t count = text_renderer.atlasPageCount();
+
+    // TODO: Refactor this ugly hack.
+    while (page_colors.size() < count) {
+        page_colors.emplace_back(RandomColor());
+    }
+
+    int min_x = position.x;
+    int max_x = position.x + size.width;
+    int min_y = position.y;
+    int max_y = position.y + size.height;
+
     auto coords = position - scroll_offset;
-    text_renderer.renderAtlasPages(coords);
-    rect_renderer.addRect(coords, atlas_size, {255, 127, 0}, Layer::kOne);
+    for (size_t page = 0; page < count; ++page) {
+        text_renderer.renderAtlasPage(page, coords, min_x, max_x, min_y, max_y);
+        rect_renderer.addRect(coords, atlas_size, page_colors[page], Layer::kOne, 0, 0, min_x,
+                              max_x, min_y, max_y);
+
+        coords.y += Atlas::kAtlasSize;
+    }
 }
 
 void AtlasWidget::updateMaxScroll() {}

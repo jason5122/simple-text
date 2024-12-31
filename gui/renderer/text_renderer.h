@@ -26,9 +26,6 @@ public:
 
     void flush(const app::Size& screen_size);
 
-    // DEBUG: Draws all texture atlases.
-    void renderAtlasPages(const app::Point& coords);
-
 private:
     static constexpr size_t kBatchMax = 0x10000;
 
@@ -49,6 +46,20 @@ private:
     std::vector<std::vector<InstanceData>> batches;
 
     void insertIntoBatch(size_t page, const InstanceData& instance);
+
+    // DEBUG: Draws all texture atlases.
+    friend class AtlasWidget;
+    constexpr size_t atlasPageCount() const;
+    void renderAtlasPage(size_t page,
+                         const app::Point& coords,
+                         int min_x = std::numeric_limits<int>::min(),
+                         int max_x = std::numeric_limits<int>::max(),
+                         int min_y = std::numeric_limits<int>::min(),
+                         int max_y = std::numeric_limits<int>::max());
 };
+
+constexpr size_t TextRenderer::atlasPageCount() const {
+    return glyph_cache.atlasPages().size();
+}
 
 }  // namespace gui

@@ -239,22 +239,69 @@ void TextRenderer::flush(const app::Size& screen_size) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextRenderer::renderAtlasPages(const app::Point& coords) {
-    int atlas_x_offset = 0;
-    for (size_t page = 0; page < glyph_cache.atlasPages().size(); ++page) {
-        auto atlas_coords = coords;
-        atlas_coords.x += atlas_x_offset;
+void TextRenderer::renderAtlasPage(
+    size_t page, const app::Point& coords, int min_x, int max_x, int min_y, int max_y) {
+    int x = coords.x;
+    int y = coords.y;
+    int width = Atlas::kAtlasSize;
+    int height = Atlas::kAtlasSize;
 
-        InstanceData instance{
-            .coords = {static_cast<float>(atlas_coords.x), static_cast<float>(atlas_coords.y)},
-            .glyph = {0, 0, Atlas::kAtlasSize, Atlas::kAtlasSize},
-            .uv = {0, 0, 1.0, 1.0},
-            .color = {255, 255, 255, true},
-        };
-        insertIntoBatch(page, std::move(instance));
+    float uv_left = 0;
+    float uv_bot = 0;
+    float uv_width = 1;
+    float uv_height = 1;
 
-        atlas_x_offset += Atlas::kAtlasSize + 100;
+    int left_edge = x;
+    int right_edge = left_edge + width;
+    int top_edge = y;
+    int bottom_edge = y + height;
+
+    if (right_edge <= min_x) return;
+    if (left_edge > max_x) return;
+    if (bottom_edge <= min_y) return;
+    if (top_edge > max_y) return;
+
+    if (left_edge < min_x) {
+        int diff = min_x - left_edge;
+        float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+        width -= diff;
+        uv_width -= uv_diff;
+        x += diff;
+        uv_left += uv_diff;
     }
+    if (right_edge > max_x) {
+        int diff = right_edge - max_x;
+        float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+        width -= diff;
+        uv_width -= uv_diff;
+    }
+    if (top_edge < min_y) {
+        int diff = min_y - top_edge;
+        float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+        height -= diff;
+        uv_height -= uv_diff;
+        y += diff;
+        uv_bot += uv_diff;
+    }
+    if (bottom_edge > max_y) {
+        int diff = bottom_edge - max_y;
+        float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+        height -= diff;
+        uv_height -= uv_diff;
+    }
+
+    // TODO: Remove this.
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+
+    InstanceData instance{
+        .coords = {static_cast<float>(x), static_cast<float>(y)},
+        .glyph = {0, 0, static_cast<float>(width), static_cast<float>(height)},
+        .uv = {uv_left, uv_bot, uv_width, uv_height},
+        .color = {255, 255, 255, true},
+    };
+    insertIntoBatch(page, std::move(instance));
 }
 
 void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance) {

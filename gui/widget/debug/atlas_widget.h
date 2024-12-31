@@ -3,6 +3,8 @@
 #include "gui/renderer/renderer.h"
 #include "gui/widget/scrollable_widget.h"
 
+#include <vector>
+
 namespace gui {
 
 class AtlasWidget : public ScrollableWidget {
@@ -19,6 +21,9 @@ public:
 private:
     // static constexpr Rgba kSideBarColor{235, 237, 239, 255};  // Light.
     static constexpr Rgba kSideBarColor{34, 38, 42, 255};  // Dark.
+
+    // TODO: Debug use; remove this.
+    std::vector<Rgba> page_colors;
 };
 
 }  // namespace gui

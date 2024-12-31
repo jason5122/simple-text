@@ -39,10 +39,6 @@ SelectionRenderer& Renderer::getSelectionRenderer() {
     return selection_renderer;
 }
 
-ImageRenderer& Renderer::getImageRenderer() {
-    return image_renderer;
-}
-
 void Renderer::flush(const app::Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -51,7 +47,6 @@ void Renderer::flush(const app::Size& size) {
     selection_renderer.flush(size);
     text_renderer.flush(size);
     rect_renderer.flush(size, Layer::kTwo);
-    image_renderer.renderBatch(size);
 }
 
 }  // namespace gui

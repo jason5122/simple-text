@@ -201,10 +201,37 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
     }
 }
 
+void TextRenderer::insertImage(size_t image_index, const app::Point& coords, const Rgba& color) {
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& image = glyph_cache.getImage(image_index);
+    InstanceData instance = {
+        .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
+        .glyph = {0, 0, static_cast<float>(image.size.width),
+                  static_cast<float>(image.size.height)},
+        .uv = image.uv,
+        .color = color,
+    };
+    instance.color.a = 2;  // TODO: Use an enum.
+    insertIntoBatch(image.page, std::move(instance));
+}
+
+void TextRenderer::insertColorImage(size_t image_index, const app::Point& coords) {
+    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& image = glyph_cache.getImage(image_index);
+    InstanceData instance = {
+        .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
+        .glyph = {0, 0, static_cast<float>(image.size.width),
+                  static_cast<float>(image.size.height)},
+        .uv = image.uv,
+    };
+    instance.color.a = 3;  // TODO: Use an enum.
+    insertIntoBatch(image.page, std::move(instance));
+}
+
 void TextRenderer::flush(const app::Size& screen_size) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
 
-    glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
+    glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);

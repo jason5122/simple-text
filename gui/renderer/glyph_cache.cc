@@ -117,6 +117,7 @@ bool GlyphCache::loadPng(std::string_view file_name, Image& image) {
     image = {
         .size = {static_cast<int>(width), static_cast<int>(height)},
         .uv = uv,
+        .page = current_page,
     };
     return true;
 }
@@ -160,6 +161,7 @@ bool GlyphCache::loadJpeg(std::string_view file_name, Image& image) {
     image = {
         .size = {static_cast<int>(width), static_cast<int>(height)},
         .uv = uv,
+        .page = current_page,
     };
     return true;
 }

@@ -51,6 +51,8 @@ private:
     size_t icon_wrap_image_id;
     size_t icon_in_selection_id;
     size_t icon_highlight_matches_id;
+    // TODO: Remove this.
+    size_t icon_pickaxe_id;
 
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 };

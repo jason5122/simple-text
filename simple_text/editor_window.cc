@@ -164,6 +164,10 @@ void EditorWindow::onDraw(const app::Size& size) {
     PROFILE_BLOCK("Total render time");
 
     // TODO: Debug use; remove this.
+    auto& text_renderer = Renderer::instance().getTextRenderer();
+    text_renderer.insertColorImage(parent.icon_pickaxe_id, {0, 500});
+
+    // TODO: Debug use; remove this.
     auto* text_view = editor_widget->currentWidget();
     if (text_view) {
         size_t length = text_view->getSelectionLength();

@@ -13,13 +13,6 @@ SideBarWidget::SideBarWidget(int width)
     : ScrollableWidget({.width = width}),
       label_font_id{rasterizer().addSystemFont(kLabelFontSize, font::FontStyle::kBold)} {
     updateMaxScroll();
-
-    // const auto& metrics = rasterizer().getMetrics(label_font_id);
-    // int label_line_height = metrics.line_height;
-
-    // folder_label.reset(new LabelWidget{{size.width, label_line_height}});
-    // folder_label->setText("FOLDERS", {128, 128, 128});
-    // folder_label->addLeftIcon(ImageRenderer::kFolderOpen2xIndex);
 }
 
 void SideBarWidget::draw() {
@@ -27,9 +20,8 @@ void SideBarWidget::draw() {
     rect_renderer.addRect(position, size, kSideBarColor, Layer::kOne);
 
     const auto& metrics = rasterizer().metrics(label_font_id);
-    // renderOldLabel(metrics.line_height);
 
-    renderNewLabel();
+    renderLabel();
 
     size_t visible_lines = std::ceil(static_cast<double>(size.height) / metrics.line_height);
     renderScrollBars(metrics.line_height, visible_lines);
@@ -62,12 +54,6 @@ bool SideBarWidget::mousePositionChanged(const std::optional<app::Point>& mouse_
     return hovered_index != old_index;
 }
 
-void SideBarWidget::layout() {
-    // Point label_pos = position - scroll_offset;
-    // label_pos.y += 400;
-    // folder_label->setPosition(label_pos);
-}
-
 void SideBarWidget::updateMaxScroll() {
     const auto& metrics = rasterizer().metrics(label_font_id);
 
@@ -75,14 +61,7 @@ void SideBarWidget::updateMaxScroll() {
     max_scroll_offset.y = line_count * metrics.line_height;
 }
 
-void SideBarWidget::renderOldLabel(int label_line_height) {
-    // folder_label->draw({});  // TODO: Make mouse position optional.
-    // RectRenderer& rect_renderer = Renderer::instance().getRectRenderer();
-    // rect_renderer.addRect(folder_label->getPosition(), {size.width, label_line_height},
-    //                       {255, 255, 0, 255}, RectRenderer::RectType::kBackground);
-}
-
-void SideBarWidget::renderNewLabel() {
+void SideBarWidget::renderLabel() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& text_renderer = Renderer::instance().getTextRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();

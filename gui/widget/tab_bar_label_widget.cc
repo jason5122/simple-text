@@ -28,7 +28,6 @@ void TabBarLabelWidget::addRightIcon(size_t icon_id) {
 
 void TabBarLabelWidget::draw() {
     auto& text_renderer = Renderer::instance().getTextRenderer();
-    auto& image_renderer = Renderer::instance().getImageRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     const auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
 
@@ -38,7 +37,7 @@ void TabBarLabelWidget::draw() {
         auto& image = glyph_cache.getImage(icon_id);
 
         app::Point icon_position = centerVertically(image.size.height) + left_offset;
-        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor);
+        text_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image.size.width;
     }
@@ -52,7 +51,7 @@ void TabBarLabelWidget::draw() {
 
         app::Point icon_position = centerVertically(image.size.height) - right_offset;
         icon_position += app::Point{size.width, 0};
-        image_renderer.insertInBatch(icon_id, icon_position, kFolderIconColor);
+        text_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
     }
 
     const auto& font_rasterizer = font::FontRasterizer::instance();

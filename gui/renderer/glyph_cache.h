@@ -30,6 +30,7 @@ public:
     struct Image {
         app::Size size;
         Vec4 uv;
+        size_t page;
     };
     size_t addPng(std::string_view image_path);
     size_t addJpeg(std::string_view image_path);

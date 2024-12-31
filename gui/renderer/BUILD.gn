@@ -2,7 +2,6 @@ source_set("renderer") {
   sources = [
     "atlas.cc",
     "glyph_cache.cc",
-    "image_renderer.cc",
     "line_layout_cache.cc",
     "rect_renderer.cc",
     "renderer.cc",

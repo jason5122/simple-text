@@ -12,7 +12,6 @@ public:
 
     void draw() override;
     bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override;
-    void layout() override;
 
     void updateMaxScroll() override;
 
@@ -24,7 +23,7 @@ private:
     // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
     static constexpr Rgb kTextColor{230, 230, 230};  // Dark.
     // static constexpr Rgba kSideBarColor{235, 237, 239, 255};  // Light.
-    static constexpr Rgba kSideBarColor{34, 38, 42, 255};       // Dark.
+    static constexpr Rgba kSideBarColor{34, 38, 42, 255};  // Dark.
     // static constexpr Rgba kScrollBarColor{190, 190, 190, 255};  // Light.
     static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};
@@ -34,13 +33,11 @@ private:
     static constexpr int kLabelFontSize = 22 * 2;
 
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
-    // std::unique_ptr<LabelWidget> folder_label;
     std::optional<size_t> hovered_index = std::nullopt;
 
     // Draw helpers.
     // TODO: Rename these methods.
-    void renderOldLabel(int label_line_height);
-    void renderNewLabel();
+    void renderLabel();
     void renderScrollBars(int line_height, size_t visible_lines);
 };
 

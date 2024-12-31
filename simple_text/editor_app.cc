@@ -35,6 +35,7 @@ void EditorApp::onLaunch() {
         fmt::format("{}/icons/icon_in_selection@2x.png", base::ResourceDir());
     std::string icon_highlight_matches_2x =
         fmt::format("{}/icons/icon_highlight_matches@2x.png", base::ResourceDir());
+    std::string icon_pickaxe = fmt::format("{}/icons/pickaxe.png", base::ResourceDir());
 
     auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
     panel_close_image_id = glyph_cache.addPng(panel_close_2x);
@@ -45,6 +46,7 @@ void EditorApp::onLaunch() {
     icon_wrap_image_id = glyph_cache.addPng(icon_wrap_2x);
     icon_in_selection_id = glyph_cache.addPng(icon_in_selection_2x);
     icon_highlight_matches_id = glyph_cache.addPng(icon_highlight_matches_2x);
+    icon_pickaxe_id = glyph_cache.addPng(icon_pickaxe);
 
     createWindow();
 }

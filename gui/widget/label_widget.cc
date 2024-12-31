@@ -22,7 +22,6 @@ void LabelWidget::setText(std::string_view str8) {
 
 void LabelWidget::draw() {
     auto& text_renderer = Renderer::instance().getTextRenderer();
-    auto& image_renderer = Renderer::instance().getImageRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
     const auto& font_rasterizer = font::FontRasterizer::instance();

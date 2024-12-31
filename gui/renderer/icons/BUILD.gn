@@ -9,6 +9,9 @@ icons = [
   "icon_wrap@2x.png",
   "icon_in_selection@2x.png",
   "icon_highlight_matches@2x.png",
+
+  # TODO: Remove this.
+  "pickaxe.png",
 ]
 
 if (is_mac) {

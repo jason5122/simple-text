@@ -20,7 +20,7 @@ void ImageButtonWidget::draw() {
     // TODO: Formalize this.
     if (getState() && bg_color.a > 0) {
         auto& rect_renderer = Renderer::instance().getRectRenderer();
-        rect_renderer.addRect(position, size, bg_color, Layer::kForeground, 4);
+        rect_renderer.addRect(position, size, bg_color, Layer::kBackground, 4);
     }
 
     auto pos = position;

@@ -398,6 +398,8 @@ constexpr Key KeyFromKeyCode(unsigned short vk) {
         {kVK_RightArrow, Key::kRightArrow},
         {kVK_DownArrow, Key::kDownArrow},
         {kVK_UpArrow, Key::kUpArrow},
+        {kVK_ANSI_Equal, Key::kEqual},
+        {kVK_ANSI_Minus, Key::kMinus},
     };
 
     for (size_t i = 0; i < std::size(gPair); ++i) {

@@ -544,7 +544,7 @@ void TextEditWidget::renderCaret(int main_line_height) {
     caret_pos.y -= extra_padding;
     caret_pos += textOffset();
 
-    int min_x = gutterWidth() + kCaretWidth / 2 + position.x;
+    int min_x = gutterWidth() + position.x;
     int max_x = position.x + size.width;
     int min_y = position.y;
     int max_y = position.y + size.height;

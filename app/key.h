@@ -48,6 +48,8 @@ enum class Key {
     kRightArrow,
     kDownArrow,
     kUpArrow,
+    kEqual,
+    kMinus,
 };
 
 // TODO: Fully implement this list.

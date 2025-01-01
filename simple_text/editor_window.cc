@@ -144,7 +144,6 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     constexpr bool kShowAtlas = true;
     if constexpr (kShowAtlas) {
         auto atlas_widget = std::make_unique<AtlasWidget>();
-        atlas_widget->setResizable(false);
         horizontal_layout->addChildEnd(std::move(atlas_widget));
     }
 

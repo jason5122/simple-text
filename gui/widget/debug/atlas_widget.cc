@@ -5,9 +5,10 @@
 
 namespace gui {
 
-AtlasWidget::AtlasWidget() : ScrollableWidget({.width = Atlas::kAtlasSize}) {
+AtlasWidget::AtlasWidget() : ScrollableWidget({.width = 400}) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     size_t count = glyph_cache.pageCount();
+    max_scroll_offset.x = Atlas::kAtlasSize;
     max_scroll_offset.y = count * Atlas::kAtlasSize;
 }
 

@@ -46,6 +46,12 @@ private:
 
     void insertIntoBatch(size_t page, const InstanceData& instance);
 
+    enum InstanceKind {
+        kPlainTexture = 0,
+        kColoredText = 1,
+        kColoredImage = 2,
+    };
+
     // DEBUG: Draws texture atlases.
     friend class AtlasWidget;
     void renderAtlasPage(size_t page,

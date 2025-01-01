@@ -12,10 +12,10 @@ class Atlas : util::NonCopyable {
 public:
     // 1024 is a conservative size.
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
-    static constexpr int kAtlasSize = 1024;
+    // static constexpr int kAtlasSize = 1024;
     // TODO: Setting this to a smaller size reduces initial memory usage. Figure out how to balance
     // that with performance (a larger texture size likely means less texture swaps).
-    // static constexpr int kAtlasSize = 4096;
+    static constexpr int kAtlasSize = 4096;
 
     Atlas();
     ~Atlas();

@@ -12,10 +12,10 @@ using namespace opengl;
 namespace {
 
 const std::string kVertexShader =
-#include "gui/renderer/shaders/text_vert.glsl"
+#include "gui/renderer/shaders/texture_vert.glsl"
     ;
 const std::string kFragmentShader =
-#include "gui/renderer/shaders/text_frag.glsl"
+#include "gui/renderer/shaders/texture_frag.glsl"
     ;
 
 }  // namespace
@@ -167,7 +167,11 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
         if (top_edge < min_y) {
             int diff = min_y - top_edge;
             int diff2 = line_height - rglyph.top;
-            assert(line_height >= rglyph.top);
+            if (line_height < rglyph.top) {
+                fmt::println("font_id = {}, glyph = {}", glyph.font_id, glyph.glyph_id);
+                fmt::println("line_height = {}, rglyph.top = {}", line_height, rglyph.top);
+                std::abort();
+            }
             int ans = std::max(diff - diff2, 0);
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
             height -= ans;
@@ -197,6 +201,7 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
             .uv = {uv_x, uv_y, uv_width, uv_height},
             .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
         };
+        instance.color.a = rglyph.colored ? kColoredText : kPlainTexture;
         insertIntoBatch(rglyph.page, std::move(instance));
     }
 }
@@ -213,7 +218,7 @@ void TextureRenderer::insertImage(size_t image_index,
         .uv = image.uv,
         .color = color,
     };
-    instance.color.a = 2;  // TODO: Use an enum.
+    instance.color.a = kPlainTexture;
     insertIntoBatch(image.page, std::move(instance));
 }
 
@@ -226,14 +231,14 @@ void TextureRenderer::insertColorImage(size_t image_index, const app::Point& coo
                   static_cast<float>(image.size.height)},
         .uv = image.uv,
     };
-    instance.color.a = 3;  // TODO: Use an enum.
+    instance.color.a = kColoredImage;
     insertIntoBatch(image.page, std::move(instance));
 }
 
 void TextureRenderer::flush(const app::Size& screen_size) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
 
-    glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_SRC_ALPHA, GL_ONE);
+    glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ZERO, GL_ONE);
 
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
@@ -253,10 +258,7 @@ void TextureRenderer::flush(const app::Size& screen_size) {
 
         std::vector<InstanceData>& batch = batches.at(page);
         if (batch.empty()) {
-            fmt::println("batch {} empty", page);
             continue;
-        } else {
-            fmt::println("batch {} size = {}", page, batch.size());
         }
 
         GLuint batch_tex = glyph_cache.pages().at(page).tex();

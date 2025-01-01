@@ -144,10 +144,6 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         bitmap_data.data(), rasterized_width, rasterized_height, 8, rasterized_width * 4,
         color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)};
 
-    CGFloat alpha = colored ? 0.0 : 1.0;
-    CGContextSetRGBFillColor(context.get(), 0.0, 0.0, 0.0, alpha);
-    CGContextFillRect(context.get(), CGRectMake(0.0, 0.0, rasterized_width, rasterized_height));
-
     CGContextSetAllowsFontSmoothing(context.get(), true);
     CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
     CGContextSetAllowsFontSubpixelQuantization(context.get(), true);

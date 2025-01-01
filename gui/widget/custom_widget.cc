@@ -2,7 +2,7 @@
 
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
-#include "gui/renderer/renderer_lite.h"
+#include "gui/renderer/renderer.h"
 
 #include <cmath>
 #include <fmt/base.h>
@@ -62,7 +62,7 @@ size_t CustomWidget::lineAtY(int y) const {
 }
 
 inline const font::LineLayout& CustomWidget::layoutAt(size_t line) {
-    auto& line_layout_cache = RendererLite::instance().getLineLayoutCache();
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache.get(font_id, line_str);
 }
@@ -78,7 +78,7 @@ inline constexpr int CustomWidget::gutterWidth() {
 }
 
 inline int CustomWidget::lineNumberWidth() {
-    auto& line_layout_cache = RendererLite::instance().getLineLayoutCache();
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     int digit_width = line_layout_cache.get(font_id, "0").width;
     int log = std::log10(tree.line_count());
     return digit_width * std::max(log + 1, 2);
@@ -93,9 +93,9 @@ void CustomWidget::renderText(int main_line_height, size_t start_line, size_t en
     start_line = std::clamp(start_line, 0_Z, tree.line_count());
     end_line = std::clamp(end_line, 0_Z, tree.line_count());
 
-    auto& texture_renderer = RendererLite::instance().getTextureRenderer();
-    // auto& rect_renderer = RendererLite::instance().getRectRenderer();
-    auto& line_layout_cache = RendererLite::instance().getLineLayoutCache();
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
+    // auto& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
     PROFILE_BLOCK("CustomWidget::renderText()");
 

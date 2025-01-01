@@ -8,9 +8,6 @@ source_set("renderer") {
     "selection_renderer.cc",
     "shader.cc",
     "texture_renderer.cc",
-
-    # TODO: Remove this.
-    "renderer_lite.cc",
   ]
 
   deps = [

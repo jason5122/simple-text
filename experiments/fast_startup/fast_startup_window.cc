@@ -1,7 +1,7 @@
 #include "fast_startup_window.h"
 
 #include "experiments/fast_startup/fast_startup_app.h"
-#include "gui/renderer/renderer_lite.h"
+#include "gui/renderer/renderer.h"
 
 #include <fmt/base.h>
 
@@ -18,7 +18,7 @@ void FastStartupWindow::onDraw(const app::Size& size) {
     main_widget->layout();
     main_widget->draw();
 
-    gui::RendererLite::instance().flush(size);
+    gui::Renderer::instance().flush(size);
 }
 
 void FastStartupWindow::onResize(const app::Size& size) {

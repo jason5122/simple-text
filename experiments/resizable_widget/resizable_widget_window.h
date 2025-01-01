@@ -2,7 +2,7 @@
 
 #include "app/window.h"
 
-#include "gui/renderer/renderer_lite.h"
+#include "gui/renderer/renderer.h"
 #include "gui/widget/container/layout_widget.h"
 
 class ResizableWidgetApp;

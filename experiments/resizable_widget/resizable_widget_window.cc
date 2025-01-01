@@ -2,7 +2,7 @@
 
 #include "experiments/resizable_widget/resizable_widget_app.h"
 #include "gui/widget/container/vertical_resizing_widget.h"
-#include "gui/widget/solid_color_widget.h"
+#include "gui/widget/debug/solid_color_widget.h"
 #include "util/profile_util.h"
 
 #include <fmt/base.h>
@@ -38,7 +38,7 @@ void ResizableWidgetWindow::onDraw(const app::Size& size) {
     main_widget->layout();
     main_widget->draw();
 
-    gui::RendererLite::instance().flush(size);
+    gui::Renderer::instance().flush(size);
 }
 
 void ResizableWidgetWindow::onResize(const app::Size& size) {

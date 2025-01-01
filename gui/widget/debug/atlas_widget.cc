@@ -6,7 +6,6 @@
 namespace gui {
 
 AtlasWidget::AtlasWidget() : ScrollableWidget({.width = Atlas::kAtlasSize}) {
-    auto& text_renderer = Renderer::instance().getTextRenderer();
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     size_t count = glyph_cache.pageCount();
     max_scroll_offset.y = count * Atlas::kAtlasSize;
@@ -26,10 +25,10 @@ inline Rgba RandomColor() {
 
 void AtlasWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
 
-    rect_renderer.addRect(position, size, kSideBarColor, Layer::kOne);
+    rect_renderer.addRect(position, size, kSideBarColor, Layer::kBackground);
 
     const app::Size atlas_size = {
         .width = Atlas::kAtlasSize,
@@ -50,9 +49,9 @@ void AtlasWidget::draw() {
 
     auto coords = position - scroll_offset;
     for (size_t page = 0; page < count; ++page) {
-        text_renderer.renderAtlasPage(page, coords, min_x, max_x, min_y, max_y);
-        rect_renderer.addRect(coords, atlas_size, page_colors[page], Layer::kOne, 0, 0, min_x,
-                              max_x, min_y, max_y);
+        texture_renderer.renderAtlasPage(page, coords, min_x, max_x, min_y, max_y);
+        rect_renderer.addRect(coords, atlas_size, page_colors[page], Layer::kBackground, 0, 0,
+                              min_x, max_x, min_y, max_y);
 
         coords.y += Atlas::kAtlasSize;
     }

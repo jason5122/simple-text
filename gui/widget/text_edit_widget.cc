@@ -397,7 +397,7 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
     start_line = std::clamp(start_line, 0_Z, tree.line_count());
     end_line = std::clamp(end_line, 0_Z, tree.line_count());
 
-    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
@@ -418,7 +418,7 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         coords.y += static_cast<int>(line) * main_line_height;
         coords.x += kCaretWidth / 2;  // Match Sublime Text.
 
-        text_renderer.renderLineLayout(
+        texture_renderer.insertLineLayout(
             layout, coords, [](size_t) { return kTextColor; }, min_x, max_x, min_y, max_y);
 
         // TODO: Change this.
@@ -431,7 +431,7 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
             gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
-                                  Layer::kOne, 0, 0, min_x, max_x, min_y, max_y);
+                                  Layer::kBackground, 0, 0, min_x, max_x, min_y, max_y);
         }
 
         // Draw line numbers.
@@ -447,8 +447,9 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords,
-                                       line_number_highlight_callback, min_x, max_x, min_y, max_y);
+        texture_renderer.insertLineLayout(line_number_layout, line_number_coords,
+                                          line_number_highlight_callback, min_x, max_x, min_y,
+                                          max_y);
     }
 }
 
@@ -503,7 +504,7 @@ void TextEditWidget::renderScrollBars(int main_line_height) {
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          Layer::kTwo, 5);
+                          Layer::kForeground, 5);
 
     // Add horizontal scroll bar.
     // int hbar_height = 15;
@@ -539,8 +540,8 @@ void TextEditWidget::renderCaret(int main_line_height) {
     int min_y = position.y;
     int max_y = position.y + size.height;
 
-    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kTwo, 0, 0,
-                          min_x, max_x, min_y, max_y);
+    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kForeground,
+                          0, 0, min_x, max_x, min_y, max_y);
 }
 
 }  // namespace gui

@@ -7,7 +7,7 @@ source_set("renderer") {
     "renderer.cc",
     "selection_renderer.cc",
     "shader.cc",
-    "text_renderer.cc",
+    "texture_renderer.cc",
 
     # TODO: Remove this.
     "renderer_lite.cc",

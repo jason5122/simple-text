@@ -25,10 +25,10 @@ TextButtonWidget::TextButtonWidget(size_t font_id,
 
 void TextButtonWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
 
-    rect_renderer.addRect(position, size, bg_color, Layer::kOne, 4);
-    text_renderer.renderLineLayout(
+    rect_renderer.addRect(position, size, bg_color, Layer::kBackground, 4);
+    texture_renderer.insertLineLayout(
         line_layout, textCenter(), [](size_t) { return kTextColor; }, 0, size.width);
 }
 

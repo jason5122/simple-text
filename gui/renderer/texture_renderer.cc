@@ -1,4 +1,4 @@
-#include "text_renderer.h"
+#include "texture_renderer.h"
 
 #include "gui/renderer/renderer.h"
 
@@ -27,7 +27,7 @@ const std::string kFragmentShader =
 
 namespace gui {
 
-TextRenderer::TextRenderer() : shader_program{kVertexShader, kFragmentShader} {
+TextureRenderer::TextureRenderer() : shader_program{kVertexShader, kFragmentShader} {
     constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
         1, 2, 3,  // Second triangle.
@@ -73,13 +73,13 @@ TextRenderer::TextRenderer() : shader_program{kVertexShader, kFragmentShader} {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-TextRenderer::~TextRenderer() {
+TextureRenderer::~TextureRenderer() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo_instance);
     glDeleteBuffers(1, &ebo);
 }
 
-TextRenderer::TextRenderer(TextRenderer&& other)
+TextureRenderer::TextureRenderer(TextureRenderer&& other)
     : shader_program{std::move(other.shader_program)},
       vao{other.vao},
       vbo_instance{other.vbo_instance},
@@ -89,7 +89,7 @@ TextRenderer::TextRenderer(TextRenderer&& other)
     other.ebo = 0;
 }
 
-TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
+TextureRenderer& TextureRenderer::operator=(TextureRenderer&& other) {
     if (&other != this) {
         shader_program = std::move(other.shader_program);
         vao = other.vao;
@@ -102,13 +102,13 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& other) {
     return *this;
 }
 
-void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
-                                    const app::Point& coords,
-                                    const std::function<Rgb(size_t)>& highlight_callback,
-                                    int min_x,
-                                    int max_x,
-                                    int min_y,
-                                    int max_y) {
+void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
+                                       const app::Point& coords,
+                                       const std::function<Rgb(size_t)>& highlight_callback,
+                                       int min_x,
+                                       int max_x,
+                                       int min_y,
+                                       int max_y) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
     int line_height = metrics.line_height;
@@ -201,7 +201,9 @@ void TextRenderer::renderLineLayout(const font::LineLayout& line_layout,
     }
 }
 
-void TextRenderer::insertImage(size_t image_index, const app::Point& coords, const Rgba& color) {
+void TextureRenderer::insertImage(size_t image_index,
+                                  const app::Point& coords,
+                                  const Rgba& color) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& image = glyph_cache.getImage(image_index);
     InstanceData instance = {
@@ -215,7 +217,7 @@ void TextRenderer::insertImage(size_t image_index, const app::Point& coords, con
     insertIntoBatch(image.page, std::move(instance));
 }
 
-void TextRenderer::insertColorImage(size_t image_index, const app::Point& coords) {
+void TextureRenderer::insertColorImage(size_t image_index, const app::Point& coords) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
     const auto& image = glyph_cache.getImage(image_index);
     InstanceData instance = {
@@ -228,7 +230,7 @@ void TextRenderer::insertColorImage(size_t image_index, const app::Point& coords
     insertIntoBatch(image.page, std::move(instance));
 }
 
-void TextRenderer::flush(const app::Size& screen_size) {
+void TextureRenderer::flush(const app::Size& screen_size) {
     const auto& glyph_cache = Renderer::instance().getGlyphCache();
 
     glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_SRC_ALPHA, GL_ONE);
@@ -269,7 +271,7 @@ void TextRenderer::flush(const app::Size& screen_size) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextRenderer::renderAtlasPage(
+void TextureRenderer::renderAtlasPage(
     size_t page, const app::Point& coords, int min_x, int max_x, int min_y, int max_y) {
     int x = coords.x;
     int y = coords.y;
@@ -334,7 +336,7 @@ void TextRenderer::renderAtlasPage(
     insertIntoBatch(page, std::move(instance));
 }
 
-void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance) {
+void TextureRenderer::insertIntoBatch(size_t page, const InstanceData& instance) {
     // TODO: Refactor this ugly hack.
     while (batches.size() <= page) {
         batches.emplace_back();
@@ -345,7 +347,7 @@ void TextRenderer::insertIntoBatch(size_t page, const InstanceData& instance) {
 
     batch.emplace_back(std::move(instance));
     if (batch.size() == kBatchMax) {
-        fmt::println("TextRenderer error: attempted to insert into a full batch!");
+        fmt::println("TextureRenderer error: attempted to insert into a full batch!");
     }
 }
 

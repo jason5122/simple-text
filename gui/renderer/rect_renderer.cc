@@ -150,7 +150,7 @@ void RectRenderer::addRect(const app::Point& coords,
         return;
     }
 
-    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
+    auto& instances = layer == Layer::kBackground ? layer_one_instances : layer_two_instances;
     instances.emplace_back(InstanceData{
         .coords = {static_cast<float>(x), static_cast<float>(y)},
         .rect_size = {static_cast<float>(width), static_cast<float>(height)},
@@ -168,7 +168,7 @@ void RectRenderer::flush(const app::Size& screen_size, Layer layer) {
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
 
-    auto& instances = layer == Layer::kOne ? layer_one_instances : layer_two_instances;
+    auto& instances = layer == Layer::kBackground ? layer_one_instances : layer_two_instances;
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * instances.size(), instances.data());

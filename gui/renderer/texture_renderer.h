@@ -9,14 +9,14 @@
 
 namespace gui {
 
-class TextRenderer {
+class TextureRenderer {
 public:
-    TextRenderer();
-    ~TextRenderer();
-    TextRenderer(TextRenderer&& other);
-    TextRenderer& operator=(TextRenderer&& other);
+    TextureRenderer();
+    ~TextureRenderer();
+    TextureRenderer(TextureRenderer&& other);
+    TextureRenderer& operator=(TextureRenderer&& other);
 
-    void renderLineLayout(const font::LineLayout& line_layout,
+    void insertLineLayout(const font::LineLayout& line_layout,
                           const app::Point& coords,
                           const std::function<Rgb(size_t)>& highlight_callback,
                           int min_x = std::numeric_limits<int>::min(),

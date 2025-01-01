@@ -17,7 +17,7 @@ SideBarWidget::SideBarWidget(int width)
 
 void SideBarWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kSideBarColor, Layer::kOne);
+    rect_renderer.addRect(position, size, kSideBarColor, Layer::kBackground);
 
     const auto& metrics = rasterizer().metrics(label_font_id);
 
@@ -63,7 +63,7 @@ void SideBarWidget::updateMaxScroll() {
 
 void SideBarWidget::renderLabel() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
     // TODO: Experimental; formalize this.
@@ -81,12 +81,12 @@ void SideBarWidget::renderLabel() {
 
         int min_x = scroll_offset.x - kLeftPadding;
         int max_x = scroll_offset.x + size.width - kLeftPadding;
-        text_renderer.renderLineLayout(layout, text_coords, highlight_callback, min_x, max_x);
+        texture_renderer.insertLineLayout(layout, text_coords, highlight_callback, min_x, max_x);
 
         // Highlight on mouse hover.
         if (line == hovered_index) {
             rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
-                                  Layer::kOne);
+                                  Layer::kBackground);
         }
     }
 }
@@ -106,7 +106,7 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
-                          Layer::kTwo, 5);
+                          Layer::kForeground, 5);
 }
 
 }  // namespace gui

@@ -15,7 +15,7 @@ StatusBarWidget::StatusBarWidget(int min_height, size_t font_id)
 
 void StatusBarWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kStatusBarColor, Layer::kOne);
+    rect_renderer.addRect(position, size, kStatusBarColor, Layer::kBackground);
 
     HorizontalLayoutWidget::draw();
 }

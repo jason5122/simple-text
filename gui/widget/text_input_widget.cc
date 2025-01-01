@@ -20,21 +20,21 @@ TextInputWidget::TextInputWidget(size_t font_id, int top_padding, int left_paddi
 
 void TextInputWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kBackgroundColor, Layer::kOne, 4);
+    rect_renderer.addRect(position, size, kBackgroundColor, Layer::kBackground, 4);
 
     auto pos = position;
     pos.y += top_padding;
     pos.x += left_padding;
     pos.x += kCaretWidth / 2;  // Match Sublime Text.
 
-    auto& text_renderer = Renderer::instance().getTextRenderer();
-    text_renderer.renderLineLayout(
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
+    texture_renderer.insertLineLayout(
         getLayout(), pos, [](size_t) { return kTextColor; }, 0, size.width);
 
     int caret_x = Movement::xAtColumn(getLayout(), caret);
     app::Point caret_pos = pos;
     caret_pos.x += caret_x;
-    rect_renderer.addRect(caret_pos, {kCaretWidth, line_height}, kCaretColor, Layer::kOne);
+    rect_renderer.addRect(caret_pos, {kCaretWidth, line_height}, kCaretColor, Layer::kBackground);
     // fmt::println("caret_x = {}", caret_x);
 }
 

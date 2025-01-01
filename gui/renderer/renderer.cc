@@ -27,8 +27,8 @@ LineLayoutCache& Renderer::getLineLayoutCache() {
     return line_layout_cache;
 }
 
-TextRenderer& Renderer::getTextRenderer() {
-    return text_renderer;
+TextureRenderer& Renderer::getTextureRenderer() {
+    return texture_renderer;
 }
 
 RectRenderer& Renderer::getRectRenderer() {
@@ -43,10 +43,10 @@ void Renderer::flush(const app::Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    rect_renderer.flush(size, Layer::kOne);
+    rect_renderer.flush(size, Layer::kBackground);
     selection_renderer.flush(size);
-    text_renderer.flush(size);
-    rect_renderer.flush(size, Layer::kTwo);
+    texture_renderer.flush(size);
+    rect_renderer.flush(size, Layer::kForeground);
 }
 
 }  // namespace gui

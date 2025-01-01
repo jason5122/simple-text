@@ -2,7 +2,7 @@
 
 #include "gui/renderer/line_layout_cache.h"
 #include "gui/renderer/rect_renderer.h"
-#include "gui/renderer/text_renderer.h"
+#include "gui/renderer/texture_renderer.h"
 
 namespace gui {
 
@@ -11,7 +11,7 @@ public:
     static RendererLite& instance();
 
     LineLayoutCache& getLineLayoutCache();
-    TextRenderer& getTextRenderer();
+    TextureRenderer& getTextureRenderer();
     RectRenderer& getRectRenderer();
 
     void flush(const app::Size& size);
@@ -19,8 +19,8 @@ public:
 private:
     RendererLite();
 
-    LineLayoutCache line_layout_cache;  // TODO: Consider making this a member in TextRenderer.
-    TextRenderer text_renderer;
+    LineLayoutCache line_layout_cache;
+    TextureRenderer texture_renderer;
     RectRenderer rect_renderer;
 };
 

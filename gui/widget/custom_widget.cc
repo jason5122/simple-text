@@ -93,7 +93,7 @@ void CustomWidget::renderText(int main_line_height, size_t start_line, size_t en
     start_line = std::clamp(start_line, 0_Z, tree.line_count());
     end_line = std::clamp(end_line, 0_Z, tree.line_count());
 
-    auto& text_renderer = RendererLite::instance().getTextRenderer();
+    auto& texture_renderer = RendererLite::instance().getTextureRenderer();
     // auto& rect_renderer = RendererLite::instance().getRectRenderer();
     auto& line_layout_cache = RendererLite::instance().getLineLayoutCache();
 
@@ -109,7 +109,7 @@ void CustomWidget::renderText(int main_line_height, size_t start_line, size_t en
         int min_x = scroll_offset.x;
         int max_x = scroll_offset.x + size.width;
 
-        text_renderer.renderLineLayout(
+        texture_renderer.insertLineLayout(
             layout, coords, [](size_t) { return kTextColor; }, min_x, max_x);
 
         // Draw line numbers.
@@ -123,8 +123,8 @@ void CustomWidget::renderText(int main_line_height, size_t start_line, size_t en
         line_number_coords.x += lineNumberWidth() - line_number_layout.width;
 
         const auto line_number_highlight_callback = [](size_t) { return kLineNumberColor; };
-        text_renderer.renderLineLayout(line_number_layout, line_number_coords,
-                                       line_number_highlight_callback);
+        texture_renderer.insertLineLayout(line_number_layout, line_number_coords,
+                                          line_number_highlight_callback);
     }
 }
 

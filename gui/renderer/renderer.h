@@ -3,7 +3,7 @@
 #include "gui/renderer/line_layout_cache.h"
 #include "gui/renderer/rect_renderer.h"
 #include "gui/renderer/selection_renderer.h"
-#include "gui/renderer/text_renderer.h"
+#include "gui/renderer/texture_renderer.h"
 
 namespace gui {
 
@@ -14,7 +14,7 @@ public:
     GlyphCache& getGlyphCache();
     LineLayoutCache& getLineLayoutCache();
 
-    TextRenderer& getTextRenderer();
+    TextureRenderer& getTextureRenderer();
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();
 
@@ -26,7 +26,7 @@ private:
     GlyphCache glyph_cache;
     LineLayoutCache line_layout_cache;
 
-    TextRenderer text_renderer;
+    TextureRenderer texture_renderer;
     RectRenderer rect_renderer;
     SelectionRenderer selection_renderer;
 };

@@ -27,7 +27,7 @@ void TabBarLabelWidget::addRightIcon(size_t icon_id) {
 }
 
 void TabBarLabelWidget::draw() {
-    auto& text_renderer = Renderer::instance().getTextRenderer();
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     const auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
 
@@ -37,7 +37,7 @@ void TabBarLabelWidget::draw() {
         auto& image = glyph_cache.getImage(icon_id);
 
         app::Point icon_position = centerVertically(image.size.height) + left_offset;
-        text_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
+        texture_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image.size.width;
     }
@@ -51,7 +51,7 @@ void TabBarLabelWidget::draw() {
 
         app::Point icon_position = centerVertically(image.size.height) - right_offset;
         icon_position += app::Point{size.width, 0};
-        text_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
+        texture_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
     }
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
@@ -62,7 +62,7 @@ void TabBarLabelWidget::draw() {
     int min_x = 0;
     int max_x = size.width - left_padding - right_padding;
     const auto highlight_callback = [this](size_t) { return color; };
-    text_renderer.renderLineLayout(layout, coords, highlight_callback, min_x, max_x);
+    texture_renderer.insertLineLayout(layout, coords, highlight_callback, min_x, max_x);
 }
 
 app::Point TabBarLabelWidget::centerVertically(int widget_height) {

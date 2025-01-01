@@ -40,6 +40,7 @@ void AtlasWidget::draw() {
     // TODO: Refactor this ugly hack.
     while (page_colors.size() < count) {
         page_colors.emplace_back(RandomColor());
+        max_scroll_offset.y = page_colors.size() * Atlas::kAtlasSize;
     }
 
     int min_x = position.x;

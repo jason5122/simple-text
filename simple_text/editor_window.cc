@@ -383,6 +383,37 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         handled = true;
     }
 
+    // TODO: Clean this up.
+    if (key == app::Key::kU && modifiers == app::kPrimaryModifier) {
+        // TODO: Clean this up. Consider keeping the same font ID or change method name from
+        // "resize" to "create copy".
+        auto& font_rasterizer = font::FontRasterizer::instance();
+        const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
+
+        int new_font_size = std::max(metrics.font_size - 1, 8 * 2);
+        fmt::println("font size = {}", new_font_size);
+        parent.main_font_id = font_rasterizer.resizeFont(parent.main_font_id, new_font_size);
+
+        auto* text_view = editor_widget->currentWidget();
+        text_view->updateFontId(parent.main_font_id);
+
+        handled = true;
+    } else if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
+        // TODO: Clean this up. Consider keeping the same font ID or change method name from
+        // "resize" to "create copy".
+        auto& font_rasterizer = font::FontRasterizer::instance();
+        const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
+
+        int new_font_size = std::min(metrics.font_size + 1, 128 * 2);
+        fmt::println("font size = {}", new_font_size);
+        parent.main_font_id = font_rasterizer.resizeFont(parent.main_font_id, new_font_size);
+
+        auto* text_view = editor_widget->currentWidget();
+        text_view->updateFontId(parent.main_font_id);
+
+        handled = true;
+    }
+
     if (handled) {
         redraw();
     }

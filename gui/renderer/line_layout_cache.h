@@ -12,6 +12,9 @@ class LineLayoutCache {
 public:
     const font::LineLayout& get(size_t font_id, std::string_view str8);
 
+    // TODO: Refactor this.
+    void clear();
+
 private:
     // We use a node-based map since we need to keep references stable.
     robin_hood::unordered_node_map<uint64_t, font::LineLayout> cache;

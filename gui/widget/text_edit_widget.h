@@ -36,6 +36,9 @@ public:
     std::pair<size_t, size_t> getLineColumn();
     size_t getSelectionLength();
 
+    // TODO: Refactor this.
+    void updateFontId(size_t font_id);
+
     void draw() override;
     void leftMouseDown(const app::Point& mouse_pos,
                        app::ModifierKey modifiers,

@@ -18,4 +18,8 @@ const font::LineLayout& LineLayoutCache::get(size_t font_id, std::string_view st
     }
 }
 
+void LineLayoutCache::clear() {
+    cache.clear();
+}
+
 }  // namespace gui

@@ -16,6 +16,7 @@ public:
 
     size_t addFont(std::string_view font_name8, int font_size, FontStyle style = FontStyle::kNone);
     size_t addSystemFont(int font_size, FontStyle style = FontStyle::kNone);
+    size_t resizeFont(size_t font_id, int font_size);
     const Metrics& metrics(size_t font_id) const;
 
     RasterizedGlyph rasterize(size_t font_id, uint32_t glyph_id) const;

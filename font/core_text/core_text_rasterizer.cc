@@ -96,6 +96,13 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     }
 }
 
+size_t FontRasterizer::resizeFont(size_t font_id, int font_size) {
+    const auto& font_ref = font_id_to_native[font_id].font;
+    CTFontRef copy = CTFontCreateCopyWithAttributes(font_ref.get(), font_size, nullptr, nullptr);
+    size_t new_id = cacheFont({copy}, font_size);
+    return new_id;
+}
+
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     CTFontRef font_ref = font_id_to_native[font_id].font.get();
 

@@ -253,7 +253,10 @@ void TextureRenderer::flush(const app::Size& screen_size) {
 
         std::vector<InstanceData>& batch = batches.at(page);
         if (batch.empty()) {
-            return;
+            fmt::println("batch {} empty", page);
+            continue;
+        } else {
+            fmt::println("batch {} size = {}", page, batch.size());
         }
 
         GLuint batch_tex = glyph_cache.pages().at(page).tex();

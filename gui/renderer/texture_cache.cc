@@ -1,4 +1,4 @@
-#include "glyph_cache.h"
+#include "texture_cache.h"
 
 #include <jerror.h>
 #include <jpeglib.h>
@@ -9,11 +9,11 @@
 
 namespace gui {
 
-GlyphCache::GlyphCache() {
+TextureCache::TextureCache() {
     atlas_pages.emplace_back();
 }
 
-const GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id) {
+const TextureCache::Glyph& TextureCache::getGlyph(size_t font_id, uint32_t glyph_id) {
     if (cache.size() <= font_id) {
         cache.resize(font_id + 1);
     }
@@ -27,7 +27,7 @@ const GlyphCache::Glyph& GlyphCache::getGlyph(size_t font_id, uint32_t glyph_id)
 }
 
 // TODO: De-duplicate this code in a clean way.
-size_t GlyphCache::addPng(std::string_view image_path) {
+size_t TextureCache::addPng(std::string_view image_path) {
     Image image;
     bool success = loadPng(image_path, image);
     // TODO: Handle image load failure in a more robust way.
@@ -41,7 +41,7 @@ size_t GlyphCache::addPng(std::string_view image_path) {
 }
 
 // TODO: De-duplicate this code in a clean way.
-size_t GlyphCache::addJpeg(std::string_view image_path) {
+size_t TextureCache::addJpeg(std::string_view image_path) {
     Image image;
     bool success = loadJpeg(image_path, image);
     // TODO: Handle image load failure in a more robust way.
@@ -54,12 +54,12 @@ size_t GlyphCache::addJpeg(std::string_view image_path) {
     return image_id;
 }
 
-const GlyphCache::Image& GlyphCache::getImage(size_t image_id) const {
+const TextureCache::Image& TextureCache::getImage(size_t image_id) const {
     return image_cache[image_id];
 }
 
 // TODO: Refactor recursion.
-GlyphCache::Glyph GlyphCache::insertIntoAtlas(const font::RasterizedGlyph& rglyph) {
+TextureCache::Glyph TextureCache::insertIntoAtlas(const font::RasterizedGlyph& rglyph) {
     Atlas& atlas = atlas_pages[current_page];
 
     // TODO: Handle the case when a texture is too large for the atlas.
@@ -87,7 +87,7 @@ GlyphCache::Glyph GlyphCache::insertIntoAtlas(const font::RasterizedGlyph& rglyp
 }
 
 // TODO: Handle errors.
-bool GlyphCache::loadPng(std::string_view file_name, Image& image) {
+bool TextureCache::loadPng(std::string_view file_name, Image& image) {
     std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
     std::unique_ptr<spng_ctx, void (*)(spng_ctx*)> ctx{spng_ctx_new(0), spng_ctx_free};
     spng_ihdr ihdr;
@@ -123,7 +123,7 @@ bool GlyphCache::loadPng(std::string_view file_name, Image& image) {
 }
 
 // TODO: Handle errors.
-bool GlyphCache::loadJpeg(std::string_view file_name, Image& image) {
+bool TextureCache::loadJpeg(std::string_view file_name, Image& image) {
     jpeg_decompress_struct info;
     jpeg_error_mgr err;
 

@@ -12,9 +12,9 @@
 namespace gui {
 
 // TODO: Consider moving glyph/image loading code outside of this.
-class GlyphCache {
+class TextureCache {
 public:
-    GlyphCache();
+    TextureCache();
 
     struct Glyph {
         int32_t left;
@@ -52,11 +52,11 @@ private:
     bool loadJpeg(std::string_view file_name, Image& image);
 };
 
-constexpr const std::vector<Atlas>& GlyphCache::pages() const {
+constexpr const std::vector<Atlas>& TextureCache::pages() const {
     return atlas_pages;
 }
 
-constexpr size_t GlyphCache::pageCount() const {
+constexpr size_t TextureCache::pageCount() const {
     return atlas_pages.size();
 }
 

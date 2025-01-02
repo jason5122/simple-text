@@ -5,7 +5,7 @@ R"(
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
-// The `colored` flag is packed along with text color.
+// The `kind` flag is packed along with text color.
 layout(location = 3) in vec4 in_text_color;
 
 out vec2 tex_coords;

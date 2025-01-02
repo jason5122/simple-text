@@ -11,7 +11,7 @@ class Renderer {
 public:
     static Renderer& instance();
 
-    GlyphCache& getGlyphCache();
+    TextureCache& getTextureCache();
     LineLayoutCache& getLineLayoutCache();
 
     TextureRenderer& getTextureRenderer();
@@ -23,7 +23,7 @@ public:
 private:
     Renderer();
 
-    GlyphCache glyph_cache;
+    TextureCache texture_cache;
     LineLayoutCache line_layout_cache;
 
     TextureRenderer texture_renderer;

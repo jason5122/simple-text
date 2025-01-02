@@ -37,16 +37,16 @@ void EditorApp::onLaunch() {
         fmt::format("{}/icons/icon_highlight_matches@2x.png", base::ResourceDir());
     std::string icon_pickaxe = fmt::format("{}/icons/pickaxe.png", base::ResourceDir());
 
-    auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
-    panel_close_image_id = glyph_cache.addPng(panel_close_2x);
-    folder_open_image_id = glyph_cache.addPng(folder_open_2x);
-    icon_regex_image_id = glyph_cache.addPng(icon_regex_2x);
-    icon_case_sensitive_image_id = glyph_cache.addPng(icon_case_sensitive_2x);
-    icon_whole_word_image_id = glyph_cache.addPng(icon_whole_word_2x);
-    icon_wrap_image_id = glyph_cache.addPng(icon_wrap_2x);
-    icon_in_selection_id = glyph_cache.addPng(icon_in_selection_2x);
-    icon_highlight_matches_id = glyph_cache.addPng(icon_highlight_matches_2x);
-    icon_pickaxe_id = glyph_cache.addPng(icon_pickaxe);
+    auto& texture_cache = gui::Renderer::instance().getTextureCache();
+    panel_close_image_id = texture_cache.addPng(panel_close_2x);
+    folder_open_image_id = texture_cache.addPng(folder_open_2x);
+    icon_regex_image_id = texture_cache.addPng(icon_regex_2x);
+    icon_case_sensitive_image_id = texture_cache.addPng(icon_case_sensitive_2x);
+    icon_whole_word_image_id = texture_cache.addPng(icon_whole_word_2x);
+    icon_wrap_image_id = texture_cache.addPng(icon_wrap_2x);
+    icon_in_selection_id = texture_cache.addPng(icon_in_selection_2x);
+    icon_highlight_matches_id = texture_cache.addPng(icon_highlight_matches_2x);
+    icon_pickaxe_id = texture_cache.addPng(icon_pickaxe);
 
     createWindow();
 }

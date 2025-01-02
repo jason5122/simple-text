@@ -113,7 +113,7 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
     int line_height = metrics.line_height;
 
-    auto& glyph_cache = Renderer::instance().getGlyphCache();
+    auto& texture_cache = Renderer::instance().getTextureCache();
 
     // TODO: Consider using binary search to locate the starting point. This assumes glyph
     // positions are monotonically increasing.
@@ -122,7 +122,7 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
     for (size_t i = 0; i < line_layout.glyphs.size(); ++i) {
         const auto& glyph = line_layout.glyphs[i];
 
-        auto& rglyph = glyph_cache.getGlyph(glyph.font_id, glyph.glyph_id);
+        auto& rglyph = texture_cache.getGlyph(glyph.font_id, glyph.glyph_id);
         int32_t left = rglyph.left;
         int32_t top = rglyph.top;
         int32_t width = rglyph.width;
@@ -209,8 +209,8 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
 void TextureRenderer::insertImage(size_t image_index,
                                   const app::Point& coords,
                                   const Rgba& color) {
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& image = glyph_cache.getImage(image_index);
+    const auto& texture_cache = Renderer::instance().getTextureCache();
+    const auto& image = texture_cache.getImage(image_index);
     InstanceData instance = {
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .glyph = {0, 0, static_cast<float>(image.size.width),
@@ -223,8 +223,8 @@ void TextureRenderer::insertImage(size_t image_index,
 }
 
 void TextureRenderer::insertColorImage(size_t image_index, const app::Point& coords) {
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
-    const auto& image = glyph_cache.getImage(image_index);
+    const auto& texture_cache = Renderer::instance().getTextureCache();
+    const auto& image = texture_cache.getImage(image_index);
     InstanceData instance = {
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .glyph = {0, 0, static_cast<float>(image.size.width),
@@ -236,7 +236,7 @@ void TextureRenderer::insertColorImage(size_t image_index, const app::Point& coo
 }
 
 void TextureRenderer::flush(const app::Size& screen_size) {
-    const auto& glyph_cache = Renderer::instance().getGlyphCache();
+    const auto& texture_cache = Renderer::instance().getTextureCache();
 
     glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ZERO, GL_ONE);
 
@@ -249,7 +249,7 @@ void TextureRenderer::flush(const app::Size& screen_size) {
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
 
-    for (size_t page = 0; page < glyph_cache.pageCount(); ++page) {
+    for (size_t page = 0; page < texture_cache.pageCount(); ++page) {
         // TODO: Refactor this ugly hack.
         while (batches.size() <= page) {
             batches.emplace_back();
@@ -261,7 +261,7 @@ void TextureRenderer::flush(const app::Size& screen_size) {
             continue;
         }
 
-        GLuint batch_tex = glyph_cache.pages().at(page).tex();
+        GLuint batch_tex = texture_cache.pages().at(page).tex();
         glBindTexture(GL_TEXTURE_2D, batch_tex);
 
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(InstanceData) * batch.size(), batch.data());

@@ -3,8 +3,10 @@ R"(
 #version 330 core
 
 in vec2 tex_coords;
+// The `kind` flag is packed along with text color.
 flat in vec4 text_color;
 
+// TODO: See if we are required to output a `vec4` here.
 layout(location = 0, index = 0) out vec3 color;
 layout(location = 0, index = 1) out vec3 alpha_mask;
 

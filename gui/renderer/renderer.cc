@@ -19,8 +19,8 @@ Renderer& Renderer::instance() {
     return renderer;
 }
 
-GlyphCache& Renderer::getGlyphCache() {
-    return glyph_cache;
+TextureCache& Renderer::getTextureCache() {
+    return texture_cache;
 }
 
 LineLayoutCache& Renderer::getLineLayoutCache() {

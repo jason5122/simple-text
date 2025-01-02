@@ -9,8 +9,8 @@ ImageButtonWidget::ImageButtonWidget(size_t image_id,
                                      const Rgba& bg_color,
                                      int padding)
     : image_id(image_id), text_color(text_color), bg_color(bg_color), padding(padding) {
-    const auto& glyph_cache = gui::Renderer::instance().getGlyphCache();
-    auto& image = glyph_cache.getImage(image_id);
+    const auto& texture_cache = gui::Renderer::instance().getTextureCache();
+    auto& image = texture_cache.getImage(image_id);
 
     size = image.size;
     size += {padding * 2, padding * 2};

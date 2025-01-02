@@ -200,6 +200,8 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& sels,
 }
 
 void SelectionRenderer::flush(const app::Size& screen_size) {
+    if (instances.empty()) return;
+
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
 
     GLuint shader_id = shader_program.id();

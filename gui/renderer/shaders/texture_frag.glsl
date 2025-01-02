@@ -3,8 +3,8 @@ R"(
 #version 330 core
 
 in vec2 tex_coords;
-// The `kind` flag is packed along with text color.
-flat in vec4 text_color;
+// The `kind` flag is packed along with texture color.
+flat in vec4 tex_color;
 
 // TODO: See if we are required to output a `vec4` here.
 layout(location = 0, index = 0) out vec3 color;
@@ -18,13 +18,13 @@ const int kColoredImage = 2;
 
 void main() {
     vec4 texel = texture(mask, tex_coords);
-    int kind = int(text_color.a);
+    int kind = int(tex_color.a);
 
     alpha_mask = vec3(texel.a);
 
-    // Plain texture. We treat alpha as a mask and color the texture using the input color.
+    // Plain texture. Color the texture using the input color.
     if (kind == kPlainTexture) {
-        color = text_color.rgb;
+        color = tex_color.rgb;
     }
     // Colored texture. The texture already has color.
     else {

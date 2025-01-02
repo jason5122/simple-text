@@ -305,6 +305,12 @@ void TextEditWidget::draw() {
     size_t start_line = scroll_offset.y / main_line_height;
     size_t end_line = start_line + visible_lines;
 
+    // Render two lines before start and after end. This ensures no sudden cutoff.
+    start_line = base::sub_sat(start_line, 2_Z);
+    end_line = base::add_sat(end_line, 2_Z);
+    start_line = std::clamp(start_line, 0_Z, tree.line_count());
+    end_line = std::clamp(end_line, 0_Z, tree.line_count());
+
     renderText(main_line_height, start_line, end_line);
     renderSelections(main_line_height, start_line, end_line);
     // Render caret first so scroll bar draws over it.
@@ -398,13 +404,6 @@ inline int TextEditWidget::lineNumberWidth() {
 }
 
 void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t end_line) {
-    // Render two lines before start and after end. This ensures no sudden cutoff of rendered text.
-    start_line = base::sub_sat(start_line, 2_Z);
-    end_line = base::add_sat(end_line, 2_Z);
-
-    start_line = std::clamp(start_line, 0_Z, tree.line_count());
-    end_line = std::clamp(end_line, 0_Z, tree.line_count());
-
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();

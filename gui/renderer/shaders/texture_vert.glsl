@@ -5,11 +5,11 @@ R"(
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec4 glyph;
 layout(location = 2) in vec4 uv;
-// The `kind` flag is packed along with text color.
-layout(location = 3) in vec4 in_text_color;
+// The `kind` flag is packed along with texture color.
+layout(location = 3) in vec4 in_tex_color;
 
 out vec2 tex_coords;
-flat out vec4 text_color;
+flat out vec4 tex_color;
 
 uniform vec2 resolution;
 
@@ -35,7 +35,7 @@ void main() {
 
     gl_Position = vec4(pixelToClipSpace(cell_position), 0.0, 1.0);
     tex_coords = uv_offset + uv_size * position;
-    text_color = vec4(in_text_color.rgb / 255.0, in_text_color.a);
+    tex_color = vec4(in_tex_color.rgb / 255.0, in_tex_color.a);
 }
 
 )"

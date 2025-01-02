@@ -1,10 +1,13 @@
 #include "selection_renderer.h"
 
-#include <cassert>
 #include <cstdint>
 
 #include "opengl/gl.h"
 using namespace opengl;
+
+// TODO: Debug use; remove this.
+#include <cassert>
+#include <fmt/base.h>
 
 namespace {
 
@@ -72,6 +75,11 @@ SelectionRenderer::SelectionRenderer() : shader_program{kVertexShader, kFragment
                            (void*)offsetof(InstanceData, border_info));
     glVertexAttribDivisor(index++, 1);
 
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, clip_rect));
+    glVertexAttribDivisor(index++, 1);
+
     // Unbind.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -107,42 +115,36 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
     return *this;
 }
 
-void SelectionRenderer::renderSelections(const std::vector<Selection>& selections,
+void SelectionRenderer::renderSelections(const std::vector<Selection>& sels,
                                          const app::Point& offset,
-                                         int line_height) {
+                                         int line_height,
+                                         int min_x,
+                                         int max_x,
+                                         int min_y,
+                                         int max_y) {
     auto create = [&](int start, int end, int line,
                       uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                       uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
                       uint32_t hide_background = 0) {
-        instances.emplace_back(InstanceData{
-            .coords =
-                {
-                    .x = static_cast<float>(start) + offset.x,
-                    .y = static_cast<float>(line_height * line) + offset.y,
-                },
-            .size =
-                {
-                    .x = static_cast<float>(end - start),
-                    .y = static_cast<float>(line_height + kBorderThickness),
-                },
-            // .color = Rgba::fromRgb({227, 230, 232}, 0),  // Light.
-            .color = Rgba::fromRgb({77, 88, 100}, 0),  // Dark.
-            // .border_color = Rgba::fromRgb({212, 217, 221}, 0),  // Light.
-            .border_color = Rgba::fromRgb({100, 115, 130}, 0),  // Dark.
-            // .border_color = Rgba::fromRgb(base::colors::red, 0),
-            // .color = Rgba::fromRgb(base::colors::yellow, 0),
-            // .border_color = Rgba::fromRgb(base::Rgb{0, 0, 0}, 0),
-            .border_info =
-                IVec4{
-                    .x = border_flags,
-                    .y = bottom_border_offset,
-                    .z = top_border_offset,
-                    .w = hide_background,
-                },
-        });
+        int x = offset.x + start;
+        int y = offset.y + line_height * line;
+        int width = end - start;
+        int height = line_height + kBorderThickness;
+
+        InstanceData instance = {
+            .coords = {static_cast<float>(x), static_cast<float>(y)},
+            .size = {static_cast<float>(width), static_cast<float>(height)},
+            .color = kSelectionColor,
+            .border_color = kSelectionBorderColor,
+            .border_info = {border_flags, bottom_border_offset, top_border_offset,
+                            hide_background},
+            .clip_rect = {static_cast<float>(min_x), static_cast<float>(min_y),
+                          static_cast<float>(max_x), static_cast<float>(max_y)},
+        };
+        instances.emplace_back(std::move(instance));
     };
 
-    size_t selections_size = selections.size();
+    size_t selections_size = sels.size();
     for (size_t i = 0; i < selections_size; ++i) {
         uint32_t flags = kLeft | kRight;
         uint32_t bottom_border_offset = 0;
@@ -151,12 +153,12 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& selection
         if (i == 0) {
             flags |= kTop | kTopLeftInwards | kTopRightInwards;
 
-            if (selections_size > 1 && selections[i].start > 0) {
-                int end = selections[i].start;
-                if (selections[i + 1].end >= selections[i].start) {
+            if (selections_size > 1 && sels[i].start > 0) {
+                int end = sels[i].start;
+                if (sels[i + 1].end >= sels[i].start) {
                     end -= kCornerRadius + 2;
                 }
-                create(2, end, selections[i].line, kBottom, 0, 0, 1);
+                create(2, end, sels[i].line, kBottom, 0, 0, 1);
             }
         }
         if (i == selections_size - 1) {
@@ -164,36 +166,36 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& selection
         }
 
         if (i > 0) {
-            if (selections[i - 1].start > 0) {
+            if (sels[i - 1].start > 0) {
                 flags |= kTopLeftInwards;
             }
 
-            if (selections[i].end > selections[i - 1].end) {
+            if (sels[i].end > sels[i - 1].end) {
                 flags |= kTopRightInwards;
 
                 flags |= kTop;
-                top_border_offset = selections[i - 1].end;
-            } else if (selections[i].end < selections[i - 1].end) {
+                top_border_offset = sels[i - 1].end;
+            } else if (sels[i].end < sels[i - 1].end) {
                 flags |= kTopRightOutwards;
             }
         }
         if (i + 1 < selections_size) {
-            if (selections[i].start > selections[i + 1].start) {
+            if (sels[i].start > sels[i + 1].start) {
                 flags |= kBottomLeftOutwards;
             }
 
-            if (selections[i].end > selections[i + 1].end) {
+            if (sels[i].end > sels[i + 1].end) {
                 flags |= kBottomRightInwards;
 
                 flags |= kBottom;
-                bottom_border_offset = selections[i + 1].end - selections[i].start;
-            } else if (selections[i].end < selections[i + 1].end) {
+                bottom_border_offset = sels[i + 1].end - sels[i].start;
+            } else if (sels[i].end < sels[i + 1].end) {
                 flags |= kBottomRightOutwards;
             }
         }
 
-        create(selections[i].start, selections[i].end, selections[i].line, flags,
-               bottom_border_offset, top_border_offset);
+        create(sels[i].start, sels[i].end, sels[i].line, flags, bottom_border_offset,
+               top_border_offset);
     }
 }
 

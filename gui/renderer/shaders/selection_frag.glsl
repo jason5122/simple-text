@@ -10,10 +10,12 @@ flat in int border_flags;
 flat in int bottom_border_offset;
 flat in int top_border_offset;
 flat in int hide_background;
+flat in vec4 clip_rect;
 
 uniform int rendering_pass;
 uniform int r;
 uniform int thickness;
+uniform vec2 resolution;
 
 out vec4 out_color;
 
@@ -33,6 +35,16 @@ const int kTopRightOutwards = 1 << 11;
 
 void main() {
     vec2 coord = gl_FragCoord.xy;
+
+    // This isn't perfect, but it's good enough for now.
+    float min_x = clip_rect.x;
+    float max_x = clip_rect.z;
+    // `clip_rect` is <min_x, min_y, max_x, max_y>. However, since OpenGL is inverted, we swap
+    // `min_y` and `max_y`, then subtract them from the resolution.
+    float min_y = resolution.y - clip_rect.w;
+    float max_y = resolution.y - clip_rect.y;
+    if (!(min_x <= coord.x && coord.x <= max_x)) discard;
+    if (!(min_y <= coord.y && coord.y <= max_y)) discard;
     
     bool has_l = (border_flags & kLeft) == kLeft;
     bool has_r = (border_flags & kRight) == kRight;

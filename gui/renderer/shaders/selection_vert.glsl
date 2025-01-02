@@ -8,6 +8,7 @@ layout(location = 2) in vec4 in_color;
 // The `border_flags` flag is packed along with background border color.
 layout(location = 3) in vec4 in_border_color;
 layout(location = 4) in ivec4 border_info;
+layout(location = 5) in vec4 in_clip_rect;
 
 flat out vec2 center;
 flat out vec2 size;
@@ -17,6 +18,7 @@ flat out int border_flags;
 flat out int bottom_border_offset;
 flat out int top_border_offset;
 flat out int hide_background;
+flat out vec4 clip_rect;
 
 uniform vec2 resolution;
 uniform int r;
@@ -53,6 +55,7 @@ void main() {
     bottom_border_offset = border_info.y;
     top_border_offset = border_info.z;
     hide_background = border_info.w;
+    clip_rect = in_clip_rect;
 }
 
 )"

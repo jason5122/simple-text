@@ -21,15 +21,24 @@ public:
         int start;
         int end;
     };
-    void renderSelections(const std::vector<Selection>& selections,
+    void renderSelections(const std::vector<Selection>& sels,
                           const app::Point& offset,
-                          int line_height);
+                          int line_height,
+                          int min_x = std::numeric_limits<int>::min(),
+                          int max_x = std::numeric_limits<int>::max(),
+                          int min_y = std::numeric_limits<int>::min(),
+                          int max_y = std::numeric_limits<int>::max());
     void flush(const app::Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
     static constexpr int kCornerRadius = 6;
     static constexpr int kBorderThickness = 2;
+
+    // static constexpr Rgba kSelectionColor = {227, 230, 232, 0};        // Light.
+    static constexpr Rgba kSelectionColor = {77, 88, 100, 0};  // Dark.
+    // static constexpr Rgba kSelectionBorderColor = {212, 217, 221, 0};  // Light.
+    static constexpr Rgba kSelectionBorderColor = {100, 115, 130, 0};  // Dark.
 
     Shader shader_program;
     GLuint vao = 0;
@@ -43,6 +52,8 @@ private:
         Rgba border_color;
         // <border_flags, bottom_border_offset, top_border_offset, hide_background>
         IVec4 border_info;
+        // <min_x, min_y, max_x, max_y>
+        Vec4 clip_rect;
     };
 
     std::vector<InstanceData> instances;

@@ -398,10 +398,9 @@ inline int TextEditWidget::lineNumberWidth() {
 }
 
 void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t end_line) {
-    // Render two lines before start and one line after end. This ensures no sudden cutoff of
-    // rendered text.
+    // Render two lines before start and after end. This ensures no sudden cutoff of rendered text.
     start_line = base::sub_sat(start_line, 2_Z);
-    end_line = base::add_sat(end_line, 1_Z);
+    end_line = base::add_sat(end_line, 2_Z);
 
     start_line = std::clamp(start_line, 0_Z, tree.line_count());
     end_line = std::clamp(end_line, 0_Z, tree.line_count());
@@ -419,6 +418,12 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
     int max_x = scroll_offset.x + (size.width - gutterWidth() - kCaretWidth / 2);
     int min_y = position.y;
     int max_y = position.y + size.height;
+
+    // {
+    //     // TODO: Implement shadows.
+    //     app::Point coords = textOffset() + scroll_offset;
+    //     rect_renderer.addRect(coords, {2, size.height}, {255}, Layer::kBackground, 0, 0);
+    // }
 
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
@@ -495,7 +500,13 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
             });
         }
     }
-    selection_renderer.renderSelections(selections, textOffset(), main_line_height);
+
+    int min_x = gutterWidth() + position.x;
+    int max_x = position.x + size.width;
+    int min_y = position.y;
+    int max_y = position.y + size.height;
+    selection_renderer.renderSelections(selections, textOffset(), main_line_height, min_x, max_x,
+                                        min_y, max_y);
 }
 
 void TextEditWidget::renderScrollBars(int main_line_height) {

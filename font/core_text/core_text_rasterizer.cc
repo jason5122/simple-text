@@ -5,6 +5,7 @@
 #include "base/apple/string_conversions.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "font/utf16_to_utf8_indices_map.h"
+
 #include <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.
@@ -230,8 +231,8 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
             ShapedGlyph glyph{
                 .font_id = run_font_id,
                 .glyph_id = glyph_ids[i],
-                .position = position,
-                .advance = advance,
+                .position = std::move(position),
+                .advance = std::move(advance),
                 .index = utf8_index,
             };
             glyphs.emplace_back(std::move(glyph));

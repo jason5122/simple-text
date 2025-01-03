@@ -2,10 +2,12 @@
 
 #include "font/pango/pango_helper.h"
 
+#include <string>
+
 // TODO: Debug use; remove this.
-#include <fmt/base.h>
 #include <algorithm>
 #include <cassert>
+#include <fmt/base.h>
 
 namespace font {
 
@@ -50,6 +52,23 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     return addFont("system-ui", font_size, style);
 }
 
+size_t FontRasterizer::resizeFont(size_t font_id, int font_size) {
+    PangoFont* font = font_id_to_native[font_id].font.get();
+    PangoFontDescription* desc = pango_font_describe(font);
+
+    PangoFontMap* font_map = pango_cairo_font_map_get_default();
+    GObjectPtr<PangoContext> context{pango_font_map_create_context(font_map)};
+
+    PangoFontDescription* desc_copy = pango_font_description_copy(desc);
+    pango_font_description_set_size(desc_copy, font_size * PANGO_SCALE);
+    GObjectPtr<PangoFont> pango_font{pango_font_map_load_font(font_map, context.get(), desc_copy)};
+    if (!pango_font) {
+        fmt::println("pango_font_map_load_font() error.");
+        std::abort();
+    }
+    return cacheFont({std::move(pango_font)}, font_size);
+}
+
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
     PangoFont* font = font_id_to_native[font_id].font.get();
 
@@ -58,6 +77,13 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     pango_font_get_glyph_extents(font, glyph_id, &ink_rect, &logical_rect);
     int width = PANGO_PIXELS(logical_rect.width);
     int height = PANGO_PIXELS(logical_rect.height);
+    int descent = PANGO_PIXELS(PANGO_DESCENT(logical_rect));
+    // TODO: Do we need these?
+    // int ascent = PANGO_PIXELS(PANGO_ASCENT(logical_rect));
+    // int ink_width = PANGO_PIXELS(ink_rect.width);
+    // int ink_height = PANGO_PIXELS(ink_rect.height);
+    // int ink_top = PANGO_PIXELS(PANGO_ASCENT(ink_rect));
+    // int ink_left = PANGO_PIXELS(PANGO_LBEARING(ink_rect));
 
     PangoGlyphStringPtr glyph_string{pango_glyph_string_new()};
     pango_glyph_string_set_size(glyph_string.get(), 1);
@@ -66,24 +92,23 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool colored = gi.attr.is_color;
     glyph_string->glyphs[0] = std::move(gi);
 
-    std::vector<uint8_t> pixel_data(width * height * 4);
+    std::vector<uint8_t> bitmap_data(width * height * 4);
     CairoSurfacePtr surface{cairo_image_surface_create_for_data(
-        pixel_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
+        bitmap_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
     CairoContextPtr render_context{cairo_create(surface.get())};
 
-    int descent = PANGO_PIXELS(PANGO_DESCENT(logical_rect));
     cairo_translate(render_context.get(), 0, -descent);
 
     cairo_set_source_rgba(render_context.get(), 1, 1, 1, 1);
     pango_cairo_show_glyph_string(render_context.get(), font, glyph_string.get());
 
     return {
-        .colored = colored,
         .left = 0,
         .top = height - descent,
         .width = width,
         .height = height,
-        .buffer = std::move(pixel_data),
+        .buffer = std::move(bitmap_data),
+        .colored = colored,
     };
 }
 
@@ -110,7 +135,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     PangoLayoutLine* layout_line = pango_layout_get_line_readonly(layout.get(), 0);
 
     int total_advance = 0;
-    std::vector<ShapedRun> runs;
+    std::vector<ShapedGlyph> glyphs;
     for (GSList* run = layout_line->runs; run != nullptr; run = run->next) {
         PangoGlyphItem* glyph_item = static_cast<PangoGlyphItem*>(run->data);
         PangoItem* item = glyph_item->item;
@@ -128,9 +153,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         int glyph_count = glyph_string->num_glyphs;
         int offset = item->offset;
 
-        std::vector<ShapedGlyph> glyphs;
-        glyphs.reserve(glyph_count);
-        for (int i = 0; i < glyph_count; i++) {
+        for (int i = 0; i < glyph_count; ++i) {
             PangoRectangle ink_rect;
             PangoRectangle logical_rect;
             pango_font_get_glyph_extents(run_font, glyph_infos[i].glyph, &ink_rect, &logical_rect);
@@ -158,6 +181,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
             size_t index = offset + log_clusters[i];
 
             ShapedGlyph glyph{
+                .font_id = run_font_id,
                 .glyph_id = glyph_id,
                 .position = std::move(position),
                 .advance = std::move(advance),
@@ -167,8 +191,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
 
             total_advance += advance.x;
         }
-
-        runs.emplace_back(ShapedRun{run_font_id, std::move(glyphs)});
     }
 
     return {
@@ -176,7 +198,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         // We shouldn't use Pango's width since we make our own slight adjustments.
         .width = total_advance,
         .length = str8.length(),
-        .runs = std::move(runs),
+        .glyphs = std::move(glyphs),
     };
 }
 

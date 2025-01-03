@@ -4,6 +4,8 @@ source_set("pango") {
   sources = [ "pango_rasterizer.cc" ]
 
   configs += [ ":linux_font_libs" ]
+
+  deps = [ "//third_party/fmt" ]
 }
 
 pkg_config("linux_font_libs") {

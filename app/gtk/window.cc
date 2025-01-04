@@ -51,6 +51,25 @@ std::optional<std::string> Window::openFilePicker() const {
     return {};
 }
 
+void Window::setCursorStyle(CursorStyle style) {
+    GdkCursor* cursor = nullptr;
+    if (style == CursorStyle::kArrow) {
+        cursor = gdk_cursor_new_from_name("default", nullptr);
+    } else if (style == CursorStyle::kIBeam) {
+        cursor = gdk_cursor_new_from_name("text", nullptr);
+    } else if (style == CursorStyle::kResizeLeftRight) {
+        cursor = gdk_cursor_new_from_name("ew-resize", nullptr);
+    } else if (style == CursorStyle::kResizeUpDown) {
+        cursor = gdk_cursor_new_from_name("ns-resize", nullptr);
+    }
+
+    if (cursor) {
+        GtkWidget* gtk_window = pimpl->main_window.gtkWindow();
+        gtk_widget_set_cursor(gtk_window, cursor);
+        g_object_unref(cursor);
+    }
+}
+
 // void Window::createMenuDebug() const {
 //     GtkWidget* window = pimpl->main_window.gtkWindow();
 

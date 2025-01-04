@@ -101,4 +101,16 @@ std::optional<std::string> Window::openFilePicker() const {
     //                   }];
 }
 
+void Window::setCursorStyle(CursorStyle style) {
+    if (style == CursorStyle::kArrow) {
+        [NSCursor.arrowCursor set];
+    } else if (style == CursorStyle::kIBeam) {
+        [NSCursor.IBeamCursor set];
+    } else if (style == CursorStyle::kResizeLeftRight) {
+        [NSCursor.resizeLeftRightCursor set];
+    } else if (style == CursorStyle::kResizeUpDown) {
+        [NSCursor.resizeUpDownCursor set];
+    }
+}
+
 }  // namespace app

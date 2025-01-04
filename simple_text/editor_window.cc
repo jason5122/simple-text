@@ -234,7 +234,7 @@ void EditorWindow::onRightMouseDown(const app::Point& mouse_pos,
                                     app::ClickType click_type) {
     // auto mouse_pos = mousePositionRaw();
     // if (mouse_pos) {
-    //     parent.setCursorStyle(app::App::CursorStyle::kArrow);
+    //     setCursorStyle(app::App::CursorStyle::kArrow);
 
     //     app::Menu menu;
     //     std::string temp = "TODO: Change this";
@@ -542,20 +542,20 @@ void EditorWindow::onClose() {
 void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos) {
     // Case 1: Dragging operation in progress.
     if (dragged_widget) {
-        parent.setCursorStyle(dragged_widget->cursorStyle());
+        setCursorStyle(dragged_widget->cursorStyle());
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
             // fmt::println("{}", hovered_widget->className());
-            parent.setCursorStyle(hovered_widget->cursorStyle());
+            setCursorStyle(hovered_widget->cursorStyle());
         } else {
             // fmt::println("No widget hovered");
-            parent.setCursorStyle(app::CursorStyle::kArrow);
+            setCursorStyle(app::CursorStyle::kArrow);
         }
     }
     // Case 3: Mouse position is outside of window.
     else {
-        parent.setCursorStyle(app::CursorStyle::kArrow);
+        setCursorStyle(app::CursorStyle::kArrow);
     }
 }

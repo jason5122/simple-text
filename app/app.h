@@ -17,7 +17,6 @@ public:
     void quit();
     std::string getClipboardString();
     void setClipboardString(const std::string& str8);
-    void setCursorStyle(CursorStyle style);
 
     virtual void onLaunch() {}
     virtual void onQuit() {}

@@ -46,7 +46,4 @@ std::string App::getClipboardString() {
 // TODO: Implement this.
 void App::setClipboardString(const std::string& str8) {}
 
-// TODO: Implement this.
-void App::setCursorStyle(CursorStyle style) {}
-
 }  // namespace app

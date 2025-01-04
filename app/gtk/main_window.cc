@@ -96,8 +96,6 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
     gtk_widget_add_controller(window, key_event_controller);
     g_signal_connect(key_event_controller, "key-pressed", G_CALLBACK(key_pressed), app_window);
 
-    gtk_widget_set_cursor(gl_area, gdk_cursor_new_from_name("text", nullptr));
-
     // gtk_window_maximize(GTK_WINDOW(window));
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
 }
@@ -265,8 +263,7 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
     int mouse_y = std::round(y);
 
     int scale_factor = gtk_widget_get_scale_factor(gl_area);
-    Point mouse_pos = {mouse_x, mouse_y};
-    mouse_pos *= scale_factor;
+    auto mouse_pos = Point{mouse_x, mouse_y} * scale_factor;
 
     GdkModifierType event_state =
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
@@ -278,8 +275,16 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
 }
 
 void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
+    GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
+
+    int mouse_x = std::round(x);
+    int mouse_y = std::round(y);
+
+    int scale_factor = gtk_widget_get_scale_factor(gl_area);
+    auto mouse_pos = Point{mouse_x, mouse_y} * scale_factor;
+
     Window* app_window = static_cast<Window*>(user_data);
-    app_window->onLeftMouseUp();
+    app_window->onLeftMouseUp(mouse_pos);
 }
 
 void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
@@ -291,7 +296,7 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
 
     // Left click drag.
-    if (event_state & GDK_BUTTON1_MASK) {
+    if ((event_state & GDK_BUTTON1_MASK) == GDK_BUTTON1_MASK) {
         GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
 
         int mouse_x = std::round(x);
@@ -306,6 +311,18 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         // TODO: Track click type. Consider having a member that tracks it from GtkGesture.
         Window* app_window = main_window->appWindow();
         app_window->onLeftMouseDrag(mouse_pos, modifiers, ClickType::kSingleClick);
+    } else {
+        GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
+
+        int mouse_x = std::round(x);
+        int mouse_y = std::round(y);
+
+        int scale_factor = gtk_widget_get_scale_factor(gl_area);
+        Point mouse_pos = {mouse_x, mouse_y};
+        mouse_pos *= scale_factor;
+
+        Window* app_window = main_window->appWindow();
+        app_window->onMouseMove(mouse_pos);
     }
 }
 

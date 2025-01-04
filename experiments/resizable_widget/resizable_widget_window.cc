@@ -89,17 +89,17 @@ void ResizableWidgetWindow::onMouseMove(const app::Point& mouse_pos) {
 void ResizableWidgetWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos) {
     // Case 1: Dragging operation in progress.
     if (dragged_widget) {
-        parent.setCursorStyle(dragged_widget->cursorStyle());
+        setCursorStyle(dragged_widget->cursorStyle());
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
             // fmt::println("{}", *hovered_widget);
-            parent.setCursorStyle(hovered_widget->cursorStyle());
+            setCursorStyle(hovered_widget->cursorStyle());
         }
     }
     // Case 3: Mouse position is outside of window.
     else {
-        parent.setCursorStyle(app::CursorStyle::kArrow);
+        setCursorStyle(app::CursorStyle::kArrow);
     }
 }

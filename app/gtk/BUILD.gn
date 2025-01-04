@@ -9,6 +9,12 @@ source_set("gtk") {
   ]
 
   public_configs = [ ":gtk4" ]
+
+  deps = [ "//third_party/fmt" ]
+
+  # TODO: This suppresses warnings in GTK code. Remove this.
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
 }
 
 pkg_config("gtk4") {

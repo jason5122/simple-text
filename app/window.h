@@ -46,6 +46,7 @@ public:
     void setTitle(std::string_view title);
     void setFilePath(std::string_view path);
     std::optional<std::string> openFilePicker() const;
+    void setCursorStyle(CursorStyle style);
 
     void createMenuDebug() const;
 

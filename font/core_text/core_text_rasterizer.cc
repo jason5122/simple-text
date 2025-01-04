@@ -60,21 +60,15 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
 
     auto font_name_cfstring = base::apple::StringToCFString(font_name8);
     auto font_style_cfstring = base::apple::StringToCFString(font_style);
-    CFTypeRef keys[] = {
-        kCTFontFamilyNameAttribute,
-        kCTFontStyleNameAttribute,
-    };
-    CFTypeRef values[] = {
-        font_name_cfstring.get(),
-        font_style_cfstring.get(),
-    };
-    assert(std::size(keys) == std::size(values));
-    ScopedCFTypeRef<CFDictionaryRef> attributes =
+    CFTypeRef keys[] = {kCTFontFamilyNameAttribute, kCTFontStyleNameAttribute};
+    CFTypeRef values[] = {font_name_cfstring.get(), font_style_cfstring.get()};
+    static_assert(std::size(keys) == std::size(values));
+    auto attributes = ScopedCFTypeRef<CFDictionaryRef>(
         CFDictionaryCreate(kCFAllocatorDefault, keys, values, std::size(keys),
-                           &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+                           &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
 
-    ScopedCFTypeRef<CTFontDescriptorRef> descriptor =
-        CTFontDescriptorCreateWithAttributes(attributes.get());
+    auto descriptor = ScopedCFTypeRef<CTFontDescriptorRef>(
+        CTFontDescriptorCreateWithAttributes(attributes.get()));
 
     const CGAffineTransform* matrix_ptr = kUseSyntheticItalic ? &kSyntheticItalicMatrix : nullptr;
 
@@ -100,8 +94,7 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
 size_t FontRasterizer::resizeFont(size_t font_id, int font_size) {
     const auto& font_ref = font_id_to_native[font_id].font;
     CTFontRef copy = CTFontCreateCopyWithAttributes(font_ref.get(), font_size, nullptr, nullptr);
-    size_t new_id = cacheFont({copy}, font_size);
-    return new_id;
+    return cacheFont({copy}, font_size);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
@@ -140,10 +133,10 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool colored = colored_font && !has_outline;
 
     std::vector<uint8_t> bitmap_data(rasterized_height * rasterized_width * 4);
-    ScopedTypeRef<CGColorSpaceRef> color_space_ref{CGColorSpaceCreateDeviceRGB()};
-    ScopedTypeRef<CGContextRef> context{CGBitmapContextCreate(
+    auto color_space_ref = ScopedTypeRef<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB());
+    auto context = ScopedTypeRef<CGContextRef>(CGBitmapContextCreate(
         bitmap_data.data(), rasterized_width, rasterized_height, 8, rasterized_width * 4,
-        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)};
+        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
     CGContextSetAllowsFontSmoothing(context.get(), true);
     CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
@@ -187,7 +180,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     }
 
     CTFontRef ct_font = font_id_to_native[font_id].font.get();
-    ScopedCFTypeRef<CTLineRef> ct_line = CreateCTLine(ct_font, font_id, str8);
+    auto ct_line = ScopedCFTypeRef<CTLineRef>(CreateCTLine(ct_font, font_id, str8));
 
     int total_advance = 0;
     std::vector<ShapedGlyph> glyphs;
@@ -228,7 +221,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
             };
 
             size_t utf8_index = utf8IndicesMap.mapIndex(indices[i]);
-            ShapedGlyph glyph{
+            ShapedGlyph glyph = {
                 .font_id = run_font_id,
                 .glyph_id = glyph_ids[i],
                 .position = std::move(position),
@@ -261,7 +254,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
 
 size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     CTFontRef ct_font = font.font.get();
-    ScopedCFTypeRef<CFStringRef> ct_font_name = CTFontCopyPostScriptName(ct_font);
+    auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(ct_font));
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
     if (font_name.empty()) {
@@ -285,7 +278,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
 
     int line_height = ascent + descent + leading;
 
-    Metrics metrics{
+    Metrics metrics = {
         .line_height = line_height,
         .ascent = ascent,
         .descent = descent,
@@ -301,22 +294,22 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
 
 namespace {
 ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8) {
-    ScopedCFTypeRef<CFStringRef> text_string = base::apple::StringToCFStringNoCopy(str8);
+    auto text_string = base::apple::StringToCFStringNoCopy(str8);
 
-    ScopedCFTypeRef<CFMutableDictionaryRef> attr{CFDictionaryCreateMutable(
-        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)};
+    auto attr = ScopedCFTypeRef<CFMutableDictionaryRef>(CFDictionaryCreateMutable(
+        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
     CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font);
 
-    ScopedCFTypeRef<CFAttributedStringRef> attr_string{
-        CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get())};
+    auto attr_string = ScopedCFTypeRef<CFAttributedStringRef>(
+        CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get()));
 
     return CTLineCreateWithAttributedString(attr_string.get());
 }
 
 // https://github.com/alacritty/crossfont/blob/9cd8ed05c9cc7ec17fe69183912560f97c050a1a/src/darwin/mod.rs#L275
 bool FontSmoothingEnabled() {
-    ScopedCFTypeRef<CFPropertyListRef> pref =
-        CFPreferencesCopyAppValue(CFSTR("AppleFontSmoothing"), kCFPreferencesCurrentApplication);
+    auto pref = ScopedCFTypeRef<CFPropertyListRef>(
+        CFPreferencesCopyAppValue(CFSTR("AppleFontSmoothing"), kCFPreferencesCurrentApplication));
 
     // Case 0: The preference does not exist. By default, macOS smooths fonts.
     if (!pref.get()) {

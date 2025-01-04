@@ -113,4 +113,8 @@ void Window::setCursorStyle(CursorStyle style) {
     }
 }
 
+void Window::setAutoRedraw(bool auto_redraw) {
+    [pimpl->window_controller setAutoRedraw:auto_redraw];
+}
+
 }  // namespace app

@@ -9,11 +9,36 @@
     app::DisplayGL* display_gl;
     int old_width;
     int old_height;
+    CVDisplayLinkRef display_link;
 }
+
+- (void)frameCallback;
 
 @end
 
+namespace {
+CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
+                             const CVTimeStamp* now,
+                             const CVTimeStamp* outputTime,
+                             CVOptionFlags flagsIn,
+                             CVOptionFlags* flagsOut,
+                             void* data) {
+    GLLayer* gl_layer = static_cast<GLLayer*>(data);
+    [gl_layer frameCallback];
+    return 0;
+}
+}  // namespace
+
 @implementation GLLayer
+
+- (void)frameCallback {
+    // CVDisplayLink can only draw on the main thread.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (app_window) {
+          app_window->onFrame();
+      }
+    });
+}
 
 - (instancetype)initWithAppWindow:(app::Window*)appWindow displayGL:(app::DisplayGL*)displayGL {
     self = [super init];
@@ -22,12 +47,38 @@
         display_gl = displayGL;
         old_width = -1;
         old_height = -1;
+
+        // Create a display link capable of being used with all active displays.
+        auto context = display_gl->context();
+        auto pixel_format = display_gl->pixelFormat();
+        CVDisplayLinkCreateWithActiveCGDisplays(&display_link);
+        CVDisplayLinkSetOutputCallback(display_link, &DisplayLinkCallback, self);
+        CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(display_link, context, pixel_format);
+
+        CVTime cv_time = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(display_link);
+        if (cv_time.flags & kCVTimeIsIndefinite) {
+            fmt::println("Error: Could not get CVDisplayLink refresh rate.");
+            std::abort();
+        }
+
+        int64_t fps = cv_time.timeScale / cv_time.timeValue;
+        fmt::println("FPS = {}", fps);
     }
     return self;
 }
 
 - (void)invalidateAppWindowPointer {
     app_window = nullptr;
+    CVDisplayLinkStop(display_link);
+    CVDisplayLinkRelease(display_link);
+}
+
+- (void)setAutoRedraw:(bool)autoRedraw {
+    if (autoRedraw) {
+        CVDisplayLinkStart(display_link);
+    } else {
+        CVDisplayLinkStop(display_link);
+    }
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {

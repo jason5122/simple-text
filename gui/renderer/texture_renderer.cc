@@ -242,7 +242,7 @@ void TextureRenderer::insertColorImage(size_t image_index, const app::Point& coo
     insertIntoBatch(image.page, std::move(instance));
 }
 
-void TextureRenderer::flush(const app::Size& screen_size) {
+void TextureRenderer::flush(const app::Size& screen_size, int frame_id) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
 
     glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ZERO, GL_ONE);
@@ -251,6 +251,10 @@ void TextureRenderer::flush(const app::Size& screen_size) {
     glUseProgram(shader_id);
     glUniform2f(glGetUniformLocation(shader_id, "resolution"), screen_size.width,
                 screen_size.height);
+
+    // TODO: For fun; remove this.
+    float time = abs(sin(3.14 / 180.0f * (frame_id * 0.5)));
+    glUniform1f(glGetUniformLocation(shader_id, "u_time"), time);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

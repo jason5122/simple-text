@@ -24,14 +24,14 @@ FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
 
 FunctionsGL::~FunctionsGL() {}
 
-void* FunctionsGL::loadProcAddress(const std::string& function) const {
+void* FunctionsGL::loadProcAddress(std::string_view function) const {
     // https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions#Windows
     // `wglGetProcAddress()` returns functions up to OpenGL 1.1.
     // `GetProcAddress()` returns functions beyond OpenGL 1.1.
     // Therefore, we need to try using both functions.
-    void* p = (void*)wglGetProcAddress(function.c_str());
+    void* p = (void*)wglGetProcAddress(function.data());
     if (!p) {
-        p = (void*)GetProcAddress(pimpl->module, function.c_str());
+        p = (void*)GetProcAddress(pimpl->module, function.data());
 
         DWORD error = GetLastError();
         if (error != 0) {

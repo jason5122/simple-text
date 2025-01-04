@@ -86,4 +86,8 @@
     [opengl_view invalidateAppWindowPointer];
 }
 
+- (void)setAutoRedraw:(bool)autoRedraw {
+    [opengl_view setAutoRedraw:autoRedraw];
+}
+
 @end

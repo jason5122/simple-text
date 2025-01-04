@@ -13,5 +13,6 @@
 
 - (void)redraw;
 - (void)invalidateAppWindowPointer;
+- (void)setAutoRedraw:(bool)autoRedraw;
 
 @end

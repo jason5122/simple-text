@@ -18,7 +18,7 @@ public:
     RectRenderer& getRectRenderer();
     SelectionRenderer& getSelectionRenderer();
 
-    void flush(const app::Size& size);
+    void flush(const app::Size& size, int frame_id);
 
 private:
     Renderer();

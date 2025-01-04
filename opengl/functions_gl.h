@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/non_copyable.h"
+
 #include <memory>
 #include <string>
 
@@ -14,7 +15,7 @@ public:
     void loadGlobalFunctionPointers();
 
 private:
-    void* loadProcAddress(const std::string& function) const;
+    void* loadProcAddress(std::string_view function) const;
 
     class impl;
     std::unique_ptr<impl> pimpl;

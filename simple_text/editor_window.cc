@@ -184,20 +184,48 @@ void EditorWindow::onDraw(const app::Size& size) {
     main_widget->layout();
     main_widget->draw();
 
-    Renderer::instance().flush(size);
+    Renderer::instance().flush(size, frame_id);
+
+    if (requested_frames > 0) {
+        setAutoRedraw(true);
+    } else {
+        setAutoRedraw(false);
+    }
+}
+
+void EditorWindow::onFrame() {
+    if (hot_widget) {
+        // TODO: Refactor this.
+        int old_width = hot_widget->getWidth();
+        hot_widget->setWidth(std::clamp(old_width + delta, 0, 500));
+    }
+
+    redraw();
+
+    ++frame_id;
+    --requested_frames;
+
+    if (requested_frames == 0) {
+        hot_widget = nullptr;
+        delta = 0;
+        fmt::println("side bar width = {}", side_bar->getWidth());
+    }
 }
 
 // TODO: Verify that resize is always called on all platforms when the window is created.
 // TODO: Verify that resizes are followed by redraw calls in the GUI framework.
 void EditorWindow::onResize(const app::Size& size) {
     main_widget->setSize(size);
-    side_bar->setMinimumWidth(100);
-    side_bar->setMaximumWidth(size.width - 100);
+    // side_bar->setMinimumWidth(100);
+    // side_bar->setMaximumWidth(size.width - 100);
 }
 
 void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {
     main_widget->mousePositionChanged(mouse_pos);
     main_widget->scroll(mouse_pos, delta);
+
+    // https://zed.dev/blog/120fps
+    requested_frames = 120;
     redraw();
 }
 
@@ -379,6 +407,34 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         auto* text_view = editor_widget->currentWidget();
         // TODO: Don't hard code this.
         text_view->find("needle");
+        handled = true;
+    }
+
+    // TODO: Refactor this.
+    int kFPS = 120;
+    int kRate = 25;
+    if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
+
+        hot_widget = side_bar;
+        int side_bar_width = hot_widget->getWidth();
+
+        int remaining;
+        if (is_side_bar_open) {
+            remaining = side_bar_width - 0;
+        } else {
+            remaining = 500 - side_bar_width;
+        }
+
+        requested_frames = remaining / kRate;
+        delta = remaining / requested_frames;
+        int direction = is_side_bar_open ? -1 : 1;
+        delta *= direction;
+
+        requested_frames += 1;  // TODO: Round properly.
+
+        fmt::println("requested_frames = {}, delta = {}", requested_frames, delta);
+
+        is_side_bar_open = !is_side_bar_open;
         handled = true;
     }
 

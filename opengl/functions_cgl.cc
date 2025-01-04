@@ -31,8 +31,8 @@ FunctionsGL::~FunctionsGL() {
     dlclose(pimpl->handle);
 }
 
-void* FunctionsGL::loadProcAddress(const std::string& function) const {
-    return dlsym(pimpl->handle, function.c_str());
+void* FunctionsGL::loadProcAddress(std::string_view function) const {
+    return dlsym(pimpl->handle, function.data());
 }
 
 }  // namespace opengl

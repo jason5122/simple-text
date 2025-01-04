@@ -87,6 +87,10 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     [gl_layer invalidateAppWindowPointer];
 }
 
+- (void)setAutoRedraw:(bool)autoRedraw {
+    [gl_layer setAutoRedraw:autoRedraw];
+}
+
 - (void)updateTrackingAreas {
     [super updateTrackingAreas];
     [self removeTrackingArea:trackingArea];

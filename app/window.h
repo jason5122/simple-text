@@ -47,11 +47,13 @@ public:
     void setFilePath(std::string_view path);
     std::optional<std::string> openFilePicker() const;
     void setCursorStyle(CursorStyle style);
+    void setAutoRedraw(bool auto_redraw);
 
     void createMenuDebug() const;
 
     virtual void onOpenGLActivate(const Size& size) {}
     virtual void onDraw(const Size& size) {}
+    virtual void onFrame() {}
     virtual void onResize(const Size& size) {}
     virtual void onScroll(const Point& mouse_pos, const Delta& delta) {}
     virtual void onLeftMouseDown(const Point& mouse_pos,

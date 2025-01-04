@@ -24,5 +24,6 @@
 - (void)setTitle:(std::string_view)title;
 - (void)setFilePath:(std::string_view)path;
 - (void)invalidateAppWindowPointer;
+- (void)setAutoRedraw:(bool)autoRedraw;
 
 @end

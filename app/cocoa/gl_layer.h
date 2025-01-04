@@ -9,5 +9,6 @@
 
 - (instancetype)initWithAppWindow:(app::Window*)appWindow displayGL:(app::DisplayGL*)displayGL;
 - (void)invalidateAppWindowPointer;
+- (void)setAutoRedraw:(bool)autoRedraw;
 
 @end

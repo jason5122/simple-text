@@ -39,13 +39,13 @@ SelectionRenderer& Renderer::getSelectionRenderer() {
     return selection_renderer;
 }
 
-void Renderer::flush(const app::Size& size) {
+void Renderer::flush(const app::Size& size, int frame_id) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     rect_renderer.flush(size, Layer::kBackground);
     selection_renderer.flush(size);
-    texture_renderer.flush(size);
+    texture_renderer.flush(size, frame_id);
     rect_renderer.flush(size, Layer::kForeground);
 }
 

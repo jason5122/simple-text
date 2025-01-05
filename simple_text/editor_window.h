@@ -14,9 +14,10 @@ public:
 
     void onOpenGLActivate(const app::Size& size) override;
     void onDraw(const app::Size& size) override;
-    void onFrame() override;
+    void onFrame(int64_t frame_time) override;
     void onResize(const app::Size& size) override;
     void onScroll(const app::Point& mouse_pos, const app::Delta& delta) override;
+    void onScrollDecelerate(const app::Point& mouse_pos, const app::Delta& delta) override;
     void onLeftMouseDown(const app::Point& mouse_pos,
                          app::ModifierKey modifiers,
                          app::ClickType click_type) override;
@@ -44,6 +45,8 @@ private:
     gui::Widget* hot_widget = nullptr;
     int delta = 0;
     bool is_side_bar_open = true;
+    int decel_x = 0;
+    int decel_y = 0;
 
     int wid;
     EditorApp& parent;

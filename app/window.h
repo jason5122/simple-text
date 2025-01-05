@@ -54,9 +54,10 @@ public:
 
     virtual void onOpenGLActivate(const Size& size) {}
     virtual void onDraw(const Size& size) {}
-    virtual void onFrame() {}
+    virtual void onFrame(int64_t frame_time) {}
     virtual void onResize(const Size& size) {}
     virtual void onScroll(const Point& mouse_pos, const Delta& delta) {}
+    virtual void onScrollDecelerate(const Point& mouse_pos, const Delta& delta) {}
     virtual void onLeftMouseDown(const Point& mouse_pos,
                                  ModifierKey modifiers,
                                  ClickType click_type) {}

@@ -23,6 +23,7 @@ void realize(GtkGLArea* self, gpointer user_data);
 gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data);
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data);
 gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data);
+void decelerate(GtkEventControllerScroll* self, gdouble vel_x, gdouble vel_y, gpointer user_data);
 void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
 void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data);
 void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data);
@@ -36,9 +37,9 @@ gboolean key_pressed(GtkEventControllerKey* self,
 }  // namespace
 
 MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context)
-    : app_window{app_window},
-      window{gtk_application_window_new(gtk_app)},
-      gl_area{gtk_gl_area_new()} {
+    : app_window(app_window),
+      window(gtk_application_window_new(gtk_app)),
+      gl_area(gtk_gl_area_new()) {
 
     gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
 
@@ -76,12 +77,14 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
     g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), app_window);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), app_window);
-    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), app_window);
+    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
 
-    GtkEventControllerScrollFlags scroll_flags = GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES;
+    GtkEventControllerScrollFlags scroll_flags = static_cast<GtkEventControllerScrollFlags>(
+        GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES | GTK_EVENT_CONTROLLER_SCROLL_KINETIC);
     GtkEventController* scroll_event_controller = gtk_event_controller_scroll_new(scroll_flags);
     gtk_widget_add_controller(gl_area, scroll_event_controller);
     g_signal_connect(scroll_event_controller, "scroll", G_CALLBACK(scroll), this);
+    g_signal_connect(scroll_event_controller, "decelerate", G_CALLBACK(decelerate), this);
 
     GtkGesture* gesture = gtk_gesture_click_new();
     gtk_widget_add_controller(gl_area, GTK_EVENT_CONTROLLER(gesture));
@@ -100,12 +103,6 @@ MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
 }
 
-MainWindow::~MainWindow() {
-    fmt::println("~MainWindow");
-    // TODO: See if we need `g_object_unref` for any other object.
-    // g_object_unref(dbus_settings_proxy);
-}
-
 void MainWindow::show() {
     gtk_window_present(GTK_WINDOW(window));
 }
@@ -119,38 +116,19 @@ void MainWindow::redraw() {
 }
 
 int MainWindow::width() {
-    // return gtk_widget_get_allocated_width(gl_area);
-    // return gtk_widget_get_width(gl_area);
-    return -1;
+    return width_;
 }
 
 int MainWindow::height() {
-    // return gtk_widget_get_allocated_height(gl_area);
-    // return gtk_widget_get_height(gl_area);
-    return -1;
+    return height_;
 }
 
 int MainWindow::scaleFactor() {
     return gtk_widget_get_scale_factor(window);
 }
 
+// TODO: Implement this.
 bool MainWindow::isDarkMode() {
-    // GError* error = nullptr;
-    // GVariant* variant =
-    //     g_dbus_proxy_call_sync(dbus_settings_proxy, "Read",
-    //                            g_variant_new("(ss)", "org.freedesktop.appearance",
-    //                            "color-scheme"), G_DBUS_CALL_FLAGS_NONE, 3000, nullptr, &error);
-
-    // variant = g_variant_get_child_value(variant, 0);
-    // while (variant && g_variant_is_of_type(variant, G_VARIANT_TYPE_VARIANT)) {
-    //     // Unbox the return value.
-    //     variant = g_variant_get_variant(variant);
-    // }
-
-    // // 0: default
-    // // 1: dark
-    // // 2: light
-    // return g_variant_get_uint32(variant) == 1;
     return false;
 }
 
@@ -201,9 +179,13 @@ void realize(GtkGLArea* self, gpointer user_data) {
 }
 
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+    main_window->width_ = width;
+    main_window->height_ = height;
+
     gtk_gl_area_make_current(self);
 
-    Window* app_window = static_cast<Window*>(user_data);
+    Window* app_window = main_window->appWindow();
     app_window->onResize({width, height});
 }
 
@@ -238,8 +220,8 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
         // dy *= 32;
     }
 
-    int mouse_x = std::round(main_window->mouse_x);
-    int mouse_y = std::round(main_window->mouse_y);
+    int mouse_x = std::round(main_window->mouse_x_);
+    int mouse_y = std::round(main_window->mouse_y_);
 
     int scale_factor = gtk_widget_get_scale_factor(gl_area);
     Point mouse_pos = {mouse_x, mouse_y};
@@ -249,11 +231,35 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
         .dx = static_cast<int>(std::round(dx)),
         .dy = static_cast<int>(std::round(dy)),
     };
+    delta *= scale_factor;
 
     Window* app_window = main_window->appWindow();
-    app_window->onScroll(mouse_pos, delta);
+    app_window->onScroll(std::move(mouse_pos), std::move(delta));
 
     return true;
+}
+
+void decelerate(GtkEventControllerScroll* self, gdouble vel_x, gdouble vel_y, gpointer user_data) {
+    MainWindow* main_window = static_cast<MainWindow*>(user_data);
+
+    GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
+    gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
+
+    int mouse_x = std::round(main_window->mouse_x_);
+    int mouse_y = std::round(main_window->mouse_y_);
+
+    int scale_factor = gtk_widget_get_scale_factor(gl_area);
+    Point mouse_pos = {mouse_x, mouse_y};
+    mouse_pos *= scale_factor;
+
+    Delta delta = {
+        .dx = static_cast<int>(std::round(vel_x)),
+        .dy = static_cast<int>(std::round(vel_y)),
+    };
+    delta *= scale_factor;
+
+    Window* app_window = main_window->appWindow();
+    app_window->onScrollDecelerate(std::move(mouse_pos), std::move(delta));
 }
 
 void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
@@ -289,8 +295,8 @@ void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointe
 
 void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    main_window->mouse_x = x;
-    main_window->mouse_y = y;
+    main_window->mouse_x_ = x;
+    main_window->mouse_y_ = y;
 
     GdkModifierType event_state =
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));

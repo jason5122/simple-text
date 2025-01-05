@@ -4,6 +4,7 @@
 #include "app/gtk/main_window.h"
 #include "app/menu.h"
 #include "app/window.h"
+
 #include <gtk/gtk.h>
 
 namespace app {
@@ -20,6 +21,8 @@ public:
         : main_window(app, app_window, context) {}
 
     MainWindow main_window;
+    bool has_tick_callback = false;
+    guint tick_callback_id = 0;
 };
 
 class Menu::impl {

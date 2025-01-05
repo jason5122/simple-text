@@ -1,5 +1,6 @@
-#include "app/gtk/impl_gtk.h"
 #include "app/window.h"
+
+#include "app/gtk/impl_gtk.h"
 
 #include <fmt/base.h>
 
@@ -68,6 +69,43 @@ void Window::setCursorStyle(CursorStyle style) {
         gtk_widget_set_cursor(gtk_window, cursor);
         g_object_unref(cursor);
     }
+}
+
+namespace {
+gboolean TickCallback(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer user_data) {
+    Window* app_window = static_cast<Window*>(user_data);
+
+    gint64 frame_time = gdk_frame_clock_get_frame_time(frame_clock);
+    double fps = gdk_frame_clock_get_fps(frame_clock);
+    fmt::println("fps = {}, frame_time = {}", fps, frame_time);
+    app_window->onFrame(frame_time);
+
+    return G_SOURCE_CONTINUE;
+}
+}  // namespace
+
+// TODO: Refactor this.
+void Window::setAutoRedraw(bool auto_redraw) {
+    // fmt::println("!{} and {} = {}", auto_redraw, pimpl->has_tick_callback,
+    //              !auto_redraw && pimpl->has_tick_callback);
+
+    GtkWidget* gtk_window = pimpl->main_window.glArea();
+    if (!auto_redraw && pimpl->has_tick_callback) {
+        fmt::println("remove");
+        gtk_widget_remove_tick_callback(gtk_window, pimpl->tick_callback_id);
+        pimpl->has_tick_callback = false;
+        pimpl->tick_callback_id = 0;
+    } else if (auto_redraw && !pimpl->has_tick_callback) {
+        fmt::println("add");
+        guint id = gtk_widget_add_tick_callback(gtk_window, &TickCallback, this, nullptr);
+        pimpl->has_tick_callback = true;
+        pimpl->tick_callback_id = id;
+    }
+}
+
+// TODO: Implement.
+int Window::framesPerSecond() const {
+    return 60;
 }
 
 // void Window::createMenuDebug() const {

@@ -141,7 +141,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
     horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
     horizontal_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
-    constexpr bool kShowAtlas = true;
+    constexpr bool kShowAtlas = false;
     if constexpr (kShowAtlas) {
         auto atlas_widget = std::make_unique<AtlasWidget>();
         horizontal_layout->addChildEnd(std::move(atlas_widget));
@@ -163,10 +163,6 @@ void EditorWindow::onDraw(const app::Size& size) {
     PROFILE_BLOCK("Total render time");
 
     // TODO: Debug use; remove this.
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    texture_renderer.insertColorImage(parent.icon_pickaxe_id, {0, 500});
-
-    // TODO: Debug use; remove this.
     auto* text_view = editor_widget->currentWidget();
     if (text_view) {
         size_t length = text_view->getSelectionLength();
@@ -186,14 +182,18 @@ void EditorWindow::onDraw(const app::Size& size) {
 
     Renderer::instance().flush(size, frame_id);
 
+    // TODO: Refactor this.
+    // fmt::println("decel_x = {}, decel_y = {}, requested_frames = {}", decel_x, decel_y,
+    //              requested_frames);
     if (requested_frames > 0) {
+        // if (requested_frames > 0 || std::abs(decel_y) > 0) {
         setAutoRedraw(true);
     } else {
         setAutoRedraw(false);
     }
 }
 
-void EditorWindow::onFrame() {
+void EditorWindow::onFrame(int64_t frame_time) {
     if (hot_widget) {
         // TODO: Refactor this.
         int old_width = hot_widget->getWidth();
@@ -201,6 +201,12 @@ void EditorWindow::onFrame() {
     }
 
     redraw();
+
+    // if (decel_y > 0) {
+    //     decel_y = std::max(decel_y - 10, 0);
+    // } else if (decel_y < 0) {
+    //     decel_y = std::min(decel_y + 10, 0);
+    // }
 
     ++frame_id;
     --requested_frames;
@@ -225,6 +231,12 @@ void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta
 
     // https://zed.dev/blog/120fps
     requested_frames = framesPerSecond();
+    redraw();
+}
+
+void EditorWindow::onScrollDecelerate(const app::Point& mouse_pos, const app::Delta& delta) {
+    decel_x = delta.dx;
+    decel_y = delta.dy;
     redraw();
 }
 

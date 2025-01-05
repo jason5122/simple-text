@@ -1,6 +1,7 @@
 #pragma once
 
 #include "app/window.h"
+
 #include <gtk/gtk.h>
 
 namespace app {
@@ -8,11 +9,11 @@ namespace app {
 class MainWindow {
 public:
     MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context);
-    ~MainWindow();
 
-    // We track mouse position in `GtkEventControllerMotion` for use in `GtkEventControllerScroll`.
-    gdouble mouse_x = 0;
-    gdouble mouse_y = 0;
+    gint width_ = 0;
+    gint height_ = 0;
+    gdouble mouse_x_ = 0;
+    gdouble mouse_y_ = 0;
 
     void show();
     void close();
@@ -24,12 +25,14 @@ public:
     void setTitle(std::string_view title);
     Window* appWindow() const;
     GtkWidget* gtkWindow() const;
+    GtkWidget* glArea() const {
+        return gl_area;
+    }
 
 private:
     Window* app_window;
     GtkWidget* window;
     GtkWidget* gl_area;
-    // GDBusProxy* dbus_settings_proxy;
 };
 
 }  // namespace app

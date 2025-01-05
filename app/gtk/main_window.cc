@@ -209,16 +209,12 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
     GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
     gtk_gl_area_make_current(GTK_GL_AREA(gl_area));
 
-    GdkScrollUnit unit = gtk_event_controller_scroll_get_unit(self);
-    if (unit == GDK_SCROLL_UNIT_WHEEL) {
-        dx *= 32;
-        dy *= 32;
-    } else {
-        // TODO: Figure out how to interpret scroll numbers (usually between 0.0-1.0).
-        fmt::println("dy = {}", dy);
-        // dx *= 32;
-        // dy *= 32;
-    }
+    // TODO: Figure out how to interpret scroll numbers (usually between 0.0-1.0).
+    // GdkScrollUnit unit = gtk_event_controller_scroll_get_unit(self);
+    // if (unit == GDK_SCROLL_UNIT_WHEEL) {
+    //     dx *= 32;
+    //     dy *= 32;
+    // }
 
     int mouse_x = std::round(main_window->mouse_x_);
     int mouse_y = std::round(main_window->mouse_y_);

@@ -14,7 +14,7 @@ public:
 
     void onOpenGLActivate(const app::Size& size) override;
     void onDraw(const app::Size& size) override;
-    void onFrame(int64_t frame_time) override;
+    void onFrame(int64_t ms) override;
     void onResize(const app::Size& size) override;
     void onScroll(const app::Point& mouse_pos, const app::Delta& delta) override;
     void onScrollDecelerate(const app::Point& mouse_pos, const app::Delta& delta) override;
@@ -40,13 +40,15 @@ private:
     static constexpr int kSideBarWidth = 250 * 2;
 
     // TODO: Clean this up.
+    static constexpr int kRatePerSec = 5;
     int requested_frames = 0;
-    int frame_id = 0;
-    gui::Widget* hot_widget = nullptr;
-    int delta = 0;
+    bool is_side_bar_animating = false;
     bool is_side_bar_open = true;
+    int target_width = 0;
     int decel_x = 0;
     int decel_y = 0;
+    int64_t last_ms = 0;
+    int64_t ms_err = 0;
 
     int wid;
     EditorApp& parent;

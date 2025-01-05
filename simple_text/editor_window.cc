@@ -180,40 +180,56 @@ void EditorWindow::onDraw(const app::Size& size) {
     main_widget->layout();
     main_widget->draw();
 
-    Renderer::instance().flush(size, frame_id);
+    Renderer::instance().flush(size);
 
     // TODO: Refactor this.
-    // fmt::println("decel_x = {}, decel_y = {}, requested_frames = {}", decel_x, decel_y,
-    //              requested_frames);
-    if (requested_frames > 0) {
-        // if (requested_frames > 0 || std::abs(decel_y) > 0) {
-        setAutoRedraw(true);
-    } else {
-        setAutoRedraw(false);
-    }
+    // if (requested_frames > 0) {
+    //     setAutoRedraw(true);
+    // } else {
+    //     setAutoRedraw(false);
+    // }
 }
 
-void EditorWindow::onFrame(int64_t frame_time) {
-    if (hot_widget) {
-        // TODO: Refactor this.
-        int old_width = hot_widget->getWidth();
-        hot_widget->setWidth(std::clamp(old_width + delta, 0, 500));
+void EditorWindow::onFrame(int64_t ms) {
+    fmt::println("on frame: requested {}", requested_frames);
+
+    if (is_side_bar_animating) {
+        int64_t d = ms - last_ms;
+        int64_t numerator = d * kRatePerSec + ms_err;
+        ms_err += numerator % 1000;
+        int64_t num_updates = numerator / 1000;
+
+        int width = side_bar->getWidth();
+        if (is_side_bar_open && width > target_width) {
+            int new_width = width - kRatePerSec * num_updates;
+            side_bar->setWidth(std::max(new_width, target_width));
+
+            if (side_bar->getWidth() == target_width) {
+                is_side_bar_open = false;
+                is_side_bar_animating = false;
+                ms_err = 0;
+                setAutoRedraw(false);
+            }
+        } else if (!is_side_bar_open && width < target_width) {
+            int new_width = width + kRatePerSec * num_updates;
+            side_bar->setWidth(std::min(new_width, target_width));
+
+            if (side_bar->getWidth() == target_width) {
+                is_side_bar_open = true;
+                is_side_bar_animating = false;
+                ms_err = 0;
+                setAutoRedraw(false);
+            }
+        }
     }
 
     redraw();
 
-    // if (decel_y > 0) {
-    //     decel_y = std::max(decel_y - 10, 0);
-    // } else if (decel_y < 0) {
-    //     decel_y = std::min(decel_y + 10, 0);
-    // }
-
-    ++frame_id;
     --requested_frames;
+    last_ms = ms;
 
     if (requested_frames == 0) {
-        hot_widget = nullptr;
-        delta = 0;
+        setAutoRedraw(false);
     }
 }
 
@@ -231,6 +247,7 @@ void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta
 
     // https://zed.dev/blog/120fps
     requested_frames = framesPerSecond();
+    setAutoRedraw(true);
     redraw();
 }
 
@@ -422,29 +439,21 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
 
     // TODO: Refactor this.
-    int kRate = 25;
     if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
 
-        hot_widget = side_bar;
-        int side_bar_width = hot_widget->getWidth();
-
-        int remaining;
-        if (is_side_bar_open) {
-            remaining = side_bar_width - 0;
-        } else {
-            remaining = 500 - side_bar_width;
+        int side_bar_width = side_bar->getWidth();
+        if (is_side_bar_animating) {
+            is_side_bar_open = !is_side_bar_open;
+            ms_err = 0;
         }
+        if (is_side_bar_open) {
+            target_width = 0;
+        } else {
+            target_width = 500;
+        }
+        is_side_bar_animating = true;
+        setAutoRedraw(true);
 
-        requested_frames = remaining / kRate;
-        delta = remaining / requested_frames;
-        int direction = is_side_bar_open ? -1 : 1;
-        delta *= direction;
-
-        requested_frames += 1;  // TODO: Round properly.
-
-        fmt::println("requested_frames = {}, delta = {}", requested_frames, delta);
-
-        is_side_bar_open = !is_side_bar_open;
         handled = true;
     }
 

@@ -73,34 +73,40 @@ void Window::setCursorStyle(CursorStyle style) {
 
 namespace {
 gboolean TickCallback(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer user_data) {
-    Window* app_window = static_cast<Window*>(user_data);
+    Window::impl* pimpl = static_cast<Window::impl*>(user_data);
+    Window* app_window = pimpl->main_window.appWindow();
 
     gint64 frame_time = gdk_frame_clock_get_frame_time(frame_clock);
-    double fps = gdk_frame_clock_get_fps(frame_clock);
-    fmt::println("fps = {}, frame_time = {}", fps, frame_time);
-    app_window->onFrame(frame_time);
+    if (pimpl->first_frame_time == 0) {
+        pimpl->first_frame_time = frame_time;
+    }
+
+    gint64 d = frame_time - pimpl->first_frame_time;
+    gint64 ms = d / 1000;
+    fmt::println("ms = {}", ms);
+
+    app_window->onFrame(ms);
 
     return G_SOURCE_CONTINUE;
 }
 }  // namespace
 
+void Window::impl::setAutoRedraw(bool auto_redraw) {
+    GtkWidget* gtk_window = main_window.glArea();
+    if (!auto_redraw && has_tick_callback) {
+        gtk_widget_remove_tick_callback(gtk_window, tick_callback_id);
+        has_tick_callback = false;
+        tick_callback_id = 0;
+    } else if (auto_redraw && !has_tick_callback) {
+        guint id = gtk_widget_add_tick_callback(gtk_window, &TickCallback, this, nullptr);
+        has_tick_callback = true;
+        tick_callback_id = id;
+    }
+}
+
 // TODO: Refactor this.
 void Window::setAutoRedraw(bool auto_redraw) {
-    // fmt::println("!{} and {} = {}", auto_redraw, pimpl->has_tick_callback,
-    //              !auto_redraw && pimpl->has_tick_callback);
-
-    GtkWidget* gtk_window = pimpl->main_window.glArea();
-    if (!auto_redraw && pimpl->has_tick_callback) {
-        fmt::println("remove");
-        gtk_widget_remove_tick_callback(gtk_window, pimpl->tick_callback_id);
-        pimpl->has_tick_callback = false;
-        pimpl->tick_callback_id = 0;
-    } else if (auto_redraw && !pimpl->has_tick_callback) {
-        fmt::println("add");
-        guint id = gtk_widget_add_tick_callback(gtk_window, &TickCallback, this, nullptr);
-        pimpl->has_tick_callback = true;
-        pimpl->tick_callback_id = id;
-    }
+    pimpl->setAutoRedraw(auto_redraw);
 }
 
 // TODO: Implement.

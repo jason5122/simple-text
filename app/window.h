@@ -54,7 +54,7 @@ public:
 
     virtual void onOpenGLActivate(const Size& size) {}
     virtual void onDraw(const Size& size) {}
-    virtual void onFrame(int64_t frame_time) {}
+    virtual void onFrame(int64_t ms) {}
     virtual void onResize(const Size& size) {}
     virtual void onScroll(const Point& mouse_pos, const Delta& delta) {}
     virtual void onScrollDecelerate(const Point& mouse_pos, const Delta& delta) {}
@@ -79,7 +79,8 @@ public:
     virtual void onClose() {}
     virtual void onDarkModeToggle() {}
 
-private:
+    // TODO: This is public for callbacks. Find a way to make this private.
+    // private:
     class impl;
     std::unique_ptr<impl> pimpl;
 };

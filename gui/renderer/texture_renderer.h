@@ -25,7 +25,7 @@ public:
                           int max_y = std::numeric_limits<int>::max());
     void insertImage(size_t image_index, const app::Point& coords, const Rgba& color);
     void insertColorImage(size_t image_index, const app::Point& coords);
-    void flush(const app::Size& screen_size, int frame_id);
+    void flush(const app::Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

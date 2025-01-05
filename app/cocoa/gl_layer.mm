@@ -10,9 +10,11 @@
     int old_width;
     int old_height;
     CVDisplayLinkRef display_link;
+
+    int64_t first_frame_time;
 }
 
-- (void)frameCallback;
+- (void)frameCallback:(const CVTimeStamp*)outputTime;
 
 @end
 
@@ -24,18 +26,29 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
                              CVOptionFlags* flagsOut,
                              void* data) {
     GLLayer* gl_layer = static_cast<GLLayer*>(data);
-    [gl_layer frameCallback];
-    return 0;
+    [gl_layer frameCallback:outputTime];
+    return kCVReturnSuccess;
 }
 }  // namespace
 
 @implementation GLLayer
 
-- (void)frameCallback {
+- (void)frameCallback:(const CVTimeStamp*)outputTime {
+    int scale = outputTime->videoTimeScale;
+    // Convert scale from seconds to milliseconds.
+    scale /= 1000;
+
+    int64_t frame_time = outputTime->videoTime / scale;
+    if (first_frame_time == 0) {
+        first_frame_time = frame_time;
+    }
+
+    int64_t ms = frame_time - first_frame_time;
+
     // CVDisplayLink can only draw on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
       if (app_window) {
-          app_window->onFrame();
+          app_window->onFrame(ms);
       }
     });
 }
@@ -47,6 +60,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
         display_gl = displayGL;
         old_width = -1;
         old_height = -1;
+        first_frame_time = 0;
 
         // Create a display link capable of being used with all active displays.
         auto context = display_gl->context();

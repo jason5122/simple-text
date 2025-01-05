@@ -23,6 +23,9 @@ public:
     MainWindow main_window;
     bool has_tick_callback = false;
     guint tick_callback_id = 0;
+    gint64 first_frame_time = 0;
+
+    void setAutoRedraw(bool auto_redraw);
 };
 
 class Menu::impl {

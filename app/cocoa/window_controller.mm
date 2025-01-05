@@ -90,4 +90,8 @@
     [opengl_view setAutoRedraw:autoRedraw];
 }
 
+- (int)framesPerSecond {
+    return [opengl_view framesPerSecond];
+}
+
 @end

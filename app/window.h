@@ -48,6 +48,7 @@ public:
     std::optional<std::string> openFilePicker() const;
     void setCursorStyle(CursorStyle style);
     void setAutoRedraw(bool auto_redraw);
+    int framesPerSecond() const;
 
     void createMenuDebug() const;
 

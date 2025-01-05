@@ -117,4 +117,8 @@ void Window::setAutoRedraw(bool auto_redraw) {
     [pimpl->window_controller setAutoRedraw:auto_redraw];
 }
 
+int Window::framesPerSecond() const {
+    return [pimpl->window_controller framesPerSecond];
+}
+
 }  // namespace app

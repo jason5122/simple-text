@@ -14,5 +14,6 @@
 - (void)redraw;
 - (void)invalidateAppWindowPointer;
 - (void)setAutoRedraw:(bool)autoRedraw;
+- (int)framesPerSecond;
 
 @end

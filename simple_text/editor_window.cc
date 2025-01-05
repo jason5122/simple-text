@@ -208,7 +208,6 @@ void EditorWindow::onFrame() {
     if (requested_frames == 0) {
         hot_widget = nullptr;
         delta = 0;
-        fmt::println("side bar width = {}", side_bar->getWidth());
     }
 }
 
@@ -225,7 +224,7 @@ void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta
     main_widget->scroll(mouse_pos, delta);
 
     // https://zed.dev/blog/120fps
-    requested_frames = 120;
+    requested_frames = framesPerSecond();
     redraw();
 }
 
@@ -411,7 +410,6 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
 
     // TODO: Refactor this.
-    int kFPS = 120;
     int kRate = 25;
     if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
 

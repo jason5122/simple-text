@@ -25,5 +25,6 @@
 - (void)setFilePath:(std::string_view)path;
 - (void)invalidateAppWindowPointer;
 - (void)setAutoRedraw:(bool)autoRedraw;
+- (int)framesPerSecond;
 
 @end

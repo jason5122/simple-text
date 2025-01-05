@@ -54,15 +54,6 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
         CVDisplayLinkCreateWithActiveCGDisplays(&display_link);
         CVDisplayLinkSetOutputCallback(display_link, &DisplayLinkCallback, self);
         CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(display_link, context, pixel_format);
-
-        CVTime cv_time = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(display_link);
-        if (cv_time.flags & kCVTimeIsIndefinite) {
-            fmt::println("Error: Could not get CVDisplayLink refresh rate.");
-            std::abort();
-        }
-
-        int64_t fps = cv_time.timeScale / cv_time.timeValue;
-        fmt::println("FPS = {}", fps);
     }
     return self;
 }
@@ -79,6 +70,16 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
     } else {
         CVDisplayLinkStop(display_link);
     }
+}
+
+- (int)framesPerSecond {
+    CVTime cv_time = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(display_link);
+    if (cv_time.flags & kCVTimeIsIndefinite) {
+        fmt::println("Error: Could not get CVDisplayLink refresh rate.");
+        std::abort();
+    }
+    int64_t fps = cv_time.timeScale / cv_time.timeValue;
+    return fps;
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {

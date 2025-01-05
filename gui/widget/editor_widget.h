@@ -20,6 +20,8 @@ public:
     void addTab(std::string_view tab_name, std::string_view text);
     void removeTab(size_t index);
     void openFile(std::string_view path);
+    // TODO: Refactor this.
+    void updateFontId(size_t font_id);
 
     constexpr std::string_view className() const final override {
         return "EditorWidget";

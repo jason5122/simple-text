@@ -287,10 +287,6 @@ size_t TextEditWidget::getSelectionLength() {
 
 void TextEditWidget::updateFontId(size_t font_id) {
     this->font_id = font_id;
-
-    // TODO: Refactor this.
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
-    line_layout_cache.clear();
     updateMaxScroll();
 }
 

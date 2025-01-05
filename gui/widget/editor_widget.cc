@@ -1,5 +1,7 @@
-#include "base/filesystem/file_reader.h"
 #include "editor_widget.h"
+
+#include "base/filesystem/file_reader.h"
+#include "gui/renderer/renderer.h"
 #include "gui/widget/padding_widget.h"
 
 namespace gui {
@@ -63,6 +65,19 @@ void EditorWidget::removeTab(size_t index) {
 void EditorWidget::openFile(std::string_view path) {
     std::string contents = base::ReadFile(path);
     addTab(path, contents);
+}
+
+// TODO: Refactor this.
+void EditorWidget::updateFontId(size_t font_id) {
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    line_layout_cache.clear();
+
+    main_font_id = font_id;
+
+    for (size_t i = 0; i < multi_view->widgetCount(); ++i) {
+        auto* text_view = multi_view->at(i);
+        text_view->updateFontId(font_id);
+    }
 }
 
 }  // namespace gui

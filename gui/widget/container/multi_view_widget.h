@@ -20,6 +20,14 @@ public:
         }
     }
 
+    constexpr size_t widgetCount() const {
+        return views.size();
+    }
+
+    WidgetType* at(size_t i) {
+        return views[i].get();
+    }
+
     void setIndex(size_t index) {
         if (index < views.size()) {
             this->index = index;

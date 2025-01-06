@@ -1,39 +1,41 @@
 #pragma once
 
-#include "app/window.h"
+#include "gui/app/window.h"
 #include "gui/widget/container/layout_widget.h"
 #include "gui/widget/editor_widget.h"
 #include "gui/widget/side_bar_widget.h"
 #include "gui/widget/status_bar_widget.h"
 
+namespace gui {
+
 class EditorApp;
 
-class EditorWindow : public app::Window {
+class EditorWindow : public Window {
 public:
     EditorWindow(EditorApp& parent, int width, int height, int wid);
 
-    void onOpenGLActivate(const app::Size& size) override;
-    void onDraw(const app::Size& size) override;
+    void onOpenGLActivate(const Size& size) override;
+    void onDraw(const Size& size) override;
     void onFrame(int64_t ms) override;
-    void onResize(const app::Size& size) override;
-    void onScroll(const app::Point& mouse_pos, const app::Delta& delta) override;
-    void onScrollDecelerate(const app::Point& mouse_pos, const app::Delta& delta) override;
-    void onLeftMouseDown(const app::Point& mouse_pos,
-                         app::ModifierKey modifiers,
-                         app::ClickType click_type) override;
-    void onLeftMouseUp(const app::Point& mouse_pos) override;
-    void onLeftMouseDrag(const app::Point& mouse_pos,
-                         app::ModifierKey modifiers,
-                         app::ClickType click_type) override;
-    void onRightMouseDown(const app::Point& mouse_pos,
-                          app::ModifierKey modifiers,
-                          app::ClickType click_type) override;
-    void onMouseMove(const app::Point& mouse_pos) override;
+    void onResize(const Size& size) override;
+    void onScroll(const Point& mouse_pos, const Delta& delta) override;
+    void onScrollDecelerate(const Point& mouse_pos, const Delta& delta) override;
+    void onLeftMouseDown(const Point& mouse_pos,
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
+    void onLeftMouseUp(const Point& mouse_pos) override;
+    void onLeftMouseDrag(const Point& mouse_pos,
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
+    void onRightMouseDown(const Point& mouse_pos,
+                          ModifierKey modifiers,
+                          ClickType click_type) override;
+    void onMouseMove(const Point& mouse_pos) override;
     void onMouseExit() override;
-    bool onKeyDown(app::Key key, app::ModifierKey modifiers) override;
+    bool onKeyDown(Key key, ModifierKey modifiers) override;
     void onInsertText(std::string_view text) override;
-    void onAction(app::Action action, bool extend) override;
-    void onAppAction(app::AppAction action) override;
+    void onAction(Action action, bool extend) override;
+    void onAppAction(AppAction action) override;
     void onClose() override;
 
 private:
@@ -51,7 +53,7 @@ private:
     // int64_t last_ms = 0;
     // int64_t ms_err = 0;
     // TODO: Remove this.
-    app::Point last_mouse_pos;
+    Point last_mouse_pos;
 
     int wid;
     EditorApp& parent;
@@ -67,5 +69,7 @@ private:
     // operation, this is null.
     gui::Widget* dragged_widget = nullptr;
 
-    void updateCursorStyle(const std::optional<app::Point>& mouse_pos);
+    void updateCursorStyle(const std::optional<Point>& mouse_pos);
 };
+
+}  // namespace gui

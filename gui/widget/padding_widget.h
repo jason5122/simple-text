@@ -7,7 +7,7 @@ namespace gui {
 
 class PaddingWidget : public Widget {
 public:
-    PaddingWidget(const app::Size& size, const Rgb& color);
+    PaddingWidget(const Size& size, const Rgb& color);
 
     void draw() override;
 

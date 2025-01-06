@@ -7,7 +7,7 @@ namespace gui {
 
 class SolidColorWidget : public Widget {
 public:
-    SolidColorWidget(const app::Size& size, const Rgb& color);
+    SolidColorWidget(const Size& size, const Rgb& color);
 
     void draw() override;
 

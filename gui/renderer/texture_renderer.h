@@ -1,9 +1,10 @@
 #pragma once
 
-#include "app/types.h"
+#include "gui/app/types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/texture_cache.h"
 #include "gui/renderer/types.h"
+
 #include <functional>
 #include <vector>
 
@@ -17,13 +18,13 @@ public:
     TextureRenderer& operator=(TextureRenderer&& other);
 
     void addLineLayout(const font::LineLayout& line_layout,
-                       const app::Point& coords,
-                       const app::Point& min_coords,
-                       const app::Point& max_coords,
+                       const Point& coords,
+                       const Point& min_coords,
+                       const Point& max_coords,
                        const std::function<Rgb(size_t)>& highlight_callback);
-    void addImage(size_t image_index, const app::Point& coords, const Rgb& color);
-    void addColorImage(size_t image_index, const app::Point& coords);
-    void flush(const app::Size& screen_size);
+    void addImage(size_t image_index, const Point& coords, const Rgb& color);
+    void addColorImage(size_t image_index, const Point& coords);
+    void flush(const Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;
@@ -53,9 +54,9 @@ private:
     // DEBUG: Draws texture atlases.
     friend class AtlasWidget;
     void renderAtlasPage(size_t page,
-                         const app::Point& coords,
-                         const app::Point& min_coords,
-                         const app::Point& max_coords);
+                         const Point& coords,
+                         const Point& min_coords,
+                         const Point& max_coords);
 };
 
 }  // namespace gui

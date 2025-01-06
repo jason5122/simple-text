@@ -7,9 +7,9 @@ namespace gui {
 // TODO: Consider breaking off toggle-able state into a "ToggleButtonWidget" subclass.
 class ButtonWidget : public Widget {
 public:
-    void leftMouseDown(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
+    void leftMouseDown(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
     bool getState() const;
 
 private:

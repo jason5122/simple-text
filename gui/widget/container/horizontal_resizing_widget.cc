@@ -8,9 +8,9 @@ HorizontalResizingWidget::HorizontalResizingWidget(int padding_in_between,
                                                    int top_padding)
     : HorizontalLayoutWidget(padding_in_between, left_padding, right_padding, top_padding) {}
 
-void HorizontalResizingWidget::leftMouseDown(const app::Point& mouse_pos,
-                                             app::ModifierKey modifiers,
-                                             app::ClickType click_type) {
+void HorizontalResizingWidget::leftMouseDown(const Point& mouse_pos,
+                                             ModifierKey modifiers,
+                                             ClickType click_type) {
     for (auto& child : children_start) {
         if (child->rightEdgeTest(mouse_pos, kResizeDistance)) {
             dragged_widget = child.get();
@@ -27,9 +27,9 @@ void HorizontalResizingWidget::leftMouseDown(const app::Point& mouse_pos,
     }
 }
 
-void HorizontalResizingWidget::leftMouseDrag(const app::Point& mouse_pos,
-                                             app::ModifierKey modifiers,
-                                             app::ClickType click_type) {
+void HorizontalResizingWidget::leftMouseDrag(const Point& mouse_pos,
+                                             ModifierKey modifiers,
+                                             ClickType click_type) {
     if (dragged_widget) {
         auto widget_size = dragged_widget->getSize();
         auto widget_pos = dragged_widget->getPosition();
@@ -44,11 +44,11 @@ void HorizontalResizingWidget::leftMouseDrag(const app::Point& mouse_pos,
     }
 }
 
-app::CursorStyle HorizontalResizingWidget::cursorStyle() const {
-    return app::CursorStyle::kResizeLeftRight;
+CursorStyle HorizontalResizingWidget::cursorStyle() const {
+    return CursorStyle::kResizeLeftRight;
 }
 
-Widget* HorizontalResizingWidget::widgetAt(const app::Point& pos) {
+Widget* HorizontalResizingWidget::widgetAt(const Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.
     for (auto& child : children_start) {
         if (child->isResizable() && child->rightEdgeTest(pos, kResizeDistance)) {

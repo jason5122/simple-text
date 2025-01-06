@@ -52,11 +52,11 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     addChildEnd(std::move(panel_close_button));
 
     auto find_all_button = std::make_unique<TextButtonWidget>(
-        ui_font_id, "Find All", kIconBackgroundColor, app::Size{20, 8}, app::Size{200, 52});
+        ui_font_id, "Find All", kIconBackgroundColor, Size{20, 8}, Size{200, 52});
     auto find_prev_button = std::make_unique<TextButtonWidget>(
-        ui_font_id, "Find Prev", kIconBackgroundColor, app::Size{20, 8}, app::Size{200, 52});
+        ui_font_id, "Find Prev", kIconBackgroundColor, Size{20, 8}, Size{200, 52});
     auto find_button = std::make_unique<TextButtonWidget>(ui_font_id, "Find", kIconBackgroundColor,
-                                                          app::Size{20, 8}, app::Size{200, 52});
+                                                          Size{20, 8}, Size{200, 52});
     find_all_button->setAutoresizing(false);
     find_prev_button->setAutoresizing(false);
     find_button->setAutoresizing(false);

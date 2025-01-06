@@ -8,19 +8,19 @@ namespace gui {
 class ScrollableWidget : public Widget {
 public:
     ScrollableWidget() {}
-    ScrollableWidget(const app::Size& size);
+    ScrollableWidget(const Size& size);
 
     virtual void updateMaxScroll() = 0;
 
-    void scroll(const app::Point& mouse_pos, const app::Delta& delta) override;
+    void scroll(const Point& mouse_pos, const Delta& delta) override;
 
     constexpr std::string_view className() const override {
         return "ScrollableWidget";
     }
 
 protected:
-    app::Point scroll_offset{};
-    app::Point max_scroll_offset{};
+    Point scroll_offset{};
+    Point max_scroll_offset{};
 
 private:
     static constexpr long long kScrollEventSeparation = 28;

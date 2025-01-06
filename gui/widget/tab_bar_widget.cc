@@ -33,7 +33,7 @@ void TabBarWidget::lastIndex() {
 }
 
 void TabBarWidget::addTab(std::string_view title) {
-    app::Size label_size{
+    Size label_size = {
         .width = kTabWidth - kTabCornerRadius * 2,
         .height = size.height,
     };
@@ -61,9 +61,9 @@ void TabBarWidget::draw() {
         tab_name_label->draw();
     }
 
-    app::Point tab_pos = position;
+    Point tab_pos = position;
     tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
-    app::Size tab_size = {kTabWidth, size.height};
+    Size tab_size = {kTabWidth, size.height};
     rect_renderer.addRect(tab_pos, tab_size, position, position + size, kTabColor,
                           Layer::kBackground, 0, kTabCornerRadius);
 
@@ -76,7 +76,7 @@ void TabBarWidget::draw() {
             continue;
         }
 
-        app::Point tab_separator_pos = position;
+        Point tab_separator_pos = position;
         tab_separator_pos.x -= kTabSeparatorSize.width;
         tab_separator_pos.x += (kTabWidth - kTabCornerRadius * 2) * (i + 1) + kTabCornerRadius;
 
@@ -90,10 +90,10 @@ void TabBarWidget::draw() {
 }
 
 void TabBarWidget::layout() {
-    app::Point left_width_offset{};
+    Point left_width_offset{};
     for (const auto& tab_name_label : tab_name_labels) {
-        app::Point label_pos = position;
-        label_pos += app::Point{kTabCornerRadius, 0};
+        Point label_pos = position;
+        label_pos += Point{kTabCornerRadius, 0};
         label_pos += left_width_offset;
         tab_name_label->setPosition(label_pos);
 

@@ -68,26 +68,26 @@ public:
         if (widget) widget->draw();
     }
 
-    void scroll(const app::Point& mouse_pos, const app::Delta& delta) override {
+    void scroll(const Point& mouse_pos, const Delta& delta) override {
         Widget* widget = currentWidget();
         if (widget) widget->scroll(mouse_pos, delta);
     }
 
-    void leftMouseDown(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override {
+    void leftMouseDown(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override {
         Widget* widget = currentWidget();
         if (widget) widget->leftMouseDown(mouse_pos, modifiers, click_type);
     }
 
-    void leftMouseDrag(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override {
+    void leftMouseDrag(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override {
         Widget* widget = currentWidget();
         if (widget) widget->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
 
-    bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override {
+    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override {
         Widget* widget = currentWidget();
         if (widget) {
             return widget->mousePositionChanged(mouse_pos);
@@ -103,7 +103,7 @@ public:
         }
     }
 
-    Widget* widgetAt(const app::Point& pos) override {
+    Widget* widgetAt(const Point& pos) override {
         Widget* widget = currentWidget();
         if (widget) {
             return widget->widgetAt(pos);

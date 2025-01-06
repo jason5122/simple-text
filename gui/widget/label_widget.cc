@@ -28,12 +28,12 @@ void LabelWidget::draw() {
     const auto& metrics = font_rasterizer.metrics(font_id);
     const auto& layout = line_layout_cache.get(font_id, label_str);
 
-    app::Point coords = centerVertically(metrics.line_height);
-    app::Point min_coords = {
+    Point coords = centerVertically(metrics.line_height);
+    Point min_coords = {
         .x = 0,
         .y = position.y,
     };
-    app::Point max_coords = {
+    Point max_coords = {
         .x = size.width,
         .y = position.y + size.height,
     };
@@ -41,8 +41,8 @@ void LabelWidget::draw() {
     texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
-app::Point LabelWidget::centerVertically(int widget_height) {
-    app::Point centered_point = position;
+Point LabelWidget::centerVertically(int widget_height) {
+    Point centered_point = position;
     centered_point.y += size.height / 2;
     centered_point.y -= widget_height / 2;
     return centered_point;

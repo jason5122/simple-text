@@ -1,6 +1,6 @@
 #pragma once
 
-#include "app/types.h"
+#include "gui/app/types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "util/non_copyable.h"
@@ -22,11 +22,11 @@ public:
         int end;
     };
     void addSelections(const std::vector<Selection>& sels,
-                       const app::Point& offset,
+                       const Point& offset,
                        int line_height,
-                       const app::Point& min_coords,
-                       const app::Point& max_coords);
-    void flush(const app::Size& screen_size);
+                       const Point& min_coords,
+                       const Point& max_coords);
+    void flush(const Size& screen_size);
 
 private:
     static constexpr size_t kBatchMax = 0x10000;

@@ -108,9 +108,9 @@ TextureRenderer& TextureRenderer::operator=(TextureRenderer&& other) {
 }
 
 void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
-                                    const app::Point& coords,
-                                    const app::Point& min_coords,
-                                    const app::Point& max_coords,
+                                    const Point& coords,
+                                    const Point& min_coords,
+                                    const Point& max_coords,
                                     const std::function<Rgb(size_t)>& highlight_callback) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
@@ -216,7 +216,7 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
     }
 }
 
-void TextureRenderer::addImage(size_t image_index, const app::Point& coords, const Rgb& color) {
+void TextureRenderer::addImage(size_t image_index, const Point& coords, const Rgb& color) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
     const auto& image = texture_cache.getImage(image_index);
     InstanceData instance = {
@@ -229,7 +229,7 @@ void TextureRenderer::addImage(size_t image_index, const app::Point& coords, con
     insertIntoBatch(image.page, std::move(instance));
 }
 
-void TextureRenderer::addColorImage(size_t image_index, const app::Point& coords) {
+void TextureRenderer::addColorImage(size_t image_index, const Point& coords) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
     const auto& image = texture_cache.getImage(image_index);
     InstanceData instance = {
@@ -242,7 +242,7 @@ void TextureRenderer::addColorImage(size_t image_index, const app::Point& coords
     insertIntoBatch(image.page, std::move(instance));
 }
 
-void TextureRenderer::flush(const app::Size& screen_size) {
+void TextureRenderer::flush(const Size& screen_size) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
 
     glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ZERO, GL_ONE);
@@ -284,9 +284,9 @@ void TextureRenderer::flush(const app::Size& screen_size) {
 }
 
 void TextureRenderer::renderAtlasPage(size_t page,
-                                      const app::Point& coords,
-                                      const app::Point& min_coords,
-                                      const app::Point& max_coords) {
+                                      const Point& coords,
+                                      const Point& min_coords,
+                                      const Point& max_coords) {
     int x = coords.x;
     int y = coords.y;
     int width = Atlas::kAtlasSize;

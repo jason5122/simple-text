@@ -1,20 +1,23 @@
 #pragma once
 
-#include "app/app.h"
+#include "gui/app/app.h"
 #include "simple_text/editor_window.h"
+
 #include <vector>
 
 // TODO: Remove this.
 #include "build/build_config.h"
 
-class EditorApp : public app::App {
+namespace gui {
+
+class EditorApp : public App {
 public:
     void createWindow();
     void destroyWindow(int wid);
 
     void onLaunch() override;
     void onQuit() override;
-    void onAppAction(app::AppAction action) override;
+    void onAppAction(AppAction action) override;
 
 private:
     friend class EditorWindow;
@@ -54,3 +57,5 @@ private:
 
     std::vector<std::unique_ptr<EditorWindow>> editor_windows;
 };
+
+}  // namespace gui

@@ -314,41 +314,41 @@ void TextEditWidget::draw() {
     renderScrollBars(main_line_height);
 }
 
-void TextEditWidget::leftMouseDown(const app::Point& mouse_pos,
-                                   app::ModifierKey modifiers,
-                                   app::ClickType click_type) {
-    app::Point coords = mouse_pos - textOffset();
+void TextEditWidget::leftMouseDown(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
+    Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
     size_t col = Movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
-    if (click_type == app::ClickType::kSingleClick) {
-        bool extend = modifiers == app::ModifierKey::kShift;
+    if (click_type == ClickType::kSingleClick) {
+        bool extend = modifiers == ModifierKey::kShift;
         selection.setIndex(offset, extend);
-    } else if (click_type == app::ClickType::kDoubleClick) {
+    } else if (click_type == ClickType::kDoubleClick) {
         // TODO: Refine double click implementation.
         size_t left = Movement::prevWordStart(tree, offset);
         size_t right = Movement::nextWordEnd(tree, offset);
         selection.setRange(left, right);
-    } else if (click_type == app::ClickType::kTripleClick) {
+    } else if (click_type == ClickType::kTripleClick) {
         auto [left, right] = tree.get_line_range_with_newline(line);
         selection.setRange(left, right);
     }
 }
 
-void TextEditWidget::leftMouseDrag(const app::Point& mouse_pos,
-                                   app::ModifierKey modifiers,
-                                   app::ClickType click_type) {
-    app::Point coords = mouse_pos - textOffset();
+void TextEditWidget::leftMouseDrag(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
+    Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
     size_t col = Movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
-    if (click_type == app::ClickType::kSingleClick) {
+    if (click_type == ClickType::kSingleClick) {
         selection.setIndex(offset, true);
-    } else if (click_type == app::ClickType::kDoubleClick) {
+    } else if (click_type == ClickType::kDoubleClick) {
         // TODO: Implement.
-    } else if (click_type == app::ClickType::kTripleClick) {
+    } else if (click_type == ClickType::kTripleClick) {
         auto [left, right] = tree.get_line_range_with_newline(line);
         selection.setIndex(right, true);
     }
@@ -382,8 +382,8 @@ inline const font::LineLayout& TextEditWidget::layoutAt(size_t line) {
     return line_layout_cache.get(font_id, line_str);
 }
 
-inline constexpr app::Point TextEditWidget::textOffset() {
-    app::Point text_offset = position - scroll_offset;
+inline constexpr Point TextEditWidget::textOffset() {
+    Point text_offset = position - scroll_offset;
     text_offset.x += gutterWidth();
     return text_offset;
 }
@@ -409,25 +409,25 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
-    app::Point min_coords = {
+    Point min_coords = {
         .x = scroll_offset.x,
         .y = position.y,
     };
-    app::Point max_coords = {
+    Point max_coords = {
         .x = scroll_offset.x + (size.width - gutterWidth() - kCaretWidth / 2),
         .y = position.y + size.height,
     };
 
     // {
     //     // TODO: Implement shadows.
-    //     app::Point coords = textOffset() + scroll_offset;
+    //     Point coords = textOffset() + scroll_offset;
     //     rect_renderer.addRect(coords, {2, size.height}, {255}, Layer::kBackground, 0, 0);
     // }
 
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
 
-        app::Point coords = textOffset();
+        Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
         coords.x += kCaretWidth / 2;  // Match Sublime Text.
 
@@ -440,16 +440,16 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
 
         // Draw gutter.
         if (line == selection_line) {
-            app::Point gutter_coords = position;
+            Point gutter_coords = position;
             gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
-            app::Size gutter_size = {gutterWidth(), main_line_height};
+            Size gutter_size = {gutterWidth(), main_line_height};
             rect_renderer.addRect(gutter_coords, gutter_size, position, position + size,
                                   kGutterColor, Layer::kBackground, 0, 0);
         }
 
         // Draw line numbers.
-        app::Point line_number_coords = position;
+        Point line_number_coords = position;
         line_number_coords.y -= scroll_offset.y;
         line_number_coords.x += kGutterLeftPadding;
         line_number_coords.y += static_cast<int>(line) * main_line_height;
@@ -461,11 +461,11 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
-        app::Point min_gutter_coords = {
+        Point min_gutter_coords = {
             .x = 0,
             .y = position.y,
         };
-        app::Point max_gutter_coords = {
+        Point max_gutter_coords = {
             .x = gutterWidth(),
             .y = position.y + size.height,
         };
@@ -508,11 +508,11 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
         }
     }
 
-    app::Point min_coords = {
+    Point min_coords = {
         .x = gutterWidth() + position.x,
         .y = position.y,
     };
-    app::Point max_coords = {
+    Point max_coords = {
         .x = position.x + size.width,
         .y = position.y + size.height,
     };
@@ -531,12 +531,12 @@ void TextEditWidget::renderScrollBars(int main_line_height) {
     vbar_height = std::max(30, vbar_height);
     double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
 
-    app::Point vbar_coords = {
+    Point vbar_coords = {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     vbar_coords += position;
-    app::Size vbar_size = {vbar_width, vbar_height};
+    Size vbar_size = {vbar_width, vbar_height};
     rect_renderer.addRect(vbar_coords, vbar_size, position, position + size, kScrollBarColor,
                           Layer::kForeground, 5);
 
@@ -561,19 +561,19 @@ void TextEditWidget::renderCaret(int main_line_height) {
     auto [line, col] = tree.line_column_at(selection.end());
     int end_caret_x = Movement::xAtColumn(layoutAt(line), col);
 
-    app::Point caret_pos = {
+    Point caret_pos = {
         .x = end_caret_x,
         .y = static_cast<int>(line) * main_line_height,
     };
     caret_pos.y -= kExtraPadding;
     caret_pos += textOffset();
-    app::Size caret_size = {kCaretWidth, caret_height};
+    Size caret_size = {kCaretWidth, caret_height};
 
-    app::Point min_coords = {
+    Point min_coords = {
         .x = gutterWidth() + position.x,
         .y = position.y,
     };
-    app::Point max_coords = {
+    Point max_coords = {
         .x = position.x + size.width,
         .y = position.y + size.height,
     };

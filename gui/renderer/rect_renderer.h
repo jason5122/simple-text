@@ -1,6 +1,6 @@
 #pragma once
 
-#include "app/types.h"
+#include "gui/app/types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "util/non_copyable.h"
@@ -17,15 +17,15 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    void addRect(const app::Point& coords,
-                 const app::Size& size,
-                 const app::Point& min_coords,
-                 const app::Point& max_coords,
+    void addRect(const Point& coords,
+                 const Size& size,
+                 const Point& min_coords,
+                 const Point& max_coords,
                  const Rgb& color,
                  Layer layer,
                  int corner_radius = 0,
                  int tab_corner_radius = 0);
-    void flush(const app::Size& screen_size, Layer layer);
+    void flush(const Size& screen_size, Layer layer);
 
 private:
     static constexpr int kBatchMax = 0x10000;

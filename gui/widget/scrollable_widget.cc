@@ -3,10 +3,10 @@
 
 namespace gui {
 
-ScrollableWidget::ScrollableWidget(const app::Size& size)
+ScrollableWidget::ScrollableWidget(const Size& size)
     : Widget{size}, prev_scroll{std::chrono::system_clock::now()} {}
 
-void ScrollableWidget::scroll(const app::Point& mouse_pos, const app::Delta& delta) {
+void ScrollableWidget::scroll(const Point& mouse_pos, const Delta& delta) {
     auto curr_scroll = std::chrono::system_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(curr_scroll - prev_scroll).count();

@@ -11,8 +11,8 @@ EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size, size_t pane
       multi_view(new MultiViewWidget<TextEditWidget>()),
       tab_bar(new TabBarWidget(ui_font_size, kTabBarHeight, panel_close_image_id)) {
     // Leave padding between window title bar and tab.
-    auto tab_bar_padding = std::make_unique<PaddingWidget>(app::Size{0, 3 * 2}, kTabBarColor);
-    auto text_view_padding = std::make_unique<PaddingWidget>(app::Size{0, 2 * 2}, kTextViewColor);
+    auto tab_bar_padding = std::make_unique<PaddingWidget>(Size{0, 3 * 2}, kTabBarColor);
+    auto text_view_padding = std::make_unique<PaddingWidget>(Size{0, 2 * 2}, kTextViewColor);
 
     multi_view->addTab(std::make_unique<TextEditWidget>("", main_font_id));
 

@@ -10,8 +10,8 @@ public:
     TextButtonWidget(size_t font_id,
                      std::string_view str8,
                      Rgb bg_color,
-                     const app::Size& padding,
-                     const app::Size& min_size);
+                     const Size& padding,
+                     const Size& min_size);
 
     void draw() override;
 
@@ -27,7 +27,7 @@ private:
     font::LineLayout line_layout;
     int line_height;
 
-    constexpr app::Point textCenter();
+    constexpr Point textCenter();
 };
 
 }  // namespace gui

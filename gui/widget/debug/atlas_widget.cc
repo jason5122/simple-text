@@ -32,7 +32,7 @@ void AtlasWidget::draw() {
     rect_renderer.addRect(position, size, position, position + size, kSideBarColor,
                           Layer::kBackground);
 
-    const app::Size atlas_size = {
+    const Size atlas_size = {
         .width = Atlas::kAtlasSize,
         .height = Atlas::kAtlasSize,
     };

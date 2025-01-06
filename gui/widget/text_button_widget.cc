@@ -6,11 +6,8 @@
 
 namespace gui {
 
-TextButtonWidget::TextButtonWidget(size_t font_id,
-                                   std::string_view str8,
-                                   Rgb bg_color,
-                                   const app::Size& padding,
-                                   const app::Size& min_size)
+TextButtonWidget::TextButtonWidget(
+    size_t font_id, std::string_view str8, Rgb bg_color, const Size& padding, const Size& min_size)
     : bg_color(bg_color) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
@@ -30,11 +27,11 @@ void TextButtonWidget::draw() {
     rect_renderer.addRect(position, size, position, position + size, bg_color, Layer::kBackground,
                           4);
 
-    app::Point min_coords = {
+    Point min_coords = {
         .x = 0,
         .y = position.y,
     };
-    app::Point max_coords = {
+    Point max_coords = {
         .x = size.width,
         .y = position.y + size.height,
     };
@@ -42,7 +39,7 @@ void TextButtonWidget::draw() {
                                    [](size_t) { return kTextColor; });
 }
 
-constexpr app::Point TextButtonWidget::textCenter() {
+constexpr Point TextButtonWidget::textCenter() {
     auto pos = position;
     pos.x += size.width / 2;
     pos.x -= line_layout.width / 2;

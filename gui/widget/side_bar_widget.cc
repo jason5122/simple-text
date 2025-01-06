@@ -28,7 +28,7 @@ void SideBarWidget::draw() {
     renderScrollBars(metrics.line_height, visible_lines);
 }
 
-bool SideBarWidget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
+bool SideBarWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
     auto old_index = hovered_index;
 
     if (!mouse_pos) {
@@ -39,7 +39,7 @@ bool SideBarWidget::mousePositionChanged(const std::optional<app::Point>& mouse_
     const auto& metrics = rasterizer().metrics(label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
-        app::Point coords = position - scroll_offset;
+        Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * label_line_height;
 
         if (mouse_pos) {
@@ -73,18 +73,18 @@ void SideBarWidget::renderLabel() {
     for (size_t line = 0; line < strs.size(); ++line) {
         const auto& layout = line_layout_cache.get(label_font_id, strs[line]);
 
-        app::Point coords = position - scroll_offset;
+        Point coords = position - scroll_offset;
         coords.y += static_cast<int>(line) * label_line_height;
 
-        app::Point text_coords = coords;
+        Point text_coords = coords;
         text_coords.x += kLeftPadding;
         const auto highlight_callback = [](size_t) { return kTextColor; };
 
-        app::Point min_coords = {
+        Point min_coords = {
             .x = scroll_offset.x - kLeftPadding,
             .y = position.y,
         };
-        app::Point max_coords = {
+        Point max_coords = {
             .x = scroll_offset.x + size.width - kLeftPadding,
             .y = position.y + size.height,
         };
@@ -93,7 +93,7 @@ void SideBarWidget::renderLabel() {
 
         // Highlight on mouse hover.
         if (line == hovered_index) {
-            app::Size highlight_size = {size.width, label_line_height};
+            Size highlight_size = {size.width, label_line_height};
             rect_renderer.addRect(coords, highlight_size, position, position + size,
                                   kHighlightColor, Layer::kBackground);
         }
@@ -110,12 +110,12 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);
     double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
-    app::Point vbar_coords = {
+    Point vbar_coords = {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
     vbar_coords += position;
-    app::Size vbar_size = {vbar_width, vbar_height};
+    Size vbar_size = {vbar_width, vbar_height};
     rect_renderer.addRect(vbar_coords, vbar_size, position, position + size, kScrollBarColor,
                           Layer::kForeground, 5);
 }

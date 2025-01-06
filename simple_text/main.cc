@@ -8,7 +8,7 @@ int EditorMain(int argc, char* argv[]) {
     std::setbuf(stdout, nullptr);
 
     // TODO: Return proper status codes.
-    EditorApp editor_app;
+    gui::EditorApp editor_app;
     editor_app.run();
     return 0;
 }

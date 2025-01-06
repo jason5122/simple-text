@@ -8,7 +8,7 @@ namespace gui {
 class TabBarLabelWidget : public Widget {
 public:
     TabBarLabelWidget(size_t font_id,
-                      const app::Size& size,
+                      const Size& size,
                       int left_padding = 0,
                       int right_padding = 0);
 
@@ -36,7 +36,7 @@ private:
     std::vector<size_t> left_side_icons;
     std::vector<size_t> right_side_icons;
 
-    app::Point centerVertically(int widget_height);
+    Point centerVertically(int widget_height);
 };
 
 }  // namespace gui

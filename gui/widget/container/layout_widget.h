@@ -10,7 +10,7 @@ namespace gui {
 class LayoutWidget : public ContainerWidget {
 public:
     LayoutWidget() = default;
-    LayoutWidget(const app::Size& size) : ContainerWidget{size} {}
+    LayoutWidget(const Size& size) : ContainerWidget{size} {}
     virtual ~LayoutWidget() {}
 
     void setMainWidget(std::unique_ptr<Widget> widget);
@@ -18,16 +18,16 @@ public:
     void addChildEnd(std::unique_ptr<Widget> widget);
 
     void draw() override;
-    void scroll(const app::Point& mouse_pos, const app::Delta& delta) override;
-    void leftMouseDown(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
-    void leftMouseDrag(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
-    bool mousePositionChanged(const std::optional<app::Point>& mouse_pos) override;
-    void setPosition(const app::Point& position) override;
-    Widget* widgetAt(const app::Point& pos) override;
+    void scroll(const Point& mouse_pos, const Delta& delta) override;
+    void leftMouseDown(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
+    void leftMouseDrag(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
+    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override;
+    void setPosition(const Point& position) override;
+    Widget* widgetAt(const Point& pos) override;
 
     constexpr std::string_view className() const override {
         return "ContainerWidget";

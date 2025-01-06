@@ -121,10 +121,10 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 void SelectionRenderer::addSelections(const std::vector<Selection>& sels,
-                                      const app::Point& offset,
+                                      const Point& offset,
                                       int line_height,
-                                      const app::Point& min_coords,
-                                      const app::Point& max_coords) {
+                                      const Point& min_coords,
+                                      const Point& max_coords) {
     auto create = [&](int start, int end, int line,
                       uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                       uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -202,7 +202,7 @@ void SelectionRenderer::addSelections(const std::vector<Selection>& sels,
     }
 }
 
-void SelectionRenderer::flush(const app::Size& screen_size) {
+void SelectionRenderer::flush(const Size& screen_size) {
     if (instances.empty()) return;
 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);

@@ -6,9 +6,3 @@ group("tests") {
   testonly = true
   deps = [ "//testing:test_runner" ]
 }
-# group("experiments") {
-#   deps = [
-#     "//experiments/fast_startup",
-#     "//experiments/resizable_widget",
-#   ]
-# }

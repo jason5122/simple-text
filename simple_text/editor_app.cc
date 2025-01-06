@@ -9,6 +9,8 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+namespace gui {
+
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
 void EditorApp::onLaunch() {
@@ -53,11 +55,11 @@ void EditorApp::onQuit() {
     fmt::println("SimpleText::onQuit()");
 }
 
-void EditorApp::onAppAction(app::AppAction action) {
-    if (action == app::AppAction::kNewFile) {
+void EditorApp::onAppAction(AppAction action) {
+    if (action == AppAction::kNewFile) {
         createWindow();
     }
-    if (action == app::AppAction::kNewWindow) {
+    if (action == AppAction::kNewWindow) {
         createWindow();
     }
 }
@@ -80,3 +82,5 @@ void EditorApp::destroyWindow(int wid) {
     fmt::println("EditorApp::destroyWindow({})", wid);
     editor_windows[wid] = nullptr;
 }
+
+}  // namespace gui

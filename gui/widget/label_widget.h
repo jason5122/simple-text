@@ -26,7 +26,7 @@ private:
     std::string label_str;
     Rgb color;
 
-    app::Point centerVertically(int widget_height);
+    Point centerVertically(int widget_height);
 };
 
 }  // namespace gui

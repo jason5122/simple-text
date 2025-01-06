@@ -6,14 +6,14 @@ namespace gui {
 
 class VerticalResizingWidget : public VerticalLayoutWidget {
 public:
-    void leftMouseDown(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
-    void leftMouseDrag(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
-    app::CursorStyle cursorStyle() const override;
-    Widget* widgetAt(const app::Point& pos) override;
+    void leftMouseDown(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
+    void leftMouseDrag(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
+    CursorStyle cursorStyle() const override;
+    Widget* widgetAt(const Point& pos) override;
 
     constexpr std::string_view className() const override {
         return "VerticalResizingWidget";

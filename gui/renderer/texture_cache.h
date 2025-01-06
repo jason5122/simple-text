@@ -1,7 +1,7 @@
 #pragma once
 
-#include "app/types.h"
 #include "font/font_rasterizer.h"
+#include "gui/app/types.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/types.h"
 
@@ -28,7 +28,7 @@ public:
     const Glyph& getGlyph(size_t font_id, uint32_t glyph_id);
 
     struct Image {
-        app::Size size;
+        Size size;
         Vec4 uv;
         size_t page;
     };

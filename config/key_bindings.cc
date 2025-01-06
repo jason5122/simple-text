@@ -1,5 +1,6 @@
-#include "app/modifier_key.h"
 #include "key_bindings.h"
+
+#include "gui/app/modifier_key.h"
 
 // TODO: Debug use; remove this.
 #include <fmt/base.h>
@@ -114,4 +115,4 @@ void KeyBindings::addBinding(const std::string& keys, const std::string& command
 
     bindings.emplace_back(key, modifiers, action);
 }
-}
+}  // namespace config

@@ -106,10 +106,10 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
     return *this;
 }
 
-void RectRenderer::addRect(const app::Point& coords,
-                           const app::Size& size,
-                           const app::Point& min_coords,
-                           const app::Point& max_coords,
+void RectRenderer::addRect(const Point& coords,
+                           const Size& size,
+                           const Point& min_coords,
+                           const Point& max_coords,
                            const Rgb& color,
                            Layer layer,
                            int corner_radius,
@@ -163,7 +163,7 @@ void RectRenderer::addRect(const app::Point& coords,
     });
 }
 
-void RectRenderer::flush(const app::Size& screen_size, Layer layer) {
+void RectRenderer::flush(const Size& screen_size, Layer layer) {
     auto& instances = layer == Layer::kBackground ? layer_one_instances : layer_two_instances;
     if (instances.empty()) return;
 

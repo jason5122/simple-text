@@ -27,7 +27,7 @@ public:
 private:
     static constexpr int kTabWidth = 360;
     static constexpr int kTabCornerRadius = 10;
-    static constexpr app::Size kTabSeparatorSize{.width = 2, .height = 38};
+    static constexpr Size kTabSeparatorSize{.width = 2, .height = 38};
     // static constexpr Rgb kTabBarColor{190, 190, 190};  // Light.
     // static constexpr Rgb kTabColor{253, 253, 253};  // Light.
     static constexpr Rgb kTabBarColor{79, 86, 94};  // Dark.

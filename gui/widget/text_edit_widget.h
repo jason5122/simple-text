@@ -40,17 +40,17 @@ public:
     void updateFontId(size_t font_id);
 
     void draw() override;
-    void leftMouseDown(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
-    void leftMouseDrag(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
+    void leftMouseDown(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
+    void leftMouseDrag(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
 
     void updateMaxScroll() override;
 
-    constexpr app::CursorStyle cursorStyle() const final override {
-        return app::CursorStyle::kIBeam;
+    constexpr CursorStyle cursorStyle() const final override {
+        return CursorStyle::kIBeam;
     }
     constexpr std::string_view className() const final override {
         return "TextViewWidget";
@@ -88,7 +88,7 @@ private:
 
     size_t lineAtY(int y) const;
     inline const font::LineLayout& layoutAt(size_t line);
-    inline constexpr app::Point textOffset();
+    inline constexpr Point textOffset();
     inline constexpr int gutterWidth();
     inline int lineNumberWidth();
 

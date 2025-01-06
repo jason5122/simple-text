@@ -5,7 +5,7 @@
 namespace gui {
 
 TabBarLabelWidget::TabBarLabelWidget(size_t font_id,
-                                     const app::Size& size,
+                                     const Size& size,
                                      int left_padding,
                                      int right_padding)
     : Widget{size}, font_id(font_id), left_padding(left_padding), right_padding(right_padding) {}
@@ -32,25 +32,25 @@ void TabBarLabelWidget::draw() {
     const auto& texture_cache = gui::Renderer::instance().getTextureCache();
 
     // Draw all left side icons.
-    app::Point left_offset{.x = left_padding};
+    Point left_offset{.x = left_padding};
     for (size_t icon_id : left_side_icons) {
         auto& image = texture_cache.getImage(icon_id);
 
-        app::Point icon_position = centerVertically(image.size.height) + left_offset;
+        Point icon_position = centerVertically(image.size.height) + left_offset;
         texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image.size.width;
     }
 
     // Draw all right side icons.
-    app::Point right_offset{.x = right_padding};
+    Point right_offset{.x = right_padding};
     for (size_t icon_id : right_side_icons) {
         auto& image = texture_cache.getImage(icon_id);
 
         right_offset.x += image.size.width;
 
-        app::Point icon_position = centerVertically(image.size.height) - right_offset;
-        icon_position += app::Point{size.width, 0};
+        Point icon_position = centerVertically(image.size.height) - right_offset;
+        icon_position += Point{size.width, 0};
         texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
@@ -58,12 +58,12 @@ void TabBarLabelWidget::draw() {
     const auto& metrics = font_rasterizer.metrics(font_id);
     const auto& layout = line_layout_cache.get(font_id, label_str);
 
-    app::Point coords = centerVertically(metrics.line_height) + left_offset;
-    app::Point min_coords = {
+    Point coords = centerVertically(metrics.line_height) + left_offset;
+    Point min_coords = {
         .x = 0,
         .y = position.y,
     };
-    app::Point max_coords = {
+    Point max_coords = {
         .x = size.width - left_padding - right_padding,
         .y = position.y + size.height,
     };
@@ -71,8 +71,8 @@ void TabBarLabelWidget::draw() {
     texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
-app::Point TabBarLabelWidget::centerVertically(int widget_height) {
-    app::Point centered_point = position;
+Point TabBarLabelWidget::centerVertically(int widget_height) {
+    Point centered_point = position;
     centered_point.y += size.height / 2;
     centered_point.y -= widget_height / 2;
     return centered_point;

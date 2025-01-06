@@ -1,6 +1,6 @@
 #include "editor_window.h"
 
-#include "app/menu.h"
+#include "gui/app/menu.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/horizontal_resizing_widget.h"
@@ -16,7 +16,7 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-using namespace gui;
+namespace gui {
 
 namespace {
 
@@ -120,7 +120,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
       status_bar(new StatusBarWidget(44, parent.ui_font_small_id)),
       side_bar(new SideBarWidget(kSideBarWidth)) {}
 
-void EditorWindow::onOpenGLActivate(const app::Size& size) {
+void EditorWindow::onOpenGLActivate(const Size& size) {
     main_widget->setSize(size);
 
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
@@ -159,7 +159,7 @@ void EditorWindow::onOpenGLActivate(const app::Size& size) {
     main_widget->addChildEnd(std::move(find_panel_widget));
 }
 
-void EditorWindow::onDraw(const app::Size& size) {
+void EditorWindow::onDraw(const Size& size) {
     PROFILE_BLOCK("Total render time");
 
     // TODO: Debug use; remove this.
@@ -246,13 +246,13 @@ void EditorWindow::onFrame(int64_t ms) {
 
 // TODO: Verify that resize is always called on all platforms when the window is created.
 // TODO: Verify that resizes are followed by redraw calls in the GUI framework.
-void EditorWindow::onResize(const app::Size& size) {
+void EditorWindow::onResize(const Size& size) {
     main_widget->setSize(size);
     // side_bar->setMinimumWidth(100);
     // side_bar->setMaximumWidth(size.width - 100);
 }
 
-void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta) {
+void EditorWindow::onScroll(const Point& mouse_pos, const Delta& delta) {
     main_widget->mousePositionChanged(mouse_pos);
     main_widget->scroll(mouse_pos, delta);
 
@@ -263,7 +263,7 @@ void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta
 }
 
 // TODO: At this point, this is GTK-specific. Make the deceleration feel more natural.
-void EditorWindow::onScrollDecelerate(const app::Point& mouse_pos, const app::Delta& delta) {
+void EditorWindow::onScrollDecelerate(const Point& mouse_pos, const Delta& delta) {
     vel_x = delta.dx;
     vel_y = delta.dy;
     last_mouse_pos = mouse_pos;
@@ -275,9 +275,9 @@ void EditorWindow::onScrollDecelerate(const app::Point& mouse_pos, const app::De
     redraw();
 }
 
-void EditorWindow::onLeftMouseDown(const app::Point& mouse_pos,
-                                   app::ModifierKey modifiers,
-                                   app::ClickType click_type) {
+void EditorWindow::onLeftMouseDown(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
     dragged_widget = main_widget->widgetAt(mouse_pos);
     if (dragged_widget) {
         dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
@@ -287,14 +287,14 @@ void EditorWindow::onLeftMouseDown(const app::Point& mouse_pos,
     }
 }
 
-void EditorWindow::onLeftMouseUp(const app::Point& mouse_pos) {
+void EditorWindow::onLeftMouseUp(const Point& mouse_pos) {
     dragged_widget = nullptr;
     updateCursorStyle(mouse_pos);
 }
 
-void EditorWindow::onLeftMouseDrag(const app::Point& mouse_pos,
-                                   app::ModifierKey modifiers,
-                                   app::ClickType click_type) {
+void EditorWindow::onLeftMouseDrag(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
     if (dragged_widget) {
         dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
         // TODO: See if we should call `updateCursorStyle()` here.
@@ -303,14 +303,14 @@ void EditorWindow::onLeftMouseDrag(const app::Point& mouse_pos,
     }
 }
 
-void EditorWindow::onRightMouseDown(const app::Point& mouse_pos,
-                                    app::ModifierKey modifiers,
-                                    app::ClickType click_type) {
+void EditorWindow::onRightMouseDown(const Point& mouse_pos,
+                                    ModifierKey modifiers,
+                                    ClickType click_type) {
     // auto mouse_pos = mousePositionRaw();
     // if (mouse_pos) {
-    //     setCursorStyle(app::App::CursorStyle::kArrow);
+    //     setCursorStyle(CursorStyle::kArrow);
 
-    //     app::Menu menu;
+    //     Menu menu;
     //     std::string temp = "TODO: Change this";
     //     menu.addItem(temp);
     //     auto selected_index = menu.show(mouse_pos.value());
@@ -323,7 +323,7 @@ void EditorWindow::onRightMouseDown(const app::Point& mouse_pos,
 }
 
 // This represents the mouse moving *without* being a click+drag.
-void EditorWindow::onMouseMove(const app::Point& mouse_pos) {
+void EditorWindow::onMouseMove(const Point& mouse_pos) {
     updateCursorStyle(mouse_pos);
 
     if (main_widget->mousePositionChanged(mouse_pos)) {
@@ -340,56 +340,55 @@ void EditorWindow::onMouseExit() {
     }
 }
 
-bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
+bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
     // fmt::println("key = {}, modifiers = {}", key, modifiers);
 
     bool handled = false;
-    if (key == app::Key::kJ && modifiers == app::kPrimaryModifier) {
+    if (key == Key::kJ && modifiers == kPrimaryModifier) {
         editor_widget->prevIndex();
         handled = true;
-    } else if (key == app::Key::kK && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kK && modifiers == kPrimaryModifier) {
         editor_widget->nextIndex();
         handled = true;
-    } else if (key == app::Key::k1 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k1 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(0);
         handled = true;
-    } else if (key == app::Key::k2 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k2 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(1);
         handled = true;
-    } else if (key == app::Key::k3 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k3 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(2);
         handled = true;
-    } else if (key == app::Key::k4 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k4 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(3);
         handled = true;
-    } else if (key == app::Key::k5 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k5 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(4);
         handled = true;
-    } else if (key == app::Key::k6 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k6 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(5);
         handled = true;
-    } else if (key == app::Key::k7 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k7 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(6);
         handled = true;
-    } else if (key == app::Key::k8 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k8 && modifiers == kPrimaryModifier) {
         editor_widget->setIndex(7);
         handled = true;
-    } else if (key == app::Key::k9 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k9 && modifiers == kPrimaryModifier) {
         editor_widget->lastIndex();
         handled = true;
-    } else if (key == app::Key::kA && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kA && modifiers == kPrimaryModifier) {
         editor_widget->currentWidget()->selectAll();
         handled = true;
-    } else if (key == app::Key::kN && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kN && modifiers == kPrimaryModifier) {
         PROFILE_BLOCK("Add new tab (modifier key)");
         // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
         editor_widget->addTab("untitled", "");
         handled = true;
-    } else if (key == app::Key::kN &&
-               modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+    } else if (key == Key::kN && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         parent.createWindow();
         handled = true;
-    } else if (key == app::Key::kW && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kW && modifiers == kPrimaryModifier) {
         // If we are dragging on the current TextViewWidget, invalidate the pointer to prevent a
         // use-after-free crash.
         if (dragged_widget == editor_widget->currentWidget()) {
@@ -398,58 +397,55 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
 
         editor_widget->removeTab(editor_widget->getCurrentIndex());
         handled = true;
-    } else if (key == app::Key::kW &&
-               modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+    } else if (key == Key::kW && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         // Immediately exit this function and don't let any other methods get called! This window's
         // smart pointer will be deallocated after `close()`.
         close();
         return true;
-    } else if (key == app::Key::kC && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kC && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
         parent.setClipboardString(text_view->getSelectionText());
         handled = true;
-    } else if (key == app::Key::kV && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kV && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
         text_view->insertText(parent.getClipboardString());
         handled = true;
-    } else if (key == app::Key::kX && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kX && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
         parent.setClipboardString(text_view->getSelectionText());
         text_view->leftDelete();
         handled = true;
-    } else if (key == app::Key::kO &&
-               modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+    } else if (key == Key::kO && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         auto path = openFilePicker();
         if (path) {
             editor_widget->openFile(*path);
             editor_widget->lastIndex();
             handled = true;
         }
-    } else if (key == app::Key::kZ && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kZ && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
         text_view->undo();
         handled = true;
-    } else if (key == app::Key::kZ &&
-               modifiers == (app::kPrimaryModifier | app::ModifierKey::kShift)) {
+    } else if (key == Key::kZ && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         auto* text_view = editor_widget->currentWidget();
         text_view->redo();
         handled = true;
-    } else if (key == app::Key::kBackspace && modifiers == app::ModifierKey::kNone) {
+    } else if (key == Key::kBackspace && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
         text_view->leftDelete();
         handled = true;
-    } else if (key == app::Key::kEnter && modifiers == app::ModifierKey::kNone) {
+    } else if (key == Key::kEnter && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
         text_view->insertText("\n");
         handled = true;
-    } else if (key == app::Key::kTab && modifiers == app::ModifierKey::kNone) {
+    } else if (key == Key::kTab && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
         // TODO: Don't hard code this.
         text_view->insertText("    ");
         handled = true;
-    } else if (key == app::Key::kQ && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kQ && modifiers == kPrimaryModifier) {
         parent.quit();
-    } else if (key == app::Key::kF && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kF && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
         // TODO: Don't hard code this.
         text_view->find("needle");
@@ -457,7 +453,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
 
     // TODO: Refactor this.
-    // if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
+    // if (key == Key::kI && modifiers == kPrimaryModifier) {
 
     //     int side_bar_width = side_bar->getWidth();
     //     if (is_side_bar_animating) {
@@ -476,7 +472,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     // }
 
     // TODO: Clean this up.
-    if (key == app::Key::kMinus && modifiers == app::kPrimaryModifier) {
+    if (key == Key::kMinus && modifiers == kPrimaryModifier) {
         auto& font_rasterizer = font::FontRasterizer::instance();
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
@@ -487,7 +483,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->updateFontId(parent.main_font_id);
 
         handled = true;
-    } else if (key == app::Key::kEqual && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::kEqual && modifiers == kPrimaryModifier) {
         auto& font_rasterizer = font::FontRasterizer::instance();
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
@@ -498,7 +494,7 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
         editor_widget->updateFontId(parent.main_font_id);
 
         handled = true;
-    } else if (key == app::Key::k0 && modifiers == app::kPrimaryModifier) {
+    } else if (key == Key::k0 && modifiers == kPrimaryModifier) {
         auto& font_rasterizer = font::FontRasterizer::instance();
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
@@ -524,85 +520,85 @@ void EditorWindow::onInsertText(std::string_view text) {
     }
 }
 
-void EditorWindow::onAction(app::Action action, bool extend) {
+void EditorWindow::onAction(Action action, bool extend) {
     PROFILE_BLOCK("EditorWindow::onAction()");
 
     bool handled = false;
     auto* text_view = editor_widget->currentWidget();
-    if (action == app::Action::kMoveForwardByCharacters) {
+    if (action == Action::kMoveForwardByCharacters) {
         text_view->move(gui::MoveBy::kCharacters, true, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveBackwardByCharacters) {
+    if (action == Action::kMoveBackwardByCharacters) {
         text_view->move(gui::MoveBy::kCharacters, false, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveForwardByLines) {
+    if (action == Action::kMoveForwardByLines) {
         text_view->move(gui::MoveBy::kLines, true, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveBackwardByLines) {
+    if (action == Action::kMoveBackwardByLines) {
         text_view->move(gui::MoveBy::kLines, false, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveForwardByWords) {
+    if (action == Action::kMoveForwardByWords) {
         text_view->move(gui::MoveBy::kWords, true, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveBackwardByWords) {
+    if (action == Action::kMoveBackwardByWords) {
         text_view->move(gui::MoveBy::kWords, false, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveToBOL) {
+    if (action == Action::kMoveToBOL) {
         text_view->moveTo(gui::MoveTo::kBOL, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveToEOL) {
+    if (action == Action::kMoveToEOL) {
         text_view->moveTo(gui::MoveTo::kEOL, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveToHardBOL) {
+    if (action == Action::kMoveToHardBOL) {
         text_view->moveTo(gui::MoveTo::kHardBOL, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveToHardEOL) {
+    if (action == Action::kMoveToHardEOL) {
         text_view->moveTo(gui::MoveTo::kHardEOL, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveToBOF) {
+    if (action == Action::kMoveToBOF) {
         text_view->moveTo(gui::MoveTo::kBOF, extend);
         handled = true;
     }
-    if (action == app::Action::kMoveToEOF) {
+    if (action == Action::kMoveToEOF) {
         text_view->moveTo(gui::MoveTo::kEOF, extend);
         handled = true;
     }
-    if (action == app::Action::kInsertNewline) {
+    if (action == Action::kInsertNewline) {
         text_view->insertText("\n");
         handled = true;
     }
-    if (action == app::Action::kInsertNewlineIgnoringFieldEditor) {
+    if (action == Action::kInsertNewlineIgnoringFieldEditor) {
         text_view->insertText("\n");
         // This command is sent as the first part of the `ctrl+o` keybind. We shouldn't redraw.
         return;
     }
-    if (action == app::Action::kInsertTab) {
+    if (action == Action::kInsertTab) {
         text_view->insertText("    ");
         handled = true;
     }
-    if (action == app::Action::kLeftDelete) {
+    if (action == Action::kLeftDelete) {
         text_view->leftDelete();
         handled = true;
     }
-    if (action == app::Action::kRightDelete) {
+    if (action == Action::kRightDelete) {
         text_view->rightDelete();
         handled = true;
     }
-    if (action == app::Action::kDeleteWordForward) {
+    if (action == Action::kDeleteWordForward) {
         text_view->deleteWord(true);
         handled = true;
     }
-    if (action == app::Action::kDeleteWordBackward) {
+    if (action == Action::kDeleteWordBackward) {
         text_view->deleteWord(false);
         handled = true;
     }
@@ -612,15 +608,15 @@ void EditorWindow::onAction(app::Action action, bool extend) {
     }
 }
 
-void EditorWindow::onAppAction(app::AppAction action) {
-    if (action == app::AppAction::kNewFile) {
+void EditorWindow::onAppAction(AppAction action) {
+    if (action == AppAction::kNewFile) {
         PROFILE_BLOCK("Add new tab (app action)");
         // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
         // editor_widget->addTab("sample.cc", kCppExample);
         editor_widget->addTab("untitled", "");
         redraw();
     }
-    if (action == app::AppAction::kNewWindow) {
+    if (action == AppAction::kNewWindow) {
         parent.createWindow();
     }
 }
@@ -629,7 +625,7 @@ void EditorWindow::onClose() {
     parent.destroyWindow(wid);
 }
 
-void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos) {
+void EditorWindow::updateCursorStyle(const std::optional<Point>& mouse_pos) {
     // Case 1: Dragging operation in progress.
     if (dragged_widget) {
         setCursorStyle(dragged_widget->cursorStyle());
@@ -641,11 +637,13 @@ void EditorWindow::updateCursorStyle(const std::optional<app::Point>& mouse_pos)
             setCursorStyle(hovered_widget->cursorStyle());
         } else {
             // fmt::println("No widget hovered");
-            setCursorStyle(app::CursorStyle::kArrow);
+            setCursorStyle(CursorStyle::kArrow);
         }
     }
     // Case 3: Mouse position is outside of window.
     else {
-        setCursorStyle(app::CursorStyle::kArrow);
+        setCursorStyle(CursorStyle::kArrow);
     }
 }
+
+}  // namespace gui

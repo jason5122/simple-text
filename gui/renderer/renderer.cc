@@ -44,7 +44,7 @@ SelectionRenderer& Renderer::getSelectionRenderer() {
     return selection_renderer;
 }
 
-void Renderer::flush(const app::Size& size) {
+void Renderer::flush(const Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 

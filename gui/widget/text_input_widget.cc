@@ -28,11 +28,11 @@ void TextInputWidget::draw() {
     pos.x += left_padding;
     pos.x += kCaretWidth / 2;  // Match Sublime Text.
 
-    app::Point min_text_coords = {
+    Point min_text_coords = {
         .x = 0,
         .y = position.y,
     };
-    app::Point max_text_coords = {
+    Point max_text_coords = {
         .x = size.width,
         .y = position.y + size.height,
     };
@@ -42,9 +42,9 @@ void TextInputWidget::draw() {
                                    [](size_t) { return kTextColor; });
 
     int caret_x = Movement::xAtColumn(getLayout(), caret);
-    app::Point caret_pos = pos;
+    Point caret_pos = pos;
     caret_pos.x += caret_x;
-    app::Size caret_size = {kCaretWidth, line_height};
+    Size caret_size = {kCaretWidth, line_height};
     rect_renderer.addRect(caret_pos, caret_size, position, position + size, kCaretColor,
                           Layer::kBackground);
     // fmt::println("caret_x = {}", caret_x);
@@ -54,9 +54,9 @@ void TextInputWidget::updateMaxScroll() {
     ;
 }
 
-void TextInputWidget::leftMouseDown(const app::Point& mouse_pos,
-                                    app::ModifierKey modifiers,
-                                    app::ClickType click_type) {
+void TextInputWidget::leftMouseDown(const Point& mouse_pos,
+                                    ModifierKey modifiers,
+                                    ClickType click_type) {
     // TODO: Refactor this.
     auto pos = position;
     pos.x += left_padding;

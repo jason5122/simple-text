@@ -4,12 +4,12 @@
 
 namespace gui {
 
-void VerticalResizingWidget::leftMouseDown(const app::Point& mouse_pos,
-                                           app::ModifierKey modifiers,
-                                           app::ClickType click_type) {
+void VerticalResizingWidget::leftMouseDown(const Point& mouse_pos,
+                                           ModifierKey modifiers,
+                                           ClickType click_type) {
     for (auto& child : children_start) {
         if (child->bottomEdgeTest(mouse_pos, kResizeDistance)) {
-            if (click_type == app::ClickType::kDoubleClick) {
+            if (click_type == ClickType::kDoubleClick) {
                 child->setHeight(child->getMinimumHeight());
             } else {
                 dragged_widget = child.get();
@@ -20,7 +20,7 @@ void VerticalResizingWidget::leftMouseDown(const app::Point& mouse_pos,
     }
     for (auto& child : children_end) {
         if (child->topEdgeTest(mouse_pos, kResizeDistance)) {
-            if (click_type == app::ClickType::kDoubleClick) {
+            if (click_type == ClickType::kDoubleClick) {
                 child->setHeight(child->getMinimumHeight());
             } else {
                 dragged_widget = child.get();
@@ -31,11 +31,11 @@ void VerticalResizingWidget::leftMouseDown(const app::Point& mouse_pos,
     }
 }
 
-void VerticalResizingWidget::leftMouseDrag(const app::Point& mouse_pos,
-                                           app::ModifierKey modifiers,
-                                           app::ClickType click_type) {
+void VerticalResizingWidget::leftMouseDrag(const Point& mouse_pos,
+                                           ModifierKey modifiers,
+                                           ClickType click_type) {
     // TODO: If a double click occurred, prevent the drag from starting in the first place.
-    if (click_type == app::ClickType::kDoubleClick) {
+    if (click_type == ClickType::kDoubleClick) {
         return;
     }
 
@@ -53,11 +53,11 @@ void VerticalResizingWidget::leftMouseDrag(const app::Point& mouse_pos,
     }
 }
 
-app::CursorStyle VerticalResizingWidget::cursorStyle() const {
-    return app::CursorStyle::kResizeUpDown;
+CursorStyle VerticalResizingWidget::cursorStyle() const {
+    return CursorStyle::kResizeUpDown;
 }
 
-Widget* VerticalResizingWidget::widgetAt(const app::Point& pos) {
+Widget* VerticalResizingWidget::widgetAt(const Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.
     for (auto& child : children_start) {
         if (child->isResizable() && child->bottomEdgeTest(pos, kResizeDistance)) {

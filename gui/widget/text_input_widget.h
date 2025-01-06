@@ -11,12 +11,12 @@ public:
 
     void draw() override;
     void updateMaxScroll() override;
-    void leftMouseDown(const app::Point& mouse_pos,
-                       app::ModifierKey modifiers,
-                       app::ClickType click_type) override;
+    void leftMouseDown(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
 
-    constexpr app::CursorStyle cursorStyle() const final override {
-        return app::CursorStyle::kIBeam;
+    constexpr CursorStyle cursorStyle() const final override {
+        return CursorStyle::kIBeam;
     }
     constexpr std::string_view className() const final override {
         return "TextInputWidget";

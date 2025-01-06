@@ -29,7 +29,7 @@ void LayoutWidget::draw() {
     }
 }
 
-void LayoutWidget::scroll(const app::Point& mouse_pos, const app::Delta& delta) {
+void LayoutWidget::scroll(const Point& mouse_pos, const Delta& delta) {
     if (main_widget) {
         if (main_widget->hitTest(mouse_pos)) {
             main_widget->scroll(mouse_pos, delta);
@@ -47,9 +47,9 @@ void LayoutWidget::scroll(const app::Point& mouse_pos, const app::Delta& delta) 
     }
 }
 
-void LayoutWidget::leftMouseDown(const app::Point& mouse_pos,
-                                 app::ModifierKey modifiers,
-                                 app::ClickType click_type) {
+void LayoutWidget::leftMouseDown(const Point& mouse_pos,
+                                 ModifierKey modifiers,
+                                 ClickType click_type) {
     if (main_widget) {
         main_widget->leftMouseDown(mouse_pos, modifiers, click_type);
     }
@@ -61,9 +61,9 @@ void LayoutWidget::leftMouseDown(const app::Point& mouse_pos,
     }
 }
 
-void LayoutWidget::leftMouseDrag(const app::Point& mouse_pos,
-                                 app::ModifierKey modifiers,
-                                 app::ClickType click_type) {
+void LayoutWidget::leftMouseDrag(const Point& mouse_pos,
+                                 ModifierKey modifiers,
+                                 ClickType click_type) {
     if (main_widget) {
         main_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
@@ -75,7 +75,7 @@ void LayoutWidget::leftMouseDrag(const app::Point& mouse_pos,
     }
 }
 
-bool LayoutWidget::mousePositionChanged(const std::optional<app::Point>& mouse_pos) {
+bool LayoutWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
     bool result = false;
     if (main_widget) {
         result = main_widget->mousePositionChanged(mouse_pos) || result;
@@ -89,12 +89,12 @@ bool LayoutWidget::mousePositionChanged(const std::optional<app::Point>& mouse_p
     return result;
 }
 
-void LayoutWidget::setPosition(const app::Point& position) {
+void LayoutWidget::setPosition(const Point& position) {
     this->position = position;
     layout();
 }
 
-Widget* LayoutWidget::widgetAt(const app::Point& pos) {
+Widget* LayoutWidget::widgetAt(const Point& pos) {
     if (main_widget) {
         if (main_widget->hitTest(pos)) {
             return main_widget->widgetAt(pos);

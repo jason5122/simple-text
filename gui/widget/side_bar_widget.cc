@@ -17,7 +17,8 @@ SideBarWidget::SideBarWidget(int width)
 
 void SideBarWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kSideBarColor, Layer::kBackground);
+    rect_renderer.addRect(position, size, position, position + size, kSideBarColor,
+                          Layer::kBackground);
 
     const auto& metrics = rasterizer().metrics(label_font_id);
 
@@ -79,14 +80,22 @@ void SideBarWidget::renderLabel() {
         text_coords.x += kLeftPadding;
         const auto highlight_callback = [](size_t) { return kTextColor; };
 
-        int min_x = scroll_offset.x - kLeftPadding;
-        int max_x = scroll_offset.x + size.width - kLeftPadding;
-        texture_renderer.insertLineLayout(layout, text_coords, highlight_callback, min_x, max_x);
+        app::Point min_coords = {
+            .x = scroll_offset.x - kLeftPadding,
+            .y = position.y,
+        };
+        app::Point max_coords = {
+            .x = scroll_offset.x + size.width - kLeftPadding,
+            .y = position.y + size.height,
+        };
+        texture_renderer.addLineLayout(layout, text_coords, min_coords, max_coords,
+                                       highlight_callback);
 
         // Highlight on mouse hover.
         if (line == hovered_index) {
-            rect_renderer.addRect(coords, {size.width, label_line_height}, {255, 255, 0, 255},
-                                  Layer::kBackground);
+            app::Size highlight_size = {size.width, label_line_height};
+            rect_renderer.addRect(coords, highlight_size, position, position + size,
+                                  kHighlightColor, Layer::kBackground);
         }
     }
 }
@@ -101,11 +110,13 @@ void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);
     double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
-    app::Point vbar_coords{
+    app::Point vbar_coords = {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
+    vbar_coords += position;
+    app::Size vbar_size = {vbar_width, vbar_height};
+    rect_renderer.addRect(vbar_coords, vbar_size, position, position + size, kScrollBarColor,
                           Layer::kForeground, 5);
 }
 

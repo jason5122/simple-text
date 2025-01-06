@@ -103,14 +103,12 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
 
 void RectRenderer::addRect(const app::Point& coords,
                            const app::Size& size,
+                           const app::Point& min_coords,
+                           const app::Point& max_coords,
                            const Rgba& color,
                            Layer layer,
                            int corner_radius,
-                           int tab_corner_radius,
-                           int min_x,
-                           int max_x,
-                           int min_y,
-                           int max_y) {
+                           int tab_corner_radius) {
     int x = coords.x;
     int y = coords.y;
     int width = size.width;
@@ -121,27 +119,27 @@ void RectRenderer::addRect(const app::Point& coords,
     int top_edge = y;
     int bottom_edge = y + height;
 
-    if (right_edge <= min_x) return;
-    if (left_edge > max_x) return;
-    if (bottom_edge <= min_y) return;
-    if (top_edge > max_y) return;
+    if (right_edge <= min_coords.x) return;
+    if (left_edge > max_coords.x) return;
+    if (bottom_edge <= min_coords.y) return;
+    if (top_edge > max_coords.y) return;
 
-    if (left_edge < min_x) {
-        int diff = min_x - left_edge;
+    if (left_edge < min_coords.x) {
+        int diff = min_coords.x - left_edge;
         width -= diff;
         x += diff;
     }
-    if (right_edge > max_x) {
-        int diff = right_edge - max_x;
+    if (right_edge > max_coords.x) {
+        int diff = right_edge - max_coords.x;
         width -= diff;
     }
-    if (top_edge < min_y) {
-        int diff = min_y - top_edge;
+    if (top_edge < min_coords.y) {
+        int diff = min_coords.y - top_edge;
         height -= diff;
         y += diff;
     }
-    if (bottom_edge > max_y) {
-        int diff = bottom_edge - max_y;
+    if (bottom_edge > max_coords.y) {
+        int diff = bottom_edge - max_coords.y;
         height -= diff;
     }
 

@@ -37,7 +37,7 @@ void TabBarLabelWidget::draw() {
         auto& image = texture_cache.getImage(icon_id);
 
         app::Point icon_position = centerVertically(image.size.height) + left_offset;
-        texture_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
+        texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image.size.width;
     }
@@ -51,7 +51,7 @@ void TabBarLabelWidget::draw() {
 
         app::Point icon_position = centerVertically(image.size.height) - right_offset;
         icon_position += app::Point{size.width, 0};
-        texture_renderer.insertImage(icon_id, icon_position, kFolderIconColor);
+        texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
@@ -59,10 +59,16 @@ void TabBarLabelWidget::draw() {
     const auto& layout = line_layout_cache.get(font_id, label_str);
 
     app::Point coords = centerVertically(metrics.line_height) + left_offset;
-    int min_x = 0;
-    int max_x = size.width - left_padding - right_padding;
+    app::Point min_coords = {
+        .x = 0,
+        .y = position.y,
+    };
+    app::Point max_coords = {
+        .x = size.width - left_padding - right_padding,
+        .y = position.y + size.height,
+    };
     const auto highlight_callback = [this](size_t) { return color; };
-    texture_renderer.insertLineLayout(layout, coords, highlight_callback, min_x, max_x);
+    texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
 app::Point TabBarLabelWidget::centerVertically(int widget_height) {

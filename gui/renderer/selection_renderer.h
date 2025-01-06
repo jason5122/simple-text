@@ -21,13 +21,11 @@ public:
         int start;
         int end;
     };
-    void renderSelections(const std::vector<Selection>& sels,
-                          const app::Point& offset,
-                          int line_height,
-                          int min_x = std::numeric_limits<int>::min(),
-                          int max_x = std::numeric_limits<int>::max(),
-                          int min_y = std::numeric_limits<int>::min(),
-                          int max_y = std::numeric_limits<int>::max());
+    void addSelections(const std::vector<Selection>& sels,
+                       const app::Point& offset,
+                       int line_height,
+                       const app::Point& min_coords,
+                       const app::Point& max_coords);
     void flush(const app::Size& screen_size);
 
 private:

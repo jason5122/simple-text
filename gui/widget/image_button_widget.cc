@@ -20,14 +20,15 @@ void ImageButtonWidget::draw() {
     // TODO: Formalize this.
     if (getState() && bg_color.a > 0) {
         auto& rect_renderer = Renderer::instance().getRectRenderer();
-        rect_renderer.addRect(position, size, bg_color, Layer::kBackground, 4);
+        rect_renderer.addRect(position, size, position, position + size, bg_color,
+                              Layer::kBackground, 4);
     }
 
     auto pos = position;
     pos += {padding, padding};
 
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    texture_renderer.insertImage(image_id, pos, text_color);
+    texture_renderer.addImage(image_id, pos, text_color);
 }
 
 }  // namespace gui

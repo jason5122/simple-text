@@ -41,14 +41,17 @@ private:
 
     // TODO: Clean this up.
     static constexpr int kRatePerSec = 5;
+    static constexpr int kDecelFriction = 4;
     int requested_frames = 0;
-    bool is_side_bar_animating = false;
-    bool is_side_bar_open = true;
-    int target_width = 0;
-    int decel_x = 0;
-    int decel_y = 0;
-    int64_t last_ms = 0;
-    int64_t ms_err = 0;
+    // bool is_side_bar_animating = false;
+    // bool is_side_bar_open = true;
+    // int target_width = 0;
+    int vel_x = 0;
+    int vel_y = 0;
+    // int64_t last_ms = 0;
+    // int64_t ms_err = 0;
+    // TODO: Remove this.
+    app::Point last_mouse_pos;
 
     int wid;
     EditorApp& parent;

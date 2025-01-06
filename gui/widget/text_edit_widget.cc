@@ -409,10 +409,14 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
-    int min_x = scroll_offset.x;
-    int max_x = scroll_offset.x + (size.width - gutterWidth() - kCaretWidth / 2);
-    int min_y = position.y;
-    int max_y = position.y + size.height;
+    app::Point min_coords = {
+        .x = scroll_offset.x,
+        .y = position.y,
+    };
+    app::Point max_coords = {
+        .x = scroll_offset.x + (size.width - gutterWidth() - kCaretWidth / 2),
+        .y = position.y + size.height,
+    };
 
     // {
     //     // TODO: Implement shadows.
@@ -427,8 +431,8 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         coords.y += static_cast<int>(line) * main_line_height;
         coords.x += kCaretWidth / 2;  // Match Sublime Text.
 
-        texture_renderer.insertLineLayout(
-            layout, coords, [](size_t) { return kTextColor; }, min_x, max_x, min_y, max_y);
+        texture_renderer.addLineLayout(layout, coords, min_coords, max_coords,
+                                       [](size_t) { return kTextColor; });
 
         // TODO: Change this.
         int min_x = std::numeric_limits<int>::min();
@@ -439,8 +443,9 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
             app::Point gutter_coords = position;
             gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
-            rect_renderer.addRect(gutter_coords, {gutterWidth(), main_line_height}, kGutterColor,
-                                  Layer::kBackground, 0, 0, min_x, max_x, min_y, max_y);
+            app::Size gutter_size = {gutterWidth(), main_line_height};
+            rect_renderer.addRect(gutter_coords, gutter_size, position, position + size,
+                                  kGutterColor, Layer::kBackground, 0, 0);
         }
 
         // Draw line numbers.
@@ -456,9 +461,16 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
-        texture_renderer.insertLineLayout(line_number_layout, line_number_coords,
-                                          line_number_highlight_callback, min_x, max_x, min_y,
-                                          max_y);
+        app::Point min_gutter_coords = {
+            .x = 0,
+            .y = position.y,
+        };
+        app::Point max_gutter_coords = {
+            .x = gutterWidth(),
+            .y = position.y + size.height,
+        };
+        texture_renderer.addLineLayout(line_number_layout, line_number_coords, min_gutter_coords,
+                                       max_gutter_coords, line_number_highlight_callback);
     }
 }
 
@@ -496,12 +508,16 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
         }
     }
 
-    int min_x = gutterWidth() + position.x;
-    int max_x = position.x + size.width;
-    int min_y = position.y;
-    int max_y = position.y + size.height;
-    selection_renderer.renderSelections(selections, textOffset(), main_line_height, min_x, max_x,
-                                        min_y, max_y);
+    app::Point min_coords = {
+        .x = gutterWidth() + position.x,
+        .y = position.y,
+    };
+    app::Point max_coords = {
+        .x = position.x + size.width,
+        .y = position.y + size.height,
+    };
+    selection_renderer.addSelections(selections, textOffset(), main_line_height, min_coords,
+                                     max_coords);
 }
 
 void TextEditWidget::renderScrollBars(int main_line_height) {
@@ -514,11 +530,14 @@ void TextEditWidget::renderScrollBars(int main_line_height) {
     int vbar_height = static_cast<int>(size.height * vbar_height_percent);
     vbar_height = std::max(30, vbar_height);
     double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
-    app::Point vbar_coords{
+
+    app::Point vbar_coords = {
         .x = size.width - vbar_width,
         .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
     };
-    rect_renderer.addRect(vbar_coords + position, {vbar_width, vbar_height}, kScrollBarColor,
+    vbar_coords += position;
+    app::Size vbar_size = {vbar_width, vbar_height};
+    rect_renderer.addRect(vbar_coords, vbar_size, position, position + size, kScrollBarColor,
                           Layer::kForeground, 5);
 
     // Add horizontal scroll bar.
@@ -537,26 +556,29 @@ void TextEditWidget::renderScrollBars(int main_line_height) {
 void TextEditWidget::renderCaret(int main_line_height) {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
-    int extra_padding = 8;
-    int caret_height = main_line_height + extra_padding * 2;
+    int caret_height = main_line_height + kExtraPadding * 2;
 
     auto [line, col] = tree.line_column_at(selection.end());
     int end_caret_x = Movement::xAtColumn(layoutAt(line), col);
 
-    app::Point caret_pos{
+    app::Point caret_pos = {
         .x = end_caret_x,
         .y = static_cast<int>(line) * main_line_height,
     };
-    caret_pos.y -= extra_padding;
+    caret_pos.y -= kExtraPadding;
     caret_pos += textOffset();
+    app::Size caret_size = {kCaretWidth, caret_height};
 
-    int min_x = gutterWidth() + position.x;
-    int max_x = position.x + size.width;
-    int min_y = position.y;
-    int max_y = position.y + size.height;
-
-    rect_renderer.addRect(caret_pos, {kCaretWidth, caret_height}, kCaretColor, Layer::kForeground,
-                          0, 0, min_x, max_x, min_y, max_y);
+    app::Point min_coords = {
+        .x = gutterWidth() + position.x,
+        .y = position.y,
+    };
+    app::Point max_coords = {
+        .x = position.x + size.width,
+        .y = position.y + size.height,
+    };
+    rect_renderer.addRect(caret_pos, caret_size, min_coords, max_coords, kCaretColor,
+                          Layer::kForeground, 0, 0);
 }
 
 }  // namespace gui

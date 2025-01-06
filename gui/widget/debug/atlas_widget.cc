@@ -29,7 +29,8 @@ void AtlasWidget::draw() {
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
     const auto& texture_cache = Renderer::instance().getTextureCache();
 
-    rect_renderer.addRect(position, size, kSideBarColor, Layer::kBackground);
+    rect_renderer.addRect(position, size, position, position + size, kSideBarColor,
+                          Layer::kBackground);
 
     const app::Size atlas_size = {
         .width = Atlas::kAtlasSize,
@@ -44,16 +45,11 @@ void AtlasWidget::draw() {
         max_scroll_offset.y = page_colors.size() * Atlas::kAtlasSize;
     }
 
-    int min_x = position.x;
-    int max_x = position.x + size.width;
-    int min_y = position.y;
-    int max_y = position.y + size.height;
-
     auto coords = position - scroll_offset;
     for (size_t page = 0; page < count; ++page) {
-        texture_renderer.renderAtlasPage(page, coords, min_x, max_x, min_y, max_y);
-        rect_renderer.addRect(coords, atlas_size, page_colors[page], Layer::kBackground, 0, 0,
-                              min_x, max_x, min_y, max_y);
+        texture_renderer.renderAtlasPage(page, coords, position, position + size);
+        rect_renderer.addRect(coords, atlas_size, position, position + size, page_colors[page],
+                              Layer::kBackground, 0, 0);
 
         coords.y += Atlas::kAtlasSize;
     }

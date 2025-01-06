@@ -29,10 +29,16 @@ void LabelWidget::draw() {
     const auto& layout = line_layout_cache.get(font_id, label_str);
 
     app::Point coords = centerVertically(metrics.line_height);
-    int min_x = 0;
-    int max_x = size.width;
+    app::Point min_coords = {
+        .x = 0,
+        .y = position.y,
+    };
+    app::Point max_coords = {
+        .x = size.width,
+        .y = position.y + size.height,
+    };
     const auto highlight_callback = [this](size_t) { return color; };
-    texture_renderer.insertLineLayout(layout, coords, highlight_callback, min_x, max_x);
+    texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
 app::Point LabelWidget::centerVertically(int widget_height) {

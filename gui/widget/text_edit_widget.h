@@ -71,6 +71,7 @@ private:
     // static constexpr Rgba kCaretColor{95, 180, 180, 255};       // Light.
     static constexpr Rgba kCaretColor{249, 174, 88, 255};  // Dark.
     static constexpr int kCaretWidth = 4;
+    static constexpr int kExtraPadding = 8;
 
     size_t font_id;
 

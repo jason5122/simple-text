@@ -54,7 +54,8 @@ void TabBarWidget::removeTab(size_t index) {
 void TabBarWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
-    rect_renderer.addRect(position, size, kTabBarColor, Layer::kBackground);
+    rect_renderer.addRect(position, size, position, position + size, kTabBarColor,
+                          Layer::kBackground);
 
     for (const auto& tab_name_label : tab_name_labels) {
         tab_name_label->draw();
@@ -62,8 +63,9 @@ void TabBarWidget::draw() {
 
     app::Point tab_pos = position;
     tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
-    rect_renderer.addRect(tab_pos, {kTabWidth, size.height}, kTabColor, Layer::kBackground, 0,
-                          kTabCornerRadius);
+    app::Size tab_size = {kTabWidth, size.height};
+    rect_renderer.addRect(tab_pos, tab_size, position, position + size, kTabColor,
+                          Layer::kBackground, 0, kTabCornerRadius);
 
     size_t num_labels = tab_name_labels.size();
     for (size_t i = 0; i < num_labels; ++i) {
@@ -82,8 +84,8 @@ void TabBarWidget::draw() {
         tab_separator_pos.y += size.height / 2;
         tab_separator_pos.y -= kTabSeparatorSize.height / 2;
 
-        rect_renderer.addRect(tab_separator_pos, kTabSeparatorSize, kTabSeparatorColor,
-                              Layer::kBackground);
+        rect_renderer.addRect(tab_separator_pos, kTabSeparatorSize, position, position + size,
+                              kTabSeparatorColor, Layer::kBackground);
     }
 }
 

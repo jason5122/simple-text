@@ -20,21 +20,33 @@ TextInputWidget::TextInputWidget(size_t font_id, int top_padding, int left_paddi
 
 void TextInputWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kBackgroundColor, Layer::kBackground, 4);
+    rect_renderer.addRect(position, size, position, position + size, kBackgroundColor,
+                          Layer::kBackground, 4);
 
     auto pos = position;
     pos.y += top_padding;
     pos.x += left_padding;
     pos.x += kCaretWidth / 2;  // Match Sublime Text.
 
+    app::Point min_text_coords = {
+        .x = 0,
+        .y = position.y,
+    };
+    app::Point max_text_coords = {
+        .x = size.width,
+        .y = position.y + size.height,
+    };
+
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    texture_renderer.insertLineLayout(
-        getLayout(), pos, [](size_t) { return kTextColor; }, 0, size.width);
+    texture_renderer.addLineLayout(getLayout(), pos, min_text_coords, max_text_coords,
+                                   [](size_t) { return kTextColor; });
 
     int caret_x = Movement::xAtColumn(getLayout(), caret);
     app::Point caret_pos = pos;
     caret_pos.x += caret_x;
-    rect_renderer.addRect(caret_pos, {kCaretWidth, line_height}, kCaretColor, Layer::kBackground);
+    app::Size caret_size = {kCaretWidth, line_height};
+    rect_renderer.addRect(caret_pos, caret_size, position, position + size, kCaretColor,
+                          Layer::kBackground);
     // fmt::println("caret_x = {}", caret_x);
 }
 

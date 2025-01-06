@@ -191,46 +191,57 @@ void EditorWindow::onDraw(const app::Size& size) {
 }
 
 void EditorWindow::onFrame(int64_t ms) {
-    fmt::println("on frame: requested {}", requested_frames);
+    // if (is_side_bar_animating) {
+    //     int64_t d = ms - last_ms;
+    //     int64_t numerator = d * kRatePerSec + ms_err;
+    //     ms_err += numerator % 1000;
+    //     int64_t num_updates = numerator / 1000;
 
-    if (is_side_bar_animating) {
-        int64_t d = ms - last_ms;
-        int64_t numerator = d * kRatePerSec + ms_err;
-        ms_err += numerator % 1000;
-        int64_t num_updates = numerator / 1000;
+    //     int width = side_bar->getWidth();
+    //     if (is_side_bar_open && width > target_width) {
+    //         int new_width = width - kRatePerSec * num_updates;
+    //         side_bar->setWidth(std::max(new_width, target_width));
 
-        int width = side_bar->getWidth();
-        if (is_side_bar_open && width > target_width) {
-            int new_width = width - kRatePerSec * num_updates;
-            side_bar->setWidth(std::max(new_width, target_width));
+    //         if (side_bar->getWidth() == target_width) {
+    //             is_side_bar_open = false;
+    //             is_side_bar_animating = false;
+    //             ms_err = 0;
+    //             setAutoRedraw(false);
+    //         }
+    //     } else if (!is_side_bar_open && width < target_width) {
+    //         int new_width = width + kRatePerSec * num_updates;
+    //         side_bar->setWidth(std::min(new_width, target_width));
 
-            if (side_bar->getWidth() == target_width) {
-                is_side_bar_open = false;
-                is_side_bar_animating = false;
-                ms_err = 0;
-                setAutoRedraw(false);
-            }
-        } else if (!is_side_bar_open && width < target_width) {
-            int new_width = width + kRatePerSec * num_updates;
-            side_bar->setWidth(std::min(new_width, target_width));
+    //         if (side_bar->getWidth() == target_width) {
+    //             is_side_bar_open = true;
+    //             is_side_bar_animating = false;
+    //             ms_err = 0;
+    //             setAutoRedraw(false);
+    //         }
+    //     }
+    // }
 
-            if (side_bar->getWidth() == target_width) {
-                is_side_bar_open = true;
-                is_side_bar_animating = false;
-                ms_err = 0;
-                setAutoRedraw(false);
-            }
-        }
-    }
+    // fmt::println("{} {}", vel_x, vel_y);
+    // if (vel_x > 0 || vel_y > 0) {
+    //     main_widget->scroll(last_mouse_pos, {vel_x, vel_y});
+    //     vel_x = std::max(vel_x - kDecelFriction, 0);
+    //     vel_y = std::max(vel_y - kDecelFriction, 0);
+    // } else if (vel_x < 0 || vel_y < 0) {
+    //     main_widget->scroll(last_mouse_pos, {vel_x, vel_y});
+    //     vel_x = std::min(vel_x + kDecelFriction, 0);
+    //     vel_y = std::min(vel_y + kDecelFriction, 0);
+    // } else {
+    //     setAutoRedraw(false);
+    // }
 
     redraw();
 
     --requested_frames;
-    last_ms = ms;
-
     if (requested_frames == 0) {
         setAutoRedraw(false);
     }
+
+    // last_ms = ms;
 }
 
 // TODO: Verify that resize is always called on all platforms when the window is created.
@@ -251,9 +262,16 @@ void EditorWindow::onScroll(const app::Point& mouse_pos, const app::Delta& delta
     redraw();
 }
 
+// TODO: At this point, this is GTK-specific. Make the deceleration feel more natural.
 void EditorWindow::onScrollDecelerate(const app::Point& mouse_pos, const app::Delta& delta) {
-    decel_x = delta.dx;
-    decel_y = delta.dy;
+    vel_x = delta.dx;
+    vel_y = delta.dy;
+    last_mouse_pos = mouse_pos;
+
+    vel_x /= 16;
+    vel_y /= 16;
+
+    setAutoRedraw(true);
     redraw();
 }
 
@@ -439,23 +457,23 @@ bool EditorWindow::onKeyDown(app::Key key, app::ModifierKey modifiers) {
     }
 
     // TODO: Refactor this.
-    if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
+    // if (key == app::Key::kI && modifiers == app::kPrimaryModifier) {
 
-        int side_bar_width = side_bar->getWidth();
-        if (is_side_bar_animating) {
-            is_side_bar_open = !is_side_bar_open;
-            ms_err = 0;
-        }
-        if (is_side_bar_open) {
-            target_width = 0;
-        } else {
-            target_width = 500;
-        }
-        is_side_bar_animating = true;
-        setAutoRedraw(true);
+    //     int side_bar_width = side_bar->getWidth();
+    //     if (is_side_bar_animating) {
+    //         is_side_bar_open = !is_side_bar_open;
+    //         ms_err = 0;
+    //     }
+    //     if (is_side_bar_open) {
+    //         target_width = 0;
+    //     } else {
+    //         target_width = 500;
+    //     }
+    //     is_side_bar_animating = true;
+    //     setAutoRedraw(true);
 
-        handled = true;
-    }
+    //     handled = true;
+    // }
 
     // TODO: Clean this up.
     if (key == app::Key::kMinus && modifiers == app::kPrimaryModifier) {

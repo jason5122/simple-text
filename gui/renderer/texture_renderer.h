@@ -16,15 +16,13 @@ public:
     TextureRenderer(TextureRenderer&& other);
     TextureRenderer& operator=(TextureRenderer&& other);
 
-    void insertLineLayout(const font::LineLayout& line_layout,
-                          const app::Point& coords,
-                          const std::function<Rgb(size_t)>& highlight_callback,
-                          int min_x = std::numeric_limits<int>::min(),
-                          int max_x = std::numeric_limits<int>::max(),
-                          int min_y = std::numeric_limits<int>::min(),
-                          int max_y = std::numeric_limits<int>::max());
-    void insertImage(size_t image_index, const app::Point& coords, const Rgba& color);
-    void insertColorImage(size_t image_index, const app::Point& coords);
+    void addLineLayout(const font::LineLayout& line_layout,
+                       const app::Point& coords,
+                       const app::Point& min_coords,
+                       const app::Point& max_coords,
+                       const std::function<Rgb(size_t)>& highlight_callback);
+    void addImage(size_t image_index, const app::Point& coords, const Rgba& color);
+    void addColorImage(size_t image_index, const app::Point& coords);
     void flush(const app::Size& screen_size);
 
 private:
@@ -56,10 +54,8 @@ private:
     friend class AtlasWidget;
     void renderAtlasPage(size_t page,
                          const app::Point& coords,
-                         int min_x = std::numeric_limits<int>::min(),
-                         int max_x = std::numeric_limits<int>::max(),
-                         int min_y = std::numeric_limits<int>::min(),
-                         int max_y = std::numeric_limits<int>::max());
+                         const app::Point& min_coords,
+                         const app::Point& max_coords);
 };
 
 }  // namespace gui

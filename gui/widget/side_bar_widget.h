@@ -27,6 +27,8 @@ private:
     // static constexpr Rgba kScrollBarColor{190, 190, 190, 255};  // Light.
     static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
     static constexpr Rgba kFolderIconColor{142, 142, 142, 255};
+    static constexpr Rgba kHighlightColor = {255, 255, 0, 255};
+
     static constexpr int kLeftPadding = 15 * 2;
 
     size_t label_font_id;

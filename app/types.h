@@ -103,4 +103,8 @@ struct Size {
     }
 };
 
+constexpr Point operator+(const Point& p, const Size& s) {
+    return {p.x + s.width, p.y + s.height};
+}
+
 }  // namespace app

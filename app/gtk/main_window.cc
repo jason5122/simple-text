@@ -252,7 +252,7 @@ void decelerate(GtkEventControllerScroll* self, gdouble vel_x, gdouble vel_y, gp
         .dx = static_cast<int>(std::round(vel_x)),
         .dy = static_cast<int>(std::round(vel_y)),
     };
-    delta *= scale_factor;
+    // delta *= scale_factor;
 
     Window* app_window = main_window->appWindow();
     app_window->onScrollDecelerate(std::move(mouse_pos), std::move(delta));

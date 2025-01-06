@@ -115,13 +115,11 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
     return *this;
 }
 
-void SelectionRenderer::renderSelections(const std::vector<Selection>& sels,
-                                         const app::Point& offset,
-                                         int line_height,
-                                         int min_x,
-                                         int max_x,
-                                         int min_y,
-                                         int max_y) {
+void SelectionRenderer::addSelections(const std::vector<Selection>& sels,
+                                      const app::Point& offset,
+                                      int line_height,
+                                      const app::Point& min_coords,
+                                      const app::Point& max_coords) {
     auto create = [&](int start, int end, int line,
                       uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                       uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,
@@ -138,8 +136,8 @@ void SelectionRenderer::renderSelections(const std::vector<Selection>& sels,
             .border_color = kSelectionBorderColor,
             .border_info = {border_flags, bottom_border_offset, top_border_offset,
                             hide_background},
-            .clip_rect = {static_cast<float>(min_x), static_cast<float>(min_y),
-                          static_cast<float>(max_x), static_cast<float>(max_y)},
+            .clip_rect = {static_cast<float>(min_coords.x), static_cast<float>(min_coords.y),
+                          static_cast<float>(max_coords.x), static_cast<float>(max_coords.y)},
         };
         instances.emplace_back(std::move(instance));
     };

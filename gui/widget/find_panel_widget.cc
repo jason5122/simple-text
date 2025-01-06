@@ -77,7 +77,8 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
 
 void FindPanelWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, kFindPanelColor, Layer::kBackground);
+    rect_renderer.addRect(position, size, position, position + size, kFindPanelColor,
+                          Layer::kBackground);
 
     HorizontalLayoutWidget::draw();
 }

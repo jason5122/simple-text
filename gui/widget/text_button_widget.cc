@@ -27,9 +27,19 @@ void TextButtonWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
 
-    rect_renderer.addRect(position, size, bg_color, Layer::kBackground, 4);
-    texture_renderer.insertLineLayout(
-        line_layout, textCenter(), [](size_t) { return kTextColor; }, 0, size.width);
+    rect_renderer.addRect(position, size, position, position + size, bg_color, Layer::kBackground,
+                          4);
+
+    app::Point min_coords = {
+        .x = 0,
+        .y = position.y,
+    };
+    app::Point max_coords = {
+        .x = size.width,
+        .y = position.y + size.height,
+    };
+    texture_renderer.addLineLayout(line_layout, textCenter(), min_coords, max_coords,
+                                   [](size_t) { return kTextColor; });
 }
 
 constexpr app::Point TextButtonWidget::textCenter() {

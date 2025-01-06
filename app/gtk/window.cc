@@ -83,8 +83,6 @@ gboolean TickCallback(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer us
 
     gint64 d = frame_time - pimpl->first_frame_time;
     gint64 ms = d / 1000;
-    fmt::println("ms = {}", ms);
-
     app_window->onFrame(ms);
 
     return G_SOURCE_CONTINUE;

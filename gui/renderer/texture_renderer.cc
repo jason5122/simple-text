@@ -102,13 +102,11 @@ TextureRenderer& TextureRenderer::operator=(TextureRenderer&& other) {
     return *this;
 }
 
-void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
-                                       const app::Point& coords,
-                                       const std::function<Rgb(size_t)>& highlight_callback,
-                                       int min_x,
-                                       int max_x,
-                                       int min_y,
-                                       int max_y) {
+void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
+                                    const app::Point& coords,
+                                    const app::Point& min_coords,
+                                    const app::Point& max_coords,
+                                    const std::function<Rgb(size_t)>& highlight_callback) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
     int line_height = metrics.line_height;
@@ -144,10 +142,10 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
         // int top_edge = glyph.position.y + coords.y - line_height - metrics.descent;
         // int bottom_edge = glyph.position.y + coords.y;
 
-        if (right_edge <= min_x) continue;
-        if (left_edge > max_x) return;
-        if (bottom_edge <= min_y) continue;
-        if (top_edge > max_y) return;
+        if (right_edge <= min_coords.x) continue;
+        if (left_edge > max_coords.x) return;
+        if (bottom_edge <= min_coords.y) continue;
+        if (top_edge > max_coords.y) return;
 
         float uv_x = rglyph.uv.x;
         float uv_y = rglyph.uv.y;
@@ -157,22 +155,22 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
         int pos_x = coords.x + left_edge;
         int pos_y = coords.y - metrics.descent;
 
-        if (left_edge < min_x) {
-            int diff = min_x - left_edge;
+        if (left_edge < min_coords.x) {
+            int diff = min_coords.x - left_edge;
             float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
             width -= diff;
             uv_width -= uv_diff;
             pos_x += diff;
             uv_x += uv_diff;
         }
-        if (right_edge > max_x) {
-            int diff = right_edge - max_x;
+        if (right_edge > max_coords.x) {
+            int diff = right_edge - max_coords.x;
             float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
             width -= diff;
             uv_width -= uv_diff;
         }
-        if (top_edge < min_y) {
-            int diff = min_y - top_edge;
+        if (top_edge < min_coords.y) {
+            int diff = min_coords.y - top_edge;
             int diff2 = line_height - rglyph.top;
             if (line_height < rglyph.top) {
                 fmt::println("font_id = {}, glyph = {}", glyph.font_id, glyph.glyph_id);
@@ -186,8 +184,8 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
             pos_y += ans;
             uv_y += uv_diff;
         }
-        if (bottom_edge > max_y) {
-            int diff = bottom_edge - max_y;
+        if (bottom_edge > max_coords.y) {
+            int diff = bottom_edge - max_coords.y;
             int diff2 = std::max(line_height - (height + top), 0);
             int ans = std::max(diff - diff2, 0);
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
@@ -213,9 +211,7 @@ void TextureRenderer::insertLineLayout(const font::LineLayout& line_layout,
     }
 }
 
-void TextureRenderer::insertImage(size_t image_index,
-                                  const app::Point& coords,
-                                  const Rgba& color) {
+void TextureRenderer::addImage(size_t image_index, const app::Point& coords, const Rgba& color) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
     const auto& image = texture_cache.getImage(image_index);
     InstanceData instance = {
@@ -229,7 +225,7 @@ void TextureRenderer::insertImage(size_t image_index,
     insertIntoBatch(image.page, std::move(instance));
 }
 
-void TextureRenderer::insertColorImage(size_t image_index, const app::Point& coords) {
+void TextureRenderer::addColorImage(size_t image_index, const app::Point& coords) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
     const auto& image = texture_cache.getImage(image_index);
     InstanceData instance = {
@@ -283,8 +279,10 @@ void TextureRenderer::flush(const app::Size& screen_size) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextureRenderer::renderAtlasPage(
-    size_t page, const app::Point& coords, int min_x, int max_x, int min_y, int max_y) {
+void TextureRenderer::renderAtlasPage(size_t page,
+                                      const app::Point& coords,
+                                      const app::Point& min_coords,
+                                      const app::Point& max_coords) {
     int x = coords.x;
     int y = coords.y;
     int width = Atlas::kAtlasSize;
@@ -300,35 +298,35 @@ void TextureRenderer::renderAtlasPage(
     int top_edge = y;
     int bottom_edge = top_edge + height;
 
-    if (right_edge <= min_x) return;
-    if (left_edge > max_x) return;
-    if (bottom_edge <= min_y) return;
-    if (top_edge > max_y) return;
+    if (right_edge <= min_coords.x) return;
+    if (left_edge > max_coords.x) return;
+    if (bottom_edge <= min_coords.y) return;
+    if (top_edge > max_coords.y) return;
 
-    if (left_edge < min_x) {
-        int diff = min_x - left_edge;
+    if (left_edge < min_coords.x) {
+        int diff = min_coords.x - left_edge;
         float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
         width -= diff;
         uv_width -= uv_diff;
         x += diff;
         uv_x += uv_diff;
     }
-    if (right_edge > max_x) {
-        int diff = right_edge - max_x;
+    if (right_edge > max_coords.x) {
+        int diff = right_edge - max_coords.x;
         float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
         width -= diff;
         uv_width -= uv_diff;
     }
-    if (top_edge < min_y) {
-        int diff = min_y - top_edge;
+    if (top_edge < min_coords.y) {
+        int diff = min_coords.y - top_edge;
         float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
         height -= diff;
         uv_height -= uv_diff;
         y += diff;
         uv_y += uv_diff;
     }
-    if (bottom_edge > max_y) {
-        int diff = bottom_edge - max_y;
+    if (bottom_edge > max_coords.y) {
+        int diff = bottom_edge - max_coords.y;
         float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
         height -= diff;
         uv_height -= uv_diff;

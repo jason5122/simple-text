@@ -47,7 +47,7 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     addChildStart(std::move(highlight_matches_button));
 
     auto panel_close_button =
-        std::make_unique<ImageButtonWidget>(panel_close_image_id, kCloseIconColor, Rgba{}, 0);
+        std::make_unique<ImageButtonWidget>(panel_close_image_id, kCloseIconColor, Rgb{}, 0);
     panel_close_button->setAutoresizing(false);
     addChildEnd(std::move(panel_close_button));
 

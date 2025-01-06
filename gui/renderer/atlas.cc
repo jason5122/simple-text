@@ -8,6 +8,11 @@ using namespace opengl;
 
 namespace gui {
 
+static_assert(!std::is_copy_constructible_v<Atlas>);
+static_assert(!std::is_copy_assignable_v<Atlas>);
+static_assert(std::is_move_constructible_v<Atlas>);
+static_assert(std::is_move_assignable_v<Atlas>);
+
 Atlas::Atlas() {
     constexpr bool kPrintMaxTextureSize = false;
     if constexpr (kPrintMaxTextureSize) {

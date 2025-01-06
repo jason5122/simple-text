@@ -9,7 +9,7 @@ class TextButtonWidget : public Widget {
 public:
     TextButtonWidget(size_t font_id,
                      std::string_view str8,
-                     Rgba bg_color,
+                     Rgb bg_color,
                      const app::Size& padding,
                      const app::Size& min_size);
 
@@ -23,7 +23,7 @@ private:
     // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
     static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
 
-    Rgba bg_color;
+    Rgb bg_color;
     font::LineLayout line_layout;
     int line_height;
 

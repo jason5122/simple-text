@@ -21,7 +21,7 @@ public:
                  const app::Size& size,
                  const app::Point& min_coords,
                  const app::Point& max_coords,
-                 const Rgba& color,
+                 const Rgb& color,
                  Layer layer,
                  int corner_radius = 0,
                  int tab_corner_radius = 0);
@@ -39,6 +39,7 @@ private:
     struct InstanceData {
         Vec2 coords;
         Vec2 rect_size;
+        // The alpha channel of `color` is unused. However, a vec4 is more efficient than a vec3.
         Rgba color;
         float corner_radius = 0;
         float tab_corner_radius = 0;
@@ -47,8 +48,5 @@ private:
     std::vector<InstanceData> layer_one_instances;
     std::vector<InstanceData> layer_two_instances;
 };
-
-static_assert(!std::is_copy_constructible_v<RectRenderer>);
-static_assert(!std::is_trivially_copy_constructible_v<RectRenderer>);
 
 }  // namespace gui

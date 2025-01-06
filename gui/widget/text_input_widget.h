@@ -26,10 +26,10 @@ private:
     // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
     static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
     // TODO: Add light variant.
-    static constexpr Rgba kBackgroundColor{69, 75, 84, 255};  // Dark.
+    static constexpr Rgb kBackgroundColor{69, 75, 84};  // Dark.
 
-    // static constexpr Rgba kCaretColor{95, 180, 180, 255};       // Light.
-    static constexpr Rgba kCaretColor{249, 174, 88, 255};  // Dark.
+    // static constexpr Rgb kCaretColor{95, 180, 180};       // Light.
+    static constexpr Rgb kCaretColor{249, 174, 88};  // Dark.
     static constexpr int kCaretWidth = 4;
 
     size_t font_id;

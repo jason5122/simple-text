@@ -9,7 +9,7 @@
 
 namespace gui {
 
-class TextureRenderer {
+class TextureRenderer : util::NonCopyable {
 public:
     TextureRenderer();
     ~TextureRenderer();
@@ -21,7 +21,7 @@ public:
                        const app::Point& min_coords,
                        const app::Point& max_coords,
                        const std::function<Rgb(size_t)>& highlight_callback);
-    void addImage(size_t image_index, const app::Point& coords, const Rgba& color);
+    void addImage(size_t image_index, const app::Point& coords, const Rgb& color);
     void addColorImage(size_t image_index, const app::Point& coords);
     void flush(const app::Size& screen_size);
 

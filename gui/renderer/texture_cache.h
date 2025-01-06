@@ -12,7 +12,7 @@
 namespace gui {
 
 // TODO: Consider moving glyph/image loading code outside of this.
-class TextureCache {
+class TextureCache : util::NonCopyable {
 public:
     TextureCache();
 

@@ -7,7 +7,7 @@ namespace gui {
 
 class SolidColorWidget : public Widget {
 public:
-    SolidColorWidget(const app::Size& size, const Rgba& color);
+    SolidColorWidget(const app::Size& size, const Rgb& color);
 
     void draw() override;
 
@@ -16,7 +16,7 @@ public:
     }
 
 private:
-    Rgba color;
+    Rgb color;
 };
 
 }  // namespace gui

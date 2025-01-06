@@ -24,8 +24,8 @@ public:
     }
 
 private:
-    static constexpr Rgba kTempColor{223, 227, 230, 255};
-    static constexpr Rgba kFolderIconColor{142, 142, 142, false};
+    static constexpr Rgb kTempColor{223, 227, 230};
+    static constexpr Rgb kFolderIconColor{142, 142, 142};
 
     size_t font_id;
     int left_padding;

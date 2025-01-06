@@ -20,8 +20,8 @@ public:
 
 private:
     static constexpr app::Point kLeftPadding{32, 0};
-    // static constexpr Rgba kStatusBarColor{199, 203, 209, 255};  // Light.
-    static constexpr Rgba kStatusBarColor{46, 50, 56, 255};  // Dark.
+    // static constexpr Rgb kStatusBarColor{199, 203, 209};  // Light.
+    static constexpr Rgb kStatusBarColor{46, 50, 56};  // Dark.
     // static constexpr Rgb kTextColor{64, 64, 64};     // Light.
     static constexpr Rgb kTextColor{217, 217, 217};  // Dark.
 

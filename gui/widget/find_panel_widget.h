@@ -26,16 +26,16 @@ public:
     }
 
 private:
-    // static constexpr Rgba kFindPanelColor{199, 203, 209, 255};  // Light.
-    static constexpr Rgba kFindPanelColor{46, 50, 56, 255};  // Dark.
-    // static constexpr Rgba kIconBackgroundFocusedColor{216, 222, 233, 255};  // Light.
-    static constexpr Rgba kIconBackgroundFocusedColor{69, 75, 84, 255};  // Dark.
+    // static constexpr Rgb kFindPanelColor{199, 203, 209};  // Light.
+    static constexpr Rgb kFindPanelColor{46, 50, 56};  // Dark.
+    // static constexpr Rgb kIconBackgroundFocusedColor{216, 222, 233};  // Light.
+    static constexpr Rgb kIconBackgroundFocusedColor{69, 75, 84};  // Dark.
     // TODO: Add light variant.
-    static constexpr Rgba kIconBackgroundColor{60, 65, 73, 255};  // Dark.
+    static constexpr Rgb kIconBackgroundColor{60, 65, 73};  // Dark.
     // TODO: Add light variant.
-    static constexpr Rgba kIconColor{236, 237, 238, false};  // Dark.
+    static constexpr Rgb kIconColor{236, 237, 238};  // Dark.
     // TODO: Add light variant.
-    static constexpr Rgba kCloseIconColor{130, 132, 136, false};  // Dark.
+    static constexpr Rgb kCloseIconColor{130, 132, 136};  // Dark.
 
     static constexpr int kHorizontalPadding = 4;
     static constexpr int kVerticalPadding = 12;

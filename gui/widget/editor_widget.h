@@ -31,11 +31,11 @@ private:
     static constexpr int kTabBarHeight = 29 * 2;
 
     // Light.
-    // static constexpr Rgba kTabBarColor{190, 190, 190, 255};
-    // static constexpr Rgba kTextViewColor{253, 253, 253, 255};
+    // static constexpr Rgb kTabBarColor{190, 190, 190};
+    // static constexpr Rgb kTextViewColor{253, 253, 253};
     // Dark.
-    static constexpr Rgba kTabBarColor{79, 86, 94, 255};
-    static constexpr Rgba kTextViewColor{48, 56, 65, 255};
+    static constexpr Rgb kTabBarColor{79, 86, 94};
+    static constexpr Rgb kTextViewColor{48, 56, 65};
 
     size_t main_font_id;
 

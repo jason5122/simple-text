@@ -21,6 +21,11 @@ const std::string kFragmentShader =
 
 namespace gui {
 
+static_assert(!std::is_copy_constructible_v<RectRenderer>);
+static_assert(!std::is_copy_assignable_v<RectRenderer>);
+static_assert(std::is_move_constructible_v<RectRenderer>);
+static_assert(std::is_move_assignable_v<RectRenderer>);
+
 RectRenderer::RectRenderer() : shader_program{kVertexShader, kFragmentShader} {
     constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -105,7 +110,7 @@ void RectRenderer::addRect(const app::Point& coords,
                            const app::Size& size,
                            const app::Point& min_coords,
                            const app::Point& max_coords,
-                           const Rgba& color,
+                           const Rgb& color,
                            Layer layer,
                            int corner_radius,
                            int tab_corner_radius) {
@@ -152,7 +157,7 @@ void RectRenderer::addRect(const app::Point& coords,
     instances.emplace_back(InstanceData{
         .coords = {static_cast<float>(x), static_cast<float>(y)},
         .rect_size = {static_cast<float>(width), static_cast<float>(height)},
-        .color = color,
+        .color = Rgba::fromRgb(color, 0),
         .corner_radius = static_cast<float>(corner_radius),
         .tab_corner_radius = static_cast<float>(tab_corner_radius),
     });

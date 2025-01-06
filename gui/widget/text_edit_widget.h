@@ -64,12 +64,12 @@ private:
     static constexpr Rgb kLineNumberColor{130, 139, 150};  // Dark.
     // static constexpr Rgb kSelectedLineNumberColor{81, 81, 81};     // Light.
     static constexpr Rgb kSelectedLineNumberColor{190, 197, 209};  // Dark.
-    // static constexpr Rgba kGutterColor{227, 230, 232, 255};  // Light.
-    // static constexpr Rgba kScrollBarColor{190, 190, 190, 255};  // Light.
-    static constexpr Rgba kGutterColor{77, 88, 100, 255};       // Dark.
-    static constexpr Rgba kScrollBarColor{105, 112, 118, 255};  // Dark.
-    // static constexpr Rgba kCaretColor{95, 180, 180, 255};       // Light.
-    static constexpr Rgba kCaretColor{249, 174, 88, 255};  // Dark.
+    // static constexpr Rgb kGutterColor{227, 230, 232};  // Light.
+    // static constexpr Rgb kScrollBarColor{190, 190, 190};  // Light.
+    static constexpr Rgb kGutterColor{77, 88, 100};       // Dark.
+    static constexpr Rgb kScrollBarColor{105, 112, 118};  // Dark.
+    // static constexpr Rgb kCaretColor{95, 180, 180};       // Light.
+    static constexpr Rgb kCaretColor{249, 174, 88};  // Dark.
     static constexpr int kCaretWidth = 4;
     static constexpr int kExtraPadding = 8;
 

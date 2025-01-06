@@ -5,8 +5,8 @@
 namespace gui {
 
 ImageButtonWidget::ImageButtonWidget(size_t image_id,
-                                     const Rgba& text_color,
-                                     const Rgba& bg_color,
+                                     const Rgb& text_color,
+                                     const Rgb& bg_color,
                                      int padding)
     : image_id(image_id), text_color(text_color), bg_color(bg_color), padding(padding) {
     const auto& texture_cache = gui::Renderer::instance().getTextureCache();
@@ -18,7 +18,7 @@ ImageButtonWidget::ImageButtonWidget(size_t image_id,
 
 void ImageButtonWidget::draw() {
     // TODO: Formalize this.
-    if (getState() && bg_color.a > 0) {
+    if (getState()) {
         auto& rect_renderer = Renderer::instance().getRectRenderer();
         rect_renderer.addRect(position, size, position, position + size, bg_color,
                               Layer::kBackground, 4);

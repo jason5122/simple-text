@@ -4,7 +4,7 @@
 
 namespace gui {
 
-SolidColorWidget::SolidColorWidget(const app::Size& size, const Rgba& color)
+SolidColorWidget::SolidColorWidget(const app::Size& size, const Rgb& color)
     : Widget(size), color(color) {}
 
 void SolidColorWidget::draw() {

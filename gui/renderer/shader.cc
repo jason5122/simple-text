@@ -7,6 +7,11 @@ using namespace opengl;
 
 namespace gui {
 
+static_assert(!std::is_copy_constructible_v<Shader>);
+static_assert(!std::is_copy_assignable_v<Shader>);
+static_assert(std::is_move_constructible_v<Shader>);
+static_assert(std::is_move_assignable_v<Shader>);
+
 Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();

@@ -22,6 +22,11 @@ const std::string kFragmentShader =
 
 namespace gui {
 
+static_assert(!std::is_copy_constructible_v<SelectionRenderer>);
+static_assert(!std::is_copy_assignable_v<SelectionRenderer>);
+static_assert(std::is_move_constructible_v<SelectionRenderer>);
+static_assert(std::is_move_assignable_v<SelectionRenderer>);
+
 SelectionRenderer::SelectionRenderer() : shader_program{kVertexShader, kFragmentShader} {
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);

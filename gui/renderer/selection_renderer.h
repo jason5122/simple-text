@@ -72,7 +72,4 @@ private:
     };
 };
 
-static_assert(!std::is_copy_constructible_v<SelectionRenderer>);
-static_assert(!std::is_trivially_copy_constructible_v<SelectionRenderer>);
-
 }  // namespace gui

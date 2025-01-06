@@ -19,11 +19,11 @@ public:
     }
 
 private:
-    // static constexpr Rgba kSideBarColor{235, 237, 239, 255};  // Light.
-    static constexpr Rgba kSideBarColor{34, 38, 42, 255};  // Dark.
+    // static constexpr Rgb kSideBarColor{235, 237, 239};  // Light.
+    static constexpr Rgb kSideBarColor{34, 38, 42};  // Dark.
 
     // TODO: Debug use; remove this.
-    std::vector<Rgba> page_colors;
+    std::vector<Rgb> page_colors;
 };
 
 }  // namespace gui

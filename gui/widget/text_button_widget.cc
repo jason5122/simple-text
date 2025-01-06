@@ -8,7 +8,7 @@ namespace gui {
 
 TextButtonWidget::TextButtonWidget(size_t font_id,
                                    std::string_view str8,
-                                   Rgba bg_color,
+                                   Rgb bg_color,
                                    const app::Size& padding,
                                    const app::Size& min_size)
     : bg_color(bg_color) {

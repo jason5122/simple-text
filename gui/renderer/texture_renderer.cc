@@ -27,6 +27,11 @@ const std::string kFragmentShader =
 
 namespace gui {
 
+static_assert(!std::is_copy_constructible_v<TextureRenderer>);
+static_assert(!std::is_copy_assignable_v<TextureRenderer>);
+static_assert(std::is_move_constructible_v<TextureRenderer>);
+static_assert(std::is_move_assignable_v<TextureRenderer>);
+
 TextureRenderer::TextureRenderer() : shader_program{kVertexShader, kFragmentShader} {
     constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -199,19 +204,19 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
         }
 
         // TODO: Refactor these casts.
+        uint8_t alpha = rglyph.colored ? kColoredText : kPlainTexture;
         InstanceData instance = {
             .coords = {static_cast<float>(pos_x), static_cast<float>(pos_y)},
             .glyph = {static_cast<float>(left), static_cast<float>(top), static_cast<float>(width),
                       static_cast<float>(height)},
             .uv = {uv_x, uv_y, uv_width, uv_height},
-            .color = Rgba::fromRgb(highlight_callback(glyph.index), rglyph.colored),
+            .color = Rgba::fromRgb(highlight_callback(glyph.index), alpha),
         };
-        instance.color.a = rglyph.colored ? kColoredText : kPlainTexture;
         insertIntoBatch(rglyph.page, std::move(instance));
     }
 }
 
-void TextureRenderer::addImage(size_t image_index, const app::Point& coords, const Rgba& color) {
+void TextureRenderer::addImage(size_t image_index, const app::Point& coords, const Rgb& color) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
     const auto& image = texture_cache.getImage(image_index);
     InstanceData instance = {
@@ -219,9 +224,8 @@ void TextureRenderer::addImage(size_t image_index, const app::Point& coords, con
         .glyph = {0, 0, static_cast<float>(image.size.width),
                   static_cast<float>(image.size.height)},
         .uv = image.uv,
-        .color = color,
+        .color = Rgba::fromRgb(color, kPlainTexture),
     };
-    instance.color.a = kPlainTexture;
     insertIntoBatch(image.page, std::move(instance));
 }
 
@@ -233,8 +237,8 @@ void TextureRenderer::addColorImage(size_t image_index, const app::Point& coords
         .glyph = {0, 0, static_cast<float>(image.size.width),
                   static_cast<float>(image.size.height)},
         .uv = image.uv,
+        .color = {.a = kColoredImage},
     };
-    instance.color.a = kColoredImage;
     insertIntoBatch(image.page, std::move(instance));
 }
 

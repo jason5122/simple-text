@@ -137,15 +137,8 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
         // TODO: Refactor this whole thing... it's messy.
         int left_edge = glyph.position.x;
         int right_edge = left_edge + left + width;
-        // TODO: Unify this. Pango seems to be a bit different, likely for 2 reasons:
-        // 1) Different coordinate system.
-        // 2) Different pixel data dimensions for rasterization.
-        // Core Text.
         int top_edge = glyph.position.y + coords.y - metrics.descent;
         int bottom_edge = top_edge + std::max(height + top, line_height);
-        // Pango.
-        // int top_edge = glyph.position.y + coords.y - line_height - metrics.descent;
-        // int bottom_edge = glyph.position.y + coords.y;
 
         if (right_edge <= min_coords.x) continue;
         if (left_edge > max_coords.x) return;

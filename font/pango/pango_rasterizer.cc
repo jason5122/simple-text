@@ -134,6 +134,9 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     // We don't need to free this. This is owned by the `PangoLayout` instance.
     PangoLayoutLine* layout_line = pango_layout_get_line_readonly(layout.get(), 0);
 
+    int font_size = metrics(font_id).font_size;
+    int line_height = metrics(font_id).line_height;
+
     int total_advance = 0;
     std::vector<ShapedGlyph> glyphs;
     for (GSList* run = layout_line->runs; run != nullptr; run = run->next) {
@@ -143,7 +146,6 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         PangoFont* run_font = item->analysis.font;
         g_object_ref(run_font);
         GObjectPtr<PangoFont> run_font_ptr{run_font};
-        int font_size = metrics(font_id).font_size;
         size_t run_font_id = cacheFont({std::move(run_font_ptr)}, font_size);
 
         PangoGlyphString* glyph_string = glyph_item->glyphs;
@@ -174,6 +176,11 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
             const PangoGlyphGeometry& geometry = gi.geometry;
             int x_offset = PANGO_PIXELS(geometry.x_offset);
             int y_offset = PANGO_PIXELS(geometry.y_offset);
+
+            // Pango's origin is at the top left. Invert the y-axis.
+            // TODO: Since our app uses a top left origin, consider inverting bottom left origin
+            // rasterizers (e.g., Core Text) instead of Pango.
+            y_offset = line_height - y_offset;
 
             uint32_t glyph_id = gi.glyph;
             Point position = {.x = total_advance + x_offset, .y = y_offset};

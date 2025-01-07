@@ -15,9 +15,7 @@ static_assert(!std::is_move_assignable_v<FontRasterizer>);
 TEST(FontRasterizerTest, LayoutLine1) {
     auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addSystemFont(32);
-
-    const std::string line = "Hello😄🙂hi";
-    auto layout = rasterizer.layoutLine(font_id, line);
+    auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
 
     EXPECT_GT(layout.width, 0);
     EXPECT_EQ(layout.glyphs.size(), 9_Z);
@@ -53,9 +51,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
 TEST(FontRasterizerTest, LayoutLine2) {
     auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.addSystemFont(32);
-
-    const std::string line = "Hello😄🙂hi";
-    auto layout = rasterizer.layoutLine(font_id, line);
+    auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
 
     int total_advance = 0;
     for (const auto& glyph : layout.glyphs) {

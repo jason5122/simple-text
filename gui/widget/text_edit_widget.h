@@ -72,6 +72,7 @@ private:
     static constexpr Rgb kCaretColor{249, 174, 88};  // Dark.
     static constexpr int kCaretWidth = 4;
     static constexpr int kExtraPadding = 8;
+    static constexpr int kBorderThickness = 2;
 
     size_t font_id;
 

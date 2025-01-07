@@ -409,29 +409,30 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
-    Point min_coords = {
+    Point min_text_coords = {
         .x = scroll_offset.x,
         .y = position.y,
     };
-    Point max_coords = {
-        .x = scroll_offset.x + (size.width - gutterWidth() - kCaretWidth / 2),
+    Point max_text_coords = {
+        .x = scroll_offset.x + (size.width - (gutterWidth() + kBorderThickness)),
         .y = position.y + size.height,
     };
 
-    // {
-    //     // TODO: Implement shadows.
-    //     Point coords = textOffset() + scroll_offset;
-    //     rect_renderer.addRect(coords, {2, size.height}, {255}, Layer::kBackground, 0, 0);
-    // }
+    {
+        // TODO: Implement shadows.
+        Point coords = textOffset() + scroll_offset;
+        rect_renderer.addRect(coords, {2, size.height}, position, position + size, {255},
+                              Layer::kBackground);
+    }
 
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
-        coords.x += kCaretWidth / 2;  // Match Sublime Text.
+        coords.x += kBorderThickness;  // Match Sublime Text.
 
-        texture_renderer.addLineLayout(layout, coords, min_coords, max_coords,
+        texture_renderer.addLineLayout(layout, coords, min_text_coords, max_text_coords,
                                        [](size_t) { return kTextColor; });
 
         // TODO: Change this.
@@ -497,8 +498,8 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
 
         if (end - start > 0) {
             // Match Sublime Text.
-            if (start > 0) start += kCaretWidth / 2;
-            end += kCaretWidth / 2;
+            if (start > 0) start += kBorderThickness;
+            end += kBorderThickness;
 
             selections.emplace_back(SelectionRenderer::Selection{
                 .line = static_cast<int>(line),

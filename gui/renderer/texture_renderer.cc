@@ -162,10 +162,12 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
 
         if (left_edge < min_coords.x) {
             int diff = min_coords.x - left_edge;
-            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-            width -= diff;
+            int diff2 = left;
+            int ans = std::max(diff - diff2, 0);
+            float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
+            width -= ans;
             uv_width -= uv_diff;
-            pos_x += diff;
+            pos_x += ans;
             uv_x += uv_diff;
         }
         if (right_edge > max_coords.x) {

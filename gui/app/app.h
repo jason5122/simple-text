@@ -3,7 +3,7 @@
 #include "gui/app/app_action.h"
 #include "gui/app/key.h"
 #include "gui/app/modifier_key.h"
-#include "gui/app/window.h"
+#include "gui/app/window_widget.h"
 #include "util/non_copyable.h"
 
 #include <memory>
@@ -28,7 +28,7 @@ public:
     std::unique_ptr<impl> pimpl;
 
 private:
-    friend class Window;
+    friend class WindowWidget;
 
     // class impl;
     // std::unique_ptr<impl> pimpl;

@@ -7,8 +7,8 @@ source_set("cocoa") {
     "menu.mm",
     "menu/app_menu_bridge.mm",
     "menu/app_menu_cocoa_controller.mm",
-    "window.mm",
     "window_controller.mm",
+    "window_widget.mm",
   ]
 
   frameworks = [

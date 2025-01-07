@@ -5,7 +5,7 @@
 #include <fmt/base.h>
 
 @interface GLLayer () {
-    gui::Window* app_window;
+    gui::WindowWidget* app_window;
     gui::DisplayGL* display_gl;
     int old_width;
     int old_height;
@@ -53,7 +53,8 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
     });
 }
 
-- (instancetype)initWithAppWindow:(gui::Window*)appWindow displayGL:(gui::DisplayGL*)displayGL {
+- (instancetype)initWithAppWindow:(gui::WindowWidget*)appWindow
+                        displayGL:(gui::DisplayGL*)displayGL {
     self = [super init];
     if (self) {
         app_window = appWindow;
@@ -104,9 +105,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
     // Call OpenGL activation callback.
     CGLSetCurrentContext(display_gl->context());
     if (app_window) {
-        int scaled_width = self.frame.size.width * self.contentsScale;
-        int scaled_height = self.frame.size.height * self.contentsScale;
-        app_window->onOpenGLActivate({scaled_width, scaled_height});
+        app_window->onOpenGLActivate();
     }
     return display_gl->context();
 }
@@ -127,19 +126,16 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 
     CGLSetCurrentContext(glContext);
 
-    int scaled_width = self.frame.size.width * self.contentsScale;
-    int scaled_height = self.frame.size.height * self.contentsScale;
-
     if (old_width != self.frame.size.width || old_height != self.frame.size.height) {
         if (app_window) {
-            app_window->onResize({scaled_width, scaled_height});
+            app_window->layout();
         }
         old_width = self.frame.size.width;
         old_height = self.frame.size.height;
     }
 
     if (app_window) {
-        app_window->onDraw({scaled_width, scaled_height});
+        app_window->draw();
     }
 
     // Calls glFlush() by default.

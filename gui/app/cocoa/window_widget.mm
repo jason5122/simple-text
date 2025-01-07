@@ -1,4 +1,4 @@
-#include "gui/app/window.h"
+#include "gui/app/window_widget.h"
 
 #include "gui/app/cocoa/impl_cocoa.h"
 
@@ -7,7 +7,8 @@
 
 namespace gui {
 
-Window::Window(App& app, int width, int height) : pimpl{new impl{}} {
+WindowWidget::WindowWidget(App& app, int width, int height)
+    : Widget({width, height}), pimpl{new impl{}} {
     NSRect frame = NSMakeRect(0, 1000, width, height);
 
     // TODO: Debug; remove this.
@@ -33,48 +34,48 @@ Window::Window(App& app, int width, int height) : pimpl{new impl{}} {
     // }
 }
 
-Window::~Window() {
+WindowWidget::~WindowWidget() {
     [pimpl->window_controller invalidateAppWindowPointer];
     [pimpl->window_controller release];
 }
 
-void Window::show() {
+void WindowWidget::show() {
     [pimpl->window_controller show];
 }
 
-void Window::close() {
+void WindowWidget::close() {
     [pimpl->window_controller close];
 }
 
-void Window::redraw() {
+void WindowWidget::redraw() {
     [pimpl->window_controller redraw];
 }
 
-int Window::width() const {
+int WindowWidget::width() const {
     return [pimpl->window_controller getWidth];
 }
 
-int Window::height() const {
+int WindowWidget::height() const {
     return [pimpl->window_controller getHeight];
 }
 
-int Window::scale() const {
+int WindowWidget::scale() const {
     return [pimpl->window_controller getScaleFactor];
 }
 
-bool Window::isDarkMode() const {
+bool WindowWidget::isDarkMode() const {
     return [pimpl->window_controller isDarkMode];
 }
 
-void Window::setTitle(std::string_view title) {
+void WindowWidget::setTitle(std::string_view title) {
     [pimpl->window_controller setTitle:title];
 }
 
-void Window::setFilePath(std::string_view path) {
+void WindowWidget::setFilePath(std::string_view path) {
     [pimpl->window_controller setFilePath:path];
 }
 
-std::optional<std::string> Window::openFilePicker() const {
+std::optional<std::string> WindowWidget::openFilePicker() const {
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Choose File";
     panel.prompt = @"Choose";
@@ -101,7 +102,7 @@ std::optional<std::string> Window::openFilePicker() const {
     //                   }];
 }
 
-void Window::setCursorStyle(CursorStyle style) {
+void WindowWidget::setCursorStyle(CursorStyle style) {
     if (style == CursorStyle::kArrow) {
         [NSCursor.arrowCursor set];
     } else if (style == CursorStyle::kIBeam) {
@@ -113,11 +114,11 @@ void Window::setCursorStyle(CursorStyle style) {
     }
 }
 
-void Window::setAutoRedraw(bool auto_redraw) {
+void WindowWidget::setAutoRedraw(bool auto_redraw) {
     [pimpl->window_controller setAutoRedraw:auto_redraw];
 }
 
-int Window::framesPerSecond() const {
+int WindowWidget::framesPerSecond() const {
     return [pimpl->window_controller framesPerSecond];
 }
 

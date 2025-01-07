@@ -29,20 +29,20 @@ void LayoutWidget::draw() {
     }
 }
 
-void LayoutWidget::scroll(const Point& mouse_pos, const Delta& delta) {
+void LayoutWidget::performScroll(const Point& mouse_pos, const Delta& delta) {
     if (main_widget) {
         if (main_widget->hitTest(mouse_pos)) {
-            main_widget->scroll(mouse_pos, delta);
+            main_widget->performScroll(mouse_pos, delta);
         }
     }
     for (auto& child : children_start) {
         if (child->hitTest(mouse_pos)) {
-            child->scroll(mouse_pos, delta);
+            child->performScroll(mouse_pos, delta);
         }
     }
     for (auto& child : children_end) {
         if (child->hitTest(mouse_pos)) {
-            child->scroll(mouse_pos, delta);
+            child->performScroll(mouse_pos, delta);
         }
     }
 }

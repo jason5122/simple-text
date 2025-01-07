@@ -18,7 +18,7 @@ public:
     void addChildEnd(std::unique_ptr<Widget> widget);
 
     void draw() override;
-    void scroll(const Point& mouse_pos, const Delta& delta) override;
+    void performScroll(const Point& mouse_pos, const Delta& delta) override;
     void leftMouseDown(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;

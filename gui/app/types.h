@@ -4,6 +4,22 @@
 
 namespace gui {
 
+enum class ClickType {
+    kSingleClick,
+    kDoubleClick,
+    kTripleClick,
+};
+
+constexpr ClickType ClickTypeFromCount(int click_count) {
+    if (click_count == 1) {
+        return ClickType::kSingleClick;
+    } else if (click_count == 2) {
+        return ClickType::kDoubleClick;
+    } else {
+        return ClickType::kTripleClick;
+    }
+}
+
 enum class CursorStyle {
     kArrow,
     kIBeam,
@@ -88,6 +104,12 @@ struct Size {
     Size& operator-=(const Size& rhs) {
         width -= rhs.width;
         height -= rhs.height;
+        return *this;
+    }
+
+    constexpr Size& operator*=(int val) {
+        width *= val;
+        height *= val;
         return *this;
     }
 

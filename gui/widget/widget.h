@@ -3,7 +3,6 @@
 #include "font/font_rasterizer.h"
 #include "gui/app/modifier_key.h"
 #include "gui/app/types.h"
-#include "gui/app/window.h"
 
 namespace gui {
 
@@ -15,13 +14,18 @@ public:
 
     virtual void draw() = 0;
     virtual constexpr void layout() {}
-    virtual constexpr void scroll(const Point& mouse_pos, const Delta& delta) {}
+    // TODO: The name `scroll` clashes with some Mac header.
+    virtual constexpr void performScroll(const Point& mouse_pos, const Delta& delta) {}
     virtual constexpr void leftMouseDown(const Point& mouse_pos,
                                          ModifierKey modifiers,
                                          ClickType click_type) {}
     virtual constexpr void leftMouseDrag(const Point& mouse_pos,
                                          ModifierKey modifiers,
                                          ClickType click_type) {}
+    virtual constexpr void leftMouseUp(const Point& mouse_pos) {}
+    virtual constexpr void rightMouseDown(const Point& mouse_pos,
+                                          ModifierKey modifiers,
+                                          ClickType click_type) {}
 
     virtual constexpr Widget* widgetAt(const Point& pos);
     virtual constexpr bool mousePositionChanged(const std::optional<Point>& mouse_pos);

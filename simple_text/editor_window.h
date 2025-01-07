@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/app/window.h"
+#include "gui/app/window_widget.h"
 #include "gui/widget/container/layout_widget.h"
 #include "gui/widget/editor_widget.h"
 #include "gui/widget/side_bar_widget.h"
@@ -10,28 +10,34 @@ namespace gui {
 
 class EditorApp;
 
-class EditorWindow : public Window {
+class EditorWindow : public WindowWidget {
 public:
     EditorWindow(EditorApp& parent, int width, int height, int wid);
 
-    void onOpenGLActivate(const Size& size) override;
-    void onDraw(const Size& size) override;
+    // Widget overrides.
+    void draw() override;
+    void layout() override;
+    void performScroll(const Point& mouse_pos, const Delta& delta) override;
+    void leftMouseDown(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
+    void leftMouseDrag(const Point& mouse_pos,
+                       ModifierKey modifiers,
+                       ClickType click_type) override;
+    void leftMouseUp(const Point& mouse_pos) override;
+    void rightMouseDown(const Point& mouse_pos,
+                        ModifierKey modifiers,
+                        ClickType click_type) override;
+    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override;
+
+    constexpr std::string_view className() const final override {
+        return "EditorWindow";
+    }
+
+    // WindowWidget overrides.
+    void onOpenGLActivate() override;
     void onFrame(int64_t ms) override;
-    void onResize(const Size& size) override;
-    void onScroll(const Point& mouse_pos, const Delta& delta) override;
     void onScrollDecelerate(const Point& mouse_pos, const Delta& delta) override;
-    void onLeftMouseDown(const Point& mouse_pos,
-                         ModifierKey modifiers,
-                         ClickType click_type) override;
-    void onLeftMouseUp(const Point& mouse_pos) override;
-    void onLeftMouseDrag(const Point& mouse_pos,
-                         ModifierKey modifiers,
-                         ClickType click_type) override;
-    void onRightMouseDown(const Point& mouse_pos,
-                          ModifierKey modifiers,
-                          ClickType click_type) override;
-    void onMouseMove(const Point& mouse_pos) override;
-    void onMouseExit() override;
     bool onKeyDown(Key key, ModifierKey modifiers) override;
     void onInsertText(std::string_view text) override;
     void onAction(Action action, bool extend) override;

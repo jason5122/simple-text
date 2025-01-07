@@ -2,7 +2,7 @@
 
 #include "gui/app/cocoa/impl_cocoa.h"
 #include "gui/app/cocoa/window_controller.h"
-#include "gui/app/window.h"
+#include "gui/app/window_widget.h"
 
 #include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>
@@ -147,7 +147,7 @@ void BuildMainMenu() {
         app->onAppAction(appAction);
     } else {
         WindowController* wc = NSApp.keyWindow.windowController;
-        gui::Window* app_window = wc.appWindow;
+        gui::WindowWidget* app_window = wc.appWindow;
 
         // `app_window` is null if we are in the about panel.
         // TODO: Create our own "About ..." panel.

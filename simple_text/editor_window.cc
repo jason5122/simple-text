@@ -111,7 +111,7 @@ int main() {
 }  // namespace
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
-    : Window(parent, width, height),
+    : WindowWidget(parent, width, height),
       wid(wid),
       parent(parent),
       main_widget(std::make_unique<VerticalResizingWidget>()),
@@ -120,7 +120,10 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
       status_bar(new StatusBarWidget(44, parent.ui_font_small_id)),
       side_bar(new SideBarWidget(kSideBarWidth)) {}
 
-void EditorWindow::onOpenGLActivate(const Size& size) {
+void EditorWindow::onOpenGLActivate() {
+    Size size = {width(), height()};
+    size *= scale();
+
     main_widget->setSize(size);
 
     // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
@@ -159,8 +162,11 @@ void EditorWindow::onOpenGLActivate(const Size& size) {
     main_widget->addChildEnd(std::move(find_panel_widget));
 }
 
-void EditorWindow::onDraw(const Size& size) {
-    PROFILE_BLOCK("Total render time");
+void EditorWindow::draw() {
+    Size size = {width(), height()};
+    size *= scale();
+
+    // PROFILE_BLOCK("Total render time");
 
     // TODO: Debug use; remove this.
     auto* text_view = editor_widget->currentWidget();
@@ -246,15 +252,18 @@ void EditorWindow::onFrame(int64_t ms) {
 
 // TODO: Verify that resize is always called on all platforms when the window is created.
 // TODO: Verify that resizes are followed by redraw calls in the GUI framework.
-void EditorWindow::onResize(const Size& size) {
+void EditorWindow::layout() {
+    Size size = {width(), height()};
+    size *= scale();
+
     main_widget->setSize(size);
     // side_bar->setMinimumWidth(100);
     // side_bar->setMaximumWidth(size.width - 100);
 }
 
-void EditorWindow::onScroll(const Point& mouse_pos, const Delta& delta) {
+void EditorWindow::performScroll(const Point& mouse_pos, const Delta& delta) {
     main_widget->mousePositionChanged(mouse_pos);
-    main_widget->scroll(mouse_pos, delta);
+    main_widget->performScroll(mouse_pos, delta);
 
     // https://zed.dev/blog/120fps
     requested_frames = framesPerSecond();
@@ -262,22 +271,9 @@ void EditorWindow::onScroll(const Point& mouse_pos, const Delta& delta) {
     redraw();
 }
 
-// TODO: At this point, this is GTK-specific. Make the deceleration feel more natural.
-void EditorWindow::onScrollDecelerate(const Point& mouse_pos, const Delta& delta) {
-    vel_x = delta.dx;
-    vel_y = delta.dy;
-    last_mouse_pos = mouse_pos;
-
-    vel_x /= 16;
-    vel_y /= 16;
-
-    setAutoRedraw(true);
-    redraw();
-}
-
-void EditorWindow::onLeftMouseDown(const Point& mouse_pos,
-                                   ModifierKey modifiers,
-                                   ClickType click_type) {
+void EditorWindow::leftMouseDown(const Point& mouse_pos,
+                                 ModifierKey modifiers,
+                                 ClickType click_type) {
     dragged_widget = main_widget->widgetAt(mouse_pos);
     if (dragged_widget) {
         dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
@@ -287,14 +283,9 @@ void EditorWindow::onLeftMouseDown(const Point& mouse_pos,
     }
 }
 
-void EditorWindow::onLeftMouseUp(const Point& mouse_pos) {
-    dragged_widget = nullptr;
-    updateCursorStyle(mouse_pos);
-}
-
-void EditorWindow::onLeftMouseDrag(const Point& mouse_pos,
-                                   ModifierKey modifiers,
-                                   ClickType click_type) {
+void EditorWindow::leftMouseDrag(const Point& mouse_pos,
+                                 ModifierKey modifiers,
+                                 ClickType click_type) {
     if (dragged_widget) {
         dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
         // TODO: See if we should call `updateCursorStyle()` here.
@@ -303,9 +294,14 @@ void EditorWindow::onLeftMouseDrag(const Point& mouse_pos,
     }
 }
 
-void EditorWindow::onRightMouseDown(const Point& mouse_pos,
-                                    ModifierKey modifiers,
-                                    ClickType click_type) {
+void EditorWindow::leftMouseUp(const Point& mouse_pos) {
+    dragged_widget = nullptr;
+    updateCursorStyle(mouse_pos);
+}
+
+void EditorWindow::rightMouseDown(const Point& mouse_pos,
+                                  ModifierKey modifiers,
+                                  ClickType click_type) {
     // auto mouse_pos = mousePositionRaw();
     // if (mouse_pos) {
     //     setCursorStyle(CursorStyle::kArrow);
@@ -323,21 +319,28 @@ void EditorWindow::onRightMouseDown(const Point& mouse_pos,
 }
 
 // This represents the mouse moving *without* being a click+drag.
-void EditorWindow::onMouseMove(const Point& mouse_pos) {
+bool EditorWindow::mousePositionChanged(const std::optional<Point>& mouse_pos) {
     updateCursorStyle(mouse_pos);
 
     if (main_widget->mousePositionChanged(mouse_pos)) {
         redraw();
+        return true;
+    } else {
+        return false;
     }
 }
 
-// Mouse position is guaranteed to be outside of the window here.
-void EditorWindow::onMouseExit() {
-    updateCursorStyle(std::nullopt);
+// TODO: At this point, this is GTK-specific. Make the deceleration feel more natural.
+void EditorWindow::onScrollDecelerate(const Point& mouse_pos, const Delta& delta) {
+    vel_x = delta.dx;
+    vel_y = delta.dy;
+    last_mouse_pos = mouse_pos;
 
-    if (main_widget->mousePositionChanged(std::nullopt)) {
-        redraw();
-    }
+    vel_x /= 16;
+    vel_y /= 16;
+
+    setAutoRedraw(true);
+    redraw();
 }
 
 bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {

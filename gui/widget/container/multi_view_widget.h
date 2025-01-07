@@ -68,9 +68,9 @@ public:
         if (widget) widget->draw();
     }
 
-    void scroll(const Point& mouse_pos, const Delta& delta) override {
+    void performScroll(const Point& mouse_pos, const Delta& delta) override {
         Widget* widget = currentWidget();
-        if (widget) widget->scroll(mouse_pos, delta);
+        if (widget) widget->performScroll(mouse_pos, delta);
     }
 
     void leftMouseDown(const Point& mouse_pos,

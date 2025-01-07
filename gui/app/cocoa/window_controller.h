@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gui/app/cocoa/display_gl.h"
-#include "gui/app/window.h"
+#include "gui/app/window_widget.h"
 
 #include <string>
 
@@ -9,10 +9,10 @@
 
 @interface WindowController : NSWindowController <NSWindowDelegate>
 
-@property(nonatomic) gui::Window* appWindow;
+@property(nonatomic) gui::WindowWidget* appWindow;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(gui::Window*)appWindow
+                    appWindow:(gui::WindowWidget*)appWindow
                     displayGL:(gui::DisplayGL*)displayGL;
 
 - (void)show;

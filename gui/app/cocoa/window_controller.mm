@@ -16,7 +16,7 @@
 @synthesize appWindow;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
-                    appWindow:(gui::Window*)theAppWindow
+                    appWindow:(gui::WindowWidget*)theAppWindow
                     displayGL:(gui::DisplayGL*)displayGL {
     self = [super init];
     if (self) {

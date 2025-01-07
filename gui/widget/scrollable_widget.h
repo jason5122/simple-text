@@ -12,7 +12,7 @@ public:
 
     virtual void updateMaxScroll() = 0;
 
-    void scroll(const Point& mouse_pos, const Delta& delta) override;
+    void performScroll(const Point& mouse_pos, const Delta& delta) override;
 
     constexpr std::string_view className() const override {
         return "ScrollableWidget";

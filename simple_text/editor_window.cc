@@ -139,6 +139,7 @@ void EditorWindow::onOpenGLActivate() {
     // text_view->insertText("\n꣰");
     // text_view->insertText("ᩣᩤᩥᩦᩧᩨᩩᩪᩫᩬᩭ");
     // TODO: Fix these cases with all font rasterizers.
+    // text_view->insertText("⃒⃓⃘⃙⃚⃑⃔⃕⃖⃗⃛⃜⃝⃞⃟⃠⃡⃢⃣⃤⃥");
     // text_view->insertText("̴̵̶̷̸̡̢̧̨̣̤̥̦̩̪̫̬̭̮̯̰̱̲̳̹̺̻̼͇͈͉͍͎̽̾̿̀́͂̓̈́͆͊͋͌ͅ͏͓͔͕͖͙͚͐͑͒͗͛ͣͤͥͦͧͨͩͪͫͬͭͮͯ͘͜͟͢͝͞͠͡Ͱ");
 
     // TODO: Maybe use this case to optimize stuff. This could detect if we're doing line/col ->

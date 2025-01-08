@@ -62,13 +62,8 @@ RectRenderer::RectRenderer() : shader_program{kVertexShader, kFragmentShader} {
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, corner_radius));
-    glVertexAttribDivisor(index++, 1);
-
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
-                          (void*)offsetof(InstanceData, tab_corner_radius));
+    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                          (void*)offsetof(InstanceData, extra));
     glVertexAttribDivisor(index++, 1);
 
     // Unbind.
@@ -157,9 +152,12 @@ void RectRenderer::addRect(const Point& coords,
     instances.emplace_back(InstanceData{
         .coords = {static_cast<float>(x), static_cast<float>(y)},
         .rect_size = {static_cast<float>(width), static_cast<float>(height)},
-        .color = Rgba::fromRgb(color, 0),
-        .corner_radius = static_cast<float>(corner_radius),
-        .tab_corner_radius = static_cast<float>(tab_corner_radius),
+        .color = Rgba::fromRgb(color, 255),
+        .extra =
+            {
+                .x = static_cast<float>(corner_radius),
+                .y = static_cast<float>(tab_corner_radius),
+            },
     });
 }
 

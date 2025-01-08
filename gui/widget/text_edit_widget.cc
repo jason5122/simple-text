@@ -418,15 +418,18 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         .y = position.y + size.height,
     };
 
-    // {
-    //     // TODO: Implement shadows.
-    //     Point coords = textOffset() + scroll_offset;
-    //     coords.x += kBorderThickness;
-    //     rect_renderer.addRect(coords, {2, size.height}, position, position + size, {255},
-    //                           Layer::kBackground);
-    //     rect_renderer.addRect(coords, {size.width, 2}, position, position + size, {255},
-    //                           Layer::kBackground);
-    // }
+    {
+        // TODO: Implement shadows.
+        Point coords = textOffset() + scroll_offset;
+        coords.x += kBorderThickness;
+        rect_renderer.addRect(coords, {2, size.height}, position, position + size, {255},
+                              Layer::kBackground);
+        rect_renderer.addRect(coords, {size.width, 2}, position, position + size, {255},
+                              Layer::kBackground);
+        // coords.x += size.width - (gutterWidth() + kBorderThickness);
+        // rect_renderer.addRect(coords, {2, size.height}, position, position + size, {255},
+        //                       Layer::kBackground);
+    }
 
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
@@ -437,10 +440,6 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
 
         texture_renderer.addLineLayout(layout, coords, min_text_coords, max_text_coords,
                                        [](size_t) { return kTextColor; });
-
-        // TODO: Change this.
-        int min_x = std::numeric_limits<int>::min();
-        int max_x = std::numeric_limits<int>::max();
 
         // Draw gutter.
         if (line == selection_line) {

@@ -39,10 +39,9 @@ private:
     struct InstanceData {
         Vec2 coords;
         Vec2 rect_size;
-        // The alpha channel of `color` is unused. However, a vec4 is more efficient than a vec3.
         Rgba color;
-        float corner_radius = 0;
-        float tab_corner_radius = 0;
+        // <corner_radius, tab_corner_radius>
+        Vec2 extra;
     };
 
     std::vector<InstanceData> layer_one_instances;

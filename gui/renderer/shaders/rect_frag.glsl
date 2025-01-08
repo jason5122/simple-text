@@ -5,8 +5,8 @@ R"(
 flat in vec4 rect_color;
 flat in vec2 rect_center;
 flat in vec2 size;
-flat in float corner_radius;      // TODO: Consider making this a uniform.
-flat in float tab_corner_radius;  // TODO: Remove the `tab_corner_radius` experiment.
+// <corner_radius, tab_corner_radius>
+flat in vec2 extra;
 
 out vec4 out_color;
 
@@ -16,7 +16,9 @@ float roundedBoxSDF(vec2 center, vec2 size, float radius) {
 }
 
 void main() {
-    float computed_alpha = 1.0;
+    float computed_alpha = rect_color.a;
+    float corner_radius = extra.x;
+    float tab_corner_radius = extra.y;
 
     if (corner_radius > 0) {
         vec2 center = gl_FragCoord.xy - rect_center;

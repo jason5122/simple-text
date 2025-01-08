@@ -24,7 +24,9 @@ public:
                  const Rgb& color,
                  Layer layer,
                  int corner_radius = 0,
-                 int tab_corner_radius = 0);
+                 int tab_corner_radius = 0,
+                 int left_shadow = 0,
+                 int right_shadow = 0);
     void flush(const Size& screen_size, Layer layer);
 
 private:
@@ -40,8 +42,8 @@ private:
         Vec2 coords;
         Vec2 rect_size;
         Rgba color;
-        // <corner_radius, tab_corner_radius>
-        Vec2 extra;
+        // <corner_radius, tab_corner_radius, left_shadow, right_shadow>
+        Vec4 extra;
     };
 
     std::vector<InstanceData> layer_one_instances;

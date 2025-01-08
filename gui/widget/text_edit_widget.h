@@ -70,6 +70,8 @@ private:
     static constexpr Rgb kScrollBarColor{105, 112, 118};  // Dark.
     // static constexpr Rgb kCaretColor{95, 180, 180};       // Light.
     static constexpr Rgb kCaretColor{249, 174, 88};  // Dark.
+    // TODO: Implement light version.
+    static constexpr Rgb kShadowColor{42, 49, 57};  // Dark.
     static constexpr int kCaretWidth = 4;
     static constexpr int kExtraPadding = 8;
     static constexpr int kBorderThickness = 2;

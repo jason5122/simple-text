@@ -409,27 +409,30 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
+    // Draw shadow to indicate horizontal scrolling is possible.
+    static constexpr int kShadowWidth = 10;
+    if (scroll_offset.x > 0) {
+        Point shadow_coords = textOffset() + scroll_offset;
+        Size shadow_size = {kShadowWidth, size.height};
+        rect_renderer.addRect(shadow_coords, shadow_size, position, position + size, kShadowColor,
+                              Layer::kForeground, 0, 0, true);
+    }
+    if (scroll_offset.x < max_scroll_offset.x) {
+        Point shadow_coords = position;
+        shadow_coords.x += size.width - kShadowWidth;
+        Size shadow_size = {kShadowWidth, size.height};
+        rect_renderer.addRect(shadow_coords, shadow_size, position, position + size, kShadowColor,
+                              Layer::kForeground, 0, 0, false, true);
+    }
+
     Point min_text_coords = {
-        .x = scroll_offset.x,
+        .x = scroll_offset.x - kBorderThickness,
         .y = position.y,
     };
     Point max_text_coords = {
         .x = scroll_offset.x + (size.width - (gutterWidth() + kBorderThickness)),
         .y = position.y + size.height,
     };
-
-    {
-        // TODO: Implement shadows.
-        Point coords = textOffset() + scroll_offset;
-        coords.x += kBorderThickness;
-        rect_renderer.addRect(coords, {2, size.height}, position, position + size, {255},
-                              Layer::kBackground);
-        rect_renderer.addRect(coords, {size.width, 2}, position, position + size, {255},
-                              Layer::kBackground);
-        // coords.x += size.width - (gutterWidth() + kBorderThickness);
-        // rect_renderer.addRect(coords, {2, size.height}, position, position + size, {255},
-        //                       Layer::kBackground);
-    }
 
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);

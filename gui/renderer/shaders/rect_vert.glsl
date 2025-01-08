@@ -5,12 +5,12 @@ R"(
 layout(location = 0) in vec2 coords;
 layout(location = 1) in vec2 rect_size;
 layout(location = 2) in vec4 in_color;
-layout(location = 3) in vec2 in_extra;
+layout(location = 3) in vec4 in_extra;
 
 flat out vec4 rect_color;
 flat out vec2 rect_center;
 flat out vec2 size;
-flat out vec2 extra;
+flat out vec4 extra;
 
 uniform vec2 resolution;
 

@@ -62,7 +62,7 @@ RectRenderer::RectRenderer() : shader_program{kVertexShader, kFragmentShader} {
     glVertexAttribDivisor(index++, 1);
 
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+    glVertexAttribPointer(index, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
                           (void*)offsetof(InstanceData, extra));
     glVertexAttribDivisor(index++, 1);
 
@@ -108,7 +108,9 @@ void RectRenderer::addRect(const Point& coords,
                            const Rgb& color,
                            Layer layer,
                            int corner_radius,
-                           int tab_corner_radius) {
+                           int tab_corner_radius,
+                           int left_shadow,
+                           int right_shadow) {
     int x = coords.x;
     int y = coords.y;
     int width = size.width;
@@ -157,6 +159,8 @@ void RectRenderer::addRect(const Point& coords,
             {
                 .x = static_cast<float>(corner_radius),
                 .y = static_cast<float>(tab_corner_radius),
+                .z = static_cast<float>(left_shadow),
+                .w = static_cast<float>(right_shadow),
             },
     });
 }

@@ -135,6 +135,11 @@ void EditorWindow::onOpenGLActivate() {
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
     text_view->insertText(kCppExample);
+    // TODO: Fix these cases on Pango. Core Text has been fixed.
+    // text_view->insertText("\n꣰");
+    // text_view->insertText("ᩣᩤᩥᩦᩧᩨᩩᩪᩫᩬᩭ");
+    // TODO: Fix these cases with all font rasterizers.
+    // text_view->insertText("̴̵̶̷̸̡̢̧̨̣̤̥̦̩̪̫̬̭̮̯̰̱̲̳̹̺̻̼͇͈͉͍͎̽̾̿̀́͂̓̈́͆͊͋͌ͅ͏͓͔͕͖͙͚͐͑͒͗͛ͣͤͥͦͧͨͩͪͫͬͭͮͯ͘͜͟͢͝͞͠͡Ͱ");
 
     // TODO: Maybe use this case to optimize stuff. This could detect if we're doing line/col ->
     // offset conversions too much, for example.
@@ -454,6 +459,16 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         text_view->find("needle");
         handled = true;
     }
+
+    // TODO: Remove this.
+    // if (key == Key::kU && modifiers == kPrimaryModifier) {
+    //     performScroll({500, 500}, {0, -1});
+    //     handled = true;
+    // }
+    // if (key == Key::kI && modifiers == kPrimaryModifier) {
+    //     performScroll({500, 500}, {0, 1});
+    //     handled = true;
+    // }
 
     // TODO: Refactor this.
     // if (key == Key::kI && modifiers == kPrimaryModifier) {

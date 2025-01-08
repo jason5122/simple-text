@@ -153,7 +153,9 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
         int pos_x = coords.x + left_edge;
         int pos_y = coords.y - metrics.descent;
 
-        if (left_edge < min_coords.x) {
+        // TODO: Why do we need to add `left` here?
+        if (left_edge + left < min_coords.x) {
+            // if (left_edge < min_coords.x) {
             int diff = min_coords.x - left_edge;
             int diff2 = left;
             int ans = std::max(diff - diff2, 0);
@@ -169,14 +171,11 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
             width -= diff;
             uv_width -= uv_diff;
         }
-        if (top_edge < min_coords.y) {
+        // TODO: Why do we need to add `top` here?
+        if (top_edge + top < min_coords.y) {
+            // if (top_edge < min_coords.y) {
             int diff = min_coords.y - top_edge;
             int diff2 = line_height - rglyph.top;
-            if (line_height < rglyph.top) {
-                fmt::println("font_id = {}, glyph = {}", glyph.font_id, glyph.glyph_id);
-                fmt::println("line_height = {}, rglyph.top = {}", line_height, rglyph.top);
-                std::abort();
-            }
             int ans = std::max(diff - diff2, 0);
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
             height -= ans;

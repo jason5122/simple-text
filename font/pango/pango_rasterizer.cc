@@ -248,6 +248,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     font_hash_to_id.emplace(hash, font_id);
     font_id_to_native.emplace_back(std::move(font));
     font_id_to_metrics.emplace_back(std::move(metrics));
+    font_id_to_postscript_name.emplace_back(std::move(font_name));
     return font_id;
 }
 

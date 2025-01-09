@@ -1,13 +1,13 @@
 #pragma once
 
-#include "app/app.h"
-#include "app/gtk/main_window.h"
-#include "app/menu.h"
-#include "app/window.h"
+#include "gui/app/app.h"
+#include "gui/app/gtk/main_window.h"
+#include "gui/app/menu.h"
+#include "gui/app/window_widget.h"
 
 #include <gtk/gtk.h>
 
-namespace app {
+namespace gui {
 
 class App::impl {
 public:
@@ -15,9 +15,9 @@ public:
     GdkGLContext* context;
 };
 
-class Window::impl {
+class WindowWidget::impl {
 public:
-    impl(GtkApplication* app, Window* app_window, GdkGLContext* context)
+    impl(GtkApplication* app, WindowWidget* app_window, GdkGLContext* context)
         : main_window(app, app_window, context) {}
 
     MainWindow main_window;
@@ -33,4 +33,4 @@ public:
     GMenu* menu;  // TODO: Use smart pointer.
 };
 
-}  // namespace app
+}  // namespace gui

@@ -1,58 +1,60 @@
-#include "app/window.h"
+#include "gui/app/window_widget.h"
 
-#include "app/gtk/impl_gtk.h"
+#include "gui/app/gtk/impl_gtk.h"
+
+#include <string>
 
 #include <fmt/base.h>
 
-namespace app {
+namespace gui {
 
-Window::Window(App& app, int width, int height)
+WindowWidget::WindowWidget(App& app, int width, int height)
     : pimpl{new impl{app.pimpl->app, this, app.pimpl->context}} {}
 
-Window::~Window() {}
+WindowWidget::~WindowWidget() {}
 
-void Window::show() {
+void WindowWidget::show() {
     pimpl->main_window.show();
 }
 
-void Window::close() {
+void WindowWidget::close() {
     pimpl->main_window.close();
 }
 
-void Window::redraw() {
+void WindowWidget::redraw() {
     pimpl->main_window.redraw();
 }
 
-int Window::width() const {
+int WindowWidget::width() const {
     return pimpl->main_window.width();
 }
 
-int Window::height() const {
+int WindowWidget::height() const {
     return pimpl->main_window.height();
 }
 
-int Window::scale() const {
+int WindowWidget::scale() const {
     return pimpl->main_window.scaleFactor();
 }
 
-bool Window::isDarkMode() const {
+bool WindowWidget::isDarkMode() const {
     // return pimpl->main_window.isDarkMode();
     return false;
 }
 
-void Window::setTitle(std::string_view title) {
+void WindowWidget::setTitle(std::string_view title) {
     pimpl->main_window.setTitle(title);
 }
 
 // TODO: Implement this.
-void Window::setFilePath(std::string_view path) {}
+void WindowWidget::setFilePath(std::string_view path) {}
 
 // TODO: Implement this.
-std::optional<std::string> Window::openFilePicker() const {
+std::optional<std::string> WindowWidget::openFilePicker() const {
     return {};
 }
 
-void Window::setCursorStyle(CursorStyle style) {
+void WindowWidget::setCursorStyle(CursorStyle style) {
     GdkCursor* cursor = nullptr;
     if (style == CursorStyle::kArrow) {
         cursor = gdk_cursor_new_from_name("default", nullptr);
@@ -73,8 +75,8 @@ void Window::setCursorStyle(CursorStyle style) {
 
 namespace {
 gboolean TickCallback(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer user_data) {
-    Window::impl* pimpl = static_cast<Window::impl*>(user_data);
-    Window* app_window = pimpl->main_window.appWindow();
+    auto* pimpl = static_cast<WindowWidget::impl*>(user_data);
+    WindowWidget* app_window = pimpl->main_window.appWindow();
 
     gint64 frame_time = gdk_frame_clock_get_frame_time(frame_clock);
     if (pimpl->first_frame_time == 0) {
@@ -89,7 +91,7 @@ gboolean TickCallback(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer us
 }
 }  // namespace
 
-void Window::impl::setAutoRedraw(bool auto_redraw) {
+void WindowWidget::impl::setAutoRedraw(bool auto_redraw) {
     GtkWidget* gtk_window = main_window.glArea();
     if (!auto_redraw && has_tick_callback) {
         gtk_widget_remove_tick_callback(gtk_window, tick_callback_id);
@@ -103,16 +105,16 @@ void Window::impl::setAutoRedraw(bool auto_redraw) {
 }
 
 // TODO: Refactor this.
-void Window::setAutoRedraw(bool auto_redraw) {
+void WindowWidget::setAutoRedraw(bool auto_redraw) {
     pimpl->setAutoRedraw(auto_redraw);
 }
 
 // TODO: Implement.
-int Window::framesPerSecond() const {
+int WindowWidget::framesPerSecond() const {
     return 60;
 }
 
-// void Window::createMenuDebug() const {
+// void WindowWidget::createMenuDebug() const {
 //     GtkWidget* window = pimpl->main_window.gtkWindow();
 
 //     GMenu* menu = g_menu_new();
@@ -137,4 +139,4 @@ int Window::framesPerSecond() const {
 //     fmt::println("Context menu closed.");
 // }
 
-}  // namespace app
+}  // namespace gui

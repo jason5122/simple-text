@@ -5,7 +5,7 @@ source_set("gtk") {
     "app.cc",
     "main_window.cc",
     "menu.cc",
-    "window.cc",
+    "window_widget.cc",
   ]
 
   public_configs = [ ":gtk4" ]

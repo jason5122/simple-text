@@ -33,19 +33,15 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
       main_widget(std::make_unique<VerticalResizingWidget>()),
       editor_widget(new EditorWidget(
           parent.main_font_id, parent.ui_font_small_id, parent.panel_close_image_id)),
-      status_bar(new StatusBarWidget(44, parent.ui_font_small_id)),
+      status_bar(new StatusBarWidget(kMinStatusBarHeight, parent.ui_font_small_id)),
       side_bar(new SideBarWidget(kSideBarWidth)) {
 
     // Set initial focused widget to EditorWidget.
     focused_widget = editor_widget;
 }
 
+// On GTK, size isn't available upon realization. This is fine, just don't rely on `size` here!
 void EditorWindow::onOpenGLActivate() {
-    Size size = {width(), height()};
-    size *= scale();
-
-    main_widget->setSize(size);
-
     using namespace std::literals;
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
@@ -85,7 +81,7 @@ void EditorWindow::onOpenGLActivate() {
 
 void EditorWindow::draw() {
     Size size = {width(), height()};
-    size *= scale();
+    // size *= scale();
 
     // PROFILE_BLOCK("Total render time");
 
@@ -175,7 +171,7 @@ void EditorWindow::onFrame(int64_t ms) {
 // TODO: Verify that resizes are followed by redraw calls in the GUI framework.
 void EditorWindow::layout() {
     Size size = {width(), height()};
-    size *= scale();
+    // size *= scale();
 
     main_widget->setSize(size);
     // side_bar->setMinimumWidth(100);

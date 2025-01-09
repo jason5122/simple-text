@@ -1,7 +1,8 @@
-#include "app/gtk/impl_gtk.h"
-#include "app/menu.h"
+#include "gui/app/menu.h"
 
-namespace app {
+#include "gui/app/gtk/impl_gtk.h"
+
+namespace gui {
 
 Menu::Menu() : pimpl{new impl{}} {
     pimpl->menu = g_menu_new();  // TODO: Use smart pointer.
@@ -22,4 +23,4 @@ std::optional<size_t> Menu::show(const Point& mouse_pos) const {
     return std::nullopt;
 }
 
-}  // namespace app
+}  // namespace gui

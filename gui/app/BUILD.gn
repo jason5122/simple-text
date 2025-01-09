@@ -1,6 +1,7 @@
 group("app") {
   if (is_mac) {
-    deps = [ "cocoa" ]
+    # deps = [ "cocoa" ]
+    deps = [ "gtk" ]
   }
   if (is_linux) {
     deps = [ "gtk" ]

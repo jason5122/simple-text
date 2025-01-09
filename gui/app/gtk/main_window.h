@@ -1,14 +1,14 @@
 #pragma once
 
-#include "app/window.h"
+#include "gui/app/window_widget.h"
 
 #include <gtk/gtk.h>
 
-namespace app {
+namespace gui {
 
 class MainWindow {
 public:
-    MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context);
+    MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLContext* context);
 
     gint width_ = 0;
     gint height_ = 0;
@@ -23,16 +23,16 @@ public:
     int scaleFactor();
     bool isDarkMode();
     void setTitle(std::string_view title);
-    Window* appWindow() const;
+    WindowWidget* appWindow() const;
     GtkWidget* gtkWindow() const;
     GtkWidget* glArea() const {
         return gl_area;
     }
 
 private:
-    Window* app_window;
+    WindowWidget* app_window;
     GtkWidget* window;
     GtkWidget* gl_area;
 };
 
-}  // namespace app
+}  // namespace gui

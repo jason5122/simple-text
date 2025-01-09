@@ -1,12 +1,14 @@
 #include "main_window.h"
+
 #include "unicode/unicode.h"
+
 #include <cmath>
 
 // Debug use; remove this.
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-namespace app {
+namespace gui {
 
 namespace {
 
@@ -36,7 +38,7 @@ gboolean key_pressed(GtkEventControllerKey* self,
 
 }  // namespace
 
-MainWindow::MainWindow(GtkApplication* gtk_app, Window* app_window, GdkGLContext* context)
+MainWindow::MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLContext* context)
     : app_window(app_window),
       window(gtk_application_window_new(gtk_app)),
       gl_area(gtk_gl_area_new()) {
@@ -136,7 +138,7 @@ void MainWindow::setTitle(std::string_view title) {
     gtk_window_set_title(GTK_WINDOW(window), title.data());
 }
 
-Window* MainWindow::appWindow() const {
+WindowWidget* MainWindow::appWindow() const {
     return app_window;
 }
 
@@ -147,7 +149,7 @@ GtkWidget* MainWindow::gtkWindow() const {
 namespace {
 
 void destroy(GtkWidget* self, gpointer user_data) {
-    Window* app_window = static_cast<Window*>(user_data);
+    WindowWidget* app_window = static_cast<WindowWidget*>(user_data);
     app_window->onClose();
 }
 
@@ -161,21 +163,13 @@ void realize(GtkGLArea* self, gpointer user_data) {
     if (gtk_gl_area_get_error(self) != nullptr) return;
 
     GdkGLAPI api = gtk_gl_area_get_api(self);
-    if (api == GDK_GL_API_GL) {
-        fmt::println("GDK_GL_API_GL");
-    }
     if (api == GDK_GL_API_GLES) {
-        fmt::println("GDK_GL_API_GLES");
+        fmt::println("GDK_GL_API_GLES is unsupported!");
+        std::abort();
     }
 
-    // FIXME: Getting the size of a widget doesn't seem to be possible during realization.
-    // This is fine for now since GTK sends a resize signal once the widget is created.
-    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
-    int scaled_width = gtk_widget_get_width(GTK_WIDGET(self)) * scale_factor;
-    int scaled_height = gtk_widget_get_height(GTK_WIDGET(self)) * scale_factor;
-
-    Window* app_window = static_cast<Window*>(user_data);
-    app_window->onOpenGLActivate({scaled_width, scaled_height});
+    WindowWidget* app_window = static_cast<WindowWidget*>(user_data);
+    app_window->onOpenGLActivate();
 }
 
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
@@ -185,19 +179,15 @@ void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
 
     gtk_gl_area_make_current(self);
 
-    Window* app_window = main_window->appWindow();
-    app_window->onResize({width, height});
+    WindowWidget* app_window = main_window->appWindow();
+    app_window->layout();
 }
 
 gboolean render(GtkGLArea* self, GdkGLContext* context, gpointer user_data) {
     gtk_gl_area_make_current(self);
 
-    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
-    int scaled_width = gtk_widget_get_width(GTK_WIDGET(self)) * scale_factor;
-    int scaled_height = gtk_widget_get_height(GTK_WIDGET(self)) * scale_factor;
-
-    Window* app_window = static_cast<Window*>(user_data);
-    app_window->onDraw({scaled_width, scaled_height});
+    WindowWidget* app_window = static_cast<WindowWidget*>(user_data);
+    app_window->draw();
 
     // Draw commands are flushed after returning.
     return true;
@@ -229,8 +219,8 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
     };
     delta *= scale_factor;
 
-    Window* app_window = main_window->appWindow();
-    app_window->onScroll(std::move(mouse_pos), std::move(delta));
+    WindowWidget* app_window = main_window->appWindow();
+    app_window->performScroll(std::move(mouse_pos), std::move(delta));
 
     return true;
 }
@@ -254,7 +244,7 @@ void decelerate(GtkEventControllerScroll* self, gdouble vel_x, gdouble vel_y, gp
     };
     // delta *= scale_factor;
 
-    Window* app_window = main_window->appWindow();
+    WindowWidget* app_window = main_window->appWindow();
     app_window->onScrollDecelerate(std::move(mouse_pos), std::move(delta));
 }
 
@@ -272,8 +262,8 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
     ModifierKey modifiers = ModifierFromState(event_state);
     ClickType click_type = ClickTypeFromCount(n_press);
 
-    Window* app_window = static_cast<Window*>(user_data);
-    app_window->onLeftMouseDown(mouse_pos, modifiers, click_type);
+    auto* app_window = static_cast<WindowWidget*>(user_data);
+    app_window->leftMouseDown(mouse_pos, modifiers, click_type);
 }
 
 void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
@@ -285,8 +275,8 @@ void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointe
     int scale_factor = gtk_widget_get_scale_factor(gl_area);
     auto mouse_pos = Point{mouse_x, mouse_y} * scale_factor;
 
-    Window* app_window = static_cast<Window*>(user_data);
-    app_window->onLeftMouseUp(mouse_pos);
+    auto* app_window = static_cast<WindowWidget*>(user_data);
+    app_window->leftMouseUp(mouse_pos);
 }
 
 void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
@@ -311,8 +301,8 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         ModifierKey modifiers = ModifierFromState(event_state);
 
         // TODO: Track click type. Consider having a member that tracks it from GtkGesture.
-        Window* app_window = main_window->appWindow();
-        app_window->onLeftMouseDrag(mouse_pos, modifiers, ClickType::kSingleClick);
+        auto* app_window = main_window->appWindow();
+        app_window->leftMouseDrag(mouse_pos, modifiers, ClickType::kSingleClick);
     } else {
         GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
 
@@ -323,8 +313,8 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         Point mouse_pos = {mouse_x, mouse_y};
         mouse_pos *= scale_factor;
 
-        Window* app_window = main_window->appWindow();
-        app_window->onMouseMove(mouse_pos);
+        auto* app_window = main_window->appWindow();
+        app_window->mousePositionChanged(mouse_pos);
     }
 }
 
@@ -341,7 +331,7 @@ gboolean key_pressed(GtkEventControllerKey* self,
     // TODO: Why does this occur?
     if (keyval == GDK_KEY_VoidSymbol) return false;
 
-    Window* app_window = static_cast<Window*>(user_data);
+    auto* app_window = static_cast<WindowWidget*>(user_data);
 
     Key key = KeyFromKeyval(keyval);
     ModifierKey modifiers = ModifierFromState(state);
@@ -460,4 +450,4 @@ constexpr const gchar* GtkAccelStringFromModifier(ModifierKey modifier) {
 
 }  // namespace
 
-}  // namespace app
+}  // namespace gui

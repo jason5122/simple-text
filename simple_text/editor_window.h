@@ -45,6 +45,7 @@ public:
     void onClose() override;
 
 private:
+    static constexpr int kMinStatusBarHeight = 22 * 2;
     static constexpr int kSideBarWidth = 250 * 2;
 
     // TODO: Clean this up.

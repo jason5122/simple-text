@@ -1,8 +1,10 @@
-#include "app/app.h"
-#include "app/gtk/impl_gtk.h"
+#include "gui/app/app.h"
+
+#include "gui/app/gtk/impl_gtk.h"
+
 #include <gtk/gtk.h>
 
-namespace app {
+namespace gui {
 
 static void activate(GtkApplication* gtk_app, gpointer p_app) {
     App* app = static_cast<App*>(p_app);
@@ -46,4 +48,4 @@ std::string App::getClipboardString() {
 // TODO: Implement this.
 void App::setClipboardString(const std::string& str8) {}
 
-}  // namespace app
+}  // namespace gui

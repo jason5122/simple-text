@@ -1,5 +1,27 @@
 # TODO
 
+# 01-09-2025
+
+### Try out DXGI bitmap render target instead of WIC
+
+- https://learn.microsoft.com/en-us/windows/win32/api/d2d1/nf-d2d1-id2d1factory-createdxgisurfacerendertarget(idxgisurface_constd2d1_render_target_properties__id2d1rendertarget)
+- https://github.com/cmuratori/refterm/blob/29b21f757cf5a025eeb4069653b758a84a1f8689/refterm_example_dwrite.cpp#L31
+- https://github.com/cmuratori/refterm/blob/29b21f757cf5a025eeb4069653b758a84a1f8689/refterm_example_dwrite.cpp#L171
+- https://stackoverflow.com/questions/25780824/difference-between-id2d1bitmap-and-iwicbitmap
+- https://stackoverflow.com/questions/2755180/windows-programming-id2d1bitmap-interface-getting-the-bitmap-data?rq=3
+- https://learn.microsoft.com/en-us/windows/win32/Direct2D/supported-pixel-formats-and-alpha-modes#supported-formats-for-wic-bitmap-render-target
+- https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nn-dxgi-idxgisurface
+- https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dx-graphics-dxgi
+- https://learn.microsoft.com/en-us/windows/win32/api/dxgi/ns-dxgi-dxgi_mapped_rect
+- https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_cpu_access_flag
+- https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createtexture2d
+- https://stackoverflow.com/questions/75171099/how-to-get-pixel-data-out-of-an-idxgisurface-created-with-gpu-access-only
+
+### Implement kinetic scrolling deceleration on GTK
+
+- https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gtk/gtkscrolledwindow.c?ref_type=heads#L173
+- https://gitlab.gnome.org/GNOME/gtk/-/blob/filter-constructors/gtk/gtkkineticscrolling.c
+
 # 12-31-2024
 
 ### Implement a proper logging system

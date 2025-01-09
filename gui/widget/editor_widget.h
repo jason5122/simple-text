@@ -26,6 +26,9 @@ public:
     constexpr std::string_view className() const final override {
         return "EditorWidget";
     }
+    constexpr bool canBeFocused() const override {
+        return true;
+    }
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

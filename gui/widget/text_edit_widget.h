@@ -24,7 +24,6 @@ public:
     void selectAll();
     void move(MoveBy by, bool forward, bool extend);
     void moveTo(MoveTo to, bool extend);
-    void insertText(std::string_view str8);
     void leftDelete();
     void rightDelete();
     void deleteWord(bool forward);
@@ -46,6 +45,7 @@ public:
     void leftMouseDrag(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;
+    void insertText(std::string_view str8) override;
 
     void updateMaxScroll() override;
 

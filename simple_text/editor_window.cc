@@ -20,93 +20,9 @@ namespace gui {
 
 namespace {
 
-constexpr auto operator* [[maybe_unused]] (const std::string_view& sv, size_t times) {
-    std::string result;
-    for (size_t i = 0; i < times; ++i) {
-        result += sv;
-    }
-    return result;
-}
-
-const std::string kSampleText =
-    R"(Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit
-esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt
-in culpa qui officia deserunt mollit anim id est laborum.
-
-)";
-
-const std::string kLongLine =
-    "This is a long long long long long long long long long long long long long long long long "
-    "long long long long long long long long long long long long long long long long long long "
-    "long long long long long long long long long long long long long long long long long long "
-    "long long line.";
-
-const std::string kUnicode =
-    R"(˚¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
-¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
-¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
-¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
-¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
-¬ß∆ƒ¬∆ß∂ƒÒÔÏÍÎ˜´Ò‰„´‰€‹‹··ºœ™£™º¡£
-
-🥲🥲🥲🥲🥲🥲)";
-
-const std::string kCppExample = R"(🥲🥲🥲🥲🥲🥲#include <assert.h>
-#include <string.h>
-#include <stdio.h>
-#include <tree_sitter/api.h>
-
-// Declare the `tree_sitter_json` function, which is
-// implemented by the `tree-sitter-json` library.
-const TSLanguage *tree_sitter_json(void);
-
-int main() {
-  // Create a parser.
-  TSParser *parser = ts_parser_new();
-
-  // Set the parser's language (JSON in this case).
-  ts_parser_set_language(parser, tree_sitter_json());
-
-  // Build a syntax tree based on source code stored in a string.
-  const char *source_code = "[1, null]";
-  TSTree *tree = ts_parser_parse_string(
-    parser,
-    NULL,
-    source_code,
-    strlen(source_code)
-  );
-
-  // Get the root node of the syntax tree.
-  TSNode root_node = ts_tree_root_node(tree);
-
-  // Get some child nodes.
-  TSNode array_node = ts_node_named_child(root_node, 0);
-  TSNode number_node = ts_node_named_child(array_node, 0);
-
-  // Check that the nodes have the expected types.
-  assert(strcmp(ts_node_type(root_node), "document") == 0);
-  assert(strcmp(ts_node_type(array_node), "array") == 0);
-  assert(strcmp(ts_node_type(number_node), "number") == 0);
-
-  // Check that the nodes have the expected child counts.
-  assert(ts_node_child_count(root_node) == 1);
-  assert(ts_node_child_count(array_node) == 5);
-  assert(ts_node_named_child_count(array_node) == 2);
-  assert(ts_node_child_count(number_node) == 0);
-
-  // Print the syntax tree as an S-expression.
-  char *string = ts_node_string(root_node);
-  printf("Syntax tree: %s\n", string);
-
-  // Free all of the heap-allocated memory.
-  free(string);
-  ts_tree_delete(tree);
-  ts_parser_delete(parser);
-  return 0;
-}
-)";
+const std::string kCppExample =
+#include "sample_code.txt"
+    ;
 
 }  // namespace
 
@@ -118,18 +34,17 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
       editor_widget(new EditorWidget(
           parent.main_font_id, parent.ui_font_small_id, parent.panel_close_image_id)),
       status_bar(new StatusBarWidget(44, parent.ui_font_small_id)),
-      side_bar(new SideBarWidget(kSideBarWidth)) {}
+      side_bar(new SideBarWidget(kSideBarWidth)) {
+
+    // Set initial focused widget to EditorWidget.
+    focused_widget = editor_widget;
+}
 
 void EditorWindow::onOpenGLActivate() {
     Size size = {width(), height()};
     size *= scale();
 
     main_widget->setSize(size);
-
-    // editor_widget->addTab("hello.txt", "Hello world!\nhi there");
-    // editor_widget->addTab("unicode.txt", kUnicode);
-    // editor_widget->addTab("long_line.txt", kLongLine * 50 + kSampleText);
-    // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
 
     using namespace std::literals;
     auto* text_view = editor_widget->currentWidget();
@@ -282,10 +197,25 @@ void EditorWindow::leftMouseDown(const Point& mouse_pos,
                                  ClickType click_type) {
     dragged_widget = main_widget->widgetAt(mouse_pos);
     if (dragged_widget) {
+        if (dragged_widget->canBeFocused()) {
+            focused_widget = dragged_widget;
+        }
+
         dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
         // TODO: See if we should call `updateCursorStyle()` here.
         // TODO: Not all widgets should initiate a drag.
         redraw();
+    }
+
+    if (dragged_widget) {
+        fmt::println("dragged widget: {}", dragged_widget->className());
+    } else {
+        fmt::println("no dragged widget");
+    }
+    if (focused_widget) {
+        fmt::println("focused widget: {}", focused_widget->className());
+    } else {
+        fmt::println("no focused widget");
     }
 }
 
@@ -444,8 +374,9 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         text_view->leftDelete();
         handled = true;
     } else if (key == Key::kEnter && modifiers == ModifierKey::kNone) {
-        auto* text_view = editor_widget->currentWidget();
-        text_view->insertText("\n");
+        // auto* text_view = editor_widget->currentWidget();
+        // text_view->insertText("\n");
+        focused_widget->insertText("\n");
         handled = true;
     } else if (key == Key::kTab && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
@@ -533,9 +464,16 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
 }
 
 void EditorWindow::onInsertText(std::string_view text) {
-    if (auto widget = editor_widget->currentWidget()) {
-        widget->insertText(text);
+    // if (auto widget = editor_widget->currentWidget()) {
+
+    if (focused_widget) {
+        focused_widget->insertText(text);
         redraw();
+        // auto editor_widget = static_cast<EditorWidget*>(focused_widget);
+        // if (auto widget = editor_widget->currentWidget()) {
+        //     widget->insertText(text);
+        //     redraw();
+        // }
     }
 }
 
@@ -593,11 +531,13 @@ void EditorWindow::onAction(Action action, bool extend) {
         handled = true;
     }
     if (action == Action::kInsertNewline) {
-        text_view->insertText("\n");
+        // text_view->insertText("\n");
+        focused_widget->insertText("\n");
         handled = true;
     }
     if (action == Action::kInsertNewlineIgnoringFieldEditor) {
-        text_view->insertText("\n");
+        // text_view->insertText("\n");
+        focused_widget->insertText("\n");
         // This command is sent as the first part of the `ctrl+o` keybind. We shouldn't redraw.
         return;
     }

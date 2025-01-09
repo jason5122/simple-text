@@ -26,10 +26,12 @@ public:
     virtual constexpr void rightMouseDown(const Point& mouse_pos,
                                           ModifierKey modifiers,
                                           ClickType click_type) {}
+    virtual constexpr void insertText(std::string_view str8) {}
 
     virtual constexpr Widget* widgetAt(const Point& pos);
     virtual constexpr bool mousePositionChanged(const std::optional<Point>& mouse_pos);
     virtual constexpr void setPosition(const Point& pos);
+    virtual constexpr bool canBeFocused() const;
     virtual constexpr CursorStyle cursorStyle() const;
     // TODO: Debug use; remove this.
     virtual constexpr std::string_view className() const = 0;
@@ -88,6 +90,10 @@ constexpr bool Widget::mousePositionChanged(const std::optional<Point>& mouse_po
 
 constexpr void Widget::setPosition(const Point& pos) {
     position = pos;
+}
+
+constexpr bool Widget::canBeFocused() const {
+    return false;
 }
 
 constexpr CursorStyle Widget::cursorStyle() const {

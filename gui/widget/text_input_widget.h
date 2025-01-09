@@ -1,6 +1,8 @@
 #pragma once
 
+#include "base/buffer/piece_tree.h"
 #include "gui/renderer/types.h"
+#include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
 
 namespace gui {
@@ -14,7 +16,11 @@ public:
     void leftMouseDown(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;
+    void insertText(std::string_view str8) override;
 
+    constexpr bool canBeFocused() const override {
+        return true;
+    }
     constexpr CursorStyle cursorStyle() const final override {
         return CursorStyle::kIBeam;
     }
@@ -31,17 +37,19 @@ private:
     // static constexpr Rgb kCaretColor{95, 180, 180};       // Light.
     static constexpr Rgb kCaretColor{249, 174, 88};  // Dark.
     static constexpr int kCaretWidth = 4;
+    static constexpr int kBorderThickness = 2;
 
     size_t font_id;
     int top_padding;
     int left_padding;
 
     int line_height;
-    std::string find_str = "needle";
+    base::PieceTree tree;
+    Selection selection{};
 
-    size_t caret = 0;
-
-    inline const font::LineLayout& getLayout() const;
+    size_t lineAtY(int y) const;
+    inline const font::LineLayout& layoutAt(size_t line);
+    inline constexpr Point textOffset();
 };
 
 }  // namespace gui

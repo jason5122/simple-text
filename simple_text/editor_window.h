@@ -74,6 +74,7 @@ private:
     // The widget that the drag operation was performed on. If there currently isn't a drag
     // operation, this is null.
     gui::Widget* dragged_widget = nullptr;
+    gui::Widget* focused_widget = nullptr;
 
     void updateCursorStyle(const std::optional<Point>& mouse_pos);
 };

@@ -127,11 +127,14 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
     CGLSetCurrentContext(glContext);
 
     if (old_width != self.frame.size.width || old_height != self.frame.size.height) {
-        if (app_window) {
-            app_window->layout();
-        }
         old_width = self.frame.size.width;
         old_height = self.frame.size.height;
+        if (app_window) {
+            int scale = self.contentsScale;
+            app_window->setWidth(old_width * scale);
+            app_window->setHeight(old_height * scale);
+            app_window->layout();
+        }
     }
 
     if (app_window) {

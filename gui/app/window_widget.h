@@ -24,8 +24,6 @@ public:
     void show();
     void close();
     void redraw();
-    int width() const;
-    int height() const;
     int scale() const;
     bool isDarkMode() const;
     void setTitle(std::string_view title);

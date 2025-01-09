@@ -80,9 +80,6 @@ void EditorWindow::onOpenGLActivate() {
 }
 
 void EditorWindow::draw() {
-    Size size = {width(), height()};
-    // size *= scale();
-
     // PROFILE_BLOCK("Total render time");
 
     // TODO: Debug use; remove this.
@@ -170,9 +167,6 @@ void EditorWindow::onFrame(int64_t ms) {
 // TODO: Verify that resize is always called on all platforms when the window is created.
 // TODO: Verify that resizes are followed by redraw calls in the GUI framework.
 void EditorWindow::layout() {
-    Size size = {width(), height()};
-    // size *= scale();
-
     main_widget->setSize(size);
     // side_bar->setMinimumWidth(100);
     // side_bar->setMaximumWidth(size.width - 100);

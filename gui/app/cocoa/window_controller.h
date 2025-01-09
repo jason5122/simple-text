@@ -18,8 +18,6 @@
 - (void)show;
 - (void)close;
 - (void)redraw;
-- (int)getWidth;
-- (int)getHeight;
 - (int)getScaleFactor;
 - (bool)isDarkMode;
 - (void)setTitle:(std::string_view)title;

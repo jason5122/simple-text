@@ -51,14 +51,6 @@ void WindowWidget::redraw() {
     [pimpl->window_controller redraw];
 }
 
-int WindowWidget::width() const {
-    return [pimpl->window_controller getWidth];
-}
-
-int WindowWidget::height() const {
-    return [pimpl->window_controller getHeight];
-}
-
 int WindowWidget::scale() const {
     return [pimpl->window_controller getScaleFactor];
 }

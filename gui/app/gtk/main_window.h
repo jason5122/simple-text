@@ -10,16 +10,12 @@ class MainWindow {
 public:
     MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLContext* context);
 
-    gint width_ = 0;
-    gint height_ = 0;
     gdouble mouse_x_ = 0;
     gdouble mouse_y_ = 0;
 
     void show();
     void close();
     void redraw();
-    int width();
-    int height();
     int scaleFactor();
     bool isDarkMode();
     void setTitle(std::string_view title);

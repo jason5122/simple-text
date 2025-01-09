@@ -57,14 +57,6 @@
     [opengl_view redraw];
 }
 
-- (int)getWidth {
-    return opengl_view.frame.size.width;
-}
-
-- (int)getHeight {
-    return opengl_view.frame.size.height;
-}
-
 - (int)getScaleFactor {
     return opengl_view.layer.contentsScale;
 }

@@ -117,14 +117,6 @@ void MainWindow::redraw() {
     gtk_widget_queue_draw(gl_area);
 }
 
-int MainWindow::width() {
-    return width_;
-}
-
-int MainWindow::height() {
-    return height_;
-}
-
 int MainWindow::scaleFactor() {
     return gtk_widget_get_scale_factor(window);
 }
@@ -174,12 +166,12 @@ void realize(GtkGLArea* self, gpointer user_data) {
 
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    main_window->width_ = width;
-    main_window->height_ = height;
+    WindowWidget* app_window = main_window->appWindow();
+
+    app_window->setWidth(width);
+    app_window->setHeight(height);
 
     gtk_gl_area_make_current(self);
-
-    WindowWidget* app_window = main_window->appWindow();
     app_window->layout();
 }
 

@@ -25,21 +25,12 @@ void WindowWidget::redraw() {
     pimpl->main_window.redraw();
 }
 
-int WindowWidget::width() const {
-    return pimpl->main_window.width();
-}
-
-int WindowWidget::height() const {
-    return pimpl->main_window.height();
-}
-
 int WindowWidget::scale() const {
     return pimpl->main_window.scaleFactor();
 }
 
 bool WindowWidget::isDarkMode() const {
-    // return pimpl->main_window.isDarkMode();
-    return false;
+    return pimpl->main_window.isDarkMode();
 }
 
 void WindowWidget::setTitle(std::string_view title) {

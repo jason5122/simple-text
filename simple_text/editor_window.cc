@@ -1,6 +1,5 @@
 #include "editor_window.h"
 
-#include "gui/app/menu.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/horizontal_resizing_widget.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/app/app.h"
+#include "gui/platform/app.h"
 #include "simple_text/editor_window.h"
 
 #include <vector>

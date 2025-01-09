@@ -1,8 +1,0 @@
-source_set("config") {
-  sources = [
-    "color_scheme.cc",
-    "key_bindings.cc",
-  ]
-
-  public_deps = [ "//third_party/glaze" ]
-}

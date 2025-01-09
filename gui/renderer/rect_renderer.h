@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gui/app/types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
+#include "gui/types.h"
 #include "util/non_copyable.h"
 
 #include <cstddef>

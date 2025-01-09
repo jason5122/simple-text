@@ -1,9 +1,9 @@
 #pragma once
 
 #include "font/font_rasterizer.h"
-#include "gui/app/types.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/types.h"
+#include "gui/types.h"
 
 #include "third_party/hash_maps/robin_hood.h"
 

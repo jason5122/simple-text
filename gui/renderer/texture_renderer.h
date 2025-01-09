@@ -1,9 +1,9 @@
 #pragma once
 
-#include "gui/app/types.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/texture_cache.h"
 #include "gui/renderer/types.h"
+#include "gui/types.h"
 
 #include <functional>
 #include <vector>

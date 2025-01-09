@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/app/window_widget.h"
+#include "gui/platform/window_widget.h"
 #include "gui/widget/container/layout_widget.h"
 #include "gui/widget/editor_widget.h"
 #include "gui/widget/side_bar_widget.h"

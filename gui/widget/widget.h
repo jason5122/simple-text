@@ -1,8 +1,8 @@
 #pragma once
 
 #include "font/font_rasterizer.h"
-#include "gui/app/modifier_key.h"
-#include "gui/app/types.h"
+#include "gui/platform/key.h"
+#include "gui/types.h"
 
 namespace gui {
 

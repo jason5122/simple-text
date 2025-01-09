@@ -70,6 +70,13 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
                  object:nil];
         // Seems that we need to call NSScroller.preferredScrollerStyle once to listen to updates.
         [NSScroller preferredScrollerStyle];
+
+        // Listen for changes to "Click in the scroll bar to..." setting.
+        NSUserDefaults* defaults = NSUserDefaults.standardUserDefaults;
+        [defaults addObserver:self
+                   forKeyPath:@"AppleScrollerPagingBehavior"
+                      options:NSKeyValueObservingOptionNew
+                      context:nullptr];
     }
     return self;
 }
@@ -84,6 +91,9 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 }
 
 - (void)invalidateAppWindowPointer {
+    NSUserDefaults* defaults = NSUserDefaults.standardUserDefaults;
+    [defaults removeObserver:self forKeyPath:@"AppleScrollerPagingBehavior" context:nullptr];
+
     app_window = nullptr;
     [gl_layer invalidateAppWindowPointer];
 }
@@ -224,6 +234,16 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     } else if (style == NSScrollerStyleOverlay) {
         fmt::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleOverlay.");
     }
+}
+
+// Listen for changes to `AppleScrollerPagingBehavior` setting ("Click in the scroll bar to...").
+- (void)observeValueForKeyPath:(NSString*)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary*)change
+                       context:(void*)context {
+    NSUserDefaults* defaults = NSUserDefaults.standardUserDefaults;
+    bool jump_on_scroll_bar_click = [defaults boolForKey:@"AppleScrollerPagingBehavior"];
+    fmt::println("jump on scroll bar click (update): {}", jump_on_scroll_bar_click);
 }
 
 // NSTextInputClient protocol implementation.

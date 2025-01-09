@@ -2,6 +2,23 @@
 
 # 01-09-2025
 
+### Great GUI design example
+
+- https://lisyarus.github.io/blog/posts/how-not-to-ui.html
+
+### Look into better bin packing algorithm
+
+- https://mozillagfx.wordpress.com/2021/02/04/improving-texture-atlas-allocation-in-webrender/
+- https://github.com/nical/guillotiere/tree/main/cli
+- https://tweedegolf.nl/en/blog/124/mix-in-rust-with-c
+
+### Miscellaneous code snippets
+
+- https://source.chromium.org/chromium/chromium/src/+/main:ui/gfx/mac/coordinate_conversion.mm
+- https://source.chromium.org/chromium/chromium/src/+/main:base/time/time_apple.mm
+- https://source.chromium.org/chromium/chromium/src/+/main:base/time/time.h
+- https://github.com/ebassi/glarea-example/blob/master/glarea-app-window.c#L398
+
 ### Try out DXGI bitmap render target instead of WIC
 
 - https://learn.microsoft.com/en-us/windows/win32/api/d2d1/nf-d2d1-id2d1factory-createdxgisurfacerendertarget(idxgisurface_constd2d1_render_target_properties__id2d1rendertarget)

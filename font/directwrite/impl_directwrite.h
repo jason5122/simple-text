@@ -1,6 +1,7 @@
 #pragma once
 
 #include "font/font_rasterizer.h"
+
 #include <d2d1.h>
 #include <dwrite_3.h>
 #include <wincodec.h>

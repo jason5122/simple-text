@@ -2,6 +2,7 @@
 
 #include "unicode/SkTFitsIn.h"
 #include "unicode/unicode.h"
+
 #include <cassert>
 #include <vector>
 
@@ -24,19 +25,20 @@ public:
             return false;
         }
 
-        auto utf16Size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
-        if (utf16Size < 0) {
+        int utf16_size = unicode::UTF8ToUTF16(nullptr, 0, utf8, size);
+        if (utf16_size < 0) {
             fmt::println("UTF16ToUTF8IndicesMap: Invalid utf8 input");
             return false;
         }
 
-        // utf16Size+1 to also store the size
-        fUtf16ToUtf8Indices = std::vector<size_t>(utf16Size + 1);
-        auto utf16 = fUtf16ToUtf8Indices.begin();
-        auto utf8Begin = utf8, utf8End = utf8 + size;
-        while (utf8Begin < utf8End) {
-            *utf16 = utf8Begin - utf8;
-            utf16 += unicode::ToUTF16(unicode::NextUTF8(&utf8Begin, utf8End), nullptr);
+        // utf16_size+1 to also store the size
+        utf16_to_utf8_indices = std::vector<size_t>(utf16_size + 1);
+        auto utf16 = utf16_to_utf8_indices.begin();
+        const char* utf8_begin = utf8;
+        const char* utf8_end = utf8 + size;
+        while (utf8_begin < utf8_end) {
+            *utf16 = utf8_begin - utf8;
+            utf16 += unicode::ToUTF16(unicode::NextUTF8(&utf8_begin, utf8_end), nullptr);
         }
         *utf16 = size;
 
@@ -44,17 +46,17 @@ public:
     }
 
     size_t mapIndex(size_t index) const {
-        assert(index < fUtf16ToUtf8Indices.size());
-        return fUtf16ToUtf8Indices[index];
+        assert(index < utf16_to_utf8_indices.size());
+        return utf16_to_utf8_indices[index];
     }
 
     std::pair<size_t, size_t> mapRange(size_t start, size_t size) const {
-        auto utf8Start = mapIndex(start);
-        return {utf8Start, mapIndex(start + size) - utf8Start};
+        size_t utf8_start = mapIndex(start);
+        return {utf8_start, mapIndex(start + size) - utf8_start};
     }
 
 private:
-    std::vector<size_t> fUtf16ToUtf8Indices;
+    std::vector<size_t> utf16_to_utf8_indices;
 };
 
-}
+}  // namespace font

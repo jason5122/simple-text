@@ -79,7 +79,7 @@ int UTF16ToUTF8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLen
  * Given a UTF-16 code point, returns true iff it is a leading surrogate.
  * https://unicode.org/faq/utf_bom.html#utf16-2
  */
-static inline bool IsLeadingSurrogateUTF16(uint16_t c) {
+constexpr bool IsLeadingSurrogateUTF16(uint16_t c) {
     return ((c) & 0xFC00) == 0xD800;
 }
 
@@ -87,8 +87,8 @@ static inline bool IsLeadingSurrogateUTF16(uint16_t c) {
  * Given a UTF-16 code point, returns true iff it is a trailing surrogate.
  * https://unicode.org/faq/utf_bom.html#utf16-2
  */
-static inline bool IsTrailingSurrogateUTF16(uint16_t c) {
+constexpr bool IsTrailingSurrogateUTF16(uint16_t c) {
     return ((c) & 0xFC00) == 0xDC00;
 }
 
-}
+}  // namespace unicode

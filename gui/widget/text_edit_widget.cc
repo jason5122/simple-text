@@ -326,9 +326,7 @@ void TextEditWidget::leftMouseDown(const Point& mouse_pos,
         bool extend = modifiers == ModifierKey::kShift;
         selection.setIndex(offset, extend);
     } else if (click_type == ClickType::kDoubleClick) {
-        // TODO: Refine double click implementation.
-        size_t left = Movement::prevWordStart(tree, offset);
-        size_t right = Movement::nextWordEnd(tree, offset);
+        auto [left, right] = Movement::surroundingWord(tree, offset);
         selection.setRange(left, right);
     } else if (click_type == ClickType::kTripleClick) {
         auto [left, right] = tree.get_line_range_with_newline(line);

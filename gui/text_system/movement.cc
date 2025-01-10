@@ -15,11 +15,11 @@ namespace {
 
 enum class CharKind {
     kWhitespace,
+    kPunctuation,
     kWord,
-    KPunctuation,
 };
 
-constexpr CharKind CodepointToCharKind(int32_t codepoint);
+constexpr CharKind to_kind(int32_t codepoint);
 
 }  // namespace
 
@@ -95,8 +95,8 @@ size_t Movement::prevWordStart(const base::PieceTree& tree, size_t offset) {
         }
 
         if (prev_cp) {
-            auto prev_kind = CodepointToCharKind(prev_cp.value());
-            auto kind = CodepointToCharKind(cp);
+            auto prev_kind = to_kind(prev_cp.value());
+            auto kind = to_kind(cp);
             if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
                 break;
             }
@@ -124,8 +124,8 @@ size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
         }
 
         if (prev_cp) {
-            auto prev_kind = CodepointToCharKind(prev_cp.value());
-            auto kind = CodepointToCharKind(cp);
+            auto prev_kind = to_kind(prev_cp.value());
+            auto kind = to_kind(cp);
             if ((prev_kind != kind && prev_kind != CharKind::kWhitespace) || cp == '\n') {
                 break;
             }
@@ -136,15 +136,55 @@ size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
     return prev_offset;
 }
 
+std::pair<size_t, size_t> Movement::surroundingWord(const base::PieceTree& tree, size_t offset) {
+    auto walker = base::TreeWalker{&tree, offset};
+    auto reverse_walker = base::ReverseTreeWalker{&tree, offset};
+
+    // TODO: Implement peek so we don't need to reset the walkers below.
+    // `std::max` just means we prioritize words, then punctuation, then whitespace.
+    auto word_kind =
+        std::max(to_kind(walker.next_codepoint()), to_kind(reverse_walker.next_codepoint()));
+
+    size_t start = offset;
+    size_t end = offset;
+    // TODO: Implement peek so we don't need to reset the walker here.
+    reverse_walker.seek(offset);
+    while (!reverse_walker.exhausted()) {
+        int32_t cp = reverse_walker.next_codepoint();
+        size_t offset = reverse_walker.offset();
+
+        auto kind = to_kind(cp);
+        if (kind == word_kind && cp != '\n') {
+            start = offset;
+        } else {
+            break;
+        }
+    }
+    // TODO: Implement peek so we don't need to reset the walker here.
+    walker.seek(offset);
+    while (!walker.exhausted()) {
+        int32_t cp = walker.next_codepoint();
+        size_t offset = walker.offset();
+
+        auto kind = to_kind(cp);
+        if (kind == word_kind && cp != '\n') {
+            end = offset;
+        } else {
+            break;
+        }
+    }
+    return {start, end};
+}
+
 namespace {
 
-constexpr CharKind CodepointToCharKind(int32_t codepoint) {
+constexpr CharKind to_kind(int32_t codepoint) {
     if (una::codepoint::is_whitespace(codepoint)) {
         return CharKind::kWhitespace;
-    } else if (una::codepoint::is_alphabetic(codepoint) || codepoint == '_') {
+    } else if (una::codepoint::is_alphanumeric(codepoint) || codepoint == '_') {
         return CharKind::kWord;
     } else {
-        return CharKind::KPunctuation;
+        return CharKind::kPunctuation;
     }
 }
 

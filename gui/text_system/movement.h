@@ -22,6 +22,8 @@ public:
     // TODO: Make documentation more clear. Consider using type aliases.
     static size_t prevWordStart(const base::PieceTree& tree, size_t offset);
     static size_t nextWordEnd(const base::PieceTree& tree, size_t offset);
+    // TODO: Make a `Pair` type.
+    static std::pair<size_t, size_t> surroundingWord(const base::PieceTree& tree, size_t offset);
 };
 
 }  // namespace gui

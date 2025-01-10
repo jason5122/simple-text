@@ -322,15 +322,25 @@ void TextEditWidget::leftMouseDown(const Point& mouse_pos,
     size_t col = Movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
-    if (click_type == ClickType::kSingleClick) {
+    switch (click_type) {
+    case ClickType::kSingleClick: {
         bool extend = modifiers == ModifierKey::kShift;
         selection.setIndex(offset, extend);
-    } else if (click_type == ClickType::kDoubleClick) {
+        break;
+    }
+    case ClickType::kDoubleClick: {
+        // TODO: Implement extending.
         auto [left, right] = Movement::surroundingWord(tree, offset);
         selection.setRange(left, right);
-    } else if (click_type == ClickType::kTripleClick) {
+        old_selection = selection;
+        break;
+    }
+    case ClickType::kTripleClick: {
+        // TODO: Implement extending.
         auto [left, right] = tree.get_line_range_with_newline(line);
         selection.setRange(left, right);
+        break;
+    }
     }
 }
 
@@ -342,14 +352,28 @@ void TextEditWidget::leftMouseDrag(const Point& mouse_pos,
     size_t col = Movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
-    if (click_type == ClickType::kSingleClick) {
+    switch (click_type) {
+    case ClickType::kSingleClick: {
         selection.setIndex(offset, true);
-    } else if (click_type == ClickType::kDoubleClick) {
-        // TODO: Implement.
-    } else if (click_type == ClickType::kTripleClick) {
+        break;
+    }
+    case ClickType::kDoubleClick: {
+        auto [left, right] = Movement::surroundingWord(tree, offset);
+        left = std::min(left, old_selection.start());
+        right = std::max(right, old_selection.end());
+        selection.setRange(left, right);
+        break;
+    }
+    case ClickType::kTripleClick: {
         auto [left, right] = tree.get_line_range_with_newline(line);
         selection.setIndex(right, true);
+        break;
     }
+    }
+}
+
+void TextEditWidget::leftMouseUp(const Point& mouse_pos) {
+    old_selection = selection;
 }
 
 void TextEditWidget::updateMaxScroll() {

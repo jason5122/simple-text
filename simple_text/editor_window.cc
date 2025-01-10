@@ -220,6 +220,10 @@ void EditorWindow::leftMouseDrag(const Point& mouse_pos,
 }
 
 void EditorWindow::leftMouseUp(const Point& mouse_pos) {
+    if (dragged_widget) {
+        dragged_widget->leftMouseUp(mouse_pos);
+        redraw();
+    }
     dragged_widget = nullptr;
     updateCursorStyle(mouse_pos);
 }

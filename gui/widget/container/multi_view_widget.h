@@ -87,6 +87,11 @@ public:
         if (widget) widget->leftMouseDrag(mouse_pos, modifiers, click_type);
     }
 
+    void leftMouseUp(const Point& mouse_pos) override {
+        Widget* widget = currentWidget();
+        if (widget) widget->leftMouseUp(mouse_pos);
+    }
+
     bool mousePositionChanged(const std::optional<Point>& mouse_pos) override {
         Widget* widget = currentWidget();
         if (widget) {

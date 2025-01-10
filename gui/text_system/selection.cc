@@ -9,6 +9,10 @@
 
 namespace gui {
 
+Selection::Selection() : start_caret(0), end_caret(0) {}
+
+Selection::Selection(size_t start, size_t end) : start_caret(start), end_caret(end) {}
+
 size_t& Selection::start() {
     return start_caret;
 }

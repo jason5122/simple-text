@@ -25,6 +25,7 @@ public:
     void leftMouseDrag(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;
+    void leftMouseUp(const Point& mouse_pos) override;
     bool mousePositionChanged(const std::optional<Point>& mouse_pos) override;
     void setPosition(const Point& position) override;
     Widget* widgetAt(const Point& pos) override;

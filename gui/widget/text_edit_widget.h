@@ -45,6 +45,7 @@ public:
     void leftMouseDrag(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;
+    void leftMouseUp(const Point& mouse_pos) override;
     void insertText(std::string_view str8) override;
 
     void updateMaxScroll() override;
@@ -81,6 +82,7 @@ private:
     base::PieceTree tree;
 
     Selection selection{};
+    Selection old_selection{};
 
 #ifdef ENABLE_HIGHLIGHTING
     highlight::ParseTree parse_tree;

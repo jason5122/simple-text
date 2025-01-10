@@ -7,6 +7,9 @@ namespace gui {
 
 class Selection {
 public:
+    Selection();
+    Selection(size_t start, size_t end);
+
     size_t& start();
     size_t& end();  // TODO: Rename this to avoid collision with range end() function.
     bool empty() const;

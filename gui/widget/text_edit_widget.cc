@@ -232,24 +232,10 @@ void TextEditWidget::deleteWord(bool forward) {
             selection.end() = offset;
             selection.start() = selection.end();
         }
-
-        // #ifdef ENABLE_HIGHLIGHTING
-        //         auto& highlighter = highlight::Highlighter::instance();
-        //         auto& language = highlighter.getLanguage("cpp");
-        //         parse_tree.edit(i, i + delta, i);
-        //         parse_tree.parse(tree, language);
-        // #endif
     } else {
         auto [start, end] = selection.range();
         tree.erase(start, end - start);
         selection.collapse(Selection::Direction::kLeft);
-
-        // #ifdef ENABLE_HIGHLIGHTING
-        //         auto& highlighter = highlight::Highlighter::instance();
-        //         auto& language = highlighter.getLanguage("cpp");
-        //         parse_tree.edit(start, end, start);
-        //         parse_tree.parse(tree, language);
-        // #endif
     }
 }
 

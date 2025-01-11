@@ -149,7 +149,7 @@ std::pair<size_t, size_t> surroundingWord(const base::PieceTree& tree, size_t of
     size_t start = offset;
     size_t end = offset;
     // TODO: Implement peek so we don't need to reset the walker here.
-    reverse_walker.seek(offset);
+    reverse_walker = base::ReverseTreeWalker{&tree, offset};
     while (!reverse_walker.exhausted()) {
         int32_t cp = reverse_walker.next_codepoint();
         size_t offset = reverse_walker.offset();
@@ -162,7 +162,7 @@ std::pair<size_t, size_t> surroundingWord(const base::PieceTree& tree, size_t of
         }
     }
     // TODO: Implement peek so we don't need to reset the walker here.
-    walker.seek(offset);
+    walker = base::TreeWalker{&tree, offset};
     while (!walker.exhausted()) {
         int32_t cp = walker.next_codepoint();
         size_t offset = walker.offset();

@@ -176,6 +176,14 @@ std::pair<size_t, size_t> Movement::surroundingWord(const base::PieceTree& tree,
     return {start, end};
 }
 
+bool Movement::isInsideWord(const base::PieceTree& tree, size_t offset) {
+    auto walker = base::TreeWalker{&tree, offset};
+    auto reverse_walker = base::ReverseTreeWalker{&tree, offset};
+    auto prev_kind = to_kind(reverse_walker.next_codepoint());
+    auto next_kind = to_kind(walker.next_codepoint());
+    return prev_kind == CharKind::kWord && next_kind == CharKind::kWord;
+}
+
 namespace {
 
 constexpr CharKind to_kind(int32_t codepoint) {

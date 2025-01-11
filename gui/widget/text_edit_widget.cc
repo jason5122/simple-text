@@ -329,7 +329,6 @@ void TextEditWidget::leftMouseDown(const Point& mouse_pos,
         break;
     }
     case ClickType::kDoubleClick: {
-        // TODO: Implement extending.
         auto [left, right] = Movement::surroundingWord(tree, offset);
         selection.setRange(left, right);
         old_selection = selection;
@@ -358,10 +357,15 @@ void TextEditWidget::leftMouseDrag(const Point& mouse_pos,
         break;
     }
     case ClickType::kDoubleClick: {
-        auto [left, right] = Movement::surroundingWord(tree, offset);
-        left = std::min(left, old_selection.start());
-        right = std::max(right, old_selection.end());
-        selection.setRange(left, right);
+        if (Movement::isInsideWord(tree, offset)) {
+            auto [left, right] = Movement::surroundingWord(tree, offset);
+            left = std::min(left, old_selection.start());
+            right = std::max(right, old_selection.end());
+            selection.setRange(left, right);
+        } else {
+            selection.start() = std::min(offset, old_selection.start());
+            selection.end() = std::max(offset, old_selection.end());
+        }
         break;
     }
     case ClickType::kTripleClick: {

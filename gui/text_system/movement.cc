@@ -10,6 +10,7 @@
 #include <fmt/base.h>
 
 namespace gui {
+namespace movement {
 
 namespace {
 
@@ -23,7 +24,7 @@ constexpr CharKind to_kind(int32_t codepoint);
 
 }  // namespace
 
-size_t Movement::columnAtX(const font::LineLayout& layout, int x) {
+size_t columnAtX(const font::LineLayout& layout, int x) {
     for (size_t i = 0; i < layout.glyphs.size(); ++i) {
         const auto& glyph = layout.glyphs[i];
         int glyph_x = glyph.position.x;
@@ -35,7 +36,7 @@ size_t Movement::columnAtX(const font::LineLayout& layout, int x) {
     return layout.length;
 }
 
-int Movement::xAtColumn(const font::LineLayout& layout, size_t col) {
+int xAtColumn(const font::LineLayout& layout, size_t col) {
     for (size_t i = 0; i < layout.glyphs.size(); ++i) {
         const auto& glyph = layout.glyphs[i];
         if (glyph.index >= col) {
@@ -56,7 +57,7 @@ inline size_t GlyphAtColumn(const std::vector<font::ShapedGlyph>& glyphs, size_t
 }
 }  // namespace
 
-size_t Movement::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
+size_t moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     const auto& glyphs = layout.glyphs;
     if (glyphs.empty()) return 0;
 
@@ -65,7 +66,7 @@ size_t Movement::moveToPrevGlyph(const font::LineLayout& layout, size_t col) {
     return col - glyphs[i].index;
 }
 
-size_t Movement::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
+size_t moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     const auto& glyphs = layout.glyphs;
 
     size_t i = GlyphAtColumn(glyphs, col);
@@ -78,7 +79,7 @@ size_t Movement::moveToNextGlyph(const font::LineLayout& layout, size_t col) {
     }
 }
 
-size_t Movement::prevWordStart(const base::PieceTree& tree, size_t offset) {
+size_t prevWordStart(const base::PieceTree& tree, size_t offset) {
     base::ReverseTreeWalker reverse_walker{&tree, offset};
 
     std::optional<int32_t> prev_cp;
@@ -90,7 +91,7 @@ size_t Movement::prevWordStart(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            fmt::println("Movement::prevWordStart() error: invalid codepoint.");
+            fmt::println("prevWordStart() error: invalid codepoint.");
             std::abort();
         }
 
@@ -107,7 +108,7 @@ size_t Movement::prevWordStart(const base::PieceTree& tree, size_t offset) {
     return prev_offset;
 }
 
-size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
+size_t nextWordEnd(const base::PieceTree& tree, size_t offset) {
     base::TreeWalker walker{&tree, offset};
 
     std::optional<int32_t> prev_cp;
@@ -119,7 +120,7 @@ size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            fmt::println("Movement::nextWordEnd() error: invalid codepoint.");
+            fmt::println("nextWordEnd() error: invalid codepoint.");
             std::abort();
         }
 
@@ -136,7 +137,7 @@ size_t Movement::nextWordEnd(const base::PieceTree& tree, size_t offset) {
     return prev_offset;
 }
 
-std::pair<size_t, size_t> Movement::surroundingWord(const base::PieceTree& tree, size_t offset) {
+std::pair<size_t, size_t> surroundingWord(const base::PieceTree& tree, size_t offset) {
     auto walker = base::TreeWalker{&tree, offset};
     auto reverse_walker = base::ReverseTreeWalker{&tree, offset};
 
@@ -176,7 +177,7 @@ std::pair<size_t, size_t> Movement::surroundingWord(const base::PieceTree& tree,
     return {start, end};
 }
 
-bool Movement::isInsideWord(const base::PieceTree& tree, size_t offset) {
+bool isInsideWord(const base::PieceTree& tree, size_t offset) {
     auto walker = base::TreeWalker{&tree, offset};
     auto reverse_walker = base::ReverseTreeWalker{&tree, offset};
     auto prev_kind = to_kind(reverse_walker.next_codepoint());
@@ -198,4 +199,5 @@ constexpr CharKind to_kind(int32_t codepoint) {
 
 }  // namespace
 
+}  // namespace movement
 }  // namespace gui

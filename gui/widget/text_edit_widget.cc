@@ -43,7 +43,7 @@ void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        size_t delta = Movement::moveToPrevGlyph(layout, col);
+        size_t delta = movement::moveToPrevGlyph(layout, col);
         selection.decrement(delta, extend);
 
         // Move to previous line if at beginning of line.
@@ -59,23 +59,23 @@ void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
             return;
         }
 
-        size_t delta = Movement::moveToNextGlyph(layout, col);
+        size_t delta = movement::moveToNextGlyph(layout, col);
         selection.increment(delta, extend);
     }
     if (by == MoveBy::kLines) {
         size_t new_line = forward ? line + 1 : line - 1;
         if (0 <= new_line && new_line < tree.line_count()) {
-            int x = Movement::xAtColumn(layout, col);
-            size_t new_col = Movement::columnAtX(layoutAt(new_line), x);
+            int x = movement::xAtColumn(layout, col);
+            size_t new_col = movement::columnAtX(layoutAt(new_line), x);
             size_t index = tree.offset_at(new_line, new_col);
             selection.setIndex(index, extend);
         }
     }
     if (by == MoveBy::kWords) {
         if (forward) {
-            selection.end() = Movement::nextWordEnd(tree, selection.end());
+            selection.end() = movement::nextWordEnd(tree, selection.end());
         } else {
-            selection.end() = Movement::prevWordStart(tree, selection.end());
+            selection.end() = movement::prevWordStart(tree, selection.end());
         }
         if (!extend) {
             selection.start() = selection.end();
@@ -92,14 +92,14 @@ void TextEditWidget::moveTo(MoveTo to, bool extend) {
         size_t line = tree.line_at(selection.end());
 
         const auto& layout = layoutAt(line);
-        size_t new_col = Movement::columnAtX(layout, 0);
+        size_t new_col = movement::columnAtX(layout, 0);
         selection.setIndex(tree.offset_at(line, new_col), extend);
     }
     if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
         size_t line = tree.line_at(selection.end());
 
         const auto& layout = layoutAt(line);
-        size_t new_col = Movement::columnAtX(layout, layout.width);
+        size_t new_col = movement::columnAtX(layout, layout.width);
         selection.setIndex(tree.offset_at(line, new_col), extend);
     }
     if (to == MoveTo::kBOF) {
@@ -139,7 +139,7 @@ void TextEditWidget::leftDelete() {
         auto [line, col] = tree.line_column_at(selection.end());
         const auto& layout = layoutAt(line);
 
-        size_t delta = Movement::moveToPrevGlyph(layout, col);
+        size_t delta = movement::moveToPrevGlyph(layout, col);
         selection.decrement(delta, false);
 
         // Delete newline if at beginning of line.
@@ -180,7 +180,7 @@ void TextEditWidget::rightDelete() {
         auto [line, col] = tree.line_column_at(selection.end());
         const auto& layout = layoutAt(line);
 
-        size_t delta = Movement::moveToNextGlyph(layout, col);
+        size_t delta = movement::moveToNextGlyph(layout, col);
         size_t i = selection.end();
         tree.erase(i, delta);
 
@@ -214,7 +214,7 @@ void TextEditWidget::deleteWord(bool forward) {
         size_t prev_offset = selection.end();
         size_t offset, delta;
         if (forward) {
-            offset = Movement::nextWordEnd(tree, prev_offset);
+            offset = movement::nextWordEnd(tree, prev_offset);
             delta = offset - prev_offset;
             tree.erase(prev_offset, delta);
 
@@ -223,7 +223,7 @@ void TextEditWidget::deleteWord(bool forward) {
             selection.end() = prev_offset;
             selection.start() = selection.end();
         } else {
-            offset = Movement::prevWordStart(tree, prev_offset);
+            offset = movement::prevWordStart(tree, prev_offset);
             delta = prev_offset - offset;
             tree.erase(offset, delta);
 
@@ -319,7 +319,7 @@ void TextEditWidget::leftMouseDown(const Point& mouse_pos,
                                    ClickType click_type) {
     Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
-    size_t col = Movement::columnAtX(layoutAt(line), coords.x);
+    size_t col = movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
     switch (click_type) {
@@ -329,7 +329,7 @@ void TextEditWidget::leftMouseDown(const Point& mouse_pos,
         break;
     }
     case ClickType::kDoubleClick: {
-        auto [left, right] = Movement::surroundingWord(tree, offset);
+        auto [left, right] = movement::surroundingWord(tree, offset);
         selection.setRange(left, right);
         old_selection = selection;
         break;
@@ -348,7 +348,7 @@ void TextEditWidget::leftMouseDrag(const Point& mouse_pos,
                                    ClickType click_type) {
     Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
-    size_t col = Movement::columnAtX(layoutAt(line), coords.x);
+    size_t col = movement::columnAtX(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
     switch (click_type) {
@@ -357,8 +357,8 @@ void TextEditWidget::leftMouseDrag(const Point& mouse_pos,
         break;
     }
     case ClickType::kDoubleClick: {
-        if (Movement::isInsideWord(tree, offset)) {
-            auto [left, right] = Movement::surroundingWord(tree, offset);
+        if (movement::isInsideWord(tree, offset)) {
+            auto [left, right] = movement::surroundingWord(tree, offset);
             left = std::min(left, old_selection.start());
             right = std::max(right, old_selection.end());
             selection.setRange(left, right);
@@ -514,8 +514,8 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
 
     const auto& c1_layout = layoutAt(c1_line);
     const auto& c2_layout = layoutAt(c2_line);
-    int c1_x = Movement::xAtColumn(c1_layout, c1_col);
-    int c2_x = Movement::xAtColumn(c2_layout, c2_col);
+    int c1_x = movement::xAtColumn(c1_layout, c1_col);
+    int c2_x = movement::xAtColumn(c2_layout, c2_col);
 
     // Don't render off-screen selections.
     if (c1_line < start_line) c1_line = start_line;
@@ -591,7 +591,7 @@ void TextEditWidget::renderCaret(int main_line_height) {
     int caret_height = main_line_height + kExtraPadding * 2;
 
     auto [line, col] = tree.line_column_at(selection.end());
-    int end_caret_x = Movement::xAtColumn(layoutAt(line), col);
+    int end_caret_x = movement::xAtColumn(layoutAt(line), col);
 
     Point caret_pos = {
         .x = end_caret_x,

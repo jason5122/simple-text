@@ -9,7 +9,6 @@
 #include <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.
-#include <algorithm>
 #include <cassert>
 #include <fmt/base.h>
 
@@ -109,56 +108,46 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     CGRect bounds = CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault,
                                                     &glyph_index, nullptr, 1);
 
-    // if (font_id != 4) return {};
+    int scale_factor = 2;
+    bounds.origin.x *= scale_factor;
+    bounds.origin.y *= scale_factor;
+    bounds.size.width *= scale_factor;
+    bounds.size.height *= scale_factor;
 
-    int scale = 2;
-    bounds.origin.x *= scale;
-    bounds.origin.y *= scale;
-    bounds.size.width *= scale;
-    bounds.size.height *= scale;
-
-    int rasterized_left = std::floor(bounds.origin.x);
-    rasterized_left = 0;
+    int left = std::floor(bounds.origin.x);
+    left = 0;
     if constexpr (kUseSyntheticBold) {
         // Add width padding for synthetic bold to prevent cutting off.
         // TODO: Check if right side is still being cut off.
-        rasterized_left = base::sub_sat(rasterized_left, 2);
+        left = base::sub_sat(left, 2);
     }
-    int rasterized_width = std::ceil(bounds.origin.x - rasterized_left + bounds.size.width);
-    int rasterized_descent = std::ceil(-bounds.origin.y);
-    rasterized_descent = 0;
-    int rasterized_ascent = std::ceil(bounds.size.height + bounds.origin.y);
-    int rasterized_height = rasterized_descent + rasterized_ascent;
+    int width = std::ceil(bounds.origin.x - left + bounds.size.width);
+    int descent = std::ceil(-bounds.origin.y);
+    descent = 0;
+    int ascent = std::ceil(bounds.size.height + bounds.origin.y);
+    int height = descent + ascent;
     if constexpr (kUseSyntheticBold) {
         // Add height padding for synthetic bold to prevent cutting off.
         // TODO: Check if bottom is still being cut off.
-        rasterized_height += 2;
+        height += 2;
     }
     int top = std::ceil(bounds.size.height + bounds.origin.y);
 
-    // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
-    // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
-    bool colored_font = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
-    bool has_outline = CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr);
-    bool colored = colored_font && !has_outline;
-
     // TODO: Clean this up.
     int weird_value = std::ceil(-bounds.origin.y);
-    rasterized_height += weird_value * 2;
+    height += weird_value * 2;
 
-    if (rasterized_width < 0 || rasterized_height < 0) {
-        auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(font_ref));
-        std::string font_name = base::apple::CFStringToString(ct_font_name.get());
+    if (width < 0 || height < 0) {
         fmt::println("Warning: width/height < 0 for font ID = {}, glyph ID = {}, font name = {}",
-                     font_id, glyph_id, font_name);
+                     font_id, glyph_id, font_id_to_postscript_name[font_id]);
         return {};
     }
 
-    std::vector<uint8_t> bitmap_data(rasterized_height * rasterized_width * 4);
+    std::vector<uint8_t> bitmap_data(height * width * 4);
     auto color_space_ref = ScopedTypeRef<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB());
     auto context = ScopedTypeRef<CGContextRef>(CGBitmapContextCreate(
-        bitmap_data.data(), rasterized_width, rasterized_height, 8, rasterized_width * 4,
-        color_space_ref.get(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
+        bitmap_data.data(), width, height, 8, width * 4, color_space_ref.get(),
+        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
     CGContextSetAllowsFontSmoothing(context.get(), true);
     CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
@@ -171,12 +160,9 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
     // TODO: Clean this up.
-    // CGPoint rasterization_origin = CGPointMake(-rasterized_left, rasterized_descent);
-    CGPoint rasterization_origin = CGPointMake(-rasterized_left, weird_value);
-
-    // TODO: Refactor this.
-    // CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
-    CGContextScaleCTM(context.get(), 2, 2);
+    // CGPoint rasterization_origin = CGPointMake(-left, descent);
+    CGPoint rasterization_origin = CGPointMake(-left, weird_value);
+    CGContextScaleCTM(context.get(), scale_factor, scale_factor);
 
     // TODO: Fully implement this.
     if constexpr (kUseSyntheticBold) {
@@ -187,11 +173,17 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
+    // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
+    // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
+    bool colored_font = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
+    bool has_outline = CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr);
+    bool colored = colored_font && !has_outline;
+
     return {
-        .left = rasterized_left,
+        .left = left,
         .top = top,
-        .width = static_cast<int32_t>(rasterized_width),
-        .height = static_cast<int32_t>(rasterized_height),
+        .width = static_cast<int32_t>(width),
+        .height = static_cast<int32_t>(height),
         .buffer = std::move(bitmap_data),
         .colored = colored,
     };
@@ -199,10 +191,10 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
 LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
-    assert(std::ranges::count(str8, '\n') == 0);
+    assert(str8.find('\n') == std::string_view::npos);
 
-    UTF16ToUTF8IndicesMap utf8IndicesMap;
-    if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
+    UTF16ToUTF8IndicesMap utf8_indices_map;
+    if (!utf8_indices_map.setUTF8(str8.data(), str8.length())) {
         fmt::println("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }
@@ -239,19 +231,21 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         for (CFIndex i = 0; i < glyph_count; ++i) {
             // TODO: Use subpixel variants instead of rounding.
             Point position = {
+                // TODO: See if we can make this more accurate.
                 // .x = static_cast<int>(std::ceil(positions[i].x)) * 2,
                 // .y = static_cast<int>(std::ceil(positions[i].y)) * 2,
                 .x = total_advance,
                 .y = static_cast<int>(std::ceil(positions[i].y)),
             };
             Point advance = {
+                // TODO: See if we can make this more accurate.
                 // .x = static_cast<int>(std::ceil(advances[i].width)) * 2,
                 // .y = static_cast<int>(std::ceil(advances[i].height)) * 2,
                 .x = static_cast<int>(std::ceil(advances[i].width * 2)),
                 .y = static_cast<int>(std::ceil(advances[i].height * 2)),
             };
 
-            size_t utf8_index = utf8IndicesMap.mapIndex(indices[i]);
+            size_t utf8_index = utf8_indices_map.mapIndex(indices[i]);
             ShapedGlyph glyph = {
                 .font_id = run_font_id,
                 .glyph_id = glyph_ids[i],

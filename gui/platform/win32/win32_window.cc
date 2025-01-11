@@ -263,7 +263,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             }
 
             std::string str8 = base::windows::ConvertToUTF8(utf16);
-            fmt::println("WM_CHAR: {}", util::EscapeSpecialChars(str8));
+            fmt::println("WM_CHAR: {}", util::escape_special_chars(str8));
             app_window.onInsertText(str8);
 
             high_surrogate = '\0';

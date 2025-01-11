@@ -4,7 +4,7 @@
 
 namespace util {
 
-constexpr std::string EscapeSpecialChars(std::string_view str) {
+constexpr std::string escape_special_chars(std::string_view str) {
     std::string result;
     for (auto c : str) {
         switch (c) {

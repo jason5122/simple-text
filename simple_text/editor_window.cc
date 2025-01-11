@@ -44,7 +44,8 @@ void EditorWindow::onOpenGLActivate() {
     using namespace std::literals;
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
-    text_view->insertText(kCppExample);
+    // text_view->insertText(kCppExample);
+    text_view->insertText("a😳😳😳😳↔️↔️");
     // TODO: Fix these cases on Pango. Core Text has been fixed.
     // text_view->insertText("\n꣰");
     // text_view->insertText("ᩣᩤᩥᩦᩧᩨᩩᩪᩫᩬᩭ");
@@ -79,7 +80,7 @@ void EditorWindow::onOpenGLActivate() {
 }
 
 void EditorWindow::draw() {
-    // PROFILE_BLOCK("Total render time");
+    // auto p = util::Profiler{"Total render time"};
 
     // TODO: Debug use; remove this.
     auto* text_view = editor_widget->currentWidget();
@@ -314,7 +315,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         editor_widget->currentWidget()->selectAll();
         handled = true;
     } else if (key == Key::kN && modifiers == kPrimaryModifier) {
-        PROFILE_BLOCK("Add new tab (modifier key)");
+        auto p = util::Profiler{"Add new tab (modifier key)"};
         // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
         editor_widget->addTab("untitled", "");
         handled = true;
@@ -472,7 +473,7 @@ void EditorWindow::onInsertText(std::string_view text) {
 }
 
 void EditorWindow::onAction(Action action, bool extend) {
-    PROFILE_BLOCK("EditorWindow::onAction()");
+    auto p = util::Profiler{"EditorWindow::onAction()"};
 
     bool handled = true;
     auto* text_view = editor_widget->currentWidget();

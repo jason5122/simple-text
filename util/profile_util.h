@@ -4,33 +4,42 @@
 #include <iostream>
 #include <string>
 
-// https://stackoverflow.com/a/37607676
-template <typename Duration = std::chrono::microseconds>
+namespace util {
+
 class Profiler {
 public:
-    Profiler(std::string const& n) : name(n), t1(std::chrono::high_resolution_clock::now()) {}
+    Profiler(std::string_view name) : name(name), t1(std::chrono::high_resolution_clock::now()) {}
     ~Profiler() {
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<Duration>(t2 - t1).count();
+        if (stopped) return;
+        stop_micro();
+    }
 
-        std::string unit = "units";
-        if (std::is_same<Duration, std::chrono::microseconds>::value) {
-            unit = "µs";
-        } else if (std::is_same<Duration, std::chrono::milliseconds>::value) {
-            unit = "ms";
+    void stop_micro() {
+        if (stopped) {
+            std::cout << "Warning: profiler was already stopped.";
+            return;
         }
-        std::cout << name << ": " << duration << ' ' << unit << '\n';
+        stopped = true;
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        std::cout << name << ": " << duration << " µs\n";
+    }
+
+    void stop_mili() {
+        if (stopped) {
+            std::cout << "Warning: profiler was already stopped.";
+            return;
+        }
+        stopped = true;
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        std::cout << name << ": " << duration << " ms\n";
     }
 
 private:
     std::string name;
     std::chrono::high_resolution_clock::time_point t1;
+    bool stopped = false;
 };
 
-#define PROFILE_BLOCK(name) const Profiler _pfinstance(name)
-#define PROFILE_BLOCK_WITH_DURATION(name, duration) const Profiler<duration> _pfinstance(name)
-
-// template <typename Duration = std::chrono::microseconds>
-// inline Profiler<Duration> ProfileBlock(std::string name) {
-//     return Profiler<Duration>(name);
-// }
+}  // namespace util

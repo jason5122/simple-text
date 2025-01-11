@@ -21,20 +21,18 @@ constexpr std::string_view kLongLine =
 constexpr std::string_view kFileName = "1gb.txt";
 const std::string kStr1Gb = kLongLine * 10000000;
 
-}
+}  // namespace
 
 // See discussion below on `fwrite(_, 1, N, _)` vs. `fwrite(_, N, 1, _)`.
 // https://stackoverflow.com/a/21769967/14698275
 TEST(FileReaderTest, ReadFile1) {
-    {
-        PROFILE_BLOCK_WITH_DURATION("Write 1GB file", std::chrono::milliseconds);
-        base::WriteFile(kFileName, kStr1Gb);
-    }
+    auto p1 = util::Profiler{"Write 1GB file"};
+    base::WriteFile(kFileName, kStr1Gb);
+    p1.stop_mili();
 
-    {
-        PROFILE_BLOCK_WITH_DURATION("Read 1GB file", std::chrono::milliseconds);
-        std::string contents = base::ReadFile(kFileName);
-    }
+    auto p2 = util::Profiler{"Read 1GB file"};
+    std::string contents = base::ReadFile(kFileName);
+    p2.stop_mili();
 
-    remove(kFileName.data());
+    std::remove(kFileName.data());
 }

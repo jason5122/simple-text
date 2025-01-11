@@ -48,6 +48,8 @@ struct Metrics {
     int ascent;
     int descent;
     int font_size;
+    // TODO: Clean this up.
+    int units_per_em;
 };
 
 struct RasterizedGlyph {

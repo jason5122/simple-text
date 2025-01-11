@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/numeric/saturation_arithmetic.h"
+
 #include <random>
 
 namespace util {

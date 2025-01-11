@@ -25,7 +25,7 @@ void TextEditWidget::selectAll() {
 }
 
 void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
-    PROFILE_BLOCK("TextViewWidget::move()");
+    auto p = util::Profiler{"TextViewWidget::move()"};
 
     auto [line, col] = tree.line_column_at(selection.end);
     const auto& layout = layoutAt(line);
@@ -83,7 +83,7 @@ void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
 }
 
 void TextEditWidget::moveTo(MoveTo to, bool extend) {
-    PROFILE_BLOCK("TextViewWidget::moveTo()");
+    auto p = util::Profiler{"TextViewWidget::moveTo()"};
 
     switch (to) {
     case MoveTo::kBOL:
@@ -128,7 +128,7 @@ void TextEditWidget::insertText(std::string_view str8) {
 }
 
 void TextEditWidget::leftDelete() {
-    PROFILE_BLOCK("TextViewWidget::leftDelete()");
+    auto p = util::Profiler{"TextViewWidget::leftDelete()"};
 
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end);
@@ -155,7 +155,7 @@ void TextEditWidget::leftDelete() {
 }
 
 void TextEditWidget::rightDelete() {
-    PROFILE_BLOCK("TextViewWidget::rightDelete()");
+    auto p = util::Profiler{"TextViewWidget::rightDelete()"};
 
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end);
@@ -175,7 +175,7 @@ void TextEditWidget::rightDelete() {
 
 // TODO: Make this delete newlines without going past them into the previous line.
 void TextEditWidget::deleteWord(bool forward) {
-    PROFILE_BLOCK("TextViewWidget::deleteWord()");
+    auto p = util::Profiler{"TextViewWidget::deleteWord()"};
 
     if (selection.empty()) {
         size_t prev_offset = selection.end;
@@ -386,7 +386,7 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     size_t selection_line = tree.line_at(selection.end);
 
-    PROFILE_BLOCK("TextViewWidget::renderText()");
+    auto p = util::Profiler{"TextViewWidget::renderText()"};
 
     // Draw shadow to indicate horizontal scrolling is possible.
     static constexpr int kShadowWidth = 10;

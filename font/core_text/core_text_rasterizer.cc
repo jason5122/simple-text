@@ -106,57 +106,35 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     }
 
     CGGlyph glyph_index = glyph_id;
-    CGRect bounds;
-    CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault, &glyph_index, &bounds, 1);
+    CGRect bounds = CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault,
+                                                    &glyph_index, nullptr, 1);
 
-    // if (glyph_index != 2075) return {};
     // if (font_id != 4) return {};
 
-    // TODO: Clean this up.
-    CGFloat font_size = metrics(font_id).font_size;
-    unsigned int units_per_em = metrics(font_id).units_per_em;
     int scale = 2;
-
     bounds.origin.x *= scale;
     bounds.origin.y *= scale;
     bounds.size.width *= scale;
     bounds.size.height *= scale;
-    CGFloat units_per_point = CTFontGetUnitsPerEm(font_ref) / CTFontGetSize(font_ref);
-    bounds.origin.x *= units_per_point;
-    bounds.origin.y *= units_per_point;
-    bounds.size.width *= units_per_point;
-    bounds.size.height *= units_per_point;
-    bounds.origin.x *= font_size / units_per_em;
-    bounds.origin.y *= font_size / units_per_em;
-    bounds.size.width *= font_size / units_per_em;
-    bounds.size.height *= font_size / units_per_em;
 
-    fmt::println("{} {} {} {} {}", units_per_point, font_size, units_per_em,
-                 CTFontGetUnitsPerEm(font_ref), CTFontGetSize(font_ref));
-
-    font_ref = CTFontCreateCopyWithAttributes(font_ref, font_size, nullptr, nullptr);
-
-    fmt::println("font = {}, index = {}", font_id, glyph_index);
-    fmt::println("{} {}", bounds.size.width, bounds.size.height);
-
-    int32_t rasterized_left = std::floor(bounds.origin.x);
+    int rasterized_left = std::floor(bounds.origin.x);
     rasterized_left = 0;
     if constexpr (kUseSyntheticBold) {
         // Add width padding for synthetic bold to prevent cutting off.
         // TODO: Check if right side is still being cut off.
         rasterized_left = base::sub_sat(rasterized_left, 2);
     }
-    uint32_t rasterized_width = std::ceil(bounds.origin.x - rasterized_left + bounds.size.width);
-    int32_t rasterized_descent = std::ceil(-bounds.origin.y);
+    int rasterized_width = std::ceil(bounds.origin.x - rasterized_left + bounds.size.width);
+    int rasterized_descent = std::ceil(-bounds.origin.y);
     rasterized_descent = 0;
-    int32_t rasterized_ascent = std::ceil(bounds.size.height + bounds.origin.y);
-    uint32_t rasterized_height = rasterized_descent + rasterized_ascent;
+    int rasterized_ascent = std::ceil(bounds.size.height + bounds.origin.y);
+    int rasterized_height = rasterized_descent + rasterized_ascent;
     if constexpr (kUseSyntheticBold) {
         // Add height padding for synthetic bold to prevent cutting off.
         // TODO: Check if bottom is still being cut off.
         rasterized_height += 2;
     }
-    int32_t top = std::ceil(bounds.size.height + bounds.origin.y);
+    int top = std::ceil(bounds.size.height + bounds.origin.y);
 
     // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
     // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
@@ -165,9 +143,16 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool colored = colored_font && !has_outline;
 
     // TODO: Clean this up.
-    uint32_t weird_value = std::ceil(-bounds.origin.y);
-    rasterized_height = base::add_sat(rasterized_height, weird_value * 2);
-    fmt::println("weird_value = {}", weird_value);
+    int weird_value = std::ceil(-bounds.origin.y);
+    rasterized_height += weird_value * 2;
+
+    if (rasterized_width < 0 || rasterized_height < 0) {
+        auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(font_ref));
+        std::string font_name = base::apple::CFStringToString(ct_font_name.get());
+        fmt::println("Warning: width/height < 0 for font ID = {}, glyph ID = {}, font name = {}",
+                     font_id, glyph_id, font_name);
+        return {};
+    }
 
     std::vector<uint8_t> bitmap_data(rasterized_height * rasterized_width * 4);
     auto color_space_ref = ScopedTypeRef<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB());
@@ -191,7 +176,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     // TODO: Refactor this.
     // CGContextTranslateCTM(context.get(), -rasterized_left, rasterized_descent);
-    CGContextScaleCTM(context.get(), 2.0, 2.0);
+    CGContextScaleCTM(context.get(), 2, 2);
 
     // TODO: Fully implement this.
     if constexpr (kUseSyntheticBold) {
@@ -230,20 +215,14 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
     CFIndex run_count = CFArrayGetCount(run_array);
 
-    int font_size = metrics(font_id).font_size;
-
     for (CFIndex i = 0; i < run_count; ++i) {
         CTRunRef ct_run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(run_array, i));
 
         auto ct_font = static_cast<CTFontRef>(
             CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName));
-        // auto cg_font = CTFontCopyGraphicsFont(ct_font, nullptr);
-        // auto new_ct_font = CTFontCreateWithGraphicsFont(cg_font, 16.0, nullptr, nullptr);
-        auto new_ct_font = ct_font;
-
         auto scoped_ct_font =
-            ScopedCFTypeRef<CTFontRef>(new_ct_font, base::apple::OwnershipPolicy::RETAIN);
-        // int font_size = CTFontGetSize(ct_font);
+            ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
+        int font_size = CTFontGetSize(ct_font);
         size_t run_font_id = cacheFont({std::move(scoped_ct_font)}, font_size);
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
@@ -260,18 +239,17 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         for (CFIndex i = 0; i < glyph_count; ++i) {
             // TODO: Use subpixel variants instead of rounding.
             Point position = {
+                // .x = static_cast<int>(std::ceil(positions[i].x)) * 2,
+                // .y = static_cast<int>(std::ceil(positions[i].y)) * 2,
                 .x = total_advance,
-                // .x = static_cast<int>(std::ceil(positions[i].x)),
                 .y = static_cast<int>(std::ceil(positions[i].y)),
             };
             Point advance = {
+                // .x = static_cast<int>(std::ceil(advances[i].width)) * 2,
+                // .y = static_cast<int>(std::ceil(advances[i].height)) * 2,
                 .x = static_cast<int>(std::ceil(advances[i].width * 2)),
                 .y = static_cast<int>(std::ceil(advances[i].height * 2)),
             };
-            // Point advance = {
-            //     .x = static_cast<int>(std::ceil(advances[i].width)),
-            //     .y = static_cast<int>(std::ceil(advances[i].height)),
-            // };
 
             size_t utf8_index = utf8IndicesMap.mapIndex(indices[i]);
             ShapedGlyph glyph = {
@@ -287,19 +265,9 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         }
     }
 
-    // TODO: Currently, width != sum of all advances since we round. When we implement subpixel
-    // variants, this should no longer be an issue.
-    // double width = CTLineGetTypographicBounds(ct_line.get(), nullptr, nullptr, nullptr);
-
-    // TODO: See if this is correct.
-    // if (total_advance % 2 == 1) {
-    //     ++total_advance;
-    // }
-
     return {
         .layout_font_id = font_id,
         .width = total_advance,
-        // .width = static_cast<int>(std::ceil(width)),
         .length = str8.length(),
         .glyphs = std::move(glyphs),
     };
@@ -321,21 +289,9 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
         return it->second;
     }
 
-    int units_per_em = CTFontGetUnitsPerEm(ct_font);
-    // TODO: Implement this properly.
-    // CGFloat pt_size = CTFontGetSize(ct_font);
-    // CGFloat units_per_point = units_per_em / pt_size;
-    int ascent = std::ceil(CTFontGetAscent(ct_font) * 2);
-    int descent = std::ceil(CTFontGetDescent(ct_font) * 2);
-    int leading = std::ceil(CTFontGetLeading(ct_font) * 2);
-
-    // int ascent = std::ceil(CTFontGetAscent(ct_font));
-    // int descent = std::ceil(CTFontGetDescent(ct_font));
-    // int leading = std::ceil(CTFontGetLeading(ct_font));
-
-    // Round up to the next even number if odd.
-    if (ascent % 2 == 1) ++ascent;
-    if (descent % 2 == 1) ++descent;
+    int ascent = std::ceil(CTFontGetAscent(ct_font)) * 2;
+    int descent = std::ceil(CTFontGetDescent(ct_font)) * 2;
+    int leading = std::ceil(CTFontGetLeading(ct_font)) * 2;
 
     int line_height = ascent + descent + leading;
 
@@ -344,7 +300,6 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
         .ascent = ascent,
         .descent = descent,
         .font_size = font_size,
-        .units_per_em = units_per_em,
     };
 
     size_t font_id = font_hash_to_id.size();
@@ -357,20 +312,14 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
 
 namespace {
 ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8) {
-    auto text_string = base::apple::StringToCFStringNoCopy(str8);
-
-    // auto string = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
-    // CFAttributedStringReplaceString(string, CFRangeMake(0, 0), text_string.get());
-    // auto len = CFAttributedStringGetLength(string);
-    // CFAttributedStringSetAttribute(string, CFRangeMake(0, len), kCTFontAttributeName, ct_font);
-    // return CTLineCreateWithAttributedString(string);
+    auto cf_str = base::apple::StringToCFStringNoCopy(str8);
 
     auto attr = ScopedCFTypeRef<CFMutableDictionaryRef>(CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
     CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font);
 
     auto attr_string = ScopedCFTypeRef<CFAttributedStringRef>(
-        CFAttributedStringCreate(kCFAllocatorDefault, text_string.get(), attr.get()));
+        CFAttributedStringCreate(kCFAllocatorDefault, cf_str.get(), attr.get()));
 
     return CTLineCreateWithAttributedString(attr_string.get());
 }

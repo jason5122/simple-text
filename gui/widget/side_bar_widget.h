@@ -32,7 +32,7 @@ private:
     static constexpr int kLeftPadding = 15 * 2;
 
     size_t label_font_id;
-    static constexpr int kLabelFontSize = 22 * 2;
+    static constexpr int kLabelFontSize = 22;
 
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
     std::optional<size_t> hovered_index = std::nullopt;

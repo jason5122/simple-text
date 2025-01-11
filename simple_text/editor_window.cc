@@ -45,7 +45,7 @@ void EditorWindow::onOpenGLActivate() {
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
     // text_view->insertText(kCppExample);
-    text_view->insertText("a😳😳😳😳↔️↔️");
+    text_view->insertText("a😳😳😳😳↔️↔️\nhello world");
     // TODO: Fix these cases on Pango. Core Text has been fixed.
     // text_view->insertText("\n꣰");
     // text_view->insertText("ᩣᩤᩥᩦᩧᩨᩩᩪᩫᩬᩭ");
@@ -369,9 +369,9 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         text_view->leftDelete();
         handled = true;
     } else if (key == Key::kEnter && modifiers == ModifierKey::kNone) {
-        // auto* text_view = editor_widget->currentWidget();
-        // text_view->insertText("\n");
-        focused_widget->insertText("\n");
+        auto* text_view = editor_widget->currentWidget();
+        text_view->insertText("\n");
+        // focused_widget->insertText("\n");
         handled = true;
     } else if (key == Key::kTab && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
@@ -459,7 +459,10 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
 }
 
 void EditorWindow::onInsertText(std::string_view text) {
-    // if (auto widget = editor_widget->currentWidget()) {
+    if (auto widget = editor_widget->currentWidget()) {
+        widget->insertText(text);
+        redraw();
+    }
 
     if (focused_widget) {
         focused_widget->insertText(text);
@@ -515,10 +518,12 @@ void EditorWindow::onAction(Action action, bool extend) {
         text_view->moveTo(gui::MoveTo::kEOF, extend);
         break;
     case Action::kInsertNewline:
-        focused_widget->insertText("\n");
+        text_view->insertText("\n");
+        // focused_widget->insertText("\n");
         break;
     case Action::kInsertNewlineIgnoringFieldEditor:
-        focused_widget->insertText("\n");
+        text_view->insertText("\n");
+        // focused_widget->insertText("\n");
         // This command is sent as the first part of the `ctrl+o` keybind. We shouldn't redraw.
         return;
     case Action::kInsertTab:

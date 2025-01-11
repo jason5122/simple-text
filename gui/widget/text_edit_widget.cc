@@ -18,95 +18,98 @@ namespace gui {
 TextEditWidget::TextEditWidget(std::string_view str8, size_t font_id)
     : font_id(font_id), tree(str8) {
     updateMaxScroll();
-
-#ifdef ENABLE_HIGHLIGHTING
-    auto& highlighter = highlight::Highlighter::instance();
-    auto& language = highlighter.getLanguage("cpp");
-    PROFILE_BLOCK("TextViewWidget: highlighter.parse()");
-    parse_tree.parse(tree, language);
-#endif
 }
 
 void TextEditWidget::selectAll() {
-    selection.setRange(0, tree.length());
+    selection.set_range(0, tree.length());
 }
 
 void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
     PROFILE_BLOCK("TextViewWidget::move()");
 
-    auto [line, col] = tree.line_column_at(selection.end());
+    auto [line, col] = tree.line_column_at(selection.end);
     const auto& layout = layoutAt(line);
 
-    if (by == MoveBy::kCharacters && !forward) {
-        if (!extend && !selection.empty()) {
-            selection.collapse(Selection::Direction::kLeft);
-            return;
-        }
+    switch (by) {
+    case MoveBy::kCharacters: {
+        if (forward) {
+            if (!extend && !selection.empty()) {
+                selection.collapse_right();
+                return;
+            }
 
-        size_t delta = movement::moveToPrevGlyph(layout, col);
-        selection.decrement(delta, extend);
+            size_t delta = movement::move_to_next_glyph(layout, col);
+            selection.increment(delta, extend);
+        } else {
+            if (!extend && !selection.empty()) {
+                selection.collapse_left();
+                return;
+            }
 
-        // Move to previous line if at beginning of line.
-        if (delta == 0 && line > 0) {
-            const auto& prev_layout = layoutAt(line - 1);
-            size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1_Z));
-            selection.setIndex(index, extend);
+            size_t delta = movement::move_to_prev_glyph(layout, col);
+            selection.decrement(delta, extend);
+
+            // Move to previous line if at beginning of line.
+            if (delta == 0 && line > 0) {
+                const auto& prev_layout = layoutAt(line - 1);
+                size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1_Z));
+                selection.set_index(index, extend);
+            }
         }
+        break;
     }
-    if (by == MoveBy::kCharacters && forward) {
-        if (!extend && !selection.empty()) {
-            selection.collapse(Selection::Direction::kRight);
-            return;
-        }
-
-        size_t delta = movement::moveToNextGlyph(layout, col);
-        selection.increment(delta, extend);
-    }
-    if (by == MoveBy::kLines) {
+    case MoveBy::kLines: {
         size_t new_line = forward ? line + 1 : line - 1;
         if (0 <= new_line && new_line < tree.line_count()) {
-            int x = movement::xAtColumn(layout, col);
-            size_t new_col = movement::columnAtX(layoutAt(new_line), x);
+            int x = movement::x_at_column(layout, col);
+            size_t new_col = movement::column_at_x(layoutAt(new_line), x);
             size_t index = tree.offset_at(new_line, new_col);
-            selection.setIndex(index, extend);
+            selection.set_index(index, extend);
         }
+        break;
     }
-    if (by == MoveBy::kWords) {
+    case MoveBy::kWords: {
         if (forward) {
-            selection.end() = movement::nextWordEnd(tree, selection.end());
+            selection.end = movement::next_word_end(tree, selection.end);
         } else {
-            selection.end() = movement::prevWordStart(tree, selection.end());
+            selection.end = movement::prev_word_start(tree, selection.end);
         }
         if (!extend) {
-            selection.start() = selection.end();
+            selection.start = selection.end;
         }
+        break;
     }
-
-    if (by == MoveBy::kCharacters) {}
+    }
 }
 
 void TextEditWidget::moveTo(MoveTo to, bool extend) {
     PROFILE_BLOCK("TextViewWidget::moveTo()");
 
-    if (to == MoveTo::kBOL || to == MoveTo::kHardBOL) {
-        size_t line = tree.line_at(selection.end());
-
+    switch (to) {
+    case MoveTo::kBOL:
+    case MoveTo::kHardBOL: {
+        size_t line = tree.line_at(selection.end);
         const auto& layout = layoutAt(line);
-        size_t new_col = movement::columnAtX(layout, 0);
-        selection.setIndex(tree.offset_at(line, new_col), extend);
+        size_t new_col = movement::column_at_x(layout, 0);
+        selection.set_index(tree.offset_at(line, new_col), extend);
+        break;
     }
-    if (to == MoveTo::kEOL || to == MoveTo::kHardEOL) {
-        size_t line = tree.line_at(selection.end());
-
+    case MoveTo::kEOL:
+    case MoveTo::kHardEOL: {
+        size_t line = tree.line_at(selection.end);
         const auto& layout = layoutAt(line);
-        size_t new_col = movement::columnAtX(layout, layout.width);
-        selection.setIndex(tree.offset_at(line, new_col), extend);
+        size_t new_col = movement::column_at_x(layout, layout.width);
+        selection.set_index(tree.offset_at(line, new_col), extend);
+        break;
     }
-    if (to == MoveTo::kBOF) {
-        selection.setIndex(0, extend);
+    case MoveTo::kBOF: {
+        selection.set_index(0, extend);
+        break;
     }
-    if (to == MoveTo::kEOF) {
-        selection.setIndex(tree.length(), extend);
+    case MoveTo::kEOF: {
+        selection.set_index(tree.length(), extend);
+        break;
+    }
     }
 }
 
@@ -115,17 +118,9 @@ void TextEditWidget::insertText(std::string_view str8) {
         leftDelete();
     }
 
-    size_t i = selection.end();
+    size_t i = selection.end;
     tree.insert(i, str8);
     selection.increment(str8.length(), false);
-
-#ifdef ENABLE_HIGHLIGHTING
-    PROFILE_BLOCK("TextViewWidget::insertText() edit + parse");
-    auto& highlighter = highlight::Highlighter::instance();
-    auto& language = highlighter.getLanguage("cpp");
-    parse_tree.edit(i, i, i + str8.length());
-    parse_tree.parse(tree, language);
-#endif
 
     // TODO: Do we update caret `max_x` too?
 
@@ -136,10 +131,10 @@ void TextEditWidget::leftDelete() {
     PROFILE_BLOCK("TextViewWidget::leftDelete()");
 
     if (selection.empty()) {
-        auto [line, col] = tree.line_column_at(selection.end());
+        auto [line, col] = tree.line_column_at(selection.end);
         const auto& layout = layoutAt(line);
 
-        size_t delta = movement::moveToPrevGlyph(layout, col);
+        size_t delta = movement::move_to_prev_glyph(layout, col);
         selection.decrement(delta, false);
 
         // Delete newline if at beginning of line.
@@ -148,26 +143,12 @@ void TextEditWidget::leftDelete() {
             delta = 1;
         }
 
-        size_t i = selection.end();
+        size_t i = selection.end;
         tree.erase(i, delta);
-
-#ifdef ENABLE_HIGHLIGHTING
-        auto& highlighter = highlight::Highlighter::instance();
-        auto& language = highlighter.getLanguage("cpp");
-        parse_tree.edit(i, i + delta, i);
-        parse_tree.parse(tree, language);
-#endif
     } else {
         auto [start, end] = selection.range();
         tree.erase(start, end - start);
-        selection.collapse(Selection::Direction::kLeft);
-
-#ifdef ENABLE_HIGHLIGHTING
-        auto& highlighter = highlight::Highlighter::instance();
-        auto& language = highlighter.getLanguage("cpp");
-        parse_tree.edit(start, end, start);
-        parse_tree.parse(tree, language);
-#endif
+        selection.collapse_left();
     }
 
     updateMaxScroll();
@@ -177,30 +158,16 @@ void TextEditWidget::rightDelete() {
     PROFILE_BLOCK("TextViewWidget::rightDelete()");
 
     if (selection.empty()) {
-        auto [line, col] = tree.line_column_at(selection.end());
+        auto [line, col] = tree.line_column_at(selection.end);
         const auto& layout = layoutAt(line);
 
-        size_t delta = movement::moveToNextGlyph(layout, col);
-        size_t i = selection.end();
+        size_t delta = movement::move_to_next_glyph(layout, col);
+        size_t i = selection.end;
         tree.erase(i, delta);
-
-#ifdef ENABLE_HIGHLIGHTING
-        auto& highlighter = highlight::Highlighter::instance();
-        auto& language = highlighter.getLanguage("cpp");
-        parse_tree.edit(i, i + delta, i);
-        parse_tree.parse(tree, language);
-#endif
     } else {
         auto [start, end] = selection.range();
         tree.erase(start, end - start);
-        selection.collapse(Selection::Direction::kLeft);
-
-#ifdef ENABLE_HIGHLIGHTING
-        auto& highlighter = highlight::Highlighter::instance();
-        auto& language = highlighter.getLanguage("cpp");
-        parse_tree.edit(start, end, start);
-        parse_tree.parse(tree, language);
-#endif
+        selection.collapse_left();
     }
 
     updateMaxScroll();
@@ -211,31 +178,31 @@ void TextEditWidget::deleteWord(bool forward) {
     PROFILE_BLOCK("TextViewWidget::deleteWord()");
 
     if (selection.empty()) {
-        size_t prev_offset = selection.end();
+        size_t prev_offset = selection.end;
         size_t offset, delta;
         if (forward) {
-            offset = movement::nextWordEnd(tree, prev_offset);
+            offset = movement::next_word_end(tree, prev_offset);
             delta = offset - prev_offset;
             tree.erase(prev_offset, delta);
 
             // TODO: Clean up selection/caret code.
             // TODO: After clean up, move this out of TextViewWidget.
-            selection.end() = prev_offset;
-            selection.start() = selection.end();
+            selection.end = prev_offset;
+            selection.start = selection.end;
         } else {
-            offset = movement::prevWordStart(tree, prev_offset);
+            offset = movement::prev_word_start(tree, prev_offset);
             delta = prev_offset - offset;
             tree.erase(offset, delta);
 
             // TODO: Clean up selection/caret code.
             // TODO: After clean up, move this out of TextViewWidget.
-            selection.end() = offset;
-            selection.start() = selection.end();
+            selection.end = offset;
+            selection.start = selection.end;
         }
     } else {
         auto [start, end] = selection.range();
         tree.erase(start, end - start);
-        selection.collapse(Selection::Direction::kLeft);
+        selection.collapse_left();
     }
 }
 
@@ -256,13 +223,13 @@ void TextEditWidget::find(std::string_view str8) {
     std::optional<size_t> result = tree.find(str8);
     if (result) {
         size_t offset = *result;
-        selection.setRange(offset, offset + str8.length());
+        selection.set_range(offset, offset + str8.length());
     }
 }
 
 // TODO: Use a struct type for clarity.
 std::pair<size_t, size_t> TextEditWidget::getLineColumn() {
-    size_t offset = selection.end();
+    size_t offset = selection.end;
     auto cursor = tree.line_column_at(offset);
     return {cursor.line, cursor.column};
 }
@@ -305,25 +272,25 @@ void TextEditWidget::leftMouseDown(const Point& mouse_pos,
                                    ClickType click_type) {
     Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
-    size_t col = movement::columnAtX(layoutAt(line), coords.x);
+    size_t col = movement::column_at_x(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
     switch (click_type) {
     case ClickType::kSingleClick: {
         bool extend = modifiers == ModifierKey::kShift;
-        selection.setIndex(offset, extend);
+        selection.set_index(offset, extend);
         break;
     }
     case ClickType::kDoubleClick: {
-        auto [left, right] = movement::surroundingWord(tree, offset);
-        selection.setRange(left, right);
+        auto [left, right] = movement::surrounding_word(tree, offset);
+        selection.set_range(left, right);
         old_selection = selection;
         break;
     }
     case ClickType::kTripleClick: {
         // TODO: Implement extending.
         auto [left, right] = tree.get_line_range_with_newline(line);
-        selection.setRange(left, right);
+        selection.set_range(left, right);
         break;
     }
     }
@@ -334,29 +301,29 @@ void TextEditWidget::leftMouseDrag(const Point& mouse_pos,
                                    ClickType click_type) {
     Point coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
-    size_t col = movement::columnAtX(layoutAt(line), coords.x);
+    size_t col = movement::column_at_x(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
 
     switch (click_type) {
     case ClickType::kSingleClick: {
-        selection.setIndex(offset, true);
+        selection.set_index(offset, true);
         break;
     }
     case ClickType::kDoubleClick: {
-        if (movement::isInsideWord(tree, offset)) {
-            auto [left, right] = movement::surroundingWord(tree, offset);
-            left = std::min(left, old_selection.start());
-            right = std::max(right, old_selection.end());
-            selection.setRange(left, right);
+        if (movement::is_inside_word(tree, offset)) {
+            auto [left, right] = movement::surrounding_word(tree, offset);
+            left = std::min(left, old_selection.start);
+            right = std::max(right, old_selection.end);
+            selection.set_range(left, right);
         } else {
-            selection.start() = std::min(offset, old_selection.start());
-            selection.end() = std::max(offset, old_selection.end());
+            selection.start = std::min(offset, old_selection.start);
+            selection.end = std::max(offset, old_selection.end);
         }
         break;
     }
     case ClickType::kTripleClick: {
         auto [left, right] = tree.get_line_range_with_newline(line);
-        selection.setIndex(right, true);
+        selection.set_index(right, true);
         break;
     }
     }
@@ -417,7 +384,7 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
-    size_t selection_line = tree.line_at(selection.end());
+    size_t selection_line = tree.line_at(selection.end);
 
     PROFILE_BLOCK("TextViewWidget::renderText()");
 
@@ -500,8 +467,8 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
 
     const auto& c1_layout = layoutAt(c1_line);
     const auto& c2_layout = layoutAt(c2_line);
-    int c1_x = movement::xAtColumn(c1_layout, c1_col);
-    int c2_x = movement::xAtColumn(c2_layout, c2_col);
+    int c1_x = movement::x_at_column(c1_layout, c1_col);
+    int c2_x = movement::x_at_column(c2_layout, c2_col);
 
     // Don't render off-screen selections.
     if (c1_line < start_line) c1_line = start_line;
@@ -576,8 +543,8 @@ void TextEditWidget::renderCaret(int main_line_height) {
 
     int caret_height = main_line_height + kExtraPadding * 2;
 
-    auto [line, col] = tree.line_column_at(selection.end());
-    int end_caret_x = movement::xAtColumn(layoutAt(line), col);
+    auto [line, col] = tree.line_column_at(selection.end);
+    int end_caret_x = movement::x_at_column(layoutAt(line), col);
 
     Point caret_pos = {
         .x = end_caret_x,

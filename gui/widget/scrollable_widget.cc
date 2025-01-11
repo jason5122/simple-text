@@ -1,6 +1,9 @@
 #include "scrollable_widget.h"
 #include <algorithm>
 
+// References:
+// https://github.com/zed-industries/zed/blob/40ecc38dd25ffdec4deb6e27ee91b72e85a019eb/crates/editor/src/scroll.rs#L129
+
 namespace gui {
 
 ScrollableWidget::ScrollableWidget(const Size& size)

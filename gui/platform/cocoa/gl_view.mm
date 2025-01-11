@@ -312,7 +312,6 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     }
 
     std::string str = selector_str.UTF8String;
-    fmt::println("selector: {}", str);
     if (str == "moveForward" || str == "moveRight") {
         app_window->onAction(gui::Action::kMoveForwardByCharacters);
     } else if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {

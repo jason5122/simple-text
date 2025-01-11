@@ -196,16 +196,17 @@ void EditorWindow::leftMouseDown(const Point& mouse_pos,
         redraw();
     }
 
-    if (dragged_widget) {
-        fmt::println("dragged widget: {}", dragged_widget->className());
-    } else {
-        fmt::println("no dragged widget");
-    }
-    if (focused_widget) {
-        fmt::println("focused widget: {}", focused_widget->className());
-    } else {
-        fmt::println("no focused widget");
-    }
+    // TODO: Clean this up.
+    // if (dragged_widget) {
+    //     fmt::println("dragged widget: {}", dragged_widget->className());
+    // } else {
+    //     fmt::println("no dragged widget");
+    // }
+    // if (focused_widget) {
+    //     fmt::println("focused widget: {}", focused_widget->className());
+    // } else {
+    //     fmt::println("no focused widget");
+    // }
 }
 
 void EditorWindow::leftMouseDrag(const Point& mouse_pos,
@@ -473,86 +474,69 @@ void EditorWindow::onInsertText(std::string_view text) {
 void EditorWindow::onAction(Action action, bool extend) {
     PROFILE_BLOCK("EditorWindow::onAction()");
 
-    bool handled = false;
+    bool handled = true;
     auto* text_view = editor_widget->currentWidget();
-    if (action == Action::kMoveForwardByCharacters) {
+    switch (action) {
+    case Action::kMoveForwardByCharacters:
         text_view->move(gui::MoveBy::kCharacters, true, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveBackwardByCharacters) {
+        break;
+    case Action::kMoveBackwardByCharacters:
         text_view->move(gui::MoveBy::kCharacters, false, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveForwardByLines) {
+        break;
+    case Action::kMoveForwardByLines:
         text_view->move(gui::MoveBy::kLines, true, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveBackwardByLines) {
+        break;
+    case Action::kMoveBackwardByLines:
         text_view->move(gui::MoveBy::kLines, false, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveForwardByWords) {
+        break;
+    case Action::kMoveForwardByWords:
         text_view->move(gui::MoveBy::kWords, true, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveBackwardByWords) {
+        break;
+    case Action::kMoveBackwardByWords:
         text_view->move(gui::MoveBy::kWords, false, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveToBOL) {
+        break;
+    case Action::kMoveToBOL:
         text_view->moveTo(gui::MoveTo::kBOL, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveToEOL) {
+        break;
+    case Action::kMoveToEOL:
         text_view->moveTo(gui::MoveTo::kEOL, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveToHardBOL) {
+        break;
+    case Action::kMoveToHardBOL:
         text_view->moveTo(gui::MoveTo::kHardBOL, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveToHardEOL) {
+        break;
+    case Action::kMoveToHardEOL:
         text_view->moveTo(gui::MoveTo::kHardEOL, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveToBOF) {
+        break;
+    case Action::kMoveToBOF:
         text_view->moveTo(gui::MoveTo::kBOF, extend);
-        handled = true;
-    }
-    if (action == Action::kMoveToEOF) {
+        break;
+    case Action::kMoveToEOF:
         text_view->moveTo(gui::MoveTo::kEOF, extend);
-        handled = true;
-    }
-    if (action == Action::kInsertNewline) {
-        // text_view->insertText("\n");
+        break;
+    case Action::kInsertNewline:
         focused_widget->insertText("\n");
-        handled = true;
-    }
-    if (action == Action::kInsertNewlineIgnoringFieldEditor) {
-        // text_view->insertText("\n");
+        break;
+    case Action::kInsertNewlineIgnoringFieldEditor:
         focused_widget->insertText("\n");
         // This command is sent as the first part of the `ctrl+o` keybind. We shouldn't redraw.
         return;
-    }
-    if (action == Action::kInsertTab) {
+    case Action::kInsertTab:
         text_view->insertText("    ");
-        handled = true;
-    }
-    if (action == Action::kLeftDelete) {
+        break;
+    case Action::kLeftDelete:
         text_view->leftDelete();
-        handled = true;
-    }
-    if (action == Action::kRightDelete) {
+        break;
+    case Action::kRightDelete:
         text_view->rightDelete();
-        handled = true;
-    }
-    if (action == Action::kDeleteWordForward) {
+        break;
+    case Action::kDeleteWordForward:
         text_view->deleteWord(true);
-        handled = true;
-    }
-    if (action == Action::kDeleteWordBackward) {
+        break;
+    case Action::kDeleteWordBackward:
         text_view->deleteWord(false);
-        handled = true;
+        break;
+    default:
+        handled = false;
     }
 
     if (handled) {
@@ -561,15 +545,14 @@ void EditorWindow::onAction(Action action, bool extend) {
 }
 
 void EditorWindow::onAppAction(AppAction action) {
-    if (action == AppAction::kNewFile) {
-        PROFILE_BLOCK("Add new tab (app action)");
-        // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
-        // editor_widget->addTab("sample.cc", kCppExample);
+    switch (action) {
+    case AppAction::kNewFile:
         editor_widget->addTab("untitled", "");
         redraw();
-    }
-    if (action == AppAction::kNewWindow) {
+        break;
+    case AppAction::kNewWindow:
         parent.createWindow();
+        break;
     }
 }
 

@@ -1,8 +1,5 @@
 source_set("text_system") {
-  sources = [
-    "movement.cc",
-    "selection.cc",
-  ]
+  sources = [ "movement.cc" ]
 
   deps = [
     "//font",

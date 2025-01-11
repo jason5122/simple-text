@@ -54,8 +54,8 @@ void TextInputWidget::draw() {
                                        [](size_t) { return kTextColor; });
     }
 
-    auto [line, col] = tree.line_column_at(selection.end());
-    int end_caret_x = movement::xAtColumn(layoutAt(line), col);
+    auto [line, col] = tree.line_column_at(selection.end);
+    int end_caret_x = movement::x_at_column(layoutAt(line), col);
 
     {
         Point caret_pos = {
@@ -94,13 +94,13 @@ void TextInputWidget::leftMouseDown(const Point& mouse_pos,
                                     ClickType click_type) {
     auto coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
-    size_t col = movement::columnAtX(layoutAt(line), coords.x);
+    size_t col = movement::column_at_x(layoutAt(line), coords.x);
     size_t offset = tree.offset_at(line, col);
-    selection.setIndex(offset, true);
+    selection.set_index(offset, true);
 }
 
 void TextInputWidget::insertText(std::string_view str8) {
-    size_t i = selection.end();
+    size_t i = selection.end;
     tree.insert(i, str8);
     selection.increment(str8.length(), false);
 

@@ -108,20 +108,30 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     CGRect bounds = CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault,
                                                     &glyph_index, nullptr, 1);
 
+    // TODO: Don't hard-code scale factor.
     int scale_factor = 2;
-    bounds.origin.x *= scale_factor;
-    bounds.origin.y *= scale_factor;
-    bounds.size.width *= scale_factor;
-    bounds.size.height *= scale_factor;
 
-    int left = std::floor(bounds.origin.x);
-    left = 0;
-    int width = std::ceil(bounds.origin.x - left + bounds.size.width);
-    int ascent = std::ceil(bounds.size.height);
+    // int left = std::floor(bounds.origin.x);
+    int width = std::ceil(bounds.origin.x + bounds.size.width);
+    int height = std::ceil(bounds.origin.y + bounds.size.height);
     int descent = std::ceil(-bounds.origin.y);
-    int height = ascent + descent;
-    height = std::ceil(bounds.origin.y + bounds.size.height);
-    int top = std::ceil(bounds.size.height + bounds.origin.y);
+    int ascent = std::ceil(bounds.origin.y + bounds.size.height);
+    height = ascent + descent;
+
+    int top = std::ceil(bounds.origin.y + bounds.size.height);
+
+    width *= 2;
+    height *= 2;
+    top *= 2;
+    // descent *= 2;
+
+    // TODO: Move this back down.
+    // CGPoint rasterization_origin = CGPointMake(-left, 0);
+    // CGPoint rasterization_origin = CGPointZero;
+    CGPoint rasterization_origin = CGPointMake(0, descent);
+
+    fmt::println("{}: {} {}, {} {}", glyph_id, bounds.origin.x, bounds.origin.y, bounds.size.width,
+                 bounds.size.height);
 
     if (width < 0 || height < 0) {
         fmt::println("Warning: width/height < 0 for font ID = {}, glyph ID = {}, font name = {}",
@@ -146,16 +156,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
 
-    // CGPoint rasterization_origin = CGPointMake(-left, 0);
-    CGPoint rasterization_origin = CGPointZero;
     CGContextScaleCTM(context.get(), scale_factor, scale_factor);
-
-    // TODO: Fully implement this.
-    if constexpr (kUseSyntheticBold) {
-        CGContextSetStrokeColorWithColor(context.get(), CGColorGetConstantColor(kCGColorWhite));
-        CGContextSetTextDrawingMode(context.get(), kCGTextFillStroke);
-        CGContextSetLineWidth(context.get(), 1.0);
-    }
 
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
 
@@ -166,7 +167,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool colored = colored_font && !has_outline;
 
     return {
-        .left = left,
+        .left = 0,
         .top = top,
         .width = static_cast<int32_t>(width),
         .height = static_cast<int32_t>(height),

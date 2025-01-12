@@ -111,27 +111,19 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     // TODO: Don't hard-code scale factor.
     int scale_factor = 2;
 
-    // int left = std::floor(bounds.origin.x);
-    int width = std::ceil(bounds.origin.x + bounds.size.width);
-    int height = std::ceil(bounds.origin.y + bounds.size.height);
+    int left = std::floor(bounds.origin.x);
     int descent = std::ceil(-bounds.origin.y);
     int ascent = std::ceil(bounds.origin.y + bounds.size.height);
-    height = ascent + descent;
-
-    int top = std::ceil(bounds.origin.y + bounds.size.height);
+    int width = std::ceil(bounds.origin.x + bounds.size.width);
+    int height = ascent + descent;
+    int top = ascent;
 
     width *= 2;
     height *= 2;
     top *= 2;
+    // TODO: Why do we not scale `top` and `left` here?
+    // left *= 2;
     // descent *= 2;
-
-    // TODO: Move this back down.
-    // CGPoint rasterization_origin = CGPointMake(-left, 0);
-    // CGPoint rasterization_origin = CGPointZero;
-    CGPoint rasterization_origin = CGPointMake(0, descent);
-
-    fmt::println("{}: {} {}, {} {}", glyph_id, bounds.origin.x, bounds.origin.y, bounds.size.width,
-                 bounds.size.height);
 
     if (width < 0 || height < 0) {
         fmt::println("Warning: width/height < 0 for font ID = {}, glyph ID = {}, font name = {}",
@@ -156,6 +148,8 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
 
+    // TODO: Why do we not offset by `-left` here?
+    CGPoint rasterization_origin = CGPointMake(0, descent);
     CGContextScaleCTM(context.get(), scale_factor, scale_factor);
 
     CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
@@ -167,7 +161,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     bool colored = colored_font && !has_outline;
 
     return {
-        .left = 0,
+        .left = left,
         .top = top,
         .width = static_cast<int32_t>(width),
         .height = static_cast<int32_t>(height),

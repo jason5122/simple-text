@@ -44,8 +44,7 @@ void EditorWindow::onOpenGLActivate() {
     using namespace std::literals;
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
-    // text_view->insertText(kCppExample);
-    text_view->insertText("😳\nh\n”\n");
+    text_view->insertText(kCppExample);
     // TODO: Fix these cases on Pango. Core Text has been fixed.
     // text_view->insertText("\n꣰");
     // text_view->insertText("ᩣᩤᩥᩦᩧᩨᩩᩪᩫᩬᩭ");

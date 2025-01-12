@@ -116,26 +116,12 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 
     int left = std::floor(bounds.origin.x);
     left = 0;
-    if constexpr (kUseSyntheticBold) {
-        // Add width padding for synthetic bold to prevent cutting off.
-        // TODO: Check if right side is still being cut off.
-        left = base::sub_sat(left, 2);
-    }
     int width = std::ceil(bounds.origin.x - left + bounds.size.width);
+    int ascent = std::ceil(bounds.size.height);
     int descent = std::ceil(-bounds.origin.y);
-    descent = 0;
-    int ascent = std::ceil(bounds.size.height + bounds.origin.y);
-    int height = descent + ascent;
-    if constexpr (kUseSyntheticBold) {
-        // Add height padding for synthetic bold to prevent cutting off.
-        // TODO: Check if bottom is still being cut off.
-        height += 2;
-    }
+    int height = ascent + descent;
+    height = std::ceil(bounds.origin.y + bounds.size.height);
     int top = std::ceil(bounds.size.height + bounds.origin.y);
-
-    // TODO: Clean this up.
-    int weird_value = std::ceil(-bounds.origin.y);
-    height += weird_value * 2;
 
     if (width < 0 || height < 0) {
         fmt::println("Warning: width/height < 0 for font ID = {}, glyph ID = {}, font name = {}",
@@ -159,9 +145,9 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     CGContextSetShouldAntialias(context.get(), true);
 
     CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
-    // TODO: Clean this up.
-    // CGPoint rasterization_origin = CGPointMake(-left, descent);
-    CGPoint rasterization_origin = CGPointMake(-left, weird_value);
+
+    // CGPoint rasterization_origin = CGPointMake(-left, 0);
+    CGPoint rasterization_origin = CGPointZero;
     CGContextScaleCTM(context.get(), scale_factor, scale_factor);
 
     // TODO: Fully implement this.

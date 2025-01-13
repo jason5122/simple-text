@@ -430,7 +430,7 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             Size gutter_size = {gutterWidth(), main_line_height};
             rect_renderer.addRect(gutter_coords, gutter_size, position, position + size,
-                                  kGutterColor, Layer::kBackground, 0, 0);
+                                  kGutterColor, Layer::kBackground);
         }
 
         // Draw line numbers.

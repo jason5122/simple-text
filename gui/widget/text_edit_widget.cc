@@ -457,8 +457,8 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
             .x = gutterWidth(),
             .y = position.y + size.height,
         };
-        // texture_renderer.addLineLayout(line_number_layout, line_number_coords, min_gutter_coords,
-        //                                max_gutter_coords, line_number_highlight_callback);
+        texture_renderer.addLineLayout(line_number_layout, line_number_coords, min_gutter_coords,
+                                       max_gutter_coords, line_number_highlight_callback);
     }
 }
 

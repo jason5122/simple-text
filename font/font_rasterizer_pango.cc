@@ -111,11 +111,11 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     // descent = ink_descent;
     // top = ink_top;
 
-    if (font_id == 1 || font_id == 2 || font_id == 3) return {};
+    // if (font_id == 1 || font_id == 2 || font_id == 3) return {};
 
-    fmt::println("font = {}, glyph = {}, width = {}, height = {}, descent = {}, ascent = {}",
-                 font_id, glyph_id, width, height, descent, ascent);
-    fmt::println("ink: {} {} {} {} {}", ink_width, ink_height, ink_left, ink_top, ink_descent);
+    // fmt::println("font = {}, glyph = {}, width = {}, height = {}, descent = {}, ascent = {}",
+    //              font_id, glyph_id, width, height, descent, ascent);
+    // fmt::println("ink: {} {} {} {} {}", ink_width, ink_height, ink_left, ink_top, ink_descent);
 
     // TODO: Don't hard-code this.
     int scale_factor = 2;

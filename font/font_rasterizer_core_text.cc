@@ -15,24 +15,15 @@
 using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
 
+// References:
+// https://github.com/servo/font-kit/blob/d49041ca57da4e9b412951f96f74cb34e3b6324f/src/loader.rs#L199
+// https://github.com/zed-industries/zed/blob/40ecc38dd25ffdec4deb6e27ee91b72e85a019eb/crates/gpui/src/platform/mac/text_system.rs#L345
+
 namespace font {
 
 namespace {
 ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8);
 bool FontSmoothingEnabled();
-
-// Mimic italics by skewing 15 degrees.
-// https://mitchellh.com/writing/ghostty-devlog-001#better-make-italics-programmatically
-constexpr CGAffineTransform kSyntheticItalicMatrix = {
-    .a = 1,
-    .b = 0,
-    .c = 0.267949,  // Approximately tan(15).
-    .d = 1,
-    .tx = 0,
-    .ty = 0,
-};
-constexpr bool kUseSyntheticItalic = false;
-constexpr bool kUseSyntheticBold = false;
 }  // namespace
 
 struct FontRasterizer::NativeFontType {
@@ -69,9 +60,7 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
     auto descriptor = ScopedCFTypeRef<CTFontDescriptorRef>(
         CTFontDescriptorCreateWithAttributes(attributes.get()));
 
-    const CGAffineTransform* matrix_ptr = kUseSyntheticItalic ? &kSyntheticItalicMatrix : nullptr;
-
-    CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, matrix_ptr);
+    CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
     return cacheFont({ct_font}, font_size);
 }
 
@@ -80,14 +69,7 @@ size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
-    if constexpr (kUseSyntheticItalic) {
-        const CGAffineTransform* matrix_ptr =
-            kUseSyntheticItalic ? &kSyntheticItalicMatrix : nullptr;
-        CTFontRef copy = CTFontCreateCopyWithAttributes(sys_font, 0.0, matrix_ptr, nullptr);
-        return cacheFont({copy}, font_size);
-    } else {
-        return cacheFont({sys_font}, font_size);
-    }
+    return cacheFont({sys_font}, font_size);
 }
 
 size_t FontRasterizer::resizeFont(size_t font_id, int font_size) {
@@ -209,21 +191,19 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         CTRunGetPositions(ct_run, {0, glyph_count}, positions.data());
         CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
 
+        // TODO: Don't hard-code scale factor.
+        int scale_factor = 2;
+
         for (CFIndex i = 0; i < glyph_count; ++i) {
             // TODO: Use subpixel variants instead of rounding.
             Point position = {
-                // TODO: See if we can make this more accurate.
-                // .x = static_cast<int>(std::ceil(positions[i].x)) * 2,
-                // .y = static_cast<int>(std::ceil(positions[i].y)) * 2,
                 .x = total_advance,
+                // TODO: Do we scale y here?
                 .y = static_cast<int>(std::ceil(positions[i].y)),
             };
             Point advance = {
-                // TODO: See if we can make this more accurate.
-                // .x = static_cast<int>(std::ceil(advances[i].width)) * 2,
-                // .y = static_cast<int>(std::ceil(advances[i].height)) * 2,
-                .x = static_cast<int>(std::ceil(advances[i].width * 2)),
-                .y = static_cast<int>(std::ceil(advances[i].height * 2)),
+                .x = static_cast<int>(std::ceil(advances[i].width * scale_factor)),
+                .y = static_cast<int>(std::ceil(advances[i].height * scale_factor)),
             };
 
             size_t utf8_index = utf8_indices_map.mapIndex(indices[i]);
@@ -264,9 +244,12 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
         return it->second;
     }
 
-    int ascent = std::ceil(CTFontGetAscent(ct_font)) * 2;
-    int descent = std::ceil(CTFontGetDescent(ct_font)) * 2;
-    int leading = std::ceil(CTFontGetLeading(ct_font)) * 2;
+    // TODO: Don't hard-code scale factor.
+    int scale_factor = 2;
+
+    int ascent = std::ceil(CTFontGetAscent(ct_font)) * scale_factor;
+    int descent = std::ceil(CTFontGetDescent(ct_font)) * scale_factor;
+    int leading = std::ceil(CTFontGetLeading(ct_font)) * scale_factor;
 
     int line_height = ascent + descent + leading;
 

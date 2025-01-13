@@ -21,6 +21,7 @@ void main() {
     int kind = int(tex_color.a);
 
     alpha_mask = vec3(texel.a);
+    // alpha_mask = vec3(1.0);
 
     // Plain texture. Color the texture using the input color.
     if (kind == kPlainTexture) {

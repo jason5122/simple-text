@@ -1,15 +1,28 @@
+import("//build/config/linux/pkg_config.gni")
+
 source_set("font") {
   sources = [ "font_rasterizer.cc" ]
 
+  deps = [
+    "//third_party/fmt",
+    "//unicode",
+  ]
+
   if (is_mac) {
-    deps = [ "core_text" ]
+    # sources += [ "font_rasterizer_core_text.cc" ]
+
+    sources += [ "font_rasterizer_pango.cc" ]
+    configs += [ ":linux_font_libs" ]
   }
   if (is_linux) {
-    deps = [ "pango" ]
+    sources += [ "font_rasterizer_pango.cc" ]
+    configs += [ ":linux_font_libs" ]
   }
   if (is_win) {
     deps = [ "directwrite" ]
   }
+}
 
-  deps += [ "//unicode" ]
+pkg_config("linux_font_libs") {
+  packages = [ "pangocairo" ]
 }

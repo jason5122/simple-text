@@ -22,7 +22,7 @@ public:
         stopped = true;
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-        std::cout << name << ": " << duration << " µs\n";
+        // std::cout << name << ": " << duration << " µs\n";
     }
 
     void stop_mili() {
@@ -33,7 +33,7 @@ public:
         stopped = true;
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-        std::cout << name << ": " << duration << " ms\n";
+        // std::cout << name << ": " << duration << " ms\n";
     }
 
 private:

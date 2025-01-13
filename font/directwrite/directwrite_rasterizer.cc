@@ -1,26 +1,28 @@
+#include "font/font_rasterizer.h"
+
 #include "base/windows/unicode.h"
 #include "font/directwrite/directwrite_helper.h"
 #include "font/directwrite/font_fallback_renderer.h"
 #include "font/directwrite/impl_directwrite.h"
-#include "font/font_rasterizer.h"
-#include <algorithm>
+
 #include <combaseapi.h>
 #include <comdef.h>
-#include <cwchar>
 #include <d2d1.h>
 #include <unknwnbase.h>
-#include <vector>
 #include <wincodec.h>
 #include <winerror.h>
 #include <wingdi.h>
 #include <winnt.h>
 #include <wrl/client.h>
 
+#include <cwchar>
+#include <vector>
+
 using Microsoft::WRL::ComPtr;
 
 // TODO: Debug use; remove this.
-#include <fmt/base.h>
 #include <cassert>
+#include <fmt/base.h>
 
 namespace font {
 
@@ -224,7 +226,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 }
 
 LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
-    assert(std::ranges::count(str8, '\n') == 0);
+    assert(str8.find('\n') == std::string_view::npos);
 
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
 

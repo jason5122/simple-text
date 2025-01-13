@@ -413,6 +413,9 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         .y = position.y + size.height,
     };
 
+    rect_renderer.addRect(position, {size.width, 2}, position, position + size, {255},
+                          Layer::kBackground);
+
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
 
@@ -454,8 +457,8 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
             .x = gutterWidth(),
             .y = position.y + size.height,
         };
-        texture_renderer.addLineLayout(line_number_layout, line_number_coords, min_gutter_coords,
-                                       max_gutter_coords, line_number_highlight_callback);
+        // texture_renderer.addLineLayout(line_number_layout, line_number_coords, min_gutter_coords,
+        //                                max_gutter_coords, line_number_highlight_callback);
     }
 }
 

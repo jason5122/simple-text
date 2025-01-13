@@ -125,8 +125,6 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
     for (size_t i = 0; i < line_layout.glyphs.size(); ++i) {
         const auto& glyph = line_layout.glyphs[i];
 
-        // if (glyph.font_id == 1 || glyph.font_id == 2 || glyph.font_id == 3) continue;
-
         auto& rglyph = texture_cache.getGlyph(glyph.font_id, glyph.glyph_id);
         int32_t left = rglyph.left;
         int32_t top = rglyph.top;
@@ -155,9 +153,7 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
         int pos_x = coords.x + left_edge;
         int pos_y = coords.y - metrics.descent;
 
-        // TODO: Why do we need to add `left` here?
-        if (left_edge + left < min_coords.x) {
-            // if (left_edge < min_coords.x) {
+        if (left_edge < min_coords.x) {
             int diff = min_coords.x - left_edge;
             int diff2 = left;
             int ans = std::max(diff - diff2, 0);
@@ -174,28 +170,12 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
             uv_width -= uv_diff;
         }
 
-        // if (glyph.glyph_id == 1) continue;
-        // if (glyph.glyph_id != 1446) continue;
-        // if (glyph.glyph_id != 28) continue;
-
-        // auto& rect_renderer = Renderer::instance().getRectRenderer();
-        // rect_renderer.addRect({pos_x, top_edge}, {500, 2}, {}, {99999, 99999}, {255, 127},
-        //                       Layer::kBackground);
-
-        // TODO: Why do we need to add `top` here?
-        // if (top_edge + top < min_coords.y) {
         if (top_edge < min_coords.y) {
-            // fmt::println("glyph = {}: top_edge = {} bottom_edge = {}, top = {}, rglyph.top = {},
-            // "
-            //              "line_height = {}, metrics.descent = {}",
-            //              glyph.glyph_id, top_edge, bottom_edge, top, rglyph.top, line_height,
-            //              metrics.descent);
-
             int diff = min_coords.y - top_edge;
             int diff2 = line_height - rglyph.top;
+            // TODO: See if this is correct. If so, refactor.
             diff2 += (pos_y - top_edge);
             int ans = std::max(diff - diff2, 0);
-            // fmt::println("diff = {}, diff2 = {}, ans = {}", diff, diff2, ans);
             float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
             height -= ans;
             uv_height -= uv_diff;

@@ -100,22 +100,11 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     int ascent = PANGO_PIXELS(PANGO_ASCENT(logical_rect));
     int top = ascent;
     // TODO: Do we need these?
-    int ink_width = PANGO_PIXELS(ink_rect.width);
-    int ink_height = PANGO_PIXELS(ink_rect.height);
-    int ink_top = PANGO_PIXELS(PANGO_ASCENT(ink_rect));
-    int ink_left = PANGO_PIXELS(PANGO_LBEARING(ink_rect));
-    int ink_descent = PANGO_PIXELS(PANGO_DESCENT(ink_rect));
-
-    // width = ink_width;
-    // height = ink_height;
-    // descent = ink_descent;
-    // top = ink_top;
-
-    // if (font_id == 1 || font_id == 2 || font_id == 3) return {};
-
-    // fmt::println("font = {}, glyph = {}, width = {}, height = {}, descent = {}, ascent = {}",
-    //              font_id, glyph_id, width, height, descent, ascent);
-    // fmt::println("ink: {} {} {} {} {}", ink_width, ink_height, ink_left, ink_top, ink_descent);
+    // int ink_width = PANGO_PIXELS(ink_rect.width);
+    // int ink_height = PANGO_PIXELS(ink_rect.height);
+    // int ink_top = PANGO_PIXELS(PANGO_ASCENT(ink_rect));
+    // int ink_left = PANGO_PIXELS(PANGO_LBEARING(ink_rect));
+    // int ink_descent = PANGO_PIXELS(PANGO_DESCENT(ink_rect));
 
     // TODO: Don't hard-code this.
     int scale_factor = 2;
@@ -136,14 +125,6 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
         bitmap_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4)};
     auto context = CairoContextPtr{cairo_create(surface.get())};
 
-    // int val = PANGO_PIXELS(PANGO_ASCENT(logical_rect));
-    // val *= -1;
-    // val -= ink_top;
-    // fmt::println("val = {}", val);
-    // int left = 1;
-    // left *= scale_factor;
-    // cairo_translate(context.get(), -left, -(descent + ascent));
-    // cairo_translate(context.get(), -2 * 2, val);
     cairo_translate(context.get(), 0, -descent);
     cairo_scale(context.get(), scale_factor, scale_factor);
 

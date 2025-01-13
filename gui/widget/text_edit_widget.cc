@@ -413,9 +413,6 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         .y = position.y + size.height,
     };
 
-    rect_renderer.addRect(position, {size.width, 2}, position, position + size, {255},
-                          Layer::kBackground);
-
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
 

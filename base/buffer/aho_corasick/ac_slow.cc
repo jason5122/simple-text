@@ -6,13 +6,13 @@
 
 namespace base {
 
-ACS_Constructor::ACS_Constructor() : _next_node_id(1) {
+ACSlowConstructor::ACSlowConstructor() : _next_node_id(1) {
     _root = new_state();
     _root_char = new InputTy[256];
     memset((void*)_root_char, '\0', 256);
 }
 
-ACS_Constructor::~ACS_Constructor() {
+ACSlowConstructor::~ACSlowConstructor() {
     for (auto i = _all_states.begin(), e = _all_states.end(); i != e; i++) {
         delete *i;
     }
@@ -20,16 +20,16 @@ ACS_Constructor::~ACS_Constructor() {
     delete[] _root_char;
 }
 
-ACS_State* ACS_Constructor::new_state() {
-    ACS_State* t = new ACS_State(_next_node_id++);
+ACSlowState* ACSlowConstructor::new_state() {
+    ACSlowState* t = new ACSlowState(_next_node_id++);
     _all_states.push_back(t);
     return t;
 }
 
-void ACS_Constructor::Add_Pattern(std::string_view str, int pattern_idx) {
-    ACS_State* state = _root;
+void ACSlowConstructor::Add_Pattern(std::string_view str, int pattern_idx) {
+    ACSlowState* state = _root;
     for (char c : str) {
-        ACS_State* new_s = state->Get_Goto(c);
+        ACSlowState* new_s = state->Get_Goto(c);
         if (!new_s) {
             new_s = new_state();
             new_s->_depth = state->_depth + 1;
@@ -41,38 +41,38 @@ void ACS_Constructor::Add_Pattern(std::string_view str, int pattern_idx) {
     state->set_Pattern_Idx(pattern_idx);
 }
 
-void ACS_Constructor::Propagate_faillink() {
-    ACS_State* r = _root;
-    std::vector<ACS_State*> wl;
+void ACSlowConstructor::Propagate_faillink() {
+    ACSlowState* r = _root;
+    std::vector<ACSlowState*> wl;
 
-    const ACS_Goto_Map& m = r->Get_Goto_Map();
+    const ACSlowGotoMap& m = r->Get_Goto_Map();
     for (auto i = m.begin(), e = m.end(); i != e; i++) {
-        ACS_State* s = i->second;
+        ACSlowState* s = i->second;
         s->_fail_link = r;
         wl.push_back(s);
     }
 
     // For any input c, make sure "goto(root, c)" is valid, which make the
     // fail-link propagation lot easier.
-    ACS_Goto_Map goto_save = r->_goto_map;
+    ACSlowGotoMap goto_save = r->_goto_map;
     for (uint32 i = 0; i <= 255; i++) {
-        ACS_State* s = r->Get_Goto(i);
+        ACSlowState* s = r->Get_Goto(i);
         if (!s) r->Set_Goto(i, r);
     }
 
     for (uint32 i = 0; i < wl.size(); i++) {
-        ACS_State* s = wl[i];
-        ACS_State* fl = s->_fail_link;
+        ACSlowState* s = wl[i];
+        ACSlowState* fl = s->_fail_link;
 
-        const ACS_Goto_Map& tran_map = s->Get_Goto_Map();
+        const ACSlowGotoMap& tran_map = s->Get_Goto_Map();
 
         for (auto ii = tran_map.begin(), ee = tran_map.end(); ii != ee; ii++) {
             InputTy c = ii->first;
-            ACS_State* tran = ii->second;
+            ACSlowState* tran = ii->second;
 
-            ACS_State* tran_fl = 0;
-            for (ACS_State* fl_walk = fl;;) {
-                if (ACS_State* t = fl_walk->Get_Goto(c)) {
+            ACSlowState* tran_fl = 0;
+            for (ACSlowState* fl_walk = fl;;) {
+                if (ACSlowState* t = fl_walk->Get_Goto(c)) {
                     tran_fl = t;
                     break;
                 } else {
@@ -89,7 +89,7 @@ void ACS_Constructor::Propagate_faillink() {
     r->_goto_map = goto_save;
 }
 
-void ACS_Constructor::Construct(const std::vector<std::string>& patterns) {
+void ACSlowConstructor::Construct(const std::vector<std::string>& patterns) {
     for (size_t i = 0; i < patterns.size(); ++i) {
         Add_Pattern(patterns[i], i);
     }
@@ -97,15 +97,15 @@ void ACS_Constructor::Construct(const std::vector<std::string>& patterns) {
     Propagate_faillink();
     unsigned char* p = _root_char;
 
-    const ACS_Goto_Map& m = _root->Get_Goto_Map();
+    const ACSlowGotoMap& m = _root->Get_Goto_Map();
     for (auto i = m.begin(), e = m.end(); i != e; i++) {
         p[i->first] = 1;
     }
 }
 
-Match_Result ACS_Constructor::MatchHelper(const char* str, uint32 len) const {
-    const ACS_State* root = _root;
-    const ACS_State* state = root;
+Match_Result ACSlowConstructor::MatchHelper(const char* str, uint32 len) const {
+    const ACSlowState* root = _root;
+    const ACSlowState* state = root;
 
     uint32 idx = 0;
     while (idx < len) {
@@ -126,10 +126,10 @@ Match_Result ACS_Constructor::MatchHelper(const char* str, uint32 len) const {
 
     while (idx < len) {
         InputTy c = str[idx];
-        ACS_State* gs = state->Get_Goto(c);
+        ACSlowState* gs = state->Get_Goto(c);
 
         if (!gs) {
-            ACS_State* fl = state->Get_FailLink();
+            ACSlowState* fl = state->Get_FailLink();
             if (fl == root) {
                 while (idx < len) {
                     InputTy c = str[idx];

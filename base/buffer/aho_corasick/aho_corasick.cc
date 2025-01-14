@@ -7,16 +7,16 @@
 
 namespace base {
 
-class BufAlloc : public Buf_Allocator {
+class BufAlloc : public BufAllocator {
 public:
-    virtual AC_Buffer* alloc(int sz) {
-        return (AC_Buffer*)(new unsigned char[sz]);
+    virtual ACBuffer* alloc(int sz) {
+        return (ACBuffer*)(new unsigned char[sz]);
     }
 
     // Do not de-allocate the buffer when the BufAlloc die.
     virtual void free() {}
 
-    static void myfree(AC_Buffer* buf) {
+    static void myfree(ACBuffer* buf) {
         const char* b = (const char*)buf;
         delete[] b;
     }
@@ -31,27 +31,27 @@ AhoCorasick::AhoCorasick(const std::vector<std::string>& patterns) {
         std::abort();
     }
 
-    ACS_Constructor acc;
+    ACSlowConstructor acc;
     acc.Construct(patterns);
 
     BufAlloc ba;
-    AC_Converter cvt(acc, ba);
-    AC_Buffer* buf = cvt.Convert();
+    ACConverter cvt(acc, ba);
+    ACBuffer* buf = cvt.Convert();
     this->buf = (void*)buf;
 }
 
 AhoCorasick::~AhoCorasick() {
-    AC_Buffer* buf = (AC_Buffer*)this->buf;
+    ACBuffer* buf = (ACBuffer*)this->buf;
     BufAlloc::myfree(buf);
 }
 
 AhoCorasick::MatchResult AhoCorasick::match(std::string_view str, unsigned int len) const {
-    AC_Buffer* buf = (AC_Buffer*)this->buf;
+    ACBuffer* buf = (ACBuffer*)this->buf;
     return Match(buf, str, len);
 }
 
 AhoCorasick::MatchResult AhoCorasick::match(const PieceTree& tree) const {
-    AC_Buffer* buf = (AC_Buffer*)this->buf;
+    ACBuffer* buf = (ACBuffer*)this->buf;
     return Match(buf, tree);
 }
 

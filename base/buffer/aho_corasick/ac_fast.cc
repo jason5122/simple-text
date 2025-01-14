@@ -7,28 +7,28 @@
 
 namespace base {
 
-uint32 AC_Converter::Calc_State_Sz(const ACS_State* s) const {
-    AC_State dummy;
-    uint32 sz = offsetof(AC_State, input_vect);
+uint32 ACConverter::Calc_State_Sz(const ACSlowState* s) const {
+    ACState dummy;
+    uint32 sz = offsetof(ACState, input_vect);
     sz += s->Get_GotoNum() * sizeof(dummy.input_vect[0]);
 
-    if (sz < sizeof(AC_State)) sz = sizeof(AC_State);
+    if (sz < sizeof(ACState)) sz = sizeof(ACState);
 
     uint32 align = __alignof__(dummy);
     sz = (sz + align - 1) & ~(align - 1);
     return sz;
 }
 
-AC_Buffer* AC_Converter::Alloc_Buffer() {
-    const std::vector<ACS_State*>& all_states = _acs.Get_All_States();
-    const ACS_State* root_state = _acs.Get_Root_State();
+ACBuffer* ACConverter::Alloc_Buffer() {
+    const std::vector<ACSlowState*>& all_states = _acs.Get_All_States();
+    const ACSlowState* root_state = _acs.Get_Root_State();
     uint32 root_fanout = root_state->Get_GotoNum();
 
     // Step 1: Calculate the buffer size
     AC_Ofst root_goto_ofst, states_ofst_ofst, first_state_ofst;
 
     // part 1 :  buffer header
-    uint32 sz = root_goto_ofst = sizeof(AC_Buffer);
+    uint32 sz = root_goto_ofst = sizeof(ACBuffer);
 
     // part 2: Root-node's goto function
     if (root_fanout != 255) [[likely]] {
@@ -45,7 +45,7 @@ AC_Buffer* AC_Converter::Alloc_Buffer() {
     sz += sizeof(AC_Ofst) * all_states.size();
 
     // part 4: state's contents
-    align = __alignof__(AC_State);
+    align = __alignof__(ACState);
     sz = (sz + align - 1) & ~(align - 1);
     first_state_ofst = sz;
 
@@ -58,7 +58,7 @@ AC_Buffer* AC_Converter::Alloc_Buffer() {
     sz += state_sz;
 
     // Step 2: Allocate buffer, and populate header.
-    AC_Buffer* buf = _buf_alloc.alloc(sz);
+    ACBuffer* buf = _buf_alloc.alloc(sz);
 
     buf->buf_len = sz;
     buf->root_goto_ofst = root_goto_ofst;
@@ -69,10 +69,10 @@ AC_Buffer* AC_Converter::Alloc_Buffer() {
     return buf;
 }
 
-void AC_Converter::Populate_Root_Goto_Func(AC_Buffer* buf, GotoVect& goto_vect) {
+void ACConverter::Populate_Root_Goto_Func(ACBuffer* buf, GotoVect& goto_vect) {
     unsigned char* buf_base = (unsigned char*)(buf);
     InputTy* root_gotos = (InputTy*)(buf_base + buf->root_goto_ofst);
-    const ACS_State* root_state = _acs.Get_Root_State();
+    const ACSlowState* root_state = _acs.Get_Root_State();
 
     root_state->Get_Sorted_Gotos(goto_vect);
 
@@ -85,7 +85,7 @@ void AC_Converter::Populate_Root_Goto_Func(AC_Buffer* buf, GotoVect& goto_vect) 
 
     for (auto i = goto_vect.begin(), e = goto_vect.end(); i != e; i++, new_id++) {
         InputTy c = i->first;
-        ACS_State* s = i->second;
+        ACSlowState* s = i->second;
         _id_map[s->Get_ID()] = new_id;
 
         if (!full_fantout) [[likely]] {
@@ -94,7 +94,7 @@ void AC_Converter::Populate_Root_Goto_Func(AC_Buffer* buf, GotoVect& goto_vect) 
     }
 }
 
-AC_Buffer* AC_Converter::Convert() {
+ACBuffer* ACConverter::Convert() {
     // Step 1: Some preparation stuff.
     GotoVect gotovect;
 
@@ -104,7 +104,7 @@ AC_Buffer* AC_Converter::Convert() {
     _ofst_map.resize(_acs.Get_Next_Node_Id());
 
     // Step 2: allocate buffer to accommodate the entire AC graph.
-    AC_Buffer* buf = Alloc_Buffer();
+    ACBuffer* buf = Alloc_Buffer();
     unsigned char* buf_base = (unsigned char*)buf;
 
     // Step 3: Root node need special care.
@@ -114,10 +114,10 @@ AC_Buffer* AC_Converter::Convert() {
 
     // Step 4: Converting the remaining states by BFSing the graph.
     // First of all, enter root's immediate kids to the working list.
-    std::vector<const ACS_State*> wl;
+    std::vector<const ACSlowState*> wl;
     State_ID id = 1;
     for (auto i = gotovect.begin(), e = gotovect.end(); i != e; i++, id++) {
-        ACS_State* s = i->second;
+        ACSlowState* s = i->second;
         wl.push_back(s);
         _id_map[s->Get_ID()] = id;
     }
@@ -125,8 +125,8 @@ AC_Buffer* AC_Converter::Convert() {
     AC_Ofst* state_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
     AC_Ofst ofst = buf->first_state_ofst;
     for (uint32 idx = 0; idx < wl.size(); idx++) {
-        const ACS_State* old_s = wl[idx];
-        AC_State* new_s = (AC_State*)(buf_base + ofst);
+        const ACSlowState* old_s = wl[idx];
+        ACState* new_s = (ACState*)(buf_base + ofst);
 
         // This property should hold as we:
         //  - States are appended to worklist in the BFS order.
@@ -153,7 +153,7 @@ AC_Buffer* AC_Converter::Convert() {
         for (auto i = gotovect.begin(), e = gotovect.end(); i != e; i++, id++, input_idx++) {
             input_vect[input_idx] = i->first;
 
-            ACS_State* kid = i->second;
+            ACSlowState* kid = i->second;
             _id_map[kid->Get_ID()] = id;
             wl.push_back(kid);
         }
@@ -167,10 +167,10 @@ AC_Buffer* AC_Converter::Convert() {
 
     // Populate the fail-link field.
     for (auto i = wl.begin(), e = wl.end(); i != e; i++) {
-        const ACS_State* slow_s = *i;
+        const ACSlowState* slow_s = *i;
         State_ID fast_s_id = _id_map[slow_s->Get_ID()];
-        AC_State* fast_s = (AC_State*)(buf_base + state_ofst_vect[fast_s_id]);
-        if (const ACS_State* fl = slow_s->Get_FailLink()) {
+        ACState* fast_s = (ACState*)(buf_base + state_ofst_vect[fast_s_id]);
+        if (const ACSlowState* fl = slow_s->Get_FailLink()) {
             State_ID id = _id_map[fl->Get_ID()];
             fast_s->fail_link = id;
         } else fast_s->fail_link = 0;
@@ -178,12 +178,12 @@ AC_Buffer* AC_Converter::Convert() {
     return buf;
 }
 
-static inline AC_State* Get_State_Addr(unsigned char* buf_base,
-                                       AC_Ofst* StateOfstVect,
-                                       uint32 state_id) {
+static inline ACState* Get_State_Addr(unsigned char* buf_base,
+                                      AC_Ofst* StateOfstVect,
+                                      uint32 state_id) {
     assert(state_id != 0 && "root node is handled in speical way");
-    assert(state_id < ((AC_Buffer*)buf_base)->state_num);
-    return (AC_State*)(buf_base + StateOfstVect[state_id]);
+    assert(state_id < ((ACBuffer*)buf_base)->state_num);
+    return (ACState*)(buf_base + StateOfstVect[state_id]);
 }
 
 // The performance of the binary search is critical to this work. This is a modified version of
@@ -221,12 +221,12 @@ static inline bool Binary_Search_Input(InputTy* input_vect,
     return false;
 }
 
-AhoCorasick::MatchResult Match(AC_Buffer* buf, std::string_view str, uint32 len) {
+AhoCorasick::MatchResult Match(ACBuffer* buf, std::string_view str, uint32 len) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
     AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
 
-    AC_State* state = 0;
+    ACState* state = 0;
     uint32 idx = 0;
 
     // Skip leading chars that are not valid input of root-nodes.
@@ -300,12 +300,12 @@ AhoCorasick::MatchResult Match(AC_Buffer* buf, std::string_view str, uint32 len)
     return r;
 }
 
-AhoCorasick::MatchResult Match(AC_Buffer* buf, const PieceTree& tree) {
+AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
     AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
 
-    AC_State* state = 0;
+    ACState* state = 0;
     // TODO: Implement starting/stopping at a specific index.
     TreeWalker walker{&tree};
 

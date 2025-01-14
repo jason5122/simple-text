@@ -7,7 +7,7 @@
 
 namespace base {
 
-class ACS_Constructor;
+class ACSlowConstructor;
 
 using AC_Ofst = uint32;
 using State_ID = uint32;
@@ -35,7 +35,7 @@ using State_ID = uint32;
 //
 //   4. the contents of states.
 //
-struct AC_Buffer {
+struct ACBuffer {
     uint32 buf_len;
     AC_Ofst root_goto_ofst;    // addr of root node's goto() function.
     AC_Ofst states_ofst_ofst;  // addr of state pointer vector (indiced by id)
@@ -50,7 +50,7 @@ struct AC_Buffer {
 };
 
 // Depict the state of "fast" AC graph.
-struct AC_State {
+struct ACState {
     // transition are sorted. For instance, state s1, has two transitions :
     //   goto(b) -> S_b, goto(a)->S_a. The inputs are sorted in the ascending
     // order, and the target states are permuted accordingly. In this case,
@@ -67,43 +67,43 @@ struct AC_State {
     InputTy input_vect[1];   // Vector of valid input. Must be last field!
 };
 
-class Buf_Allocator {
+class BufAllocator {
 public:
-    Buf_Allocator() : _buf(0) {}
-    virtual ~Buf_Allocator() {
+    BufAllocator() : _buf(0) {}
+    virtual ~BufAllocator() {
         free();
     }
 
-    virtual AC_Buffer* alloc(int sz) = 0;
+    virtual ACBuffer* alloc(int sz) = 0;
     virtual void free() {}
 
 protected:
-    AC_Buffer* _buf;
+    ACBuffer* _buf;
 };
 
 // Convert slow-AC-graph into fast one.
-class AC_Converter {
+class ACConverter {
 public:
-    AC_Converter(ACS_Constructor& acs, Buf_Allocator& ba) : _acs(acs), _buf_alloc(ba) {}
-    AC_Buffer* Convert();
+    ACConverter(ACSlowConstructor& acs, BufAllocator& ba) : _acs(acs), _buf_alloc(ba) {}
+    ACBuffer* Convert();
 
 private:
     // Return the size in byte needed to to save the specified state.
-    uint32 Calc_State_Sz(const ACS_State*) const;
+    uint32 Calc_State_Sz(const ACSlowState*) const;
 
     // In fast-AC-graph, the ID is bit tricky. Given a state of slow-graph,
     // this function is to return the ID of its counterpart in the fast-graph.
-    State_ID Get_Renumbered_Id(const ACS_State* s) const {
+    State_ID Get_Renumbered_Id(const ACSlowState* s) const {
         const std::vector<uint32>& m = _id_map;
         return m[s->Get_ID()];
     }
 
-    AC_Buffer* Alloc_Buffer();
-    void Populate_Root_Goto_Func(AC_Buffer*, GotoVect&);
+    ACBuffer* Alloc_Buffer();
+    void Populate_Root_Goto_Func(ACBuffer*, GotoVect&);
 
 private:
-    ACS_Constructor& _acs;
-    Buf_Allocator& _buf_alloc;
+    ACSlowConstructor& _acs;
+    BufAllocator& _buf_alloc;
 
     // map: ID of state in slow-graph -> ID of counterpart in fast-graph.
     std::vector<uint32> _id_map;
@@ -112,7 +112,7 @@ private:
     std::vector<AC_Ofst> _ofst_map;
 };
 
-AhoCorasick::MatchResult Match(AC_Buffer* buf, std::string_view str, uint32 len);
-AhoCorasick::MatchResult Match(AC_Buffer* buf, const PieceTree& tree);
+AhoCorasick::MatchResult Match(ACBuffer* buf, std::string_view str, uint32 len);
+AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree);
 
 }  // namespace base

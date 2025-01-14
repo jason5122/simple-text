@@ -9,61 +9,51 @@
 #include <string>
 #include <vector>
 
+#include <fmt/base.h>
+#include <fmt/format.h>
+
 namespace base {
 
-// Forward decl. the acronym "ACS" stands for "Aho-Corasick Slow implementation"
-class ACS_State;
-class ACS_Constructor;
-class AhoCorasick;
+class ACSlowState;
 
-using ACS_Goto_Map = std::map<InputTy, ACS_State*>;
+using ACSlowGotoMap = std::map<InputTy, ACSlowState*>;
 
-class Match_Result {
-public:
+struct Match_Result {
     int begin;
     int end;
     int pattern_idx;
-    Match_Result(int b, int e, int p) : begin(b), end(e), pattern_idx(p) {}
 };
 
-using GotoPair = std::pair<InputTy, ACS_State*>;
+using GotoPair = std::pair<InputTy, ACSlowState*>;
 using GotoVect = std::vector<GotoPair>;
 
-// Sorting functor
-class GotoSort {
-public:
-    bool operator()(const GotoPair& g1, const GotoPair& g2) {
-        return g1.first < g2.first;
-    }
-};
-
-class ACS_State {
-    friend class ACS_Constructor;
+class ACSlowState {
+    friend class ACSlowConstructor;
 
 public:
-    ACS_State(uint32 id)
+    ACSlowState(uint32 id)
         : _id(id), _pattern_idx(-1), _depth(0), _is_terminal(false), _fail_link(0) {}
-    ~ACS_State() {}
+    ~ACSlowState() {}
 
-    void Set_Goto(InputTy c, ACS_State* s) {
+    void Set_Goto(InputTy c, ACSlowState* s) {
         _goto_map[c] = s;
     }
-    ACS_State* Get_Goto(InputTy c) const {
+    ACSlowState* Get_Goto(InputTy c) const {
         auto iter = _goto_map.find(c);
         return iter != _goto_map.end() ? (*iter).second : 0;
     }
 
     // Return all transitions sorted in the ascending order of their input.
-    void Get_Sorted_Gotos(GotoVect& Gotos) const {
-        const ACS_Goto_Map& m = _goto_map;
-        Gotos.clear();
+    void Get_Sorted_Gotos(GotoVect& gotos) const {
+        const ACSlowGotoMap& m = _goto_map;
+        gotos.clear();
         for (auto i = m.begin(), e = m.end(); i != e; i++) {
-            Gotos.push_back(GotoPair(i->first, i->second));
+            gotos.emplace_back(i->first, i->second);
         }
-        std::sort(Gotos.begin(), Gotos.end(), GotoSort());
+        std::sort(gotos.begin(), gotos.end());
     }
 
-    ACS_State* Get_FailLink() const {
+    ACSlowState* Get_FailLink() const {
         return _fail_link;
     }
     uint32 Get_GotoNum() const {
@@ -75,7 +65,7 @@ public:
     uint32 Get_Depth() const {
         return _depth;
     }
-    const ACS_Goto_Map& Get_Goto_Map(void) const {
+    const ACSlowGotoMap& Get_Goto_Map(void) const {
         return _goto_map;
     }
     bool is_Terminal() const {
@@ -97,14 +87,14 @@ private:
     int _pattern_idx;
     short _depth;
     bool _is_terminal;
-    ACS_Goto_Map _goto_map;
-    ACS_State* _fail_link;
+    ACSlowGotoMap _goto_map;
+    ACSlowState* _fail_link;
 };
 
-class ACS_Constructor {
+class ACSlowConstructor {
 public:
-    ACS_Constructor();
-    ~ACS_Constructor();
+    ACSlowConstructor();
+    ~ACSlowConstructor();
 
     void Construct(const std::vector<std::string>& patterns);
 
@@ -117,10 +107,10 @@ public:
         return Match(s, strlen(s));
     }
 
-    const ACS_State* Get_Root_State() const {
+    const ACSlowState* Get_Root_State() const {
         return _root;
     }
-    const std::vector<ACS_State*>& Get_All_States() const {
+    const std::vector<ACSlowState*>& Get_All_States() const {
         return _all_states;
     }
 
@@ -133,14 +123,14 @@ public:
 
 private:
     void Add_Pattern(std::string_view str, int pattern_idx);
-    ACS_State* new_state();
+    ACSlowState* new_state();
     void Propagate_faillink();
 
     Match_Result MatchHelper(const char*, uint32 len) const;
 
 private:
-    ACS_State* _root;
-    std::vector<ACS_State*> _all_states;
+    ACSlowState* _root;
+    std::vector<ACSlowState*> _all_states;
     unsigned char* _root_char;
     uint32 _next_node_id;
 };

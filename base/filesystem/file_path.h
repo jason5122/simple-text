@@ -1,8 +1,17 @@
 #pragma once
 
+#include <string>
+
 #include "build/build_config.h"
 
-#include <string>
+// Windows-style drive letter support and pathname separator characters can be
+// enabled and disabled independently, to aid testing.  These #defines are
+// here so that the same setting can be used in both the implementation and
+// in the unit test.
+#if BUILDFLAG(IS_WIN)
+#define FILE_PATH_USES_DRIVE_LETTERS
+#define FILE_PATH_USES_WIN_SEPARATORS
+#endif
 
 // Macros for string literal initialization of FilePath::CharType[].
 #if BUILDFLAG(IS_WIN)
@@ -59,14 +68,53 @@ public:
     static constexpr CharType kExtensionSeparator = FILE_PATH_LITERAL('.');
 
     FilePath() = default;
-    FilePath(const FilePath& path) = default;
+    FilePath(const FilePath& other) = default;
     explicit FilePath(StringPieceType path);
 
+    bool operator==(const FilePath& other) const;
+    bool operator!=(const FilePath& other) const;
+
     const StringType& value() const;
-    bool empty() const;
+    [[nodiscard]] bool empty() const;
     void clear();
 
+    // Returns true if |character| is in kSeparators.
+    static bool IsSeparator(CharType character);
+
+    // Returns a FilePath corresponding to the directory containing the path
+    // named by this object, stripping away the file component.  If this object
+    // only contains one component, returns a FilePath identifying
+    // kCurrentDirectory.  If this object already refers to the root directory,
+    // returns a FilePath identifying the root directory. Please note that this
+    // doesn't resolve directory navigation, e.g. the result for "../a" is "..".
+    [[nodiscard]] FilePath DirName() const;
+
+    // Returns a FilePath corresponding to the last path component of this
+    // object, either a file or a directory.  If this object already refers to
+    // the root directory, returns a FilePath identifying the root directory;
+    // this is the only situation in which BaseName will return an absolute path.
+    [[nodiscard]] FilePath BaseName() const;
+
+    // Returns the final extension of a file path, or an empty string if the file
+    // path has no extension.  In most cases, the final extension of a file path
+    // refers to the part of the file path from the last dot to the end (including
+    // the dot itself).  For example, this method applied to "/pics/jojo.jpg"
+    // and "/pics/jojo." returns ".jpg" and ".", respectively.  However, if the
+    // base name of the file path is either "." or "..", this method returns an
+    // empty string.
+    [[nodiscard]] StringType Extension() const;
+
+    // Returns "C:\pics\jojo" for path "C:\pics\jojo.jpg"
+    [[nodiscard]] FilePath RemoveExtension() const;
+
 private:
+    // Remove trailing separators from this object.  If the path is absolute, it
+    // will never be stripped any more than to refer to the absolute root
+    // directory, so "////" will become "/", not "".  A leading pair of
+    // separators is never stripped, to support alternate roots.  This is used to
+    // support UNC paths on Windows.
+    void StripTrailingSeparatorsInternal();
+
     StringType path_;
 };
 

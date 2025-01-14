@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "base/filesystem/file_reader.h"
+#include "base/files/file_reader.h"
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"

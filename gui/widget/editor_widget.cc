@@ -1,6 +1,6 @@
 #include "editor_widget.h"
 
-#include "base/filesystem/file_reader.h"
+#include "base/files/file_reader.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/padding_widget.h"
 

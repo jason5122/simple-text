@@ -1,6 +1,6 @@
 #include "editor_app.h"
 
-#include "base/filesystem/file_reader.h"
+#include "base/files/file_reader.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/renderer.h"
 #include "opengl/functions_gl.h"

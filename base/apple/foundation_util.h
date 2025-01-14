@@ -3,7 +3,7 @@
 #include <Foundation/Foundation.h>
 
 #include "base/apple/scoped_cftyperef.h"
-#include "base/filesystem/file_path.h"
+#include "base/files/file_path.h"
 
 namespace base::apple {
 

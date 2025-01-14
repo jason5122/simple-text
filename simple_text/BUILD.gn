@@ -8,7 +8,7 @@ common_sources = [
 ]
 
 common_deps = [
-  "//base/filesystem",
+  "//base/files",
   "//gui",
   "//opengl",
   "//third_party/fmt",

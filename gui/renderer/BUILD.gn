@@ -12,7 +12,7 @@ source_set("renderer") {
 
   deps = [
     "icons",
-    "//base/filesystem",
+    "//base/files",
     "//font",
     "//third_party/fmt",
     "//third_party/libjpeg",

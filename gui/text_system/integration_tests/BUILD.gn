@@ -9,7 +9,7 @@ source_set("integration_tests") {
     "//third_party/googletest:gtest",
 
     # TODO: Remove these as dependencies. We will likely move all line layout stuff out of //gui.
-    "//base/filesystem",
+    "//base/files",
     "//gui",
     "//opengl",
   ]

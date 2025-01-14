@@ -7,7 +7,7 @@ source_set("tests") {
   ]
 
   deps = [
-    "//base/filesystem",
+    "//base/files",
     "//third_party/googletest:gtest",
   ]
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/filesystem/file_path.h"
+#include "base/files/file_path.h"
 #include "build/build_config.h"
 
 #if BUILDFLAG(IS_POSIX)

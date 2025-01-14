@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "base/filesystem/file_path.h"
+#include "base/files/file_path.h"
 
 namespace base {
 

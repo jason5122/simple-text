@@ -1,8 +1,11 @@
-#include "base/filesystem/file_reader.h"
 #include <gtest/gtest.h>
+
+#include "base/filesystem/file_reader.h"
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
+
+namespace base {
 
 namespace {
 
@@ -27,12 +30,14 @@ const std::string kStr1Gb = kLongLine * 10000000;
 // https://stackoverflow.com/a/21769967/14698275
 TEST(FileReaderTest, ReadFile1) {
     auto p1 = util::Profiler{"Write 1GB file"};
-    base::WriteFile(kFileName, kStr1Gb);
+    WriteFile(kFileName, kStr1Gb);
     p1.stop_mili();
 
     auto p2 = util::Profiler{"Read 1GB file"};
-    std::string contents = base::ReadFile(kFileName);
+    std::string contents = ReadFile(kFileName);
     p2.stop_mili();
 
     std::remove(kFileName.data());
 }
+
+}  // namespace base

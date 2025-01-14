@@ -1,5 +1,8 @@
 source_set("filesystem") {
-  sources = [ "file_reader.cc" ]
+  sources = [
+    "file_path.cc",
+    "file_reader.cc",
+  ]
 
   if (is_mac) {
     sources += [

@@ -1,7 +1,10 @@
 source_set("tests") {
   testonly = true
 
-  sources = [ "file_reader_test.cc" ]
+  sources = [
+    "file_path_test.cc",
+    "file_reader_test.cc",
+  ]
 
   deps = [
     "//base/filesystem",

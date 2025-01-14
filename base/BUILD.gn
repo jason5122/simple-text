@@ -1,8 +1,8 @@
 source_set("base") {
   sources = [
-    "buffer/aho_corasick/ac.cc",
     "buffer/aho_corasick/ac_fast.cc",
     "buffer/aho_corasick/ac_slow.cc",
+    "buffer/aho_corasick/aho_corasick.cc",
     "buffer/piece_tree.cc",
     "buffer/piece_tree_rbtree.cc",
     "files/file_path.cc",

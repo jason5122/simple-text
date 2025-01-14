@@ -1,44 +1,42 @@
-#include "base/buffer/aho_corasick/ac.h"
-#include "util/random_util.h"
-
 #include <gtest/gtest.h>
+
+#include "base/buffer/aho_corasick/aho_corasick.h"
+#include "util/random_util.h"
 
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
 
 namespace base {
 
+using MatchResult = AhoCorasick::MatchResult;
+
 namespace {
-ac_result_t MatchPattern(std::string_view str, std::string_view pattern) {
-    ac_t* ac = ac_create({std::string(pattern)});
-    auto result = ac_match(ac, str, str.length());
-    ac_free(ac);
+MatchResult MatchPattern(std::string_view str, std::string_view pattern) {
+    AhoCorasick ac({std::string(pattern)});
+    auto result = ac.match(str, str.length());
     return result;
 }
 
 [[maybe_unused]]
-ac_result_t MatchPattern(const PieceTree& tree, std::string_view pattern) {
-    ac_t* ac = ac_create({std::string(pattern)});
-    auto result = ac_match(ac, tree);
-    ac_free(ac);
+MatchResult MatchPattern(const PieceTree& tree, std::string_view pattern) {
+    AhoCorasick ac({std::string(pattern)});
+    auto result = ac.match(tree);
     return result;
 }
 
-ac_result_t MatchDict(std::string_view str, const std::vector<std::string>& dict) {
-    ac_t* ac = ac_create(dict);
-    auto result = ac_match(ac, str, str.length());
-    ac_free(ac);
+MatchResult MatchDict(std::string_view str, const std::vector<std::string>& dict) {
+    AhoCorasick ac(dict);
+    auto result = ac.match(str, str.length());
     return result;
 }
 
-ac_result_t MatchDict(const PieceTree& tree, const std::vector<std::string>& dict) {
-    ac_t* ac = ac_create(dict);
-    auto result = ac_match(ac, tree);
-    ac_free(ac);
+MatchResult MatchDict(const PieceTree& tree, const std::vector<std::string>& dict) {
+    AhoCorasick ac(dict);
+    auto result = ac.match(tree);
     return result;
 }
 
-void CheckResult(const ac_result_t& r,
+void CheckResult(const MatchResult& r,
                  std::string_view str,
                  const std::optional<std::string_view>& expected) {
     int begin = r.match_begin;

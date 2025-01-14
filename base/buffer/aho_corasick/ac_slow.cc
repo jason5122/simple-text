@@ -1,6 +1,6 @@
 #include "ac_slow.h"
 
-#include "ac.h"
+#include "aho_corasick.h"
 
 #include <cassert>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ac.h"
 #include "ac_slow.h"
+#include "aho_corasick.h"
 
 #include <vector>
 
@@ -112,7 +112,7 @@ private:
     std::vector<AC_Ofst> _ofst_map;
 };
 
-ac_result_t Match(AC_Buffer* buf, std::string_view str, uint32 len);
-ac_result_t Match(AC_Buffer* buf, const PieceTree& tree);
+AhoCorasick::MatchResult Match(AC_Buffer* buf, std::string_view str, uint32 len);
+AhoCorasick::MatchResult Match(AC_Buffer* buf, const PieceTree& tree);
 
 }  // namespace base

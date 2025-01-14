@@ -1,6 +1,6 @@
 #include "piece_tree.h"
 
-#include "base/buffer/aho_corasick/ac.h"
+#include "base/buffer/aho_corasick/aho_corasick.h"
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "util/scope_guard.h"
@@ -374,9 +374,8 @@ std::string PieceTree::substr(size_t offset, size_t count) const {
 }
 
 std::optional<size_t> PieceTree::find(std::string_view str) const {
-    ac_t* ac = ac_create({std::string(str)});
-    auto result = ac_match(ac, *this);
-    ac_free(ac);
+    AhoCorasick ac({std::string(str)});
+    auto result = ac.match(*this);
 
     if (result.match_begin == -1) {
         return std::nullopt;

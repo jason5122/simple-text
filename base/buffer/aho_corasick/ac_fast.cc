@@ -221,7 +221,7 @@ static inline bool Binary_Search_Input(InputTy* input_vect,
     return false;
 }
 
-ac_result_t Match(AC_Buffer* buf, std::string_view str, uint32 len) {
+AhoCorasick::MatchResult Match(AC_Buffer* buf, std::string_view str, uint32 len) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
     AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
@@ -245,7 +245,7 @@ ac_result_t Match(AC_Buffer* buf, std::string_view str, uint32 len) {
         state = Get_State_Addr(buf_base, states_ofst_vect, c);
     }
 
-    ac_result_t r = {-1, -1};
+    AhoCorasick::MatchResult r = {-1, -1};
     if (state != 0) [[likely]] {
         if (state->is_term) [[unlikely]] {
             /* Dictionary may have string of length 1 */
@@ -289,7 +289,7 @@ ac_result_t Match(AC_Buffer* buf, std::string_view str, uint32 len) {
 
         // Check to see if the state is terminal state?
         if (state->is_term) {
-            ac_result_t r;
+            AhoCorasick::MatchResult r;
             r.match_begin = idx - state->depth;
             r.match_end = idx - 1;
             r.pattern_idx = state->is_term - 1;
@@ -300,7 +300,7 @@ ac_result_t Match(AC_Buffer* buf, std::string_view str, uint32 len) {
     return r;
 }
 
-ac_result_t Match(AC_Buffer* buf, const PieceTree& tree) {
+AhoCorasick::MatchResult Match(AC_Buffer* buf, const PieceTree& tree) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
     AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
@@ -325,7 +325,7 @@ ac_result_t Match(AC_Buffer* buf, const PieceTree& tree) {
         state = Get_State_Addr(buf_base, states_ofst_vect, c);
     }
 
-    ac_result_t r = {-1, -1};
+    AhoCorasick::MatchResult r = {-1, -1};
     if (state != 0) [[likely]] {
         if (state->is_term) [[unlikely]] {
             uint32 idx = walker.offset();
@@ -371,7 +371,7 @@ ac_result_t Match(AC_Buffer* buf, const PieceTree& tree) {
         // Check to see if the state is terminal state?
         if (state->is_term) {
             uint32 idx = walker.offset();
-            ac_result_t r;
+            AhoCorasick::MatchResult r;
             r.match_begin = idx - state->depth;
             r.match_end = idx - 1;
             r.pattern_idx = state->is_term - 1;

@@ -420,7 +420,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         auto& font_rasterizer = font::FontRasterizer::instance();
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
-        int new_font_size = std::max(metrics.font_size - 2, 8 * 2);
+        int new_font_size = std::max(metrics.font_size - 1, 8);
         fmt::println("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resizeFont(parent.main_font_id, new_font_size);
 
@@ -431,7 +431,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         auto& font_rasterizer = font::FontRasterizer::instance();
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
-        int new_font_size = std::min(metrics.font_size + 2, 128 * 2);
+        int new_font_size = std::min(metrics.font_size + 1, 128);
         fmt::println("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resizeFont(parent.main_font_id, new_font_size);
 

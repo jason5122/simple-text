@@ -137,8 +137,8 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
         // TODO: Refactor this whole thing... it's messy.
         int left_edge = glyph.position.x;
         int right_edge = left_edge + left + width;
-        int top_edge = glyph.position.y + coords.y - metrics.descent;
-        // TODO: Check if this is correct.
+        // TODO: Check if `top_edge` and `bottom_edge` are correct.
+        int top_edge = coords.y + glyph.position.y - metrics.descent;
         int bottom_edge = coords.y + height + top;
 
         if (right_edge <= min_coords.x) continue;
@@ -155,13 +155,13 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
         int pos_y = coords.y - metrics.descent;
 
         if (left_edge < min_coords.x) {
-            int diff = min_coords.x - left_edge;
+            int diff1 = min_coords.x - left_edge;
             int diff2 = left;
-            int ans = std::max(diff - diff2, 0);
-            float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
-            width -= ans;
+            int diff = std::max(diff1 - diff2, 0);
+            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+            width -= diff;
             uv_width -= uv_diff;
-            pos_x += ans;
+            pos_x += diff;
             uv_x += uv_diff;
         }
         if (right_edge > max_coords.x) {
@@ -170,28 +170,22 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
             width -= diff;
             uv_width -= uv_diff;
         }
-
         if (top_edge < min_coords.y) {
-            int diff = min_coords.y - top_edge;
-            int diff2 = line_height - rglyph.top;
-            // TODO: See if this is correct. If so, refactor.
-            diff2 += (pos_y - top_edge);
-            int ans = std::max(diff - diff2, 0);
-            float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
-            height -= ans;
+            int diff1 = min_coords.y - top_edge;
+            int diff2 = line_height - rglyph.top - glyph.position.y;
+            int diff = std::max(diff1 - diff2, 0);
+            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+            height -= diff;
             uv_height -= uv_diff;
-            pos_y += ans;
+            pos_y += diff;
             uv_y += uv_diff;
         }
-
         if (bottom_edge > max_coords.y) {
-            int diff = bottom_edge - max_coords.y;
-            int diff2 = line_height - (height + top);
-            // TODO: See if this is correct. If so, refactor.
-            diff2 += (bottom_edge - (pos_y + line_height));
-            int ans = std::max(diff - diff2, 0);
-            float uv_diff = static_cast<float>(ans) / Atlas::kAtlasSize;
-            height -= ans;
+            int diff1 = bottom_edge - max_coords.y;
+            int diff2 = metrics.descent;
+            int diff = std::max(diff1 - diff2, 0);
+            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
+            height -= diff;
             uv_height -= uv_diff;
         }
 

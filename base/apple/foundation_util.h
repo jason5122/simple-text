@@ -2,6 +2,9 @@
 
 #include <Foundation/Foundation.h>
 
+#include "base/apple/scoped_cftyperef.h"
+#include "base/filesystem/file_path.h"
+
 namespace base::apple {
 
 // Taken from //chromium/src/base/apple/foundation_util.h.
@@ -42,5 +45,17 @@ T* ObjCCastStrict(id objc_val) {
     assert(objc_val == nil || rv);
     return rv;
 }
+
+// Converts |path| to an autoreleased NSString. Returns nil if |path| is empty.
+NSString* FilePathToNSString(const FilePath& path);
+
+// Converts |str| to a FilePath. Returns an empty path if |str| is nil.
+FilePath NSStringToFilePath(NSString* str);
+
+// Converts |path| to a CFStringRef. Returns nil if |path| is empty.
+ScopedCFTypeRef<CFStringRef> FilePathToCFString(const FilePath& path);
+
+// Converts |str| to a FilePath. Returns an empty path if |str| is nil.
+FilePath CFStringToFilePath(CFStringRef str);
 
 }  // namespace base::apple

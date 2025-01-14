@@ -1,5 +1,7 @@
 #include "file_path.h"
 
+#include "base/apple/scoped_cftyperef.h"
+
 namespace base {
 
 using StringType = FilePath::StringType;
@@ -155,6 +157,39 @@ FilePath FilePath::RemoveExtension() const {
     } else {
         return FilePath(path_.substr(0, dot));
     }
+}
+
+StringType FilePath::GetHFSDecomposedForm(StringPieceType string) {
+    apple::ScopedCFTypeRef<CFStringRef> cfstring(CFStringCreateWithBytesNoCopy(
+        nullptr, reinterpret_cast<const UInt8*>(string.data()),
+        static_cast<CFIndex>(string.length()), kCFStringEncodingUTF8, false, kCFAllocatorNull));
+    return GetHFSDecomposedForm(cfstring.get());
+}
+
+StringType FilePath::GetHFSDecomposedForm(CFStringRef cfstring) {
+    if (!cfstring) {
+        return StringType();
+    }
+
+    StringType result;
+    // Query the maximum length needed to store the result. In most cases this
+    // will overestimate the required space. The return value also already
+    // includes the space needed for a terminating 0.
+    CFIndex length = CFStringGetMaximumSizeOfFileSystemRepresentation(cfstring);
+    // Reserve enough space for CFStringGetFileSystemRepresentation to write
+    // into. Also set the length to the maximum so that we can shrink it later.
+    // (Increasing rather than decreasing it would clobber the string contents!)
+    result.reserve(static_cast<size_t>(length));
+    result.resize(static_cast<size_t>(length) - 1);
+    Boolean success = CFStringGetFileSystemRepresentation(cfstring, &result[0], length);
+    if (success) {
+        // Reduce result.length() to actual string length.
+        result.resize(strlen(result.c_str()));
+    } else {
+        // An error occurred -> clear result.
+        result.clear();
+    }
+    return result;
 }
 
 void FilePath::StripTrailingSeparatorsInternal() {

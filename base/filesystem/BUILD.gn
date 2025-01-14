@@ -3,16 +3,26 @@ source_set("filesystem") {
     "file_path.cc",
     "file_reader.cc",
   ]
+  deps = [ "//third_party/fmt" ]
+
+  if (is_mac || is_linux) {
+    sources += [
+      "file_posix.cc",
+      "file_util_posix.cc",
+    ]
+  }
 
   if (is_mac) {
     sources += [
       "file_reader_mac.mm",
+      "file_util_mac.mm",
       "file_watcher_mac.cc",
     ]
     frameworks = [
       "Cocoa.framework",
       "CoreServices.framework",
     ]
+    deps += [ "//base/apple" ]
   }
 
   if (is_linux) {
@@ -29,6 +39,4 @@ source_set("filesystem") {
     ]
     libs = [ "shell32.lib" ]
   }
-
-  deps = [ "//third_party/fmt" ]
 }

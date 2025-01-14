@@ -26,6 +26,10 @@
 #define FILE_PATH_LITERAL(x) x
 #endif
 
+#if BUILDFLAG(IS_MAC)
+typedef const struct __CFString* CFStringRef;
+#endif
+
 namespace base {
 
 class FilePath {
@@ -71,6 +75,10 @@ public:
     FilePath(const FilePath& other) = default;
     explicit FilePath(StringPieceType path);
 
+    FilePath& operator=(const FilePath& that) = default;
+    FilePath(FilePath&& that) noexcept = default;
+    FilePath& operator=(FilePath&& that) noexcept = default;
+
     bool operator==(const FilePath& other) const;
     bool operator!=(const FilePath& other) const;
 
@@ -106,6 +114,16 @@ public:
 
     // Returns "C:\pics\jojo" for path "C:\pics\jojo.jpg"
     [[nodiscard]] FilePath RemoveExtension() const;
+
+#if BUILDFLAG(IS_MAC)
+    // Returns the string in the special canonical decomposed form as defined for
+    // HFS, which is close to, but not quite, decomposition form D. See
+    // http://developer.apple.com/mac/library/technotes/tn/tn1150.html#UnicodeSubtleties
+    // for further comments.
+    // Returns the empty string if the conversion failed.
+    static StringType GetHFSDecomposedForm(StringPieceType string);
+    static StringType GetHFSDecomposedForm(CFStringRef cfstring);
+#endif
 
 private:
     // Remove trailing separators from this object.  If the path is absolute, it

@@ -1,0 +1,5 @@
+source_set("apple") {
+  sources = [ "foundation_util.mm" ]
+
+  frameworks = [ "Foundation.framework" ]
+}

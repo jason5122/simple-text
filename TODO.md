@@ -1,5 +1,11 @@
 # TODO
 
+# 01-14-2025
+
+## Implement Chromium/Abseil's `FunctionRef`
+
+- https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++-features.md#FunctionRef-banned
+
 # 01-09-2025
 
 ## Apply Zed's patch for scroll locking

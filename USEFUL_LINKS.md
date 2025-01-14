@@ -1,5 +1,11 @@
 # Useful Links
 
+## Chromium
+
+- [Skia tab drawing code](https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/ui/views/tabs/tab_style_views.cc;l=370;drc=a438ffb4145448ea189d11daa7c9f8bdc2e77238)
+- [GTK `dlopen()` example](https://source.chromium.org/chromium/chromium/src/+/main:ui/gtk/gtk_compat.cc;l=52;drc=a438ffb4145448ea189d11daa7c9f8bdc2e77238)
+- [Chromium code coverage `BUILD.gn`](https://source.chromium.org/chromium/chromium/src/+/main:build/config/coverage/BUILD.gn;l=31;drc=59c007a7ad2f034baeffab754f3f5bf109b69cda)
+
 - [UTF-8 encoder/decoder](https://mothereff.in/utf-8)
 - [UTF summary](https://howardhinnant.github.io/utf_summary.html)
 

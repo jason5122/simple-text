@@ -16,7 +16,7 @@ namespace gui {
 
 TEST(LineLayoutIntegrationTest, Movement1) {
     auto& font_rasterizer = font::FontRasterizer::instance();
-    size_t font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
+    size_t font_id = font_rasterizer.add_font(kMainFontFace, kMainFontSize);
 
     base::PieceTree tree{"Hi 🙂🙂 Hello world!\nThis is a new line."};
     LineLayoutCache line_layout_cache;

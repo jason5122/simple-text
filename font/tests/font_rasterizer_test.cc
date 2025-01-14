@@ -14,8 +14,8 @@ static_assert(!std::is_move_assignable_v<FontRasterizer>);
 
 TEST(FontRasterizerTest, LayoutLine1) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-    auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
+    size_t font_id = rasterizer.add_system_font(32);
+    auto layout = rasterizer.layout_line(font_id, "Hello😄🙂hi");
 
     EXPECT_GT(layout.width, 0);
     EXPECT_EQ(layout.glyphs.size(), 9_Z);
@@ -50,8 +50,8 @@ TEST(FontRasterizerTest, LayoutLine1) {
 
 TEST(FontRasterizerTest, LayoutLine2) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-    auto layout = rasterizer.layoutLine(font_id, "Hello😄🙂hi");
+    size_t font_id = rasterizer.add_system_font(32);
+    auto layout = rasterizer.layout_line(font_id, "Hello😄🙂hi");
 
     int total_advance = 0;
     for (const auto& glyph : layout.glyphs) {
@@ -65,9 +65,9 @@ TEST(FontRasterizerTest, LayoutLine2) {
 // via rearranging pixels will be too slow.
 TEST(FontRasterizerTest, RasterizePerformance) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
+    size_t font_id = rasterizer.add_system_font(32);
 
-    auto layout = rasterizer.layoutLine(font_id, "a");
+    auto layout = rasterizer.layout_line(font_id, "a");
     uint32_t glyph_id = layout.glyphs[0].glyph_id;
 
     for (int i = 0; i < 10000; ++i) {
@@ -79,11 +79,11 @@ TEST(FontRasterizerTest, RasterizePerformance) {
 
 TEST(FontRasterizerTest, LineLayoutPerformance) {
     auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
+    size_t font_id = rasterizer.add_system_font(32);
 
     for (int i = 0; i < 1000; ++i) {
         std::string str = util::RandomString(100);
-        auto layout = rasterizer.layoutLine(font_id, str);
+        auto layout = rasterizer.layout_line(font_id, str);
     }
 }
 

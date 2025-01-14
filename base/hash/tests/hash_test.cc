@@ -1,7 +1,9 @@
-#include "base/hash/hash_combine.h"
-#include "base/numeric/literals.h"
-#include <cstddef>
 #include <gtest/gtest.h>
+
+#include "base/hash/hash.h"
+#include "base/numeric/literals.h"
+
+#include <cstddef>
 
 namespace base {
 

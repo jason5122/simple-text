@@ -9,22 +9,26 @@
 
 namespace font {
 
+using FontId = size_t;
+
 class FontRasterizer {
 public:
     static FontRasterizer& instance();
     FontRasterizer(const FontRasterizer&) = delete;
     FontRasterizer& operator=(const FontRasterizer&) = delete;
 
-    size_t addFont(std::string_view font_name8, int font_size, FontStyle style = FontStyle::kNone);
-    size_t addSystemFont(int font_size, FontStyle style = FontStyle::kNone);
+    FontId add_font(std::string_view font_name8,
+                    int font_size,
+                    FontStyle style = FontStyle::kNone);
+    FontId add_system_font(int font_size, FontStyle style = FontStyle::kNone);
     // TODO: Clean this up. Consider keeping the same font ID or change method name from "resize"
     // to "create copy".
-    size_t resizeFont(size_t font_id, int font_size);
-    const Metrics& metrics(size_t font_id) const;
-    std::string_view postscriptName(size_t font_id) const;
+    FontId resize_font(FontId font_id, int font_size);
+    const Metrics& metrics(FontId font_id) const;
+    std::string_view postscript_name(FontId font_id) const;
 
-    RasterizedGlyph rasterize(size_t font_id, uint32_t glyph_id) const;
-    LineLayout layoutLine(size_t font_id, std::string_view str8);
+    RasterizedGlyph rasterize(FontId font_id, uint32_t glyph_id) const;
+    LineLayout layout_line(FontId font_id, std::string_view str8);
 
 private:
     friend class impl;
@@ -33,12 +37,13 @@ private:
     ~FontRasterizer();
 
     struct NativeFontType;
-    std::unordered_map<size_t, size_t> font_hash_to_id;
+    std::unordered_map<size_t, FontId> font_hash_to_id;
     std::vector<NativeFontType> font_id_to_native;
     std::vector<Metrics> font_id_to_metrics;
     std::vector<std::string> font_id_to_postscript_name;
-    size_t hashFont(std::string_view font_name8, int font_size) const;
-    size_t cacheFont(NativeFontType font, int font_size);
+
+    size_t hash_font(std::string_view font_name8, int font_size) const;
+    FontId cache_font(NativeFontType font, int font_size);
 
     class impl;
     std::unique_ptr<impl> pimpl;

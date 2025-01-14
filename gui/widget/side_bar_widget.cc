@@ -11,7 +11,7 @@ namespace gui {
 
 SideBarWidget::SideBarWidget(int width)
     : ScrollableWidget({.width = width}),
-      label_font_id{rasterizer().addSystemFont(kLabelFontSize, font::FontStyle::kBold)} {
+      label_font_id{rasterizer().add_system_font(kLabelFontSize, font::FontStyle::kBold)} {
     updateMaxScroll();
 }
 

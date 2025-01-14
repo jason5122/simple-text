@@ -42,9 +42,9 @@ private:
     // const std::string kMainFontFace = "Monospace";
 #endif
 
-    size_t main_font_id;
-    size_t ui_font_small_id;
-    size_t ui_font_regular_id;
+    font::FontId main_font_id;
+    font::FontId ui_font_small_id;
+    font::FontId ui_font_regular_id;
 
     size_t panel_close_image_id;
     size_t folder_open_image_id;

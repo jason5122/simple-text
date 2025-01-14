@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
+
+#include "third_party/hash_maps/rapidhash.h"
 
 namespace base {
 
@@ -13,6 +16,10 @@ constexpr size_t hash_combine(size_t lhs, size_t rhs) {
         lhs ^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
     }
     return lhs;
+}
+
+constexpr uint64_t hash_string(std::string_view str) {
+    return rapidhash(str.data(), str.length());
 }
 
 }  // namespace base

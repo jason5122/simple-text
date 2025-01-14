@@ -10,8 +10,8 @@ namespace gui {
 namespace {
 font::LineLayout CreateLayout(std::string_view str) {
     auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.addSystemFont(32);
-    return rasterizer.layoutLine(font_id, str);
+    size_t font_id = rasterizer.add_system_font(32);
+    return rasterizer.layout_line(font_id, str);
 }
 }  // namespace
 

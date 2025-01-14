@@ -36,7 +36,7 @@ FontRasterizer::FontRasterizer() {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontStyle style) {
+size_t FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle style) {
     std::string font_style;
     if (style == FontStyle::kNone) {
         font_style = "Regular";
@@ -61,21 +61,21 @@ size_t FontRasterizer::addFont(std::string_view font_name8, int font_size, FontS
         CTFontDescriptorCreateWithAttributes(attributes.get()));
 
     CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
-    return cacheFont({ct_font}, font_size);
+    return cache_font({ct_font}, font_size);
 }
 
-size_t FontRasterizer::addSystemFont(int font_size, FontStyle style) {
+size_t FontRasterizer::add_system_font(int font_size, FontStyle style) {
     bool is_bold = (style & FontStyle::kBold) != FontStyle::kNone;
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
-    return cacheFont({sys_font}, font_size);
+    return cache_font({sys_font}, font_size);
 }
 
-size_t FontRasterizer::resizeFont(size_t font_id, int font_size) {
+size_t FontRasterizer::resize_font(size_t font_id, int font_size) {
     const auto& font_ref = font_id_to_native[font_id].font;
     CTFontRef copy = CTFontCreateCopyWithAttributes(font_ref.get(), font_size, nullptr, nullptr);
-    return cacheFont({copy}, font_size);
+    return cache_font({copy}, font_size);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
@@ -153,7 +153,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 }
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
-LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
+LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
     assert(str8.find('\n') == std::string_view::npos);
 
     UTF16ToUTF8IndicesMap utf8_indices_map;
@@ -178,7 +178,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
         auto scoped_ct_font =
             ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
         int font_size = CTFontGetSize(ct_font);
-        size_t run_font_id = cacheFont({std::move(scoped_ct_font)}, font_size);
+        size_t run_font_id = cache_font({std::move(scoped_ct_font)}, font_size);
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -228,7 +228,7 @@ LineLayout FontRasterizer::layoutLine(size_t font_id, std::string_view str8) {
     };
 }
 
-size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
+size_t FontRasterizer::cache_font(NativeFontType font, int font_size) {
     CTFontRef ct_font = font.font.get();
     auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(ct_font));
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
@@ -239,7 +239,7 @@ size_t FontRasterizer::cacheFont(NativeFontType font, int font_size) {
     }
 
     // If the font is already present, return its ID.
-    size_t hash = hashFont(font_name, font_size);
+    size_t hash = hash_font(font_name, font_size);
     if (auto it = font_hash_to_id.find(hash); it != font_hash_to_id.end()) {
         return it->second;
     }

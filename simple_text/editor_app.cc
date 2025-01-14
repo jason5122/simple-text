@@ -19,9 +19,9 @@ void EditorApp::onLaunch() {
 
     // Load fonts.
     auto& font_rasterizer = font::FontRasterizer::instance();
-    main_font_id = font_rasterizer.addFont(kMainFontFace, kMainFontSize);
-    ui_font_small_id = font_rasterizer.addSystemFont(kUIFontSizeSmall);
-    ui_font_regular_id = font_rasterizer.addSystemFont(kUIFontSizeRegular);
+    main_font_id = font_rasterizer.add_font(kMainFontFace, kMainFontSize);
+    ui_font_small_id = font_rasterizer.add_system_font(kUIFontSizeSmall);
+    ui_font_regular_id = font_rasterizer.add_system_font(kUIFontSizeRegular);
 
     // Load images.
     // TODO: Replace this with an actual file path class.

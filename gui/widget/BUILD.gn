@@ -24,7 +24,7 @@ source_set("widget") {
   ]
 
   deps = [
-    "//base/buffer",
+    "//base",
     "//gui/renderer",
     "//third_party/fmt",
 

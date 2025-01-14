@@ -4,12 +4,11 @@ source_set("integration_tests") {
   sources = [ "line_layout_integration_test.cc" ]
 
   deps = [
-    "//base/buffer",
+    "//base",
     "//gui/text_system",
     "//third_party/googletest:gtest",
 
     # TODO: Remove these as dependencies. We will likely move all line layout stuff out of //gui.
-    "//base/files",
     "//gui",
     "//opengl",
   ]

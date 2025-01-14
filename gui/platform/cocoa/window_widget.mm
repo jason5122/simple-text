@@ -75,7 +75,7 @@ std::optional<std::string> WindowWidget::openFilePicker() const {
     panel.canChooseFiles = true;
 
     // TODO: Make this a parameter.
-    // TODO: Expand tilde paths in a helper function (probably in //base/files/) and implement
+    // TODO: Expand tilde paths in a helper function (probably in //base) and implement
     // for each OS.
     // panel.directoryURL = [NSURL fileURLWithPath:@"~".stringByExpandingTildeInPath];
 

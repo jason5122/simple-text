@@ -1,0 +1,68 @@
+source_set("base") {
+  sources = [
+    "buffer/aho_corasick/ac.cc",
+    "buffer/aho_corasick/ac_fast.cc",
+    "buffer/aho_corasick/ac_slow.cc",
+    "buffer/piece_tree.cc",
+    "buffer/piece_tree_rbtree.cc",
+    "files/file_path.cc",
+    "files/file_reader.cc",
+  ]
+  deps = [ "//third_party/fmt" ]
+
+  # TODO: Consider checking all type conversions. These result in silent and subtle bugs. We
+  # previously spent one hour debugging one.
+  # configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
+  libs = []
+  frameworks = []
+
+  if (is_posix) {
+    sources += [
+      "files/file_posix.cc",
+      "files/file_util_posix.cc",
+    ]
+  }
+
+  if (is_mac) {
+    sources += [
+      "apple/foundation_util.mm",
+      "files/file_reader_mac.mm",
+      "files/file_util_mac.mm",
+      "files/file_watcher_mac.cc",
+    ]
+    frameworks += [ "Foundation.framework" ]
+  }
+
+  if (is_linux) {
+    sources += [
+      "files/file_reader_linux.cc",
+      "files/file_watcher_linux.cc",
+    ]
+  }
+
+  if (is_win) {
+    sources += [
+      "files/file_reader_win.cc",
+      "files/file_watcher_win.cc",
+    ]
+    libs += [ "shell32.lib" ]
+  }
+}
+
+source_set("base_unittests") {
+  testonly = true
+
+  sources = [
+    "buffer/aho_corasick/aho_corasick_unittest.cc",
+    "buffer/piece_tree_unittest.cc",
+    "buffer/tree_walker_unittest.cc",
+    "files/file_path_unittest.cc",
+    "files/file_reader_unittest.cc",
+  ]
+
+  deps = [
+    ":base",
+    "//third_party/googletest:gtest",
+  ]
+}

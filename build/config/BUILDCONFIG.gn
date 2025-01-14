@@ -28,6 +28,7 @@ declare_args() {
 is_mac = target_os == "mac"
 is_linux = target_os == "linux"
 is_win = target_os == "win"
+is_posix = !is_win
 
 # =============================================================================
 # TARGET DEFAULTS

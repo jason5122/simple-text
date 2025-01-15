@@ -16,11 +16,6 @@ public:
         return map[index];
     }
 
-    constexpr std::pair<size_t, size_t> map_range(size_t start, size_t size) const {
-        size_t utf8_start = map_index(start);
-        return {utf8_start, map_index(start + size) - utf8_start};
-    }
-
 private:
     std::vector<size_t> map;
 };

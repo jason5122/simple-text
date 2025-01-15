@@ -9,8 +9,8 @@ namespace base {
 
 class ACSlowConstructor;
 
-using AC_Ofst = uint32;
-using State_ID = uint32;
+using ACOffset = uint32;
+using StateID = uint32;
 
 // The entire "fast" AC graph is converted from its "slow" version, and store
 // in an consecutive trunk of memory or "buffer". Since the pointers in the
@@ -37,11 +37,11 @@ using State_ID = uint32;
 //
 struct ACBuffer {
     uint32 buf_len;
-    AC_Ofst root_goto_ofst;    // addr of root node's goto() function.
-    AC_Ofst states_ofst_ofst;  // addr of state pointer vector (indiced by id)
-    AC_Ofst first_state_ofst;  // addr of the first state in the buffer.
-    uint16 root_goto_num;      // fan-out of root-node.
-    uint16 state_num;          // number of states
+    ACOffset root_goto_ofst;    // addr of root node's goto() function.
+    ACOffset states_ofst_ofst;  // addr of state pointer vector (indiced by id)
+    ACOffset first_state_ofst;  // addr of the first state in the buffer.
+    uint16 root_goto_num;       // fan-out of root-node.
+    uint16 state_num;           // number of states
 
     // Followed by the gut of the buffer:
     // 1. map: root's-valid-input -> kid's id
@@ -58,8 +58,8 @@ struct ACState {
     // into S_a, S_b. So, S_a is the 1st kid, the ID of kids are consecutive,
     // so we don't need to save all the target kids.
     //
-    State_ID first_kid;
-    AC_Ofst fail_link;
+    StateID first_kid;
+    ACOffset fail_link;
     short depth;             // How far away from root.
     unsigned short is_term;  // Is terminal node. if is_term != 0, it encodes
                              // the value of "1 + pattern-index".
@@ -69,16 +69,13 @@ struct ACState {
 
 class BufAllocator {
 public:
-    BufAllocator() : _buf(0) {}
+    BufAllocator() {}
     virtual ~BufAllocator() {
         free();
     }
 
     virtual ACBuffer* alloc(int sz) = 0;
     virtual void free() {}
-
-protected:
-    ACBuffer* _buf;
 };
 
 // Convert slow-AC-graph into fast one.
@@ -93,9 +90,9 @@ private:
 
     // In fast-AC-graph, the ID is bit tricky. Given a state of slow-graph,
     // this function is to return the ID of its counterpart in the fast-graph.
-    State_ID Get_Renumbered_Id(const ACSlowState* s) const {
+    StateID Get_Renumbered_Id(const ACSlowState* s) const {
         const std::vector<uint32>& m = _id_map;
-        return m[s->Get_ID()];
+        return m[s->id()];
     }
 
     ACBuffer* Alloc_Buffer();
@@ -109,7 +106,7 @@ private:
     std::vector<uint32> _id_map;
 
     // map: ID of state in slow-graph -> offset of counterpart in fast-graph.
-    std::vector<AC_Ofst> _ofst_map;
+    std::vector<ACOffset> _ofst_map;
 };
 
 AhoCorasick::MatchResult Match(ACBuffer* buf, std::string_view str, uint32 len);

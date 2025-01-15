@@ -10,7 +10,7 @@ namespace base {
 uint32 ACConverter::Calc_State_Sz(const ACSlowState* s) const {
     ACState dummy;
     uint32 sz = offsetof(ACState, input_vect);
-    sz += s->Get_GotoNum() * sizeof(dummy.input_vect[0]);
+    sz += s->goto_num() * sizeof(dummy.input_vect[0]);
 
     if (sz < sizeof(ACState)) sz = sizeof(ACState);
 
@@ -20,12 +20,12 @@ uint32 ACConverter::Calc_State_Sz(const ACSlowState* s) const {
 }
 
 ACBuffer* ACConverter::Alloc_Buffer() {
-    const std::vector<ACSlowState*>& all_states = _acs.Get_All_States();
-    const ACSlowState* root_state = _acs.Get_Root_State();
-    uint32 root_fanout = root_state->Get_GotoNum();
+    const std::vector<ACSlowState*>& all_states = _acs.all_states();
+    const ACSlowState* root_state = _acs.root();
+    uint32 root_fanout = root_state->goto_num();
 
     // Step 1: Calculate the buffer size
-    AC_Ofst root_goto_ofst, states_ofst_ofst, first_state_ofst;
+    ACOffset root_goto_ofst, states_ofst_ofst, first_state_ofst;
 
     // part 1 :  buffer header
     uint32 sz = root_goto_ofst = sizeof(ACBuffer);
@@ -38,11 +38,11 @@ ACBuffer* ACConverter::Alloc_Buffer() {
     }
 
     // part 3: mapping of state's relative position.
-    unsigned align = __alignof__(AC_Ofst);
+    unsigned align = __alignof__(ACOffset);
     sz = (sz + align - 1) & ~(align - 1);
     states_ofst_ofst = sz;
 
-    sz += sizeof(AC_Ofst) * all_states.size();
+    sz += sizeof(ACOffset) * all_states.size();
 
     // part 4: state's contents
     align = __alignof__(ACState);
@@ -65,14 +65,14 @@ ACBuffer* ACConverter::Alloc_Buffer() {
     buf->states_ofst_ofst = states_ofst_ofst;
     buf->first_state_ofst = first_state_ofst;
     buf->root_goto_num = root_fanout;
-    buf->state_num = _acs.Get_State_Num();
+    buf->state_num = _acs.state_num();
     return buf;
 }
 
 void ACConverter::Populate_Root_Goto_Func(ACBuffer* buf, GotoVect& goto_vect) {
     unsigned char* buf_base = (unsigned char*)(buf);
     InputTy* root_gotos = (InputTy*)(buf_base + buf->root_goto_ofst);
-    const ACSlowState* root_state = _acs.Get_Root_State();
+    const ACSlowState* root_state = _acs.root();
 
     root_state->Get_Sorted_Gotos(goto_vect);
 
@@ -86,7 +86,7 @@ void ACConverter::Populate_Root_Goto_Func(ACBuffer* buf, GotoVect& goto_vect) {
     for (auto i = goto_vect.begin(), e = goto_vect.end(); i != e; i++, new_id++) {
         InputTy c = i->first;
         ACSlowState* s = i->second;
-        _id_map[s->Get_ID()] = new_id;
+        _id_map[s->id()] = new_id;
 
         if (!full_fantout) [[likely]] {
             root_gotos[c] = new_id;
@@ -100,8 +100,8 @@ ACBuffer* ACConverter::Convert() {
 
     _id_map.clear();
     _ofst_map.clear();
-    _id_map.resize(_acs.Get_Next_Node_Id());
-    _ofst_map.resize(_acs.Get_Next_Node_Id());
+    _id_map.resize(_acs.next_node_id());
+    _ofst_map.resize(_acs.next_node_id());
 
     // Step 2: allocate buffer to accommodate the entire AC graph.
     ACBuffer* buf = Alloc_Buffer();
@@ -110,20 +110,20 @@ ACBuffer* ACConverter::Convert() {
     // Step 3: Root node need special care.
     Populate_Root_Goto_Func(buf, gotovect);
     buf->root_goto_num = gotovect.size();
-    _id_map[_acs.Get_Root_State()->Get_ID()] = 0;
+    _id_map[_acs.root()->id()] = 0;
 
     // Step 4: Converting the remaining states by BFSing the graph.
     // First of all, enter root's immediate kids to the working list.
     std::vector<const ACSlowState*> wl;
-    State_ID id = 1;
+    StateID id = 1;
     for (auto i = gotovect.begin(), e = gotovect.end(); i != e; i++, id++) {
         ACSlowState* s = i->second;
         wl.push_back(s);
-        _id_map[s->Get_ID()] = id;
+        _id_map[s->id()] = id;
     }
 
-    AC_Ofst* state_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
-    AC_Ofst ofst = buf->first_state_ofst;
+    ACOffset* state_ofst_vect = (ACOffset*)(buf_base + buf->states_ofst_ofst);
+    ACOffset ofst = buf->first_state_ofst;
     for (uint32 idx = 0; idx < wl.size(); idx++) {
         const ACSlowState* old_s = wl[idx];
         ACState* new_s = (ACState*)(buf_base + ofst);
@@ -133,16 +133,16 @@ ACBuffer* ACConverter::Convert() {
         //  - sibling states are appended to worklist in the order of their
         //    corresponding input.
         //
-        State_ID state_id = idx + 1;
-        assert(_id_map[old_s->Get_ID()] == state_id);
+        StateID state_id = idx + 1;
+        assert(_id_map[old_s->id()] == state_id);
 
         state_ofst_vect[state_id] = ofst;
 
         new_s->first_kid = wl.size() + 1;
-        new_s->depth = old_s->Get_Depth();
-        new_s->is_term = old_s->is_Terminal() ? old_s->get_Pattern_Idx() + 1 : 0;
+        new_s->depth = old_s->depth();
+        new_s->is_term = old_s->is_terminal() ? old_s->pattern_index() + 1 : 0;
 
-        uint32 gotonum = old_s->Get_GotoNum();
+        uint32 gotonum = old_s->goto_num();
         new_s->goto_num = gotonum;
 
         // Populate the "input" field
@@ -154,11 +154,11 @@ ACBuffer* ACConverter::Convert() {
             input_vect[input_idx] = i->first;
 
             ACSlowState* kid = i->second;
-            _id_map[kid->Get_ID()] = id;
+            _id_map[kid->id()] = id;
             wl.push_back(kid);
         }
 
-        _ofst_map[old_s->Get_ID()] = ofst;
+        _ofst_map[old_s->id()] = ofst;
         ofst += Calc_State_Sz(old_s);
     }
 
@@ -168,10 +168,10 @@ ACBuffer* ACConverter::Convert() {
     // Populate the fail-link field.
     for (auto i = wl.begin(), e = wl.end(); i != e; i++) {
         const ACSlowState* slow_s = *i;
-        State_ID fast_s_id = _id_map[slow_s->Get_ID()];
+        StateID fast_s_id = _id_map[slow_s->id()];
         ACState* fast_s = (ACState*)(buf_base + state_ofst_vect[fast_s_id]);
-        if (const ACSlowState* fl = slow_s->Get_FailLink()) {
-            State_ID id = _id_map[fl->Get_ID()];
+        if (const ACSlowState* fl = slow_s->fail_link()) {
+            StateID id = _id_map[fl->id()];
             fast_s->fail_link = id;
         } else fast_s->fail_link = 0;
     }
@@ -179,19 +179,17 @@ ACBuffer* ACConverter::Convert() {
 }
 
 static inline ACState* Get_State_Addr(unsigned char* buf_base,
-                                      AC_Ofst* StateOfstVect,
+                                      ACOffset* StateOfstVect,
                                       uint32 state_id) {
     assert(state_id != 0 && "root node is handled in speical way");
     assert(state_id < ((ACBuffer*)buf_base)->state_num);
     return (ACState*)(buf_base + StateOfstVect[state_id]);
 }
 
+namespace {
 // The performance of the binary search is critical to this work. This is a modified version of
 // binary search that seems to perform faster.
-static inline bool Binary_Search_Input(InputTy* input_vect,
-                                       int vect_len,
-                                       InputTy input,
-                                       int& idx) {
+inline bool Binary_Search_Input(InputTy* input_vect, int vect_len, InputTy input, int& idx) {
     if (vect_len <= 8) {
         for (int i = 0; i < vect_len; i++) {
             if (input_vect[i] == input) {
@@ -220,11 +218,12 @@ static inline bool Binary_Search_Input(InputTy* input_vect,
     }
     return false;
 }
+}  // namespace
 
 AhoCorasick::MatchResult Match(ACBuffer* buf, std::string_view str, uint32 len) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
-    AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
+    ACOffset* states_ofst_vect = (ACOffset*)(buf_base + buf->states_ofst_ofst);
 
     ACState* state = 0;
     uint32 idx = 0;
@@ -268,7 +267,7 @@ AhoCorasick::MatchResult Match(ACBuffer* buf, std::string_view str, uint32 len) 
             idx++;
         } else {
             // Follow the fail-link.
-            State_ID fl = state->fail_link;
+            StateID fl = state->fail_link;
             if (fl == 0) {
                 // fail-link is root-node, which implies the root-node doesn't
                 // have 255 valid transitions (otherwise, the fail-link should
@@ -303,7 +302,7 @@ AhoCorasick::MatchResult Match(ACBuffer* buf, std::string_view str, uint32 len) 
 AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree) {
     unsigned char* buf_base = (unsigned char*)(buf);
     unsigned char* root_goto = buf_base + buf->root_goto_ofst;
-    AC_Ofst* states_ofst_vect = (AC_Ofst*)(buf_base + buf->states_ofst_ofst);
+    ACOffset* states_ofst_vect = (ACOffset*)(buf_base + buf->states_ofst_ofst);
 
     ACState* state = 0;
     // TODO: Implement starting/stopping at a specific index.
@@ -325,15 +324,15 @@ AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree) {
         state = Get_State_Addr(buf_base, states_ofst_vect, c);
     }
 
-    AhoCorasick::MatchResult r = {-1, -1};
     if (state != 0) [[likely]] {
         if (state->is_term) [[unlikely]] {
             uint32 idx = walker.offset();
             /* Dictionary may have string of length 1 */
-            r.match_begin = idx - state->depth;
-            r.match_end = idx - 1;
-            r.pattern_idx = state->is_term - 1;
-            return r;
+            return {
+                .match_begin = static_cast<int>(idx - state->depth),
+                .match_end = static_cast<int>(idx - 1),
+                .pattern_idx = state->is_term - 1,
+            };
         }
     }
 
@@ -349,7 +348,7 @@ AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree) {
             walker.next();
         } else {
             // Follow the fail-link.
-            State_ID fl = state->fail_link;
+            StateID fl = state->fail_link;
             if (fl == 0) {
                 // fail-link is root-node, which implies the root-node doesn't
                 // have 255 valid transitions (otherwise, the fail-link should
@@ -371,15 +370,15 @@ AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree) {
         // Check to see if the state is terminal state?
         if (state->is_term) {
             uint32 idx = walker.offset();
-            AhoCorasick::MatchResult r;
-            r.match_begin = idx - state->depth;
-            r.match_end = idx - 1;
-            r.pattern_idx = state->is_term - 1;
-            return r;
+            return {
+                .match_begin = static_cast<int>(idx - state->depth),
+                .match_end = static_cast<int>(idx - 1),
+                .pattern_idx = state->is_term - 1,
+            };
         }
     }
 
-    return r;
+    return {-1, -1, -1};
 }
 
 }  // namespace base

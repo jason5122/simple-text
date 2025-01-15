@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ac_util.h"
-
 #include <algorithm>  // for std::sort
 #include <cassert>
 #include <map>
@@ -12,17 +10,16 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+// TODO: Clean this up. Don't define it here since we're polluting the namespace.
+using uint16 = unsigned short;
+using uint32 = unsigned int;
+using InputTy = unsigned char;
+
 namespace base {
 
 class ACSlowState;
 
 using ACSlowGotoMap = std::map<InputTy, ACSlowState*>;
-
-struct Match_Result {
-    int begin;
-    int end;
-    int pattern_idx;
-};
 
 using GotoPair = std::pair<InputTy, ACSlowState*>;
 using GotoVect = std::vector<GotoPair>;
@@ -53,33 +50,27 @@ public:
         std::sort(gotos.begin(), gotos.end());
     }
 
-    ACSlowState* Get_FailLink() const {
+    ACSlowState* fail_link() const {
         return _fail_link;
     }
-    uint32 Get_GotoNum() const {
+    uint32 goto_num() const {
         return _goto_map.size();
     }
-    uint32 Get_ID() const {
+    uint32 id() const {
         return _id;
     }
-    uint32 Get_Depth() const {
+    uint32 depth() const {
         return _depth;
     }
-    const ACSlowGotoMap& Get_Goto_Map(void) const {
+    const ACSlowGotoMap& goto_map(void) const {
         return _goto_map;
     }
-    bool is_Terminal() const {
+    bool is_terminal() const {
         return _is_terminal;
     }
-    int get_Pattern_Idx() const {
-        assert(is_Terminal() && _pattern_idx >= 0);
+    int pattern_index() const {
+        assert(is_terminal() && _pattern_idx >= 0);
         return _pattern_idx;
-    }
-
-private:
-    void set_Pattern_Idx(int idx) {
-        assert(is_Terminal());
-        _pattern_idx = idx;
     }
 
 private:
@@ -89,6 +80,11 @@ private:
     bool _is_terminal;
     ACSlowGotoMap _goto_map;
     ACSlowState* _fail_link;
+
+    void set_pattern_index(int idx) {
+        assert(is_terminal());
+        _pattern_idx = idx;
+    }
 };
 
 class ACSlowConstructor {
@@ -98,41 +94,29 @@ public:
 
     void Construct(const std::vector<std::string>& patterns);
 
-    Match_Result Match(const char* s, uint32 len) const {
-        Match_Result r = MatchHelper(s, len);
-        return r;
-    }
-
-    Match_Result Match(const char* s) const {
-        return Match(s, strlen(s));
-    }
-
-    const ACSlowState* Get_Root_State() const {
+    const ACSlowState* root() const {
         return _root;
     }
-    const std::vector<ACSlowState*>& Get_All_States() const {
+    const std::vector<ACSlowState*>& all_states() const {
         return _all_states;
     }
 
-    uint32 Get_Next_Node_Id() const {
+    uint32 next_node_id() const {
         return _next_node_id;
     }
-    uint32 Get_State_Num() const {
+    uint32 state_num() const {
         return _next_node_id - 1;
     }
-
-private:
-    void Add_Pattern(std::string_view str, int pattern_idx);
-    ACSlowState* new_state();
-    void Propagate_faillink();
-
-    Match_Result MatchHelper(const char*, uint32 len) const;
 
 private:
     ACSlowState* _root;
     std::vector<ACSlowState*> _all_states;
     unsigned char* _root_char;
     uint32 _next_node_id;
+
+    void add_pattern(std::string_view str, int pattern_idx);
+    ACSlowState* new_state();
+    void propagate_faillink();
 };
 
 }  // namespace base

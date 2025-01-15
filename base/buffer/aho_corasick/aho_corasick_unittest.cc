@@ -267,35 +267,40 @@ __builtin_char_memchr: 25 ms
 
 // TODO: Make this optional. This test runs slowly; only run if you need to re-measure performance.
 // TEST(AhoCorasickTest, PerformanceTest) {
-//     ac_t* ac = ac_create({"a"});
-//     {
-//         PROFILE_BLOCK_WITH_DURATION("Aho-Corasick match (string)", std::chrono::milliseconds);
-//         ac_match(ac, kLongStr, kLongStr.length());
+//     auto pf = util::Profiler{"PieceTree line-by-line iteration"};
+//     for (size_t line = 0; line < kLongPieceTree.line_count(); ++line) {
+//         std::string line_str = kLongPieceTree.get_line_content(line);
 //     }
-//     {
-//         PROFILE_BLOCK_WITH_DURATION("Aho-Corasick match (piece table)",
-//         std::chrono::milliseconds); ac_match(ac, kLongPieceTree, kLongPieceTree.length());
-//     }
-//     {
-//         PROFILE_BLOCK_WITH_DURATION("std::string find", std::chrono::milliseconds);
-//         kLongStr.find("a");
-//     }
+//     pf.stop_mili();
 
-//     {
-//         PROFILE_BLOCK_WITH_DURATION("std::string iteration", std::chrono::milliseconds);
-//         for (char ch [[maybe_unused]] : kLongStr) {}
+//     // auto ac = AhoCorasick({"a"});
+
+//     // auto pf1 = util::Profiler{"Aho-Corasick match (string)"};
+//     // ac.match(kLongStr, kLongStr.length());
+//     // pf1.stop_mili();
+
+//     // auto pf2 = util::Profiler{"Aho-Corasick match (piece table)"};
+//     // ac.match(kLongPieceTree);
+//     // pf2.stop_mili();
+
+//     // auto pf3 = util::Profiler{"std::string find"};
+//     // kLongStr.find("a");
+//     // pf3.stop_mili();
+
+//     // auto pf4 = util::Profiler{"std::string iteration"};
+//     // for (char ch [[maybe_unused]] : kLongStr) {}
+//     // pf4.stop_mili();
+
+//     auto pf5 = util::Profiler{"Piece table iteration"};
+//     TreeWalker walker{&kLongPieceTree};
+//     while (!walker.exhausted()) {
+//         walker.next();
 //     }
-//     {
-//         PROFILE_BLOCK_WITH_DURATION("Piece table iteration", std::chrono::milliseconds);
-//         TreeWalker walker{&kLongPieceTree};
-//         while (!walker.exhausted()) {
-//             walker.next();
-//         }
-//     }
-//     {
-//         PROFILE_BLOCK_WITH_DURATION("__builtin_char_memchr", std::chrono::milliseconds);
-//         __builtin_char_memchr(kLongStr.data(), 'a', kLongStr.size());
-//     }
+//     pf5.stop_mili();
+
+//     // auto pf6 = util::Profiler{"__builtin_char_memchr"};
+//     // __builtin_char_memchr(kLongStr.data(), 'a', kLongStr.size());
+//     // pf6.stop_mili();
 // }
 
 }  // namespace base

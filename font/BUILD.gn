@@ -23,7 +23,14 @@ source_set("font") {
   }
 
   if (is_win) {
-    deps = [ "directwrite" ]
+    sources += [
+      "font_fallback_renderer.cc",
+      "font_rasterizer_directwrite.cc",
+    ]
+    libs = [
+      "d2d1.lib",
+      "dwrite.lib",
+    ]
   }
 }
 

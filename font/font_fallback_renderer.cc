@@ -12,7 +12,7 @@ namespace font {
 FontFallbackRenderer::FontFallbackRenderer(ComPtr<IDWriteFontCollection> font_collection,
                                            std::string_view str8)
     : fRefCount(1), font_collection{font_collection} {
-    if (!utf8IndicesMap.setUTF8(str8.data(), str8.length())) {
+    if (!indices_map.set_utf8(str8.data(), str8.length())) {
         fmt::println("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }
@@ -92,7 +92,7 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
             .glyph_id = glyph_id,
             .position = {.x = total_advance},
             .advance = {.x = advance},
-            .index = utf8IndicesMap.mapIndex(text_position + inverted_cluster_map[i]),
+            .index = indices_map.map_index(text_position + inverted_cluster_map[i]),
         };
         glyphs.emplace_back(std::move(glyph));
 

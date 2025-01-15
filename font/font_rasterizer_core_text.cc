@@ -24,7 +24,7 @@ using base::apple::ScopedTypeRef;
 namespace font {
 
 namespace {
-ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8);
+ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, FontId font_id, std::string_view str8);
 bool FontSmoothingEnabled();
 }  // namespace
 
@@ -38,7 +38,7 @@ FontRasterizer::FontRasterizer() {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle style) {
+FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle style) {
     std::string font_style;
     if (style == FontStyle::kNone) {
         font_style = "Regular";
@@ -66,7 +66,7 @@ size_t FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
     return cache_font({ct_font}, font_size);
 }
 
-size_t FontRasterizer::add_system_font(int font_size, FontStyle style) {
+FontId FontRasterizer::add_system_font(int font_size, FontStyle style) {
     bool is_bold = (style & FontStyle::kBold) != FontStyle::kNone;
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
@@ -74,13 +74,13 @@ size_t FontRasterizer::add_system_font(int font_size, FontStyle style) {
     return cache_font({sys_font}, font_size);
 }
 
-size_t FontRasterizer::resize_font(size_t font_id, int font_size) {
+FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
     const auto& font_ref = font_id_to_native[font_id].font;
     CTFontRef copy = CTFontCreateCopyWithAttributes(font_ref.get(), font_size, nullptr, nullptr);
     return cache_font({copy}, font_size);
 }
 
-RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) const {
+RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) const {
     CTFontRef font_ref = font_id_to_native[font_id].font.get();
 
     if (!font_ref) {
@@ -155,7 +155,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 }
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
-LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
+LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     assert(str8.find('\n') == std::string_view::npos);
 
     unicode::UTF16ToUTF8IndicesMap indices_map;
@@ -180,7 +180,7 @@ LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
         auto scoped_ct_font =
             ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
         int font_size = CTFontGetSize(ct_font);
-        size_t run_font_id = cache_font({std::move(scoped_ct_font)}, font_size);
+        FontId run_font_id = cache_font({std::move(scoped_ct_font)}, font_size);
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -230,7 +230,7 @@ LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
     };
 }
 
-size_t FontRasterizer::cache_font(NativeFontType font, int font_size) {
+FontId FontRasterizer::cache_font(NativeFontType font, int font_size) {
     CTFontRef ct_font = font.font.get();
     auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(ct_font));
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
@@ -262,7 +262,7 @@ size_t FontRasterizer::cache_font(NativeFontType font, int font_size) {
         .font_size = font_size,
     };
 
-    size_t font_id = font_hash_to_id.size();
+    FontId font_id = font_hash_to_id.size();
     font_hash_to_id.emplace(hash, font_id);
     font_id_to_native.emplace_back(std::move(font));
     font_id_to_metrics.emplace_back(std::move(metrics));
@@ -271,7 +271,8 @@ size_t FontRasterizer::cache_font(NativeFontType font, int font_size) {
 }
 
 namespace {
-ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, size_t font_id, std::string_view str8) {
+
+ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, FontId font_id, std::string_view str8) {
     auto cf_str = base::apple::StringToCFStringNoCopy(str8);
 
     auto attr = ScopedCFTypeRef<CFMutableDictionaryRef>(CFDictionaryCreateMutable(
@@ -309,6 +310,7 @@ bool FontSmoothingEnabled() {
         return true;
     }
 }
+
 }  // namespace
 
 }  // namespace font

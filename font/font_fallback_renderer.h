@@ -1,10 +1,10 @@
 #pragma once
 
-#include "font/types.h"
-#include "unicode/utf16_to_utf8_indices_map.h"
-
 #include <dwrite_3.h>
 #include <wrl/client.h>
+
+#include "font/types.h"
+#include "unicode/utf16_to_utf8_indices_map.h"
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/src/utils/win/SkObjBase.h
 // TODO: Define this elsewhere.
@@ -64,7 +64,7 @@ private:
 
     ULONG fRefCount;
     Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
-    UTF16ToUTF8IndicesMap utf8IndicesMap;
+    UTF16ToUTF8IndicesMap indices_map;
 };
 
 }  // namespace font

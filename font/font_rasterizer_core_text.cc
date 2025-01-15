@@ -4,7 +4,7 @@
 #include "base/apple/scoped_cgtyperef.h"
 #include "base/apple/string_conversions.h"
 #include "base/numeric/saturation_arithmetic.h"
-#include "font/utf16_to_utf8_indices_map.h"
+#include "unicode/utf16_to_utf8_indices_map.h"
 
 #include <CoreText/CoreText.h>
 
@@ -156,8 +156,8 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
     assert(str8.find('\n') == std::string_view::npos);
 
-    UTF16ToUTF8IndicesMap utf8_indices_map;
-    if (!utf8_indices_map.setUTF8(str8.data(), str8.length())) {
+    unicode::UTF16ToUTF8IndicesMap utf8_indices_map;
+    if (!utf8_indices_map.set_utf8(str8.data(), str8.length())) {
         fmt::println("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }
@@ -206,7 +206,7 @@ LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
                 .y = static_cast<int>(std::ceil(advances[i].height * scale_factor)),
             };
 
-            size_t utf8_index = utf8_indices_map.mapIndex(indices[i]);
+            size_t utf8_index = utf8_indices_map.map_index(indices[i]);
             ShapedGlyph glyph = {
                 .font_id = run_font_id,
                 .glyph_id = glyph_ids[i],

@@ -1,5 +1,6 @@
-#include "unicode/unicode.h"
 #include <gtest/gtest.h>
+
+#include "unicode/unicode.h"
 
 namespace unicode {
 

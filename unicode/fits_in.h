@@ -1,24 +1,21 @@
-/*
- * Copyright 2013 Google Inc.
- *
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
- */
 #pragma once
 
 #include <cstdint>
 #include <limits>
 #include <type_traits>
 
+namespace unicode {
+
 /**
  * std::underlying_type is only defined for enums. For integral types, we just want the type.
  */
-template <typename T, class Enable = void> struct sk_strip_enum {
+template <typename T, class Enable = void>
+struct strip_enum {
     typedef T type;
 };
 
 template <typename T>
-struct sk_strip_enum<T, typename std::enable_if<std::is_enum<T>::value>::type> {
+struct strip_enum<T, typename std::enable_if<std::is_enum<T>::value>::type> {
     typedef typename std::underlying_type<T>::type type;
 };
 
@@ -68,12 +65,12 @@ static constexpr inline
                                 (std::is_integral<D>::value || std::is_enum<D>::value),
                             bool>::type
     /*bool*/
-    SkTFitsIn(S src) {
+    fits_in(S src) {
     // Ensure that is_signed and is_unsigned are passed the arithmetic underlyng types of enums.
-    using Sa = typename sk_strip_enum<S>::type;
-    using Da = typename sk_strip_enum<D>::type;
+    using Sa = typename strip_enum<S>::type;
+    using Da = typename strip_enum<D>::type;
 
-    // SkTFitsIn() is used in public headers, so needs to be written targeting at most C++11.
+    // fits_in() is used in public headers, so needs to be written targeting at most C++11.
     return
 
         // E.g. (int8_t)(uint8_t) int8_t(-1) == -1, but the uint8_t == 255, not -1.
@@ -86,17 +83,8 @@ static constexpr inline
             ? src <= (S)std::numeric_limits<Da>::max()
             :
 
-#if !defined(SK_DEBUG) && !defined(__MSVC_RUNTIME_CHECKS)
             // Correct (simple) version. This trips up MSVC's /RTCc run-time checking.
             (S)(D)src == src;
-#else
-            // More complex version that's safe with /RTCc. Used in all debug builds, for coverage.
-            (std::is_signed<Sa>::value)
-            ? (intmax_t)src >= (intmax_t)std::numeric_limits<Da>::min() &&
-                  (intmax_t)src <= (intmax_t)std::numeric_limits<Da>::max()
-            :
-
-            // std::is_unsigned<S> ?
-            (uintmax_t)src <= (uintmax_t)std::numeric_limits<Da>::max();
-#endif
 }
+
+}  // namespace unicode

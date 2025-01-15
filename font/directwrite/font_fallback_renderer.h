@@ -1,7 +1,7 @@
 #pragma once
 
 #include "font/types.h"
-#include "font/utf16_to_utf8_indices_map.h"
+#include "unicode/utf16_to_utf8_indices_map.h"
 
 #include <dwrite_3.h>
 #include <wrl/client.h>

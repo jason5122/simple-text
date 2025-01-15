@@ -1,3 +1,17 @@
 source_set("unicode") {
-  sources = [ "unicode.cc" ]
+  sources = [
+    "unicode.cc",
+    "utf16_to_utf8_indices_map.cc",
+  ]
+}
+
+source_set("unicode_unittests") {
+  testonly = true
+
+  sources = [ "unicode_unittest.cc" ]
+
+  deps = [
+    ":unicode",
+    "//third_party/googletest:gtest",
+  ]
 }

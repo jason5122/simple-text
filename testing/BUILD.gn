@@ -9,9 +9,8 @@ executable("unittest_runner") {
 
   deps = [
     "//base:base_unittests",
-    "//font/tests",
-    "//gui/text_system/integration_tests",
-    "//gui/text_system/tests",
+    "//font:font_unittests",
+    "//gui:gui_unittests",
     "//third_party/googletest:gtest",
     "//unicode:unicode_unittests",
   ]

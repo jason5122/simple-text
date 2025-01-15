@@ -6,6 +6,8 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "unicode/utf16_to_utf8_indices_map.h"
 
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
 
 // TODO: Debug use; remove this.

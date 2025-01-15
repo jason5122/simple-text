@@ -10,7 +10,11 @@ source_set("font") {
 
   if (is_mac) {
     sources += [ "font_rasterizer_core_text.cc" ]
-    frameworks = [ "CoreText.framework" ]
+    frameworks = [
+      "CoreText.framework",
+      "CoreGraphics.framework",
+      "CoreFoundation.framework",
+    ]
   }
 
   if (is_linux) {
@@ -27,4 +31,15 @@ if (is_linux) {
   pkg_config("linux_font_libs") {
     packages = [ "pangocairo" ]
   }
+}
+
+source_set("font_unittests") {
+  testonly = true
+
+  sources = [ "font_rasterizer_unittest.cc" ]
+
+  deps = [
+    ":font",
+    "//third_party/googletest:gtest",
+  ]
 }

@@ -1,9 +1,0 @@
-source_set("text_system") {
-  sources = [ "movement.cc" ]
-
-  deps = [
-    "//font",
-    "//third_party/fmt",
-    "//third_party/uni_algo",
-  ]
-}

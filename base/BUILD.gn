@@ -61,7 +61,6 @@ source_set("base_unittests") {
     "buffer/piece_tree_unittest.cc",
     "buffer/tree_walker_unittest.cc",
     "files/file_path_unittest.cc",
-    "files/file_reader_unittest.cc",
   ]
 
   deps = [
@@ -73,7 +72,10 @@ source_set("base_unittests") {
 source_set("base_perftests") {
   testonly = true
 
-  sources = [ "buffer/aho_corasick/aho_corasick_perftest.cc" ]
+  sources = [
+    "buffer/aho_corasick/aho_corasick_perftest.cc",
+    "files/file_reader_perftest.cc",
+  ]
 
   deps = [
     ":base",

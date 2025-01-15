@@ -26,7 +26,6 @@ public:
         int pattern_idx;
     };
 
-    MatchResult match(std::string_view str, unsigned int len) const;
     MatchResult match(const PieceTree& tree) const;
 
 private:

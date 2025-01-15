@@ -10,11 +10,6 @@ namespace base {
 using MatchResult = AhoCorasick::MatchResult;
 
 namespace {
-MatchResult MatchPattern(std::string_view str, std::string_view pattern) {
-    AhoCorasick ac({std::string(pattern)});
-    auto result = ac.match(str, str.length());
-    return result;
-}
 
 MatchResult MatchPattern(const PieceTree& tree, std::string_view pattern) {
     AhoCorasick ac({std::string(pattern)});
@@ -64,17 +59,15 @@ const std::string kLongLine = kX * 100;
 const std::string kStr1Gb = kLongLine * 10000000;
 const std::string kLongStr = "needle" + kStr1Gb;
 const PieceTree kLongPieceTree{kLongStr};
+
 }  // namespace
 
 // Test that matching quits as soon as possible. We don't want to load the entire string if we
 // don't have to. These tests should return immediately.
 // TODO: Make this optional. This test runs slowly.
 TEST(AhoCorasickPerfTest, LongStringTest) {
-    auto result_str = MatchPattern(kLongStr, "needle");
-    CheckResult(result_str, kLongStr, "needle");
-
-    auto result_tree = MatchPattern(kLongPieceTree, "needle");
-    CheckResult(result_tree, kLongStr, "needle");
+    auto result = MatchPattern(kLongPieceTree, "needle");
+    CheckResult(result, kLongStr, "needle");
 }
 
 /*
@@ -88,19 +81,15 @@ __builtin_char_memchr: 25 ms
 
 // TODO: Make this optional. This test runs slowly; only run if you need to re-measure performance.
 TEST(AhoCorasickPerfTest, VariousIterationTests) {
-    auto pf = util::Profiler{"PieceTree line-by-line iteration"};
+    auto pf1 = util::Profiler{"PieceTree line-by-line iteration"};
     for (size_t line = 0; line < kLongPieceTree.line_count(); ++line) {
         std::string line_str = kLongPieceTree.get_line_content(line);
     }
-    pf.stop_mili();
+    pf1.stop_mili();
 
     auto ac = AhoCorasick({"a"});
 
-    auto pf1 = util::Profiler{"Aho-Corasick match (string)"};
-    ac.match(kLongStr, kLongStr.length());
-    pf1.stop_mili();
-
-    auto pf2 = util::Profiler{"Aho-Corasick match (piece table)"};
+    auto pf2 = util::Profiler{"Aho-Corasick match"};
     ac.match(kLongPieceTree);
     pf2.stop_mili();
 

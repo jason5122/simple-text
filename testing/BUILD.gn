@@ -27,6 +27,7 @@ executable("perftest_runner") {
 
   deps = [
     "//base:base_perftests",
+    "//font:font_perftests",
     "//third_party/googletest:gtest",
   ]
 }

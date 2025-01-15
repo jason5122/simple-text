@@ -109,7 +109,6 @@ private:
     std::vector<ACOffset> _ofst_map;
 };
 
-AhoCorasick::MatchResult Match(ACBuffer* buf, std::string_view str, uint32 len);
 AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree);
 
 }  // namespace base

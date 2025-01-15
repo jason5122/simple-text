@@ -43,3 +43,14 @@ source_set("font_unittests") {
     "//third_party/googletest:gtest",
   ]
 }
+
+source_set("font_perftests") {
+  testonly = true
+
+  sources = [ "font_rasterizer_perftest.cc" ]
+
+  deps = [
+    ":font",
+    "//third_party/googletest:gtest",
+  ]
+}

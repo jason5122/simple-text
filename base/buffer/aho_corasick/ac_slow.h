@@ -1,6 +1,6 @@
 #pragma once
 
-#include <algorithm>  // for std::sort
+#include <algorithm>
 #include <cassert>
 #include <map>
 #include <stdio.h>

@@ -11,15 +11,10 @@ namespace base {
 using MatchResult = AhoCorasick::MatchResult;
 
 namespace {
-MatchResult MatchPattern(std::string_view str, std::string_view pattern) {
-    AhoCorasick ac({std::string(pattern)});
-    auto result = ac.match(str, str.length());
-    return result;
-}
 
-MatchResult MatchDict(std::string_view str, const std::vector<std::string>& dict) {
-    AhoCorasick ac(dict);
-    auto result = ac.match(str, str.length());
+MatchResult MatchPattern(const PieceTree& tree, std::string_view pattern) {
+    AhoCorasick ac({std::string(pattern)});
+    auto result = ac.match(tree);
     return result;
 }
 
@@ -62,7 +57,8 @@ void CheckRandom(std::string_view str) {
     size_t len = util::RandomNumber(1, str.length());
     std::string_view pattern = str.substr(i, len);
 
-    auto result = MatchPattern(str, pattern);
+    PieceTree tree{str};
+    auto result = MatchPattern(tree, pattern);
     CheckResult(result, str, pattern);
 }
 }  // namespace
@@ -98,13 +94,6 @@ using StrPairs = std::vector<StrPair>;
 
 void TestCase(const StrPairs& str_pairs, const Dict& dict) {
     for (const auto& [str, expected] : str_pairs) {
-        auto result = MatchDict(str, dict);
-        CheckResult(result, str, expected);
-    }
-}
-
-void TestCasePieceTree(const StrPairs& str_pairs, const Dict& dict) {
-    for (const auto& [str, expected] : str_pairs) {
         PieceTree tree{str};
         auto result = MatchDict(tree, dict);
         CheckResult(result, str, expected);
@@ -117,70 +106,60 @@ TEST(AhoCorasickTest, Test1) {
     StrPairs str_pairs = {{"he", "he"},  {"she", "she"}, {"his", "his"},   {"hers", "he"},
                           {"ahe", "he"}, {"shhe", "he"}, {"shis2", "his"}, {"ahhe", "he"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test2) {
     Dict dict = {"poto", "poto"};
     StrPairs str_pairs = {{"The pot had a handle", std::nullopt}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test3) {
     Dict dict = {"The"};
     StrPairs str_pairs = {{"The pot had a handle", "The"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test4) {
     Dict dict = {"pot"};
     StrPairs str_pairs = {{"The pot had a handle", "pot"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test5) {
     Dict dict = {"pot "};
     StrPairs str_pairs = {{"The pot had a handle", "pot "}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test6) {
     Dict dict = {"ot h"};
     StrPairs str_pairs = {{"The pot had a handle", "ot h"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test7) {
     Dict dict = {"andle"};
     StrPairs str_pairs = {{"The pot had a handle", "andle"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test8) {
     Dict dict = {"aaab"};
     StrPairs str_pairs = {{"aaaaaaab", "aaab"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test9) {
     Dict dict = {"haha", "z"};
     StrPairs str_pairs = {{"aaaaz", "z"}, {"z", "z"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test10) {
     Dict dict = {"abc"};
     StrPairs str_pairs = {{"cde", std::nullopt}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test11) {
@@ -192,7 +171,6 @@ TEST(AhoCorasickTest, Test11) {
         {"Ø", std::nullopt},
     };
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test12) {
@@ -204,21 +182,18 @@ TEST(AhoCorasickTest, Test12) {
         {"abc\x{EF}\x{B7}\x{BD}def\x{BD}", "abc﷽def"},
     };
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test13) {
     Dict dict = {""};
     StrPairs str_pairs = {{"", std::nullopt}, {"abc", std::nullopt}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 TEST(AhoCorasickTest, Test14) {
     Dict dict = {"3"};
     StrPairs str_pairs = {{"abc123", "3"}, {"3", "3"}};
     TestCase(str_pairs, dict);
-    TestCasePieceTree(str_pairs, dict);
 }
 
 }  // namespace base

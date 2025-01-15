@@ -28,7 +28,7 @@ const std::string kStr1Gb = kLongLine * 10000000;
 
 // See discussion below on `fwrite(_, 1, N, _)` vs. `fwrite(_, N, 1, _)`.
 // https://stackoverflow.com/a/21769967/14698275
-TEST(FileReaderTest, ReadFile1) {
+TEST(FileReaderPerfTest, ReadFile1) {
     auto p1 = util::Profiler{"Write 1GB file"};
     WriteFile(kFileName, kStr1Gb);
     p1.stop_mili();

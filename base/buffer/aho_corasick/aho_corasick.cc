@@ -45,11 +45,6 @@ AhoCorasick::~AhoCorasick() {
     BufAlloc::myfree(buf);
 }
 
-AhoCorasick::MatchResult AhoCorasick::match(std::string_view str, unsigned int len) const {
-    ACBuffer* buf = (ACBuffer*)this->buf;
-    return Match(buf, str, len);
-}
-
 AhoCorasick::MatchResult AhoCorasick::match(const PieceTree& tree) const {
     ACBuffer* buf = (ACBuffer*)this->buf;
     return Match(buf, tree);

@@ -1,4 +1,4 @@
-executable("test_runner") {
+executable("unittest_runner") {
   testonly = true
 
   sources = [ "main.cc" ]
@@ -14,5 +14,20 @@ executable("test_runner") {
     "//gui/text_system/tests",
     "//third_party/googletest:gtest",
     "//unicode/tests",
+  ]
+}
+
+executable("perftest_runner") {
+  testonly = true
+
+  sources = [ "main.cc" ]
+
+  if (is_win) {
+    libs = [ "ole32.lib" ]
+  }
+
+  deps = [
+    "//base:base_perftests",
+    "//third_party/googletest:gtest",
   ]
 }

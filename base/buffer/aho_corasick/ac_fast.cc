@@ -178,20 +178,18 @@ ACBuffer* ACConverter::Convert() {
     return buf;
 }
 
-static inline ACState* Get_State_Addr(unsigned char* buf_base,
-                                      ACOffset* StateOfstVect,
-                                      uint32 state_id) {
+namespace {
+inline ACState* Get_State_Addr(unsigned char* buf_base, ACOffset* StateOfstVect, uint32 state_id) {
     assert(state_id != 0 && "root node is handled in speical way");
     assert(state_id < ((ACBuffer*)buf_base)->state_num);
     return (ACState*)(buf_base + StateOfstVect[state_id]);
 }
 
-namespace {
 // The performance of the binary search is critical to this work. This is a modified version of
 // binary search that seems to perform faster.
 inline bool Binary_Search_Input(InputTy* input_vect, int vect_len, InputTy input, int& idx) {
     if (vect_len <= 8) {
-        for (int i = 0; i < vect_len; i++) {
+        for (int i = 0; i < vect_len; ++i) {
             if (input_vect[i] == input) {
                 idx = i;
                 return true;
@@ -204,14 +202,17 @@ inline bool Binary_Search_Input(InputTy* input_vect, int vect_len, InputTy input
     // Also since they are signed integer, "(low + high)/2" is slightly more
     // expensive than (low+high)>>1 or ((unsigned)(low + high))/2.
     //
-    int low = 0, high = vect_len - 1;
+    int low = 0;
+    int high = vect_len - 1;
     while (low <= high) {
         int mid = (low + high) >> 1;
         InputTy mid_c = input_vect[mid];
 
-        if (input < mid_c) high = mid - 1;
-        else if (input > mid_c) low = mid + 1;
-        else {
+        if (input < mid_c) {
+            high = mid - 1;
+        } else if (input > mid_c) {
+            low = mid + 1;
+        } else {
             idx = mid;
             return true;
         }

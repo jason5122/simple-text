@@ -10,16 +10,21 @@ source_set("font") {
 
   if (is_mac) {
     sources += [ "font_rasterizer_core_text.cc" ]
+    frameworks = [ "CoreText.framework" ]
   }
+
   if (is_linux) {
     sources += [ "font_rasterizer_pango.cc" ]
     configs += [ ":linux_font_libs" ]
   }
+
   if (is_win) {
     deps = [ "directwrite" ]
   }
 }
 
-pkg_config("linux_font_libs") {
-  packages = [ "pangocairo" ]
+if (is_linux) {
+  pkg_config("linux_font_libs") {
+    packages = [ "pangocairo" ]
+  }
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <optional>
+
 #include "font/font_rasterizer.h"
 #include "gui/platform/key.h"
 #include "gui/types.h"

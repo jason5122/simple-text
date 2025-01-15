@@ -94,7 +94,7 @@ TEST(AhoCorasickPerfTest, VariousIterationTests) {
     pf2.stop_mili();
 
     auto pf3 = util::Profiler{"std::string find"};
-    kLongStr.find("a");
+    static_cast<void>(kLongStr.find("a"));
     pf3.stop_mili();
 
     auto pf4 = util::Profiler{"std::string iteration"};

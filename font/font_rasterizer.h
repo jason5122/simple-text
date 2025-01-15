@@ -42,6 +42,8 @@ private:
     std::vector<Metrics> font_id_to_metrics;
     std::vector<std::string> font_id_to_postscript_name;
 
+    // TODO: This is a hack for DirectWrite. Find a way to make this private.
+public:
     size_t hash_font(std::string_view font_name8, int font_size) const;
     FontId cache_font(NativeFontType font, int font_size);
 

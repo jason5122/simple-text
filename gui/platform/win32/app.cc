@@ -1,10 +1,14 @@
-#include "app/app.h"
-#include "app/win32/impl_win.h"
-#include "app/win32/resources.h"
+#include "gui/platform/app.h"
+
 #include <memory>
+#include <string>
+
 #include <windows.h>
 
-namespace app {
+#include "gui/platform/win32/impl_win.h"
+#include "gui/platform/win32/resources.h"
+
+namespace gui {
 
 App::App() : pimpl{new impl{}} {}
 
@@ -40,9 +44,8 @@ std::string App::getClipboardString() {
 }
 
 // TODO: Implement this.
-void App::setClipboardString(const std::string& str8) {}
+void App::setClipboardString(const std::string& str8) {
+    ;
+}
 
-// TODO: Implement this.
-void App::setCursorStyle(CursorStyle style) {}
-
-}  // namespace app
+}  // namespace gui

@@ -1,14 +1,15 @@
-#include "app/win32/impl_win.h"
-#include "app/window.h"
+#include "gui/platform/window_widget.h"
 
-namespace app {
+#include "gui/platform/win32/impl_win.h"
 
-Window::Window(App& app, int width, int height)
+namespace gui {
+
+WindowWidget::WindowWidget(App& app, int width, int height)
     : pimpl{new impl{*this, app.pimpl->dummy_context}} {}
 
-Window::~Window() {}
+WindowWidget::~WindowWidget() {}
 
-void Window::show() {
+void WindowWidget::show() {
     pimpl->win32_window.create(L"Simple Text", WS_OVERLAPPEDWINDOW, pimpl->wid++);
 
     // TODO: Sync this with requested width/height.
@@ -25,40 +26,49 @@ void Window::show() {
     SetWindowPlacement(pimpl->win32_window.m_hwnd, &placement);
 }
 
-void Window::close() {
+void WindowWidget::close() {
     pimpl->win32_window.destroy();
 }
 
-void Window::redraw() {
+void WindowWidget::redraw() {
     pimpl->win32_window.redraw();
 }
 
-int Window::width() const {
-    return pimpl->win32_window.width();
-}
-
-int Window::height() const {
-    return pimpl->win32_window.height();
-}
-
-int Window::scale() const {
+int WindowWidget::scale() const {
     return pimpl->win32_window.scale();
 }
 
-bool Window::isDarkMode() const {
+bool WindowWidget::isDarkMode() const {
     return false;
 }
 
-void Window::setTitle(std::string_view title) {
+void WindowWidget::setTitle(std::string_view title) {
     pimpl->win32_window.setTitle(title);
 }
 
 // TODO: Implement this.
-void Window::setFilePath(std::string_view path) {}
+void WindowWidget::setFilePath(std::string_view path) {
+    ;
+}
 
 // TODO: Implement this.
-std::optional<std::string> Window::openFilePicker() const {
+std::optional<std::string> WindowWidget::openFilePicker() const {
     return {};
 }
 
-}  // namespace app
+// TODO: Implement this.
+void WindowWidget::setCursorStyle(CursorStyle style) {
+    ;
+}
+
+// TODO: Implement this.
+void WindowWidget::setAutoRedraw(bool auto_redraw) {
+    ;
+}
+
+// TODO: Implement this.
+int WindowWidget::framesPerSecond() const {
+    return 60;
+}
+
+}  // namespace gui

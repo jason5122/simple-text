@@ -15,8 +15,8 @@
 #include <wrl/client.h>
 
 #include "base/windows/unicode.h"
-#include "font/directwrite/font_fallback_renderer.h"
-#include "font/directwrite/impl_directwrite.h"
+#include "font/font_fallback_renderer.h"
+#include "font/impl_directwrite.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -171,12 +171,26 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         std::vector<uint8_t> buffer(size);
         glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
                                                buffer.data(), size);
+
+        // TODO: Clean this up.
+        size_t pixels = pixel_width * pixel_height;
+        std::vector<uint8_t> temp_buffer;
+        temp_buffer.reserve(pixels * 4);
+        for (size_t i = 0; i < pixels; ++i) {
+            size_t offset = i * 3;
+            temp_buffer.emplace_back(buffer[offset]);
+            temp_buffer.emplace_back(buffer[offset]);
+            temp_buffer.emplace_back(buffer[offset]);
+            temp_buffer.emplace_back(buffer[offset]);
+        }
+
         return {
             .left = texture_bounds.left,
             .top = top,
             .width = static_cast<int32_t>(pixel_width),
             .height = static_cast<int32_t>(pixel_height),
-            .buffer = std::move(buffer),
+            // .buffer = std::move(buffer),
+            .buffer = std::move(temp_buffer),
             .colored = false,
         };
     }
@@ -292,7 +306,7 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
         .layout_font_id = font_id,
         .width = font_fallback_renderer->total_advance,
         .length = str8.length(),
-        .runs = font_fallback_renderer->runs,
+        .glyphs = font_fallback_renderer->glyphs,
     };
 }
 
@@ -400,12 +414,12 @@ void DrawColorRun(ID2D1RenderTarget* target,
         case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
             fmt::println("Error: DrawColorBitmapGlyphRun() is unimplemented!");
             std::abort();
-            break;
+            // break;
 
         case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
             fmt::println("Error: DrawSvgGlyphRun() is unimplemented!");
             std::abort();
-            break;
+            // break;
 
         case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
         case DWRITE_GLYPH_IMAGE_FORMATS_CFF:

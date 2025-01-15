@@ -1,16 +1,17 @@
 #pragma once
 
-#include "app/win32/dummy_context.h"
-#include "app/window.h"
 #include <windows.h>
 
-namespace app {
+#include "gui/platform/win32/dummy_context.h"
+#include "gui/platform/window_widget.h"
+
+namespace gui {
 
 class Win32Window {
 public:
     HWND m_hwnd;
 
-    Win32Window(Window& app_window, DummyContext& dummy_context)
+    Win32Window(WindowWidget& app_window, DummyContext& dummy_context)
         : app_window{app_window}, dummy_context{dummy_context} {}
     BOOL create(PCWSTR lpWindowName, DWORD dwStyle, int wid);
     LRESULT handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -24,7 +25,7 @@ public:
 
 private:
     HDC m_hdc;
-    Window& app_window;
+    WindowWidget& app_window;
     DummyContext& dummy_context;
 
     WCHAR high_surrogate = '\0';
@@ -33,4 +34,4 @@ private:
     bool tracking_mouse = false;
 };
 
-}  // namespace app
+}  // namespace gui

@@ -1,6 +1,12 @@
 #include "file_path.h"
 
+#include <algorithm>
+#include <array>
+#include <numeric>
+
+#if BUILDFLAG(IS_MAC)
 #include "base/apple/scoped_cftyperef.h"
+#endif
 
 namespace base {
 
@@ -17,7 +23,10 @@ const FilePath::CharType kStringTerminator = FILE_PATH_LITERAL('\0');
 // begins with a letter followed by a colon.  On other platforms, this always
 // returns npos.
 StringPieceType::size_type FindDriveLetter(StringPieceType path);
-bool AreAllSeparators(const StringType& input);
+#if defined(FILE_PATH_USES_DRIVE_LETTERS)
+bool EqualDriveLetterCaseInsensitive(StringPieceType a, StringPieceType b);
+#endif
+[[maybe_unused]] bool AreAllSeparators(const StringType& input);
 
 // Find the position of the '.' that separates the extension from the rest
 // of the file name. The position is relative to BaseName(), not value().
@@ -159,6 +168,7 @@ FilePath FilePath::RemoveExtension() const {
     }
 }
 
+#if BUILDFLAG(IS_MAC)
 StringType FilePath::GetHFSDecomposedForm(StringPieceType string) {
     apple::ScopedCFTypeRef<CFStringRef> cfstring(CFStringCreateWithBytesNoCopy(
         nullptr, reinterpret_cast<const UInt8*>(string.data()),
@@ -191,6 +201,7 @@ StringType FilePath::GetHFSDecomposedForm(CFStringRef cfstring) {
     }
     return result;
 }
+#endif
 
 void FilePath::StripTrailingSeparatorsInternal() {
     // If there is no drive letter, start will be 1, which will prevent stripping
@@ -225,6 +236,42 @@ StringPieceType::size_type FindDriveLetter(StringPieceType path) {
 #endif
     return StringType::npos;
 }
+
+#if defined(FILE_PATH_USES_DRIVE_LETTERS)
+
+namespace {
+// Lookup table for fast ASCII case-insensitive comparison.
+inline constexpr std::array<unsigned char, 256> kToLower = []() {
+    std::array<unsigned char, 256> table;
+    std::iota(table.begin(), table.end(), 0);
+    std::iota(table.begin() + size_t{'A'}, table.begin() + size_t{'Z'} + 1, 'a');
+    return table;
+}();
+}  // namespace
+
+bool EqualDriveLetterCaseInsensitive(StringPieceType a, StringPieceType b) {
+    size_t a_letter_pos = FindDriveLetter(a);
+    size_t b_letter_pos = FindDriveLetter(b);
+
+    if (a_letter_pos == StringType::npos || b_letter_pos == StringType::npos) return a == b;
+
+    StringPieceType a_letter(a.substr(0, a_letter_pos + 1));
+    StringPieceType b_letter(b.substr(0, b_letter_pos + 1));
+
+    // TODO: Clean this up.
+    static constexpr auto lower = [](auto c) constexpr {
+        return kToLower[static_cast<unsigned char>(c)];
+    };
+    if (std::ranges::equal(a_letter.substr(0, b_letter.size()), b_letter, {}, lower, lower)) {
+        return false;
+    }
+    // if (!StartsWith(a_letter, b_letter, CompareCase::INSENSITIVE_ASCII)) return false;
+
+    StringPieceType a_rest(a.substr(a_letter_pos + 1));
+    StringPieceType b_rest(b.substr(b_letter_pos + 1));
+    return a_rest == b_rest;
+}
+#endif
 
 bool AreAllSeparators(const StringType& input) {
     for (auto it : input) {

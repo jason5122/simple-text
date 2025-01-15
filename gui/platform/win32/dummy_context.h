@@ -2,6 +2,8 @@
 
 #include <windows.h>
 
+namespace gui {
+
 class DummyContext {
 public:
     HGLRC m_context;
@@ -11,3 +13,5 @@ public:
 private:
     HWND m_hwnd;
 };
+
+}  // namespace gui

@@ -4,7 +4,7 @@ source_set("win32") {
     "dummy_context.cc",
     "menu.cc",
     "win32_window.cc",
-    "window.cc",
+    "window_widget.cc",
   ]
 
   libs = [
@@ -14,4 +14,6 @@ source_set("win32") {
     "dwrite.lib",
     "shcore.lib",
   ]
+
+  deps = [ "//third_party/fmt" ]
 }

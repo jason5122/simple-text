@@ -1,21 +1,21 @@
 #pragma once
 
-#include "app/app.h"
-#include "app/menu.h"
-#include "app/win32/dummy_context.h"
-#include "app/win32/win32_window.h"
-#include "app/window.h"
+#include "gui/platform/app.h"
+#include "gui/platform/menu.h"
+#include "gui/platform/win32/dummy_context.h"
+#include "gui/platform/win32/win32_window.h"
+#include "gui/platform/window_widget.h"
 
-namespace app {
+namespace gui {
 
 class App::impl {
 public:
     DummyContext dummy_context;
 };
 
-class Window::impl {
+class WindowWidget::impl {
 public:
-    impl(Window& app_window, DummyContext& dummy_context)
+    impl(WindowWidget& app_window, DummyContext& dummy_context)
         : win32_window(app_window, dummy_context) {}
 
     Win32Window win32_window;
@@ -28,4 +28,4 @@ class Menu::impl {
 public:
 };
 
-}  // namespace app
+}  // namespace gui

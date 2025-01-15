@@ -30,14 +30,15 @@ private:
     const std::string kMainFontFace = "Source Code Pro";
     // const std::string kMainFontFace = "Menlo";
 #elif BUILDFLAG(IS_WIN)
-    constexpr int kMainFontSize = 11;
-    constexpr int kUIFontSizeSmall = 8;
+    static constexpr int kMainFontSize = 11;
+    static constexpr int kUIFontSizeSmall = 8;
+    static constexpr int kUIFontSizeRegular = 9;
     const std::string kMainFontFace = "Source Code Pro";
 // const std::string kMainFontFace = "Consolas";
 // const std::string kMainFontFace = "Cascadia Code";
 #elif BUILDFLAG(IS_LINUX)
-    constexpr int kMainFontSize = 12;
-    constexpr int kUIFontSizeSmall = 11;
+    static constexpr int kMainFontSize = 12;
+    static constexpr int kUIFontSizeSmall = 11;
     const std::string kMainFontFace = "Source Code Pro";
     // const std::string kMainFontFace = "Monospace";
 #endif

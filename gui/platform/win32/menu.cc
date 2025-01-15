@@ -1,7 +1,8 @@
-#include "app/menu.h"
-#include "app/win32/impl_win.h"
+#include "gui/platform/menu.h"
 
-namespace app {
+#include "gui/platform/win32/impl_win.h"
+
+namespace gui {
 
 Menu::Menu() : pimpl{new impl{}} {}
 
@@ -13,4 +14,4 @@ std::optional<size_t> Menu::show(const Point& mouse_pos) const {
     return std::nullopt;
 }
 
-}  // namespace app
+}  // namespace gui

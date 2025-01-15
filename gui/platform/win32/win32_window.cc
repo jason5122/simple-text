@@ -1,9 +1,5 @@
 #include "win32_window.h"
 
-#include "app/app_action.h"
-#include "app/modifier_key.h"
-#include "app/win32/resources.h"
-#include "base/windows/unicode.h"
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <string>
@@ -11,11 +7,16 @@
 #include <wingdi.h>
 #include <winuser.h>
 
+#include "base/windows/unicode.h"
+#include "gui/platform/key.h"
+#include "gui/platform/win32/resources.h"
+
 // TODO: Debug use; remove this.
 #include "util/escape_special_chars.h"
 #include <fmt/base.h>
 
-namespace app {
+namespace gui {
+
 namespace {
 
 constexpr Key KeyFromKeyCode(WPARAM vk);
@@ -23,9 +24,6 @@ inline ModifierKey ModifierFromState();
 inline void AddMenu(HWND hwnd);  // TODO: Clean this up.
 
 }  // namespace
-}  // namespace app
-
-namespace app {
 
 LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -53,7 +51,9 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int scaled_width = rect.right;
         int scaled_height = rect.bottom;
 
-        app_window.onOpenGLActivate({scaled_width, scaled_height});
+        // TODO: See if we need to set the size here.
+        // app_window.setSize({scaled_width, scaled_height});
+        app_window.onOpenGLActivate();
 
         return 0;
     }
@@ -68,12 +68,13 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         PAINTSTRUCT ps;
         BeginPaint(m_hwnd, &ps);
 
-        RECT rect;
-        GetClientRect(m_hwnd, &rect);
-        int scaled_width = rect.right;
-        int scaled_height = rect.bottom;
+        // TODO: See if we need this.
+        // RECT rect;
+        // GetClientRect(m_hwnd, &rect);
+        // int scaled_width = rect.right;
+        // int scaled_height = rect.bottom;
 
-        app_window.onDraw({scaled_width, scaled_height});
+        app_window.draw();
 
         SwapBuffers(m_hdc);
 
@@ -86,8 +87,8 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         int width = LOWORD(lParam);
         int height = HIWORD(lParam);
-
-        app_window.onResize({width, height});
+        app_window.setSize({width, height});
+        app_window.layout();
         return 0;
     }
 
@@ -113,7 +114,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         Point mouse_pos = {mouse_x, mouse_y};
         Delta delta = {0, static_cast<int>(std::round(dy))};
 
-        app_window.onScroll(mouse_pos, delta);
+        app_window.performScroll(mouse_pos, delta);
         return 0;
     }
 
@@ -137,7 +138,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         Point mouse_pos = {mouse_x, mouse_y};
         Delta delta = {static_cast<int>(std::round(dx)), 0};
 
-        app_window.onScroll(mouse_pos, delta);
+        app_window.performScroll(mouse_pos, delta);
         return 0;
     }
 
@@ -159,7 +160,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         Point mouse_pos = {mouse_x, mouse_y};
         ModifierKey modifiers = ModifierFromState();
         ClickType click_type = ClickTypeFromCount(click_count);
-        app_window.onLeftMouseDown(mouse_pos, modifiers, click_type);
+        app_window.leftMouseDown(mouse_pos, modifiers, click_type);
         return 0;
     }
 
@@ -177,7 +178,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (wParam & MK_LBUTTON) {
             ModifierKey modifiers = ModifierFromState();
             ClickType click_type = ClickTypeFromCount(click_count);
-            app_window.onLeftMouseDrag(mouse_pos, modifiers, click_type);
+            app_window.leftMouseDrag(mouse_pos, modifiers, click_type);
         } else {
             if (!tracking_mouse) {
                 TRACKMOUSEEVENT tme{
@@ -187,7 +188,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 };
                 tracking_mouse = TrackMouseEvent(&tme);
             }
-            app_window.onMouseMove(mouse_pos);
+            app_window.mousePositionChanged(mouse_pos);
         }
         return 0;
     }
@@ -195,7 +196,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     // Microsoft-endorsed implementation: https://stackoverflow.com/a/68029657/14698275
     case WM_MOUSELEAVE: {
         tracking_mouse = false;
-        app_window.onMouseExit();
+        app_window.mousePositionChanged(std::nullopt);
         return 0;
     }
 
@@ -279,7 +280,8 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 }
 
-static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+namespace {
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     Win32Window* pThis = nullptr;
 
     if (uMsg == WM_NCCREATE) {
@@ -297,6 +299,7 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 }
+}  // namespace
 
 void Win32Window::redraw() {
     InvalidateRect(m_hwnd, nullptr, false);
@@ -451,4 +454,4 @@ inline void AddMenu(HWND hwnd) {
 
 }  // namespace
 
-}  // namespace app
+}  // namespace gui

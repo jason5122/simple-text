@@ -25,18 +25,31 @@ void EditorApp::onLaunch() {
 
     // Load images.
     // TODO: Replace this with an actual file path class.
-    std::string panel_close_2x = fmt::format("{}/icons/panel_close@2x.png", base::ResourceDir());
-    std::string folder_open_2x = fmt::format("{}/icons/folder_open@2x.png", base::ResourceDir());
-    std::string icon_regex_2x = fmt::format("{}/icons/icon_regex@2x.png", base::ResourceDir());
+    // std::string panel_close_2x = fmt::format("{}/icons/panel_close@2x.png",
+    // base::ResourceDir()); std::string folder_open_2x =
+    // fmt::format("{}/icons/folder_open@2x.png", base::ResourceDir()); std::string icon_regex_2x =
+    // fmt::format("{}/icons/icon_regex@2x.png", base::ResourceDir()); std::string
+    // icon_case_sensitive_2x =
+    //     fmt::format("{}/icons/icon_case_sensitive@2x.png", base::ResourceDir());
+    // std::string icon_whole_word_2x =
+    //     fmt::format("{}/icons/icon_whole_word@2x.png", base::ResourceDir());
+    // std::string icon_wrap_2x = fmt::format("{}/icons/icon_wrap@2x.png", base::ResourceDir());
+    // std::string icon_in_selection_2x =
+    //     fmt::format("{}/icons/icon_in_selection@2x.png", base::ResourceDir());
+    // std::string icon_highlight_matches_2x =
+    //     fmt::format("{}/icons/icon_highlight_matches@2x.png", base::ResourceDir());
+    std::string panel_close_2x = fmt::format("icons/panel_close@2x.png", base::ResourceDir());
+    std::string folder_open_2x = fmt::format("icons/folder_open@2x.png", base::ResourceDir());
+    std::string icon_regex_2x = fmt::format("icons/icon_regex@2x.png", base::ResourceDir());
     std::string icon_case_sensitive_2x =
-        fmt::format("{}/icons/icon_case_sensitive@2x.png", base::ResourceDir());
+        fmt::format("icons/icon_case_sensitive@2x.png", base::ResourceDir());
     std::string icon_whole_word_2x =
-        fmt::format("{}/icons/icon_whole_word@2x.png", base::ResourceDir());
-    std::string icon_wrap_2x = fmt::format("{}/icons/icon_wrap@2x.png", base::ResourceDir());
+        fmt::format("icons/icon_whole_word@2x.png", base::ResourceDir());
+    std::string icon_wrap_2x = fmt::format("icons/icon_wrap@2x.png", base::ResourceDir());
     std::string icon_in_selection_2x =
-        fmt::format("{}/icons/icon_in_selection@2x.png", base::ResourceDir());
+        fmt::format("icons/icon_in_selection@2x.png", base::ResourceDir());
     std::string icon_highlight_matches_2x =
-        fmt::format("{}/icons/icon_highlight_matches@2x.png", base::ResourceDir());
+        fmt::format("icons/icon_highlight_matches@2x.png", base::ResourceDir());
 
     auto& texture_cache = gui::Renderer::instance().getTextureCache();
     panel_close_image_id = texture_cache.addPng(panel_close_2x);

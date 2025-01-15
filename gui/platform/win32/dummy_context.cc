@@ -3,6 +3,8 @@
 // TODO: Debug use; remove this.
 #include "util/profile_util.h"
 
+namespace gui {
+
 void DummyContext::initialize() {
     m_hwnd = CreateWindowEx(0, L"DummyClass", L"Dummy", WS_DISABLED, CW_USEDEFAULT, CW_USEDEFAULT,
                             CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(nullptr), this);
@@ -19,7 +21,7 @@ void DummyContext::initialize() {
         .cAuxBuffers = 0,
     };
 
-    PROFILE_BLOCK("ChoosePixelFormat() + SetPixelFormat()");
+    auto pf = util::Profiler{"ChoosePixelFormat() + SetPixelFormat()"};
     int pixelformat = ChoosePixelFormat(m_hdc, &pfd);
     SetPixelFormat(m_hdc, pixelformat, &pfd);
 
@@ -31,3 +33,5 @@ void DummyContext::initialize() {
     // TODO: If we need this, load this function pointer manually.
     // wglSwapIntervalEXT(0);
 }
+
+}  // namespace gui

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string_view>
+#include <vector>
+
 #include <dwrite_3.h>
 #include <wrl/client.h>
 
@@ -17,7 +20,7 @@ class FontFallbackRenderer : public IDWriteTextRenderer {
 public:
     // TODO: Consider encapsulating these with getters.
     int total_advance = 0;
-    std::vector<ShapedRun> runs;
+    std::vector<ShapedGlyph> glyphs;
 
     FontFallbackRenderer(Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection,
                          std::string_view str8);
@@ -64,7 +67,7 @@ private:
 
     ULONG fRefCount;
     Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
-    UTF16ToUTF8IndicesMap indices_map;
+    unicode::UTF16ToUTF8IndicesMap indices_map;
 };
 
 }  // namespace font

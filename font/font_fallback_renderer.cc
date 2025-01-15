@@ -1,6 +1,6 @@
 #include "font_fallback_renderer.h"
 
-#include "font/directwrite/impl_directwrite.h"
+#include "font/impl_directwrite.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -61,16 +61,14 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
     font_collection->GetFontFromFontFace(glyphRun->fontFace, &font);
     int font_size = glyphRun->fontEmSize * 72 / 96;
     auto font_rasterizer = static_cast<FontRasterizer*>(clientDrawingContext);
-    size_t font_id = font_rasterizer->cacheFont({font}, font_size);
+    size_t run_font_id = font_rasterizer->cache_font({font}, font_size);
 
     size_t glyph_count = glyphRun->glyphCount;
-    std::vector<ShapedGlyph> glyphs;
-    glyphs.reserve(glyph_count);
-
     auto cluster_map = glyphRunDescription->clusterMap;
     size_t text_position = glyphRunDescription->textPosition;
     size_t len = glyphRunDescription->stringLength;
 
+    // TODO: Move this to a helper function (in an anonymous namespace).
     // Invert cluster map (string index -> glyph index) to (glyph index -> string index).
     std::vector<size_t> inverted_cluster_map(glyph_count);
     size_t i = 0;
@@ -88,21 +86,19 @@ SK_STDMETHODIMP FontFallbackRenderer::DrawGlyphRun(
         // TODO: Verify that rounding up is correct.
         int advance = std::ceil(glyphRun->glyphAdvances[i]);
 
-        ShapedGlyph glyph{
+        size_t utf8_index = indices_map.map_index(text_position + inverted_cluster_map[i]);
+        ShapedGlyph glyph = {
+            .font_id = run_font_id,
             .glyph_id = glyph_id,
+            // TODO: Do we need the y values?
             .position = {.x = total_advance},
             .advance = {.x = advance},
-            .index = indices_map.map_index(text_position + inverted_cluster_map[i]),
+            .index = utf8_index,
         };
         glyphs.emplace_back(std::move(glyph));
 
         total_advance += advance;
     }
-
-    runs.emplace_back(ShapedRun{
-        .font_id = font_id,
-        .glyphs = std::move(glyphs),
-    });
 
     return S_OK;
 }

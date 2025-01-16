@@ -27,11 +27,13 @@ bool PathHasAccess(const FilePath& path, DWORD dir_desired_access, DWORD file_de
     DWORD desired_access = is_directory ? dir_desired_access : file_desired_access;
     DWORD flags_and_attrs = is_directory ? FILE_FLAG_BACKUP_SEMANTICS : FILE_ATTRIBUTE_NORMAL;
 
-    // TODO: Implement win::ScopedHandle (or just make this compile).
-    win::ScopedHandle file(::CreateFile(path_str, desired_access, kFileShareAll, nullptr,
-                                        OPEN_EXISTING, flags_and_attrs, nullptr));
-
-    return file.is_valid();
+    // TODO: Implement a scoped type for `HANDLE` so we don't have to manually close it.
+    constexpr DWORD kFileShareAll = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    HANDLE file = ::CreateFile(path_str, desired_access, kFileShareAll, nullptr, OPEN_EXISTING,
+                               flags_and_attrs, nullptr);
+    bool is_valid = file != nullptr;
+    ::CloseHandle(file);
+    return is_valid;
 }
 
 }  // namespace

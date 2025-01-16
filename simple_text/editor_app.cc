@@ -27,16 +27,18 @@ void EditorApp::onLaunch() {
     // Load images.
     base::FilePath assets_path;
     base::PathService::get(base::PathKey::kDirAssets, &assets_path);
-    base::FilePath icons_path = assets_path.Append("icons");
+    base::FilePath icons_path = assets_path.Append(FILE_PATH_LITERAL("icons"));
 
-    auto panel_close_2x = icons_path.Append("panel_close@2x.png");
-    auto folder_open_2x = icons_path.Append("folder_open@2x.png");
-    auto icon_regex_2x = icons_path.Append("icon_regex@2x.png");
-    auto icon_case_sensitive_2x = icons_path.Append("icon_case_sensitive@2x.png");
-    auto icon_whole_word_2x = icons_path.Append("icon_whole_word@2x.png");
-    auto icon_wrap_2x = icons_path.Append("icon_wrap@2x.png");
-    auto icon_in_selection_2x = icons_path.Append("icon_in_selection@2x.png");
-    auto icon_highlight_matches_2x = icons_path.Append("icon_highlight_matches@2x.png");
+    auto panel_close_2x = icons_path.Append(FILE_PATH_LITERAL("panel_close@2x.png"));
+    auto folder_open_2x = icons_path.Append(FILE_PATH_LITERAL("folder_open@2x.png"));
+    auto icon_regex_2x = icons_path.Append(FILE_PATH_LITERAL("icon_regex@2x.png"));
+    auto icon_case_sensitive_2x =
+        icons_path.Append(FILE_PATH_LITERAL("icon_case_sensitive@2x.png"));
+    auto icon_whole_word_2x = icons_path.Append(FILE_PATH_LITERAL("icon_whole_word@2x.png"));
+    auto icon_wrap_2x = icons_path.Append(FILE_PATH_LITERAL("icon_wrap@2x.png"));
+    auto icon_in_selection_2x = icons_path.Append(FILE_PATH_LITERAL("icon_in_selection@2x.png"));
+    auto icon_highlight_matches_2x =
+        icons_path.Append(FILE_PATH_LITERAL("icon_highlight_matches@2x.png"));
 
     auto& texture_cache = gui::Renderer::instance().getTextureCache();
     panel_close_image_id = texture_cache.addPng(panel_close_2x.value());

@@ -34,4 +34,18 @@ bool DirectoryExists(const FilePath& path) {
     return S_ISDIR(file_info.st_mode);
 }
 
+bool ReadSymbolicLink(const FilePath& symlink_path, FilePath* target_path) {
+    char buf[PATH_MAX];
+    ssize_t count = ::readlink(symlink_path.value().c_str(), buf, std::size(buf));
+
+    bool error = count <= 0;
+    if (error) {
+        target_path->clear();
+        return false;
+    }
+
+    *target_path = FilePath(FilePath::StringType(buf, static_cast<size_t>(count)));
+    return true;
+}
+
 }  // namespace base

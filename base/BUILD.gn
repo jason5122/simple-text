@@ -38,11 +38,14 @@ source_set("base") {
   }
 
   if (is_linux) {
-    sources += []
+    sources += [ "path_service_linux.cc" ]
   }
 
   if (is_win) {
-    sources += [ "files/file_util_win.cc" ]
+    sources += [
+      "files/file_util_win.cc",
+      "path_service_win.cc",
+    ]
     libs += [ "shell32.lib" ]
   }
 }

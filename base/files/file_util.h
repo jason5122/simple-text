@@ -32,6 +32,13 @@ bool PathIsWritable(const FilePath& path);
 // Returns true if the given path exists and is a directory, false otherwise.
 bool DirectoryExists(const FilePath& path);
 
+// Reads the given |symlink| and returns the raw string in |target|.
+// Returns false upon failure.
+// IMPORTANT NOTE: if the string stored in the symlink is a relative file path,
+// it should be interpreted relative to the symlink's directory, NOT the current
+// working directory. ReadSymbolicLinkAbsolute() may be the better choice.
+bool ReadSymbolicLink(const FilePath& symlink, FilePath* target);
+
 // Get the temporary directory provided by the system.
 //
 // WARNING: In general, you should use CreateTemporaryFile variants below

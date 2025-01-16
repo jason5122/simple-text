@@ -40,7 +40,7 @@ size_t TextureCache::addPng(const base::FilePath& path) {
     bool success = loadPng(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
-        fmt::println("GlyphCache::addPng() error: Could not load image.");
+        fmt::println("TextureCache::addPng() error: Could not load image.");
         std::abort();
     }
 
@@ -55,7 +55,7 @@ size_t TextureCache::addJpeg(const base::FilePath& path) {
     bool success = loadJpeg(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
-        fmt::println("GlyphCache::addJpeg() error: Could not load image.");
+        fmt::println("TextureCache::addJpeg() error: Could not load image.");
     }
 
     size_t image_id = image_cache.size();

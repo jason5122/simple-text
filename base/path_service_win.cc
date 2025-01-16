@@ -29,8 +29,9 @@ FilePath ExecutablePath() {
 FilePath PathService::get_special_path(PathKey key) {
     switch (key) {
     case PathKey::kFileExe:
-    case PathKey::kDirAssets:
         return ExecutablePath();
+    case PathKey::kDirAssets:
+        return ExecutablePath().DirName();
     }
 }
 

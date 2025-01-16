@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+
 #include <windows.h>
 
 namespace base::windows {
@@ -27,4 +28,4 @@ inline std::string ConvertToUTF8(std::wstring_view str16) {
     return str8;
 }
 
-}
+}  // namespace base::windows

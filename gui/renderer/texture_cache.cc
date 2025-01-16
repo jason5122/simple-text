@@ -4,6 +4,9 @@
 #include <jpeglib.h>
 #include <spng.h>
 
+#include "base/files/file_util.h"
+#include "base/files/scoped_file.h"
+
 // TODO: Debug use; remove this.
 #include <fmt/base.h>
 
@@ -32,9 +35,9 @@ const TextureCache::Glyph& TextureCache::getGlyph(size_t font_id, uint32_t glyph
 }
 
 // TODO: De-duplicate this code in a clean way.
-size_t TextureCache::addPng(std::string_view image_path) {
+size_t TextureCache::addPng(const base::FilePath& path) {
     Image image;
-    bool success = loadPng(image_path, image);
+    bool success = loadPng(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
         fmt::println("GlyphCache::addPng() error: Could not load image.");
@@ -47,9 +50,9 @@ size_t TextureCache::addPng(std::string_view image_path) {
 }
 
 // TODO: De-duplicate this code in a clean way.
-size_t TextureCache::addJpeg(std::string_view image_path) {
+size_t TextureCache::addJpeg(const base::FilePath& path) {
     Image image;
-    bool success = loadJpeg(image_path, image);
+    bool success = loadJpeg(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
         fmt::println("GlyphCache::addJpeg() error: Could not load image.");
@@ -93,8 +96,8 @@ TextureCache::Glyph TextureCache::insertIntoAtlas(const font::RasterizedGlyph& r
 }
 
 // TODO: Handle errors.
-bool TextureCache::loadPng(std::string_view file_name, Image& image) {
-    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
+bool TextureCache::loadPng(const base::FilePath& path, Image& image) {
+    base::ScopedFILE fp(base::OpenFile(path, "rb"));
     std::unique_ptr<spng_ctx, void (*)(spng_ctx*)> ctx{spng_ctx_new(0), spng_ctx_free};
     spng_ihdr ihdr;
     size_t size;
@@ -129,11 +132,11 @@ bool TextureCache::loadPng(std::string_view file_name, Image& image) {
 }
 
 // TODO: Handle errors.
-bool TextureCache::loadJpeg(std::string_view file_name, Image& image) {
+bool TextureCache::loadJpeg(const base::FilePath& path, Image& image) {
     jpeg_decompress_struct info;
     jpeg_error_mgr err;
 
-    std::unique_ptr<FILE, int (*)(FILE*)> fp{fopen(file_name.data(), "rb"), fclose};
+    base::ScopedFILE fp(base::OpenFile(path, "rb"));
     if (!fp) {
         return false;
     }

@@ -1,8 +1,9 @@
 #include "file_util.h"
 
 #include <stdlib.h>
-
 #include <windows.h>
+
+#include "base/windows/unicode.h"
 
 namespace base {
 
@@ -50,6 +51,25 @@ bool DirectoryExists(const FilePath& path) {
     DWORD fileattr = ::GetFileAttributes(path.value().c_str());
     if (fileattr != INVALID_FILE_ATTRIBUTES) return (fileattr & FILE_ATTRIBUTE_DIRECTORY) != 0;
     return false;
+}
+
+namespace {
+
+// Appends |mode_char| to |mode| before the optional character set encoding; see
+// https://msdn.microsoft.com/library/yeby3zcb.aspx for details.
+void AppendModeCharacter(wchar_t mode_char, std::wstring* mode) {
+    size_t comma_pos = mode->find(L',');
+    mode->insert(comma_pos == std::wstring::npos ? mode->length() : comma_pos, 1, mode_char);
+}
+
+}  // namespace
+
+FILE* OpenFile(const FilePath& filename, const char* mode) {
+    // 'N' is unconditionally added below, so be sure there is not one already
+    // present before a comma in |mode|.
+    std::wstring w_mode = base::windows::ConvertToUTF16(mode);
+    AppendModeCharacter(L'N', &w_mode);
+    return _wfsopen(filename.value().c_str(), w_mode.c_str(), _SH_DENYNO);
 }
 
 }  // namespace base

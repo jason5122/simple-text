@@ -7,6 +7,7 @@ source_set("base") {
     "buffer/piece_tree_rbtree.cc",
     "files/file_path.cc",
     "files/file_reader.cc",
+    "files/file_util.cc",
     "path_service.cc",
   ]
   deps = [ "//third_party/fmt" ]

@@ -55,4 +55,21 @@ bool GetTempDir(FilePath* path);
 // Path service may also override DIR_HOME.
 FilePath GetHomeDir();
 
+// Wrapper for fopen-like calls. Returns non-NULL FILE* on success. The
+// underlying file descriptor (POSIX) or handle (Windows) is unconditionally
+// configured to not be propagated to child processes.
+FILE* OpenFile(const FilePath& filename, const char* mode);
+
+// Closes file opened by OpenFile. Returns true on success.
+bool CloseFile(FILE* file);
+
+#if BUILDFLAG(IS_POSIX)
+
+// Sets the given |fd| to close-on-exec mode.
+// Returns true if it was able to set it in the close-on-exec mode, otherwise
+// false.
+bool SetCloseOnExec(int fd);
+
+#endif
+
 }  // namespace base

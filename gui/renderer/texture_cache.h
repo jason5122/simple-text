@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/files/file_path.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/types.h"
@@ -32,8 +33,8 @@ public:
         Vec4 uv;
         size_t page;
     };
-    size_t addPng(std::string_view image_path);
-    size_t addJpeg(std::string_view image_path);
+    size_t addPng(const base::FilePath& path);
+    size_t addJpeg(const base::FilePath& path);
     const Image& getImage(size_t image_id) const;
 
     constexpr const std::vector<Atlas>& pages() const;
@@ -48,8 +49,8 @@ private:
     std::vector<Image> image_cache;
 
     Glyph insertIntoAtlas(const font::RasterizedGlyph& rglyph);
-    bool loadPng(std::string_view file_name, Image& image);
-    bool loadJpeg(std::string_view file_name, Image& image);
+    bool loadPng(const base::FilePath& path, Image& image);
+    bool loadJpeg(const base::FilePath& path, Image& image);
 };
 
 constexpr const std::vector<Atlas>& TextureCache::pages() const {

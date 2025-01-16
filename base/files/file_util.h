@@ -10,6 +10,15 @@
 
 namespace base {
 
+// Returns an absolute version of a relative path. Returns an empty path on
+// error. This function can result in I/O so it can be slow.
+//
+// On POSIX, this function calls realpath(), so:
+// 1) it fails if the path does not exist.
+// 2) it expands all symlink components of the path.
+// 3) it removes "." and ".." directory components.
+FilePath MakeAbsoluteFilePath(const FilePath& input);
+
 // Returns true if the given path exists on the local filesystem,
 // false otherwise.
 bool PathExists(const FilePath& path);

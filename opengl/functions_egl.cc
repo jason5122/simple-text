@@ -39,7 +39,7 @@ FunctionsGL::~FunctionsGL() {
     dlclose(pimpl->handle);
 }
 
-void* FunctionsGL::loadProcAddress(std::string_view function) const {
+void* FunctionsGL::load_proc_address(std::string_view function) const {
     void* p = reinterpret_cast<void*>(pimpl->mGetProcAddressPtr(function.data()));
     if (!p) {
         p = dlsym(pimpl->handle, function.data());

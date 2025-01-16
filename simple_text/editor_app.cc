@@ -1,6 +1,7 @@
 #include "editor_app.h"
 
 #include "base/files/file_reader.h"
+#include "base/path_service.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/renderer.h"
 #include "opengl/functions_gl.h"
@@ -14,8 +15,8 @@ namespace gui {
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
 void EditorApp::onLaunch() {
-    opengl::FunctionsGL functions_gl{};
-    functions_gl.loadGlobalFunctionPointers();
+    opengl::FunctionsGL functions_gl;
+    functions_gl.load_global_function_pointers();
 
     // Load fonts.
     auto& font_rasterizer = font::FontRasterizer::instance();
@@ -24,42 +25,28 @@ void EditorApp::onLaunch() {
     ui_font_regular_id = font_rasterizer.add_system_font(kUIFontSizeRegular);
 
     // Load images.
-    // TODO: Replace this with an actual file path class.
-    // std::string panel_close_2x = fmt::format("{}/icons/panel_close@2x.png",
-    // base::ResourceDir()); std::string folder_open_2x =
-    // fmt::format("{}/icons/folder_open@2x.png", base::ResourceDir()); std::string icon_regex_2x =
-    // fmt::format("{}/icons/icon_regex@2x.png", base::ResourceDir()); std::string
-    // icon_case_sensitive_2x =
-    //     fmt::format("{}/icons/icon_case_sensitive@2x.png", base::ResourceDir());
-    // std::string icon_whole_word_2x =
-    //     fmt::format("{}/icons/icon_whole_word@2x.png", base::ResourceDir());
-    // std::string icon_wrap_2x = fmt::format("{}/icons/icon_wrap@2x.png", base::ResourceDir());
-    // std::string icon_in_selection_2x =
-    //     fmt::format("{}/icons/icon_in_selection@2x.png", base::ResourceDir());
-    // std::string icon_highlight_matches_2x =
-    //     fmt::format("{}/icons/icon_highlight_matches@2x.png", base::ResourceDir());
-    std::string panel_close_2x = fmt::format("icons/panel_close@2x.png", base::ResourceDir());
-    std::string folder_open_2x = fmt::format("icons/folder_open@2x.png", base::ResourceDir());
-    std::string icon_regex_2x = fmt::format("icons/icon_regex@2x.png", base::ResourceDir());
-    std::string icon_case_sensitive_2x =
-        fmt::format("icons/icon_case_sensitive@2x.png", base::ResourceDir());
-    std::string icon_whole_word_2x =
-        fmt::format("icons/icon_whole_word@2x.png", base::ResourceDir());
-    std::string icon_wrap_2x = fmt::format("icons/icon_wrap@2x.png", base::ResourceDir());
-    std::string icon_in_selection_2x =
-        fmt::format("icons/icon_in_selection@2x.png", base::ResourceDir());
-    std::string icon_highlight_matches_2x =
-        fmt::format("icons/icon_highlight_matches@2x.png", base::ResourceDir());
+    base::FilePath assets_path;
+    base::PathService::get(base::PathKey::kDirAssets, &assets_path);
+    base::FilePath icons_path = assets_path.Append("icons");
+
+    auto panel_close_2x = icons_path.Append("panel_close@2x.png");
+    auto folder_open_2x = icons_path.Append("folder_open@2x.png");
+    auto icon_regex_2x = icons_path.Append("icon_regex@2x.png");
+    auto icon_case_sensitive_2x = icons_path.Append("icon_case_sensitive@2x.png");
+    auto icon_whole_word_2x = icons_path.Append("icon_whole_word@2x.png");
+    auto icon_wrap_2x = icons_path.Append("icon_wrap@2x.png");
+    auto icon_in_selection_2x = icons_path.Append("icon_in_selection@2x.png");
+    auto icon_highlight_matches_2x = icons_path.Append("icon_highlight_matches@2x.png");
 
     auto& texture_cache = gui::Renderer::instance().getTextureCache();
-    panel_close_image_id = texture_cache.addPng(panel_close_2x);
-    folder_open_image_id = texture_cache.addPng(folder_open_2x);
-    icon_regex_image_id = texture_cache.addPng(icon_regex_2x);
-    icon_case_sensitive_image_id = texture_cache.addPng(icon_case_sensitive_2x);
-    icon_whole_word_image_id = texture_cache.addPng(icon_whole_word_2x);
-    icon_wrap_image_id = texture_cache.addPng(icon_wrap_2x);
-    icon_in_selection_id = texture_cache.addPng(icon_in_selection_2x);
-    icon_highlight_matches_id = texture_cache.addPng(icon_highlight_matches_2x);
+    panel_close_image_id = texture_cache.addPng(panel_close_2x.value());
+    folder_open_image_id = texture_cache.addPng(folder_open_2x.value());
+    icon_regex_image_id = texture_cache.addPng(icon_regex_2x.value());
+    icon_case_sensitive_image_id = texture_cache.addPng(icon_case_sensitive_2x.value());
+    icon_whole_word_image_id = texture_cache.addPng(icon_whole_word_2x.value());
+    icon_wrap_image_id = texture_cache.addPng(icon_wrap_2x.value());
+    icon_in_selection_id = texture_cache.addPng(icon_in_selection_2x.value());
+    icon_highlight_matches_id = texture_cache.addPng(icon_highlight_matches_2x.value());
 
     createWindow();
 }

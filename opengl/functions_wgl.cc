@@ -24,7 +24,7 @@ FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
 
 FunctionsGL::~FunctionsGL() {}
 
-void* FunctionsGL::loadProcAddress(std::string_view function) const {
+void* FunctionsGL::load_proc_address(std::string_view function) const {
     // https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions#Windows
     // `wglGetProcAddress()` returns functions up to OpenGL 1.1.
     // `GetProcAddress()` returns functions beyond OpenGL 1.1.

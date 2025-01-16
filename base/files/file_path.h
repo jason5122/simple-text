@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "build/build_config.h"
 
@@ -114,6 +115,31 @@ public:
 
     // Returns "C:\pics\jojo" for path "C:\pics\jojo.jpg"
     [[nodiscard]] FilePath RemoveExtension() const;
+
+    // Returns a FilePath by appending a separator and the supplied path
+    // component to this object's path.  Append takes care to avoid adding
+    // excessive separators if this object's path already ends with a separator.
+    // If this object's path is kCurrentDirectory ('.'), a new FilePath
+    // corresponding only to |component| is returned.  |component| must be a
+    // relative path; it is an error to pass an absolute path.
+    [[nodiscard]] FilePath Append(StringPieceType component) const;
+    [[nodiscard]] FilePath Append(const FilePath& component) const;
+
+    // Returns a vector of all of the components of the provided path. It is
+    // equivalent to calling DirName().value() on the path's root component,
+    // and BaseName().value() on each child component.
+    //
+    // To make sure this is lossless so we can differentiate absolute and
+    // relative paths, the root slash will be included even though no other
+    // slashes will be. The precise behavior is:
+    //
+    // Posix:  "/foo/bar"  ->  [ "/", "foo", "bar" ]
+    // Windows:  "C:\foo\bar"  ->  [ "C:", "\\", "foo", "bar" ]
+    std::vector<FilePath::StringType> GetComponents() const;
+
+    // Returns true if this FilePath contains an attempt to reference a parent
+    // directory (e.g. has a path component that is "..").
+    bool ReferencesParent() const;
 
 #if BUILDFLAG(IS_MAC)
     // Returns the string in the special canonical decomposed form as defined for

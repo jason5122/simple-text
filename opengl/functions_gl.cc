@@ -4,9 +4,9 @@
 
 namespace opengl {
 
-#define ASSIGN(NAME, FP) FP = reinterpret_cast<decltype(FP)>(loadProcAddress(NAME))
+#define ASSIGN(NAME, FP) FP = reinterpret_cast<decltype(FP)>(load_proc_address(NAME))
 
-void FunctionsGL::loadGlobalFunctionPointers() {
+void FunctionsGL::load_global_function_pointers() {
     // 1.0
     ASSIGN("glClear", glClear);
     ASSIGN("glClearColor", glClearColor);

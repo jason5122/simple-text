@@ -168,6 +168,101 @@ FilePath FilePath::RemoveExtension() const {
     }
 }
 
+FilePath FilePath::Append(StringPieceType component) const {
+    StringPieceType appended = component;
+    StringType without_nuls;
+
+    StringType::size_type nul_pos = component.find(kStringTerminator);
+    if (nul_pos != StringPieceType::npos) {
+        without_nuls = StringType(component.substr(0, nul_pos));
+        appended = StringPieceType(without_nuls);
+    }
+
+    if (path_.compare(kCurrentDirectory) == 0 && !appended.empty()) {
+        // Append normally doesn't do any normalization, but as a special case,
+        // when appending to kCurrentDirectory, just return a new path for the
+        // component argument.  Appending component to kCurrentDirectory would
+        // serve no purpose other than needlessly lengthening the path, and
+        // it's likely in practice to wind up with FilePath objects containing
+        // only kCurrentDirectory when calling DirName on a single relative path
+        // component.
+        return FilePath(appended);
+    }
+
+    FilePath new_path(path_);
+    new_path.StripTrailingSeparatorsInternal();
+
+    // Don't append a separator if the path is empty (indicating the current
+    // directory) or if the path component is empty (indicating nothing to
+    // append).
+    if (!appended.empty() && !new_path.path_.empty()) {
+        // Don't append a separator if the path still ends with a trailing
+        // separator after stripping (indicating the root directory).
+        if (!IsSeparator(new_path.path_.back())) {
+            // Don't append a separator if the path is just a drive letter.
+            if (FindDriveLetter(new_path.path_) + 1 != new_path.path_.length()) {
+                new_path.path_.append(1, kSeparators[0]);
+            }
+        }
+    }
+
+    new_path.path_.append(appended);
+    return new_path;
+}
+
+FilePath FilePath::Append(const FilePath& component) const {
+    return Append(component.value());
+}
+
+std::vector<FilePath::StringType> FilePath::GetComponents() const {
+    std::vector<StringType> ret_val;
+    if (value().empty()) return ret_val;
+
+    FilePath current = *this;
+    FilePath base;
+
+    // Capture path components.
+    while (current != current.DirName()) {
+        base = current.BaseName();
+        if (!AreAllSeparators(base.value())) ret_val.push_back(base.value());
+        current = current.DirName();
+    }
+
+    // Capture root, if any.
+    base = current.BaseName();
+    if (!base.value().empty() && base.value() != kCurrentDirectory)
+        ret_val.push_back(current.BaseName().value());
+
+    // Capture drive letter, if any.
+    FilePath dir = current.DirName();
+    StringType::size_type letter = FindDriveLetter(dir.value());
+    if (letter != StringType::npos) ret_val.emplace_back(dir.value(), 0, letter + 1);
+
+    std::ranges::reverse(ret_val);
+    return ret_val;
+}
+
+bool FilePath::ReferencesParent() const {
+    if (path_.find(kParentDirectory) == StringType::npos) {
+        // GetComponents is quite expensive, so avoid calling it in the majority
+        // of cases where there isn't a kParentDirectory anywhere in the path.
+        return false;
+    }
+
+    const std::vector<StringType> components = GetComponents();
+    return std::any_of(components.begin(), components.end(), [](const StringType& component) {
+#if BUILDFLAG(IS_WIN)
+        // Windows has odd, undocumented behavior with path components
+        // containing only whitespace and . characters. So, if all we see is .
+        // and whitespace, then we treat any .. sequence as referencing parent.
+        return component.find_first_not_of(FILE_PATH_LITERAL(". \n\r\t")) == std::string::npos &&
+               component.find(kParentDirectory) != std::string::npos;
+#else
+        return component == kParentDirectory;
+#endif
+    });
+}
+
 #if BUILDFLAG(IS_MAC)
 StringType FilePath::GetHFSDecomposedForm(StringPieceType string) {
     apple::ScopedCFTypeRef<CFStringRef> cfstring(CFStringCreateWithBytesNoCopy(

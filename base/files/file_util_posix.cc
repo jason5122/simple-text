@@ -6,6 +6,14 @@
 
 namespace base {
 
+FilePath MakeAbsoluteFilePath(const FilePath& input) {
+    char full_path[PATH_MAX];
+    if (realpath(input.value().c_str(), full_path) == nullptr) {
+        return FilePath();
+    }
+    return FilePath(full_path);
+}
+
 bool PathExists(const FilePath& path) {
     return access(path.value().c_str(), F_OK) == 0;
 }

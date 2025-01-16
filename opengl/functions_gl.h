@@ -12,10 +12,10 @@ public:
     FunctionsGL();
     ~FunctionsGL();
 
-    void loadGlobalFunctionPointers();
+    void load_global_function_pointers();
 
 private:
-    void* loadProcAddress(std::string_view function) const;
+    void* load_proc_address(std::string_view function) const;
 
     class impl;
     std::unique_ptr<impl> pimpl;

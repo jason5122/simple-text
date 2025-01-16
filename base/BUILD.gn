@@ -7,6 +7,7 @@ source_set("base") {
     "buffer/piece_tree_rbtree.cc",
     "files/file_path.cc",
     "files/file_reader.cc",
+    "path_service.cc",
   ]
   deps = [ "//third_party/fmt" ]
 
@@ -27,9 +28,8 @@ source_set("base") {
   if (is_mac) {
     sources += [
       "apple/foundation_util.mm",
-      "files/file_reader_mac.mm",
       "files/file_util_mac.mm",
-      "files/file_watcher_mac.cc",
+      "path_service_mac.mm",
     ]
     frameworks += [
       "Foundation.framework",
@@ -38,17 +38,11 @@ source_set("base") {
   }
 
   if (is_linux) {
-    sources += [
-      "files/file_reader_linux.cc",
-      "files/file_watcher_linux.cc",
-    ]
+    sources += []
   }
 
   if (is_win) {
-    sources += [
-      "files/file_reader_win.cc",
-      "files/file_watcher_win.cc",
-    ]
+    sources += [ "files/file_util_win.cc" ]
     libs += [ "shell32.lib" ]
   }
 }

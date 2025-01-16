@@ -29,7 +29,7 @@ source_set("base") {
     sources += [
       "apple/foundation_util.mm",
       "files/file_util_mac.mm",
-      "path_service_mac.mm",
+      "path_service_mac.cc",
     ]
     frameworks += [
       "Foundation.framework",

@@ -1,16 +1,16 @@
 #include "path_service.h"
 
-#include <Foundation/Foundation.h>
+#include <cassert>
+
 #include <mach-o/dyld.h>
 
-#include "apple/foundation_util.h"
 #include "base/files/file_util.h"
 
 namespace base {
 
 namespace {
 
-FilePath GetExecutablePath() {
+FilePath ExecutablePath() {
     // Executable path can have relative references ("..") depending on how the app was launched.
     uint32_t executable_length = 0;
     _NSGetExecutablePath(nullptr, &executable_length);
@@ -26,8 +26,18 @@ FilePath GetExecutablePath() {
     return MakeAbsoluteFilePath(FilePath(executable_path));
 }
 
-FilePath FrameworkBundlePath() {
-    return apple::NSStringToFilePath(NSBundle.mainBundle.bundlePath);
+// We avoid using NSBundle since FilePath operations are faster. We also avoid having to include
+// Foundation.
+FilePath ResourcesPath() {
+    // Start out with the path to the running executable.
+    base::FilePath path;
+    base::PathService::get(base::PathKey::kFileExe, &path);
+
+    // One step up to MacOS, another to Contents.
+    path = path.DirName().DirName();
+    assert(path.BaseName().value() == "Contents");
+
+    return path.Append("Resources");
 }
 
 }  // namespace
@@ -35,9 +45,9 @@ FilePath FrameworkBundlePath() {
 FilePath PathService::get_special_path(PathKey key) {
     switch (key) {
     case PathKey::kFileExe:
-        return GetExecutablePath();
+        return ExecutablePath();
     case PathKey::kDirAssets:
-        return FrameworkBundlePath().Append("Contents").Append("Resources");
+        return ResourcesPath();
     }
 }
 

@@ -32,14 +32,14 @@ namespace {
 
 inline void DrawColorRun(ID2D1RenderTarget* target,
                          IDWriteColorGlyphRunEnumerator1* color_run_enumerator,
-                         UINT origin_y);
+                         const D2D1_POINT_2F& baseline_origin);
 inline std::wstring GetPostscriptName(IDWriteFont* font, std::wstring_view locale);
 inline std::wstring GetFontFamilyName(IDWriteFont* font, std::wstring_view locale);
 inline std::wstring GetLocaleName(IDWriteLocalizedStrings* strings, std::wstring_view locale);
 
 }  // namespace
 
-FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
+FontRasterizer::FontRasterizer() : pimpl(new impl()) {
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
                         reinterpret_cast<IUnknown**>(pimpl->dwrite_factory.GetAddressOf()));
     D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, pimpl->d2d_factory.GetAddressOf());
@@ -207,7 +207,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         UINT bitmap_width = pixel_width + 10;
         UINT bitmap_height = pixel_height + 10;
         pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
-                                         GUID_WICPixelFormat32bppPRGBA, WICBitmapCacheOnDemand,
+                                         GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnDemand,
                                          wic_bitmap.GetAddressOf());
 
         D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
@@ -216,30 +216,39 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         ComPtr<ID2D1RenderTarget> target;
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
-        DrawColorRun(target.Get(), color_run_enumerator.Get(), -texture_bounds.top);
+        D2D1_POINT_2F baseline_origin = {
+            .x = 0,
+            .y = static_cast<FLOAT>(-texture_bounds.top),
+        };
+        DrawColorRun(target.Get(), color_run_enumerator.Get(), baseline_origin);
 
-        ComPtr<IWICBitmapLock> bitmap_lock;
-        wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
+        // TODO: Change stride based on plain/colored text.
+        UINT stride = bitmap_width * 4;
+        std::vector<uint8_t> bitmap_data(stride * bitmap_height);
+        wic_bitmap->CopyPixels(nullptr, stride, bitmap_data.size(), &bitmap_data);
 
-        UINT buffer_size = 0;
-        BYTE* pv = NULL;
-        bitmap_lock->GetDataPointer(&buffer_size, &pv);
+        // ComPtr<IWICBitmapLock> bitmap_lock;
+        // wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
 
-        UINT width = 0;
-        UINT height = 0;
-        bitmap_lock->GetSize(&width, &height);
-        size_t pixels = width * height;
+        // UINT buffer_size = 0;
+        // BYTE* pv = NULL;
+        // bitmap_lock->GetDataPointer(&buffer_size, &pv);
 
-        // TODO: Try to use the bitmap data without copying/manipulating the pixels.
-        std::vector<uint8_t> bitmap_data;
-        bitmap_data.reserve(pixels * 4);
-        for (size_t i = 0; i < pixels; ++i) {
-            size_t offset = i * 4;
-            bitmap_data.emplace_back(pv[offset + 2]);
-            bitmap_data.emplace_back(pv[offset + 1]);
-            bitmap_data.emplace_back(pv[offset]);
-            bitmap_data.emplace_back(pv[offset + 3]);
-        }
+        // UINT width = 0;
+        // UINT height = 0;
+        // bitmap_lock->GetSize(&width, &height);
+        // size_t pixels = width * height;
+
+        // // TODO: Try to use the bitmap data without copying/manipulating the pixels.
+        // std::vector<uint8_t> bitmap_data;
+        // bitmap_data.reserve(pixels * 4);
+        // for (size_t i = 0; i < pixels; ++i) {
+        //     size_t offset = i * 4;
+        //     bitmap_data.emplace_back(pv[offset]);
+        //     bitmap_data.emplace_back(pv[offset + 1]);
+        //     bitmap_data.emplace_back(pv[offset + 2]);
+        //     bitmap_data.emplace_back(pv[offset + 3]);
+        // }
 
         return {
             .left = 0,
@@ -368,21 +377,16 @@ namespace {
 
 void DrawColorRun(ID2D1RenderTarget* target,
                   IDWriteColorGlyphRunEnumerator1* color_run_enumerator,
-                  UINT origin_y) {
+                  const D2D1_POINT_2F& baseline_origin) {
     // TODO: Find a way to reuse render target and brushes.
     ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
 
-    D2D1_POINT_2F baseline_origin = {
-        .x = 0,
-        .y = static_cast<FLOAT>(origin_y),
-    };
-
     target->BeginDraw();
-    BOOL has_run;
-    const DWRITE_COLOR_GLYPH_RUN1* color_run;
-
     while (true) {
+        BOOL has_run;
+        const DWRITE_COLOR_GLYPH_RUN1* color_run;
+
         if (FAILED(color_run_enumerator->MoveNext(&has_run)) || !has_run) {
             break;
         }
@@ -391,18 +395,19 @@ void DrawColorRun(ID2D1RenderTarget* target,
         }
 
         switch (color_run->glyphImageFormat) {
+
         case DWRITE_GLYPH_IMAGE_FORMATS_PNG:
         case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
         case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
-        case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8:
+        case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8: {
             fmt::println("Error: DrawColorBitmapGlyphRun() is unimplemented!");
-            std::abort();
-            // break;
+            break;
+        }
 
-        case DWRITE_GLYPH_IMAGE_FORMATS_SVG:
+        case DWRITE_GLYPH_IMAGE_FORMATS_SVG: {
             fmt::println("Error: DrawSvgGlyphRun() is unimplemented!");
-            std::abort();
-            // break;
+            break;
+        }
 
         case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
         case DWRITE_GLYPH_IMAGE_FORMATS_CFF:

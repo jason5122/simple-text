@@ -16,8 +16,9 @@ struct FontRasterizer::NativeFontType {
 class FontRasterizer::impl {
 public:
     Microsoft::WRL::ComPtr<IDWriteFactory4> dwrite_factory;
-    Microsoft::WRL::ComPtr<ID2D1Factory> d2d_factory;
+    Microsoft::WRL::ComPtr<ID2D1Factory> d2d1_factory;
     Microsoft::WRL::ComPtr<IWICImagingFactory2> wic_factory;
+    Microsoft::WRL::ComPtr<ID2D1DCRenderTarget> dc_target;
 
     struct DWriteInfo {
         std::wstring font_name16;

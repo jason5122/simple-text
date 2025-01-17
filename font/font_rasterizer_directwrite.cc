@@ -42,7 +42,7 @@ inline std::wstring GetLocaleName(IDWriteLocalizedStrings* strings, std::wstring
 FontRasterizer::FontRasterizer() : pimpl(new impl()) {
     DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
                         reinterpret_cast<IUnknown**>(pimpl->dwrite_factory.GetAddressOf()));
-    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, pimpl->d2d_factory.GetAddressOf());
+    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, pimpl->d2d1_factory.GetAddressOf());
 
     HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                                   IID_PPV_ARGS(&pimpl->wic_factory));
@@ -56,6 +56,31 @@ FontRasterizer::FontRasterizer() : pimpl(new impl()) {
     WCHAR locale_storage[LOCALE_NAME_MAX_LENGTH];
     GetUserDefaultLocaleName(locale_storage, LOCALE_NAME_MAX_LENGTH);
     pimpl->locale = std::wstring(locale_storage);
+
+    ComPtr<IDWriteRenderingParams> default_params;
+    pimpl->dwrite_factory->CreateRenderingParams(default_params.GetAddressOf());
+    FLOAT gamma = default_params->GetGamma();
+    FLOAT enhanced_contrast = default_params->GetEnhancedContrast();
+    FLOAT cleartype_level = default_params->GetClearTypeLevel();
+    // TODO: See if we should hard code pixel geometry and rendering mode.
+    ComPtr<IDWriteRenderingParams> params;
+    pimpl->dwrite_factory->CreateCustomRenderingParams(
+        gamma, enhanced_contrast, cleartype_level, DWRITE_PIXEL_GEOMETRY_RGB,
+        DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC, params.GetAddressOf());
+
+    D2D1_RENDER_TARGET_PROPERTIES render_target_properties = {
+        .type = D2D1_RENDER_TARGET_TYPE_DEFAULT,
+        .pixelFormat =
+            {
+                .format = DXGI_FORMAT_B8G8R8A8_UNORM,
+                .alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED,
+            },
+        .dpiX = 96.0,
+        .dpiY = 96.0,
+        .usage = D2D1_RENDER_TARGET_USAGE_NONE,
+        .minLevel = D2D1_FEATURE_LEVEL_DEFAULT,
+    };
+    pimpl->d2d1_factory->CreateDCRenderTarget(pimpl->dc_target.GetAddressOf());
 }
 
 FontRasterizer::~FontRasterizer() {}
@@ -118,16 +143,16 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
     ComPtr<IDWriteFontFace> font_face;
     font->CreateFontFace(&font_face);
-    UINT16 glyph_index = glyph_id;
 
-    FLOAT glyph_advances = 0;
+    UINT16 glyph_index = glyph_id;
+    FLOAT advance = 0.0;
     DWRITE_GLYPH_OFFSET offset{};
     DWRITE_GLYPH_RUN glyph_run = {
         .fontFace = font_face.Get(),
         .fontEmSize = dwrite_info.em_size,
         .glyphCount = 1,
         .glyphIndices = &glyph_index,
-        .glyphAdvances = &glyph_advances,
+        .glyphAdvances = &advance,
         .glyphOffsets = &offset,
         .isSideways = 0,
         .bidiLevel = 0,
@@ -213,8 +238,8 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
         // TODO: Find a way to reuse render target and brushes.
         ComPtr<ID2D1RenderTarget> target;
-        pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
-                                                        target.GetAddressOf());
+        pimpl->d2d1_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
+                                                         target.GetAddressOf());
         D2D1_POINT_2F baseline_origin = {
             .x = 0,
             .y = static_cast<FLOAT>(-texture_bounds.top),

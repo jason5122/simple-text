@@ -355,15 +355,13 @@ namespace {
 void DrawColorRun(ID2D1RenderTarget* target,
                   IDWriteColorGlyphRunEnumerator1* color_run_enumerator,
                   const D2D1_POINT_2F& baseline_origin) {
-    // TODO: Find a way to reuse render target and brushes.
-    ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
-    target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
+    ComPtr<ID2D1SolidColorBrush> brush;
+    target->CreateSolidColorBrush({1.0f, 1.0f, 1.0f, 1.0f}, &brush);
 
     target->BeginDraw();
     while (true) {
         BOOL has_run;
         const DWRITE_COLOR_GLYPH_RUN1* color_run;
-
         if (FAILED(color_run_enumerator->MoveNext(&has_run)) || !has_run) {
             break;
         }
@@ -372,34 +370,14 @@ void DrawColorRun(ID2D1RenderTarget* target,
         }
 
         switch (color_run->glyphImageFormat) {
-
-        case DWRITE_GLYPH_IMAGE_FORMATS_PNG:
-        case DWRITE_GLYPH_IMAGE_FORMATS_JPEG:
-        case DWRITE_GLYPH_IMAGE_FORMATS_TIFF:
-        case DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8: {
-            fmt::println("Error: DrawColorBitmapGlyphRun() is unimplemented!");
-            break;
-        }
-
-        case DWRITE_GLYPH_IMAGE_FORMATS_SVG: {
-            fmt::println("Error: DrawSvgGlyphRun() is unimplemented!");
-            break;
-        }
-
-        case DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE:
-        case DWRITE_GLYPH_IMAGE_FORMATS_CFF:
         case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
-        default: {
-            ComPtr<ID2D1SolidColorBrush> layer_brush;
-            if (color_run->paletteIndex == 0xFFFF) {
-                layer_brush = blue_brush;
-            } else {
-                target->CreateSolidColorBrush(color_run->runColor, &layer_brush);
-            }
-
-            target->DrawGlyphRun(baseline_origin, &color_run->glyphRun, layer_brush.Get());
+            brush->SetColor(color_run->runColor);
+            target->DrawGlyphRun(baseline_origin, &color_run->glyphRun, brush.Get(),
+                                 color_run->measuringMode);
             break;
-        }
+        default:
+            fmt::println("Error: DirectWrite glyph image format unimplemented");
+            std::abort();
         }
     }
     target->EndDraw();

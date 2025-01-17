@@ -6,7 +6,7 @@
 
 #include <combaseapi.h>
 #include <comdef.h>
-#include <d2d1.h>
+#include <d2d1_3.h>
 #include <dwrite_3.h>
 #include <unknwnbase.h>
 #include <wincodec.h>
@@ -161,20 +161,20 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     };
 
     // TODO: Debug this.
-    pimpl->dc_target->SetUnitMode(D2D1_UNIT_MODE_DIPS);
-    pimpl->dc_target->SetDpi(96.0, 96.0);
+    ComPtr<ID2D1DeviceContext4> dc_target4;
+    pimpl->dc_target->QueryInterface(
+        reinterpret_cast<ID2D1DeviceContext4**>(dc_target4.GetAddressOf()));
+    dc_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
+    dc_target4->SetDpi(96.0, 96.0);
     D2D1_RECT_F bounds;
-    pimpl->dc_target->GetGlyphRunWorldBounds({}, &glyph_run, DWRITE_MEASURING_MODE_NATURAL,
-                                             &bounds);
-    fmt::println("left = {}, top = {}, right = {}, bottom = {}", bounds.left, bounds.top,
-                 bounds.right, bounds.bottom);
+    dc_target4->GetGlyphRunWorldBounds({}, &glyph_run, DWRITE_MEASURING_MODE_NATURAL, &bounds);
 
     ComPtr<IDWriteRenderingParams> rendering_params;
     pimpl->dwrite_factory->CreateRenderingParams(rendering_params.GetAddressOf());
 
     DWRITE_RENDERING_MODE rendering_mode;
     font_face->GetRecommendedRenderingMode(dwrite_info.em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
-                                           rendering_params, &rendering_mode);
+                                           rendering_params.Get(), &rendering_mode);
 
     ComPtr<IDWriteGlyphRunAnalysis> glyph_run_analysis;
     pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
@@ -183,6 +183,17 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
     RECT texture_bounds;
     glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds);
+
+    // TODO: Debug use; remove this.
+    fmt::println("font = {}, glyph = {}, left = {} vs {}, top = {} vs {}, right = {} vs {}, "
+                 "bottom = {} vs {}",
+                 font_id, glyph_id, bounds.left, texture_bounds.left, bounds.top,
+                 texture_bounds.top, bounds.right, texture_bounds.right, bounds.bottom,
+                 texture_bounds.bottom);
+    texture_bounds.left = std::ceil(bounds.left);
+    texture_bounds.top = std::ceil(bounds.top);
+    texture_bounds.right = std::ceil(bounds.right);
+    texture_bounds.bottom = std::ceil(bounds.bottom);
 
     LONG pixel_width = texture_bounds.right - texture_bounds.left;
     LONG pixel_height = texture_bounds.bottom - texture_bounds.top;

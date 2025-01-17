@@ -204,11 +204,10 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     else {
         ComPtr<IWICBitmap> wic_bitmap;
         // TODO: Implement without magic numbers. Properly find the right width/height.
-        UINT bitmap_width = pixel_width + 10;
-        UINT bitmap_height = pixel_height + 10;
-        pimpl->wic_factory->CreateBitmap(bitmap_width, bitmap_height,
-                                         GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnDemand,
-                                         wic_bitmap.GetAddressOf());
+        UINT width = pixel_width + 10;
+        UINT height = pixel_height + 10;
+        pimpl->wic_factory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA,
+                                         WICBitmapCacheOnDemand, wic_bitmap.GetAddressOf());
 
         D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
 
@@ -222,33 +221,11 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         };
         DrawColorRun(target.Get(), color_run_enumerator.Get(), baseline_origin);
 
+        // TODO: Try to use the bitmap data without copying/manipulating the pixels.
         // TODO: Change stride based on plain/colored text.
-        UINT stride = bitmap_width * 4;
-        std::vector<uint8_t> bitmap_data(stride * bitmap_height);
-        wic_bitmap->CopyPixels(nullptr, stride, bitmap_data.size(), &bitmap_data);
-
-        // ComPtr<IWICBitmapLock> bitmap_lock;
-        // wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
-
-        // UINT buffer_size = 0;
-        // BYTE* pv = NULL;
-        // bitmap_lock->GetDataPointer(&buffer_size, &pv);
-
-        // UINT width = 0;
-        // UINT height = 0;
-        // bitmap_lock->GetSize(&width, &height);
-        // size_t pixels = width * height;
-
-        // // TODO: Try to use the bitmap data without copying/manipulating the pixels.
-        // std::vector<uint8_t> bitmap_data;
-        // bitmap_data.reserve(pixels * 4);
-        // for (size_t i = 0; i < pixels; ++i) {
-        //     size_t offset = i * 4;
-        //     bitmap_data.emplace_back(pv[offset]);
-        //     bitmap_data.emplace_back(pv[offset + 1]);
-        //     bitmap_data.emplace_back(pv[offset + 2]);
-        //     bitmap_data.emplace_back(pv[offset + 3]);
-        // }
+        UINT stride = width * 4;
+        std::vector<uint8_t> bitmap_data(stride * height);
+        wic_bitmap->CopyPixels(nullptr, stride, bitmap_data.size(), bitmap_data.data());
 
         return {
             .left = 0,

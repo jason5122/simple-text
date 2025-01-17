@@ -45,7 +45,8 @@ private:
     // TODO: This is a hack for DirectWrite. Find a way to make this private.
 public:
     size_t hash_font(std::string_view font_name8, int font_size) const;
-    FontId cache_font(NativeFontType font, int font_size);
+    size_t hash_font(std::wstring_view font_name16, int font_size) const;
+    FontId cache_font(NativeFontType native_font, int font_size);
 
     class impl;
     std::unique_ptr<impl> pimpl;

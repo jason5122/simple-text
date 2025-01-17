@@ -9,65 +9,62 @@
 #include "font/types.h"
 #include "unicode/utf16_to_utf8_indices_map.h"
 
-// https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/src/utils/win/SkObjBase.h
-// TODO: Define this elsewhere.
-#define SK_STDMETHODIMP COM_DECLSPEC_NOTHROW STDMETHODIMP
-#define SK_STDMETHODIMP_(type) COM_DECLSPEC_NOTHROW STDMETHODIMP_(type)
-
 namespace font {
 
 class FontFallbackRenderer : public IDWriteTextRenderer {
 public:
-    // TODO: Consider encapsulating these with getters.
-    int total_advance = 0;
-    std::vector<ShapedGlyph> glyphs;
-
     FontFallbackRenderer(Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection,
                          std::string_view str8);
 
-    // IUnknown methods
-    SK_STDMETHODIMP QueryInterface(IID const& riid, void** ppvObject) override;
-    SK_STDMETHODIMP_(ULONG) AddRef() override;
-    SK_STDMETHODIMP_(ULONG) Release() override;
+    // IUnknown methods.
+    HRESULT WINAPI QueryInterface(IID const& riid, void** ppv_object) override;
+    ULONG WINAPI AddRef() override;
+    ULONG WINAPI Release() override;
 
-    // IDWriteTextRenderer methods
-    SK_STDMETHODIMP DrawGlyphRun(void* clientDrawingContext,
-                                 FLOAT baselineOriginX,
-                                 FLOAT baselineOriginY,
-                                 DWRITE_MEASURING_MODE measuringMode,
-                                 DWRITE_GLYPH_RUN const* glyphRun,
-                                 DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
-                                 IUnknown* clientDrawingEffect) override;
-    SK_STDMETHODIMP DrawUnderline(void* clientDrawingContext,
-                                  FLOAT baselineOriginX,
-                                  FLOAT baselineOriginY,
-                                  DWRITE_UNDERLINE const* underline,
-                                  IUnknown* clientDrawingEffect) override;
-    SK_STDMETHODIMP DrawStrikethrough(void* clientDrawingContext,
-                                      FLOAT baselineOriginX,
-                                      FLOAT baselineOriginY,
-                                      DWRITE_STRIKETHROUGH const* strikethrough,
-                                      IUnknown* clientDrawingEffect) override;
-    SK_STDMETHODIMP DrawInlineObject(void* clientDrawingContext,
-                                     FLOAT originX,
-                                     FLOAT originY,
-                                     IDWriteInlineObject* inlineObject,
-                                     BOOL isSideways,
-                                     BOOL isRightToLeft,
-                                     IUnknown* clientDrawingEffect) override;
+    // IDWriteTextRenderer methods.
+    HRESULT WINAPI DrawGlyphRun(void* client_drawing_context,
+                                FLOAT baseline_origin_x,
+                                FLOAT baseline_origin_y,
+                                DWRITE_MEASURING_MODE measuring_mode,
+                                DWRITE_GLYPH_RUN const* glyph_run,
+                                DWRITE_GLYPH_RUN_DESCRIPTION const* glyph_run_description,
+                                IUnknown* client_drawing_effect) override;
+    HRESULT WINAPI DrawUnderline(void* client_drawing_context,
+                                 FLOAT baseline_origin_x,
+                                 FLOAT baseline_origin_y,
+                                 DWRITE_UNDERLINE const* underline,
+                                 IUnknown* client_drawing_effect) override;
+    HRESULT WINAPI DrawStrikethrough(void* client_drawing_context,
+                                     FLOAT baseline_origin_x,
+                                     FLOAT baseline_origin_y,
+                                     DWRITE_STRIKETHROUGH const* strikethrough,
+                                     IUnknown* client_drawing_effect) override;
+    HRESULT WINAPI DrawInlineObject(void* client_drawing_context,
+                                    FLOAT origin_x,
+                                    FLOAT origin_y,
+                                    IDWriteInlineObject* inline_object,
+                                    BOOL is_sideways,
+                                    BOOL is_right_to_left,
+                                    IUnknown* client_drawing_effect) override;
 
-    // IDWritePixelSnapping methods
-    SK_STDMETHODIMP IsPixelSnappingDisabled(void* clientDrawingContext, BOOL* isDisabled) override;
-    SK_STDMETHODIMP GetCurrentTransform(void* clientDrawingContext,
-                                        DWRITE_MATRIX* transform) override;
-    SK_STDMETHODIMP GetPixelsPerDip(void* clientDrawingContext, FLOAT* pixelsPerDip) override;
+    // IDWritePixelSnapping methods.
+    HRESULT WINAPI IsPixelSnappingDisabled(void* client_drawing_context,
+                                           BOOL* is_disabled) override;
+    HRESULT WINAPI GetCurrentTransform(void* client_drawing_context,
+                                       DWRITE_MATRIX* transform) override;
+    HRESULT WINAPI GetPixelsPerDip(void* client_drawing_context, FLOAT* pixels_per_dip) override;
 
 private:
     virtual ~FontFallbackRenderer() {}
 
-    ULONG fRefCount;
+    ULONG ref_count;
     Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
     unicode::UTF16ToUTF8IndicesMap indices_map;
+
+    // Outputs for FontRasterizer.
+    friend class FontRasterizer;
+    int total_advance = 0;
+    std::vector<ShapedGlyph> glyphs;
 };
 
 }  // namespace font

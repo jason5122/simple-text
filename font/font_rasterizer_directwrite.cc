@@ -1,6 +1,7 @@
 #include "font/font_rasterizer.h"
 
 #include <cwchar>
+#include <limits>
 #include <vector>
 
 #include <combaseapi.h>
@@ -23,17 +24,18 @@ using Microsoft::WRL::ComPtr;
 // TODO: Debug use; remove this.
 #include <cassert>
 #include <fmt/base.h>
+#include <fmt/xchar.h>
 
 namespace font {
 
 namespace {
 
-inline std::string PostScriptName(ComPtr<IDWriteFont> font);
-inline void DrawColorRun(
-    ID2D1RenderTarget* target,
-    Microsoft::WRL::ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
-    UINT origin_y);
-inline std::wstring GetFontFamilyName(IDWriteFont* font);
+inline void DrawColorRun(ID2D1RenderTarget* target,
+                         IDWriteColorGlyphRunEnumerator1* color_run_enumerator,
+                         UINT origin_y);
+inline std::wstring GetPostscriptName(IDWriteFont* font, std::wstring_view locale);
+inline std::wstring GetFontFamilyName(IDWriteFont* font, std::wstring_view locale);
+inline std::wstring GetLocaleName(IDWriteLocalizedStrings* strings, std::wstring_view locale);
 
 }  // namespace
 
@@ -50,6 +52,10 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {
         // fmt::println(err.ErrorMessage());
         std::abort();
     }
+
+    WCHAR locale_storage[LOCALE_NAME_MAX_LENGTH];
+    GetUserDefaultLocaleName(locale_storage, LOCALE_NAME_MAX_LENGTH);
+    pimpl->locale = std::wstring(locale_storage);
 }
 
 FontRasterizer::~FontRasterizer() {}
@@ -174,14 +180,14 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
         // TODO: Clean this up.
         size_t pixels = pixel_width * pixel_height;
-        std::vector<uint8_t> temp_buffer;
-        temp_buffer.reserve(pixels * 4);
+        std::vector<uint8_t> bitmap_data;
+        bitmap_data.reserve(pixels * 4);
         for (size_t i = 0; i < pixels; ++i) {
             size_t offset = i * 3;
-            temp_buffer.emplace_back(buffer[offset]);
-            temp_buffer.emplace_back(buffer[offset]);
-            temp_buffer.emplace_back(buffer[offset]);
-            temp_buffer.emplace_back(buffer[offset]);
+            bitmap_data.emplace_back(buffer[offset]);
+            bitmap_data.emplace_back(buffer[offset]);
+            bitmap_data.emplace_back(buffer[offset]);
+            bitmap_data.emplace_back(buffer[offset]);
         }
 
         return {
@@ -190,7 +196,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
             .width = static_cast<int32_t>(pixel_width),
             .height = static_cast<int32_t>(pixel_height),
             // .buffer = std::move(buffer),
-            .buffer = std::move(temp_buffer),
+            .buffer = std::move(bitmap_data),
             .colored = false,
         };
     }
@@ -210,37 +216,37 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         ComPtr<ID2D1RenderTarget> target;
         pimpl->d2d_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props,
                                                         target.GetAddressOf());
-        DrawColorRun(target.Get(), std::move(color_run_enumerator), -texture_bounds.top);
+        DrawColorRun(target.Get(), color_run_enumerator.Get(), -texture_bounds.top);
 
-        IWICBitmapLock* bitmap_lock;
+        ComPtr<IWICBitmapLock> bitmap_lock;
         wic_bitmap.Get()->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
 
         UINT buffer_size = 0;
         BYTE* pv = NULL;
         bitmap_lock->GetDataPointer(&buffer_size, &pv);
 
-        UINT bw = 0, bh = 0;
-        bitmap_lock->GetSize(&bw, &bh);
-        size_t pixels = bw * bh;
+        UINT width = 0;
+        UINT height = 0;
+        bitmap_lock->GetSize(&width, &height);
+        size_t pixels = width * height;
 
-        std::vector<uint8_t> temp_buffer;
-        temp_buffer.reserve(pixels * 4);
+        // TODO: Try to use the bitmap data without copying/manipulating the pixels.
+        std::vector<uint8_t> bitmap_data;
+        bitmap_data.reserve(pixels * 4);
         for (size_t i = 0; i < pixels; ++i) {
             size_t offset = i * 4;
-            temp_buffer.emplace_back(pv[offset]);
-            temp_buffer.emplace_back(pv[offset + 1]);
-            temp_buffer.emplace_back(pv[offset + 2]);
-            temp_buffer.emplace_back(pv[offset + 3]);
+            bitmap_data.emplace_back(pv[offset + 2]);
+            bitmap_data.emplace_back(pv[offset + 1]);
+            bitmap_data.emplace_back(pv[offset]);
+            bitmap_data.emplace_back(pv[offset + 3]);
         }
-
-        bitmap_lock->Release();
 
         return {
             .left = 0,
             .top = top,
-            .width = static_cast<int32_t>(bw),
-            .height = static_cast<int32_t>(bh),
-            .buffer = std::move(temp_buffer),
+            .width = static_cast<int32_t>(width),
+            .height = static_cast<int32_t>(height),
+            .buffer = std::move(bitmap_data),
             .colored = true,
         };
     }
@@ -260,16 +266,13 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     pimpl->dwrite_factory->CreateTextFormat(dwrite_info.font_name16.data(), font_collection,
                                             DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL,
                                             DWRITE_FONT_STRETCH_NORMAL, dwrite_info.em_size,
-                                            L"en-us", &text_format);
+                                            pimpl->locale.data(), &text_format);
 
-    // TODO: The `maxWidth`/`maxHeight` arguments *do* prevent ligature formation if the values are
-    // too low. Find out what the appropriate values are.
-    // You can reproduce this by creating a long string of `=` in Cascadia/Fira Code. Eventually,
-    // the ligatures break when they go past the max width.
     UINT32 len = str16.length();
     ComPtr<IDWriteTextLayout> text_layout;
-    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(), 2000.0f, 2000.0f,
-                                            &text_layout);
+    pimpl->dwrite_factory->CreateTextLayout(str16.data(), len, text_format.Get(),
+                                            std::numeric_limits<float>::infinity(),
+                                            std::numeric_limits<float>::infinity(), &text_layout);
 
     // OpenType features.
     // TODO: Consider using the lower-level IDWriteTextAnalyzer, which IDWriteTextLayout uses under
@@ -278,7 +281,7 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     // https://stackoverflow.com/questions/32545675/what-are-the-default-typography-settings-used-by-idwritetextlayout#48800921
     // https://stackoverflow.com/questions/44611592/how-do-i-balance-script-oriented-opentype-features-with-other-opentype-features
 
-    IDWriteTypography* typography;
+    ComPtr<IDWriteTypography> typography;
     pimpl->dwrite_factory->CreateTypography(&typography);
     // Since we have to provide our own defaults, here are some sane ones from Harfbuzz:
     // https://github.com/harfbuzz/harfbuzz/blob/f35b0a63b1c30923e91b612399c4387e64432b91/src/hb-ot-shape.cc#L285-L308
@@ -294,12 +297,12 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES, 1});
     // Additional tags.
     typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19, 1});
-    text_layout->SetTypography(typography, {0, len});
+    text_layout->SetTypography(typography.Get(), {0, len});
 
     text_layout->SetFontCollection(font_collection, {0, len});
 
     ComPtr<FontFallbackRenderer> font_fallback_renderer =
-        new FontFallbackRenderer{font_collection, str8};
+        new FontFallbackRenderer(font_collection, str8);
     text_layout->Draw(this, font_fallback_renderer.Get(), 0.0f, 0.0f);
 
     return {
@@ -310,9 +313,9 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     };
 }
 
-FontId FontRasterizer::cache_font(NativeFontType font, int font_size) {
-    ComPtr<IDWriteFont> dwrite_font = font.font;
-    std::string font_name = PostScriptName(dwrite_font);
+FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
+    ComPtr<IDWriteFont> dwrite_font = native_font.font;
+    std::wstring font_name = GetPostscriptName(dwrite_font.Get(), pimpl->locale);
 
     // If the font is already present, return its ID.
     size_t hash = hash_font(font_name, font_size);
@@ -346,51 +349,31 @@ FontId FontRasterizer::cache_font(NativeFontType font, int font_size) {
         .font_size = font_size,
     };
     impl::DWriteInfo dwrite_info = {
-        .font_name16 = GetFontFamilyName(dwrite_font.Get()),
+        .font_name16 = GetFontFamilyName(dwrite_font.Get(), pimpl->locale),
         .em_size = em_size,
     };
 
     FontId font_id = font_id_to_native.size();
     font_hash_to_id.emplace(hash, font_id);
-    font_id_to_native.emplace_back(std::move(font));
+    font_id_to_native.emplace_back(std::move(native_font));
     font_id_to_metrics.emplace_back(std::move(metrics));
-    font_id_to_postscript_name.emplace_back(std::move(font_name));
+    // TODO: See if we can prevent this conversion.
+    std::string font_name8 = base::windows::ConvertToUTF8(font_name);
+    font_id_to_postscript_name.emplace_back(std::move(font_name8));
     pimpl->font_id_to_dwrite_info.emplace_back(std::move(dwrite_info));
     return font_id;
 }
 
 namespace {
 
-std::string PostScriptName(ComPtr<IDWriteFont> font) {
-    ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
-    BOOL has_id_keyed_names;
-    font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
-                                  &font_id_keyed_names, &has_id_keyed_names);
-
-    wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
-    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
-
-    UINT32 index = 0;
-    BOOL exists = false;
-    font_id_keyed_names->FindLocaleName(localeName, &index, &exists);
-
-    UINT32 length = 0;
-    font_id_keyed_names->GetStringLength(index, &length);
-
-    std::wstring localized_name;
-    localized_name.resize(length + 1);
-    font_id_keyed_names->GetString(index, localized_name.data(), length + 1);
-    return base::windows::ConvertToUTF8(localized_name);
-}
-
 void DrawColorRun(ID2D1RenderTarget* target,
-                  ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator,
+                  IDWriteColorGlyphRunEnumerator1* color_run_enumerator,
                   UINT origin_y) {
     // TODO: Find a way to reuse render target and brushes.
     ComPtr<ID2D1SolidColorBrush> blue_brush = nullptr;
     target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f), &blue_brush);
 
-    D2D1_POINT_2F baseline_origin{
+    D2D1_POINT_2F baseline_origin = {
         .x = 0,
         .y = static_cast<FLOAT>(origin_y),
     };
@@ -440,26 +423,44 @@ void DrawColorRun(ID2D1RenderTarget* target,
     target->EndDraw();
 }
 
-std::wstring GetFontFamilyName(IDWriteFont* font) {
-    Microsoft::WRL::ComPtr<IDWriteFontFamily> font_family;
+std::wstring GetPostscriptName(IDWriteFont* font, std::wstring_view locale) {
+    ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;
+    BOOL has_id_keyed_names;
+    font->GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
+                                  &font_id_keyed_names, &has_id_keyed_names);
+    return GetLocaleName(font_id_keyed_names.Get(), locale);
+}
+
+std::wstring GetFontFamilyName(IDWriteFont* font, std::wstring_view locale) {
+    ComPtr<IDWriteFontFamily> font_family;
     font->GetFontFamily(&font_family);
 
-    Microsoft::WRL::ComPtr<IDWriteLocalizedStrings> family_names;
+    ComPtr<IDWriteLocalizedStrings> family_names;
     font_family->GetFamilyNames(&family_names);
+    return GetLocaleName(family_names.Get(), locale);
+}
 
-    wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
-    GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
-
+std::wstring GetLocaleName(IDWriteLocalizedStrings* strings, std::wstring_view locale) {
+    // Follow recommended strategy for getting locale name.
+    // https://learn.microsoft.com/en-us/windows/win32/api/dwrite/nn-dwrite-idwritelocalizedstrings
     UINT32 index = 0;
     BOOL exists = false;
-    family_names->FindLocaleName(localeName, &index, &exists);
+    strings->FindLocaleName(locale.data(), &index, &exists);
+    // If the above find did not find a match, retry with US English.
+    if (!exists) {
+        strings->FindLocaleName(L"en-US", &index, &exists);
+    }
+    // If the specified locale doesn't exist, select the first on the list.
+    if (!exists) {
+        index = 0;
+    }
 
     UINT32 length = 0;
-    family_names->GetStringLength(index, &length);
+    strings->GetStringLength(index, &length);
 
     std::wstring name;
     name.resize(length + 1);
-    family_names->GetString(index, name.data(), length + 1);
+    strings->GetString(index, name.data(), length + 1);
     return name;
 }
 

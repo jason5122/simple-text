@@ -230,8 +230,8 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     };
 }
 
-FontId FontRasterizer::cache_font(NativeFontType font, int font_size) {
-    CTFontRef ct_font = font.font.get();
+FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
+    CTFontRef ct_font = native_font.font.get();
     auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(ct_font));
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
@@ -264,7 +264,7 @@ FontId FontRasterizer::cache_font(NativeFontType font, int font_size) {
 
     FontId font_id = font_hash_to_id.size();
     font_hash_to_id.emplace(hash, font_id);
-    font_id_to_native.emplace_back(std::move(font));
+    font_id_to_native.emplace_back(std::move(native_font));
     font_id_to_metrics.emplace_back(std::move(metrics));
     font_id_to_postscript_name.emplace_back(std::move(font_name));
     return font_id;

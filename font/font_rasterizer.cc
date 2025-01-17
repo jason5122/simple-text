@@ -22,4 +22,9 @@ size_t FontRasterizer::hash_font(std::string_view font_name8, int font_size) con
     return base::hash_combine(str_hash, font_size);
 }
 
+size_t FontRasterizer::hash_font(std::wstring_view font_name16, int font_size) const {
+    uint64_t str_hash = base::hash_string(font_name16);
+    return base::hash_combine(str_hash, font_size);
+}
+
 }  // namespace font

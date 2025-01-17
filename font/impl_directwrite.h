@@ -24,6 +24,7 @@ public:
         float em_size;
     };
     std::vector<DWriteInfo> font_id_to_dwrite_info;
+    std::wstring locale;
 };
 
 }  // namespace font

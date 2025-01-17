@@ -245,8 +245,8 @@ LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
     };
 }
 
-size_t FontRasterizer::cache_font(NativeFontType font, int font_size) {
-    PangoFontDescription* run_font_desc = pango_font_describe(font.font.get());
+size_t FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
+    PangoFontDescription* run_font_desc = pango_font_describe(native_font.font.get());
     char* font_str = pango_font_description_to_string(run_font_desc);
     std::string font_name = font_str;
     g_free(font_str);
@@ -257,7 +257,7 @@ size_t FontRasterizer::cache_font(NativeFontType font, int font_size) {
         return it->second;
     }
 
-    PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(font.font.get(), nullptr)};
+    PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(native_font.font.get(), nullptr)};
     if (!pango_metrics) {
         fmt::println("pango_font_get_metrics() error.");
         std::abort();
@@ -284,7 +284,7 @@ size_t FontRasterizer::cache_font(NativeFontType font, int font_size) {
 
     size_t font_id = font_hash_to_id.size();
     font_hash_to_id.emplace(hash, font_id);
-    font_id_to_native.emplace_back(std::move(font));
+    font_id_to_native.emplace_back(std::move(native_font));
     font_id_to_metrics.emplace_back(std::move(metrics));
     font_id_to_postscript_name.emplace_back(std::move(font_name));
     return font_id;

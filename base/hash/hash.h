@@ -22,4 +22,8 @@ constexpr uint64_t hash_string(std::string_view str) {
     return rapidhash(str.data(), str.length());
 }
 
+constexpr uint64_t hash_string(std::wstring_view str) {
+    return rapidhash(str.data(), str.length() * sizeof(wchar_t));
+}
+
 }  // namespace base

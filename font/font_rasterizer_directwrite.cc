@@ -16,8 +16,6 @@
 #include <wrl/client.h>
 
 #include "base/windows/unicode.h"
-#include "font/font_fallback_renderer.h"
-#include "font/impl_directwrite.h"
 #include "unicode/utf16_to_utf8_indices_map.h"
 
 using Microsoft::WRL::ComPtr;
@@ -460,7 +458,7 @@ private:
     unicode::UTF16ToUTF8IndicesMap indices_map;
 
     // Outputs for FontRasterizer.
-    friend class FontRasterizer;
+    friend class ::font::FontRasterizer;
     int total_advance = 0;
     std::vector<ShapedGlyph> glyphs;
 };

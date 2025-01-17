@@ -80,7 +80,9 @@ FontRasterizer::FontRasterizer() : pimpl(new impl()) {
         .usage = D2D1_RENDER_TARGET_USAGE_NONE,
         .minLevel = D2D1_FEATURE_LEVEL_DEFAULT,
     };
-    pimpl->d2d1_factory->CreateDCRenderTarget(pimpl->dc_target.GetAddressOf());
+    pimpl->d2d1_factory->CreateDCRenderTarget(&render_target_properties,
+                                              pimpl->dc_target.GetAddressOf());
+    pimpl->dc_target->SetTextRenderingParams(params.Get());
 }
 
 FontRasterizer::~FontRasterizer() {}
@@ -158,17 +160,26 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         .bidiLevel = 0,
     };
 
-    IDWriteRenderingParams* rendering_params;
-    pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
+    // TODO: Debug this.
+    pimpl->dc_target->SetUnitMode(D2D1_UNIT_MODE_DIPS);
+    pimpl->dc_target->SetDpi(96.0, 96.0);
+    D2D1_RECT_F bounds;
+    pimpl->dc_target->GetGlyphRunWorldBounds({}, &glyph_run, DWRITE_MEASURING_MODE_NATURAL,
+                                             &bounds);
+    fmt::println("left = {}, top = {}, right = {}, bottom = {}", bounds.left, bounds.top,
+                 bounds.right, bounds.bottom);
+
+    ComPtr<IDWriteRenderingParams> rendering_params;
+    pimpl->dwrite_factory->CreateRenderingParams(rendering_params.GetAddressOf());
 
     DWRITE_RENDERING_MODE rendering_mode;
     font_face->GetRecommendedRenderingMode(dwrite_info.em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
                                            rendering_params, &rendering_mode);
 
-    IDWriteGlyphRunAnalysis* glyph_run_analysis;
+    ComPtr<IDWriteGlyphRunAnalysis> glyph_run_analysis;
     pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
                                                   DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
-                                                  &glyph_run_analysis);
+                                                  glyph_run_analysis.GetAddressOf());
 
     RECT texture_bounds;
     glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds);

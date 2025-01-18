@@ -249,9 +249,12 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     // TODO: Don't hard-code scale factor.
     int scale_factor = 2;
 
-    int ascent = std::ceil(CTFontGetAscent(ct_font)) * scale_factor;
-    int descent = std::ceil(CTFontGetDescent(ct_font)) * scale_factor;
-    int leading = std::ceil(CTFontGetLeading(ct_font)) * scale_factor;
+    int ascent = std::ceil(CTFontGetAscent(ct_font));
+    int descent = std::ceil(CTFontGetDescent(ct_font));
+    int leading = std::ceil(CTFontGetLeading(ct_font));
+    ascent *= scale_factor;
+    descent *= scale_factor;
+    leading *= scale_factor;
 
     int line_height = ascent + descent + leading;
 

@@ -201,19 +201,18 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
     int width = right - left;
     int height = bottom - top;
+    // TODO: Is this ascent or descent?
     int descent = -top;
-
-    descent += 8;  // TODO: Why does this work?
-
-    fmt::println("{} {} {} {} {}", left, right, top, bottom, metrics(font_id).line_height);
-
-    width *= scale_factor;
-    height *= scale_factor;
 
     D2D1_POINT_2F baseline_origin = {
         .x = static_cast<FLOAT>(-left),
         .y = static_cast<FLOAT>(-top),
     };
+
+    width *= scale_factor;
+    height *= scale_factor;
+    left *= scale_factor;
+    descent *= scale_factor;
 
     ComPtr<IWICBitmap> wic_bitmap;
     pimpl->wic_factory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA,
@@ -292,10 +291,8 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     wic_bitmap->CopyPixels(nullptr, stride, bitmap_data.size(), bitmap_data.data());
 
     return {
-        .left = left * scale_factor,
-        // .left = left,
-        .top = descent * scale_factor,
-        // .top = descent,
+        .left = left,
+        .top = descent,
         .width = static_cast<int32_t>(width),
         .height = static_cast<int32_t>(height),
         .buffer = std::move(bitmap_data),
@@ -548,16 +545,14 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
 
     float em_size = font_size * 96.f / 72;
     float scale = em_size / dwrite_metrics.designUnitsPerEm;
-    scale *= scale_factor;
 
     int ascent = std::ceil(dwrite_metrics.ascent * scale);
     int descent = std::ceil(-dwrite_metrics.descent * scale);
-
-    // Round up to the next even number if odd.
-    if (ascent % 2 == 1) ++ascent;
-    if (descent % 2 == 1) ++descent;
-
     int line_gap = std::ceil(dwrite_metrics.lineGap * scale);
+    ascent *= scale_factor;
+    descent *= scale_factor;
+    line_gap *= scale_factor;
+
     int line_height = ascent - descent + line_gap;
 
     Metrics metrics = {

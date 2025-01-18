@@ -131,6 +131,10 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
         int32_t width = rglyph.width;
         int32_t height = rglyph.height;
 
+        // TODO: Why does this work for DirectWrite?
+        int scale_factor = 2;
+        top -= metrics.descent * scale_factor;
+
         // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
         top = line_height - top;
 

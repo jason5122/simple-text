@@ -48,6 +48,7 @@ public:
     ComPtr<ID2D1Factory> d2d1_factory;
     ComPtr<IWICImagingFactory2> wic_factory;
     ComPtr<ID2D1DCRenderTarget> dc_target;
+    ComPtr<IDWriteRenderingParams> text_rendering_params;
 
     struct DWriteInfo {
         std::wstring font_name16;
@@ -81,10 +82,9 @@ FontRasterizer::FontRasterizer() : pimpl(new impl()) {
     FLOAT enhanced_contrast = default_params->GetEnhancedContrast();
     FLOAT cleartype_level = default_params->GetClearTypeLevel();
     // TODO: See if we should hard code pixel geometry and rendering mode.
-    ComPtr<IDWriteRenderingParams> params;
     pimpl->dwrite_factory->CreateCustomRenderingParams(
         gamma, enhanced_contrast, cleartype_level, DWRITE_PIXEL_GEOMETRY_RGB,
-        DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC, &params);
+        DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC, &pimpl->text_rendering_params);
 
     D2D1_RENDER_TARGET_PROPERTIES render_target_properties = {
         .type = D2D1_RENDER_TARGET_TYPE_DEFAULT,
@@ -99,7 +99,7 @@ FontRasterizer::FontRasterizer() : pimpl(new impl()) {
         .minLevel = D2D1_FEATURE_LEVEL_DEFAULT,
     };
     pimpl->d2d1_factory->CreateDCRenderTarget(&render_target_properties, &pimpl->dc_target);
-    pimpl->dc_target->SetTextRenderingParams(params.Get());
+    pimpl->dc_target->SetTextRenderingParams(pimpl->text_rendering_params.Get());
 }
 
 FontRasterizer::~FontRasterizer() {}
@@ -285,14 +285,23 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
         D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
 
-        // TODO: Find a way to reuse render target and brushes.
-        ComPtr<ID2D1RenderTarget> target;
-        pimpl->d2d1_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props, &target);
+        ComPtr<ID2D1RenderTarget> render_target;
+        pimpl->d2d1_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props, &render_target);
+        ComPtr<ID2D1DeviceContext4> render_target4;
+        hr = render_target.As(&render_target4);
+        if (FAILED(hr)) {
+            fmt::println("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
+            std::abort();
+        }
+        render_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
+        render_target4->SetDpi(96.0, 96.0);
+        render_target4->SetTextRenderingParams(pimpl->text_rendering_params.Get());
+
         D2D1_POINT_2F baseline_origin = {
             .x = 0,
             .y = static_cast<FLOAT>(-texture_bounds.top),
         };
-        DrawColorRun(target.Get(), color_run_enumerator.Get(), baseline_origin);
+        DrawColorRun(render_target.Get(), color_run_enumerator.Get(), baseline_origin);
 
         // TODO: Try to use the bitmap data without copying/manipulating the pixels.
         // TODO: Change stride based on plain/colored text.

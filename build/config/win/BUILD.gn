@@ -1,3 +1,9 @@
+config("compiler") {
+  cflags = [
+    "/utf-8",  # Assume UTF-8 by default to avoid code page dependencies.
+  ]
+}
+
 # Character set ----------------------------------------------------------------
 
 # Not including this config means "ansi" (8-bit system codepage).

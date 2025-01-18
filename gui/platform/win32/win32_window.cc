@@ -148,6 +148,9 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         // https://devblogs.microsoft.com/oldnewthing/20041018-00/?p=37543
         LONG click_time = GetMessageTime();
         UINT delta = click_time - last_click_time;
+
+        // TODO: Cache `GetDoubleClickTime()`.
+        // TODO: Also incorporate `SM_CXDOUBLECLK`/`SM_CYDOUBLECLK`.
         if (delta > GetDoubleClickTime()) {
             click_count = 0;
         }
@@ -166,7 +169,6 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_LBUTTONUP: {
         ReleaseCapture();
-        click_count = 0;
         return 0;
     }
 

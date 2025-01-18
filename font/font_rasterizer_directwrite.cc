@@ -546,14 +546,11 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     float em_size = font_size * 96.f / 72;
     float scale = em_size / dwrite_metrics.designUnitsPerEm;
 
-    int ascent = std::ceil(dwrite_metrics.ascent * scale);
-    int descent = std::ceil(-dwrite_metrics.descent * scale);
-    int line_gap = std::ceil(dwrite_metrics.lineGap * scale);
-    ascent *= scale_factor;
-    descent *= scale_factor;
-    line_gap *= scale_factor;
+    int ascent = std::ceil(dwrite_metrics.ascent * scale * scale_factor);
+    int descent = std::ceil(dwrite_metrics.descent * scale * scale_factor);
+    int line_gap = std::ceil(dwrite_metrics.lineGap * scale * scale_factor);
 
-    int line_height = ascent - descent + line_gap;
+    int line_height = ascent + descent + line_gap;
 
     Metrics metrics = {
         .line_height = line_height,

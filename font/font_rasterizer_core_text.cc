@@ -249,6 +249,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     // TODO: Don't hard-code scale factor.
     int scale_factor = 2;
 
+    // TODO: Do we multiply before std::ceil()? That is correct for DirectWrite.
     int ascent = std::ceil(CTFontGetAscent(ct_font));
     int descent = std::ceil(CTFontGetDescent(ct_font));
     int leading = std::ceil(CTFontGetLeading(ct_font));

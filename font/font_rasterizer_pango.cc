@@ -266,6 +266,7 @@ size_t FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     // TODO: Don't hard-code this.
     int scale_factor = 2;
 
+    // TODO: Do we use std::ceil()?
     int ascent = pango_font_metrics_get_ascent(pango_metrics.get()) / PANGO_SCALE;
     int descent = pango_font_metrics_get_descent(pango_metrics.get()) / PANGO_SCALE;
     int height = pango_font_metrics_get_height(pango_metrics.get()) / PANGO_SCALE;

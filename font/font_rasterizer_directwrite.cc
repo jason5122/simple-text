@@ -370,6 +370,9 @@ public:
             fmt::println("Glyph run without font face.");
             std::abort();
         }
+        if (glyph_run->glyphCount == 0) {
+            return S_OK;
+        }
 
         // Cache font.
         auto font_rasterizer = static_cast<FontRasterizer*>(client_drawing_context);

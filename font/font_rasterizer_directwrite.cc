@@ -194,23 +194,26 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         return {};
     }
 
-    int width = std::ceil((bounds.right - bounds.left) * scale_factor);
-    int height = std::ceil((bounds.bottom - bounds.top) * scale_factor);
-    int left = std::ceil(bounds.left);
-    int top = -std::ceil(bounds.top * scale_factor);
+    int left = std::floor(bounds.left);
+    int right = std::ceil(bounds.right);
+    int top = std::floor(bounds.top);
+    int bottom = std::ceil(bounds.bottom);
+
+    int width = right - left;
+    int height = bottom - top;
+    int descent = -top;
+
+    descent += 8;  // TODO: Why does this work?
+
+    fmt::println("{} {} {} {} {}", left, right, top, bottom, metrics(font_id).line_height);
+
+    width *= scale_factor;
+    height *= scale_factor;
 
     D2D1_POINT_2F baseline_origin = {
         .x = static_cast<FLOAT>(-left),
-        .y = static_cast<FLOAT>(top),
+        .y = static_cast<FLOAT>(-top),
     };
-
-    // TODO: Refactor these hacks.
-    top += metrics(font_id).line_height;
-    width += left;
-    height += top;
-    if (width <= 0 || height <= 0) {
-        return {};
-    }
 
     ComPtr<IWICBitmap> wic_bitmap;
     pimpl->wic_factory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA,
@@ -284,16 +287,15 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     }
     render_target4->EndDraw();
 
-    // TODO: Try to use the bitmap data without copying/manipulating the pixels.
-    // TODO: Change stride based on plain/colored text.
     UINT stride = width * 4;
     std::vector<uint8_t> bitmap_data(stride * height);
     wic_bitmap->CopyPixels(nullptr, stride, bitmap_data.size(), bitmap_data.data());
 
     return {
-        .left = 0,
+        .left = left * scale_factor,
         // .left = left,
-        .top = top,
+        .top = descent * scale_factor,
+        // .top = descent,
         .width = static_cast<int32_t>(width),
         .height = static_cast<int32_t>(height),
         .buffer = std::move(bitmap_data),

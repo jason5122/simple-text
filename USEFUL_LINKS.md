@@ -1,5 +1,9 @@
 # Useful Links
 
+## D3D11
+
+- [Minimal D3D11 setup](https://gist.github.com/d7samurai/261c69490cce0620d0bfc93003cd1052)
+
 ## Chromium
 
 - [Skia tab drawing code](https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/ui/views/tabs/tab_style_views.cc;l=370;drc=a438ffb4145448ea189d11daa7c9f8bdc2e77238)

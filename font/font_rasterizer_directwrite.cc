@@ -59,15 +59,21 @@ public:
 
 FontRasterizer::FontRasterizer() : pimpl(new impl()) {
     // TODO: Check return values here and handle errors.
-    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4),
-                        reinterpret_cast<IUnknown**>(&pimpl->dwrite_factory));
-    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pimpl->d2d1_factory);
+
+    // Create DirectWrite factory.
+    ComPtr<IUnknown> factory_unknown;
+    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory4), &factory_unknown);
+    factory_unknown.CopyTo(&pimpl->dwrite_factory);
+    // Create D2D1 factory.
+    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory),
+                      &pimpl->d2d1_factory);
+    // Create WIC bitmap factory.
     CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                      IID_PPV_ARGS(&pimpl->wic_factory));
 
     WCHAR locale_storage[LOCALE_NAME_MAX_LENGTH];
     GetUserDefaultLocaleName(locale_storage, LOCALE_NAME_MAX_LENGTH);
-    pimpl->locale = std::wstring(locale_storage);
+    pimpl->locale = locale_storage;
 
     ComPtr<IDWriteRenderingParams> default_params;
     pimpl->dwrite_factory->CreateRenderingParams(&default_params);
@@ -151,6 +157,8 @@ FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
 }
 
 RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) const {
+    HRESULT hr;
+
     ComPtr<IDWriteFont> font = font_id_to_native[font_id].font;
     const auto& dwrite_info = pimpl->font_id_to_dwrite_info[font_id];
 
@@ -173,7 +181,12 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
     // TODO: Debug this.
     ComPtr<ID2D1DeviceContext4> dc_target4;
-    pimpl->dc_target->QueryInterface(reinterpret_cast<ID2D1DeviceContext4**>(&dc_target4));
+    hr = pimpl->dc_target.As(&dc_target4);
+    if (FAILED(hr)) {
+        fmt::println("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
+        std::abort();
+    }
+
     dc_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
     dc_target4->SetDpi(96.0, 96.0);
     D2D1_RECT_F bounds;
@@ -217,11 +230,15 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
     int32_t top = -texture_bounds.top;
 
-    HRESULT hr = DWRITE_E_NOCOLOR;
-    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
-
     ComPtr<IDWriteFontFace2> font_face_2;
-    font_face->QueryInterface(reinterpret_cast<IDWriteFontFace2**>(&font_face_2));
+    hr = font_face.As(&font_face_2);
+    if (FAILED(hr)) {
+        fmt::println("IDWriteFontFace2 error: Windows 10 is the oldest supported version");
+        std::abort();
+    }
+
+    hr = DWRITE_E_NOCOLOR;
+    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
     if (font_face_2->IsColorFont()) {
         DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
         hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr, image_formats,

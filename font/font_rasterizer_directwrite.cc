@@ -29,9 +29,6 @@ namespace font {
 
 namespace {
 
-inline void DrawColorRun(ID2D1RenderTarget* target,
-                         IDWriteColorGlyphRunEnumerator1* color_run_enumerator,
-                         const D2D1_POINT_2F& baseline_origin);
 inline std::wstring GetPostscriptName(IDWriteFont* font, std::wstring_view locale);
 inline std::wstring GetFontFamilyName(IDWriteFont* font, std::wstring_view locale);
 inline std::wstring GetLocaleName(IDWriteLocalizedStrings* strings, std::wstring_view locale);
@@ -237,14 +234,39 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         std::abort();
     }
 
-    hr = DWRITE_E_NOCOLOR;
-    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
-    if (font_face_2->IsColorFont()) {
-        DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
-        hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr, image_formats,
-                                                           DWRITE_MEASURING_MODE_NATURAL, nullptr,
-                                                           0, &color_run_enumerator);
+    // TODO: Consider making a helper function for this. Also see if the below method works.
+    // D2D1_RENDER_TARGET_PROPERTIES render_target_properties = D2D1::RenderTargetProperties();
+    D2D1_RENDER_TARGET_PROPERTIES render_target_properties = {
+        .type = D2D1_RENDER_TARGET_TYPE_DEFAULT,
+        .pixelFormat =
+            {
+                .format = DXGI_FORMAT_B8G8R8A8_UNORM,
+                .alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED,
+            },
+        .dpiX = 96.0,
+        .dpiY = 96.0,
+        .usage = D2D1_RENDER_TARGET_USAGE_NONE,
+        .minLevel = D2D1_FEATURE_LEVEL_DEFAULT,
+    };
+
+    ComPtr<ID2D1RenderTarget> render_target;
+    pimpl->d2d1_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), render_target_properties,
+                                                     &render_target);
+    ComPtr<ID2D1DeviceContext4> render_target4;
+    hr = render_target.As(&render_target4);
+    if (FAILED(hr)) {
+        fmt::println("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
+        std::abort();
     }
+    render_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
+    render_target4->SetDpi(96.0, 96.0);
+    render_target4->SetTextRenderingParams(pimpl->text_rendering_params.Get());
+
+    ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
+    DWRITE_GLYPH_IMAGE_FORMATS image_formats = DWRITE_GLYPH_IMAGE_FORMATS_COLR;
+    hr = pimpl->dwrite_factory->TranslateColorGlyphRun({}, &glyph_run, nullptr, image_formats,
+                                                       DWRITE_MEASURING_MODE_NATURAL, nullptr, 0,
+                                                       &color_run_enumerator);
 
     // Non-colored glyph run.
     if (hr == DWRITE_E_NOCOLOR) {
@@ -283,25 +305,37 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         pimpl->wic_factory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA,
                                          WICBitmapCacheOnDemand, &wic_bitmap);
 
-        D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
-
-        ComPtr<ID2D1RenderTarget> render_target;
-        pimpl->d2d1_factory->CreateWicBitmapRenderTarget(wic_bitmap.Get(), props, &render_target);
-        ComPtr<ID2D1DeviceContext4> render_target4;
-        hr = render_target.As(&render_target4);
-        if (FAILED(hr)) {
-            fmt::println("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
-            std::abort();
-        }
-        render_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
-        render_target4->SetDpi(96.0, 96.0);
-        render_target4->SetTextRenderingParams(pimpl->text_rendering_params.Get());
-
         D2D1_POINT_2F baseline_origin = {
             .x = 0,
             .y = static_cast<FLOAT>(-texture_bounds.top),
         };
-        DrawColorRun(render_target.Get(), color_run_enumerator.Get(), baseline_origin);
+
+        ComPtr<ID2D1SolidColorBrush> brush;
+        render_target4->CreateSolidColorBrush({1.0f, 1.0f, 1.0f, 1.0f}, &brush);
+
+        render_target4->BeginDraw();
+        while (true) {
+            BOOL has_run;
+            const DWRITE_COLOR_GLYPH_RUN1* color_run;
+            if (FAILED(color_run_enumerator->MoveNext(&has_run)) || !has_run) {
+                break;
+            }
+            if (FAILED(color_run_enumerator->GetCurrentRun(&color_run))) {
+                break;
+            }
+
+            switch (color_run->glyphImageFormat) {
+            case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
+                brush->SetColor(color_run->runColor);
+                render_target4->DrawGlyphRun(baseline_origin, &color_run->glyphRun, brush.Get(),
+                                             color_run->measuringMode);
+                break;
+            default:
+                fmt::println("Error: DirectWrite glyph image format unimplemented");
+                std::abort();
+            }
+        }
+        render_target4->EndDraw();
 
         // TODO: Try to use the bitmap data without copying/manipulating the pixels.
         // TODO: Change stride based on plain/colored text.
@@ -595,37 +629,6 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
 }
 
 namespace {
-
-void DrawColorRun(ID2D1RenderTarget* target,
-                  IDWriteColorGlyphRunEnumerator1* color_run_enumerator,
-                  const D2D1_POINT_2F& baseline_origin) {
-    ComPtr<ID2D1SolidColorBrush> brush;
-    target->CreateSolidColorBrush({1.0f, 1.0f, 1.0f, 1.0f}, &brush);
-
-    target->BeginDraw();
-    while (true) {
-        BOOL has_run;
-        const DWRITE_COLOR_GLYPH_RUN1* color_run;
-        if (FAILED(color_run_enumerator->MoveNext(&has_run)) || !has_run) {
-            break;
-        }
-        if (FAILED(color_run_enumerator->GetCurrentRun(&color_run))) {
-            break;
-        }
-
-        switch (color_run->glyphImageFormat) {
-        case DWRITE_GLYPH_IMAGE_FORMATS_COLR:
-            brush->SetColor(color_run->runColor);
-            target->DrawGlyphRun(baseline_origin, &color_run->glyphRun, brush.Get(),
-                                 color_run->measuringMode);
-            break;
-        default:
-            fmt::println("Error: DirectWrite glyph image format unimplemented");
-            std::abort();
-        }
-    }
-    target->EndDraw();
-}
 
 std::wstring GetPostscriptName(IDWriteFont* font, std::wstring_view locale) {
     ComPtr<IDWriteLocalizedStrings> font_id_keyed_names;

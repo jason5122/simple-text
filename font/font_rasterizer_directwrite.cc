@@ -156,6 +156,8 @@ FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
 RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) const {
     HRESULT hr;
 
+    int scale_factor = 2;
+
     ComPtr<IDWriteFont> font = font_id_to_native[font_id].font;
     const auto& dwrite_info = pimpl->font_id_to_dwrite_info[font_id];
 
@@ -176,66 +178,41 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         .bidiLevel = 0,
     };
 
-    // TODO: Debug this.
     ComPtr<ID2D1DeviceContext4> dc_target4;
     hr = pimpl->dc_target.As(&dc_target4);
     if (FAILED(hr)) {
         fmt::println("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
         std::abort();
     }
-
     dc_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
-    dc_target4->SetDpi(96.0, 96.0);
+    dc_target4->SetDpi(96.0 * scale_factor, 96.0 * scale_factor);
+
     D2D1_RECT_F bounds;
     dc_target4->GetGlyphRunWorldBounds({}, &glyph_run, DWRITE_MEASURING_MODE_NATURAL, &bounds);
+    // TODO: Clean this up.
+    if (bounds.right < bounds.left) {
+        return {};
+    }
 
-    ComPtr<IDWriteRenderingParams> rendering_params;
-    pimpl->dwrite_factory->CreateRenderingParams(&rendering_params);
-
-    DWRITE_RENDERING_MODE rendering_mode;
-    font_face->GetRecommendedRenderingMode(dwrite_info.em_size, 1.0, DWRITE_MEASURING_MODE_NATURAL,
-                                           rendering_params.Get(), &rendering_mode);
-
-    ComPtr<IDWriteGlyphRunAnalysis> glyph_run_analysis;
-    pimpl->dwrite_factory->CreateGlyphRunAnalysis(&glyph_run, 1.0, nullptr, rendering_mode,
-                                                  DWRITE_MEASURING_MODE_NATURAL, 0.0, 0.0,
-                                                  &glyph_run_analysis);
-
-    RECT texture_bounds;
-    glyph_run_analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds);
-
-    // TODO: Debug use; remove this.
-    fmt::println("font = {}, glyph = {}, left = {} vs {}, top = {} vs {}, right = {} vs {}, "
-                 "bottom = {} vs {}",
-                 font_id, glyph_id, bounds.left, texture_bounds.left, bounds.top,
-                 texture_bounds.top, bounds.right, texture_bounds.right, bounds.bottom,
-                 texture_bounds.bottom);
-    texture_bounds.left = std::ceil(bounds.left);
-    texture_bounds.top = std::ceil(bounds.top);
-    texture_bounds.right = std::ceil(bounds.right);
-    texture_bounds.bottom = std::ceil(bounds.bottom);
-
-    LONG pixel_width = texture_bounds.right - texture_bounds.left;
-    LONG pixel_height = texture_bounds.bottom - texture_bounds.top;
-    UINT32 size = pixel_width * pixel_height * 3;
-
-    DWRITE_GLYPH_METRICS metrics;
-    font_face->GetDesignGlyphMetrics(&glyph_index, 1, &metrics, false);
-
-    DWRITE_FONT_METRICS font_metrics;
-    font_face->GetMetrics(&font_metrics);
-
-    int32_t top = -texture_bounds.top;
+    int width = std::ceil((bounds.right - bounds.left) * scale_factor);
+    int height = std::ceil((bounds.bottom - bounds.top) * scale_factor);
+    int left = std::ceil(bounds.left);
+    int top = -std::ceil(bounds.top * scale_factor);
 
     D2D1_POINT_2F baseline_origin = {
-        .x = 0,
+        .x = static_cast<FLOAT>(-left),
         .y = static_cast<FLOAT>(top),
     };
 
+    // TODO: Refactor these hacks.
+    top += metrics(font_id).line_height;
+    width += left;
+    height += top;
+    if (width <= 0 || height <= 0) {
+        return {};
+    }
+
     ComPtr<IWICBitmap> wic_bitmap;
-    // TODO: Implement without magic numbers. Properly find the right width/height.
-    UINT width = pixel_width + 10;
-    UINT height = pixel_height + 10;
     pimpl->wic_factory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA,
                                      WICBitmapCacheOnDemand, &wic_bitmap);
 
@@ -264,7 +241,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         std::abort();
     }
     render_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
-    render_target4->SetDpi(96.0, 96.0);
+    render_target4->SetDpi(96.0 * scale_factor, 96.0 * scale_factor);
     render_target4->SetTextRenderingParams(pimpl->text_rendering_params.Get());
 
     ComPtr<IDWriteColorGlyphRunEnumerator1> color_run_enumerator;
@@ -315,6 +292,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
     return {
         .left = 0,
+        // .left = left,
         .top = top,
         .width = static_cast<int32_t>(width),
         .height = static_cast<int32_t>(height),
@@ -387,6 +365,8 @@ public:
                                 DWRITE_GLYPH_RUN_DESCRIPTION const* glyph_run_description,
                                 IUnknown* client_drawing_effect) override {
 
+        int scale_factor = 2;
+
         if (!glyph_run->fontFace) {
             fmt::println("Glyph run without font face.");
             std::abort();
@@ -406,7 +386,7 @@ public:
         for (size_t i = 0; i < glyph_count; ++i) {
             uint32_t glyph_id = glyph_run->glyphIndices[i];
             // TODO: Verify that rounding up is correct.
-            int advance = std::ceil(glyph_run->glyphAdvances[i]);
+            int advance = std::ceil(glyph_run->glyphAdvances[i] * scale_factor);
 
             size_t utf8_index = indices_map.map_index(text_position + inverted_cluster_map[i]);
             ShapedGlyph glyph = {
@@ -547,6 +527,8 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
 }
 
 FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
+    int scale_factor = 2;
+
     ComPtr<IDWriteFont> dwrite_font = native_font.font;
     std::wstring font_name = GetPostscriptName(dwrite_font.Get(), pimpl->locale);
 
@@ -564,6 +546,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
 
     float em_size = font_size * 96.f / 72;
     float scale = em_size / dwrite_metrics.designUnitsPerEm;
+    scale *= scale_factor;
 
     int ascent = std::ceil(dwrite_metrics.ascent * scale);
     int descent = std::ceil(-dwrite_metrics.descent * scale);

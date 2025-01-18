@@ -227,12 +227,17 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
     int32_t top = -texture_bounds.top;
 
-    ComPtr<IDWriteFontFace2> font_face_2;
-    hr = font_face.As(&font_face_2);
-    if (FAILED(hr)) {
-        fmt::println("IDWriteFontFace2 error: Windows 10 is the oldest supported version");
-        std::abort();
-    }
+    D2D1_POINT_2F baseline_origin = {
+        .x = 0,
+        .y = static_cast<FLOAT>(top),
+    };
+
+    ComPtr<IWICBitmap> wic_bitmap;
+    // TODO: Implement without magic numbers. Properly find the right width/height.
+    UINT width = pixel_width + 10;
+    UINT height = pixel_height + 10;
+    pimpl->wic_factory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA,
+                                     WICBitmapCacheOnDemand, &wic_bitmap);
 
     // TODO: Consider making a helper function for this. Also see if the below method works.
     // D2D1_RENDER_TARGET_PROPERTIES render_target_properties = D2D1::RenderTargetProperties();
@@ -268,52 +273,13 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
                                                        DWRITE_MEASURING_MODE_NATURAL, nullptr, 0,
                                                        &color_run_enumerator);
 
-    // Non-colored glyph run.
-    if (hr == DWRITE_E_NOCOLOR) {
-        std::vector<uint8_t> buffer(size);
-        glyph_run_analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &texture_bounds,
-                                               buffer.data(), size);
+    ComPtr<ID2D1SolidColorBrush> brush;
+    render_target4->CreateSolidColorBrush({1.0f, 1.0f, 1.0f, 1.0f}, &brush);
 
-        // TODO: Clean this up.
-        size_t pixels = pixel_width * pixel_height;
-        std::vector<uint8_t> bitmap_data;
-        bitmap_data.reserve(pixels * 4);
-        for (size_t i = 0; i < pixels; ++i) {
-            size_t offset = i * 3;
-            bitmap_data.emplace_back(buffer[offset]);
-            bitmap_data.emplace_back(buffer[offset]);
-            bitmap_data.emplace_back(buffer[offset]);
-            bitmap_data.emplace_back(buffer[offset]);
-        }
+    render_target4->BeginDraw();
 
-        return {
-            .left = texture_bounds.left,
-            .top = top,
-            .width = static_cast<int32_t>(pixel_width),
-            .height = static_cast<int32_t>(pixel_height),
-            // .buffer = std::move(buffer),
-            .buffer = std::move(bitmap_data),
-            .colored = false,
-        };
-    }
-    // Colored glyph run.
-    else {
-        ComPtr<IWICBitmap> wic_bitmap;
-        // TODO: Implement without magic numbers. Properly find the right width/height.
-        UINT width = pixel_width + 10;
-        UINT height = pixel_height + 10;
-        pimpl->wic_factory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA,
-                                         WICBitmapCacheOnDemand, &wic_bitmap);
-
-        D2D1_POINT_2F baseline_origin = {
-            .x = 0,
-            .y = static_cast<FLOAT>(-texture_bounds.top),
-        };
-
-        ComPtr<ID2D1SolidColorBrush> brush;
-        render_target4->CreateSolidColorBrush({1.0f, 1.0f, 1.0f, 1.0f}, &brush);
-
-        render_target4->BeginDraw();
+    bool colored = hr != DWRITE_E_NOCOLOR;
+    if (colored) {
         while (true) {
             BOOL has_run;
             const DWRITE_COLOR_GLYPH_RUN1* color_run;
@@ -335,23 +301,26 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
                 std::abort();
             }
         }
-        render_target4->EndDraw();
-
-        // TODO: Try to use the bitmap data without copying/manipulating the pixels.
-        // TODO: Change stride based on plain/colored text.
-        UINT stride = width * 4;
-        std::vector<uint8_t> bitmap_data(stride * height);
-        wic_bitmap->CopyPixels(nullptr, stride, bitmap_data.size(), bitmap_data.data());
-
-        return {
-            .left = 0,
-            .top = top,
-            .width = static_cast<int32_t>(width),
-            .height = static_cast<int32_t>(height),
-            .buffer = std::move(bitmap_data),
-            .colored = true,
-        };
+    } else {
+        render_target4->DrawGlyphRun(baseline_origin, &glyph_run, brush.Get(),
+                                     DWRITE_MEASURING_MODE_NATURAL);
     }
+    render_target4->EndDraw();
+
+    // TODO: Try to use the bitmap data without copying/manipulating the pixels.
+    // TODO: Change stride based on plain/colored text.
+    UINT stride = width * 4;
+    std::vector<uint8_t> bitmap_data(stride * height);
+    wic_bitmap->CopyPixels(nullptr, stride, bitmap_data.size(), bitmap_data.data());
+
+    return {
+        .left = 0,
+        .top = top,
+        .width = static_cast<int32_t>(width),
+        .height = static_cast<int32_t>(height),
+        .buffer = std::move(bitmap_data),
+        .colored = colored,
+    };
 }
 
 namespace {

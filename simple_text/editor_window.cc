@@ -193,6 +193,7 @@ void EditorWindow::leftMouseDown(const Point& mouse_pos,
         }
 
         dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
+        main_widget->layout();
         // TODO: See if we should call `updateCursorStyle()` here.
         // TODO: Not all widgets should initiate a drag.
         redraw();

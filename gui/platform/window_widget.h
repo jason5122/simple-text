@@ -49,6 +49,9 @@ public:
     // private:
     class impl;
     std::unique_ptr<impl> pimpl;
+
+private:
+    CursorStyle current_style = CursorStyle::kArrow;
 };
 
 }  // namespace gui

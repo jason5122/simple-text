@@ -95,6 +95,9 @@ std::optional<std::string> WindowWidget::openFilePicker() const {
 }
 
 void WindowWidget::setCursorStyle(CursorStyle style) {
+    if (current_style == style) return;
+    current_style = style;
+
     if (style == CursorStyle::kArrow) {
         [NSCursor.arrowCursor set];
     } else if (style == CursorStyle::kIBeam) {

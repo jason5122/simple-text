@@ -2,6 +2,8 @@
 
 #include "gui/platform/win32/impl_win.h"
 
+#include <fmt/base.h>
+
 namespace gui {
 
 WindowWidget::WindowWidget(App& app, int width, int height)
@@ -58,7 +60,18 @@ std::optional<std::string> WindowWidget::openFilePicker() const {
 
 // TODO: Implement this.
 void WindowWidget::setCursorStyle(CursorStyle style) {
-    ;
+    if (current_style == style) return;
+    current_style = style;
+
+    if (style == CursorStyle::kArrow) {
+        SetCursor(LoadCursor(nullptr, IDC_ARROW));
+    } else if (style == CursorStyle::kIBeam) {
+        SetCursor(LoadCursor(nullptr, IDC_IBEAM));
+    } else if (style == CursorStyle::kResizeLeftRight) {
+        SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+    } else if (style == CursorStyle::kResizeUpDown) {
+        SetCursor(LoadCursor(nullptr, IDC_SIZENS));
+    }
 }
 
 // TODO: Implement this.

@@ -96,9 +96,7 @@ void EditorWindow::draw() {
         status_bar->setText("No file open");
     }
 
-    main_widget->layout();
     main_widget->draw();
-
     Renderer::instance().flush(size);
 
     // TODO: Refactor this.
@@ -164,11 +162,15 @@ void EditorWindow::onFrame(int64_t ms) {
 }
 
 // TODO: Verify that resize is always called on all platforms when the window is created.
-// TODO: Verify that resizes are followed by redraw calls in the GUI framework.
 void EditorWindow::layout() {
     main_widget->setSize(size);
+    main_widget->layout();
     // side_bar->setMinimumWidth(100);
     // side_bar->setMaximumWidth(size.width - 100);
+
+    // Manually redraw just to be safe. Windows does not automatically redraw when the window size
+    // shrinks.
+    redraw();
 }
 
 void EditorWindow::performScroll(const Point& mouse_pos, const Delta& delta) {
@@ -214,6 +216,7 @@ void EditorWindow::leftMouseDrag(const Point& mouse_pos,
                                  ClickType click_type) {
     if (dragged_widget) {
         dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
+        main_widget->layout();
         // TODO: See if we should call `updateCursorStyle()` here.
         // TODO: Not all widgets should initiate a drag.
         redraw();

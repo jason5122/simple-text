@@ -185,10 +185,11 @@ FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
     return add_font(font_name8, font_size, font_style);
 }
 
-// TODO: Implement this.
 FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
-    fmt::println("Warning: Implement FontRasterizer::resize_font()");
-    return font_id;
+    ComPtr<IDWriteFont> font = font_id_to_native[font_id].font;
+    std::wstring font_name16 = GetFontFamilyName(font.Get(), pimpl->locale);
+    std::string font_name8 = base::windows::ConvertToUTF8(font_name16);
+    return add_font(font_name8, font_size);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) const {

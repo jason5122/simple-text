@@ -46,12 +46,11 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         wglMakeCurrent(m_hdc, dummy_context.m_context);
 
-        RECT rect;
-        GetClientRect(m_hwnd, &rect);
-        int scaled_width = rect.right;
-        int scaled_height = rect.bottom;
-
         // TODO: See if we need to set the size here.
+        // RECT rect;
+        // GetClientRect(m_hwnd, &rect);
+        // int scaled_width = rect.right;
+        // int scaled_height = rect.bottom;
         // app_window.setSize({scaled_width, scaled_height});
         app_window.onOpenGLActivate();
 
@@ -177,6 +176,11 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_LBUTTONUP: {
         ReleaseCapture();
+
+        int mouse_x = GET_X_LPARAM(lParam);
+        int mouse_y = GET_Y_LPARAM(lParam);
+        Point mouse_pos = {mouse_x, mouse_y};
+        app_window.leftMouseUp(mouse_pos);
         return 0;
     }
 
@@ -316,19 +320,24 @@ void Win32Window::redraw() {
 }
 
 BOOL Win32Window::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
+    // TODO: Clean this up. Do we even need a unique class name?
     std::wstring class_name = L"ClassName";
     class_name += std::to_wstring(wid);
 
-    WNDCLASS wc{
+    WNDCLASSEX wc = {
+        .cbSize = sizeof(WNDCLASSEX),
         .lpfnWndProc = WindowProc,
         .hInstance = GetModuleHandle(nullptr),
-        .hCursor = LoadCursor(nullptr, IDC_IBEAM),
-        // TODO: Change this color based on the editor background color.
-        .hbrBackground = CreateSolidBrush(RGB(253, 253, 253)),
+        // We set our own cursor shapes.
+        .hCursor = nullptr,
+        // We paint our own backgrounds.
+        .hbrBackground = nullptr,
         .lpszClassName = class_name.data(),
     };
+    RegisterClassEx(&wc);
 
-    RegisterClass(&wc);
+    // Set cursor to arrow (otherwise IDC_WAIT appears as a default).
+    SetCursor(LoadCursor(nullptr, IDC_ARROW));
 
     m_hwnd =
         CreateWindowEx(0, class_name.data(), lpWindowName, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -431,6 +440,8 @@ constexpr Key KeyFromKeyCode(WPARAM vk) {
         {VK_RIGHT, Key::kRightArrow},
         {VK_DOWN, Key::kDownArrow},
         {VK_UP, Key::kUpArrow},
+        {VK_OEM_PLUS, Key::kEqual},
+        {VK_OEM_MINUS, Key::kMinus},
     };
     for (size_t i = 0; i < std::size(kKeyMap); ++i) {
         if (kKeyMap[i].vk == vk) {

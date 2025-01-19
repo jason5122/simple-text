@@ -175,12 +175,14 @@ FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
     metrics.cbSize = sizeof(metrics);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, metrics.cbSize, &metrics, 0);
 
-    IDWriteGdiInterop* gdi_interop = nullptr;
+    ComPtr<IDWriteGdiInterop> gdi_interop;
     pimpl->dwrite_factory->GetGdiInterop(&gdi_interop);
-
     ComPtr<IDWriteFont> sys_font;
     gdi_interop->CreateFontFromLOGFONT(&metrics.lfMessageFont, &sys_font);
-    return cache_font({sys_font}, font_size);
+
+    std::wstring font_name16 = GetFontFamilyName(sys_font.Get(), pimpl->locale);
+    std::string font_name8 = base::windows::ConvertToUTF8(font_name16);
+    return add_font(font_name8, font_size, font_style);
 }
 
 // TODO: Implement this.

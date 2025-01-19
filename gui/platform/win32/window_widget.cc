@@ -23,7 +23,7 @@ void WindowWidget::show() {
         .showCmd = SW_NORMAL,
         .rcNormalPosition = RECT{0, 0, width * 2, height * 2},
     };
-    SetWindowPlacement(pimpl->win32_window.m_hwnd, &placement);
+    SetWindowPlacement(pimpl->win32_window.get_hwnd(), &placement);
 }
 
 void WindowWidget::close() {
@@ -43,7 +43,7 @@ bool WindowWidget::isDarkMode() const {
 }
 
 void WindowWidget::setTitle(std::string_view title) {
-    pimpl->win32_window.setTitle(title);
+    pimpl->win32_window.set_title(title);
 }
 
 // TODO: Implement this.

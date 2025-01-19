@@ -25,7 +25,7 @@ inline void AddMenu(HWND hwnd);  // TODO: Clean this up.
 
 }  // namespace
 
-LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
 
     case WM_CREATE: {
@@ -145,21 +145,29 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_LBUTTONDOWN: {
         SetCapture(m_hwnd);
 
-        // https://devblogs.microsoft.com/oldnewthing/20041018-00/?p=37543
-        LONG click_time = GetMessageTime();
-        UINT delta = click_time - last_click_time;
-
-        // TODO: Cache `GetDoubleClickTime()`.
-        // TODO: Also incorporate `SM_CXDOUBLECLK`/`SM_CYDOUBLECLK`.
-        if (delta > GetDoubleClickTime()) {
-            click_count = 0;
-        }
-        // TODO: Prevent this from overflowing! This is unlikely, but prevent it anyways.
-        ++click_count;
-        last_click_time = click_time;
-
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
+
+        // https://devblogs.microsoft.com/oldnewthing/20041018-00/?p=37543
+        LONG click_time = GetMessageTime();
+        UINT delta_time = click_time - last_click_time;
+        int delta_mouse_x = std::abs(mouse_x - last_mouse_x);
+        int delta_mouse_y = std::abs(mouse_y - last_mouse_y);
+
+        // TODO: See if static is fine, or if we should cache them as members.
+        static UINT double_click_interval = GetDoubleClickTime();
+        static int double_click_x_tolerance = GetSystemMetrics(SM_CXDOUBLECLK);
+        static int double_click_y_tolerance = GetSystemMetrics(SM_CYDOUBLECLK);
+
+        if (delta_time > double_click_interval || delta_mouse_x > double_click_x_tolerance ||
+            delta_mouse_y > double_click_y_tolerance) {
+            click_count = 0;
+        }
+        ++click_count;
+        last_click_time = click_time;
+        last_mouse_x = mouse_x;
+        last_mouse_y = mouse_y;
+
         Point mouse_pos = {mouse_x, mouse_y};
         ModifierKey modifiers = ModifierFromState();
         ClickType click_type = ClickTypeFromCount(click_count);
@@ -183,7 +191,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             app_window.leftMouseDrag(mouse_pos, modifiers, click_type);
         } else {
             if (!tracking_mouse) {
-                TRACKMOUSEEVENT tme{
+                TRACKMOUSEEVENT tme = {
                     .cbSize = sizeof(TRACKMOUSEEVENT),
                     .dwFlags = TME_LEAVE,
                     .hwndTrack = m_hwnd,
@@ -195,7 +203,7 @@ LRESULT Win32Window::handleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
-    // Microsoft-endorsed implementation: https://stackoverflow.com/a/68029657/14698275
+    // Microsoft-recommended implementation: https://stackoverflow.com/a/68029657/14698275
     case WM_MOUSELEAVE: {
         tracking_mouse = false;
         app_window.mousePositionChanged(std::nullopt);
@@ -291,12 +299,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         pThis = static_cast<Win32Window*>(pCreate->lpCreateParams);
         SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 
-        pThis->m_hwnd = hwnd;
+        pThis->set_hwnd(hwnd);
     } else {
         pThis = reinterpret_cast<Win32Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
     if (pThis) {
-        return pThis->handleMessage(uMsg, wParam, lParam);
+        return pThis->handle_message(uMsg, wParam, lParam);
     } else {
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
@@ -355,14 +363,22 @@ int Win32Window::scale() {
     HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
     DEVICE_SCALE_FACTOR scale_factor;
     GetScaleFactorForMonitor(hmon, &scale_factor);
-    // fmt::println("scale_factor: {}", scale_factor);
+    fmt::println("Win32 window scale: {}", static_cast<int>(scale_factor));
     // TODO: Don't hard code this.
     return 1;
 }
 
-void Win32Window::setTitle(std::string_view title) {
+void Win32Window::set_title(std::string_view title) {
     std::wstring str16 = base::windows::ConvertToUTF16(title);
     SetWindowText(m_hwnd, str16.data());
+}
+
+HWND Win32Window::get_hwnd() const {
+    return m_hwnd;
+}
+
+void Win32Window::set_hwnd(HWND hwnd) {
+    m_hwnd = hwnd;
 }
 
 namespace {

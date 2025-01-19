@@ -43,7 +43,9 @@ FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 
-size_t FontRasterizer::add_font(std::string_view font_name_utf8, int font_size, FontStyle style) {
+size_t FontRasterizer::add_font(std::string_view font_name_utf8,
+                                int font_size,
+                                FontStyle font_style) {
     PangoFontMap* font_map = pango_cairo_font_map_get_default();
     GObjectPtr<PangoContext> context{pango_font_map_create_context(font_map)};
 
@@ -51,10 +53,10 @@ size_t FontRasterizer::add_font(std::string_view font_name_utf8, int font_size, 
     pango_font_description_set_family_static(desc.get(), font_name_utf8.data());
     pango_font_description_set_size(desc.get(), font_size * PANGO_SCALE);
 
-    if ((style & FontStyle::kBold) != FontStyle::kNone) {
+    if ((font_style & FontStyle::kBold) != FontStyle::kNone) {
         pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
     }
-    if ((style & FontStyle::kItalic) != FontStyle::kNone) {
+    if ((font_style & FontStyle::kItalic) != FontStyle::kNone) {
         pango_font_description_set_style(desc.get(), PANGO_STYLE_ITALIC);
     }
 
@@ -67,8 +69,8 @@ size_t FontRasterizer::add_font(std::string_view font_name_utf8, int font_size, 
     return cache_font({std::move(pango_font)}, font_size);
 }
 
-size_t FontRasterizer::add_system_font(int font_size, FontStyle style) {
-    return add_font("system-ui", font_size, style);
+size_t FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
+    return add_font("system-ui", font_size, font_style);
 }
 
 size_t FontRasterizer::resize_font(size_t font_id, int font_size) {

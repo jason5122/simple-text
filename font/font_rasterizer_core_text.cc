@@ -38,20 +38,20 @@ FontRasterizer::FontRasterizer() {}
 
 FontRasterizer::~FontRasterizer() {}
 
-FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle style) {
-    std::string font_style;
-    if (style == FontStyle::kNone) {
-        font_style = "Regular";
-    } else if (style == FontStyle::kBold) {
-        font_style = "Bold";
-    } else if (style == FontStyle::kItalic) {
-        font_style = "Italic";
-    } else if (style == (FontStyle::kBold | FontStyle::kItalic)) {
-        font_style = "Bold Italic";
+FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle font_style) {
+    std::string style;
+    if (font_style == FontStyle::kNone) {
+        style = "Regular";
+    } else if (font_style == FontStyle::kBold) {
+        style = "Bold";
+    } else if (font_style == FontStyle::kItalic) {
+        style = "Italic";
+    } else if (font_style == (FontStyle::kBold | FontStyle::kItalic)) {
+        style = "Bold Italic";
     }
 
     auto font_name_cfstring = base::apple::StringToCFString(font_name8);
-    auto font_style_cfstring = base::apple::StringToCFString(font_style);
+    auto font_style_cfstring = base::apple::StringToCFString(style);
     CFTypeRef keys[] = {kCTFontFamilyNameAttribute, kCTFontStyleNameAttribute};
     CFTypeRef values[] = {font_name_cfstring.get(), font_style_cfstring.get()};
     static_assert(std::size(keys) == std::size(values));
@@ -66,8 +66,8 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
     return cache_font({ct_font}, font_size);
 }
 
-FontId FontRasterizer::add_system_font(int font_size, FontStyle style) {
-    bool is_bold = (style & FontStyle::kBold) != FontStyle::kNone;
+FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
+    bool is_bold = (font_style & FontStyle::kBold) != FontStyle::kNone;
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);

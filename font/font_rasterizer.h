@@ -19,8 +19,8 @@ public:
 
     FontId add_font(std::string_view font_name8,
                     int font_size,
-                    FontStyle style = FontStyle::kNone);
-    FontId add_system_font(int font_size, FontStyle style = FontStyle::kNone);
+                    FontStyle font_style = FontStyle::kNone);
+    FontId add_system_font(int font_size, FontStyle font_style = FontStyle::kNone);
     // TODO: Clean this up. Consider keeping the same font ID or change method name from "resize"
     // to "create copy".
     FontId resize_font(FontId font_id, int font_size);

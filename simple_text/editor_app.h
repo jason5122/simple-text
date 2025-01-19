@@ -33,9 +33,9 @@ private:
     static constexpr int kMainFontSize = 11;
     static constexpr int kUIFontSizeSmall = 8;
     static constexpr int kUIFontSizeRegular = 9;
-    const std::string kMainFontFace = "Source Code Pro";
-// const std::string kMainFontFace = "Consolas";
-// const std::string kMainFontFace = "Cascadia Code";
+    static constexpr std::string_view kMainFontFace = "Source Code Pro";
+    // static constexpr std::string_view kMainFontFace = "Consolas";
+    // static constexpr std::string_view kMainFontFace = "Cascadia Code";
 #elif BUILDFLAG(IS_LINUX)
     static constexpr int kMainFontSize = 12;
     static constexpr int kUIFontSizeSmall = 11;

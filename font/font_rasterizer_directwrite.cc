@@ -69,7 +69,7 @@ FontRasterizer::FontRasterizer() : pimpl(new impl()) {
     CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                      IID_PPV_ARGS(&pimpl->wic_factory));
 
-    WCHAR locale_storage[LOCALE_NAME_MAX_LENGTH];
+    wchar_t locale_storage[LOCALE_NAME_MAX_LENGTH];
     GetUserDefaultLocaleName(locale_storage, LOCALE_NAME_MAX_LENGTH);
     pimpl->locale = locale_storage;
 
@@ -101,7 +101,7 @@ FontRasterizer::FontRasterizer() : pimpl(new impl()) {
 
 FontRasterizer::~FontRasterizer() {}
 
-FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle style) {
+FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle font_style) {
     std::wstring font_name16 = base::windows::ConvertToUTF16(font_name8);
 
     ComPtr<IDWriteFontCollection> font_collection;
@@ -124,9 +124,45 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
                      font_size);
     }
 
+    auto style = DWRITE_FONT_STYLE_NORMAL;
+    auto weight = DWRITE_FONT_WEIGHT_NORMAL;
+    if (font_style == FontStyle::kNone) {
+        style = DWRITE_FONT_STYLE_NORMAL;
+    } else if (font_style == FontStyle::kBold) {
+        weight = DWRITE_FONT_WEIGHT_BOLD;
+    } else if (font_style == FontStyle::kItalic) {
+        style = DWRITE_FONT_STYLE_ITALIC;
+    }
+
+    // TODO: Do we need this?
+    // ComPtr<IDWriteFontCollection1> font_collection1;
+    // font_collection.As(&font_collection1);
+    // ComPtr<IDWriteFontSet> font_set;
+    // font_collection1->GetFontSet(&font_set);
+    // ComPtr<IDWriteFontSet> filtered_set;
+    // font_set->GetMatchingFonts(font_name16.data(), weight, DWRITE_FONT_STRETCH_NORMAL, style,
+    //                            &filtered_set);
+    // UINT32 font_count = filtered_set->GetFontCount();
+    // for (UINT32 i = 0; i < font_count; ++i) {
+    //     ComPtr<IDWriteFontFaceReference> font_face_ref;
+    //     filtered_set->GetFontFaceReference(i, &font_face_ref);
+    //     ComPtr<IDWriteFontFace3> font_face;
+    //     font_face_ref->CreateFontFace(&font_face);
+
+    //     ComPtr<IDWriteFont> font;
+    //     HRESULT hr = font_collection1->GetFontFromFontFace(font_face.Get(), &font);
+
+    //     std::wstring font_name = GetPostscriptName(font.Get(), pimpl->locale);
+    //     fmt::println(L"font name = {}", font_name);
+
+    //     if (SUCCEEDED(hr)) {
+    //         fmt::println("Found font in filtered collection!");
+    //         return cache_font({font}, font_size);
+    //     }
+    // }
+
     ComPtr<IDWriteFont> font;
-    hr = font_family->GetFirstMatchingFont(DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STRETCH_NORMAL,
-                                           DWRITE_FONT_STYLE_NORMAL, &font);
+    hr = font_family->GetFirstMatchingFont(weight, DWRITE_FONT_STRETCH_NORMAL, style, &font);
     if (FAILED(hr)) {
         fmt::println("Could not create font with name {} and size {}.", font_name8, font_size);
     }
@@ -134,7 +170,7 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
     return cache_font({font}, font_size);
 }
 
-FontId FontRasterizer::add_system_font(int font_size, FontStyle style) {
+FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
     NONCLIENTMETRICS metrics = {};
     metrics.cbSize = sizeof(metrics);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, metrics.cbSize, &metrics, 0);
@@ -472,16 +508,17 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
 
     std::wstring str16 = base::windows::ConvertToUTF16(str8);
 
+    auto& native_font = font_id_to_native[font_id];
     const auto& dwrite_info = pimpl->font_id_to_dwrite_info[font_id];
+    ComPtr<IDWriteFont> font = native_font.font;
 
-    IDWriteFontCollection* font_collection;
+    ComPtr<IDWriteFontCollection> font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
 
     ComPtr<IDWriteTextFormat> text_format;
-    pimpl->dwrite_factory->CreateTextFormat(dwrite_info.font_name16.data(), font_collection,
-                                            DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL,
-                                            DWRITE_FONT_STRETCH_NORMAL, dwrite_info.em_size,
-                                            pimpl->locale.data(), &text_format);
+    pimpl->dwrite_factory->CreateTextFormat(
+        dwrite_info.font_name16.data(), font_collection.Get(), font->GetWeight(), font->GetStyle(),
+        DWRITE_FONT_STRETCH_NORMAL, dwrite_info.em_size, pimpl->locale.data(), &text_format);
 
     UINT32 len = str16.length();
     ComPtr<IDWriteTextLayout> text_layout;
@@ -514,7 +551,7 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     typography->AddFontFeature({DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19, 1});
     text_layout->SetTypography(typography.Get(), {0, len});
 
-    text_layout->SetFontCollection(font_collection, {0, len});
+    text_layout->SetFontCollection(font_collection.Get(), {0, len});
 
     ComPtr<FontFallbackRenderer> font_fallback_renderer =
         new FontFallbackRenderer(font_collection, str8);
@@ -614,9 +651,8 @@ std::wstring GetLocaleName(IDWriteLocalizedStrings* strings, std::wstring_view l
     UINT32 length = 0;
     strings->GetStringLength(index, &length);
 
-    std::wstring name;
-    name.resize(length + 1);
-    strings->GetString(index, name.data(), length + 1);
+    wchar_t name[length + 1];
+    strings->GetString(index, name, length + 1);
     return name;
 }
 

@@ -30,7 +30,7 @@ private:
     enum class ScrollAxis { None, Vertical, Horizontal };
 
     std::chrono::time_point<std::chrono::system_clock> prev_scroll;
-    ScrollAxis axis{ScrollAxis::None};
+    ScrollAxis axis = ScrollAxis::None;
 };
 
 }  // namespace gui

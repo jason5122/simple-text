@@ -85,22 +85,22 @@ GLuint Atlas::tex() const {
     return tex_id;
 }
 
-bool Atlas::insertTexture(
-    int width, int height, Format format, const std::vector<GLubyte>& data, Vec4& out_uv) {
+bool Atlas::insert_texture(
+    int width, int height, Format format, const std::vector<uint8_t>& data, Vec4& out_uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
         fmt::println("Glyph is too large.");
         return false;
     }
 
     // If there's not enough room in current row, advance to the next one.
-    if (!roomInRow(width, height)) {
-        if (!advanceRow()) {
+    if (!room_in_row(width, height)) {
+        if (!advance_row()) {
             fmt::println("Atlas is full.");
             return false;
         }
 
         // If there's still not enough room, then atlas is full.
-        if (!roomInRow(width, height)) {
+        if (!room_in_row(width, height)) {
             fmt::println("Could not insert into atlas.");
             return false;
         }
@@ -132,7 +132,7 @@ bool Atlas::insertTexture(
     return true;
 }
 
-bool Atlas::roomInRow(int width, int height) {
+bool Atlas::room_in_row(int width, int height) {
     int next_extent = row_extent + width;
     bool enough_width = next_extent <= kAtlasSize;
     bool enough_height = height < (kAtlasSize - row_baseline);
@@ -140,7 +140,7 @@ bool Atlas::roomInRow(int width, int height) {
     return enough_width && enough_height;
 }
 
-bool Atlas::advanceRow() {
+bool Atlas::advance_row() {
     int advance_to = row_baseline + row_tallest;
     if (kAtlasSize - advance_to <= 0) {
         return false;

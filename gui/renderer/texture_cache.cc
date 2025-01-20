@@ -1,6 +1,5 @@
 #include "texture_cache.h"
 
-#include <jerror.h>
 #include <jpeglib.h>
 #include <spng.h>
 
@@ -75,7 +74,7 @@ TextureCache::Glyph TextureCache::insertIntoAtlas(const font::RasterizedGlyph& r
     //       Return an enum classifying the error instead of using a boolean.
     Vec4 uv;
     bool success =
-        atlas.insertTexture(rglyph.width, rglyph.height, Atlas::Format::kBGRA, rglyph.buffer, uv);
+        atlas.insert_texture(rglyph.width, rglyph.height, Atlas::Format::kBGRA, rglyph.buffer, uv);
 
     // The current page is full, so create a new page and try again.
     if (!success) {
@@ -122,7 +121,7 @@ bool TextureCache::loadPng(const base::FilePath& path, Image& image) {
     // TODO: Handle case when atlas is full.
     Atlas& atlas = atlas_pages[current_page];
     Vec4 uv;
-    atlas.insertTexture(width, height, Atlas::Format::kRGBA, std::move(buffer), uv);
+    atlas.insert_texture(width, height, Atlas::Format::kRGBA, std::move(buffer), uv);
     image = {
         .size = {static_cast<int>(width), static_cast<int>(height)},
         .uv = uv,
@@ -166,7 +165,7 @@ bool TextureCache::loadJpeg(const base::FilePath& path, Image& image) {
     // TODO: Handle case when atlas is full.
     Atlas& atlas = atlas_pages[current_page];
     Vec4 uv;
-    atlas.insertTexture(width, height, Atlas::Format::kRGB, std::move(buffer), uv);
+    atlas.insert_texture(width, height, Atlas::Format::kRGB, std::move(buffer), uv);
     image = {
         .size = {static_cast<int>(width), static_cast<int>(height)},
         .uv = uv,

@@ -6,6 +6,7 @@
 #include "gui/text_system/movement.h"
 
 #include <cmath>
+
 #include <fmt/base.h>
 #include <fmt/format.h>
 
@@ -338,7 +339,7 @@ void TextEditWidget::updateMaxScroll() {
     const auto& metrics = font_rasterizer.metrics(font_id);
 
     // TODO: Figure out how to update max width.
-    max_scroll_offset.x = 2000;
+    // max_scroll_offset.x = 2000;
     // max_scroll_offset.x = 0;
     max_scroll_offset.y = tree.line_count() * metrics.line_height;
 }
@@ -413,8 +414,18 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         .y = position.y + size.height,
     };
 
+    // We set the max horizontal scroll to the max width out of each *visible* line. This means the
+    // max horizontal scroll changes dynamically as the user scrolls through the buffer, but this
+    // is better than computing it up front and having to update it.
+    //
+    // As long as the user can scroll to the section vertically and then scroll horizontally once
+    // there, it shouldn't be confusing or limiting at all in my opinion.
+    int max_layout_width = 0;
+
     for (size_t line = start_line; line < end_line; ++line) {
         const auto& layout = layoutAt(line);
+
+        max_layout_width = std::max(layout.width, max_layout_width);
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * main_line_height;
@@ -457,6 +468,8 @@ void TextEditWidget::renderText(int main_line_height, size_t start_line, size_t 
         texture_renderer.addLineLayout(line_number_layout, line_number_coords, min_gutter_coords,
                                        max_gutter_coords, line_number_highlight_callback);
     }
+
+    max_scroll_offset.x = max_layout_width;
 }
 
 void TextEditWidget::renderSelections(int main_line_height, size_t start_line, size_t end_line) {
@@ -505,37 +518,48 @@ void TextEditWidget::renderSelections(int main_line_height, size_t start_line, s
                                      max_coords);
 }
 
+// TODO: Implement a non-"scroll past end" mode.
 void TextEditWidget::renderScrollBars(int main_line_height) {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.
-    int vbar_width = 15;
-    double max_scrollbar_y = size.height + tree.line_count() * main_line_height;
-    double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;
-    int vbar_height = static_cast<int>(size.height * vbar_height_percent);
-    vbar_height = std::max(30, vbar_height);
-    double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
+    // TODO: Consider subtracting 1 from the line count.
+    if (tree.line_count() > 0) {
+        int vbar_width = 15;
+        double max_scrollbar_y = size.height + tree.line_count() * main_line_height;
+        double vbar_height_percent = static_cast<double>(size.height) / max_scrollbar_y;
+        int vbar_height = size.height * vbar_height_percent;
+        vbar_height = std::max(30, vbar_height);
+        double vbar_percent = static_cast<double>(scroll_offset.y) / max_scroll_offset.y;
 
-    Point vbar_coords = {
-        .x = size.width - vbar_width,
-        .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
-    };
-    vbar_coords += position;
-    Size vbar_size = {vbar_width, vbar_height};
-    rect_renderer.addRect(vbar_coords, vbar_size, position, position + size, kScrollBarColor,
-                          Layer::kForeground, 5);
+        Point vbar_coords = {
+            .x = size.width - vbar_width,
+            .y = static_cast<int>(std::round((size.height - vbar_height) * vbar_percent)),
+        };
+        vbar_coords += position;
+        Size vbar_size = {vbar_width, vbar_height};
+        rect_renderer.addRect(vbar_coords, vbar_size, position, position + size, kScrollBarColor,
+                              Layer::kForeground, 5);
+    }
 
     // Add horizontal scroll bar.
-    // int hbar_height = 15;
-    // int hbar_width = size.width * (static_cast<float>(size.width) / max_scroll_offset.x);
-    // hbar_width = std::max(hbar_width, kMinScrollbarWidth);
-    // float hbar_percent = static_cast<float>(scroll_offset.x) / max_scroll_offset.x;
-    // Point hbar_coords{
-    //     .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
-    //     .y = size.height - hbar_height,
-    // };
-    // rect_renderer.addRect(hbar_coords + position, {hbar_width, hbar_height}, kScrollBarColor,
-    // 5);
+    // TODO: We shouldn't implement "scroll past end" horizontally.
+    if (max_scroll_offset.x > 0) {
+        int hbar_height = 15;
+        double max_scrollbar_x = size.width + max_scroll_offset.x;
+        double hbar_width_percent = static_cast<double>(size.width) / max_scrollbar_x;
+        int hbar_width = size.width * hbar_width_percent;
+        hbar_width = std::max(hbar_width, kMinScrollbarWidth);
+        double hbar_percent = static_cast<double>(scroll_offset.x) / max_scroll_offset.x;
+        Point hbar_coords = {
+            .x = static_cast<int>(std::round((size.width - hbar_width) * hbar_percent)),
+            .y = size.height - hbar_height,
+        };
+        hbar_coords += position;
+        Size hbar_size = {hbar_width, hbar_height};
+        rect_renderer.addRect(hbar_coords, hbar_size, position, position + size, kScrollBarColor,
+                              Layer::kForeground, 5);
+    }
 }
 
 void TextEditWidget::renderCaret(int main_line_height) {

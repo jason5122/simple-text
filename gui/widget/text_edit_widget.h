@@ -58,7 +58,6 @@ public:
     }
 
 private:
-    static constexpr int kMinScrollbarWidth = 100;
     // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
     static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
     // static constexpr Rgb kLineNumberColor{152, 152, 152};  // Light.
@@ -76,6 +75,8 @@ private:
     static constexpr int kCaretWidth = 4;
     static constexpr int kExtraPadding = 8;
     static constexpr int kBorderThickness = 2;
+    // TODO: Do we need this?
+    static constexpr int kMinScrollbarWidth = 100;
 
     size_t font_id;
 

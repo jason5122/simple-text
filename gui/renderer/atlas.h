@@ -15,7 +15,9 @@ public:
     // static constexpr int kAtlasSize = 1024;
     // TODO: Setting this to a smaller size reduces initial memory usage. Figure out how to balance
     // that with performance (a larger texture size likely means less texture swaps).
-    static constexpr int kAtlasSize = 4096;
+    static constexpr int kAtlasSize = 2048;
+    // static constexpr int kAtlasSize = 4096;
+    // static constexpr int kAtlasSize = 16384;
 
     Atlas();
     ~Atlas();
@@ -29,8 +31,8 @@ public:
         kRGBA,
         kRGB,
     };
-    bool insertTexture(
-        int width, int height, Format format, const std::vector<GLubyte>& data, Vec4& out_uv);
+    bool insert_texture(
+        int width, int height, Format format, const std::vector<uint8_t>& data, Vec4& out_uv);
 
 private:
     GLuint tex_id = 0;
@@ -42,8 +44,8 @@ private:
     // DEBUG: Color atlas background to spot incorrect shaders easier.
     std::vector<uint8_t> atlas_background;
 
-    bool roomInRow(int width, int height);
-    bool advanceRow();
+    bool room_in_row(int width, int height);
+    bool advance_row();
 };
 
 }  // namespace gui

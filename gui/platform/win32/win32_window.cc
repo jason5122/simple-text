@@ -86,7 +86,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         int width = LOWORD(lParam);
         int height = HIWORD(lParam);
-        app_window.setSize({width, height});
+        app_window.set_size({width, height});
         app_window.layout();
         return 0;
     }
@@ -113,7 +113,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         Point mouse_pos = {mouse_x, mouse_y};
         Delta delta = {0, static_cast<int>(std::round(dy))};
 
-        app_window.performScroll(mouse_pos, delta);
+        app_window.perform_scroll(mouse_pos, delta);
         return 0;
     }
 
@@ -137,7 +137,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         Point mouse_pos = {mouse_x, mouse_y};
         Delta delta = {static_cast<int>(std::round(dx)), 0};
 
-        app_window.performScroll(mouse_pos, delta);
+        app_window.perform_scroll(mouse_pos, delta);
         return 0;
     }
 
@@ -170,7 +170,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         Point mouse_pos = {mouse_x, mouse_y};
         ModifierKey modifiers = ModifierFromState();
         ClickType click_type = ClickTypeFromCount(click_count);
-        app_window.leftMouseDown(mouse_pos, modifiers, click_type);
+        app_window.left_mouse_down(mouse_pos, modifiers, click_type);
         return 0;
     }
 
@@ -180,7 +180,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         int mouse_x = GET_X_LPARAM(lParam);
         int mouse_y = GET_Y_LPARAM(lParam);
         Point mouse_pos = {mouse_x, mouse_y};
-        app_window.leftMouseUp(mouse_pos);
+        app_window.left_mouse_up(mouse_pos);
         return 0;
     }
 
@@ -192,7 +192,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (wParam & MK_LBUTTON) {
             ModifierKey modifiers = ModifierFromState();
             ClickType click_type = ClickTypeFromCount(click_count);
-            app_window.leftMouseDrag(mouse_pos, modifiers, click_type);
+            app_window.left_mouse_drag(mouse_pos, modifiers, click_type);
         } else {
             if (!tracking_mouse) {
                 TRACKMOUSEEVENT tme = {
@@ -202,7 +202,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 };
                 tracking_mouse = TrackMouseEvent(&tme);
             }
-            app_window.mousePositionChanged(mouse_pos);
+            app_window.mouse_position_changed(mouse_pos);
         }
         return 0;
     }
@@ -210,7 +210,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     // Microsoft-recommended implementation: https://stackoverflow.com/a/68029657/14698275
     case WM_MOUSELEAVE: {
         tracking_mouse = false;
-        app_window.mousePositionChanged(std::nullopt);
+        app_window.mouse_position_changed(std::nullopt);
         return 0;
     }
 

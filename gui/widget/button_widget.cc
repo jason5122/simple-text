@@ -4,7 +4,7 @@
 
 namespace gui {
 
-void ButtonWidget::leftMouseDown(const Point& mouse_pos,
+void ButtonWidget::left_mouse_down(const Point& mouse_pos,
                                  ModifierKey modifiers,
                                  ClickType click_type) {
     state = !state;

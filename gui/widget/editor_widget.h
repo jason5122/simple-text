@@ -23,10 +23,10 @@ public:
     // TODO: Refactor this.
     void updateFontId(size_t font_id);
 
-    constexpr std::string_view className() const final override {
+    constexpr std::string_view class_name() const final override {
         return "EditorWidget";
     }
-    constexpr bool canBeFocused() const override {
+    constexpr bool can_be_focused() const override {
         return true;
     }
 

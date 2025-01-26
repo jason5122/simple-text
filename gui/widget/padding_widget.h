@@ -11,7 +11,7 @@ public:
 
     void draw() override;
 
-    constexpr std::string_view className() const final override {
+    constexpr std::string_view class_name() const final override {
         return "PaddingWidget";
     }
 

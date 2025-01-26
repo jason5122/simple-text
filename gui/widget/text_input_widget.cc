@@ -1,8 +1,8 @@
 #include "text_input_widget.h"
 
 #include "base/numeric/literals.h"
+#include "editor/movement.h"
 #include "gui/renderer/renderer.h"
-#include "gui/text_system/movement.h"
 
 #include <fmt/base.h>
 
@@ -11,20 +11,24 @@ namespace gui {
 TextInputWidget::TextInputWidget(size_t font_id, int top_padding, int left_padding)
     : font_id(font_id), top_padding(top_padding), left_padding(left_padding) {
 
-    updateMaxScroll();
+    update_max_scroll();
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
     line_height = metrics.line_height;
 
-    size.height = line_height;
-    size.height += top_padding * 2;
-    size.height += 2;  // Selection width.
+    int new_height = line_height;
+    new_height = line_height;
+    new_height += top_padding * 2;
+    new_height += 2;  // Selection width.
+    set_height(new_height);
 }
 
 void TextInputWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, position, position + size, kBackgroundColor,
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
+
+    rect_renderer.addRect(position(), size(), position(), position() + size(), kBackgroundColor,
                           Layer::kBackground, 4);
 
     // auto pos = position;
@@ -34,17 +38,25 @@ void TextInputWidget::draw() {
 
     Point min_text_coords = {
         .x = scroll_offset.x - kBorderThickness,
-        .y = position.y,
+        .y = position().y,
     };
     Point max_text_coords = {
-        .x = scroll_offset.x + (size.width - (left_padding + kBorderThickness)),
-        .y = position.y + size.height,
+        .x = scroll_offset.x + (size().width - (left_padding + kBorderThickness)),
+        .y = position().y + size().height,
     };
 
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
+    // We set the max horizontal scroll to the max width out of each *visible* line. This means the
+    // max horizontal scroll changes dynamically as the user scrolls through the buffer, but this
+    // is better than computing it up front and having to update it.
+    //
+    // As long as the user can scroll to the section vertically and then scroll horizontally once
+    // there, it shouldn't be confusing or limiting at all in my opinion.
+    int max_layout_width = 0;
 
     for (size_t line = 0; line < tree.line_count(); ++line) {
         const auto& layout = layoutAt(line);
+
+        max_layout_width = std::max(layout.width, max_layout_width);
 
         Point coords = textOffset();
         coords.y += static_cast<int>(line) * line_height;
@@ -53,6 +65,8 @@ void TextInputWidget::draw() {
         texture_renderer.addLineLayout(layout, coords, min_text_coords, max_text_coords,
                                        [](size_t) { return kTextColor; });
     }
+
+    max_scroll_offset.x = max_layout_width;
 
     auto [line, col] = tree.line_column_at(selection.end);
     int end_caret_x = movement::x_at_column(layoutAt(line), col);
@@ -66,12 +80,12 @@ void TextInputWidget::draw() {
         Size caret_size = {kCaretWidth, line_height};
 
         Point min_coords = {
-            .x = left_padding + position.x,
-            .y = position.y,
+            .x = left_padding + position().x,
+            .y = position().y,
         };
         Point max_coords = {
-            .x = position.x + size.width,
-            .y = position.y + size.height,
+            .x = position().x + width(),
+            .y = position().y + height(),
         };
 
         rect_renderer.addRect(caret_pos, caret_size, min_coords, max_coords, kCaretColor,
@@ -79,19 +93,18 @@ void TextInputWidget::draw() {
     }
 }
 
-void TextInputWidget::updateMaxScroll() {
+void TextInputWidget::update_max_scroll() {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
 
-    // TODO: Figure out how to update max width.
-    max_scroll_offset.x = 2000;
-    // max_scroll_offset.x = 0;
+    // NOTE: We update the max width when iterating over visible lines, not here.
+
     max_scroll_offset.y = tree.line_count() * metrics.line_height;
 }
 
-void TextInputWidget::leftMouseDown(const Point& mouse_pos,
-                                    ModifierKey modifiers,
-                                    ClickType click_type) {
+void TextInputWidget::left_mouse_down(const Point& mouse_pos,
+                                      ModifierKey modifiers,
+                                      ClickType click_type) {
     auto coords = mouse_pos - textOffset();
     size_t line = lineAtY(coords.y);
     size_t col = movement::column_at_x(layoutAt(line), coords.x);
@@ -99,12 +112,12 @@ void TextInputWidget::leftMouseDown(const Point& mouse_pos,
     selection.set_index(offset, true);
 }
 
-void TextInputWidget::insertText(std::string_view str8) {
+void TextInputWidget::insert_text(std::string_view str8) {
     size_t i = selection.end;
     tree.insert(i, str8);
     selection.increment(str8.length(), false);
 
-    updateMaxScroll();
+    update_max_scroll();
 }
 
 size_t TextInputWidget::lineAtY(int y) const {
@@ -126,7 +139,7 @@ inline const font::LineLayout& TextInputWidget::layoutAt(size_t line) {
 }
 
 inline constexpr Point TextInputWidget::textOffset() {
-    Point text_offset = position - scroll_offset;
+    Point text_offset = position() - scroll_offset;
     text_offset.x += left_padding;
     text_offset.y += top_padding;
     return text_offset;

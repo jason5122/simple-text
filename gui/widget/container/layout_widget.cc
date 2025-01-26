@@ -29,97 +29,97 @@ void LayoutWidget::draw() {
     }
 }
 
-void LayoutWidget::performScroll(const Point& mouse_pos, const Delta& delta) {
+void LayoutWidget::perform_scroll(const Point& mouse_pos, const Delta& delta) {
     if (main_widget) {
-        if (main_widget->hitTest(mouse_pos)) {
-            main_widget->performScroll(mouse_pos, delta);
+        if (main_widget->hit_test(mouse_pos)) {
+            main_widget->perform_scroll(mouse_pos, delta);
         }
     }
     for (auto& child : children_start) {
-        if (child->hitTest(mouse_pos)) {
-            child->performScroll(mouse_pos, delta);
+        if (child->hit_test(mouse_pos)) {
+            child->perform_scroll(mouse_pos, delta);
         }
     }
     for (auto& child : children_end) {
-        if (child->hitTest(mouse_pos)) {
-            child->performScroll(mouse_pos, delta);
+        if (child->hit_test(mouse_pos)) {
+            child->perform_scroll(mouse_pos, delta);
         }
     }
 }
 
-void LayoutWidget::leftMouseDown(const Point& mouse_pos,
-                                 ModifierKey modifiers,
-                                 ClickType click_type) {
+void LayoutWidget::left_mouse_down(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
     if (main_widget) {
-        main_widget->leftMouseDown(mouse_pos, modifiers, click_type);
+        main_widget->left_mouse_down(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_start) {
-        child->leftMouseDown(mouse_pos, modifiers, click_type);
+        child->left_mouse_down(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_end) {
-        child->leftMouseDown(mouse_pos, modifiers, click_type);
+        child->left_mouse_down(mouse_pos, modifiers, click_type);
     }
 }
 
-void LayoutWidget::leftMouseDrag(const Point& mouse_pos,
-                                 ModifierKey modifiers,
-                                 ClickType click_type) {
+void LayoutWidget::left_mouse_drag(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
     if (main_widget) {
-        main_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
+        main_widget->left_mouse_drag(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_start) {
-        child->leftMouseDrag(mouse_pos, modifiers, click_type);
+        child->left_mouse_drag(mouse_pos, modifiers, click_type);
     }
     for (auto& child : children_end) {
-        child->leftMouseDrag(mouse_pos, modifiers, click_type);
+        child->left_mouse_drag(mouse_pos, modifiers, click_type);
     }
 }
 
-void LayoutWidget::leftMouseUp(const Point& mouse_pos) {
+void LayoutWidget::left_mouse_up(const Point& mouse_pos) {
     if (main_widget) {
-        main_widget->leftMouseUp(mouse_pos);
+        main_widget->left_mouse_up(mouse_pos);
     }
     for (auto& child : children_start) {
-        child->leftMouseUp(mouse_pos);
+        child->left_mouse_up(mouse_pos);
     }
     for (auto& child : children_end) {
-        child->leftMouseUp(mouse_pos);
+        child->left_mouse_up(mouse_pos);
     }
 }
 
-bool LayoutWidget::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+bool LayoutWidget::mouse_position_changed(const std::optional<Point>& mouse_pos) {
     bool result = false;
     if (main_widget) {
-        result = main_widget->mousePositionChanged(mouse_pos) || result;
+        result = main_widget->mouse_position_changed(mouse_pos) || result;
     }
     for (auto& child : children_start) {
-        result = child->mousePositionChanged(mouse_pos) || result;
+        result = child->mouse_position_changed(mouse_pos) || result;
     }
     for (auto& child : children_end) {
-        result = child->mousePositionChanged(mouse_pos) || result;
+        result = child->mouse_position_changed(mouse_pos) || result;
     }
     return result;
 }
 
-void LayoutWidget::setPosition(const Point& position) {
-    this->position = position;
+void LayoutWidget::set_position(const Point& position) {
+    Widget::set_position(position);
     layout();
 }
 
-Widget* LayoutWidget::widgetAt(const Point& pos) {
+Widget* LayoutWidget::widget_at(const Point& pos) {
     if (main_widget) {
-        if (main_widget->hitTest(pos)) {
-            return main_widget->widgetAt(pos);
+        if (main_widget->hit_test(pos)) {
+            return main_widget->widget_at(pos);
         }
     }
     for (auto& child : children_start) {
-        if (child->hitTest(pos)) {
-            return child->widgetAt(pos);
+        if (child->hit_test(pos)) {
+            return child->widget_at(pos);
         }
     }
     for (auto& child : children_end) {
-        if (child->hitTest(pos)) {
-            return child->widgetAt(pos);
+        if (child->hit_test(pos)) {
+            return child->widget_at(pos);
         }
     }
     return nullptr;

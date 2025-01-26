@@ -4,13 +4,13 @@
 
 namespace gui {
 
-void VerticalResizingWidget::leftMouseDown(const Point& mouse_pos,
+void VerticalResizingWidget::left_mouse_down(const Point& mouse_pos,
                                            ModifierKey modifiers,
                                            ClickType click_type) {
     for (auto& child : children_start) {
-        if (child->bottomEdgeTest(mouse_pos, kResizeDistance)) {
+        if (child->bottom_edge_test(mouse_pos, kResizeDistance)) {
             if (click_type == ClickType::kDoubleClick) {
-                child->setHeight(child->getMinimumHeight());
+                child->set_height(child->min_height());
             } else {
                 dragged_widget = child.get();
                 is_dragged_widget_start = true;
@@ -19,9 +19,9 @@ void VerticalResizingWidget::leftMouseDown(const Point& mouse_pos,
         }
     }
     for (auto& child : children_end) {
-        if (child->topEdgeTest(mouse_pos, kResizeDistance)) {
+        if (child->top_edge_test(mouse_pos, kResizeDistance)) {
             if (click_type == ClickType::kDoubleClick) {
-                child->setHeight(child->getMinimumHeight());
+                child->set_height(child->min_height());
             } else {
                 dragged_widget = child.get();
                 is_dragged_widget_start = false;
@@ -31,7 +31,7 @@ void VerticalResizingWidget::leftMouseDown(const Point& mouse_pos,
     }
 }
 
-void VerticalResizingWidget::leftMouseDrag(const Point& mouse_pos,
+void VerticalResizingWidget::left_mouse_drag(const Point& mouse_pos,
                                            ModifierKey modifiers,
                                            ClickType click_type) {
     // TODO: If a double click occurred, prevent the drag from starting in the first place.
@@ -40,8 +40,8 @@ void VerticalResizingWidget::leftMouseDrag(const Point& mouse_pos,
     }
 
     if (dragged_widget) {
-        auto widget_size = dragged_widget->getSize();
-        auto widget_pos = dragged_widget->getPosition();
+        auto widget_size = dragged_widget->size();
+        auto widget_pos = dragged_widget->position();
 
         int new_height;
         if (is_dragged_widget_start) {
@@ -49,29 +49,29 @@ void VerticalResizingWidget::leftMouseDrag(const Point& mouse_pos,
         } else {
             new_height = (widget_pos.y + widget_size.height) - mouse_pos.y;
         }
-        dragged_widget->setHeight(new_height);
+        dragged_widget->set_height(new_height);
     }
 }
 
-CursorStyle VerticalResizingWidget::cursorStyle() const {
+CursorStyle VerticalResizingWidget::cursor_style() const {
     return CursorStyle::kResizeUpDown;
 }
 
-Widget* VerticalResizingWidget::widgetAt(const Point& pos) {
+Widget* VerticalResizingWidget::widget_at(const Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.
     for (auto& child : children_start) {
-        if (child->isResizable() && child->bottomEdgeTest(pos, kResizeDistance)) {
+        if (child->is_resizable() && child->bottom_edge_test(pos, kResizeDistance)) {
             return this;
         }
     }
     for (auto& child : children_end) {
-        if (child->isResizable() && child->topEdgeTest(pos, kResizeDistance)) {
+        if (child->is_resizable() && child->top_edge_test(pos, kResizeDistance)) {
             return this;
         }
     }
 
     // Otherwise, propagate as normal.
-    return LayoutWidget::widgetAt(pos);
+    return LayoutWidget::widget_at(pos);
 }
 
 }  // namespace gui

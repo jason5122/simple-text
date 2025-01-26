@@ -10,11 +10,11 @@ public:
     ScrollableWidget() {}
     ScrollableWidget(const Size& size);
 
-    virtual void updateMaxScroll() = 0;
+    virtual void update_max_scroll() = 0;
 
-    void performScroll(const Point& mouse_pos, const Delta& delta) override;
+    void perform_scroll(const Point& mouse_pos, const Delta& delta) override;
 
-    constexpr std::string_view className() const override {
+    constexpr std::string_view class_name() const override {
         return "ScrollableWidget";
     }
 

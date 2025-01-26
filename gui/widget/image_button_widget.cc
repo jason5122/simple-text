@@ -12,19 +12,20 @@ ImageButtonWidget::ImageButtonWidget(size_t image_id,
     const auto& texture_cache = gui::Renderer::instance().getTextureCache();
     auto& image = texture_cache.getImage(image_id);
 
-    size = image.size;
-    size += {padding * 2, padding * 2};
+    auto new_size = image.size;
+    new_size += {padding * 2, padding * 2};
+    set_size(new_size);
 }
 
 void ImageButtonWidget::draw() {
     // TODO: Formalize this.
     if (getState()) {
         auto& rect_renderer = Renderer::instance().getRectRenderer();
-        rect_renderer.addRect(position, size, position, position + size, bg_color,
+        rect_renderer.addRect(position(), size(), position(), position() + size(), bg_color,
                               Layer::kBackground, 4);
     }
 
-    auto pos = position;
+    auto pos = position();
     pos += {padding, padding};
 
     auto& texture_renderer = Renderer::instance().getTextureRenderer();

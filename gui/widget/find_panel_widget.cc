@@ -33,12 +33,12 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
         icon_in_selection_id, kIconColor, kIconBackgroundFocusedColor, 4);
     auto highlight_matches_button = std::make_unique<ImageButtonWidget>(
         icon_highlight_matches_id, kIconColor, kIconBackgroundFocusedColor, 4);
-    regex_button->setAutoresizing(false);
-    case_sensitive_button->setAutoresizing(false);
-    whole_word_button->setAutoresizing(false);
-    wrap_button->setAutoresizing(false);
-    in_selection_button->setAutoresizing(false);
-    highlight_matches_button->setAutoresizing(false);
+    regex_button->set_autoresizing(false);
+    case_sensitive_button->set_autoresizing(false);
+    whole_word_button->set_autoresizing(false);
+    wrap_button->set_autoresizing(false);
+    in_selection_button->set_autoresizing(false);
+    highlight_matches_button->set_autoresizing(false);
     addChildStart(std::move(regex_button));
     addChildStart(std::move(case_sensitive_button));
     addChildStart(std::move(whole_word_button));
@@ -48,7 +48,7 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
 
     auto panel_close_button =
         std::make_unique<ImageButtonWidget>(panel_close_image_id, kCloseIconColor, Rgb{}, 0);
-    panel_close_button->setAutoresizing(false);
+    panel_close_button->set_autoresizing(false);
     addChildEnd(std::move(panel_close_button));
 
     auto find_all_button = std::make_unique<TextButtonWidget>(
@@ -57,27 +57,27 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
         ui_font_id, "Find Prev", kIconBackgroundColor, Size{20, 8}, Size{200, 52});
     auto find_button = std::make_unique<TextButtonWidget>(ui_font_id, "Find", kIconBackgroundColor,
                                                           Size{20, 8}, Size{200, 52});
-    find_all_button->setAutoresizing(false);
-    find_prev_button->setAutoresizing(false);
-    find_button->setAutoresizing(false);
-    int button_height = find_button->getHeight();
+    find_all_button->set_autoresizing(false);
+    find_prev_button->set_autoresizing(false);
+    find_button->set_autoresizing(false);
+    int button_height = find_button->height();
     addChildEnd(std::move(find_all_button));
     addChildEnd(std::move(find_prev_button));
     addChildEnd(std::move(find_button));
 
-    int text_input_height = text_input_widget->getHeight();
+    int text_input_height = text_input_widget->height();
     setMainWidget(std::unique_ptr<TextInputWidget>(text_input_widget));
 
     // Calculate max height. We assume all buttons have the same height.
     text_input_height += kVerticalPadding * 2;  // Pad top and bottom.
     button_height += kVerticalPadding * 2;      // Pad top and bottom.
-    setHeight(std::max(text_input_height, button_height));
-    setMinimumHeight(getHeight());
+    set_height(std::max(text_input_height, button_height));
+    set_min_height(height());
 }
 
 void FindPanelWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, position, position + size, kFindPanelColor,
+    rect_renderer.addRect(position(), size(), position(), position() + size(), kFindPanelColor,
                           Layer::kBackground);
 
     HorizontalLayoutWidget::draw();

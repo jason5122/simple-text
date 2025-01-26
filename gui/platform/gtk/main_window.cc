@@ -169,8 +169,8 @@ void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
     WindowWidget* app_window = main_window->appWindow();
 
-    app_window->setWidth(width);
-    app_window->setHeight(height);
+    app_window->set_width(width);
+    app_window->set_height(height);
 
     gtk_gl_area_make_current(self);
     app_window->layout();
@@ -213,7 +213,7 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
     delta *= scale_factor;
 
     WindowWidget* app_window = main_window->appWindow();
-    app_window->performScroll(std::move(mouse_pos), std::move(delta));
+    app_window->perform_scroll(std::move(mouse_pos), std::move(delta));
 
     return true;
 }
@@ -256,7 +256,7 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
     ClickType click_type = ClickTypeFromCount(n_press);
 
     auto* app_window = static_cast<WindowWidget*>(user_data);
-    app_window->leftMouseDown(mouse_pos, modifiers, click_type);
+    app_window->left_mouse_down(mouse_pos, modifiers, click_type);
 }
 
 void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
@@ -269,7 +269,7 @@ void released(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointe
     auto mouse_pos = Point{mouse_x, mouse_y} * scale_factor;
 
     auto* app_window = static_cast<WindowWidget*>(user_data);
-    app_window->leftMouseUp(mouse_pos);
+    app_window->left_mouse_up(mouse_pos);
 }
 
 void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_data) {
@@ -295,7 +295,7 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
 
         // TODO: Track click type. Consider having a member that tracks it from GtkGesture.
         auto* app_window = main_window->appWindow();
-        app_window->leftMouseDrag(mouse_pos, modifiers, ClickType::kSingleClick);
+        app_window->left_mouse_drag(mouse_pos, modifiers, ClickType::kSingleClick);
     } else {
         GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
 
@@ -307,7 +307,7 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         mouse_pos *= scale_factor;
 
         auto* app_window = main_window->appWindow();
-        app_window->mousePositionChanged(mouse_pos);
+        app_window->mouse_position_changed(mouse_pos);
     }
 }
 

@@ -2,8 +2,8 @@
 
 #include "base/numeric/literals.h"
 #include "build/build_config.h"
+#include "editor/movement.h"
 #include "font/font_rasterizer.h"
-#include "gui/text_system/movement.h"
 
 namespace gui {
 

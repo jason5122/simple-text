@@ -50,7 +50,7 @@ void TabBarLabelWidget::draw() {
         right_offset.x += image.size.width;
 
         Point icon_position = centerVertically(image.size.height) - right_offset;
-        icon_position += Point{size.width, 0};
+        icon_position += Point{width(), 0};
         texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
 
@@ -61,19 +61,19 @@ void TabBarLabelWidget::draw() {
     Point coords = centerVertically(metrics.line_height) + left_offset;
     Point min_coords = {
         .x = 0,
-        .y = position.y,
+        .y = position().y,
     };
     Point max_coords = {
-        .x = size.width - left_padding - right_padding,
-        .y = position.y + size.height,
+        .x = width() - left_padding - right_padding,
+        .y = position().y + height(),
     };
     const auto highlight_callback = [this](size_t) { return color; };
     texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
 Point TabBarLabelWidget::centerVertically(int widget_height) {
-    Point centered_point = position;
-    centered_point.y += size.height / 2;
+    Point centered_point = position();
+    centered_point.y += height() / 2;
     centered_point.y -= widget_height / 2;
     return centered_point;
 }

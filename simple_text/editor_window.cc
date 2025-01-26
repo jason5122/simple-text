@@ -44,7 +44,7 @@ void EditorWindow::onOpenGLActivate() {
     using namespace std::literals;
     auto* text_view = editor_widget->currentWidget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
-    text_view->insertText(kCppExample);
+    text_view->insert_text(kCppExample);
     // TODO: Fix these cases on Pango. Core Text has been fixed.
     // text_view->insertText("\n꣰");
     // text_view->insertText("ᩣᩤᩥᩦᩧᩨᩩᩪᩫᩬᩭ");
@@ -67,7 +67,7 @@ void EditorWindow::onOpenGLActivate() {
     }
 
     main_widget->setMainWidget(std::move(horizontal_layout));
-    status_bar->setResizable(false);
+    status_bar->set_resizable(false);
     main_widget->addChildEnd(std::unique_ptr<StatusBarWidget>(status_bar));
 
     auto find_panel_widget = std::make_unique<FindPanelWidget>(
@@ -84,12 +84,12 @@ void EditorWindow::draw() {
     // TODO: Debug use; remove this.
     auto* text_view = editor_widget->currentWidget();
     if (text_view) {
-        size_t length = text_view->getSelectionLength();
+        size_t length = text_view->get_selection_length();
         if (length > 0) {
             status_bar->setText(
                 fmt::format("{} character{} selected", length, length != 1 ? "s" : ""));
         } else {
-            auto [line, col] = text_view->getLineColumn();
+            auto [line, col] = text_view->get_line_column();
             status_bar->setText(fmt::format("Line {}, Column {}", line + 1, col + 1));
         }
     } else {
@@ -97,7 +97,7 @@ void EditorWindow::draw() {
     }
 
     main_widget->draw();
-    Renderer::instance().flush(size);
+    Renderer::instance().flush(size());
 
     // TODO: Refactor this.
     // if (requested_frames > 0) {
@@ -163,7 +163,7 @@ void EditorWindow::onFrame(int64_t ms) {
 
 // TODO: Verify that resize is always called on all platforms when the window is created.
 void EditorWindow::layout() {
-    main_widget->setSize(size);
+    main_widget->set_size(size());
     main_widget->layout();
     // side_bar->setMinimumWidth(100);
     // side_bar->setMaximumWidth(size.width - 100);
@@ -173,9 +173,9 @@ void EditorWindow::layout() {
     redraw();
 }
 
-void EditorWindow::performScroll(const Point& mouse_pos, const Delta& delta) {
-    main_widget->mousePositionChanged(mouse_pos);
-    main_widget->performScroll(mouse_pos, delta);
+void EditorWindow::perform_scroll(const Point& mouse_pos, const Delta& delta) {
+    main_widget->mouse_position_changed(mouse_pos);
+    main_widget->perform_scroll(mouse_pos, delta);
 
     // https://zed.dev/blog/120fps
     requested_frames = framesPerSecond();
@@ -183,16 +183,16 @@ void EditorWindow::performScroll(const Point& mouse_pos, const Delta& delta) {
     redraw();
 }
 
-void EditorWindow::leftMouseDown(const Point& mouse_pos,
-                                 ModifierKey modifiers,
-                                 ClickType click_type) {
-    dragged_widget = main_widget->widgetAt(mouse_pos);
+void EditorWindow::left_mouse_down(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
+    dragged_widget = main_widget->widget_at(mouse_pos);
     if (dragged_widget) {
-        if (dragged_widget->canBeFocused()) {
+        if (dragged_widget->can_be_focused()) {
             focused_widget = dragged_widget;
         }
 
-        dragged_widget->leftMouseDown(mouse_pos, modifiers, click_type);
+        dragged_widget->left_mouse_down(mouse_pos, modifiers, click_type);
         main_widget->layout();
         // TODO: See if we should call `updateCursorStyle()` here.
         // TODO: Not all widgets should initiate a drag.
@@ -212,11 +212,11 @@ void EditorWindow::leftMouseDown(const Point& mouse_pos,
     // }
 }
 
-void EditorWindow::leftMouseDrag(const Point& mouse_pos,
-                                 ModifierKey modifiers,
-                                 ClickType click_type) {
+void EditorWindow::left_mouse_drag(const Point& mouse_pos,
+                                   ModifierKey modifiers,
+                                   ClickType click_type) {
     if (dragged_widget) {
-        dragged_widget->leftMouseDrag(mouse_pos, modifiers, click_type);
+        dragged_widget->left_mouse_drag(mouse_pos, modifiers, click_type);
         main_widget->layout();
         // TODO: See if we should call `updateCursorStyle()` here.
         // TODO: Not all widgets should initiate a drag.
@@ -224,18 +224,18 @@ void EditorWindow::leftMouseDrag(const Point& mouse_pos,
     }
 }
 
-void EditorWindow::leftMouseUp(const Point& mouse_pos) {
+void EditorWindow::left_mouse_up(const Point& mouse_pos) {
     if (dragged_widget) {
-        dragged_widget->leftMouseUp(mouse_pos);
+        dragged_widget->left_mouse_up(mouse_pos);
         redraw();
     }
     dragged_widget = nullptr;
     updateCursorStyle(mouse_pos);
 }
 
-void EditorWindow::rightMouseDown(const Point& mouse_pos,
-                                  ModifierKey modifiers,
-                                  ClickType click_type) {
+void EditorWindow::right_mouse_down(const Point& mouse_pos,
+                                    ModifierKey modifiers,
+                                    ClickType click_type) {
     // auto mouse_pos = mousePositionRaw();
     // if (mouse_pos) {
     //     setCursorStyle(CursorStyle::kArrow);
@@ -253,10 +253,10 @@ void EditorWindow::rightMouseDown(const Point& mouse_pos,
 }
 
 // This represents the mouse moving *without* being a click+drag.
-bool EditorWindow::mousePositionChanged(const std::optional<Point>& mouse_pos) {
+bool EditorWindow::mouse_position_changed(const std::optional<Point>& mouse_pos) {
     updateCursorStyle(mouse_pos);
 
-    if (main_widget->mousePositionChanged(mouse_pos)) {
+    if (main_widget->mouse_position_changed(mouse_pos)) {
         redraw();
         return true;
     } else {
@@ -315,7 +315,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         editor_widget->lastIndex();
         handled = true;
     } else if (key == Key::kA && modifiers == kPrimaryModifier) {
-        editor_widget->currentWidget()->selectAll();
+        editor_widget->currentWidget()->select_all();
         handled = true;
     } else if (key == Key::kN && modifiers == kPrimaryModifier) {
         auto p = util::Profiler{"Add new tab (modifier key)"};
@@ -341,16 +341,16 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         return true;
     } else if (key == Key::kC && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
-        parent.setClipboardString(text_view->getSelectionText());
+        parent.setClipboardString(text_view->get_selection_text());
         handled = true;
     } else if (key == Key::kV && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
-        text_view->insertText(parent.getClipboardString());
+        text_view->insert_text(parent.getClipboardString());
         handled = true;
     } else if (key == Key::kX && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->currentWidget();
-        parent.setClipboardString(text_view->getSelectionText());
-        text_view->leftDelete();
+        parent.setClipboardString(text_view->get_selection_text());
+        text_view->left_delete();
         handled = true;
     } else if (key == Key::kO && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         auto path = openFilePicker();
@@ -369,17 +369,17 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         handled = true;
     } else if (key == Key::kBackspace && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
-        text_view->leftDelete();
+        text_view->left_delete();
         handled = true;
     } else if (key == Key::kEnter && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
-        text_view->insertText("\n");
+        text_view->insert_text("\n");
         // focused_widget->insertText("\n");
         handled = true;
     } else if (key == Key::kTab && modifiers == ModifierKey::kNone) {
         auto* text_view = editor_widget->currentWidget();
         // TODO: Don't hard code this.
-        text_view->insertText("    ");
+        text_view->insert_text("    ");
         handled = true;
     } else if (key == Key::kQ && modifiers == kPrimaryModifier) {
         parent.quit();
@@ -392,11 +392,11 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
 
     // TODO: Remove this.
     // if (key == Key::kU && modifiers == kPrimaryModifier) {
-    //     performScroll({500, 500}, {0, -1});
+    //     perform_scroll({500, 500}, {0, -1});
     //     handled = true;
     // }
     // if (key == Key::kI && modifiers == kPrimaryModifier) {
-    //     performScroll({500, 500}, {0, 1});
+    //     perform_scroll({500, 500}, {0, 1});
     //     handled = true;
     // }
 
@@ -463,12 +463,12 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
 
 void EditorWindow::onInsertText(std::string_view text) {
     if (auto widget = editor_widget->currentWidget()) {
-        widget->insertText(text);
+        widget->insert_text(text);
         redraw();
     }
 
     if (focused_widget) {
-        focused_widget->insertText(text);
+        focused_widget->insert_text(text);
         redraw();
         // auto editor_widget = static_cast<EditorWidget*>(focused_widget);
         // if (auto widget = editor_widget->currentWidget()) {
@@ -503,46 +503,46 @@ void EditorWindow::onAction(Action action, bool extend) {
         text_view->move(gui::MoveBy::kWords, false, extend);
         break;
     case Action::kMoveToBOL:
-        text_view->moveTo(gui::MoveTo::kBOL, extend);
+        text_view->move_to(gui::MoveTo::kBOL, extend);
         break;
     case Action::kMoveToEOL:
-        text_view->moveTo(gui::MoveTo::kEOL, extend);
+        text_view->move_to(gui::MoveTo::kEOL, extend);
         break;
     case Action::kMoveToHardBOL:
-        text_view->moveTo(gui::MoveTo::kHardBOL, extend);
+        text_view->move_to(gui::MoveTo::kHardBOL, extend);
         break;
     case Action::kMoveToHardEOL:
-        text_view->moveTo(gui::MoveTo::kHardEOL, extend);
+        text_view->move_to(gui::MoveTo::kHardEOL, extend);
         break;
     case Action::kMoveToBOF:
-        text_view->moveTo(gui::MoveTo::kBOF, extend);
+        text_view->move_to(gui::MoveTo::kBOF, extend);
         break;
     case Action::kMoveToEOF:
-        text_view->moveTo(gui::MoveTo::kEOF, extend);
+        text_view->move_to(gui::MoveTo::kEOF, extend);
         break;
     case Action::kInsertNewline:
-        text_view->insertText("\n");
+        text_view->insert_text("\n");
         // focused_widget->insertText("\n");
         break;
     case Action::kInsertNewlineIgnoringFieldEditor:
-        text_view->insertText("\n");
+        text_view->insert_text("\n");
         // focused_widget->insertText("\n");
         // This command is sent as the first part of the `ctrl+o` keybind. We shouldn't redraw.
         return;
     case Action::kInsertTab:
-        text_view->insertText("    ");
+        text_view->insert_text("    ");
         break;
     case Action::kLeftDelete:
-        text_view->leftDelete();
+        text_view->left_delete();
         break;
     case Action::kRightDelete:
-        text_view->rightDelete();
+        text_view->right_delete();
         break;
     case Action::kDeleteWordForward:
-        text_view->deleteWord(true);
+        text_view->delete_word(true);
         break;
     case Action::kDeleteWordBackward:
-        text_view->deleteWord(false);
+        text_view->delete_word(false);
         break;
     default:
         handled = false;
@@ -572,13 +572,13 @@ void EditorWindow::onClose() {
 void EditorWindow::updateCursorStyle(const std::optional<Point>& mouse_pos) {
     // Case 1: Dragging operation in progress.
     if (dragged_widget) {
-        setCursorStyle(dragged_widget->cursorStyle());
+        setCursorStyle(dragged_widget->cursor_style());
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
-        if (auto hovered_widget = main_widget->widgetAt(mouse_pos.value())) {
+        if (auto hovered_widget = main_widget->widget_at(mouse_pos.value())) {
             // fmt::println("{}", hovered_widget->className());
-            setCursorStyle(hovered_widget->cursorStyle());
+            setCursorStyle(hovered_widget->cursor_style());
         } else {
             // fmt::println("No widget hovered");
             setCursorStyle(CursorStyle::kArrow);

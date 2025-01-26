@@ -116,7 +116,7 @@ ACBuffer* ACConverter::Convert() {
     // First of all, enter root's immediate kids to the working list.
     std::vector<const ACSlowState*> wl;
     StateID id = 1;
-    for (auto i = gotovect.begin(), e = gotovect.end(); i != e; i++, id++) {
+    for (auto i = gotovect.begin(); i != gotovect.end(); i++, id++) {
         ACSlowState* s = i->second;
         wl.push_back(s);
         _id_map[s->id()] = id;

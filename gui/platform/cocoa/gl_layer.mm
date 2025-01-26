@@ -131,8 +131,8 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
         old_height = self.frame.size.height;
         if (app_window) {
             int scale = self.contentsScale;
-            app_window->setWidth(old_width * scale);
-            app_window->setHeight(old_height * scale);
+            app_window->set_width(old_width * scale);
+            app_window->set_height(old_height * scale);
             app_window->layout();
         }
     }

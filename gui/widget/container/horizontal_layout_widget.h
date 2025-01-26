@@ -14,7 +14,7 @@ public:
 
     void layout() override;
 
-    constexpr std::string_view className() const override {
+    constexpr std::string_view class_name() const override {
         return "HorizontalLayoutWidget";
     }
 

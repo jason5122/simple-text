@@ -11,11 +11,11 @@ public:
     SideBarWidget(int width);
 
     void draw() override;
-    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override;
+    bool mouse_position_changed(const std::optional<Point>& mouse_pos) override;
 
-    void updateMaxScroll() override;
+    void update_max_scroll() override;
 
-    constexpr std::string_view className() const final override {
+    constexpr std::string_view class_name() const final override {
         return "SideBarWidget";
     }
 

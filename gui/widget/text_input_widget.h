@@ -1,8 +1,8 @@
 #pragma once
 
 #include "base/buffer/piece_tree.h"
+#include "editor/selection.h"
 #include "gui/renderer/types.h"
-#include "gui/text_system/selection.h"
 #include "gui/widget/scrollable_widget.h"
 
 namespace gui {
@@ -12,19 +12,19 @@ public:
     TextInputWidget(size_t font_id, int top_padding, int left_padding);
 
     void draw() override;
-    void updateMaxScroll() override;
-    void leftMouseDown(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override;
-    void insertText(std::string_view str8) override;
+    void update_max_scroll() override;
+    void left_mouse_down(const Point& mouse_pos,
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
+    void insert_text(std::string_view str8) override;
 
-    constexpr bool canBeFocused() const override {
+    constexpr bool can_be_focused() const override {
         return true;
     }
-    constexpr CursorStyle cursorStyle() const final override {
+    constexpr CursorStyle cursor_style() const final override {
         return CursorStyle::kIBeam;
     }
-    constexpr std::string_view className() const final override {
+    constexpr std::string_view class_name() const final override {
         return "TextInputWidget";
     }
 

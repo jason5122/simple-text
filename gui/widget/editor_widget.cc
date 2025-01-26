@@ -23,31 +23,31 @@ EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size, size_t pane
 }
 
 TextEditWidget* EditorWidget::currentWidget() const {
-    return multi_view->currentWidget();
+    return multi_view->current_widget();
 }
 
 void EditorWidget::setIndex(size_t index) {
-    multi_view->setIndex(index);
+    multi_view->set_index(index);
     tab_bar->setIndex(index);
 }
 
 void EditorWidget::prevIndex() {
-    multi_view->prevIndex();
+    multi_view->prev_index();
     tab_bar->prevIndex();
 }
 
 void EditorWidget::nextIndex() {
-    multi_view->nextIndex();
+    multi_view->next_index();
     tab_bar->nextIndex();
 }
 
 void EditorWidget::lastIndex() {
-    multi_view->lastIndex();
+    multi_view->last_index();
     tab_bar->lastIndex();
 }
 
 size_t EditorWidget::getCurrentIndex() {
-    return multi_view->getCurrentIndex();
+    return multi_view->index();
 }
 
 void EditorWidget::addTab(std::string_view tab_name, std::string_view text) {
@@ -74,9 +74,9 @@ void EditorWidget::updateFontId(size_t font_id) {
 
     main_font_id = font_id;
 
-    for (size_t i = 0; i < multi_view->widgetCount(); ++i) {
+    for (size_t i = 0; i < multi_view->count(); ++i) {
         auto* text_view = multi_view->at(i);
-        text_view->updateFontId(font_id);
+        text_view->update_font_id(font_id);
     }
 }
 

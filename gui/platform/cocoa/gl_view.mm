@@ -122,14 +122,14 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 - (void)mouseMoved:(NSEvent*)event {
     if (app_window) {
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
-        app_window->mousePositionChanged(mouse_pos);
+        app_window->mouse_position_changed(mouse_pos);
     }
 }
 
 - (void)mouseEntered:(NSEvent*)event {
     if (app_window) {
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
-        app_window->mousePositionChanged(mouse_pos);
+        app_window->mouse_position_changed(mouse_pos);
     }
 }
 
@@ -139,13 +139,13 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 - (void)cursorUpdate:(NSEvent*)event {
     if (app_window) {
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
-        app_window->mousePositionChanged(mouse_pos);
+        app_window->mouse_position_changed(mouse_pos);
     }
 }
 
 - (void)mouseExited:(NSEvent*)event {
     if (app_window) {
-        app_window->mousePositionChanged(std::nullopt);
+        app_window->mouse_position_changed(std::nullopt);
     }
 }
 
@@ -153,24 +153,29 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     if (!app_window) return;
 
     if (event.type == NSEventTypeScrollWheel) {
-        int dx = std::round(-event.scrollingDeltaX);
-        int dy = std::round(-event.scrollingDeltaY);
-        gui::Delta scroll{dx, dy};
+        double raw_x = -event.scrollingDeltaX;
+        double raw_y = -event.scrollingDeltaY;
         if (!event.hasPreciseScrollingDeltas) {
+            // TODO: Do we use this code instead?
             // Taken from //chromium/src/ui/events/cocoa/events_mac.mm.
             // static constexpr double kScrollbarPixelsPerCocoaTick = 40.0;
             // int dx = -event.deltaX * kScrollbarPixelsPerCocoaTick;
             // int dy = -event.deltaY * kScrollbarPixelsPerCocoaTick;
 
             // https://linebender.gitbook.io/linebender-graphics-wiki/mouse-wheel#macos
-            scroll *= 16;
+            raw_x *= 16;
+            raw_y *= 16;
         }
+
+        int dx = std::ceil(raw_x);
+        int dy = std::ceil(raw_y);
+        gui::Delta scroll = {dx, dy};
 
         int scale = gl_layer.contentsScale;
         scroll *= scale;
 
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
-        app_window->performScroll(mouse_pos, scroll);
+        app_window->perform_scroll(mouse_pos, scroll);
     }
 }
 
@@ -192,14 +197,14 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
         gui::ModifierKey modifiers = gui::ModifierFromFlags(event.modifierFlags);
         gui::ClickType click_type = gui::ClickTypeFromCount(event.clickCount);
-        app_window->leftMouseDown(mouse_pos, modifiers, click_type);
+        app_window->left_mouse_down(mouse_pos, modifiers, click_type);
     }
 }
 
 - (void)mouseUp:(NSEvent*)event {
     if (app_window) {
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
-        app_window->leftMouseUp(mouse_pos);
+        app_window->left_mouse_up(mouse_pos);
     }
 }
 
@@ -208,7 +213,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
         gui::ModifierKey modifiers = gui::ModifierFromFlags(event.modifierFlags);
         gui::ClickType click_type = gui::ClickTypeFromCount(event.clickCount);
-        app_window->leftMouseDrag(mouse_pos, modifiers, click_type);
+        app_window->left_mouse_drag(mouse_pos, modifiers, click_type);
     }
 }
 
@@ -217,7 +222,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
         gui::ModifierKey modifiers = gui::ModifierFromFlags(event.modifierFlags);
         gui::ClickType click_type = gui::ClickTypeFromCount(event.clickCount);
-        app_window->rightMouseDown(mouse_pos, modifiers, click_type);
+        app_window->right_mouse_down(mouse_pos, modifiers, click_type);
     }
 }
 

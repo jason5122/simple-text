@@ -16,34 +16,34 @@ TextButtonWidget::TextButtonWidget(
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     line_layout = line_layout_cache.get(font_id, str8);
 
-    setWidth(std::max(line_layout.width + padding.width * 2, min_size.width));
-    setHeight(std::max(line_height + padding.height * 2, min_size.height));
+    set_width(std::max(line_layout.width + padding.width * 2, min_size.width));
+    set_height(std::max(line_height + padding.height * 2, min_size.height));
 }
 
 void TextButtonWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
 
-    rect_renderer.addRect(position, size, position, position + size, bg_color, Layer::kBackground,
-                          4);
+    rect_renderer.addRect(position(), size(), position(), position() + size(), bg_color,
+                          Layer::kBackground, 4);
 
     Point min_coords = {
         .x = 0,
-        .y = position.y,
+        .y = position().y,
     };
     Point max_coords = {
-        .x = size.width,
-        .y = position.y + size.height,
+        .x = size().width,
+        .y = position().y + size().height,
     };
     texture_renderer.addLineLayout(line_layout, textCenter(), min_coords, max_coords,
                                    [](size_t) { return kTextColor; });
 }
 
 constexpr Point TextButtonWidget::textCenter() {
-    auto pos = position;
-    pos.x += size.width / 2;
+    auto pos = position();
+    pos.x += size().width / 2;
     pos.x -= line_layout.width / 2;
-    pos.y += size.height / 2;
+    pos.y += size().height / 2;
     pos.y -= line_height / 2;
     return pos;
 }

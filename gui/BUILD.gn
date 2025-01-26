@@ -8,7 +8,6 @@ source_set("gui") {
     "renderer/shader.cc",
     "renderer/texture_cache.cc",
     "renderer/texture_renderer.cc",
-    "text_system/movement.cc",
     "widget/button_widget.cc",
     "widget/container/horizontal_layout_widget.cc",
     "widget/container/horizontal_resizing_widget.cc",
@@ -34,26 +33,15 @@ source_set("gui") {
 
   deps = [
     "//base",
+    "//editor",
     "//font",
     "//gui/renderer/icons",
     "//opengl",
     "//third_party/fmt",
     "//third_party/libjpeg",
     "//third_party/libspng",
-    "//third_party/uni_algo",
 
     # TODO: Refactor this.
     "//gui/platform",
-  ]
-}
-
-source_set("gui_unittests") {
-  testonly = true
-
-  sources = [ "text_system/movement_unittest.cc" ]
-
-  deps = [
-    ":gui",
-    "//third_party/googletest:gtest",
   ]
 }

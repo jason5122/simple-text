@@ -55,7 +55,7 @@ PieceTree::PieceTree(std::string_view txt) {
         size_t last_line = buf.line_starts.size() - 1;
         // Create a new node that spans this buffer and retains an index to it.
         // Insert the node into the balanced tree.
-        Piece piece{
+        Piece piece = {
             .buffer_type = BufferType::Original,
             .first = {.line = 0, .column = 0},
             .last = {.line = last_line, .column = buf.buffer.size() - buf.line_starts[last_line]},
@@ -577,7 +577,7 @@ NodePosition PieceTree::node_at(size_t off) const {
 }
 
 BufferCursor PieceTree::buffer_position(const Piece& piece, size_t remainder) const {
-    auto& starts = buffers.buffer_at(piece.buffer_type)->line_starts;
+    const auto& starts = buffers.buffer_at(piece.buffer_type)->line_starts;
     auto start_offset = starts[piece.first.line] + piece.first.column;
     auto offset = start_offset + remainder;
 

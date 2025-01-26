@@ -29,7 +29,10 @@ void AtlasWidget::draw() {
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
     const auto& texture_cache = Renderer::instance().getTextureCache();
 
-    rect_renderer.addRect(position, size, position, position + size, kSideBarColor,
+    const auto min_coords = position();
+    const auto max_coords = min_coords + size();
+
+    rect_renderer.addRect(position(), size(), min_coords, max_coords, kSideBarColor,
                           Layer::kBackground);
 
     const Size atlas_size = {
@@ -45,16 +48,16 @@ void AtlasWidget::draw() {
         max_scroll_offset.y = page_colors.size() * Atlas::kAtlasSize;
     }
 
-    auto coords = position - scroll_offset;
+    auto coords = position() - scroll_offset;
     for (size_t page = 0; page < count; ++page) {
-        texture_renderer.renderAtlasPage(page, coords, position, position + size);
-        rect_renderer.addRect(coords, atlas_size, position, position + size, page_colors[page],
+        texture_renderer.renderAtlasPage(page, coords, min_coords, max_coords);
+        rect_renderer.addRect(coords, atlas_size, min_coords, max_coords, page_colors[page],
                               Layer::kBackground, 0, 0);
 
         coords.y += Atlas::kAtlasSize;
     }
 }
 
-void AtlasWidget::updateMaxScroll() {}
+void AtlasWidget::update_max_scroll() {}
 
 }  // namespace gui

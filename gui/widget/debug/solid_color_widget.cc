@@ -9,7 +9,8 @@ SolidColorWidget::SolidColorWidget(const Size& size, const Rgb& color)
 
 void SolidColorWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, position, position + size, color, Layer::kForeground);
+    rect_renderer.addRect(position(), size(), position(), position() + size(), color,
+                          Layer::kForeground);
 }
 
 }  // namespace gui

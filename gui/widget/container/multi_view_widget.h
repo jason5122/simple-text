@@ -4,6 +4,7 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "base/numeric/wrap_arithmetic.h"
 #include "gui/widget/container/container_widget.h"
+
 #include <memory>
 #include <vector>
 
@@ -12,15 +13,15 @@ namespace gui {
 template <typename WidgetType>
 class MultiViewWidget : public ContainerWidget {
 public:
-    WidgetType* currentWidget() const {
+    WidgetType* current_widget() const {
         if (!views.empty()) {
-            return views[index].get();
+            return views[index_].get();
         } else {
             return nullptr;
         }
     }
 
-    constexpr size_t widgetCount() const {
+    constexpr size_t count() const {
         return views.size();
     }
 
@@ -28,28 +29,28 @@ public:
         return views[i].get();
     }
 
-    void setIndex(size_t index) {
+    void set_index(size_t index) {
         if (index < views.size()) {
-            this->index = index;
+            index_ = index;
         }
     }
 
-    void prevIndex() {
-        if (index >= views.size()) return;
-        index = base::dec_wrap(index, views.size());
+    void prev_index() {
+        if (index_ >= views.size()) return;
+        index_ = base::dec_wrap(index_, views.size());
     }
 
-    void nextIndex() {
-        if (index >= views.size()) return;
-        index = base::inc_wrap(index, views.size());
+    void next_index() {
+        if (index_ >= views.size()) return;
+        index_ = base::inc_wrap(index_, views.size());
     }
 
-    void lastIndex() {
-        index = base::sub_sat(views.size(), 1_Z);
+    void last_index() {
+        index_ = base::sub_sat(views.size(), 1_Z);
     }
 
-    size_t getCurrentIndex() {
-        return index;
+    size_t index() {
+        return index_;
     }
 
     void addTab(std::unique_ptr<WidgetType> widget) {
@@ -60,42 +61,42 @@ public:
         if (views.empty()) return;
 
         views.erase(views.begin() + index);
-        this->index = std::clamp(index, 0_Z, base::sub_sat(views.size(), 1_Z));
+        index_ = std::clamp(index, 0_Z, base::sub_sat(views.size(), 1_Z));
     }
 
     void draw() override {
-        Widget* widget = currentWidget();
+        Widget* widget = current_widget();
         if (widget) widget->draw();
     }
 
-    void performScroll(const Point& mouse_pos, const Delta& delta) override {
-        Widget* widget = currentWidget();
-        if (widget) widget->performScroll(mouse_pos, delta);
+    void perform_scroll(const Point& mouse_pos, const Delta& delta) override {
+        Widget* widget = current_widget();
+        if (widget) widget->perform_scroll(mouse_pos, delta);
     }
 
-    void leftMouseDown(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override {
-        Widget* widget = currentWidget();
-        if (widget) widget->leftMouseDown(mouse_pos, modifiers, click_type);
+    void left_mouse_down(const Point& mouse_pos,
+                         ModifierKey modifiers,
+                         ClickType click_type) override {
+        Widget* widget = current_widget();
+        if (widget) widget->left_mouse_down(mouse_pos, modifiers, click_type);
     }
 
-    void leftMouseDrag(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override {
-        Widget* widget = currentWidget();
-        if (widget) widget->leftMouseDrag(mouse_pos, modifiers, click_type);
+    void left_mouse_drag(const Point& mouse_pos,
+                         ModifierKey modifiers,
+                         ClickType click_type) override {
+        Widget* widget = current_widget();
+        if (widget) widget->left_mouse_drag(mouse_pos, modifiers, click_type);
     }
 
-    void leftMouseUp(const Point& mouse_pos) override {
-        Widget* widget = currentWidget();
-        if (widget) widget->leftMouseUp(mouse_pos);
+    void left_mouse_up(const Point& mouse_pos) override {
+        Widget* widget = current_widget();
+        if (widget) widget->left_mouse_up(mouse_pos);
     }
 
-    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override {
-        Widget* widget = currentWidget();
+    bool mouse_position_changed(const std::optional<Point>& mouse_pos) override {
+        Widget* widget = current_widget();
         if (widget) {
-            return widget->mousePositionChanged(mouse_pos);
+            return widget->mouse_position_changed(mouse_pos);
         } else {
             return false;
         }
@@ -103,26 +104,26 @@ public:
 
     void layout() override {
         for (auto& text_view : views) {
-            text_view->setSize(size);
-            text_view->setPosition(position);
+            text_view->set_size(size());
+            text_view->set_position(position());
         }
     }
 
-    Widget* widgetAt(const Point& pos) override {
-        Widget* widget = currentWidget();
+    Widget* widget_at(const Point& pos) override {
+        Widget* widget = current_widget();
         if (widget) {
-            return widget->widgetAt(pos);
+            return widget->widget_at(pos);
         } else {
             return nullptr;
         }
     }
 
-    constexpr std::string_view className() const override {
+    constexpr std::string_view class_name() const override {
         return "MultiViewWidget";
     }
 
 private:
-    size_t index = 0;
+    size_t index_ = 0;
     std::vector<std::unique_ptr<WidgetType>> views;
 };
 

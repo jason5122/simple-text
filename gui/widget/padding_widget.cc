@@ -8,7 +8,8 @@ PaddingWidget::PaddingWidget(const Size& size, const Rgb& color) : Widget{size},
 
 void PaddingWidget::draw() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position, size, position, position + size, color, Layer::kBackground);
+    rect_renderer.addRect(position(), size(), position(), position() + size(), color,
+                          Layer::kBackground);
 }
 
 }  // namespace gui

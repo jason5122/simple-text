@@ -17,20 +17,20 @@ public:
     // Widget overrides.
     void draw() override;
     void layout() override;
-    void performScroll(const Point& mouse_pos, const Delta& delta) override;
-    void leftMouseDown(const Point& mouse_pos,
+    void perform_scroll(const Point& mouse_pos, const Delta& delta) override;
+    void left_mouse_down(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;
-    void leftMouseDrag(const Point& mouse_pos,
+    void left_mouse_drag(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;
-    void leftMouseUp(const Point& mouse_pos) override;
-    void rightMouseDown(const Point& mouse_pos,
+    void left_mouse_up(const Point& mouse_pos) override;
+    void right_mouse_down(const Point& mouse_pos,
                         ModifierKey modifiers,
                         ClickType click_type) override;
-    bool mousePositionChanged(const std::optional<Point>& mouse_pos) override;
+    bool mouse_position_changed(const std::optional<Point>& mouse_pos) override;
 
-    constexpr std::string_view className() const final override {
+    constexpr std::string_view class_name() const final override {
         return "EditorWindow";
     }
 

@@ -14,7 +14,7 @@ public:
 
     void setText(std::string_view str8);
 
-    constexpr std::string_view className() const final override {
+    constexpr std::string_view class_name() const final override {
         return "StatusBarWidget";
     }
 

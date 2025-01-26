@@ -1,0 +1,19 @@
+source_set("editor") {
+  sources = [ "movement.cc" ]
+
+  deps = [
+    "//third_party/fmt",
+    "//third_party/uni_algo",
+  ]
+}
+
+source_set("editor_unittests") {
+  testonly = true
+
+  sources = [ "movement_unittest.cc" ]
+
+  deps = [
+    ":editor",
+    "//third_party/googletest:gtest",
+  ]
+}

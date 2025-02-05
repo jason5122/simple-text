@@ -26,19 +26,18 @@ public:
         bool colored;
         size_t page;
     };
-    const Glyph& getGlyph(size_t font_id, uint32_t glyph_id);
+    const Glyph& get_glyph(size_t font_id, uint32_t glyph_id);
 
     struct Image {
         Size size;
         Vec4 uv;
         size_t page;
     };
-    size_t addPng(const base::FilePath& path);
-    size_t addJpeg(const base::FilePath& path);
-    const Image& getImage(size_t image_id) const;
+    size_t add_png(const base::FilePath& path);
+    size_t add_jpeg(const base::FilePath& path);
+    const Image& get_image(size_t image_id) const;
 
     constexpr const std::vector<Atlas>& pages() const;
-    constexpr size_t pageCount() const;
 
 private:
     std::vector<Atlas> atlas_pages;
@@ -48,17 +47,13 @@ private:
     std::vector<robin_hood::unordered_node_map<uint32_t, Glyph>> cache;
     std::vector<Image> image_cache;
 
-    Glyph insertIntoAtlas(const font::RasterizedGlyph& rglyph);
-    bool loadPng(const base::FilePath& path, Image& image);
-    bool loadJpeg(const base::FilePath& path, Image& image);
+    Glyph insert_into_atlas(const font::RasterizedGlyph& rglyph);
+    bool load_png(const base::FilePath& path, Image& image);
+    bool load_jpeg(const base::FilePath& path, Image& image);
 };
 
 constexpr const std::vector<Atlas>& TextureCache::pages() const {
     return atlas_pages;
-}
-
-constexpr size_t TextureCache::pageCount() const {
-    return atlas_pages.size();
 }
 
 }  // namespace gui

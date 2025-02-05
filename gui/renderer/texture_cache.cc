@@ -20,7 +20,7 @@ TextureCache::TextureCache() {
     atlas_pages.emplace_back();
 }
 
-const TextureCache::Glyph& TextureCache::getGlyph(size_t font_id, uint32_t glyph_id) {
+const TextureCache::Glyph& TextureCache::get_glyph(size_t font_id, uint32_t glyph_id) {
     if (cache.size() <= font_id) {
         cache.resize(font_id + 1);
     }
@@ -28,15 +28,15 @@ const TextureCache::Glyph& TextureCache::getGlyph(size_t font_id, uint32_t glyph
     if (!cache[font_id].contains(glyph_id)) {
         const auto& font_rasterizer = font::FontRasterizer::instance();
         auto rglyph = font_rasterizer.rasterize(font_id, glyph_id);
-        cache[font_id].emplace(glyph_id, insertIntoAtlas(std::move(rglyph)));
+        cache[font_id].emplace(glyph_id, insert_into_atlas(std::move(rglyph)));
     }
     return cache[font_id][glyph_id];
 }
 
 // TODO: De-duplicate this code in a clean way.
-size_t TextureCache::addPng(const base::FilePath& path) {
+size_t TextureCache::add_png(const base::FilePath& path) {
     Image image;
-    bool success = loadPng(path, image);
+    bool success = load_png(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
         fmt::println("TextureCache::addPng() error: Could not load image.");
@@ -49,9 +49,9 @@ size_t TextureCache::addPng(const base::FilePath& path) {
 }
 
 // TODO: De-duplicate this code in a clean way.
-size_t TextureCache::addJpeg(const base::FilePath& path) {
+size_t TextureCache::add_jpeg(const base::FilePath& path) {
     Image image;
-    bool success = loadJpeg(path, image);
+    bool success = load_jpeg(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
         fmt::println("TextureCache::addJpeg() error: Could not load image.");
@@ -62,12 +62,12 @@ size_t TextureCache::addJpeg(const base::FilePath& path) {
     return image_id;
 }
 
-const TextureCache::Image& TextureCache::getImage(size_t image_id) const {
+const TextureCache::Image& TextureCache::get_image(size_t image_id) const {
     return image_cache[image_id];
 }
 
 // TODO: Refactor recursion.
-TextureCache::Glyph TextureCache::insertIntoAtlas(const font::RasterizedGlyph& rglyph) {
+TextureCache::Glyph TextureCache::insert_into_atlas(const font::RasterizedGlyph& rglyph) {
     Atlas& atlas = atlas_pages[current_page];
 
     // TODO: Handle the case when a texture is too large for the atlas.
@@ -80,7 +80,7 @@ TextureCache::Glyph TextureCache::insertIntoAtlas(const font::RasterizedGlyph& r
     if (!success) {
         atlas_pages.emplace_back();
         ++current_page;
-        return insertIntoAtlas(rglyph);
+        return insert_into_atlas(rglyph);
     }
 
     return {
@@ -95,7 +95,7 @@ TextureCache::Glyph TextureCache::insertIntoAtlas(const font::RasterizedGlyph& r
 }
 
 // TODO: Handle errors.
-bool TextureCache::loadPng(const base::FilePath& path, Image& image) {
+bool TextureCache::load_png(const base::FilePath& path, Image& image) {
     base::ScopedFILE fp(base::OpenFile(path, "rb"));
     std::unique_ptr<spng_ctx, void (*)(spng_ctx*)> ctx{spng_ctx_new(0), spng_ctx_free};
     spng_ihdr ihdr;
@@ -131,7 +131,7 @@ bool TextureCache::loadPng(const base::FilePath& path, Image& image) {
 }
 
 // TODO: Handle errors.
-bool TextureCache::loadJpeg(const base::FilePath& path, Image& image) {
+bool TextureCache::load_jpeg(const base::FilePath& path, Image& image) {
     jpeg_decompress_struct info;
     jpeg_error_mgr err;
 

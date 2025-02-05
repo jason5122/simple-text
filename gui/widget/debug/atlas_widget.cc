@@ -7,7 +7,7 @@ namespace gui {
 
 AtlasWidget::AtlasWidget() : ScrollableWidget({.width = 400}) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
-    size_t count = texture_cache.pageCount();
+    size_t count = texture_cache.pages().size();
     max_scroll_offset.x = Atlas::kAtlasSize;
     max_scroll_offset.y = count * Atlas::kAtlasSize;
 }
@@ -40,7 +40,7 @@ void AtlasWidget::draw() {
         .height = Atlas::kAtlasSize,
     };
 
-    size_t count = texture_cache.pageCount();
+    size_t count = texture_cache.pages().size();
 
     // TODO: Refactor this ugly hack.
     while (page_colors.size() < count) {

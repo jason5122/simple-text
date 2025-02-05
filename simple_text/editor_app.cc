@@ -41,14 +41,14 @@ void EditorApp::onLaunch() {
         icons_path.Append(FILE_PATH_LITERAL("icon_highlight_matches@2x.png"));
 
     auto& texture_cache = gui::Renderer::instance().getTextureCache();
-    panel_close_image_id = texture_cache.addPng(panel_close_2x);
-    folder_open_image_id = texture_cache.addPng(folder_open_2x);
-    icon_regex_image_id = texture_cache.addPng(icon_regex_2x);
-    icon_case_sensitive_image_id = texture_cache.addPng(icon_case_sensitive_2x);
-    icon_whole_word_image_id = texture_cache.addPng(icon_whole_word_2x);
-    icon_wrap_image_id = texture_cache.addPng(icon_wrap_2x);
-    icon_in_selection_id = texture_cache.addPng(icon_in_selection_2x);
-    icon_highlight_matches_id = texture_cache.addPng(icon_highlight_matches_2x);
+    panel_close_image_id = texture_cache.add_png(panel_close_2x);
+    folder_open_image_id = texture_cache.add_png(folder_open_2x);
+    icon_regex_image_id = texture_cache.add_png(icon_regex_2x);
+    icon_case_sensitive_image_id = texture_cache.add_png(icon_case_sensitive_2x);
+    icon_whole_word_image_id = texture_cache.add_png(icon_whole_word_2x);
+    icon_wrap_image_id = texture_cache.add_png(icon_wrap_2x);
+    icon_in_selection_id = texture_cache.add_png(icon_in_selection_2x);
+    icon_highlight_matches_id = texture_cache.add_png(icon_highlight_matches_2x);
 
     createWindow();
 }

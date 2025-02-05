@@ -125,7 +125,7 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
     for (size_t i = 0; i < line_layout.glyphs.size(); ++i) {
         const auto& glyph = line_layout.glyphs[i];
 
-        auto& rglyph = texture_cache.getGlyph(glyph.font_id, glyph.glyph_id);
+        auto& rglyph = texture_cache.get_glyph(glyph.font_id, glyph.glyph_id);
         int32_t left = rglyph.left;
         int32_t top = rglyph.top;
         int32_t width = rglyph.width;
@@ -209,7 +209,7 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
 
 void TextureRenderer::addImage(size_t image_index, const Point& coords, const Rgb& color) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
-    const auto& image = texture_cache.getImage(image_index);
+    const auto& image = texture_cache.get_image(image_index);
     InstanceData instance = {
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .glyph = {0, 0, static_cast<float>(image.size.width),
@@ -222,7 +222,7 @@ void TextureRenderer::addImage(size_t image_index, const Point& coords, const Rg
 
 void TextureRenderer::addColorImage(size_t image_index, const Point& coords) {
     const auto& texture_cache = Renderer::instance().getTextureCache();
-    const auto& image = texture_cache.getImage(image_index);
+    const auto& image = texture_cache.get_image(image_index);
     InstanceData instance = {
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
         .glyph = {0, 0, static_cast<float>(image.size.width),
@@ -247,7 +247,7 @@ void TextureRenderer::flush(const Size& screen_size) {
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_instance);
 
-    for (size_t page = 0; page < texture_cache.pageCount(); ++page) {
+    for (size_t page = 0; page < texture_cache.pages().size(); ++page) {
         // TODO: Refactor this ugly hack.
         while (batches.size() <= page) {
             batches.emplace_back();

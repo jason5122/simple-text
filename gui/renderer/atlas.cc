@@ -85,6 +85,22 @@ GLuint Atlas::tex() const {
     return tex_id;
 }
 
+// TODO: Consider refactoring this.
+namespace {
+
+GLenum format_to_glenum(Atlas::Format format) {
+    switch (format) {
+    case Atlas::Format::kBGRA:
+        return GL_BGRA;
+    case Atlas::Format::kRGBA:
+        return GL_RGBA;
+    case Atlas::Format::kRGB:
+        return GL_RGB;
+    }
+}
+
+}  // namespace
+
 bool Atlas::insert_texture(
     int width, int height, Format format, const std::vector<uint8_t>& data, Vec4& out_uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
@@ -107,11 +123,7 @@ bool Atlas::insert_texture(
     }
 
     // Load data into OpenGL.
-    GLenum gl_format;
-    if (format == Format::kBGRA) gl_format = GL_BGRA;
-    else if (format == Format::kRGBA) gl_format = GL_RGBA;
-    else if (format == Format::kRGB) gl_format = GL_RGB;
-    else std::abort();
+    GLenum gl_format = format_to_glenum(format);
 
     glBindTexture(GL_TEXTURE_2D, tex_id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, row_extent, row_baseline, width, height, gl_format,

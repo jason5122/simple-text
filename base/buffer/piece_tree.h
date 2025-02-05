@@ -134,10 +134,8 @@ public:
     char next();
     void seek(size_t offset);
     bool exhausted() const;
-    size_t remaining() const;
-    size_t offset() const {
-        return total_offset;
-    }
+    constexpr size_t remaining() const;
+    constexpr size_t offset() const;
 
     // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
     int32_t next_codepoint();
@@ -173,10 +171,8 @@ public:
     char next();
     void seek(size_t offset);
     bool exhausted() const;
-    size_t remaining() const;
-    size_t offset() const {
-        return total_offset;
-    }
+    constexpr size_t remaining() const;
+    constexpr size_t offset() const;
 
     // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
     int32_t next_codepoint();
@@ -199,5 +195,21 @@ private:
     const char* first_ptr = nullptr;
     const char* last_ptr = nullptr;
 };
+
+constexpr size_t TreeWalker::remaining() const {
+    return total_content_length - total_offset;
+}
+
+constexpr size_t TreeWalker::offset() const {
+    return total_offset;
+}
+
+constexpr size_t ReverseTreeWalker::remaining() const {
+    return total_offset + 1;
+}
+
+constexpr size_t ReverseTreeWalker::offset() const {
+    return total_offset;
+}
 
 }  // namespace base

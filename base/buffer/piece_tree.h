@@ -132,13 +132,11 @@ public:
 
     char current();
     char next();
+    char32_t next_codepoint();
     void seek(size_t offset);
     bool exhausted() const;
     constexpr size_t remaining() const;
     constexpr size_t offset() const;
-
-    // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
-    int32_t next_codepoint();
 
 private:
     void populate_ptrs();
@@ -169,13 +167,11 @@ public:
 
     char current();
     char next();
+    char32_t next_codepoint();
     void seek(size_t offset);
     bool exhausted() const;
     constexpr size_t remaining() const;
     constexpr size_t offset() const;
-
-    // If invalid UTF-8 is encountered, set offset to end (become exhausted) and return -1.
-    int32_t next_codepoint();
 
 private:
     void populate_ptrs();

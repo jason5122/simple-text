@@ -16,8 +16,8 @@ namespace gui {
 
 // TODO: Remove methods; make this a pure struct.
 struct Selection {
-    size_t start;
-    size_t end;
+    size_t start{};
+    size_t end{};
 
     constexpr bool empty() const;
     constexpr size_t length() const;

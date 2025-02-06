@@ -75,10 +75,10 @@ private:
 
     size_t font_id;
 
-    base::PieceTree tree;
+    base::PieceTree tree{};
 
-    Selection selection;
-    Selection old_selection;
+    Selection selection{};
+    Selection old_selection{};
 
     static constexpr int kGutterLeftPadding = 18 * 2;
     static constexpr int kGutterRightPadding = 8 * 2;

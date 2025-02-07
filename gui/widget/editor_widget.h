@@ -11,17 +11,17 @@ class EditorWidget : public VerticalLayoutWidget {
 public:
     EditorWidget(size_t main_font_id, size_t ui_font_size, size_t panel_close_image_id);
 
-    TextEditWidget* currentWidget() const;
-    void setIndex(size_t index);
-    void prevIndex();
-    void nextIndex();
-    void lastIndex();
-    size_t getCurrentIndex();
-    void addTab(std::string_view tab_name, std::string_view text);
-    void removeTab(size_t index);
-    void openFile(std::string_view path);
+    TextEditWidget* current_widget() const;
+    void set_index(size_t index);
+    void prev_index();
+    void next_index();
+    void last_index();
+    size_t get_current_index();
+    void add_tab(std::string_view tab_name, std::string_view text);
+    void remove_tab(size_t index);
+    void open_file(std::string_view path);
     // TODO: Refactor this.
-    void updateFontId(size_t font_id);
+    void update_font(size_t font_id);
 
     constexpr std::string_view class_name() const final override {
         return "EditorWidget";

@@ -9,7 +9,7 @@ class LabelWidget : public Widget {
 public:
     LabelWidget(size_t font_id, const Rgb& color, int left_padding = 0, int right_padding = 0);
 
-    void setText(std::string_view str8);
+    void set_text(std::string_view str8);
 
     void draw() override;
 
@@ -26,7 +26,7 @@ private:
     std::string label_str;
     Rgb color;
 
-    Point centerVertically(int widget_height);
+    Point center_vertically(int widget_height);
 };
 
 }  // namespace gui

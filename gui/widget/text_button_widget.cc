@@ -35,11 +35,11 @@ void TextButtonWidget::draw() {
         .x = size().width,
         .y = position().y + size().height,
     };
-    texture_renderer.addLineLayout(line_layout, textCenter(), min_coords, max_coords,
+    texture_renderer.addLineLayout(line_layout, text_center(), min_coords, max_coords,
                                    [](size_t) { return kTextColor; });
 }
 
-constexpr Point TextButtonWidget::textCenter() {
+constexpr Point TextButtonWidget::text_center() {
     auto pos = position();
     pos.x += size().width / 2;
     pos.x -= line_layout.width / 2;

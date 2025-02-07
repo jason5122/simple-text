@@ -42,7 +42,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
 // On GTK, size isn't available upon realization. This is fine, just don't rely on `size` here!
 void EditorWindow::onOpenGLActivate() {
     using namespace std::literals;
-    auto* text_view = editor_widget->currentWidget();
+    auto* text_view = editor_widget->current_widget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
     text_view->insert_text(kCppExample);
     // TODO: Fix these cases on Pango. Core Text has been fixed.
@@ -82,18 +82,18 @@ void EditorWindow::draw() {
     // auto p = util::Profiler{"Total render time"};
 
     // TODO: Debug use; remove this.
-    auto* text_view = editor_widget->currentWidget();
+    auto* text_view = editor_widget->current_widget();
     if (text_view) {
         size_t length = text_view->get_selection_length();
         if (length > 0) {
-            status_bar->setText(
+            status_bar->set_text(
                 fmt::format("{} character{} selected", length, length != 1 ? "s" : ""));
         } else {
             auto [line, col] = text_view->get_line_column();
-            status_bar->setText(fmt::format("Line {}, Column {}", line + 1, col + 1));
+            status_bar->set_text(fmt::format("Line {}, Column {}", line + 1, col + 1));
         }
     } else {
-        status_bar->setText("No file open");
+        status_bar->set_text("No file open");
     }
 
     main_widget->draw();
@@ -282,45 +282,45 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
 
     bool handled = false;
     if (key == Key::kJ && modifiers == kPrimaryModifier) {
-        editor_widget->prevIndex();
+        editor_widget->prev_index();
         handled = true;
     } else if (key == Key::kK && modifiers == kPrimaryModifier) {
-        editor_widget->nextIndex();
+        editor_widget->next_index();
         handled = true;
     } else if (key == Key::k1 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(0);
+        editor_widget->set_index(0);
         handled = true;
     } else if (key == Key::k2 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(1);
+        editor_widget->set_index(1);
         handled = true;
     } else if (key == Key::k3 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(2);
+        editor_widget->set_index(2);
         handled = true;
     } else if (key == Key::k4 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(3);
+        editor_widget->set_index(3);
         handled = true;
     } else if (key == Key::k5 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(4);
+        editor_widget->set_index(4);
         handled = true;
     } else if (key == Key::k6 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(5);
+        editor_widget->set_index(5);
         handled = true;
     } else if (key == Key::k7 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(6);
+        editor_widget->set_index(6);
         handled = true;
     } else if (key == Key::k8 && modifiers == kPrimaryModifier) {
-        editor_widget->setIndex(7);
+        editor_widget->set_index(7);
         handled = true;
     } else if (key == Key::k9 && modifiers == kPrimaryModifier) {
-        editor_widget->lastIndex();
+        editor_widget->last_index();
         handled = true;
     } else if (key == Key::kA && modifiers == kPrimaryModifier) {
-        editor_widget->currentWidget()->select_all();
+        editor_widget->current_widget()->select_all();
         handled = true;
     } else if (key == Key::kN && modifiers == kPrimaryModifier) {
         auto p = util::Profiler{"Add new tab (modifier key)"};
         // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
-        editor_widget->addTab("untitled", "");
+        editor_widget->add_tab("untitled", "");
         handled = true;
     } else if (key == Key::kN && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         parent.createWindow();
@@ -328,11 +328,11 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
     } else if (key == Key::kW && modifiers == kPrimaryModifier) {
         // If we are dragging on the current TextViewWidget, invalidate the pointer to prevent a
         // use-after-free crash.
-        if (dragged_widget == editor_widget->currentWidget()) {
+        if (dragged_widget == editor_widget->current_widget()) {
             dragged_widget = nullptr;
         }
 
-        editor_widget->removeTab(editor_widget->getCurrentIndex());
+        editor_widget->remove_tab(editor_widget->get_current_index());
         handled = true;
     } else if (key == Key::kW && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         // Immediately exit this function and don't let any other methods get called! This window's
@@ -340,51 +340,51 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         close();
         return true;
     } else if (key == Key::kC && modifiers == kPrimaryModifier) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         parent.setClipboardString(text_view->get_selection_text());
         handled = true;
     } else if (key == Key::kV && modifiers == kPrimaryModifier) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         text_view->insert_text(parent.getClipboardString());
         handled = true;
     } else if (key == Key::kX && modifiers == kPrimaryModifier) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         parent.setClipboardString(text_view->get_selection_text());
         text_view->left_delete();
         handled = true;
     } else if (key == Key::kO && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
         auto path = openFilePicker();
         if (path) {
-            editor_widget->openFile(*path);
-            editor_widget->lastIndex();
+            editor_widget->open_file(*path);
+            editor_widget->last_index();
             handled = true;
         }
     } else if (key == Key::kZ && modifiers == kPrimaryModifier) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         text_view->undo();
         handled = true;
     } else if (key == Key::kZ && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         text_view->redo();
         handled = true;
     } else if (key == Key::kBackspace && modifiers == ModifierKey::kNone) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         text_view->left_delete();
         handled = true;
     } else if (key == Key::kEnter && modifiers == ModifierKey::kNone) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         text_view->insert_text("\n");
         // focused_widget->insertText("\n");
         handled = true;
     } else if (key == Key::kTab && modifiers == ModifierKey::kNone) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         // TODO: Don't hard code this.
         text_view->insert_text("    ");
         handled = true;
     } else if (key == Key::kQ && modifiers == kPrimaryModifier) {
         parent.quit();
     } else if (key == Key::kF && modifiers == kPrimaryModifier) {
-        auto* text_view = editor_widget->currentWidget();
+        auto* text_view = editor_widget->current_widget();
         // TODO: Don't hard code this.
         text_view->find("needle");
         handled = true;
@@ -428,7 +428,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         fmt::println("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
 
-        editor_widget->updateFontId(parent.main_font_id);
+        editor_widget->update_font(parent.main_font_id);
 
         handled = true;
     } else if (key == Key::kEqual && modifiers == kPrimaryModifier) {
@@ -439,7 +439,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         fmt::println("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
 
-        editor_widget->updateFontId(parent.main_font_id);
+        editor_widget->update_font(parent.main_font_id);
 
         handled = true;
     } else if (key == Key::k0 && modifiers == kPrimaryModifier) {
@@ -450,7 +450,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         fmt::println("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
 
-        editor_widget->updateFontId(parent.main_font_id);
+        editor_widget->update_font(parent.main_font_id);
 
         handled = true;
     }
@@ -462,7 +462,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
 }
 
 void EditorWindow::onInsertText(std::string_view text) {
-    if (auto widget = editor_widget->currentWidget()) {
+    if (auto widget = editor_widget->current_widget()) {
         widget->insert_text(text);
         redraw();
     }
@@ -482,7 +482,7 @@ void EditorWindow::onAction(Action action, bool extend) {
     auto p = util::Profiler{"EditorWindow::onAction()"};
 
     bool handled = true;
-    auto* text_view = editor_widget->currentWidget();
+    auto* text_view = editor_widget->current_widget();
     switch (action) {
     case Action::kMoveForwardByCharacters:
         text_view->move(gui::MoveBy::kCharacters, true, extend);
@@ -556,7 +556,7 @@ void EditorWindow::onAction(Action action, bool extend) {
 void EditorWindow::onAppAction(AppAction action) {
     switch (action) {
     case AppAction::kNewFile:
-        editor_widget->addTab("untitled", "");
+        editor_widget->add_tab("untitled", "");
         redraw();
         break;
     case AppAction::kNewWindow:

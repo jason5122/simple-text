@@ -25,7 +25,7 @@ enum class ClickType {
     kTripleClick,
 };
 
-constexpr ClickType ClickTypeFromCount(long click_count) {
+constexpr ClickType click_type_from_count(long click_count) {
     if (click_count == 1) {
         return ClickType::kSingleClick;
     } else if (click_count == 2) {

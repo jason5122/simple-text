@@ -29,13 +29,13 @@ public:
     }
 
 private:
-    // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
-    static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
+    // static constexpr Rgb kTextColor = {51, 51, 51};     // Light.
+    static constexpr Rgb kTextColor = {216, 222, 233};  // Dark.
     // TODO: Add light variant.
-    static constexpr Rgb kBackgroundColor{69, 75, 84};  // Dark.
+    static constexpr Rgb kBackgroundColor = {69, 75, 84};  // Dark.
 
-    // static constexpr Rgb kCaretColor{95, 180, 180};       // Light.
-    static constexpr Rgb kCaretColor{249, 174, 88};  // Dark.
+    // static constexpr Rgb kCaretColor = {95, 180, 180};       // Light.
+    static constexpr Rgb kCaretColor = {249, 174, 88};  // Dark.
     static constexpr int kCaretWidth = 4;
     static constexpr int kBorderThickness = 2;
 
@@ -44,12 +44,12 @@ private:
     int left_padding;
 
     int line_height;
-    base::PieceTree tree;
+    base::PieceTree tree{};
     Selection selection{};
 
-    size_t lineAtY(int y) const;
-    inline const font::LineLayout& layoutAt(size_t line);
-    inline constexpr Point textOffset();
+    size_t line_at_y(int y) const;
+    inline const font::LineLayout& layout_at(size_t line);
+    inline constexpr Point text_offset();
 };
 
 }  // namespace gui

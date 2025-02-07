@@ -253,7 +253,7 @@ void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer
     GdkModifierType event_state =
         gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(self));
     ModifierKey modifiers = ModifierFromState(event_state);
-    ClickType click_type = ClickTypeFromCount(n_press);
+    ClickType click_type = click_type_from_count(n_press);
 
     auto* app_window = static_cast<WindowWidget*>(user_data);
     app_window->left_mouse_down(mouse_pos, modifiers, click_type);

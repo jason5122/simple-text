@@ -19,7 +19,7 @@ ImageButtonWidget::ImageButtonWidget(size_t image_id,
 
 void ImageButtonWidget::draw() {
     // TODO: Formalize this.
-    if (getState()) {
+    if (get_state()) {
         auto& rect_renderer = Renderer::instance().getRectRenderer();
         rect_renderer.addRect(position(), size(), position(), position() + size(), bg_color,
                               Layer::kBackground, 4);

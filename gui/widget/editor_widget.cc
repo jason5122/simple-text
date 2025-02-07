@@ -22,53 +22,53 @@ EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size, size_t pane
     setMainWidget(std::unique_ptr<MultiViewWidget<TextEditWidget>>(multi_view));
 }
 
-TextEditWidget* EditorWidget::currentWidget() const {
+TextEditWidget* EditorWidget::current_widget() const {
     return multi_view->current_widget();
 }
 
-void EditorWidget::setIndex(size_t index) {
+void EditorWidget::set_index(size_t index) {
     multi_view->set_index(index);
-    tab_bar->setIndex(index);
+    tab_bar->set_index(index);
 }
 
-void EditorWidget::prevIndex() {
+void EditorWidget::prev_index() {
     multi_view->prev_index();
-    tab_bar->prevIndex();
+    tab_bar->prev_index();
 }
 
-void EditorWidget::nextIndex() {
+void EditorWidget::next_index() {
     multi_view->next_index();
-    tab_bar->nextIndex();
+    tab_bar->next_index();
 }
 
-void EditorWidget::lastIndex() {
+void EditorWidget::last_index() {
     multi_view->last_index();
-    tab_bar->lastIndex();
+    tab_bar->last_index();
 }
 
-size_t EditorWidget::getCurrentIndex() {
+size_t EditorWidget::get_current_index() {
     return multi_view->index();
 }
 
-void EditorWidget::addTab(std::string_view tab_name, std::string_view text) {
+void EditorWidget::add_tab(std::string_view tab_name, std::string_view text) {
     multi_view->addTab(std::make_unique<TextEditWidget>(text, main_font_id));
-    tab_bar->addTab(tab_name);
+    tab_bar->add_tab(tab_name);
     layout();
 }
 
-void EditorWidget::removeTab(size_t index) {
+void EditorWidget::remove_tab(size_t index) {
     multi_view->removeTab(index);
-    tab_bar->removeTab(index);
+    tab_bar->remove_tab(index);
     layout();
 }
 
-void EditorWidget::openFile(std::string_view path) {
+void EditorWidget::open_file(std::string_view path) {
     std::string contents = base::ReadFile(path);
-    addTab(path, contents);
+    add_tab(path, contents);
 }
 
 // TODO: Refactor this.
-void EditorWidget::updateFontId(size_t font_id) {
+void EditorWidget::update_font(size_t font_id) {
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     line_layout_cache.clear();
 

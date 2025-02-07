@@ -11,7 +11,11 @@ namespace gui {
 
 SideBarWidget::SideBarWidget(int width)
     : ScrollableWidget({.width = width}),
-      label_font_id{rasterizer().add_system_font(kLabelFontSize, font::FontStyle::kBold)} {
+      // TODO: Move this out of here. Or, consider allowing font usage via (name, size) without
+      // needing to pass around a font ID everywhere.
+      label_font_id{rasterizer().add_system_font(kLabelFontSize, font::FontStyle::kBold)},
+      folders_label_font_id{
+          rasterizer().add_system_font(kFoldersLabelFontSize, font::FontStyle::kBold)} {
     update_max_scroll();
 }
 
@@ -22,10 +26,11 @@ void SideBarWidget::draw() {
 
     const auto& metrics = rasterizer().metrics(label_font_id);
 
-    renderLabel();
+    render_folder_label();
+    render_labels();
 
     size_t visible_lines = std::ceil(static_cast<double>(size().height) / metrics.line_height);
-    renderScrollBars(metrics.line_height, visible_lines);
+    render_scroll_bars(metrics.line_height, visible_lines);
 }
 
 bool SideBarWidget::mouse_position_changed(const std::optional<Point>& mouse_pos) {
@@ -56,28 +61,54 @@ bool SideBarWidget::mouse_position_changed(const std::optional<Point>& mouse_pos
 }
 
 void SideBarWidget::update_max_scroll() {
-    const auto& metrics = rasterizer().metrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(folders_label_font_id);
 
     int line_count = strs.size() + 1;
     max_scroll_offset.y = line_count * metrics.line_height;
 }
 
-void SideBarWidget::renderLabel() {
+void SideBarWidget::render_folder_label() {
+    auto& texture_renderer = Renderer::instance().getTextureRenderer();
+    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+
+    const auto& layout = line_layout_cache.get(folders_label_font_id, "FOLDERS");
+
+    Point text_coords = position() - scroll_offset;
+    text_coords.x += kLeftPadding;
+    text_coords.y += kTopPadding;
+    // TODO: Debug use; change this.
+    const auto highlight_callback = [](size_t) { return Rgb{255, 127, 0}; };
+
+    Point min_coords = {
+        .x = scroll_offset.x - kLeftPadding,
+        .y = position().y,
+    };
+    Point max_coords = {
+        .x = scroll_offset.x + size().width - kLeftPadding,
+        .y = position().y + size().height,
+    };
+    texture_renderer.addLineLayout(layout, text_coords, min_coords, max_coords,
+                                   highlight_callback);
+}
+
+void SideBarWidget::render_labels() {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
     auto& texture_renderer = Renderer::instance().getTextureRenderer();
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
 
     // TODO: Experimental; formalize this.
-    const auto& metrics = rasterizer().metrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(folders_label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
         const auto& layout = line_layout_cache.get(label_font_id, strs[line]);
 
         Point coords = position() - scroll_offset;
-        coords.y += static_cast<int>(line) * label_line_height;
+        // TODO: Formalize the +1 from the "FOLDERS" label being rendered above.
+        coords.y += static_cast<int>(line + 1) * label_line_height;
 
         Point text_coords = coords;
         text_coords.x += kLeftPadding;
+        text_coords.y += kTopPadding;
         const auto highlight_callback = [](size_t) { return kTextColor; };
 
         Point min_coords = {
@@ -100,7 +131,7 @@ void SideBarWidget::renderLabel() {
     }
 }
 
-void SideBarWidget::renderScrollBars(int line_height, size_t visible_lines) {
+void SideBarWidget::render_scroll_bars(int line_height, size_t visible_lines) {
     auto& rect_renderer = Renderer::instance().getRectRenderer();
 
     // Add vertical scroll bar.

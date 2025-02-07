@@ -9,42 +9,42 @@ namespace gui {
 
 TabBarWidget::TabBarWidget(size_t font_id, int height, size_t panel_close_image_id)
     : Widget{{.height = height}}, font_id(font_id), panel_close_image_id(panel_close_image_id) {
-    addTab("untitled");
+    add_tab("untitled");
 }
 
-void TabBarWidget::setIndex(size_t index) {
+void TabBarWidget::set_index(size_t index) {
     if (index < tab_name_labels.size()) {
         this->index = index;
     }
 }
 
-void TabBarWidget::prevIndex() {
+void TabBarWidget::prev_index() {
     if (index >= tab_name_labels.size()) return;
     index = base::dec_wrap(index, tab_name_labels.size());
 }
 
-void TabBarWidget::nextIndex() {
+void TabBarWidget::next_index() {
     if (index >= tab_name_labels.size()) return;
     index = base::inc_wrap(index, tab_name_labels.size());
 }
 
-void TabBarWidget::lastIndex() {
+void TabBarWidget::last_index() {
     index = base::sub_sat(tab_name_labels.size(), 1_Z);
 }
 
-void TabBarWidget::addTab(std::string_view title) {
+void TabBarWidget::add_tab(std::string_view title) {
     Size label_size = {
         .width = kTabWidth - kTabCornerRadius * 2,
         .height = height(),
     };
     auto tab_name_label = std::make_unique<TabBarLabelWidget>(font_id, label_size, 22, 16);
-    tab_name_label->setText(title);
-    tab_name_label->setColor(kTabTextColor);
-    tab_name_label->addRightIcon(panel_close_image_id);
+    tab_name_label->set_text(title);
+    tab_name_label->set_color(kTabTextColor);
+    tab_name_label->add_right_icon(panel_close_image_id);
     tab_name_labels.emplace_back(std::move(tab_name_label));
 }
 
-void TabBarWidget::removeTab(size_t index) {
+void TabBarWidget::remove_tab(size_t index) {
     if (tab_name_labels.empty()) return;
 
     tab_name_labels.erase(tab_name_labels.begin() + index);

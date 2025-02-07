@@ -10,19 +10,19 @@ TabBarLabelWidget::TabBarLabelWidget(size_t font_id,
                                      int right_padding)
     : Widget{size}, font_id(font_id), left_padding(left_padding), right_padding(right_padding) {}
 
-void TabBarLabelWidget::setText(std::string_view str8) {
+void TabBarLabelWidget::set_text(std::string_view str8) {
     this->label_str = str8;
 }
 
-void TabBarLabelWidget::setColor(const Rgb& color) {
+void TabBarLabelWidget::set_color(const Rgb& color) {
     this->color = color;
 }
 
-void TabBarLabelWidget::addLeftIcon(size_t icon_id) {
+void TabBarLabelWidget::add_left_icon(size_t icon_id) {
     left_side_icons.emplace_back(icon_id);
 }
 
-void TabBarLabelWidget::addRightIcon(size_t icon_id) {
+void TabBarLabelWidget::add_right_icon(size_t icon_id) {
     right_side_icons.emplace_back(icon_id);
 }
 
@@ -36,7 +36,7 @@ void TabBarLabelWidget::draw() {
     for (size_t icon_id : left_side_icons) {
         auto& image = texture_cache.get_image(icon_id);
 
-        Point icon_position = centerVertically(image.size.height) + left_offset;
+        Point icon_position = center_vertically(image.size.height) + left_offset;
         texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image.size.width;
@@ -49,7 +49,7 @@ void TabBarLabelWidget::draw() {
 
         right_offset.x += image.size.width;
 
-        Point icon_position = centerVertically(image.size.height) - right_offset;
+        Point icon_position = center_vertically(image.size.height) - right_offset;
         icon_position += Point{width(), 0};
         texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
     }
@@ -58,7 +58,7 @@ void TabBarLabelWidget::draw() {
     const auto& metrics = font_rasterizer.metrics(font_id);
     const auto& layout = line_layout_cache.get(font_id, label_str);
 
-    Point coords = centerVertically(metrics.line_height) + left_offset;
+    Point coords = center_vertically(metrics.line_height) + left_offset;
     Point min_coords = {
         .x = 0,
         .y = position().y,
@@ -71,7 +71,7 @@ void TabBarLabelWidget::draw() {
     texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
-Point TabBarLabelWidget::centerVertically(int widget_height) {
+Point TabBarLabelWidget::center_vertically(int widget_height) {
     Point centered_point = position();
     centered_point.y += height() / 2;
     centered_point.y -= widget_height / 2;

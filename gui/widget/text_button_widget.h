@@ -27,7 +27,7 @@ private:
     font::LineLayout line_layout;
     int line_height;
 
-    constexpr Point textCenter();
+    constexpr Point text_center();
 };
 
 }  // namespace gui

@@ -169,7 +169,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         Point mouse_pos = {mouse_x, mouse_y};
         ModifierKey modifiers = ModifierFromState();
-        ClickType click_type = ClickTypeFromCount(click_count);
+        ClickType click_type = click_type_from_count(click_count);
         app_window.left_mouse_down(mouse_pos, modifiers, click_type);
         return 0;
     }
@@ -191,7 +191,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         if (wParam & MK_LBUTTON) {
             ModifierKey modifiers = ModifierFromState();
-            ClickType click_type = ClickTypeFromCount(click_count);
+            ClickType click_type = click_type_from_count(click_count);
             app_window.left_mouse_drag(mouse_pos, modifiers, click_type);
         } else {
             if (!tracking_mouse) {

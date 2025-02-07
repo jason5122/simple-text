@@ -12,10 +12,10 @@ public:
                       int left_padding = 0,
                       int right_padding = 0);
 
-    void setText(std::string_view str8);
-    void setColor(const Rgb& color);
-    void addLeftIcon(size_t icon_id);
-    void addRightIcon(size_t icon_id);
+    void set_text(std::string_view str8);
+    void set_color(const Rgb& color);
+    void add_left_icon(size_t icon_id);
+    void add_right_icon(size_t icon_id);
 
     void draw() override;
 
@@ -36,7 +36,7 @@ private:
     std::vector<size_t> left_side_icons;
     std::vector<size_t> right_side_icons;
 
-    Point centerVertically(int widget_height);
+    Point center_vertically(int widget_height);
 };
 
 }  // namespace gui

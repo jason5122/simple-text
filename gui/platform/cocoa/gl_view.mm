@@ -196,7 +196,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     if (app_window) {
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
         gui::ModifierKey modifiers = gui::ModifierFromFlags(event.modifierFlags);
-        gui::ClickType click_type = gui::ClickTypeFromCount(event.clickCount);
+        gui::ClickType click_type = gui::click_type_from_count(event.clickCount);
         app_window->left_mouse_down(mouse_pos, modifiers, click_type);
     }
 }
@@ -212,7 +212,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     if (app_window) {
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
         gui::ModifierKey modifiers = gui::ModifierFromFlags(event.modifierFlags);
-        gui::ClickType click_type = gui::ClickTypeFromCount(event.clickCount);
+        gui::ClickType click_type = gui::click_type_from_count(event.clickCount);
         app_window->left_mouse_drag(mouse_pos, modifiers, click_type);
     }
 }
@@ -221,7 +221,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     if (app_window) {
         auto mouse_pos = gui::ScaleAndInvertPosition(gui::MousePositionFromEvent(event), gl_layer);
         gui::ModifierKey modifiers = gui::ModifierFromFlags(event.modifierFlags);
-        gui::ClickType click_type = gui::ClickTypeFromCount(event.clickCount);
+        gui::ClickType click_type = gui::click_type_from_count(event.clickCount);
         app_window->right_mouse_down(mouse_pos, modifiers, click_type);
     }
 }

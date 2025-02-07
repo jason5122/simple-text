@@ -10,7 +10,7 @@ void ButtonWidget::left_mouse_down(const Point& mouse_pos,
     state = !state;
 }
 
-bool ButtonWidget::getState() const {
+bool ButtonWidget::get_state() const {
     return state;
 }
 

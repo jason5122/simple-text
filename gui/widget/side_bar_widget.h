@@ -20,27 +20,33 @@ public:
     }
 
 private:
-    // static constexpr Rgb kTextColor{51, 51, 51};     // Light.
-    static constexpr Rgb kTextColor{230, 230, 230};  // Dark.
-    // static constexpr Rgb kSideBarColor{235, 237, 239};  // Light.
-    static constexpr Rgb kSideBarColor{34, 38, 42};  // Dark.
-    // static constexpr Rgb kScrollBarColor{190, 190, 190};  // Light.
-    static constexpr Rgb kScrollBarColor{105, 112, 118};  // Dark.
-    static constexpr Rgb kFolderIconColor{142, 142, 142};
+    // static constexpr Rgb kTextColor = {51, 51, 51};     // Light.
+    static constexpr Rgb kTextColor = {230, 230, 230};  // Dark.
+    // static constexpr Rgb kSideBarColor = {235, 237, 239};  // Light.
+    static constexpr Rgb kSideBarColor = {34, 38, 42};  // Dark.
+    // static constexpr Rgb kScrollBarColor = {190, 190, 190};  // Light.
+    static constexpr Rgb kScrollBarColor = {105, 112, 118};  // Dark.
+    static constexpr Rgb kFolderIconColor = {142, 142, 142};
     static constexpr Rgb kHighlightColor = {255, 255, 0};
 
+    // TODO: Tweak these to match Sublime Text.
     static constexpr int kLeftPadding = 15 * 2;
+    static constexpr int kTopPadding = 15 * 2;
 
+    static constexpr int kLabelFontSize = 12;
+    static constexpr int kFoldersLabelFontSize = 13;
     size_t label_font_id;
-    static constexpr int kLabelFontSize = 22;
+    size_t folders_label_font_id;
 
+    static constexpr std::string_view kFoldersLabel = "FOLDERS";
     static constexpr std::array strs = {"simple-text", ".cache", "app", "base", "build", "config"};
     std::optional<size_t> hovered_index = std::nullopt;
 
     // Draw helpers.
     // TODO: Rename these methods.
-    void renderLabel();
-    void renderScrollBars(int line_height, size_t visible_lines);
+    void render_folder_label();
+    void render_labels();
+    void render_scroll_bars(int line_height, size_t visible_lines);
 };
 
 }  // namespace gui

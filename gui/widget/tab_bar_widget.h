@@ -10,12 +10,12 @@ class TabBarWidget : public Widget {
 public:
     TabBarWidget(size_t font_id, int height, size_t panel_close_image_id);
 
-    void setIndex(size_t index);
-    void prevIndex();
-    void nextIndex();
-    void lastIndex();
-    void addTab(std::string_view title);
-    void removeTab(size_t index);
+    void set_index(size_t index);
+    void prev_index();
+    void next_index();
+    void last_index();
+    void add_tab(std::string_view title);
+    void remove_tab(size_t index);
 
     void draw() override;
     void layout() override;

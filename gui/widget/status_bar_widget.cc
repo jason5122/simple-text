@@ -21,8 +21,8 @@ void StatusBarWidget::draw() {
     HorizontalLayoutWidget::draw();
 }
 
-void StatusBarWidget::setText(std::string_view str8) {
-    line_column_label->setText(str8);
+void StatusBarWidget::set_text(std::string_view str8) {
+    line_column_label->set_text(str8);
 }
 
 }  // namespace gui

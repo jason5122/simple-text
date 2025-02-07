@@ -10,7 +10,7 @@ public:
     void left_mouse_down(const Point& mouse_pos,
                        ModifierKey modifiers,
                        ClickType click_type) override;
-    bool getState() const;
+    bool get_state() const;
 
 private:
     bool state = false;

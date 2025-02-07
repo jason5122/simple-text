@@ -54,11 +54,11 @@ void TextInputWidget::draw() {
     int max_layout_width = 0;
 
     for (size_t line = 0; line < tree.line_count(); ++line) {
-        const auto& layout = layoutAt(line);
+        const auto& layout = layout_at(line);
 
         max_layout_width = std::max(layout.width, max_layout_width);
 
-        Point coords = textOffset();
+        Point coords = text_offset();
         coords.y += static_cast<int>(line) * line_height;
         coords.x += kBorderThickness;  // Match Sublime Text.
 
@@ -69,14 +69,14 @@ void TextInputWidget::draw() {
     max_scroll_offset.x = max_layout_width;
 
     auto [line, col] = tree.line_column_at(selection.end);
-    int end_caret_x = movement::x_at_column(layoutAt(line), col);
+    int end_caret_x = movement::x_at_column(layout_at(line), col);
 
     {
         Point caret_pos = {
             .x = end_caret_x,
             .y = static_cast<int>(line) * line_height,
         };
-        caret_pos += textOffset();
+        caret_pos += text_offset();
         Size caret_size = {kCaretWidth, line_height};
 
         Point min_coords = {
@@ -105,9 +105,9 @@ void TextInputWidget::update_max_scroll() {
 void TextInputWidget::left_mouse_down(const Point& mouse_pos,
                                       ModifierKey modifiers,
                                       ClickType click_type) {
-    auto coords = mouse_pos - textOffset();
-    size_t line = lineAtY(coords.y);
-    size_t col = movement::column_at_x(layoutAt(line), coords.x);
+    auto coords = mouse_pos - text_offset();
+    size_t line = line_at_y(coords.y);
+    size_t col = movement::column_at_x(layout_at(line), coords.x);
     size_t offset = tree.offset_at(line, col);
     selection.set_index(offset, true);
 }
@@ -120,7 +120,7 @@ void TextInputWidget::insert_text(std::string_view str8) {
     update_max_scroll();
 }
 
-size_t TextInputWidget::lineAtY(int y) const {
+size_t TextInputWidget::line_at_y(int y) const {
     if (y < 0) {
         y = 0;
     }
@@ -132,13 +132,13 @@ size_t TextInputWidget::lineAtY(int y) const {
     return std::clamp(line, 0_Z, tree.line_count() - 1);
 }
 
-inline const font::LineLayout& TextInputWidget::layoutAt(size_t line) {
+inline const font::LineLayout& TextInputWidget::layout_at(size_t line) {
     auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache.get(font_id, line_str);
 }
 
-inline constexpr Point TextInputWidget::textOffset() {
+inline constexpr Point TextInputWidget::text_offset() {
     Point text_offset = position() - scroll_offset;
     text_offset.x += left_padding;
     text_offset.y += top_padding;

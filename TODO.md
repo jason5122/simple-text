@@ -1,5 +1,18 @@
 # TODO
 
+# 04-13-2025
+
+- [Implement synthetic italic/bold](https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/platform/fonts/mac/font_platform_data_mac.mm;l=259-260?q=FontPlatformDataFromCTFont&ss=chromium)
+- Pango is in maintenance mode — consider moving FreeType + HarfBuzz:
+  - https://blogs.gnome.org/mclasen/2019/05/25/pango-future-directions/
+  - https://wiki.inkscape.org/wiki/Text_Rendering_Notes#A_summary_of_observations_about_text_rendering.21
+- [Implement `subl`-like CLI](https://discord.com/channels/280102180189634562/280102180189634562/1061577791948210193)
+- [Kern proportional fonts correctly](https://www.warp.dev/blog/adventures-text-rendering-kerning-glyph-atlases#glyph-atlas)
+- [Wayland: activate window using xdg-activation token](https://github.com/sublimehq/sublime_text/issues/6236)
+- Look at Chromium for NSMenuItem approach.
+  - Consider using the same big method for the selector. the method will then call the right C++ functions.
+- Set up debugging for codebase.
+
 # 01-14-2025
 
 ## Implement Chromium/Abseil's `FunctionRef`

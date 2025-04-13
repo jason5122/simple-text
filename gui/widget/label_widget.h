@@ -13,9 +13,7 @@ public:
 
     void draw() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "LabelWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "LabelWidget"; }
 
 private:
     static constexpr Rgba kTempColor{223, 227, 230, 255};

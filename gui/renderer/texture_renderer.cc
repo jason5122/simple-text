@@ -107,16 +107,16 @@ TextureRenderer& TextureRenderer::operator=(TextureRenderer&& other) {
     return *this;
 }
 
-void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
-                                    const Point& coords,
-                                    const Point& min_coords,
-                                    const Point& max_coords,
-                                    const std::function<Rgb(size_t)>& highlight_callback) {
+void TextureRenderer::add_line_layout(const font::LineLayout& line_layout,
+                                      const Point& coords,
+                                      const Point& min_coords,
+                                      const Point& max_coords,
+                                      const std::function<Rgb(size_t)>& highlight_callback) {
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
     int line_height = metrics.line_height;
 
-    auto& texture_cache = Renderer::instance().getTextureCache();
+    auto& texture_cache = Renderer::instance().texture_cache();
 
     // TODO: Consider using binary search to locate the starting point. This assumes glyph
     // positions are monotonically increasing.
@@ -203,12 +203,12 @@ void TextureRenderer::addLineLayout(const font::LineLayout& line_layout,
             .uv = {uv_x, uv_y, uv_width, uv_height},
             .color = Rgba::fromRgb(highlight_callback(glyph.index), alpha),
         };
-        insertIntoBatch(rglyph.page, std::move(instance));
+        insert_into_batch(rglyph.page, std::move(instance));
     }
 }
 
-void TextureRenderer::addImage(size_t image_index, const Point& coords, const Rgb& color) {
-    const auto& texture_cache = Renderer::instance().getTextureCache();
+void TextureRenderer::add_image(size_t image_index, const Point& coords, const Rgb& color) {
+    const auto& texture_cache = Renderer::instance().texture_cache();
     const auto& image = texture_cache.get_image(image_index);
     InstanceData instance = {
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
@@ -217,11 +217,11 @@ void TextureRenderer::addImage(size_t image_index, const Point& coords, const Rg
         .uv = image.uv,
         .color = Rgba::fromRgb(color, kPlainTexture),
     };
-    insertIntoBatch(image.page, std::move(instance));
+    insert_into_batch(image.page, std::move(instance));
 }
 
-void TextureRenderer::addColorImage(size_t image_index, const Point& coords) {
-    const auto& texture_cache = Renderer::instance().getTextureCache();
+void TextureRenderer::add_color_image(size_t image_index, const Point& coords) {
+    const auto& texture_cache = Renderer::instance().texture_cache();
     const auto& image = texture_cache.get_image(image_index);
     InstanceData instance = {
         .coords = {static_cast<float>(coords.x), static_cast<float>(coords.y)},
@@ -230,11 +230,11 @@ void TextureRenderer::addColorImage(size_t image_index, const Point& coords) {
         .uv = image.uv,
         .color = {.a = kColoredImage},
     };
-    insertIntoBatch(image.page, std::move(instance));
+    insert_into_batch(image.page, std::move(instance));
 }
 
 void TextureRenderer::flush(const Size& screen_size) {
-    const auto& texture_cache = Renderer::instance().getTextureCache();
+    const auto& texture_cache = Renderer::instance().texture_cache();
 
     glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ZERO, GL_ONE);
 
@@ -274,10 +274,10 @@ void TextureRenderer::flush(const Size& screen_size) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextureRenderer::renderAtlasPage(size_t page,
-                                      const Point& coords,
-                                      const Point& min_coords,
-                                      const Point& max_coords) {
+void TextureRenderer::render_atlas_page(size_t page,
+                                        const Point& coords,
+                                        const Point& min_coords,
+                                        const Point& max_coords) {
     int x = coords.x;
     int y = coords.y;
     int width = Atlas::kAtlasSize;
@@ -338,10 +338,10 @@ void TextureRenderer::renderAtlasPage(size_t page,
         .uv = {uv_x, uv_y, uv_width, uv_height},
         .color = {255, 255, 255, true},
     };
-    insertIntoBatch(page, std::move(instance));
+    insert_into_batch(page, std::move(instance));
 }
 
-void TextureRenderer::insertIntoBatch(size_t page, const InstanceData& instance) {
+void TextureRenderer::insert_into_batch(size_t page, const InstanceData& instance) {
     // TODO: Refactor this ugly hack.
     while (batches.size() <= page) {
         batches.emplace_back();

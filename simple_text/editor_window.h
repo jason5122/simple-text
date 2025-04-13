@@ -19,30 +19,28 @@ public:
     void layout() override;
     void perform_scroll(const Point& mouse_pos, const Delta& delta) override;
     void left_mouse_down(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override;
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
     void left_mouse_drag(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override;
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
     void left_mouse_up(const Point& mouse_pos) override;
     void right_mouse_down(const Point& mouse_pos,
-                        ModifierKey modifiers,
-                        ClickType click_type) override;
+                          ModifierKey modifiers,
+                          ClickType click_type) override;
     bool mouse_position_changed(const std::optional<Point>& mouse_pos) override;
 
-    constexpr std::string_view class_name() const final override {
-        return "EditorWindow";
-    }
+    constexpr std::string_view class_name() const final override { return "EditorWindow"; }
 
     // WindowWidget overrides.
-    void onOpenGLActivate() override;
-    void onFrame(int64_t ms) override;
-    void onScrollDecelerate(const Point& mouse_pos, const Delta& delta) override;
-    bool onKeyDown(Key key, ModifierKey modifiers) override;
-    void onInsertText(std::string_view text) override;
-    void onAction(Action action, bool extend) override;
-    void onAppAction(AppAction action) override;
-    void onClose() override;
+    void on_opengl_activate() override;
+    void on_frame(int64_t ms) override;
+    void on_scroll_decelerate(const Point& mouse_pos, const Delta& delta) override;
+    bool on_key_down(Key key, ModifierKey modifiers) override;
+    void on_insert_text(std::string_view text) override;
+    void on_action(Action action, bool extend) override;
+    void on_app_action(AppAction action) override;
+    void on_close() override;
 
 private:
     static constexpr int kMinStatusBarHeight = 22 * 2;
@@ -77,7 +75,7 @@ private:
     gui::Widget* dragged_widget = nullptr;
     gui::Widget* focused_widget = nullptr;
 
-    void updateCursorStyle(const std::optional<Point>& mouse_pos);
+    void update_cursor_style(const std::optional<Point>& mouse_pos);
 };
 
 }  // namespace gui

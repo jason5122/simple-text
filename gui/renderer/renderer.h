@@ -9,26 +9,29 @@ namespace gui {
 
 class Renderer {
 public:
-    static Renderer& instance();
+    inline static Renderer& instance() {
+        static Renderer renderer;
+        return renderer;
+    }
 
-    TextureCache& getTextureCache();
-    LineLayoutCache& getLineLayoutCache();
+    constexpr TextureCache& texture_cache() { return texture_cache_; }
+    constexpr LineLayoutCache& line_layout_cache() { return line_layout_cache_; }
 
-    TextureRenderer& getTextureRenderer();
-    RectRenderer& getRectRenderer();
-    SelectionRenderer& getSelectionRenderer();
+    constexpr TextureRenderer& texture_renderer() { return texture_renderer_; }
+    constexpr RectRenderer& rect_renderer() { return rect_renderer_; }
+    constexpr SelectionRenderer& selection_renderer() { return selection_renderer_; }
 
     void flush(const Size& size);
 
 private:
     Renderer();
 
-    TextureCache texture_cache;
-    LineLayoutCache line_layout_cache;
+    TextureCache texture_cache_;
+    LineLayoutCache line_layout_cache_;
 
-    TextureRenderer texture_renderer;
-    RectRenderer rect_renderer;
-    SelectionRenderer selection_renderer;
+    TextureRenderer texture_renderer_;
+    RectRenderer rect_renderer_;
+    SelectionRenderer selection_renderer_;
 };
 
 }  // namespace gui

@@ -134,17 +134,17 @@ void BuildMainMenu() {
 
     BuildMainMenu();
 
-    app->onLaunch();
+    app->on_launch();
 }
 
 - (void)applicationWillTerminate:(NSNotification*)notification {
-    app->onQuit();
+    app->on_quit();
 }
 
 - (void)callAppAction:(gui::AppAction)appAction {
     // If there are no open windows, pass action to `App` instead of `Window`.
     if (NSApp.keyWindow == nil) {
-        app->onAppAction(appAction);
+        app->on_app_action(appAction);
     } else {
         WindowController* wc = NSApp.keyWindow.windowController;
         gui::WindowWidget* app_window = wc.appWindow;
@@ -152,9 +152,9 @@ void BuildMainMenu() {
         // `app_window` is null if we are in the about panel.
         // TODO: Create our own "About ..." panel.
         if (app_window) {
-            app_window->onAppAction(appAction);
+            app_window->on_app_action(appAction);
         } else {
-            app->onAppAction(appAction);
+            app->on_app_action(appAction);
         }
     }
 }
@@ -207,13 +207,13 @@ void App::quit() {
     [NSApp terminate:nil];
 }
 
-std::string App::getClipboardString() {
+std::string App::get_clipboard_string() {
     NSString* ns_string = [NSPasteboard.generalPasteboard stringForType:NSPasteboardTypeString];
     std::string str(ns_string.UTF8String);
     return str;
 }
 
-void App::setClipboardString(const std::string& str8) {
+void App::set_clipboard_string(const std::string& str8) {
     NSPasteboard* pboard = NSPasteboard.generalPasteboard;
     NSString* ns_string = [[NSString alloc] initWithUTF8String:str8.data()];
     [pboard clearContents];

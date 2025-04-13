@@ -1,8 +1,8 @@
 IndentWidth: 4
 TabWidth: 4
 ColumnLimit: 99
-AllowShortBlocksOnASingleLine: Empty
-AllowShortFunctionsOnASingleLine: Empty
+# AllowShortBlocksOnASingleLine: Empty
+# AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLoopsOnASingleLine: true
 SpacesBeforeTrailingComments: 2

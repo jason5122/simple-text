@@ -15,14 +15,14 @@ LabelWidget::LabelWidget(size_t font_id, const Rgb& color, int left_padding, int
 void LabelWidget::set_text(std::string_view str8) {
     this->label_str = str8;
 
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
     const auto& layout = line_layout_cache.get(font_id, label_str);
     set_width(layout.width);
 }
 
 void LabelWidget::draw() {
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& texture_renderer = Renderer::instance().texture_renderer();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
@@ -38,7 +38,7 @@ void LabelWidget::draw() {
         .y = position().y + height(),
     };
     const auto highlight_callback = [this](size_t) { return color; };
-    texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
+    texture_renderer.add_line_layout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
 Point LabelWidget::center_vertically(int widget_height) {

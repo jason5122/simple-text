@@ -17,13 +17,13 @@ public:
     TextureRenderer(TextureRenderer&& other);
     TextureRenderer& operator=(TextureRenderer&& other);
 
-    void addLineLayout(const font::LineLayout& line_layout,
-                       const Point& coords,
-                       const Point& min_coords,
-                       const Point& max_coords,
-                       const std::function<Rgb(size_t)>& highlight_callback);
-    void addImage(size_t image_index, const Point& coords, const Rgb& color);
-    void addColorImage(size_t image_index, const Point& coords);
+    void add_line_layout(const font::LineLayout& line_layout,
+                         const Point& coords,
+                         const Point& min_coords,
+                         const Point& max_coords,
+                         const std::function<Rgb(size_t)>& highlight_callback);
+    void add_image(size_t image_index, const Point& coords, const Rgb& color);
+    void add_color_image(size_t image_index, const Point& coords);
     void flush(const Size& screen_size);
 
 private:
@@ -43,7 +43,7 @@ private:
 
     std::vector<std::vector<InstanceData>> batches;
 
-    void insertIntoBatch(size_t page, const InstanceData& instance);
+    void insert_into_batch(size_t page, const InstanceData& instance);
 
     enum InstanceKind {
         kPlainTexture = 0,
@@ -53,10 +53,10 @@ private:
 
     // DEBUG: Draws texture atlases.
     friend class AtlasWidget;
-    void renderAtlasPage(size_t page,
-                         const Point& coords,
-                         const Point& min_coords,
-                         const Point& max_coords);
+    void render_atlas_page(size_t page,
+                           const Point& coords,
+                           const Point& min_coords,
+                           const Point& max_coords);
 };
 
 }  // namespace gui

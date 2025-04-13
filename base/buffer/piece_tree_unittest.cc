@@ -299,8 +299,8 @@ TEST(PieceTreeTest, InsertAtRandom) {
     PieceTree tree{str};
 
     for (size_t n = 0; n < 100; ++n) {
-        size_t index = util::RandomNumber(0, str.length());
-        const std::string random_str = util::RandomString(util::RandomNumber(0, 10));
+        size_t index = util::random_number(0, str.length());
+        const std::string random_str = util::random_string(util::random_number(0, 10));
 
         str.insert(index, random_str);
         tree.insert(index, random_str);
@@ -512,16 +512,16 @@ TEST(PieceTreeTest, RandomTestLite) {
 
     for (size_t n = 0; n < 5; ++n) {
         // Randomly insert.
-        size_t insert_index = util::RandomNumber(0, str.length());
-        const std::string random_str = util::RandomString(util::RandomNumber(0, 10));
+        size_t insert_index = util::random_number(0, str.length());
+        const std::string random_str = util::random_string(util::random_number(0, 10));
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());
         EXPECT_EQ(str.length(), tree.length());
 
         // Randomly erase.
-        size_t erase_index = util::RandomNumber(0, str.length());
-        size_t count = util::RandomNumber(0, 4);
+        size_t erase_index = util::random_number(0, str.length());
+        size_t count = util::random_number(0, 4);
         str.erase(erase_index, count);
         tree.erase(erase_index, count);
         EXPECT_EQ(str, tree.str());
@@ -539,8 +539,8 @@ TEST(PieceTreeTest, EraseAtRandom) {
         PieceTree tree{original_str};
 
         for (size_t i = 0; i < 10; ++i) {
-            size_t index = util::RandomNumber(0, str.length());
-            size_t count = util::RandomNumber(0, str.length());
+            size_t index = util::random_number(0, str.length());
+            size_t count = util::random_number(0, str.length());
 
             str.erase(index, count);
             tree.erase(index, count);
@@ -556,16 +556,16 @@ TEST(PieceTreeTest, CombinedRandomTest1) {
 
     for (size_t n = 0; n < 100; ++n) {
         // Randomly insert.
-        size_t insert_index = util::RandomNumber(0, str.length());
-        const std::string random_str = util::RandomString(util::RandomNumber(0, 10));
+        size_t insert_index = util::random_number(0, str.length());
+        const std::string random_str = util::random_string(util::random_number(0, 10));
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());
         EXPECT_EQ(str.length(), tree.length());
 
         // Randomly erase.
-        size_t erase_index = util::RandomNumber(0, str.length());
-        size_t count = util::RandomNumber(0, 4);
+        size_t erase_index = util::random_number(0, str.length());
+        size_t count = util::random_number(0, 4);
         str.erase(erase_index, count);
         tree.erase(erase_index, count);
         EXPECT_EQ(str, tree.str());
@@ -660,16 +660,16 @@ TEST(PieceTreeTest, LineColumnAtRandomTest) {
 
     for (size_t n = 0; n < 50; ++n) {
         // Randomly insert.
-        size_t insert_index = util::RandomNumber(0, str.length());
-        const std::string random_str = util::RandomNewlineString(util::RandomNumber(0, 10), 5);
+        size_t insert_index = util::random_number(0, str.length());
+        const std::string random_str = util::random_newline_string(util::random_number(0, 10), 5);
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());
         EXPECT_EQ(str.length(), tree.length());
 
         // Randomly erase.
-        size_t erase_index = util::RandomNumber(0, str.length());
-        size_t erase_count = util::RandomNumber(0, 4);
+        size_t erase_index = util::random_number(0, str.length());
+        size_t erase_count = util::random_number(0, 4);
         str.erase(erase_index, erase_count);
         tree.erase(erase_index, erase_count);
         EXPECT_EQ(str, tree.str());
@@ -744,24 +744,24 @@ TEST(PieceTreeTest, SubstrRandomTest) {
 
     for (size_t n = 0; n < 100; ++n) {
         // Randomly insert.
-        size_t insert_index = util::RandomNumber(0, str.length());
-        const std::string random_str = util::RandomString(util::RandomNumber(0, 10));
+        size_t insert_index = util::random_number(0, str.length());
+        const std::string random_str = util::random_string(util::random_number(0, 10));
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());
         EXPECT_EQ(str.length(), tree.length());
 
         // Randomly erase.
-        size_t erase_index = util::RandomNumber(0, str.length());
-        size_t erase_count = util::RandomNumber(0, 4);
+        size_t erase_index = util::random_number(0, str.length());
+        size_t erase_count = util::random_number(0, 4);
         str.erase(erase_index, erase_count);
         tree.erase(erase_index, erase_count);
         EXPECT_EQ(str, tree.str());
         EXPECT_EQ(str.length(), tree.length());
 
         // Randomly get substrings.
-        size_t index = util::RandomNumber(0, str.length());
-        size_t count = util::RandomNumber(0, str.length());
+        size_t index = util::random_number(0, str.length());
+        size_t count = util::random_number(0, str.length());
         EXPECT_EQ(str.substr(index, count), tree.substr(index, count));
     }
 }
@@ -772,8 +772,8 @@ TEST(PieceTreeTest, LineFeedCountRandomTest) {
     size_t total_newlines = 0;
     for (size_t n = 0; n < 50; ++n) {
         // Randomly insert.
-        size_t insert_index = util::RandomNumber(0, str.length());
-        const std::string random_str = util::RandomNewlineString(util::RandomNumber(0, 10), 5);
+        size_t insert_index = util::random_number(0, str.length());
+        const std::string random_str = util::random_newline_string(util::random_number(0, 10), 5);
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());
@@ -870,9 +870,9 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
     size_t total_newlines = 0;
     for (size_t n = 0; n < 50; ++n) {
         // Randomly insert.
-        size_t insert_index = util::RandomNumber(0, str.length());
+        size_t insert_index = util::random_number(0, str.length());
         const std::string random_str =
-            util::RandomNewlineString(util::RandomNumber(0, 100), kNewlinesPerInsert);
+            util::random_newline_string(util::random_number(0, 100), kNewlinesPerInsert);
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());

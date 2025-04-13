@@ -14,9 +14,7 @@ public:
 
     void perform_scroll(const Point& mouse_pos, const Delta& delta) override;
 
-    constexpr std::string_view class_name() const override {
-        return "ScrollableWidget";
-    }
+    constexpr std::string_view class_name() const override { return "ScrollableWidget"; }
 
 protected:
     Point scroll_offset{};

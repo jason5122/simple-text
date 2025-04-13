@@ -17,6 +17,13 @@ const int kColoredText = 1;
 const int kColoredImage = 2;
 
 void main() {
+    const int kDebug = 0;
+    if (kDebug == 1) {
+        color = vec3(1.0);
+        alpha_mask = vec3(1.0);
+        return;
+    }
+
     vec4 texel = texture(mask, tex_coords);
     int kind = int(tex_color.a);
 

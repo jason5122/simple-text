@@ -45,9 +45,7 @@ enum class CursorStyle {
 struct Point {
     int x, y;
 
-    friend Point operator+(const Point& p1, const Point& p2) {
-        return {p1.x + p2.x, p1.y + p2.y};
-    }
+    friend Point operator+(const Point& p1, const Point& p2) { return {p1.x + p2.x, p1.y + p2.y}; }
 
     Point& operator+=(const Point& rhs) {
         x += rhs.x;
@@ -55,9 +53,7 @@ struct Point {
         return *this;
     }
 
-    friend Point operator-(const Point& p1, const Point& p2) {
-        return {p1.x - p2.x, p1.y - p2.y};
-    }
+    friend Point operator-(const Point& p1, const Point& p2) { return {p1.x - p2.x, p1.y - p2.y}; }
 
     Point& operator-=(const Point& rhs) {
         x -= rhs.x;
@@ -65,13 +61,8 @@ struct Point {
         return *this;
     }
 
-    friend constexpr Point operator*(const Point& p, int val) {
-        return {p.x * val, p.y * val};
-    }
-
-    friend constexpr Point operator*(int val, const Point& p) {
-        return p * val;
-    }
+    friend constexpr Point operator*(const Point& p, int val) { return {p.x * val, p.y * val}; }
+    friend constexpr Point operator*(int val, const Point& p) { return p * val; }
 
     constexpr Point& operator*=(int val) {
         x *= val;
@@ -83,13 +74,8 @@ struct Point {
 struct Delta {
     int dx, dy;
 
-    friend constexpr Delta operator*(const Delta& d, int val) {
-        return {d.dx * val, d.dy * val};
-    }
-
-    friend constexpr Delta operator*(int val, const Delta& d) {
-        return d * val;
-    }
+    friend constexpr Delta operator*(const Delta& d, int val) { return {d.dx * val, d.dy * val}; }
+    friend constexpr Delta operator*(int val, const Delta& d) { return d * val; }
 
     constexpr Delta& operator*=(int val) {
         dx *= val;
@@ -128,15 +114,10 @@ struct Size {
         return *this;
     }
 
-    static constexpr Size minValue() {
-        return {};
-    }
+    static constexpr Size min_value() { return {}; }
 
-    static constexpr Size maxValue() {
-        return {
-            .width = std::numeric_limits<int>::max(),
-            .height = std::numeric_limits<int>::max(),
-        };
+    static constexpr Size max_value() {
+        return {std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
     }
 };
 

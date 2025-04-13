@@ -14,9 +14,7 @@ public:
     void draw() override;
     void update_max_scroll() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "AtlasWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "AtlasWidget"; }
 
 private:
     // static constexpr Rgb kSideBarColor{235, 237, 239};  // Light.

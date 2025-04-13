@@ -14,15 +14,13 @@ StatusBarWidget::StatusBarWidget(int min_height, size_t font_id)
 }
 
 void StatusBarWidget::draw() {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position(), size(), position(), position() + size(), kStatusBarColor,
-                          Layer::kBackground);
+    auto& rect_renderer = Renderer::instance().rect_renderer();
+    rect_renderer.add_rect(position(), size(), position(), position() + size(), kStatusBarColor,
+                           Layer::kBackground);
 
     HorizontalLayoutWidget::draw();
 }
 
-void StatusBarWidget::set_text(std::string_view str8) {
-    line_column_label->set_text(str8);
-}
+void StatusBarWidget::set_text(std::string_view str8) { line_column_label->set_text(str8); }
 
 }  // namespace gui

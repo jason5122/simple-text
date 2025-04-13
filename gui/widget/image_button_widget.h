@@ -11,9 +11,7 @@ public:
 
     void draw() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "ImageButtonWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "ImageButtonWidget"; }
 
 private:
     size_t image_id;

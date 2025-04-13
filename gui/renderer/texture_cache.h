@@ -37,7 +37,7 @@ public:
     size_t add_jpeg(const base::FilePath& path);
     const Image& get_image(size_t image_id) const;
 
-    constexpr const std::vector<Atlas>& pages() const;
+    constexpr const std::vector<Atlas>& pages() const { return atlas_pages; }
 
 private:
     std::vector<Atlas> atlas_pages;
@@ -51,9 +51,5 @@ private:
     bool load_png(const base::FilePath& path, Image& image);
     bool load_jpeg(const base::FilePath& path, Image& image);
 };
-
-constexpr const std::vector<Atlas>& TextureCache::pages() const {
-    return atlas_pages;
-}
 
 }  // namespace gui

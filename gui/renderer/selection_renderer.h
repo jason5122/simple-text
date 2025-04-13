@@ -21,7 +21,7 @@ public:
         int start;
         int end;
     };
-    void addSelections(const std::vector<Selection>& sels,
+    void add_selections(const std::vector<Selection>& sels,
                        const Point& offset,
                        int line_height,
                        const Point& min_coords,

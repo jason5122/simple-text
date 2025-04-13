@@ -20,11 +20,11 @@ SideBarWidget::SideBarWidget(int width)
 }
 
 void SideBarWidget::draw() {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
-    rect_renderer.addRect(position(), size(), position(), position() + size(), kSideBarColor,
-                          Layer::kBackground);
+    auto& rect_renderer = Renderer::instance().rect_renderer();
+    rect_renderer.add_rect(position(), size(), position(), position() + size(), kSideBarColor,
+                           Layer::kBackground);
 
-    const auto& metrics = rasterizer().metrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(folders_label_font_id);
 
     render_folder_label();
     render_labels();
@@ -41,7 +41,7 @@ bool SideBarWidget::mouse_position_changed(const std::optional<Point>& mouse_pos
         return hovered_index != old_index;
     }
 
-    const auto& metrics = rasterizer().metrics(label_font_id);
+    const auto& metrics = rasterizer().metrics(folders_label_font_id);
     int label_line_height = metrics.line_height;
     for (size_t line = 0; line < strs.size(); ++line) {
         Point coords = position() - scroll_offset;
@@ -68,8 +68,8 @@ void SideBarWidget::update_max_scroll() {
 }
 
 void SideBarWidget::render_folder_label() {
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& texture_renderer = Renderer::instance().texture_renderer();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
 
     const auto& layout = line_layout_cache.get(folders_label_font_id, "FOLDERS");
 
@@ -87,14 +87,14 @@ void SideBarWidget::render_folder_label() {
         .x = scroll_offset.x + size().width - kLeftPadding,
         .y = position().y + size().height,
     };
-    texture_renderer.addLineLayout(layout, text_coords, min_coords, max_coords,
-                                   highlight_callback);
+    texture_renderer.add_line_layout(layout, text_coords, min_coords, max_coords,
+                                     highlight_callback);
 }
 
 void SideBarWidget::render_labels() {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& rect_renderer = Renderer::instance().rect_renderer();
+    auto& texture_renderer = Renderer::instance().texture_renderer();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
 
     // TODO: Experimental; formalize this.
     const auto& metrics = rasterizer().metrics(folders_label_font_id);
@@ -119,20 +119,20 @@ void SideBarWidget::render_labels() {
             .x = scroll_offset.x + size().width - kLeftPadding,
             .y = position().y + size().height,
         };
-        texture_renderer.addLineLayout(layout, text_coords, min_coords, max_coords,
-                                       highlight_callback);
+        texture_renderer.add_line_layout(layout, text_coords, min_coords, max_coords,
+                                         highlight_callback);
 
         // Highlight on mouse hover.
         if (line == hovered_index) {
             Size highlight_size = {size().width, label_line_height};
-            rect_renderer.addRect(coords, highlight_size, position(), position() + size(),
-                                  kHighlightColor, Layer::kBackground);
+            rect_renderer.add_rect(coords, highlight_size, position(), position() + size(),
+                                   kHighlightColor, Layer::kBackground);
         }
     }
 }
 
 void SideBarWidget::render_scroll_bars(int line_height, size_t visible_lines) {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().rect_renderer();
 
     // Add vertical scroll bar.
     int vbar_width = 15;
@@ -147,8 +147,8 @@ void SideBarWidget::render_scroll_bars(int line_height, size_t visible_lines) {
     };
     vbar_coords += position();
     Size vbar_size = {vbar_width, vbar_height};
-    rect_renderer.addRect(vbar_coords, vbar_size, position(), position() + size(), kScrollBarColor,
-                          Layer::kForeground, 5);
+    rect_renderer.add_rect(vbar_coords, vbar_size, position(), position() + size(),
+                           kScrollBarColor, Layer::kForeground, 5);
 }
 
 }  // namespace gui

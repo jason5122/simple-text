@@ -15,9 +15,7 @@ public:
 
     void update_max_scroll() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "SideBarWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "SideBarWidget"; }
 
 private:
     // static constexpr Rgb kTextColor = {51, 51, 51};     // Light.
@@ -31,7 +29,7 @@ private:
 
     // TODO: Tweak these to match Sublime Text.
     static constexpr int kLeftPadding = 15 * 2;
-    static constexpr int kTopPadding = 15 * 2;
+    static constexpr int kTopPadding = 13 * 2;
 
     static constexpr int kLabelFontSize = 12;
     static constexpr int kFoldersLabelFontSize = 13;

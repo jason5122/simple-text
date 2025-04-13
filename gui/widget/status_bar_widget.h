@@ -14,9 +14,7 @@ public:
 
     void set_text(std::string_view str8);
 
-    constexpr std::string_view class_name() const final override {
-        return "StatusBarWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "StatusBarWidget"; }
 
 private:
     static constexpr Point kLeftPadding{32, 0};

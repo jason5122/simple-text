@@ -11,9 +11,7 @@ public:
 
     void draw() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "SolidColorWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "SolidColorWidget"; }
 
 private:
     Rgb color;

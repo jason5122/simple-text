@@ -183,7 +183,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     if (app_window) {
         gui::Key key = gui::KeyFromKeyCode(event.keyCode);
         gui::ModifierKey modifiers = gui::ModifierFromFlags(event.modifierFlags);
-        bool handled = app_window->onKeyDown(key, modifiers);
+        bool handled = app_window->on_key_down(key, modifiers);
 
         if (!handled) {
             // TODO: Should we ignore the return value of this?
@@ -228,7 +228,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 
 - (void)viewDidChangeEffectiveAppearance {
     if (app_window) {
-        app_window->onDarkModeToggle();
+        app_window->on_dark_mode_toggle();
     }
 }
 
@@ -287,7 +287,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
     if (app_window) {
         BOOL isAttributedString = [string isKindOfClass:NSAttributedString.class];
         NSString* text = isAttributedString ? [string string] : string;
-        app_window->onInsertText(text.UTF8String);
+        app_window->on_insert_text(text.UTF8String);
     }
 }
 
@@ -318,63 +318,63 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 
     std::string str = selector_str.UTF8String;
     if (str == "moveForward" || str == "moveRight") {
-        app_window->onAction(gui::Action::kMoveForwardByCharacters);
+        app_window->on_action(gui::Action::kMoveForwardByCharacters);
     } else if (str == "moveForwardAndModifySelection" || str == "moveRightAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveForwardByCharacters, true);
+        app_window->on_action(gui::Action::kMoveForwardByCharacters, true);
     } else if (str == "moveBackward" || str == "moveLeft") {
-        app_window->onAction(gui::Action::kMoveBackwardByCharacters);
+        app_window->on_action(gui::Action::kMoveBackwardByCharacters);
     } else if (str == "moveBackwardAndModifySelection" || str == "moveLeftAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveBackwardByCharacters, true);
+        app_window->on_action(gui::Action::kMoveBackwardByCharacters, true);
     } else if (str == "moveDown") {
-        app_window->onAction(gui::Action::kMoveForwardByLines);
+        app_window->on_action(gui::Action::kMoveForwardByLines);
     } else if (str == "moveDownAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveForwardByLines, true);
+        app_window->on_action(gui::Action::kMoveForwardByLines, true);
     } else if (str == "moveUp") {
-        app_window->onAction(gui::Action::kMoveBackwardByLines);
+        app_window->on_action(gui::Action::kMoveBackwardByLines);
     } else if (str == "moveUpAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveBackwardByLines, true);
+        app_window->on_action(gui::Action::kMoveBackwardByLines, true);
     } else if (str == "moveWordRight") {
-        app_window->onAction(gui::Action::kMoveForwardByWords);
+        app_window->on_action(gui::Action::kMoveForwardByWords);
     } else if (str == "moveWordRightAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveForwardByWords, true);
+        app_window->on_action(gui::Action::kMoveForwardByWords, true);
     } else if (str == "moveWordLeft") {
-        app_window->onAction(gui::Action::kMoveBackwardByWords);
+        app_window->on_action(gui::Action::kMoveBackwardByWords);
     } else if (str == "moveWordLeftAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveBackwardByWords, true);
+        app_window->on_action(gui::Action::kMoveBackwardByWords, true);
     } else if (str == "moveToLeftEndOfLine") {
-        app_window->onAction(gui::Action::kMoveToBOL);
+        app_window->on_action(gui::Action::kMoveToBOL);
     } else if (str == "moveToLeftEndOfLineAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveToBOL, true);
+        app_window->on_action(gui::Action::kMoveToBOL, true);
     } else if (str == "moveToRightEndOfLine") {
-        app_window->onAction(gui::Action::kMoveToEOL);
+        app_window->on_action(gui::Action::kMoveToEOL);
     } else if (str == "moveToRightEndOfLineAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveToEOL, true);
+        app_window->on_action(gui::Action::kMoveToEOL, true);
     } else if (str == "moveToBeginningOfParagraph") {
-        app_window->onAction(gui::Action::kMoveToHardBOL);
+        app_window->on_action(gui::Action::kMoveToHardBOL);
     } else if (str == "moveToBeginningOfParagraphAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveToHardBOL, true);
+        app_window->on_action(gui::Action::kMoveToHardBOL, true);
     } else if (str == "moveToEndOfParagraph") {
-        app_window->onAction(gui::Action::kMoveToHardEOL);
+        app_window->on_action(gui::Action::kMoveToHardEOL);
     } else if (str == "moveToEndOfParagraphAndModifySelection") {
-        app_window->onAction(gui::Action::kMoveToHardEOL, true);
+        app_window->on_action(gui::Action::kMoveToHardEOL, true);
     } else if (str == "moveToBeginningOfDocument") {
-        app_window->onAction(gui::Action::kMoveToBOF);
+        app_window->on_action(gui::Action::kMoveToBOF);
     } else if (str == "moveToEndOfDocument") {
-        app_window->onAction(gui::Action::kMoveToEOF);
+        app_window->on_action(gui::Action::kMoveToEOF);
     } else if (str == "deleteBackward") {
-        app_window->onAction(gui::Action::kLeftDelete);
+        app_window->on_action(gui::Action::kLeftDelete);
     } else if (str == "deleteForward") {
-        app_window->onAction(gui::Action::kRightDelete);
+        app_window->on_action(gui::Action::kRightDelete);
     } else if (str == "deleteWordBackward") {
-        app_window->onAction(gui::Action::kDeleteWordBackward);
+        app_window->on_action(gui::Action::kDeleteWordBackward);
     } else if (str == "deleteWordForward") {
-        app_window->onAction(gui::Action::kDeleteWordForward);
+        app_window->on_action(gui::Action::kDeleteWordForward);
     } else if (str == "insertNewline") {
-        app_window->onAction(gui::Action::kInsertNewline);
+        app_window->on_action(gui::Action::kInsertNewline);
     } else if (str == "insertNewlineIgnoringFieldEditor") {
-        app_window->onAction(gui::Action::kInsertNewlineIgnoringFieldEditor);
+        app_window->on_action(gui::Action::kInsertNewlineIgnoringFieldEditor);
     } else if (str == "insertTab" || str == "insertTabIgnoringFieldEditor") {
-        app_window->onAction(gui::Action::kInsertTab);
+        app_window->on_action(gui::Action::kInsertTab);
     }
 }
 

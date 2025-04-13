@@ -19,9 +19,7 @@ public:
 
     void draw() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "TabBarLabelWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "TabBarLabelWidget"; }
 
 private:
     static constexpr Rgb kTempColor{223, 227, 230};

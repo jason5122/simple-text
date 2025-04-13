@@ -101,16 +101,16 @@ RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
     return *this;
 }
 
-void RectRenderer::addRect(const Point& coords,
-                           const Size& size,
-                           const Point& min_coords,
-                           const Point& max_coords,
-                           const Rgb& color,
-                           Layer layer,
-                           int corner_radius,
-                           int tab_corner_radius,
-                           int left_shadow,
-                           int right_shadow) {
+void RectRenderer::add_rect(const Point& coords,
+                            const Size& size,
+                            const Point& min_coords,
+                            const Point& max_coords,
+                            const Rgb& color,
+                            Layer layer,
+                            int corner_radius,
+                            int tab_corner_radius,
+                            int left_shadow,
+                            int right_shadow) {
     int x = coords.x;
     int y = coords.y;
     int width = size.width;

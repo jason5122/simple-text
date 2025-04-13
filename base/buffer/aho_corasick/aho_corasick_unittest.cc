@@ -53,8 +53,8 @@ void CheckResult(const MatchResult& r,
 }
 
 void CheckRandom(std::string_view str) {
-    size_t i = util::RandomNumber(0, str.length() - 1);
-    size_t len = util::RandomNumber(1, str.length());
+    size_t i = util::random_number(0, str.length() - 1);
+    size_t len = util::random_number(1, str.length());
     std::string_view pattern = str.substr(i, len);
 
     PieceTree tree{str};
@@ -74,7 +74,7 @@ TEST(AhoCorasickTest, RandomCharTest) {
     // This string contains chars of *any* value. This is not necessarily valid Unicode.
     auto random_char_str = []() {
         std::string str;
-        for (int j = 0; j < 100; ++j) str += util::RandomChar();
+        for (int j = 0; j < 100; ++j) str += util::random_char();
         return str;
     };
 

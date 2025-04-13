@@ -120,7 +120,7 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
     return *this;
 }
 
-void SelectionRenderer::addSelections(const std::vector<Selection>& sels,
+void SelectionRenderer::add_selections(const std::vector<Selection>& sels,
                                       const Point& offset,
                                       int line_height,
                                       const Point& min_coords,

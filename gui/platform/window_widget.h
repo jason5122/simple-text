@@ -23,27 +23,27 @@ public:
     void close();
     void redraw();
     int scale() const;
-    bool isDarkMode() const;
-    void setTitle(std::string_view title);
-    void setFilePath(std::string_view path);
-    std::optional<std::string> openFilePicker() const;
-    void setCursorStyle(CursorStyle style);
-    void setAutoRedraw(bool auto_redraw);
-    int framesPerSecond() const;
+    bool is_dark_mode() const;
+    void set_title(std::string_view title);
+    void set_file_path(std::string_view path);
+    std::optional<std::string> open_file_picker() const;
+    void set_cursor_style(CursorStyle style);
+    void set_auto_redraw(bool auto_redraw);
+    int frames_per_second() const;
 
-    void createMenuDebug() const;
+    void create_menu_debug() const;
 
-    virtual void onOpenGLActivate() {}
-    virtual void onFrame(int64_t ms) {}
-    virtual void onScrollDecelerate(const Point& mouse_pos, const Delta& delta) {}
-    virtual bool onKeyDown(Key key, ModifierKey modifiers) {
+    virtual void on_opengl_activate() {}
+    virtual void on_frame(int64_t ms) {}
+    virtual void on_scroll_decelerate(const Point& mouse_pos, const Delta& delta) {}
+    virtual bool on_key_down(Key key, ModifierKey modifiers) {
         return false;
     }
-    virtual void onInsertText(std::string_view text) {}
-    virtual void onAction(Action action, bool extend = false) {}
-    virtual void onAppAction(AppAction action) {}
-    virtual void onClose() {}
-    virtual void onDarkModeToggle() {}
+    virtual void on_insert_text(std::string_view text) {}
+    virtual void on_action(Action action, bool extend = false) {}
+    virtual void on_app_action(AppAction action) {}
+    virtual void on_close() {}
+    virtual void on_dark_mode_toggle() {}
 
     // TODO: This is public for callbacks. Find a way to make this private.
     // private:

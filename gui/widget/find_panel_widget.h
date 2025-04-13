@@ -21,9 +21,7 @@ public:
 
     void draw() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "FindPanelWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "FindPanelWidget"; }
 
 private:
     // static constexpr Rgb kFindPanelColor{199, 203, 209};  // Light.

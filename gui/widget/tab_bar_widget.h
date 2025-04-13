@@ -20,9 +20,7 @@ public:
     void draw() override;
     void layout() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "TabBarWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "TabBarWidget"; }
 
 private:
     static constexpr int kTabWidth = 360;

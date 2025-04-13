@@ -48,7 +48,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
     // CVDisplayLink can only draw on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
       if (app_window) {
-          app_window->onFrame(ms);
+          app_window->on_frame(ms);
       }
     });
 }
@@ -105,7 +105,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
     // Call OpenGL activation callback.
     CGLSetCurrentContext(display_gl->context());
     if (app_window) {
-        app_window->onOpenGLActivate();
+        app_window->on_opengl_activate();
     }
     return display_gl->context();
 }

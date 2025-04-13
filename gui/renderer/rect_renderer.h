@@ -17,16 +17,16 @@ public:
     RectRenderer(RectRenderer&& other);
     RectRenderer& operator=(RectRenderer&& other);
 
-    void addRect(const Point& coords,
-                 const Size& size,
-                 const Point& min_coords,
-                 const Point& max_coords,
-                 const Rgb& color,
-                 Layer layer,
-                 int corner_radius = 0,
-                 int tab_corner_radius = 0,
-                 int left_shadow = 0,
-                 int right_shadow = 0);
+    void add_rect(const Point& coords,
+                  const Size& size,
+                  const Point& min_coords,
+                  const Point& max_coords,
+                  const Rgb& color,
+                  Layer layer,
+                  int corner_radius = 0,
+                  int tab_corner_radius = 0,
+                  int left_shadow = 0,
+                  int right_shadow = 0);
     void flush(const Size& screen_size, Layer layer);
 
 private:

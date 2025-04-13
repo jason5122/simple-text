@@ -15,9 +15,7 @@ public:
 
     void draw() override;
 
-    constexpr std::string_view class_name() const final override {
-        return "TextButtonWidget";
-    }
+    constexpr std::string_view class_name() const final override { return "TextButtonWidget"; }
 
 private:
     // static constexpr Rgb kTextColor{51, 51, 51};     // Light.

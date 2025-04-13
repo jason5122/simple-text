@@ -55,19 +55,19 @@ int WindowWidget::scale() const {
     return [pimpl->window_controller getScaleFactor];
 }
 
-bool WindowWidget::isDarkMode() const {
+bool WindowWidget::is_dark_mode() const {
     return [pimpl->window_controller isDarkMode];
 }
 
-void WindowWidget::setTitle(std::string_view title) {
+void WindowWidget::set_title(std::string_view title) {
     [pimpl->window_controller setTitle:title];
 }
 
-void WindowWidget::setFilePath(std::string_view path) {
+void WindowWidget::set_file_path(std::string_view path) {
     [pimpl->window_controller setFilePath:path];
 }
 
-std::optional<std::string> WindowWidget::openFilePicker() const {
+std::optional<std::string> WindowWidget::open_file_picker() const {
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Choose File";
     panel.prompt = @"Choose";
@@ -94,7 +94,7 @@ std::optional<std::string> WindowWidget::openFilePicker() const {
     //                   }];
 }
 
-void WindowWidget::setCursorStyle(CursorStyle style) {
+void WindowWidget::set_cursor_style(CursorStyle style) {
     if (current_style == style) return;
     current_style = style;
 
@@ -109,11 +109,11 @@ void WindowWidget::setCursorStyle(CursorStyle style) {
     }
 }
 
-void WindowWidget::setAutoRedraw(bool auto_redraw) {
+void WindowWidget::set_auto_redraw(bool auto_redraw) {
     [pimpl->window_controller setAutoRedraw:auto_redraw];
 }
 
-int WindowWidget::framesPerSecond() const {
+int WindowWidget::frames_per_second() const {
     return [pimpl->window_controller framesPerSecond];
 }
 

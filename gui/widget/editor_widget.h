@@ -23,12 +23,8 @@ public:
     // TODO: Refactor this.
     void update_font(size_t font_id);
 
-    constexpr std::string_view class_name() const final override {
-        return "EditorWidget";
-    }
-    constexpr bool can_be_focused() const override {
-        return true;
-    }
+    constexpr std::string_view class_name() const final override { return "EditorWidget"; }
+    constexpr bool can_be_focused() const override { return true; }
 
 private:
     static constexpr int kTabBarHeight = 29 * 2;

@@ -9,7 +9,7 @@ ImageButtonWidget::ImageButtonWidget(size_t image_id,
                                      const Rgb& bg_color,
                                      int padding)
     : image_id(image_id), text_color(text_color), bg_color(bg_color), padding(padding) {
-    const auto& texture_cache = gui::Renderer::instance().getTextureCache();
+    const auto& texture_cache = gui::Renderer::instance().texture_cache();
     auto& image = texture_cache.get_image(image_id);
 
     auto new_size = image.size;
@@ -20,16 +20,16 @@ ImageButtonWidget::ImageButtonWidget(size_t image_id,
 void ImageButtonWidget::draw() {
     // TODO: Formalize this.
     if (get_state()) {
-        auto& rect_renderer = Renderer::instance().getRectRenderer();
-        rect_renderer.addRect(position(), size(), position(), position() + size(), bg_color,
-                              Layer::kBackground, 4);
+        auto& rect_renderer = Renderer::instance().rect_renderer();
+        rect_renderer.add_rect(position(), size(), position(), position() + size(), bg_color,
+                               Layer::kBackground, 4);
     }
 
     auto pos = position();
     pos += {padding, padding};
 
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    texture_renderer.addImage(image_id, pos, text_color);
+    auto& texture_renderer = Renderer::instance().texture_renderer();
+    texture_renderer.add_image(image_id, pos, text_color);
 }
 
 }  // namespace gui

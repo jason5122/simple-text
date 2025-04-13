@@ -28,9 +28,7 @@ void TabBarWidget::next_index() {
     index = base::inc_wrap(index, tab_name_labels.size());
 }
 
-void TabBarWidget::last_index() {
-    index = base::sub_sat(tab_name_labels.size(), 1_Z);
-}
+void TabBarWidget::last_index() { index = base::sub_sat(tab_name_labels.size(), 1_Z); }
 
 void TabBarWidget::add_tab(std::string_view title) {
     Size label_size = {
@@ -52,10 +50,10 @@ void TabBarWidget::remove_tab(size_t index) {
 }
 
 void TabBarWidget::draw() {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().rect_renderer();
 
-    rect_renderer.addRect(position(), size(), position(), position() + size(), kTabBarColor,
-                          Layer::kBackground);
+    rect_renderer.add_rect(position(), size(), position(), position() + size(), kTabBarColor,
+                           Layer::kBackground);
 
     for (const auto& tab_name_label : tab_name_labels) {
         tab_name_label->draw();
@@ -64,8 +62,8 @@ void TabBarWidget::draw() {
     Point tab_pos = position();
     tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
     Size tab_size = {kTabWidth, height()};
-    rect_renderer.addRect(tab_pos, tab_size, position(), position() + size(), kTabColor,
-                          Layer::kBackground, 0, kTabCornerRadius);
+    rect_renderer.add_rect(tab_pos, tab_size, position(), position() + size(), kTabColor,
+                           Layer::kBackground, 0, kTabCornerRadius);
 
     size_t num_labels = tab_name_labels.size();
     for (size_t i = 0; i < num_labels; ++i) {
@@ -84,8 +82,8 @@ void TabBarWidget::draw() {
         tab_separator_pos.y += height() / 2;
         tab_separator_pos.y -= kTabSeparatorSize.height / 2;
 
-        rect_renderer.addRect(tab_separator_pos, kTabSeparatorSize, position(),
-                              position() + size(), kTabSeparatorColor, Layer::kBackground);
+        rect_renderer.add_rect(tab_separator_pos, kTabSeparatorSize, position(),
+                               position() + size(), kTabSeparatorColor, Layer::kBackground);
     }
 }
 

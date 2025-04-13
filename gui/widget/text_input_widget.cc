@@ -25,11 +25,11 @@ TextInputWidget::TextInputWidget(size_t font_id, int top_padding, int left_paddi
 }
 
 void TextInputWidget::draw() {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
+    auto& rect_renderer = Renderer::instance().rect_renderer();
+    auto& texture_renderer = Renderer::instance().texture_renderer();
 
-    rect_renderer.addRect(position(), size(), position(), position() + size(), kBackgroundColor,
-                          Layer::kBackground, 4);
+    rect_renderer.add_rect(position(), size(), position(), position() + size(), kBackgroundColor,
+                           Layer::kBackground, 4);
 
     // auto pos = position;
     // pos.y += top_padding;
@@ -62,8 +62,8 @@ void TextInputWidget::draw() {
         coords.y += static_cast<int>(line) * line_height;
         coords.x += kBorderThickness;  // Match Sublime Text.
 
-        texture_renderer.addLineLayout(layout, coords, min_text_coords, max_text_coords,
-                                       [](size_t) { return kTextColor; });
+        texture_renderer.add_line_layout(layout, coords, min_text_coords, max_text_coords,
+                                         [](size_t) { return kTextColor; });
     }
 
     max_scroll_offset.x = max_layout_width;
@@ -88,8 +88,8 @@ void TextInputWidget::draw() {
             .y = position().y + height(),
         };
 
-        rect_renderer.addRect(caret_pos, caret_size, min_coords, max_coords, kCaretColor,
-                              Layer::kForeground);
+        rect_renderer.add_rect(caret_pos, caret_size, min_coords, max_coords, kCaretColor,
+                               Layer::kForeground);
     }
 }
 
@@ -133,7 +133,7 @@ size_t TextInputWidget::line_at_y(int y) const {
 }
 
 inline const font::LineLayout& TextInputWidget::layout_at(size_t line) {
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache.get(font_id, line_str);
 }

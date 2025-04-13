@@ -41,7 +41,7 @@
 
 - (void)windowWillClose:(NSNotification*)notification {
     if (appWindow) {
-        appWindow->onClose();
+        appWindow->on_close();
     }
 }
 

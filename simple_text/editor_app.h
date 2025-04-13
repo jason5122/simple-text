@@ -12,12 +12,12 @@ namespace gui {
 
 class EditorApp : public App {
 public:
-    void createWindow();
-    void destroyWindow(int wid);
+    void create_window();
+    void destroy_window(int wid);
 
-    void onLaunch() override;
-    void onQuit() override;
-    void onAppAction(AppAction action) override;
+    void on_launch() override;
+    void on_quit() override;
+    void on_app_action(AppAction action) override;
 
 private:
     friend class EditorWindow;

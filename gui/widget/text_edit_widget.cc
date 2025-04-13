@@ -21,9 +21,7 @@ TextEditWidget::TextEditWidget(std::string_view str8, size_t font_id)
     update_max_scroll();
 }
 
-void TextEditWidget::select_all() {
-    selection.set_range(0, tree.length());
-}
+void TextEditWidget::select_all() { selection.set_range(0, tree.length()); }
 
 void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
     auto p = util::Profiler{"TextViewWidget::move()"};
@@ -212,13 +210,9 @@ std::string TextEditWidget::get_selection_text() {
     return tree.substr(start, end - start);
 }
 
-void TextEditWidget::undo() {
-    tree.undo();
-}
+void TextEditWidget::undo() { tree.undo(); }
 
-void TextEditWidget::redo() {
-    tree.redo();
-}
+void TextEditWidget::redo() { tree.redo(); }
 
 void TextEditWidget::find(std::string_view str8) {
     std::optional<size_t> result = tree.find(str8);
@@ -235,9 +229,7 @@ std::pair<size_t, size_t> TextEditWidget::get_line_column() {
     return {cursor.line, cursor.column};
 }
 
-size_t TextEditWidget::get_selection_length() {
-    return selection.length();
-}
+size_t TextEditWidget::get_selection_length() { return selection.length(); }
 
 void TextEditWidget::update_font_id(size_t font_id) {
     this->font_id = font_id;
@@ -330,9 +322,7 @@ void TextEditWidget::left_mouse_drag(const Point& mouse_pos,
     }
 }
 
-void TextEditWidget::left_mouse_up(const Point& mouse_pos) {
-    old_selection = selection;
-}
+void TextEditWidget::left_mouse_up(const Point& mouse_pos) { old_selection = selection; }
 
 void TextEditWidget::update_max_scroll() {
     const auto& font_rasterizer = font::FontRasterizer::instance();
@@ -356,7 +346,7 @@ size_t TextEditWidget::line_at_y(int y) const {
 }
 
 inline const font::LineLayout& TextEditWidget::layout_at(size_t line) {
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache.get(font_id, line_str);
 }
@@ -372,16 +362,16 @@ inline constexpr int TextEditWidget::gutter_width() {
 }
 
 inline int TextEditWidget::line_number_width() {
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
     int digit_width = line_layout_cache.get(font_id, "0").width;
     int log = std::log10(tree.line_count());
     return digit_width * std::max(log + 1, 2);
 }
 
 void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t end_line) {
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& texture_renderer = Renderer::instance().texture_renderer();
+    auto& rect_renderer = Renderer::instance().rect_renderer();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
 
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     size_t selection_line = tree.line_at(selection.end);
@@ -393,15 +383,15 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
     if (scroll_offset.x > 0) {
         Point shadow_coords = text_offset() + scroll_offset;
         Size shadow_size = {kShadowWidth, size().height};
-        rect_renderer.addRect(shadow_coords, shadow_size, position(), position() + size(),
-                              kShadowColor, Layer::kForeground, 0, 0, true);
+        rect_renderer.add_rect(shadow_coords, shadow_size, position(), position() + size(),
+                               kShadowColor, Layer::kForeground, 0, 0, true);
     }
     if (scroll_offset.x < max_scroll_offset.x) {
         Point shadow_coords = position();
         shadow_coords.x += size().width - kShadowWidth;
         Size shadow_size = {kShadowWidth, size().height};
-        rect_renderer.addRect(shadow_coords, shadow_size, position(), position() + size(),
-                              kShadowColor, Layer::kForeground, 0, 0, false, true);
+        rect_renderer.add_rect(shadow_coords, shadow_size, position(), position() + size(),
+                               kShadowColor, Layer::kForeground, 0, 0, false, true);
     }
 
     Point min_text_coords = {
@@ -430,8 +420,8 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
         coords.y += static_cast<int>(line) * main_line_height;
         coords.x += kBorderThickness;  // Match Sublime Text.
 
-        texture_renderer.addLineLayout(layout, coords, min_text_coords, max_text_coords,
-                                       [](size_t) { return kTextColor; });
+        texture_renderer.add_line_layout(layout, coords, min_text_coords, max_text_coords,
+                                         [](size_t) { return kTextColor; });
 
         // Draw gutter.
         if (line == selection_line) {
@@ -439,8 +429,8 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
             gutter_coords.y -= scroll_offset.y;
             gutter_coords.y += static_cast<int>(line) * main_line_height;
             Size gutter_size = {gutter_width(), main_line_height};
-            rect_renderer.addRect(gutter_coords, gutter_size, position(), position() + size(),
-                                  kGutterColor, Layer::kBackground);
+            rect_renderer.add_rect(gutter_coords, gutter_size, position(), position() + size(),
+                                   kGutterColor, Layer::kBackground);
         }
 
         // Draw line numbers.
@@ -464,15 +454,15 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
             .x = gutter_width(),
             .y = position().y + size().height,
         };
-        texture_renderer.addLineLayout(line_number_layout, line_number_coords, min_gutter_coords,
-                                       max_gutter_coords, line_number_highlight_callback);
+        texture_renderer.add_line_layout(line_number_layout, line_number_coords, min_gutter_coords,
+                                         max_gutter_coords, line_number_highlight_callback);
     }
 
     max_scroll_offset.x = max_layout_width;
 }
 
 void TextEditWidget::render_selections(int main_line_height, size_t start_line, size_t end_line) {
-    auto& selection_renderer = Renderer::instance().getSelectionRenderer();
+    auto& selection_renderer = Renderer::instance().selection_renderer();
     auto [start, end] = selection.range();
     auto [c1_line, c1_col] = tree.line_column_at(start);
     auto [c2_line, c2_col] = tree.line_column_at(end);
@@ -513,13 +503,13 @@ void TextEditWidget::render_selections(int main_line_height, size_t start_line, 
         .x = position().x + size().width,
         .y = position().y + size().height,
     };
-    selection_renderer.addSelections(selections, text_offset(), main_line_height, min_coords,
-                                     max_coords);
+    selection_renderer.add_selections(selections, text_offset(), main_line_height, min_coords,
+                                      max_coords);
 }
 
 // TODO: Implement a non-"scroll past end" mode.
 void TextEditWidget::render_scroll_bars(int main_line_height) {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().rect_renderer();
 
     // Add vertical scroll bar.
     // TODO: Consider subtracting 1 from the line count.
@@ -537,8 +527,8 @@ void TextEditWidget::render_scroll_bars(int main_line_height) {
         };
         vbar_coords += position();
         Size vbar_size = {vbar_width, vbar_height};
-        rect_renderer.addRect(vbar_coords, vbar_size, position(), position() + size(),
-                              kScrollBarColor, Layer::kForeground, 5);
+        rect_renderer.add_rect(vbar_coords, vbar_size, position(), position() + size(),
+                               kScrollBarColor, Layer::kForeground, 5);
     }
 
     // Add horizontal scroll bar.
@@ -556,13 +546,13 @@ void TextEditWidget::render_scroll_bars(int main_line_height) {
         };
         hbar_coords += position();
         Size hbar_size = {hbar_width, hbar_height};
-        rect_renderer.addRect(hbar_coords, hbar_size, position(), position() + size(),
-                              kScrollBarColor, Layer::kForeground, 5);
+        rect_renderer.add_rect(hbar_coords, hbar_size, position(), position() + size(),
+                               kScrollBarColor, Layer::kForeground, 5);
     }
 }
 
 void TextEditWidget::render_caret(int main_line_height) {
-    auto& rect_renderer = Renderer::instance().getRectRenderer();
+    auto& rect_renderer = Renderer::instance().rect_renderer();
 
     int caret_height = main_line_height + kExtraPadding * 2;
 
@@ -585,8 +575,8 @@ void TextEditWidget::render_caret(int main_line_height) {
         .x = position().x + size().width,
         .y = position().y + size().height,
     };
-    rect_renderer.addRect(caret_pos, caret_size, min_coords, max_coords, kCaretColor,
-                          Layer::kForeground, 0, 0);
+    rect_renderer.add_rect(caret_pos, caret_size, min_coords, max_coords, kCaretColor,
+                           Layer::kForeground, 0, 0);
 }
 
 }  // namespace gui

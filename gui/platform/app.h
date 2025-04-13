@@ -15,12 +15,12 @@ public:
     virtual ~App();
     void run();
     void quit();
-    std::string getClipboardString();
-    void setClipboardString(const std::string& str8);
+    std::string get_clipboard_string();
+    void set_clipboard_string(const std::string& str8);
 
-    virtual void onLaunch() {}
-    virtual void onQuit() {}
-    virtual void onAppAction(AppAction action) {}
+    virtual void on_launch() {}
+    virtual void on_quit() {}
+    virtual void on_app_action(AppAction action) {}
 
     // TODO: Find a way to make this private! We currently need this for GTK's callbacks.
     class impl;

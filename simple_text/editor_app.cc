@@ -14,7 +14,7 @@ namespace gui {
 
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
-void EditorApp::onLaunch() {
+void EditorApp::on_launch() {
     opengl::FunctionsGL functions_gl;
     functions_gl.load_global_function_pointers();
 
@@ -40,7 +40,7 @@ void EditorApp::onLaunch() {
     auto icon_highlight_matches_2x =
         icons_path.Append(FILE_PATH_LITERAL("icon_highlight_matches@2x.png"));
 
-    auto& texture_cache = gui::Renderer::instance().getTextureCache();
+    auto& texture_cache = gui::Renderer::instance().texture_cache();
     panel_close_image_id = texture_cache.add_png(panel_close_2x);
     folder_open_image_id = texture_cache.add_png(folder_open_2x);
     icon_regex_image_id = texture_cache.add_png(icon_regex_2x);
@@ -50,23 +50,23 @@ void EditorApp::onLaunch() {
     icon_in_selection_id = texture_cache.add_png(icon_in_selection_2x);
     icon_highlight_matches_id = texture_cache.add_png(icon_highlight_matches_2x);
 
-    createWindow();
+    create_window();
 }
 
-void EditorApp::onQuit() {
+void EditorApp::on_quit() {
     fmt::println("SimpleText::onQuit()");
 }
 
-void EditorApp::onAppAction(AppAction action) {
+void EditorApp::on_app_action(AppAction action) {
     if (action == AppAction::kNewFile) {
-        createWindow();
+        create_window();
     }
     if (action == AppAction::kNewWindow) {
-        createWindow();
+        create_window();
     }
 }
 
-void EditorApp::createWindow() {
+void EditorApp::create_window() {
     auto editor_window = std::make_unique<EditorWindow>(*this, 1200, 800, editor_windows.size());
 
 #ifdef NDEBUG
@@ -74,13 +74,13 @@ void EditorApp::createWindow() {
 #else
     const std::string& debug_or_release = "Debug";
 #endif
-    editor_window->setTitle(fmt::format("Simple Text ({})", debug_or_release));
+    editor_window->set_title(fmt::format("Simple Text ({})", debug_or_release));
 
     editor_window->show();
     editor_windows.emplace_back(std::move(editor_window));
 }
 
-void EditorApp::destroyWindow(int wid) {
+void EditorApp::destroy_window(int wid) {
     fmt::println("EditorApp::destroyWindow({})", wid);
     editor_windows[wid] = nullptr;
 }

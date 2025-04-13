@@ -10,26 +10,18 @@ TabBarLabelWidget::TabBarLabelWidget(size_t font_id,
                                      int right_padding)
     : Widget{size}, font_id(font_id), left_padding(left_padding), right_padding(right_padding) {}
 
-void TabBarLabelWidget::set_text(std::string_view str8) {
-    this->label_str = str8;
-}
+void TabBarLabelWidget::set_text(std::string_view str8) { this->label_str = str8; }
 
-void TabBarLabelWidget::set_color(const Rgb& color) {
-    this->color = color;
-}
+void TabBarLabelWidget::set_color(const Rgb& color) { this->color = color; }
 
-void TabBarLabelWidget::add_left_icon(size_t icon_id) {
-    left_side_icons.emplace_back(icon_id);
-}
+void TabBarLabelWidget::add_left_icon(size_t icon_id) { left_side_icons.emplace_back(icon_id); }
 
-void TabBarLabelWidget::add_right_icon(size_t icon_id) {
-    right_side_icons.emplace_back(icon_id);
-}
+void TabBarLabelWidget::add_right_icon(size_t icon_id) { right_side_icons.emplace_back(icon_id); }
 
 void TabBarLabelWidget::draw() {
-    auto& texture_renderer = Renderer::instance().getTextureRenderer();
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
-    const auto& texture_cache = gui::Renderer::instance().getTextureCache();
+    auto& texture_renderer = Renderer::instance().texture_renderer();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
+    const auto& texture_cache = gui::Renderer::instance().texture_cache();
 
     // Draw all left side icons.
     Point left_offset{.x = left_padding};
@@ -37,7 +29,7 @@ void TabBarLabelWidget::draw() {
         auto& image = texture_cache.get_image(icon_id);
 
         Point icon_position = center_vertically(image.size.height) + left_offset;
-        texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
+        texture_renderer.add_image(icon_id, icon_position, kFolderIconColor);
 
         left_offset.x += image.size.width;
     }
@@ -51,7 +43,7 @@ void TabBarLabelWidget::draw() {
 
         Point icon_position = center_vertically(image.size.height) - right_offset;
         icon_position += Point{width(), 0};
-        texture_renderer.addImage(icon_id, icon_position, kFolderIconColor);
+        texture_renderer.add_image(icon_id, icon_position, kFolderIconColor);
     }
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
@@ -68,7 +60,7 @@ void TabBarLabelWidget::draw() {
         .y = position().y + height(),
     };
     const auto highlight_callback = [this](size_t) { return color; };
-    texture_renderer.addLineLayout(layout, coords, min_coords, max_coords, highlight_callback);
+    texture_renderer.add_line_layout(layout, coords, min_coords, max_coords, highlight_callback);
 }
 
 Point TabBarLabelWidget::center_vertically(int widget_height) {

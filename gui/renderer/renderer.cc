@@ -19,39 +19,14 @@ Renderer::Renderer() {
     glClearColor(48.0f / 255, 56.0f / 255, 65.0f / 255, 1.0f);  // Dark.
 }
 
-Renderer& Renderer::instance() {
-    static Renderer renderer;
-    return renderer;
-}
-
-TextureCache& Renderer::getTextureCache() {
-    return texture_cache;
-}
-
-LineLayoutCache& Renderer::getLineLayoutCache() {
-    return line_layout_cache;
-}
-
-TextureRenderer& Renderer::getTextureRenderer() {
-    return texture_renderer;
-}
-
-RectRenderer& Renderer::getRectRenderer() {
-    return rect_renderer;
-}
-
-SelectionRenderer& Renderer::getSelectionRenderer() {
-    return selection_renderer;
-}
-
 void Renderer::flush(const Size& size) {
     glViewport(0, 0, size.width, size.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    rect_renderer.flush(size, Layer::kBackground);
-    selection_renderer.flush(size);
-    texture_renderer.flush(size);
-    rect_renderer.flush(size, Layer::kForeground);
+    rect_renderer_.flush(size, Layer::kBackground);
+    selection_renderer_.flush(size);
+    texture_renderer_.flush(size);
+    rect_renderer_.flush(size, Layer::kForeground);
 }
 
 }  // namespace gui

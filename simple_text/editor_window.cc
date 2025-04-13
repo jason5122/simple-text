@@ -40,7 +40,7 @@ EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)
 }
 
 // On GTK, size isn't available upon realization. This is fine, just don't rely on `size` here!
-void EditorWindow::onOpenGLActivate() {
+void EditorWindow::on_opengl_activate() {
     using namespace std::literals;
     auto* text_view = editor_widget->current_widget();
     // text_view->insertText("⌚..⌛⏩..⏬☂️..☃️");
@@ -58,9 +58,9 @@ void EditorWindow::onOpenGLActivate() {
 
     // Main widgets.
     auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
-    horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
+    // horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
     horizontal_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
-    constexpr bool kShowAtlas = false;
+    constexpr bool kShowAtlas = true;
     if constexpr (kShowAtlas) {
         auto atlas_widget = std::make_unique<AtlasWidget>();
         horizontal_layout->addChildEnd(std::move(atlas_widget));
@@ -107,7 +107,7 @@ void EditorWindow::draw() {
     // }
 }
 
-void EditorWindow::onFrame(int64_t ms) {
+void EditorWindow::on_frame(int64_t ms) {
     // if (is_side_bar_animating) {
     //     int64_t d = ms - last_ms;
     //     int64_t numerator = d * kRatePerSec + ms_err;
@@ -155,7 +155,7 @@ void EditorWindow::onFrame(int64_t ms) {
 
     --requested_frames;
     if (requested_frames == 0) {
-        setAutoRedraw(false);
+        set_auto_redraw(false);
     }
 
     // last_ms = ms;
@@ -178,8 +178,8 @@ void EditorWindow::perform_scroll(const Point& mouse_pos, const Delta& delta) {
     main_widget->perform_scroll(mouse_pos, delta);
 
     // https://zed.dev/blog/120fps
-    requested_frames = framesPerSecond();
-    setAutoRedraw(true);
+    requested_frames = frames_per_second();
+    set_auto_redraw(true);
     redraw();
 }
 
@@ -230,7 +230,7 @@ void EditorWindow::left_mouse_up(const Point& mouse_pos) {
         redraw();
     }
     dragged_widget = nullptr;
-    updateCursorStyle(mouse_pos);
+    update_cursor_style(mouse_pos);
 }
 
 void EditorWindow::right_mouse_down(const Point& mouse_pos,
@@ -254,7 +254,7 @@ void EditorWindow::right_mouse_down(const Point& mouse_pos,
 
 // This represents the mouse moving *without* being a click+drag.
 bool EditorWindow::mouse_position_changed(const std::optional<Point>& mouse_pos) {
-    updateCursorStyle(mouse_pos);
+    update_cursor_style(mouse_pos);
 
     if (main_widget->mouse_position_changed(mouse_pos)) {
         redraw();
@@ -265,7 +265,7 @@ bool EditorWindow::mouse_position_changed(const std::optional<Point>& mouse_pos)
 }
 
 // TODO: At this point, this is GTK-specific. Make the deceleration feel more natural.
-void EditorWindow::onScrollDecelerate(const Point& mouse_pos, const Delta& delta) {
+void EditorWindow::on_scroll_decelerate(const Point& mouse_pos, const Delta& delta) {
     vel_x = delta.dx;
     vel_y = delta.dy;
     last_mouse_pos = mouse_pos;
@@ -273,11 +273,11 @@ void EditorWindow::onScrollDecelerate(const Point& mouse_pos, const Delta& delta
     vel_x /= 16;
     vel_y /= 16;
 
-    setAutoRedraw(true);
+    set_auto_redraw(true);
     redraw();
 }
 
-bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
+bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
     // fmt::println("key = {}, modifiers = {}", key, modifiers);
 
     bool handled = false;
@@ -323,7 +323,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         editor_widget->add_tab("untitled", "");
         handled = true;
     } else if (key == Key::kN && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
-        parent.createWindow();
+        parent.create_window();
         handled = true;
     } else if (key == Key::kW && modifiers == kPrimaryModifier) {
         // If we are dragging on the current TextViewWidget, invalidate the pointer to prevent a
@@ -341,19 +341,19 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
         return true;
     } else if (key == Key::kC && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->current_widget();
-        parent.setClipboardString(text_view->get_selection_text());
+        parent.set_clipboard_string(text_view->get_selection_text());
         handled = true;
     } else if (key == Key::kV && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->current_widget();
-        text_view->insert_text(parent.getClipboardString());
+        text_view->insert_text(parent.get_clipboard_string());
         handled = true;
     } else if (key == Key::kX && modifiers == kPrimaryModifier) {
         auto* text_view = editor_widget->current_widget();
-        parent.setClipboardString(text_view->get_selection_text());
+        parent.set_clipboard_string(text_view->get_selection_text());
         text_view->left_delete();
         handled = true;
     } else if (key == Key::kO && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {
-        auto path = openFilePicker();
+        auto path = open_file_picker();
         if (path) {
             editor_widget->open_file(*path);
             editor_widget->last_index();
@@ -461,7 +461,7 @@ bool EditorWindow::onKeyDown(Key key, ModifierKey modifiers) {
     return handled;
 }
 
-void EditorWindow::onInsertText(std::string_view text) {
+void EditorWindow::on_insert_text(std::string_view text) {
     if (auto widget = editor_widget->current_widget()) {
         widget->insert_text(text);
         redraw();
@@ -478,7 +478,7 @@ void EditorWindow::onInsertText(std::string_view text) {
     }
 }
 
-void EditorWindow::onAction(Action action, bool extend) {
+void EditorWindow::on_action(Action action, bool extend) {
     auto p = util::Profiler{"EditorWindow::onAction()"};
 
     bool handled = true;
@@ -553,40 +553,38 @@ void EditorWindow::onAction(Action action, bool extend) {
     }
 }
 
-void EditorWindow::onAppAction(AppAction action) {
+void EditorWindow::on_app_action(AppAction action) {
     switch (action) {
     case AppAction::kNewFile:
         editor_widget->add_tab("untitled", "");
         redraw();
         break;
     case AppAction::kNewWindow:
-        parent.createWindow();
+        parent.create_window();
         break;
     }
 }
 
-void EditorWindow::onClose() {
-    parent.destroyWindow(wid);
-}
+void EditorWindow::on_close() { parent.destroy_window(wid); }
 
-void EditorWindow::updateCursorStyle(const std::optional<Point>& mouse_pos) {
+void EditorWindow::update_cursor_style(const std::optional<Point>& mouse_pos) {
     // Case 1: Dragging operation in progress.
     if (dragged_widget) {
-        setCursorStyle(dragged_widget->cursor_style());
+        set_cursor_style(dragged_widget->cursor_style());
     }
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         if (auto hovered_widget = main_widget->widget_at(mouse_pos.value())) {
             // fmt::println("{}", hovered_widget->className());
-            setCursorStyle(hovered_widget->cursor_style());
+            set_cursor_style(hovered_widget->cursor_style());
         } else {
             // fmt::println("No widget hovered");
-            setCursorStyle(CursorStyle::kArrow);
+            set_cursor_style(CursorStyle::kArrow);
         }
     }
     // Case 3: Mouse position is outside of window.
     else {
-        setCursorStyle(CursorStyle::kArrow);
+        set_cursor_style(CursorStyle::kArrow);
     }
 }
 

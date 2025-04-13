@@ -69,7 +69,7 @@ void EditorWidget::open_file(std::string_view path) {
 
 // TODO: Refactor this.
 void EditorWidget::update_font(size_t font_id) {
-    auto& line_layout_cache = Renderer::instance().getLineLayoutCache();
+    auto& line_layout_cache = Renderer::instance().line_layout_cache();
     line_layout_cache.clear();
 
     main_font_id = font_id;

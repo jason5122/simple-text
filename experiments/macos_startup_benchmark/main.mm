@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-constexpr bool kBenchmarkMode = true;
+constexpr bool kBenchmarkMode = false;
 constexpr bool kUseOpenGL = true;
 
 @interface View : NSView

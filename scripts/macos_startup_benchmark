@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd out/release
-cd 'macOS Startup Benchmark.app/Contents/MacOS/'
-hyperfine --warmup 20 --runs 50 '"./macOS Startup Benchmark"'

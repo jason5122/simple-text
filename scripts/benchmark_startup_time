@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd out/release
+cd 'Simple Text.app/Contents/MacOS/'
+hyperfine --warmup 5 '"./Simple Text"'

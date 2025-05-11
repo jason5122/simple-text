@@ -2,17 +2,17 @@
 
 namespace gui {
 
-void LayoutWidget::setMainWidget(std::unique_ptr<Widget> widget) {
+void LayoutWidget::set_main_widget(std::unique_ptr<Widget> widget) {
     main_widget = std::move(widget);
     layout();
 }
 
-void LayoutWidget::addChildStart(std::unique_ptr<Widget> widget) {
+void LayoutWidget::add_child_start(std::unique_ptr<Widget> widget) {
     children_start.emplace_back(std::move(widget));
     layout();
 }
 
-void LayoutWidget::addChildEnd(std::unique_ptr<Widget> widget) {
+void LayoutWidget::add_child_end(std::unique_ptr<Widget> widget) {
     children_end.emplace_back(std::move(widget));
     layout();
 }

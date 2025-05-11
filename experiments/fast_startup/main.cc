@@ -1,5 +1,5 @@
 #include "build/build_config.h"
-#include "simple_text/editor_app.h"
+#include "experiments/fast_startup/app.h"
 
 namespace {
 
@@ -8,8 +8,8 @@ int EditorMain(int argc, char* argv[]) {
     std::setbuf(stdout, nullptr);
 
     // TODO: Return proper status codes.
-    gui::EditorApp editor_app;
-    editor_app.run();
+    gui::FastStartupApp fast_startup_app;
+    fast_startup_app.run();
     return 0;
 }
 

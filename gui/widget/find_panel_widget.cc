@@ -39,17 +39,17 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     wrap_button->set_autoresizing(false);
     in_selection_button->set_autoresizing(false);
     highlight_matches_button->set_autoresizing(false);
-    addChildStart(std::move(regex_button));
-    addChildStart(std::move(case_sensitive_button));
-    addChildStart(std::move(whole_word_button));
-    addChildStart(std::move(wrap_button));
-    addChildStart(std::move(in_selection_button));
-    addChildStart(std::move(highlight_matches_button));
+    add_child_start(std::move(regex_button));
+    add_child_start(std::move(case_sensitive_button));
+    add_child_start(std::move(whole_word_button));
+    add_child_start(std::move(wrap_button));
+    add_child_start(std::move(in_selection_button));
+    add_child_start(std::move(highlight_matches_button));
 
     auto panel_close_button =
         std::make_unique<ImageButtonWidget>(panel_close_image_id, kCloseIconColor, Rgb{}, 0);
     panel_close_button->set_autoresizing(false);
-    addChildEnd(std::move(panel_close_button));
+    add_child_end(std::move(panel_close_button));
 
     auto find_all_button = std::make_unique<TextButtonWidget>(
         ui_font_id, "Find All", kIconBackgroundColor, Size{20, 8}, Size{200, 52});
@@ -61,12 +61,12 @@ FindPanelWidget::FindPanelWidget(size_t main_font_id,
     find_prev_button->set_autoresizing(false);
     find_button->set_autoresizing(false);
     int button_height = find_button->height();
-    addChildEnd(std::move(find_all_button));
-    addChildEnd(std::move(find_prev_button));
-    addChildEnd(std::move(find_button));
+    add_child_end(std::move(find_all_button));
+    add_child_end(std::move(find_prev_button));
+    add_child_end(std::move(find_button));
 
     int text_input_height = text_input_widget->height();
-    setMainWidget(std::unique_ptr<TextInputWidget>(text_input_widget));
+    set_main_widget(std::unique_ptr<TextInputWidget>(text_input_widget));
 
     // Calculate max height. We assume all buttons have the same height.
     text_input_height += kVerticalPadding * 2;  // Pad top and bottom.

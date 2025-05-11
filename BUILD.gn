@@ -9,3 +9,7 @@ group("tests") {
     "//testing:unittest_runner",
   ]
 }
+
+group("experiments") {
+  deps = [ "//experiments/fast_startup" ]
+}

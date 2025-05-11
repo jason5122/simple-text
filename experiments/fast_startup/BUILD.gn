@@ -2,9 +2,9 @@ import("//build/config/mac/icon.gni")
 import("//build/config/mac/mac_app_bundle.gni")
 
 common_sources = [
-  "editor_app.cc",
-  "editor_window.cc",
+  "app.cc",
   "main.cc",
+  "window.cc",
 ]
 
 common_deps = [
@@ -12,24 +12,16 @@ common_deps = [
   "//gui",
   "//opengl",
   "//third_party/fmt",
-
-  # TODO: Find a way to include Tree-sitter headers without listing the dependency here.
-  # "//third_party/tree_sitter",
 ]
 
 if (is_mac) {
-  mac_app_bundle("simple_text") {
-    output_name = "Simple Text"
+  mac_app_bundle("fast_startup") {
+    output_name = "Fast Startup"
     bundle_identifier = "com.jason5122.simple-text"
     info_plist = "resources/Info.plist"
 
     sources = common_sources
     deps = common_deps
-    # deps += [ ":icon" ]
-  }
-
-  icon("icon") {
-    sources = [ "resources/app.iconset" ]
   }
 }
 

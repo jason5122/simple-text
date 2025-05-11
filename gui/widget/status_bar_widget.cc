@@ -10,7 +10,7 @@ StatusBarWidget::StatusBarWidget(int min_height, size_t font_id)
     int label_height = line_column_label->height();
     set_height(std::max(label_height, min_height));
 
-    addChildStart(std::unique_ptr<LabelWidget>(line_column_label));
+    add_child_start(std::unique_ptr<LabelWidget>(line_column_label));
 }
 
 void StatusBarWidget::draw() {

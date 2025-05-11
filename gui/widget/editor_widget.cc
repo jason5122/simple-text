@@ -16,15 +16,13 @@ EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size, size_t pane
 
     multi_view->addTab(std::make_unique<TextEditWidget>("", main_font_id));
 
-    addChildStart(std::move(tab_bar_padding));
-    addChildStart(std::unique_ptr<TabBarWidget>(tab_bar));
-    addChildStart(std::move(text_view_padding));
-    setMainWidget(std::unique_ptr<MultiViewWidget<TextEditWidget>>(multi_view));
+    add_child_start(std::move(tab_bar_padding));
+    add_child_start(std::unique_ptr<TabBarWidget>(tab_bar));
+    add_child_start(std::move(text_view_padding));
+    set_main_widget(std::unique_ptr<MultiViewWidget<TextEditWidget>>(multi_view));
 }
 
-TextEditWidget* EditorWidget::current_widget() const {
-    return multi_view->current_widget();
-}
+TextEditWidget* EditorWidget::current_widget() const { return multi_view->current_widget(); }
 
 void EditorWidget::set_index(size_t index) {
     multi_view->set_index(index);
@@ -46,9 +44,7 @@ void EditorWidget::last_index() {
     tab_bar->last_index();
 }
 
-size_t EditorWidget::get_current_index() {
-    return multi_view->index();
-}
+size_t EditorWidget::get_current_index() { return multi_view->index(); }
 
 void EditorWidget::add_tab(std::string_view tab_name, std::string_view text) {
     multi_view->addTab(std::make_unique<TextEditWidget>(text, main_font_id));

@@ -172,6 +172,10 @@ config("default_warnings") {
 
     # https://staticthinking.wordpress.com/2023/07/25/wsign-compare-is-garbage/
     "-Wno-sign-compare",
+
+    # TODO: Remove this after debugging.
+    "-Wno-unused-variable",
+    "-Wno-unused-function",
   ]
 }
 

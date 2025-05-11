@@ -53,9 +53,7 @@ void EditorApp::on_launch() {
     create_window();
 }
 
-void EditorApp::on_quit() {
-    fmt::println("SimpleText::onQuit()");
-}
+void EditorApp::on_quit() { fmt::println("SimpleText::onQuit()"); }
 
 void EditorApp::on_app_action(AppAction action) {
     if (action == AppAction::kNewFile) {

@@ -39,29 +39,17 @@ WindowWidget::~WindowWidget() {
     [pimpl->window_controller release];
 }
 
-void WindowWidget::show() {
-    [pimpl->window_controller show];
-}
+void WindowWidget::show() { [pimpl->window_controller show]; }
 
-void WindowWidget::close() {
-    [pimpl->window_controller close];
-}
+void WindowWidget::close() { [pimpl->window_controller close]; }
 
-void WindowWidget::redraw() {
-    [pimpl->window_controller redraw];
-}
+void WindowWidget::redraw() { [pimpl->window_controller redraw]; }
 
-int WindowWidget::scale() const {
-    return [pimpl->window_controller getScaleFactor];
-}
+int WindowWidget::scale() const { return [pimpl->window_controller getScaleFactor]; }
 
-bool WindowWidget::is_dark_mode() const {
-    return [pimpl->window_controller isDarkMode];
-}
+bool WindowWidget::is_dark_mode() const { return [pimpl->window_controller isDarkMode]; }
 
-void WindowWidget::set_title(std::string_view title) {
-    [pimpl->window_controller setTitle:title];
-}
+void WindowWidget::set_title(std::string_view title) { [pimpl->window_controller setTitle:title]; }
 
 void WindowWidget::set_file_path(std::string_view path) {
     [pimpl->window_controller setFilePath:path];
@@ -113,8 +101,6 @@ void WindowWidget::set_auto_redraw(bool auto_redraw) {
     [pimpl->window_controller setAutoRedraw:auto_redraw];
 }
 
-int WindowWidget::frames_per_second() const {
-    return [pimpl->window_controller framesPerSecond];
-}
+int WindowWidget::frames_per_second() const { return [pimpl->window_controller framesPerSecond]; }
 
 }  // namespace gui

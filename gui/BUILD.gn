@@ -1,6 +1,7 @@
 source_set("gui") {
   sources = [
     "renderer/atlas.cc",
+    "renderer/debug/renderer_lite.cc",
     "renderer/line_layout_cache.cc",
     "renderer/rect_renderer.cc",
     "renderer/renderer.cc",

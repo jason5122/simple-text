@@ -59,23 +59,23 @@ void EditorWindow::on_opengl_activate() {
     // Main widgets.
     auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
     // horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
-    horizontal_layout->setMainWidget(std::unique_ptr<EditorWidget>(editor_widget));
+    horizontal_layout->set_main_widget(std::unique_ptr<EditorWidget>(editor_widget));
     constexpr bool kShowAtlas = true;
     if constexpr (kShowAtlas) {
         auto atlas_widget = std::make_unique<AtlasWidget>();
-        horizontal_layout->addChildEnd(std::move(atlas_widget));
+        horizontal_layout->add_child_end(std::move(atlas_widget));
     }
 
-    main_widget->setMainWidget(std::move(horizontal_layout));
+    main_widget->set_main_widget(std::move(horizontal_layout));
     status_bar->set_resizable(false);
-    main_widget->addChildEnd(std::unique_ptr<StatusBarWidget>(status_bar));
+    main_widget->add_child_end(std::unique_ptr<StatusBarWidget>(status_bar));
 
     auto find_panel_widget = std::make_unique<FindPanelWidget>(
         parent.main_font_id, parent.ui_font_regular_id, parent.icon_regex_image_id,
         parent.icon_case_sensitive_image_id, parent.icon_whole_word_image_id,
         parent.icon_wrap_image_id, parent.icon_in_selection_id, parent.icon_highlight_matches_id,
         parent.panel_close_image_id);
-    main_widget->addChildEnd(std::move(find_panel_widget));
+    main_widget->add_child_end(std::move(find_panel_widget));
 }
 
 void EditorWindow::draw() {

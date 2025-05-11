@@ -1,7 +1,6 @@
 source_set("cocoa") {
   sources = [
     "app.mm",
-    "debug/view.mm",
     "display_gl.mm",
     "gl_layer.mm",
     "gl_view.mm",

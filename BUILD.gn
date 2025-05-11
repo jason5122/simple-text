@@ -11,5 +11,5 @@ group("tests") {
 }
 
 group("experiments") {
-  deps = [ "//experiments/fast_startup" ]
+  deps = [ "//experiments/macos_startup_benchmark" ]
 }

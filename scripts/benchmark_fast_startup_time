@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd out/release
-cd 'Fast Startup.app/Contents/MacOS/'
-hyperfine --warmup 5 '"./Fast Startup"'

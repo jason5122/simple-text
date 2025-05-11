@@ -1,0 +1,13 @@
+import("//build/config/mac/mac_app_bundle.gni")
+
+mac_app_bundle("macos_startup_benchmark") {
+  output_name = "macOS Startup Benchmark"
+
+  sources = [ "main.mm" ]
+
+  frameworks = [
+    "Cocoa.framework",
+    "QuartzCore.framework",
+  ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
+}

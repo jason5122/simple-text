@@ -3,12 +3,10 @@
 #include "gui/platform/cocoa/gl_view.h"
 
 // Debug use; remove this.
-#include "gui/platform/cocoa/debug/view.h"
 #include <fmt/base.h>
 
 @interface WindowController () {
-    // GLView* opengl_view;
-    View* opengl_view;
+    GLView* opengl_view;
 }
 
 @end
@@ -30,10 +28,9 @@
                                                    styleMask:mask
                                                      backing:NSBackingStoreBuffered
                                                        defer:false] autorelease];
-        // opengl_view = [[[GLView alloc] initWithFrame:frameRect
-        //                                    appWindow:theAppWindow
-        //                                    displayGL:displayGL] autorelease];
-        opengl_view = [[[View alloc] initWithFrame:frameRect] autorelease];
+        opengl_view = [[[GLView alloc] initWithFrame:frameRect
+                                           appWindow:theAppWindow
+                                           displayGL:displayGL] autorelease];
         self.window.contentView = opengl_view;
         [self.window makeFirstResponder:opengl_view];
 

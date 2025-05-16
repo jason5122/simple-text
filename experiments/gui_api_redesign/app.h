@@ -7,8 +7,8 @@
 class App {
 public:
     ~App();
-    App(App&&) = delete;
-    App& operator=(App&&) = delete;
+    App(const App&) = delete;
+    App& operator=(const App&) = delete;
     static std::unique_ptr<App> create();
 
     int run();

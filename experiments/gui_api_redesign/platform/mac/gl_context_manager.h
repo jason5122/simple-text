@@ -6,8 +6,8 @@
 class GLContextManager {
 public:
     ~GLContextManager();
-    GLContextManager(GLContextManager&&) = delete;
-    GLContextManager& operator=(GLContextManager&&) = delete;
+    GLContextManager(const GLContextManager&) = delete;
+    GLContextManager& operator=(const GLContextManager&) = delete;
     static std::unique_ptr<GLContextManager> create();
 
     CGLPixelFormatObj pixel_format() const { return pixel_format_; }

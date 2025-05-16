@@ -48,8 +48,7 @@ constexpr bool kBenchmarkMode = false;
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
     CGLSetCurrentContext(ctx_);
-    opengl_redesign::FunctionsGL functions_gl;
-    functions_gl.load_global_function_pointers();
+    opengl_redesign::load_global_function_pointers();
 
     return ctx_;
 }

@@ -2,35 +2,13 @@
 
 #include <dlfcn.h>
 
-// TODO: Debug use; remove this.
-#include <fmt/base.h>
+namespace opengl_redesign::internal {
 
-namespace {
-
-const char* kDefaultOpenGLDylibName =
-    "/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib";
-
+void* load_proc_address(const char* fp) {
+    constexpr const char* kDylibPath =
+        "/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib";
+    static void* handle = dlopen(kDylibPath, RTLD_NOW);
+    return dlsym(handle, fp);
 }
 
-namespace opengl_redesign {
-
-class FunctionsGL::impl {
-public:
-    void* handle;
-};
-
-FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
-    pimpl->handle = dlopen(kDefaultOpenGLDylibName, RTLD_NOW);
-    if (!pimpl->handle) {
-        fmt::println("Could not open the OpenGL Framework.");
-        std::abort();
-    }
-}
-
-FunctionsGL::~FunctionsGL() { dlclose(pimpl->handle); }
-
-void* FunctionsGL::load_proc_address(std::string_view function) const {
-    return dlsym(pimpl->handle, function.data());
-}
-
-}  // namespace opengl_redesign
+}  // namespace opengl_redesign::internal

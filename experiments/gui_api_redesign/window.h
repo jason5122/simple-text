@@ -7,8 +7,8 @@
 class Window {
 public:
     ~Window();
-    Window(Window&&) = delete;
-    Window& operator=(Window&&) = delete;
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
 
     void on_draw(std::function<void()> callback) { draw_callback_ = std::move(callback); }
     void invoke_draw_callback() {

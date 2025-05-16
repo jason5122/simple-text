@@ -19,7 +19,6 @@ std::unique_ptr<Window> Window::create(int width, int height, GLContextManager* 
     ns_window.contentView = [[[GLView alloc] initWithFrame:frame
                                                  appWindow:window.get()
                                           glContextManager:mgr] autorelease];
-
     [ns_window setTitle:@"GUI API Redesign"];
     [ns_window makeKeyAndOrderFront:nil];
     return window;

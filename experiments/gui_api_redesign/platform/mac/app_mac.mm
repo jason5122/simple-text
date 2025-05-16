@@ -1,6 +1,24 @@
 #include "experiments/gui_api_redesign/app.h"
-#include "experiments/gui_api_redesign/platform/mac/gl_view.h"
+#include "experiments/gui_api_redesign/platform/mac/gl_context_manager.h"
 #include <AppKit/AppKit.h>
+#include <fmt/base.h>
+
+struct App::Impl {
+    std::unique_ptr<GLContextManager> gl_context_manager;
+};
+
+App::~App() = default;
+
+App::App() : pimpl_(std::make_unique<Impl>()) {}
+
+bool App::initialize() {
+    pimpl_->gl_context_manager = GLContextManager::create();
+    if (!pimpl_->gl_context_manager) {
+        fmt::println(stderr, "Failed to initialize GL context manager");
+        return false;
+    }
+    return true;
+}
 
 int App::run() {
     @autoreleasepool {
@@ -23,19 +41,8 @@ int App::run() {
 }
 
 Window& App::create_window(int width, int height) {
-    auto win = std::make_unique<Window>(width, height);
-
-    NSRect frame = NSMakeRect(0, 0, 1200, 800);
-    NSUInteger style =
-        NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
-    NSWindow* window = [[[NSWindow alloc] initWithContentRect:frame
-                                                    styleMask:style
-                                                      backing:NSBackingStoreBuffered
-                                                        defer:false] autorelease];
-    window.contentView = [[[GLView alloc] initWithFrame:frame appWindow:win.get()] autorelease];
-
-    [window setTitle:@"GUI API Redesign"];
-    [window makeKeyAndOrderFront:nil];
+    auto win = std::unique_ptr<Window>(new Window(width, height));
+    win->initialize();
 
     Window& ref = *win;
     windows_.push_back(std::move(win));

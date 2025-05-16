@@ -6,14 +6,15 @@ mac_app_bundle("gui_api_redesign") {
   sources = [
     "main.cc",
     "platform/mac/app_mac.mm",
+    "platform/mac/gl_context_manager.cc",
     "platform/mac/gl_view.mm",
     "platform/mac/window_mac.mm",
   ]
   deps = [ "//third_party/fmt" ]
 
   frameworks = [
-    "AppKit.framework",
     "Cocoa.framework",
+    "OpenGL.framework",
     "QuartzCore.framework",
   ]
   defines = [ "GL_SILENCE_DEPRECATION" ]

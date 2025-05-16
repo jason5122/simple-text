@@ -6,11 +6,10 @@ int main() {
     std::setbuf(stdout, nullptr);
 
     App app;
+    if (!app.initialize()) std::exit(1);
 
-    Window& w1 = app.create_window(800, 600);
-    Window& w2 = app.create_window(800, 600);
-    w1.on_draw([]() { fmt::println("window 1 draw"); });
-    w2.on_draw([]() { fmt::println("window 2 draw"); });
+    Window& win = app.create_window(1200, 800);
+    win.on_draw([]() { fmt::println("draw"); });
 
     return app.run();
 }

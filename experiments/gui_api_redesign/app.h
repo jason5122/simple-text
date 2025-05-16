@@ -7,13 +7,16 @@
 class App {
 public:
     ~App();
-    App();
+    App(App&&) = delete;
+    App& operator=(App&&) = delete;
+    static std::unique_ptr<App> create();
 
-    bool initialize();
     int run();
     Window& create_window(int width, int height);
 
 private:
+    App();
+
     std::vector<std::unique_ptr<Window>> windows_;
 
     struct Impl;

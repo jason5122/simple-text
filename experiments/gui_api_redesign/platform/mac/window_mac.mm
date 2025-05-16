@@ -5,20 +5,21 @@
 struct Window::Impl {};
 
 Window::~Window() = default;
+Window::Window() : pimpl_(std::make_unique<Impl>()) {}
 
-Window::Window(int width, int height)
-    : width_(width), height_(height), pimpl_(std::make_unique<Impl>()) {}
-
-void Window::initialize() {
-    NSRect frame = NSMakeRect(0, 0, width_, height_);
+std::unique_ptr<Window> Window::create(int width, int height) {
+    auto window = std::unique_ptr<Window>(new Window());
+    NSRect frame = NSMakeRect(0, 0, width, height);
     NSUInteger style =
         NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
-    NSWindow* window = [[[NSWindow alloc] initWithContentRect:frame
-                                                    styleMask:style
-                                                      backing:NSBackingStoreBuffered
-                                                        defer:false] autorelease];
-    window.contentView = [[[GLView alloc] initWithFrame:frame appWindow:this] autorelease];
+    NSWindow* ns_window = [[[NSWindow alloc] initWithContentRect:frame
+                                                       styleMask:style
+                                                         backing:NSBackingStoreBuffered
+                                                           defer:false] autorelease];
+    ns_window.contentView = [[[GLView alloc] initWithFrame:frame
+                                                 appWindow:window.get()] autorelease];
 
-    [window setTitle:@"GUI API Redesign"];
-    [window makeKeyAndOrderFront:nil];
+    [ns_window setTitle:@"GUI API Redesign"];
+    [ns_window makeKeyAndOrderFront:nil];
+    return window;
 }

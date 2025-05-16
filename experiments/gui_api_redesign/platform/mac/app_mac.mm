@@ -8,16 +8,17 @@ struct App::Impl {
 };
 
 App::~App() = default;
-
 App::App() : pimpl_(std::make_unique<Impl>()) {}
 
-bool App::initialize() {
-    pimpl_->gl_context_manager = GLContextManager::create();
-    if (!pimpl_->gl_context_manager) {
+std::unique_ptr<App> App::create() {
+    auto app = std::unique_ptr<App>(new App());
+    auto mgr = GLContextManager::create();
+    if (!mgr) {
         fmt::println(stderr, "Failed to initialize GL context manager");
-        return false;
+        return nullptr;
     }
-    return true;
+    app->pimpl_->gl_context_manager = std::move(mgr);
+    return app;
 }
 
 int App::run() {
@@ -41,10 +42,8 @@ int App::run() {
 }
 
 Window& App::create_window(int width, int height) {
-    auto win = std::unique_ptr<Window>(new Window(width, height));
-    win->initialize();
-
-    Window& ref = *win;
-    windows_.push_back(std::move(win));
+    auto window = Window::create(width, height);
+    Window& ref = *window;
+    windows_.push_back(std::move(window));
     return ref;
 }

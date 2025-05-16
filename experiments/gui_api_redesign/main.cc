@@ -5,11 +5,10 @@ int main() {
     // Disable stdout buffering.
     std::setbuf(stdout, nullptr);
 
-    App app;
-    if (!app.initialize()) std::exit(1);
+    auto app = App::create();
 
-    Window& win = app.create_window(1200, 800);
+    Window& win = app->create_window(1200, 800);
     win.on_draw([]() { fmt::println("draw"); });
 
-    return app.run();
+    return app->run();
 }

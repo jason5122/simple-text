@@ -6,8 +6,6 @@
 class GLContextManager {
 public:
     ~GLContextManager();
-    GLContextManager(const GLContextManager&) = delete;
-    GLContextManager& operator=(const GLContextManager&) = delete;
     GLContextManager(GLContextManager&&) = delete;
     GLContextManager& operator=(GLContextManager&&) = delete;
     static std::unique_ptr<GLContextManager> create();

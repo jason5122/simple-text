@@ -1,10 +1,18 @@
-executable("gui_api_redesign") {
-  sources = [ "main.cc" ]
+import("//build/config/mac/mac_app_bundle.gni")
 
-  if (is_mac) {
-    sources += [
-      "platform/app_mac.mm",
-      "platform/window_mac.mm",
-    ]
-  }
+mac_app_bundle("gui_api_redesign") {
+  output_name = "GUI API Redesign"
+
+  sources = [
+    "main.cc",
+    "platform/mac/app_mac.mm",
+    "platform/mac/window_mac.mm",
+  ]
+
+  frameworks = [
+    "AppKit.framework",
+    "Cocoa.framework",
+    "QuartzCore.framework",
+  ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
 }

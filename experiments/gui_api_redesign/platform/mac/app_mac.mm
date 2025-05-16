@@ -1,7 +1,6 @@
-#include <Cocoa/Cocoa.h>
-#include <QuartzCore/QuartzCore.h>
+#include "experiments/gui_api_redesign/app.h"
 
-#include <iostream>
+#include <AppKit/AppKit.h>
 
 constexpr bool kBenchmarkMode = true;
 constexpr bool kUseOpenGL = true;
@@ -16,7 +15,6 @@ constexpr bool kUseOpenGL = true;
     return self;
 }
 - (void)drawRect:(NSRect)dirtyRect {
-    std::cout << "draw" << std::endl;
     if constexpr (kBenchmarkMode) {
         [NSApp terminate:nil];
     }
@@ -38,14 +36,13 @@ constexpr bool kUseOpenGL = true;
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    std::cout << "draw" << std::endl;
     if constexpr (kBenchmarkMode) {
         [NSApp terminate:nil];
     }
 }
 @end
 
-int main(int argc, const char* argv[]) {
+int App::run() {
     @autoreleasepool {
         [NSApplication sharedApplication];
 
@@ -78,10 +75,17 @@ int main(int argc, const char* argv[]) {
             window.contentView = [[[View alloc] initWithFrame:frame] autorelease];
         }
 
-        [window setTitle:@"Bare macOS App"];
+        [window setTitle:@"GUI API Redesign"];
         [window makeKeyAndOrderFront:nil];
 
         [NSApp run];
     }
-    return 0;
+    return 0;  // TODO: How do we get non-zero return values from NSApp?
+}
+
+Window& App::create_window(int width, int height) {
+    auto win = std::make_unique<Window>(width, height);
+    Window& ref = *win;
+    windows_.push_back(std::move(win));
+    return ref;
 }

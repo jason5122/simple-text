@@ -1,6 +1,9 @@
 #include "gl_view.h"
 #include <fmt/base.h>
 
+// TODO: Remove this.
+#include "experiments/opengl_loader_redesign/functions_gl.h"
+
 constexpr bool kBenchmarkMode = false;
 
 @interface GLLayer : CAOpenGLLayer {
@@ -44,6 +47,10 @@ constexpr bool kBenchmarkMode = false;
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
+    CGLSetCurrentContext(ctx_);
+    opengl_redesign::FunctionsGL functions_gl;
+    functions_gl.load_global_function_pointers();
+
     return ctx_;
 }
 
@@ -63,4 +70,5 @@ constexpr bool kBenchmarkMode = false;
         app_window_->invoke_draw_callback();
     }
 }
+
 @end

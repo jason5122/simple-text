@@ -1,8 +1,8 @@
 #include "functions_gl.h"
 
-#include "opengl/gl.h"
+#include "experiments/opengl_loader_redesign/gl.h"
 
-namespace opengl {
+namespace opengl_redesign {
 
 #define ASSIGN(FP) FP = reinterpret_cast<decltype(FP)>(load_proc_address(#FP))
 
@@ -75,4 +75,4 @@ void FunctionsGL::load_global_function_pointers() {
     ASSIGN(glVertexAttribDivisor);
 }
 
-}  // namespace opengl
+}  // namespace opengl_redesign

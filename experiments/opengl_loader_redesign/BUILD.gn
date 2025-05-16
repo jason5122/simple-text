@@ -1,0 +1,21 @@
+source_set("opengl_loader_redesign") {
+  sources = [
+    "functions_gl.cc",
+    "gl.cc",
+  ]
+
+  if (is_mac) {
+    sources += [ "functions_cgl.cc" ]
+  }
+
+  if (is_win) {
+    sources += [ "functions_wgl.cc" ]
+    libs = [ "opengl32.lib" ]
+  }
+
+  if (is_linux) {
+    sources += [ "functions_egl.cc" ]
+  }
+
+  deps = [ "//third_party/fmt" ]
+}

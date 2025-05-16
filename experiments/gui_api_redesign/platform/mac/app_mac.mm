@@ -4,7 +4,7 @@
 #include <fmt/base.h>
 
 struct App::Impl {
-    std::unique_ptr<GLContextManager> gl_context_manager;
+    std::unique_ptr<GLContextManager> mgr;
 };
 
 App::~App() = default;
@@ -17,7 +17,7 @@ std::unique_ptr<App> App::create() {
         fmt::println(stderr, "Failed to initialize GL context manager");
         return nullptr;
     }
-    app->pimpl_->gl_context_manager = std::move(mgr);
+    app->pimpl_->mgr = std::move(mgr);
     return app;
 }
 
@@ -42,7 +42,7 @@ int App::run() {
 }
 
 Window& App::create_window(int width, int height) {
-    auto window = Window::create(width, height);
+    auto window = Window::create(width, height, pimpl_->mgr.get());
     Window& ref = *window;
     windows_.push_back(std::move(window));
     return ref;

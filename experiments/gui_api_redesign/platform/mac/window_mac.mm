@@ -7,7 +7,7 @@ struct Window::Impl {};
 Window::~Window() = default;
 Window::Window() : pimpl_(std::make_unique<Impl>()) {}
 
-std::unique_ptr<Window> Window::create(int width, int height) {
+std::unique_ptr<Window> Window::create(int width, int height, GLContextManager* mgr) {
     auto window = std::unique_ptr<Window>(new Window());
     NSRect frame = NSMakeRect(0, 0, width, height);
     NSUInteger style =
@@ -17,7 +17,8 @@ std::unique_ptr<Window> Window::create(int width, int height) {
                                                          backing:NSBackingStoreBuffered
                                                            defer:false] autorelease];
     ns_window.contentView = [[[GLView alloc] initWithFrame:frame
-                                                 appWindow:window.get()] autorelease];
+                                                 appWindow:window.get()
+                                          glContextManager:mgr] autorelease];
 
     [ns_window setTitle:@"GUI API Redesign"];
     [ns_window makeKeyAndOrderFront:nil];

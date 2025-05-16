@@ -5,44 +5,50 @@ constexpr bool kBenchmarkMode = false;
 
 @interface GLLayer : CAOpenGLLayer {
     Window* app_window_;
+    CGLContextObj ctx_;
+    GLContextManager* mgr_;
 }
-@property(nonatomic) Window* appWindow;
+- (instancetype)initWithAppWindow:(Window*)appWindow glContextManager:(GLContextManager*)mgr;
 @end
 
 @implementation GLView {
     Window* app_window_;
 }
 
-- (instancetype)initWithFrame:(NSRect)frameRect appWindow:(Window*)appWindow {
+- (instancetype)initWithFrame:(NSRect)frameRect
+                    appWindow:(Window*)appWindow
+             glContextManager:(GLContextManager*)mgr {
     self = [super initWithFrame:frameRect];
     if (self) {
         app_window_ = appWindow;
+        self.wantsLayer = YES;
+        self.layer = [[[GLLayer alloc] initWithAppWindow:appWindow
+                                        glContextManager:mgr] autorelease];
+        self.layer.needsDisplayOnBoundsChange = YES;
     }
     return self;
-}
-
-- (BOOL)wantsLayer {
-    return YES;
-}
-
-- (CALayer*)makeBackingLayer {
-    auto layer = [GLLayer layer];
-    layer.needsDisplayOnBoundsChange = YES;
-    layer.appWindow = app_window_;
-    return layer;
 }
 
 @end
 
 @implementation GLLayer
 
-@synthesize appWindow;
+- (instancetype)initWithAppWindow:(Window*)appWindow glContextManager:(GLContextManager*)mgr {
+    self = [super init];
+    if (self) {
+        app_window_ = appWindow;
+        mgr_ = mgr;
+        ctx_ = mgr->create_layer_context();
+    }
+    return self;
+}
 
-- (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
-                pixelFormat:(CGLPixelFormatObj)pixelFormat
-               forLayerTime:(CFTimeInterval)timeInterval
-                displayTime:(const CVTimeStamp*)timeStamp {
-    return true;
+- (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
+    return ctx_;
+}
+
+- (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
+    return mgr_->pixel_format();
 }
 
 - (void)drawInCGLContext:(CGLContextObj)glContext
@@ -53,8 +59,8 @@ constexpr bool kBenchmarkMode = false;
         [NSApp terminate:nil];
     }
 
-    if (self.appWindow) {
-        self.appWindow->invoke_draw_callback();
+    if (app_window_) {
+        app_window_->invoke_draw_callback();
     }
 }
 @end

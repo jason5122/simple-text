@@ -1,5 +1,6 @@
 #pragma once
 
+#include "experiments/gui_api_redesign/platform/mac/gl_context_manager.h"
 #include <functional>
 #include <memory>
 
@@ -17,10 +18,8 @@ public:
 private:
     friend class App;
     Window();
-    static std::unique_ptr<Window> create(int width, int height);
+    static std::unique_ptr<Window> create(int width, int height, GLContextManager* mgr);
 
-    int width_;
-    int height_;
     std::function<void()> draw_callback_;
 
     struct Impl;

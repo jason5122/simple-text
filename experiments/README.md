@@ -10,4 +10,4 @@ Example of goals from experiments:
 
 ## Maintaining
 
-Please note that all experiments will be compiled along with the other GN targets. Because of this, it is best to ensure they are either **isolated** or are **minimally dependent** on application code.
+Please note that all experiments will be compiled along with the other GN targets. Because of this, it is best to ensure they are either **isolated** or are **minimally dependent** on application code. If an experiment is no longer needed or too difficult to maintain, it is best to remove it.

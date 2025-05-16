@@ -174,8 +174,7 @@ config("default_warnings") {
     "-Wno-sign-compare",
 
     # TODO: Remove this after debugging.
-    "-Wno-unused-variable",
-    "-Wno-unused-function",
+    "-Wno-unused",
   ]
 }
 

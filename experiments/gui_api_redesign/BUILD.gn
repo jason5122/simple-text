@@ -1,0 +1,10 @@
+executable("gui_api_redesign") {
+  sources = [ "main.cc" ]
+
+  if (is_mac) {
+    sources += [
+      "platform/app_mac.mm",
+      "platform/window_mac.mm",
+    ]
+  }
+}

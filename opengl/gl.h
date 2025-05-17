@@ -19,6 +19,7 @@ extern PFNGLTEXPARAMETERIPROC glTexParameteri;
 extern PFNGLBLENDFUNCPROC glBlendFunc;
 extern PFNGLSCISSORPROC glScissor;
 extern PFNGLDISABLEPROC glDisable;
+extern PFNGLFLUSHPROC glFlush;
 
 // 1.1
 extern PFNGLGENTEXTURESPROC glGenTextures;

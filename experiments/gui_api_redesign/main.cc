@@ -16,6 +16,9 @@ int main() {
         fmt::println("draw");
         glClearColor(0.5, 0, 0.5, 1);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // TODO: Move this to Renderer::end_frame().
+        glFlush();
     });
 
     return app->run();

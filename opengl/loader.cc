@@ -20,6 +20,7 @@ void load_global_function_pointers() {
     LOAD_GL_FUNC(glBlendFunc);
     LOAD_GL_FUNC(glScissor);
     LOAD_GL_FUNC(glDisable);
+    LOAD_GL_FUNC(glFlush);
 
     // 1.1
     LOAD_GL_FUNC(glGenTextures);

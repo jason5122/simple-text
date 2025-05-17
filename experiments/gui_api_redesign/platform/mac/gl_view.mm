@@ -6,8 +6,8 @@ constexpr bool kBenchmarkMode = false;
 
 @interface GLLayer : CAOpenGLLayer {
     Window* app_window_;
-    CGLContextObj ctx_;
     GLContextManager* mgr_;
+    CGLContextObj ctx_;
 }
 - (instancetype)initWithAppWindow:(Window*)appWindow glContextManager:(GLContextManager*)mgr;
 @end

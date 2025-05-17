@@ -16,6 +16,7 @@ PFNGLTEXPARAMETERIPROC glTexParameteri = nullptr;
 PFNGLBLENDFUNCPROC glBlendFunc = nullptr;
 PFNGLSCISSORPROC glScissor = nullptr;
 PFNGLDISABLEPROC glDisable = nullptr;
+PFNGLFLUSHPROC glFlush = nullptr;
 
 // 1.1
 PFNGLGENTEXTURESPROC glGenTextures = nullptr;

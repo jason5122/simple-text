@@ -52,7 +52,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         // int scaled_width = rect.right;
         // int scaled_height = rect.bottom;
         // app_window.setSize({scaled_width, scaled_height});
-        app_window.onOpenGLActivate();
+        app_window.on_opengl_activate();
 
         return 0;
     }
@@ -220,7 +220,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         Key key = KeyFromKeyCode(wParam);
         ModifierKey modifiers = ModifierFromState();
 
-        bool handled = app_window.onKeyDown(key, modifiers);
+        bool handled = app_window.on_key_down(key, modifiers);
         bool can_be_char = CanBeChar(key) && modifiers == ModifierKey::kNone;
 
         // Remove translated WM_CHAR if we've already handled the keybind or if it is not
@@ -234,7 +234,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_DESTROY: {
-        app_window.onClose();
+        app_window.on_close();
         return 0;
     }
 
@@ -251,10 +251,10 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
         case ID_FILE_NEW_FILE:
-            app_window.onAppAction(AppAction::kNewFile);
+            app_window.on_app_action(AppAction::kNewFile);
             break;
         case ID_FILE_NEW_WINDOW:
-            app_window.onAppAction(AppAction::kNewWindow);
+            app_window.on_app_action(AppAction::kNewWindow);
             break;
         case ID_FILE_EXIT:
             PostQuitMessage(0);
@@ -279,7 +279,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
             std::string str8 = base::windows::ConvertToUTF8(utf16);
             fmt::println("WM_CHAR: {}", util::escape_special_chars(str8));
-            app_window.onInsertText(str8);
+            app_window.on_insert_text(str8);
 
             high_surrogate = '\0';
         }
@@ -315,9 +315,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 }  // namespace
 
-void Win32Window::redraw() {
-    InvalidateRect(m_hwnd, nullptr, false);
-}
+void Win32Window::redraw() { InvalidateRect(m_hwnd, nullptr, false); }
 
 BOOL Win32Window::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
     // TODO: Clean this up. Do we even need a unique class name?
@@ -348,13 +346,9 @@ BOOL Win32Window::create(PCWSTR lpWindowName, DWORD dwStyle, int wid) {
     return m_hwnd ? true : false;
 }
 
-BOOL Win32Window::destroy() {
-    return DestroyWindow(m_hwnd);
-}
+BOOL Win32Window::destroy() { return DestroyWindow(m_hwnd); }
 
-void Win32Window::quit() {
-    PostQuitMessage(0);
-}
+void Win32Window::quit() { PostQuitMessage(0); }
 
 int Win32Window::width() {
     RECT size;
@@ -382,13 +376,9 @@ void Win32Window::set_title(std::string_view title) {
     SetWindowText(m_hwnd, str16.data());
 }
 
-HWND Win32Window::get_hwnd() const {
-    return m_hwnd;
-}
+HWND Win32Window::get_hwnd() const { return m_hwnd; }
 
-void Win32Window::set_hwnd(HWND hwnd) {
-    m_hwnd = hwnd;
-}
+void Win32Window::set_hwnd(HWND hwnd) { m_hwnd = hwnd; }
 
 namespace {
 

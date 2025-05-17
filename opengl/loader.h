@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 namespace opengl {
 
 void load_global_function_pointers();

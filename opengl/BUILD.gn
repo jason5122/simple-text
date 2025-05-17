@@ -16,6 +16,4 @@ source_set("opengl") {
   if (is_linux) {
     sources += [ "loader_egl.cc" ]
   }
-
-  deps = [ "//third_party/fmt" ]
 }

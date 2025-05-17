@@ -5,9 +5,6 @@ using namespace opengl;
 
 namespace gui {
 
-static_assert(std::is_move_constructible_v<RendererLite>);
-static_assert(std::is_move_assignable_v<RendererLite>);
-
 RendererLite::RendererLite() {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);

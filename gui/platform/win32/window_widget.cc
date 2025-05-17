@@ -28,38 +28,24 @@ void WindowWidget::show() {
     SetWindowPlacement(pimpl->win32_window.get_hwnd(), &placement);
 }
 
-void WindowWidget::close() {
-    pimpl->win32_window.destroy();
-}
+void WindowWidget::close() { pimpl->win32_window.destroy(); }
 
-void WindowWidget::redraw() {
-    pimpl->win32_window.redraw();
-}
+void WindowWidget::redraw() { pimpl->win32_window.redraw(); }
 
-int WindowWidget::scale() const {
-    return pimpl->win32_window.scale();
-}
+int WindowWidget::scale() const { return pimpl->win32_window.scale(); }
 
-bool WindowWidget::isDarkMode() const {
-    return false;
-}
+bool WindowWidget::is_dark_mode() const { return false; }
 
-void WindowWidget::setTitle(std::string_view title) {
-    pimpl->win32_window.set_title(title);
-}
+void WindowWidget::set_title(std::string_view title) { pimpl->win32_window.set_title(title); }
 
 // TODO: Implement this.
-void WindowWidget::setFilePath(std::string_view path) {
-    ;
-}
+void WindowWidget::set_file_path(std::string_view path) { ; }
 
 // TODO: Implement this.
-std::optional<std::string> WindowWidget::openFilePicker() const {
-    return {};
-}
+std::optional<std::string> WindowWidget::open_file_picker() const { return {}; }
 
 // TODO: Implement this.
-void WindowWidget::setCursorStyle(CursorStyle style) {
+void WindowWidget::set_cursor_style(CursorStyle style) {
     if (current_style == style) return;
     current_style = style;
 
@@ -75,13 +61,9 @@ void WindowWidget::setCursorStyle(CursorStyle style) {
 }
 
 // TODO: Implement this.
-void WindowWidget::setAutoRedraw(bool auto_redraw) {
-    ;
-}
+void WindowWidget::set_auto_redraw(bool auto_redraw) { ; }
 
 // TODO: Implement this.
-int WindowWidget::framesPerSecond() const {
-    return 60;
-}
+int WindowWidget::frames_per_second() const { return 60; }
 
 }  // namespace gui

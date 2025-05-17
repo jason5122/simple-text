@@ -11,8 +11,8 @@ int main() {
 
     auto app = App::create();
 
-    Window& win = app->create_window(1200, 800);
-    win.on_draw([]() {
+    auto& window = app->create_window(1200, 800);
+    window.on_draw([]() {
         fmt::println("draw");
         glClearColor(0.5, 0, 0.5, 1);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -20,6 +20,8 @@ int main() {
         // TODO: Move this to Renderer::end_frame().
         glFlush();
     });
+
+    fmt::println("hello world");
 
     return app->run();
 }

@@ -1,7 +1,9 @@
-#include "base/windows/win32_error.h"
+// #include "base/windows/win32_error.h"
 #include "opengl/loader.h"
-#include <fmt/fmt.base>
 #include <windows.h>
+
+// TODO: Remove this.
+#include <cstdlib>
 
 namespace opengl::internal {
 
@@ -19,8 +21,8 @@ void* load_proc_address(const char* fp) {
 
         DWORD error = GetLastError();
         if (error != ERROR_SUCCESS) {
-            std::string error_str = base::windows::GetLastErrorAsString(error);
-            fmt::println("Error loading function `{}`: {}", fp, error_str);
+            // std::string error_str = base::windows::GetLastErrorAsString(error);
+            // fmt::println("Error loading function `{}`: {}", fp, error_str);
             std::abort();
         }
     }

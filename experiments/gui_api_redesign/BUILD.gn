@@ -1,25 +1,42 @@
-import("//build/config/mac/mac_app_bundle.gni")
+if (is_mac) {
+  import("//build/config/mac/mac_app_bundle.gni")
 
-mac_app_bundle("gui_api_redesign") {
-  output_name = "GUI API Redesign"
+  mac_app_bundle("gui_api_redesign") {
+    output_name = "GUI API Redesign"
 
-  sources = [
-    "main.cc",
-    "platform/mac/app_mac.mm",
-    "platform/mac/gl_context_manager.cc",
-    "platform/mac/gl_view.mm",
-    "platform/mac/window_mac.mm",
-  ]
+    sources = [
+      "main.cc",
+      "platform/cocoa/app.mm",
+      "platform/cocoa/gl_context_manager.cc",
+      "platform/cocoa/gl_view.mm",
+      "platform/cocoa/window.mm",
+    ]
 
-  deps = [
-    "//opengl",
-    "//third_party/fmt",
-  ]
+    deps = [
+      "//opengl",
+      "//third_party/fmt",
+    ]
 
-  frameworks = [
-    "Cocoa.framework",
-    "OpenGL.framework",
-    "QuartzCore.framework",
-  ]
-  defines = [ "GL_SILENCE_DEPRECATION" ]
+    frameworks = [
+      "Cocoa.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+  }
+}
+
+if (is_win) {
+  executable("gui_api_redesign") {
+    sources = [
+      "main.cc",
+      "platform/win32/app.cc",
+      "platform/win32/window.cc",
+    ]
+
+    deps = [
+      "//opengl",
+      "//third_party/fmt",
+    ]
+  }
 }

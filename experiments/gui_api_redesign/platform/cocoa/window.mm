@@ -7,7 +7,9 @@ struct Window::Impl {};
 Window::~Window() = default;
 Window::Window() : pimpl_(std::make_unique<Impl>()) {}
 
-std::unique_ptr<Window> Window::create(int width, int height, GLContextManager* mgr) {
+std::unique_ptr<Window> Window::create(int width, int height, void* cx) {
+    auto* mgr = static_cast<GLContextManager*>(cx);
+
     auto window = std::unique_ptr<Window>(new Window());
     NSRect frame = NSMakeRect(0, 0, width, height);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |

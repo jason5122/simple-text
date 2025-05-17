@@ -42,7 +42,7 @@ int App::run() {
 }
 
 Window& App::create_window(int width, int height) {
-    auto window = Window::create(width, height, pimpl_->mgr.get());
+    auto window = Window::create(width, height, static_cast<void*>(pimpl_->mgr.get()));
     Window& ref = *window;
     windows_.push_back(std::move(window));
     return ref;

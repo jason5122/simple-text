@@ -1,4 +1,4 @@
-#include "experiments/gui_api_redesign/platform/mac/gl_view.h"
+#include "experiments/gui_api_redesign/platform/cocoa/gl_view.h"
 #include "experiments/gui_api_redesign/window.h"
 #include <AppKit/AppKit.h>
 

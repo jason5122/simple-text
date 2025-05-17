@@ -1,6 +1,6 @@
 #pragma once
 
-#include "experiments/gui_api_redesign/platform/mac/gl_context_manager.h"
+#include "experiments/gui_api_redesign/platform/cocoa/gl_context_manager.h"
 #include "experiments/gui_api_redesign/window.h"
 #include <AppKit/AppKit.h>
 

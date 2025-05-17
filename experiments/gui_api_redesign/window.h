@@ -3,6 +3,8 @@
 #include <functional>
 #include <memory>
 
+class GLContextManager;
+
 class Window {
 public:
     ~Window();
@@ -17,7 +19,6 @@ public:
 private:
     friend class App;
     Window();
-    class GLContextManager;
     static std::unique_ptr<Window> create(int width, int height, GLContextManager* mgr);
 
     std::function<void()> draw_callback_;

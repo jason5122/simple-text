@@ -1,5 +1,5 @@
 #include "experiments/gui_api_redesign/app.h"
-#include "experiments/gui_api_redesign/platform/mac/gl_context_manager.h"
+#include "experiments/gui_api_redesign/platform/cocoa/gl_context_manager.h"
 #include <AppKit/AppKit.h>
 #include <fmt/base.h>
 

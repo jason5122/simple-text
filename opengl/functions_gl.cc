@@ -1,78 +1,77 @@
-#include "functions_gl.h"
-
+#include "opengl/functions_gl.h"
 #include "opengl/gl.h"
 
 namespace opengl {
 
-#define ASSIGN(FP) FP = reinterpret_cast<decltype(FP)>(load_proc_address(#FP))
+#define LOAD_GL_FUNC(FP) FP = reinterpret_cast<decltype(FP)>(internal::load_proc_address(#FP))
 
-void FunctionsGL::load_global_function_pointers() {
+void load_global_function_pointers() {
     // 1.0
-    ASSIGN(glClear);
-    ASSIGN(glClearColor);
-    ASSIGN(glDepthMask);
-    ASSIGN(glEnable);
-    ASSIGN(glGetError);
-    ASSIGN(glGetIntegerv);
-    ASSIGN(glViewport);
-    ASSIGN(glPixelStorei);
-    ASSIGN(glTexImage2D);
-    ASSIGN(glTexParameteri);
-    ASSIGN(glBlendFunc);
-    ASSIGN(glScissor);
-    ASSIGN(glDisable);
+    LOAD_GL_FUNC(glClear);
+    LOAD_GL_FUNC(glClearColor);
+    LOAD_GL_FUNC(glDepthMask);
+    LOAD_GL_FUNC(glEnable);
+    LOAD_GL_FUNC(glGetError);
+    LOAD_GL_FUNC(glGetIntegerv);
+    LOAD_GL_FUNC(glViewport);
+    LOAD_GL_FUNC(glPixelStorei);
+    LOAD_GL_FUNC(glTexImage2D);
+    LOAD_GL_FUNC(glTexParameteri);
+    LOAD_GL_FUNC(glBlendFunc);
+    LOAD_GL_FUNC(glScissor);
+    LOAD_GL_FUNC(glDisable);
 
     // 1.1
-    ASSIGN(glGenTextures);
-    ASSIGN(glDeleteTextures);
-    ASSIGN(glBindTexture);
-    ASSIGN(glTexSubImage2D);
+    LOAD_GL_FUNC(glGenTextures);
+    LOAD_GL_FUNC(glDeleteTextures);
+    LOAD_GL_FUNC(glBindTexture);
+    LOAD_GL_FUNC(glTexSubImage2D);
 
     // 1.3
-    ASSIGN(glActiveTexture);
+    LOAD_GL_FUNC(glActiveTexture);
 
     // 1.4
-    ASSIGN(glBlendFuncSeparate);
+    LOAD_GL_FUNC(glBlendFuncSeparate);
 
     // 1.5
-    ASSIGN(glGenBuffers);
-    ASSIGN(glBindBuffer);
-    ASSIGN(glBufferData);
-    ASSIGN(glBufferSubData);
-    ASSIGN(glDeleteBuffers);
+    LOAD_GL_FUNC(glGenBuffers);
+    LOAD_GL_FUNC(glBindBuffer);
+    LOAD_GL_FUNC(glBufferData);
+    LOAD_GL_FUNC(glBufferSubData);
+    LOAD_GL_FUNC(glDeleteBuffers);
 
     // 2.0
-    ASSIGN(glAttachShader);
-    ASSIGN(glCompileShader);
-    ASSIGN(glCreateProgram);
-    ASSIGN(glCreateShader);
-    ASSIGN(glDeleteProgram);
-    ASSIGN(glDeleteShader);
-    ASSIGN(glLinkProgram);
-    ASSIGN(glShaderSource);
-    ASSIGN(glGetShaderInfoLog);
-    ASSIGN(glGetProgramInfoLog);
-    ASSIGN(glGetShaderiv);
-    ASSIGN(glGetProgramiv);
-    ASSIGN(glEnableVertexAttribArray);
-    ASSIGN(glVertexAttribPointer);
-    ASSIGN(glUseProgram);
-    ASSIGN(glGetUniformLocation);
-    ASSIGN(glUniform2f);
-    ASSIGN(glUniform1f);
-    ASSIGN(glUniform1i);
+    LOAD_GL_FUNC(glAttachShader);
+    LOAD_GL_FUNC(glCompileShader);
+    LOAD_GL_FUNC(glCreateProgram);
+    LOAD_GL_FUNC(glCreateShader);
+    LOAD_GL_FUNC(glDeleteProgram);
+    LOAD_GL_FUNC(glDeleteShader);
+    LOAD_GL_FUNC(glLinkProgram);
+    LOAD_GL_FUNC(glShaderSource);
+    LOAD_GL_FUNC(glGetShaderInfoLog);
+    LOAD_GL_FUNC(glGetProgramInfoLog);
+    LOAD_GL_FUNC(glGetShaderiv);
+    LOAD_GL_FUNC(glGetProgramiv);
+    LOAD_GL_FUNC(glEnableVertexAttribArray);
+    LOAD_GL_FUNC(glVertexAttribPointer);
+    LOAD_GL_FUNC(glUseProgram);
+    LOAD_GL_FUNC(glGetUniformLocation);
+    LOAD_GL_FUNC(glUniform2f);
+    LOAD_GL_FUNC(glUniform1f);
+    LOAD_GL_FUNC(glUniform1i);
 
     // 3.0
-    ASSIGN(glBindVertexArray);
-    ASSIGN(glGenVertexArrays);
-    ASSIGN(glDeleteVertexArrays);
-    ASSIGN(glVertexAttribIPointer);
+    LOAD_GL_FUNC(glBindVertexArray);
+    LOAD_GL_FUNC(glGenVertexArrays);
+    LOAD_GL_FUNC(glDeleteVertexArrays);
+    LOAD_GL_FUNC(glVertexAttribIPointer);
 
     // 3.1
-    ASSIGN(glDrawElementsInstanced);
+    LOAD_GL_FUNC(glDrawElementsInstanced);
 
     // 3.3
-    ASSIGN(glVertexAttribDivisor);
+    LOAD_GL_FUNC(glVertexAttribDivisor);
 }
 
 }  // namespace opengl

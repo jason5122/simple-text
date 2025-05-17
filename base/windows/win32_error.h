@@ -3,6 +3,8 @@
 #include <string>
 #include <windows.h>
 
+namespace base::windows {
+
 // https://stackoverflow.com/a/17387176/14698275
 inline std::string GetLastErrorAsString(DWORD error) {
     LPSTR messageBuffer = nullptr;
@@ -23,3 +25,5 @@ inline std::string GetLastErrorAsString(DWORD error) {
 
     return message;
 }
+
+}  // namespace base::windows

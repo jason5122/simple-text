@@ -15,8 +15,7 @@ namespace gui {
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
 void EditorApp::on_launch() {
-    opengl::FunctionsGL functions_gl;
-    functions_gl.load_global_function_pointers();
+    opengl::load_global_function_pointers();
 
     // Load fonts.
     auto& font_rasterizer = font::FontRasterizer::instance();

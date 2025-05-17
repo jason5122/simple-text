@@ -1,50 +1,20 @@
-#include "functions_gl.h"
-
 #include "opengl/egl_types.h"
-
+#include "opengl/functions_gl.h"
 #include <dlfcn.h>
 
-// TODO: Debug use; remove this.
-#include <fmt/base.h>
+namespace opengl::internal {
 
-namespace {
-
-const char* kDefaultEGLPath = "libEGL.so.1";
-
-}
-
-namespace opengl {
-
-class FunctionsGL::impl {
-public:
-    void* handle;
-    PFNEGLGETPROCADDRESSPROC mGetProcAddressPtr;
-};
-
-FunctionsGL::FunctionsGL() : pimpl{new impl{}} {
-    pimpl->handle = dlopen(kDefaultEGLPath, RTLD_NOW);
-    if (!pimpl->handle) {
-        fmt::println("Could not dlopen native EGL.");
-        std::abort();
-    }
-
-    pimpl->mGetProcAddressPtr =
-        reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(pimpl->handle, "eglGetProcAddress"));
-    if (!pimpl->mGetProcAddressPtr) {
-        fmt::println("Could not find eglGetProcAddress");
-    }
-}
-
-FunctionsGL::~FunctionsGL() {
-    dlclose(pimpl->handle);
-}
-
-void* FunctionsGL::load_proc_address(std::string_view function) const {
-    void* p = reinterpret_cast<void*>(pimpl->mGetProcAddressPtr(function.data()));
+// TODO: Handle errors.
+void* load_proc_address(const char* fp) {
+    constexpr const char* kDylibPath = "libEGL.so.1";
+    static void* handle = dlopen(kDylibPath, RTLD_NOW);
+    static PFNEGLGETPROCADDRESSPROC mGetProcAddressPtr =
+        reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(handle, "eglGetProcAddress"));
+    void* p = reinterpret_cast<void*>(mGetProcAddressPtr(fp));
     if (!p) {
-        p = dlsym(pimpl->handle, function.data());
+        p = dlsym(handle, fp);
     }
     return p;
 }
 
-}  // namespace opengl
+}  // namespace opengl::internal

@@ -2,8 +2,8 @@
 #include <fmt/base.h>
 
 // TODO: Remove this.
-#include "experiments/opengl_loader_redesign/gl.h"
-using namespace opengl_redesign;
+#include "opengl/gl.h"
+using namespace opengl;
 
 int main() {
     // Disable stdout buffering.

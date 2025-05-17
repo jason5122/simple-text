@@ -10,8 +10,9 @@ mac_app_bundle("gui_api_redesign") {
     "platform/mac/gl_view.mm",
     "platform/mac/window_mac.mm",
   ]
+
   deps = [
-    "//experiments/opengl_loader_redesign",
+    "//opengl",
     "//third_party/fmt",
   ]
 

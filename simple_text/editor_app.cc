@@ -4,7 +4,7 @@
 #include "base/path_service.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/renderer.h"
-#include "opengl/functions_gl.h"
+#include "opengl/loader.h"
 
 // TODO: Debug; remove this.
 #include <fmt/base.h>

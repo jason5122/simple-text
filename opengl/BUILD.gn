@@ -1,20 +1,20 @@
 source_set("opengl") {
   sources = [
-    "functions_gl.cc",
     "gl.cc",
+    "loader.cc",
   ]
 
   if (is_mac) {
-    sources += [ "functions_cgl.cc" ]
+    sources += [ "loader_cgl.cc" ]
   }
 
   if (is_win) {
-    sources += [ "functions_wgl.cc" ]
+    sources += [ "loader_wgl.cc" ]
     libs = [ "opengl32.lib" ]
   }
 
   if (is_linux) {
-    sources += [ "functions_egl.cc" ]
+    sources += [ "loader_egl.cc" ]
   }
 
   deps = [ "//third_party/fmt" ]

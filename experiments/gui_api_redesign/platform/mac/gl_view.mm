@@ -1,5 +1,5 @@
 #include "gl_view.h"
-#include "opengl/functions_gl.h"
+#include "opengl/loader.h"
 #include <fmt/base.h>
 
 constexpr bool kBenchmarkMode = false;

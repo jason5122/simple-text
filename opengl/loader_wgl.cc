@@ -1,5 +1,5 @@
 #include "base/windows/win32_error.h"
-#include "opengl/functions_gl.h"
+#include "opengl/loader.h"
 #include <fmt/fmt.base>
 #include <windows.h>
 

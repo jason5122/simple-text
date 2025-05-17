@@ -1,4 +1,4 @@
-#include "opengl/functions_gl.h"
+#include "opengl/loader.h"
 #include <dlfcn.h>
 
 namespace opengl::internal {

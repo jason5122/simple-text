@@ -1,5 +1,5 @@
-#include "opengl/functions_gl.h"
 #include "opengl/gl.h"
+#include "opengl/loader.h"
 
 namespace opengl {
 

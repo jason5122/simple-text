@@ -5,7 +5,7 @@
 
 namespace base::windows {
 
-inline std::wstring ConvertToUTF16(std::string_view str8) {
+inline std::wstring convert_to_utf16(std::string_view str8) {
     size_t len = str8.length();
     int required_len = MultiByteToWideChar(CP_UTF8, 0, str8.data(), len, nullptr, 0);
 
@@ -15,7 +15,7 @@ inline std::wstring ConvertToUTF16(std::string_view str8) {
     return str16;
 }
 
-inline std::string ConvertToUTF8(std::wstring_view str16) {
+inline std::string convert_to_utf8(std::wstring_view str16) {
     size_t len = str16.length();
     int required_len =
         WideCharToMultiByte(CP_UTF8, 0, str16.data(), len, nullptr, 0, nullptr, nullptr);

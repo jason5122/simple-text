@@ -11,7 +11,7 @@
 #include <string>
 
 // TODO: Debug use; remove this.
-#include "util/profile_util.h"
+#include "util/profiler.h"
 #include <fmt/base.h>
 #include <fmt/format.h>
 

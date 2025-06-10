@@ -1,7 +1,7 @@
 #include "dummy_context.h"
 
 // TODO: Debug use; remove this.
-#include "util/profile_util.h"
+#include "util/profiler.h"
 
 namespace gui {
 

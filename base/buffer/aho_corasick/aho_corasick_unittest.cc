@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "base/buffer/aho_corasick/aho_corasick.h"
-#include "util/random_util.h"
+#include "util/random.h"
 
 // TODO: Debug use; remove this.
-#include "util/profile_util.h"
+#include "util/profiler.h"
 
 namespace base {
 

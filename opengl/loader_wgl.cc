@@ -21,7 +21,7 @@ void* load_proc_address(const char* fp) {
 
         DWORD error = GetLastError();
         if (error != ERROR_SUCCESS) {
-            // std::string error_str = base::windows::GetLastErrorAsString(error);
+            // std::string error_str = base::windows::get_last_error_as_string(error);
             // fmt::println("Error loading function `{}`: {}", fp, error_str);
             std::abort();
         }

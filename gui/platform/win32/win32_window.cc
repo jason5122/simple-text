@@ -277,7 +277,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 utf16[0] = static_cast<WCHAR>(wParam);
             }
 
-            std::string str8 = base::windows::ConvertToUTF8(utf16);
+            std::string str8 = base::windows::convert_to_utf8(utf16);
             fmt::println("WM_CHAR: {}", util::escape_special_chars(str8));
             app_window.on_insert_text(str8);
 
@@ -372,7 +372,7 @@ int Win32Window::scale() {
 }
 
 void Win32Window::set_title(std::string_view title) {
-    std::wstring str16 = base::windows::ConvertToUTF16(title);
+    std::wstring str16 = base::windows::convert_to_utf16(title);
     SetWindowText(m_hwnd, str16.data());
 }
 

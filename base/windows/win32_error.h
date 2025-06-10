@@ -6,7 +6,7 @@
 namespace base::windows {
 
 // https://stackoverflow.com/a/17387176/14698275
-inline std::string GetLastErrorAsString(DWORD error) {
+inline std::string get_last_error_as_string(DWORD error) {
     LPSTR messageBuffer = nullptr;
 
     // Ask Win32 to give us the string version of that message ID.

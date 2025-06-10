@@ -1,7 +1,7 @@
 #include "base/buffer/piece_tree.h"
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
-#include "util/random_util.h"
+#include "util/random.h"
 
 #include <algorithm>
 #include <gtest/gtest.h>

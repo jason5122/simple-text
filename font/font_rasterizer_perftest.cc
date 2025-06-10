@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "font/font_rasterizer.h"
-#include "util/random_util.h"
+#include "util/random.h"
 
 namespace font {
 

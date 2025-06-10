@@ -21,7 +21,7 @@ const std::string kFragmentShader =
 }  // namespace
 
 // TODO: Debug; remove this.
-#include "util/profile_util.h"
+#include "util/profiler.h"
 #include <cassert>
 #include <fmt/base.h>
 

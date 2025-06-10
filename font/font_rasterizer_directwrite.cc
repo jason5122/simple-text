@@ -102,7 +102,7 @@ FontRasterizer::FontRasterizer() : pimpl(new impl()) {
 FontRasterizer::~FontRasterizer() {}
 
 FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle font_style) {
-    std::wstring font_name16 = base::windows::ConvertToUTF16(font_name8);
+    std::wstring font_name16 = base::windows::convert_to_utf16(font_name8);
 
     ComPtr<IDWriteFontCollection> font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
@@ -181,14 +181,14 @@ FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
     gdi_interop->CreateFontFromLOGFONT(&metrics.lfMessageFont, &sys_font);
 
     std::wstring font_name16 = GetFontFamilyName(sys_font.Get(), pimpl->locale);
-    std::string font_name8 = base::windows::ConvertToUTF8(font_name16);
+    std::string font_name8 = base::windows::convert_to_utf8(font_name16);
     return add_font(font_name8, font_size, font_style);
 }
 
 FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
     ComPtr<IDWriteFont> font = font_id_to_native[font_id].font;
     std::wstring font_name16 = GetFontFamilyName(font.Get(), pimpl->locale);
-    std::string font_name8 = base::windows::ConvertToUTF8(font_name16);
+    std::string font_name8 = base::windows::convert_to_utf8(font_name16);
     return add_font(font_name8, font_size);
 }
 
@@ -382,9 +382,7 @@ public:
         return E_FAIL;
     }
 
-    ULONG WINAPI AddRef() override {
-        return InterlockedIncrement(&ref_count);
-    }
+    ULONG WINAPI AddRef() override { return InterlockedIncrement(&ref_count); }
 
     ULONG WINAPI Release() override {
         ULONG new_count = InterlockedDecrement(&ref_count);
@@ -509,7 +507,7 @@ private:
 LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     assert(str8.find('\n') == std::string_view::npos);
 
-    std::wstring str16 = base::windows::ConvertToUTF16(str8);
+    std::wstring str16 = base::windows::convert_to_utf16(str8);
 
     auto& native_font = font_id_to_native[font_id];
     const auto& dwrite_info = pimpl->font_id_to_dwrite_info[font_id];
@@ -611,7 +609,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     font_id_to_native.emplace_back(std::move(native_font));
     font_id_to_metrics.emplace_back(std::move(metrics));
     // TODO: See if we can prevent this conversion.
-    std::string font_name8 = base::windows::ConvertToUTF8(font_name);
+    std::string font_name8 = base::windows::convert_to_utf8(font_name);
     font_id_to_postscript_name.emplace_back(std::move(font_name8));
     pimpl->font_id_to_dwrite_info.emplace_back(std::move(dwrite_info));
     return font_id;

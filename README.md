@@ -31,14 +31,11 @@ This project uses the GN meta-build system. Binaries are available [here](https:
 ## Building
 
 ```
-gn gen out/Default
-ninja -C out/Default
-```
+gn gen out/debug
+ninja -C out/debug
 
-## LSP
-
-```
-ninja -C out/Default -t compdb cc cxx objc objcxx > compile_commands.json
+# (Optional) Add LSP support for your editor. 
+ninja -C out/debug -t compdb cc cxx objc objcxx > compile_commands.json
 ```
 
 ## Why Simple Text?

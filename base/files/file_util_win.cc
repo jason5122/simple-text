@@ -67,7 +67,7 @@ void AppendModeCharacter(wchar_t mode_char, std::wstring* mode) {
 FILE* OpenFile(const FilePath& filename, const char* mode) {
     // 'N' is unconditionally added below, so be sure there is not one already
     // present before a comma in |mode|.
-    std::wstring w_mode = base::windows::ConvertToUTF16(mode);
+    std::wstring w_mode = base::windows::convert_to_utf16(mode);
     AppendModeCharacter(L'N', &w_mode);
     return _wfsopen(filename.value().c_str(), w_mode.c_str(), _SH_DENYNO);
 }

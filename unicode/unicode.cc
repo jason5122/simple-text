@@ -56,7 +56,7 @@ constexpr Unichar next_fail(const T** ptr, const T* end) {
 
 }  // namespace
 
-int CountUTF8(const char* utf8, size_t byteLength) {
+int count_utf8(const char* utf8, size_t byteLength) {
     if (!utf8 && byteLength) {
         return -1;
     }
@@ -79,7 +79,7 @@ int CountUTF8(const char* utf8, size_t byteLength) {
     return count;
 }
 
-int CountUTF16(const uint16_t* utf16, size_t byteLength) {
+int count_utf16(const uint16_t* utf16, size_t byteLength) {
     if (!utf16 || !is_align2(intptr_t(utf16)) || !is_align2(byteLength)) {
         return -1;
     }
@@ -105,7 +105,7 @@ int CountUTF16(const uint16_t* utf16, size_t byteLength) {
     return count;
 }
 
-int CountUTF32(const int32_t* utf32, size_t byteLength) {
+int count_utf32(const int32_t* utf32, size_t byteLength) {
     if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) || !fits_in<int>(byteLength >> 2)) {
         return -1;
     }
@@ -121,7 +121,7 @@ int CountUTF32(const int32_t* utf32, size_t byteLength) {
     return (int)(byteLength >> 2);
 }
 
-Unichar NextUTF8(const char** ptr, const char* end) {
+Unichar next_utf8(const char** ptr, const char* end) {
     if (!ptr || !end) {
         return -1;
     }
@@ -157,7 +157,7 @@ Unichar NextUTF8(const char** ptr, const char* end) {
     return c;
 }
 
-Unichar NextUTF16(const uint16_t** ptr, const uint16_t* end) {
+Unichar next_utf16(const uint16_t** ptr, const uint16_t* end) {
     if (!ptr || !end) {
         return -1;
     }
@@ -195,7 +195,7 @@ Unichar NextUTF16(const uint16_t** ptr, const uint16_t* end) {
     return result;
 }
 
-Unichar NextUTF32(const int32_t** ptr, const int32_t* end) {
+Unichar next_utf32(const int32_t** ptr, const int32_t* end) {
     if (!ptr || !end) {
         return -1;
     }
@@ -212,7 +212,7 @@ Unichar NextUTF32(const int32_t** ptr, const int32_t* end) {
     return value;
 }
 
-size_t ToUTF8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
+size_t to_utf8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
     if ((uint32_t)uni > 0x10FFFF) {
         return 0;
     }
@@ -241,7 +241,7 @@ size_t ToUTF8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
     return count;
 }
 
-size_t ToUTF16(Unichar uni, uint16_t utf16[2]) {
+size_t to_utf16(Unichar uni, uint16_t utf16[2]) {
     if ((uint32_t)uni > 0x10FFFF) {
         return 0;
     }
@@ -257,7 +257,7 @@ size_t ToUTF16(Unichar uni, uint16_t utf16[2]) {
     return 1 + extra;
 }
 
-int UTF8ToUTF16(uint16_t dst[], int dstCapacity, const char src[], size_t srcByteLength) {
+int utf8_to_utf16(uint16_t dst[], int dstCapacity, const char src[], size_t srcByteLength) {
     if (!dst) {
         dstCapacity = 0;
     }
@@ -266,13 +266,13 @@ int UTF8ToUTF16(uint16_t dst[], int dstCapacity, const char src[], size_t srcByt
     uint16_t* endDst = dst + dstCapacity;
     const char* endSrc = src + srcByteLength;
     while (src < endSrc) {
-        Unichar uni = NextUTF8(&src, endSrc);
+        Unichar uni = next_utf8(&src, endSrc);
         if (uni < 0) {
             return -1;
         }
 
         uint16_t utf16[2];
-        size_t count = ToUTF16(uni, utf16);
+        size_t count = to_utf16(uni, utf16);
         if (count == 0) {
             return -1;
         }
@@ -289,7 +289,7 @@ int UTF8ToUTF16(uint16_t dst[], int dstCapacity, const char src[], size_t srcByt
     return dstLength;
 }
 
-int UTF16ToUTF8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLength) {
+int utf16_to_utf8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLength) {
     if (!dst) {
         dstCapacity = 0;
     }
@@ -298,13 +298,13 @@ int UTF16ToUTF8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLen
     const char* endDst = dst + dstCapacity;
     const uint16_t* endSrc = src + srcLength;
     while (src < endSrc) {
-        Unichar uni = NextUTF16(&src, endSrc);
+        Unichar uni = next_utf16(&src, endSrc);
         if (uni < 0) {
             return -1;
         }
 
         char utf8[unicode::kMaxBytesInUTF8Sequence];
-        size_t count = ToUTF8(uni, utf8);
+        size_t count = to_utf8(uni, utf8);
         if (count == 0) {
             return -1;
         }

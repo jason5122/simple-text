@@ -1,22 +1,17 @@
-#include "rect_renderer.h"
-
-#include "opengl/gl.h"
-using namespace opengl;
-
+#include "gl/gl.h"
+#include "gui/renderer/rect_renderer.h"
 #include <cmath>
-
-// TODO: Debug use; remove this.
 #include <fmt/base.h>
 
-namespace {
+using namespace gl;
 
+namespace {
 const std::string kVertexShader =
 #include "gui/renderer/shaders/rect_vert.glsl"
     ;
 const std::string kFragmentShader =
 #include "gui/renderer/shaders/rect_frag.glsl"
     ;
-
 }  // namespace
 
 namespace gui {

@@ -4,7 +4,6 @@
 #include "gui/platform/cocoa/display_gl.h"
 #include "gui/platform/cocoa/window_controller.h"
 #include "gui/platform/menu.h"
-
 #include <Cocoa/Cocoa.h>
 
 @interface MenuController : NSObject

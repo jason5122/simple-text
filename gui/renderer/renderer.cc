@@ -1,7 +1,7 @@
-#include "renderer.h"
+#include "gl/gl.h"
+#include "gui/renderer/renderer.h"
 
-#include "opengl/gl.h"
-using namespace opengl;
+using namespace gl;
 
 namespace gui {
 

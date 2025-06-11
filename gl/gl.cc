@@ -1,6 +1,6 @@
-#include "gl.h"
+#include "gl/gl.h"
 
-namespace opengl {
+namespace gl {
 
 // 1.0
 PFNGLCLEARPROC glClear = nullptr;
@@ -70,4 +70,4 @@ PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced = nullptr;
 // 3.3
 PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor = nullptr;
 
-}  // namespace opengl
+}  // namespace gl

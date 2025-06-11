@@ -1,6 +1,5 @@
-#include "atlas_widget.h"
-
-// TODO: Debug use; remove this.
+#include "gui/renderer/renderer.h"
+#include "gui/widget/debug/atlas_widget.h"
 #include <random>
 
 namespace gui {
@@ -13,7 +12,7 @@ AtlasWidget::AtlasWidget() : ScrollableWidget({.width = 400}) {
 }
 
 namespace {
-inline Rgb RandomColor() {
+inline Rgb random_color() {
     std::random_device dev;
     std::mt19937 rng(dev());
     std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);
@@ -44,7 +43,7 @@ void AtlasWidget::draw() {
 
     // TODO: Refactor this ugly hack.
     while (page_colors.size() < count) {
-        page_colors.emplace_back(RandomColor());
+        page_colors.emplace_back(random_color());
         max_scroll_offset.y = page_colors.size() * Atlas::kAtlasSize;
     }
 

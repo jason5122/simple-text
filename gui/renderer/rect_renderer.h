@@ -1,10 +1,10 @@
 #pragma once
 
+#include "gl/gl.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
 #include "util/non_copyable.h"
-
 #include <cstddef>
 #include <vector>
 
@@ -34,9 +34,9 @@ private:
     static constexpr int kMinTabWidth = 350;
 
     Shader shader_program;
-    GLuint vao = 0;
-    GLuint vbo_instance = 0;
-    GLuint ebo = 0;
+    gl::GLuint vao = 0;
+    gl::GLuint vbo_instance = 0;
+    gl::GLuint ebo = 0;
 
     struct InstanceData {
         Vec2 coords;

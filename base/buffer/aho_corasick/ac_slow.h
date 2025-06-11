@@ -10,18 +10,18 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-// TODO: Clean this up. Don't define it here since we're polluting the namespace.
-using uint16 = unsigned short;
-using uint32 = unsigned int;
-using InputTy = unsigned char;
-
 namespace base {
 
 class ACSlowState;
 
-using ACSlowGotoMap = std::map<InputTy, ACSlowState*>;
+// TODO: Clean this up. Don't define it here since we're polluting the namespace.
+using uint16 = unsigned short;
+using uint32 = unsigned int;
+using input_t = unsigned char;
 
-using GotoPair = std::pair<InputTy, ACSlowState*>;
+using ACSlowGotoMap = std::map<input_t, ACSlowState*>;
+
+using GotoPair = std::pair<input_t, ACSlowState*>;
 using GotoVect = std::vector<GotoPair>;
 
 class ACSlowState {
@@ -32,10 +32,8 @@ public:
         : _id(id), _pattern_idx(-1), _depth(0), _is_terminal(false), _fail_link(0) {}
     ~ACSlowState() {}
 
-    void Set_Goto(InputTy c, ACSlowState* s) {
-        _goto_map[c] = s;
-    }
-    ACSlowState* Get_Goto(InputTy c) const {
+    void Set_Goto(input_t c, ACSlowState* s) { _goto_map[c] = s; }
+    ACSlowState* Get_Goto(input_t c) const {
         auto iter = _goto_map.find(c);
         return iter != _goto_map.end() ? (*iter).second : 0;
     }
@@ -50,24 +48,12 @@ public:
         std::sort(gotos.begin(), gotos.end());
     }
 
-    ACSlowState* fail_link() const {
-        return _fail_link;
-    }
-    uint32 goto_num() const {
-        return _goto_map.size();
-    }
-    uint32 id() const {
-        return _id;
-    }
-    uint32 depth() const {
-        return _depth;
-    }
-    const ACSlowGotoMap& goto_map(void) const {
-        return _goto_map;
-    }
-    bool is_terminal() const {
-        return _is_terminal;
-    }
+    ACSlowState* fail_link() const { return _fail_link; }
+    uint32 goto_num() const { return _goto_map.size(); }
+    uint32 id() const { return _id; }
+    uint32 depth() const { return _depth; }
+    const ACSlowGotoMap& goto_map(void) const { return _goto_map; }
+    bool is_terminal() const { return _is_terminal; }
     int pattern_index() const {
         assert(is_terminal() && _pattern_idx >= 0);
         return _pattern_idx;
@@ -92,21 +78,13 @@ public:
     ACSlowConstructor();
     ~ACSlowConstructor();
 
-    void Construct(const std::vector<std::string>& patterns);
+    void construct(const std::vector<std::string>& patterns);
 
-    const ACSlowState* root() const {
-        return _root;
-    }
-    const std::vector<ACSlowState*>& all_states() const {
-        return _all_states;
-    }
+    const ACSlowState* root() const { return _root; }
+    const std::vector<ACSlowState*>& all_states() const { return _all_states; }
 
-    uint32 next_node_id() const {
-        return _next_node_id;
-    }
-    uint32 state_num() const {
-        return _next_node_id - 1;
-    }
+    uint32 next_node_id() const { return _next_node_id; }
+    uint32 state_num() const { return _next_node_id - 1; }
 
 private:
     ACSlowState* _root;

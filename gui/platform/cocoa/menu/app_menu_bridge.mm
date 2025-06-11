@@ -1,5 +1,4 @@
-#include "app_menu_bridge.h"
-
+#include "gui/platform/cocoa/menu/app_menu_bridge.h"
 #include "gui/platform/cocoa/menu/app_menu_cocoa_controller.h"
 
 AppMenuBridge::AppMenuBridge()
@@ -8,10 +7,6 @@ AppMenuBridge::AppMenuBridge()
     menu_root.delegate = controller;
 }
 
-AppMenuBridge::~AppMenuBridge() {
-    menu_root.delegate = nil;
-}
+AppMenuBridge::~AppMenuBridge() { menu_root.delegate = nil; }
 
-constexpr NSMenu* AppMenuBridge::menu() const {
-    return menu_root;
-}
+constexpr NSMenu* AppMenuBridge::menu() const { return menu_root; }

@@ -1,19 +1,15 @@
-#include "win32_window.h"
-
+#include "base/windows/unicode.h"
+#include "gui/platform/key.h"
+#include "gui/platform/win32/resources.h"
+#include "gui/platform/win32/win32_window.h"
+#include "util/escape_special_chars.h"
+#include <fmt/base.h>
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <string>
 #include <windowsx.h>
 #include <wingdi.h>
 #include <winuser.h>
-
-#include "base/windows/unicode.h"
-#include "gui/platform/key.h"
-#include "gui/platform/win32/resources.h"
-
-// TODO: Debug use; remove this.
-#include "util/escape_special_chars.h"
-#include <fmt/base.h>
 
 namespace gui {
 

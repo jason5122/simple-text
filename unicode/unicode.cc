@@ -1,6 +1,5 @@
-#include "unicode.h"
-
 #include "unicode/fits_in.h"
+#include "unicode/unicode.h"
 
 namespace unicode {
 
@@ -20,13 +19,9 @@ constexpr bool is_align4(T x) {
     return 0 == (x & 3);
 }
 
-constexpr inline bool utf16_is_high_surrogate(uint16_t c) {
-    return (c & 0xFC00) == 0xD800;
-}
+constexpr inline bool utf16_is_high_surrogate(uint16_t c) { return (c & 0xFC00) == 0xD800; }
 
-constexpr inline bool utf16_is_low_surrogate(uint16_t c) {
-    return (c & 0xFC00) == 0xDC00;
-}
+constexpr inline bool utf16_is_low_surrogate(uint16_t c) { return (c & 0xFC00) == 0xDC00; }
 
 /** @returns   -1  iff invalid UTF8 byte,
                 0  iff UTF8 continuation byte,
@@ -49,13 +44,9 @@ constexpr int utf8_byte_type(uint8_t c) {
         return value;
     }
 }
-constexpr bool utf8_type_is_valid_leading_byte(int type) {
-    return type > 0;
-}
+constexpr bool utf8_type_is_valid_leading_byte(int type) { return type > 0; }
 
-constexpr bool utf8_byte_is_continuation(uint8_t c) {
-    return utf8_byte_type(c) == 0;
-}
+constexpr bool utf8_byte_is_continuation(uint8_t c) { return utf8_byte_type(c) == 0; }
 
 template <typename T>
 constexpr Unichar next_fail(const T** ptr, const T* end) {

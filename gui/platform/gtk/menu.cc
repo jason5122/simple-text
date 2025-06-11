@@ -1,6 +1,5 @@
-#include "gui/platform/menu.h"
-
 #include "gui/platform/gtk/impl_gtk.h"
+#include "gui/platform/menu.h"
 
 namespace gui {
 

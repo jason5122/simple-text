@@ -1,16 +1,11 @@
-#include "font/font_rasterizer.h"
-
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
 #include "base/apple/string_conversions.h"
-#include "base/numeric/saturation_arithmetic.h"
+#include "font/font_rasterizer.h"
 #include "unicode/utf16_to_utf8_indices_map.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
-
-// TODO: Debug use; remove this.
 #include <cassert>
 #include <fmt/base.h>
 

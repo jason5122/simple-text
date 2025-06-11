@@ -1,9 +1,7 @@
-#include "text_input_widget.h"
-
 #include "base/numeric/literals.h"
 #include "editor/movement.h"
 #include "gui/renderer/renderer.h"
-
+#include "gui/widget/text_input_widget.h"
 #include <fmt/base.h>
 
 namespace gui {

@@ -1,11 +1,7 @@
-#include "gl_view.h"
-
 #include "gui/platform/cocoa/gl_layer.h"
+#include "gui/platform/cocoa/gl_view.h"
 #include "gui/types.h"
-
 #include <Carbon/Carbon.h>
-
-// Debug use; remove this.
 #include <fmt/base.h>
 
 namespace gui {

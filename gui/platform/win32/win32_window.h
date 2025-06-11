@@ -1,9 +1,8 @@
 #pragma once
 
-#include <windows.h>
-
 #include "gui/platform/win32/dummy_context.h"
 #include "gui/platform/window_widget.h"
+#include <windows.h>
 
 namespace gui {
 

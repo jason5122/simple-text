@@ -1,9 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "base/buffer/aho_corasick/aho_corasick.h"
-
-// TODO: Debug use; remove this.
 #include "util/profiler.h"
+#include <gtest/gtest.h>
 
 namespace base {
 
@@ -98,7 +95,8 @@ TEST(AhoCorasickPerfTest, VariousIterationTests) {
     pf3.stop_mili();
 
     auto pf4 = util::Profiler{"std::string iteration"};
-    for (char ch [[maybe_unused]] : kLongStr) {}
+    for (char ch [[maybe_unused]] : kLongStr) {
+    }
     pf4.stop_mili();
 
     auto pf5 = util::Profiler{"Piece table iteration"};

@@ -1,4 +1,4 @@
-#include "horizontal_resizing_widget.h"
+#include "gui/widget/container/horizontal_resizing_widget.h"
 
 namespace gui {
 
@@ -9,8 +9,8 @@ HorizontalResizingWidget::HorizontalResizingWidget(int padding_in_between,
     : HorizontalLayoutWidget(padding_in_between, left_padding, right_padding, top_padding) {}
 
 void HorizontalResizingWidget::left_mouse_down(const Point& mouse_pos,
-                                             ModifierKey modifiers,
-                                             ClickType click_type) {
+                                               ModifierKey modifiers,
+                                               ClickType click_type) {
     for (auto& child : children_start) {
         if (child->right_edge_test(mouse_pos, kResizeDistance)) {
             dragged_widget = child.get();
@@ -28,8 +28,8 @@ void HorizontalResizingWidget::left_mouse_down(const Point& mouse_pos,
 }
 
 void HorizontalResizingWidget::left_mouse_drag(const Point& mouse_pos,
-                                             ModifierKey modifiers,
-                                             ClickType click_type) {
+                                               ModifierKey modifiers,
+                                               ClickType click_type) {
     if (dragged_widget) {
         auto widget_size = dragged_widget->size();
         auto widget_pos = dragged_widget->position();

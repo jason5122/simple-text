@@ -4,7 +4,6 @@
 #include "gui/renderer/types.h"
 #include "gui/types.h"
 #include "util/non_copyable.h"
-
 #include <vector>
 
 namespace gui {
@@ -22,10 +21,10 @@ public:
         int end;
     };
     void add_selections(const std::vector<Selection>& sels,
-                       const Point& offset,
-                       int line_height,
-                       const Point& min_coords,
-                       const Point& max_coords);
+                        const Point& offset,
+                        int line_height,
+                        const Point& min_coords,
+                        const Point& max_coords);
     void flush(const Size& screen_size);
 
 private:
@@ -39,9 +38,9 @@ private:
     static constexpr Rgba kSelectionBorderColor = {100, 115, 130, 0};  // Dark.
 
     Shader shader_program;
-    GLuint vao = 0;
-    GLuint vbo_instance = 0;
-    GLuint ebo = 0;
+    gl::GLuint vao = 0;
+    gl::GLuint vbo_instance = 0;
+    gl::GLuint ebo = 0;
 
     struct InstanceData {
         Vec2 coords;

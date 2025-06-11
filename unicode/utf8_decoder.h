@@ -17,17 +17,11 @@ public:
         state = kStateTable[256 + state + type];
     }
 
-    constexpr bool done() const {
-        return state == kAcceptState;
-    }
+    constexpr bool done() const { return state == kAcceptState; }
 
-    constexpr bool error() const {
-        return state == kRejectState;
-    }
+    constexpr bool error() const { return state == kRejectState; }
 
-    constexpr char32_t value() const {
-        return value_;
-    }
+    constexpr char32_t value() const { return value_; }
 
 private:
     static constexpr uint8_t kAcceptState = 0;
@@ -71,17 +65,11 @@ public:
         state = next_state;
     }
 
-    constexpr bool done() const {
-        return state == kAcceptState;
-    }
+    constexpr bool done() const { return state == kAcceptState; }
 
-    constexpr bool error() const {
-        return state == kRejectState;
-    }
+    constexpr bool error() const { return state == kRejectState; }
 
-    constexpr char32_t value() const {
-        return value_;
-    }
+    constexpr char32_t value() const { return value_; }
 
 private:
     static constexpr uint8_t kAcceptState = 0;

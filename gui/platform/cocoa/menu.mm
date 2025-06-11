@@ -1,9 +1,7 @@
-#include "menu.h"
-
 #include "base/apple/foundation_util.h"
 #include "base/apple/string_conversions.h"
 #include "gui/platform/cocoa/impl_cocoa.h"
-
+#include "gui/platform/menu.h"
 #include <fmt/base.h>
 
 // This Objective-C class wraps a gui::Menu object, which allows it to be stored in the
@@ -46,9 +44,7 @@ std::optional<size_t> Menu::show(const Point& mouse_pos) const {
     }
 }
 
-void Menu::setSelectedIndex(size_t index) {
-    this->index = index;
-}
+void Menu::setSelectedIndex(size_t index) { this->index = index; }
 
 }  // namespace gui
 

@@ -1,4 +1,4 @@
-#include "app_menu_cocoa_controller.h"
+#include "gui/platform/cocoa/menu/app_menu_cocoa_controller.h"
 
 @implementation AppMenuCocoaController {
     AppMenuBridge* bridge;

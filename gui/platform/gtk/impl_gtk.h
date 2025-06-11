@@ -4,7 +4,6 @@
 #include "gui/platform/gtk/main_window.h"
 #include "gui/platform/menu.h"
 #include "gui/platform/window_widget.h"
-
 #include <gtk/gtk.h>
 
 namespace gui {

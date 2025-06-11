@@ -1,12 +1,8 @@
-#include "editor_app.h"
-
-#include "base/files/file_reader.h"
 #include "base/path_service.h"
 #include "font/font_rasterizer.h"
+#include "gl/loader.h"
 #include "gui/renderer/renderer.h"
-#include "opengl/loader.h"
-
-// TODO: Debug; remove this.
+#include "simple_text/editor_app.h"
 #include <fmt/base.h>
 #include <fmt/format.h>
 
@@ -15,7 +11,7 @@ namespace gui {
 // We should have an OpenGL context within this function.
 // Load OpenGL function pointers and perform OpenGL setup here.
 void EditorApp::on_launch() {
-    opengl::load_global_function_pointers();
+    gl::load_global_function_pointers();
 
     // Load fonts.
     auto& font_rasterizer = font::FontRasterizer::instance();

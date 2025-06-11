@@ -2,9 +2,7 @@
 
 #include "base/buffer/piece_tree.h"
 #include "font/types.h"
-
 #include <cstddef>
-#include <string_view>
 
 namespace gui {
 namespace movement {

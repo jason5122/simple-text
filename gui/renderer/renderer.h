@@ -3,6 +3,7 @@
 #include "gui/renderer/line_layout_cache.h"
 #include "gui/renderer/rect_renderer.h"
 #include "gui/renderer/selection_renderer.h"
+#include "gui/renderer/texture_cache.h"
 #include "gui/renderer/texture_renderer.h"
 
 namespace gui {

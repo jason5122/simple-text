@@ -1,12 +1,9 @@
 #include "gui/platform/app.h"
-
-#include <memory>
-#include <string>
-
-#include <windows.h>
-
 #include "gui/platform/win32/impl_win.h"
 #include "gui/platform/win32/resources.h"
+#include <memory>
+#include <string>
+#include <windows.h>
 
 namespace gui {
 

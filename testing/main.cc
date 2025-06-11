@@ -1,7 +1,5 @@
 #include "build/build_config.h"
-
 #include <gtest/gtest.h>
-
 #if BUILDFLAG(IS_WIN)
 #include <ole2.h>
 #endif

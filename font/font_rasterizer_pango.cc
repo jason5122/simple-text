@@ -1,21 +1,15 @@
 #include "font/font_rasterizer.h"
-
-#include <memory>
-#include <string>
-
-#include <pango/pangocairo.h>
-
-// TODO: Debug use; remove this.
 #include <cassert>
 #include <fmt/base.h>
+#include <memory>
+#include <pango/pangocairo.h>
+#include <string>
 
 namespace font {
 
 template <typename T, auto fn>
 struct Deleter {
-    void operator()(T* ptr) {
-        fn(ptr);
-    }
+    void operator()(T* ptr) { fn(ptr); }
 };
 
 template <typename T>

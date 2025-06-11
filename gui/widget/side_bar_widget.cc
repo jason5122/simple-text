@@ -1,11 +1,6 @@
-#include "side_bar_widget.h"
-
 #include "gui/renderer/renderer.h"
-
+#include "gui/widget/side_bar_widget.h"
 #include <cmath>
-
-// TODO: Debug use; remove this.
-#include <fmt/base.h>
 
 namespace gui {
 

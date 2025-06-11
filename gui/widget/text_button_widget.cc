@@ -1,8 +1,5 @@
-#include "text_button_widget.h"
-
 #include "gui/renderer/renderer.h"
-
-#include <fmt/base.h>
+#include "gui/widget/text_button_widget.h"
 
 namespace gui {
 

@@ -1,6 +1,5 @@
-#include "font_rasterizer.h"
-
 #include "base/hash/hash.h"
+#include "font/font_rasterizer.h"
 
 namespace font {
 

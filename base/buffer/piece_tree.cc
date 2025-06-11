@@ -1,11 +1,9 @@
-#include "piece_tree.h"
-
 #include "base/buffer/aho_corasick/aho_corasick.h"
+#include "base/buffer/piece_tree.h"
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "unicode/utf8_decoder.h"
 #include "util/scope_guard.h"
-
 #include <cassert>
 #include <memory>
 #include <string>
@@ -385,21 +383,13 @@ std::optional<size_t> PieceTree::find(std::string_view str) const {
     }
 }
 
-size_t PieceTree::length() const {
-    return total_content_length;
-}
+size_t PieceTree::length() const { return total_content_length; }
 
-bool PieceTree::empty() const {
-    return total_content_length == 0;
-}
+bool PieceTree::empty() const { return total_content_length == 0; }
 
-size_t PieceTree::line_feed_count() const {
-    return lf_count;
-}
+size_t PieceTree::line_feed_count() const { return lf_count; }
 
-size_t PieceTree::line_count() const {
-    return line_feed_count() + 1;
-}
+size_t PieceTree::line_count() const { return line_feed_count() + 1; }
 
 size_t PieceTree::line_at(size_t offset) const {
     if (empty()) return 0;

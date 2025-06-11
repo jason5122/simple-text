@@ -1,10 +1,6 @@
-#include "main_window.h"
-
+#include "gui/platform/gtk/main_window.h"
 #include "unicode/unicode.h"
-
 #include <cmath>
-
-// Debug use; remove this.
 #include <fmt/base.h>
 #include <fmt/format.h>
 
@@ -105,38 +101,24 @@ MainWindow::MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLC
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
 }
 
-void MainWindow::show() {
-    gtk_window_present(GTK_WINDOW(window));
-}
+void MainWindow::show() { gtk_window_present(GTK_WINDOW(window)); }
 
-void MainWindow::close() {
-    gtk_window_close(GTK_WINDOW(window));
-}
+void MainWindow::close() { gtk_window_close(GTK_WINDOW(window)); }
 
-void MainWindow::redraw() {
-    gtk_widget_queue_draw(gl_area);
-}
+void MainWindow::redraw() { gtk_widget_queue_draw(gl_area); }
 
-int MainWindow::scaleFactor() {
-    return gtk_widget_get_scale_factor(window);
-}
+int MainWindow::scale_factor() { return gtk_widget_get_scale_factor(window); }
 
 // TODO: Implement this.
-bool MainWindow::isDarkMode() {
-    return false;
-}
+bool MainWindow::is_dark_mode() { return false; }
 
-void MainWindow::setTitle(std::string_view title) {
+void MainWindow::set_title(std::string_view title) {
     gtk_window_set_title(GTK_WINDOW(window), title.data());
 }
 
-WindowWidget* MainWindow::appWindow() const {
-    return app_window;
-}
+WindowWidget* MainWindow::app_window() const { return app_window; }
 
-GtkWidget* MainWindow::gtkWindow() const {
-    return window;
-}
+GtkWidget* MainWindow::gtk_window() const { return window; }
 
 namespace {
 
@@ -167,7 +149,7 @@ void realize(GtkGLArea* self, gpointer user_data) {
 // NOTE: GtkGLArea's size is in physical pixels. Most GTK widgets use logical pixels.
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data) {
     MainWindow* main_window = static_cast<MainWindow*>(user_data);
-    WindowWidget* app_window = main_window->appWindow();
+    WindowWidget* app_window = main_window->app_window();
 
     app_window->set_width(width);
     app_window->set_height(height);
@@ -212,7 +194,7 @@ gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer
     };
     delta *= scale_factor;
 
-    WindowWidget* app_window = main_window->appWindow();
+    WindowWidget* app_window = main_window->app_window();
     app_window->perform_scroll(std::move(mouse_pos), std::move(delta));
 
     return true;
@@ -237,7 +219,7 @@ void decelerate(GtkEventControllerScroll* self, gdouble vel_x, gdouble vel_y, gp
     };
     // delta *= scale_factor;
 
-    WindowWidget* app_window = main_window->appWindow();
+    WindowWidget* app_window = main_window->app_window();
     app_window->onScrollDecelerate(std::move(mouse_pos), std::move(delta));
 }
 
@@ -294,7 +276,7 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         ModifierKey modifiers = ModifierFromState(event_state);
 
         // TODO: Track click type. Consider having a member that tracks it from GtkGesture.
-        auto* app_window = main_window->appWindow();
+        auto* app_window = main_window->app_window();
         app_window->left_mouse_drag(mouse_pos, modifiers, ClickType::kSingleClick);
     } else {
         GtkWidget* gl_area = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
@@ -306,7 +288,7 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
         Point mouse_pos = {mouse_x, mouse_y};
         mouse_pos *= scale_factor;
 
-        auto* app_window = main_window->appWindow();
+        auto* app_window = main_window->app_window();
         app_window->mouse_position_changed(mouse_pos);
     }
 }

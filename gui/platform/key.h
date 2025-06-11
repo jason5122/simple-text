@@ -1,7 +1,6 @@
 #pragma once
 
 #include "build/build_config.h"
-
 #include <type_traits>
 
 namespace gui {
@@ -75,27 +74,21 @@ inline constexpr auto operator|(ModifierKey l, ModifierKey r) {
     return static_cast<ModifierKey>(static_cast<U>(l) | static_cast<U>(r));
 }
 
-inline constexpr auto& operator|=(ModifierKey& l, ModifierKey r) {
-    return l = l | r;
-}
+inline constexpr auto& operator|=(ModifierKey& l, ModifierKey r) { return l = l | r; }
 
 inline constexpr auto operator&(ModifierKey l, ModifierKey r) {
     using U = std::underlying_type_t<ModifierKey>;
     return static_cast<ModifierKey>(static_cast<U>(l) & static_cast<U>(r));
 }
 
-inline constexpr auto& operator&=(ModifierKey& l, ModifierKey r) {
-    return l = l & r;
-}
+inline constexpr auto& operator&=(ModifierKey& l, ModifierKey r) { return l = l & r; }
 
 inline constexpr auto operator^(ModifierKey l, ModifierKey r) {
     using U = std::underlying_type_t<ModifierKey>;
     return static_cast<ModifierKey>(static_cast<U>(l) ^ static_cast<U>(r));
 }
 
-inline constexpr auto& operator^=(ModifierKey& l, ModifierKey r) {
-    return l = l ^ r;
-}
+inline constexpr auto& operator^=(ModifierKey& l, ModifierKey r) { return l = l ^ r; }
 
 inline constexpr auto operator~(ModifierKey m) {
     using U = std::underlying_type_t<ModifierKey>;

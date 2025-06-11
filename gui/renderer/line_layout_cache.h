@@ -1,9 +1,7 @@
 #pragma once
 
 #include "font/types.h"
-
 #include "third_party/hash_maps/robin_hood.h"
-
 #include <string_view>
 
 namespace gui {

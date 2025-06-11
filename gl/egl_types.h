@@ -3,6 +3,7 @@
 #include <EGL/egl.h>
 
 namespace opengl {
+
 // EGL 1.0
 typedef EGLBoolean (*PFNEGLCHOOSECONFIGPROC)(EGLDisplay dpy,
                                              const EGLint* attrib_list,

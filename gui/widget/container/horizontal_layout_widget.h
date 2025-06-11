@@ -14,9 +14,7 @@ public:
 
     void layout() override;
 
-    constexpr std::string_view class_name() const override {
-        return "HorizontalLayoutWidget";
-    }
+    constexpr std::string_view class_name() const override { return "HorizontalLayoutWidget"; }
 
 private:
     int padding_in_between;

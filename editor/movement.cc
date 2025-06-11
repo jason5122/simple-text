@@ -1,13 +1,9 @@
-#include "movement.h"
-
+#include "editor/movement.h"
 #include "third_party/uni_algo/include/uni_algo/prop.h"
-
+#include <fmt/base.h>
 #include <numeric>
 #include <optional>
 #include <vector>
-
-// TODO: Debug use; remove this.
-#include <fmt/base.h>
 
 // References:
 // https://github.com/zed-industries/zed/blob/40ecc38dd25ffdec4deb6e27ee91b72e85a019eb/crates/multi_buffer/src/multi_buffer.rs#L2498

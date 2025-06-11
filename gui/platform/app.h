@@ -4,7 +4,6 @@
 #include "gui/platform/key.h"
 #include "gui/platform/window_widget.h"
 #include "util/non_copyable.h"
-
 #include <memory>
 
 namespace gui {

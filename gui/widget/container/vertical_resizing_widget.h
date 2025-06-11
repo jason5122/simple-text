@@ -7,17 +7,15 @@ namespace gui {
 class VerticalResizingWidget : public VerticalLayoutWidget {
 public:
     void left_mouse_down(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override;
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
     void left_mouse_drag(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override;
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
     CursorStyle cursor_style() const override;
     Widget* widget_at(const Point& pos) override;
 
-    constexpr std::string_view class_name() const override {
-        return "VerticalResizingWidget";
-    }
+    constexpr std::string_view class_name() const override { return "VerticalResizingWidget"; }
 
 private:
     // Max distance the mouse cursor can be from a resizable widget edge to initiate a resize.

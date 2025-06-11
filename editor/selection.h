@@ -1,13 +1,10 @@
 #pragma once
 
 #include "base/numeric/saturation_arithmetic.h"
-
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <utility>
-
-// TODO: Debug use; remove this.
-#include <cassert>
 
 // References:
 // https://github.com/zed-industries/zed/blob/40ecc38dd25ffdec4deb6e27ee91b72e85a019eb/crates/text/src/selection.rs
@@ -16,8 +13,8 @@ namespace gui {
 
 // TODO: Remove methods; make this a pure struct.
 struct Selection {
-    size_t start{};
-    size_t end{};
+    size_t start = 0;
+    size_t end = 0;
 
     constexpr bool empty() const;
     constexpr size_t length() const;
@@ -31,9 +28,7 @@ struct Selection {
     constexpr void collapse_right();
 };
 
-constexpr bool Selection::empty() const {
-    return start == end;
-}
+constexpr bool Selection::empty() const { return start == end; }
 
 constexpr size_t Selection::length() const {
     auto [left, right] = range();

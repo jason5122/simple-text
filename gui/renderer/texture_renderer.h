@@ -1,10 +1,9 @@
 #pragma once
 
+#include "font/types.h"
 #include "gui/renderer/shader.h"
-#include "gui/renderer/texture_cache.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
-
 #include <functional>
 #include <vector>
 
@@ -30,9 +29,9 @@ private:
     static constexpr size_t kBatchMax = 0x10000;
 
     Shader shader_program;
-    GLuint vao = 0;
-    GLuint vbo_instance = 0;
-    GLuint ebo = 0;
+    gl::GLuint vao = 0;
+    gl::GLuint vbo_instance = 0;
+    gl::GLuint ebo = 0;
 
     struct InstanceData {
         Vec2 coords;

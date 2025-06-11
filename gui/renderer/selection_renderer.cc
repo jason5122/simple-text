@@ -1,23 +1,18 @@
-#include "selection_renderer.h"
-
-#include <cstdint>
-
-#include "opengl/gl.h"
-using namespace opengl;
-
-// TODO: Debug use; remove this.
+#include "gl/gl.h"
+#include "gui/renderer/selection_renderer.h"
 #include <cassert>
+#include <cstdint>
 #include <fmt/base.h>
 
-namespace {
+using namespace gl;
 
+namespace {
 const std::string kVertexShader =
 #include "gui/renderer/shaders/selection_vert.glsl"
     ;
 const std::string kFragmentShader =
 #include "gui/renderer/shaders/selection_frag.glsl"
     ;
-
 }  // namespace
 
 namespace gui {
@@ -121,10 +116,10 @@ SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
 }
 
 void SelectionRenderer::add_selections(const std::vector<Selection>& sels,
-                                      const Point& offset,
-                                      int line_height,
-                                      const Point& min_coords,
-                                      const Point& max_coords) {
+                                       const Point& offset,
+                                       int line_height,
+                                       const Point& min_coords,
+                                       const Point& max_coords) {
     auto create = [&](int start, int end, int line,
                       uint32_t border_flags = kLeft | kRight | kTop | kBottom,
                       uint32_t bottom_border_offset = 0, uint32_t top_border_offset = 0,

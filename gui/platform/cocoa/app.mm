@@ -1,15 +1,11 @@
 #include "gui/platform/app.h"
-
 #include "gui/platform/cocoa/impl_cocoa.h"
 #include "gui/platform/cocoa/window_controller.h"
 #include "gui/platform/window_widget.h"
-
 #include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>
-#include <vector>
-
-// TODO: Debug use; remove this.
 #include <fmt/base.h>
+#include <vector>
 
 // Taken from `//chromium/src/chrome/browser/ui/cocoa/main_menu_builder.mm.
 namespace {
@@ -203,9 +199,7 @@ void App::run() {
     }
 }
 
-void App::quit() {
-    [NSApp terminate:nil];
-}
+void App::quit() { [NSApp terminate:nil]; }
 
 std::string App::get_clipboard_string() {
     NSString* ns_string = [NSPasteboard.generalPasteboard stringForType:NSPasteboardTypeString];

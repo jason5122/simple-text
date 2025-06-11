@@ -9,8 +9,8 @@ common_sources = [
 
 common_deps = [
   "//base",
+  "//gl",
   "//gui",
-  "//opengl",
   "//third_party/fmt",
 
   # TODO: Find a way to include Tree-sitter headers without listing the dependency here.
@@ -25,6 +25,7 @@ if (is_mac) {
 
     sources = common_sources
     deps = common_deps
+
     # deps += [ ":icon" ]
   }
 

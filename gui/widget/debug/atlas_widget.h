@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/renderer/renderer.h"
+#include "gui/renderer/types.h"
 #include "gui/widget/scrollable_widget.h"
 
 #include <vector>

@@ -1,9 +1,7 @@
-#include "utf16_to_utf8_indices_map.h"
-
-#include <cassert>
-
 #include "unicode/fits_in.h"
 #include "unicode/unicode.h"
+#include "unicode/utf16_to_utf8_indices_map.h"
+#include <cassert>
 
 namespace unicode {
 

@@ -1,9 +1,6 @@
-#include "display_gl.h"
-
+#include "gui/platform/cocoa/display_gl.h"
 #include <Cocoa/Cocoa.h>
 #include <OpenGL/gl3.h>
-
-// TODO: Debug use; remove this.
 #include <fmt/base.h>
 
 namespace gui {
@@ -46,12 +43,8 @@ std::unique_ptr<DisplayGL> DisplayGL::Create() {
     return std::unique_ptr<DisplayGL>(new DisplayGL(pixel_format, context));
 }
 
-CGLPixelFormatObj DisplayGL::pixelFormat() {
-    return pixel_format_.get();
-}
+CGLPixelFormatObj DisplayGL::pixelFormat() { return pixel_format_.get(); }
 
-CGLContextObj DisplayGL::context() {
-    return context_.get();
-}
+CGLContextObj DisplayGL::context() { return context_.get(); }
 
 }  // namespace gui

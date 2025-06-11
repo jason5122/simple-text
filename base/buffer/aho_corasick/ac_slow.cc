@@ -8,7 +8,7 @@ namespace base {
 
 ACSlowConstructor::ACSlowConstructor() : _next_node_id(1) {
     _root = new_state();
-    _root_char = new InputTy[256];
+    _root_char = new input_t[256];
     memset((void*)_root_char, '\0', 256);
 }
 
@@ -67,7 +67,7 @@ void ACSlowConstructor::propagate_faillink() {
         const ACSlowGotoMap& tran_map = s->goto_map();
 
         for (auto j = tran_map.begin(); j != tran_map.end(); ++j) {
-            InputTy c = j->first;
+            input_t c = j->first;
             ACSlowState* tran = j->second;
 
             ACSlowState* tran_fl = 0;
@@ -89,7 +89,7 @@ void ACSlowConstructor::propagate_faillink() {
     r->_goto_map = goto_save;
 }
 
-void ACSlowConstructor::Construct(const std::vector<std::string>& patterns) {
+void ACSlowConstructor::construct(const std::vector<std::string>& patterns) {
     for (size_t i = 0; i < patterns.size(); ++i) {
         add_pattern(patterns[i], i);
     }

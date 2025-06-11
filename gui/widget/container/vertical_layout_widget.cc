@@ -1,4 +1,4 @@
-#include "vertical_layout_widget.h"
+#include "gui/widget/container/vertical_layout_widget.h"
 
 namespace gui {
 

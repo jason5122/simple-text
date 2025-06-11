@@ -1,7 +1,5 @@
 #include "gui/platform/app.h"
-
 #include "gui/platform/gtk/impl_gtk.h"
-
 #include <gtk/gtk.h>
 
 namespace gui {
@@ -28,24 +26,16 @@ App::App() : pimpl{new impl{}} {
     g_signal_connect(pimpl->app, "activate", G_CALLBACK(activate), this);
 }
 
-App::~App() {
-    g_object_unref(pimpl->app);
-}
+App::~App() { g_object_unref(pimpl->app); }
 
-void App::run() {
-    g_application_run(G_APPLICATION(pimpl->app), 0, NULL);
-}
+void App::run() { g_application_run(G_APPLICATION(pimpl->app), 0, NULL); }
 
-void App::quit() {
-    g_application_quit(G_APPLICATION(pimpl->app));
-}
+void App::quit() { g_application_quit(G_APPLICATION(pimpl->app)); }
 
 // TODO: Implement this.
-std::string App::getClipboardString() {
-    return "";
-}
+std::string App::get_clipboard_string() { return ""; }
 
 // TODO: Implement this.
-void App::setClipboardString(const std::string& str8) {}
+void App::set_clipboard_string(const std::string& str8) {}
 
 }  // namespace gui

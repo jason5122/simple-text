@@ -1,29 +1,24 @@
+#include "base/windows/unicode.h"
 #include "font/font_rasterizer.h"
-
-#include <cwchar>
-#include <limits>
-#include <vector>
-
+#include "unicode/utf16_to_utf8_indices_map.h"
+#include <cassert>
 #include <combaseapi.h>
 #include <comdef.h>
+#include <cwchar>
 #include <d2d1_3.h>
 #include <dwrite_3.h>
+#include <fmt/base.h>
+#include <fmt/xchar.h>
+#include <limits>
 #include <unknwnbase.h>
+#include <vector>
 #include <wincodec.h>
 #include <winerror.h>
 #include <wingdi.h>
 #include <winnt.h>
 #include <wrl/client.h>
 
-#include "base/windows/unicode.h"
-#include "unicode/utf16_to_utf8_indices_map.h"
-
 using Microsoft::WRL::ComPtr;
-
-// TODO: Debug use; remove this.
-#include <cassert>
-#include <fmt/base.h>
-#include <fmt/xchar.h>
 
 namespace font {
 

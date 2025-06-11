@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gui/platform/window_widget.h"
-
 #include <gtk/gtk.h>
 
 namespace gui {
@@ -16,14 +15,12 @@ public:
     void show();
     void close();
     void redraw();
-    int scaleFactor();
-    bool isDarkMode();
-    void setTitle(std::string_view title);
-    WindowWidget* appWindow() const;
-    GtkWidget* gtkWindow() const;
-    GtkWidget* glArea() const {
-        return gl_area;
-    }
+    int scale_dactor();
+    bool is_dark_mode();
+    void set_title(std::string_view title);
+    WindowWidget* app_window() const;
+    GtkWidget* gtk_window() const;
+    GtkWidget* gl_area() const { return gl_area; }
 
 private:
     WindowWidget* app_window;

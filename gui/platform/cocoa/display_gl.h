@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/apple/scoped_cgtyperef.h"
-
 #include <memory>
 
 using base::apple::ScopedTypeRef;

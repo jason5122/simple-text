@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opengl/gl.h"
+#include "gl/gl.h"
 #include "util/non_copyable.h"
 #include <string>
 
@@ -13,10 +13,10 @@ public:
     Shader(Shader&& other);
     Shader& operator=(Shader&& other);
 
-    GLuint id();
+    gl::GLuint id();
 
 private:
-    GLuint id_ = 0;
+    gl::GLuint id_ = 0;
 };
 
 }  // namespace gui

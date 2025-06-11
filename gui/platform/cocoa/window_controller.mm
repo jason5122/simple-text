@@ -1,8 +1,5 @@
-#include "window_controller.h"
-
 #include "gui/platform/cocoa/gl_view.h"
-
-// Debug use; remove this.
+#include "gui/platform/cocoa/window_controller.h"
 #include <fmt/base.h>
 
 @interface WindowController () {

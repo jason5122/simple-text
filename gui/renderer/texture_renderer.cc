@@ -1,29 +1,22 @@
-#include "texture_renderer.h"
-
+#include "font/font_rasterizer.h"
+#include "gl/gl.h"
 #include "gui/renderer/renderer.h"
-
+#include "gui/renderer/texture_renderer.h"
 #include <algorithm>
-#include <cmath>
+#include <cassert>
 #include <cstdint>
+#include <fmt/base.h>
 
-#include "opengl/gl.h"
-using namespace opengl;
+using namespace gl;
 
 namespace {
-
 const std::string kVertexShader =
 #include "gui/renderer/shaders/texture_vert.glsl"
     ;
 const std::string kFragmentShader =
 #include "gui/renderer/shaders/texture_frag.glsl"
     ;
-
 }  // namespace
-
-// TODO: Debug; remove this.
-#include "util/profiler.h"
-#include <cassert>
-#include <fmt/base.h>
 
 namespace gui {
 

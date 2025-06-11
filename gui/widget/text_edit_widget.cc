@@ -1,18 +1,13 @@
-#include "text_edit_widget.h"
-
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "editor/movement.h"
 #include "gui/renderer/renderer.h"
-
-#include <cmath>
-
-#include <fmt/base.h>
-#include <fmt/format.h>
-
-// TODO: Debug use; remove this.
+#include "gui/widget/text_edit_widget.h"
 #include "util/profiler.h"
 #include <cassert>
+#include <cmath>
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 namespace gui {
 

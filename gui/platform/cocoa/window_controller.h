@@ -2,10 +2,8 @@
 
 #include "gui/platform/cocoa/display_gl.h"
 #include "gui/platform/window_widget.h"
-
-#include <string>
-
 #include <Cocoa/Cocoa.h>
+#include <string>
 
 @interface WindowController : NSWindowController <NSWindowDelegate>
 

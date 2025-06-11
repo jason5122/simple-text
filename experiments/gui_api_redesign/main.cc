@@ -1,9 +1,8 @@
 #include "experiments/gui_api_redesign/app.h"
+#include "gl/gl.h"
 #include <fmt/base.h>
 
-// TODO: Remove this.
-#include "opengl/gl.h"
-using namespace opengl;
+using namespace gl;
 
 int main() {
     // Disable stdout buffering.

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "font/types.h"
-
 #include <memory>
 #include <string>
 #include <unordered_map>

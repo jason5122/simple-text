@@ -1,12 +1,9 @@
 #pragma once
 
+#include "build/build_config.h"
 #include "gui/platform/app.h"
 #include "simple_text/editor_window.h"
-
 #include <vector>
-
-// TODO: Remove this.
-#include "build/build_config.h"
 
 namespace gui {
 

@@ -1,6 +1,5 @@
-#include "padding_widget.h"
-
 #include "gui/renderer/renderer.h"
+#include "gui/widget/padding_widget.h"
 
 namespace gui {
 

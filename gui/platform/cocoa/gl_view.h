@@ -2,7 +2,6 @@
 
 #include "gui/platform/cocoa/display_gl.h"
 #include "gui/platform/window_widget.h"
-
 #include <Cocoa/Cocoa.h>
 
 @interface GLView : NSView <NSTextInputClient>

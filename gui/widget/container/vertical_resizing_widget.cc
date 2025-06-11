@@ -1,12 +1,10 @@
-#include "vertical_resizing_widget.h"
-
-#include <fmt/base.h>
+#include "gui/widget/container/vertical_resizing_widget.h"
 
 namespace gui {
 
 void VerticalResizingWidget::left_mouse_down(const Point& mouse_pos,
-                                           ModifierKey modifiers,
-                                           ClickType click_type) {
+                                             ModifierKey modifiers,
+                                             ClickType click_type) {
     for (auto& child : children_start) {
         if (child->bottom_edge_test(mouse_pos, kResizeDistance)) {
             if (click_type == ClickType::kDoubleClick) {
@@ -32,8 +30,8 @@ void VerticalResizingWidget::left_mouse_down(const Point& mouse_pos,
 }
 
 void VerticalResizingWidget::left_mouse_drag(const Point& mouse_pos,
-                                           ModifierKey modifiers,
-                                           ClickType click_type) {
+                                             ModifierKey modifiers,
+                                             ClickType click_type) {
     // TODO: If a double click occurred, prevent the drag from starting in the first place.
     if (click_type == ClickType::kDoubleClick) {
         return;
@@ -53,9 +51,7 @@ void VerticalResizingWidget::left_mouse_drag(const Point& mouse_pos,
     }
 }
 
-CursorStyle VerticalResizingWidget::cursor_style() const {
-    return CursorStyle::kResizeUpDown;
-}
+CursorStyle VerticalResizingWidget::cursor_style() const { return CursorStyle::kResizeUpDown; }
 
 Widget* VerticalResizingWidget::widget_at(const Point& pos) {
     // If mouse cursor is over a resizable widget edge, return this widget for resizing purposes.

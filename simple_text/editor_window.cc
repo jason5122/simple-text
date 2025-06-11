@@ -1,28 +1,22 @@
-#include "editor_window.h"
-
 #include "gui/renderer/renderer.h"
-#include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/container/horizontal_resizing_widget.h"
 #include "gui/widget/container/vertical_resizing_widget.h"
 #include "gui/widget/debug/atlas_widget.h"
 #include "gui/widget/find_panel_widget.h"
 #include "simple_text/editor_app.h"
-
-#include <string>
-
-// TODO: Debug use; remove this.
+#include "simple_text/editor_window.h"
 #include "util/profiler.h"
 #include <fmt/base.h>
 #include <fmt/format.h>
+#include <string>
 
 namespace gui {
 
+// TODO: Debug use; remove this.
 namespace {
-
 const std::string kCppExample =
 #include "sample_code.txt"
     ;
-
 }  // namespace
 
 EditorWindow::EditorWindow(EditorApp& parent, int width, int height, int wid)

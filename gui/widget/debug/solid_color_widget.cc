@@ -1,6 +1,5 @@
-#include "solid_color_widget.h"
-
 #include "gui/renderer/renderer.h"
+#include "gui/widget/debug/solid_color_widget.h"
 
 namespace gui {
 

@@ -16,27 +16,21 @@ inline constexpr auto operator|(FontStyle l, FontStyle r) {
     return static_cast<FontStyle>(static_cast<U>(l) | static_cast<U>(r));
 }
 
-inline constexpr auto& operator|=(FontStyle& l, FontStyle r) {
-    return l = l | r;
-}
+inline constexpr auto& operator|=(FontStyle& l, FontStyle r) { return l = l | r; }
 
 inline constexpr auto operator&(FontStyle l, FontStyle r) {
     using U = std::underlying_type_t<FontStyle>;
     return static_cast<FontStyle>(static_cast<U>(l) & static_cast<U>(r));
 }
 
-inline constexpr auto& operator&=(FontStyle& l, FontStyle r) {
-    return l = l & r;
-}
+inline constexpr auto& operator&=(FontStyle& l, FontStyle r) { return l = l & r; }
 
 inline constexpr auto operator^(FontStyle l, FontStyle r) {
     using U = std::underlying_type_t<FontStyle>;
     return static_cast<FontStyle>(static_cast<U>(l) ^ static_cast<U>(r));
 }
 
-inline constexpr auto& operator^=(FontStyle& l, FontStyle r) {
-    return l = l ^ r;
-}
+inline constexpr auto& operator^=(FontStyle& l, FontStyle r) { return l = l ^ r; }
 
 inline constexpr auto operator~(FontStyle m) {
     using U = std::underlying_type_t<FontStyle>;

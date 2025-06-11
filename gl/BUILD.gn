@@ -1,4 +1,4 @@
-source_set("opengl") {
+source_set("gl") {
   sources = [
     "gl.cc",
     "loader.cc",

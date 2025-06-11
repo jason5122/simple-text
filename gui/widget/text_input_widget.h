@@ -18,15 +18,9 @@ public:
                          ClickType click_type) override;
     void insert_text(std::string_view str8) override;
 
-    constexpr bool can_be_focused() const override {
-        return true;
-    }
-    constexpr CursorStyle cursor_style() const final override {
-        return CursorStyle::kIBeam;
-    }
-    constexpr std::string_view class_name() const final override {
-        return "TextInputWidget";
-    }
+    constexpr bool can_be_focused() const override { return true; }
+    constexpr CursorStyle cursor_style() const final override { return CursorStyle::kIBeam; }
+    constexpr std::string_view class_name() const final override { return "TextInputWidget"; }
 
 private:
     // static constexpr Rgb kTextColor = {51, 51, 51};     // Light.

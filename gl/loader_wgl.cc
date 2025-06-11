@@ -1,11 +1,9 @@
+#include "gl/loader.h"
 // #include "base/windows/win32_error.h"
-#include "opengl/loader.h"
+#include <cstdlib>
 #include <windows.h>
 
-// TODO: Remove this.
-#include <cstdlib>
-
-namespace opengl::internal {
+namespace gl::internal {
 
 // TODO: Handle errors.
 void* load_proc_address(const char* fp) {
@@ -29,4 +27,4 @@ void* load_proc_address(const char* fp) {
     return p;
 }
 
-}  // namespace opengl::internal
+}  // namespace gl::internal

@@ -1,9 +1,7 @@
-#include "shader.h"
-
-using namespace opengl;
-
-// TODO: Debug; remove this.
+#include "gui/renderer/shader.h"
 #include <fmt/base.h>
+
+using namespace gl;
 
 namespace gui {
 
@@ -72,13 +70,9 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
     glDeleteShader(fragment_shader);
 }
 
-Shader::~Shader() {
-    glDeleteProgram(id_);
-}
+Shader::~Shader() { glDeleteProgram(id_); }
 
-Shader::Shader(Shader&& other) : id_(other.id_) {
-    other.id_ = 0;
-}
+Shader::Shader(Shader&& other) : id_(other.id_) { other.id_ = 0; }
 
 Shader& Shader::operator=(Shader&& other) {
     if (&other != this) {
@@ -88,8 +82,6 @@ Shader& Shader::operator=(Shader&& other) {
     return *this;
 }
 
-GLuint Shader::id() {
-    return id_;
-}
+GLuint Shader::id() { return id_; }
 
 }  // namespace gui

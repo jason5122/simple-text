@@ -1,9 +1,8 @@
 #pragma once
 
+#include "gl/gl.h"
 #include "gui/renderer/types.h"
-#include "opengl/gl.h"
 #include "util/non_copyable.h"
-
 #include <vector>
 
 namespace gui {
@@ -24,7 +23,7 @@ public:
     Atlas(Atlas&& other);
     Atlas& operator=(Atlas&& other);
 
-    GLuint tex() const;
+    gl::GLuint tex() const;
 
     enum class Format {
         kBGRA,
@@ -35,7 +34,7 @@ public:
         int width, int height, Format format, const std::vector<uint8_t>& data, Vec4& out_uv);
 
 private:
-    GLuint tex_id = 0;
+    gl::GLuint tex_id = 0;
 
     int row_extent = 0;
     int row_baseline = 0;

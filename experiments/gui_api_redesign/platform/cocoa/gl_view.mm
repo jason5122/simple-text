@@ -1,5 +1,5 @@
+#include "gl/loader.h"
 #include "gl_view.h"
-#include "opengl/loader.h"
 #include <fmt/base.h>
 
 constexpr bool kBenchmarkMode = false;
@@ -46,7 +46,7 @@ constexpr bool kBenchmarkMode = false;
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
     CGLSetCurrentContext(ctx_);
-    opengl::load_global_function_pointers();
+    gl::load_global_function_pointers();
 
     return ctx_;
 }

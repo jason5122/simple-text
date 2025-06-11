@@ -1,10 +1,8 @@
-#include "atlas.h"
-
-using namespace opengl;
-
-// TODO: For debugging; remove this.
+#include "gui/renderer/atlas.h"
 #include <fmt/base.h>
 #include <random>
+
+using namespace gl;
 
 namespace gui {
 
@@ -65,13 +63,9 @@ Atlas::Atlas() {
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
-Atlas::~Atlas() {
-    glDeleteTextures(1, &tex_id);
-}
+Atlas::~Atlas() { glDeleteTextures(1, &tex_id); }
 
-Atlas::Atlas(Atlas&& other) : tex_id(other.tex_id) {
-    other.tex_id = 0;
-}
+Atlas::Atlas(Atlas&& other) : tex_id(other.tex_id) { other.tex_id = 0; }
 
 Atlas& Atlas::operator=(Atlas&& other) {
     if (&other != this) {
@@ -81,9 +75,7 @@ Atlas& Atlas::operator=(Atlas&& other) {
     return *this;
 }
 
-GLuint Atlas::tex() const {
-    return tex_id;
-}
+GLuint Atlas::tex() const { return tex_id; }
 
 // TODO: Consider refactoring this.
 namespace {

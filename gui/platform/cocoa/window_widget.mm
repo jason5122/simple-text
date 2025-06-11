@@ -1,8 +1,5 @@
-#include "gui/platform/window_widget.h"
-
 #include "gui/platform/cocoa/impl_cocoa.h"
-
-// TODO: Debug use; remove this.
+#include "gui/platform/window_widget.h"
 #include <fmt/base.h>
 
 namespace gui {

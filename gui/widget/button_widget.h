@@ -8,8 +8,8 @@ namespace gui {
 class ButtonWidget : public Widget {
 public:
     void left_mouse_down(const Point& mouse_pos,
-                       ModifierKey modifiers,
-                       ClickType click_type) override;
+                         ModifierKey modifiers,
+                         ClickType click_type) override;
     bool get_state() const;
 
 private:

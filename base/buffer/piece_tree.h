@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/buffer/piece_tree_rbtree.h"
-
 #include <forward_list>
 #include <memory>
 #include <optional>
@@ -192,20 +191,12 @@ private:
     const char* last_ptr = nullptr;
 };
 
-constexpr size_t TreeWalker::remaining() const {
-    return total_content_length - total_offset;
-}
+constexpr size_t TreeWalker::remaining() const { return total_content_length - total_offset; }
 
-constexpr size_t TreeWalker::offset() const {
-    return total_offset;
-}
+constexpr size_t TreeWalker::offset() const { return total_offset; }
 
-constexpr size_t ReverseTreeWalker::remaining() const {
-    return total_offset + 1;
-}
+constexpr size_t ReverseTreeWalker::remaining() const { return total_offset + 1; }
 
-constexpr size_t ReverseTreeWalker::offset() const {
-    return total_offset;
-}
+constexpr size_t ReverseTreeWalker::offset() const { return total_offset; }
 
 }  // namespace base

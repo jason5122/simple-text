@@ -1,7 +1,7 @@
-#include "opengl/gl.h"
-#include "opengl/loader.h"
+#include "gl/gl.h"
+#include "gl/loader.h"
 
-namespace opengl {
+namespace gl {
 
 #define LOAD_GL_FUNC(FP) FP = reinterpret_cast<decltype(FP)>(internal::load_proc_address(#FP))
 
@@ -75,4 +75,4 @@ void load_global_function_pointers() {
     LOAD_GL_FUNC(glVertexAttribDivisor);
 }
 
-}  // namespace opengl
+}  // namespace gl

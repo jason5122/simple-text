@@ -1,4 +1,4 @@
-#include "scrollable_widget.h"
+#include "gui/widget/scrollable_widget.h"
 #include <algorithm>
 
 // References:

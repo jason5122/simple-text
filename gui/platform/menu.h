@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gui/types.h"
-
 #include <memory>
 #include <optional>
 #include <string_view>

@@ -1,6 +1,4 @@
-#include "dummy_context.h"
-
-// TODO: Debug use; remove this.
+#include "gui/platform/win32/dummy_context.h"
 #include "util/profiler.h"
 
 namespace gui {

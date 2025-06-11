@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/buffer/piece_tree.h"
-
 #include <string>
 #include <vector>
 
@@ -29,7 +28,6 @@ public:
     MatchResult match(const PieceTree& tree) const;
 
 private:
-    // TODO: Clean this up. Don't use an opaque void pointer.
     void* buf;
 };
 

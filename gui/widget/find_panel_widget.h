@@ -1,9 +1,7 @@
 #pragma once
 
-#include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_layout_widget.h"
 #include "gui/widget/text_input_widget.h"
-#include "gui/widget/widget.h"
 
 namespace gui {
 

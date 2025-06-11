@@ -1,9 +1,7 @@
-#include <gtest/gtest.h>
-
 #include "base/numeric/literals.h"
-#include "build/build_config.h"
 #include "editor/movement.h"
 #include "font/font_rasterizer.h"
+#include <gtest/gtest.h>
 
 namespace gui {
 

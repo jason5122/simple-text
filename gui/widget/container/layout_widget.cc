@@ -1,4 +1,4 @@
-#include "layout_widget.h"
+#include "gui/widget/container/layout_widget.h"
 
 namespace gui {
 

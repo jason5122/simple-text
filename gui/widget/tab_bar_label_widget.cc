@@ -1,6 +1,5 @@
-#include "tab_bar_label_widget.h"
-
 #include "gui/renderer/renderer.h"
+#include "gui/widget/tab_bar_label_widget.h"
 
 namespace gui {
 

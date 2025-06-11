@@ -1,6 +1,4 @@
-#include "gl_layer.h"
-
-// TODO: Debug use; remove this.
+#include "gui/platform/cocoa/gl_layer.h"
 #include <Cocoa/Cocoa.h>
 #include <fmt/base.h>
 

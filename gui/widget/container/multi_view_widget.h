@@ -4,7 +4,6 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include "base/numeric/wrap_arithmetic.h"
 #include "gui/widget/container/container_widget.h"
-
 #include <memory>
 #include <vector>
 
@@ -21,13 +20,9 @@ public:
         }
     }
 
-    constexpr size_t count() const {
-        return views.size();
-    }
+    constexpr size_t count() const { return views.size(); }
 
-    WidgetType* at(size_t i) {
-        return views[i].get();
-    }
+    WidgetType* at(size_t i) { return views[i].get(); }
 
     void set_index(size_t index) {
         if (index < views.size()) {
@@ -45,17 +40,11 @@ public:
         index_ = base::inc_wrap(index_, views.size());
     }
 
-    void last_index() {
-        index_ = base::sub_sat(views.size(), 1_Z);
-    }
+    void last_index() { index_ = base::sub_sat(views.size(), 1_Z); }
 
-    size_t index() {
-        return index_;
-    }
+    size_t index() { return index_; }
 
-    void addTab(std::unique_ptr<WidgetType> widget) {
-        views.emplace_back(std::move(widget));
-    }
+    void addTab(std::unique_ptr<WidgetType> widget) { views.emplace_back(std::move(widget)); }
 
     void removeTab(size_t index) {
         if (views.empty()) return;
@@ -118,9 +107,7 @@ public:
         }
     }
 
-    constexpr std::string_view class_name() const override {
-        return "MultiViewWidget";
-    }
+    constexpr std::string_view class_name() const override { return "MultiViewWidget"; }
 
 private:
     size_t index_ = 0;

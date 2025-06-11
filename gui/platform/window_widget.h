@@ -4,7 +4,6 @@
 #include "gui/platform/key.h"
 #include "gui/types.h"
 #include "gui/widget/widget.h"
-
 #include <memory>
 #include <optional>
 #include <string>
@@ -36,9 +35,7 @@ public:
     virtual void on_opengl_activate() {}
     virtual void on_frame(int64_t ms) {}
     virtual void on_scroll_decelerate(const Point& mouse_pos, const Delta& delta) {}
-    virtual bool on_key_down(Key key, ModifierKey modifiers) {
-        return false;
-    }
+    virtual bool on_key_down(Key key, ModifierKey modifiers) { return false; }
     virtual void on_insert_text(std::string_view text) {}
     virtual void on_action(Action action, bool extend = false) {}
     virtual void on_app_action(AppAction action) {}

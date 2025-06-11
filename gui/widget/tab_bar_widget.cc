@@ -1,9 +1,8 @@
-#include "tab_bar_widget.h"
-
 #include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "base/numeric/wrap_arithmetic.h"
 #include "gui/renderer/renderer.h"
+#include "gui/widget/tab_bar_widget.h"
 
 namespace gui {
 

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "ac_slow.h"
-#include "aho_corasick.h"
-
+#include "base/buffer/aho_corasick/ac_slow.h"
 #include <vector>
 
 namespace base {
@@ -64,15 +62,13 @@ struct ACState {
     unsigned short is_term;  // Is terminal node. if is_term != 0, it encodes
                              // the value of "1 + pattern-index".
     unsigned char goto_num;  // The number of valid transition.
-    InputTy input_vect[1];   // Vector of valid input. Must be last field!
+    input_t input_vect[1];   // Vector of valid input. Must be last field!
 };
 
 class BufAllocator {
 public:
     BufAllocator() {}
-    virtual ~BufAllocator() {
-        free();
-    }
+    virtual ~BufAllocator() { free(); }
 
     virtual ACBuffer* alloc(int sz) = 0;
     virtual void free() {}
@@ -82,21 +78,14 @@ public:
 class ACConverter {
 public:
     ACConverter(ACSlowConstructor& acs, BufAllocator& ba) : _acs(acs), _buf_alloc(ba) {}
-    ACBuffer* Convert();
+    ACBuffer* convert();
 
 private:
     // Return the size in byte needed to to save the specified state.
-    uint32 Calc_State_Sz(const ACSlowState*) const;
+    uint32 calculate_state_size(const ACSlowState*) const;
 
-    // In fast-AC-graph, the ID is bit tricky. Given a state of slow-graph,
-    // this function is to return the ID of its counterpart in the fast-graph.
-    StateID Get_Renumbered_Id(const ACSlowState* s) const {
-        const std::vector<uint32>& m = _id_map;
-        return m[s->id()];
-    }
-
-    ACBuffer* Alloc_Buffer();
-    void Populate_Root_Goto_Func(ACBuffer*, GotoVect&);
+    ACBuffer* alloc_buffer();
+    void populate_root_goto_func(ACBuffer*, GotoVect&);
 
 private:
     ACSlowConstructor& _acs;
@@ -108,7 +97,5 @@ private:
     // map: ID of state in slow-graph -> offset of counterpart in fast-graph.
     std::vector<ACOffset> _ofst_map;
 };
-
-AhoCorasick::MatchResult Match(ACBuffer* buf, const PieceTree& tree);
 
 }  // namespace base

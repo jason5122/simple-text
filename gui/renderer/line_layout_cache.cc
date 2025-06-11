@@ -1,7 +1,6 @@
-#include "line_layout_cache.h"
-
 #include "base/hash/hash.h"
-#include "gui/renderer/renderer.h"
+#include "font/font_rasterizer.h"
+#include "gui/renderer/line_layout_cache.h"
 
 namespace gui {
 
@@ -17,8 +16,6 @@ const font::LineLayout& LineLayoutCache::get(size_t font_id, std::string_view st
     }
 }
 
-void LineLayoutCache::clear() {
-    cache.clear();
-}
+void LineLayoutCache::clear() { cache.clear(); }
 
 }  // namespace gui

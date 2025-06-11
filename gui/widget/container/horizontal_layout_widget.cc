@@ -1,4 +1,4 @@
-#include "horizontal_layout_widget.h"
+#include "gui/widget/container/horizontal_layout_widget.h"
 
 namespace gui {
 

@@ -1,13 +1,11 @@
 #pragma once
 
 #include "base/files/file_path.h"
-#include "font/font_rasterizer.h"
+#include "font/types.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
-
 #include "third_party/hash_maps/robin_hood.h"
-
 #include <vector>
 
 namespace gui {

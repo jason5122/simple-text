@@ -1,6 +1,5 @@
-#include "image_button_widget.h"
-
 #include "gui/renderer/renderer.h"
+#include "gui/widget/image_button_widget.h"
 
 namespace gui {
 

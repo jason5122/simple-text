@@ -1,5 +1,4 @@
-#include "piece_tree_rbtree.h"
-
+#include "base/buffer/piece_tree_rbtree.h"
 #include <cassert>
 
 namespace base {
@@ -7,13 +6,9 @@ namespace base {
 RedBlackTree::Node::Node(Color c, const NodePtr& lft, const NodeData& data, const NodePtr& rgt)
     : color(c), left(lft), data(data), right(rgt) {}
 
-const RedBlackTree::Node* RedBlackTree::root_ptr() const {
-    return root_node.get();
-}
+const RedBlackTree::Node* RedBlackTree::root_ptr() const { return root_node.get(); }
 
-bool RedBlackTree::empty() const {
-    return !root_node;
-}
+bool RedBlackTree::empty() const { return !root_node; }
 
 const NodeData& RedBlackTree::data() const {
     assert(!empty());

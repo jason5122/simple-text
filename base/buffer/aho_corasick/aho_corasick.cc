@@ -5,19 +5,6 @@
 
 namespace base {
 
-class BufAlloc : public BufAllocator {
-public:
-    virtual ACBuffer* alloc(int sz) { return reinterpret_cast<ACBuffer*>(new unsigned char[sz]); }
-
-    // Do not de-allocate the buffer when the BufAlloc die.
-    virtual void free() {}
-
-    static void myfree(ACBuffer* buf) {
-        const char* b = reinterpret_cast<const char*>(buf);
-        delete[] b;
-    }
-};
-
 AhoCorasick::AhoCorasick(const std::vector<std::string>& patterns) {
     if (patterns.size() >= 65535) {
         // TODO: Currently we use 16-bit to encode pattern-index (see the comment to
@@ -30,15 +17,15 @@ AhoCorasick::AhoCorasick(const std::vector<std::string>& patterns) {
     ACSlowConstructor acc;
     acc.construct(patterns);
 
-    BufAlloc ba;
-    ACConverter cvt{acc, ba};
+    ACConverter cvt{acc};
     ACBuffer* buf = cvt.convert();
     this->buf = static_cast<void*>(buf);
 }
 
 AhoCorasick::~AhoCorasick() {
     ACBuffer* buf = static_cast<ACBuffer*>(this->buf);
-    BufAlloc::myfree(buf);
+    const char* b = reinterpret_cast<const char*>(buf);
+    delete[] b;
 }
 
 namespace {

@@ -1,7 +1,4 @@
-#include "ac_slow.h"
-
-#include "aho_corasick.h"
-
+#include "base/buffer/aho_corasick/ac_slow.h"
 #include <cassert>
 
 namespace base {

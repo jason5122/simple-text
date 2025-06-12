@@ -55,7 +55,7 @@ ACBuffer* ACConverter::alloc_buffer() {
     sz += state_sz;
 
     // Step 2: Allocate buffer, and populate header.
-    ACBuffer* buf = _buf_alloc.alloc(sz);
+    ACBuffer* buf = reinterpret_cast<ACBuffer*>(new unsigned char[sz]);
 
     buf->buf_len = sz;
     buf->root_goto_ofst = root_goto_ofst;

@@ -77,7 +77,7 @@ public:
 // Convert slow-AC-graph into fast one.
 class ACConverter {
 public:
-    ACConverter(ACSlowConstructor& acs, BufAllocator& ba) : _acs(acs), _buf_alloc(ba) {}
+    ACConverter(ACSlowConstructor& acs) : _acs(acs) {}
     ACBuffer* convert();
 
 private:
@@ -89,7 +89,6 @@ private:
 
 private:
     ACSlowConstructor& _acs;
-    BufAllocator& _buf_alloc;
 
     // map: ID of state in slow-graph -> ID of counterpart in fast-graph.
     std::vector<uint32> _id_map;

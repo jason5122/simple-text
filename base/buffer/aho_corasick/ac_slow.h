@@ -2,13 +2,12 @@
 
 #include <algorithm>
 #include <cassert>
+#include <fmt/base.h>
+#include <fmt/format.h>
 #include <map>
 #include <stdio.h>
 #include <string>
 #include <vector>
-
-#include <fmt/base.h>
-#include <fmt/format.h>
 
 namespace base {
 

@@ -134,8 +134,8 @@ public:
     char32_t next_codepoint();
     void seek(size_t offset);
     bool exhausted() const;
-    constexpr size_t remaining() const;
-    constexpr size_t offset() const;
+    constexpr size_t remaining() const { return total_content_length - total_offset; }
+    constexpr size_t offset() const { return total_offset; }
 
 private:
     void populate_ptrs();
@@ -169,8 +169,8 @@ public:
     char32_t next_codepoint();
     void seek(size_t offset);
     bool exhausted() const;
-    constexpr size_t remaining() const;
-    constexpr size_t offset() const;
+    constexpr size_t remaining() const { return total_offset + 1; }
+    constexpr size_t offset() const { return total_offset; }
 
 private:
     void populate_ptrs();
@@ -190,13 +190,5 @@ private:
     const char* first_ptr = nullptr;
     const char* last_ptr = nullptr;
 };
-
-constexpr size_t TreeWalker::remaining() const { return total_content_length - total_offset; }
-
-constexpr size_t TreeWalker::offset() const { return total_offset; }
-
-constexpr size_t ReverseTreeWalker::remaining() const { return total_offset + 1; }
-
-constexpr size_t ReverseTreeWalker::offset() const { return total_offset; }
 
 }  // namespace base

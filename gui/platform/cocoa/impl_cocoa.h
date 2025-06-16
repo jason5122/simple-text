@@ -12,20 +12,20 @@
 
 namespace gui {
 
-class App::impl {
+class App::Impl {
 public:
     NSPoint cascading_point = NSZeroPoint;
     std::unique_ptr<DisplayGL> display_gl;
 
-    impl() : display_gl(DisplayGL::Create()) {}
+    Impl() : display_gl(DisplayGL::Create()) {}
 };
 
-class WindowWidget::impl {
+class WindowWidget::Impl {
 public:
     WindowController* window_controller;
 };
 
-class Menu::impl {
+class Menu::Impl {
 public:
     NSMenu* ns_menu;
     MenuController* menu_controller;

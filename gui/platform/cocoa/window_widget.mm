@@ -5,7 +5,7 @@
 namespace gui {
 
 WindowWidget::WindowWidget(App& app, int width, int height)
-    : Widget({width, height}), pimpl{new impl{}} {
+    : Widget({width, height}), pimpl{new Impl{}} {
     NSRect frame = NSMakeRect(0, 1000, width, height);
 
     // TODO: Debug; remove this.

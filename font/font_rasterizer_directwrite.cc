@@ -34,7 +34,7 @@ struct FontRasterizer::NativeFontType {
     ComPtr<IDWriteFont> font;
 };
 
-class FontRasterizer::impl {
+class FontRasterizer::Impl {
 public:
     ComPtr<IDWriteFactory4> dwrite_factory;
     ComPtr<ID2D1Factory> d2d1_factory;
@@ -50,7 +50,7 @@ public:
     std::wstring locale;
 };
 
-FontRasterizer::FontRasterizer() : pimpl(new impl()) {
+FontRasterizer::FontRasterizer() : pimpl(new Impl()) {
     // TODO: Check return values here and handle errors.
 
     // Create DirectWrite factory.

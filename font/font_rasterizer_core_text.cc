@@ -27,7 +27,7 @@ struct FontRasterizer::NativeFontType {
     ScopedCFTypeRef<CTFontRef> font;
 };
 
-class FontRasterizer::impl {};
+class FontRasterizer::Impl {};
 
 FontRasterizer::FontRasterizer() {}
 

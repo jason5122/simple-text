@@ -44,8 +44,8 @@ public:
 
     // TODO: This is public for callbacks. Find a way to make this private.
     // private:
-    class impl;
-    std::unique_ptr<impl> pimpl;
+    class Impl;
+    std::unique_ptr<Impl> pimpl;
 
 private:
     CursorStyle current_style = CursorStyle::kArrow;

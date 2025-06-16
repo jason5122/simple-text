@@ -28,12 +28,12 @@ struct FontRasterizer::NativeFontType {
     GObjectPtr<PangoFont> font;
 };
 
-class FontRasterizer::impl {
+class FontRasterizer::Impl {
 public:
     std::vector<std::unordered_map<PangoGlyph, PangoGlyphInfo>> glyph_info_cache;
 };
 
-FontRasterizer::FontRasterizer() : pimpl{new impl{}} {}
+FontRasterizer::FontRasterizer() : pimpl{new Impl{}} {}
 
 FontRasterizer::~FontRasterizer() {}
 

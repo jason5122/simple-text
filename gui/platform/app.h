@@ -22,14 +22,14 @@ public:
     virtual void on_app_action(AppAction action) {}
 
     // TODO: Find a way to make this private! We currently need this for GTK's callbacks.
-    class impl;
-    std::unique_ptr<impl> pimpl;
+    class Impl;
+    std::unique_ptr<Impl> pimpl;
 
 private:
     friend class WindowWidget;
 
-    // class impl;
-    // std::unique_ptr<impl> pimpl;
+    // class Impl;
+    // std::unique_ptr<Impl> pimpl;
 };
 
 }  // namespace gui

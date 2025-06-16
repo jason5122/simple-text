@@ -13,7 +13,7 @@
 
 namespace gui {
 
-Menu::Menu() : pimpl{new impl{}} {
+Menu::Menu() : pimpl{new Impl{}} {
     pimpl->ns_menu = [[NSMenu alloc] initWithTitle:@""];
     pimpl->menu_controller = [[MenuController alloc] init];
 }

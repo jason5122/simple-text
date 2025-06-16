@@ -19,8 +19,8 @@ public:
 private:
     size_t index;
 
-    class impl;
-    std::unique_ptr<impl> pimpl;
+    class Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 }  // namespace gui

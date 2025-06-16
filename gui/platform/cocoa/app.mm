@@ -183,7 +183,7 @@ void BuildMainMenu() {
 
 namespace gui {
 
-App::App() : pimpl{new impl{}} {
+App::App() : pimpl{new Impl{}} {
     // We must create the application instance once before using `NSApp`.
     [NSApplication sharedApplication];
 

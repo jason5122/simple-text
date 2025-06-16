@@ -30,7 +30,7 @@ public:
     LineLayout layout_line(FontId font_id, std::string_view str8);
 
 private:
-    friend class impl;
+    friend class Impl;
 
     FontRasterizer();
     ~FontRasterizer();
@@ -47,8 +47,8 @@ public:
     size_t hash_font(std::wstring_view font_name16, int font_size) const;
     FontId cache_font(NativeFontType native_font, int font_size);
 
-    class impl;
-    std::unique_ptr<impl> pimpl;
+    class Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 }  // namespace font

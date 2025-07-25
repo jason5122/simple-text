@@ -9,11 +9,6 @@ static_library("spdlog") {
     "src/stdout_sinks.cpp",
   ]
 
-  defines = [
-    "SPDLOG_COMPILED_LIB",
-    "SPDLOG_NO_EXCEPTIONS",
-  ]
-
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
 
@@ -21,5 +16,10 @@ static_library("spdlog") {
 }
 
 config("spdlog_includes") {
+  defines = [
+    "SPDLOG_COMPILED_LIB",
+    "SPDLOG_NO_EXCEPTIONS",
+  ]
+
   include_dirs = [ "include" ]
 }

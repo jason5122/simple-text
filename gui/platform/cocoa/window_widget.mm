@@ -33,7 +33,7 @@ WindowWidget::WindowWidget(App& app, int width, int height)
 
 WindowWidget::~WindowWidget() {
     [pimpl->window_controller invalidateAppWindowPointer];
-    [pimpl->window_controller release];
+    // [pimpl->window_controller release];
 }
 
 void WindowWidget::show() { [pimpl->window_controller show]; }

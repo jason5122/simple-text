@@ -23,7 +23,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
                              CVOptionFlags flagsIn,
                              CVOptionFlags* flagsOut,
                              void* data) {
-    GLLayer* gl_layer = static_cast<GLLayer*>(data);
+    GLLayer* gl_layer = (__bridge GLLayer*)data;
     [gl_layer frameCallback:outputTime];
     return kCVReturnSuccess;
 }
@@ -44,9 +44,11 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
     int64_t ms = frame_time - first_frame_time;
 
     // CVDisplayLink can only draw on the main thread.
+    __weak GLLayer* weak_self = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-      if (app_window) {
-          app_window->on_frame(ms);
+      GLLayer* strong_self = weak_self;
+      if (strong_self->app_window) {
+          strong_self->app_window->on_frame(ms);
       }
     });
 }
@@ -65,7 +67,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
         auto context = display_gl->context();
         auto pixel_format = display_gl->pixelFormat();
         CVDisplayLinkCreateWithActiveCGDisplays(&display_link);
-        CVDisplayLinkSetOutputCallback(display_link, &DisplayLinkCallback, self);
+        CVDisplayLinkSetOutputCallback(display_link, &DisplayLinkCallback, (__bridge void*)self);
         CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(display_link, context, pixel_format);
     }
     return self;

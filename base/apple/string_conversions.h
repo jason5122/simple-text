@@ -65,12 +65,12 @@ inline std::string CFStringToString(CFStringRef cfstring) {
 
 #ifdef __OBJC__
 inline NSString* StringToNSString(std::string_view str8) {
-    return static_cast<NSString*>(StringToCFStringNoCopy(str8).release());
+    return (__bridge_transfer NSString*)StringToCFStringNoCopy(str8).release();
 }
 
 inline std::string NSStringToString(NSString* nsstring) {
     if (!nsstring) return std::string();
-    return CFStringToString(static_cast<CFStringRef>(nsstring));
+    return CFStringToString((__bridge CFStringRef)nsstring);
 }
 #endif
 

@@ -19,14 +19,14 @@ std::unique_ptr<Window> Window::create(WindowCreateInfo info) {
     NSRect frame = NSMakeRect(0, 0, info.width, info.height);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                        NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
-    NSWindow* ns_window = [[[NSWindow alloc] initWithContentRect:frame
-                                                       styleMask:style
-                                                         backing:NSBackingStoreBuffered
-                                                           defer:false] autorelease];
-    ns_window.contentView = [[[GLView alloc] initWithFrame:frame
-                                                 appWindow:window.get()
-                                                 glContext:window->pimpl_->ctx.get()
-                                             glPixelFormat:window->pimpl_->pf] autorelease];
+    NSWindow* ns_window = [[NSWindow alloc] initWithContentRect:frame
+                                                      styleMask:style
+                                                        backing:NSBackingStoreBuffered
+                                                          defer:false];
+    ns_window.contentView = [[GLView alloc] initWithFrame:frame
+                                                appWindow:window.get()
+                                                glContext:window->pimpl_->ctx.get()
+                                            glPixelFormat:window->pimpl_->pf];
     [ns_window setTitle:@"GUI API Redesign"];
     [ns_window makeKeyAndOrderFront:nil];
     return window;

@@ -4,11 +4,11 @@
 namespace base::apple {
 
 NSString* FilePathToNSString(const FilePath& path) {
-    return static_cast<NSString*>(FilePathToCFString(path).release());
+    return (__bridge_transfer NSString*)FilePathToCFString(path).release();
 }
 
 FilePath NSStringToFilePath(NSString* str) {
-    return CFStringToFilePath(static_cast<CFStringRef>(str));
+    return CFStringToFilePath((__bridge CFStringRef)str);
 }
 
 ScopedCFTypeRef<CFStringRef> FilePathToCFString(const FilePath& path) {

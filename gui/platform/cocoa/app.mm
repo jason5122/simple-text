@@ -186,7 +186,7 @@ App::App() : pimpl{new Impl{}} {
     // We must create the application instance once before using `NSApp`.
     [NSApplication sharedApplication];
 
-    AppDelegate* app_delegate = [[[AppDelegate alloc] initWithApp:this] autorelease];
+    AppDelegate* app_delegate = [[AppDelegate alloc] initWithApp:this];
     NSApp.delegate = app_delegate;
 }
 

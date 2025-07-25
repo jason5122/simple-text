@@ -9,4 +9,4 @@ AppMenuBridge::AppMenuBridge()
 
 AppMenuBridge::~AppMenuBridge() { menu_root.delegate = nil; }
 
-constexpr NSMenu* AppMenuBridge::menu() const { return menu_root; }
+NSMenu* AppMenuBridge::menu() const { return menu_root; }

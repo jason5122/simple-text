@@ -10,7 +10,7 @@ public:
     AppMenuBridge(const AppMenuBridge&) = delete;
     AppMenuBridge& operator=(const AppMenuBridge&) = delete;
 
-    constexpr NSMenu* menu() const;
+    NSMenu* menu() const;
 
 private:
     AppMenuCocoaController* __strong controller;

@@ -63,19 +63,19 @@ int main(int argc, const char* argv[]) {
         NSRect frame = NSMakeRect(0, 0, 1200, 800);
         NSUInteger style =
             NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
-        NSWindow* window = [[[NSWindow alloc] initWithContentRect:frame
-                                                        styleMask:style
-                                                          backing:NSBackingStoreBuffered
-                                                            defer:false] autorelease];
+        NSWindow* window = [[NSWindow alloc] initWithContentRect:frame
+                                                       styleMask:style
+                                                         backing:NSBackingStoreBuffered
+                                                           defer:false];
 
         // Create view (OpenGL or non-OpenGL).
         if constexpr (kUseOpenGL) {
-            NSView* gl_view = [[[NSView alloc] initWithFrame:frame] autorelease];
+            NSView* gl_view = [[NSView alloc] initWithFrame:frame];
             gl_view.layer = [[GLLayer alloc] init];
             gl_view.layer.needsDisplayOnBoundsChange = true;
             window.contentView = gl_view;
         } else {
-            window.contentView = [[[View alloc] initWithFrame:frame] autorelease];
+            window.contentView = [[View alloc] initWithFrame:frame];
         }
 
         [window setTitle:@"Bare macOS App"];

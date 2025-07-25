@@ -18,8 +18,8 @@ Menu::Menu() : pimpl{new Impl{}} {
 }
 
 Menu::~Menu() {
-    [pimpl->ns_menu release];
-    [pimpl->menu_controller release];
+    // [pimpl->ns_menu release];
+    // [pimpl->menu_controller release];
 }
 
 void Menu::addItem(std::string_view label) {

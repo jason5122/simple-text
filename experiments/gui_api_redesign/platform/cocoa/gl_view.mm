@@ -28,8 +28,7 @@ constexpr bool kBenchmarkMode = false;
     if (self) {
         app_window_ = appWindow;
         self.wantsLayer = YES;
-        self.layer = [[[GLLayer alloc] initWithAppWindow:appWindow glContext:ctx
-                                           glPixelFormat:pf] autorelease];
+        self.layer = [[GLLayer alloc] initWithAppWindow:appWindow glContext:ctx glPixelFormat:pf];
         self.layer.needsDisplayOnBoundsChange = YES;
     }
     return self;

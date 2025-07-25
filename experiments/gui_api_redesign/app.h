@@ -9,8 +9,8 @@ public:
     ~App();
     App(const App&) = delete;
     App& operator=(const App&) = delete;
-    static std::unique_ptr<App> create();
 
+    static std::unique_ptr<App> create();
     int run();
     Window* create_window(int width, int height);
 

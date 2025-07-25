@@ -20,13 +20,13 @@
 
         NSWindowStyleMask mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable |
                                  NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
-        self.window = [[[NSWindow alloc] initWithContentRect:frameRect
-                                                   styleMask:mask
-                                                     backing:NSBackingStoreBuffered
-                                                       defer:false] autorelease];
-        opengl_view = [[[GLView alloc] initWithFrame:frameRect
-                                           appWindow:theAppWindow
-                                           displayGL:displayGL] autorelease];
+        self.window = [[NSWindow alloc] initWithContentRect:frameRect
+                                                  styleMask:mask
+                                                    backing:NSBackingStoreBuffered
+                                                      defer:false];
+        opengl_view = [[GLView alloc] initWithFrame:frameRect
+                                          appWindow:theAppWindow
+                                          displayGL:displayGL];
         self.window.contentView = opengl_view;
         [self.window makeFirstResponder:opengl_view];
 

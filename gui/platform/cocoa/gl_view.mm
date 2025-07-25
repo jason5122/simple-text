@@ -33,7 +33,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
                     displayGL:(gui::DisplayGL*)displayGL {
     self = [super initWithFrame:frame];
     if (self) {
-        gl_layer = [[[GLLayer alloc] initWithAppWindow:appWindow displayGL:displayGL] autorelease];
+        gl_layer = [[GLLayer alloc] initWithAppWindow:appWindow displayGL:displayGL];
         app_window = appWindow;
 
         gl_layer.needsDisplayOnBoundsChange = true;
@@ -52,10 +52,10 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 
         NSTrackingAreaOptions options =
             NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
-        trackingArea = [[[NSTrackingArea alloc] initWithRect:self.bounds
-                                                     options:options
-                                                       owner:self
-                                                    userInfo:nil] autorelease];
+        trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                    options:options
+                                                      owner:self
+                                                   userInfo:nil];
         [self addTrackingArea:trackingArea];
 
         // Listen for changes to "Show scroll bars" setting.
@@ -108,10 +108,10 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 
     NSTrackingAreaOptions options =
         NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow;
-    trackingArea = [[[NSTrackingArea alloc] initWithRect:self.bounds
-                                                 options:options
-                                                   owner:self
-                                                userInfo:nil] autorelease];
+    trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
+                                                options:options
+                                                  owner:self
+                                               userInfo:nil];
     [self addTrackingArea:trackingArea];
 }
 

@@ -1,6 +1,6 @@
 #include "gui/renderer/atlas.h"
-#include <fmt/base.h>
 #include <random>
+#include <spdlog/spdlog.h>
 
 using namespace gl;
 
@@ -16,7 +16,7 @@ Atlas::Atlas() {
     if constexpr (kPrintMaxTextureSize) {
         GLint max_texture_size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-        fmt::println("GL_MAX_TEXTURE_SIZE = {}", max_texture_size);
+        spdlog::info("GL_MAX_TEXTURE_SIZE = {}", max_texture_size);
     }
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -96,20 +96,20 @@ GLenum format_to_glenum(Atlas::Format format) {
 bool Atlas::insert_texture(
     int width, int height, Format format, const std::vector<uint8_t>& data, Vec4& out_uv) {
     if (width > kAtlasSize || height > kAtlasSize) {
-        fmt::println("Glyph is too large.");
+        spdlog::error("Glyph is too large.");
         return false;
     }
 
     // If there's not enough room in current row, advance to the next one.
     if (!room_in_row(width, height)) {
         if (!advance_row()) {
-            fmt::println("Atlas is full.");
+            spdlog::error("Atlas is full.");
             return false;
         }
 
         // If there's still not enough room, then atlas is full.
         if (!room_in_row(width, height)) {
-            fmt::println("Could not insert into atlas.");
+            spdlog::error("Could not insert into atlas.");
             return false;
         }
     }

@@ -6,7 +6,6 @@
 #include "util/profiler.h"
 #include <cassert>
 #include <cmath>
-#include <fmt/base.h>
 #include <fmt/format.h>
 
 namespace gui {

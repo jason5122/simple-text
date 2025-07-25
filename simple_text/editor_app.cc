@@ -3,8 +3,8 @@
 #include "gl/loader.h"
 #include "gui/renderer/renderer.h"
 #include "simple_text/editor_app.h"
-#include <fmt/base.h>
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 namespace gui {
 
@@ -48,7 +48,7 @@ void EditorApp::on_launch() {
     create_window();
 }
 
-void EditorApp::on_quit() { fmt::println("SimpleText::onQuit()"); }
+void EditorApp::on_quit() { spdlog::info("SimpleText::onQuit()"); }
 
 void EditorApp::on_app_action(AppAction action) {
     if (action == AppAction::kNewFile) {
@@ -74,7 +74,7 @@ void EditorApp::create_window() {
 }
 
 void EditorApp::destroy_window(int wid) {
-    fmt::println("EditorApp::destroyWindow({})", wid);
+    spdlog::info("EditorApp::destroyWindow({})", wid);
     editor_windows[wid] = nullptr;
 }
 

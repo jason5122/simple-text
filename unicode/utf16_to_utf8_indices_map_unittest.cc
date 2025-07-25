@@ -1,5 +1,4 @@
 #include "unicode/utf16_to_utf8_indices_map.h"
-#include <fmt/base.h>
 #include <gtest/gtest.h>
 
 namespace unicode {

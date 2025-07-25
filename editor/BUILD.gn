@@ -2,7 +2,7 @@ source_set("editor") {
   sources = [ "movement.cc" ]
 
   deps = [
-    "//third_party/fmt",
+    "//third_party/spdlog",
     "//third_party/uni_algo",
   ]
 }

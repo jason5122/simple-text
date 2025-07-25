@@ -10,7 +10,7 @@ source_set("base") {
     "files/file_util.cc",
     "path_service.cc",
   ]
-  deps = [ "//third_party/fmt" ]
+  deps = [ "//third_party/spdlog" ]
 
   # TODO: Consider checking all type conversions. These result in silent and subtle bugs. We
   # previously spent one hour debugging one.

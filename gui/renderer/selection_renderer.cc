@@ -2,7 +2,6 @@
 #include "gui/renderer/selection_renderer.h"
 #include <cassert>
 #include <cstdint>
-#include <fmt/base.h>
 
 using namespace gl;
 

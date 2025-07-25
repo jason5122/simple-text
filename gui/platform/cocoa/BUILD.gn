@@ -18,5 +18,5 @@ source_set("cocoa") {
   ]
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
-  deps = [ "//third_party/fmt" ]
+  deps = [ "//third_party/spdlog" ]
 }

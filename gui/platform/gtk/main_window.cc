@@ -1,8 +1,8 @@
 #include "gui/platform/gtk/main_window.h"
 #include "unicode/unicode.h"
 #include <cmath>
-#include <fmt/base.h>
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 namespace gui {
 
@@ -138,7 +138,7 @@ void realize(GtkGLArea* self, gpointer user_data) {
 
     GdkGLAPI api = gtk_gl_area_get_api(self);
     if (api == GDK_GL_API_GLES) {
-        fmt::println("GDK_GL_API_GLES is unsupported!");
+        spdlog::error("GDK_GL_API_GLES is unsupported!");
         std::abort();
     }
 
@@ -294,7 +294,7 @@ void motion(GtkEventControllerMotion* self, gdouble x, gdouble y, gpointer user_
 }
 
 void quit_callback(GSimpleAction* action, GVariant* parameter, gpointer app) {
-    fmt::println("quit callback");
+    spdlog::info("quit callback");
     g_application_quit(G_APPLICATION(app));
 }
 
@@ -321,7 +321,7 @@ gboolean key_pressed(GtkEventControllerKey* self,
             std::string str8(utf8, utf8_len);
             app_window->onInsertText(str8);
 
-            fmt::println("str8 = {}, codepoint = {}", str8, codepoint);
+            spdlog::info("str8 = {}, codepoint = {}", str8, codepoint);
         }
     }
     return false;  // TODO: See if we should return true/false here.
@@ -418,7 +418,7 @@ constexpr const gchar* GtkAccelStringFromModifier(ModifierKey modifier) {
     case ModifierKey::kSuper:
         return "<Meta>";
     default:
-        fmt::println("Error: Could not parse modifier.");
+        spdlog::error("Error: Could not parse modifier.");
         std::abort();
     }
 }

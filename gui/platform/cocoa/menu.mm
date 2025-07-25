@@ -2,7 +2,6 @@
 #include "base/apple/string_conversions.h"
 #include "gui/platform/cocoa/impl_cocoa.h"
 #include "gui/platform/menu.h"
-#include <fmt/base.h>
 
 // This Objective-C class wraps a gui::Menu object, which allows it to be stored in the
 // representedObject field of an NSMenuItem.

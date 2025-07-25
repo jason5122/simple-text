@@ -7,14 +7,16 @@ if (is_mac) {
     sources = [
       "main.cc",
       "platform/cocoa/app.mm",
-      "platform/cocoa/gl_context_manager.cc",
+      "platform/cocoa/gl_context.cc",
+      "platform/cocoa/gl_pixel_format.cc",
       "platform/cocoa/gl_view.mm",
       "platform/cocoa/window.mm",
+      "renderer.cc",
     ]
 
     deps = [
       "//gl",
-      "//third_party/fmt",
+      "//third_party/spdlog",
     ]
 
     frameworks = [
@@ -36,7 +38,7 @@ if (is_win) {
 
     deps = [
       "//gl",
-      "//third_party/fmt",
+      "//third_party/spdlog",
     ]
   }
 }

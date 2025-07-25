@@ -3,9 +3,9 @@
 #include "gui/platform/win32/resources.h"
 #include "gui/platform/win32/win32_window.h"
 #include "util/escape_special_chars.h"
-#include <fmt/base.h>
 #include <shellscalingapi.h>
 #include <shtypes.h>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <windowsx.h>
 #include <wingdi.h>
@@ -211,7 +211,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_KEYDOWN: {
-        fmt::println("WM_KEYDOWN: {}", wParam);
+        spdlog::info("WM_KEYDOWN: {}", wParam);
 
         Key key = KeyFromKeyCode(wParam);
         ModifierKey modifiers = ModifierFromState();
@@ -237,9 +237,9 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     // TODO: Test light/dark mode switching on an activated Windows license.
     case WM_SETTINGCHANGE: {
         if (!lstrcmp(LPCTSTR(lParam), L"ImmersiveColorSet")) {
-            fmt::println("ImmersiveColorSet");
+            spdlog::info("ImmersiveColorSet");
         } else {
-            fmt::println("WM_SETTINGCHANGE, but theme was not changed.");
+            spdlog::info("WM_SETTINGCHANGE, but theme was not changed.");
         }
         return 0;
     }
@@ -274,7 +274,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             }
 
             std::string str8 = base::windows::convert_to_utf8(utf16);
-            fmt::println("WM_CHAR: {}", util::escape_special_chars(str8));
+            spdlog::info("WM_CHAR: {}", util::escape_special_chars(str8));
             app_window.on_insert_text(str8);
 
             high_surrogate = '\0';
@@ -362,7 +362,7 @@ int Win32Window::scale() {
     HMONITOR hmon = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTOPRIMARY);
     DEVICE_SCALE_FACTOR scale_factor;
     GetScaleFactorForMonitor(hmon, &scale_factor);
-    fmt::println("Win32 window scale: {}", static_cast<int>(scale_factor));
+    spdlog::info("Win32 window scale: {}", static_cast<int>(scale_factor));
     // TODO: Don't hard code this.
     return 1;
 }

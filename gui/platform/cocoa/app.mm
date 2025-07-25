@@ -4,7 +4,6 @@
 #include "gui/platform/window_widget.h"
 #include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>
-#include <fmt/base.h>
 #include <vector>
 
 // Taken from `//chromium/src/chrome/browser/ui/cocoa/main_menu_builder.mm.

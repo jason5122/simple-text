@@ -1,5 +1,5 @@
 #include "gui/renderer/shader.h"
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 using namespace gl;
 
@@ -29,7 +29,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
         std::string error;
         error.reserve(log_size);
         glGetShaderInfoLog(vertex_shader, log_size, nullptr, error.data());
-        fmt::println("vertex shader: {}", error);
+        spdlog::error("vertex shader: {}", error);
 
         glDeleteShader(vertex_shader);
         // TODO: Handle errors in constructor.
@@ -44,7 +44,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
         std::string error;
         error.reserve(log_size);
         glGetShaderInfoLog(vertex_shader, log_size, nullptr, error.data());
-        fmt::println("fragment shader: {}", error);
+        spdlog::error("fragment shader: {}", error);
 
         glDeleteShader(fragment_shader);
         // TODO: Handle errors in constructor.
@@ -60,7 +60,7 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
         // TODO: Do this in a more robust way.
         char info_log[512];
         glGetProgramInfoLog(id_, 512, nullptr, info_log);
-        fmt::println("Shader linking error: {}", info_log);
+        spdlog::error("Shader linking error: {}", info_log);
 
         // TODO: Use RAII wrappers to automatically destruct shaders and program.
         // TODO: Handle errors in constructor.

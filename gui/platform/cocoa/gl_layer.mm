@@ -1,6 +1,6 @@
 #include "gui/platform/cocoa/gl_layer.h"
 #include <Cocoa/Cocoa.h>
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 @interface GLLayer () {
     gui::WindowWidget* app_window;
@@ -88,7 +88,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 - (int)framesPerSecond {
     CVTime cv_time = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(display_link);
     if (cv_time.flags & kCVTimeIsIndefinite) {
-        fmt::println("Error: Could not get CVDisplayLink refresh rate.");
+        spdlog::error("Error: Could not get CVDisplayLink refresh rate.");
         std::abort();
     }
     int64_t fps = cv_time.timeScale / cv_time.timeValue;

@@ -2,8 +2,8 @@
 #include "base/files/scoped_file.h"
 #include "font/font_rasterizer.h"
 #include "gui/renderer/texture_cache.h"
-#include <fmt/base.h>
 #include <jpeglib.h>
+#include <spdlog/spdlog.h>
 #include <spng.h>
 
 namespace gui {
@@ -34,7 +34,7 @@ size_t TextureCache::add_png(const base::FilePath& path) {
     bool success = load_png(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
-        fmt::println("TextureCache::addPng() error: Could not load image.");
+        spdlog::error("TextureCache::addPng() error: Could not load image.");
         std::abort();
     }
 
@@ -49,7 +49,8 @@ size_t TextureCache::add_jpeg(const base::FilePath& path) {
     bool success = load_jpeg(path, image);
     // TODO: Handle image load failure in a more robust way.
     if (!success) {
-        fmt::println("TextureCache::addJpeg() error: Could not load image.");
+        spdlog::error("TextureCache::addJpeg() error: Could not load image.");
+        std::abort();
     }
 
     size_t image_id = image_cache.size();

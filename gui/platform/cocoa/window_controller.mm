@@ -1,6 +1,5 @@
 #include "gui/platform/cocoa/gl_view.h"
 #include "gui/platform/cocoa/window_controller.h"
-#include <fmt/base.h>
 
 @interface WindowController () {
     GLView* opengl_view;

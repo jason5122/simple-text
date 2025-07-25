@@ -7,7 +7,7 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
 #include <cassert>
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 using base::apple::ScopedCFTypeRef;
 using base::apple::ScopedTypeRef;
@@ -79,7 +79,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     CTFontRef font_ref = font_id_to_native[font_id].font.get();
 
     if (!font_ref) {
-        fmt::println("FontRasterizer::rasterize() error: CTFontRef is null!");
+        spdlog::error("FontRasterizer::rasterize() error: CTFontRef is null!");
         std::abort();
     }
 
@@ -105,8 +105,8 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     // descent *= 2;
 
     if (width < 0 || height < 0) {
-        fmt::println("Warning: width/height < 0 for font ID = {}, glyph ID = {}, font name = {}",
-                     font_id, glyph_id, font_id_to_postscript_name[font_id]);
+        spdlog::warn("width/height < 0 for font ID = {}, glyph ID = {}, font name = {}", font_id,
+                     glyph_id, font_id_to_postscript_name[font_id]);
         return {};
     }
 
@@ -155,7 +155,7 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
 
     unicode::UTF16ToUTF8IndicesMap indices_map;
     if (!indices_map.set_utf8(str8.data(), str8.length())) {
-        fmt::println("UTF16ToUTF8IndicesMap::setUTF8 error");
+        spdlog::error("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }
 
@@ -231,7 +231,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     std::string font_name = base::apple::CFStringToString(ct_font_name.get());
 
     if (font_name.empty()) {
-        fmt::println("FontRasterizer::cacheFont() error: font_name is empty");
+        spdlog::error("FontRasterizer::cacheFont() error: font_name is empty");
         std::abort();
     }
 

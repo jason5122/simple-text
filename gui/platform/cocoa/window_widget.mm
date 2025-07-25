@@ -1,6 +1,6 @@
 #include "gui/platform/cocoa/impl_cocoa.h"
 #include "gui/platform/window_widget.h"
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 namespace gui {
 
@@ -74,7 +74,7 @@ std::optional<std::string> WindowWidget::open_file_picker() const {
     // [panel beginSheetModalForWindow:pimpl->window_controller.window
     //                   completionHandler:^(NSInteger result) {
     //                     if (result == NSModalResponseOK) {
-    //                         fmt::println(panel.URL.fileSystemRepresentation);
+    //                         spdlog::info(panel.URL.fileSystemRepresentation);
     //                     }
     //                   }];
 }

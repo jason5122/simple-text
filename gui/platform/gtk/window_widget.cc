@@ -1,6 +1,6 @@
 #include "gui/platform/gtk/impl_gtk.h"
 #include "gui/platform/window_widget.h"
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 #include <string>
 
 namespace gui {
@@ -106,7 +106,7 @@ int WindowWidget::frames_per_second() const { return 60; }
 //     // gtk_widget_set_visible(popover_menu, true);
 //     gtk_popover_popup(GTK_POPOVER(popover_menu));
 
-//     fmt::println("Context menu closed.");
+//     spdlog::info("Context menu closed.");
 // }
 
 }  // namespace gui

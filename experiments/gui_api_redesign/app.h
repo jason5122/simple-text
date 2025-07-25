@@ -12,7 +12,7 @@ public:
     static std::unique_ptr<App> create();
 
     int run();
-    Window& create_window(int width, int height);
+    Window* create_window(int width, int height);
 
 private:
     App();

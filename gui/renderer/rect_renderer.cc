@@ -1,7 +1,6 @@
 #include "gl/gl.h"
 #include "gui/renderer/rect_renderer.h"
 #include <cmath>
-#include <fmt/base.h>
 
 using namespace gl;
 

@@ -38,9 +38,9 @@ source_set("gui") {
     "//font",
     "//gl",
     "//gui/renderer/icons",
-    "//third_party/fmt",
     "//third_party/libjpeg",
     "//third_party/libspng",
+    "//third_party/spdlog",
 
     # TODO: Refactor this.
     "//gui/platform",

@@ -1,23 +1,24 @@
 #include "experiments/gui_api_redesign/app.h"
-#include "experiments/gui_api_redesign/platform/cocoa/gl_context_manager.h"
+#include "experiments/gui_api_redesign/platform/cocoa/window_create_info.h"
 #include <AppKit/AppKit.h>
-#include <fmt/base.h>
 
 struct App::Impl {
-    std::unique_ptr<GLContextManager> mgr;
+    std::unique_ptr<GLContext> ctx;
+    std::unique_ptr<GLPixelFormat> pf;
 };
 
 App::~App() = default;
 App::App() : pimpl_(std::make_unique<Impl>()) {}
 
 std::unique_ptr<App> App::create() {
+    auto pf = GLPixelFormat::create();
+    if (!pf) return nullptr;
+    auto ctx = GLContext::create(*pf);
+    if (!ctx) return nullptr;
+
     auto app = std::unique_ptr<App>(new App());
-    auto mgr = GLContextManager::create();
-    if (!mgr) {
-        fmt::println(stderr, "Failed to initialize GL context manager");
-        return nullptr;
-    }
-    app->pimpl_->mgr = std::move(mgr);
+    app->pimpl_->ctx = std::move(ctx);
+    app->pimpl_->pf = std::move(pf);
     return app;
 }
 
@@ -41,9 +42,20 @@ int App::run() {
     return 0;  // TODO: How do we get non-zero return values from NSApp?
 }
 
-Window& App::create_window(int width, int height) {
-    auto window = Window::create(width, height, static_cast<void*>(pimpl_->mgr.get()));
-    Window& ref = *window;
+Window* App::create_window(int width, int height) {
+    auto ctx = pimpl_->ctx->create_shared(*pimpl_->pf);
+    if (!ctx) return nullptr;
+
+    WindowCreateInfo info = {
+        .width = width,
+        .height = height,
+        .ctx = std::move(ctx),
+        .pf = pimpl_->pf.get(),
+    };
+    auto window = Window::create(std::move(info));
+    if (!window) return nullptr;
+
+    Window* ptr = window.get();
     windows_.push_back(std::move(window));
-    return ref;
+    return ptr;
 }

@@ -78,7 +78,7 @@ void Language::load() {
                                                &ts_wasm_error);
 
         if (!language) {
-            fmt::println("SyntaxHighlighter::loadFromWasm() error: Language is null!");
+            spdlog::error("SyntaxHighlighter::loadFromWasm() error: Language is null!");
             std::abort();
         }
         assert(ts_language_is_wasm(language));
@@ -96,8 +96,8 @@ void Language::load() {
     query = ts_query_new(language, src.data(), src.length(), &error_offset, &error_type);
 
     if (error_type != TSQueryErrorNone) {
-        fmt::println("Error creating new TSQuery. error_offset: {}, error type:{} ", error_offset,
-                     static_cast<std::underlying_type_t<TSQueryError>>(error_type));
+        spdlog::error("Error creating new TSQuery. error_offset: {}, error type:{} ", error_offset,
+                      static_cast<std::underlying_type_t<TSQueryError>>(error_type));
     }
 
     uint32_t capture_count = ts_query_capture_count(query);
@@ -105,7 +105,7 @@ void Language::load() {
     for (size_t i = 0; i < capture_count; ++i) {
         uint32_t length;
         std::string capture_name = ts_query_capture_name_for_id(query, i, &length);
-        fmt::println("{}: {}", i, capture_name);
+        spdlog::info("{}: {}", i, capture_name);
 
         capture_index_color_table[i] = ColorForCaptureName(capture_name);
     }
@@ -141,9 +141,7 @@ const Rgb& Language::getColor(size_t capture_index) const {
     return capture_index_color_table[capture_index];
 }
 
-TSParser* Language::getParser() const {
-    return parser;
-}
+TSParser* Language::getParser() const { return parser; }
 
 namespace {
 constexpr Rgb ColorForCaptureName(std::string_view name) {

@@ -1,7 +1,7 @@
 #include "gui/platform/cocoa/display_gl.h"
 #include <Cocoa/Cocoa.h>
 #include <OpenGL/gl3.h>
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 namespace gui {
 
@@ -25,18 +25,18 @@ std::unique_ptr<DisplayGL> DisplayGL::Create() {
 
     CGLChoosePixelFormat(attribs, &pixel_format, &nVirtualScreens);
     if (pixel_format == nullptr) {
-        fmt::println("Could not create the context's pixel format.");
+        spdlog::error("Could not create the context's pixel format.");
         return nullptr;
     }
 
     CGLCreateContext(pixel_format, nullptr, &context);
     if (pixel_format == nullptr) {
-        fmt::println("Could not create the CGL context.");
+        spdlog::error("Could not create the CGL context.");
         return nullptr;
     }
 
     if (CGLSetCurrentContext(context) != kCGLNoError) {
-        fmt::println("Could not make the CGL context current.");
+        spdlog::error("Could not make the CGL context current.");
         return nullptr;
     }
 

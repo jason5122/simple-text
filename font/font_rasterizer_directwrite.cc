@@ -7,9 +7,8 @@
 #include <cwchar>
 #include <d2d1_3.h>
 #include <dwrite_3.h>
-#include <fmt/base.h>
-#include <fmt/xchar.h>
 #include <limits>
+#include <spdlog/spdlog.h>
 #include <unknwnbase.h>
 #include <vector>
 #include <wincodec.h>
@@ -108,15 +107,17 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
     HRESULT hr;
     hr = font_collection->FindFamilyName(font_name16.data(), &index, &exists);
     if (FAILED(hr)) {
-        fmt::println("Could not create font family with name {} and size {}.", font_name8,
-                     font_size);
+        spdlog::error("Could not create font family with name {} and size {}.", font_name8,
+                      font_size);
+        std::abort();
     }
 
     ComPtr<IDWriteFontFamily> font_family;
     hr = font_collection->GetFontFamily(index, &font_family);
     if (FAILED(hr)) {
-        fmt::println("Could not create font family with name {} and size {}.", font_name8,
-                     font_size);
+        spdlog::error("Could not create font family with name {} and size {}.", font_name8,
+                      font_size);
+        std::abort();
     }
 
     auto style = DWRITE_FONT_STYLE_NORMAL;
@@ -148,10 +149,10 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
     //     HRESULT hr = font_collection1->GetFontFromFontFace(font_face.Get(), &font);
 
     //     std::wstring font_name = GetPostscriptName(font.Get(), pimpl->locale);
-    //     fmt::println(L"font name = {}", font_name);
+    //     spdlog::info(L"font name = {}", font_name);
 
     //     if (SUCCEEDED(hr)) {
-    //         fmt::println("Found font in filtered collection!");
+    //         spdlog::info("Found font in filtered collection!");
     //         return cache_font({font}, font_size);
     //     }
     // }
@@ -159,7 +160,8 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
     ComPtr<IDWriteFont> font;
     hr = font_family->GetFirstMatchingFont(weight, DWRITE_FONT_STRETCH_NORMAL, style, &font);
     if (FAILED(hr)) {
-        fmt::println("Could not create font with name {} and size {}.", font_name8, font_size);
+        spdlog::error("Could not create font with name {} and size {}.", font_name8, font_size);
+        std::abort();
     }
 
     return cache_font({font}, font_size);
@@ -215,7 +217,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     ComPtr<ID2D1DeviceContext4> dc_target4;
     hr = pimpl->dc_target.As(&dc_target4);
     if (FAILED(hr)) {
-        fmt::println("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
+        spdlog::error("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
         std::abort();
     }
     dc_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
@@ -273,7 +275,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     ComPtr<ID2D1DeviceContext4> render_target4;
     hr = render_target.As(&render_target4);
     if (FAILED(hr)) {
-        fmt::println("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
+        spdlog::error("ID2D1DeviceContext4 error: Windows 10 is the oldest supported version");
         std::abort();
     }
     render_target4->SetUnitMode(D2D1_UNIT_MODE_DIPS);
@@ -310,7 +312,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
                                              color_run->measuringMode);
                 break;
             default:
-                fmt::println("Error: DirectWrite glyph image format unimplemented");
+                spdlog::error("Error: DirectWrite glyph image format unimplemented");
                 std::abort();
             }
         }
@@ -360,7 +362,7 @@ public:
         : ref_count(1), font_collection(font_collection) {
 
         if (!indices_map.set_utf8(str8.data(), str8.length())) {
-            fmt::println("UTF16ToUTF8IndicesMap::setUTF8 error");
+            spdlog::error("UTF16ToUTF8IndicesMap::setUTF8 error");
             std::abort();
         }
     }
@@ -399,7 +401,7 @@ public:
         int scale_factor = 2;
 
         if (!glyph_run->fontFace) {
-            fmt::println("Glyph run without font face.");
+            spdlog::error("Glyph run without font face.");
             std::abort();
         }
         if (glyph_run->glyphCount == 0) {

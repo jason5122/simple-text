@@ -1,8 +1,8 @@
 #include "font/font_rasterizer.h"
 #include <cassert>
-#include <fmt/base.h>
 #include <memory>
 #include <pango/pangocairo.h>
+#include <spdlog/spdlog.h>
 #include <string>
 
 namespace font {
@@ -57,7 +57,7 @@ size_t FontRasterizer::add_font(std::string_view font_name_utf8,
     GObjectPtr<PangoFont> pango_font{
         pango_font_map_load_font(font_map, context.get(), desc.get())};
     if (!pango_font) {
-        fmt::println("pango_font_map_load_font() error.");
+        spdlog::error("pango_font_map_load_font() error.");
         std::abort();
     }
     return cache_font({std::move(pango_font)}, font_size);
@@ -78,7 +78,7 @@ size_t FontRasterizer::resize_font(size_t font_id, int font_size) {
     pango_font_description_set_size(desc_copy, font_size * PANGO_SCALE);
     GObjectPtr<PangoFont> pango_font{pango_font_map_load_font(font_map, context.get(), desc_copy)};
     if (!pango_font) {
-        fmt::println("pango_font_map_load_font() error.");
+        spdlog::error("pango_font_map_load_font() error.");
         std::abort();
     }
     return cache_font({std::move(pango_font)}, font_size);
@@ -255,7 +255,7 @@ size_t FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
 
     PangoFontMetricsPtr pango_metrics{pango_font_get_metrics(native_font.font.get(), nullptr)};
     if (!pango_metrics) {
-        fmt::println("pango_font_get_metrics() error.");
+        spdlog::error("pango_font_get_metrics() error.");
         std::abort();
     }
 

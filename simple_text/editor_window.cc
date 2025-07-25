@@ -6,8 +6,8 @@
 #include "simple_text/editor_app.h"
 #include "simple_text/editor_window.h"
 #include "util/profiler.h"
-#include <fmt/base.h>
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 #include <string>
 
 namespace gui {
@@ -132,7 +132,7 @@ void EditorWindow::on_frame(int64_t ms) {
     //     }
     // }
 
-    // fmt::println("{} {}", vel_x, vel_y);
+    // spdlog::info("{} {}", vel_x, vel_y);
     // if (vel_x > 0 || vel_y > 0) {
     //     main_widget->scroll(last_mouse_pos, {vel_x, vel_y});
     //     vel_x = std::max(vel_x - kDecelFriction, 0);
@@ -195,14 +195,14 @@ void EditorWindow::left_mouse_down(const Point& mouse_pos,
 
     // TODO: Clean this up.
     // if (dragged_widget) {
-    //     fmt::println("dragged widget: {}", dragged_widget->className());
+    //     spdlog::info("dragged widget: {}", dragged_widget->className());
     // } else {
-    //     fmt::println("no dragged widget");
+    //     spdlog::info("no dragged widget");
     // }
     // if (focused_widget) {
-    //     fmt::println("focused widget: {}", focused_widget->className());
+    //     spdlog::info("focused widget: {}", focused_widget->className());
     // } else {
-    //     fmt::println("no focused widget");
+    //     spdlog::info("no focused widget");
     // }
 }
 
@@ -239,9 +239,9 @@ void EditorWindow::right_mouse_down(const Point& mouse_pos,
     //     menu.addItem(temp);
     //     auto selected_index = menu.show(mouse_pos.value());
     //     if (selected_index) {
-    //         fmt::println("Selected menu index = {}", selected_index.value());
+    //         spdlog::info("Selected menu index = {}", selected_index.value());
     //     } else {
-    //         fmt::println("Menu was closed without a selection.");
+    //         spdlog::info("Menu was closed without a selection.");
     //     }
     // }
 }
@@ -272,7 +272,7 @@ void EditorWindow::on_scroll_decelerate(const Point& mouse_pos, const Delta& del
 }
 
 bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
-    // fmt::println("key = {}, modifiers = {}", key, modifiers);
+    // spdlog::info("key = {}, modifiers = {}", key, modifiers);
 
     bool handled = false;
     if (key == Key::kJ && modifiers == kPrimaryModifier) {
@@ -419,7 +419,7 @@ bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
         int new_font_size = std::max(metrics.font_size - 1, 8);
-        fmt::println("font size = {}", new_font_size);
+        spdlog::info("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
 
         editor_widget->update_font(parent.main_font_id);
@@ -430,7 +430,7 @@ bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
         int new_font_size = std::min(metrics.font_size + 1, 128);
-        fmt::println("font size = {}", new_font_size);
+        spdlog::info("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
 
         editor_widget->update_font(parent.main_font_id);
@@ -441,7 +441,7 @@ bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
         const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
 
         int new_font_size = parent.kMainFontSize;
-        fmt::println("font size = {}", new_font_size);
+        spdlog::info("font size = {}", new_font_size);
         parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
 
         editor_widget->update_font(parent.main_font_id);
@@ -569,10 +569,10 @@ void EditorWindow::update_cursor_style(const std::optional<Point>& mouse_pos) {
     // Case 2: Mouse position is within window.
     else if (mouse_pos) {
         if (auto hovered_widget = main_widget->widget_at(mouse_pos.value())) {
-            // fmt::println("{}", hovered_widget->className());
+            // spdlog::info("{}", hovered_widget->className());
             set_cursor_style(hovered_widget->cursor_style());
         } else {
-            // fmt::println("No widget hovered");
+            // spdlog::info("No widget hovered");
             set_cursor_style(CursorStyle::kArrow);
         }
     }

@@ -4,7 +4,7 @@ source_set("font") {
   sources = [ "font_rasterizer.cc" ]
 
   deps = [
-    "//third_party/fmt",
+    "//third_party/spdlog",
     "//unicode",
   ]
 

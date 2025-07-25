@@ -1,8 +1,8 @@
 #include "editor/movement.h"
 #include "third_party/uni_algo/include/uni_algo/prop.h"
-#include <fmt/base.h>
 #include <numeric>
 #include <optional>
+#include <spdlog/spdlog.h>
 #include <vector>
 
 // References:
@@ -93,7 +93,7 @@ size_t prev_word_start(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            fmt::println("prevWordStart() error: invalid codepoint.");
+            spdlog::error("prevWordStart() error: invalid codepoint.");
             std::abort();
         }
 
@@ -122,7 +122,7 @@ size_t next_word_end(const base::PieceTree& tree, size_t offset) {
 
         // TODO: Properly handle errors.
         if (cp == -1) {
-            fmt::println("nextWordEnd() error: invalid codepoint.");
+            spdlog::error("nextWordEnd() error: invalid codepoint.");
             std::abort();
         }
 

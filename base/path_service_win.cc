@@ -1,7 +1,5 @@
-#include "path_service.h"
-
-#include <fmt/base.h>
-
+#include "base/path_service.h"
+#include <spdlog/spdlog.h>
 #include <windows.h>
 
 namespace base {
@@ -18,7 +16,7 @@ FilePath ExecutablePath() {
     system_buffer[0] = 0;
 
     if (::GetModuleFileName(NULL, system_buffer, MAX_PATH) == 0) {
-        fmt::println("GetModuleFileName() error");
+        spdlog::error("GetModuleFileName() error");
         std::abort();
     }
     return FilePath(system_buffer);

@@ -1,6 +1,5 @@
 #include "gui/platform/win32/impl_win.h"
 #include "gui/platform/window_widget.h"
-#include <fmt/base.h>
 
 namespace gui {
 

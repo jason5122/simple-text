@@ -15,5 +15,5 @@ source_set("win32") {
     "shcore.lib",
   ]
 
-  deps = [ "//third_party/fmt" ]
+  deps = [ "//third_party/spdlog" ]
 }

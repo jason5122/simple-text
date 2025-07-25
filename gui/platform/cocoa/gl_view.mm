@@ -2,7 +2,7 @@
 #include "gui/platform/cocoa/gl_view.h"
 #include "gui/types.h"
 #include <Carbon/Carbon.h>
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 namespace gui {
 namespace {
@@ -232,9 +232,9 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
 - (void)onScrollerStyleChanged:(NSNotification*)notification {
     auto style = NSScroller.preferredScrollerStyle;
     if (style == NSScrollerStyleLegacy) {
-        fmt::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleLegacy.");
+        spdlog::info("NSScroller.preferredScrollerStyle is now NSScrollerStyleLegacy.");
     } else if (style == NSScrollerStyleOverlay) {
-        fmt::println("NSScroller.preferredScrollerStyle is now NSScrollerStyleOverlay.");
+        spdlog::info("NSScroller.preferredScrollerStyle is now NSScrollerStyleOverlay.");
     }
 }
 
@@ -245,7 +245,7 @@ inline Point ScaleAndInvertPosition(const Point& point, GLLayer* gl_layer);
                        context:(void*)context {
     NSUserDefaults* defaults = NSUserDefaults.standardUserDefaults;
     bool jump_on_scroll_bar_click = [defaults boolForKey:@"AppleScrollerPagingBehavior"];
-    fmt::println("jump on scroll bar click (update): {}", jump_on_scroll_bar_click);
+    spdlog::info("jump on scroll bar click (update): {}", jump_on_scroll_bar_click);
 }
 
 // NSTextInputClient protocol implementation.

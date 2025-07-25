@@ -2,7 +2,6 @@
 #include "editor/movement.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/text_input_widget.h"
-#include <fmt/base.h>
 
 namespace gui {
 

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 using namespace gl;
 
@@ -345,7 +345,7 @@ void TextureRenderer::insert_into_batch(size_t page, const InstanceData& instanc
 
     batch.emplace_back(std::move(instance));
     if (batch.size() == kBatchMax) {
-        fmt::println("TextureRenderer error: attempted to insert into a full batch!");
+        spdlog::info("TextureRenderer error: attempted to insert into a full batch!");
     }
 }
 

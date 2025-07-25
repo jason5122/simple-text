@@ -1,7 +1,7 @@
 #include "base/buffer/aho_corasick/ac_fast.h"
 #include "base/buffer/aho_corasick/ac_slow.h"
 #include "base/buffer/aho_corasick/aho_corasick.h"
-#include <fmt/base.h>
+#include <spdlog/spdlog.h>
 
 namespace base {
 
@@ -10,7 +10,7 @@ AhoCorasick::AhoCorasick(const std::vector<std::string>& patterns) {
         // TODO: Currently we use 16-bit to encode pattern-index (see the comment to
         // AC_State::is_term), therefore we are not able to handle pattern set with more than 65535
         // entries.
-        fmt::println("Error: Pattern limit of 65535 exceeded in AhoCorasick constructor.");
+        spdlog::error("Error: Pattern limit of 65535 exceeded in AhoCorasick constructor.");
         std::abort();
     }
 

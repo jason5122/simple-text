@@ -12,7 +12,7 @@
 
 - [UTF-8 encoder/decoder](https://mothereff.in/utf-8)
 - [UTF summary](https://howardhinnant.github.io/utf_summary.html)
-
+ 
 ## Unicode test data
 
 - [ICU UDHR `.txt` files](https://github.com/unicode-org/icu/tree/main/icu4j/perf-tests/data/udhr)

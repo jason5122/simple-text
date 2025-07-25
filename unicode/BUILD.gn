@@ -15,7 +15,7 @@ source_set("unicode_unittests") {
 
   deps = [
     ":unicode",
-    "//third_party/fmt",
     "//third_party/googletest:gtest",
+    "//third_party/spdlog",
   ]
 }

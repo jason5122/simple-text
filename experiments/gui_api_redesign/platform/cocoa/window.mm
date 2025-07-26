@@ -11,7 +11,7 @@ struct Window::Impl {
 Window::~Window() = default;
 Window::Window() : renderer_(Renderer::create()), pimpl_(std::make_unique<Impl>()) {}
 
-std::unique_ptr<Window> Window::create(WindowCreateInfo info) {
+std::unique_ptr<Window> Window::create(CreateInfo info) {
     auto window = std::unique_ptr<Window>(new Window());
     window->pimpl_->ctx = std::move(info.ctx);
     window->pimpl_->pf = info.pf;

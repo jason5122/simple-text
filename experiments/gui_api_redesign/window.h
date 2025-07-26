@@ -4,8 +4,6 @@
 #include <functional>
 #include <memory>
 
-struct WindowCreateInfo;
-
 class Window {
 public:
     ~Window();
@@ -20,7 +18,9 @@ public:
 private:
     friend class App;
     Window();
-    static std::unique_ptr<Window> create(WindowCreateInfo info);
+
+    struct CreateInfo;
+    static std::unique_ptr<Window> create(CreateInfo info);
 
     std::function<void(Renderer&)> draw_callback_;
     std::unique_ptr<Renderer> renderer_;

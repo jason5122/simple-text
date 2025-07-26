@@ -97,7 +97,7 @@ Window* App::create_window(int width, int height) {
     auto ctx = pimpl_->ctx->create_shared(*pimpl_->pf);
     if (!ctx) return nullptr;
 
-    WindowCreateInfo info = {
+    Window::CreateInfo info = {
         .width = width,
         .height = height,
         .ctx = std::move(ctx),

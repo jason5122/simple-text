@@ -2,6 +2,41 @@
 #include "experiments/gui_api_redesign/platform/cocoa/window_create_info.h"
 #include <AppKit/AppKit.h>
 
+// TODO: Remove this.
+// ============================================================================
+#include "base/apple/scoped_cftyperef.h"
+#include <spdlog/spdlog.h>
+using base::apple::ScopedCFTypeRef;
+#include <queue>
+ScopedCFTypeRef<CFRunLoopSourceRef> work_source;
+ScopedCFTypeRef<CFRunLoopRef> run_loop = CFRunLoopGetCurrent();
+std::queue<std::function<void()>> tasks;
+std::mutex task_mutex;
+
+static void task_source_perform(void* info) {
+    std::queue<std::function<void()>> local;
+
+    {
+        std::lock_guard<std::mutex> lock(task_mutex);
+        std::swap(local, tasks);
+    }
+
+    while (!local.empty()) {
+        local.front()();
+        local.pop();
+    }
+}
+
+static void schedule_work(std::function<void()> fn) {
+    {
+        std::lock_guard<std::mutex> lock(task_mutex);
+        tasks.push(std::move(fn));
+    }
+    CFRunLoopSourceSignal(work_source.get());
+    CFRunLoopWakeUp(run_loop.get());
+}
+// ============================================================================
+
 struct App::Impl {
     std::unique_ptr<GLContext> ctx;
     std::unique_ptr<GLPixelFormat> pf;
@@ -36,6 +71,22 @@ int App::run() {
         item.submenu = submenu;
         [main_menu addItem:item];
         NSApp.mainMenu = main_menu;
+
+        // Run loop example.
+        // TODO: Refactor this.
+        // ============================================================================
+        CFRunLoopSourceContext source_context = {};
+        source_context.info = nullptr;
+        source_context.perform = task_source_perform;
+        work_source = CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &source_context);
+        CFRunLoopAddSource(run_loop.get(), work_source.get(), kCFRunLoopCommonModes);
+
+        schedule_work([] { spdlog::info("scheduled work"); });
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC),
+                       dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+                         schedule_work([] { spdlog::info("delayed scheduled work"); });
+                       });
+        // ============================================================================
 
         [NSApp run];
     }

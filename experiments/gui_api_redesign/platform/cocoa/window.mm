@@ -16,7 +16,10 @@ std::unique_ptr<Window> Window::create(WindowCreateInfo info) {
     window->pimpl_->ctx = std::move(info.ctx);
     window->pimpl_->pf = info.pf;
 
-    NSRect frame = NSMakeRect(0, 0, info.width, info.height);
+    // DEBUG: The value `1000` is to push the window to the top right. We do this to not block
+    // the bottom right panel of the editor, where logging is done. Of course, we should remove
+    // this later.
+    NSRect frame = NSMakeRect(1000, 1000, info.width, info.height);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                        NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
     NSWindow* ns_window = [[NSWindow alloc] initWithContentRect:frame

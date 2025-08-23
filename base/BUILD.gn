@@ -29,6 +29,7 @@ source_set("base") {
   if (is_mac) {
     sources += [
       "apple/foundation_util.mm",
+      "apple/owned_nsevent.mm",
       "files/file_util_mac.mm",
       "path_service_mac.cc",
     ]

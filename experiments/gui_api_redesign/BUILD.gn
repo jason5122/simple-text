@@ -5,6 +5,15 @@ if (is_mac) {
     output_name = "GUI API Redesign"
 
     sources = [
+      "events/cocoa/cocoa_event_utils.mm",
+      "events/cocoa/events_mac.mm",
+      "events/event.cc",
+      "events/event_handler.cc",
+      "events/event_processor.cc",
+      "events/event_source.cc",
+      "events/event_target.cc",
+      "events/event_targeter.cc",
+      "events/keycodes/keyboard_code_conversion_mac.mm",
       "main.cc",
       "platform/cocoa/app.mm",
       "platform/cocoa/gl_context.cc",
@@ -12,6 +21,9 @@ if (is_mac) {
       "platform/cocoa/gl_view.mm",
       "platform/cocoa/window.mm",
       "renderer.cc",
+      "views/view.cc",
+      "views/widget/root_view.cc",
+      "views/widget/widget.cc",
     ]
 
     deps = [

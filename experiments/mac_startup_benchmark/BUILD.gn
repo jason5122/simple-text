@@ -1,7 +1,7 @@
 import("//build/config/mac/mac_app_bundle.gni")
 
-mac_app_bundle("macos_startup_benchmark") {
-  output_name = "macOS Startup Benchmark"
+mac_app_bundle("mac_startup_benchmark") {
+  output_name = "Mac Startup Benchmark"
 
   sources = [ "main.mm" ]
 

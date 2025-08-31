@@ -6,7 +6,7 @@ Example of goals from experiments:
 
 1. Test the validity/performance of a new approach before integrating.
 2. Isolate slow existing code to diagnose the root cause.
-3. Develop something complex (e.g., algorithm, class, etc.) without the burden of developing for the entire app.
+3. Build something complex (e.g., algorithm, class, etc.) without the burden of building the entire app.
 
 ## Maintaining
 

@@ -10,9 +10,7 @@ void* load_proc_address(const char* fp) {
     static PFNEGLGETPROCADDRESSPROC mGetProcAddressPtr =
         reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(handle, "eglGetProcAddress"));
     void* p = reinterpret_cast<void*>(mGetProcAddressPtr(fp));
-    if (!p) {
-        p = dlsym(handle, fp);
-    }
+    if (!p) p = dlsym(handle, fp);
     return p;
 }
 

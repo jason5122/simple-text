@@ -60,6 +60,7 @@ source_set("base_unittests") {
     "buffer/piece_tree_unittest.cc",
     "buffer/tree_walker_unittest.cc",
     "files/file_path_unittest.cc",
+    "location_unittest.cc",
     "memory/weak_ptr_unittest.cc",
     "numeric/safe_conversions_unittest.cc",
     "numeric/saturation_arithmetic_unittest.cc",

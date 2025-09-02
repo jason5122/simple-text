@@ -1,3 +1,7 @@
-#include "base/numeric/safe_conversions.h"
+#include "base/check.h"
 
-int main() { base::checked_cast<size_t>(-1); }
+int main() {
+    CHECK_EQ(2, 2);
+    // CHECK_EQ(9 + 10, 21);
+    NOTREACHED();
+}

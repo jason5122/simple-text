@@ -1,4 +1,5 @@
 #include "base/buffer/piece_tree_rbtree.h"
+#include "base/check.h"
 #include <cassert>
 
 namespace base {
@@ -209,8 +210,7 @@ RedBlackTree RedBlackTree::balance_left(const RedBlackTree& left) {
             RedBlackTree(Color::Black, left.left(), left.data(), left.right().left().left());
         return RedBlackTree(Color::Red, new_left, left.right().left().data(), new_right);
     }
-    assert(!"impossible");
-    return left;
+    NOTREACHED();
 }
 
 RedBlackTree RedBlackTree::balance_right(const RedBlackTree& right) {
@@ -239,8 +239,7 @@ RedBlackTree RedBlackTree::balance_right(const RedBlackTree& right) {
             RedBlackTree(Color::Black, right.left().right().right(), right.data(), right.right());
         return RedBlackTree(Color::Red, new_left, right.left().right().data(), new_right);
     }
-    assert(!"impossible");
-    return right;
+    NOTREACHED();
 }
 
 RedBlackTree RedBlackTree::remove_left(const RedBlackTree& root, size_t at, size_t total) {

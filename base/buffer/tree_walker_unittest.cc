@@ -1,5 +1,4 @@
 #include "base/buffer/piece_tree.h"
-#include "base/numeric/literals.h"
 #include "third_party/uni_algo/include/uni_algo/prop.h"
 #include <gtest/gtest.h>
 #include <stack>
@@ -102,7 +101,7 @@ TEST(TreeWalkerTest, TreeWalkerOffsetTest2) {
     PieceTree tree{"abcd"};
     TreeWalker walker{&tree};
 
-    EXPECT_EQ(walker.offset(), 0_Z);
+    EXPECT_EQ(walker.offset(), size_t{0});
     EXPECT_FALSE(walker.exhausted());
 
     walker = {&tree, 4};
@@ -146,7 +145,7 @@ TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest1) {
             EXPECT_EQ(ch, str[i]);
             EXPECT_EQ(offset, i);
         }
-        EXPECT_EQ(reverse_walker.offset(), 0_Z);
+        EXPECT_EQ(reverse_walker.offset(), size_t{0});
     }
 }
 
@@ -154,11 +153,11 @@ TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest2) {
     PieceTree tree{"abcd"};
 
     ReverseTreeWalker reverse_walker{&tree};
-    EXPECT_EQ(reverse_walker.offset(), 0_Z);
+    EXPECT_EQ(reverse_walker.offset(), size_t{0});
     EXPECT_TRUE(reverse_walker.exhausted());
 
     reverse_walker = {&tree, 3};  // abc|d
-    EXPECT_EQ(reverse_walker.offset(), 3_Z);
+    EXPECT_EQ(reverse_walker.offset(), size_t{3});
     EXPECT_FALSE(reverse_walker.exhausted());
     EXPECT_EQ(reverse_walker.next(), 'c');
     EXPECT_EQ(reverse_walker.next(), 'b');

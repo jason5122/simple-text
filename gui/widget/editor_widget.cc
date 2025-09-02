@@ -13,7 +13,7 @@ EditorWidget::EditorWidget(size_t main_font_id, size_t ui_font_size, size_t pane
     auto tab_bar_padding = std::make_unique<PaddingWidget>(Size{0, 3 * 2}, kTabBarColor);
     auto text_view_padding = std::make_unique<PaddingWidget>(Size{0, 2 * 2}, kTextViewColor);
 
-    multi_view->addTab(std::make_unique<TextEditWidget>("", main_font_id));
+    multi_view->add_tab(std::make_unique<TextEditWidget>("", main_font_id));
 
     add_child_start(std::move(tab_bar_padding));
     add_child_start(std::unique_ptr<TabBarWidget>(tab_bar));
@@ -46,13 +46,13 @@ void EditorWidget::last_index() {
 size_t EditorWidget::get_current_index() { return multi_view->index(); }
 
 void EditorWidget::add_tab(std::string_view tab_name, std::string_view text) {
-    multi_view->addTab(std::make_unique<TextEditWidget>(text, main_font_id));
+    multi_view->add_tab(std::make_unique<TextEditWidget>(text, main_font_id));
     tab_bar->add_tab(tab_name);
     layout();
 }
 
 void EditorWidget::remove_tab(size_t index) {
-    multi_view->removeTab(index);
+    multi_view->remove_tab(index);
     tab_bar->remove_tab(index);
     layout();
 }

@@ -8,6 +8,7 @@ source_set("base") {
     "files/file_path.cc",
     "files/file_reader.cc",
     "files/file_util.cc",
+    "location.cc",
     "path_service.cc",
   ]
   deps = [ "//third_party/spdlog" ]
@@ -61,6 +62,8 @@ source_set("base_unittests") {
     "buffer/tree_walker_unittest.cc",
     "files/file_path_unittest.cc",
     "memory/weak_ptr_unittest.cc",
+    "numeric/safe_conversions_unittest.cc",
+    "numeric/saturation_arithmetic_unittest.cc",
   ]
 
   deps = [

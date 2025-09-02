@@ -1,9 +1,8 @@
 #pragma once
 
+#include "third_party/hash_maps/rapidhash.h"
 #include <cstddef>
 #include <string>
-
-#include "third_party/hash_maps/rapidhash.h"
 
 namespace base {
 

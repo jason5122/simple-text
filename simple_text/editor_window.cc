@@ -313,7 +313,7 @@ bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
         handled = true;
     } else if (key == Key::kN && modifiers == kPrimaryModifier) {
         auto p = util::Profiler{"Add new tab (modifier key)"};
-        // editor_widget->addTab("sample_text.txt", kSampleText * 50 + kLongLine);
+        // editor_widget->add_tab("sample_text.txt", kSampleText * 50 + kLongLine);
         editor_widget->add_tab("untitled", "");
         handled = true;
     } else if (key == Key::kN && modifiers == (kPrimaryModifier | ModifierKey::kShift)) {

@@ -29,10 +29,6 @@ config("compiler") {
   # Pass the same C/C++ flags to the Objective-C/C++ compiler.
   cflags_objc += cflags_c
   cflags_objcc += cflags_cc
-
-  # if (!is_win) {
-  #   ldflags = [ "-fuse-ld=lld" ]
-  # }
 }
 
 config("default_include_dirs") {

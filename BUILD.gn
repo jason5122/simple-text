@@ -11,7 +11,11 @@ group("tests") {
 }
 
 group("experiments") {
-  deps = [ "//experiments/gui_api_redesign" ]
+  deps = [
+    "//experiments/gui_api_redesign",
+    "//experiments/message_loop",
+    "//experiments/playground",
+  ]
 
   if (is_mac) {
     deps += [ "//experiments/mac_startup_benchmark" ]

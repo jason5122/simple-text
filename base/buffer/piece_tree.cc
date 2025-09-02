@@ -1,6 +1,5 @@
 #include "base/buffer/aho_corasick/aho_corasick.h"
 #include "base/buffer/piece_tree.h"
-#include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "unicode/utf8_decoder.h"
 #include "util/scope_guard.h"
@@ -120,7 +119,7 @@ void PieceTree::internal_insert(size_t offset, std::string_view txt) {
     auto result = node_at(offset);
     // If the offset is beyond the buffer, just select the last node.
     if (result.node == nullptr) {
-        auto off = base::sub_sat(total_content_length, 1_Z);
+        auto off = base::sub_sat(total_content_length, size_t{1});
         result = node_at(off);
     }
 

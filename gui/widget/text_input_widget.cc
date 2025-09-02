@@ -1,4 +1,4 @@
-#include "base/numeric/literals.h"
+#include "base/numeric/safe_conversions.h"
 #include "editor/movement.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/text_input_widget.h"
@@ -96,7 +96,7 @@ void TextInputWidget::update_max_scroll() {
 
     // NOTE: We update the max width when iterating over visible lines, not here.
 
-    max_scroll_offset.y = tree.line_count() * metrics.line_height;
+    max_scroll_offset.y = base::checked_cast<int>(tree.line_count()) * metrics.line_height;
 }
 
 void TextInputWidget::left_mouse_down(const Point& mouse_pos,
@@ -118,15 +118,13 @@ void TextInputWidget::insert_text(std::string_view str8) {
 }
 
 size_t TextInputWidget::line_at_y(int y) const {
-    if (y < 0) {
-        y = 0;
-    }
+    if (y < 0) y = 0;
 
     const auto& font_rasterizer = font::FontRasterizer::instance();
     const auto& metrics = font_rasterizer.metrics(font_id);
 
     size_t line = y / metrics.line_height;
-    return std::clamp(line, 0_Z, tree.line_count() - 1);
+    return std::clamp(line, size_t{0}, tree.line_count() - 1);
 }
 
 inline const font::LineLayout& TextInputWidget::layout_at(size_t line) {

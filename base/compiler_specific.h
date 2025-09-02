@@ -6,20 +6,6 @@
 #define HAS_BUILTIN(x) 0
 #endif
 
-// Annotates a function indicating it should always be inlined.
-//
-// See also:
-//   https://clang.llvm.org/docs/AttributeReference.html#always-inline-force-inline
-//
-// Usage:
-// ```
-//   ALWAYS_INLINE void Func() {
-//     // This body will be inlined into callers whenever possible.
-//   }
-// ```
-//
-// Since `ALWAYS_INLINE` is performance-oriented but can hamper debugging,
-// ignore it in debug mode.
 #if __has_cpp_attribute(clang::always_inline)
 #define ALWAYS_INLINE [[clang::always_inline]] inline
 #elif __has_cpp_attribute(gnu::always_inline)
@@ -30,10 +16,10 @@
 #define ALWAYS_INLINE inline
 #endif
 
-// Annotates a data member indicating it need not have an address distinct from
-// all other non-static data members of the class, and its tail padding may be
-// used for other objects' storage. This can have subtle and dangerous effects,
-// including on containing objects; use with caution.
+// Annotates a data member indicating it need not have an address distinct from all other
+// non-static data members of the class, and its tail padding may be used for other objects'
+// storage. This can have subtle and dangerous effects, including on containing objects; use with
+// caution.
 //
 // See also:
 //   https://en.cppreference.com/w/cpp/language/attributes/no_unique_address

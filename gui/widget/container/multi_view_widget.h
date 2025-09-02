@@ -1,8 +1,6 @@
 #pragma once
 
-#include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
-#include "base/numeric/wrap_arithmetic.h"
 #include "gui/widget/container/container_widget.h"
 #include <memory>
 #include <vector>
@@ -12,45 +10,29 @@ namespace gui {
 template <typename WidgetType>
 class MultiViewWidget : public ContainerWidget {
 public:
-    WidgetType* current_widget() const {
-        if (!views.empty()) {
-            return views[index_].get();
-        } else {
-            return nullptr;
-        }
-    }
+    WidgetType* current_widget() const { return views_.empty() ? nullptr : views_[index_].get(); }
 
-    constexpr size_t count() const { return views.size(); }
+    constexpr size_t count() const { return views_.size(); }
 
-    WidgetType* at(size_t i) { return views[i].get(); }
+    WidgetType* at(size_t i) { return views_[i].get(); }
 
-    void set_index(size_t index) {
-        if (index < views.size()) {
-            index_ = index;
-        }
-    }
+    void set_index(size_t index) { index_ = index; }
 
-    void prev_index() {
-        if (index_ >= views.size()) return;
-        index_ = base::dec_wrap(index_, views.size());
-    }
+    void prev_index() { index_ = (index_ + views_.size() - 1) % views_.size(); }
 
-    void next_index() {
-        if (index_ >= views.size()) return;
-        index_ = base::inc_wrap(index_, views.size());
-    }
+    void next_index() { index_ = (index_ + 1) % views_.size(); }
 
-    void last_index() { index_ = base::sub_sat(views.size(), 1_Z); }
+    void last_index() { index_ = base::sub_sat(views_.size(), size_t{1}); }
 
     size_t index() { return index_; }
 
-    void addTab(std::unique_ptr<WidgetType> widget) { views.emplace_back(std::move(widget)); }
+    void add_tab(std::unique_ptr<WidgetType> widget) { views_.emplace_back(std::move(widget)); }
 
-    void removeTab(size_t index) {
-        if (views.empty()) return;
+    void remove_tab(size_t index) {
+        if (views_.empty()) return;
 
-        views.erase(views.begin() + index);
-        index_ = std::clamp(index, 0_Z, base::sub_sat(views.size(), 1_Z));
+        views_.erase(views_.begin() + index);
+        index_ = std::clamp(index, size_t{0}, base::sub_sat(views_.size(), size_t{1}));
     }
 
     void draw() override {
@@ -84,15 +66,11 @@ public:
 
     bool mouse_position_changed(const std::optional<Point>& mouse_pos) override {
         Widget* widget = current_widget();
-        if (widget) {
-            return widget->mouse_position_changed(mouse_pos);
-        } else {
-            return false;
-        }
+        return widget ? widget->mouse_position_changed(mouse_pos) : false;
     }
 
     void layout() override {
-        for (auto& text_view : views) {
+        for (auto& text_view : views_) {
             text_view->set_size(size());
             text_view->set_position(position());
         }
@@ -100,18 +78,14 @@ public:
 
     Widget* widget_at(const Point& pos) override {
         Widget* widget = current_widget();
-        if (widget) {
-            return widget->widget_at(pos);
-        } else {
-            return nullptr;
-        }
+        return widget ? widget->widget_at(pos) : nullptr;
     }
 
     constexpr std::string_view class_name() const override { return "MultiViewWidget"; }
 
 private:
     size_t index_ = 0;
-    std::vector<std::unique_ptr<WidgetType>> views;
+    std::vector<std::unique_ptr<WidgetType>> views_;
 };
 
 }  // namespace gui

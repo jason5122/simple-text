@@ -1,51 +1,39 @@
-#include "base/numeric/literals.h"
 #include "base/numeric/saturation_arithmetic.h"
-#include "base/numeric/wrap_arithmetic.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/tab_bar_widget.h"
 
 namespace gui {
 
 TabBarWidget::TabBarWidget(size_t font_id, int height, size_t panel_close_image_id)
-    : Widget{{.height = height}}, font_id(font_id), panel_close_image_id(panel_close_image_id) {
+    : Widget{{.height = height}}, font_id_(font_id), panel_close_image_id_(panel_close_image_id) {
     add_tab("untitled");
 }
 
-void TabBarWidget::set_index(size_t index) {
-    if (index < tab_name_labels.size()) {
-        this->index = index;
-    }
-}
+void TabBarWidget::set_index(size_t index) { index_ = index; }
 
-void TabBarWidget::prev_index() {
-    if (index >= tab_name_labels.size()) return;
-    index = base::dec_wrap(index, tab_name_labels.size());
-}
+void TabBarWidget::prev_index() { index_ = (index_ + labels_.size() - 1) % labels_.size(); }
 
-void TabBarWidget::next_index() {
-    if (index >= tab_name_labels.size()) return;
-    index = base::inc_wrap(index, tab_name_labels.size());
-}
+void TabBarWidget::next_index() { index_ = (index_ + 1) % labels_.size(); }
 
-void TabBarWidget::last_index() { index = base::sub_sat(tab_name_labels.size(), 1_Z); }
+void TabBarWidget::last_index() { index_ = base::sub_sat(labels_.size(), size_t{1}); }
 
 void TabBarWidget::add_tab(std::string_view title) {
     Size label_size = {
         .width = kTabWidth - kTabCornerRadius * 2,
         .height = height(),
     };
-    auto tab_name_label = std::make_unique<TabBarLabelWidget>(font_id, label_size, 22, 16);
-    tab_name_label->set_text(title);
-    tab_name_label->set_color(kTabTextColor);
-    tab_name_label->add_right_icon(panel_close_image_id);
-    tab_name_labels.emplace_back(std::move(tab_name_label));
+    auto label = std::make_unique<TabBarLabelWidget>(font_id_, label_size, 22, 16);
+    label->set_text(title);
+    label->set_color(kTabTextColor);
+    label->add_right_icon(panel_close_image_id_);
+    labels_.emplace_back(std::move(label));
 }
 
 void TabBarWidget::remove_tab(size_t index) {
-    if (tab_name_labels.empty()) return;
+    if (labels_.empty()) return;
 
-    tab_name_labels.erase(tab_name_labels.begin() + index);
-    this->index = std::clamp(index, 0_Z, base::sub_sat(tab_name_labels.size(), 1_Z));
+    labels_.erase(labels_.begin() + index);
+    index_ = std::clamp(index, size_t{0}, base::sub_sat(labels_.size(), size_t{1}));
 }
 
 void TabBarWidget::draw() {
@@ -54,19 +42,19 @@ void TabBarWidget::draw() {
     rect_renderer.add_rect(position(), size(), position(), position() + size(), kTabBarColor,
                            Layer::kBackground);
 
-    for (const auto& tab_name_label : tab_name_labels) {
+    for (const auto& tab_name_label : labels_) {
         tab_name_label->draw();
     }
 
     Point tab_pos = position();
-    tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index;
+    tab_pos.x += (kTabWidth - kTabCornerRadius * 2) * index_;
     Size tab_size = {kTabWidth, height()};
     rect_renderer.add_rect(tab_pos, tab_size, position(), position() + size(), kTabColor,
                            Layer::kBackground, 0, kTabCornerRadius);
 
-    size_t num_labels = tab_name_labels.size();
+    size_t num_labels = labels_.size();
     for (size_t i = 0; i < num_labels; ++i) {
-        if (i == index || i == base::sub_sat(index, 1_Z)) {
+        if (i == index_ || i == base::sub_sat(index_, size_t{1})) {
             continue;
         }
         if (i == num_labels - 1) {
@@ -88,7 +76,7 @@ void TabBarWidget::draw() {
 
 void TabBarWidget::layout() {
     Point left_width_offset{};
-    for (const auto& tab_name_label : tab_name_labels) {
+    for (const auto& tab_name_label : labels_) {
         Point label_pos = position();
         label_pos += Point{kTabCornerRadius, 0};
         label_pos += left_width_offset;

@@ -1,7 +1,0 @@
-source_set("tests") {
-  testonly = true
-
-  sources = [ "hash_test.cc" ]
-
-  deps = [ "//third_party/googletest:gtest" ]
-}

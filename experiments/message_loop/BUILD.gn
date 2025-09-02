@@ -1,0 +1,7 @@
+executable("message_loop") {
+  sources = [ "main.mm" ]
+
+  frameworks = [ "AppKit.framework" ]
+
+  deps = [ "//third_party/spdlog" ]
+}

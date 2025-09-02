@@ -1,6 +1,3 @@
-#include "base/check.h"
+#include "base/numeric/safe_conversions.h"
 
-int main() {
-    CHECK(2 + 2 == 4);
-    CHECK(9 + 10 == 21);
-}
+int main() { base::checked_cast<size_t>(-1); }

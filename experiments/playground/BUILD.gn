@@ -1,4 +1,3 @@
 executable("playground") {
   sources = [ "main.cc" ]
-  deps = [ "//base" ]
 }

@@ -6,16 +6,14 @@
 
 namespace base {
 
-// checked_cast<> is analogous to static_cast<> for numeric types, except that it CHECKs that the
-// specified numeric conversion will not overflow or underflow. NaN source will always trigger a
-// CHECK.
+// TODO: Implement support for floating points.
 template <typename Dst, typename Src>
 constexpr Dst checked_cast(Src value) {
+    CHECK(std::in_range<Dst>(value));
     return static_cast<Dst>(static_cast<Src>(value));
 }
 
-// Determines if a numeric value is negative without throwing compiler
-// warnings on: unsigned(value) < 0.
+// Determines if a numeric value is negative without throwing compiler.
 template <typename T>
     requires(std::is_arithmetic_v<T>)
 constexpr bool is_value_negative(T value) {

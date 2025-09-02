@@ -8,7 +8,9 @@
 
 #define CHECK(cond)                                                                               \
     do {                                                                                          \
-        if (!(cond)) ::base::internal::check_fail(#cond, ::base::Location::current());            \
+        if (!(cond)) [[unlikely]] {                                                               \
+            ::base::internal::check_fail(#cond, ::base::Location::current());                     \
+        }                                                                                         \
     } while (false)
 
 namespace base::internal {

@@ -53,4 +53,10 @@ TEST(SaturationArithmeticTest, SubSatOverflow) {
     EXPECT_EQ(sub_sat(min_size_t, size_t{1}), min_size_t);
 }
 
+TEST(SaturationArithmeticTest, AbsSat) {
+    // This is the only edge case where `abs_sat()` doesn't behave like `std:abs()`.
+    EXPECT_EQ(abs_sat(std::numeric_limits<int8_t>::min()), std::numeric_limits<int8_t>::max());
+    EXPECT_EQ(abs_sat(std::numeric_limits<int>::min()), std::numeric_limits<int>::max());
+}
+
 }  // namespace base

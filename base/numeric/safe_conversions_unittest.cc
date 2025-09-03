@@ -24,4 +24,20 @@ TEST(SafeConversionsDeathTest, CheckedCastTooSmall) {
     EXPECT_DEATH(checked_cast<int8_t>(-129), "");
 }
 
+TEST(SafeConversionsTest, IsValueNegative) {
+    EXPECT_TRUE(is_value_negative(-1));
+    EXPECT_FALSE(is_value_negative(0));
+    EXPECT_FALSE(is_value_negative(1));
+
+    EXPECT_TRUE(is_value_negative(-1.0));
+    EXPECT_FALSE(is_value_negative(0.0));
+    EXPECT_FALSE(is_value_negative(1.0));
+}
+
+TEST(SafeConversionsTest, SafeUnsignedAbs) {
+    EXPECT_EQ(safe_unsigned_abs(-1), 1);
+    EXPECT_EQ(safe_unsigned_abs(0), 0);
+    EXPECT_EQ(safe_unsigned_abs(1), 1);
+}
+
 }  // namespace base

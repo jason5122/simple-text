@@ -1,4 +1,7 @@
 #include "base/strings/string_util.h"
+#include "base/third_party/icu/icu_utf.h"
+
+// TODO: Clean up Chromium code.
 
 namespace base {
 
@@ -10,6 +13,15 @@ using MachineWord = uintptr_t;
 
 inline bool IsMachineWordAligned(const void* pointer) {
     return !(reinterpret_cast<MachineWord>(pointer) & (sizeof(MachineWord) - 1));
+}
+
+inline bool IsValidCharacter(base_icu::UChar32 code_point) {
+    // Excludes non-characters (U+FDD0..U+FDEF, and all code points
+    // ending in 0xFFFE or 0xFFFF) from the set of valid code points.
+    // https://unicode.org/faq/private_use.html#nonchar1
+    return (code_point >= 0 && code_point < 0xD800) ||
+           (code_point >= 0xE000 && code_point < 0xFDD0) ||
+           (code_point > 0xFDEF && code_point <= 0x10FFFF && (code_point & 0xFFFE) != 0xFFFE);
 }
 
 template <class Char>
@@ -57,10 +69,26 @@ bool DoIsStringASCII(const Char* characters, size_t length) {
     return !(all_char_bits & non_ascii_bit_mask);
 }
 
+template <bool (*Validator)(base_icu::UChar32)>
+inline bool DoIsStringUTF8(std::string_view str) {
+    const uint8_t* src = reinterpret_cast<const uint8_t*>(str.data());
+    size_t src_len = str.length();
+    size_t char_index = 0;
+
+    while (char_index < src_len) {
+        base_icu::UChar32 code_point;
+        CBU8_NEXT(src, char_index, src_len, code_point);
+        if (!Validator(code_point)) return false;
+    }
+    return true;
+}
+
 }  // namespace
 
-bool IsStringASCII(std::string_view str) { return DoIsStringASCII(str.data(), str.length()); }
+bool is_string_utf8(std::string_view str) { return DoIsStringUTF8<IsValidCharacter>(str); }
 
-bool IsStringASCII(std::u16string_view str) { return DoIsStringASCII(str.data(), str.length()); }
+bool is_string_ascii(std::string_view str) { return DoIsStringASCII(str.data(), str.length()); }
+
+bool is_string_ascii(std::u16string_view str) { return DoIsStringASCII(str.data(), str.length()); }
 
 }  // namespace base

@@ -241,13 +241,13 @@ std::ostream& operator<<(std::ostream& os, ThreadTicks thread_ticks) {
 
 bool Time::Exploded::HasValidValues() const {
     // clang-format off
-  return (1 <= month) && (month <= 12) &&
-         (0 <= day_of_week) && (day_of_week <= 6) &&
-         (1 <= day_of_month) && (day_of_month <= 31) &&
-         (0 <= hour) && (hour <= 23) &&
-         (0 <= minute) && (minute <= 59) &&
-         (0 <= second) && (second <= 60) &&
-         (0 <= millisecond) && (millisecond <= 999);
+    return (1 <= month) && (month <= 12) &&
+           (0 <= day_of_week) && (day_of_week <= 6) &&
+           (1 <= day_of_month) && (day_of_month <= 31) &&
+           (0 <= hour) && (hour <= 23) &&
+           (0 <= minute) && (minute <= 59) &&
+           (0 <= second) && (second <= 60) &&
+           (0 <= millisecond) && (millisecond <= 999);
     // clang-format on
 }
 

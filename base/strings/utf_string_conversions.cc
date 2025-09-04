@@ -2,6 +2,8 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/third_party/icu/icu_utf.h"
 
+// TODO: Clean up Chromium code.
+
 namespace base {
 
 namespace {
@@ -137,7 +139,7 @@ constexpr int size_coefficient_v =
 
 template <typename InputString, typename DestString>
 bool UTFConversion(const InputString& src_str, DestString* dest_str) {
-    if (IsStringASCII(src_str)) {
+    if (is_string_ascii(src_str)) {
         dest_str->assign(src_str.begin(), src_str.end());
         return true;
     }

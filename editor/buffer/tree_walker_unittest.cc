@@ -1,9 +1,9 @@
-#include "base/buffer/piece_tree.h"
+#include "editor/buffer/piece_tree.h"
 #include "third_party/uni_algo/include/uni_algo/prop.h"
 #include <gtest/gtest.h>
 #include <stack>
 
-namespace base {
+namespace editor {
 
 TEST(TreeWalkerTest, TreeWalkerNextUTF8Test1) {
     PieceTree tree{"abcdefghijklmnopqrstuvwxyz"};
@@ -303,4 +303,4 @@ TEST(TreeWalkerTest, ReverseWalkerConsistency) {
     EXPECT_EQ(codepoints, expected);
 }
 
-}  // namespace base
+}  // namespace editor

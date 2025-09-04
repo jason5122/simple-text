@@ -1,10 +1,5 @@
 source_set("base") {
   sources = [
-    "buffer/aho_corasick/ac_fast.cc",
-    "buffer/aho_corasick/ac_slow.cc",
-    "buffer/aho_corasick/aho_corasick.cc",
-    "buffer/piece_tree.cc",
-    "buffer/piece_tree_rbtree.cc",
     "files/file_path.cc",
     "files/file_reader.cc",
     "files/file_util.cc",
@@ -61,9 +56,6 @@ source_set("base_unittests") {
   testonly = true
 
   sources = [
-    "buffer/aho_corasick/aho_corasick_unittest.cc",
-    "buffer/piece_tree_unittest.cc",
-    "buffer/tree_walker_unittest.cc",
     "files/file_path_unittest.cc",
     "location_unittest.cc",
     "memory/weak_ptr_unittest.cc",
@@ -93,10 +85,7 @@ source_set("base_unittests") {
 source_set("base_perftests") {
   testonly = true
 
-  sources = [
-    "buffer/aho_corasick/aho_corasick_perftest.cc",
-    "files/file_reader_perftest.cc",
-  ]
+  sources = [ "files/file_reader_perftest.cc" ]
 
   deps = [
     ":base",

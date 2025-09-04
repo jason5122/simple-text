@@ -11,7 +11,7 @@
 namespace gui {
 
 // TODO: Consider moving glyph/image loading code outside of this.
-class TextureCache : util::NonCopyable {
+class TextureCache {
 public:
     TextureCache();
 
@@ -49,5 +49,8 @@ private:
     bool load_png(const base::FilePath& path, Image& image);
     bool load_jpeg(const base::FilePath& path, Image& image);
 };
+
+static_assert(std::is_nothrow_move_constructible_v<TextureCache>);
+static_assert(std::is_nothrow_move_assignable_v<TextureCache>);
 
 }  // namespace gui

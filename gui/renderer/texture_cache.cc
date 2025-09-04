@@ -8,11 +8,6 @@
 
 namespace gui {
 
-static_assert(!std::is_copy_constructible_v<TextureCache>);
-static_assert(!std::is_copy_assignable_v<TextureCache>);
-static_assert(std::is_move_constructible_v<TextureCache>);
-static_assert(std::is_move_assignable_v<TextureCache>);
-
 TextureCache::TextureCache() { atlas_pages.emplace_back(); }
 
 const TextureCache::Glyph& TextureCache::get_glyph(size_t font_id, uint32_t glyph_id) {

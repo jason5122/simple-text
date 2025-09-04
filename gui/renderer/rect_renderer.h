@@ -4,18 +4,19 @@
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
-#include "util/non_copyable.h"
 #include <cstddef>
 #include <vector>
 
 namespace gui {
 
-class RectRenderer : util::NonCopyable {
+class RectRenderer {
 public:
     RectRenderer();
     ~RectRenderer();
-    RectRenderer(RectRenderer&& other);
-    RectRenderer& operator=(RectRenderer&& other);
+    RectRenderer(const RectRenderer&) = delete;
+    RectRenderer& operator=(const RectRenderer&) = delete;
+    RectRenderer(RectRenderer&&) noexcept;
+    RectRenderer& operator=(RectRenderer&&) noexcept;
 
     void add_rect(const Point& coords,
                   const Size& size,
@@ -49,5 +50,11 @@ private:
     std::vector<InstanceData> layer_one_instances;
     std::vector<InstanceData> layer_two_instances;
 };
+
+static_assert(std::is_nothrow_destructible_v<RectRenderer>);
+static_assert(!std::is_copy_constructible_v<RectRenderer>);
+static_assert(!std::is_copy_assignable_v<RectRenderer>);
+static_assert(std::is_nothrow_move_constructible_v<RectRenderer>);
+static_assert(std::is_nothrow_move_assignable_v<RectRenderer>);
 
 }  // namespace gui

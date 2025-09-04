@@ -5,11 +5,6 @@ using namespace gl;
 
 namespace gui {
 
-static_assert(!std::is_copy_constructible_v<Shader>);
-static_assert(!std::is_copy_assignable_v<Shader>);
-static_assert(std::is_move_constructible_v<Shader>);
-static_assert(std::is_move_assignable_v<Shader>);
-
 Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
     const char* vert_source_c = vert_source.c_str();
     const char* frag_source_c = frag_source.c_str();
@@ -72,9 +67,9 @@ Shader::Shader(const std::string& vert_source, const std::string& frag_source) {
 
 Shader::~Shader() { glDeleteProgram(id_); }
 
-Shader::Shader(Shader&& other) : id_(other.id_) { other.id_ = 0; }
+Shader::Shader(Shader&& other) noexcept : id_(other.id_) { other.id_ = 0; }
 
-Shader& Shader::operator=(Shader&& other) {
+Shader& Shader::operator=(Shader&& other) noexcept {
     if (&other != this) {
         id_ = other.id_;
         other.id_ = 0;

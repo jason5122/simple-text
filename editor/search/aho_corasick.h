@@ -1,10 +1,10 @@
 #pragma once
 
-#include "base/buffer/piece_tree.h"
+#include "editor/buffer/piece_tree.h"
 #include <string>
 #include <vector>
 
-namespace base {
+namespace editor {
 
 class AhoCorasick {
 public:
@@ -31,4 +31,4 @@ private:
     void* buf;
 };
 
-}  // namespace base
+}  // namespace editor

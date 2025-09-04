@@ -15,6 +15,8 @@ public:
     static FontRasterizer& instance();
     FontRasterizer(const FontRasterizer&) = delete;
     FontRasterizer& operator=(const FontRasterizer&) = delete;
+    FontRasterizer(FontRasterizer&&) = delete;
+    FontRasterizer& operator=(FontRasterizer&&) = delete;
 
     FontId add_font(std::string_view font_name8,
                     int font_size,
@@ -33,7 +35,7 @@ private:
     friend class Impl;
 
     FontRasterizer();
-    ~FontRasterizer();
+    ~FontRasterizer() noexcept;
 
     struct NativeFontType;
     std::unordered_map<size_t, FontId> font_hash_to_id;
@@ -50,5 +52,10 @@ public:
     class Impl;
     std::unique_ptr<Impl> pimpl;
 };
+
+static_assert(!std::is_copy_constructible_v<FontRasterizer>);
+static_assert(!std::is_copy_assignable_v<FontRasterizer>);
+static_assert(!std::is_move_constructible_v<FontRasterizer>);
+static_assert(!std::is_move_assignable_v<FontRasterizer>);
 
 }  // namespace font

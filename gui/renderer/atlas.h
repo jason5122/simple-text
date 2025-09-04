@@ -2,12 +2,11 @@
 
 #include "gl/gl.h"
 #include "gui/renderer/types.h"
-#include "util/non_copyable.h"
 #include <vector>
 
 namespace gui {
 
-class Atlas : util::NonCopyable {
+class Atlas {
 public:
     // 1024 is a conservative size.
     // https://feedback.wildfiregames.com/report/opengl/feature/GL_MAX_TEXTURE_SIZE
@@ -20,8 +19,10 @@ public:
 
     Atlas();
     ~Atlas();
-    Atlas(Atlas&& other);
-    Atlas& operator=(Atlas&& other);
+    Atlas(const Atlas&) = delete;
+    Atlas& operator=(const Atlas&) = delete;
+    Atlas(Atlas&&) noexcept;
+    Atlas& operator=(Atlas&&) noexcept;
 
     gl::GLuint tex() const;
 
@@ -46,5 +47,11 @@ private:
     bool room_in_row(int width, int height);
     bool advance_row();
 };
+
+static_assert(std::is_nothrow_destructible_v<Atlas>);
+static_assert(!std::is_copy_constructible_v<Atlas>);
+static_assert(!std::is_copy_assignable_v<Atlas>);
+static_assert(std::is_nothrow_move_constructible_v<Atlas>);
+static_assert(std::is_nothrow_move_assignable_v<Atlas>);
 
 }  // namespace gui

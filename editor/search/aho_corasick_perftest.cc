@@ -1,8 +1,8 @@
-#include "base/buffer/aho_corasick/aho_corasick.h"
+#include "editor/search/aho_corasick.h"
 #include "util/profiler.h"
 #include <gtest/gtest.h>
 
-namespace base {
+namespace editor {
 
 using MatchResult = AhoCorasick::MatchResult;
 
@@ -111,4 +111,4 @@ TEST(AhoCorasickPerfTest, VariousIterationTests) {
     pf6.stop_mili();
 }
 
-}  // namespace base
+}  // namespace editor

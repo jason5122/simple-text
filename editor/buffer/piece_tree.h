@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer/piece_tree_rbtree.h"
+#include "editor/buffer/piece_tree_rbtree.h"
 #include <forward_list>
 #include <memory>
 #include <optional>
@@ -12,7 +12,7 @@
 #define TEXTBUF_DEBUG
 #endif  // NDEBUG
 
-namespace base {
+namespace editor {
 
 struct NodePosition {
     const NodeData* node = nullptr;
@@ -191,4 +191,4 @@ private:
     const char* last_ptr = nullptr;
 };
 
-}  // namespace base
+}  // namespace editor

@@ -33,6 +33,7 @@ executable("perf_tests") {
 
   deps = [
     "//base:base_perftests",
+    "//editor:editor_perftests",
     "//font:font_perftests",
     "//third_party/googletest:gtest",
   ]

@@ -1,9 +1,9 @@
-#include "base/buffer/piece_tree.h"
+#include "editor/buffer/piece_tree.h"
 #include "util/random.h"
 #include <algorithm>
 #include <gtest/gtest.h>
 
-namespace base {
+namespace editor {
 
 TEST(PieceTreeTest, CustomTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
@@ -925,4 +925,4 @@ TEST(PieceTreeTest, FindTest2) {
     ASSERT_FALSE(tree.find("\x8F\x9F"));
 }
 
-}  // namespace base
+}  // namespace editor

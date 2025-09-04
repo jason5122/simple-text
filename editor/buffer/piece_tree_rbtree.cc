@@ -1,8 +1,8 @@
-#include "base/buffer/piece_tree_rbtree.h"
 #include "base/check.h"
+#include "editor/buffer/piece_tree_rbtree.h"
 #include <cassert>
 
-namespace base {
+namespace editor {
 
 RedBlackTree::Node::Node(Color c, const NodePtr& lft, const NodeData& data, const NodePtr& rgt)
     : color(c), left(lft), data(data), right(rgt) {}
@@ -269,4 +269,4 @@ RedBlackTree RedBlackTree::rem(const RedBlackTree& root, size_t at, size_t total
     return remove_right(root, at, total);
 }
 
-}  // namespace base
+}  // namespace editor

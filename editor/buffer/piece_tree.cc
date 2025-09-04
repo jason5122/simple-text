@@ -1,6 +1,6 @@
-#include "base/buffer/aho_corasick/aho_corasick.h"
-#include "base/buffer/piece_tree.h"
 #include "base/numeric/saturation_arithmetic.h"
+#include "editor/buffer/piece_tree.h"
+#include "editor/search/aho_corasick.h"
 #include "unicode/utf8_decoder.h"
 #include "util/scope_guard.h"
 #include <cassert>
@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace base {
+namespace editor {
 
 const CharBuffer* BufferCollection::buffer_at(BufferType buffer_type) const {
     return buffer_type == BufferType::Mod ? &mod_buffer : orig_buffer.get();
@@ -1018,4 +1018,4 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
     }
 }
 
-}  // namespace base
+}  // namespace editor

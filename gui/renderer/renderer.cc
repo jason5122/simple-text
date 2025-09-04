@@ -5,11 +5,6 @@ using namespace gl;
 
 namespace gui {
 
-static_assert(!std::is_copy_constructible_v<Renderer>);
-static_assert(!std::is_copy_assignable_v<Renderer>);
-static_assert(std::is_move_constructible_v<Renderer>);
-static_assert(std::is_move_assignable_v<Renderer>);
-
 Renderer::Renderer() {
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);

@@ -1,7 +1,7 @@
-#include "base/buffer/aho_corasick/ac_slow.h"
+#include "editor/search/ac_slow.h"
 #include <cassert>
 
-namespace base {
+namespace editor {
 
 ACSlowConstructor::ACSlowConstructor() : _next_node_id(1) {
     _root = new_state();
@@ -100,4 +100,4 @@ void ACSlowConstructor::construct(const std::vector<std::string>& patterns) {
     }
 }
 
-}  // namespace base
+}  // namespace editor

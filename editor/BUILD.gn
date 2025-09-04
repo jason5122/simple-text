@@ -1,5 +1,12 @@
 source_set("editor") {
-  sources = [ "movement.cc" ]
+  sources = [
+    "buffer/piece_tree.cc",
+    "buffer/piece_tree_rbtree.cc",
+    "movement.cc",
+    "search/ac_fast.cc",
+    "search/ac_slow.cc",
+    "search/aho_corasick.cc",
+  ]
 
   deps = [
     "//third_party/spdlog",
@@ -10,7 +17,23 @@ source_set("editor") {
 source_set("editor_unittests") {
   testonly = true
 
-  sources = [ "movement_unittest.cc" ]
+  sources = [
+    "buffer/piece_tree_unittest.cc",
+    "buffer/tree_walker_unittest.cc",
+    "movement_unittest.cc",
+    "search/aho_corasick_unittest.cc",
+  ]
+
+  deps = [
+    ":editor",
+    "//third_party/googletest:gtest",
+  ]
+}
+
+source_set("editor_perftests") {
+  testonly = true
+
+  sources = [ "search/aho_corasick_perftest.cc" ]
 
   deps = [
     ":editor",

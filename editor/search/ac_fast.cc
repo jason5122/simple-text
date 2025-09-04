@@ -1,8 +1,8 @@
-#include "base/buffer/aho_corasick/ac_fast.h"
-#include "base/buffer/aho_corasick/ac_slow.h"
+#include "editor/search/ac_fast.h"
+#include "editor/search/ac_slow.h"
 #include <cassert>
 
-namespace base {
+namespace editor {
 
 uint32 ACConverter::calculate_state_size(const ACSlowState* s) const {
     ACState dummy;
@@ -175,4 +175,4 @@ ACBuffer* ACConverter::convert() {
     return buf;
 }
 
-}  // namespace base
+}  // namespace editor

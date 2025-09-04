@@ -1,9 +1,9 @@
 #pragma once
 
-#include "base/buffer/aho_corasick/ac_slow.h"
+#include "editor/search/ac_slow.h"
 #include <vector>
 
-namespace base {
+namespace editor {
 
 class ACSlowConstructor;
 
@@ -97,4 +97,4 @@ private:
     std::vector<ACOffset> _ofst_map;
 };
 
-}  // namespace base
+}  // namespace editor

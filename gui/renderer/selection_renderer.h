@@ -3,17 +3,18 @@
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
-#include "util/non_copyable.h"
 #include <vector>
 
 namespace gui {
 
-class SelectionRenderer : util::NonCopyable {
+class SelectionRenderer {
 public:
     SelectionRenderer();
     ~SelectionRenderer();
-    SelectionRenderer(SelectionRenderer&& other);
-    SelectionRenderer& operator=(SelectionRenderer&& other);
+    SelectionRenderer(const SelectionRenderer&) = delete;
+    SelectionRenderer& operator=(const SelectionRenderer&) = delete;
+    SelectionRenderer(SelectionRenderer&&) noexcept;
+    SelectionRenderer& operator=(SelectionRenderer&&) noexcept;
 
     struct Selection {
         int line;
@@ -70,5 +71,11 @@ private:
         kTopRightOutwards = 1 << 11,
     };
 };
+
+static_assert(std::is_nothrow_destructible_v<SelectionRenderer>);
+static_assert(!std::is_copy_constructible_v<SelectionRenderer>);
+static_assert(!std::is_copy_assignable_v<SelectionRenderer>);
+static_assert(std::is_nothrow_move_constructible_v<SelectionRenderer>);
+static_assert(std::is_nothrow_move_assignable_v<SelectionRenderer>);
 
 }  // namespace gui

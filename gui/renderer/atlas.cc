@@ -6,11 +6,6 @@ using namespace gl;
 
 namespace gui {
 
-static_assert(!std::is_copy_constructible_v<Atlas>);
-static_assert(!std::is_copy_assignable_v<Atlas>);
-static_assert(std::is_move_constructible_v<Atlas>);
-static_assert(std::is_move_assignable_v<Atlas>);
-
 Atlas::Atlas() {
     constexpr bool kPrintMaxTextureSize = false;
     if constexpr (kPrintMaxTextureSize) {
@@ -63,11 +58,11 @@ Atlas::Atlas() {
     glBindTexture(GL_TEXTURE_2D, 0);  // Unbind.
 }
 
-Atlas::~Atlas() { glDeleteTextures(1, &tex_id); }
+Atlas::~Atlas() noexcept { glDeleteTextures(1, &tex_id); }
 
-Atlas::Atlas(Atlas&& other) : tex_id(other.tex_id) { other.tex_id = 0; }
+Atlas::Atlas(Atlas&& other) noexcept : tex_id(other.tex_id) { other.tex_id = 0; }
 
-Atlas& Atlas::operator=(Atlas&& other) {
+Atlas& Atlas::operator=(Atlas&& other) noexcept {
     if (&other != this) {
         tex_id = other.tex_id;
         other.tex_id = 0;

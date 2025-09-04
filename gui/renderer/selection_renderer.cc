@@ -16,11 +16,6 @@ const std::string kFragmentShader =
 
 namespace gui {
 
-static_assert(!std::is_copy_constructible_v<SelectionRenderer>);
-static_assert(!std::is_copy_assignable_v<SelectionRenderer>);
-static_assert(std::is_move_constructible_v<SelectionRenderer>);
-static_assert(std::is_move_assignable_v<SelectionRenderer>);
-
 SelectionRenderer::SelectionRenderer() : shader_program{kVertexShader, kFragmentShader} {
     GLuint shader_id = shader_program.id();
     glUseProgram(shader_id);
@@ -91,7 +86,7 @@ SelectionRenderer::~SelectionRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
+SelectionRenderer::SelectionRenderer(SelectionRenderer&& other) noexcept
     : shader_program{std::move(other.shader_program)},
       vao{other.vao},
       vbo_instance{other.vbo_instance},
@@ -101,7 +96,7 @@ SelectionRenderer::SelectionRenderer(SelectionRenderer&& other)
     other.ebo = 0;
 }
 
-SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) {
+SelectionRenderer& SelectionRenderer::operator=(SelectionRenderer&& other) noexcept {
     if (&other != this) {
         shader_program = std::move(other.shader_program);
         vao = other.vao;

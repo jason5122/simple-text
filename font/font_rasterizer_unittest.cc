@@ -3,11 +3,6 @@
 
 namespace font {
 
-static_assert(!std::is_copy_constructible_v<FontRasterizer>);
-static_assert(!std::is_copy_assignable_v<FontRasterizer>);
-static_assert(!std::is_move_constructible_v<FontRasterizer>);
-static_assert(!std::is_move_assignable_v<FontRasterizer>);
-
 TEST(FontRasterizerTest, LayoutLine1) {
     auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.add_system_font(32);

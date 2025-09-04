@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace base {
+namespace editor {
 
 struct BufferCursor {
     size_t line = 0;    // Relative line in the current buffer.
@@ -89,4 +89,4 @@ private:
     NodePtr root_node;
 };
 
-}  // namespace base
+}  // namespace editor

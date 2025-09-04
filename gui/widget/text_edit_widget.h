@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer/piece_tree.h"
+#include "editor/buffer/piece_tree.h"
 #include "editor/selection.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
@@ -71,7 +71,7 @@ private:
 
     size_t font_id;
 
-    base::PieceTree tree{};
+    editor::PieceTree tree{};
 
     Selection selection{};
     Selection old_selection{};

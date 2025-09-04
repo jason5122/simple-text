@@ -9,12 +9,14 @@
 
 namespace gui {
 
-class TextureRenderer : util::NonCopyable {
+class TextureRenderer {
 public:
     TextureRenderer();
     ~TextureRenderer();
-    TextureRenderer(TextureRenderer&& other);
-    TextureRenderer& operator=(TextureRenderer&& other);
+    TextureRenderer(const TextureRenderer&) = delete;
+    TextureRenderer& operator=(const TextureRenderer&) = delete;
+    TextureRenderer(TextureRenderer&& other) noexcept;
+    TextureRenderer& operator=(TextureRenderer&& other) noexcept;
 
     void add_line_layout(const font::LineLayout& line_layout,
                          const Point& coords,
@@ -57,5 +59,11 @@ private:
                            const Point& min_coords,
                            const Point& max_coords);
 };
+
+static_assert(std::is_nothrow_destructible_v<TextureRenderer>);
+static_assert(!std::is_copy_constructible_v<TextureRenderer>);
+static_assert(!std::is_copy_assignable_v<TextureRenderer>);
+static_assert(std::is_nothrow_move_constructible_v<TextureRenderer>);
+static_assert(std::is_nothrow_move_assignable_v<TextureRenderer>);
 
 }  // namespace gui

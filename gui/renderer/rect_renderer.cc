@@ -15,11 +15,6 @@ const std::string kFragmentShader =
 
 namespace gui {
 
-static_assert(!std::is_copy_constructible_v<RectRenderer>);
-static_assert(!std::is_copy_assignable_v<RectRenderer>);
-static_assert(std::is_move_constructible_v<RectRenderer>);
-static_assert(std::is_move_assignable_v<RectRenderer>);
-
 RectRenderer::RectRenderer() : shader_program{kVertexShader, kFragmentShader} {
     constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -72,7 +67,7 @@ RectRenderer::~RectRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-RectRenderer::RectRenderer(RectRenderer&& other)
+RectRenderer::RectRenderer(RectRenderer&& other) noexcept
     : shader_program{std::move(other.shader_program)},
       vao{other.vao},
       vbo_instance{other.vbo_instance},
@@ -82,7 +77,7 @@ RectRenderer::RectRenderer(RectRenderer&& other)
     other.ebo = 0;
 }
 
-RectRenderer& RectRenderer::operator=(RectRenderer&& other) {
+RectRenderer& RectRenderer::operator=(RectRenderer&& other) noexcept {
     if (&other != this) {
         shader_program = std::move(other.shader_program);
         vao = other.vao;

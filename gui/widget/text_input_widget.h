@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/buffer/piece_tree.h"
+#include "editor/buffer/piece_tree.h"
 #include "editor/selection.h"
 #include "gui/renderer/types.h"
 #include "gui/widget/scrollable_widget.h"
@@ -38,7 +38,7 @@ private:
     int left_padding;
 
     int line_height;
-    base::PieceTree tree{};
+    editor::PieceTree tree{};
     Selection selection{};
 
     size_t line_at_y(int y) const;

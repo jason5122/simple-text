@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace base {
+namespace editor {
 
 class ACSlowState;
 
@@ -94,4 +94,4 @@ private:
     void propagate_faillink();
 };
 
-}  // namespace base
+}  // namespace editor

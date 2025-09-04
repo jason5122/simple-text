@@ -20,11 +20,6 @@ const std::string kFragmentShader =
 
 namespace gui {
 
-static_assert(!std::is_copy_constructible_v<TextureRenderer>);
-static_assert(!std::is_copy_assignable_v<TextureRenderer>);
-static_assert(std::is_move_constructible_v<TextureRenderer>);
-static_assert(std::is_move_assignable_v<TextureRenderer>);
-
 TextureRenderer::TextureRenderer() : shader_program{kVertexShader, kFragmentShader} {
     constexpr GLuint indices[] = {
         0, 1, 3,  // First triangle.
@@ -77,7 +72,7 @@ TextureRenderer::~TextureRenderer() {
     glDeleteBuffers(1, &ebo);
 }
 
-TextureRenderer::TextureRenderer(TextureRenderer&& other)
+TextureRenderer::TextureRenderer(TextureRenderer&& other) noexcept
     : shader_program{std::move(other.shader_program)},
       vao{other.vao},
       vbo_instance{other.vbo_instance},
@@ -87,7 +82,7 @@ TextureRenderer::TextureRenderer(TextureRenderer&& other)
     other.ebo = 0;
 }
 
-TextureRenderer& TextureRenderer::operator=(TextureRenderer&& other) {
+TextureRenderer& TextureRenderer::operator=(TextureRenderer&& other) noexcept {
     if (&other != this) {
         shader_program = std::move(other.shader_program);
         vao = other.vao;

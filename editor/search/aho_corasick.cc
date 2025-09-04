@@ -1,9 +1,9 @@
-#include "base/buffer/aho_corasick/ac_fast.h"
-#include "base/buffer/aho_corasick/ac_slow.h"
-#include "base/buffer/aho_corasick/aho_corasick.h"
+#include "editor/search/ac_fast.h"
+#include "editor/search/ac_slow.h"
+#include "editor/search/aho_corasick.h"
 #include <spdlog/spdlog.h>
 
-namespace base {
+namespace editor {
 
 AhoCorasick::AhoCorasick(const std::vector<std::string>& patterns) {
     if (patterns.size() >= 65535) {
@@ -155,4 +155,4 @@ AhoCorasick::MatchResult AhoCorasick::match(const PieceTree& tree) const {
     return {-1, -1, -1};
 }
 
-}  // namespace base
+}  // namespace editor

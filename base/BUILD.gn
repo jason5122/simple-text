@@ -9,8 +9,11 @@ source_set("base") {
     "files/file_reader.cc",
     "files/file_util.cc",
     "path_service.cc",
+    "strings/string_util.cc",
+    "strings/utf_string_conversions.cc",
   ]
   deps = [ "//third_party/spdlog" ]
+  public_deps = [ "//base/third_party/icu" ]
 
   # TODO: Consider checking all type conversions. These result in silent and subtle bugs. We
   # previously spent one hour debugging one.
@@ -32,6 +35,7 @@ source_set("base") {
       "apple/owned_nsevent.mm",
       "files/file_util_mac.mm",
       "path_service_mac.cc",
+      "strings/sys_string_conversions_mac.mm",
     ]
     frameworks += [
       "Foundation.framework",
@@ -47,6 +51,7 @@ source_set("base") {
     sources += [
       "files/file_util_win.cc",
       "path_service_win.cc",
+      "strings/sys_string_conversions_win.cc",
     ]
     libs += [ "shell32.lib" ]
   }
@@ -64,7 +69,19 @@ source_set("base_unittests") {
     "memory/weak_ptr_unittest.cc",
     "numeric/safe_conversions_unittest.cc",
     "numeric/saturation_arithmetic_unittest.cc",
+    "strings/string_util_unittest.cc",
+    "strings/utf_string_conversions_unittest.cc",
   ]
+
+  if (is_mac) {
+    sources += [
+      "apple/scoped_cftyperef_unittest.cc",
+      "strings/sys_string_conversions_mac_unittest.mm",
+    ]
+  }
+  if (is_win) {
+    sources += [ "strings/sys_string_conversions_win_unittest.cc" ]
+  }
 
   deps = [
     ":base",

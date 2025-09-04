@@ -231,14 +231,14 @@ private:
     bool quit_pending_;
 };
 
-class MessagePumpNSRunLoop : public MessagePumpCFRunLoopBase {
+class MessagePumpNSApplication : public MessagePumpCFRunLoopBase {
 public:
-    MessagePumpNSRunLoop();
+    MessagePumpNSApplication();
 
-    MessagePumpNSRunLoop(const MessagePumpNSRunLoop&) = delete;
-    MessagePumpNSRunLoop& operator=(const MessagePumpNSRunLoop&) = delete;
+    MessagePumpNSApplication(const MessagePumpNSApplication&) = delete;
+    MessagePumpNSApplication& operator=(const MessagePumpNSApplication&) = delete;
 
-    ~MessagePumpNSRunLoop() override;
+    ~MessagePumpNSApplication() override;
 
     void DoRun(Delegate* delegate) override;
     bool DoQuit() override;

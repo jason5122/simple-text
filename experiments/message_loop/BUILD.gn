@@ -1,5 +1,8 @@
 executable("message_loop") {
-  sources = [ "main.mm" ]
+  sources = [
+    "main.mm",
+    "message_pump_mac.mm",
+  ]
 
   frameworks = [ "AppKit.framework" ]
 

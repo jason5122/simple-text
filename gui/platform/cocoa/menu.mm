@@ -1,5 +1,5 @@
 #include "base/apple/foundation_util.h"
-#include "base/apple/string_conversions.h"
+#include "base/strings/sys_string_conversions.h"
 #include "gui/platform/cocoa/impl_cocoa.h"
 #include "gui/platform/menu.h"
 
@@ -23,7 +23,7 @@ Menu::~Menu() {
 }
 
 void Menu::addItem(std::string_view label) {
-    NSString* label_nsstring = base::apple::StringToNSString(label);
+    NSString* label_nsstring = base::sys_utf8_to_nsstring(label);
     NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:label_nsstring
                                                   action:@selector(itemSelected:)
                                            keyEquivalent:@""];

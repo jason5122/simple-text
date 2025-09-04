@@ -7,16 +7,12 @@ namespace base::apple {
 
 template <typename CFT>
 struct ScopedCFTypeRefTraits {
-    static CFT InvalidValue() {
-        return nullptr;
-    }
+    static CFT InvalidValue() { return nullptr; }
     static CFT Retain(CFT object) {
         CFRetain(object);
         return object;
     }
-    static void Release(CFT object) {
-        CFRelease(object);
-    }
+    static void Release(CFT object) { CFRelease(object); }
 };
 
 template <typename CFT>

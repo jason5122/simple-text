@@ -1,6 +1,6 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
-#include "base/apple/string_conversions.h"
+#include "base/strings/sys_string_conversions.h"
 #include "font/font_rasterizer.h"
 #include "unicode/utf16_to_utf8_indices_map.h"
 #include <CoreFoundation/CoreFoundation.h>
@@ -45,8 +45,8 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
         style = "Bold Italic";
     }
 
-    auto font_name_cfstring = base::apple::StringToCFString(font_name8);
-    auto font_style_cfstring = base::apple::StringToCFString(style);
+    auto font_name_cfstring = base::sys_utf8_to_cfstring_ref(font_name8);
+    auto font_style_cfstring = base::sys_utf8_to_cfstring_ref(style);
     CFTypeRef keys[] = {kCTFontFamilyNameAttribute, kCTFontStyleNameAttribute};
     CFTypeRef values[] = {font_name_cfstring.get(), font_style_cfstring.get()};
     static_assert(std::size(keys) == std::size(values));
@@ -228,7 +228,7 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
 FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     CTFontRef ct_font = native_font.font.get();
     auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(ct_font));
-    std::string font_name = base::apple::CFStringToString(ct_font_name.get());
+    std::string font_name = base::sys_cfstring_ref_to_utf8(ct_font_name.get());
 
     if (font_name.empty()) {
         spdlog::error("FontRasterizer::cacheFont() error: font_name is empty");
@@ -272,7 +272,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
 namespace {
 
 ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, FontId font_id, std::string_view str8) {
-    auto cf_str = base::apple::StringToCFStringNoCopy(str8);
+    auto cf_str = base::sys_utf8_to_cfstring_ref(str8);
 
     auto attr = ScopedCFTypeRef<CFMutableDictionaryRef>(CFDictionaryCreateMutable(
         kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));

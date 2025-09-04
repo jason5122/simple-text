@@ -99,25 +99,15 @@ public:
         }
     }
 
-    bool operator==(const ScopedTypeRef& that) const {
-        return object_ == that.object_;
-    }
+    bool operator==(const ScopedTypeRef& that) const { return object_ == that.object_; }
 
-    bool operator!=(const ScopedTypeRef& that) const {
-        return object_ != that.object_;
-    }
+    bool operator!=(const ScopedTypeRef& that) const { return object_ != that.object_; }
 
-    element_type* operator&() {
-        return &object_;
-    }
+    element_type* operator&() { return &object_; }
 
-    explicit operator bool() const {
-        return object_ != Traits::InvalidValue();
-    }
+    explicit operator bool() const { return object_ != Traits::InvalidValue(); }
 
-    element_type get() const {
-        return object_;
-    }
+    element_type get() const { return object_; }
 
     // ScopedTypeRef<>::release() is like std::unique_ptr<>::release.  It is NOT
     // a wrapper for Release().  To force a ScopedTypeRef<> object to call

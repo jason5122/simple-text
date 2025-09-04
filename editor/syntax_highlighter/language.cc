@@ -1,10 +1,7 @@
-#include "language.h"
-
+#include "base/debug/profiler.h"
 #include "base/files/file_reader.h"
+#include "editor/syntax_highlighter/language.h"
 #include <wasm.h>
-
-// TODO: Debug use; remove this.
-#include "util/profiler.h"
 
 namespace highlight {
 

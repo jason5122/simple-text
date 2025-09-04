@@ -3,7 +3,7 @@
 #include "base/numeric/saturation_arithmetic.h"
 #include <random>
 
-namespace util {
+namespace base {
 
 // Returns a random number in the range [low, high].
 inline int random_number(int low, int high) {
@@ -27,7 +27,7 @@ inline std::string random_string(size_t length) {
 inline std::string random_newline_string(size_t length, size_t newlines) {
     std::string str = random_string(base::sub_sat(length, newlines));
     for (size_t k = 0; k < newlines; ++k) {
-        size_t i = util::random_number(0, str.length());
+        size_t i = random_number(0, str.length());
         str.insert(i, "\n");
     }
     return str;
@@ -39,4 +39,4 @@ inline char random_char() {
     return random_number(low, high);
 }
 
-}  // namespace util
+}  // namespace base

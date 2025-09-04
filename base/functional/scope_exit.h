@@ -3,18 +3,22 @@
 #include <concepts>
 #include <utility>
 
+namespace base {
+
 template <std::invocable F>
-class ScopeGuard {
+class ScopeExit {
 public:
     template <std::invocable T>
-    explicit constexpr ScopeGuard(T&& scope_exit_func)
+    explicit constexpr ScopeExit(T&& scope_exit_func)
         : scope_exit_func{std::forward<T>(scope_exit_func)} {}
 
-    ~ScopeGuard() { scope_exit_func(); }
+    ~ScopeExit() { scope_exit_func(); }
 
 private:
     F scope_exit_func;
 };
 
 template <std::invocable F>
-ScopeGuard(F&&) -> ScopeGuard<F>;
+ScopeExit(F&&) -> ScopeExit<F>;
+
+}  // namespace base

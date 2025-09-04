@@ -1,5 +1,5 @@
+#include "base/rand_util.h"
 #include "font/font_rasterizer.h"
-#include "util/random.h"
 #include <gtest/gtest.h>
 
 namespace font {
@@ -25,7 +25,7 @@ TEST(FontRasterizerTest, LineLayoutPerformance) {
     size_t font_id = rasterizer.add_system_font(32);
 
     for (int i = 0; i < 1000; ++i) {
-        std::string str = util::random_string(100);
+        std::string str = base::random_string(100);
         auto layout = rasterizer.layout_line(font_id, str);
     }
 }

@@ -1,9 +1,9 @@
+#include "base/debug/profiler.h"
 #include "base/numeric/safe_conversions.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "editor/movement.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/text_edit_widget.h"
-#include "util/profiler.h"
 #include <cassert>
 #include <cmath>
 #include <fmt/format.h>
@@ -18,7 +18,7 @@ TextEditWidget::TextEditWidget(std::string_view str8, size_t font_id)
 void TextEditWidget::select_all() { selection.set_range(0, tree.length()); }
 
 void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
-    auto p = util::Profiler{"TextViewWidget::move()"};
+    auto p = base::Profiler{"TextViewWidget::move()"};
 
     auto [line, col] = tree.line_column_at(selection.end);
     const auto& layout = layout_at(line);
@@ -77,7 +77,7 @@ void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
 }
 
 void TextEditWidget::move_to(MoveTo to, bool extend) {
-    auto p = util::Profiler{"TextViewWidget::moveTo()"};
+    auto p = base::Profiler{"TextViewWidget::moveTo()"};
 
     switch (to) {
     case MoveTo::kBOL:
@@ -122,7 +122,7 @@ void TextEditWidget::insert_text(std::string_view str8) {
 }
 
 void TextEditWidget::left_delete() {
-    auto p = util::Profiler{"TextViewWidget::leftDelete()"};
+    auto p = base::Profiler{"TextViewWidget::leftDelete()"};
 
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end);
@@ -149,7 +149,7 @@ void TextEditWidget::left_delete() {
 }
 
 void TextEditWidget::right_delete() {
-    auto p = util::Profiler{"TextViewWidget::rightDelete()"};
+    auto p = base::Profiler{"TextViewWidget::rightDelete()"};
 
     if (selection.empty()) {
         auto [line, col] = tree.line_column_at(selection.end);
@@ -169,7 +169,7 @@ void TextEditWidget::right_delete() {
 
 // TODO: Make this delete newlines without going past them into the previous line.
 void TextEditWidget::delete_word(bool forward) {
-    auto p = util::Profiler{"TextViewWidget::deleteWord()"};
+    auto p = base::Profiler{"TextViewWidget::deleteWord()"};
 
     if (selection.empty()) {
         size_t prev_offset = selection.end;
@@ -371,7 +371,7 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
     // TODO: Refactor code in draw() to only fetch caret [line, col] once.
     size_t selection_line = tree.line_at(selection.end);
 
-    auto p = util::Profiler{"TextViewWidget::renderText()"};
+    auto p = base::Profiler{"TextViewWidget::renderText()"};
 
     // Draw shadow to indicate horizontal scrolling is possible.
     static constexpr int kShadowWidth = 10;

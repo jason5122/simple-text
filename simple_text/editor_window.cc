@@ -1,3 +1,4 @@
+#include "base/debug/profiler.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/container/horizontal_resizing_widget.h"
 #include "gui/widget/container/vertical_resizing_widget.h"
@@ -5,7 +6,6 @@
 #include "gui/widget/find_panel_widget.h"
 #include "simple_text/editor_app.h"
 #include "simple_text/editor_window.h"
-#include "util/profiler.h"
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -73,7 +73,7 @@ void EditorWindow::on_opengl_activate() {
 }
 
 void EditorWindow::draw() {
-    // auto p = util::Profiler{"Total render time"};
+    // auto p = base::Profiler{"Total render time"};
 
     // TODO: Debug use; remove this.
     auto* text_view = editor_widget->current_widget();
@@ -312,7 +312,7 @@ bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
         editor_widget->current_widget()->select_all();
         handled = true;
     } else if (key == Key::kN && modifiers == kPrimaryModifier) {
-        auto p = util::Profiler{"Add new tab (modifier key)"};
+        auto p = base::Profiler{"Add new tab (modifier key)"};
         // editor_widget->add_tab("sample_text.txt", kSampleText * 50 + kLongLine);
         editor_widget->add_tab("untitled", "");
         handled = true;
@@ -473,7 +473,7 @@ void EditorWindow::on_insert_text(std::string_view text) {
 }
 
 void EditorWindow::on_action(Action action, bool extend) {
-    auto p = util::Profiler{"EditorWindow::onAction()"};
+    auto p = base::Profiler{"EditorWindow::onAction()"};
 
     bool handled = true;
     auto* text_view = editor_widget->current_widget();

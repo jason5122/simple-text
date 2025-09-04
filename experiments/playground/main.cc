@@ -1,7 +1,3 @@
-#include "base/check.h"
+#include <spdlog/spdlog.h>
 
-int main() {
-    CHECK_EQ(2, 2);
-    // CHECK_EQ(9 + 10, 21);
-    NOTREACHED();
-}
+int main() { spdlog::info("{:?}", "hello world!\n\n\n\r\n\t"); }

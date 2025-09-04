@@ -1,5 +1,5 @@
+#include "base/debug/profiler.h"
 #include "gui/platform/win32/dummy_context.h"
-#include "util/profiler.h"
 
 namespace gui {
 
@@ -19,7 +19,7 @@ void DummyContext::initialize() {
         .cAuxBuffers = 0,
     };
 
-    auto pf = util::Profiler{"ChoosePixelFormat() + SetPixelFormat()"};
+    auto pf = base::Profiler{"ChoosePixelFormat() + SetPixelFormat()"};
     int pixelformat = ChoosePixelFormat(m_hdc, &pfd);
     SetPixelFormat(m_hdc, pixelformat, &pfd);
 

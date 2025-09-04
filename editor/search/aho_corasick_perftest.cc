@@ -1,5 +1,5 @@
+#include "base/debug/profiler.h"
 #include "editor/search/aho_corasick.h"
-#include "util/profiler.h"
 #include <gtest/gtest.h>
 
 namespace editor {
@@ -78,7 +78,7 @@ __builtin_char_memchr: 25 ms
 
 // TODO: Make this optional. This test runs slowly; only run if you need to re-measure performance.
 TEST(AhoCorasickPerfTest, VariousIterationTests) {
-    auto pf1 = util::Profiler{"PieceTree line-by-line iteration"};
+    auto pf1 = base::Profiler{"PieceTree line-by-line iteration"};
     for (size_t line = 0; line < kLongPieceTree.line_count(); ++line) {
         std::string line_str = kLongPieceTree.get_line_content(line);
     }
@@ -86,27 +86,27 @@ TEST(AhoCorasickPerfTest, VariousIterationTests) {
 
     auto ac = AhoCorasick({"a"});
 
-    auto pf2 = util::Profiler{"Aho-Corasick match"};
+    auto pf2 = base::Profiler{"Aho-Corasick match"};
     ac.match(kLongPieceTree);
     pf2.stop_mili();
 
-    auto pf3 = util::Profiler{"std::string find"};
+    auto pf3 = base::Profiler{"std::string find"};
     static_cast<void>(kLongStr.find("a"));
     pf3.stop_mili();
 
-    auto pf4 = util::Profiler{"std::string iteration"};
+    auto pf4 = base::Profiler{"std::string iteration"};
     for (char ch [[maybe_unused]] : kLongStr) {
     }
     pf4.stop_mili();
 
-    auto pf5 = util::Profiler{"Piece table iteration"};
+    auto pf5 = base::Profiler{"Piece table iteration"};
     TreeWalker walker{&kLongPieceTree};
     while (!walker.exhausted()) {
         walker.next();
     }
     pf5.stop_mili();
 
-    auto pf6 = util::Profiler{"__builtin_char_memchr"};
+    auto pf6 = base::Profiler{"__builtin_char_memchr"};
     __builtin_char_memchr(kLongStr.data(), 'a', kLongStr.size());
     pf6.stop_mili();
 }

@@ -1,9 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "base/debug/profiler.h"
 #include "base/files/file_reader.h"
-
-// TODO: Debug use; remove this.
-#include "util/profiler.h"
 
 namespace base {
 
@@ -29,11 +27,11 @@ const std::string kStr1Gb = kLongLine * 10000000;
 // See discussion below on `fwrite(_, 1, N, _)` vs. `fwrite(_, N, 1, _)`.
 // https://stackoverflow.com/a/21769967/14698275
 TEST(FileReaderPerfTest, ReadFile1) {
-    auto p1 = util::Profiler{"Write 1GB file"};
+    auto p1 = Profiler{"Write 1GB file"};
     WriteFile(kFileName, kStr1Gb);
     p1.stop_mili();
 
-    auto p2 = util::Profiler{"Read 1GB file"};
+    auto p2 = Profiler{"Read 1GB file"};
     std::string contents = ReadFile(kFileName);
     p2.stop_mili();
 

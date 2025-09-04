@@ -2,7 +2,6 @@
 #include "gui/platform/key.h"
 #include "gui/platform/win32/resources.h"
 #include "gui/platform/win32/win32_window.h"
-#include "util/escape_special_chars.h"
 #include <shellscalingapi.h>
 #include <shtypes.h>
 #include <spdlog/spdlog.h>
@@ -274,7 +273,7 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             }
 
             std::string str8 = base::windows::convert_to_utf8(utf16);
-            spdlog::info("WM_CHAR: {}", util::escape_special_chars(str8));
+            spdlog::info("WM_CHAR: {:?}", str8);
             app_window.on_insert_text(str8);
 
             high_surrogate = '\0';

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-namespace util {
+namespace base {
 
 class Profiler {
 public:
@@ -42,4 +42,4 @@ private:
     bool stopped = false;
 };
 
-}  // namespace util
+}  // namespace base

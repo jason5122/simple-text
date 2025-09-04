@@ -1,8 +1,8 @@
+#include "base/functional/scope_exit.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "editor/buffer/piece_tree.h"
 #include "editor/search/aho_corasick.h"
 #include "unicode/utf8_decoder.h"
-#include "util/scope_guard.h"
 #include <cassert>
 #include <memory>
 #include <string>
@@ -104,7 +104,7 @@ void satisfies_rb_invariants(const RedBlackTree& root) {
 void PieceTree::internal_insert(size_t offset, std::string_view txt) {
     assert(!txt.empty());
 
-    ScopeGuard guard{[&] {
+    base::ScopeExit guard{[&] {
         compute_buffer_meta();
 #ifdef TEXTBUF_DEBUG
         satisfies_rb_invariants(root);
@@ -209,7 +209,7 @@ void PieceTree::internal_insert(size_t offset, std::string_view txt) {
 
 void PieceTree::internal_erase(size_t offset, size_t count) {
     assert(count != 0 && !root.empty());
-    ScopeGuard guard{[&] {
+    base::ScopeExit guard{[&] {
         compute_buffer_meta();
 #ifdef TEXTBUF_DEBUG
         satisfies_rb_invariants(root);

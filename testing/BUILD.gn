@@ -1,10 +1,16 @@
-executable("unittest_runner") {
+executable("unit_tests") {
   testonly = true
 
   sources = [ "main.cc" ]
 
   if (is_win) {
     libs = [ "ole32.lib" ]
+  }
+  if (is_mac) {
+    sources += [
+      "gtest_mac.mm",
+      "gtest_mac_unittest.mm",
+    ]
   }
 
   deps = [
@@ -16,7 +22,7 @@ executable("unittest_runner") {
   ]
 }
 
-executable("perftest_runner") {
+executable("perf_tests") {
   testonly = true
 
   sources = [ "main.cc" ]

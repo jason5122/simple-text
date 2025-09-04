@@ -1,12 +1,13 @@
 #pragma once
 
 #include "base/apple/scoped_cftyperef.h"
+#include "base/check.h"
 #include "base/files/file_path.h"
 #include <Foundation/Foundation.h>
 
 namespace base::apple {
 
-// Taken from //chromium/src/base/apple/foundation_util.h.
+#if defined(__OBJC__)
 
 // ObjCCast<>() and ObjCCastStrict<>() cast a basic id to a more
 // specific (NSObject-derived) type. The compatibility of the passed
@@ -41,7 +42,7 @@ T* ObjCCast(id objc_val) {
 template <typename T>
 T* ObjCCastStrict(id objc_val) {
     T* rv = ObjCCast<T>(objc_val);
-    assert(objc_val == nil || rv);
+    CHECK(objc_val == nil || rv);
     return rv;
 }
 
@@ -50,6 +51,8 @@ NSString* FilePathToNSString(const FilePath& path);
 
 // Converts |str| to a FilePath. Returns an empty path if |str| is nil.
 FilePath NSStringToFilePath(NSString* str);
+
+#endif  // defined(__OBJC__)
 
 // Converts |path| to a CFStringRef. Returns nil if |path| is empty.
 ScopedCFTypeRef<CFStringRef> FilePathToCFString(const FilePath& path);

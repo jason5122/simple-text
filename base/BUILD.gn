@@ -75,6 +75,7 @@ source_set("base_unittests") {
 
   if (is_mac) {
     sources += [
+      "apple/foundation_util_unittest.mm",
       "apple/scoped_cftyperef_unittest.cc",
       "strings/sys_string_conversions_mac_unittest.mm",
     ]

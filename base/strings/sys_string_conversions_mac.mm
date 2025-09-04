@@ -3,6 +3,7 @@
 #include <Foundation/Foundation.h>
 #include <vector>
 
+using base::apple::OwnershipPolicy;
 using base::apple::ScopedCFTypeRef;
 
 namespace base {
@@ -16,7 +17,7 @@ ScopedCFTypeRef<CFStringRef> string_piece_to_cfstring_with_encodings(
     std::basic_string_view<CharT> in, CFStringEncoding in_encoding) {
     const auto in_length = in.length();
     if (in_length == 0) {
-        return ScopedCFTypeRef<CFStringRef>(CFSTR(""), apple::OwnershipPolicy::RETAIN);
+        return ScopedCFTypeRef<CFStringRef>(CFSTR(""), OwnershipPolicy::kRetain);
     }
 
     return ScopedCFTypeRef<CFStringRef>(CFStringCreateWithBytes(

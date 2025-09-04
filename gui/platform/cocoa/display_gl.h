@@ -3,8 +3,6 @@
 #include "base/apple/scoped_cgtyperef.h"
 #include <memory>
 
-using base::apple::ScopedTypeRef;
-
 namespace gui {
 
 class DisplayGL {
@@ -16,8 +14,8 @@ public:
     CGLContextObj context();
 
 private:
-    ScopedTypeRef<CGLPixelFormatObj> pixel_format_;
-    ScopedTypeRef<CGLContextObj> context_;
+    base::apple::ScopedCGLPixelFormat pixel_format_;
+    base::apple::ScopedCGLContext context_;
 
     DisplayGL(CGLPixelFormatObj pixel_format, CGLContextObj context);
 };

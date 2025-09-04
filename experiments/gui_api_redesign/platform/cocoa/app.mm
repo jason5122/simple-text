@@ -9,7 +9,7 @@
 using base::apple::ScopedCFTypeRef;
 #include <queue>
 ScopedCFTypeRef<CFRunLoopSourceRef> work_source;
-ScopedCFTypeRef<CFRunLoopRef> run_loop = CFRunLoopGetCurrent();
+auto run_loop = ScopedCFTypeRef<CFRunLoopRef>(CFRunLoopGetCurrent());
 std::queue<std::function<void()>> tasks;
 std::mutex task_mutex;
 
@@ -78,7 +78,7 @@ int App::run() {
         CFRunLoopSourceContext source_context = {};
         source_context.info = nullptr;
         source_context.perform = task_source_perform;
-        work_source = CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &source_context);
+        work_source.reset(CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &source_context));
         CFRunLoopAddSource(run_loop.get(), work_source.get(), kCFRunLoopCommonModes);
 
         schedule_work([] { spdlog::info("scheduled work"); });

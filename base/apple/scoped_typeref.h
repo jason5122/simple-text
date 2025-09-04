@@ -4,16 +4,7 @@
 
 namespace base::apple {
 
-// Defines the ownership policy for a scoped object.
-enum class OwnershipPolicy {
-    // The scoped object takes ownership of an object by taking over an existing
-    // ownership claim.
-    ASSUME,
-
-    // The scoped object will retain the object and any initial ownership is
-    // not changed.
-    RETAIN
-};
+enum class OwnershipPolicy { kAssume, kRetain };
 
 template <typename T>
 struct ScopedTypeRefTraits;
@@ -23,68 +14,83 @@ class ScopedTypeRef {
 public:
     using element_type = T;
 
-    // explicit constexpr ScopedTypeRef(element_type object = Traits::InvalidValue())
-    //     : object_(object) {}
-    // constexpr ScopedTypeRef(element_type object = Traits::InvalidValue()) : object_(object) {}
+    // Construction from underlying type
 
-    // TODO: Investigate adding `explicit`.
-    constexpr ScopedTypeRef(element_type object = Traits::InvalidValue(),
-                            OwnershipPolicy policy = OwnershipPolicy::ASSUME)
+    explicit constexpr ScopedTypeRef(element_type object = Traits::InvalidValue(),
+                                     OwnershipPolicy policy = OwnershipPolicy::kAssume)
         : object_(object) {
-        if (object_ != Traits::InvalidValue() && policy == OwnershipPolicy::RETAIN) {
+        if (object_ != Traits::InvalidValue() && policy == OwnershipPolicy::kRetain) {
             object_ = Traits::Retain(object_);
         }
     }
 
-    // Copy construction
-    ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) = delete;
-    // ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) : object_(that.get()) {
-    //     if (object_ != Traits::InvalidValue()) {
-    //         object_ = Traits::Retain(object_);
-    //     }
-    // }
+    // The pattern in the four [copy|move] [constructors|assignment operators]
+    // below is that for each of them there is the standard version for use by
+    // scopers wrapping objects of this type, and a templated version to handle
+    // scopers wrapping objects of subtypes. One might think that one could get
+    // away only the templated versions, as their templates should match the
+    // usage, but that doesn't work. Having a templated function that matches the
+    // types of, say, a copy constructor, doesn't count as a copy constructor, and
+    // the compiler's generated copy constructor is incorrect.
 
-    // template <typename R, typename RTraits>
-    // ScopedTypeRef(const ScopedTypeRef<R, RTraits>& that) : object_(that.get()) {
-    //     if (object_ != Traits::InvalidValue()) {
-    //         object_ = Traits::Retain(object_);
-    //     }
-    // }
+    // Copy construction
+
+    ScopedTypeRef(const ScopedTypeRef<T, Traits>& that) : object_(that.get()) {
+        if (object_ != Traits::InvalidValue()) {
+            object_ = Traits::Retain(object_);
+        }
+    }
+
+    template <typename R, typename RTraits>
+    ScopedTypeRef(const ScopedTypeRef<R, RTraits>& that) : object_(that.get()) {
+        if (object_ != Traits::InvalidValue()) {
+            object_ = Traits::Retain(object_);
+        }
+    }
 
     // Copy assignment
-    ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) = delete;
-    // ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) {
-    //     reset(that.get(), OwnershipPolicy::RETAIN);
-    //     return *this;
-    // }
 
-    // template <typename R, typename RTraits>
-    // ScopedTypeRef& operator=(const ScopedTypeRef<R, RTraits>& that) {
-    //     reset(that.get(), OwnershipPolicy::RETAIN);
-    //     return *this;
-    // }
+    ScopedTypeRef& operator=(const ScopedTypeRef<T, Traits>& that) {
+        reset(that.get(), OwnershipPolicy::kRetain);
+        return *this;
+    }
+
+    template <typename R, typename RTraits>
+    ScopedTypeRef& operator=(const ScopedTypeRef<R, RTraits>& that) {
+        reset(that.get(), OwnershipPolicy::kRetain);
+        return *this;
+    }
 
     // Move construction
+
     ScopedTypeRef(ScopedTypeRef<T, Traits>&& that) : object_(that.release()) {}
 
     template <typename R, typename RTraits>
     ScopedTypeRef(ScopedTypeRef<R, RTraits>&& that) : object_(that.release()) {}
 
     // Move assignment
+
     ScopedTypeRef& operator=(ScopedTypeRef<T, Traits>&& that) {
-        reset(that.release(), OwnershipPolicy::ASSUME);
+        reset(that.release(), OwnershipPolicy::kAssume);
         return *this;
     }
 
     template <typename R, typename RTraits>
     ScopedTypeRef& operator=(ScopedTypeRef<R, RTraits>&& that) {
-        reset(that.release(), OwnershipPolicy::ASSUME);
+        reset(that.release(), OwnershipPolicy::kAssume);
         return *this;
     }
 
+    // Resetting
+
+    template <typename R, typename RTraits>
+    void reset(const ScopedTypeRef<R, RTraits>& that) {
+        reset(that.get(), OwnershipPolicy::kRetain);
+    }
+
     void reset(element_type object = Traits::InvalidValue(),
-               OwnershipPolicy policy = OwnershipPolicy::RETAIN) {
-        if (object != Traits::InvalidValue() && policy == OwnershipPolicy::RETAIN) {
+               OwnershipPolicy policy = OwnershipPolicy::kAssume) {
+        if (object != Traits::InvalidValue() && policy == OwnershipPolicy::kRetain) {
             object = Traits::Retain(object);
         }
         if (object_ != Traits::InvalidValue()) {
@@ -93,21 +99,35 @@ public:
         object_ = object;
     }
 
+    // Destruction
+
     ~ScopedTypeRef() {
         if (object_ != Traits::InvalidValue()) {
             Traits::Release(object_);
         }
     }
 
+    // This is to be used only to take ownership of objects that are created by
+    // pass-by-pointer create functions. To enforce this, require that this object
+    // be empty before use.
+    [[nodiscard]] element_type* InitializeInto() {
+        CHECK_EQ(object_, Traits::InvalidValue());
+        return &object_;
+    }
+
     bool operator==(const ScopedTypeRef& that) const { return object_ == that.object_; }
 
     bool operator!=(const ScopedTypeRef& that) const { return object_ != that.object_; }
 
-    element_type* operator&() { return &object_; }
-
     explicit operator bool() const { return object_ != Traits::InvalidValue(); }
 
     element_type get() const { return object_; }
+
+    void swap(ScopedTypeRef& that) {
+        element_type temp = that.object_;
+        that.object_ = object_;
+        object_ = temp;
+    }
 
     // ScopedTypeRef<>::release() is like std::unique_ptr<>::release.  It is NOT
     // a wrapper for Release().  To force a ScopedTypeRef<> object to call
@@ -121,10 +141,5 @@ public:
 private:
     element_type object_;
 };
-
-template <typename T, typename Traits = ScopedTypeRefTraits<T>>
-bool operator==(const T& that, std::nullptr_t) {
-    return false;
-}
 
 }  // namespace base::apple

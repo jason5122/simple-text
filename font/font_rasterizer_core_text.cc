@@ -9,8 +9,10 @@
 #include <cassert>
 #include <spdlog/spdlog.h>
 
+using base::apple::OwnershipPolicy;
 using base::apple::ScopedCFTypeRef;
-using base::apple::ScopedTypeRef;
+using base::apple::ScopedCGColorSpace;
+using base::apple::ScopedCGContext;
 
 // References:
 // https://github.com/servo/font-kit/blob/d49041ca57da4e9b412951f96f74cb34e3b6324f/src/loader.rs#L199
@@ -25,6 +27,9 @@ bool FontSmoothingEnabled();
 
 struct FontRasterizer::NativeFontType {
     ScopedCFTypeRef<CTFontRef> font;
+
+    // We don't use a default policy to keep things explicit.
+    NativeFontType(CTFontRef ctfont, OwnershipPolicy policy) : font(ctfont, policy) {}
 };
 
 class FontRasterizer::Impl {};
@@ -58,7 +63,7 @@ FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, Font
         CTFontDescriptorCreateWithAttributes(attributes.get()));
 
     CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
-    return cache_font({ct_font}, font_size);
+    return cache_font({ct_font, OwnershipPolicy::kRetain}, font_size);
 }
 
 FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
@@ -66,13 +71,13 @@ FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
     CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
 
     CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
-    return cache_font({sys_font}, font_size);
+    return cache_font({sys_font, OwnershipPolicy::kRetain}, font_size);
 }
 
 FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
     const auto& font_ref = font_id_to_native[font_id].font;
     CTFontRef copy = CTFontCreateCopyWithAttributes(font_ref.get(), font_size, nullptr, nullptr);
-    return cache_font({copy}, font_size);
+    return cache_font({copy, OwnershipPolicy::kRetain}, font_size);
 }
 
 RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) const {
@@ -111,8 +116,8 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     }
 
     std::vector<uint8_t> bitmap_data(height * width * 4);
-    auto color_space_ref = ScopedTypeRef<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB());
-    auto context = ScopedTypeRef<CGContextRef>(CGBitmapContextCreate(
+    auto color_space_ref = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
+    auto context = ScopedCGContext(CGBitmapContextCreate(
         bitmap_data.data(), width, height, 8, width * 4, color_space_ref.get(),
         kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
@@ -172,10 +177,8 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
 
         auto ct_font = static_cast<CTFontRef>(
             CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName));
-        auto scoped_ct_font =
-            ScopedCFTypeRef<CTFontRef>(ct_font, base::apple::OwnershipPolicy::RETAIN);
         int font_size = CTFontGetSize(ct_font);
-        FontId run_font_id = cache_font({std::move(scoped_ct_font)}, font_size);
+        FontId run_font_id = cache_font({ct_font, OwnershipPolicy::kRetain}, font_size);
 
         CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
         std::vector<CGGlyph> glyph_ids(glyph_count);
@@ -281,7 +284,8 @@ ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, FontId font_id, std::
     auto attr_string = ScopedCFTypeRef<CFAttributedStringRef>(
         CFAttributedStringCreate(kCFAllocatorDefault, cf_str.get(), attr.get()));
 
-    return CTLineCreateWithAttributedString(attr_string.get());
+    return ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(attr_string.get()),
+                                      OwnershipPolicy::kRetain);
 }
 
 // https://github.com/alacritty/crossfont/blob/9cd8ed05c9cc7ec17fe69183912560f97c050a1a/src/darwin/mod.rs#L275
@@ -305,9 +309,8 @@ bool FontSmoothingEnabled() {
         CFStringRef cfstring = static_cast<CFStringRef>(pref.get());
         int value = CFStringGetIntValue(cfstring);
         return value != 0;
-    } else {
-        return true;
     }
+    return true;
 }
 
 }  // namespace

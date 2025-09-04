@@ -36,4 +36,9 @@ struct ScopedTypeRefTraits<CGContextRef> {
     static void Release(CGContextRef object) { CGContextRelease(object); }
 };
 
+using ScopedCGLContext = ScopedTypeRef<CGLContextObj>;
+using ScopedCGLPixelFormat = ScopedTypeRef<CGLPixelFormatObj>;
+using ScopedCGColorSpace = ScopedTypeRef<CGColorSpaceRef>;
+using ScopedCGContext = ScopedTypeRef<CGContextRef>;
+
 }  // namespace base::apple

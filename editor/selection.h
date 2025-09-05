@@ -1,8 +1,8 @@
 #pragma once
 
+#include "base/check.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <utility>
 
@@ -32,7 +32,7 @@ constexpr bool Selection::empty() const { return start == end; }
 
 constexpr size_t Selection::length() const {
     auto [left, right] = range();
-    assert(right >= left);
+    CHECK_GE(right, left);
     return right - left;
 }
 

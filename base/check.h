@@ -2,8 +2,6 @@
 
 #include "base/compiler_specific.h"
 #include "base/location.h"
-#include "build/build_config.h"
-#include <cstdio>
 #include <cstdlib>
 
 #define CHECK(cond)                                                                               \
@@ -13,7 +11,12 @@
         }                                                                                         \
     } while (false)
 
-#define CHECK_OP(op, a, b) CHECK((a)op(b))
+#define CHECK_OP(op, a, b)                                                                        \
+    do {                                                                                          \
+        if (!((a)op(b))) [[unlikely]] {                                                           \
+            ::base::internal::check_op_fail(#op, #a, #b, ::base::Location::current());            \
+        }                                                                                         \
+    } while (false)
 
 #define CHECK_EQ(a, b) CHECK_OP(==, a, b)
 #define CHECK_NE(a, b) CHECK_OP(!=, a, b)
@@ -27,32 +30,33 @@
         ::base::internal::notreached_fail(::base::Location::current());                           \
     } while (false)
 
+#ifdef NDEBUG
+// clang-format off
+#define DCHECK(cond)        do { (void)sizeof(cond); } while (false)
+#define DCHECK_EQ(a, b)     do { (void)sizeof((a) == (b)); } while (false)
+#define DCHECK_NE(a, b)     do { (void)sizeof((a) != (b)); } while (false)
+#define DCHECK_LT(a, b)     do { (void)sizeof((a)  < (b)); } while (false)
+#define DCHECK_LE(a, b)     do { (void)sizeof((a) <= (b)); } while (false)
+#define DCHECK_GT(a, b)     do { (void)sizeof((a)  > (b)); } while (false)
+#define DCHECK_GE(a, b)     do { (void)sizeof((a) >= (b)); } while (false)
+// clang-format on
+#else
+#define DCHECK(cond) CHECK(cond)
+#define DCHECK_EQ(a, b) CHECK_EQ(a, b)
+#define DCHECK_NE(a, b) CHECK_NE(a, b)
+#define DCHECK_LT(a, b) CHECK_LT(a, b)
+#define DCHECK_LE(a, b) CHECK_LE(a, b)
+#define DCHECK_GT(a, b) CHECK_GT(a, b)
+#define DCHECK_GE(a, b) CHECK_GE(a, b)
+#endif
+
 namespace base::internal {
 
-[[noreturn]] ALWAYS_INLINE void immediate_crash() {
-// We can't use abort() on Windows because it results in the abort/retry/ignore dialog which
-// disrupts automated tests.
-#if BUILDFLAG(IS_WIN)
-    __debugbreak();
-#elif BUILDFLAG(IS_POSIX)
-    __builtin_trap();
-    __builtin_unreachable();
-#else
-    // Last resort on unknown architectures. Should never be needed.
-    std::abort();
-#endif
-}
-
-[[noreturn]] NOINLINE inline void check_fail(const char* expr, Location loc) {
-    std::fprintf(stderr, "[%s:%u] Check failed: %s\n", loc.file_name(), loc.line_number(), expr);
-    std::fflush(stderr);
-    immediate_crash();
-}
-
-[[noreturn]] NOINLINE inline void notreached_fail(Location loc) {
-    std::fprintf(stderr, "[%s:%u] Unreachable code hit.\n", loc.file_name(), loc.line_number());
-    std::fflush(stderr);
-    immediate_crash();
-}
+[[noreturn]] NOINLINE void check_fail(const char* expr, Location loc);
+[[noreturn]] NOINLINE void check_op_fail(const char* op,
+                                         const char* a,
+                                         const char* b,
+                                         Location loc);
+[[noreturn]] NOINLINE void notreached_fail(Location loc);
 
 }  // namespace base::internal

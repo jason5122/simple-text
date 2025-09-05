@@ -1,5 +1,6 @@
 source_set("base") {
   sources = [
+    "check.cc",
     "files/file_path.cc",
     "files/file_reader.cc",
     "files/file_util.cc",
@@ -56,7 +57,11 @@ source_set("base_unittests") {
   testonly = true
 
   sources = [
+    "containers/fixed_flat_map_unittest.cc",
+    "containers/flat_map_unittest.cc",
+    "containers/flat_tree_unittest.cc",
     "files/file_path_unittest.cc",
+    "hash/hash_unittest.cc",
     "location_unittest.cc",
     "memory/weak_ptr_unittest.cc",
     "numeric/safe_conversions_unittest.cc",

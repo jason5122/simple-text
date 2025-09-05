@@ -1,5 +1,5 @@
+#include "base/check.h"
 #include "font/font_rasterizer.h"
-#include <cassert>
 #include <memory>
 #include <pango/pangocairo.h>
 #include <spdlog/spdlog.h>
@@ -138,7 +138,7 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
 }
 
 LineLayout FontRasterizer::layout_line(size_t font_id, std::string_view str8) {
-    assert(str8.find('\n') == std::string_view::npos);
+    DCHECK_EQ(str8.find('\n'), std::string_view::npos);
 
     PangoFont* font = font_id_to_native[font_id].font.get();
 

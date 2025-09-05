@@ -1,4 +1,5 @@
 #include "base/hash/hash.h"
+#include "build/build_config.h"
 #include "font/font_rasterizer.h"
 
 namespace font {
@@ -21,9 +22,11 @@ size_t FontRasterizer::hash_font(std::string_view font_name8, int font_size) con
     return base::hash_combine(str_hash, font_size);
 }
 
+#if BUILDFLAG(IS_WIN)
 size_t FontRasterizer::hash_font(std::wstring_view font_name16, int font_size) const {
     uint64_t str_hash = base::hash_string(font_name16);
     return base::hash_combine(str_hash, font_size);
 }
+#endif
 
 }  // namespace font

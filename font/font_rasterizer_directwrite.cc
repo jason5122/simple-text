@@ -1,7 +1,7 @@
+#include "base/check.h"
 #include "base/windows/unicode.h"
 #include "font/font_rasterizer.h"
 #include "unicode/utf16_to_utf8_indices_map.h"
-#include <cassert>
 #include <combaseapi.h>
 #include <comdef.h>
 #include <cwchar>
@@ -502,7 +502,7 @@ private:
 }  // namespace
 
 LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
-    assert(str8.find('\n') == std::string_view::npos);
+    DCHECK_EQ(str8.find('\n'), std::string_view::npos);
 
     std::wstring str16 = base::windows::convert_to_utf16(str8);
 

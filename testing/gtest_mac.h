@@ -8,59 +8,59 @@ namespace internal {
 
 // This overloaded version allows comparison between ObjC objects that conform
 // to the NSObject protocol. Used to implement {ASSERT|EXPECT}_NSEQ().
-GTEST_API_ AssertionResult CmpHelperNSEQ(const char* expected_expression,
-                                         const char* actual_expression,
-                                         id<NSObject> expected,
-                                         id<NSObject> actual);
+AssertionResult CmpHelperNSEQ(const char* expected_expression,
+                              const char* actual_expression,
+                              id<NSObject> expected,
+                              id<NSObject> actual);
 
 // This overloaded version allows comparison between ObjC objects that conform
 // to the NSObject protocol. Used to implement {ASSERT|EXPECT}_NSNE().
-GTEST_API_ AssertionResult CmpHelperNSNE(const char* expected_expression,
-                                         const char* actual_expression,
-                                         id<NSObject> expected,
-                                         id<NSObject> actual);
+AssertionResult CmpHelperNSNE(const char* expected_expression,
+                              const char* actual_expression,
+                              id<NSObject> expected,
+                              id<NSObject> actual);
 
 // This overloaded version allows comparison between NSRect objects using
 // NSEqualRects. Used to implement {ASSERT|EXPECT}_NSEQ().
-GTEST_API_ AssertionResult CmpHelperNSEQ(const char* expected_expression,
-                                         const char* actual_expression,
-                                         const NSRect& expected,
-                                         const NSRect& actual);
+AssertionResult CmpHelperNSEQ(const char* expected_expression,
+                              const char* actual_expression,
+                              const NSRect& expected,
+                              const NSRect& actual);
 
 // This overloaded version allows comparison between NSRect objects using
 // NSEqualRects. Used to implement {ASSERT|EXPECT}_NSNE().
-GTEST_API_ AssertionResult CmpHelperNSNE(const char* expected_expression,
-                                         const char* actual_expression,
-                                         const NSRect& expected,
-                                         const NSRect& actual);
+AssertionResult CmpHelperNSNE(const char* expected_expression,
+                              const char* actual_expression,
+                              const NSRect& expected,
+                              const NSRect& actual);
 
 // This overloaded version allows comparison between NSPoint objects using
 // NSEqualPoints. Used to implement {ASSERT|EXPECT}_NSEQ().
-GTEST_API_ AssertionResult CmpHelperNSEQ(const char* expected_expression,
-                                         const char* actual_expression,
-                                         const NSPoint& expected,
-                                         const NSPoint& actual);
+AssertionResult CmpHelperNSEQ(const char* expected_expression,
+                              const char* actual_expression,
+                              const NSPoint& expected,
+                              const NSPoint& actual);
 
 // This overloaded version allows comparison between NSPoint objects using
 // NSEqualPoints. Used to implement {ASSERT|EXPECT}_NSNE().
-GTEST_API_ AssertionResult CmpHelperNSNE(const char* expected_expression,
-                                         const char* actual_expression,
-                                         const NSPoint& expected,
-                                         const NSPoint& actual);
+AssertionResult CmpHelperNSNE(const char* expected_expression,
+                              const char* actual_expression,
+                              const NSPoint& expected,
+                              const NSPoint& actual);
 
 // This overloaded version allows comparison between NSRange objects using
 // NSEqualRanges. Used to implement {ASSERT|EXPECT}_NSEQ().
-GTEST_API_ AssertionResult CmpHelperNSEQ(const char* expected_expression,
-                                         const char* actual_expression,
-                                         const NSRange& expected,
-                                         const NSRange& actual);
+AssertionResult CmpHelperNSEQ(const char* expected_expression,
+                              const char* actual_expression,
+                              const NSRange& expected,
+                              const NSRange& actual);
 
 // This overloaded version allows comparison between NSRange objects using
 // NSEqualRanges. Used to implement {ASSERT|EXPECT}_NSNE().
-GTEST_API_ AssertionResult CmpHelperNSNE(const char* expected_expression,
-                                         const char* actual_expression,
-                                         const NSRange& expected,
-                                         const NSRange& actual);
+AssertionResult CmpHelperNSNE(const char* expected_expression,
+                              const char* actual_expression,
+                              const NSRange& expected,
+                              const NSRange& actual);
 
 }  // namespace internal
 }  // namespace testing

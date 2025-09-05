@@ -1,9 +1,9 @@
+#include "base/check.h"
 #include "base/functional/scope_exit.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "editor/buffer/piece_tree.h"
 #include "editor/search/aho_corasick.h"
 #include "unicode/utf8_decoder.h"
-#include <cassert>
 #include <memory>
 #include <string>
 #include <vector>
@@ -47,7 +47,7 @@ PieceTree::PieceTree(std::string_view txt) {
     last_insert = {};
 
     const auto& buf = *buffers.orig_buffer;
-    assert(!buf.line_starts.empty());
+    DCHECK(!buf.line_starts.empty());
     // If this immutable buffer is empty, we can avoid creating a piece for it altogether.
     if (!buf.buffer.empty()) {
         size_t last_line = buf.line_starts.size() - 1;
@@ -96,13 +96,13 @@ void satisfies_rb_invariants(const RedBlackTree& root) {
     // we'll just track odd nodes as either red or black. Measure the number of black nodes we need
     // to validate.
     if (root.empty() || (root.left().empty() && root.right().empty())) return;
-    assert(check_black_node_invariant(root) != 0);
+    DCHECK_NE(check_black_node_invariant(root), 0);
 }
 }  // namespace
 #endif  // TEXTBUF_DEBUG
 
 void PieceTree::internal_insert(size_t offset, std::string_view txt) {
-    assert(!txt.empty());
+    DCHECK(!txt.empty());
 
     base::ScopeExit guard{[&] {
         compute_buffer_meta();
@@ -128,7 +128,7 @@ void PieceTree::internal_insert(size_t offset, std::string_view txt) {
     // 2. We are inserting at the end of an existing node.
     // 3. We are inserting in the middle of the node.
     auto [node, remainder, node_start_offset, line] = result;
-    assert(node != nullptr);
+    DCHECK_NE(node, nullptr);
 
     // Case #1.
     if (node_start_offset == offset) {
@@ -208,7 +208,7 @@ void PieceTree::internal_insert(size_t offset, std::string_view txt) {
 }
 
 void PieceTree::internal_erase(size_t offset, size_t count) {
-    assert(count != 0 && !root.empty());
+    DCHECK(count != 0 && !root.empty());
     base::ScopeExit guard{[&] {
         compute_buffer_meta();
 #ifdef TEXTBUF_DEBUG
@@ -476,7 +476,7 @@ size_t PieceTree::line_feed_count(BufferType buffer_type,
     if (next_start_offset > end_offset + 1) return end.line - start.line;
     // This must be the case.  next_start_offset is a line down, so it is not possible for
     // end_offset to be < it at this point.
-    assert(end_offset + 1 == next_start_offset);
+    DCHECK_EQ(end_offset + 1, next_start_offset);
     return end.line - start.line;
 }
 
@@ -643,9 +643,9 @@ PieceTree::ShrinkResult PieceTree::shrink_piece(const Piece& piece,
 
 void PieceTree::combine_pieces(NodePosition existing, Piece new_piece) {
     // This transformation is only valid under the following conditions.
-    assert(existing.node->piece.buffer_type == BufferType::Mod);
+    DCHECK_EQ(existing.node->piece.buffer_type, BufferType::Mod);
     // This assumes that the piece was just built.
-    assert(existing.node->piece.last == new_piece.first);
+    DCHECK_EQ(existing.node->piece.last, new_piece.first);
     auto old_piece = existing.node->piece;
     new_piece.first = old_piece.first;
     new_piece.newline_count = new_piece.newline_count + old_piece.newline_count;
@@ -667,7 +667,7 @@ void PieceTree::remove_node_range(NodePosition first, size_t length) {
     // We're going to remove all of 'P1' and 'P2' in this range and the caller will re-insert
     // these pieces with the correct lengths.  If we fail to adjust 'length' we will delete P1
     // and believe that the entire range was deleted.
-    assert(first.node != nullptr);
+    DCHECK_NE(first.node, nullptr);
     auto total_length = first.node->piece.length;
     length = length - (total_length - first.remainder) + total_length;
 
@@ -830,7 +830,7 @@ void TreeWalker::populate_ptrs() {
         return;
     }
 
-    assert(dir == Direction::Right);
+    DCHECK_EQ(dir, Direction::Right);
     auto right = node.right();
     stack.pop_back();
     stack.push_back({right});
@@ -859,7 +859,7 @@ void TreeWalker::fast_forward_to(size_t offset) {
             last_ptr = buffer->buffer.data() + last_offset;
             return;
         } else {
-            assert(!stack.empty());
+            DCHECK(!stack.empty());
             // This parent is no longer relevant.
             stack.pop_back();
             auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
@@ -979,7 +979,7 @@ void ReverseTreeWalker::populate_ptrs() {
         return;
     }
 
-    assert(dir == Direction::Left);
+    DCHECK_EQ(dir, Direction::Left);
     auto left = node.left();
     stack.pop_back();
     stack.push_back({left});
@@ -990,7 +990,7 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
     auto node = root;
     while (!node.empty()) {
         if (node.data().left_subtree_length > offset) {
-            assert(!stack.empty());
+            DCHECK(!stack.empty());
             // This parent is no longer relevant.
             stack.pop_back();
             node = node.left();

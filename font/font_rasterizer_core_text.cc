@@ -1,12 +1,12 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
+#include "base/check.h"
 #include "base/strings/sys_string_conversions.h"
 #include "font/font_rasterizer.h"
 #include "unicode/utf16_to_utf8_indices_map.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
-#include <cassert>
 #include <spdlog/spdlog.h>
 
 using base::apple::OwnershipPolicy;
@@ -156,7 +156,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 
 // https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
 LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
-    assert(str8.find('\n') == std::string_view::npos);
+    DCHECK_EQ(str8.find('\n'), std::string_view::npos);
 
     unicode::UTF16ToUTF8IndicesMap indices_map;
     if (!indices_map.set_utf8(str8.data(), str8.length())) {

@@ -32,17 +32,18 @@ constexpr inline bool utf16_is_low_surrogate(uint16_t c) { return (c & 0xFC00) =
       I.e.: if return value > 0, then gives length of sequence.
 */
 constexpr int utf8_byte_type(uint8_t c) {
-    if (c < 0x80) {
-        return 1;
-    } else if (c < 0xC0) {
-        return 0;
-    } else if (c >= 0xF5 || (c & 0xFE) == 0xC0) {  // "octet values c0, c1, f5 to ff never appear"
-        return -1;
-    } else {
-        int value = (((0xe5 << 24) >> ((unsigned)c >> 4 << 1)) & 3) + 1;
-        // assert(value >= 2 && value <=4);
-        return value;
-    }
+    if (c < 0x80) return 1;            // ASCII
+    if ((c & 0xC0) == 0x80) return 0;  // continuation 10xxxxxx
+
+    // Disallow illegal lead bytes up-front.
+    if (c < 0xC2) return -1;  // C0/C1 are invalid (overlong 2-byte)
+    if (c > 0xF4) return -1;  // F5..FF invalid (outside Unicode range)
+
+    if ((c & 0xE0) == 0xC0) return 2;  // 110xxxxx
+    if ((c & 0xF0) == 0xE0) return 3;  // 1110xxxx
+    if ((c & 0xF8) == 0xF0) return 4;  // 11110xxx
+
+    return -1;
 }
 constexpr bool utf8_type_is_valid_leading_byte(int type) { return type > 0; }
 
@@ -56,12 +57,11 @@ constexpr Unichar next_fail(const T** ptr, const T* end) {
 
 }  // namespace
 
-int count_utf8(const char* utf8, size_t byteLength) {
-    if (!utf8 && byteLength) {
-        return -1;
-    }
+int count_utf8(std::string_view str8) {
+    const char* utf8 = str8.data();  // TODO: Replace this.
+
     int count = 0;
-    const char* stop = utf8 + byteLength;
+    const char* stop = utf8 + str8.length();
     while (utf8 < stop) {
         int type = utf8_byte_type(*(const uint8_t*)utf8);
         if (!utf8_type_is_valid_leading_byte(type) || utf8 + type > stop) {

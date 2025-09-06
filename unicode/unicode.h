@@ -2,15 +2,15 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 
 namespace unicode {
 
 using Unichar = int32_t;
 
-/** Given a sequence of UTF-8 bytes, return the number of unicode codepoints.
-    If the sequence is invalid UTF-8, return -1.
-*/
-int count_utf8(const char* utf8, size_t byteLength);
+// Given a sequence of UTF-8 bytes, return the number of unicode codepoints.
+// If the sequence is invalid UTF-8, return -1.
+int count_utf8(std::string_view str8);
 
 /** Given a sequence of aligned UTF-16 characters in machine-endian form,
     return the number of unicode codepoints.  If the sequence is invalid

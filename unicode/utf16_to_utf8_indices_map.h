@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <vector>
 
 // References:
@@ -10,8 +11,7 @@ namespace unicode {
 // Builds a UTF-16 to UTF-8 indices map. The text is not retained.
 class UTF16ToUTF8IndicesMap {
 public:
-    bool set_utf8(const char* utf8, size_t size);
-
+    bool set_utf8(std::string_view str8);
     constexpr size_t map_index(size_t index) const { return map[index]; }
 
 private:

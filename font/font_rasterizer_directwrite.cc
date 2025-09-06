@@ -361,7 +361,7 @@ public:
     FontFallbackRenderer(ComPtr<IDWriteFontCollection> font_collection, std::string_view str8)
         : ref_count(1), font_collection(font_collection) {
 
-        if (!indices_map.set_utf8(str8.data(), str8.length())) {
+        if (!indices_map.set_utf8(str8)) {
             spdlog::error("UTF16ToUTF8IndicesMap::setUTF8 error");
             std::abort();
         }

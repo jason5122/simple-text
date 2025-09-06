@@ -1,5 +1,5 @@
-#include "unicode/fits_in.h"
 #include "unicode/unicode.h"
+#include <utility>
 
 namespace unicode {
 
@@ -106,7 +106,8 @@ int count_utf16(const uint16_t* utf16, size_t byteLength) {
 }
 
 int count_utf32(const int32_t* utf32, size_t byteLength) {
-    if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) || !fits_in<int>(byteLength >> 2)) {
+    if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) ||
+        !std::in_range<int>(byteLength >> 2)) {
         return -1;
     }
     const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits

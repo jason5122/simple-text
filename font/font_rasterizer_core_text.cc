@@ -159,7 +159,7 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     DCHECK_EQ(str8.find('\n'), std::string_view::npos);
 
     unicode::UTF16ToUTF8IndicesMap indices_map;
-    if (!indices_map.set_utf8(str8.data(), str8.length())) {
+    if (!indices_map.set_utf8(str8)) {
         spdlog::error("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();
     }

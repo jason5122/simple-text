@@ -4,9 +4,9 @@
 namespace unicode {
 
 TEST(UTF16ToUTF8IndicesMapTest, MapIndex) {
-    std::string str = "Foo©bar𝌆baz☃qux";
+    std::string str8 = "Foo©bar𝌆baz☃qux";
     UTF16ToUTF8IndicesMap indices_map;
-    indices_map.set_utf8(str.data(), str.length());
+    indices_map.set_utf8(str8);
 
     // "foo"
     EXPECT_EQ(indices_map.map_index(0), 0);

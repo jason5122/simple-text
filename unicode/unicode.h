@@ -16,16 +16,9 @@ int count_utf8(std::string_view str8);
 // unicode codepoints. If the sequence is invalid UTF-16, return -1.
 int count_utf16(std::u16string_view str16);
 
-/** Given a sequence of aligned UTF-32 characters in machine-endian form,
-    return the number of unicode codepoints.  If the sequence is invalid
-    UTF-32, return -1.
-*/
-int count_utf32(const int32_t* utf32, size_t byteLength);
-
-/** Given a sequence of UTF-8 bytes, return the first unicode codepoint.
-    The pointer will be incremented to point at the next codepoint's start.  If
-    invalid UTF-8 is encountered, set *ptr to end and return -1.
-*/
+// Given a sequence of UTF-8 bytes, return the first unicode codepoint. The pointer will be
+// incremented to point at the next codepoint's start.  If invalid UTF-8 is encountered, set *ptr
+// to end and return -1.
 Unichar next_utf8(const char** ptr, const char* end);
 
 /** Given a sequence of aligned UTF-16 characters in machine-endian form,
@@ -34,13 +27,6 @@ Unichar next_utf8(const char** ptr, const char* end);
     set *ptr to end and return -1.
 */
 Unichar next_utf16(const uint16_t** ptr, const uint16_t* end);
-
-/** Given a sequence of aligned UTF-32 characters in machine-endian form,
-    return the first unicode codepoint.  The pointer will be incremented to
-    point at the next codepoint's start.  If invalid UTF-32 is encountered,
-    set *ptr to end and return -1.
-*/
-Unichar next_utf32(const int32_t** ptr, const int32_t* end);
 
 constexpr unsigned kMaxBytesInUTF8Sequence = 4;
 

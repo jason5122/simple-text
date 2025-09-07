@@ -206,7 +206,7 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
                 .y = static_cast<int>(std::ceil(advances[i].height * scale_factor)),
             };
 
-            size_t utf8_index = indices_map.map_index(indices[i]);
+            size_t utf8_index = indices_map[indices[i]];
             ShapedGlyph glyph = {
                 .font_id = run_font_id,
                 .glyph_id = glyph_ids[i],

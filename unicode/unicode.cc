@@ -9,16 +9,6 @@ constexpr int32_t left_shift(int32_t value, int32_t shift) {
     return (int32_t)((uint32_t)value << shift);
 }
 
-template <typename T>
-constexpr bool is_align2(T x) {
-    return 0 == (x & 1);
-}
-
-template <typename T>
-constexpr bool is_align4(T x) {
-    return 0 == (x & 3);
-}
-
 /** @returns   -1  iff invalid UTF8 byte,
                 0  iff UTF8 continuation byte,
                 1  iff ASCII byte,
@@ -89,23 +79,6 @@ int count_utf16(std::u16string_view str16) {
     return count;
 }
 
-int count_utf32(const int32_t* utf32, size_t byteLength) {
-    if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) ||
-        !std::in_range<int>(byteLength >> 2)) {
-        return -1;
-    }
-    const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
-    const uint32_t* ptr = (const uint32_t*)utf32;
-    const uint32_t* stop = ptr + (byteLength >> 2);
-    while (ptr < stop) {
-        if (*ptr & kInvalidUnicharMask) {
-            return -1;
-        }
-        ptr += 1;
-    }
-    return (int)(byteLength >> 2);
-}
-
 Unichar next_utf8(const char** ptr, const char* end) {
     if (!ptr || !end) {
         return -1;
@@ -147,7 +120,7 @@ Unichar next_utf16(const uint16_t** ptr, const uint16_t* end) {
         return -1;
     }
     const uint16_t* src = *ptr;
-    if (!src || src + 1 > end || !is_align2(intptr_t(src))) {
+    if (!src || src + 1 > end) {
         return next_fail(ptr, end);
     }
     uint16_t c = *src++;
@@ -178,23 +151,6 @@ Unichar next_utf16(const uint16_t** ptr, const uint16_t* end) {
     }
     *ptr = src;
     return result;
-}
-
-Unichar next_utf32(const int32_t** ptr, const int32_t* end) {
-    if (!ptr || !end) {
-        return -1;
-    }
-    const int32_t* s = *ptr;
-    if (!s || s + 1 > end || !is_align4(intptr_t(s))) {
-        return next_fail(ptr, end);
-    }
-    int32_t value = *s;
-    const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
-    if (value & kInvalidUnicharMask) {
-        return next_fail(ptr, end);
-    }
-    *ptr = s + 1;
-    return value;
 }
 
 size_t to_utf8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {

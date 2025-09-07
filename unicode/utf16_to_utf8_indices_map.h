@@ -12,7 +12,7 @@ namespace unicode {
 class UTF16ToUTF8IndicesMap {
 public:
     bool set_utf8(std::string_view str8);
-    constexpr size_t map_index(size_t index) const { return map[index]; }
+    constexpr size_t operator[](size_t index) const { return map[index]; }
 
 private:
     std::vector<size_t> map;

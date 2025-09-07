@@ -13,6 +13,7 @@ source_set("unicode_unittests") {
   sources = [
     "unicode_unittest.cc",
     "utf16_to_utf8_indices_map_unittest.cc",
+    "utf8_decoder_unittest.cc",
   ]
 
   deps = [

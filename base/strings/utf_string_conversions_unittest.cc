@@ -4,7 +4,7 @@
 namespace base {
 
 namespace {
-std::vector<std::string> kConvertRoundtripCases({
+constexpr auto kConvertRoundtripCases = std::to_array<std::string_view>({
     "",               // Empty string
     "Hello, World!",  // ASCII / ISO-8859 string (also valid UTF-8)
     "a\0b",           // UTF-8 with embedded NUL byte

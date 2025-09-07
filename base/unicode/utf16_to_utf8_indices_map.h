@@ -11,7 +11,7 @@ namespace base {
 // Builds a UTF-16 to UTF-8 indices map. The text is not retained.
 class UTF16ToUTF8IndicesMap {
 public:
-    bool set_utf8(std::string_view str8);
+    bool set_utf8(std::string_view utf8);
     constexpr size_t operator[](size_t index) const { return map[index]; }
 
 private:

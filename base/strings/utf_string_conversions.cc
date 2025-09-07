@@ -1,6 +1,7 @@
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/third_party/icu/icu_utf.h"
+#include "base/unicode/unicode.h"
 
 // TODO: Clean up Chromium code.
 
@@ -9,16 +10,6 @@ namespace base {
 namespace {
 
 constexpr base_icu::UChar32 kErrorCodePoint = 0xFFFD;
-
-inline bool IsValidCodepoint(base_icu::UChar32 code_point) {
-    // Excludes code points that are not Unicode scalar values, i.e.
-    // surrogate code points ([0xD800, 0xDFFF]). Additionally, excludes
-    // code points larger than 0x10FFFF (the highest codepoint allowed).
-    // Non-characters and unassigned code points are allowed.
-    // https://unicode.org/glossary/#unicode_scalar_value
-    return (code_point >= 0 && code_point < 0xD800) ||
-           (code_point >= 0xE000 && code_point <= 0x10FFFF);
-}
 
 // UnicodeAppendUnsafe --------------------------------------------------------
 // Function overloads that write code_point to the output string. Output string
@@ -59,7 +50,7 @@ bool DoUTFConversion(const char* src, size_t src_len, DestChar* dest, size_t* de
         base_icu::UChar32 code_point;
         CBU8_NEXT(reinterpret_cast<const uint8_t*>(src), i, src_len, code_point);
 
-        if (!IsValidCodepoint(code_point)) {
+        if (!is_valid_codepoint(code_point)) {
             success = false;
             code_point = kErrorCodePoint;
         }
@@ -75,7 +66,7 @@ bool DoUTFConversion(const char16_t* src, size_t src_len, DestChar* dest, size_t
     bool success = true;
 
     auto ConvertSingleChar = [&success](char16_t in) -> base_icu::UChar32 {
-        if (!CBU16_IS_SINGLE(in) || !IsValidCodepoint(in)) {
+        if (!CBU16_IS_SINGLE(in) || !is_valid_codepoint(in)) {
             success = false;
             return kErrorCodePoint;
         }
@@ -91,7 +82,7 @@ bool DoUTFConversion(const char16_t* src, size_t src_len, DestChar* dest, size_t
 
         if (CBU16_IS_LEAD(src[i]) && CBU16_IS_TRAIL(src[i + 1])) {
             code_point = CBU16_GET_SUPPLEMENTARY(src[i], src[i + 1]);
-            if (!IsValidCodepoint(code_point)) {
+            if (!is_valid_codepoint(code_point)) {
                 code_point = kErrorCodePoint;
                 success = false;
             }

@@ -9,6 +9,7 @@ using TestFunction = bool (*)(std::string_view str);
 
 // Helper used to test IsStringUTF8[AllowingNoncharacters].
 void TestStructurallyValidUtf8(TestFunction fn) {
+    EXPECT_TRUE(fn(""));
     EXPECT_TRUE(fn("abc"));
     EXPECT_TRUE(fn("\xC2\x81"));
     EXPECT_TRUE(fn("\xE1\x80\xBF"));

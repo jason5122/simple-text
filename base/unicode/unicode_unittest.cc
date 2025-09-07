@@ -55,13 +55,199 @@ TEST(UnicodeTest, CountUTF16Invalid) {
     EXPECT_EQ(count_utf16(u"\xDC00\xDC00"), -1);
 }
 
-TEST(UnicodeTest, NextUTF8ASCII) {
-    std::string utf8 = "hello world";
-    size_t i = 0;
-    EXPECT_EQ(next_utf8(utf8, i), 0x68);
-    EXPECT_EQ(i, 1);
+TEST(UnicodeTest, NextUTF8BasicBMP) {
+    constexpr auto kAscii = std::to_array<std::string_view>({
+        "",
+        "hello world",
+        "\n\r\t",
+        "\x0",
+    });
+
+    for (std::string_view s : kAscii) {
+        size_t expected_i = 0;
+        for (size_t i = 0; i < s.length();) {
+            EXPECT_EQ(s[i], next_utf8(s, i));
+            EXPECT_EQ(i, ++expected_i);
+        }
+    }
 }
 
-// TODO: Add more tests.
+TEST(UnicodeTest, NextUTF8AdvanceIndexAfterInvalid) {
+    // clang-format off
+    constexpr std::string_view s = "a\x80" "b";
+    // clang-format on
+    size_t i = 0;
+    EXPECT_EQ(next_utf8(s, i), u'a');
+    EXPECT_EQ(i, 1);
+    EXPECT_EQ(next_utf8(s, i), -1);
+    EXPECT_EQ(i, 2);
+    EXPECT_EQ(next_utf8(s, i), u'b');
+    EXPECT_EQ(i, s.length());
+}
+
+TEST(UnicodeTest, NextUTF8OutOfBounds) {
+    constexpr std::string_view s = "abc";
+    size_t i = 99;
+    EXPECT_EQ(next_utf8(s, i), -1);
+    EXPECT_EQ(i, 99);
+}
+
+TEST(UnicodeTest, NextUTF16BasicBMP) {
+    constexpr auto kAscii = std::to_array<std::u16string_view>({
+        u"",
+        u"hello world",
+        u"\n\r\t",
+        u"\x0",
+    });
+
+    for (std::u16string_view s : kAscii) {
+        size_t expected_i = 0;
+        for (size_t i = 0; i < s.length();) {
+            EXPECT_EQ(s[i], next_utf16(s, i));
+            EXPECT_EQ(i, ++expected_i);
+        }
+    }
+}
+
+TEST(UnicodeTest, NextUTF16SurrogatePair) {
+    // 😀 U+1F600 as UTF-16 surrogate pair
+    constexpr std::u16string_view s = u"\U0001F600";
+    size_t i = 0;
+    EXPECT_EQ(next_utf16(s, i), 0x1F600);
+    EXPECT_EQ(i, 2);
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, s.length());
+}
+
+TEST(UnicodeTest, NextUTF16Mixed) {
+    // "A😀B"
+    constexpr std::u16string_view s = u"A\U0001F600B";
+    size_t i = 0;
+    EXPECT_EQ(next_utf16(s, i), u'A');
+    EXPECT_EQ(i, 1);
+    EXPECT_EQ(next_utf16(s, i), 0x1F600);
+    EXPECT_EQ(i, 3);
+    EXPECT_EQ(next_utf16(s, i), u'B');
+    EXPECT_EQ(i, 4);
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, s.length());
+}
+
+TEST(UnicodeTest, NextUTF16VariationSelector16) {
+    // ☂️  = U+2602 U+FE0F (two code points, both BMP)
+    constexpr std::u16string_view s = u"\u2602\uFE0F";
+    size_t i = 0;
+    EXPECT_EQ(next_utf16(s, i), 0x2602);
+    EXPECT_EQ(i, 1);
+    EXPECT_EQ(next_utf16(s, i), 0xFE0F);
+    EXPECT_EQ(i, 2);
+}
+
+TEST(UnicodeTest, NextUTF16InvalidUnpairedHigh) {
+    constexpr std::u16string_view s = u"\xD800";  // Lone high surrogate.
+    size_t i = 0;
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, s.length());
+}
+
+TEST(UnicodeTest, NextUTF16InvalidUnpairedLow) {
+    constexpr std::u16string_view s = u"\xDC00";  // Lone low surrogate.
+    size_t i = 0;
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, s.length());
+}
+
+TEST(UnicodeTest, NextUTF16TwoHighs) {
+    constexpr std::u16string_view s = u"\xD800\xD800";
+    size_t i = 0;
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, 1);
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, s.length());
+}
+
+TEST(UnicodeTest, NextUTF16AdvanceIndexAfterInvalid) {
+    // clang-format off
+    constexpr std::u16string_view s = u"ab\xD800" "cd";
+    // clang-format on
+    size_t i = 0;
+    EXPECT_EQ(next_utf16(s, i), u'a');
+    EXPECT_EQ(i, 1);
+    EXPECT_EQ(next_utf16(s, i), u'b');
+    EXPECT_EQ(i, 2);
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, 3);
+    EXPECT_EQ(next_utf16(s, i), u'c');
+    EXPECT_EQ(i, 4);
+    EXPECT_EQ(next_utf16(s, i), u'd');
+    EXPECT_EQ(i, s.length());
+}
+
+TEST(UnicodeTest, NextUTF16OutOfBounds) {
+    constexpr std::u16string_view s = u"abc";
+    size_t i = 99;
+    EXPECT_EQ(next_utf16(s, i), -1);
+    EXPECT_EQ(i, 99);
+}
+
+TEST(UnicodeTest, CodepointToUTF8NoOutput) {
+    EXPECT_EQ(codepoint_to_utf8(U'A'), 1);
+    EXPECT_EQ(codepoint_to_utf8(U'©'), 2);
+    EXPECT_EQ(codepoint_to_utf8(U'€'), 3);
+    EXPECT_EQ(codepoint_to_utf8(U'😀'), 4);
+    EXPECT_EQ(codepoint_to_utf8(0xD800), -1);
+}
+
+TEST(UnicodeTest, CodepointToUTF8WithOutput) {
+    using namespace std::literals;
+
+    char out[4] = {};
+    EXPECT_EQ(codepoint_to_utf8(U'A', out), 1);
+    EXPECT_EQ(std::string_view(out, 1), "\x41"sv);
+
+    EXPECT_EQ(codepoint_to_utf8(U'©', out), 2);
+    EXPECT_EQ(std::string_view(out, 2), "\xC2\xA9"sv);
+
+    EXPECT_EQ(codepoint_to_utf8(U'€', out), 3);
+    EXPECT_EQ(std::string_view(out, 3), "\xE2\x82\xAC"sv);
+
+    EXPECT_EQ(codepoint_to_utf8(U'😀', out), 4);
+    EXPECT_EQ(std::string_view(out, 4), "\xF0\x9F\x98\x80"sv);
+
+    EXPECT_EQ(codepoint_to_utf8(0xD800, out), -1);
+}
+
+TEST(UnicodeTest, CodepointToUTF16NoOutput) {
+    EXPECT_EQ(codepoint_to_utf16(U'A'), 1);
+    EXPECT_EQ(codepoint_to_utf16(U'©'), 1);
+    EXPECT_EQ(codepoint_to_utf16(U'€'), 1);
+    EXPECT_EQ(codepoint_to_utf16(U'😀'), 2);
+    EXPECT_EQ(codepoint_to_utf16(0xD800), -1);
+}
+
+TEST(UnicodeTest, CodepointToUTF16WithOutput) {
+    using namespace std::literals;
+
+    uint16_t out[4] = {};
+
+    // 'A' -> 0041
+    EXPECT_EQ(codepoint_to_utf16(U'A', out), 1);
+    EXPECT_EQ(out[0], 0x0041);
+
+    // © U+00A9 -> 00A9
+    EXPECT_EQ(codepoint_to_utf16(U'©', out), 1);
+    EXPECT_EQ(out[0], 0x00A9);
+
+    // € U+20AC -> 20AC
+    EXPECT_EQ(codepoint_to_utf16(U'€', out), 1);
+    EXPECT_EQ(out[0], 0x20AC);
+
+    // 😀 U+1F600 -> D83D DE00
+    EXPECT_EQ(codepoint_to_utf16(U'😀', out), 2);
+    EXPECT_EQ(out[0], 0xD83D);
+    EXPECT_EQ(out[1], 0xDE00);
+
+    EXPECT_EQ(codepoint_to_utf16(0xD800, out), -1);
+}
 
 }  // namespace base

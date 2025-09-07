@@ -32,7 +32,7 @@ TEST(UTF16ToUTF8IndicesMapTest, MapIndex) {
 }
 
 TEST(UTF16ToUTF8IndicesMapTest, InvalidUTF8) {
-    const std::string invalids[] = {
+    constexpr auto kInvalids = std::to_array<std::string_view>({
         "\x80",              // lone continuation
         "\xE2\x28\xA1",      // wrong continuation
         "\xC2",              // truncated 2-byte
@@ -41,11 +41,11 @@ TEST(UTF16ToUTF8IndicesMapTest, InvalidUTF8) {
         "\xC0\x80",          // overlong via illegal lead
         "\xF5\x80\x80\x80",  // > U+10FFFF
         "\xFF",              // illegal byte
-    };
+    });
 
-    for (const auto& bad : invalids) {
+    for (std::string_view s : kInvalids) {
         UTF16ToUTF8IndicesMap m;
-        EXPECT_FALSE(m.set_utf8(bad));
+        EXPECT_FALSE(m.set_utf8(s));
     }
 }
 

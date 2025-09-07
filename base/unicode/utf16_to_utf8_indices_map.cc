@@ -4,26 +4,6 @@
 
 namespace base {
 
-namespace {
-
-// Returns the number of resulting UTF-16 code units needed to convert the UTF-8 sequence.
-// If there is an error, -1 is returned.
-int utf8_to_utf16_length(std::string_view utf8) {
-    int len = 0;
-    for (size_t i = 0; i < utf8.length();) {
-        Unichar cp = next_utf8(utf8, i);
-        if (cp < 0) return -1;
-
-        int count = codepoint_to_utf16(cp);
-        if (count < 0) return -1;
-
-        len += count;
-    }
-    return len;
-}
-
-}  // namespace
-
 bool UTF16ToUTF8IndicesMap::set_utf8(std::string_view utf8) {
     size_t len = utf8.length();
 
@@ -38,10 +18,24 @@ bool UTF16ToUTF8IndicesMap::set_utf8(std::string_view utf8) {
 
     map = std::vector<size_t>(utf16_size);
     auto utf16 = map.begin();
-    size_t i = 0;
-    while (i < len) {
-        *utf16 = i;
-        utf16 += codepoint_to_utf16(next_utf8(utf8, i));
+    for (size_t i = 0; i < len;) {
+        size_t start = i;
+
+        Unichar cp = next_utf8(utf8, i);
+        if (cp < 0) {
+            map.clear();
+            return false;
+        }
+
+        int units = codepoint_to_utf16(cp);
+        if (units < 0) {
+            map.clear();
+            return false;
+        }
+
+        while (units--) {
+            *utf16++ = start;
+        }
     }
 
     return true;

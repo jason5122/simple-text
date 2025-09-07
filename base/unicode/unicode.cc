@@ -75,4 +75,18 @@ int codepoint_to_utf16(Unichar cp, uint16_t utf16[2]) {
     return CBU16_LENGTH(cp);
 }
 
+int utf8_to_utf16_length(std::string_view utf8) {
+    int len = 0;
+    for (size_t i = 0; i < utf8.length();) {
+        Unichar cp = next_utf8(utf8, i);
+        if (cp < 0) return -1;
+
+        int count = codepoint_to_utf16(cp);
+        if (count < 0) return -1;
+
+        len += count;
+    }
+    return len;
+}
+
 }  // namespace base

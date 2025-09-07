@@ -4,31 +4,45 @@
 namespace base {
 
 TEST(UTF16ToUTF8IndicesMapTest, MapIndex) {
-    UTF16ToUTF8IndicesMap indices_map;
-    indices_map.set_utf8("Foo©bar𝌆baz☃qux");
+    UTF16ToUTF8IndicesMap m;
+    ASSERT_TRUE(m.set_utf8("Foo©bar𝌆baz☃qux"));
+    ASSERT_EQ(m.size(), 16);
 
     // "foo"
-    EXPECT_EQ(indices_map[0], 0);
-    EXPECT_EQ(indices_map[1], 1);
-    EXPECT_EQ(indices_map[2], 2);
+    EXPECT_EQ(m[0], 0);
+    EXPECT_EQ(m[1], 1);
+    EXPECT_EQ(m[2], 2);
     // "©"
-    EXPECT_EQ(indices_map[3], 3);
+    EXPECT_EQ(m[3], 3);
     // "bar"
-    EXPECT_EQ(indices_map[4], 5);
-    EXPECT_EQ(indices_map[5], 6);
-    EXPECT_EQ(indices_map[6], 7);
+    EXPECT_EQ(m[4], 5);
+    EXPECT_EQ(m[5], 6);
+    EXPECT_EQ(m[6], 7);
     // "𝌆"
-    EXPECT_EQ(indices_map[7], 8);
+    EXPECT_EQ(m[7], 8);
     // "baz"
-    EXPECT_EQ(indices_map[9], 12);
-    EXPECT_EQ(indices_map[10], 13);
-    EXPECT_EQ(indices_map[11], 14);
+    EXPECT_EQ(m[9], 12);
+    EXPECT_EQ(m[10], 13);
+    EXPECT_EQ(m[11], 14);
     // "☃"
-    EXPECT_EQ(indices_map[12], 15);
+    EXPECT_EQ(m[12], 15);
     // "qux"
-    EXPECT_EQ(indices_map[13], 18);
-    EXPECT_EQ(indices_map[14], 19);
-    EXPECT_EQ(indices_map[15], 20);
+    EXPECT_EQ(m[13], 18);
+    EXPECT_EQ(m[14], 19);
+    EXPECT_EQ(m[15], 20);
+}
+
+TEST(UTF16ToUTF8IndicesMapTest, MapIndex2) {
+    UTF16ToUTF8IndicesMap m;
+    // clang-format off
+    ASSERT_TRUE(m.set_utf8("A" "\xF0\x9F\x98\x80" "B"));
+    // clang-format on
+    ASSERT_EQ(m.size(), 4);
+
+    EXPECT_EQ(m[0], 0);
+    EXPECT_EQ(m[1], 1);
+    EXPECT_EQ(m[2], 1);
+    EXPECT_EQ(m[3], 5);
 }
 
 TEST(UTF16ToUTF8IndicesMapTest, InvalidUTF8) {

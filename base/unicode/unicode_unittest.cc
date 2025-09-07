@@ -250,4 +250,63 @@ TEST(UnicodeTest, CodepointToUTF16WithOutput) {
     EXPECT_EQ(codepoint_to_utf16(0xD800, out), -1);
 }
 
+TEST(UnicodeTest, UTF8ToUTF16Length) {
+    struct Case {
+        std::string_view s;
+        int expected_units;
+    };
+    // Note: counts are UTF-16 *code units*, not code points.
+    constexpr auto kCases = std::to_array<Case>({
+        {"", 0},                          // empty
+        {"hello", 5},                     // ASCII
+        {"\xC2\xA9", 1},                  // © U+00A9 (BMP)
+        {"\xE2\x82\xAC", 1},              // € U+20AC (BMP)
+        {"\xF0\x9F\x98\x80", 2},          // 😀 U+1F600 (astral)
+        {"\xE2\x98\x82\xEF\xB8\x8F", 2},  // ☂️ = U+2602, U+FE0F (both BMP)
+        {"A😀B", 4},                      // A😀B -> 1 + 2 + 1
+        {"😀😀", 4},                      // 😀😀 (2 + 2)
+        {"e\xCC\x81", 2},                 // e + COMBINING ACUTE (BMP + BMP)
+        {"\xF4\x8F\xBF\xBF", 2},          // U+10FFFF (max scalar, astral)
+    });
+
+    for (const auto& c : kCases) {
+        SCOPED_TRACE(::testing::Message() << "bytes=" << c.s.size());
+        EXPECT_EQ(utf8_to_utf16_length(c.s), c.expected_units);
+    }
+
+    EXPECT_EQ(utf8_to_utf16_length(""), 0);
+    EXPECT_EQ(utf8_to_utf16_length("😀"), 2);
+}
+
+TEST(Utf8ToUtf16Length, UTF8ToUTF16LengthInvalid) {
+    // Each case has exactly one invalid sequence.
+    constexpr auto kInvalids = std::to_array<std::string_view>({
+        "\x80",              // lone continuation
+        "\xE2\x28\xA1",      // wrong continuation inside 3-byte
+        "\xC2",              // truncated 2-byte
+        "\xE2\x82",          // truncated 3-byte
+        "\xF0\x9F\x92",      // truncated 4-byte
+        "\xC0\x80",          // overlong encoding of NUL (illegal)
+        "\xED\xA0\x80",      // UTF-8 for U+D800 (surrogate; invalid in UTF-8)
+        "\xF5\x80\x80\x80",  // lead > U+10FFFF
+        "\xFF",              // illegal byte
+    });
+    for (std::string_view s : kInvalids) {
+        EXPECT_EQ(utf8_to_utf16_length(s), -1);
+    }
+}
+
+TEST(Utf8ToUtf16Length, UTF8ToUTF16LengthLongMixedSequence) {
+    // "Foo©bar😀baz☃️qux" -> count BMP vs astral:
+    // Foo(3) + ©(1) + bar(3) + 😀(2) + baz(3) + ☃️(U+2603 U+FE0F -> 2) + qux(3) = 17
+    const std::string_view s = "Foo"
+                               "\xC2\xA9"
+                               "bar"
+                               "\xF0\x9F\x98\x80"
+                               "baz"
+                               "\xE2\x98\x83\xEF\xB8\x8F"
+                               "qux";
+    EXPECT_EQ(utf8_to_utf16_length(s), 17);
+}
+
 }  // namespace base

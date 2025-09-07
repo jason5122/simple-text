@@ -38,6 +38,10 @@ int codepoint_to_utf8(Unichar cp, char utf8[kMaxBytesInUTF8Sequence] = nullptr);
 // return -1.
 int codepoint_to_utf16(Unichar cp, uint16_t utf16[2] = nullptr);
 
+// Returns the number of resulting UTF-16 code units needed to convert the UTF-8 sequence.
+// If there is an error, -1 is returned.
+int utf8_to_utf16_length(std::string_view utf8);
+
 constexpr bool is_valid_codepoint(Unichar cp) {
     // Excludes code points that are not Unicode scalar values, i.e.
     // surrogate code points ([0xD800, 0xDFFF]). Additionally, excludes

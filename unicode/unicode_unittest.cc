@@ -29,4 +29,30 @@ TEST(UnicodeTest, CountUTF8Invalid) {
     EXPECT_EQ(count_utf8("\xFF"), -1);
 }
 
+TEST(UnicodeTest, CountUTF16) {
+    EXPECT_EQ(count_utf16(u""), 0);
+    EXPECT_EQ(count_utf16(u"hello world"), 11);
+    EXPECT_EQ(count_utf16(u"⌚..⌛⏩..⏬☂️..☃️"), 14);
+    EXPECT_EQ(count_utf16(u"﷽"), 1);
+
+    // Surrogate pairs.
+    EXPECT_EQ(count_utf16(u"\xD83D\xDE00"), 1);  // 😀
+    EXPECT_EQ(count_utf16(u"\xD834\xDD1E"), 1);  // 𝄞
+    EXPECT_EQ(count_utf16(u"\xD834\xDF06"), 1);  // 𝌆
+}
+
+TEST(UnicodeTest, CountUTF16Invalid) {
+    EXPECT_EQ(count_utf16(u"\xD800"), -1);
+    EXPECT_EQ(count_utf16(u"\xDC00"), -1);
+
+    // clang-format off
+    EXPECT_EQ(count_utf16(u"\xD800" "A"), -1);
+    EXPECT_EQ(count_utf16(u"\xDC00" "A"), -1);
+    // clang-format on
+
+    EXPECT_EQ(count_utf16(u"\xDC00\xD800"), -1);
+    EXPECT_EQ(count_utf16(u"\xD800\xD800"), -1);
+    EXPECT_EQ(count_utf16(u"\xDC00\xDC00"), -1);
+}
+
 }  // namespace unicode

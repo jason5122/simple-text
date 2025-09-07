@@ -5,7 +5,7 @@ namespace unicode {
 
 namespace {
 
-constexpr inline int32_t left_shift(int32_t value, int32_t shift) {
+constexpr int32_t left_shift(int32_t value, int32_t shift) {
     return (int32_t)((uint32_t)value << shift);
 }
 
@@ -18,10 +18,6 @@ template <typename T>
 constexpr bool is_align4(T x) {
     return 0 == (x & 3);
 }
-
-constexpr inline bool utf16_is_high_surrogate(uint16_t c) { return (c & 0xFC00) == 0xD800; }
-
-constexpr inline bool utf16_is_low_surrogate(uint16_t c) { return (c & 0xFC00) == 0xDC00; }
 
 /** @returns   -1  iff invalid UTF8 byte,
                 0  iff UTF8 continuation byte,
@@ -46,8 +42,11 @@ constexpr int utf8_byte_type(uint8_t c) {
     return -1;
 }
 constexpr bool utf8_type_is_valid_leading_byte(int type) { return type > 0; }
-
 constexpr bool utf8_byte_is_continuation(uint8_t c) { return utf8_byte_type(c) == 0; }
+
+// https://unicode.org/faq/utf_bom.html#utf16-2
+constexpr bool utf16_is_high_surrogate(uint16_t c) { return (c & 0xFC00) == 0xD800; }
+constexpr bool utf16_is_low_surrogate(uint16_t c) { return (c & 0xFC00) == 0xDC00; }
 
 template <typename T>
 constexpr Unichar next_fail(const T** ptr, const T* end) {
@@ -58,49 +57,34 @@ constexpr Unichar next_fail(const T** ptr, const T* end) {
 }  // namespace
 
 int count_utf8(std::string_view str8) {
-    const char* utf8 = str8.data();  // TODO: Replace this.
-
     int count = 0;
-    const char* stop = utf8 + str8.length();
-    while (utf8 < stop) {
-        int type = utf8_byte_type(*(const uint8_t*)utf8);
-        if (!utf8_type_is_valid_leading_byte(type) || utf8 + type > stop) {
-            return -1;  // Sequence extends beyond end.
+    size_t i = 0;
+    size_t n = str8.length();
+    while (i < n) {
+        int len = utf8_byte_type(str8[i]);
+        if (len <= 0 || i + len > n) return -1;
+
+        for (size_t k = 1; k < len; ++k) {
+            if (!utf8_byte_is_continuation(str8[i + k])) return -1;
         }
-        while (type-- > 1) {
-            ++utf8;
-            if (!utf8_byte_is_continuation(*(const uint8_t*)utf8)) {
-                return -1;
-            }
-        }
-        ++utf8;
+        i += len;
         ++count;
     }
     return count;
 }
 
-int count_utf16(const uint16_t* utf16, size_t byteLength) {
-    if (!utf16 || !is_align2(intptr_t(utf16)) || !is_align2(byteLength)) {
-        return -1;
-    }
-    const uint16_t* src = (const uint16_t*)utf16;
-    const uint16_t* stop = src + (byteLength >> 1);
+int count_utf16(std::u16string_view str16) {
+    size_t i = 0;
     int count = 0;
-    while (src < stop) {
-        unsigned c = *src++;
-        if (utf16_is_low_surrogate(c)) {
-            return -1;
-        }
+    while (i < str16.length()) {
+        char16_t c = str16[i++];
+        if (utf16_is_low_surrogate(c)) return -1;
         if (utf16_is_high_surrogate(c)) {
-            if (src >= stop) {
-                return -1;
-            }
-            c = *src++;
-            if (!utf16_is_low_surrogate(c)) {
-                return -1;
-            }
+            if (i >= str16.length()) return -1;
+            c = str16[i++];
+            if (!utf16_is_low_surrogate(c)) return -1;
         }
-        count += 1;
+        ++count;
     }
     return count;
 }

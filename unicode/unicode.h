@@ -8,15 +8,13 @@ namespace unicode {
 
 using Unichar = int32_t;
 
-// Given a sequence of UTF-8 bytes, return the number of unicode codepoints.
-// If the sequence is invalid UTF-8, return -1.
+// Given a sequence of UTF-8 bytes, return the number of unicode codepoints. If the sequence is
+// invalid UTF-8, return -1.
 int count_utf8(std::string_view str8);
 
-/** Given a sequence of aligned UTF-16 characters in machine-endian form,
-    return the number of unicode codepoints.  If the sequence is invalid
-    UTF-16, return -1.
-*/
-int count_utf16(const uint16_t* utf16, size_t byteLength);
+// Given a sequence of aligned UTF-16 characters in machine-endian form, return the number of
+// unicode codepoints. If the sequence is invalid UTF-16, return -1.
+int count_utf16(std::u16string_view str16);
 
 /** Given a sequence of aligned UTF-32 characters in machine-endian form,
     return the number of unicode codepoints.  If the sequence is invalid
@@ -71,17 +69,5 @@ int utf8_to_utf16(uint16_t dst[], int dstCapacity, const char src[], size_t srcB
  *  If there is an error, -1 is returned and the dst[] buffer is undefined.
  */
 int utf16_to_utf8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLength);
-
-/**
- * Given a UTF-16 code point, returns true iff it is a leading surrogate.
- * https://unicode.org/faq/utf_bom.html#utf16-2
- */
-constexpr bool is_leading_surrogate_utf16(uint16_t c) { return ((c) & 0xFC00) == 0xD800; }
-
-/**
- * Given a UTF-16 code point, returns true iff it is a trailing surrogate.
- * https://unicode.org/faq/utf_bom.html#utf16-2
- */
-constexpr bool is_trailing_surrogate_utf16(uint16_t c) { return ((c) & 0xFC00) == 0xDC00; }
 
 }  // namespace unicode

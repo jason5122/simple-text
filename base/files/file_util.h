@@ -2,6 +2,7 @@
 
 #include "base/files/file_path.h"
 #include "build/build_config.h"
+#include <span>
 
 #if BUILDFLAG(IS_POSIX)
 #include <sys/stat.h>
@@ -64,6 +65,8 @@ FILE* OpenFile(const FilePath& filename, const char* mode);
 bool CloseFile(FILE* file);
 
 #if BUILDFLAG(IS_POSIX)
+
+bool ReadFromFD(int fd, std::span<uint8_t> buffer);
 
 // Sets the given |fd| to close-on-exec mode.
 // Returns true if it was able to set it in the close-on-exec mode, otherwise

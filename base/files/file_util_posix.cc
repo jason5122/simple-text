@@ -1,9 +1,8 @@
-#include "file_util.h"
-
+#include "base/files/file.h"
+#include "base/files/file_util.h"
+#include "base/posix/eintr_wrapper.h"
 #include <fcntl.h>
 #include <unistd.h>
-
-#include "base/files/file.h"
 
 namespace base {
 
@@ -15,17 +14,11 @@ FilePath MakeAbsoluteFilePath(const FilePath& input) {
     return FilePath(full_path);
 }
 
-bool PathExists(const FilePath& path) {
-    return access(path.value().c_str(), F_OK) == 0;
-}
+bool PathExists(const FilePath& path) { return access(path.value().c_str(), F_OK) == 0; }
 
-bool PathIsReadable(const FilePath& path) {
-    return access(path.value().c_str(), R_OK) == 0;
-}
+bool PathIsReadable(const FilePath& path) { return access(path.value().c_str(), R_OK) == 0; }
 
-bool PathIsWritable(const FilePath& path) {
-    return access(path.value().c_str(), W_OK) == 0;
-}
+bool PathIsWritable(const FilePath& path) { return access(path.value().c_str(), W_OK) == 0; }
 
 bool DirectoryExists(const FilePath& path) {
     stat_wrapper_t file_info;
@@ -87,6 +80,18 @@ FILE* OpenFile(const FilePath& filename, const char* mode) {
     }
 #endif
     return result;
+}
+
+bool ReadFromFD(int fd, std::span<uint8_t> buffer) {
+    while (!buffer.empty()) {
+        ssize_t bytes_read = HANDLE_EINTR(read(fd, buffer.data(), buffer.size()));
+
+        if (bytes_read <= 0) {
+            return false;
+        }
+        buffer = buffer.subspan(bytes_read);
+    }
+    return true;
 }
 
 bool SetCloseOnExec(int fd) {

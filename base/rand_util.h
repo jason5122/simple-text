@@ -2,8 +2,11 @@
 
 #include "base/numeric/saturation_arithmetic.h"
 #include <random>
+#include <span>
 
 namespace base {
+
+void rand_bytes(std::span<uint8_t> output);
 
 // Returns a random number in the range [low, high].
 inline int random_number(int low, int high) {

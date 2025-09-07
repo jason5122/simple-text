@@ -23,6 +23,7 @@ source_set("base") {
     sources += [
       "files/file_posix.cc",
       "files/file_util_posix.cc",
+      "rand_util_posix.cc",
     ]
   }
 
@@ -65,8 +66,10 @@ source_set("base_unittests") {
     "hash/hash_unittest.cc",
     "location_unittest.cc",
     "memory/weak_ptr_unittest.cc",
+    "no_destructor_unittest.cc",
     "numeric/safe_conversions_unittest.cc",
     "numeric/saturation_arithmetic_unittest.cc",
+    "rand_util_unittest.cc",
     "strings/string_util_unittest.cc",
     "strings/utf_string_conversions_unittest.cc",
     "unicode/unicode_unittest.cc",

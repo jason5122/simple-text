@@ -11,4 +11,6 @@ TEST(UTF8DecoderTest, Valid) {
     EXPECT_EQ(decoder.value(), 0x68);
 }
 
+// TODO: Add more tests.
+
 }  // namespace unicode

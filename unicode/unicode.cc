@@ -1,13 +1,9 @@
+#include "base/third_party/icu/icu_utf.h"
 #include "unicode/unicode.h"
-#include <utility>
 
 namespace unicode {
 
 namespace {
-
-constexpr int32_t left_shift(int32_t value, int32_t shift) {
-    return (int32_t)((uint32_t)value << shift);
-}
 
 /** @returns   -1  iff invalid UTF8 byte,
                 0  iff UTF8 continuation byte,
@@ -44,29 +40,37 @@ constexpr Unichar next_fail(const T** ptr, const T* end) {
     return -1;
 }
 
+inline bool IsValidCodepoint(base_icu::UChar32 code_point) {
+    // Excludes code points that are not Unicode scalar values, i.e.
+    // surrogate code points ([0xD800, 0xDFFF]). Additionally, excludes
+    // code points larger than 0x10FFFF (the highest codepoint allowed).
+    // Non-characters and unassigned code points are allowed.
+    // https://unicode.org/glossary/#unicode_scalar_value
+    return (code_point >= 0 && code_point < 0xD800) ||
+           (code_point >= 0xE000 && code_point <= 0x10FFFF);
+}
+
 }  // namespace
 
 int count_utf8(std::string_view str8) {
     int count = 0;
-    size_t i = 0;
-    size_t n = str8.length();
-    while (i < n) {
-        int len = utf8_byte_type(str8[i]);
-        if (len <= 0 || i + len > n) return -1;
+    size_t len = str8.length();
+    for (size_t i = 0; i < len;) {
+        int bytes = utf8_byte_type(str8[i]);
+        if (bytes <= 0 || i + bytes > len) return -1;
 
-        for (size_t k = 1; k < len; ++k) {
+        for (size_t k = 1; k < bytes; ++k) {
             if (!utf8_byte_is_continuation(str8[i + k])) return -1;
         }
-        i += len;
+        i += bytes;
         ++count;
     }
     return count;
 }
 
 int count_utf16(std::u16string_view str16) {
-    size_t i = 0;
     int count = 0;
-    while (i < str16.length()) {
+    for (size_t i = 0; i < str16.length();) {
         char16_t c = str16[i++];
         if (utf16_is_low_surrogate(c)) return -1;
         if (utf16_is_high_surrogate(c)) {
@@ -79,40 +83,17 @@ int count_utf16(std::u16string_view str16) {
     return count;
 }
 
-Unichar next_utf8(const char** ptr, const char* end) {
-    if (!ptr || !end) {
-        return -1;
-    }
-    const uint8_t* p = (const uint8_t*)*ptr;
-    if (!p || p >= (const uint8_t*)end) {
-        return next_fail(ptr, end);
-    }
-    int c = *p;
-    int hic = c << 24;
+Unichar next_utf8(std::string_view utf8, size_t& i) {
+    size_t len = utf8.length();
+    if (i < len) {
+        base_icu::UChar32 code_point;
+        CBU8_NEXT(reinterpret_cast<const uint8_t*>(utf8.data()), i, len, code_point);
 
-    if (!utf8_type_is_valid_leading_byte(utf8_byte_type(c))) {
-        return next_fail(ptr, end);
+        if (IsValidCodepoint(code_point)) {
+            return code_point;
+        }
     }
-    if (hic < 0) {
-        uint32_t mask = (uint32_t)~0x3F;
-        hic = left_shift(hic, 1);
-        do {
-            ++p;
-            if (p >= (const uint8_t*)end) {
-                return next_fail(ptr, end);
-            }
-            // check before reading off end of array.
-            uint8_t nextByte = *p;
-            if (!utf8_byte_is_continuation(nextByte)) {
-                return next_fail(ptr, end);
-            }
-            c = (c << 6) | (nextByte & 0x3F);
-            mask <<= 5;
-        } while ((hic = left_shift(hic, 1)) < 0);
-        c &= ~mask;
-    }
-    *ptr = (char*)p + 1;
-    return c;
+    return -1;
 }
 
 Unichar next_utf16(const uint16_t** ptr, const uint16_t* end) {
@@ -153,10 +134,10 @@ Unichar next_utf16(const uint16_t** ptr, const uint16_t* end) {
     return result;
 }
 
-size_t to_utf8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
-    if ((uint32_t)uni > 0x10FFFF) {
-        return 0;
-    }
+int to_utf8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
+    // if ((uint32_t)uni > 0x10FFFF) return -1;
+    if (!IsValidCodepoint(uni)) return -1;
+
     if (uni <= 127) {
         if (utf8) {
             *utf8 = (char)uni;
@@ -165,7 +146,7 @@ size_t to_utf8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
     }
     char tmp[4];
     char* p = tmp;
-    size_t count = 1;
+    int count = 1;
     while (uni > 0x7F >> count) {
         *p++ = (char)(0x80 | (uni & 0x3F));
         uni >>= 6;
@@ -182,10 +163,10 @@ size_t to_utf8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
     return count;
 }
 
-size_t to_utf16(Unichar uni, uint16_t utf16[2]) {
-    if ((uint32_t)uni > 0x10FFFF) {
-        return 0;
-    }
+int to_utf16(Unichar uni, uint16_t utf16[2]) {
+    // if ((uint32_t)uni > 0x10FFFF) return -1;
+    if (!IsValidCodepoint(uni)) return -1;
+
     int extra = (uni > 0xFFFF);
     if (utf16) {
         if (extra) {
@@ -198,36 +179,22 @@ size_t to_utf16(Unichar uni, uint16_t utf16[2]) {
     return 1 + extra;
 }
 
-int utf8_to_utf16(uint16_t dst[], int dstCapacity, const char src[], size_t srcByteLength) {
-    if (!dst) {
-        dstCapacity = 0;
-    }
-
-    int dstLength = 0;
-    uint16_t* endDst = dst + dstCapacity;
-    const char* endSrc = src + srcByteLength;
-    while (src < endSrc) {
-        Unichar uni = next_utf8(&src, endSrc);
+int utf8_to_utf16_length(std::string_view utf8) {
+    int len = 0;
+    for (size_t i = 0; i < utf8.length();) {
+        Unichar uni = next_utf8(utf8, i);
         if (uni < 0) {
             return -1;
         }
 
-        uint16_t utf16[2];
-        size_t count = to_utf16(uni, utf16);
-        if (count == 0) {
+        int count = to_utf16(uni);
+        if (count < 0) {
             return -1;
         }
-        dstLength += count;
 
-        if (dst) {
-            uint16_t* elems = utf16;
-            while (dst < endDst && count > 0) {
-                *dst++ = *elems++;
-                count -= 1;
-            }
-        }
+        len += count;
     }
-    return dstLength;
+    return len;
 }
 
 int utf16_to_utf8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLength) {
@@ -245,8 +212,8 @@ int utf16_to_utf8(char dst[], int dstCapacity, const uint16_t src[], size_t srcL
         }
 
         char utf8[unicode::kMaxBytesInUTF8Sequence];
-        size_t count = to_utf8(uni, utf8);
-        if (count == 0) {
+        int count = to_utf8(uni, utf8);
+        if (count < 0) {
             return -1;
         }
         dstLength += count;

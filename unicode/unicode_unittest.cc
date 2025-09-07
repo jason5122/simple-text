@@ -55,12 +55,13 @@ TEST(UnicodeTest, CountUTF16Invalid) {
     EXPECT_EQ(count_utf16(u"\xDC00\xDC00"), -1);
 }
 
-TEST(UnicodeTest, NextUTF8) {
+TEST(UnicodeTest, NextUTF8ASCII) {
     std::string utf8 = "hello world";
-    const char* utf8_begin = utf8.data();
-    const char* utf8_end = utf8_begin + utf8.length();
-    Unichar codepoint = next_utf8(&utf8_begin, utf8_end);
-    EXPECT_EQ(codepoint, 0x68);
+    size_t i = 0;
+    EXPECT_EQ(next_utf8(utf8, i), 0x68);
+    EXPECT_EQ(i, 1);
 }
+
+// TODO: Add more tests.
 
 }  // namespace unicode

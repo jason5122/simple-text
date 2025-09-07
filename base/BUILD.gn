@@ -9,7 +9,6 @@ source_set("base") {
     "strings/utf_string_conversions.cc",
   ]
   deps = [ "//third_party/spdlog" ]
-  public_deps = [ "//base/third_party/icu" ]
 
   # TODO: Consider checking all type conversions. These result in silent and subtle bugs. We
   # previously spent one hour debugging one.

@@ -1,4 +1,0 @@
-source_set("icu") {
-  sources = [ "icu_utf.h" ]
-  visibility = [ "//base" ]
-}

@@ -16,10 +16,10 @@ int count_utf8(std::string_view str8);
 // unicode codepoints. If the sequence is invalid UTF-16, return -1.
 int count_utf16(std::u16string_view str16);
 
-// Given a sequence of UTF-8 bytes, return the first unicode codepoint. The pointer will be
-// incremented to point at the next codepoint's start.  If invalid UTF-8 is encountered, set *ptr
+// Given a sequence of UTF-8 bytes, return the first unicode codepoint. The index will be
+// incremented to point at the next codepoint's start.  If invalid UTF-8 is encountered, set index
 // to end and return -1.
-Unichar next_utf8(const char** ptr, const char* end);
+Unichar next_utf8(std::string_view utf8, size_t& i);
 
 /** Given a sequence of aligned UTF-16 characters in machine-endian form,
     return the first unicode codepoint.  The pointer will be incremented to
@@ -30,25 +30,20 @@ Unichar next_utf16(const uint16_t** ptr, const uint16_t* end);
 
 constexpr unsigned kMaxBytesInUTF8Sequence = 4;
 
-/** Convert the unicode codepoint into UTF-8.  If `utf8` is non-null, place the
-    result in that array.  Return the number of bytes in the result.  If `utf8`
-    is null, simply return the number of bytes that would be used.  For invalid
-    unicode codepoints, return 0.
-*/
-size_t to_utf8(Unichar uni, char utf8[kMaxBytesInUTF8Sequence] = nullptr);
+// Convert the unicode codepoint into UTF-8.  If `utf8` is non-null, place the result in that
+// array.  Return the number of bytes in the result.  If `utf8` is null, simply return the number
+// of bytes that would be used.  For invalid unicode codepoints, return -1.
+int to_utf8(Unichar uni, char utf8[kMaxBytesInUTF8Sequence] = nullptr);
 
-/** Convert the unicode codepoint into UTF-16.  If `utf16` is non-null, place
-    the result in that array.  Return the number of UTF-16 code units in the
-    result (1 or 2).  If `utf16` is null, simply return the number of code
-    units that would be used.  For invalid unicode codepoints, return 0.
-*/
-size_t to_utf16(Unichar uni, uint16_t utf16[2] = nullptr);
+// Convert the unicode codepoint into UTF-16.  If `utf16` is non-null, place the result in that
+// array.  Return the number of UTF-16 code units in the result (1 or 2).  If `utf16` is null,
+// simply return the number of code units that would be used.  For invalid unicode codepoints,
+// return -1.
+int to_utf16(Unichar uni, uint16_t utf16[2] = nullptr);
 
-/** Returns the number of resulting UTF16 values needed to convert the src utf8 sequence.
- *  If dst is not null, it is filled with the corresponding values up to its capacity.
- *  If there is an error, -1 is returned and the dst[] buffer is undefined.
- */
-int utf8_to_utf16(uint16_t dst[], int dstCapacity, const char src[], size_t srcByteLength);
+// Returns the number of resulting UTF-16 values needed to convert the UTF-8 sequence. If there is
+// an error, -1 is returned.
+int utf8_to_utf16_length(std::string_view utf8);
 
 /** Returns the number of resulting UTF8 values needed to convert the src utf16 sequence.
  *  If dst is not null, it is filled with the corresponding values up to its capacity.

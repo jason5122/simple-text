@@ -18,7 +18,6 @@ executable("unit_tests") {
     "//editor:editor_unittests",
     "//font:font_unittests",
     "//third_party/googletest:gtest",
-    "//unicode:unicode_unittests",
   ]
 }
 

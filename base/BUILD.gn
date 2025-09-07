@@ -7,6 +7,8 @@ source_set("base") {
     "path_service.cc",
     "strings/string_util.cc",
     "strings/utf_string_conversions.cc",
+    "unicode/unicode.cc",
+    "unicode/utf16_to_utf8_indices_map.cc",
   ]
   deps = [ "//third_party/spdlog" ]
 
@@ -67,6 +69,9 @@ source_set("base_unittests") {
     "numeric/saturation_arithmetic_unittest.cc",
     "strings/string_util_unittest.cc",
     "strings/utf_string_conversions_unittest.cc",
+    "unicode/unicode_unittest.cc",
+    "unicode/utf16_to_utf8_indices_map_unittest.cc",
+    "unicode/utf8_decoder_unittest.cc",
   ]
 
   if (is_mac) {

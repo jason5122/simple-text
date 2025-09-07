@@ -1,7 +1,7 @@
 #include "base/third_party/icu/icu_utf.h"
-#include "unicode/unicode.h"
+#include "base/unicode/unicode.h"
 
-namespace unicode {
+namespace base {
 
 namespace {
 
@@ -134,7 +134,7 @@ Unichar next_utf16(const uint16_t** ptr, const uint16_t* end) {
     return result;
 }
 
-int to_utf8(Unichar uni, char utf8[unicode::kMaxBytesInUTF8Sequence]) {
+int to_utf8(Unichar uni, char utf8[base::kMaxBytesInUTF8Sequence]) {
     // if ((uint32_t)uni > 0x10FFFF) return -1;
     if (!IsValidCodepoint(uni)) return -1;
 
@@ -211,7 +211,7 @@ int utf16_to_utf8(char dst[], int dstCapacity, const uint16_t src[], size_t srcL
             return -1;
         }
 
-        char utf8[unicode::kMaxBytesInUTF8Sequence];
+        char utf8[base::kMaxBytesInUTF8Sequence];
         int count = to_utf8(uni, utf8);
         if (count < 0) {
             return -1;
@@ -229,4 +229,4 @@ int utf16_to_utf8(char dst[], int dstCapacity, const uint16_t src[], size_t srcL
     return dstLength;
 }
 
-}  // namespace unicode
+}  // namespace base

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace unicode {
+namespace base {
 
 // https://github.com/gershnik/sys_string/blob/f6d5127da833ecf99b499156a9bc0f2093f2f745/lib/inc/sys_string/impl/unicode/utf_encoding.h#L232
 // https://gershnik.github.io/2021/03/24/reverse-utf8-decoding.html
@@ -97,4 +97,4 @@ private:
         0,  12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 0};
 };
 
-}  // namespace unicode
+}  // namespace base

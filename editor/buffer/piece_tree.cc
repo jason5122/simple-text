@@ -1,9 +1,9 @@
 #include "base/check.h"
 #include "base/functional/scope_exit.h"
 #include "base/numeric/saturation_arithmetic.h"
+#include "base/unicode/utf8_decoder.h"
 #include "editor/buffer/piece_tree.h"
 #include "editor/search/aho_corasick.h"
-#include "unicode/utf8_decoder.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -777,7 +777,7 @@ bool TreeWalker::exhausted() const {
 }
 
 char32_t TreeWalker::next_codepoint() {
-    unicode::UTF8Decoder decoder;
+    base::UTF8Decoder decoder;
     while (!exhausted()) {
         decoder.put(next());
 
@@ -926,7 +926,7 @@ bool ReverseTreeWalker::exhausted() const {
 }
 
 char32_t ReverseTreeWalker::next_codepoint() {
-    unicode::ReverseUTF8Decoder decoder;
+    base::ReverseUTF8Decoder decoder;
     while (!exhausted()) {
         decoder.put(next());
 

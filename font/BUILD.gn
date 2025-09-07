@@ -4,8 +4,8 @@ source_set("font") {
   sources = [ "font_rasterizer.cc" ]
 
   deps = [
+    "//base",
     "//third_party/spdlog",
-    "//unicode",
   ]
 
   if (is_mac) {

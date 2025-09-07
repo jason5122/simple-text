@@ -2,8 +2,8 @@
 #include "base/apple/scoped_cgtyperef.h"
 #include "base/check.h"
 #include "base/strings/sys_string_conversions.h"
+#include "base/unicode/utf16_to_utf8_indices_map.h"
 #include "font/font_rasterizer.h"
-#include "unicode/utf16_to_utf8_indices_map.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
@@ -158,7 +158,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
 LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     DCHECK_EQ(str8.find('\n'), std::string_view::npos);
 
-    unicode::UTF16ToUTF8IndicesMap indices_map;
+    base::UTF16ToUTF8IndicesMap indices_map;
     if (!indices_map.set_utf8(str8)) {
         spdlog::error("UTF16ToUTF8IndicesMap::setUTF8 error");
         std::abort();

@@ -1,7 +1,7 @@
-#include "unicode/utf8_decoder.h"
+#include "base/unicode/utf8_decoder.h"
 #include <gtest/gtest.h>
 
-namespace unicode {
+namespace base {
 
 TEST(UTF8DecoderTest, Valid) {
     UTF8Decoder decoder;
@@ -13,4 +13,4 @@ TEST(UTF8DecoderTest, Valid) {
 
 // TODO: Add more tests.
 
-}  // namespace unicode
+}  // namespace base

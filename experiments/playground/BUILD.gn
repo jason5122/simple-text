@@ -2,7 +2,7 @@ executable("playground") {
   sources = [ "main.cc" ]
 
   deps = [
+    "//base",
     "//third_party/spdlog",
-    "//unicode",
   ]
 }

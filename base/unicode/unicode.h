@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string_view>
 
-namespace unicode {
+namespace base {
 
 using Unichar = int32_t;
 
@@ -51,4 +51,4 @@ int utf8_to_utf16_length(std::string_view utf8);
  */
 int utf16_to_utf8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLength);
 
-}  // namespace unicode
+}  // namespace base

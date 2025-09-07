@@ -1,7 +1,7 @@
-#include "unicode/unicode.h"
+#include "base/unicode/unicode.h"
 #include <gtest/gtest.h>
 
-namespace unicode {
+namespace base {
 
 TEST(UnicodeTest, CountUTF8) {
     EXPECT_EQ(count_utf8(""), 0);
@@ -64,4 +64,4 @@ TEST(UnicodeTest, NextUTF8ASCII) {
 
 // TODO: Add more tests.
 
-}  // namespace unicode
+}  // namespace base

@@ -1,7 +1,7 @@
-#include "unicode/utf16_to_utf8_indices_map.h"
+#include "base/unicode/utf16_to_utf8_indices_map.h"
 #include <gtest/gtest.h>
 
-namespace unicode {
+namespace base {
 
 TEST(UTF16ToUTF8IndicesMapTest, MapIndex) {
     UTF16ToUTF8IndicesMap indices_map;
@@ -49,4 +49,4 @@ TEST(UTF16ToUTF8IndicesMapTest, InvalidUTF8) {
     }
 }
 
-}  // namespace unicode
+}  // namespace base

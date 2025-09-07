@@ -1,8 +1,8 @@
-#include "unicode/unicode.h"
-#include "unicode/utf16_to_utf8_indices_map.h"
+#include "base/unicode/unicode.h"
+#include "base/unicode/utf16_to_utf8_indices_map.h"
 #include <cassert>
 
-namespace unicode {
+namespace base {
 
 bool UTF16ToUTF8IndicesMap::set_utf8(std::string_view str8) {
     size_t len = str8.length();
@@ -27,4 +27,4 @@ bool UTF16ToUTF8IndicesMap::set_utf8(std::string_view str8) {
     return true;
 }
 
-}  // namespace unicode
+}  // namespace base

@@ -5,6 +5,7 @@ source_set("base") {
     "files/file_reader.cc",
     "files/file_util.cc",
     "path_service.cc",
+    "rand_util.cc",
     "strings/string_util.cc",
     "strings/utf_string_conversions.cc",
     "unicode/unicode.cc",
@@ -49,6 +50,7 @@ source_set("base") {
     sources += [
       "files/file_util_win.cc",
       "path_service_win.cc",
+      "rand_util_win.cc",
       "strings/sys_string_conversions_win.cc",
     ]
     libs += [ "shell32.lib" ]
@@ -62,6 +64,7 @@ source_set("base_unittests") {
     "containers/fixed_flat_map_unittest.cc",
     "containers/flat_map_unittest.cc",
     "containers/flat_tree_unittest.cc",
+    "containers/span_util_unittest.cc",
     "files/file_path_unittest.cc",
     "hash/hash_unittest.cc",
     "location_unittest.cc",

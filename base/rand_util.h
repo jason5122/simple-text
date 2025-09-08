@@ -6,7 +6,23 @@
 
 namespace base {
 
+// Returns a random number in range [0, UINT64_MAX]. Thread-safe.
+uint64_t rand_uint64();
+
+// Returns a random number in range [min, max]. Thread-safe.
+int rand_int(int min, int max);
+
+// Returns a random number in range [0, range).  Thread-safe.
+uint64_t rand_generator(uint64_t range);
+
+// Fills `output` with cryptographically secure random data. Thread-safe.
 void rand_bytes(std::span<uint8_t> output);
+
+// Fills a string of length |length| with random data and returns it. Thread-safe.
+std::string rand_bytes_as_string(size_t length);
+
+// Creates a vector of `length` bytes, fills it with random data, and returns it. Thread-safe.
+std::vector<uint8_t> rand_bytes_as_vector(size_t length);
 
 // Returns a random number in the range [low, high].
 inline int random_number(int low, int high) {

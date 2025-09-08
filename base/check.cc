@@ -24,12 +24,6 @@ void check_fail(const char* expr, Location loc) {
     immediate_crash();
 }
 
-void check_op_fail(const char* op, const char* a, const char* b, Location loc) {
-    fmt::println(stderr, "[{}:{}] Check failed: {} {} {}", loc.file_name(), loc.line_number(), a,
-                 op, b);
-    immediate_crash();
-}
-
 void notreached_fail(Location loc) {
     fmt::println(stderr, "[{}:{}] Unreachable code hit.", loc.file_name(), loc.line_number());
     immediate_crash();

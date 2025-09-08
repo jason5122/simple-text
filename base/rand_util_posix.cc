@@ -1,3 +1,4 @@
+#include "base/check.h"
 #include "base/files/file_util.h"
 #include "base/no_destructor.h"
 #include "base/posix/eintr_wrapper.h"

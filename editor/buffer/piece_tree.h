@@ -41,8 +41,8 @@ struct LineRange {
 
 class PieceTree {
 public:
-    explicit PieceTree();
-    explicit PieceTree(std::string_view txt);
+    PieceTree();
+    PieceTree(std::string_view txt);
 
     // Manipulation.
     void insert(size_t offset, std::string_view txt);

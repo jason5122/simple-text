@@ -27,6 +27,7 @@ source_set("editor_unittests") {
   deps = [
     ":editor",
     "//third_party/googletest:gtest",
+    "//third_party/spdlog",
   ]
 }
 

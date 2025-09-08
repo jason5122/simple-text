@@ -1,3 +1,4 @@
+#include "base/check.h"
 #include "base/containers/span_util.h"
 #include "base/rand_util.h"
 
@@ -19,6 +20,28 @@ int rand_int(int min, int max) {
     DCHECK_GE(result, min);
     DCHECK_LE(result, max);
     return result;
+}
+
+double rand_double() {
+    // We try to get maximum precision by masking out as many bits as will fit
+    // in the target type's mantissa, and raising it to an appropriate power to
+    // produce output in the range [0, 1).  For IEEE 754 doubles, the mantissa
+    // is expected to accommodate 53 bits (including the implied bit).
+    uint64_t bits = rand_uint64();
+    static_assert(std::numeric_limits<double>::radix == 2, "otherwise use scalbn");
+    constexpr int kBits = std::numeric_limits<double>::digits;
+    return ldexp(bits & ((UINT64_C(1) << kBits) - 1u), -kBits);
+}
+
+float rand_float() {
+    // We try to get maximum precision by masking out as many bits as will fit
+    // in the target type's mantissa, and raising it to an appropriate power to
+    // produce output in the range [0, 1).  For IEEE 754 floats, the mantissa is
+    // expected to accommodate 12 bits (including the implied bit).
+    uint64_t bits = rand_uint64();
+    static_assert(std::numeric_limits<float>::radix == 2, "otherwise use scalbn");
+    constexpr int kBits = std::numeric_limits<float>::digits;
+    return ldexpf(bits & ((UINT64_C(1) << kBits) - 1u), -kBits);
 }
 
 uint64_t rand_generator(uint64_t range) {

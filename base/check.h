@@ -14,7 +14,7 @@
 #define CHECK_OP(op, a, b)                                                                        \
     do {                                                                                          \
         if (!((a)op(b))) [[unlikely]] {                                                           \
-            ::base::internal::check_op_fail(#op, #a, #b, ::base::Location::current());            \
+            ::base::internal::check_fail(#a " " #op " " #b, ::base::Location::current());         \
         }                                                                                         \
     } while (false)
 
@@ -53,10 +53,6 @@
 namespace base::internal {
 
 [[noreturn]] NOINLINE void check_fail(const char* expr, Location loc);
-[[noreturn]] NOINLINE void check_op_fail(const char* op,
-                                         const char* a,
-                                         const char* b,
-                                         Location loc);
 [[noreturn]] NOINLINE void notreached_fail(Location loc);
 
 }  // namespace base::internal

@@ -43,10 +43,17 @@ class PieceTree {
 public:
     PieceTree();
     PieceTree(std::string_view txt);
+    PieceTree(const char* s);
+    PieceTree(const std::string& s);
+
+    PieceTree& operator=(std::string_view txt);
+    PieceTree& operator=(const char* s);
+    PieceTree& operator=(const std::string& s);
 
     // Manipulation.
     void insert(size_t offset, std::string_view txt);
     void erase(size_t offset, size_t count);
+    void clear();
     bool undo();
     bool redo();
 
@@ -64,6 +71,7 @@ public:
     std::string substr(size_t offset, size_t count) const;
     std::optional<size_t> find(std::string_view str) const;
 
+    size_t size() const;
     size_t length() const;
     bool empty() const;
     size_t line_feed_count() const;
@@ -73,6 +81,7 @@ private:
     friend class TreeWalker;
     friend class ReverseTreeWalker;
 
+    void assign(std::string_view txt);
     void internal_insert(size_t offset, std::string_view txt);
     void internal_erase(size_t offset, size_t count);
 

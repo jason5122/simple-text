@@ -1,5 +1,5 @@
+#include "base/rand_util.h"
 #include "gui/renderer/atlas.h"
-#include <random>
 #include <spdlog/spdlog.h>
 
 using namespace gl;
@@ -26,13 +26,9 @@ Atlas::Atlas() {
     // Creating this vector is very slow, so disable when not debugging (even during debug builds).
     constexpr bool kDebugTextureBleeding = false;
     if constexpr (kDebugTextureBleeding) {
-        std::random_device dev;
-        std::mt19937 rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);
-
-        uint8_t r = dist(rng);
-        uint8_t g = dist(rng);
-        uint8_t b = dist(rng);
+        uint8_t r = base::rand_int(0, 255);
+        uint8_t g = base::rand_int(0, 255);
+        uint8_t b = base::rand_int(0, 255);
 
         size_t pixels = kAtlasSize * kAtlasSize;
         atlas_background.resize(pixels * 4);

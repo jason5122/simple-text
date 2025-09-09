@@ -1,5 +1,4 @@
 #include "base/check.h"
-#include "base/numeric/safe_conversions.h"
 #include "base/rand_util.h"
 #include "editor/buffer/piece_tree.h"
 #include <algorithm>
@@ -8,16 +7,48 @@
 
 namespace editor {
 
+TEST(PieceTreeTest, Construction) {
+    using namespace std::string_literals;
+    using namespace std::string_view_literals;
+    PieceTree tree1 = "one";
+    PieceTree tree2 = "two"s;
+    PieceTree tree3 = "three"sv;
+    EXPECT_EQ(tree1.str(), "one");
+    EXPECT_EQ(tree2.str(), "two");
+    EXPECT_EQ(tree3.str(), "three");
+}
+
+TEST(PieceTreeTest, Assignment) {
+    using namespace std::string_literals;
+    using namespace std::string_view_literals;
+    PieceTree tree;
+    tree = "one";
+    EXPECT_EQ(tree.str(), "one");
+    tree = "two"s;
+    EXPECT_EQ(tree.str(), "two");
+    tree = "three"sv;
+    EXPECT_EQ(tree.str(), "three");
+}
+
+TEST(PieceTree, Clear) {
+    PieceTree tree = "hi";
+    EXPECT_EQ(tree.str(), "hi");
+    EXPECT_EQ(tree.length(), 2);
+    tree.clear();
+    EXPECT_EQ(tree.str(), "");
+    EXPECT_EQ(tree.length(), 0);
+}
+
 TEST(PieceTreeTest, CustomTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = str;
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 }
 
 TEST(PieceTreeTest, CustomTest2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
@@ -34,7 +65,7 @@ TEST(PieceTreeTest, CustomTest2) {
 
 TEST(PieceTreeTest, CustomTest3) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
@@ -51,7 +82,7 @@ TEST(PieceTreeTest, CustomTest3) {
 
 TEST(PieceTreeTest, CustomTest4) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
 
@@ -68,7 +99,7 @@ TEST(PieceTreeTest, CustomTest4) {
 
 TEST(PieceTreeTest, Init) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     EXPECT_EQ(str, tree.str());
     EXPECT_EQ(str.length(), tree.length());
@@ -76,7 +107,7 @@ TEST(PieceTreeTest, Init) {
 
 TEST(PieceTreeTest, InsertAtBeginningOfString1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "String1 ";
     str.insert(0, s1);
@@ -92,7 +123,7 @@ TEST(PieceTreeTest, InsertAtBeginningOfString1) {
 
 TEST(PieceTreeTest, InsertAtBeginningOfString2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "String1 ";
     for (size_t n = 0; n < 5; ++n) {
@@ -105,7 +136,7 @@ TEST(PieceTreeTest, InsertAtBeginningOfString2) {
 
 TEST(PieceTreeTest, InsertAtBeginningOfPiece1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "String1 ";
     str.insert(0, s1);
@@ -122,7 +153,7 @@ TEST(PieceTreeTest, InsertAtBeginningOfPiece1) {
 
 TEST(PieceTreeTest, InsertAtBeginningOfPiece2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "String1 ";
     str.insert(0, s1);
@@ -151,7 +182,7 @@ TEST(PieceTreeTest, InsertAtBeginningOfPiece2) {
 
 TEST(PieceTreeTest, InsertAtMiddleOfPiece1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "went to the park and\n";
     str.insert(20, s1);
@@ -168,7 +199,7 @@ TEST(PieceTreeTest, InsertAtMiddleOfPiece1) {
 
 TEST(PieceTreeTest, InsertAtMiddleOfPiece2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "went to the park and\n";
     str.insert(20, s1);
@@ -203,7 +234,7 @@ TEST(PieceTreeTest, InsertAtMiddleOfPiece2) {
 
 TEST(PieceTreeTest, InsertAtEnd1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = " and walked away\n";
     size_t len = str.length();
@@ -215,7 +246,7 @@ TEST(PieceTreeTest, InsertAtEnd1) {
 
 TEST(PieceTreeTest, InsertAtEnd2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = " and walked away\n";
     size_t len1 = str.length();
@@ -246,7 +277,7 @@ TEST(PieceTreeTest, InsertAtEnd2) {
 
 TEST(PieceTreeTest, InsertCustomTest1) {
     std::string str = "";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "R7";
     str.insert(0, s1);
@@ -269,7 +300,7 @@ TEST(PieceTreeTest, InsertCustomTest1) {
 
 TEST(PieceTreeTest, InsertEmpty) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.insert(0, "");
     tree.insert(0, "");
@@ -295,7 +326,7 @@ TEST(PieceTreeTest, InsertEmpty) {
 // Randomly inserts 100 alphanumeric strings of length [0, 10] at index [0, length).
 TEST(PieceTreeTest, InsertAtRandom) {
     std::string str = "";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     for (size_t n = 0; n < 100; ++n) {
         size_t index = base::rand_int(0, str.length());
@@ -322,7 +353,7 @@ TEST(PieceTreeTest, InsertAtRandom) {
 
 TEST(PieceTreeTest, EraseAtBeginning1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     while (str.length() > 0) {
         str.erase(0, 1);
@@ -334,7 +365,7 @@ TEST(PieceTreeTest, EraseAtBeginning1) {
 
 TEST(PieceTreeTest, EraseAtMiddleOfPiece1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.erase(3, 6);
     tree.erase(3, 6);
@@ -349,7 +380,7 @@ TEST(PieceTreeTest, EraseAtMiddleOfPiece1) {
 
 TEST(PieceTreeTest, EraseAtMiddleOfPiece2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.erase(3, 6);
     tree.erase(3, 6);
@@ -369,7 +400,7 @@ TEST(PieceTreeTest, EraseAtMiddleOfPiece2) {
 
 TEST(PieceTreeTest, EraseBeyondOnePiece1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = " and nimble";
     str.insert(9, s1);
@@ -385,7 +416,7 @@ TEST(PieceTreeTest, EraseBeyondOnePiece1) {
 
 TEST(PieceTreeTest, EraseBeyondOnePiece2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "String1";
     str.insert(0, s1);
@@ -401,7 +432,7 @@ TEST(PieceTreeTest, EraseBeyondOnePiece2) {
 
 TEST(PieceTreeTest, EraseBeyondOnePiece3) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     const std::string s1 = "String1";
     str.insert(10, s1);
@@ -417,7 +448,7 @@ TEST(PieceTreeTest, EraseBeyondOnePiece3) {
 
 TEST(PieceTreeTest, EraseCustomTest1) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.erase(25, 44);
     tree.erase(25, 44);
@@ -432,7 +463,7 @@ TEST(PieceTreeTest, EraseCustomTest1) {
 
 TEST(PieceTreeTest, EraseCustomTest2) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.erase(3, 2);
     tree.erase(3, 2);
@@ -457,7 +488,7 @@ TEST(PieceTreeTest, EraseCustomTest2) {
 
 TEST(PieceTreeTest, EraseCustomTest3) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.erase(1, 40);
     tree.erase(1, 40);
@@ -482,7 +513,7 @@ TEST(PieceTreeTest, EraseCustomTest3) {
 
 TEST(PieceTreeTest, EraseEmpty) {
     std::string str = "The quick brown fox\njumped over the lazy dog";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.erase(1, 0);
     tree.erase(1, 0);
@@ -507,7 +538,7 @@ TEST(PieceTreeTest, EraseEmpty) {
 
 TEST(PieceTreeTest, RandomTestLite) {
     std::string str = "";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     for (size_t n = 0; n < 5; ++n) {
         // Randomly insert.
@@ -535,7 +566,7 @@ TEST(PieceTreeTest, EraseAtRandom) {
 
     for (size_t n = 0; n < 100; ++n) {
         std::string str{original_str};
-        PieceTree tree{original_str};
+        PieceTree tree = original_str;
 
         for (size_t i = 0; i < 10; ++i) {
             size_t index = base::rand_int(0, str.length());
@@ -551,7 +582,7 @@ TEST(PieceTreeTest, EraseAtRandom) {
 
 TEST(PieceTreeTest, CombinedRandomTest1) {
     std::string str = "";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     for (size_t n = 0; n < 100; ++n) {
         // Randomly insert.
@@ -574,7 +605,7 @@ TEST(PieceTreeTest, CombinedRandomTest1) {
 
 TEST(PieceTreeTest, LineColumnAt1) {
     auto check = [](std::string_view str) {
-        PieceTree tree{str};
+        PieceTree tree = {str};
 
         std::unordered_map<size_t, BufferCursor> index_to_line_col_map;
         size_t line = 0;
@@ -616,7 +647,7 @@ TEST(PieceTreeTest, LineColumnAt2) {
 
 TEST(PieceTreeTest, LineColumnAt3) {
     std::string str = "Hello\nworld!\nthis is a newline";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     str.insert(23, "\n");
     tree.insert(23, "\n");
@@ -660,10 +691,10 @@ TEST(PieceTreeTest, RandStringWithNewlines) {
 
 TEST(PieceTreeTest, LineColumnAtRandomTest) {
     std::string str = "";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     auto check = [](std::string_view str) {
-        PieceTree tree{str};
+        PieceTree tree = {str};
 
         std::unordered_map<size_t, BufferCursor> index_to_line_col_map;
         size_t line = 0;
@@ -720,7 +751,7 @@ TEST(PieceTreeTest, Substr1) {
 
 TEST(PieceTreeTest, Substr2) {
     std::string str = "Hello world!";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     tree.insert(6, "brave new ");
     str.insert(6, "brave new ");
@@ -737,7 +768,7 @@ TEST(PieceTreeTest, Substr2) {
 
 TEST(PieceTreeTest, Substr3) {
     std::string str = "Hello world!";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     tree.insert(0, "String1 ");
     str.insert(0, "String1 ");
@@ -766,7 +797,7 @@ TEST(PieceTreeTest, Substr3) {
 
 TEST(PieceTreeTest, SubstrRandomTest) {
     std::string str = "";
-    PieceTree tree{str};
+    PieceTree tree = {str};
 
     for (size_t n = 0; n < 100; ++n) {
         // Randomly insert.
@@ -812,7 +843,7 @@ TEST(PieceTreeTest, LineFeedCountRandomTest) {
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertTest1) {
-    PieceTree tree{};
+    PieceTree tree;
     tree.insert(tree.length(), "hello");
     tree.insert(tree.length(), "\nwasd\nworld");
 
@@ -827,7 +858,7 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest1) {
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertTest2) {
-    PieceTree tree{};
+    PieceTree tree;
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\nwasd\n");
 
@@ -842,7 +873,7 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest2) {
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertTest3) {
-    PieceTree tree{};
+    PieceTree tree;
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\n");
     tree.insert(6, "wasd\n");
@@ -858,7 +889,7 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest3) {
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertTest4) {
-    PieceTree tree{};
+    PieceTree tree;
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\n");
     tree.insert(6, "wasd\n");
@@ -873,7 +904,7 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest4) {
     EXPECT_EQ(tree.line_count(), size_t{3});
 }
 TEST(PieceTreeTest, GetLineContentAfterInsertTest5) {
-    PieceTree tree{};
+    PieceTree tree;
     tree.insert(tree.length(), "helloworld");
     tree.insert(5, "\n");
     tree.insert(7, "asd\nw");

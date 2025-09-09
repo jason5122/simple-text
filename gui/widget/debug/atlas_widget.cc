@@ -1,6 +1,6 @@
+#include "base/rand_util.h"
 #include "gui/renderer/renderer.h"
 #include "gui/widget/debug/atlas_widget.h"
-#include <random>
 
 namespace gui {
 
@@ -10,18 +10,6 @@ AtlasWidget::AtlasWidget() : ScrollableWidget({.width = 400}) {
     max_scroll_offset.x = Atlas::kAtlasSize;
     max_scroll_offset.y = count * Atlas::kAtlasSize;
 }
-
-namespace {
-inline Rgb random_color() {
-    std::random_device dev;
-    std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);
-    uint8_t r = dist(rng);
-    uint8_t g = dist(rng);
-    uint8_t b = dist(rng);
-    return {r, g, b};
-}
-}  // namespace
 
 void AtlasWidget::draw() {
     auto& rect_renderer = Renderer::instance().rect_renderer();
@@ -34,7 +22,7 @@ void AtlasWidget::draw() {
     rect_renderer.add_rect(position(), size(), min_coords, max_coords, kSideBarColor,
                            Layer::kBackground);
 
-    const Size atlas_size = {
+    constexpr Size atlas_size = {
         .width = Atlas::kAtlasSize,
         .height = Atlas::kAtlasSize,
     };
@@ -43,7 +31,12 @@ void AtlasWidget::draw() {
 
     // TODO: Refactor this ugly hack.
     while (page_colors.size() < count) {
-        page_colors.emplace_back(random_color());
+        const Rgb random_color = {
+            .r = static_cast<uint8_t>(base::rand_int(0, 255)),
+            .g = static_cast<uint8_t>(base::rand_int(0, 255)),
+            .b = static_cast<uint8_t>(base::rand_int(0, 255)),
+        };
+        page_colors.emplace_back(random_color);
         max_scroll_offset.y = page_colors.size() * Atlas::kAtlasSize;
     }
 

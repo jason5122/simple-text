@@ -35,8 +35,20 @@ std::vector<size_t> populate_line_starts(std::string_view buf) {
 }  // namespace
 
 PieceTree::PieceTree() : PieceTree("") {}
+PieceTree::PieceTree(std::string_view txt) { assign(txt); }
+PieceTree::PieceTree(const char* s) : PieceTree(std::string_view{s}) {}
+PieceTree::PieceTree(const std::string& s) : PieceTree(std::string_view{s}) {}
 
-PieceTree::PieceTree(std::string_view txt) {
+PieceTree& PieceTree::operator=(std::string_view txt) {
+    clear();
+    assign(txt);
+    return *this;
+}
+
+PieceTree& PieceTree::operator=(const char* s) { return *this = std::string_view{s}; }
+PieceTree& PieceTree::operator=(const std::string& s) { return *this = std::string_view{s}; }
+
+void PieceTree::assign(std::string_view txt) {
     buffers = BufferCollection{
         .orig_buffer = std::make_shared<CharBuffer>(std::string{txt}, populate_line_starts(txt)),
     };
@@ -382,7 +394,9 @@ std::optional<size_t> PieceTree::find(std::string_view str) const {
     }
 }
 
-size_t PieceTree::length() const { return total_content_length; }
+size_t PieceTree::size() const { return total_content_length; }
+
+size_t PieceTree::length() const { return size(); }
 
 bool PieceTree::empty() const { return total_content_length == 0; }
 
@@ -692,6 +706,8 @@ void PieceTree::erase(size_t offset, size_t count) {
     append_undo();
     internal_erase(offset, count);
 }
+
+void PieceTree::clear() { *this = PieceTree{}; }
 
 void PieceTree::compute_buffer_meta() {
     lf_count = root.lf_count();

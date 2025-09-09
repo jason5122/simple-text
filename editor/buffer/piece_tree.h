@@ -8,10 +8,6 @@
 #include <string_view>
 #include <vector>
 
-#ifndef NDEBUG
-#define TEXTBUF_DEBUG
-#endif  // NDEBUG
-
 namespace editor {
 
 struct NodePosition {
@@ -35,8 +31,8 @@ struct BufferCollection {
 };
 
 struct LineRange {
-    size_t first;
-    size_t last;
+    size_t first{};
+    size_t last{};
 };
 
 class PieceTree {
@@ -81,57 +77,22 @@ private:
     friend class TreeWalker;
     friend class ReverseTreeWalker;
 
-    void assign(std::string_view txt);
-    void internal_insert(size_t offset, std::string_view txt);
-    void internal_erase(size_t offset, size_t count);
-
-    using Accumulator = size_t (*)(const BufferCollection*, const Piece&, size_t);
-
-    template <Accumulator accumulate>
-    static void line_start(size_t* offset,
-                           const BufferCollection* buffers,
-                           const RedBlackTree& node,
-                           size_t line);
-    static size_t accumulate_value(const BufferCollection* buffers,
-                                   const Piece& piece,
-                                   size_t index);
-    static size_t accumulate_value_no_lf(const BufferCollection* buffers,
-                                         const Piece& piece,
-                                         size_t index);
-    size_t line_feed_count(BufferType buffer_type,
-                           const BufferCursor& start,
-                           const BufferCursor& end) const;
-    NodePosition node_at(size_t off) const;
-    BufferCursor buffer_position(const Piece& piece, size_t remainder) const;
-    Piece trim_piece_right(const Piece& piece, const BufferCursor& pos) const;
-    Piece trim_piece_left(const Piece& piece, const BufferCursor& pos) const;
-
-    struct ShrinkResult {
-        Piece left;
-        Piece right;
-    };
-
-    ShrinkResult shrink_piece(const Piece& piece,
-                              const BufferCursor& first,
-                              const BufferCursor& last) const;
-
     // Direct mutations.
+    void assign(std::string_view txt);
     Piece build_piece(std::string_view txt);
     void combine_pieces(NodePosition existing_piece, Piece new_piece);
     void remove_node_range(NodePosition first, size_t length);
-    void compute_buffer_meta();
-    void append_undo();
 
-    BufferCollection buffers;
-    RedBlackTree root;
-    BufferCursor last_insert;
+    BufferCollection buffers_;
+    RedBlackTree root_;
+    BufferCursor last_insert_;
 
     // Buffer metadata.
-    size_t lf_count = 0;
-    size_t total_content_length = 0;
+    size_t lf_count_ = 0;
+    size_t total_content_length_ = 0;
 
-    std::forward_list<RedBlackTree> undo_stack;
-    std::forward_list<RedBlackTree> redo_stack;
+    std::forward_list<RedBlackTree> undo_stack_;
+    std::forward_list<RedBlackTree> redo_stack_;
 };
 
 class TreeWalker {

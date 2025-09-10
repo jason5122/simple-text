@@ -41,11 +41,6 @@ std::vector<size_t> populate_line_starts(std::string_view buf) {
     return starts;
 }
 
-inline void compute_buffer_meta(size_t& lf, size_t& total, const RedBlackTree& root) {
-    lf = root.lf_count();
-    total = root.length();
-}
-
 BufferCursor buffer_position(const BufferCollection& buffers,
                              const Piece& piece,
                              size_t remainder) {
@@ -85,7 +80,7 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
     size_t newline_count = 0;
 
     auto node = root;
-    while (!node.empty()) {
+    while (node) {
         if (off < node.data().left_subtree_length) {
             node = node.left();
         } else if (off < node.data().left_subtree_length + node.data().piece.length) {
@@ -105,7 +100,7 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
             };
         } else {
             // If there are no more nodes to traverse to, return this final node.
-            if (node.right().empty()) {
+            if (!node.right()) {
                 auto offset_amount = node.data().left_subtree_length;
                 node_start_offset += offset_amount;
                 newline_count +=
@@ -195,7 +190,7 @@ void line_start(size_t* offset,
                 const BufferCollection* buffers,
                 const RedBlackTree& node,
                 size_t line) {
-    if (node.empty()) return;
+    if (!node) return;
     if (line <= node.data().left_subtree_lf_count) {
         line_start<accumulate>(offset, buffers, node.left(), line);
     }
@@ -283,8 +278,6 @@ PieceTree::PieceTree(std::string_view txt) {
         };
         root_ = root_.insert({piece}, 0);
     }
-
-    compute_buffer_meta(lf_count_, length_, root_);
 }
 
 PieceTree& PieceTree::operator=(std::string_view txt) {
@@ -295,10 +288,9 @@ PieceTree& PieceTree::operator=(std::string_view txt) {
 namespace {
 // Borrowed from https://github.com/dotnwat/persistent-rbtree/blob/master/tree.h:checkConsistency.
 int check_black_node_invariant(const RedBlackTree& node) {
-    if (node.empty()) return 1;
-    if (node.root_color() == Color::Red &&
-        ((!node.left().empty() && node.left().root_color() == Color::Red) ||
-         (!node.right().empty() && node.right().root_color() == Color::Red))) {
+    if (!node) return 1;
+    if (node.color() == Color::Red && ((node.left() && node.left().color() == Color::Red) ||
+                                       (node.right() && node.right().color() == Color::Red))) {
         return 1;
     }
     auto l = check_black_node_invariant(node.left());
@@ -306,7 +298,7 @@ int check_black_node_invariant(const RedBlackTree& node) {
 
     if (l != 0 && r != 0 && l != r) return 0;
 
-    if (l != 0 && r != 0) return node.root_color() == Color::Red ? l : l + 1;
+    if (l != 0 && r != 0) return node.color() == Color::Red ? l : l + 1;
     return 0;
 }
 
@@ -320,7 +312,7 @@ bool satisfies_rb_invariants(const RedBlackTree& root) {
     // The internal nodes in this RB tree can be totally black so we will not count them directly,
     // we'll just track odd nodes as either red or black. Measure the number of black nodes we need
     // to validate.
-    if (root.empty() || (root.left().empty() && root.right().empty())) return true;
+    if (!root || (!root.left() && !root.right())) return true;
     return check_black_node_invariant(root) != 0;
 }
 }  // namespace
@@ -392,7 +384,7 @@ size_t PieceTree::offset_at(size_t line, size_t column) const {
 }
 
 std::string PieceTree::get_line_content(size_t line) const {
-    if (root_.empty()) return "";
+    if (!root_) return "";
 
     std::string buf;
     size_t line_offset = 0;
@@ -407,7 +399,7 @@ std::string PieceTree::get_line_content(size_t line) const {
 }
 
 std::string PieceTree::get_line_content_with_newline(size_t line) const {
-    if (root_.empty()) return "";
+    if (!root_) return "";
 
     std::string buf;
     size_t line_offset = 0;
@@ -422,7 +414,7 @@ std::string PieceTree::get_line_content_with_newline(size_t line) const {
 }
 
 std::string PieceTree::get_line_content_for_layout_use(size_t line) const {
-    if (root_.empty()) return "";
+    if (!root_) return "";
 
     std::string buf;
     size_t line_offset = 0;
@@ -524,11 +516,10 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     if (!redo_stack_.empty()) redo_stack_.clear();
     undo_stack_.push_front(root_);
 
-    base::ScopeExit guard{[&] {
-        compute_buffer_meta(lf_count_, length_, root_);
-        DCHECK(satisfies_rb_invariants(root_));
-    }};
-    if (root_.empty()) {
+    // TODO: Do we need ScopeExit here?
+    base::ScopeExit guard{[&] { DCHECK(satisfies_rb_invariants(root_)); }};
+
+    if (!root_) {
         auto piece = build_piece(txt);
         root_ = root_.insert({piece}, 0);
         return;
@@ -537,7 +528,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     auto result = node_at(root_, buffers_, offset);
     // If the offset is beyond the buffer, just select the last node.
     if (result.node == nullptr) {
-        auto off = base::sub_sat(length_, size_t{1});
+        auto off = base::sub_sat(length(), size_t{1});
         result = node_at(root_, buffers_, off);
     }
 
@@ -626,16 +617,15 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
 }
 
 void PieceTree::erase(size_t offset, size_t count) {
-    if (count == 0 || root_.empty()) return;
+    if (count == 0 || !root_) return;
 
     // Can't redo if we're creating a new undo entry.
     if (!redo_stack_.empty()) redo_stack_.clear();
     undo_stack_.push_front(root_);
 
-    base::ScopeExit guard{[&] {
-        compute_buffer_meta(lf_count_, length_, root_);
-        DCHECK(satisfies_rb_invariants(root_));
-    }};
+    // TODO: Do we need ScopeExit here?
+    base::ScopeExit guard{[&] { DCHECK(satisfies_rb_invariants(root_)); }};
+
     auto first = node_at(root_, buffers_, offset);
     auto last = node_at(root_, buffers_, offset + count);
     auto first_node = first.node;
@@ -697,7 +687,6 @@ bool PieceTree::undo() {
     redo_stack_.push_front(root_);
     root_ = undo_stack_.front();
     undo_stack_.pop_front();
-    compute_buffer_meta(lf_count_, length_, root_);
     return true;
 }
 
@@ -706,12 +695,11 @@ bool PieceTree::redo() {
     undo_stack_.push_front(root_);
     root_ = redo_stack_.front();
     redo_stack_.pop_front();
-    compute_buffer_meta(lf_count_, length_, root_);
     return true;
 }
 
 TreeWalker::TreeWalker(const PieceTree* tree, size_t offset)
-    : buffers_{&tree->buffers_}, root_{tree->root_}, length_{tree->length_}, stack_{{root_}} {
+    : buffers_{&tree->buffers_}, root_{tree->root_}, length_{tree->length()}, stack_{{root_}} {
     total_offset_ = std::min(offset, tree->length());
     fast_forward_to(total_offset_);
 }
@@ -754,8 +742,8 @@ bool TreeWalker::exhausted() const {
     // we're done.
     auto& entry = stack_.back();
     // We descended into a null child, we're done.
-    if (entry.node.empty()) return true;
-    if (entry.dir == Direction::Right && entry.node.right().empty()) return true;
+    if (!entry.node) return true;
+    if (entry.dir == Direction::Right && !entry.node.right()) return true;
     return false;
 }
 
@@ -780,7 +768,7 @@ char32_t TreeWalker::next_codepoint() {
 
 void TreeWalker::populate_ptrs() {
     if (exhausted()) return;
-    if (stack_.back().node.empty()) {
+    if (!stack_.back().node) {
         stack_.pop_back();
         populate_ptrs();
         return;
@@ -788,7 +776,7 @@ void TreeWalker::populate_ptrs() {
 
     auto& [node, dir] = stack_.back();
     if (dir == Direction::Left) {
-        if (!node.left().empty()) {
+        if (node.left()) {
             auto left = node.left();
             // Change the dir for when we pop back.
             stack_.back().dir = Direction::Center;
@@ -822,7 +810,7 @@ void TreeWalker::populate_ptrs() {
 
 void TreeWalker::fast_forward_to(size_t offset) {
     auto node = root_;
-    while (!node.empty()) {
+    while (node) {
         if (node.data().left_subtree_length > offset) {
             // For when we revisit this node.
             stack_.back().dir = Direction::Center;
@@ -902,9 +890,9 @@ bool ReverseTreeWalker::exhausted() const {
     // we're done.
     auto& entry = stack.back();
     // We descended into a null child, we're done.
-    if (entry.node.empty()) return true;
+    if (!entry.node) return true;
     // Do we need this check for reverse iterators?
-    if (entry.dir == Direction::Left && entry.node.left().empty()) return true;
+    if (entry.dir == Direction::Left && !entry.node.left()) return true;
     return false;
 }
 
@@ -929,7 +917,7 @@ char32_t ReverseTreeWalker::next_codepoint() {
 
 void ReverseTreeWalker::populate_ptrs() {
     if (exhausted()) return;
-    if (stack.back().node.empty()) {
+    if (!stack.back().node) {
         stack.pop_back();
         populate_ptrs();
         return;
@@ -937,7 +925,7 @@ void ReverseTreeWalker::populate_ptrs() {
 
     auto& [node, dir] = stack.back();
     if (dir == Direction::Right) {
-        if (!node.right().empty()) {
+        if (node.right()) {
             auto right = node.right();
             // Change the dir for when we pop back.
             stack.back().dir = Direction::Center;
@@ -971,7 +959,7 @@ void ReverseTreeWalker::populate_ptrs() {
 
 void ReverseTreeWalker::fast_forward_to(size_t offset) {
     auto node = root;
-    while (!node.empty()) {
+    while (node) {
         if (node.data().left_subtree_length > offset) {
             DCHECK(!stack.empty());
             // This parent is no longer relevant.

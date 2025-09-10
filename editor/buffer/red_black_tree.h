@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/check.h"
 #include <memory>
 
 namespace editor {
@@ -25,9 +26,11 @@ struct NodeData {
     Piece piece{};
     size_t left_subtree_length{};
     size_t left_subtree_lf_count{};
+    size_t subtree_length{};
+    size_t subtree_lf_count{};
 };
 
-enum class Color { Red, Black, DoubleBlack };
+enum class Color { Red, Black };
 
 class RedBlackTree {
     struct Node;
@@ -48,29 +51,25 @@ public:
     RedBlackTree(const NodePtr& node);
 
     // Queries.
-    constexpr const Node* root_ptr() const { return root_node_.get(); }
-    constexpr bool empty() const { return !root_node_; }
-    const NodeData& data() const;
-    RedBlackTree left() const;
-    RedBlackTree right() const;
-    Color root_color() const;
-    size_t length() const;
-    size_t lf_count() const;
-
-    // Helpers.
-    bool operator==(const RedBlackTree&) const = default;
+    explicit operator bool() const noexcept { return static_cast<bool>(node_); }
+    constexpr size_t length() const { return !node_ ? 0 : data().subtree_length; }
+    constexpr size_t line_feed_count() const { return !node_ ? 0 : data().subtree_lf_count; }
+    // clang-format off
+    const NodeData& data() const { DCHECK(node_); return node_->data; }
+    RedBlackTree left() const { DCHECK(node_); return {node_->left}; }
+    RedBlackTree right() const { DCHECK(node_); return {node_->right}; }
+    Color color() const { DCHECK(node_); return node_->color; }
+    // clang-format on
 
     // Mutators.
     RedBlackTree insert(const NodeData& x, size_t at) const;
     RedBlackTree remove(size_t at) const;
 
-    // TODO: Consider making these private.
-    RedBlackTree paint(Color c) const;
+    // Helpers.
+    bool operator==(const RedBlackTree&) const = default;
 
 private:
-    RedBlackTree internal_insert(const NodeData& x, size_t at, size_t total_offset) const;
-
-    NodePtr root_node_;
+    NodePtr node_;
 };
 
 }  // namespace editor

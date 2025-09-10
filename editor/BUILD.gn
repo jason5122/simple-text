@@ -1,7 +1,7 @@
 source_set("editor") {
   sources = [
     "buffer/piece_tree.cc",
-    "buffer/piece_tree_rbtree.cc",
+    "buffer/red_black_tree.cc",
     "movement.cc",
     "search/ac_fast.cc",
     "search/ac_slow.cc",
@@ -19,6 +19,7 @@ source_set("editor_unittests") {
 
   sources = [
     "buffer/piece_tree_unittest.cc",
+    "buffer/red_black_tree_unittest.cc",
     "buffer/tree_walker_unittest.cc",
     "movement_unittest.cc",
     "search/aho_corasick_unittest.cc",

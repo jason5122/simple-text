@@ -1,6 +1,6 @@
 #pragma once
 
-#include "editor/buffer/piece_tree_rbtree.h"
+#include "editor/buffer/red_black_tree.h"
 #include <format>
 #include <forward_list>
 #include <memory>
@@ -45,10 +45,10 @@ public:
     bool redo();
 
     // Metadata.
-    constexpr size_t length() const { return length_; }
-    constexpr bool empty() const { return length_ == 0; }
-    constexpr size_t line_feed_count() const { return lf_count_; }
-    constexpr size_t line_count() const { return lf_count_ + 1; }
+    size_t length() const { return root_.length(); }
+    bool empty() const { return length() == 0; }
+    size_t line_feed_count() const { return root_.line_feed_count(); }
+    size_t line_count() const { return line_feed_count() + 1; }
 
     // Queries.
     std::string get_line_content(size_t line) const;
@@ -79,9 +79,6 @@ private:
     BufferCollection buffers_;
     RedBlackTree root_;
     BufferCursor last_insert_;
-
-    size_t lf_count_ = 0;
-    size_t length_ = 0;
 
     std::forward_list<RedBlackTree> undo_stack_;
     std::forward_list<RedBlackTree> redo_stack_;

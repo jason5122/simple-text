@@ -5,8 +5,8 @@
 namespace editor {
 
 struct BufferCursor {
-    size_t line = 0;    // Relative line in the current buffer.
-    size_t column = 0;  // Column into the current line.
+    size_t line{};    // Relative line in the current buffer.
+    size_t column{};  // Column into the current line.
 
     bool operator==(const BufferCursor&) const = default;
 };
@@ -15,10 +15,10 @@ enum class BufferType { Original, Mod };
 
 struct Piece {
     BufferType buffer_type = BufferType::Original;
-    BufferCursor first = {};
-    BufferCursor last = {};
-    size_t length = 0;
-    size_t newline_count = 0;
+    BufferCursor first{};
+    BufferCursor last{};
+    size_t length{};
+    size_t newline_count{};
 };
 
 struct NodeData {
@@ -43,11 +43,11 @@ class RedBlackTree {
     };
 
 public:
-    explicit RedBlackTree() = default;
+    RedBlackTree() = default;
 
     // Queries.
-    const Node* root_ptr() const;
-    bool empty() const;
+    constexpr const Node* root_ptr() const { return root_node_.get(); }
+    constexpr bool empty() const { return !root_node_; }
     const NodeData& data() const;
     RedBlackTree left() const;
     RedBlackTree right() const;
@@ -86,7 +86,7 @@ private:
     // General.
     RedBlackTree paint(Color c) const;
 
-    NodePtr root_node;
+    NodePtr root_node_;
 };
 
 }  // namespace editor

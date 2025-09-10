@@ -1,5 +1,6 @@
 #include "base/check.h"
-#include <fmt/base.h>
+#include <format>
+#include <iostream>
 
 namespace base::internal {
 
@@ -20,12 +21,14 @@ namespace {
 }  // namespace
 
 void check_fail(const char* expr, Location loc) {
-    fmt::println(stderr, "[{}:{}] Check failed: {}", loc.file_name(), loc.line_number(), expr);
+    auto msg = std::format("[{}:{}] Check failed: {}", loc.file_name(), loc.line_number(), expr);
+    std::cerr << msg << '\n';
     immediate_crash();
 }
 
 void notreached_fail(Location loc) {
-    fmt::println(stderr, "[{}:{}] Unreachable code hit.", loc.file_name(), loc.line_number());
+    auto msg = std::format("[{}:{}] Unreachable code hit.", loc.file_name(), loc.line_number());
+    std::cerr << msg << '\n';
     immediate_crash();
 }
 

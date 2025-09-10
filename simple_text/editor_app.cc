@@ -3,7 +3,7 @@
 #include "gl/loader.h"
 #include "gui/renderer/renderer.h"
 #include "simple_text/editor_app.h"
-#include <fmt/format.h>
+#include <format>
 #include <spdlog/spdlog.h>
 
 namespace gui {
@@ -67,7 +67,7 @@ void EditorApp::create_window() {
 #else
     const std::string& debug_or_release = "Debug";
 #endif
-    editor_window->set_title(fmt::format("Simple Text ({})", debug_or_release));
+    editor_window->set_title(std::format("Simple Text ({})", debug_or_release));
 
     editor_window->show();
     editor_windows.emplace_back(std::move(editor_window));

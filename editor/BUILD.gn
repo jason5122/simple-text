@@ -34,7 +34,10 @@ source_set("editor_unittests") {
 source_set("editor_perftests") {
   testonly = true
 
-  sources = [ "search/aho_corasick_perftest.cc" ]
+  sources = [
+    "buffer/piece_tree_perftest.cc",
+    "search/aho_corasick_perftest.cc",
+  ]
 
   deps = [
     ":editor",

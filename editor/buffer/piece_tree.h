@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editor/buffer/piece_tree_rbtree.h"
+#include <format>
 #include <forward_list>
 #include <memory>
 #include <optional>
@@ -10,12 +11,7 @@
 
 namespace editor {
 
-struct NodePosition {
-    const NodeData* node = nullptr;
-    size_t remainder = 0;     // Remainder in current piece.
-    size_t start_offset = 0;  // Node start offset in document.
-    size_t line = 0;          // The line (relative to the document) where this node starts.
-};
+struct NodePosition;
 
 struct CharBuffer {
     std::string buffer;
@@ -37,14 +33,9 @@ struct LineRange {
 
 class PieceTree {
 public:
-    PieceTree();
-    PieceTree(std::string_view txt);
-    PieceTree(const char* s);
-    PieceTree(const std::string& s);
-
+    PieceTree() : PieceTree(std::string_view{}) {}
+    explicit PieceTree(std::string_view txt);
     PieceTree& operator=(std::string_view txt);
-    PieceTree& operator=(const char* s);
-    PieceTree& operator=(const std::string& s);
 
     // Manipulation.
     void insert(size_t offset, std::string_view txt);
@@ -52,6 +43,12 @@ public:
     void clear();
     bool undo();
     bool redo();
+
+    // Metadata.
+    constexpr size_t length() const { return length_; }
+    constexpr bool empty() const { return length_ == 0; }
+    constexpr size_t line_feed_count() const { return lf_count_; }
+    constexpr size_t line_count() const { return lf_count_ + 1; }
 
     // Queries.
     std::string get_line_content(size_t line) const;
@@ -67,18 +64,14 @@ public:
     std::string substr(size_t offset, size_t count) const;
     std::optional<size_t> find(std::string_view str) const;
 
-    size_t size() const;
-    size_t length() const;
-    bool empty() const;
-    size_t line_feed_count() const;
-    size_t line_count() const;
+    // Debug use.
+    size_t piece_count() const { return root_.length(); }
 
 private:
     friend class TreeWalker;
     friend class ReverseTreeWalker;
 
     // Direct mutations.
-    void assign(std::string_view txt);
     Piece build_piece(std::string_view txt);
     void combine_pieces(NodePosition existing_piece, Piece new_piece);
     void remove_node_range(NodePosition first, size_t length);
@@ -87,13 +80,15 @@ private:
     RedBlackTree root_;
     BufferCursor last_insert_;
 
-    // Buffer metadata.
     size_t lf_count_ = 0;
-    size_t total_content_length_ = 0;
+    size_t length_ = 0;
 
     std::forward_list<RedBlackTree> undo_stack_;
     std::forward_list<RedBlackTree> redo_stack_;
 };
+
+static_assert(std::movable<PieceTree>);
+static_assert(std::copyable<PieceTree>);
 
 class TreeWalker {
 public:
@@ -104,8 +99,8 @@ public:
     char32_t next_codepoint();
     void seek(size_t offset);
     bool exhausted() const;
-    constexpr size_t remaining() const { return total_content_length - total_offset; }
-    constexpr size_t offset() const { return total_offset; }
+    constexpr size_t remaining() const { return length_ - total_offset_; }
+    constexpr size_t offset() const { return total_offset_; }
 
 private:
     void populate_ptrs();
@@ -118,16 +113,14 @@ private:
         Direction dir = Direction::Left;
     };
 
-    const BufferCollection* buffers;
-    RedBlackTree root;
+    const BufferCollection* buffers_;
+    RedBlackTree root_;
+    size_t length_ = 0;
 
-    // Buffer metadata.
-    size_t total_content_length = 0;
-
-    std::vector<StackEntry> stack;
-    size_t total_offset = 0;
-    const char* first_ptr = nullptr;
-    const char* last_ptr = nullptr;
+    std::vector<StackEntry> stack_;
+    size_t total_offset_ = 0;
+    const char* first_ptr_ = nullptr;
+    const char* last_ptr_ = nullptr;
 };
 
 class ReverseTreeWalker {
@@ -162,3 +155,21 @@ private:
 };
 
 }  // namespace editor
+
+template <>
+struct std::formatter<editor::PieceTree> {
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+    template <class FormatContext>
+    auto format(const editor::PieceTree& pt, FormatContext& ctx) const {
+        return std::format_to(ctx.out(), "{}", pt.str());
+    }
+};
+
+template <>
+struct std::formatter<editor::LineRange> {
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+    template <class FormatContext>
+    auto format(const editor::LineRange& r, FormatContext& ctx) const {
+        return std::format_to(ctx.out(), "[{}..{}]", r.first, r.last);
+    }
+};

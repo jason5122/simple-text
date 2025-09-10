@@ -60,10 +60,7 @@ private:
                            const Point& max_coords);
 };
 
-static_assert(std::is_nothrow_destructible_v<TextureRenderer>);
-static_assert(!std::is_copy_constructible_v<TextureRenderer>);
-static_assert(!std::is_copy_assignable_v<TextureRenderer>);
-static_assert(std::is_nothrow_move_constructible_v<TextureRenderer>);
-static_assert(std::is_nothrow_move_assignable_v<TextureRenderer>);
+static_assert(std::movable<TextureRenderer>);
+static_assert(!std::copyable<TextureRenderer>);
 
 }  // namespace gui

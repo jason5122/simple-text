@@ -51,10 +51,7 @@ private:
     std::vector<InstanceData> layer_two_instances;
 };
 
-static_assert(std::is_nothrow_destructible_v<RectRenderer>);
-static_assert(!std::is_copy_constructible_v<RectRenderer>);
-static_assert(!std::is_copy_assignable_v<RectRenderer>);
-static_assert(std::is_nothrow_move_constructible_v<RectRenderer>);
-static_assert(std::is_nothrow_move_assignable_v<RectRenderer>);
+static_assert(std::movable<RectRenderer>);
+static_assert(!std::copyable<RectRenderer>);
 
 }  // namespace gui

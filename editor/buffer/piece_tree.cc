@@ -10,6 +10,13 @@
 
 namespace editor {
 
+struct NodePosition {
+    const NodeData* node = nullptr;
+    size_t remainder = 0;     // Remainder in current piece.
+    size_t start_offset = 0;  // Node start offset in document.
+    size_t line = 0;          // The line (relative to the document) where this node starts.
+};
+
 const CharBuffer* BufferCollection::buffer_at(BufferType buffer_type) const {
     return buffer_type == BufferType::Mod ? &mod_buffer : orig_buffer.get();
 }
@@ -250,21 +257,7 @@ size_t accumulate_value_no_lf(const BufferCollection* buffers, const Piece& piec
 
 }  // namespace
 
-PieceTree::PieceTree() : PieceTree("") {}
-PieceTree::PieceTree(std::string_view txt) { assign(txt); }
-PieceTree::PieceTree(const char* s) : PieceTree(std::string_view{s}) {}
-PieceTree::PieceTree(const std::string& s) : PieceTree(std::string_view{s}) {}
-
-PieceTree& PieceTree::operator=(std::string_view txt) {
-    clear();
-    assign(txt);
-    return *this;
-}
-
-PieceTree& PieceTree::operator=(const char* s) { return *this = std::string_view{s}; }
-PieceTree& PieceTree::operator=(const std::string& s) { return *this = std::string_view{s}; }
-
-void PieceTree::assign(std::string_view txt) {
+PieceTree::PieceTree(std::string_view txt) {
     buffers_ = BufferCollection{
         .orig_buffer = std::make_shared<CharBuffer>(std::string{txt}, populate_line_starts(txt)),
     };
@@ -291,7 +284,12 @@ void PieceTree::assign(std::string_view txt) {
         root_ = root_.insert({piece}, 0);
     }
 
-    compute_buffer_meta(lf_count_, total_content_length_, root_);
+    compute_buffer_meta(lf_count_, length_, root_);
+}
+
+PieceTree& PieceTree::operator=(std::string_view txt) {
+    *this = PieceTree(txt);
+    return *this;
 }
 
 namespace {
@@ -371,16 +369,6 @@ std::optional<size_t> PieceTree::find(std::string_view str) const {
         return result.match_begin;
     }
 }
-
-size_t PieceTree::size() const { return total_content_length_; }
-
-size_t PieceTree::length() const { return size(); }
-
-bool PieceTree::empty() const { return total_content_length_ == 0; }
-
-size_t PieceTree::line_feed_count() const { return lf_count_; }
-
-size_t PieceTree::line_count() const { return line_feed_count() + 1; }
 
 size_t PieceTree::line_at(size_t offset) const {
     if (empty()) return 0;
@@ -537,7 +525,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     undo_stack_.push_front(root_);
 
     base::ScopeExit guard{[&] {
-        compute_buffer_meta(lf_count_, total_content_length_, root_);
+        compute_buffer_meta(lf_count_, length_, root_);
         DCHECK(satisfies_rb_invariants(root_));
     }};
     if (root_.empty()) {
@@ -549,7 +537,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     auto result = node_at(root_, buffers_, offset);
     // If the offset is beyond the buffer, just select the last node.
     if (result.node == nullptr) {
-        auto off = base::sub_sat(total_content_length_, size_t{1});
+        auto off = base::sub_sat(length_, size_t{1});
         result = node_at(root_, buffers_, off);
     }
 
@@ -645,7 +633,7 @@ void PieceTree::erase(size_t offset, size_t count) {
     undo_stack_.push_front(root_);
 
     base::ScopeExit guard{[&] {
-        compute_buffer_meta(lf_count_, total_content_length_, root_);
+        compute_buffer_meta(lf_count_, length_, root_);
         DCHECK(satisfies_rb_invariants(root_));
     }};
     auto first = node_at(root_, buffers_, offset);
@@ -709,7 +697,7 @@ bool PieceTree::undo() {
     redo_stack_.push_front(root_);
     root_ = undo_stack_.front();
     undo_stack_.pop_front();
-    compute_buffer_meta(lf_count_, total_content_length_, root_);
+    compute_buffer_meta(lf_count_, length_, root_);
     return true;
 }
 
@@ -718,56 +706,53 @@ bool PieceTree::redo() {
     undo_stack_.push_front(root_);
     root_ = redo_stack_.front();
     redo_stack_.pop_front();
-    compute_buffer_meta(lf_count_, total_content_length_, root_);
+    compute_buffer_meta(lf_count_, length_, root_);
     return true;
 }
 
 TreeWalker::TreeWalker(const PieceTree* tree, size_t offset)
-    : buffers{&tree->buffers_},
-      root{tree->root_},
-      total_content_length{tree->total_content_length_},
-      stack{{root}} {
-    total_offset = std::min(offset, tree->length());
-    fast_forward_to(total_offset);
+    : buffers_{&tree->buffers_}, root_{tree->root_}, length_{tree->length_}, stack_{{root_}} {
+    total_offset_ = std::min(offset, tree->length());
+    fast_forward_to(total_offset_);
 }
 
 char TreeWalker::next() {
-    if (first_ptr == last_ptr) {
+    if (first_ptr_ == last_ptr_) {
         populate_ptrs();
         // If this is exhausted, we're done.
         if (exhausted()) return '\0';
         // Catchall.
-        if (first_ptr == last_ptr) return next();
+        if (first_ptr_ == last_ptr_) return next();
     }
-    total_offset++;
-    return *first_ptr++;
+    total_offset_++;
+    return *first_ptr_++;
 }
 
 char TreeWalker::current() {
-    if (first_ptr == last_ptr) {
+    if (first_ptr_ == last_ptr_) {
         populate_ptrs();
         // If this is exhausted, we're done.
         if (exhausted()) return '\0';
     }
-    return *first_ptr;
+    return *first_ptr_;
 }
 
 void TreeWalker::seek(size_t offset) {
-    stack.clear();
-    stack.push_back({root});
-    total_offset = offset;
+    stack_.clear();
+    stack_.push_back({root_});
+    total_offset_ = offset;
     fast_forward_to(offset);
 }
 
 bool TreeWalker::exhausted() const {
-    if (stack.empty()) return true;
+    if (stack_.empty()) return true;
     // If we have not exhausted the pointers, we're still active.
-    if (first_ptr != last_ptr) return false;
+    if (first_ptr_ != last_ptr_) return false;
     // If there's more than one entry on the stack, we're still active.
-    if (stack.size() > 1) return false;
+    if (stack_.size() > 1) return false;
     // Now, if there's exactly one entry and that entry itself is exhausted (no right subtree)
     // we're done.
-    auto& entry = stack.back();
+    auto& entry = stack_.back();
     // We descended into a null child, we're done.
     if (entry.node.empty()) return true;
     if (entry.dir == Direction::Right && entry.node.right().empty()) return true;
@@ -795,75 +780,75 @@ char32_t TreeWalker::next_codepoint() {
 
 void TreeWalker::populate_ptrs() {
     if (exhausted()) return;
-    if (stack.back().node.empty()) {
-        stack.pop_back();
+    if (stack_.back().node.empty()) {
+        stack_.pop_back();
         populate_ptrs();
         return;
     }
 
-    auto& [node, dir] = stack.back();
+    auto& [node, dir] = stack_.back();
     if (dir == Direction::Left) {
         if (!node.left().empty()) {
             auto left = node.left();
             // Change the dir for when we pop back.
-            stack.back().dir = Direction::Center;
-            stack.push_back({left});
+            stack_.back().dir = Direction::Center;
+            stack_.push_back({left});
             populate_ptrs();
             return;
         }
         // Otherwise, let's visit the center, we can actually fallthrough.
-        stack.back().dir = Direction::Center;
+        stack_.back().dir = Direction::Center;
         dir = Direction::Center;
     }
 
     if (dir == Direction::Center) {
         auto& piece = node.data().piece;
-        auto* buffer = buffers->buffer_at(piece.buffer_type);
-        auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
-        auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
-        first_ptr = buffer->buffer.data() + first_offset;
-        last_ptr = buffer->buffer.data() + last_offset;
+        auto* buffer = buffers_->buffer_at(piece.buffer_type);
+        auto first_offset = buffers_->buffer_offset(piece.buffer_type, piece.first);
+        auto last_offset = buffers_->buffer_offset(piece.buffer_type, piece.last);
+        first_ptr_ = buffer->buffer.data() + first_offset;
+        last_ptr_ = buffer->buffer.data() + last_offset;
         // Change this direction.
-        stack.back().dir = Direction::Right;
+        stack_.back().dir = Direction::Right;
         return;
     }
 
     DCHECK_EQ(dir, Direction::Right);
     auto right = node.right();
-    stack.pop_back();
-    stack.push_back({right});
+    stack_.pop_back();
+    stack_.push_back({right});
     populate_ptrs();
 }
 
 void TreeWalker::fast_forward_to(size_t offset) {
-    auto node = root;
+    auto node = root_;
     while (!node.empty()) {
         if (node.data().left_subtree_length > offset) {
             // For when we revisit this node.
-            stack.back().dir = Direction::Center;
+            stack_.back().dir = Direction::Center;
             node = node.left();
-            stack.push_back({node});
+            stack_.push_back({node});
         }
         // It is inside this node.
         else if (node.data().left_subtree_length + node.data().piece.length > offset) {
-            stack.back().dir = Direction::Right;
+            stack_.back().dir = Direction::Right;
             // Make the offset relative to this piece.
             offset -= node.data().left_subtree_length;
             auto& piece = node.data().piece;
-            auto* buffer = buffers->buffer_at(piece.buffer_type);
-            auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
-            auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
-            first_ptr = buffer->buffer.data() + first_offset + offset;
-            last_ptr = buffer->buffer.data() + last_offset;
+            auto* buffer = buffers_->buffer_at(piece.buffer_type);
+            auto first_offset = buffers_->buffer_offset(piece.buffer_type, piece.first);
+            auto last_offset = buffers_->buffer_offset(piece.buffer_type, piece.last);
+            first_ptr_ = buffer->buffer.data() + first_offset + offset;
+            last_ptr_ = buffer->buffer.data() + last_offset;
             return;
         } else {
-            DCHECK(!stack.empty());
+            DCHECK(!stack_.empty());
             // This parent is no longer relevant.
-            stack.pop_back();
+            stack_.pop_back();
             auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
             offset -= offset_amount;
             node = node.right();
-            stack.push_back({node});
+            stack_.push_back({node});
         }
     }
 }

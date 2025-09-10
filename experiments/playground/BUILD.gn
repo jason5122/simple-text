@@ -3,6 +3,7 @@ executable("playground") {
 
   deps = [
     "//base",
+    "//editor",
     "//third_party/spdlog",
   ]
 }

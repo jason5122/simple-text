@@ -273,7 +273,8 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             }
 
             std::string str8 = base::windows::convert_to_utf8(utf16);
-            spdlog::info("WM_CHAR: {:?}", str8);
+            // TODO: Implement fmtlib style "debug format" ({:?}) that escapes special chars.
+            spdlog::info("WM_CHAR: {}", str8);
             app_window.on_insert_text(str8);
 
             high_surrogate = '\0';

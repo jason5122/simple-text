@@ -20,10 +20,7 @@ private:
     gl::GLuint id_ = 0;
 };
 
-static_assert(std::is_nothrow_destructible_v<Shader>);
-static_assert(!std::is_copy_constructible_v<Shader>);
-static_assert(!std::is_copy_assignable_v<Shader>);
-static_assert(std::is_nothrow_move_constructible_v<Shader>);
-static_assert(std::is_nothrow_move_assignable_v<Shader>);
+static_assert(std::movable<Shader>);
+static_assert(!std::copyable<Shader>);
 
 }  // namespace gui

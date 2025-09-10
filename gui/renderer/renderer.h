@@ -35,10 +35,7 @@ private:
     SelectionRenderer selection_renderer_;
 };
 
-static_assert(std::is_nothrow_destructible_v<Renderer>);
-static_assert(!std::is_copy_constructible_v<Renderer>);
-static_assert(!std::is_copy_assignable_v<Renderer>);
-static_assert(std::is_nothrow_move_constructible_v<Renderer>);
-static_assert(std::is_nothrow_move_assignable_v<Renderer>);
+static_assert(std::movable<Renderer>);
+static_assert(!std::copyable<Renderer>);
 
 }  // namespace gui

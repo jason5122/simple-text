@@ -48,10 +48,7 @@ private:
     bool advance_row();
 };
 
-static_assert(std::is_nothrow_destructible_v<Atlas>);
-static_assert(!std::is_copy_constructible_v<Atlas>);
-static_assert(!std::is_copy_assignable_v<Atlas>);
-static_assert(std::is_nothrow_move_constructible_v<Atlas>);
-static_assert(std::is_nothrow_move_assignable_v<Atlas>);
+static_assert(std::movable<Atlas>);
+static_assert(!std::copyable<Atlas>);
 
 }  // namespace gui

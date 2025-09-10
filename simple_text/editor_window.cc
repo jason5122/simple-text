@@ -6,7 +6,7 @@
 #include "gui/widget/find_panel_widget.h"
 #include "simple_text/editor_app.h"
 #include "simple_text/editor_window.h"
-#include <fmt/format.h>
+#include <format>
 #include <spdlog/spdlog.h>
 #include <string>
 
@@ -81,10 +81,10 @@ void EditorWindow::draw() {
         size_t length = text_view->get_selection_length();
         if (length > 0) {
             status_bar->set_text(
-                fmt::format("{} character{} selected", length, length != 1 ? "s" : ""));
+                std::format("{} character{} selected", length, length != 1 ? "s" : ""));
         } else {
             auto [line, col] = text_view->get_line_column();
-            status_bar->set_text(fmt::format("Line {}, Column {}", line + 1, col + 1));
+            status_bar->set_text(std::format("Line {}, Column {}", line + 1, col + 1));
         }
     } else {
         status_bar->set_text("No file open");

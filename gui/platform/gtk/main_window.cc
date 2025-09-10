@@ -1,7 +1,7 @@
 #include "gui/platform/gtk/main_window.h"
 #include "unicode/unicode.h"
 #include <cmath>
-#include <fmt/format.h>
+#include <format>
 #include <spdlog/spdlog.h>
 
 namespace gui {
@@ -64,7 +64,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLC
         g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
                                         gtk_app);
 
-        std::string quit_accel = fmt::format("{}q", GtkAccelStringFromModifier(kPrimaryModifier));
+        std::string quit_accel = std::format("{}q", GtkAccelStringFromModifier(kPrimaryModifier));
         const gchar* quit_accels[2] = {quit_accel.data(), NULL};
         gtk_application_set_accels_for_action(gtk_app, "app.quit", quit_accels);
     }

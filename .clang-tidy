@@ -7,4 +7,5 @@ bugprone-*,
 clang-analyzer-*,
 misc-*,
 -misc-unused-parameters,
--misc-const-correctness'
+-misc-const-correctness,
+-misc-no-recursion'

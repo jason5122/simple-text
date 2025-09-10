@@ -50,7 +50,7 @@ private:
     bool load_jpeg(const base::FilePath& path, Image& image);
 };
 
-static_assert(std::is_nothrow_move_constructible_v<TextureCache>);
-static_assert(std::is_nothrow_move_assignable_v<TextureCache>);
+static_assert(std::movable<TextureCache>);
+static_assert(std::copyable<TextureCache>);
 
 }  // namespace gui

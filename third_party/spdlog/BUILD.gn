@@ -13,15 +13,13 @@ static_library("spdlog") {
   configs += [ "//build/config/compiler:no_simple_text_code" ]
 
   public_configs = [ ":spdlog_includes" ]
-
-  public_deps = [ "//third_party/fmt" ]
 }
 
 config("spdlog_includes") {
   defines = [
     "SPDLOG_COMPILED_LIB",
     "SPDLOG_NO_EXCEPTIONS",
-    "SPDLOG_FMT_EXTERNAL",
+    "SPDLOG_USE_STD_FORMAT",
   ]
   if (is_win) {
     defines += [ "SPDLOG_WCHAR_TO_UTF8_SUPPORT" ]

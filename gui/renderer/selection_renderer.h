@@ -72,10 +72,7 @@ private:
     };
 };
 
-static_assert(std::is_nothrow_destructible_v<SelectionRenderer>);
-static_assert(!std::is_copy_constructible_v<SelectionRenderer>);
-static_assert(!std::is_copy_assignable_v<SelectionRenderer>);
-static_assert(std::is_nothrow_move_constructible_v<SelectionRenderer>);
-static_assert(std::is_nothrow_move_assignable_v<SelectionRenderer>);
+static_assert(std::movable<SelectionRenderer>);
+static_assert(!std::copyable<SelectionRenderer>);
 
 }  // namespace gui

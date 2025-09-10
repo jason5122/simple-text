@@ -6,7 +6,7 @@
 #include "gui/widget/text_edit_widget.h"
 #include <cassert>
 #include <cmath>
-#include <fmt/format.h>
+#include <format>
 
 namespace gui {
 
@@ -434,7 +434,7 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
         line_number_coords.x += kGutterLeftPadding;
         line_number_coords.y += static_cast<int>(line) * main_line_height;
 
-        std::string line_number_str = fmt::format("{}", line + 1);
+        std::string line_number_str = std::format("{}", line + 1);
         const auto& line_number_layout = line_layout_cache.get(font_id, line_number_str);
         line_number_coords.x += line_number_width() - line_number_layout.width;
 

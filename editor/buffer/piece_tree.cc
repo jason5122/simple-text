@@ -11,8 +11,7 @@
 namespace editor {
 
 struct NodePosition {
-    const NodeData* node = nullptr;
-    const Piece* piece = nullptr;
+    RedBlackTree node;
     size_t remainder = 0;     // Remainder in current piece.
     size_t start_offset = 0;  // Node start offset in document.
     size_t line = 0;          // The line (relative to the document) where this node starts.
@@ -94,7 +93,7 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
             // we need to retract it by the starting line of the piece to get the real difference.
             newline_count += pos.line - node.piece().first.line;
             return {
-                .node = &node.data(),
+                .node = node,
                 .remainder = remainder,
                 .start_offset = node_start_offset,
                 .line = newline_count,
@@ -108,7 +107,7 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
                 // Now we find the line within this piece.
                 auto remainder = node.piece().length;
                 return {
-                    .node = &node.data(),
+                    .node = node,
                     .remainder = remainder,
                     .start_offset = node_start_offset,
                     .line = newline_count,
@@ -435,10 +434,10 @@ Piece PieceTree::build_piece(std::string_view txt) {
 
 void PieceTree::combine_pieces(NodePosition existing, Piece new_piece) {
     // This transformation is only valid under the following conditions.
-    DCHECK_EQ(existing.node->piece.type, BufferType::Mod);
+    DCHECK_EQ(existing.node.piece().type, BufferType::Mod);
     // This assumes that the piece was just built.
-    DCHECK_EQ(existing.node->piece.last, new_piece.first);
-    auto old_piece = existing.node->piece;
+    DCHECK_EQ(existing.node.piece().last, new_piece.first);
+    auto old_piece = existing.node.piece();
     new_piece.first = old_piece.first;
     new_piece.lf_count = new_piece.lf_count + old_piece.lf_count;
     new_piece.length = new_piece.length + old_piece.length;
@@ -459,14 +458,14 @@ void PieceTree::remove_node_range(NodePosition first, size_t length) {
     // We're going to remove all of 'P1' and 'P2' in this range and the caller will re-insert
     // these pieces with the correct lengths.  If we fail to adjust 'length' we will delete P1
     // and believe that the entire range was deleted.
-    DCHECK_NE(first.node, nullptr);
-    auto total_length = first.node->piece.length;
+    DCHECK(first.node);
+    auto total_length = first.node.piece().length;
     length = length - (total_length - first.remainder) + total_length;
 
     auto delete_at_offset = first.start_offset;
     size_t deleted_len = 0;
-    while (deleted_len < length && first.node != nullptr) {
-        deleted_len += first.node->piece.length;
+    while (deleted_len < length && first.node) {
+        deleted_len += first.node.piece().length;
         root_ = root_.remove(delete_at_offset);
         first = node_at(root_, buffers_, delete_at_offset);
     }
@@ -489,7 +488,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
 
     auto result = node_at(root_, buffers_, offset);
     // If the offset is beyond the buffer, just select the last node.
-    if (result.node == nullptr) {
+    if (!result.node) {
         auto off = base::sub_sat(length(), size_t{1});
         result = node_at(root_, buffers_, off);
     }
@@ -498,8 +497,8 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     // 1. We are inserting at the beginning of an existing node.
     // 2. We are inserting at the end of an existing node.
     // 3. We are inserting in the middle of the node.
-    auto [node, piece, remainder, node_start_offset, line] = result;
-    DCHECK_NE(node, nullptr);
+    auto [node, remainder, node_start_offset, line] = result;
+    DCHECK(node);
 
     // Case #1.
     if (node_start_offset == offset) {
@@ -513,8 +512,8 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
         // 5. Re-insert the new piece.
         if (offset != 0) {
             auto prev_node_result = node_at(root_, buffers_, offset - 1);
-            if (prev_node_result.node->piece.type == BufferType::Mod &&
-                prev_node_result.node->piece.last == last_insert_) {
+            if (prev_node_result.node.piece().type == BufferType::Mod &&
+                prev_node_result.node.piece().last == last_insert_) {
                 auto new_piece = build_piece(txt);
                 combine_pieces(prev_node_result, new_piece);
                 return;
@@ -526,7 +525,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     }
 
     // Case #2.
-    const bool inside_node = offset < node_start_offset + node->piece.length;
+    const bool inside_node = offset < node_start_offset + node.piece().length;
     if (!inside_node) {
         // There's a bonus case here.  If our last insertion point was the same as this piece's
         // last and it inserted into the mod buffer, then we can simply 'extend' this piece by
@@ -535,7 +534,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
         // 2. Remove the old piece.
         // 3. Extend the old piece's length to the length of the newly created piece.
         // 4. Re-insert the new piece.
-        if (node->piece.type == BufferType::Mod && node->piece.last == last_insert_) {
+        if (node.piece().type == BufferType::Mod && node.piece().last == last_insert_) {
             auto new_piece = build_piece(txt);
             combine_pieces(result, new_piece);
             return;
@@ -549,17 +548,17 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     // Case #3.
     // The basic approach here is to split the existing node into two pieces
     // and insert the new piece in between them.
-    auto insert_pos = buffer_position(buffers_, node->piece, remainder);
-    auto new_len_right = buffers_.buffer_offset(node->piece.type, node->piece.last) -
-                         buffers_.buffer_offset(node->piece.type, insert_pos);
-    auto new_piece_right = node->piece;
+    auto insert_pos = buffer_position(buffers_, node.piece(), remainder);
+    auto new_len_right = buffers_.buffer_offset(node.piece().type, node.piece().last) -
+                         buffers_.buffer_offset(node.piece().type, insert_pos);
+    auto new_piece_right = node.piece();
     new_piece_right.first = insert_pos;
     new_piece_right.length = new_len_right;
     new_piece_right.lf_count =
-        lf_count_between_range(buffers_, node->piece.type, insert_pos, node->piece.last);
+        lf_count_between_range(buffers_, node.piece().type, insert_pos, node.piece().last);
 
     // Remove the original node tail.
-    auto new_piece_left = trim_piece_right(buffers_, node->piece, insert_pos);
+    auto new_piece_left = trim_piece_right(buffers_, node.piece(), insert_pos);
 
     auto new_piece = build_piece(txt);
 
@@ -592,16 +591,16 @@ void PieceTree::erase(size_t offset, size_t count) {
     auto first_node = first.node;
     auto last_node = last.node;
 
-    auto start_split_pos = buffer_position(buffers_, first_node->piece, first.remainder);
+    auto start_split_pos = buffer_position(buffers_, first_node.piece(), first.remainder);
 
     // Simple case: the range of characters we want to delete are
     // held directly within this node.  Remove the node, resize it
     // then add it back.
     if (first_node == last_node) {
-        auto end_split_pos = buffer_position(buffers_, first_node->piece, last.remainder);
+        auto end_split_pos = buffer_position(buffers_, first_node.piece(), last.remainder);
         // The removed buffer is somewhere in the middle.  Trim it in both directions.
-        auto left = trim_piece_right(buffers_, first_node->piece, start_split_pos);
-        auto right = trim_piece_left(buffers_, first_node->piece, end_split_pos);
+        auto left = trim_piece_right(buffers_, first_node.piece(), start_split_pos);
+        auto right = trim_piece_left(buffers_, first_node.piece(), end_split_pos);
 
         root_ = root_.remove(first.start_offset);
         // Note: We insert right first so that the 'left' will be inserted to the right node's
@@ -619,12 +618,12 @@ void PieceTree::erase(size_t offset, size_t count) {
     // 3. Part of the first node is deleted and part of the last node.
     // 4. The entire first node is deleted and part of the last node.
 
-    auto new_first = trim_piece_right(buffers_, first_node->piece, start_split_pos);
-    if (last_node == nullptr) {
+    auto new_first = trim_piece_right(buffers_, first_node.piece(), start_split_pos);
+    if (!last_node) {
         remove_node_range(first, count);
     } else {
-        auto end_split_pos = buffer_position(buffers_, last_node->piece, last.remainder);
-        auto new_last = trim_piece_left(buffers_, last_node->piece, end_split_pos);
+        auto end_split_pos = buffer_position(buffers_, last_node.piece(), last.remainder);
+        auto new_last = trim_piece_left(buffers_, last_node.piece(), end_split_pos);
         remove_node_range(first, count);
         // There's an edge case here where we delete all the nodes up to 'last' but
         // last itself remains untouched.  The test of 'remainder' in 'last' can identify

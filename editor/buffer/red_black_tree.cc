@@ -34,20 +34,6 @@ RedBlackTree internal_insert(const RedBlackTree& node,
 
 RedBlackTree::RedBlackTree(Color c,
                            const RedBlackTree& lft,
-                           const NodeData& val,
-                           const RedBlackTree& rgt) {
-    NodeData d = {
-        .piece = val.piece,
-        .left_length = lft.length(),
-        .left_lf_count = lft.line_feed_count(),
-        .subtree_length = lft.length() + val.piece.length + rgt.length(),
-        .subtree_lf_count = lft.line_feed_count() + val.piece.lf_count + rgt.line_feed_count(),
-    };
-    node_ = std::make_shared<Node>(c, lft.node_, d, rgt.node_);
-}
-
-RedBlackTree::RedBlackTree(Color c,
-                           const RedBlackTree& lft,
                            const Piece& p,
                            const RedBlackTree& rgt) {
     NodeData d = {

@@ -47,7 +47,6 @@ class RedBlackTree {
 public:
     RedBlackTree() = default;
     RedBlackTree(Color c, const RedBlackTree& lft, const Piece& p, const RedBlackTree& rgt);
-    RedBlackTree(Color c, const RedBlackTree& lft, const NodeData& val, const RedBlackTree& rgt);
 
     // Queries.
     explicit operator bool() const { return static_cast<bool>(node_); }
@@ -57,7 +56,6 @@ public:
     size_t left_line_feed_count() const { return !node_ ? 0 : node_->data.left_lf_count; }
     // clang-format off
     const Piece& piece() const { DCHECK(node_); return node_->data.piece; }
-    const NodeData& data() const { DCHECK(node_); return node_->data; }
     Color color() const { DCHECK(node_); return node_->color; }
     RedBlackTree left() const { DCHECK(node_); return {node_->left}; }
     RedBlackTree right() const { DCHECK(node_); return {node_->right}; }

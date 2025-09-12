@@ -12,6 +12,7 @@ namespace editor {
 
 struct NodePosition {
     const NodeData* node = nullptr;
+    const Piece* piece = nullptr;
     size_t remainder = 0;     // Remainder in current piece.
     size_t start_offset = 0;  // Node start offset in document.
     size_t line = 0;          // The line (relative to the document) where this node starts.
@@ -81,17 +82,17 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
 
     auto node = root;
     while (node) {
-        if (off < node.data().left_length) {
+        if (off < node.left_length()) {
             node = node.left();
-        } else if (off < node.data().left_length + node.data().piece.length) {
-            node_start_offset += node.data().left_length;
-            newline_count += node.data().left_lf_count;
+        } else if (off < node.left_length() + node.piece().length) {
+            node_start_offset += node.left_length();
+            newline_count += node.left_line_feed_count();
             // Now we find the line within this piece.
-            auto remainder = off - node.data().left_length;
-            auto pos = buffer_position(buffers, node.data().piece, remainder);
+            auto remainder = off - node.left_length();
+            auto pos = buffer_position(buffers, node.piece(), remainder);
             // Note: since buffer_position will return us a newline relative to the buffer itself,
             // we need to retract it by the starting line of the piece to get the real difference.
-            newline_count += pos.line - node.data().piece.first.line;
+            newline_count += pos.line - node.piece().first.line;
             return {
                 .node = &node.data(),
                 .remainder = remainder,
@@ -101,11 +102,11 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
         } else {
             // If there are no more nodes to traverse to, return this final node.
             if (!node.right()) {
-                auto offset_amount = node.data().left_length;
+                auto offset_amount = node.left_length();
                 node_start_offset += offset_amount;
-                newline_count += node.data().left_lf_count + node.data().piece.lf_count;
+                newline_count += node.left_line_feed_count() + node.piece().lf_count;
                 // Now we find the line within this piece.
-                auto remainder = node.data().piece.length;
+                auto remainder = node.piece().length;
                 return {
                     .node = &node.data(),
                     .remainder = remainder,
@@ -113,10 +114,10 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
                     .line = newline_count,
                 };
             }
-            auto offset_amount = node.data().left_length + node.data().piece.length;
+            auto offset_amount = node.left_length() + node.piece().length;
             off -= offset_amount;
             node_start_offset += offset_amount;
-            newline_count += node.data().left_lf_count + node.data().piece.lf_count;
+            newline_count += node.left_line_feed_count() + node.piece().lf_count;
             node = node.right();
         }
     }
@@ -190,15 +191,15 @@ void line_start(size_t* offset,
                 const RedBlackTree& node,
                 size_t line) {
     if (!node) return;
-    if (line <= node.data().left_lf_count) {
+    if (line <= node.left_line_feed_count()) {
         line_start<accumulate>(offset, buffers, node.left(), line);
     }
     // The desired line is directly within the node.
-    else if (line <= node.data().left_lf_count + node.data().piece.lf_count) {
-        line -= node.data().left_lf_count;
-        size_t len = node.data().left_length;
+    else if (line <= node.left_line_feed_count() + node.piece().lf_count) {
+        line -= node.left_line_feed_count();
+        size_t len = node.left_length();
         if (line != 0) {
-            len += (*accumulate)(buffers, node.data().piece, line - 1);
+            len += (*accumulate)(buffers, node.piece(), line - 1);
         }
         *offset += len;
 
@@ -207,8 +208,8 @@ void line_start(size_t* offset,
     else {
         // This case implies that 'left_subtree_lf_count' is strictly < line.
         // The content is somewhere in the middle.
-        line -= node.data().left_lf_count + node.data().piece.lf_count;
-        *offset += node.data().left_length + node.data().piece.length;
+        line -= node.left_line_feed_count() + node.piece().lf_count;
+        *offset += node.left_length() + node.piece().length;
         line_start<accumulate>(offset, buffers, node.right(), line);
     }
 }
@@ -400,7 +401,10 @@ std::string PieceTree::get_line_content_for_layout_use(size_t line) const {
 }
 
 Piece PieceTree::build_piece(std::string_view txt) {
-    auto start_offset = buffers_.mod_buffer.buffer.size();
+    auto& line_starts = buffers_.mod_buffer.line_starts;
+    auto& buffer = buffers_.mod_buffer.buffer;
+
+    auto start_offset = buffer.size();
     auto scratch_starts = populate_line_starts(txt);
     auto start = last_insert_;
     // Offset the new starts relative to the existing buffer.
@@ -408,22 +412,14 @@ Piece PieceTree::build_piece(std::string_view txt) {
         new_start += start_offset;
     }
     // Append new starts.
-    // Note: we can drop the first start because the algorithm always adds an empty start.
-    auto new_starts_end = scratch_starts.size();
-    buffers_.mod_buffer.line_starts.reserve(buffers_.mod_buffer.line_starts.size() +
-                                            new_starts_end);
-    for (size_t i = 1; i < new_starts_end; ++i) {
-        buffers_.mod_buffer.line_starts.emplace_back(scratch_starts[i]);
-    }
-    auto old_size = buffers_.mod_buffer.buffer.size();
-    buffers_.mod_buffer.buffer.resize(buffers_.mod_buffer.buffer.size() + txt.size());
-    auto insert_at = buffers_.mod_buffer.buffer.data() + old_size;
-    std::copy(txt.data(), txt.data() + txt.size(), insert_at);
+    // NOTE: We drop the first start because the algorithm always adds an empty start.
+    line_starts.insert(line_starts.end(), scratch_starts.begin() + 1, scratch_starts.end());
+    buffer.append(txt);
 
     // Build the new piece for the inserted buffer.
-    auto end_offset = buffers_.mod_buffer.buffer.size();
-    auto end_index = buffers_.mod_buffer.line_starts.size() - 1;
-    auto end_col = end_offset - buffers_.mod_buffer.line_starts[end_index];
+    auto end_offset = buffer.size();
+    auto end_index = line_starts.size() - 1;
+    auto end_col = end_offset - line_starts[end_index];
     BufferCursor end_pos = {.line = end_index, .column = end_col};
     Piece piece = {
         .type = BufferType::Mod,
@@ -502,7 +498,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     // 1. We are inserting at the beginning of an existing node.
     // 2. We are inserting at the end of an existing node.
     // 3. We are inserting in the middle of the node.
-    auto [node, remainder, node_start_offset, line] = result;
+    auto [node, piece, remainder, node_start_offset, line] = result;
     DCHECK_NE(node, nullptr);
 
     // Case #1.
@@ -755,7 +751,7 @@ void TreeWalker::populate_ptrs() {
     }
 
     if (dir == Direction::Center) {
-        auto& piece = node.data().piece;
+        auto& piece = node.piece();
         auto* buffer = buffers_->buffer_at(piece.type);
         auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
         auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
@@ -776,18 +772,18 @@ void TreeWalker::populate_ptrs() {
 void TreeWalker::fast_forward_to(size_t offset) {
     auto node = root_;
     while (node) {
-        if (node.data().left_length > offset) {
+        if (node.left_length() > offset) {
             // For when we revisit this node.
             stack_.back().dir = Direction::Center;
             node = node.left();
             stack_.push_back({node});
         }
         // It is inside this node.
-        else if (node.data().left_length + node.data().piece.length > offset) {
+        else if (node.left_length() + node.piece().length > offset) {
             stack_.back().dir = Direction::Right;
             // Make the offset relative to this piece.
-            offset -= node.data().left_length;
-            auto& piece = node.data().piece;
+            offset -= node.left_length();
+            auto& piece = node.piece();
             auto* buffer = buffers_->buffer_at(piece.type);
             auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
             auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
@@ -798,7 +794,7 @@ void TreeWalker::fast_forward_to(size_t offset) {
             DCHECK(!stack_.empty());
             // This parent is no longer relevant.
             stack_.pop_back();
-            auto offset_amount = node.data().left_length + node.data().piece.length;
+            auto offset_amount = node.left_length() + node.piece().length;
             offset -= offset_amount;
             node = node.right();
             stack_.push_back({node});
@@ -904,7 +900,7 @@ void ReverseTreeWalker::populate_ptrs() {
     }
 
     if (dir == Direction::Center) {
-        auto& piece = node.data().piece;
+        auto& piece = node.piece();
         auto* buffer = buffers->buffer_at(piece.type);
         auto first_offset = buffers->buffer_offset(piece.type, piece.first);
         auto last_offset = buffers->buffer_offset(piece.type, piece.last);
@@ -925,7 +921,7 @@ void ReverseTreeWalker::populate_ptrs() {
 void ReverseTreeWalker::fast_forward_to(size_t offset) {
     auto node = root;
     while (node) {
-        if (node.data().left_length > offset) {
+        if (node.left_length() > offset) {
             DCHECK(!stack.empty());
             // This parent is no longer relevant.
             stack.pop_back();
@@ -933,11 +929,11 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             stack.push_back({node});
         }
         // It is inside this node.
-        else if (node.data().left_length + node.data().piece.length > offset) {
+        else if (node.left_length() + node.piece().length > offset) {
             stack.back().dir = Direction::Left;
             // Make the offset relative to this piece.
-            offset -= node.data().left_length;
-            auto& piece = node.data().piece;
+            offset -= node.left_length();
+            auto& piece = node.piece();
             auto* buffer = buffers->buffer_at(piece.type);
             auto first_offset = buffers->buffer_offset(piece.type, piece.first);
             last_ptr = buffer->buffer.data() + first_offset;
@@ -946,7 +942,7 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
         } else {
             // For when we revisit this node.
             stack.back().dir = Direction::Center;
-            auto offset_amount = node.data().left_length + node.data().piece.length;
+            auto offset_amount = node.left_length() + node.piece().length;
             offset -= offset_amount;
             node = node.right();
             stack.push_back({node});

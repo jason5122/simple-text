@@ -8,22 +8,19 @@ namespace {
 
 using RBT = RedBlackTree;
 
-inline NodeData ND(size_t len, size_t lf) {
-    // left_subtree_* will be filled by the tree when building nodes.
-    return {.piece = {.length = len, .lf_count = lf}};
-}
+inline Piece P(size_t len, size_t lf) { return {.length = len, .lf_count = lf}; }
 
 // Black leaf.
-inline RBT BL(size_t len = 1, size_t lf = 0) { return {Color::Black, {}, ND(len, lf), {}}; }
+inline RBT BL(size_t len = 1, size_t lf = 0) { return {Color::Black, {}, P(len, lf), {}}; }
 // Red leaf.
-inline RBT RL(size_t len = 1, size_t lf = 0) { return {Color::Red, {}, ND(len, lf), {}}; }
+inline RBT RL(size_t len = 1, size_t lf = 0) { return {Color::Red, {}, P(len, lf), {}}; }
 // Black node.
 inline RBT B(const RBT& L, const RBT& R, size_t len = 1, size_t lf = 0) {
-    return {Color::Black, L, ND(len, lf), R};
+    return {Color::Black, L, P(len, lf), R};
 }
 // Red node.
 inline RBT R(const RBT& L, const RBT& R, size_t len = 1, size_t lf = 0) {
-    return {Color::Red, L, ND(len, lf), R};
+    return {Color::Red, L, P(len, lf), R};
 }
 
 }  // namespace
@@ -45,16 +42,15 @@ TEST(RedBlackTreeTest, Constructor) {
 
 TEST(RedBlackTreeTest, Insert) {
     RBT t;
-    t = t.insert(0, ND(5, 2));
+    t = t.insert(0, P(5, 2));
     EXPECT_EQ(t.length(), 5);
     EXPECT_EQ(t.line_feed_count(), 2);
-    EXPECT_EQ(t.data().piece.type, BufferType::Original);
 
-    t = t.insert(0, ND(10, 0));
+    t = t.insert(0, P(10, 0));
     EXPECT_EQ(t.length(), 15);
     EXPECT_EQ(t.line_feed_count(), 2);
 
-    t = t.insert(10, ND(1, 1));
+    t = t.insert(10, P(1, 1));
     EXPECT_EQ(t.length(), 16);
     EXPECT_EQ(t.line_feed_count(), 3);
 }
@@ -68,7 +64,7 @@ TEST(RedBlackTreeTest, RandomInserts) {
         size_t at = base::rand_generator(total_len + 1);
         size_t len = base::rand_int(1, 100);
         size_t lf = base::rand_generator(len);
-        t = t.insert(at, ND(len, lf));
+        t = t.insert(at, P(len, lf));
 
         total_len += len;
         total_lf += lf;

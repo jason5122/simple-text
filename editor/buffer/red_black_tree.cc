@@ -14,10 +14,10 @@ inline bool doubled_right(const RedBlackTree& t) { return is_red(t) && is_red(t.
 
 inline RedBlackTree paint(const RedBlackTree& node, Color c) {
     DCHECK(node);
-    return {c, node.left(), node.data(), node.right()};
+    return {c, node.left(), node.piece(), node.right()};
 }
 
-RedBlackTree balance(Color c, const RedBlackTree& lft, const NodeData& x, const RedBlackTree& rgt);
+RedBlackTree balance(Color c, const RedBlackTree& lft, const Piece& p, const RedBlackTree& rgt);
 RedBlackTree balance(const RedBlackTree& node);
 RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right);
 RedBlackTree balance_left(const RedBlackTree& left);
@@ -26,7 +26,7 @@ RedBlackTree remove_left(const RedBlackTree& root, size_t at, size_t total);
 RedBlackTree remove_right(const RedBlackTree& root, size_t at, size_t total);
 RedBlackTree rem(const RedBlackTree& root, size_t at, size_t total);
 RedBlackTree internal_insert(const RedBlackTree& node,
-                             const NodeData& x,
+                             const Piece& x,
                              size_t at,
                              size_t total_offset);
 
@@ -46,15 +46,29 @@ RedBlackTree::RedBlackTree(Color c,
     node_ = std::make_shared<Node>(c, lft.node_, d, rgt.node_);
 }
 
-RedBlackTree RedBlackTree::insert(size_t at, const NodeData& val) const {
-    RedBlackTree t = internal_insert(*this, val, at, 0);
-    return {Color::Black, t.left(), t.data(), t.right()};
+RedBlackTree::RedBlackTree(Color c,
+                           const RedBlackTree& lft,
+                           const Piece& p,
+                           const RedBlackTree& rgt) {
+    NodeData d = {
+        .piece = p,
+        .left_length = lft.length(),
+        .left_lf_count = lft.line_feed_count(),
+        .subtree_length = lft.length() + p.length + rgt.length(),
+        .subtree_lf_count = lft.line_feed_count() + p.lf_count + rgt.line_feed_count(),
+    };
+    node_ = std::make_shared<Node>(c, lft.node_, d, rgt.node_);
+}
+
+RedBlackTree RedBlackTree::insert(size_t at, const Piece& p) const {
+    RedBlackTree t = internal_insert(*this, p, at, 0);
+    return {Color::Black, t.left(), t.piece(), t.right()};
 }
 
 RedBlackTree RedBlackTree::remove(size_t at) const {
     auto t = rem(*this, at, 0);
     if (!t) return {};
-    return {Color::Black, t.left(), t.data(), t.right()};
+    return {Color::Black, t.left(), t.piece(), t.right()};
 }
 
 std::string RedBlackTree::to_string() const {
@@ -70,8 +84,8 @@ std::string RedBlackTree::to_string() const {
     }
 
     auto node_id = [](const RedBlackTree& n) -> uintptr_t {
-        // Use the NodeData address as a stable ID (OK for persistent trees).
-        return reinterpret_cast<uintptr_t>(&n.data());
+        // Use the piece address as a stable ID (OK for persistent trees).
+        return reinterpret_cast<uintptr_t>(&n.piece());
     };
 
     std::queue<RedBlackTree> q;
@@ -83,11 +97,11 @@ std::string RedBlackTree::to_string() const {
 
         uintptr_t id = node_id(cur);
 
-        const NodeData& d = cur.data();
+        const Piece& p = cur.piece();
         const bool is_red = (cur.color() == Color::Red);
-        out << "  n" << id << " [label=\"{" << (is_red ? "R" : "B")
-            << " | piece.len=" << d.piece.length << " | T.len=" << cur.length()
-            << "}\", color=" << (is_red ? "red" : "black") << "];\n";
+        out << "  n" << id << " [label=\"{" << (is_red ? "R" : "B") << " | piece.len=" << p.length
+            << " | T.len=" << cur.length() << "}\", color=" << (is_red ? "red" : "black")
+            << "];\n";
 
         if (auto L = cur.left()) {
             out << "  n" << id << " -> n" << node_id(L) << " [label=\"L\"];\n";
@@ -133,35 +147,32 @@ bool RedBlackTree::check_invariants() const {
 
 namespace {
 
-RedBlackTree balance(Color c,
-                     const RedBlackTree& lft,
-                     const NodeData& x,
-                     const RedBlackTree& rgt) {
+RedBlackTree balance(Color c, const RedBlackTree& lft, const Piece& p, const RedBlackTree& rgt) {
     if (c == Color::Black && doubled_left(lft)) {
         return {Color::Red,
                 paint(lft.left(), Color::Black),
-                lft.data(),
-                {Color::Black, lft.right(), x, rgt}};
+                lft.piece(),
+                {Color::Black, lft.right(), p, rgt}};
     }
     if (c == Color::Black && doubled_right(lft)) {
         return {Color::Red,
-                {Color::Black, lft.left(), lft.data(), lft.right().left()},
-                lft.right().data(),
-                {Color::Black, lft.right().right(), x, rgt}};
+                {Color::Black, lft.left(), lft.piece(), lft.right().left()},
+                lft.right().piece(),
+                {Color::Black, lft.right().right(), p, rgt}};
     }
     if (c == Color::Black && doubled_left(rgt)) {
         return {Color::Red,
-                {Color::Black, lft, x, rgt.left().left()},
-                rgt.left().data(),
-                {Color::Black, rgt.left().right(), rgt.data(), rgt.right()}};
+                {Color::Black, lft, p, rgt.left().left()},
+                rgt.left().piece(),
+                {Color::Black, rgt.left().right(), rgt.piece(), rgt.right()}};
     }
     if (c == Color::Black && doubled_right(rgt)) {
         return {Color::Red,
-                {Color::Black, lft, x, rgt.left()},
-                rgt.data(),
+                {Color::Black, lft, p, rgt.left()},
+                rgt.piece(),
                 paint(rgt.right(), Color::Black)};
     }
-    return {c, lft, x, rgt};
+    return {c, lft, p, rgt};
 }
 
 RedBlackTree balance(const RedBlackTree& node) {
@@ -169,11 +180,11 @@ RedBlackTree balance(const RedBlackTree& node) {
     if (is_red(node.left()) && is_red(node.right())) {
         auto l = paint(node.left(), Color::Black);
         auto r = paint(node.right(), Color::Black);
-        return {Color::Red, l, node.data(), r};
+        return {Color::Red, l, node.piece(), r};
     }
 
     DCHECK_EQ(node.color(), Color::Black);
-    return balance(node.color(), node.left(), node.data(), node.right());
+    return balance(node.color(), node.left(), node.piece(), node.right());
 }
 
 RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right) {
@@ -184,33 +195,33 @@ RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right) {
     // match: (left.color, right.color)
     // case: (B, R)
     if (is_black(left) && is_red(right)) {
-        return {Color::Red, fuse(left, right.left()), right.data(), right.right()};
+        return {Color::Red, fuse(left, right.left()), right.piece(), right.right()};
     }
     // case: (R, B)
     if (is_red(left) && is_black(right)) {
-        return {Color::Red, left.left(), left.data(), fuse(left.right(), right)};
+        return {Color::Red, left.left(), left.piece(), fuse(left.right(), right)};
     }
     // case: (R, R)
     if (is_red(left) && is_red(right)) {
         auto fused = fuse(left.right(), right.left());
         if (is_red(fused)) {
-            RedBlackTree new_left = {Color::Red, left.left(), left.data(), fused.left()};
-            RedBlackTree new_right = {Color::Red, fused.right(), right.data(), right.right()};
-            return {Color::Red, new_left, fused.data(), new_right};
+            RedBlackTree new_left = {Color::Red, left.left(), left.piece(), fused.left()};
+            RedBlackTree new_right = {Color::Red, fused.right(), right.piece(), right.right()};
+            return {Color::Red, new_left, fused.piece(), new_right};
         }
-        RedBlackTree new_right = {Color::Red, fused, right.data(), right.right()};
-        return {Color::Red, left.left(), left.data(), new_right};
+        RedBlackTree new_right = {Color::Red, fused, right.piece(), right.right()};
+        return {Color::Red, left.left(), left.piece(), new_right};
     }
     // case: (B, B)
     DCHECK(is_black(left) && is_black(right));
     auto fused = fuse(left.right(), right.left());
     if (is_red(fused)) {
-        RedBlackTree new_left = {Color::Black, left.left(), left.data(), fused.left()};
-        RedBlackTree new_right = {Color::Black, fused.right(), right.data(), right.right()};
-        return {Color::Red, new_left, fused.data(), new_right};
+        RedBlackTree new_left = {Color::Black, left.left(), left.piece(), fused.left()};
+        RedBlackTree new_right = {Color::Black, fused.right(), right.piece(), right.right()};
+        return {Color::Red, new_left, fused.piece(), new_right};
     }
-    RedBlackTree new_right = {Color::Black, fused, right.data(), right.right()};
-    RedBlackTree new_node = {Color::Red, left.left(), left.data(), new_right};
+    RedBlackTree new_right = {Color::Black, fused, right.piece(), right.right()};
+    RedBlackTree new_node = {Color::Red, left.left(), left.piece(), new_right};
     return balance_left(new_node);
 }
 
@@ -218,11 +229,11 @@ RedBlackTree balance_left(const RedBlackTree& left) {
     // match: (color_l, color_r, color_r_l)
     // case: (Some(R), ..)
     if (left.left() && left.left().color() == Color::Red) {
-        return {Color::Red, paint(left.left(), Color::Black), left.data(), left.right()};
+        return {Color::Red, paint(left.left(), Color::Black), left.piece(), left.right()};
     }
     // case: (_, Some(B), _)
     if (left.right() && left.right().color() == Color::Black) {
-        RedBlackTree new_left = {Color::Black, left.left(), left.data(),
+        RedBlackTree new_left = {Color::Black, left.left(), left.piece(),
                                  paint(left.right(), Color::Red)};
         return balance(new_left);
     }
@@ -230,12 +241,12 @@ RedBlackTree balance_left(const RedBlackTree& left) {
     if (left.right() && left.right().color() == Color::Red && left.right().left() &&
         left.right().left().color() == Color::Black) {
         RedBlackTree unbalanced_new_right = {Color::Black, left.right().left().right(),
-                                             left.right().data(),
+                                             left.right().piece(),
                                              paint(left.right().right(), Color::Red)};
         auto new_right = balance(unbalanced_new_right);
-        RedBlackTree new_left = {Color::Black, left.left(), left.data(),
+        RedBlackTree new_left = {Color::Black, left.left(), left.piece(),
                                  left.right().left().left()};
-        return {Color::Red, new_left, left.right().left().data(), new_right};
+        return {Color::Red, new_left, left.right().left().piece(), new_right};
     }
     NOTREACHED();
 }
@@ -244,11 +255,11 @@ RedBlackTree balance_right(const RedBlackTree& right) {
     // match: (color_l, color_l_r, color_r)
     // case: (.., Some(R))
     if (right.right() && right.right().color() == Color::Red) {
-        return {Color::Red, right.left(), right.data(), paint(right.right(), Color::Black)};
+        return {Color::Red, right.left(), right.piece(), paint(right.right(), Color::Black)};
     }
     // case: (Some(B), ..)
     if (right.left() && right.left().color() == Color::Black) {
-        RedBlackTree new_right = {Color::Black, paint(right.left(), Color::Red), right.data(),
+        RedBlackTree new_right = {Color::Black, paint(right.left(), Color::Red), right.piece(),
                                   right.right()};
         return balance(new_right);
     }
@@ -259,20 +270,20 @@ RedBlackTree balance_right(const RedBlackTree& right) {
             Color::Black,
             // Note: Because 'left' is red, it must have a left child.
             paint(right.left().left(), Color::Red),
-            right.left().data(),
+            right.left().piece(),
             right.left().right().left(),
         };
         auto new_left = balance(unbalanced_new_left);
-        RedBlackTree new_right = {Color::Black, right.left().right().right(), right.data(),
+        RedBlackTree new_right = {Color::Black, right.left().right().right(), right.piece(),
                                   right.right()};
-        return {Color::Red, new_left, right.left().right().data(), new_right};
+        return {Color::Red, new_left, right.left().right().piece(), new_right};
     }
     NOTREACHED();
 }
 
 RedBlackTree remove_left(const RedBlackTree& root, size_t at, size_t total) {
     auto new_left = rem(root.left(), at, total);
-    RedBlackTree new_node = {Color::Red, new_left, root.data(), root.right()};
+    RedBlackTree new_node = {Color::Red, new_left, root.piece(), root.right()};
     // In this case, the root was a red node and must've had at least two children.
     if (root.left() && root.left().color() == Color::Black) {
         return balance_left(new_node);
@@ -281,9 +292,8 @@ RedBlackTree remove_left(const RedBlackTree& root, size_t at, size_t total) {
 }
 
 RedBlackTree remove_right(const RedBlackTree& root, size_t at, size_t total) {
-    const NodeData& y = root.data();
-    auto new_right = rem(root.right(), at, total + y.left_length + y.piece.length);
-    RedBlackTree new_node = {Color::Red, root.left(), root.data(), new_right};
+    auto new_right = rem(root.right(), at, total + root.left_length() + root.piece().length);
+    RedBlackTree new_node = {Color::Red, root.left(), root.piece(), new_right};
     // In this case, the root was a red node and must've had at least two children.
     if (root.right() && root.right().color() == Color::Black) {
         return balance_right(new_node);
@@ -293,27 +303,26 @@ RedBlackTree remove_right(const RedBlackTree& root, size_t at, size_t total) {
 
 RedBlackTree rem(const RedBlackTree& root, size_t at, size_t total) {
     if (!root) return {};
-    const NodeData& y = root.data();
-    if (at < total + y.left_length) return remove_left(root, at, total);
-    if (at == total + y.left_length) return fuse(root.left(), root.right());
+    if (at < total + root.left_length()) return remove_left(root, at, total);
+    if (at == total + root.left_length()) return fuse(root.left(), root.right());
     return remove_right(root, at, total);
 }
 
 RedBlackTree internal_insert(const RedBlackTree& node,
-                             const NodeData& x,
+                             const Piece& p,
                              size_t at,
                              size_t total_offset) {
     if (!node) {
-        return {Color::Red, {}, x, {}};
+        return {Color::Red, {}, p, {}};
     }
 
-    const NodeData& y = node.data();
-    if (at < total_offset + y.left_length + y.piece.length) {
-        return balance(node.color(), internal_insert(node.left(), x, at, total_offset), y,
-                       node.right());
+    if (at < total_offset + node.left_length() + node.piece().length) {
+        return balance(node.color(), internal_insert(node.left(), p, at, total_offset),
+                       node.piece(), node.right());
     }
-    auto rgt = internal_insert(node.right(), x, at, total_offset + y.left_length + y.piece.length);
-    return balance(node.color(), node.left(), y, rgt);
+    auto rgt = internal_insert(node.right(), p, at,
+                               total_offset + node.left_length() + node.piece().length);
+    return balance(node.color(), node.left(), node.piece(), rgt);
 }
 
 }  // namespace

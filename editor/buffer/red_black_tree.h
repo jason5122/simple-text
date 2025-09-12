@@ -46,13 +46,17 @@ class RedBlackTree {
 
 public:
     RedBlackTree() = default;
+    RedBlackTree(Color c, const RedBlackTree& lft, const Piece& p, const RedBlackTree& rgt);
     RedBlackTree(Color c, const RedBlackTree& lft, const NodeData& val, const RedBlackTree& rgt);
 
     // Queries.
     explicit operator bool() const { return static_cast<bool>(node_); }
-    size_t length() const { return !node_ ? 0 : data().subtree_length; }
-    size_t line_feed_count() const { return !node_ ? 0 : data().subtree_lf_count; }
+    size_t length() const { return !node_ ? 0 : node_->data.subtree_length; }
+    size_t line_feed_count() const { return !node_ ? 0 : node_->data.subtree_lf_count; }
+    size_t left_length() const { return !node_ ? 0 : node_->data.left_length; }
+    size_t left_line_feed_count() const { return !node_ ? 0 : node_->data.left_lf_count; }
     // clang-format off
+    const Piece& piece() const { DCHECK(node_); return node_->data.piece; }
     const NodeData& data() const { DCHECK(node_); return node_->data; }
     Color color() const { DCHECK(node_); return node_->color; }
     RedBlackTree left() const { DCHECK(node_); return {node_->left}; }
@@ -60,7 +64,7 @@ public:
     // clang-format on
 
     // Mutators.
-    RedBlackTree insert(size_t at, const NodeData& val) const;
+    RedBlackTree insert(size_t at, const Piece& p) const;
     RedBlackTree remove(size_t at) const;
 
     // Helpers.

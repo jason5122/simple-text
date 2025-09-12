@@ -44,7 +44,7 @@ std::vector<size_t> populate_line_starts(std::string_view buf) {
 BufferCursor buffer_position(const BufferCollection& buffers,
                              const Piece& piece,
                              size_t remainder) {
-    const auto& starts = buffers.buffer_at(piece.buffer_type)->line_starts;
+    const auto& starts = buffers.buffer_at(piece.type)->line_starts;
     auto start_offset = starts[piece.first.line] + piece.first.column;
     auto offset = start_offset + remainder;
 
@@ -81,13 +81,13 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
 
     auto node = root;
     while (node) {
-        if (off < node.data().left_subtree_length) {
+        if (off < node.data().left_length) {
             node = node.left();
-        } else if (off < node.data().left_subtree_length + node.data().piece.length) {
-            node_start_offset += node.data().left_subtree_length;
-            newline_count += node.data().left_subtree_lf_count;
+        } else if (off < node.data().left_length + node.data().piece.length) {
+            node_start_offset += node.data().left_length;
+            newline_count += node.data().left_lf_count;
             // Now we find the line within this piece.
-            auto remainder = off - node.data().left_subtree_length;
+            auto remainder = off - node.data().left_length;
             auto pos = buffer_position(buffers, node.data().piece, remainder);
             // Note: since buffer_position will return us a newline relative to the buffer itself,
             // we need to retract it by the starting line of the piece to get the real difference.
@@ -101,10 +101,9 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
         } else {
             // If there are no more nodes to traverse to, return this final node.
             if (!node.right()) {
-                auto offset_amount = node.data().left_subtree_length;
+                auto offset_amount = node.data().left_length;
                 node_start_offset += offset_amount;
-                newline_count +=
-                    node.data().left_subtree_lf_count + node.data().piece.newline_count;
+                newline_count += node.data().left_lf_count + node.data().piece.lf_count;
                 // Now we find the line within this piece.
                 auto remainder = node.data().piece.length;
                 return {
@@ -114,10 +113,10 @@ NodePosition node_at(const RedBlackTree& root, const BufferCollection& buffers, 
                     .line = newline_count,
                 };
             }
-            auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
+            auto offset_amount = node.data().left_length + node.data().piece.length;
             off -= offset_amount;
             node_start_offset += offset_amount;
-            newline_count += node.data().left_subtree_lf_count + node.data().piece.newline_count;
+            newline_count += node.data().left_lf_count + node.data().piece.lf_count;
             node = node.right();
         }
     }
@@ -148,17 +147,17 @@ size_t lf_count_between_range(const BufferCollection& buffers,
 Piece trim_piece_right(const BufferCollection& buffers,
                        const Piece& piece,
                        const BufferCursor& pos) {
-    auto orig_end_offset = buffers.buffer_offset(piece.buffer_type, piece.last);
+    auto orig_end_offset = buffers.buffer_offset(piece.type, piece.last);
 
-    auto new_end_offset = buffers.buffer_offset(piece.buffer_type, pos);
-    auto new_lf_count = lf_count_between_range(buffers, piece.buffer_type, piece.first, pos);
+    auto new_end_offset = buffers.buffer_offset(piece.type, pos);
+    auto new_lf_count = lf_count_between_range(buffers, piece.type, piece.first, pos);
 
     auto len_delta = orig_end_offset - new_end_offset;
     auto new_len = piece.length - len_delta;
 
     auto new_piece = piece;
     new_piece.last = pos;
-    new_piece.newline_count = new_lf_count;
+    new_piece.lf_count = new_lf_count;
     new_piece.length = new_len;
 
     return new_piece;
@@ -167,17 +166,17 @@ Piece trim_piece_right(const BufferCollection& buffers,
 Piece trim_piece_left(const BufferCollection& buffers,
                       const Piece& piece,
                       const BufferCursor& pos) {
-    auto orig_start_offset = buffers.buffer_offset(piece.buffer_type, piece.first);
+    auto orig_start_offset = buffers.buffer_offset(piece.type, piece.first);
 
-    auto new_start_offset = buffers.buffer_offset(piece.buffer_type, pos);
-    auto new_lf_count = lf_count_between_range(buffers, piece.buffer_type, pos, piece.last);
+    auto new_start_offset = buffers.buffer_offset(piece.type, pos);
+    auto new_lf_count = lf_count_between_range(buffers, piece.type, pos, piece.last);
 
     auto len_delta = new_start_offset - orig_start_offset;
     auto new_len = piece.length - len_delta;
 
     auto new_piece = piece;
     new_piece.first = pos;
-    new_piece.newline_count = new_lf_count;
+    new_piece.lf_count = new_lf_count;
     new_piece.length = new_len;
 
     return new_piece;
@@ -191,13 +190,13 @@ void line_start(size_t* offset,
                 const RedBlackTree& node,
                 size_t line) {
     if (!node) return;
-    if (line <= node.data().left_subtree_lf_count) {
+    if (line <= node.data().left_lf_count) {
         line_start<accumulate>(offset, buffers, node.left(), line);
     }
     // The desired line is directly within the node.
-    else if (line <= node.data().left_subtree_lf_count + node.data().piece.newline_count) {
-        line -= node.data().left_subtree_lf_count;
-        size_t len = node.data().left_subtree_length;
+    else if (line <= node.data().left_lf_count + node.data().piece.lf_count) {
+        line -= node.data().left_lf_count;
+        size_t len = node.data().left_length;
         if (line != 0) {
             len += (*accumulate)(buffers, node.data().piece, line - 1);
         }
@@ -208,8 +207,8 @@ void line_start(size_t* offset,
     else {
         // This case implies that 'left_subtree_lf_count' is strictly < line.
         // The content is somewhere in the middle.
-        line -= node.data().left_subtree_lf_count + node.data().piece.newline_count;
-        *offset += node.data().left_subtree_length + node.data().piece.length;
+        line -= node.data().left_lf_count + node.data().piece.lf_count;
+        *offset += node.data().left_length + node.data().piece.length;
         line_start<accumulate>(offset, buffers, node.right(), line);
     }
 }
@@ -217,7 +216,7 @@ void line_start(size_t* offset,
 // Fetches the length of the piece starting from the first line to 'index' or to the end of
 // the piece.
 size_t accumulate_value(const BufferCollection* buffers, const Piece& piece, size_t index) {
-    auto* buffer = buffers->buffer_at(piece.buffer_type);
+    auto* buffer = buffers->buffer_at(piece.type);
     auto& line_starts = buffer->line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
@@ -233,7 +232,7 @@ size_t accumulate_value(const BufferCollection* buffers, const Piece& piece, siz
 // Fetches the length of the piece starting from the first line to 'index' or to the end of
 // the piece.
 size_t accumulate_value_no_lf(const BufferCollection* buffers, const Piece& piece, size_t index) {
-    auto* buffer = buffers->buffer_at(piece.buffer_type);
+    auto* buffer = buffers->buffer_at(piece.type);
     auto& line_starts = buffer->line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
@@ -270,13 +269,13 @@ PieceTree::PieceTree(std::string_view txt) {
         // Create a new node that spans this buffer and retains an index to it.
         // Insert the node into the balanced tree.
         Piece piece = {
-            .buffer_type = BufferType::Original,
+            .type = BufferType::Original,
             .first = {.line = 0, .column = 0},
             .last = {.line = last_line, .column = buf.buffer.size() - buf.line_starts[last_line]},
             .length = buf.buffer.size(),
-            .newline_count = last_line,
+            .lf_count = last_line,
         };
-        root_ = root_.insert({piece}, 0);
+        root_ = root_.insert(0, {piece});
     }
 }
 
@@ -284,38 +283,6 @@ PieceTree& PieceTree::operator=(std::string_view txt) {
     *this = PieceTree(txt);
     return *this;
 }
-
-namespace {
-// Borrowed from https://github.com/dotnwat/persistent-rbtree/blob/master/tree.h:checkConsistency.
-int check_black_node_invariant(const RedBlackTree& node) {
-    if (!node) return 1;
-    if (node.color() == Color::Red && ((node.left() && node.left().color() == Color::Red) ||
-                                       (node.right() && node.right().color() == Color::Red))) {
-        return 1;
-    }
-    auto l = check_black_node_invariant(node.left());
-    auto r = check_black_node_invariant(node.right());
-
-    if (l != 0 && r != 0 && l != r) return 0;
-
-    if (l != 0 && r != 0) return node.color() == Color::Red ? l : l + 1;
-    return 0;
-}
-
-bool satisfies_rb_invariants(const RedBlackTree& root) {
-    // 1. Every node is either red or black.
-    // 2. All NIL nodes (figure 1) are considered black.
-    // 3. A red node does not have a red child.
-    // 4. Every path from a given node to any of its descendant NIL nodes goes through the same
-    // number of black nodes.
-
-    // The internal nodes in this RB tree can be totally black so we will not count them directly,
-    // we'll just track odd nodes as either red or black. Measure the number of black nodes we need
-    // to validate.
-    if (!root || (!root.left() && !root.right())) return true;
-    return check_black_node_invariant(root) != 0;
-}
-}  // namespace
 
 LineRange PieceTree::get_line_range(size_t line) const {
     LineRange range;
@@ -459,11 +426,11 @@ Piece PieceTree::build_piece(std::string_view txt) {
     auto end_col = end_offset - buffers_.mod_buffer.line_starts[end_index];
     BufferCursor end_pos = {.line = end_index, .column = end_col};
     Piece piece = {
-        .buffer_type = BufferType::Mod,
+        .type = BufferType::Mod,
         .first = start,
         .last = end_pos,
         .length = end_offset - start_offset,
-        .newline_count = lf_count_between_range(buffers_, BufferType::Mod, start, end_pos),
+        .lf_count = lf_count_between_range(buffers_, BufferType::Mod, start, end_pos),
     };
     // Update the last insertion.
     last_insert_ = end_pos;
@@ -472,14 +439,14 @@ Piece PieceTree::build_piece(std::string_view txt) {
 
 void PieceTree::combine_pieces(NodePosition existing, Piece new_piece) {
     // This transformation is only valid under the following conditions.
-    DCHECK_EQ(existing.node->piece.buffer_type, BufferType::Mod);
+    DCHECK_EQ(existing.node->piece.type, BufferType::Mod);
     // This assumes that the piece was just built.
     DCHECK_EQ(existing.node->piece.last, new_piece.first);
     auto old_piece = existing.node->piece;
     new_piece.first = old_piece.first;
-    new_piece.newline_count = new_piece.newline_count + old_piece.newline_count;
+    new_piece.lf_count = new_piece.lf_count + old_piece.lf_count;
     new_piece.length = new_piece.length + old_piece.length;
-    root_ = root_.remove(existing.start_offset).insert({new_piece}, existing.start_offset);
+    root_ = root_.remove(existing.start_offset).insert(existing.start_offset, {new_piece});
 }
 
 void PieceTree::remove_node_range(NodePosition first, size_t length) {
@@ -510,18 +477,17 @@ void PieceTree::remove_node_range(NodePosition first, size_t length) {
 }
 
 void PieceTree::insert(size_t offset, std::string_view txt) {
+    base::ScopeExit guard{[&] { DCHECK(root_.check_invariants()); }};
+
     if (txt.empty()) return;
 
     // Can't redo if we're creating a new undo entry.
     if (!redo_stack_.empty()) redo_stack_.clear();
     undo_stack_.push_front(root_);
 
-    // TODO: Do we need ScopeExit here?
-    base::ScopeExit guard{[&] { DCHECK(satisfies_rb_invariants(root_)); }};
-
     if (!root_) {
         auto piece = build_piece(txt);
-        root_ = root_.insert({piece}, 0);
+        root_ = root_.insert(0, {piece});
         return;
     }
 
@@ -551,7 +517,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
         // 5. Re-insert the new piece.
         if (offset != 0) {
             auto prev_node_result = node_at(root_, buffers_, offset - 1);
-            if (prev_node_result.node->piece.buffer_type == BufferType::Mod &&
+            if (prev_node_result.node->piece.type == BufferType::Mod &&
                 prev_node_result.node->piece.last == last_insert_) {
                 auto new_piece = build_piece(txt);
                 combine_pieces(prev_node_result, new_piece);
@@ -559,7 +525,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
             }
         }
         auto piece = build_piece(txt);
-        root_ = root_.insert({piece}, offset);
+        root_ = root_.insert(offset, {piece});
         return;
     }
 
@@ -573,14 +539,14 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
         // 2. Remove the old piece.
         // 3. Extend the old piece's length to the length of the newly created piece.
         // 4. Re-insert the new piece.
-        if (node->piece.buffer_type == BufferType::Mod && node->piece.last == last_insert_) {
+        if (node->piece.type == BufferType::Mod && node->piece.last == last_insert_) {
             auto new_piece = build_piece(txt);
             combine_pieces(result, new_piece);
             return;
         }
         // Insert the new piece at the end.
         auto piece = build_piece(txt);
-        root_ = root_.insert({piece}, offset);
+        root_ = root_.insert(offset, {piece});
         return;
     }
 
@@ -588,13 +554,13 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     // The basic approach here is to split the existing node into two pieces
     // and insert the new piece in between them.
     auto insert_pos = buffer_position(buffers_, node->piece, remainder);
-    auto new_len_right = buffers_.buffer_offset(node->piece.buffer_type, node->piece.last) -
-                         buffers_.buffer_offset(node->piece.buffer_type, insert_pos);
+    auto new_len_right = buffers_.buffer_offset(node->piece.type, node->piece.last) -
+                         buffers_.buffer_offset(node->piece.type, insert_pos);
     auto new_piece_right = node->piece;
     new_piece_right.first = insert_pos;
     new_piece_right.length = new_len_right;
-    new_piece_right.newline_count =
-        lf_count_between_range(buffers_, node->piece.buffer_type, insert_pos, node->piece.last);
+    new_piece_right.lf_count =
+        lf_count_between_range(buffers_, node->piece.type, insert_pos, node->piece.last);
 
     // Remove the original node tail.
     auto new_piece_left = trim_piece_right(buffers_, node->piece, insert_pos);
@@ -605,26 +571,25 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     root_ = root_.remove(node_start_offset);
 
     // Insert the left.
-    root_ = root_.insert({new_piece_left}, node_start_offset);
+    root_ = root_.insert(node_start_offset, {new_piece_left});
 
     // Insert the new mid.
     node_start_offset = node_start_offset + new_piece_left.length;
-    root_ = root_.insert({new_piece}, node_start_offset);
+    root_ = root_.insert(node_start_offset, {new_piece});
 
     // Insert remainder.
     node_start_offset = node_start_offset + new_piece.length;
-    root_ = root_.insert({new_piece_right}, node_start_offset);
+    root_ = root_.insert(node_start_offset, {new_piece_right});
 }
 
 void PieceTree::erase(size_t offset, size_t count) {
+    base::ScopeExit guard{[&] { DCHECK(root_.check_invariants()); }};
+
     if (count == 0 || !root_) return;
 
     // Can't redo if we're creating a new undo entry.
     if (!redo_stack_.empty()) redo_stack_.clear();
     undo_stack_.push_front(root_);
-
-    // TODO: Do we need ScopeExit here?
-    base::ScopeExit guard{[&] { DCHECK(satisfies_rb_invariants(root_)); }};
 
     auto first = node_at(root_, buffers_, offset);
     auto last = node_at(root_, buffers_, offset + count);
@@ -645,8 +610,8 @@ void PieceTree::erase(size_t offset, size_t count) {
         root_ = root_.remove(first.start_offset);
         // Note: We insert right first so that the 'left' will be inserted to the right node's
         // left.
-        if (right.length > 0) root_ = root_.insert({right}, first.start_offset);
-        if (left.length > 0) root_ = root_.insert({left}, first.start_offset);
+        if (right.length > 0) root_ = root_.insert(first.start_offset, {right});
+        if (left.length > 0) root_ = root_.insert(first.start_offset, {left});
         return;
     }
 
@@ -670,13 +635,13 @@ void PieceTree::erase(size_t offset, size_t count) {
         // this scenario to avoid inserting a duplicate of 'last'.
         if (last.remainder != 0) {
             if (new_last.length != 0) {
-                root_ = root_.insert({new_last}, first.start_offset);
+                root_ = root_.insert(first.start_offset, {new_last});
             }
         }
     }
 
     if (new_first.length != 0) {
-        root_ = root_.insert({new_first}, first.start_offset);
+        root_ = root_.insert(first.start_offset, {new_first});
     }
 }
 
@@ -791,9 +756,9 @@ void TreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.data().piece;
-        auto* buffer = buffers_->buffer_at(piece.buffer_type);
-        auto first_offset = buffers_->buffer_offset(piece.buffer_type, piece.first);
-        auto last_offset = buffers_->buffer_offset(piece.buffer_type, piece.last);
+        auto* buffer = buffers_->buffer_at(piece.type);
+        auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
+        auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
         first_ptr_ = buffer->buffer.data() + first_offset;
         last_ptr_ = buffer->buffer.data() + last_offset;
         // Change this direction.
@@ -811,21 +776,21 @@ void TreeWalker::populate_ptrs() {
 void TreeWalker::fast_forward_to(size_t offset) {
     auto node = root_;
     while (node) {
-        if (node.data().left_subtree_length > offset) {
+        if (node.data().left_length > offset) {
             // For when we revisit this node.
             stack_.back().dir = Direction::Center;
             node = node.left();
             stack_.push_back({node});
         }
         // It is inside this node.
-        else if (node.data().left_subtree_length + node.data().piece.length > offset) {
+        else if (node.data().left_length + node.data().piece.length > offset) {
             stack_.back().dir = Direction::Right;
             // Make the offset relative to this piece.
-            offset -= node.data().left_subtree_length;
+            offset -= node.data().left_length;
             auto& piece = node.data().piece;
-            auto* buffer = buffers_->buffer_at(piece.buffer_type);
-            auto first_offset = buffers_->buffer_offset(piece.buffer_type, piece.first);
-            auto last_offset = buffers_->buffer_offset(piece.buffer_type, piece.last);
+            auto* buffer = buffers_->buffer_at(piece.type);
+            auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
+            auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
             first_ptr_ = buffer->buffer.data() + first_offset + offset;
             last_ptr_ = buffer->buffer.data() + last_offset;
             return;
@@ -833,7 +798,7 @@ void TreeWalker::fast_forward_to(size_t offset) {
             DCHECK(!stack_.empty());
             // This parent is no longer relevant.
             stack_.pop_back();
-            auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
+            auto offset_amount = node.data().left_length + node.data().piece.length;
             offset -= offset_amount;
             node = node.right();
             stack_.push_back({node});
@@ -940,9 +905,9 @@ void ReverseTreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.data().piece;
-        auto* buffer = buffers->buffer_at(piece.buffer_type);
-        auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
-        auto last_offset = buffers->buffer_offset(piece.buffer_type, piece.last);
+        auto* buffer = buffers->buffer_at(piece.type);
+        auto first_offset = buffers->buffer_offset(piece.type, piece.first);
+        auto last_offset = buffers->buffer_offset(piece.type, piece.last);
         last_ptr = buffer->buffer.data() + first_offset;
         first_ptr = buffer->buffer.data() + last_offset;
         // Change this direction.
@@ -960,7 +925,7 @@ void ReverseTreeWalker::populate_ptrs() {
 void ReverseTreeWalker::fast_forward_to(size_t offset) {
     auto node = root;
     while (node) {
-        if (node.data().left_subtree_length > offset) {
+        if (node.data().left_length > offset) {
             DCHECK(!stack.empty());
             // This parent is no longer relevant.
             stack.pop_back();
@@ -968,20 +933,20 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             stack.push_back({node});
         }
         // It is inside this node.
-        else if (node.data().left_subtree_length + node.data().piece.length > offset) {
+        else if (node.data().left_length + node.data().piece.length > offset) {
             stack.back().dir = Direction::Left;
             // Make the offset relative to this piece.
-            offset -= node.data().left_subtree_length;
+            offset -= node.data().left_length;
             auto& piece = node.data().piece;
-            auto* buffer = buffers->buffer_at(piece.buffer_type);
-            auto first_offset = buffers->buffer_offset(piece.buffer_type, piece.first);
+            auto* buffer = buffers->buffer_at(piece.type);
+            auto first_offset = buffers->buffer_offset(piece.type, piece.first);
             last_ptr = buffer->buffer.data() + first_offset;
             first_ptr = buffer->buffer.data() + first_offset + offset;
             return;
         } else {
             // For when we revisit this node.
             stack.back().dir = Direction::Center;
-            auto offset_amount = node.data().left_subtree_length + node.data().piece.length;
+            auto offset_amount = node.data().left_length + node.data().piece.length;
             offset -= offset_amount;
             node = node.right();
             stack.push_back({node});

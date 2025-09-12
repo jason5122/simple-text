@@ -37,6 +37,7 @@ source_set("editor_perftests") {
 
   sources = [
     "buffer/piece_tree_perftest.cc",
+    "buffer/red_black_tree_perftest.cc",
     "search/aho_corasick_perftest.cc",
   ]
 

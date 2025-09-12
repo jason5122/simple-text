@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/check.h"
+#include <format>
 #include <memory>
 
 namespace editor {
@@ -15,17 +16,17 @@ struct BufferCursor {
 enum class BufferType { Original, Mod };
 
 struct Piece {
-    BufferType buffer_type{};
+    BufferType type{};
     BufferCursor first{};
     BufferCursor last{};
     size_t length{};
-    size_t newline_count{};
+    size_t lf_count{};
 };
 
 struct NodeData {
     Piece piece{};
-    size_t left_subtree_length{};
-    size_t left_subtree_lf_count{};
+    size_t left_length{};
+    size_t left_lf_count{};
     size_t subtree_length{};
     size_t subtree_lf_count{};
 };
@@ -37,8 +38,6 @@ class RedBlackTree {
     using NodePtr = std::shared_ptr<const Node>;
 
     struct Node {
-        Node(Color c, const NodePtr& lft, const NodeData& data, const NodePtr& rgt);
-
         Color color;
         NodePtr left;
         NodeData data;
@@ -48,28 +47,42 @@ class RedBlackTree {
 public:
     RedBlackTree() = default;
     RedBlackTree(Color c, const RedBlackTree& lft, const NodeData& val, const RedBlackTree& rgt);
-    RedBlackTree(const NodePtr& node);
 
     // Queries.
-    explicit operator bool() const noexcept { return static_cast<bool>(node_); }
-    constexpr size_t length() const { return !node_ ? 0 : data().subtree_length; }
-    constexpr size_t line_feed_count() const { return !node_ ? 0 : data().subtree_lf_count; }
+    explicit operator bool() const { return static_cast<bool>(node_); }
+    size_t length() const { return !node_ ? 0 : data().subtree_length; }
+    size_t line_feed_count() const { return !node_ ? 0 : data().subtree_lf_count; }
     // clang-format off
     const NodeData& data() const { DCHECK(node_); return node_->data; }
+    Color color() const { DCHECK(node_); return node_->color; }
     RedBlackTree left() const { DCHECK(node_); return {node_->left}; }
     RedBlackTree right() const { DCHECK(node_); return {node_->right}; }
-    Color color() const { DCHECK(node_); return node_->color; }
     // clang-format on
 
     // Mutators.
-    RedBlackTree insert(const NodeData& x, size_t at) const;
+    RedBlackTree insert(size_t at, const NodeData& val) const;
     RedBlackTree remove(size_t at) const;
 
     // Helpers.
     bool operator==(const RedBlackTree&) const = default;
 
+    // Debug use.
+    std::string to_string() const;
+    bool check_invariants() const;
+
 private:
+    RedBlackTree(const NodePtr& node) : node_(node) {}
+
     NodePtr node_;
 };
 
 }  // namespace editor
+
+template <>
+struct std::formatter<editor::RedBlackTree> {
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+    template <class FormatContext>
+    auto format(const editor::RedBlackTree& t, FormatContext& ctx) const {
+        return std::format_to(ctx.out(), "{}", t.to_string());
+    }
+};

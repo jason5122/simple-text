@@ -446,18 +446,17 @@ void PieceTree::combine_pieces(NodePosition existing, Piece new_piece) {
 
 void PieceTree::remove_node_range(NodePosition first, size_t length) {
     // Remove pieces until we reach the desired length.
-    // Because we could be deleting content in the range starting at 'first' where the piece
-    // length could be much larger than 'length', we need to adjust 'length' to contain the
-    // delta in length within the piece to the end where 'length' starts:
-    // "abcd"  "efg"
+    // Because we could be deleting content in the range starting at 'first' where the piece length
+    // could be much larger than 'length', we need to adjust 'length' to contain the delta in
+    // length within the piece to the end where 'length' starts: "abcd"  "efg"
     //     ^     ^
     //     |_____|
     //      length to delete = 3
     // P1 length: 4
     // P2 length: 3 (though this length does not matter)
-    // We're going to remove all of 'P1' and 'P2' in this range and the caller will re-insert
-    // these pieces with the correct lengths.  If we fail to adjust 'length' we will delete P1
-    // and believe that the entire range was deleted.
+    // We're going to remove all of 'P1' and 'P2' in this range and the caller will re-insert these
+    // pieces with the correct lengths.  If we fail to adjust 'length' we will delete P1 and
+    // believe that the entire range was deleted.
     DCHECK(first.node);
     auto total_length = first.node.piece().length;
     length = length - (total_length - first.remainder) + total_length;
@@ -503,8 +502,8 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     // Case #1.
     if (node_start_offset == offset) {
         // There's a bonus case here.  If our last insertion point was the same as this piece's
-        // last and it inserted into the mod buffer, then we can simply 'extend' this piece by
-        // the following process:
+        // last and it inserted into the mod buffer, then we can simply 'extend' this piece by the
+        // following process:
         // 1. Fetch the previous node (if we can) and compare.
         // 2. Build the new piece.
         // 3. Remove the old piece.
@@ -546,8 +545,8 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     }
 
     // Case #3.
-    // The basic approach here is to split the existing node into two pieces
-    // and insert the new piece in between them.
+    // The basic approach here is to split the existing node into two pieces and insert the new
+    // piece in between them.
     auto insert_pos = buffer_position(buffers_, node.piece(), remainder);
     auto new_len_right = buffers_.buffer_offset(node.piece().type, node.piece().last) -
                          buffers_.buffer_offset(node.piece().type, insert_pos);
@@ -659,8 +658,11 @@ bool PieceTree::redo() {
 }
 
 TreeWalker::TreeWalker(const PieceTree* tree, size_t offset)
-    : buffers_{&tree->buffers_}, root_{tree->root_}, length_{tree->length()}, stack_{{root_}} {
-    total_offset_ = std::min(offset, tree->length());
+    : buffers_{&tree->buffers_},
+      root_{tree->root_},
+      length_{tree->length()},
+      stack_{{root_}},
+      total_offset_{std::min(offset, tree->length())} {
     fast_forward_to(total_offset_);
 }
 
@@ -802,53 +804,53 @@ void TreeWalker::fast_forward_to(size_t offset) {
 }
 
 ReverseTreeWalker::ReverseTreeWalker(const PieceTree* tree, size_t offset)
-    : buffers{&tree->buffers_}, root{tree->root_}, stack{{root}} {
-    total_offset = std::min(offset, tree->length());
-    fast_forward_to(total_offset);
+    : buffers_{&tree->buffers_}, root_{tree->root_}, stack_{{root_}} {
+    total_offset_ = std::min(offset, tree->length());
+    fast_forward_to(total_offset_);
 }
 
 char ReverseTreeWalker::next() {
-    if (first_ptr == last_ptr) {
+    if (first_ptr_ == last_ptr_) {
         populate_ptrs();
         // If this is exhausted, we're done.
         if (exhausted()) return '\0';
         // Catchall.
-        if (first_ptr == last_ptr) return next();
+        if (first_ptr_ == last_ptr_) return next();
     }
     // Since CharOffset is unsigned, this will end up wrapping, both 'exhausted' and 'remaining'
     // will return 'true' and '0' respectively.
     // TODO: Consider changing wrapping behavior.
-    total_offset--;
+    total_offset_--;
     // A dereference is the pointer value _before_ this actual pointer, just like STL reverse
     // iterator models.
-    return *(--first_ptr);
+    return *(--first_ptr_);
 }
 
 char ReverseTreeWalker::current() {
-    if (first_ptr == last_ptr) {
+    if (first_ptr_ == last_ptr_) {
         populate_ptrs();
         // If this is exhausted, we're done.
         if (exhausted()) return '\0';
     }
-    return *(first_ptr - 1);
+    return *(first_ptr_ - 1);
 }
 
 void ReverseTreeWalker::seek(size_t offset) {
-    stack.clear();
-    stack.push_back({root});
-    total_offset = offset;
+    stack_.clear();
+    stack_.push_back({root_});
+    total_offset_ = offset;
     fast_forward_to(offset);
 }
 
 bool ReverseTreeWalker::exhausted() const {
-    if (stack.empty()) return true;
+    if (stack_.empty()) return true;
     // If we have not exhausted the pointers, we're still active.
-    if (first_ptr != last_ptr) return false;
+    if (first_ptr_ != last_ptr_) return false;
     // If there's more than one entry on the stack, we're still active.
-    if (stack.size() > 1) return false;
+    if (stack_.size() > 1) return false;
     // Now, if there's exactly one entry and that entry itself is exhausted (no right subtree)
     // we're done.
-    auto& entry = stack.back();
+    auto& entry = stack_.back();
     // We descended into a null child, we're done.
     if (!entry.node) return true;
     // Do we need this check for reverse iterators?
@@ -877,74 +879,74 @@ char32_t ReverseTreeWalker::next_codepoint() {
 
 void ReverseTreeWalker::populate_ptrs() {
     if (exhausted()) return;
-    if (!stack.back().node) {
-        stack.pop_back();
+    if (!stack_.back().node) {
+        stack_.pop_back();
         populate_ptrs();
         return;
     }
 
-    auto& [node, dir] = stack.back();
+    auto& [node, dir] = stack_.back();
     if (dir == Direction::Right) {
         if (node.right()) {
             auto right = node.right();
             // Change the dir for when we pop back.
-            stack.back().dir = Direction::Center;
-            stack.push_back({right});
+            stack_.back().dir = Direction::Center;
+            stack_.push_back({right});
             populate_ptrs();
             return;
         }
         // Otherwise, let's visit the center, we can actually fallthrough.
-        stack.back().dir = Direction::Center;
+        stack_.back().dir = Direction::Center;
         dir = Direction::Center;
     }
 
     if (dir == Direction::Center) {
         auto& piece = node.piece();
-        auto* buffer = buffers->buffer_at(piece.type);
-        auto first_offset = buffers->buffer_offset(piece.type, piece.first);
-        auto last_offset = buffers->buffer_offset(piece.type, piece.last);
-        last_ptr = buffer->buffer.data() + first_offset;
-        first_ptr = buffer->buffer.data() + last_offset;
+        auto* buffer = buffers_->buffer_at(piece.type);
+        auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
+        auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
+        last_ptr_ = buffer->buffer.data() + first_offset;
+        first_ptr_ = buffer->buffer.data() + last_offset;
         // Change this direction.
-        stack.back().dir = Direction::Left;
+        stack_.back().dir = Direction::Left;
         return;
     }
 
     DCHECK_EQ(dir, Direction::Left);
     auto left = node.left();
-    stack.pop_back();
-    stack.push_back({left});
+    stack_.pop_back();
+    stack_.push_back({left});
     populate_ptrs();
 }
 
 void ReverseTreeWalker::fast_forward_to(size_t offset) {
-    auto node = root;
+    auto node = root_;
     while (node) {
         if (node.left_length() > offset) {
-            DCHECK(!stack.empty());
+            DCHECK(!stack_.empty());
             // This parent is no longer relevant.
-            stack.pop_back();
+            stack_.pop_back();
             node = node.left();
-            stack.push_back({node});
+            stack_.push_back({node});
         }
         // It is inside this node.
         else if (node.left_length() + node.piece().length > offset) {
-            stack.back().dir = Direction::Left;
+            stack_.back().dir = Direction::Left;
             // Make the offset relative to this piece.
             offset -= node.left_length();
             auto& piece = node.piece();
-            auto* buffer = buffers->buffer_at(piece.type);
-            auto first_offset = buffers->buffer_offset(piece.type, piece.first);
-            last_ptr = buffer->buffer.data() + first_offset;
-            first_ptr = buffer->buffer.data() + first_offset + offset;
+            auto* buffer = buffers_->buffer_at(piece.type);
+            auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
+            last_ptr_ = buffer->buffer.data() + first_offset;
+            first_ptr_ = buffer->buffer.data() + first_offset + offset;
             return;
         } else {
             // For when we revisit this node.
-            stack.back().dir = Direction::Center;
+            stack_.back().dir = Direction::Center;
             auto offset_amount = node.left_length() + node.piece().length;
             offset -= offset_amount;
             node = node.right();
-            stack.push_back({node});
+            stack_.push_back({node});
         }
     }
 }

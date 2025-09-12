@@ -129,8 +129,8 @@ public:
     char32_t next_codepoint();
     void seek(size_t offset);
     bool exhausted() const;
-    constexpr size_t remaining() const { return total_offset + 1; }
-    constexpr size_t offset() const { return total_offset; }
+    constexpr size_t remaining() const { return total_offset_ + 1; }
+    constexpr size_t offset() const { return total_offset_; }
 
 private:
     void populate_ptrs();
@@ -143,12 +143,12 @@ private:
         Direction dir = Direction::Right;
     };
 
-    const BufferCollection* buffers;
-    RedBlackTree root;
-    std::vector<StackEntry> stack;
-    size_t total_offset = 0;
-    const char* first_ptr = nullptr;
-    const char* last_ptr = nullptr;
+    const BufferCollection* buffers_;
+    RedBlackTree root_;
+    std::vector<StackEntry> stack_;
+    size_t total_offset_ = 0;
+    const char* first_ptr_ = nullptr;
+    const char* last_ptr_ = nullptr;
 };
 
 }  // namespace editor

@@ -3,7 +3,6 @@
 #include "editor/buffer/red_black_tree.h"
 #include <format>
 #include <forward_list>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -19,10 +18,7 @@ struct CharBuffer {
 };
 
 struct BufferCollection {
-    const CharBuffer* buffer_at(BufferType buffer_type) const;
-    size_t buffer_offset(BufferType buffer_type, const BufferCursor& cursor) const;
-
-    std::shared_ptr<const CharBuffer> orig_buffer;
+    CharBuffer orig_buffer;
     CharBuffer mod_buffer;
 };
 

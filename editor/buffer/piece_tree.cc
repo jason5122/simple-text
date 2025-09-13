@@ -4,7 +4,6 @@
 #include "base/unicode/utf8_decoder.h"
 #include "editor/buffer/piece_tree.h"
 #include "editor/search/aho_corasick.h"
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,26 +16,24 @@ struct NodePosition {
     size_t line = 0;          // The line (relative to the document) where this node starts.
 };
 
-const CharBuffer* BufferCollection::buffer_at(BufferType buffer_type) const {
-    return buffer_type == BufferType::Mod ? &mod_buffer : orig_buffer.get();
+namespace {
+
+const CharBuffer& get_buffer(const BufferCollection& buffers, BufferType type) {
+    return type == BufferType::Mod ? buffers.mod_buffer : buffers.orig_buffer;
 }
 
-size_t BufferCollection::buffer_offset(BufferType buffer_type, const BufferCursor& cursor) const {
-    auto& starts = buffer_at(buffer_type)->line_starts;
+size_t get_offset(const BufferCollection& buffers, BufferType type, const BufferCursor& cursor) {
+    const auto& starts = get_buffer(buffers, type).line_starts;
     return starts[cursor.line] + cursor.column;
 }
 
-namespace {
-
 std::vector<size_t> populate_line_starts(std::string_view buf) {
     std::vector<size_t> starts;
-    starts.emplace_back(0);
-    const auto len = buf.size();
-    for (size_t i = 0; i < len; ++i) {
-        char c = buf[i];
-        if (c == '\n') {
-            starts.emplace_back(i + 1);
-        }
+    starts.push_back(0);
+    size_t pos = 0;
+    while ((pos = buf.find('\n', pos)) != std::string_view::npos) {
+        starts.push_back(pos + 1);
+        ++pos;  // Continue after the newline.
     }
     return starts;
 }
@@ -44,7 +41,7 @@ std::vector<size_t> populate_line_starts(std::string_view buf) {
 BufferCursor buffer_position(const BufferCollection& buffers,
                              const Piece& piece,
                              size_t remainder) {
-    const auto& starts = buffers.buffer_at(piece.type)->line_starts;
+    const auto& starts = get_buffer(buffers, piece.type).line_starts;
     auto start_offset = starts[piece.first.line] + piece.first.column;
     auto offset = start_offset + remainder;
 
@@ -130,7 +127,7 @@ size_t lf_count_between_range(const BufferCollection& buffers,
     // If the end position is the beginning of a new line, then we can just return the difference
     // in lines.
     if (end.column == 0) return end.line - start.line;
-    auto& starts = buffers.buffer_at(buffer_type)->line_starts;
+    const auto& starts = get_buffer(buffers, buffer_type).line_starts;
     // It means, there is no LF after end.
     if (end.line == starts.size() - 1) return end.line - start.line;
     // Due to the check above, we know that there's at least one more line after 'end.line'.
@@ -147,9 +144,9 @@ size_t lf_count_between_range(const BufferCollection& buffers,
 Piece trim_piece_right(const BufferCollection& buffers,
                        const Piece& piece,
                        const BufferCursor& pos) {
-    auto orig_end_offset = buffers.buffer_offset(piece.type, piece.last);
+    auto orig_end_offset = get_offset(buffers, piece.type, piece.last);
 
-    auto new_end_offset = buffers.buffer_offset(piece.type, pos);
+    auto new_end_offset = get_offset(buffers, piece.type, pos);
     auto new_lf_count = lf_count_between_range(buffers, piece.type, piece.first, pos);
 
     auto len_delta = orig_end_offset - new_end_offset;
@@ -166,9 +163,9 @@ Piece trim_piece_right(const BufferCollection& buffers,
 Piece trim_piece_left(const BufferCollection& buffers,
                       const Piece& piece,
                       const BufferCursor& pos) {
-    auto orig_start_offset = buffers.buffer_offset(piece.type, piece.first);
+    auto orig_start_offset = get_offset(buffers, piece.type, piece.first);
 
-    auto new_start_offset = buffers.buffer_offset(piece.type, pos);
+    auto new_start_offset = get_offset(buffers, piece.type, pos);
     auto new_lf_count = lf_count_between_range(buffers, piece.type, pos, piece.last);
 
     auto len_delta = new_start_offset - orig_start_offset;
@@ -216,8 +213,7 @@ void line_start(size_t* offset,
 // Fetches the length of the piece starting from the first line to 'index' or to the end of
 // the piece.
 size_t accumulate_value(const BufferCollection* buffers, const Piece& piece, size_t index) {
-    auto* buffer = buffers->buffer_at(piece.type);
-    auto& line_starts = buffer->line_starts;
+    const auto& line_starts = get_buffer(*buffers, piece.type).line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
     auto first = line_starts[piece.first.line] + piece.first.column;
@@ -232,36 +228,34 @@ size_t accumulate_value(const BufferCollection* buffers, const Piece& piece, siz
 // Fetches the length of the piece starting from the first line to 'index' or to the end of
 // the piece.
 size_t accumulate_value_no_lf(const BufferCollection* buffers, const Piece& piece, size_t index) {
-    auto* buffer = buffers->buffer_at(piece.type);
-    auto& line_starts = buffer->line_starts;
+    const auto& buffer = get_buffer(*buffers, piece.type);
+    auto& line_starts = buffer.line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
     auto first = line_starts[piece.first.line] + piece.first.column;
     if (expected_start > piece.last.line) {
         auto last = line_starts[piece.last.line] + piece.last.column;
         if (last == first) return 0;
-        if (buffer->buffer[last - 1] == '\n') return last - 1 - first;
+        if (buffer.buffer[last - 1] == '\n') return last - 1 - first;
         return last - first;
     }
     auto last = line_starts[expected_start];
     if (last == first) return 0;
-    if (buffer->buffer[last - 1] == '\n') return last - 1 - first;
+    if (buffer.buffer[last - 1] == '\n') return last - 1 - first;
     return last - first;
 }
 
 }  // namespace
 
 PieceTree::PieceTree(std::string_view txt) {
-    buffers_ = BufferCollection{
-        .orig_buffer = std::make_shared<CharBuffer>(std::string{txt}, populate_line_starts(txt)),
-    };
+    buffers_ = BufferCollection{.orig_buffer = {std::string{txt}, populate_line_starts(txt)}};
 
     // In order to maintain the invariant of other buffers, the mod_buffer needs a single
     // line-start of 0.
     buffers_.mod_buffer.line_starts.emplace_back(0);
     last_insert_ = {};
 
-    const auto& buf = *buffers_.orig_buffer;
+    const auto& buf = buffers_.orig_buffer;
     DCHECK(!buf.line_starts.empty());
     // If this immutable buffer is empty, we can avoid creating a piece for it altogether.
     if (!buf.buffer.empty()) {
@@ -548,8 +542,8 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     // The basic approach here is to split the existing node into two pieces and insert the new
     // piece in between them.
     auto insert_pos = buffer_position(buffers_, node.piece(), remainder);
-    auto new_len_right = buffers_.buffer_offset(node.piece().type, node.piece().last) -
-                         buffers_.buffer_offset(node.piece().type, insert_pos);
+    auto new_len_right = get_offset(buffers_, node.piece().type, node.piece().last) -
+                         get_offset(buffers_, node.piece().type, insert_pos);
     auto new_piece_right = node.piece();
     new_piece_right.first = insert_pos;
     new_piece_right.length = new_len_right;
@@ -753,11 +747,11 @@ void TreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.piece();
-        auto* buffer = buffers_->buffer_at(piece.type);
-        auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
-        auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
-        first_ptr_ = buffer->buffer.data() + first_offset;
-        last_ptr_ = buffer->buffer.data() + last_offset;
+        const auto& buffer = get_buffer(*buffers_, piece.type);
+        auto first_offset = get_offset(*buffers_, piece.type, piece.first);
+        auto last_offset = get_offset(*buffers_, piece.type, piece.last);
+        first_ptr_ = buffer.buffer.data() + first_offset;
+        last_ptr_ = buffer.buffer.data() + last_offset;
         // Change this direction.
         stack_.back().dir = Direction::Right;
         return;
@@ -785,11 +779,11 @@ void TreeWalker::fast_forward_to(size_t offset) {
             // Make the offset relative to this piece.
             offset -= node.left_length();
             auto& piece = node.piece();
-            auto* buffer = buffers_->buffer_at(piece.type);
-            auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
-            auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
-            first_ptr_ = buffer->buffer.data() + first_offset + offset;
-            last_ptr_ = buffer->buffer.data() + last_offset;
+            const auto& buffer = get_buffer(*buffers_, piece.type);
+            auto first_offset = get_offset(*buffers_, piece.type, piece.first);
+            auto last_offset = get_offset(*buffers_, piece.type, piece.last);
+            first_ptr_ = buffer.buffer.data() + first_offset + offset;
+            last_ptr_ = buffer.buffer.data() + last_offset;
             return;
         } else {
             DCHECK(!stack_.empty());
@@ -902,11 +896,11 @@ void ReverseTreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.piece();
-        auto* buffer = buffers_->buffer_at(piece.type);
-        auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
-        auto last_offset = buffers_->buffer_offset(piece.type, piece.last);
-        last_ptr_ = buffer->buffer.data() + first_offset;
-        first_ptr_ = buffer->buffer.data() + last_offset;
+        const auto& buffer = get_buffer(*buffers_, piece.type);
+        auto first_offset = get_offset(*buffers_, piece.type, piece.first);
+        auto last_offset = get_offset(*buffers_, piece.type, piece.last);
+        last_ptr_ = buffer.buffer.data() + first_offset;
+        first_ptr_ = buffer.buffer.data() + last_offset;
         // Change this direction.
         stack_.back().dir = Direction::Left;
         return;
@@ -935,10 +929,10 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             // Make the offset relative to this piece.
             offset -= node.left_length();
             auto& piece = node.piece();
-            auto* buffer = buffers_->buffer_at(piece.type);
-            auto first_offset = buffers_->buffer_offset(piece.type, piece.first);
-            last_ptr_ = buffer->buffer.data() + first_offset;
-            first_ptr_ = buffer->buffer.data() + first_offset + offset;
+            const auto& buffer = get_buffer(*buffers_, piece.type);
+            auto first_offset = get_offset(*buffers_, piece.type, piece.first);
+            last_ptr_ = buffer.buffer.data() + first_offset;
+            first_ptr_ = buffer.buffer.data() + first_offset + offset;
             return;
         } else {
             // For when we revisit this node.

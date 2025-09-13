@@ -81,7 +81,7 @@ size_t move_to_next_glyph(const font::LineLayout& layout, size_t col) {
 }
 
 size_t prev_word_start(const PieceTree& tree, size_t offset) {
-    ReverseTreeWalker reverse_walker{&tree, offset};
+    ReverseTreeWalker reverse_walker{tree, offset};
 
     std::optional<int32_t> prev_cp;
     size_t prev_offset = offset;
@@ -110,7 +110,7 @@ size_t prev_word_start(const PieceTree& tree, size_t offset) {
 }
 
 size_t next_word_end(const PieceTree& tree, size_t offset) {
-    TreeWalker walker{&tree, offset};
+    TreeWalker walker{tree, offset};
 
     std::optional<int32_t> prev_cp;
     size_t prev_offset = offset;
@@ -139,8 +139,8 @@ size_t next_word_end(const PieceTree& tree, size_t offset) {
 }
 
 std::pair<size_t, size_t> surrounding_word(const PieceTree& tree, size_t offset) {
-    auto walker = TreeWalker{&tree, offset};
-    auto reverse_walker = ReverseTreeWalker{&tree, offset};
+    auto walker = TreeWalker{tree, offset};
+    auto reverse_walker = ReverseTreeWalker{tree, offset};
 
     // TODO: Implement peek so we don't need to reset the walkers below.
     // `std::max` just means we prioritize words, then punctuation, then whitespace.
@@ -150,10 +150,10 @@ std::pair<size_t, size_t> surrounding_word(const PieceTree& tree, size_t offset)
     size_t start = offset;
     size_t end = offset;
     // TODO: Implement peek so we don't need to reset the walker here.
-    reverse_walker = ReverseTreeWalker{&tree, offset};
-    while (!reverse_walker.exhausted()) {
-        int32_t cp = reverse_walker.next_codepoint();
-        size_t offset = reverse_walker.offset();
+    auto reverse_walker2 = ReverseTreeWalker{tree, offset};
+    while (!reverse_walker2.exhausted()) {
+        int32_t cp = reverse_walker2.next_codepoint();
+        size_t offset = reverse_walker2.offset();
 
         auto kind = to_kind(cp);
         if (kind == word_kind && cp != '\n') {
@@ -163,10 +163,10 @@ std::pair<size_t, size_t> surrounding_word(const PieceTree& tree, size_t offset)
         }
     }
     // TODO: Implement peek so we don't need to reset the walker here.
-    walker = TreeWalker{&tree, offset};
-    while (!walker.exhausted()) {
-        int32_t cp = walker.next_codepoint();
-        size_t offset = walker.offset();
+    auto walker2 = TreeWalker{tree, offset};
+    while (!walker2.exhausted()) {
+        int32_t cp = walker2.next_codepoint();
+        size_t offset = walker2.offset();
 
         auto kind = to_kind(cp);
         if (kind == word_kind && cp != '\n') {
@@ -179,8 +179,8 @@ std::pair<size_t, size_t> surrounding_word(const PieceTree& tree, size_t offset)
 }
 
 bool is_inside_word(const PieceTree& tree, size_t offset) {
-    auto walker = TreeWalker{&tree, offset};
-    auto reverse_walker = ReverseTreeWalker{&tree, offset};
+    auto walker = TreeWalker{tree, offset};
+    auto reverse_walker = ReverseTreeWalker{tree, offset};
     auto prev_kind = to_kind(reverse_walker.next_codepoint());
     auto next_kind = to_kind(walker.next_codepoint());
     return prev_kind == CharKind::kWord && next_kind == CharKind::kWord;

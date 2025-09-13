@@ -80,7 +80,7 @@ AhoCorasick::MatchResult AhoCorasick::match(const PieceTree& tree) const {
 
     ACState* state = 0;
     // TODO: Implement starting/stopping at a specific index.
-    TreeWalker walker{&tree};
+    TreeWalker walker{tree};
 
     // Skip leading chars that are not valid input of root-nodes.
     if (buf->root_goto_num != 255) [[likely]] {

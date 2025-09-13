@@ -179,11 +179,11 @@ Piece trim_piece_left(const BufferCollection& buffers,
     return new_piece;
 }
 
-using Accumulator = size_t (*)(const BufferCollection*, const Piece&, size_t);
+using Accumulator = size_t (*)(const BufferCollection&, const Piece&, size_t);
 
 template <Accumulator accumulate>
 void line_start(size_t* offset,
-                const BufferCollection* buffers,
+                const BufferCollection& buffers,
                 const RedBlackTree& node,
                 size_t line) {
     if (!node) return;
@@ -212,8 +212,8 @@ void line_start(size_t* offset,
 
 // Fetches the length of the piece starting from the first line to 'index' or to the end of
 // the piece.
-size_t accumulate_value(const BufferCollection* buffers, const Piece& piece, size_t index) {
-    const auto& line_starts = get_buffer(*buffers, piece.type).line_starts;
+size_t accumulate_value(const BufferCollection& buffers, const Piece& piece, size_t index) {
+    const auto& line_starts = get_buffer(buffers, piece.type).line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
     auto first = line_starts[piece.first.line] + piece.first.column;
@@ -227,8 +227,8 @@ size_t accumulate_value(const BufferCollection* buffers, const Piece& piece, siz
 
 // Fetches the length of the piece starting from the first line to 'index' or to the end of
 // the piece.
-size_t accumulate_value_no_lf(const BufferCollection* buffers, const Piece& piece, size_t index) {
-    const auto& buffer = get_buffer(*buffers, piece.type);
+size_t accumulate_value_no_lf(const BufferCollection& buffers, const Piece& piece, size_t index) {
+    const auto& buffer = get_buffer(buffers, piece.type);
     auto& line_starts = buffer.line_starts;
     // Extend it so we can capture the entire line content including newline.
     auto expected_start = piece.first.line + (index + 1);
@@ -280,22 +280,22 @@ PieceTree& PieceTree::operator=(std::string_view txt) {
 
 LineRange PieceTree::get_line_range(size_t line) const {
     LineRange range;
-    line_start<&accumulate_value>(&range.first, &buffers_, root_, line);
-    line_start<&accumulate_value_no_lf>(&range.last, &buffers_, root_, line + 1);
+    line_start<&accumulate_value>(&range.first, buffers_, root_, line);
+    line_start<&accumulate_value_no_lf>(&range.last, buffers_, root_, line + 1);
     return range;
 }
 
 LineRange PieceTree::get_line_range_with_newline(size_t line) const {
     LineRange range;
-    line_start<&accumulate_value>(&range.first, &buffers_, root_, line);
-    line_start<&accumulate_value>(&range.last, &buffers_, root_, line + 1);
+    line_start<&accumulate_value>(&range.first, buffers_, root_, line);
+    line_start<&accumulate_value>(&range.last, buffers_, root_, line + 1);
     return range;
 }
 
 std::string PieceTree::str() const {
     std::string str;
     str.reserve(length());
-    TreeWalker walker{this};
+    TreeWalker walker{*this};
     while (!walker.exhausted()) {
         str.push_back(walker.next());
     }
@@ -305,7 +305,7 @@ std::string PieceTree::str() const {
 std::string PieceTree::substr(size_t offset, size_t count) const {
     std::string str;
     str.reserve(count);
-    TreeWalker walker{this, offset};
+    TreeWalker walker{*this, offset};
     for (size_t i = 0; i < count && !walker.exhausted(); ++i) {
         str.push_back(walker.next());
     }
@@ -349,8 +349,8 @@ std::string PieceTree::get_line_content(size_t line) const {
 
     std::string buf;
     size_t line_offset = 0;
-    line_start<&accumulate_value>(&line_offset, &buffers_, root_, line);
-    TreeWalker walker{this, line_offset};
+    line_start<&accumulate_value>(&line_offset, buffers_, root_, line);
+    TreeWalker walker{*this, line_offset};
     while (!walker.exhausted()) {
         char c = walker.next();
         if (c == '\n') break;
@@ -364,8 +364,8 @@ std::string PieceTree::get_line_content_with_newline(size_t line) const {
 
     std::string buf;
     size_t line_offset = 0;
-    line_start<&accumulate_value>(&line_offset, &buffers_, root_, line);
-    TreeWalker walker{this, line_offset};
+    line_start<&accumulate_value>(&line_offset, buffers_, root_, line);
+    TreeWalker walker{*this, line_offset};
     while (!walker.exhausted()) {
         char c = walker.next();
         buf.push_back(c);
@@ -379,8 +379,8 @@ std::string PieceTree::get_line_content_for_layout_use(size_t line) const {
 
     std::string buf;
     size_t line_offset = 0;
-    line_start<&accumulate_value>(&line_offset, &buffers_, root_, line);
-    TreeWalker walker{this, line_offset};
+    line_start<&accumulate_value>(&line_offset, buffers_, root_, line);
+    TreeWalker walker{*this, line_offset};
     while (!walker.exhausted()) {
         char c = walker.next();
         if (c == '\n') {
@@ -651,12 +651,12 @@ bool PieceTree::redo() {
     return true;
 }
 
-TreeWalker::TreeWalker(const PieceTree* tree, size_t offset)
-    : buffers_{&tree->buffers_},
-      root_{tree->root_},
-      length_{tree->length()},
+TreeWalker::TreeWalker(const PieceTree& tree, size_t offset)
+    : buffers_{tree.buffers_},
+      root_{tree.root_},
+      length_{tree.length()},
       stack_{{root_}},
-      total_offset_{std::min(offset, tree->length())} {
+      total_offset_{std::min(offset, tree.length())} {
     fast_forward_to(total_offset_);
 }
 
@@ -747,9 +747,9 @@ void TreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.piece();
-        const auto& buffer = get_buffer(*buffers_, piece.type);
-        auto first_offset = get_offset(*buffers_, piece.type, piece.first);
-        auto last_offset = get_offset(*buffers_, piece.type, piece.last);
+        const auto& buffer = get_buffer(buffers_, piece.type);
+        auto first_offset = get_offset(buffers_, piece.type, piece.first);
+        auto last_offset = get_offset(buffers_, piece.type, piece.last);
         first_ptr_ = buffer.buffer.data() + first_offset;
         last_ptr_ = buffer.buffer.data() + last_offset;
         // Change this direction.
@@ -779,9 +779,9 @@ void TreeWalker::fast_forward_to(size_t offset) {
             // Make the offset relative to this piece.
             offset -= node.left_length();
             auto& piece = node.piece();
-            const auto& buffer = get_buffer(*buffers_, piece.type);
-            auto first_offset = get_offset(*buffers_, piece.type, piece.first);
-            auto last_offset = get_offset(*buffers_, piece.type, piece.last);
+            const auto& buffer = get_buffer(buffers_, piece.type);
+            auto first_offset = get_offset(buffers_, piece.type, piece.first);
+            auto last_offset = get_offset(buffers_, piece.type, piece.last);
             first_ptr_ = buffer.buffer.data() + first_offset + offset;
             last_ptr_ = buffer.buffer.data() + last_offset;
             return;
@@ -797,9 +797,11 @@ void TreeWalker::fast_forward_to(size_t offset) {
     }
 }
 
-ReverseTreeWalker::ReverseTreeWalker(const PieceTree* tree, size_t offset)
-    : buffers_{&tree->buffers_}, root_{tree->root_}, stack_{{root_}} {
-    total_offset_ = std::min(offset, tree->length());
+ReverseTreeWalker::ReverseTreeWalker(const PieceTree& tree, size_t offset)
+    : buffers_{tree.buffers_},
+      root_{tree.root_},
+      stack_{{root_}},
+      total_offset_{std::min(offset, tree.length())} {
     fast_forward_to(total_offset_);
 }
 
@@ -896,9 +898,9 @@ void ReverseTreeWalker::populate_ptrs() {
 
     if (dir == Direction::Center) {
         auto& piece = node.piece();
-        const auto& buffer = get_buffer(*buffers_, piece.type);
-        auto first_offset = get_offset(*buffers_, piece.type, piece.first);
-        auto last_offset = get_offset(*buffers_, piece.type, piece.last);
+        const auto& buffer = get_buffer(buffers_, piece.type);
+        auto first_offset = get_offset(buffers_, piece.type, piece.first);
+        auto last_offset = get_offset(buffers_, piece.type, piece.last);
         last_ptr_ = buffer.buffer.data() + first_offset;
         first_ptr_ = buffer.buffer.data() + last_offset;
         // Change this direction.
@@ -929,8 +931,8 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             // Make the offset relative to this piece.
             offset -= node.left_length();
             auto& piece = node.piece();
-            const auto& buffer = get_buffer(*buffers_, piece.type);
-            auto first_offset = get_offset(*buffers_, piece.type, piece.first);
+            const auto& buffer = get_buffer(buffers_, piece.type);
+            auto first_offset = get_offset(buffers_, piece.type, piece.first);
             last_ptr_ = buffer.buffer.data() + first_offset;
             first_ptr_ = buffer.buffer.data() + first_offset + offset;
             return;

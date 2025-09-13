@@ -7,7 +7,7 @@ namespace editor {
 
 TEST(TreeWalkerTest, TreeWalkerNextUTF8Test1) {
     PieceTree tree{"abcdefghijklmnopqrstuvwxyz"};
-    TreeWalker walker{&tree};
+    TreeWalker walker{tree};
 
     while (!walker.exhausted()) {
         int32_t codepoint = walker.next_codepoint();
@@ -18,12 +18,12 @@ TEST(TreeWalkerTest, TreeWalkerNextUTF8Test1) {
 
 TEST(TreeWalkerTest, TreeWalkerNextUTF8Test2) {
     PieceTree tree1{"﷽"};
-    TreeWalker walker1{&tree1};
+    TreeWalker walker1{tree1};
     EXPECT_EQ(walker1.next_codepoint(), static_cast<int32_t>(U'\U0000FDFD'));
     EXPECT_TRUE(walker1.exhausted());
 
     PieceTree tree2{"☃️"};
-    TreeWalker walker2{&tree2};
+    TreeWalker walker2{tree2};
     EXPECT_EQ(walker2.next_codepoint(), static_cast<int32_t>(U'\U00002603'));
     EXPECT_FALSE(walker2.exhausted());
     EXPECT_EQ(walker2.next_codepoint(), static_cast<int32_t>(U'\U0000FE0F'));
@@ -32,7 +32,7 @@ TEST(TreeWalkerTest, TreeWalkerNextUTF8Test2) {
 
 TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test1) {
     PieceTree tree{"abcdefghijklmnopqrstuvwxyz"};
-    ReverseTreeWalker walker{&tree};
+    ReverseTreeWalker walker{tree};
 
     while (!walker.exhausted()) {
         int32_t codepoint = walker.next_codepoint();
@@ -43,12 +43,12 @@ TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test1) {
 
 TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test2) {
     PieceTree tree1{"﷽"};
-    ReverseTreeWalker walker1{&tree1, tree1.length()};
+    ReverseTreeWalker walker1{tree1, tree1.length()};
     EXPECT_EQ(walker1.next_codepoint(), static_cast<int32_t>(U'\U0000FDFD'));
     EXPECT_TRUE(walker1.exhausted());
 
     PieceTree tree2{"☃️"};
-    ReverseTreeWalker walker2{&tree2, tree2.length()};
+    ReverseTreeWalker walker2{tree2, tree2.length()};
     EXPECT_EQ(walker2.next_codepoint(), static_cast<int32_t>(U'\U0000FE0F'));
     EXPECT_FALSE(walker2.exhausted());
     EXPECT_EQ(walker2.next_codepoint(), static_cast<int32_t>(U'\U00002603'));
@@ -57,7 +57,7 @@ TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test2) {
 
 TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test3) {
     PieceTree tree{"a bc\u205Fxyz"};
-    ReverseTreeWalker walker{&tree, tree.length()};
+    ReverseTreeWalker walker{tree, tree.length()};
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U'z'));
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U'y'));
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U'x'));
@@ -72,7 +72,7 @@ TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test3) {
 
 TEST(TreeWalkerTest, ReverseTreeWalkerNextUTF8Test4) {
     PieceTree tree{"a bc\u205Fxyz"};
-    ReverseTreeWalker walker{&tree, 4};
+    ReverseTreeWalker walker{tree, 4};
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U'c'));
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U'b'));
     EXPECT_EQ(walker.next_codepoint(), static_cast<int32_t>(U' '));
@@ -87,7 +87,7 @@ TEST(TreeWalkerTest, TreeWalkerOffsetTest1) {
 
     for (size_t start = 0; start < tree.length(); ++start) {
         size_t i = start;
-        TreeWalker walker{&tree, start};
+        TreeWalker walker{tree, start};
         while (!walker.exhausted()) {
             EXPECT_EQ(walker.offset(), i);
             EXPECT_EQ(walker.next(), str[i]);
@@ -99,35 +99,33 @@ TEST(TreeWalkerTest, TreeWalkerOffsetTest1) {
 
 TEST(TreeWalkerTest, TreeWalkerOffsetTest2) {
     PieceTree tree{"abcd"};
-    TreeWalker walker{&tree};
+    TreeWalker w1{tree};
 
-    EXPECT_EQ(walker.offset(), size_t{0});
-    EXPECT_FALSE(walker.exhausted());
+    EXPECT_EQ(w1.offset(), size_t{0});
+    EXPECT_FALSE(w1.exhausted());
 
-    walker = {&tree, 4};
-    EXPECT_EQ(walker.offset(), tree.length());
-    EXPECT_TRUE(walker.exhausted());
+    TreeWalker w2 = {tree, 4};
+    EXPECT_EQ(w2.offset(), tree.length());
+    EXPECT_TRUE(w2.exhausted());
 
-    walker = {&tree, 100};
-    EXPECT_EQ(walker.offset(), tree.length());
-    EXPECT_TRUE(walker.exhausted());
+    TreeWalker w3 = {tree, 100};
+    EXPECT_EQ(w3.offset(), tree.length());
+    EXPECT_TRUE(w3.exhausted());
 }
 
 TEST(TreeWalkerTest, Exhausted) {
     PieceTree tree{"abcd"};
 
-    TreeWalker walker{&tree};
-    ReverseTreeWalker reverse_walker{&tree};
+    TreeWalker w1 = {tree, tree.length()};
+    EXPECT_TRUE(w1.exhausted());
+    TreeWalker w2 = {tree, 1};
+    EXPECT_FALSE(w2.exhausted());
 
-    walker = {&tree, tree.length()};
-    EXPECT_TRUE(walker.exhausted());
-    walker = {&tree, 1};
-    EXPECT_FALSE(walker.exhausted());
-
-    reverse_walker = {&tree, 0};
-    EXPECT_TRUE(reverse_walker.exhausted());
-    reverse_walker = {&tree, 1};
-    EXPECT_FALSE(reverse_walker.exhausted());
+    ReverseTreeWalker reverse_walker{tree};
+    ReverseTreeWalker rw1 = {tree, 0};
+    EXPECT_TRUE(rw1.exhausted());
+    ReverseTreeWalker rw2 = {tree, 1};
+    EXPECT_FALSE(rw2.exhausted());
 }
 
 TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest1) {
@@ -136,7 +134,7 @@ TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest1) {
 
     for (size_t start = 0; start <= tree.length(); ++start) {
         size_t i = start;
-        ReverseTreeWalker reverse_walker{&tree, start};
+        ReverseTreeWalker reverse_walker{tree, start};
         while (!reverse_walker.exhausted()) {
             char ch = reverse_walker.next();
             size_t offset = reverse_walker.offset();
@@ -152,33 +150,33 @@ TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest1) {
 TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest2) {
     PieceTree tree{"abcd"};
 
-    ReverseTreeWalker reverse_walker{&tree};
-    EXPECT_EQ(reverse_walker.offset(), size_t{0});
-    EXPECT_TRUE(reverse_walker.exhausted());
+    ReverseTreeWalker rw1{tree};
+    EXPECT_EQ(rw1.offset(), size_t{0});
+    EXPECT_TRUE(rw1.exhausted());
 
-    reverse_walker = {&tree, 3};  // abc|d
-    EXPECT_EQ(reverse_walker.offset(), size_t{3});
-    EXPECT_FALSE(reverse_walker.exhausted());
-    EXPECT_EQ(reverse_walker.next(), 'c');
-    EXPECT_EQ(reverse_walker.next(), 'b');
-    EXPECT_EQ(reverse_walker.next(), 'a');
-    EXPECT_TRUE(reverse_walker.exhausted());
+    ReverseTreeWalker rw2 = {tree, 3};  // abc|d
+    EXPECT_EQ(rw2.offset(), size_t{3});
+    EXPECT_FALSE(rw2.exhausted());
+    EXPECT_EQ(rw2.next(), 'c');
+    EXPECT_EQ(rw2.next(), 'b');
+    EXPECT_EQ(rw2.next(), 'a');
+    EXPECT_TRUE(rw2.exhausted());
 
-    reverse_walker = {&tree, 4};  // abcd|
-    EXPECT_EQ(reverse_walker.offset(), tree.length());
-    EXPECT_EQ(reverse_walker.next(), 'd');
+    ReverseTreeWalker rw3 = {tree, 4};  // abcd|
+    EXPECT_EQ(rw3.offset(), tree.length());
+    EXPECT_EQ(rw3.next(), 'd');
 
-    reverse_walker = {&tree, 100};  // abcd|
-    EXPECT_EQ(reverse_walker.offset(), tree.length());
-    EXPECT_EQ(reverse_walker.next(), 'd');
+    ReverseTreeWalker rw4 = {tree, 100};  // abcd|
+    EXPECT_EQ(rw4.offset(), tree.length());
+    EXPECT_EQ(rw4.next(), 'd');
 }
 
 // Check that the forward and reverse walkers have the same offsets and codepoints.
 TEST(TreeWalkerTest, UTF8OffsetsAndCodepointsMatch) {
     PieceTree tree{"abc🙂def"};
 
-    auto walker = TreeWalker{&tree};
-    auto reverse_walker = ReverseTreeWalker{&tree, tree.length()};
+    auto walker = TreeWalker{tree};
+    auto reverse_walker = ReverseTreeWalker{tree, tree.length()};
 
     std::stack<size_t> offset_stk;
     std::stack<int32_t> cp_stk;
@@ -211,7 +209,7 @@ TEST(TreeWalkerTest, WalkerConsistency) {
 
     auto get_codepoints = [](const PieceTree& tree, size_t offset) {
         std::vector<int32_t> codepoints;
-        auto walker = TreeWalker{&tree, offset};
+        auto walker = TreeWalker{tree, offset};
         while (!walker.exhausted()) {
             int32_t cp = walker.next_codepoint();
             codepoints.emplace_back(cp);
@@ -260,7 +258,7 @@ TEST(TreeWalkerTest, ReverseWalkerConsistency) {
 
     auto get_codepoints = [](const PieceTree& tree, size_t offset) {
         std::vector<int32_t> codepoints;
-        auto reverse_walker = ReverseTreeWalker{&tree, offset};
+        auto reverse_walker = ReverseTreeWalker{tree, offset};
         while (!reverse_walker.exhausted()) {
             int32_t cp = reverse_walker.next_codepoint();
             codepoints.emplace_back(cp);

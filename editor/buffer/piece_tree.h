@@ -85,7 +85,7 @@ static_assert(std::copyable<PieceTree>);
 
 class TreeWalker {
 public:
-    TreeWalker(const PieceTree* tree, size_t offset = 0);
+    TreeWalker(const PieceTree& tree, size_t offset = 0);
 
     char current();
     char next();
@@ -106,7 +106,7 @@ private:
         Direction dir = Direction::Left;
     };
 
-    const BufferCollection* buffers_;
+    const BufferCollection& buffers_;
     RedBlackTree root_;
     size_t length_ = 0;
 
@@ -118,7 +118,7 @@ private:
 
 class ReverseTreeWalker {
 public:
-    ReverseTreeWalker(const PieceTree* tree, size_t offset = 0);
+    ReverseTreeWalker(const PieceTree& tree, size_t offset = 0);
 
     char current();
     char next();
@@ -139,7 +139,7 @@ private:
         Direction dir = Direction::Right;
     };
 
-    const BufferCollection* buffers_;
+    const BufferCollection& buffers_;
     RedBlackTree root_;
     std::vector<StackEntry> stack_;
     size_t total_offset_ = 0;

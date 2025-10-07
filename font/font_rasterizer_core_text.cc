@@ -21,8 +21,48 @@ using base::apple::ScopedCGContext;
 namespace font {
 
 namespace {
-ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, FontId font_id, std::string_view str8);
-bool FontSmoothingEnabled();
+
+ScopedCFTypeRef<CTLineRef> create_ct_line(CTFontRef ct_font,
+                                          FontId font_id,
+                                          std::string_view str8) {
+    auto cf_str = base::sys_utf8_to_cfstring_ref(str8);
+
+    auto attr = ScopedCFTypeRef<CFMutableDictionaryRef>(CFDictionaryCreateMutable(
+        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font);
+
+    auto attr_string = ScopedCFTypeRef<CFAttributedStringRef>(
+        CFAttributedStringCreate(kCFAllocatorDefault, cf_str.get(), attr.get()));
+
+    return ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(attr_string.get()),
+                                      OwnershipPolicy::kRetain);
+}
+
+// https://github.com/alacritty/crossfont/blob/9cd8ed05c9cc7ec17fe69183912560f97c050a1a/src/darwin/mod.rs#L275
+bool font_smoothing_enabled() {
+    auto pref = ScopedCFTypeRef<CFPropertyListRef>(
+        CFPreferencesCopyAppValue(CFSTR("AppleFontSmoothing"), kCFPreferencesCurrentApplication));
+
+    // Case 0: The preference does not exist. By default, macOS smooths fonts.
+    if (!pref.get()) {
+        return true;
+    }
+    // Case 1: The preference is an integer. Anything greater than 0 enables smoothing.
+    else if (CFGetTypeID(pref.get()) == CFNumberGetTypeID()) {
+        CFNumberRef cfnumber = static_cast<CFNumberRef>(pref.get());
+        int value;
+        CFNumberGetValue(cfnumber, kCFNumberIntType, &value);
+        return value != 0;
+    }
+    // Case 2: The preference is a string. Parse it as an integer.
+    else if (CFGetTypeID(pref.get()) == CFStringGetTypeID()) {
+        CFStringRef cfstring = static_cast<CFStringRef>(pref.get());
+        int value = CFStringGetIntValue(cfstring);
+        return value != 0;
+    }
+    return true;
+}
+
 }  // namespace
 
 struct FontRasterizer::NativeFontType {
@@ -81,12 +121,14 @@ FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
 }
 
 RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) const {
-    CTFontRef font_ref = font_id_to_native[font_id].font.get();
+    // DEBUG: Perform expensive work.
+    // std::function<uint64_t(int)> fibonacci = [&](int n) {
+    //     return (n < 2) ? n : fibonacci(n - 1) + fibonacci(n - 2);
+    // };
+    // fibonacci(30);
 
-    if (!font_ref) {
-        spdlog::error("FontRasterizer::rasterize() error: CTFontRef is null!");
-        std::abort();
-    }
+    CTFontRef font_ref = font_id_to_native[font_id].font.get();
+    CHECK(font_ref);
 
     CGGlyph glyph_index = glyph_id;
     CGRect bounds = CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault,
@@ -122,7 +164,7 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
         kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
     CGContextSetAllowsFontSmoothing(context.get(), true);
-    CGContextSetShouldSmoothFonts(context.get(), FontSmoothingEnabled());
+    CGContextSetShouldSmoothFonts(context.get(), font_smoothing_enabled());
     CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
     CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
     CGContextSetAllowsFontSubpixelPositioning(context.get(), true);
@@ -159,13 +201,10 @@ LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     DCHECK_EQ(str8.find('\n'), std::string_view::npos);
 
     base::UTF16ToUTF8IndicesMap indices_map;
-    if (!indices_map.set_utf8(str8)) {
-        spdlog::error("UTF16ToUTF8IndicesMap::setUTF8 error");
-        std::abort();
-    }
+    CHECK(indices_map.set_utf8(str8));
 
     CTFontRef ct_font = font_id_to_native[font_id].font.get();
-    auto ct_line = ScopedCFTypeRef<CTLineRef>(CreateCTLine(ct_font, font_id, str8));
+    auto ct_line = ScopedCFTypeRef<CTLineRef>(create_ct_line(ct_font, font_id, str8));
 
     int total_advance = 0;
     std::vector<ShapedGlyph> glyphs;
@@ -232,11 +271,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     CTFontRef ct_font = native_font.font.get();
     auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(ct_font));
     std::string font_name = base::sys_cfstring_ref_to_utf8(ct_font_name.get());
-
-    if (font_name.empty()) {
-        spdlog::error("FontRasterizer::cacheFont() error: font_name is empty");
-        std::abort();
-    }
+    CHECK(!font_name.empty());
 
     // If the font is already present, return its ID.
     size_t hash = hash_font(font_name, font_size);
@@ -271,48 +306,5 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     font_id_to_postscript_name.emplace_back(std::move(font_name));
     return font_id;
 }
-
-namespace {
-
-ScopedCFTypeRef<CTLineRef> CreateCTLine(CTFontRef ct_font, FontId font_id, std::string_view str8) {
-    auto cf_str = base::sys_utf8_to_cfstring_ref(str8);
-
-    auto attr = ScopedCFTypeRef<CFMutableDictionaryRef>(CFDictionaryCreateMutable(
-        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
-    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font);
-
-    auto attr_string = ScopedCFTypeRef<CFAttributedStringRef>(
-        CFAttributedStringCreate(kCFAllocatorDefault, cf_str.get(), attr.get()));
-
-    return ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(attr_string.get()),
-                                      OwnershipPolicy::kRetain);
-}
-
-// https://github.com/alacritty/crossfont/blob/9cd8ed05c9cc7ec17fe69183912560f97c050a1a/src/darwin/mod.rs#L275
-bool FontSmoothingEnabled() {
-    auto pref = ScopedCFTypeRef<CFPropertyListRef>(
-        CFPreferencesCopyAppValue(CFSTR("AppleFontSmoothing"), kCFPreferencesCurrentApplication));
-
-    // Case 0: The preference does not exist. By default, macOS smooths fonts.
-    if (!pref.get()) {
-        return true;
-    }
-    // Case 1: The preference is an integer. Anything greater than 0 enables smoothing.
-    else if (CFGetTypeID(pref.get()) == CFNumberGetTypeID()) {
-        CFNumberRef cfnumber = static_cast<CFNumberRef>(pref.get());
-        int value;
-        CFNumberGetValue(cfnumber, kCFNumberIntType, &value);
-        return value != 0;
-    }
-    // Case 2: The preference is a string. Parse it as an integer.
-    else if (CFGetTypeID(pref.get()) == CFStringGetTypeID()) {
-        CFStringRef cfstring = static_cast<CFStringRef>(pref.get());
-        int value = CFStringGetIntValue(cfstring);
-        return value != 0;
-    }
-    return true;
-}
-
-}  // namespace
 
 }  // namespace font

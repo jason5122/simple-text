@@ -100,7 +100,7 @@ TEST(AhoCorasickPerfTest, VariousIterationTests) {
     pf4.stop_mili();
 
     auto pf5 = base::Profiler{"Piece table iteration"};
-    TreeWalker walker{&kLongPieceTree};
+    TreeWalker walker{kLongPieceTree};
     while (!walker.exhausted()) {
         walker.next();
     }

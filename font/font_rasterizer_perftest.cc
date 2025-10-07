@@ -20,14 +20,15 @@ TEST(FontRasterizerTest, RasterizePerformance) {
     }
 }
 
-TEST(FontRasterizerTest, LineLayoutPerformance) {
-    auto& rasterizer = FontRasterizer::instance();
-    size_t font_id = rasterizer.add_system_font(32);
+// TODO: Find a way to randomly generate valid UTF-8 and re-enable.
+// TEST(FontRasterizerTest, LineLayoutPerformance) {
+//     auto& rasterizer = FontRasterizer::instance();
+//     size_t font_id = rasterizer.add_system_font(32);
 
-    for (int i = 0; i < 1000; ++i) {
-        std::string str = base::rand_bytes_as_string(100);
-        auto layout = rasterizer.layout_line(font_id, str);
-    }
-}
+//     for (int i = 0; i < 1000; ++i) {
+//         std::string str = base::rand_bytes_as_string(100);  // TODO: Use valid UTF-8.
+//         auto layout = rasterizer.layout_line(font_id, str);
+//     }
+// }
 
 }  // namespace font

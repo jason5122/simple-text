@@ -210,8 +210,7 @@ void line_start(size_t* offset,
     }
 }
 
-// Fetches the length of the piece starting from the first line to 'index' or to the end of
-// the piece.
+// Fetches the length of the piece starting from the first line to 'index' or to the end.
 size_t accumulate_value(const BufferCollection& buffers, const Piece& piece, size_t index) {
     const auto& line_starts = get_buffer(buffers, piece.type).line_starts;
     // Extend it so we can capture the entire line content including newline.
@@ -225,8 +224,7 @@ size_t accumulate_value(const BufferCollection& buffers, const Piece& piece, siz
     return last - first;
 }
 
-// Fetches the length of the piece starting from the first line to 'index' or to the end of
-// the piece.
+// Fetches the length of the piece starting from the first line to 'index' or to the end.
 size_t accumulate_value_no_lf(const BufferCollection& buffers, const Piece& piece, size_t index) {
     const auto& buffer = get_buffer(buffers, piece.type);
     auto& line_starts = buffer.line_starts;

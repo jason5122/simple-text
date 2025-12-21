@@ -183,8 +183,9 @@ RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) con
     // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
     // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
     bool colored_font = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
-    bool has_outline = CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr);
-    bool colored = colored_font && !has_outline;
+    auto outline_path =
+        ScopedCFTypeRef<CGPathRef>(CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr));
+    bool colored = colored_font && !outline_path;
 
     return {
         .left = left,

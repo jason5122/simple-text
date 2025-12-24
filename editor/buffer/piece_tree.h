@@ -77,9 +77,6 @@ private:
     std::forward_list<RedBlackTree> redo_stack_;
 };
 
-static_assert(std::movable<PieceTree>);
-static_assert(std::copyable<PieceTree>);
-
 class TreeWalker {
 public:
     TreeWalker(const PieceTree& tree, size_t offset = 0);

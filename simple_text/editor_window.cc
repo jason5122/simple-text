@@ -54,7 +54,7 @@ void EditorWindow::on_opengl_activate() {
     auto horizontal_layout = std::make_unique<HorizontalResizingWidget>();
     // horizontal_layout->addChildStart(std::unique_ptr<SideBarWidget>(side_bar));
     horizontal_layout->set_main_widget(std::unique_ptr<EditorWidget>(editor_widget));
-    constexpr bool kShowAtlas = true;
+    constexpr bool kShowAtlas = false;
     if constexpr (kShowAtlas) {
         auto atlas_widget = std::make_unique<AtlasWidget>();
         horizontal_layout->add_child_end(std::move(atlas_widget));

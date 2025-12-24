@@ -12,6 +12,7 @@ group("tests") {
 
 group("experiments") {
   deps = [
+    "//experiments/fuzz",
     "//experiments/gui_api_redesign",
     "//experiments/message_loop",
     "//experiments/playground",

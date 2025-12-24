@@ -1,0 +1,11 @@
+executable("fuzz") {
+  sources = [
+    "arg_parser.cc",
+    "main.cc",
+  ]
+
+  deps = [
+    "//editor",
+    "//third_party/spdlog",
+  ]
+}

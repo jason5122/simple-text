@@ -7,6 +7,9 @@
 
 namespace editor {
 
+static_assert(std::movable<PieceTree>);
+static_assert(std::copyable<PieceTree>);
+
 TEST(PieceTreeTest, Construction) {
     using namespace std::string_literals;
     using namespace std::string_view_literals;

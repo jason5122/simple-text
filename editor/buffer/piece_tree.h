@@ -60,9 +60,6 @@ public:
     std::string substr(size_t offset, size_t count) const;
     std::optional<size_t> find(std::string_view str) const;
 
-    // Debug use.
-    size_t piece_count() const { return root_.length(); }
-
 private:
     friend class TreeWalker;
     friend class ReverseTreeWalker;

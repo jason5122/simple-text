@@ -9,6 +9,7 @@ source_set("editor") {
   ]
 
   deps = [
+    "//base",
     "//third_party/spdlog",
     "//third_party/uni_algo",
   ]

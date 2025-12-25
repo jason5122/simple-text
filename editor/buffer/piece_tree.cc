@@ -310,8 +310,8 @@ std::string PieceTree::substr(size_t offset, size_t count) const {
     return str;
 }
 
-std::optional<size_t> PieceTree::find(std::string_view str) const {
-    AhoCorasick ac({std::string(str)});
+std::optional<size_t> PieceTree::find(std::string_view txt) const {
+    AhoCorasick ac({std::string(txt)});
     auto result = ac.match(*this);
 
     if (result.match_begin == -1) {
@@ -632,8 +632,6 @@ void PieceTree::erase(size_t offset, size_t count) {
         root_ = root_.insert(first.start_offset, {new_first});
     }
 }
-
-void PieceTree::clear() { *this = PieceTree{}; }
 
 bool PieceTree::undo() {
     if (undo_stack_.empty()) return false;

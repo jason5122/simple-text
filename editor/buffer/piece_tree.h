@@ -32,11 +32,12 @@ public:
     PieceTree() : PieceTree(std::string_view{}) {}
     explicit PieceTree(std::string_view txt);
     PieceTree& operator=(std::string_view txt);
+    PieceTree& assign(std::string_view txt) { return *this = PieceTree(txt); }
 
     // Manipulation.
     void insert(size_t offset, std::string_view txt);
     void erase(size_t offset, size_t count);
-    void clear();
+    void clear() { *this = PieceTree{}; }
     bool undo();
     bool redo();
 
@@ -58,7 +59,11 @@ public:
     LineRange get_line_range_with_newline(size_t line) const;
     std::string str() const;
     std::string substr(size_t offset, size_t count) const;
-    std::optional<size_t> find(std::string_view str) const;
+    std::optional<size_t> find(std::string_view txt) const;
+
+    // Debug use.
+    // TODO: Should we expose a better debug interface?
+    RedBlackTree root() const { return root_; }
 
 private:
     friend class TreeWalker;

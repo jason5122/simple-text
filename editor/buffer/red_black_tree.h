@@ -69,7 +69,8 @@ public:
     bool operator==(const RedBlackTree&) const = default;
 
     // Debug use.
-    std::string to_string() const;
+    // TODO: Should we expose a better debug interface?
+    std::string to_graphviz_dot() const;
     bool check_invariants() const;
 
 private:
@@ -85,6 +86,6 @@ struct std::formatter<editor::RedBlackTree> {
     constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
     template <class FormatContext>
     auto format(const editor::RedBlackTree& t, FormatContext& ctx) const {
-        return std::format_to(ctx.out(), "{}", t.to_string());
+        return std::format_to(ctx.out(), "{}", t.to_graphviz_dot());
     }
 };

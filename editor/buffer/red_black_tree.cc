@@ -57,7 +57,7 @@ RedBlackTree RedBlackTree::remove(size_t at) const {
     return {Color::Black, t.left(), t.piece(), t.right()};
 }
 
-std::string RedBlackTree::to_string() const {
+std::string RedBlackTree::to_graphviz_dot() const {
     std::ostringstream out;
     out << "digraph RB {\n"
            "  node [shape=record, fontname=\"monospace\", fontsize=10];\n"
@@ -78,24 +78,24 @@ std::string RedBlackTree::to_string() const {
     q.push(root);
 
     while (!q.empty()) {
-        auto cur = q.front();
+        auto curr = q.front();
         q.pop();
 
-        uintptr_t id = node_id(cur);
+        uintptr_t id = node_id(curr);
 
-        const Piece& p = cur.piece();
-        const bool is_red = (cur.color() == Color::Red);
-        out << "  n" << id << " [label=\"{" << (is_red ? "R" : "B") << " | piece.len=" << p.length
-            << " | T.len=" << cur.length() << "}\", color=" << (is_red ? "red" : "black")
-            << "];\n";
+        const auto& p = curr.piece();
+        auto color = (curr.color() == Color::Red) ? "red" : "black";
+        auto type = (p.type == BufferType::Original) ? "Original" : "Mod";
+        out << std::format("  n{} [label=\"{{{} | piece.len={} | tree.len={}}}\", color={}];\n",
+                           id, type, p.length, curr.length(), color);
 
-        if (auto L = cur.left()) {
-            out << "  n" << id << " -> n" << node_id(L) << " [label=\"L\"];\n";
-            q.push(L);
+        if (auto left = curr.left()) {
+            out << std::format("  n{} -> n{} [label=\"L\"];\n", id, node_id(left));
+            q.push(left);
         }
-        if (auto R = cur.right()) {
-            out << "  n" << id << " -> n" << node_id(R) << " [label=\"R\"];\n";
-            q.push(R);
+        if (auto right = curr.right()) {
+            out << std::format("  n{} -> n{} [label=\"R\"];\n", id, node_id(right));
+            q.push(right);
         }
     }
     out << "}\n";

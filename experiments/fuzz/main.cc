@@ -4,14 +4,61 @@
 #include "experiments/fuzz/string_buffer.h"
 #include <cstring>
 #include <spdlog/spdlog.h>
+#include <sstream>
 #include <string>
 
 namespace {
+
 void write_file(const std::string& file_name, const std::string& contents) {
     FILE* fp = fopen(file_name.data(), "wb");
     fwrite(&contents[0], 1, contents.length(), fp);
     fclose(fp);
 }
+
+std::string to_graphviz_dot(const editor::RedBlackTree& root) {
+    std::ostringstream out;
+    out << "digraph RB {\n"
+           "  node [shape=record, fontname=\"monospace\", fontsize=10];\n"
+           "  rankdir=TB;\n";
+
+    if (!root) {
+        out << "  empty [label=\"(empty)\"];\n}\n";
+        return out.str();
+    }
+
+    auto node_id = [](const editor::RedBlackTree& n) -> uintptr_t {
+        // Use the piece address as a stable ID (OK for persistent trees).
+        return reinterpret_cast<uintptr_t>(&n.piece());
+    };
+
+    std::queue<editor::RedBlackTree> q;
+    q.push(root);
+
+    while (!q.empty()) {
+        auto curr = q.front();
+        q.pop();
+
+        uintptr_t id = node_id(curr);
+
+        const auto& p = curr.piece();
+        auto color = (curr.color() == editor::Color::Red) ? "red" : "black";
+        out << std::format(
+            "  n{} [label=\"{{piece.len={} | tree.len={} | tree.lf_count={}}}\", color={}];\n", id,
+            p.length, curr.length(), curr.line_feed_count(), color);
+
+        if (auto left = curr.left()) {
+            out << std::format("  n{} -> n{} [label=\"L\"];\n", id, node_id(left));
+            q.push(left);
+        }
+        if (auto right = curr.right()) {
+            out << std::format("  n{} -> n{} [label=\"R\"];\n", id, node_id(right));
+            q.push(right);
+        }
+    }
+    out << "}\n";
+    return out.str();
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -74,5 +121,5 @@ int main(int argc, char** argv) {
 
     spdlog::info("OK ({} ops)", args.ops);
     spdlog::info("lines = {}, length = {}", pt.line_count(), pt.length());
-    write_file("fuzz.dot", pt.root().to_graphviz_dot());
+    write_file("fuzz.dot", to_graphviz_dot(pt.root()));
 }

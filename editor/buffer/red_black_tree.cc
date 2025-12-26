@@ -1,6 +1,5 @@
 #include "base/check.h"
 #include "editor/buffer/red_black_tree.h"
-#include <sstream>
 
 namespace editor {
 
@@ -55,51 +54,6 @@ RedBlackTree RedBlackTree::remove(size_t at) const {
     auto t = rem(*this, at, 0);
     if (!t) return {};
     return {Color::Black, t.left(), t.piece(), t.right()};
-}
-
-std::string RedBlackTree::to_graphviz_dot() const {
-    std::ostringstream out;
-    out << "digraph RB {\n"
-           "  node [shape=record, fontname=\"monospace\", fontsize=10];\n"
-           "  rankdir=TB;\n";
-
-    auto root = *this;
-    if (!root) {
-        out << "  empty [label=\"(empty)\"];\n}\n";
-        return out.str();
-    }
-
-    auto node_id = [](const RedBlackTree& n) -> uintptr_t {
-        // Use the piece address as a stable ID (OK for persistent trees).
-        return reinterpret_cast<uintptr_t>(&n.piece());
-    };
-
-    std::queue<RedBlackTree> q;
-    q.push(root);
-
-    while (!q.empty()) {
-        auto curr = q.front();
-        q.pop();
-
-        uintptr_t id = node_id(curr);
-
-        const auto& p = curr.piece();
-        auto color = (curr.color() == Color::Red) ? "red" : "black";
-        out << std::format(
-            "  n{} [label=\"{{piece.len={} | tree.len={} | tree.lf_count={}}}\", color={}];\n", id,
-            p.length, curr.length(), curr.line_feed_count(), color);
-
-        if (auto left = curr.left()) {
-            out << std::format("  n{} -> n{} [label=\"L\"];\n", id, node_id(left));
-            q.push(left);
-        }
-        if (auto right = curr.right()) {
-            out << std::format("  n{} -> n{} [label=\"R\"];\n", id, node_id(right));
-            q.push(right);
-        }
-    }
-    out << "}\n";
-    return out.str();
 }
 
 namespace {

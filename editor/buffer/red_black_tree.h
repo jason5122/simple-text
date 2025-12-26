@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/check.h"
-#include <format>
 #include <memory>
 
 namespace editor {
@@ -69,8 +68,6 @@ public:
     bool operator==(const RedBlackTree&) const = default;
 
     // Debug use.
-    // TODO: Should we expose a better debug interface?
-    std::string to_graphviz_dot() const;
     bool check_invariants() const;
 
 private:
@@ -80,12 +77,3 @@ private:
 };
 
 }  // namespace editor
-
-template <>
-struct std::formatter<editor::RedBlackTree> {
-    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
-    template <class FormatContext>
-    auto format(const editor::RedBlackTree& t, FormatContext& ctx) const {
-        return std::format_to(ctx.out(), "{}", t.to_graphviz_dot());
-    }
-};

@@ -77,15 +77,17 @@ TEST(RedBlackTreeTest, RandomInserts) {
 // TODO: Should we enforce that the root must be black?
 TEST(RedBlackTreeTest, CheckInvariants) {
     auto kValid = std::to_array<RBT>({
-        {},    // Empty.
+        {},    // NIL.
         BL(),  // Single black.
-        RL(),  // Single red.
         B(BL(), BL()),
         B(RL(), RL()),
         B(B(RL(), RL()), BL()),
         B(B(BL(), BL()), B(BL(), BL())),
     });
     for (auto t : kValid) EXPECT_TRUE(t.check_invariants());
+
+    auto red_root = RL();
+    EXPECT_FALSE(red_root.check_invariants());
 
     // Red node cannot have a red child.
     auto kRedViolation = std::to_array<RBT>({

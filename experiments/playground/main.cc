@@ -3,8 +3,11 @@
 
 int main() {
     editor::PieceTree pt{"hello"};
-    pt.insert(pt.length(), "\nworld");
+    pt.insert(pt.length(), " world");
+    pt.insert(2, "!");
 
-    spdlog::info(pt);
-    spdlog::info(pt.get_line_range(0));
+    std::string s;
+    s.assign("hello");
+
+    s.erase(s.length(), 100);
 }

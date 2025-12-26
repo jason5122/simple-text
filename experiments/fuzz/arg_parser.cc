@@ -26,17 +26,10 @@ Args parse_args(int argc, char** argv) {
             return argv[++i];
         };
 
-        if (k == "--seed") {
-            a.seed = parse_u64(need("--seed"));
-            a.seed_provided = true;
-        } else if (k == "--ops") {
+        if (k == "--ops") {
             a.ops = parse_sz(need("--ops"));
-        } else if (k == "--max_payload") {
-            a.max_payload = parse_sz(need("--max_payload"));
         } else if (k == "--check_every") {
             a.check_every = parse_sz(need("--check_every"));
-        } else if (k == "--log_keep") {
-            a.log_keep = parse_sz(need("--log_keep"));
         } else {
             spdlog::error("Unknown arg: {}", k);
             std::exit(2);

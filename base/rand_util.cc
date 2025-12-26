@@ -72,4 +72,17 @@ std::vector<uint8_t> rand_bytes_as_vector(size_t length) {
     return result;
 }
 
+std::string rand_string_with_newlines(size_t length, size_t k) {
+    CHECK_GE(length, k);
+
+    std::string s;
+    for (size_t i = 0; i < length - k; ++i) {
+        s += static_cast<char>(base::rand_int('a', 'z'));
+    }
+    for (size_t i = 0; i < k; ++i) {
+        s.insert(base::rand_int(0, s.length()), 1, '\n');
+    }
+    return s;
+}
+
 }  // namespace base

@@ -1,4 +1,3 @@
-#include "base/check.h"
 #include "base/rand_util.h"
 #include "editor/buffer/piece_tree.h"
 #include <algorithm>
@@ -665,32 +664,14 @@ TEST(PieceTreeTest, LineColumnAt3) {
     EXPECT_EQ(cursor2.column, size_t{1});
 }
 
-namespace {
-
-// Generates a string of length n with k newlines.
-std::string rand_string_with_newlines(size_t n, size_t k) {
-    DCHECK_GE(n, k);
-
-    std::string s;
-    for (size_t i = 0; i < n - k; ++i) {
-        s += static_cast<char>(base::rand_int('a', 'z'));
-    }
-    for (size_t i = 0; i < k; ++i) {
-        s.insert(base::rand_int(0, s.length()), 1, '\n');
-    }
-    return s;
-}
-
 TEST(PieceTreeTest, RandStringWithNewlines) {
     for (size_t i = 0; i < 20; ++i) {
         size_t k = base::rand_int(0, 10);
         size_t n = base::rand_int(k, 100);
-        std::string s = rand_string_with_newlines(n, k);
+        std::string s = base::rand_string_with_newlines(n, k);
         EXPECT_EQ(std::count(s.begin(), s.end(), '\n'), k);
     }
 }
-
-}  // namespace
 
 TEST(PieceTreeTest, LineColumnAtRandomTest) {
     std::string str = "";
@@ -721,7 +702,7 @@ TEST(PieceTreeTest, LineColumnAtRandomTest) {
     for (size_t n = 0; n < 50; ++n) {
         // Randomly insert.
         size_t insert_index = base::rand_int(0, str.length());
-        const std::string random_str = rand_string_with_newlines(base::rand_int(5, 10), 5);
+        const std::string random_str = base::rand_string_with_newlines(base::rand_int(5, 10), 5);
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());
@@ -833,7 +814,7 @@ TEST(PieceTreeTest, LineFeedCountRandomTest) {
     for (size_t n = 0; n < 50; ++n) {
         // Randomly insert.
         size_t insert_index = base::rand_int(0, str.length());
-        const std::string random_str = rand_string_with_newlines(base::rand_int(5, 10), 5);
+        const std::string random_str = base::rand_string_with_newlines(base::rand_int(5, 10), 5);
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());
@@ -931,8 +912,8 @@ TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
     for (size_t n = 0; n < 50; ++n) {
         // Randomly insert.
         size_t insert_index = base::rand_int(0, str.length());
-        const std::string random_str =
-            rand_string_with_newlines(base::rand_int(kNewlinesPerInsert, 100), kNewlinesPerInsert);
+        const std::string random_str = base::rand_string_with_newlines(
+            base::rand_int(kNewlinesPerInsert, 100), kNewlinesPerInsert);
         str.insert(insert_index, random_str);
         tree.insert(insert_index, random_str);
         EXPECT_EQ(str, tree.str());

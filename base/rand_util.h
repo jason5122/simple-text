@@ -28,4 +28,7 @@ std::string rand_bytes_as_string(size_t length);
 // Creates a vector of `length` bytes, fills it with random data, and returns it. Thread-safe.
 std::vector<uint8_t> rand_bytes_as_vector(size_t length);
 
+// Generates a lowercase alphabetical string (a-z) with k newlines.
+std::string rand_string_with_newlines(size_t length, size_t k);
+
 }  // namespace base

@@ -85,9 +85,9 @@ std::string RedBlackTree::to_graphviz_dot() const {
 
         const auto& p = curr.piece();
         auto color = (curr.color() == Color::Red) ? "red" : "black";
-        auto type = (p.type == BufferType::Original) ? "Original" : "Mod";
-        out << std::format("  n{} [label=\"{{{} | piece.len={} | tree.len={}}}\", color={}];\n",
-                           id, type, p.length, curr.length(), color);
+        out << std::format(
+            "  n{} [label=\"{{piece.len={} | tree.len={} | tree.lf_count={}}}\", color={}];\n", id,
+            p.length, curr.length(), curr.line_feed_count(), color);
 
         if (auto left = curr.left()) {
             out << std::format("  n{} -> n{} [label=\"L\"];\n", id, node_id(left));
@@ -119,16 +119,21 @@ int check_black_node_invariant(const RedBlackTree& node) {
 
 bool RedBlackTree::check_invariants() const {
     // 1. Every node is either red or black.
-    // 2. All NIL nodes (figure 1) are considered black.
-    // 3. A red node does not have a red child.
-    // 4. Every path from a given node to any of its descendant NIL nodes goes through the same
+    // 2. The root is black.
+    // 3. Every leaf (NIL) is black.
+    // 4. If a node is red, then both its children are black.
+    // 5. For each node, all simple paths from the node to descendant leaves contain the same
     // number of black nodes.
 
     // The internal nodes in this RB tree can be totally black so we will not count them directly,
     // we'll just track odd nodes as either red or black. Measure the number of black nodes we need
     // to validate.
-    if (!*this || (!left() && !right())) return true;
-    return check_black_node_invariant(*this) != 0;
+    const auto& root = *this;
+    // TODO: Do we need this line?
+    // if (!root || (!left() && !right())) return true;
+    // TODO: Can we incorporate this check in `check_black_node_invariant`?
+    if (!is_black(root)) return false;
+    return check_black_node_invariant(root) != 0;
 }
 
 namespace {

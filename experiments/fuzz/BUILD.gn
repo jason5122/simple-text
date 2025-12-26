@@ -2,7 +2,17 @@ executable("fuzz") {
   sources = [
     "arg_parser.cc",
     "main.cc",
+    "string_buffer.cc",
   ]
+
+  deps = [
+    "//editor",
+    "//third_party/spdlog",
+  ]
+}
+
+executable("benchmark") {
+  sources = [ "benchmark.cc" ]
 
   deps = [
     "//editor",

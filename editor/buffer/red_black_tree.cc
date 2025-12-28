@@ -5,17 +5,6 @@ namespace editor {
 
 namespace {
 
-// Null nodes are black.
-inline bool is_black(const RedBlackTree& t) { return !t || t.color() == Color::Black; }
-inline bool is_red(const RedBlackTree& t) { return t && t.color() == Color::Red; }
-inline bool doubled_left(const RedBlackTree& t) { return is_red(t) && is_red(t.left()); }
-inline bool doubled_right(const RedBlackTree& t) { return is_red(t) && is_red(t.right()); }
-
-inline RedBlackTree paint(const RedBlackTree& node, Color c) {
-    DCHECK(node);
-    return {c, node.left(), node.piece(), node.right()};
-}
-
 RedBlackTree balance(Color c, const RedBlackTree& lft, const Piece& p, const RedBlackTree& rgt);
 RedBlackTree balance(const RedBlackTree& node);
 RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right);
@@ -46,27 +35,26 @@ RedBlackTree::RedBlackTree(Color c,
 }
 
 RedBlackTree RedBlackTree::insert(size_t at, const Piece& p) const {
-    RedBlackTree t = internal_insert(*this, p, at, 0);
-    return {Color::Black, t.left(), t.piece(), t.right()};
+    return internal_insert(*this, p, at, 0).paint_black();
 }
 
 RedBlackTree RedBlackTree::remove(size_t at) const {
     auto t = rem(*this, at, 0);
     if (!t) return {};
-    return {Color::Black, t.left(), t.piece(), t.right()};
+    return t.paint_black();
 }
 
 namespace {
 // Borrowed from https://github.com/dotnwat/persistent-rbtree/blob/master/tree.h:checkConsistency.
 int check_black_node_invariant(const RedBlackTree& node) {
     if (!node) return 1;
-    if (is_red(node) && (is_red(node.left()) || is_red(node.right()))) return 0;
+    if (node.is_red() && (node.left().is_red() || node.right().is_red())) return 0;
 
     auto l = check_black_node_invariant(node.left());
     auto r = check_black_node_invariant(node.right());
 
     if (l != 0 && r != 0 && l != r) return 0;
-    if (l != 0 && r != 0) return is_red(node) ? l : l + 1;
+    if (l != 0 && r != 0) return node.is_red() ? l : l + 1;
     return 0;
 }
 }  // namespace
@@ -86,45 +74,45 @@ bool RedBlackTree::check_invariants() const {
     // TODO: Do we need this line?
     // if (!root || (!left() && !right())) return true;
     // TODO: Can we incorporate this check in `check_black_node_invariant`?
-    if (!is_black(root)) return false;
+    if (!root.is_black()) return false;
     return check_black_node_invariant(root) != 0;
 }
 
 namespace {
 
 RedBlackTree balance(Color c, const RedBlackTree& lft, const Piece& p, const RedBlackTree& rgt) {
-    if (c == Color::Black && doubled_left(lft)) {
+    if (c == Color::Black && lft.has_doubled_left()) {
         return {Color::Red,
-                paint(lft.left(), Color::Black),
+                lft.left().paint_black(),
                 lft.piece(),
                 {Color::Black, lft.right(), p, rgt}};
     }
-    if (c == Color::Black && doubled_right(lft)) {
+    if (c == Color::Black && lft.has_doubled_right()) {
         return {Color::Red,
                 {Color::Black, lft.left(), lft.piece(), lft.right().left()},
                 lft.right().piece(),
                 {Color::Black, lft.right().right(), p, rgt}};
     }
-    if (c == Color::Black && doubled_left(rgt)) {
+    if (c == Color::Black && rgt.has_doubled_left()) {
         return {Color::Red,
                 {Color::Black, lft, p, rgt.left().left()},
                 rgt.left().piece(),
                 {Color::Black, rgt.left().right(), rgt.piece(), rgt.right()}};
     }
-    if (c == Color::Black && doubled_right(rgt)) {
+    if (c == Color::Black && rgt.has_doubled_right()) {
         return {Color::Red,
                 {Color::Black, lft, p, rgt.left()},
                 rgt.piece(),
-                paint(rgt.right(), Color::Black)};
+                rgt.right().paint_black()};
     }
     return {c, lft, p, rgt};
 }
 
 RedBlackTree balance(const RedBlackTree& node) {
-    // Two red children.
-    if (is_red(node.left()) && is_red(node.right())) {
-        auto l = paint(node.left(), Color::Black);
-        auto r = paint(node.right(), Color::Black);
+    // Both children are red.
+    if (node.left().is_red() && node.right().is_red()) {
+        auto l = node.left().paint_black();
+        auto r = node.right().paint_black();
         return {Color::Red, l, node.piece(), r};
     }
 
@@ -139,17 +127,17 @@ RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right) {
     if (!right) return left;
     // match: (left.color, right.color)
     // case: (B, R)
-    if (is_black(left) && is_red(right)) {
+    if (left.is_black() && right.is_red()) {
         return {Color::Red, fuse(left, right.left()), right.piece(), right.right()};
     }
     // case: (R, B)
-    if (is_red(left) && is_black(right)) {
+    if (left.is_red() && right.is_black()) {
         return {Color::Red, left.left(), left.piece(), fuse(left.right(), right)};
     }
     // case: (R, R)
-    if (is_red(left) && is_red(right)) {
+    if (left.is_red() && right.is_red()) {
         auto fused = fuse(left.right(), right.left());
-        if (is_red(fused)) {
+        if (fused.is_red()) {
             RedBlackTree new_left = {Color::Red, left.left(), left.piece(), fused.left()};
             RedBlackTree new_right = {Color::Red, fused.right(), right.piece(), right.right()};
             return {Color::Red, new_left, fused.piece(), new_right};
@@ -158,9 +146,9 @@ RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right) {
         return {Color::Red, left.left(), left.piece(), new_right};
     }
     // case: (B, B)
-    DCHECK(is_black(left) && is_black(right));
+    DCHECK(left.is_black() && right.is_black());
     auto fused = fuse(left.right(), right.left());
-    if (is_red(fused)) {
+    if (fused.is_red()) {
         RedBlackTree new_left = {Color::Black, left.left(), left.piece(), fused.left()};
         RedBlackTree new_right = {Color::Black, fused.right(), right.piece(), right.right()};
         return {Color::Red, new_left, fused.piece(), new_right};
@@ -173,21 +161,21 @@ RedBlackTree fuse(const RedBlackTree& left, const RedBlackTree& right) {
 RedBlackTree balance_left(const RedBlackTree& left) {
     // match: (color_l, color_r, color_r_l)
     // case: (Some(R), ..)
-    if (left.left() && left.left().color() == Color::Red) {
-        return {Color::Red, paint(left.left(), Color::Black), left.piece(), left.right()};
+    if (left.left() && left.left().is_red()) {
+        return {Color::Red, left.left().paint_black(), left.piece(), left.right()};
     }
     // case: (_, Some(B), _)
-    if (left.right() && left.right().color() == Color::Black) {
+    if (left.right() && left.right().is_black()) {
         RedBlackTree new_left = {Color::Black, left.left(), left.piece(),
-                                 paint(left.right(), Color::Red)};
+                                 left.right().paint_red()};
         return balance(new_left);
     }
     // case: (_, Some(R), Some(B))
-    if (left.right() && left.right().color() == Color::Red && left.right().left() &&
-        left.right().left().color() == Color::Black) {
+    if (left.right() && left.right().is_red() && left.right().left() &&
+        left.right().left().is_black()) {
         RedBlackTree unbalanced_new_right = {Color::Black, left.right().left().right(),
                                              left.right().piece(),
-                                             paint(left.right().right(), Color::Red)};
+                                             left.right().right().paint_red()};
         auto new_right = balance(unbalanced_new_right);
         RedBlackTree new_left = {Color::Black, left.left(), left.piece(),
                                  left.right().left().left()};
@@ -199,22 +187,22 @@ RedBlackTree balance_left(const RedBlackTree& left) {
 RedBlackTree balance_right(const RedBlackTree& right) {
     // match: (color_l, color_l_r, color_r)
     // case: (.., Some(R))
-    if (right.right() && right.right().color() == Color::Red) {
-        return {Color::Red, right.left(), right.piece(), paint(right.right(), Color::Black)};
+    if (right.right() && right.right().is_red()) {
+        return {Color::Red, right.left(), right.piece(), right.right().paint_black()};
     }
     // case: (Some(B), ..)
-    if (right.left() && right.left().color() == Color::Black) {
-        RedBlackTree new_right = {Color::Black, paint(right.left(), Color::Red), right.piece(),
+    if (right.left() && right.left().is_black()) {
+        RedBlackTree new_right = {Color::Black, right.left().paint_red(), right.piece(),
                                   right.right()};
         return balance(new_right);
     }
     // case: (Some(R), Some(B), _)
-    if (right.left() && right.left().color() == Color::Red && right.left().right() &&
-        right.left().right().color() == Color::Black) {
+    if (right.left() && right.left().is_red() && right.left().right() &&
+        right.left().right().is_black()) {
         RedBlackTree unbalanced_new_left = {
             Color::Black,
             // Note: Because 'left' is red, it must have a left child.
-            paint(right.left().left(), Color::Red),
+            right.left().left().paint_red(),
             right.left().piece(),
             right.left().right().left(),
         };
@@ -230,7 +218,7 @@ RedBlackTree remove_left(const RedBlackTree& root, size_t at, size_t total) {
     auto new_left = rem(root.left(), at, total);
     RedBlackTree new_node = {Color::Red, new_left, root.piece(), root.right()};
     // In this case, the root was a red node and must've had at least two children.
-    if (root.left() && root.left().color() == Color::Black) {
+    if (root.left() && root.left().is_black()) {
         return balance_left(new_node);
     }
     return new_node;
@@ -240,7 +228,7 @@ RedBlackTree remove_right(const RedBlackTree& root, size_t at, size_t total) {
     auto new_right = rem(root.right(), at, total + root.left_length() + root.piece().length);
     RedBlackTree new_node = {Color::Red, root.left(), root.piece(), new_right};
     // In this case, the root was a red node and must've had at least two children.
-    if (root.right() && root.right().color() == Color::Black) {
+    if (root.right() && root.right().is_black()) {
         return balance_right(new_node);
     }
     return new_node;

@@ -30,6 +30,8 @@ struct NodeData {
     size_t subtree_lf_count{};
 };
 
+// TODO: Should we hide `Color`/`color()` as an implementation detail? We already expose
+// `is_red()`/`is_black()` checks.
 enum class Color { Red, Black };
 
 class RedBlackTree {
@@ -55,6 +57,7 @@ public:
     size_t left_line_feed_count() const { return !node_ ? 0 : node_->data.left_lf_count; }
     // clang-format off
     const Piece& piece() const { DCHECK(node_); return node_->data.piece; }
+    // TODO: See above comment under `Color`.
     Color color() const { DCHECK(node_); return node_->color; }
     RedBlackTree left() const { DCHECK(node_); return {node_->left}; }
     RedBlackTree right() const { DCHECK(node_); return {node_->right}; }
@@ -69,6 +72,16 @@ public:
 
     // Debug use.
     bool check_invariants() const;
+
+    // TODO: Organize these.
+    // Null nodes are black.
+    bool is_black() const { return !node_ || node_->color == Color::Black; }
+    bool is_red() const { return node_ && node_->color == Color::Red; }
+    // TODO: Are these good names? Should we have these functions?
+    bool has_doubled_left() const { return is_red() && left().is_red(); }
+    bool has_doubled_right() const { return is_red() && right().is_red(); }
+    RedBlackTree paint_black() const { return {Color::Black, left(), piece(), right()}; }
+    RedBlackTree paint_red() const { return {Color::Red, left(), piece(), right()}; }
 
 private:
     RedBlackTree(const NodePtr& node) : node_(node) {}

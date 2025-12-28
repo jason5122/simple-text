@@ -84,17 +84,17 @@ TEST(RedBlackTreeTest, CheckInvariants) {
         B(B(RL(), RL()), BL()),
         B(B(BL(), BL()), B(BL(), BL())),
     });
-    for (auto t : kValid) EXPECT_TRUE(t.check_invariants());
+    for (auto t : kValid) EXPECT_TRUE(t.satisfies_red_black_invariants());
 
     auto red_root = RL();
-    EXPECT_FALSE(red_root.check_invariants());
+    EXPECT_FALSE(red_root.satisfies_red_black_invariants());
 
     // Red node cannot have a red child.
     auto kRedViolation = std::to_array<RBT>({
         R({}, RL()),
         B(R(RL(), {}), BL()),
     });
-    for (auto t : kRedViolation) EXPECT_FALSE(t.check_invariants());
+    for (auto t : kRedViolation) EXPECT_FALSE(t.satisfies_red_black_invariants());
 
     // Black heights must be the same across all paths.
     auto kBlackViolation = std::to_array<RBT>({
@@ -103,7 +103,7 @@ TEST(RedBlackTreeTest, CheckInvariants) {
         B(RL(), BL()),
         B(B(BL(), BL()), B(BL(), RL())),
     });
-    for (auto t : kBlackViolation) EXPECT_FALSE(t.check_invariants());
+    for (auto t : kBlackViolation) EXPECT_FALSE(t.satisfies_red_black_invariants());
 }
 
 }  // namespace editor

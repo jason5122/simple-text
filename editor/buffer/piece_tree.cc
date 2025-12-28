@@ -463,7 +463,7 @@ void PieceTree::remove_node_range(NodePosition first, size_t length) {
 }
 
 void PieceTree::insert(size_t offset, std::string_view txt) {
-    base::ScopeExit guard{[&] { DCHECK(root_.check_invariants()); }};
+    base::ScopeExit guard{[&] { DCHECK(root_.satisfies_red_black_invariants()); }};
 
     if (txt.empty()) return;
 
@@ -569,7 +569,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
 }
 
 void PieceTree::erase(size_t offset, size_t count) {
-    base::ScopeExit guard{[&] { DCHECK(root_.check_invariants()); }};
+    base::ScopeExit guard{[&] { DCHECK(root_.satisfies_red_black_invariants()); }};
 
     if (offset >= length()) return;
     count = std::min(count, length() - offset);

@@ -47,7 +47,7 @@ class RedBlackTree {
 
 public:
     RedBlackTree() = default;
-    RedBlackTree(Color c, const RedBlackTree& lft, const Piece& p, const RedBlackTree& rgt);
+    RedBlackTree(Color c, const RedBlackTree& left, const Piece& p, const RedBlackTree& right);
 
     // Queries.
     explicit operator bool() const { return static_cast<bool>(node_); }
@@ -71,17 +71,22 @@ public:
     bool operator==(const RedBlackTree&) const = default;
 
     // Debug use.
-    bool check_invariants() const;
+    bool satisfies_red_black_invariants() const;
 
-    // TODO: Organize these.
+    // TODO: Organize and test these.
     // Null nodes are black.
     bool is_black() const { return !node_ || node_->color == Color::Black; }
     bool is_red() const { return node_ && node_->color == Color::Red; }
-    // TODO: Are these good names? Should we have these functions?
-    bool has_doubled_left() const { return is_red() && left().is_red(); }
-    bool has_doubled_right() const { return is_red() && right().is_red(); }
-    RedBlackTree paint_black() const { return {Color::Black, left(), piece(), right()}; }
-    RedBlackTree paint_red() const { return {Color::Red, left(), piece(), right()}; }
+    bool double_red_left() const { return is_red() && left().is_red(); }
+    bool double_red_right() const { return is_red() && right().is_red(); }
+    RedBlackTree blacken() const { return {Color::Black, left(), piece(), right()}; }
+    RedBlackTree redden() const { return {Color::Red, left(), piece(), right()}; }
+    RedBlackTree balance() const;
+    // TODO: These are associated with deletion. Consider renaming to `fixup_delete_{left,right}`.
+    RedBlackTree balance_left() const;
+    RedBlackTree balance_right() const;
+    RedBlackTree remove_left(size_t at, size_t total) const;
+    RedBlackTree remove_right(size_t at, size_t total) const;
 
 private:
     RedBlackTree(const NodePtr& node) : node_(node) {}

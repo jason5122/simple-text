@@ -24,9 +24,6 @@ struct Piece {
 
 class RedBlackTree {
 public:
-    // TODO: Should we make `Color`/`color()` private? We already expose `is_red()`/`is_black()`
-    // checks.
-    // TODO: Apparently making this top-level and named `RBColor` is cleaner than an inner class.
     enum class Color { Red, Black };
 
     RedBlackTree() = default;
@@ -34,16 +31,16 @@ public:
 
     // Queries.
     explicit operator bool() const { return static_cast<bool>(node_); }
+    bool empty() const { return !node_; }
     size_t length() const { return !node_ ? 0 : node_->data.subtree_length; }
     size_t line_feed_count() const { return !node_ ? 0 : node_->data.subtree_lf_count; }
     size_t left_length() const { return !node_ ? 0 : node_->data.left_length; }
     size_t left_line_feed_count() const { return !node_ ? 0 : node_->data.left_lf_count; }
     // clang-format off
-    const Piece& piece() const { DCHECK(node_); return node_->data.piece; }
-    // TODO: See above comment under `Color`.
-    Color color() const { DCHECK(node_); return node_->color; }
-    RedBlackTree left() const { DCHECK(node_); return {node_->left}; }
-    RedBlackTree right() const { DCHECK(node_); return {node_->right}; }
+    const Piece& piece() const { DCHECK(!empty()); return node_->data.piece; }
+    Color color() const { DCHECK(!empty()); return node_->color; }
+    RedBlackTree left() const { DCHECK(!empty()); return {node_->left}; }
+    RedBlackTree right() const { DCHECK(!empty()); return {node_->right}; }
     // clang-format on
 
     // Mutators.
@@ -55,7 +52,6 @@ public:
 
     // TODO: Organize and test these.
     // Null nodes are black.
-    bool empty() const { return !node_; }
     bool is_black() const { return !node_ || node_->color == Color::Black; }
     bool is_red() const { return node_ && node_->color == Color::Red; }
     bool double_red_left() const { return is_red() && left().is_red(); }

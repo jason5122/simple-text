@@ -22,30 +22,13 @@ struct Piece {
     size_t lf_count{};
 };
 
-struct NodeData {
-    Piece piece{};
-    size_t left_length{};
-    size_t left_lf_count{};
-    size_t subtree_length{};
-    size_t subtree_lf_count{};
-};
-
-// TODO: Should we hide `Color`/`color()` as an implementation detail? We already expose
-// `is_red()`/`is_black()` checks.
-enum class Color { Red, Black };
-
 class RedBlackTree {
-    struct Node;
-    using NodePtr = std::shared_ptr<const Node>;
-
-    struct Node {
-        Color color;
-        NodePtr left;
-        NodeData data;
-        NodePtr right;
-    };
-
 public:
+    // TODO: Should we make `Color`/`color()` private? We already expose `is_red()`/`is_black()`
+    // checks.
+    // TODO: Apparently making this top-level and named `RBColor` is cleaner than an inner class.
+    enum class Color { Red, Black };
+
     RedBlackTree() = default;
     RedBlackTree(Color c, const RedBlackTree& left, const Piece& p, const RedBlackTree& right);
 
@@ -70,9 +53,6 @@ public:
     // Helpers.
     bool operator==(const RedBlackTree&) const = default;
 
-    // Debug use.
-    bool satisfies_red_black_invariants() const;
-
     // TODO: Organize and test these.
     // Null nodes are black.
     bool is_black() const { return !node_ || node_->color == Color::Black; }
@@ -81,14 +61,36 @@ public:
     bool double_red_right() const { return is_red() && right().is_red(); }
     RedBlackTree blacken() const { return {Color::Black, left(), piece(), right()}; }
     RedBlackTree redden() const { return {Color::Red, left(), piece(), right()}; }
-    RedBlackTree balance() const;
-    // TODO: These are associated with deletion. Consider renaming to `fixup_delete_{left,right}`.
+
+    // Deletion.
+    RedBlackTree flip_children_if_both_red() const;
     RedBlackTree balance_left() const;
     RedBlackTree balance_right() const;
     RedBlackTree remove_left(size_t at, size_t total) const;
     RedBlackTree remove_right(size_t at, size_t total) const;
 
+    // Debug use.
+    bool satisfies_red_black_invariants() const;
+
 private:
+    struct Node;
+    using NodePtr = std::shared_ptr<const Node>;
+
+    struct NodeData {
+        Piece piece{};
+        size_t left_length{};
+        size_t left_lf_count{};
+        size_t subtree_length{};
+        size_t subtree_lf_count{};
+    };
+
+    struct Node {
+        Color color;
+        NodePtr left;
+        NodeData data;
+        NodePtr right;
+    };
+
     RedBlackTree(const NodePtr& node) : node_(node) {}
 
     NodePtr node_;

@@ -41,7 +41,7 @@ std::string to_graphviz_dot(const editor::RedBlackTree& root) {
         uintptr_t id = node_id(curr);
 
         const auto& p = curr.piece();
-        auto color = (curr.color() == editor::Color::Red) ? "red" : "black";
+        auto color = curr.is_red() ? "red" : "black";
         out << std::format(
             "  n{} [label=\"{{piece.len={} | tree.len={} | tree.lf_count={}}}\", color={}];\n", id,
             p.length, curr.length(), curr.line_feed_count(), color);

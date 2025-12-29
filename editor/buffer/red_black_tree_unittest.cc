@@ -4,44 +4,45 @@
 
 namespace editor {
 
-namespace {
+using Tree = RedBlackTree;
+using Color = RedBlackTree::Color;
 
-using RBT = RedBlackTree;
+namespace {
 
 inline Piece P(size_t len, size_t lf) { return {.length = len, .lf_count = lf}; }
 
 // Black leaf.
-inline RBT BL(size_t len = 1, size_t lf = 0) { return {Color::Black, {}, P(len, lf), {}}; }
+inline Tree BL(size_t len = 1, size_t lf = 0) { return {Color::Black, {}, P(len, lf), {}}; }
 // Red leaf.
-inline RBT RL(size_t len = 1, size_t lf = 0) { return {Color::Red, {}, P(len, lf), {}}; }
+inline Tree RL(size_t len = 1, size_t lf = 0) { return {Color::Red, {}, P(len, lf), {}}; }
 // Black node.
-inline RBT B(const RBT& L, const RBT& R, size_t len = 1, size_t lf = 0) {
+inline Tree B(const Tree& L, const Tree& R, size_t len = 1, size_t lf = 0) {
     return {Color::Black, L, P(len, lf), R};
 }
 // Red node.
-inline RBT R(const RBT& L, const RBT& R, size_t len = 1, size_t lf = 0) {
+inline Tree R(const Tree& L, const Tree& R, size_t len = 1, size_t lf = 0) {
     return {Color::Red, L, P(len, lf), R};
 }
 
 }  // namespace
 
 TEST(RedBlackTreeTest, Constructor) {
-    RBT t1;
+    Tree t1;
     EXPECT_FALSE(t1);
     EXPECT_EQ(t1.length(), 0);
     EXPECT_EQ(t1.line_feed_count(), 0);
 
-    RBT t2 = BL(10, 5);
+    Tree t2 = BL(10, 5);
     EXPECT_TRUE(t2);
     EXPECT_EQ(t2.color(), Color::Black);
-    EXPECT_EQ(t2.left(), RBT{});
-    EXPECT_EQ(t2.right(), RBT{});
+    EXPECT_EQ(t2.left(), Tree{});
+    EXPECT_EQ(t2.right(), Tree{});
     EXPECT_EQ(t2.length(), 10);
     EXPECT_EQ(t2.line_feed_count(), 5);
 }
 
 TEST(RedBlackTreeTest, Insert) {
-    RBT t;
+    Tree t;
     t = t.insert(0, P(5, 2));
     EXPECT_EQ(t.length(), 5);
     EXPECT_EQ(t.line_feed_count(), 2);
@@ -56,7 +57,7 @@ TEST(RedBlackTreeTest, Insert) {
 }
 
 TEST(RedBlackTreeTest, RandomInserts) {
-    RBT t;
+    Tree t;
     size_t total_len = 0;
     size_t total_lf = 0;
 
@@ -76,7 +77,7 @@ TEST(RedBlackTreeTest, RandomInserts) {
 
 // TODO: Should we enforce that the root must be black?
 TEST(RedBlackTreeTest, CheckInvariants) {
-    auto kValid = std::to_array<RBT>({
+    auto kValid = std::to_array<Tree>({
         {},    // NIL.
         BL(),  // Single black.
         B(BL(), BL()),
@@ -90,14 +91,14 @@ TEST(RedBlackTreeTest, CheckInvariants) {
     EXPECT_FALSE(red_root.satisfies_red_black_invariants());
 
     // Red node cannot have a red child.
-    auto kRedViolation = std::to_array<RBT>({
+    auto kRedViolation = std::to_array<Tree>({
         R({}, RL()),
         B(R(RL(), {}), BL()),
     });
     for (auto t : kRedViolation) EXPECT_FALSE(t.satisfies_red_black_invariants());
 
     // Black heights must be the same across all paths.
-    auto kBlackViolation = std::to_array<RBT>({
+    auto kBlackViolation = std::to_array<Tree>({
         B(BL(), {}),
         B(B({}, BL()), {}),
         B(RL(), BL()),

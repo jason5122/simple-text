@@ -55,6 +55,7 @@ public:
 
     // TODO: Organize and test these.
     // Null nodes are black.
+    bool empty() const { return !node_; }
     bool is_black() const { return !node_ || node_->color == Color::Black; }
     bool is_red() const { return node_ && node_->color == Color::Red; }
     bool double_red_left() const { return is_red() && left().is_red(); }

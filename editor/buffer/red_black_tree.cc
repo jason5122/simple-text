@@ -46,7 +46,7 @@ RedBlackTree RedBlackTree::insert(size_t at, const Piece& p) const {
 
 // See okasaki_balance.png (Okasaki, 1999, Fig. 1) for the balance cases.
 RedBlackTree RedBlackTree::balance() const {
-    if (!is_black()) return *this;
+    if (empty() || is_red()) return *this;
 
     auto l = left();
     auto r = right();

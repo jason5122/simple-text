@@ -24,56 +24,53 @@ RedBlackTree::RedBlackTree(Color c,
 // =================================================================================================
 
 namespace {
-
-// TODO: What is `Color c` referring to? What is `left` and `right`? Could this be cleaner?
-RedBlackTree balance(Color c,
-                     const RedBlackTree& left,
-                     const Piece& p,
-                     const RedBlackTree& right) {
-    if (c == Color::Black && left.double_red_left()) {
-        return {Color::Red,
-                left.left().blacken(),
-                left.piece(),
-                {Color::Black, left.right(), p, right}};
-    }
-    if (c == Color::Black && left.double_red_right()) {
-        return {Color::Red,
-                {Color::Black, left.left(), left.piece(), left.right().left()},
-                left.right().piece(),
-                {Color::Black, left.right().right(), p, right}};
-    }
-    if (c == Color::Black && right.double_red_left()) {
-        return {Color::Red,
-                {Color::Black, left, p, right.left().left()},
-                right.left().piece(),
-                {Color::Black, right.left().right(), right.piece(), right.right()}};
-    }
-    if (c == Color::Black && right.double_red_right()) {
-        return {Color::Red,
-                {Color::Black, left, p, right.left()},
-                right.piece(),
-                right.right().blacken()};
-    }
-    return {c, left, p, right};
-}
-
 RedBlackTree ins(const RedBlackTree& node, const Piece& p, size_t at, size_t total_offset) {
     if (!node) return {Color::Red, {}, p, {}};
 
     size_t split = total_offset + node.left_length() + node.piece().length;
     if (at < split) {
         auto new_left = ins(node.left(), p, at, total_offset);
-        return balance(node.color(), new_left, node.piece(), node.right());
+        RedBlackTree rebuilt = {node.color(), new_left, node.piece(), node.right()};
+        return rebuilt.balance();
     } else {
         auto new_right = ins(node.right(), p, at, split);
-        return balance(node.color(), node.left(), node.piece(), new_right);
+        RedBlackTree rebuilt = {node.color(), node.left(), node.piece(), new_right};
+        return rebuilt.balance();
     }
 }
-
 }  // namespace
 
 RedBlackTree RedBlackTree::insert(size_t at, const Piece& p) const {
     return ins(*this, p, at, 0).blacken();
+}
+
+// See okasaki_balance.png (Okasaki, 1999, Fig. 1) for the balance cases.
+RedBlackTree RedBlackTree::balance() const {
+    if (!is_black()) return *this;
+
+    auto l = left();
+    auto r = right();
+    const auto& p = piece();
+
+    if (l.double_red_left()) {
+        return {Color::Red, l.left().blacken(), l.piece(), {Color::Black, l.right(), p, r}};
+    }
+    if (l.double_red_right()) {
+        return {Color::Red,
+                {Color::Black, l.left(), l.piece(), l.right().left()},
+                l.right().piece(),
+                {Color::Black, l.right().right(), p, r}};
+    }
+    if (r.double_red_left()) {
+        return {Color::Red,
+                {Color::Black, l, p, r.left().left()},
+                r.left().piece(),
+                {Color::Black, r.left().right(), r.piece(), r.right()}};
+    }
+    if (r.double_red_right()) {
+        return {Color::Red, {Color::Black, l, p, r.left()}, r.piece(), r.right().blacken()};
+    }
+    return *this;
 }
 
 // =================================================================================================
@@ -140,7 +137,7 @@ RedBlackTree RedBlackTree::flip_children_if_both_red() const {
     if (left().is_red() && right().is_red()) {
         return {Color::Red, left().blacken(), piece(), right().blacken()};
     }
-    return balance(color(), left(), piece(), right());
+    return balance();
 }
 
 RedBlackTree RedBlackTree::balance_left() const {
@@ -233,19 +230,11 @@ int black_height_or_zero(const RedBlackTree& node) {
 }  // namespace
 
 bool RedBlackTree::satisfies_red_black_invariants() const {
-    // 1. Every node is either red or black.
-    // 2. The root is black.
-    // 3. Every leaf (NIL) is black.
-    // 4. If a node is red, then both its children are black.
-    // 5. For each node, all simple paths from the node to descendant leaves contain the same
-    // number of black nodes.
-
-    // The internal nodes in this RB tree can be totally black so we will not count them directly,
-    // we'll just track odd nodes as either red or black. Measure the number of black nodes we need
-    // to validate.
-    const auto& root = *this;
-    if (!root.is_black()) return false;
-    return black_height_or_zero(root) != 0;
+    // 1. Each node is red or black.
+    // 2. Red nodes have black children.
+    // 3. Every path from a node to an empty leaf has the same black height.
+    // 4. Leaves are implicitly black.
+    return black_height_or_zero(*this) != 0;
 }
 
 }  // namespace editor

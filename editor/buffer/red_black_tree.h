@@ -62,6 +62,9 @@ public:
     RedBlackTree blacken() const { return {Color::Black, left(), piece(), right()}; }
     RedBlackTree redden() const { return {Color::Red, left(), piece(), right()}; }
 
+    // Insertion.
+    RedBlackTree balance() const;
+
     // Deletion.
     RedBlackTree flip_children_if_both_red() const;
     RedBlackTree balance_left() const;

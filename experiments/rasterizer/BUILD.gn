@@ -1,0 +1,15 @@
+executable("rasterizer") {
+  sources = [ "main.cc" ]
+
+  frameworks = [
+    "CoreText.framework",
+    "CoreGraphics.framework",
+    "CoreFoundation.framework",
+    "ImageIO.framework",
+  ]
+
+  deps = [
+    "//base",
+    "//third_party/spdlog",
+  ]
+}

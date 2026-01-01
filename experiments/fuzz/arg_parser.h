@@ -3,10 +3,15 @@
 #include <cstdint>
 #include <cstdlib>
 
+// struct Args {
+//     size_t ops = 1000;
+//     size_t payload = 32;
+//     size_t check_every = 64;
+// };
 struct Args {
-    size_t ops = 1000;
+    size_t ops = 10000;
     size_t payload = 32;
-    size_t check_every = 64;
+    size_t check_every = 0;
 };
 
 uint64_t parse_u64(const char* s);

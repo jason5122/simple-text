@@ -1,40 +1,59 @@
-#include "base/debug/timer.h"
+#include "base/debug/profiler.h"
+#include "base/rand_util.h"
+#include <set>
 #include <spdlog/spdlog.h>
-#include <string>
 #include <string_view>
+
+#include "clrs.h"
+#include "custom.h"
+// #include "red_black_tree.h"
 
 namespace {
 
-constexpr auto operator*(const std::string_view& sv, size_t times) {
-    std::string result;
-    for (size_t i = 0; i < times; ++i) result += sv;
-    return result;
+void benchmark_std_set(const std::vector<int>& nums) {
+    auto prof = base::Profiler("std::set");
+    std::set<int> set;
+    for (int k : nums) set.insert(k);
 }
 
-auto benchmark(size_t exp) {
-    base::Timer timer;
+// void benchmark_red_black_tree(const std::vector<int>& nums) {
+//     auto prof = base::Profiler("editor::RedBlackTree");
+//     editor::NodeArena arena;
+//     editor::RedBlackTree t;
+//     for (int k : nums) {
+//         size_t at = static_cast<size_t>(k) % (t.length() + 1);
+//         t = t.insert(arena, k, {.length = 1});
+//     }
+// }
 
-    size_t size = std::pow(10, exp);
-    std::string str = std::string_view("a") * size;
-    std::string line;
-    for (char c : str) {
-        if (c == '\n') {
-            // Do something with line.
-            line.clear();
-        } else {
-            line += c;
-        }
+void benchmark_red_black_tree(const std::vector<int>& nums) {
+    auto prof = base::Profiler("editor::RedBlackTree");
+    editor::RedBlackTree t;
+    for (int k : nums) {
+        size_t at = static_cast<size_t>(k) % (t.length() + 1);
+        t.insert_at(k, {.length = 1});
     }
+}
 
-    auto duration = timer.stop();
-    spdlog::info("benchmark(10^{}): {} µs", exp, duration);
-    return duration;
+void benchmark_third_party_red_black_tree(const std::vector<int>& nums) {
+    auto prof = base::Profiler("CLRS");
+    RedBlackTree t;
+    for (int k : nums) t.insert(k);
 }
 
 }  // namespace
 
 int main() {
-    for (size_t exp = 3; exp <= 9; exp++) {
-        benchmark(exp);
+    for (int N = 1'000; N <= 1'000'000; N *= 10) {
+        std::cout << "N = " << N << '\n';
+
+        std::vector<int> nums(N);
+        for (size_t i = 0; i < N; i++) nums[i] = base::rand_int(0, 4096);
+
+        benchmark_std_set(nums);
+        benchmark_third_party_red_black_tree(nums);
+        benchmark_red_black_tree(nums);
+
+        std::cout << '\n';
     }
 }

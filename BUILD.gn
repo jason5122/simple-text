@@ -16,6 +16,7 @@ group("experiments") {
     "//experiments/gui_api_redesign",
     "//experiments/message_loop",
     "//experiments/playground",
+    "//experiments/rasterizer",
   ]
 
   if (is_mac) {

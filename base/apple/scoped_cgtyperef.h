@@ -36,9 +36,25 @@ struct ScopedTypeRefTraits<CGContextRef> {
     static void Release(CGContextRef object) { CGContextRelease(object); }
 };
 
+template <>
+struct ScopedTypeRefTraits<CGImageRef> {
+    static CGImageRef InvalidValue() { return nullptr; }
+    static CGImageRef Retain(CGImageRef object) { return CGImageRetain(object); }
+    static void Release(CGImageRef object) { CGImageRelease(object); }
+};
+
+template <>
+struct ScopedTypeRefTraits<CGColorRef> {
+    static CGColorRef InvalidValue() { return nullptr; }
+    static CGColorRef Retain(CGColorRef object) { return CGColorRetain(object); }
+    static void Release(CGColorRef object) { CGColorRelease(object); }
+};
+
 using ScopedCGLContext = ScopedTypeRef<CGLContextObj>;
 using ScopedCGLPixelFormat = ScopedTypeRef<CGLPixelFormatObj>;
 using ScopedCGColorSpace = ScopedTypeRef<CGColorSpaceRef>;
 using ScopedCGContext = ScopedTypeRef<CGContextRef>;
+using ScopedCGImage = ScopedTypeRef<CGImageRef>;
+using ScopedCGColor = ScopedTypeRef<CGColorRef>;
 
 }  // namespace base::apple

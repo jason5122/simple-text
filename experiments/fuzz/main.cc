@@ -1,3 +1,4 @@
+#include "base/check.h"
 #include "base/rand_util.h"
 #include "editor/buffer/piece_tree.h"
 #include "experiments/fuzz/arg_parser.h"

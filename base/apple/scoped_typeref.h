@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/check.h"
 #include <cstddef>
 
 namespace base::apple {

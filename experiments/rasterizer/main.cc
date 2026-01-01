@@ -85,6 +85,91 @@ void draw_text2(CGContextRef ctx, CTLineRef line, CTFontRef font, CGFloat descen
     }
 }
 
+struct GlyphBitmap {
+    size_t width;
+    size_t height;
+    size_t bytes_per_pixel;
+    int bearing_x;
+    int bearing_y;
+    std::vector<uint8_t> pixels;
+};
+
+GlyphBitmap rasterize(CTFontRef font, CGGlyph glyph, int scale) {
+    CGRect bounds =
+        CTFontGetBoundingRectsForGlyphs(font, kCTFontOrientationDefault, &glyph, nullptr, 1);
+    CGFloat pad = 1.0 / scale;
+    bounds = CGRectInset(bounds, -pad, -pad);
+
+    // size_t width = std::ceil(bounds.size.width * scale);
+    // size_t height = std::ceil(bounds.size.height * scale);
+    int x0 = (int)std::floor(bounds.origin.x * scale);
+    int y0 = (int)std::floor(bounds.origin.y * scale);
+    int x1 = (int)std::ceil((bounds.origin.x + bounds.size.width) * scale);
+    int y1 = (int)std::ceil((bounds.origin.y + bounds.size.height) * scale);
+    size_t width = (size_t)std::max(0, x1 - x0);
+    size_t height = (size_t)std::max(0, y1 - y0);
+    int bearing_x = x0;
+    int bearing_y = y0;
+
+    size_t bytes_per_pixel = 4;
+    size_t bytes_per_row = width * bytes_per_pixel;
+    std::vector<uint8_t> pixels(height * bytes_per_row);
+
+    auto cs = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
+    auto ctx = ScopedCGContext(
+        CGBitmapContextCreate(pixels.data(), width, height, 8, bytes_per_row, cs.get(),
+                              kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
+
+    CGContextSetRGBFillColor(ctx.get(), 0, 0, 0, 1);
+    CGContextScaleCTM(ctx.get(), scale, scale);
+    CGContextTranslateCTM(ctx.get(), -bearing_x / scale, -bearing_y / scale);
+
+    CGPoint pos = {0, 0};
+    CTFontDrawGlyphs(font, &glyph, &pos, 1, ctx.get());
+
+    return {
+        .width = width,
+        .height = height,
+        .bytes_per_pixel = bytes_per_pixel,
+        .bearing_x = bearing_x,
+        .bearing_y = bearing_y,
+        .pixels = std::move(pixels),
+    };
+}
+
+void blit_glyph_bitmap(CGContextRef ctx, const GlyphBitmap& bitmap, const CGPoint& origin) {
+    auto& [width, height, bytes_per_pixel, bearing_x, bearing_y, pixels] = bitmap;
+    size_t bytes_per_row = width * bytes_per_pixel;
+
+    auto provider = ScopedCFTypeRef<CGDataProviderRef>(
+        CGDataProviderCreateWithData(nullptr, pixels.data(), height * bytes_per_row, nullptr));
+    auto cs = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
+    auto img = ScopedCFTypeRef<CGImageRef>(
+        CGImageCreate(width, height, 8, 32, bytes_per_row, cs.get(),
+                      kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host, provider.get(),
+                      nullptr, true, kCGRenderingIntentDefault));
+
+    CGContextSaveGState(ctx);
+    constexpr int scale = 2;
+    CGFloat bx = (CGFloat)bearing_x / (CGFloat)scale;
+    CGFloat by = (CGFloat)bearing_y / (CGFloat)scale;
+    CGRect rect = {
+        .origin =
+            {
+                .x = origin.x + bx,
+                .y = origin.y + by,
+            },
+        .size =
+            {
+                .width = (CGFloat)width / (CGFloat)scale,
+                .height = (CGFloat)height / (CGFloat)scale,
+            },
+    };
+    CGContextSetInterpolationQuality(ctx, kCGInterpolationNone);
+    CGContextDrawImage(ctx, rect, img.get());
+    CGContextRestoreGState(ctx);
+}
+
 // Identical to `draw_text`!
 void draw_text3(CGContextRef ctx, CTLineRef line, CTFontRef font, CGFloat descent) {
     CGContextSetRGBFillColor(ctx, 0, 0, 0, 1);
@@ -117,7 +202,11 @@ void draw_text3(CGContextRef ctx, CTLineRef line, CTFontRef font, CGFloat descen
             auto glyph = glyphs[i];
             pos.x += line_origin.x;
             pos.y += line_origin.y;
-            CTFontDrawGlyphs(run_font, &glyph, &pos, 1, ctx);
+            // CTFontDrawGlyphs(run_font, &glyph, &pos, 1, ctx);
+
+            constexpr size_t scale = 2;
+            auto bitmap = rasterize(run_font, glyph, scale);
+            blit_glyph_bitmap(ctx, bitmap, pos);
         }
     }
 }
@@ -137,12 +226,12 @@ int main() {
 
     constexpr size_t bytes_per_pixel = 4;
     constexpr size_t bytes_per_row = width * bytes_per_pixel;
-    std::vector<uint8_t> pixels(height * bytes_per_row, 0);
+    std::vector<uint8_t> pixels(height * bytes_per_row);
 
     auto cs = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
     auto ctx = ScopedCGContext(
         CGBitmapContextCreate(pixels.data(), width, height, 8, bytes_per_row, cs.get(),
-                              kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Host));
+                              kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
     CGContextSetRGBFillColor(ctx.get(), 1, 1, 1, 1);
     CGContextFillRect(ctx.get(), CGRectMake(0, 0, width, height));

@@ -26,6 +26,18 @@ void write_png(std::string_view path, CGImageRef image) {
     CGImageDestinationAddImage(dest.get(), image, nullptr);
     CGImageDestinationFinalize(dest.get());
 }
+
+struct Color {
+    CGFloat r, g, b;
+};
+
+void draw_line(CGContextRef ctx, Color color, int scale, CGPoint p1, CGPoint p2) {
+    CGContextSetRGBStrokeColor(ctx, color.r, color.g, color.b, 1);
+    CGContextSetLineWidth(ctx, 1.0 / scale);
+    CGContextMoveToPoint(ctx, p1.x, p1.y);
+    CGContextAddLineToPoint(ctx, p2.x, p2.y);
+    CGContextStrokePath(ctx);
+}
 }  // namespace
 
 int main() {
@@ -34,8 +46,8 @@ int main() {
     CGFloat font_size = 16;
     const char* out_path = "out.png";
 
-    constexpr size_t width = 1500;
-    constexpr size_t height = 100;
+    constexpr size_t width = 1000;
+    constexpr size_t height = 200;
     constexpr size_t scale = 2;
 
     constexpr size_t bytes_per_pixel = 4;
@@ -65,20 +77,23 @@ int main() {
     CGFloat ascent = 0, descent = 0, leading = 0;
     double line_width = CTLineGetTypographicBounds(line.get(), &ascent, &descent, &leading);
 
-    auto snap = [scale](CGFloat y) { return (std::round(y * scale - 0.5) + 0.5) / scale; };
-    // auto snap = [scale](CGFloat y) { return (std::floor(y * scale) + 0.5) / scale; };
+    // Round.
+    auto snap = [scale](CGFloat y) { return (std::floor(y * scale) + 0.5) / scale; };
     spdlog::info("descent = {} -> {}", descent, snap(descent));
     spdlog::info("line_width = {} -> {}", line_width, std::ceil(line_width));
+    spdlog::info("snap(0) = {}", snap(0));
+    ascent = snap(ascent);
+    descent = snap(descent);
+    line_width = std::ceil(line_width);
+    CGFloat baseline = snap(0);
 
-    CGContextSetTextPosition(ctx.get(), 0, snap(descent));
+    CGContextSetTextPosition(ctx.get(), 0, descent);
     CTLineDraw(line.get(), ctx.get());
 
-    // Baseline.
-    CGContextSetRGBStrokeColor(ctx.get(), 1, 0, 0, 1);
-    CGContextSetLineWidth(ctx.get(), 1.0 / scale);
-    CGContextMoveToPoint(ctx.get(), 0, snap(descent));
-    CGContextAddLineToPoint(ctx.get(), std::ceil(line_width), snap(descent));
-    CGContextStrokePath(ctx.get());
+    // Debug.
+    draw_line(ctx.get(), {1, 0, 0}, scale, {0, descent}, {line_width, descent});
+    draw_line(ctx.get(), {0, 1, 0}, scale, {0, ascent}, {line_width, ascent});
+    draw_line(ctx.get(), {0, 0, 1}, scale, {0, baseline}, {line_width, baseline});
 
     auto img = ScopedCGImage(CGBitmapContextCreateImage(ctx.get()));
     write_png(out_path, img.get());

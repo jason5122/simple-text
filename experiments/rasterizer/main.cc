@@ -94,80 +94,77 @@ struct GlyphBitmap {
     std::vector<uint8_t> pixels;
 };
 
-GlyphBitmap rasterize(CTFontRef font, CGGlyph glyph, int scale) {
-    CGRect bounds =
+GlyphBitmap rasterize(CTFontRef font, CGGlyph glyph, const CGPoint& origin_user, int scale) {
+    // Glyph bounds in glyph space (relative to glyph origin).
+    CGRect gb =
         CTFontGetBoundingRectsForGlyphs(font, kCTFontOrientationDefault, &glyph, nullptr, 1);
-    CGFloat pad = 1.0 / scale;
-    bounds = CGRectInset(bounds, -pad, -pad);
 
-    // size_t width = std::ceil(bounds.size.width * scale);
-    // size_t height = std::ceil(bounds.size.height * scale);
-    int x0 = (int)std::floor(bounds.origin.x * scale);
-    int y0 = (int)std::floor(bounds.origin.y * scale);
-    int x1 = (int)std::ceil((bounds.origin.x + bounds.size.width) * scale);
-    int y1 = (int)std::ceil((bounds.origin.y + bounds.size.height) * scale);
-    size_t width = (size_t)std::max(0, x1 - x0);
-    size_t height = (size_t)std::max(0, y1 - y0);
-    int bearing_x = x0;
-    int bearing_y = y0;
+    // Move bounds into destination user space at origin_user.
+    CGRect ub = CGRectOffset(gb, origin_user.x, origin_user.y);
+
+    // Pad by 1 device pixel to avoid AA clipping.
+    CGFloat pad_user = 1.0 / scale;
+    ub = CGRectInset(ub, -pad_user, -pad_user);
+
+    // Compute destination pixel rect.
+    int x0 = (int)std::floor(ub.origin.x * scale);
+    int y0 = (int)std::floor(ub.origin.y * scale);
+    int x1 = (int)std::ceil((ub.origin.x + ub.size.width) * scale);
+    int y1 = (int)std::ceil((ub.origin.y + ub.size.height) * scale);
+
+    size_t w = std::max(0, x1 - x0);
+    size_t h = std::max(0, y1 - y0);
+
+    if (w == 0 || h == 0) return {};
 
     size_t bytes_per_pixel = 4;
-    size_t bytes_per_row = width * bytes_per_pixel;
-    std::vector<uint8_t> pixels(height * bytes_per_row);
+    size_t bytes_per_row = w * bytes_per_pixel;
+    std::vector<uint8_t> pixels(h * bytes_per_row);
 
     auto cs = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
     auto ctx = ScopedCGContext(
-        CGBitmapContextCreate(pixels.data(), width, height, 8, bytes_per_row, cs.get(),
+        CGBitmapContextCreate(pixels.data(), w, h, 8, bytes_per_row, cs.get(),
                               kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
-    CGContextSetRGBFillColor(ctx.get(), 0, 0, 0, 1);
+    // Map glyph drawing into destination user space, but clipped to this bitmap.
+    // device_px = user * scale, so set scale then translate by bitmap origin in user units.
     CGContextScaleCTM(ctx.get(), scale, scale);
-    CGContextTranslateCTM(ctx.get(), -bearing_x / scale, -bearing_y / scale);
+    CGContextTranslateCTM(ctx.get(), -(CGFloat)x0 / scale, -(CGFloat)y0 / scale);
 
-    CGPoint pos = {0, 0};
+    // Draw glyph at its real destination position.
+    CGContextSetRGBFillColor(ctx.get(), 0, 0, 0, 1);
+    CGPoint pos = origin_user;
     CTFontDrawGlyphs(font, &glyph, &pos, 1, ctx.get());
 
     return {
-        .width = width,
-        .height = height,
+        .width = w,
+        .height = h,
         .bytes_per_pixel = bytes_per_pixel,
-        .bearing_x = bearing_x,
-        .bearing_y = bearing_y,
+        .bearing_x = x0,
+        .bearing_y = y0,
         .pixels = std::move(pixels),
     };
 }
 
-void blit_glyph_bitmap(CGContextRef ctx, const GlyphBitmap& bitmap, const CGPoint& origin) {
-    auto& [width, height, bytes_per_pixel, bearing_x, bearing_y, pixels] = bitmap;
-    size_t bytes_per_row = width * bytes_per_pixel;
+void blit_glyph_bitmap(CGContextRef ctx, const GlyphBitmap& bm, int scale) {
+    if (bm.width == 0 || bm.height == 0) return;
 
-    auto provider = ScopedCFTypeRef<CGDataProviderRef>(
-        CGDataProviderCreateWithData(nullptr, pixels.data(), height * bytes_per_row, nullptr));
+    size_t bytes_per_row = bm.width * bm.bytes_per_pixel;
+    auto provider = ScopedCFTypeRef<CGDataProviderRef>(CGDataProviderCreateWithData(
+        nullptr, bm.pixels.data(), bm.height * bytes_per_row, nullptr));
     auto cs = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
     auto img = ScopedCFTypeRef<CGImageRef>(
-        CGImageCreate(width, height, 8, 32, bytes_per_row, cs.get(),
+        CGImageCreate(bm.width, bm.height, 8, 32, bytes_per_row, cs.get(),
                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host, provider.get(),
                       nullptr, true, kCGRenderingIntentDefault));
 
-    CGContextSaveGState(ctx);
-    constexpr int scale = 2;
-    CGFloat bx = (CGFloat)bearing_x / (CGFloat)scale;
-    CGFloat by = (CGFloat)bearing_y / (CGFloat)scale;
+    // Destination rect in user space.
     CGRect rect = {
-        .origin =
-            {
-                .x = origin.x + bx,
-                .y = origin.y + by,
-            },
-        .size =
-            {
-                .width = (CGFloat)width / (CGFloat)scale,
-                .height = (CGFloat)height / (CGFloat)scale,
-            },
+        .origin = {(CGFloat)bm.bearing_x / scale, (CGFloat)bm.bearing_y / scale},
+        .size = {(CGFloat)bm.width / scale, (CGFloat)bm.height / scale},
     };
-    CGContextSetInterpolationQuality(ctx, kCGInterpolationNone);
+
     CGContextDrawImage(ctx, rect, img.get());
-    CGContextRestoreGState(ctx);
 }
 
 // Identical to `draw_text`!
@@ -202,11 +199,10 @@ void draw_text3(CGContextRef ctx, CTLineRef line, CTFontRef font, CGFloat descen
             auto glyph = glyphs[i];
             pos.x += line_origin.x;
             pos.y += line_origin.y;
-            // CTFontDrawGlyphs(run_font, &glyph, &pos, 1, ctx);
 
-            constexpr size_t scale = 2;
-            auto bitmap = rasterize(run_font, glyph, scale);
-            blit_glyph_bitmap(ctx, bitmap, pos);
+            constexpr int scale = 2;
+            GlyphBitmap bm = rasterize(run_font, glyph, pos, scale);
+            blit_glyph_bitmap(ctx, bm, scale);
         }
     }
 }

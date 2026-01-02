@@ -1,5 +1,8 @@
 executable("rasterizer") {
-  sources = [ "main.cc" ]
+  sources = [
+    "font_core_text.cc",
+    "main.cc",
+  ]
 
   frameworks = [
     "CoreText.framework",

@@ -1,5 +1,6 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
+#include "base/hash/hash.h"
 #include "base/strings/sys_string_conversions.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
@@ -123,7 +124,7 @@ struct GlyphBitmap {
 };
 
 // Rasterize a glyph at a representative subpixel X for the bucket.
-GlyphBitmap rasterize_bucketed_x(
+GlyphBitmap rasterize(
     CTFontRef font, CGGlyph glyph, uint8_t phase_x_bucket, int scale, int buckets) {
     // Glyph bounds in glyph space (relative to glyph origin).
     CGRect gb =
@@ -212,15 +213,16 @@ void blit_glyph_bitmap(CGContextRef ctx,
 
 struct CacheKey {
     CTFontRef font = nullptr;
-    CGGlyph glyph = 0;
+    uint32_t glyph = 0;
     uint8_t phase_x_bucket = 0;
 };
 
 struct CacheKeyHash {
     size_t operator()(const CacheKey& k) const noexcept {
-        size_t h = std::hash<const void*>()((const void*)k.font);
-        h ^= (size_t)k.glyph + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-        h ^= (size_t)k.phase_x_bucket + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        size_t h = 0;
+        h = base::hash_combine(h, std::hash<const void*>{}((const void*)k.font));
+        h = base::hash_combine(h, std::hash<uint32_t>{}(k.glyph));
+        h = base::hash_combine(h, std::hash<uint8_t>{}(k.phase_x_bucket));
         return h;
     }
 };
@@ -239,7 +241,7 @@ const GlyphBitmap& get_cached_glyph(
     auto it = g_cache.find(key);
     if (it != g_cache.end()) return it->second;
 
-    GlyphBitmap bm = rasterize_bucketed_x(font, glyph, key.phase_x_bucket, scale, buckets);
+    GlyphBitmap bm = rasterize(font, glyph, key.phase_x_bucket, scale, buckets);
     auto [ins_it, _] = g_cache.emplace(key, std::move(bm));
     return ins_it->second;
 }

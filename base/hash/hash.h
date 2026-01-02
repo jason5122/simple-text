@@ -3,7 +3,7 @@
 #include "build/build_config.h"
 #include "third_party/hash_maps/rapidhash.h"
 #include <cstddef>
-#include <string>
+#include <string_view>
 
 namespace base {
 

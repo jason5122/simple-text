@@ -13,7 +13,6 @@
 #include <vector>
 
 using base::apple::ScopedCFTypeRef;
-using base::apple::ScopedCGColor;
 using base::apple::ScopedCGColorSpace;
 using base::apple::ScopedCGContext;
 using base::apple::ScopedCGImage;
@@ -44,10 +43,9 @@ void draw_line(
     CGContextStrokePath(ctx);
 }
 
-void draw_text(CGContextRef ctx, CTLineRef line, CTFontRef, CGFloat descent) {
+void draw_text(CGContextRef ctx, CTLineRef line, CGFloat descent) {
     CGContextSetTextMatrix(ctx, CGAffineTransformIdentity);
     CGContextSetTextDrawingMode(ctx, kCGTextFill);
-
     CGContextSetTextPosition(ctx, 0, descent);
     CTLineDraw(line, ctx);
 }
@@ -88,40 +86,60 @@ void draw_text2(CGContextRef ctx, CTLineRef line, CTFontRef font, CGFloat descen
     }
 }
 
-struct GlyphBitmap {
-    size_t width = 0;
-    size_t height = 0;
-    size_t bytes_per_pixel = 4;
-    CGFloat offset_x_user = 0;
-    CGFloat offset_y_user = 0;
-    // uint8_t phase_x_bucket = 0;
-    std::vector<uint8_t> pixels;
-};
+// -------------------- Subpixel-X bucket helpers --------------------
 
-uint8_t phase_bucket_x(CGFloat origin_x_user, int scale, int buckets) {
-    // Phase in device pixels.
+inline CGFloat frac01(CGFloat x) { return x - std::floor(x); }
+
+inline uint8_t phase_bucket_x(CGFloat origin_x_user, int scale, int buckets) {
+    // x in device px
     CGFloat x_dev = origin_x_user * (CGFloat)scale;
-    CGFloat frac = x_dev - std::floor(x_dev);          // [0,1)
-    int b = (int)std::floor(frac * (CGFloat)buckets);  // 0..buckets-1
+    CGFloat f = frac01(x_dev);  // [0,1)
+    int b = (int)std::floor(f * (CGFloat)buckets);
     if (b < 0) b = 0;
     if (b >= buckets) b = buckets - 1;
     return (uint8_t)b;
 }
 
-GlyphBitmap rasterize(
-    CTFontRef font, CGGlyph glyph, const CGPoint& origin_user, int scale, int buckets) {
+inline CGFloat bucket_center_subx_user(uint8_t bucket, int scale, int buckets) {
+    // representative subpixel offset in device px, then convert to user
+    CGFloat f = ((CGFloat)bucket + 0.5f) / (CGFloat)buckets;  // (0,1)
+    return f / (CGFloat)scale;
+}
+
+// -------------------- Glyph bitmap and raster/blit --------------------
+
+struct GlyphBitmap {
+    size_t width = 0;
+    size_t height = 0;
+    size_t bytes_per_pixel = 4;
+
+    // Offset of the crop rect origin relative to the glyph origin, in USER units.
+    // This is what lets blit use only (origin_user + offset_user).
+    CGFloat offset_x_user = 0;
+    CGFloat offset_y_user = 0;
+
+    uint8_t phase_x_bucket = 0;
+    std::vector<uint8_t> pixels;
+};
+
+// Rasterize a glyph at a representative subpixel X for the bucket.
+GlyphBitmap rasterize_bucketed_x(
+    CTFontRef font, CGGlyph glyph, uint8_t phase_x_bucket, int scale, int buckets) {
     // Glyph bounds in glyph space (relative to glyph origin).
     CGRect gb =
         CTFontGetBoundingRectsForGlyphs(font, kCTFontOrientationDefault, &glyph, nullptr, 1);
 
-    // Move bounds into destination user space at origin_user.
-    CGRect ub = CGRectOffset(gb, origin_user.x, origin_user.y);
+    // Place glyph at (subX, 0) in user space for this bucket.
+    CGFloat subx_user = bucket_center_subx_user(phase_x_bucket, scale, buckets);
 
-    // Pad by 1 device pixel to avoid AA clipping.
+    // Bounds in that rasterization user space.
+    CGRect ub = CGRectOffset(gb, subx_user, 0);
+
+    // Pad by 1 device px to avoid AA clipping.
     CGFloat pad_user = 1.0 / scale;
     ub = CGRectInset(ub, -pad_user, -pad_user);
 
-    // Compute destination pixel rect.
+    // Crop rect in device px.
     int x0 = (int)std::floor(ub.origin.x * scale);
     int y0 = (int)std::floor(ub.origin.y * scale);
     int x1 = (int)std::ceil((ub.origin.x + ub.size.width) * scale);
@@ -141,26 +159,27 @@ GlyphBitmap rasterize(
         CGBitmapContextCreate(pixels.data(), w, h, 8, bytes_per_row, cs.get(),
                               kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
-    // Map glyph drawing into destination user space, but clipped to this bitmap.
+    // Map glyph drawing into raster user space clipped to this bitmap:
+    // device = user * scale; so scale, then translate by bitmap origin in user units.
     CGContextScaleCTM(ctx.get(), scale, scale);
     CGContextTranslateCTM(ctx.get(), -(CGFloat)x0 / scale, -(CGFloat)y0 / scale);
 
-    // Draw glyph at its real destination position.
     CGContextSetRGBFillColor(ctx.get(), 0, 0, 0, 1);
-    CGPoint pos = origin_user;
+    CGPoint pos = {subx_user, 0};
     CTFontDrawGlyphs(font, &glyph, &pos, 1, ctx.get());
 
-    // Convert crop origin back to user space, then store it as an offset from origin_user.
-    CGFloat crop_x_user = (CGFloat)x0 / (CGFloat)scale;
-    CGFloat crop_y_user = (CGFloat)y0 / (CGFloat)scale;
+    // Convert crop origin back to user, then make it relative to glyph origin:
+    // crop_x_user already includes subx_user; subtract it out to get glyph-origin-relative.
+    CGFloat crop_x_user = (CGFloat)x0 / scale;
+    CGFloat crop_y_user = (CGFloat)y0 / scale;
 
     return {
         .width = w,
         .height = h,
         .bytes_per_pixel = bytes_per_pixel,
-        .offset_x_user = crop_x_user - origin_user.x,
-        .offset_y_user = crop_y_user - origin_user.y,
-        // .phase_x_bucket = phase_bucket_x(origin_user.x, scale, buckets),
+        .offset_x_user = crop_x_user - subx_user,
+        .offset_y_user = crop_y_user,
+        .phase_x_bucket = phase_x_bucket,
         .pixels = std::move(pixels),
     };
 }
@@ -180,16 +199,16 @@ void blit_glyph_bitmap(CGContextRef ctx,
                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host, provider.get(),
                       nullptr, false, kCGRenderingIntentDefault));
 
-    // Destination rect in user space.
     CGRect rect = {
         .origin = {origin_user.x + bm.offset_x_user, origin_user.y + bm.offset_y_user},
         .size = {(CGFloat)bm.width / scale, (CGFloat)bm.height / scale},
     };
 
+    CGContextSaveGState(ctx);
+    CGContextSetInterpolationQuality(ctx, kCGInterpolationNone);
     CGContextDrawImage(ctx, rect, img.get());
+    CGContextRestoreGState(ctx);
 }
-
-// --- Minimal cache keyed by (font pointer, glyph id, x-phase bucket) ---
 
 struct CacheKey {
     CTFontRef font = nullptr;
@@ -212,7 +231,7 @@ struct CacheKeyEq {
     }
 };
 
-std::unordered_map<CacheKey, GlyphBitmap, CacheKeyHash, CacheKeyEq> g_cache;
+static std::unordered_map<CacheKey, GlyphBitmap, CacheKeyHash, CacheKeyEq> g_cache;
 
 const GlyphBitmap& get_cached_glyph(
     CTFontRef font, CGGlyph glyph, const CGPoint& origin_user, int scale, int buckets) {
@@ -220,14 +239,11 @@ const GlyphBitmap& get_cached_glyph(
     auto it = g_cache.find(key);
     if (it != g_cache.end()) return it->second;
 
-    GlyphBitmap bm = rasterize(font, glyph, origin_user, scale, buckets);
-    // bm.phase_x_bucket = key.phase_x_bucket;
-
+    GlyphBitmap bm = rasterize_bucketed_x(font, glyph, key.phase_x_bucket, scale, buckets);
     auto [ins_it, _] = g_cache.emplace(key, std::move(bm));
     return ins_it->second;
 }
 
-// Uses cached glyph bitmaps. With buckets=1 you will see mismatches; higher buckets converge.
 void draw_text3(CGContextRef ctx, CTLineRef line, CTFontRef font, CGFloat descent) {
     CGContextSetRGBFillColor(ctx, 0, 0, 0, 1);
 
@@ -262,6 +278,11 @@ void draw_text3(CGContextRef ctx, CTLineRef line, CTFontRef font, CGFloat descen
             auto glyph = glyphs[i];
             pos.x += line_origin.x;
             pos.y += line_origin.y;
+
+            // Optional Y snap (NOT bucketing): keep baselines on device pixels.
+            // If your reference is CTLineDraw on the same ctx, this usually won’t change anything,
+            // but it can help if your baseline math produces fractional device Y.
+            // pos.y = std::round(pos.y * scale) / (CGFloat)scale;
 
             const GlyphBitmap& bm = get_cached_glyph(run_font, glyph, pos, scale, buckets);
             blit_glyph_bitmap(ctx, bm, pos, scale);
@@ -308,13 +329,13 @@ int main() {
     CGFloat ascent = 0, descent = 0, leading = 0;
     double line_width = CTLineGetTypographicBounds(line.get(), &ascent, &descent, &leading);
 
-    // draw_text(ctx.get(), line.get(), font.get(), descent);
+    // draw_text(ctx.get(), line.get(), descent);
     // draw_text2(ctx.get(), line.get(), font.get(), descent);
     draw_text3(ctx.get(), line.get(), font.get(), descent);
 
-    // Debug.
+    // Debug lines.
     auto snap = [](CGFloat y) { return (std::floor(y * scale) + 0.5) / scale; };
-    double w = std::ceil(line_width);
+    auto w = std::ceil(line_width);
     draw_line(ctx.get(), {1, 0, 0}, scale, {0, snap(descent)}, {w, snap(descent)});
     draw_line(ctx.get(), {0, 1, 0}, scale, {0, snap(ascent)}, {w, snap(ascent)});
     draw_line(ctx.get(), {0, 0, 1}, scale, {0, snap(0)}, {w, snap(0)});

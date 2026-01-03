@@ -1,3 +1,6 @@
+# This is just to appease missing variables when including Skia as a dependency.
+import("//build/config/skia_compat.gni")
+
 # =============================================================================
 # PLATFORM SELECTION
 # =============================================================================
@@ -38,9 +41,8 @@ default_compiler_configs = [
   "//build/config/compiler:default_include_dirs",
   "//build/config/compiler:default_optimization",
   "//build/config/compiler:no_exceptions",
-  "//build/config/compiler:no_rtti",
-  "//build/config/compiler:runtime_library",
   "//build/config/compiler:simple_text_code",
+  "//build/config/compiler:no_rtti",
   "//build/config/sanitizers:default_sanitizer_flags",
 ]
 
@@ -58,7 +60,7 @@ if (is_win) {
   ]
 }
 if (is_release) {
-  default_compiler_configs += [ "//build/config:release" ]
+  default_compiler_configs += [ "//build/config/compiler:release" ]
 }
 
 set_defaults("executable") {

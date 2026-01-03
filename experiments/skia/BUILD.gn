@@ -1,0 +1,16 @@
+executable("skia") {
+  sources = [ "main.mm" ]
+
+  frameworks = [
+    "Cocoa.framework",
+    "CoreGraphics.framework",
+    "QuartzCore.framework",
+    "CoreVideo.framework",
+  ]
+
+  deps = [
+    "//third_party/skia",
+    "//third_party/skia:pathops",
+    "//third_party/spdlog",
+  ]
+}

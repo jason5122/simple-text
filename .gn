@@ -2,3 +2,35 @@ buildconfig = "//build/config/BUILDCONFIG.gn"
 
 # Use `python3` for compatibility with the default Python on macOS.
 script_executable = "python3"
+
+# This is just to override Skia args.
+# "This is intended to be used when subprojects declare arguments with default values that need to be changed for whatever reason."
+# https://gn.googlesource.com/gn/+/HEAD/docs/reference.md#dotfile
+default_args = {
+  skia_use_harfbuzz = false
+  skia_use_icu = false
+
+  skia_use_libjpeg_turbo_decode = false
+  skia_use_libjpeg_turbo_encode = false
+  skia_use_no_jpeg_encode = true
+
+  skia_use_libpng_decode = false
+  skia_use_libpng_encode = false
+  skia_use_no_png_encode = true
+
+  skia_use_libwebp_decode = false
+  skia_use_libwebp_encode = false
+  skia_use_no_webp_encode = true
+
+  skia_use_zlib = false
+  skia_use_wuffs = false
+  skia_enable_pdf = false
+  skia_enable_skottie = false
+  skia_use_expat = false
+  skia_enable_svg = false
+
+  # Stay CPU-only.
+  skia_enable_ganesh = false
+  skia_use_gl = false
+  skia_use_metal = false
+}

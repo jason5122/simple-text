@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+# Copyright 2022 Google LLC
+#
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import hashlib
+import json
+import os
+import platform
+import re
+import stat
+import sys
+import tempfile
+import zipfile
+from urllib.request import urlopen
+
+
+os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
+
+OS = {"darwin": "mac", "linux": "linux", "linux2": "linux", "win32": "windows"}[sys.platform]
+cpu = {"aarch64": "arm64", "amd64": "amd64", "arm64": "arm64", "x86_64": "amd64"}[platform.machine().lower()]
+platform = f"{OS}-{cpu}"
+ninja = "ninja"
+if "windows" in platform:
+    ninja = "ninja.exe"
+
+
+ninja_path = os.path.join("bin", ninja)
+
+desired_version = "version:2@1.12.1.chromium.4"
+
+print(f"Fetching {ninja} at {desired_version} for platform {platform}")
+
+# Download ninja.
+ninjazip = os.path.join(tempfile.mkdtemp(), "ninja.zip")
+with open(ninjazip, "wb") as f:
+    url = f"https://chrome-infra-packages.appspot.com/dl/infra/3pp/tools/ninja/{platform}/+/{desired_version}"
+    f.write(urlopen(url).read())
+
+with zipfile.ZipFile(ninjazip, "r") as f:
+    f.extract(ninja, "bin")
+
+if not "windows" in platform:
+    uid = os.getuid()
+    gid = os.getgid()
+    os.chown(ninja_path, uid, gid)
+    os.chmod(
+        ninja_path,
+        stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH,
+    )

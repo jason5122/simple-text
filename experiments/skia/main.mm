@@ -1,23 +1,14 @@
 #include "base/debug/profiler.h"
-#include "third_party/skia/include/core/SkBitmap.h"
-#include "third_party/skia/include/core/SkCanvas.h"
-#include "third_party/skia/include/core/SkImageInfo.h"
-#include "third_party/skia/include/core/SkPaint.h"
-#include "third_party/skia/include/core/SkRect.h"
-#include "third_party/skia/include/core/SkSurface.h"
-#include "third_party/skia/include/utils/mac/SkCGUtils.h"
+#include "third_party/skia/skia.h"
 #include <Cocoa/Cocoa.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreVideo/CoreVideo.h>
 #include <QuartzCore/QuartzCore.h>
 #include <mach/mach_time.h>
 
-// If you want your earlier Op() sample, keep these includes + link pathops.
-// #include "third_party/skia/include/core/SkPath.h"
-// #include "third_party/skia/include/core/SkPathBuilder.h"
-// #include "third_party/skia/include/pathops/SkPathOps.h"
+namespace {
 
-static double SecondsSince(uint64_t t0) {
+double SecondsSince(uint64_t t0) {
     static mach_timebase_info_data_t tb = {0, 0};
     if (tb.denom == 0) mach_timebase_info(&tb);
     uint64_t now = mach_absolute_time();
@@ -27,7 +18,7 @@ static double SecondsSince(uint64_t t0) {
 
 // Copy pixels into an owned SkBitmap, then create CGImage from that.
 // This avoids the “blank/intermittent” bug from handing CA borrowed pixels.
-static CGImageRef MakeCGImageFromSurfaceCopy(const sk_sp<SkSurface>& surface) {
+CGImageRef MakeCGImageFromSurfaceCopy(const sk_sp<SkSurface>& surface) {
     const int w = surface->width();
     const int h = surface->height();
 
@@ -41,6 +32,8 @@ static CGImageRef MakeCGImageFromSurfaceCopy(const sk_sp<SkSurface>& surface) {
     return SkCreateCGImageRef(bm);  // you own the returned CGImageRef
 }
 
+}  // namespace
+
 @interface SkiaLayer : CALayer {
 @private
     CVDisplayLinkRef _dl;
@@ -48,18 +41,20 @@ static CGImageRef MakeCGImageFromSurfaceCopy(const sk_sp<SkSurface>& surface) {
 }
 @end
 
-static CVReturn DisplayLinkCB(CVDisplayLinkRef,
-                              const CVTimeStamp*,
-                              const CVTimeStamp*,
-                              CVOptionFlags,
-                              CVOptionFlags*,
-                              void* ctx) {
+namespace {
+CVReturn DisplayLinkCB(CVDisplayLinkRef,
+                       const CVTimeStamp*,
+                       const CVTimeStamp*,
+                       CVOptionFlags,
+                       CVOptionFlags*,
+                       void* ctx) {
     SkiaLayer* layer = (__bridge SkiaLayer*)ctx;
     dispatch_async(dispatch_get_main_queue(), ^{
       [layer setNeedsDisplay];
     });
     return kCVReturnSuccess;
 }
+}  // namespace
 
 @implementation SkiaLayer
 

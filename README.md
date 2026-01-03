@@ -5,50 +5,37 @@
        src="docs/simple-text.png">
 </p> -->
 
-## Progress Chart
+## Quickstart
 
-| Feature              | macOS          | Linux      | Windows          |
-| -------------------- | -------------- | ---------- | ---------------- |
-| Text System          | ✅ (Core Text) | ✅ (Pango) | ✅ (DirectWrite) |
-| Window creation      | ✅ (Cocoa)     | ✅ (GTK 4) | ✅ (Win32)       |
-| OpenGL context       | ✅             | ✅         | ✅               |
-| Keyboard/mouse input | ✅             | ✅         | ✅               |
-| Tabs                 | ✅             | ✅         | ✅               |
-| Popups/Dialogs       | 🚧             | 🚧         | 🚧               |
+```bash
+python3 bin/fetch-gn
+python3 bin/fetch-ninja
+
+bin/gn gen out/release --args='is_release=true'
+bin/ninja -C out/release
+```
 
 ## Dependencies
 
-This project uses the GN meta-build system. Binaries are available [here](https://gn.googlesource.com/gn#getting-a-binary).
+This project uses Clang/LLVM. The build system will search common paths to discover the LLVM install.
 
 ### macOS
 
-`brew install ninja llvm`
+Xcode Clang is unsupported at the moment. Please use Homebrew's version.
+
+```bash
+brew install llvm
+```
 
 ### Fedora
 
-`dnf install gn ninja-build clang llvm lld`
-
-## Building
-
+```bash
+dnf install clang llvm lld
 ```
-gn gen out/debug
-ninja -C out/debug
 
+## Development
+
+```bash
 # (Optional) Add LSP support for your editor. 
-ninja -C out/debug -t compdb cc cxx objc objcxx > compile_commands.json
+bin/ninja -C out/release -t compdb cc cxx objc objcxx > compile_commands.json
 ```
-
-## Why Simple Text?
-
-> [!NOTE]\
-> These are features that are important from _my point of view_!\
-> Someone who appreciates other features (e.g., AI integration, plugins) would have a different chart.
-
-| Editor             | GUI? | Native GUI? | Cross-platform? | Fast? | Open source? | Tree-sitter support? | LSP support? | Simple codebase? | Notes                                                                        |
-| ------------------ | ---- | ----------- | --------------- | ----- | ------------ | -------------------- | ------------ | ---------------- | ---------------------------------------------------------------------------- |
-| Simple Text        | ✅   | ✅          | ✅              | ✅    | ✅           | ✅                   | ✅           | ✅               |                                                                              |
-| Sublime Text       | ✅   | ✅          | ✅              | ✅    | ❌           | ❌                   | ✅           | N/A              | Very nearly perfect!                                                         |
-| Visual Studio Code | ✅   | ❌          | ✅              | ❌    | ✅           | ❌                   | ✅           | ❌               |                                                                              |
-| Zed                | ✅   | ❌          | ❌              | ✅    | ✅           | ✅                   | ✅           | ❌               | Contains a _lot_ of arguably unnecessary features, such as AI and voice chat |
-| Lapce              | ✅   | ❌          | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               | GUI doesn't feel super polished, at least on macOS (e.g., blurry fonts)      |
-| Neovim             | ❌   | N/A         | ✅              | ✅    | ✅           | ✅                   | ✅           | ❌               |                                                                              |

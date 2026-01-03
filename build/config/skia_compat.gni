@@ -1,5 +1,5 @@
-is_component_build = true
-is_official_build = false
+is_official_build = true
+is_component_build = false
 is_wasm = false
 is_android = false
 is_ios = false

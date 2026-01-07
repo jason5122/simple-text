@@ -27,6 +27,7 @@ void load_global_function_pointers() {
     LOAD_GL_FUNC(glDeleteTextures);
     LOAD_GL_FUNC(glBindTexture);
     LOAD_GL_FUNC(glTexSubImage2D);
+    LOAD_GL_FUNC(glDrawArrays);
 
     // 1.3
     LOAD_GL_FUNC(glActiveTexture);
@@ -61,6 +62,7 @@ void load_global_function_pointers() {
     LOAD_GL_FUNC(glUniform2f);
     LOAD_GL_FUNC(glUniform1f);
     LOAD_GL_FUNC(glUniform1i);
+    LOAD_GL_FUNC(glGetAttribLocation);
 
     // 3.0
     LOAD_GL_FUNC(glBindVertexArray);

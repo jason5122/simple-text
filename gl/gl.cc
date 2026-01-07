@@ -23,6 +23,7 @@ PFNGLGENTEXTURESPROC glGenTextures = nullptr;
 PFNGLDELETETEXTURESPROC glDeleteTextures = nullptr;
 PFNGLBINDTEXTUREPROC glBindTexture = nullptr;
 PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D = nullptr;
+PFNGLDRAWARRAYSPROC glDrawArrays = nullptr;
 
 // 1.3
 PFNGLACTIVETEXTUREPROC glActiveTexture = nullptr;
@@ -57,6 +58,7 @@ PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = nullptr;
 PFNGLUNIFORM2FPROC glUniform2f = nullptr;
 PFNGLUNIFORM1FPROC glUniform1f = nullptr;
 PFNGLUNIFORM1IPROC glUniform1i = nullptr;
+PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = nullptr;
 
 // 3.0
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = nullptr;

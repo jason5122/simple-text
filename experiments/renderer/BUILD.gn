@@ -1,0 +1,15 @@
+executable("renderer") {
+  sources = [ "main.mm" ]
+
+  frameworks = [
+    "Cocoa.framework",
+    "OpenGL.framework",
+    "QuartzCore.framework",
+  ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
+
+  deps = [
+    "//gl",
+    "//third_party/spdlog",
+  ]
+}

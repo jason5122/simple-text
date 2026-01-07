@@ -17,6 +17,7 @@ group("experiments") {
     "//experiments/message_loop",
     "//experiments/playground",
     "//experiments/rasterizer",
+    "//experiments/renderer",
     "//experiments/skia",
   ]
 

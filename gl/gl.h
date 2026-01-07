@@ -2857,6 +2857,7 @@ extern PFNGLGENTEXTURESPROC glGenTextures;
 extern PFNGLDELETETEXTURESPROC glDeleteTextures;
 extern PFNGLBINDTEXTUREPROC glBindTexture;
 extern PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D;
+extern PFNGLDRAWARRAYSPROC glDrawArrays;
 
 // 1.3
 extern PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -2891,6 +2892,7 @@ extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 extern PFNGLUNIFORM2FPROC glUniform2f;
 extern PFNGLUNIFORM1FPROC glUniform1f;
 extern PFNGLUNIFORM1IPROC glUniform1i;
+extern PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 
 // 3.0
 extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;

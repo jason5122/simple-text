@@ -11,7 +11,7 @@ public:
     static std::unique_ptr<DisplayLinkMac> create_for_display(CGDirectDisplayID display_id);
     virtual ~DisplayLinkMac() = default;
 
-    using TickCallback = std::function<void(uint64_t)>;
+    using TickCallback = std::function<void()>;
     virtual void set_callback(TickCallback callback) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;

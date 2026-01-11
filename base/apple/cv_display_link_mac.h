@@ -18,7 +18,7 @@ public:
     void stop() override;
 
 private:
-    CVDisplayLinkMac(base::apple::ScopedTypeRef<CVDisplayLinkRef> display_link);
+    explicit CVDisplayLinkMac(base::apple::ScopedTypeRef<CVDisplayLinkRef> display_link);
 
     // The static callback function called by the CVDisplayLink, on the CVDisplayLink thread.
     static CVReturn display_link_callback(CVDisplayLinkRef display_link_ref,

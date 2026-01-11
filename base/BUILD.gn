@@ -30,8 +30,9 @@ source_set("base") {
 
   if (is_mac) {
     sources += [
+      "apple/ca_display_link_mac.mm",
       "apple/cv_display_link_mac.mm",
-      "apple/display_link_mac.cc",
+      "apple/display_link_mac.mm",
       "apple/foundation_util.mm",
       "apple/owned_nsevent.mm",
       "files/file_util_mac.mm",
@@ -42,6 +43,7 @@ source_set("base") {
       "Foundation.framework",
       "CoreServices.framework",
       "QuartzCore.framework",
+      "AppKit.framework",
     ]
   }
 

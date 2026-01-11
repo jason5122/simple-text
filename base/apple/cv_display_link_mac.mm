@@ -83,11 +83,10 @@ CVReturn CVDisplayLinkMac::display_link_callback(CVDisplayLinkRef display_link_r
                                                  CVOptionFlags* flags_out,
                                                  void* context) {
     auto* display_link = static_cast<CVDisplayLinkMac*>(context);
-    uint64_t host_time = output_time ? output_time->hostTime : 0;
 
     // TODO: Consider replacing approach with base::SequencedTaskRunner.
     dispatch_async(dispatch_get_main_queue(), ^{
-      if (display_link->tick_callback_) display_link->tick_callback_(host_time);
+      if (display_link->tick_callback_) display_link->tick_callback_();
     });
     return kCVReturnSuccess;
 }

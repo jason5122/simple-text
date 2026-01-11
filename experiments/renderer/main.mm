@@ -7,14 +7,11 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
-#include <mach/mach_time.h>
 #include <spdlog/spdlog.h>
 
 using namespace gl;
 
 namespace {
-
-double NowSeconds() { return CACurrentMediaTime(); }
 
 GLuint Compile(GLenum type, const char* src) {
     GLuint s = glCreateShader(type);
@@ -47,12 +44,6 @@ GLuint Link(GLuint vs, GLuint fs) {
     glDeleteShader(vs);
     glDeleteShader(fs);
     return p;
-}
-
-inline void AtomicMax(std::atomic<double>& a, double v) {
-    double cur = a.load(std::memory_order_relaxed);
-    while (v > cur && !a.compare_exchange_weak(cur, v, std::memory_order_relaxed)) {
-    }
 }
 
 }  // namespace
@@ -212,7 +203,7 @@ inline void AtomicMax(std::atomic<double>& a, double v) {
 
 @implementation GLView {
     std::unique_ptr<base::apple::DisplayLinkMac> display_link_;
-    uint64_t run_until_;
+    dispatch_source_t stop_timer_;
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
@@ -225,15 +216,19 @@ inline void AtomicMax(std::atomic<double>& a, double v) {
         display_link_ = base::apple::DisplayLinkMac::create_for_display(display_id);
         if (!display_link_) std::abort();
 
-        display_link_->set_callback([self](uint64_t now) {
-            spdlog::info("now: {}", now);
-            [self.layer setNeedsDisplay];
-
-            if (now >= run_until_) {
-                display_link_->stop();
-            }
-        });
+        // NOTE: Logging seems to add hiccups. Don't log in the callback.
+        display_link_->set_callback([self]() { [self.layer setNeedsDisplay]; });
         display_link_->stop();
+
+        stop_timer_ =
+            dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+        __weak GLView* weak_self = self;
+        dispatch_source_set_event_handler(stop_timer_, ^{
+          GLView* self = weak_self;
+          if (!self) return;
+          self->display_link_->stop();
+        });
+        dispatch_resume(stop_timer_);
     }
     return self;
 }
@@ -246,41 +241,21 @@ inline void AtomicMax(std::atomic<double>& a, double v) {
     return YES;
 }
 
-// Live resize: you said this is required for zero judder.
-// Keep it. This is independent of display-link pacing.
 - (void)setFrameSize:(NSSize)newSize {
     [super setFrameSize:newSize];
     [self.layer setNeedsDisplay];
 }
 
-namespace {
-
-mach_timebase_info_data_t timebase = {0};
-
-void ensure_timebase() {
-    if (timebase.denom == 0) {
-        mach_timebase_info(&timebase);
-    }
-}
-
-uint64_t seconds_to_ticks(double seconds) {
-    ensure_timebase();
-    // Targeted nanoseconds.
-    uint64_t target_ns = (uint64_t)(seconds * 1e9);
-    // Invert the conversion.
-    return (target_ns * timebase.denom) / timebase.numer;
-}
-
-}  // namespace
-
 - (void)scrollWheel:(NSEvent*)e {
     GLLayer* layer = (GLLayer*)self.layer;
     layer->scroll_y_ += (float)e.scrollingDeltaY;
 
-    uint64_t one_second_ticks = seconds_to_ticks(1.0);
-    uint64_t now = mach_absolute_time();
-    run_until_ = now + one_second_ticks;
     display_link_->start();
+
+    // Push the stop 1 sec into the future (debounce).
+    int64_t delay_ns = (int64_t)(1.0 * NSEC_PER_SEC);
+    dispatch_time_t deadline = dispatch_time(DISPATCH_TIME_NOW, delay_ns);
+    dispatch_source_set_timer(stop_timer_, deadline, DISPATCH_TIME_FOREVER, 10 * NSEC_PER_MSEC);
 }
 
 @end

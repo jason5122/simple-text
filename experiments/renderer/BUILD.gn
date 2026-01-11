@@ -9,6 +9,7 @@ executable("renderer") {
   defines = [ "GL_SILENCE_DEPRECATION" ]
 
   deps = [
+    "//base",
     "//gl",
     "//third_party/spdlog",
   ]

@@ -1,52 +1,10 @@
 #include "base/apple/display_link_mac.h"
-#include "gl/gl.h"
-#include "gl/loader.h"
+#include "gfx/device.h"
 #include <Cocoa/Cocoa.h>
-#include <OpenGL/OpenGL.h>
-#include <QuartzCore/QuartzCore.h>
 #include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <spdlog/spdlog.h>
-
-using namespace gl;
-
-namespace {
-
-GLuint Compile(GLenum type, const char* src) {
-    GLuint s = glCreateShader(type);
-    glShaderSource(s, 1, &src, nullptr);
-    glCompileShader(s);
-    GLint ok = 0;
-    glGetShaderiv(s, GL_COMPILE_STATUS, &ok);
-    if (!ok) {
-        char log[2048];
-        GLsizei n = 0;
-        glGetShaderInfoLog(s, sizeof(log), &n, log);
-        spdlog::error("shader compile fail: {}", log);
-    }
-    return s;
-}
-
-GLuint Link(GLuint vs, GLuint fs) {
-    GLuint p = glCreateProgram();
-    glAttachShader(p, vs);
-    glAttachShader(p, fs);
-    glLinkProgram(p);
-    GLint ok = 0;
-    glGetProgramiv(p, GL_LINK_STATUS, &ok);
-    if (!ok) {
-        char log[2048];
-        GLsizei n = 0;
-        glGetProgramInfoLog(p, sizeof(log), &n, log);
-        spdlog::error("program link fail: {}", log);
-    }
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-    return p;
-}
-
-}  // namespace
 
 @interface GLLayer : CAOpenGLLayer
 - (instancetype)init;
@@ -54,31 +12,21 @@ GLuint Link(GLuint vs, GLuint fs) {
 
 @implementation GLLayer {
 @public
-    bool did_load_gl_;
-    GLuint prog_;
-    GLuint vao_;
-    GLuint vbo_;
-    bool anchor_top_left_;
-
+    std::unique_ptr<gfx::Device> device_;
     float scroll_y_;
-
-    GLint offLoc_;
-    GLint sclLoc_;
 }
 
 - (instancetype)init {
     self = [super init];
-    if (self) {
-        self.contentsScale = NSScreen.mainScreen.backingScaleFactor;
+    if (!self) return nil;
 
-        did_load_gl_ = false;
-        prog_ = 0;
-        vao_ = 0;
-        vbo_ = 0;
-        anchor_top_left_ = true;
+    self.contentsScale = NSScreen.mainScreen.backingScaleFactor;
 
-        scroll_y_ = 0.0f;
-    }
+    scroll_y_ = 0.0f;
+
+    device_ = gfx::create_device(gfx::Backend::kOpenGL);
+    if (!device_) std::abort();
+
     return self;
 }
 
@@ -98,57 +46,10 @@ GLuint Link(GLuint vs, GLuint fs) {
     return pf;
 }
 
-- (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLContextObj ctx = [super copyCGLContextForPixelFormat:pixelFormat];
-    if (!ctx) return NULL;
-
-    CGLContextObj prev = CGLGetCurrentContext();
-    CGLSetCurrentContext(ctx);
-
-    if (!did_load_gl_) {
-        gl::load_global_function_pointers();
-        did_load_gl_ = true;
-
-        const char* vs_src =
-#include "experiments/renderer/vert.glsl"
-            ;
-
-        const char* fs_src =
-#include "experiments/renderer/frag.glsl"
-            ;
-
-        prog_ = Link(Compile(GL_VERTEX_SHADER, vs_src), Compile(GL_FRAGMENT_SHADER, fs_src));
-
-        float verts[] = {-1.f, -1.f, 1.f, -1.f, -1.f, 1.f, 1.f, 1.f};
-
-        glGenVertexArrays(1, &vao_);
-        glBindVertexArray(vao_);
-
-        glGenBuffers(1, &vbo_);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-
-        GLint loc = glGetAttribLocation(prog_, "aPos");
-        glEnableVertexAttribArray((GLuint)loc);
-        glVertexAttribPointer((GLuint)loc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-
-        glBindVertexArray(0);
-
-        offLoc_ = glGetUniformLocation(prog_, "uOffsetClip");
-        sclLoc_ = glGetUniformLocation(prog_, "uScaleClip");
-    }
-
-    CGLSetCurrentContext(prev);
-    return ctx;
-}
-
 - (void)drawInCGLContext:(CGLContextObj)glContext
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    // NOTE: Disable this in case it causes extra lag.
-    // spdlog::info("draw");
-
     CGLSetCurrentContext(glContext);
 
     CGSize s = self.bounds.size;
@@ -156,44 +57,27 @@ GLuint Link(GLuint vs, GLuint fs) {
     int w = (int)llround(s.width * scale);
     int h = (int)llround(s.height * scale);
 
-    glViewport(0, 0, w, h);
-    glClearColor(1, 1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // TODO: Move surface somewhere more sensible.
+    auto surface = device_->create_surface(w, h);
+    if (!surface) std::abort();
 
-    glUseProgram(prog_);
-    glBindVertexArray(vao_);
+    auto frame = surface->begin_frame();
+    if (!frame) std::abort();
 
-    const float half_w_px = 20.0f;
-    const float half_h_px = 300.0f;
-    const float margin_px = 100.0f;
-    float anim_px = 200.0f;
+    frame->set_viewport(w, h);
+    frame->clear({1.f, 1.f, 1.f, 1.f});
 
-    float cx_px, cy_px;
-    if (anchor_top_left_) {
-        cx_px = margin_px + half_w_px + anim_px;
-        cy_px = (float)h - (margin_px + half_h_px);
-    } else {
-        cx_px = (float)w - (margin_px + half_w_px + anim_px);
-        cy_px = margin_px + half_h_px;
-    }
+    // Build a few quads in pixel coordinates (top-left origin).
+    std::array<gfx::Quad, 4> quads = {
+        gfx::Quad{20.f - scroll_y_, 20.f, 200.f, 80.f, 1.f, 0.f, 0.f, 1.f},
+        gfx::Quad{60.f, 60.f - scroll_y_, 240.f, 120.f, 0.f, 1.f, 0.f, 0.6f},
+        gfx::Quad{320.f - scroll_y_, 40.f, 140.f, 200.f, 0.2f, 0.4f, 1.f, 1.f},
+        gfx::Quad{100.f, 100.f - scroll_y_, 20.f, 300.f, 127.f / 255, 127.f / 255, 127.f / 255,
+                  1.f},
+    };
+    frame->draw_quads(quads);
 
-    cy_px += scroll_y_;
-
-    float cx_clip = (cx_px / (float)w) * 2.0f - 1.0f;
-    float cy_clip = (cy_px / (float)h) * 2.0f - 1.0f;
-
-    float sx_clip = (half_w_px / (float)w) * 2.0f;
-    float sy_clip = (half_h_px / (float)h) * 2.0f;
-
-    glUniform2f(offLoc_, cx_clip, cy_clip);
-    glUniform2f(sclLoc_, sx_clip, sy_clip);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glBindVertexArray(0);
-    glUseProgram(0);
-
-    glFlush();
+    frame->present();
 }
 
 @end
@@ -208,28 +92,29 @@ GLuint Link(GLuint vs, GLuint fs) {
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
     self = [super initWithFrame:frameRect];
-    if (self) {
-        self.wantsLayer = YES;
-        self.layer = [[GLLayer alloc] init];
+    if (!self) return nil;
 
-        CGDirectDisplayID display_id = CGMainDisplayID();
-        display_link_ = base::apple::DisplayLinkMac::create_for_display(display_id);
-        if (!display_link_) std::abort();
+    self.wantsLayer = YES;
+    self.layer = [[GLLayer alloc] init];
 
-        // NOTE: Logging seems to add hiccups. Don't log in the callback.
-        display_link_->set_callback([self]() { [self.layer setNeedsDisplay]; });
-        display_link_->stop();
+    CGDirectDisplayID display_id = CGMainDisplayID();
+    display_link_ = base::apple::DisplayLinkMac::create_for_display(display_id);
+    if (!display_link_) std::abort();
 
-        stop_timer_ =
-            dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
-        __weak GLView* weak_self = self;
-        dispatch_source_set_event_handler(stop_timer_, ^{
-          GLView* self = weak_self;
-          if (!self) return;
-          self->display_link_->stop();
-        });
-        dispatch_resume(stop_timer_);
-    }
+    // NOTE: Logging seems to add hiccups. Don't log in the callback.
+    display_link_->set_callback([self]() { [self.layer setNeedsDisplay]; });
+    display_link_->stop();
+
+    stop_timer_ =
+        dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    __weak GLView* weak_self = self;
+    dispatch_source_set_event_handler(stop_timer_, ^{
+      GLView* self = weak_self;
+      if (!self) return;
+      self->display_link_->stop();
+    });
+    dispatch_resume(stop_timer_);
+
     return self;
 }
 

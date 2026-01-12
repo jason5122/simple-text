@@ -2893,6 +2893,7 @@ extern PFNGLUNIFORM2FPROC glUniform2f;
 extern PFNGLUNIFORM1FPROC glUniform1f;
 extern PFNGLUNIFORM1IPROC glUniform1i;
 extern PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
+extern PFNGLDETACHSHADERPROC glDetachShader;
 
 // 3.0
 extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;

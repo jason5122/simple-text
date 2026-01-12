@@ -1,0 +1,12 @@
+source_set("gfx") {
+  sources = [ "device.cc" ]
+
+  # OpenGL.
+  sources += [
+    "gl/gl_device.cc",
+    "gl/gl_frame.cc",
+    "gl/gl_surface.cc",
+  ]
+
+  deps = [ "//third_party/spdlog" ]
+}

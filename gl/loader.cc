@@ -63,6 +63,7 @@ void load_global_function_pointers() {
     LOAD_GL_FUNC(glUniform1f);
     LOAD_GL_FUNC(glUniform1i);
     LOAD_GL_FUNC(glGetAttribLocation);
+    LOAD_GL_FUNC(glDetachShader);
 
     // 3.0
     LOAD_GL_FUNC(glBindVertexArray);

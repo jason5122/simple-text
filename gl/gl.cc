@@ -59,6 +59,7 @@ PFNGLUNIFORM2FPROC glUniform2f = nullptr;
 PFNGLUNIFORM1FPROC glUniform1f = nullptr;
 PFNGLUNIFORM1IPROC glUniform1i = nullptr;
 PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = nullptr;
+PFNGLDETACHSHADERPROC glDetachShader = nullptr;
 
 // 3.0
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = nullptr;

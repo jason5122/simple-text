@@ -10,6 +10,7 @@ executable("renderer") {
 
   deps = [
     "//base",
+    "//gfx",
     "//gl",
     "//third_party/spdlog",
   ]

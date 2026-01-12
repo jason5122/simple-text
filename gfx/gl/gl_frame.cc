@@ -12,7 +12,7 @@ void GLFrame::clear(const Color& c) {
 
 void GLFrame::set_viewport(int width, int height) { glViewport(0, 0, width, height); }
 
-void GLFrame::draw_quads(std::span<const Quad> quads) {
+void GLFrame::draw_quads(std::span<const Quad> quads, float transform_x, float transform_y) {
     if (quads.empty()) return;
 
     if (!device_.init_quad_pipeline()) {
@@ -52,12 +52,14 @@ void GLFrame::draw_quads(std::span<const Quad> quads) {
 
     glUseProgram(device_.quad_program());
     glUniform2f(device_.quad_u_viewport_loc(), (float)w, (float)h);
+    glUniform2f(device_.pipeline_.u_translate_loc, transform_x, transform_y);
 
     glBindVertexArray(device_.quad_vao());
     glBindBuffer(GL_ARRAY_BUFFER, device_.quad_vbo());
 
     // Upload vertices. STREAM_DRAW is appropriate for per-frame updates.
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(scratch_.size() * sizeof(Vertex)), scratch_.data(),
+    std::span<const Vertex> verts{scratch_};
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(verts.size_bytes()), verts.data(),
                  GL_STREAM_DRAW);
 
     // Blend for alpha.

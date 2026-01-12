@@ -78,8 +78,8 @@ std::unique_ptr<CADisplayLinkMac> CADisplayLinkMac::create_for_display(
         impl->display_link = [screen displayLinkWithTarget:impl->target selector:@selector(step:)];
         if (!impl->display_link) return nullptr;
 
-        // TODO: Investigate run loop modes.
-        [impl->display_link addToRunLoop:NSRunLoop.currentRunLoop forMode:NSDefaultRunLoopMode];
+        // TODO: Investigate run loop modes. Apparently `NSRunLoopCommonModes` is for scrolling.
+        [impl->display_link addToRunLoop:NSRunLoop.mainRunLoop forMode:NSRunLoopCommonModes];
 
         // Set the CADisplayLinkTarget's callback to call back into the C++ code.
         auto weak = display_link->weak_factory_.GetWeakPtr();

@@ -22,6 +22,8 @@ public:
     gl::GLint quad_u_viewport_loc() const { return pipeline_.u_viewport_loc; }
 
 private:
+    friend class GLFrame;
+
     bool initialized_ = false;
 
     // TODO: Clean OpenGL stuff up.
@@ -31,6 +33,7 @@ private:
         gl::GLuint vao = 0;
         gl::GLuint vbo = 0;
         gl::GLint u_viewport_loc = -1;
+        gl::GLint u_translate_loc = -1;
     };
     QuadPipeline pipeline_;
 

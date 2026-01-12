@@ -1,4 +1,5 @@
 #include "base/apple/display_link_mac.h"
+#include "base/rand_util.h"
 #include "gfx/device.h"
 #include <Cocoa/Cocoa.h>
 #include <atomic>
@@ -6,14 +7,60 @@
 #include <cstdint>
 #include <spdlog/spdlog.h>
 
+namespace {
+
+double now_seconds() { return CACurrentMediaTime(); }
+
+float rand_range(float minv, float maxv) { return minv + (maxv - minv) * base::rand_float(); }
+
+// Generates quads in pixel coords, top-left origin.
+// `viewport_w/h` define the render target size in pixels.
+constexpr std::array<gfx::Quad, 100> make_random_quads(float viewport_w, float viewport_h) {
+    std::array<gfx::Quad, 100> quads{};
+
+    // Tweak these to taste.
+    const float min_w = 4.0f;
+    const float max_w = std::max(8.0f, viewport_w * 0.35f);
+    const float min_h = 4.0f;
+    const float max_h = std::max(8.0f, viewport_h * 0.35f);
+
+    for (size_t i = 0; i < quads.size(); ++i) {
+        float w = rand_range(min_w, max_w);
+        float h = rand_range(min_h, max_h);
+
+        // Keep fully on-screen. If you want off-screen stress too, remove clamps.
+        float x = rand_range(0.0f, std::max(0.0f, viewport_w - w));
+        float y = rand_range(0.0f, std::max(0.0f, viewport_h - h));
+
+        float r = base::rand_float();
+        float g = base::rand_float();
+        float b = base::rand_float();
+
+        // Slight bias toward visible alpha, but still varies.
+        float a = rand_range(0.15f, 1.0f);
+
+        quads[i] = gfx::Quad{x, y, w, h, r, g, b, a};
+    }
+
+    return quads;
+}
+
+const auto kQuads = make_random_quads(3000, 2000);
+
+}  // namespace
+
 @interface GLLayer : CAOpenGLLayer
 - (instancetype)init;
+- (void)requestFrameOnce;
 @end
 
 @implementation GLLayer {
 @public
     std::unique_ptr<gfx::Device> device_;
     float scroll_y_;
+    std::atomic<float> scroll_dy_;
+    std::atomic<bool> frame_pending_;
+    std::atomic<double> keep_running_until_;
 }
 
 - (instancetype)init {
@@ -22,10 +69,16 @@
 
     self.contentsScale = NSScreen.mainScreen.backingScaleFactor;
 
-    scroll_y_ = 0.0f;
-
     device_ = gfx::create_device(gfx::Backend::kOpenGL);
-    if (!device_) std::abort();
+    if (!device_) {
+        spdlog::error("Could not create OpenGL backend.");
+        std::exit(EXIT_FAILURE);
+    }
+
+    scroll_y_ = 0.0f;
+    scroll_dy_.store(0.0f, std::memory_order_relaxed);
+    frame_pending_.store(false, std::memory_order_relaxed);
+    keep_running_until_.store(0.0, std::memory_order_relaxed);
 
     return self;
 }
@@ -68,16 +121,31 @@
     frame->clear({1.f, 1.f, 1.f, 1.f});
 
     // Build a few quads in pixel coordinates (top-left origin).
-    std::array<gfx::Quad, 4> quads = {
-        gfx::Quad{20.f - scroll_y_, 20.f, 200.f, 80.f, 1.f, 0.f, 0.f, 1.f},
-        gfx::Quad{60.f, 60.f - scroll_y_, 240.f, 120.f, 0.f, 1.f, 0.f, 0.6f},
-        gfx::Quad{320.f - scroll_y_, 40.f, 140.f, 200.f, 0.2f, 0.4f, 1.f, 1.f},
-        gfx::Quad{100.f, 100.f - scroll_y_, 20.f, 300.f, 127.f / 255, 127.f / 255, 127.f / 255,
-                  1.f},
+    constexpr std::array<gfx::Quad, 4> quads = {
+        gfx::Quad{800.f, 800.f, 40.f, 600.f, 1.f, 0.f, 0.f, 1.f},
+        gfx::Quad{1200.f, 800.f, 40.f, 600.f, 0.f, 1.f, 0.f, 0.6f},
+        gfx::Quad{1600.f, 800.f, 40.f, 600.f, 0.2f, 0.4f, 1.f, 1.f},
+        gfx::Quad{2000.f, 800.f, 40.f, 600.f, 127.f / 255, 127.f / 255, 127.f / 255, 1.f},
     };
-    frame->draw_quads(quads);
+
+    float dy = scroll_dy_.exchange(0.0f, std::memory_order_relaxed);
+    scroll_y_ += dy;
+
+    // frame->draw_quads(quads, 0, -scroll_y_);
+    frame->draw_quads(kQuads, 0, -scroll_y_);
 
     frame->present();
+
+    frame_pending_.store(false, std::memory_order_relaxed);
+}
+
+- (void)requestFrameOnce {
+    bool expected = false;
+    if (!frame_pending_.compare_exchange_strong(expected, true, std::memory_order_relaxed)) {
+        spdlog::warn("Frame dropped");
+        return;
+    }
+    [self setNeedsDisplay];
 }
 
 @end
@@ -87,7 +155,6 @@
 
 @implementation GLView {
     std::unique_ptr<base::apple::DisplayLinkMac> display_link_;
-    dispatch_source_t stop_timer_;
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
@@ -101,25 +168,21 @@
     display_link_ = base::apple::DisplayLinkMac::create_for_display(display_id);
     if (!display_link_) std::abort();
 
-    // NOTE: Logging seems to add hiccups. Don't log in the callback.
-    display_link_->set_callback([self]() { [self.layer setNeedsDisplay]; });
+    display_link_->set_callback([self]() {
+        GLLayer* layer = (GLLayer*)self.layer;
+
+        double now = now_seconds();
+        double until = layer->keep_running_until_.load(std::memory_order_relaxed);
+
+        if (now <= until) {
+            [layer requestFrameOnce];
+        } else {
+            display_link_->stop();
+        }
+    });
     display_link_->stop();
 
-    stop_timer_ =
-        dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
-    __weak GLView* weak_self = self;
-    dispatch_source_set_event_handler(stop_timer_, ^{
-      GLView* self = weak_self;
-      if (!self) return;
-      self->display_link_->stop();
-    });
-    dispatch_resume(stop_timer_);
-
     return self;
-}
-
-- (void)dealloc {
-    display_link_->set_callback(nullptr);
 }
 
 - (BOOL)acceptsFirstResponder {
@@ -128,19 +191,18 @@
 
 - (void)setFrameSize:(NSSize)newSize {
     [super setFrameSize:newSize];
-    [self.layer setNeedsDisplay];
+    GLLayer* layer = (GLLayer*)self.layer;
+    [layer requestFrameOnce];
 }
 
 - (void)scrollWheel:(NSEvent*)e {
     GLLayer* layer = (GLLayer*)self.layer;
-    layer->scroll_y_ += (float)e.scrollingDeltaY;
+
+    float dy = (float)e.scrollingDeltaY;
+    layer->scroll_dy_.fetch_add(dy, std::memory_order_relaxed);
+    layer->keep_running_until_.store(now_seconds() + 0.75, std::memory_order_relaxed);
 
     display_link_->start();
-
-    // Push the stop 1 sec into the future (debounce).
-    int64_t delay_ns = (int64_t)(1.0 * NSEC_PER_SEC);
-    dispatch_time_t deadline = dispatch_time(DISPATCH_TIME_NOW, delay_ns);
-    dispatch_source_set_timer(stop_timer_, deadline, DISPATCH_TIME_FOREVER, 10 * NSEC_PER_MSEC);
 }
 
 @end

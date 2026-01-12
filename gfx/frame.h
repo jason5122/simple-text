@@ -19,7 +19,7 @@ public:
 
     virtual void clear(const Color& c) = 0;
     virtual void set_viewport(int width, int height) = 0;
-    virtual void draw_quads(std::span<const Quad> quads) = 0;
+    virtual void draw_quads(std::span<const Quad> quads, float transform_x, float transform_y) = 0;
     virtual void present() = 0;
 };
 

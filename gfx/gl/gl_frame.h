@@ -12,7 +12,7 @@ public:
 
     void clear(const Color& c) override;
     void set_viewport(int width, int height) override;
-    void draw_quads(std::span<const Quad> quads) override;
+    void draw_quads(std::span<const Quad> quads, float transform_x, float transform_y) override;
     void present() override;
 
 private:

@@ -80,9 +80,15 @@ bool GLDevice::init_quad_pipeline() {
     glDeleteShader(fs);
     if (!prog) return false;
 
-    GLint u_loc = glGetUniformLocation(prog, "u_viewport_px");
-    if (u_loc < 0) {
+    GLint viewport_loc = glGetUniformLocation(prog, "u_viewport_px");
+    if (viewport_loc < 0) {
         spdlog::error("GL uniform not found: u_viewport_px");
+        glDeleteProgram(prog);
+        return false;
+    }
+    GLint translate_loc = glGetUniformLocation(prog, "u_translate_px");
+    if (translate_loc < 0) {
+        spdlog::error("GL uniform not found: u_translate_px");
         glDeleteProgram(prog);
         return false;
     }
@@ -111,7 +117,8 @@ bool GLDevice::init_quad_pipeline() {
     pipeline_.program = prog;
     pipeline_.vao = vao;
     pipeline_.vbo = vbo;
-    pipeline_.u_viewport_loc = u_loc;
+    pipeline_.u_viewport_loc = viewport_loc;
+    pipeline_.u_translate_loc = translate_loc;
     pipeline_.initialized = true;
     return true;
 }

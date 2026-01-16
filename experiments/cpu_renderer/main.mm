@@ -1,10 +1,14 @@
 #include "base/debug/profiler.h"
-#include "third_party/skia/skia.h"
 #include <Cocoa/Cocoa.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreVideo/CoreVideo.h>
 #include <QuartzCore/QuartzCore.h>
 #include <mach/mach_time.h>
+
+#include "third_party/skia/include/core/SkSurface.h"
+#include "third_party/skia/include/core/SkBitmap.h"
+#include "third_party/skia/include/core/SkCanvas.h"
+#include "third_party/skia/include/utils/mac/SkCGUtils.h"
 
 namespace {
 

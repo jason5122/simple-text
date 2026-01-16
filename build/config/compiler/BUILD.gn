@@ -182,7 +182,7 @@ config("default_warnings") {
 
     # TODO: This causes //third_party/googletest to trip our code when included as headers.
     # https://issues.chromium.org/issues/417996267
-    "-Wno-error=character-conversion",
+    "-Wno-character-conversion",
   ]
 }
 

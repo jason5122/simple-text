@@ -12,14 +12,13 @@ group("tests") {
 
 group("experiments") {
   deps = [
+    "//experiments/cpu_renderer",
     "//experiments/fuzz",
     "//experiments/gui_api_redesign",
     "//experiments/message_loop",
     "//experiments/playground",
     "//experiments/rasterizer",
     "//experiments/renderer",
-
-    # "//experiments/skia",
   ]
 
   if (is_mac) {

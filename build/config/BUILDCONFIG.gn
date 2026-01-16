@@ -1,6 +1,3 @@
-# This is just to appease missing variables when including Skia as a dependency.
-import("//build/config/skia_compat.gni")
-
 # =============================================================================
 # PLATFORM SELECTION
 # =============================================================================

@@ -1,4 +1,4 @@
-executable("skia") {
+executable("cpu_renderer") {
   sources = [ "main.mm" ]
 
   frameworks = [
@@ -9,8 +9,7 @@ executable("skia") {
   ]
 
   deps = [
-    "//third_party/skia",
-    "//third_party/skia:pathops",
+    "//skia",
     "//third_party/spdlog",
   ]
 }

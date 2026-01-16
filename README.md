@@ -10,6 +10,7 @@
 ```bash
 python3 bin/fetch-gn
 python3 bin/fetch-ninja
+python3 bin/fetch-clang
 
 bin/gn gen out/release --args='is_release=true'
 bin/ninja -C out/release

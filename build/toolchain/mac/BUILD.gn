@@ -1,16 +1,10 @@
-toolchain("clang") {
-  if (target_cpu == "arm64") {
-    prefix = "/opt/homebrew/opt/llvm/bin"
-  } else {
-    # TODO: Don't hard code this.
-    # Auto-detect common clang install paths, but allow the user to specify their own path.
-    # prefix = "/usr/local/opt/llvm/bin"
-    prefix = "/opt/homebrew/opt/llvm/bin"
-  }
+import("//build/config/clang/clang.gni")
 
-  cc = "${prefix}/clang"
-  cxx = "${prefix}/clang++"
-  ar = "${prefix}/llvm-ar"
+toolchain("clang") {
+  prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
+  cc = "${prefix}clang"
+  cxx = "${prefix}clang++"
+  ar = "${prefix}llvm-ar"
 
   tool("link") {
     rspfile = "{{output}}.rsp"

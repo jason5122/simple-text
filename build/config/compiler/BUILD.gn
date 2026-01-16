@@ -31,6 +31,14 @@ config("compiler") {
   cflags_objcc += cflags_cc
 }
 
+config("runtime_library") {
+  configs = []
+
+  if (is_mac) {
+    configs += [ "//build/config/mac:runtime_library" ]
+  }
+}
+
 config("default_include_dirs") {
   include_dirs = [
     "//",
@@ -171,6 +179,10 @@ config("default_warnings") {
 
     # TODO: Remove this after debugging.
     "-Wno-unused",
+
+    # TODO: This causes //third_party/googletest to trip our code when included as headers.
+    # https://issues.chromium.org/issues/417996267
+    "-Wno-error=character-conversion",
   ]
 }
 

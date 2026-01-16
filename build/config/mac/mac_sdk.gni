@@ -6,5 +6,13 @@ declare_args() {
   # This also controls the value of the `LSMinimumSystemVersion` in `Info.plist` files. This value
   # controls the minimum OS version that may launch the application, and OS releases older than this
   # will refuse to launch the application.
-  mac_deployment_target = "10.14"
+  mac_deployment_target = "13.3"
+
+  # Path to a specific version of the Mac SDK, not including a slash at the end.
+  mac_sdk_path = ""
+}
+
+if (mac_sdk_path == "") {
+  mac_sdk_path =
+      exec_script("//build/config/mac/get_sdk_path.py", [], "trim string")
 }

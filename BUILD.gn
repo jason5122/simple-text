@@ -18,7 +18,8 @@ group("experiments") {
     "//experiments/playground",
     "//experiments/rasterizer",
     "//experiments/renderer",
-    "//experiments/skia",
+
+    # "//experiments/skia",
   ]
 
   if (is_mac) {

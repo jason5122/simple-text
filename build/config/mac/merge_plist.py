@@ -6,7 +6,6 @@ substitutions $(VARIABLE) in the Property List string values.
 import argparse
 import json
 import re
-import subprocess
 import sys
 import plistlib
 

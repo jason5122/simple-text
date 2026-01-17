@@ -184,7 +184,7 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
 }
 
 GlyphBitmap GlyphRasterizer::rasterize(
-    const FontHandle& font, GlyphId glyph, double origin_x, double origin_y, int scale) const {
+    const FontHandle& font, GlyphId glyph, double sub_x, double sub_y, int scale) const {
     CTFontRef ctfont = font.impl_->ctfont.get();
 
     // Glyph bounds in glyph space (relative to glyph origin).
@@ -192,22 +192,20 @@ GlyphBitmap GlyphRasterizer::rasterize(
     CGRect gb =
         CTFontGetBoundingRectsForGlyphs(ctfont, kCTFontOrientationDefault, &glyphs, nullptr, 1);
 
-    // Move bounds into destination user space at origin_user.
-    CGRect ub = CGRectOffset(gb, origin_x, origin_y);
-
-    // Pad by 1 device pixel to avoid AA clipping.
-    CGFloat pad_user = 1.0 / scale;
-    ub = CGRectInset(ub, -pad_user, -pad_user);
-
     // Compute destination pixel rect.
-    int x0 = (int)std::floor(ub.origin.x * scale);
-    int y0 = (int)std::floor(ub.origin.y * scale);
-    int x1 = (int)std::ceil((ub.origin.x + ub.size.width) * scale);
-    int y1 = (int)std::ceil((ub.origin.y + ub.size.height) * scale);
+    int x0 = (int)std::floor(gb.origin.x * scale);
+    int y0 = (int)std::floor(gb.origin.y * scale);
+    int x1 = (int)std::ceil((gb.origin.x + gb.size.width) * scale);
+    int y1 = (int)std::ceil((gb.origin.y + gb.size.height) * scale);
+
+    // Outset by 1 device pixel.
+    x0 -= 1;
+    y0 -= 1;
+    x1 += 1;
+    y1 += 1;
 
     size_t w = std::max(0, x1 - x0);
     size_t h = std::max(0, y1 - y0);
-
     if (w == 0 || h == 0) return {};
 
     size_t bytes_per_pixel = 4;
@@ -219,14 +217,19 @@ GlyphBitmap GlyphRasterizer::rasterize(
         CGBitmapContextCreate(pixels.data(), w, h, 8, bytes_per_row, cs.get(),
                               kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
+    CGContextSetAllowsFontSubpixelQuantization(ctx.get(), false);
+    CGContextSetShouldSubpixelQuantizeFonts(ctx.get(), false);
+    CGContextSetAllowsFontSubpixelPositioning(ctx.get(), true);
+    CGContextSetShouldSubpixelPositionFonts(ctx.get(), true);
+
     // Map glyph drawing into destination user space, but clipped to this bitmap.
     // device_px = user * scale, so set scale then translate by bitmap origin in user units.
     CGContextScaleCTM(ctx.get(), scale, scale);
     CGContextTranslateCTM(ctx.get(), -(CGFloat)x0 / scale, -(CGFloat)y0 / scale);
 
-    // Draw glyph at its real destination position.
-    CGContextSetRGBFillColor(ctx.get(), 0, 0, 0, 1);
-    CGPoint pos = {origin_x, origin_y};
+    // Draw black on white to create mask. (Special path exists to speed this up in CG.)
+    CGContextSetGrayFillColor(ctx.get(), 0.0f, 1.0f);
+    CGPoint pos = {(CGFloat)sub_x / scale, (CGFloat)sub_y / scale};
     CTFontDrawGlyphs(ctfont, &glyphs, &pos, 1, ctx.get());
 
     return {

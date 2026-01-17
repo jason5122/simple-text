@@ -20,6 +20,8 @@ using base::apple::ScopedCGImage;
 namespace {
 
 void draw_text(CGContextRef ctx, const font::ShapedLine& shaped) {
+    constexpr int scale = 2;
+
     font::GlyphRasterizer rasterizer;
     for (const auto& run : shaped.runs) {
         for (const auto& g : run.glyphs) {
@@ -27,9 +29,24 @@ void draw_text(CGContextRef ctx, const font::ShapedLine& shaped) {
             auto pos_y = g.y_offset;
             pos_y += shaped.descent;
 
-            constexpr int scale = 2;
-            font::GlyphBitmap bmp = rasterizer.rasterize(run.font, g.glyph, pos_x, pos_y, scale);
-            blit_bitmap(ctx, bmp, scale);
+            double fx = pos_x * scale;
+            double fy = pos_y * scale;
+            double sub_x = fx - std::floor(fx);
+            double sub_y = fy - std::floor(fy);
+            sub_x = 0;
+            sub_y = 0;
+            font::GlyphBitmap bmp = rasterizer.rasterize(run.font, g.glyph, sub_x, sub_y, scale);
+
+            ImageView img = {
+                .data = bmp.pixels.data(),
+                .width = bmp.width,
+                .height = bmp.height,
+                .stride = bmp.width * bmp.bytes_per_pixel,
+            };
+            CGRect rect = CGRectMake(pos_x + (double)bmp.bearing_x / scale,
+                                     pos_y + (double)bmp.bearing_y / scale,
+                                     (double)bmp.width / scale, (double)bmp.height / scale);
+            draw_pixels(ctx, img, rect);
         }
     }
 }

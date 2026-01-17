@@ -3,7 +3,6 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
 #include "base/strings/sys_string_conversions.h"
-#include "experiments/rasterizer/font.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
@@ -40,23 +39,24 @@ void draw_line(
     CGContextStrokePath(ctx);
 }
 
-void blit_bitmap(CGContextRef ctx, const font::GlyphBitmap& bm, int scale) {
-    if (bm.width == 0 || bm.height == 0) return;
+struct ImageView {
+    const uint8_t* data;
+    size_t width;
+    size_t height;
+    size_t stride;
+};
 
-    size_t bytes_per_row = bm.width * bm.bytes_per_pixel;
-    auto provider = ScopedCFTypeRef<CGDataProviderRef>(CGDataProviderCreateWithData(
-        nullptr, bm.pixels.data(), bm.height * bytes_per_row, nullptr));
+void draw_pixels(CGContextRef ctx, const ImageView& img, const CGRect& rect) {
+    auto provider = ScopedCFTypeRef<CGDataProviderRef>(
+        CGDataProviderCreateWithData(nullptr, img.data, img.stride * img.height, nullptr));
     auto cs = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
-    auto img = ScopedCFTypeRef<CGImageRef>(
-        CGImageCreate(bm.width, bm.height, 8, 32, bytes_per_row, cs.get(),
+    auto cgimg = ScopedCFTypeRef<CGImageRef>(
+        CGImageCreate(img.width, img.height, 8, 32, img.stride, cs.get(),
                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host, provider.get(),
-                      nullptr, true, kCGRenderingIntentDefault));
+                      nullptr, false, kCGRenderingIntentDefault));
 
-    // Destination rect in user space.
-    CGRect rect = {
-        .origin = {(CGFloat)bm.bearing_x / scale, (CGFloat)bm.bearing_y / scale},
-        .size = {(CGFloat)bm.width / scale, (CGFloat)bm.height / scale},
-    };
-
-    CGContextDrawImage(ctx, rect, img.get());
+    CGContextSaveGState(ctx);
+    CGContextSetInterpolationQuality(ctx, kCGInterpolationNone);
+    CGContextDrawImage(ctx, rect, cgimg.get());
+    CGContextRestoreGState(ctx);
 }

@@ -2,15 +2,11 @@
 #include "base/rand_util.h"
 #include "gfx/device.h"
 #include <Cocoa/Cocoa.h>
-#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <spdlog/spdlog.h>
 
 namespace {
-
-double now_seconds() { return CACurrentMediaTime(); }
-
 float rand_range(float minv, float maxv) { return minv + (maxv - minv) * base::rand_float(); }
 
 // Generates quads in pixel coords, top-left origin.
@@ -46,21 +42,16 @@ constexpr std::array<gfx::Quad, 100> make_random_quads(float viewport_w, float v
 }
 
 const auto kQuads = make_random_quads(3000, 2000);
-
 }  // namespace
 
 @interface GLLayer : CAOpenGLLayer
 - (instancetype)init;
-- (void)requestFrameOnce;
 @end
 
 @implementation GLLayer {
 @public
     std::unique_ptr<gfx::Device> device_;
     float scroll_y_;
-    std::atomic<float> scroll_dy_;
-    std::atomic<bool> frame_pending_;
-    std::atomic<double> keep_running_until_;
 }
 
 - (instancetype)init {
@@ -69,22 +60,16 @@ const auto kQuads = make_random_quads(3000, 2000);
 
     self.contentsScale = NSScreen.mainScreen.backingScaleFactor;
 
-    device_ = gfx::create_device(gfx::Backend::kOpenGL);
-    if (!device_) {
-        spdlog::error("Could not create OpenGL backend.");
-        std::exit(EXIT_FAILURE);
-    }
-
     scroll_y_ = 0.0f;
-    scroll_dy_.store(0.0f, std::memory_order_relaxed);
-    frame_pending_.store(false, std::memory_order_relaxed);
-    keep_running_until_.store(0.0, std::memory_order_relaxed);
+
+    device_ = gfx::create_device(gfx::Backend::kOpenGL);
+    if (!device_) std::abort();
 
     return self;
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    CGLPixelFormatObj pf = NULL;
+    CGLPixelFormatObj pf = nullptr;
     GLint npix = 0;
 
     CGLPixelFormatAttribute attrs[] = {
@@ -95,7 +80,7 @@ const auto kQuads = make_random_quads(3000, 2000);
         kCGLPFADoubleBuffer,       kCGLPFAAccelerated,
         (CGLPixelFormatAttribute)0};
 
-    if (CGLChoosePixelFormat(attrs, &pf, &npix) != kCGLNoError || !pf) return NULL;
+    if (CGLChoosePixelFormat(attrs, &pf, &npix) != kCGLNoError || !pf) return nullptr;
     return pf;
 }
 
@@ -127,25 +112,10 @@ const auto kQuads = make_random_quads(3000, 2000);
         gfx::Quad{1600.f, 800.f, 40.f, 600.f, 0.2f, 0.4f, 1.f, 1.f},
         gfx::Quad{2000.f, 800.f, 40.f, 600.f, 127.f / 255, 127.f / 255, 127.f / 255, 1.f},
     };
-
-    float dy = scroll_dy_.exchange(0.0f, std::memory_order_relaxed);
-    scroll_y_ += dy;
-
-    // frame->draw_quads(quads, 0, -scroll_y_);
-    frame->draw_quads(kQuads, 0, -scroll_y_);
+    frame->draw_quads(quads, 0, -scroll_y_);
+    // frame->draw_quads(kQuads, 0, -scroll_y_);
 
     frame->present();
-
-    frame_pending_.store(false, std::memory_order_relaxed);
-}
-
-- (void)requestFrameOnce {
-    bool expected = false;
-    if (!frame_pending_.compare_exchange_strong(expected, true, std::memory_order_relaxed)) {
-        spdlog::warn("Frame dropped");
-        return;
-    }
-    [self setNeedsDisplay];
 }
 
 @end
@@ -155,6 +125,7 @@ const auto kQuads = make_random_quads(3000, 2000);
 
 @implementation GLView {
     std::unique_ptr<base::apple::DisplayLinkMac> display_link_;
+    dispatch_source_t stop_timer_;
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
@@ -168,21 +139,24 @@ const auto kQuads = make_random_quads(3000, 2000);
     display_link_ = base::apple::DisplayLinkMac::create_for_display(display_id);
     if (!display_link_) std::abort();
 
-    display_link_->set_callback([self]() {
-        GLLayer* layer = (GLLayer*)self.layer;
-
-        double now = now_seconds();
-        double until = layer->keep_running_until_.load(std::memory_order_relaxed);
-
-        if (now <= until) {
-            [layer requestFrameOnce];
-        } else {
-            display_link_->stop();
-        }
-    });
+    display_link_->set_callback([self]() { [self.layer setNeedsDisplay]; });
     display_link_->stop();
 
+    stop_timer_ =
+        dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    __weak GLView* weak_self = self;
+    dispatch_source_set_event_handler(stop_timer_, ^{
+      GLView* self = weak_self;
+      if (!self) return;
+      self->display_link_->stop();
+    });
+    dispatch_resume(stop_timer_);
+
     return self;
+}
+
+- (void)dealloc {
+    display_link_->set_callback(nullptr);
 }
 
 - (BOOL)acceptsFirstResponder {
@@ -191,18 +165,20 @@ const auto kQuads = make_random_quads(3000, 2000);
 
 - (void)setFrameSize:(NSSize)newSize {
     [super setFrameSize:newSize];
-    GLLayer* layer = (GLLayer*)self.layer;
-    [layer requestFrameOnce];
+    [self.layer setNeedsDisplay];
 }
 
 - (void)scrollWheel:(NSEvent*)e {
     GLLayer* layer = (GLLayer*)self.layer;
-
-    float dy = (float)e.scrollingDeltaY;
-    layer->scroll_dy_.fetch_add(dy, std::memory_order_relaxed);
-    layer->keep_running_until_.store(now_seconds() + 0.75, std::memory_order_relaxed);
+    float dy = static_cast<float>(e.scrollingDeltaY);
+    layer->scroll_y_ += dy;
 
     display_link_->start();
+
+    // Push the stop 1 sec into the future (debounce).
+    int64_t delay_ns = (int64_t)(1.0 * NSEC_PER_SEC);
+    dispatch_time_t deadline = dispatch_time(DISPATCH_TIME_NOW, delay_ns);
+    dispatch_source_set_timer(stop_timer_, deadline, DISPATCH_TIME_FOREVER, 10 * NSEC_PER_MSEC);
 }
 
 @end

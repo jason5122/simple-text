@@ -19,3 +19,6 @@
 [submodule "third_party/khronos"]
 	path = third_party/khronos
 	url = https://github.com/KhronosGroup/EGL-Registry
+[submodule "third_party/tree_sitter/src"]
+	path = third_party/tree_sitter/src
+	url = https://github.com/tree-sitter/tree-sitter

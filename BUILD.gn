@@ -16,6 +16,7 @@ group("experiments") {
     "//experiments/fuzz",
     "//experiments/gui_api_redesign",
     "//experiments/message_loop",
+    "//experiments/parser",
     "//experiments/playground",
     "//experiments/rasterizer",
     "//experiments/renderer",

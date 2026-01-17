@@ -1,5 +1,5 @@
 static_library("tree_sitter") {
-  sources = [ "src/lib.c" ]
+  sources = [ "src/lib/src/lib.c" ]
 
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
@@ -12,5 +12,5 @@ static_library("tree_sitter") {
 }
 
 config("tree_sitter_includes") {
-  include_dirs = [ "include" ]
+  include_dirs = [ "src/lib/include" ]
 }

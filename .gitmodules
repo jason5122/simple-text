@@ -22,3 +22,6 @@
 [submodule "third_party/tree_sitter/src"]
 	path = third_party/tree_sitter/src
 	url = https://github.com/tree-sitter/tree-sitter
+[submodule "third_party/skia/src"]
+	path = third_party/skia/src
+	url = https://skia.googlesource.com/skia.git

@@ -1,9 +1,8 @@
 static_library("libspng") {
-  sources = [ "src/spng.c" ]
+  sources = [ "src/spng/spng.c" ]
 
   # https://libspng.org/docs/build/#miniz
   defines = [ "SPNG_USE_MINIZ" ]
-  sources += [ "src/miniz.c" ]
 
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
@@ -12,10 +11,10 @@ static_library("libspng") {
   cflags = [ "-Wno-#pragma-messages" ]
 
   public_configs = [ ":libspng_includes" ]
+
+  deps = [ "//third_party/miniz" ]
 }
 
 config("libspng_includes") {
-  defines = [ "SPNG_STATIC" ]
-
-  include_dirs = [ "include" ]
+  include_dirs = [ "src/spng" ]
 }

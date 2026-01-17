@@ -1,0 +1,17 @@
+static_library("miniz") {
+  sources = [
+    "src/miniz.c",
+    "src/miniz_tdef.c",
+    "src/miniz_tinfl.c",
+    "src/miniz_zip.c",
+  ]
+
+  public_configs = [ ":miniz_includes" ]
+}
+
+config("miniz_includes") {
+  include_dirs = [
+    "include",
+    "src",
+  ]
+}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "build/build_config.h"
-#include "third_party/khronos/KHR/khrplatform.h"
+#include "third_party/khronos/api/KHR/khrplatform.h"
 #include <stdint.h>
 
 // DEV: The section with OpenGL function declarations (lines with `extern`) are at the bottom.

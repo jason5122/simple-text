@@ -16,3 +16,6 @@
 [submodule "third_party/uni_algo/src"]
 	path = third_party/uni_algo/src
 	url = https://github.com/uni-algo/uni-algo
+[submodule "third_party/khronos"]
+	path = third_party/khronos
+	url = https://github.com/KhronosGroup/EGL-Registry

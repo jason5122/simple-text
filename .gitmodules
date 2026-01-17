@@ -7,3 +7,6 @@
 [submodule "third_party/libspng/src"]
 	path = third_party/libspng/src
 	url = https://github.com/randy408/libspng/
+[submodule "third_party/spdlog/src"]
+	path = third_party/spdlog/src
+	url = https://github.com/gabime/spdlog

@@ -38,7 +38,7 @@ source_set("gui") {
     "//font",
     "//gl",
     "//gui/renderer/icons",
-    "//third_party/libjpeg",
+    "//third_party/libjpeg_turbo",
     "//third_party/libspng",
     "//third_party/spdlog",
 

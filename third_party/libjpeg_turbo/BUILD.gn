@@ -1,0 +1,114 @@
+libjpeg16_sources = [
+  "src/src/jcapistd.c",
+  "src/src/jccolor.c",
+  "src/src/jcdiffct.c",
+  "src/src/jclossls.c",
+  "src/src/jcmainct.c",
+  "src/src/jcprepct.c",
+  "src/src/jcsample.c",
+  "src/src/jdapistd.c",
+  "src/src/jdcolor.c",
+  "src/src/jddiffct.c",
+  "src/src/jdlossls.c",
+  "src/src/jdmainct.c",
+  "src/src/jdpostct.c",
+  "src/src/jdsample.c",
+  "src/src/jutils.c",
+]
+
+libjpeg12_sources = libjpeg16_sources + [
+                      "src/src/jccoefct.c",
+                      "src/src/jcdctmgr.c",
+                      "src/src/jdcoefct.c",
+                      "src/src/jddctmgr.c",
+                      "src/src/jdmerge.c",
+                      "src/src/jfdctfst.c",
+                      "src/src/jfdctint.c",
+                      "src/src/jidctflt.c",
+                      "src/src/jidctfst.c",
+                      "src/src/jidctint.c",
+                      "src/src/jidctred.c",
+                      "src/src/jquant1.c",
+                      "src/src/jquant2.c",
+                    ]
+
+libjpeg_sources = libjpeg12_sources + [
+                    "src/src/jcapimin.c",
+                    "src/src/jchuff.c",
+                    "src/src/jcicc.c",
+                    "src/src/jcinit.c",
+                    "src/src/jclhuff.c",
+                    "src/src/jcmarker.c",
+                    "src/src/jcmaster.c",
+                    "src/src/jcomapi.c",
+                    "src/src/jcparam.c",
+                    "src/src/jcphuff.c",
+                    "src/src/jctrans.c",
+                    "src/src/jdapimin.c",
+                    "src/src/jdatadst.c",
+                    "src/src/jdatasrc.c",
+                    "src/src/jdhuff.c",
+                    "src/src/jdicc.c",
+                    "src/src/jdinput.c",
+                    "src/src/jdlhuff.c",
+                    "src/src/jdmarker.c",
+                    "src/src/jdmaster.c",
+                    "src/src/jdphuff.c",
+                    "src/src/jdtrans.c",
+                    "src/src/jerror.c",
+                    "src/src/jfdctflt.c",
+                    "src/src/jmemmgr.c",
+                    "src/src/jmemnobs.c",
+                    "src/src/jpeg_nbits.c",
+                  ]
+
+static_library("libjpeg16") {
+  sources = libjpeg16_sources
+
+  defines = [
+    "NO_GETENV",
+    "NO_PUTENV",
+    "BITS_IN_JSAMPLE=16",
+  ]
+
+  public_configs = [ ":libjpeg_config" ]
+}
+
+static_library("libjpeg12") {
+  sources = libjpeg12_sources
+
+  defines = [
+    "NO_GETENV",
+    "NO_PUTENV",
+    "BITS_IN_JSAMPLE=12",
+  ]
+
+  public_configs = [ ":libjpeg_config" ]
+}
+
+# TODO: Look into enabling SIMD. We keep SIMD off for simplicity in this GN file.
+static_library("libjpeg_turbo") {
+  sources = libjpeg_sources
+
+  defines = [
+    "NO_GETENV",
+    "NO_PUTENV",
+  ]
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
+  public_configs = [ ":libjpeg_config" ]
+
+  deps = [
+    ":libjpeg12",
+    ":libjpeg16",
+  ]
+}
+
+config("libjpeg_config") {
+  include_dirs = [
+    "include",
+    "src/src",
+  ]
+}

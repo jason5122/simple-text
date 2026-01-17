@@ -1,3 +1,6 @@
+assert(path_exists("src/src"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
 import("src/gn/shared_sources.gni")
 import("src/modules/skcms/skcms.gni")
 

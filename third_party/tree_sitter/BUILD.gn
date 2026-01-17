@@ -1,3 +1,6 @@
+assert(path_exists("src/lib"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
 static_library("tree_sitter") {
   sources = [ "src/lib/src/lib.c" ]
 

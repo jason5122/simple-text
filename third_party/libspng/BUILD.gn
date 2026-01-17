@@ -1,3 +1,6 @@
+assert(path_exists("src/spng"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
 static_library("libspng") {
   sources = [ "src/spng/spng.c" ]
 

@@ -1,3 +1,6 @@
+assert(path_exists("src/src"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
 source_set("uni_algo") {
   sources = [ "src/src/data.cpp" ]
 
@@ -20,5 +23,5 @@ config("uni_algo_includes") {
     "UNI_ALGO_NO_SHRINK_TO_FIT",
   ]
 
-  include_dirs = [ "src/include/" ]
+  include_dirs = [ "src/include" ]
 }

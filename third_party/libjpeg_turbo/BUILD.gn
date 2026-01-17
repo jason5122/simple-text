@@ -1,3 +1,6 @@
+assert(path_exists("src/src"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
 libjpeg16_sources = [
   "src/src/jcapistd.c",
   "src/src/jccolor.c",

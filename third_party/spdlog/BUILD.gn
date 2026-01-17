@@ -1,3 +1,6 @@
+assert(path_exists("src/src"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
 static_library("spdlog") {
   sources = [
     "src/src/async.cpp",

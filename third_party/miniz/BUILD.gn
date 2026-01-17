@@ -1,3 +1,6 @@
+assert(path_exists("src/miniz.c"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
 static_library("miniz") {
   sources = [
     "src/miniz.c",

@@ -71,7 +71,7 @@ static_library("libjpeg16") {
     "BITS_IN_JSAMPLE=16",
   ]
 
-  public_configs = [ ":libjpeg_config" ]
+  public_configs = [ ":libjpeg_includes" ]
 }
 
 static_library("libjpeg12") {
@@ -83,7 +83,7 @@ static_library("libjpeg12") {
     "BITS_IN_JSAMPLE=12",
   ]
 
-  public_configs = [ ":libjpeg_config" ]
+  public_configs = [ ":libjpeg_includes" ]
 }
 
 # TODO: Look into enabling SIMD. We keep SIMD off for simplicity in this GN file.
@@ -98,7 +98,7 @@ static_library("libjpeg_turbo") {
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
 
-  public_configs = [ ":libjpeg_config" ]
+  public_configs = [ ":libjpeg_includes" ]
 
   deps = [
     ":libjpeg12",
@@ -106,7 +106,7 @@ static_library("libjpeg_turbo") {
   ]
 }
 
-config("libjpeg_config") {
+config("libjpeg_includes") {
   include_dirs = [
     "include",
     "src/src",

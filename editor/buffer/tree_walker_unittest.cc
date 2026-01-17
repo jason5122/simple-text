@@ -1,5 +1,5 @@
 #include "editor/buffer/piece_tree.h"
-#include "third_party/uni_algo/include/uni_algo/prop.h"
+#include "uni_algo/prop.h"
 #include <gtest/gtest.h>
 #include <stack>
 

@@ -1,5 +1,5 @@
 #include "editor/movement.h"
-#include "third_party/uni_algo/include/uni_algo/prop.h"
+#include "uni_algo/prop.h"
 #include <numeric>
 #include <optional>
 #include <spdlog/spdlog.h>

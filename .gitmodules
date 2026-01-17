@@ -13,3 +13,6 @@
 [submodule "third_party/libjpeg_turbo/src"]
 	path = third_party/libjpeg_turbo/src
 	url = https://github.com/libjpeg-turbo/libjpeg-turbo
+[submodule "third_party/uni_algo/src"]
+	path = third_party/uni_algo/src
+	url = https://github.com/uni-algo/uni-algo

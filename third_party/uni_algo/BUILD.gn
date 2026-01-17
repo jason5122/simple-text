@@ -1,15 +1,12 @@
 source_set("uni_algo") {
-  # TODO: Determine if we want to use static or non-static data.
-  # sources = [ "src/data.cc" ]
+  sources = [ "src/src/data.cpp" ]
 
   public_configs = [ ":uni_algo_includes" ]
 }
 
 config("uni_algo_includes") {
-  defines = [ "UNI_ALGO_STATIC_DATA" ]
-
   # Disable unused modules.
-  defines += [
+  defines = [
     "UNI_ALGO_DISABLE_CONV",
     "UNI_ALGO_DISABLE_ITER",
     "UNI_ALGO_DISABLE_CASE",
@@ -23,5 +20,5 @@ config("uni_algo_includes") {
     "UNI_ALGO_NO_SHRINK_TO_FIT",
   ]
 
-  include_dirs = [ "include" ]
+  include_dirs = [ "src/include/" ]
 }

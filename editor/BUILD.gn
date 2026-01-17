@@ -30,6 +30,7 @@ source_set("editor_unittests") {
     ":editor",
     "//third_party/googletest:gtest",
     "//third_party/spdlog",
+    "//third_party/uni_algo",
   ]
 }
 

@@ -1,42 +1,30 @@
-<h1 align="center">Simple Text - A GPU-accelerated, cross-platform text editor</h1>
+<h1>
+<p align="center">
+  <img src="docs/logo.png" alt="Logo" width="128">
+  <br>Simple Text
+</h1>
+  <p align="center">
+    A GPU-accelerated, cross-platform text editor.
+    <br />
+    <a href="#about">About</a>
+    ·
+    <a href="https://github.com/jason5122/simple-text/releases">Download</a>
+    ·
+    <a href="docs">Documentation</a>
+    ·
+    <a href="docs/DEVELOPING.md">Developing</a>
+  </p>
+</p>
 
-<!-- <p align="center">
-  <img alt="Simple Text - A GPU-accelerated, cross-platform text editor"
-       src="docs/simple-text.png">
-</p> -->
+<p align="center">
+  <img src="docs/demo.png" alt="Simple Text">
+</p>
 
-## Quickstart
+## About
 
-```bash
-python3 bin/fetch-gn
-python3 bin/fetch-ninja
-python3 bin/fetch-clang
+> [!NOTE]
+> The app name and icon are a placeholder!
 
-bin/gn gen out/release --args='is_release=true'
-bin/ninja -C out/release
-```
+Simple Text is a fast, lightweight text editor written in C++ and OpenGL. The goal of this project is to provide a competitive editing experience to that of VSCode and Zed with a fraction of the code size. It should also be easy to extend and hack on the internals.
 
-## Dependencies
-
-This project uses Clang/LLVM. The build system will search common paths to discover the LLVM install.
-
-### macOS
-
-Xcode Clang is unsupported at the moment. Please use Homebrew's version.
-
-```bash
-brew install llvm
-```
-
-### Fedora
-
-```bash
-dnf install clang llvm lld
-```
-
-## Development
-
-```bash
-# (Optional) Add LSP support for your editor. 
-bin/ninja -C out/release -t compdb cc cxx objc objcxx > compile_commands.json
-```
+Simple Text also doubles as a research project on font rendering, GUI frameworks, computer graphics, and text editing.

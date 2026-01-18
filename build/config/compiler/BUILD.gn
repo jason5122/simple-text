@@ -26,6 +26,45 @@ config("compiler") {
     cflags_cc += [ "-std=c++20" ]
   }
 
+  if (!is_win) {
+    ldflags += [ "-fuse-ld=lld" ]
+
+    if (is_mac) {
+      ldflags += [ "-Wl,-fatal_warnings" ]
+    } else {
+      ldflags += [ "-Wl,--fatal-warnings" ]
+    }
+  }
+
+  # ThinLTO.
+  cflags += [ "-flto=thin" ]
+  if (!is_win) {
+    ldflags += [ "-flto=thin" ]
+  }
+
+  # ThinLTO cache.
+  # Limit cache size to the lesser of 10% of available disk space, 40GB and 100000 files.
+  cache_policy = "cache_size=10%:cache_size_bytes=40g:cache_size_files=100000"
+  cache_dir = rebase_path("$root_out_dir/thinlto-cache", root_build_dir)
+  if (is_win) {
+    ldflags += [
+      "/lldltocache:$cache_dir",
+      "/lldltocachepolicy:$cache_policy",
+    ]
+  } else {
+    if (is_mac) {
+      ldflags += [ "-Wl,-cache_path_lto,$cache_dir" ]
+    } else {
+      ldflags += [ "-Wl,--thinlto-cache-dir=$cache_dir" ]
+    }
+    ldflags += [ "-Wl,--thinlto-cache-policy=$cache_policy" ]
+  }
+
+  # https://www.smileykeith.com/2022/02/23/lc-linker-option/
+  if (is_mac) {
+    ldflags += [ "-Wl,--strict-auto-link" ]
+  }
+
   # Pass the same C/C++ flags to the Objective-C/C++ compiler.
   cflags_objc += cflags_c
   cflags_objcc += cflags_cc
@@ -58,9 +97,6 @@ config("optimize") {
     ]
   } else {
     cflags = [ "-O2" ]
-
-    # TODO: Consider moving LTO into a separate config.
-    ldflags = [ "-flto=thin" ]
   }
 }
 

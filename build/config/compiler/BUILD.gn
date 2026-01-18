@@ -32,7 +32,7 @@ config("compiler") {
 }
 
 config("runtime_library") {
-  configs = []
+  configs = [ "//build/config/c++:runtime_library" ]
 
   if (is_mac) {
     configs += [ "//build/config/mac:runtime_library" ]
@@ -85,11 +85,30 @@ config("default_optimization") {
   }
 }
 
+config("exceptions") {
+  if (is_win) {
+    defines = [ "_HAS_EXCEPTIONS=1" ]
+    cflags_cc = [ "/EHsc" ]
+  } else {
+    cflags_cc = [ "-fexceptions" ]
+    cflags_objcc = cflags_cc
+  }
+}
+
 config("no_exceptions") {
   if (is_win) {
     defines = [ "_HAS_EXCEPTIONS=0" ]
   } else {
     cflags_cc = [ "-fno-exceptions" ]
+    cflags_objcc = cflags_cc
+  }
+}
+
+config("rtti") {
+  if (is_win) {
+    cflags_cc = [ "/GR" ]
+  } else {
+    cflags_cc = [ "-frtti" ]
     cflags_objcc = cflags_cc
   }
 }

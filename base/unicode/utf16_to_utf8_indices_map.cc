@@ -1,6 +1,7 @@
 #include "base/unicode/unicode.h"
 #include "base/unicode/utf16_to_utf8_indices_map.h"
 #include <cassert>
+#include <utility>
 
 namespace base {
 

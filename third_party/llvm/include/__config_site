@@ -1,0 +1,26 @@
+// -*- C++ -*-
+
+#ifndef _LIBCPP_CONFIG_SITE
+#define _LIBCPP_CONFIG_SITE
+
+#define _LIBCPP_HARDENING_MODE_DEFAULT _LIBCPP_HARDENING_MODE_NONE
+
+// Prevents errors like "error: 'to_chars' is unavailable: introduced in macOS 13.3".
+#define _LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS
+
+// =================================================================================================
+// Settings below aren't part of __config_site upstream. We set them here since we want them to
+// take effect everywhere, unconditionally.
+// =================================================================================================
+// See https://libcxx.llvm.org/DesignDocs/HeaderRemovalPolicy.html
+#define _LIBCPP_REMOVE_TRANSITIVE_INCLUDES
+
+// Prevent libc++ from embedding linker flags to try to automatically link against its runtime
+// library. This is unnecessary with our build system, and can also result in build failures if
+// libc++'s name for a library does not match ours. Only has an effect on Windows.
+#define _LIBCPP_NO_AUTO_LINK
+
+// Disable header include for parallel algorithms.
+#define _LIBCPP_HAS_NO_INCOMPLETE_PSTL
+
+#endif  // _LIBCPP_CONFIG_SITE

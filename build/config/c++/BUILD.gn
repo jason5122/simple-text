@@ -1,0 +1,17 @@
+import("//build/config/c++/c++.gni")
+
+config("runtime_library") {
+  # libc++ expects `__assertion_handler` and `__config_site`.
+  include_dirs = [ "//third_party/llvm/include" ]
+
+  if (!is_win) {
+    cflags_cc = [
+      "-nostdinc++",
+      "-isystem" + rebase_path("$libcxx_prefix/include", root_build_dir),
+      "-isystem" + rebase_path("$libcxxabi_prefix/include", root_build_dir),
+    ]
+    cflags_objcc = cflags_cc
+
+    ldflags = [ "-nostdlib++" ]
+  }
+}

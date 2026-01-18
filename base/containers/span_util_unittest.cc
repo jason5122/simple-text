@@ -1,4 +1,6 @@
 #include "base/containers/span_util.h"
+#include <algorithm>
+#include <bit>
 #include <gtest/gtest.h>
 
 namespace base {

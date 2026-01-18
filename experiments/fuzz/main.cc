@@ -4,6 +4,7 @@
 #include "experiments/fuzz/arg_parser.h"
 #include "experiments/fuzz/string_buffer.h"
 #include <cstring>
+#include <queue>
 #include <spdlog/spdlog.h>
 #include <sstream>
 #include <string>

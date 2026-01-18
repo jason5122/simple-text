@@ -1,6 +1,7 @@
 #include "base/check.h"
 #include "base/containers/span_util.h"
 #include "base/rand_util.h"
+#include <math.h>
 
 namespace base {
 

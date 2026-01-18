@@ -3,6 +3,7 @@
 #include "gfx/frame.h"
 #include "gfx/gl/gl_device.h"
 #include "gfx/gl/gl_surface.h"
+#include <vector>
 
 namespace gfx {
 

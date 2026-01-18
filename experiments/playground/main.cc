@@ -1,5 +1,7 @@
-#include <spdlog/spdlog.h>
+#include <iostream>
+#include <string>
 
 int main() {
-    spdlog::info("hello world");
+    std::string s = "hello world";
+    std::cout << s << '\n';
 }

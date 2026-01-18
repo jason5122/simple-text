@@ -75,3 +75,39 @@ set_defaults("source_set") {
 }
 
 set_default_toolchain("//build/toolchain/$target_os:clang")
+
+# A helper for forwarding testonly and visibility.
+# Forwarding "*" does not include variables from outer scopes (to avoid copying all globals into
+# each template invocation), so it will not pick up file-scoped or outer-template-scoped variables.
+# Normally this behavior is desired, but "visibility" and "testonly" are commonly defined in outer
+# scopes. Explicitly forwarding them in forward_variables_from() works around this nuance.
+TESTONLY_AND_VISIBILITY = [
+  "testonly",
+  "visibility",
+]
+
+# Set libc++ as a dependency for executable and shared_library targets.
+foreach(_target_type,
+        [
+          "executable",
+          "loadable_module",
+          "shared_library",
+        ]) {
+  template(_target_type) {
+    # Alias "target_name" because it is clobbered by forward_variables_from().
+    _target_name = target_name
+    target(_target_type, _target_name) {
+      forward_variables_from(invoker, "*", TESTONLY_AND_VISIBILITY)
+      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
+      if (!defined(inputs)) {
+        inputs = []
+      }
+
+      if (!defined(deps)) {
+        deps = []
+      }
+
+      deps += [ "//third_party/llvm:libc++" ]
+    }
+  }
+}

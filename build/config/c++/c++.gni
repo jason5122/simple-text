@@ -1,0 +1,2 @@
+libcxx_prefix = "//third_party/llvm/src/libcxx"
+libcxxabi_prefix = "//third_party/llvm/src/libcxxabi"

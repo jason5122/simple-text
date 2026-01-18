@@ -1,12 +1,10 @@
-toolchain("clang") {
-  # Taken from //chromium/src/build/toolchain/win/toolchain.gni.
-  cl = "clang-cl"
-  link = "lld-link"
-  lib = "$link /lib"
+import("//build/config/clang/clang.gni")
 
-  # Make these apply to all tools below.
-  lib_switch = ""
-  lib_dir_switch = "/LIBPATH:"
+toolchain("clang") {
+  prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
+  cl = "${prefix}clang-cl"
+  link = "${prefix}lld-link"
+  lib = "$link /lib"
 
   tool("link") {
     exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"

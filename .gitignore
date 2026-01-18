@@ -2,7 +2,7 @@ bin/gn
 bin/gn.exe
 bin/ninja
 bin/ninja.exe
-third_party/llvm-build/
+third_party/llvm-toolchain/
 
 out/
 __pycache__/

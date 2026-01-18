@@ -1,3 +1,1 @@
-declare_args() {
-  clang_base_path = "//third_party/llvm-build/Release+Asserts"
-}
+clang_base_path = "//third_party/llvm-toolchain"

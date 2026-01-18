@@ -7,7 +7,7 @@ This repository uses Git submodules. Clone it recursively with `git clone --recu
 ```bash
 python3 bin/fetch-gn
 python3 bin/fetch-ninja
-python3 bin/fetch-clang
+python3 bin/fetch-llvm-toolchain
 
 bin/gn gen out/release --args='is_release=true'
 bin/ninja -C out/release

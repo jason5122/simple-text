@@ -53,7 +53,6 @@ if (is_win) {
     "//build/config/win:lean_and_mean",
     "//build/config/win:nominmax",
     "//build/config/win:winver",
-    "//build/config/win:static_crt",
     "//build/config/win:no_crt_deprecation_warnings",
   ]
 }

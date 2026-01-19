@@ -28,12 +28,13 @@ brew install xwin
 xwin --accept-license --arch x86_64 splat --output third_party/xwin
 ```
 
-In `args.gn`, set `target_os` to `"win"`. Optionally, set `target_cpu`.
+```bash
+bin/gn args out/windows-x64
+# When args.gn opens, set `target_os` (and optionally `target_cpu`). Example for Windows x86_64:
+# target_os = "win"
+# target_cpu = "x64"
 
-```
-# Example for Windows x86_64.
-target_os = "win"
-target_cpu = "x64"
+bin/ninja -C out/windows-x64
 ```
 
 ### Linux to Windows

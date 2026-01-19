@@ -32,6 +32,15 @@ config("compiler") {
   cflags_cc = [ "/TP" ]
 }
 
+config("runtime_library") {
+  # Statically link CRT.
+  cflags = [ "/MT" ]
+
+  # On Windows, including libcpmt explicitly links the C++ standard library, which libc++ needs for
+  # exception_ptr internals.
+  ldflags = [ "/DEFAULTLIB:libcpmt.lib" ]
+}
+
 # Character set ----------------------------------------------------------------
 
 # Not including this config means "ansi" (8-bit system codepage).
@@ -75,21 +84,6 @@ config("winver") {
     "_WIN32_WINNT=0x0A00",
     "WINVER=0x0A00",
   ]
-}
-
-config("static_crt") {
-  if (is_release) {
-    cflags = [ "/MT" ]
-
-    # On Windows, including libcpmt[d] explicitly links the C++ standard library, which libc++ needs
-    # for exception_ptr internals.
-    ldflags = [ "/DEFAULTLIB:libcpmt.lib" ]
-  } else {
-    # This pulls in the static debug CRT and defines _DEBUG.
-    cflags = [ "/MTd" ]
-
-    ldflags = [ "/DEFAULTLIB:libcpmtd.lib" ]
-  }
 }
 
 config("no_crt_deprecation_warnings") {

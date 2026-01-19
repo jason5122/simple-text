@@ -29,7 +29,6 @@ def main():
     os_name, cpu = get_os_cpu()
     is_windows = os_name == "windows"
     exe_name = "ninja.exe" if is_windows else "ninja"
-    ninja_path = os.path.join("bin", exe_name)
 
     version = "v1.13.2"
     asset = ASSET_BY_OS_CPU[(os_name, cpu)]
@@ -46,7 +45,8 @@ def main():
             z.extract(exe_name, "bin")
 
     if not is_windows:
-        os.chmod(ninja_path, 0o755)
+        exe_path = os.path.join("bin", exe_name)
+        os.chmod(exe_path, 0o755)
 
 
 if __name__ == "__main__":

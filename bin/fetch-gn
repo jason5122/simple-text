@@ -1,29 +1,43 @@
 #!/usr/bin/env python3
 import os
 import platform
-import sys
 import tempfile
 import zipfile
 from urllib.request import urlopen
 
 
-os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
+def get_os_cpu() -> tuple[str, str]:
+    system = platform.system().lower()  # darwin, linux, windows
+    machine = platform.machine().lower()  # x86_64, amd64, arm64, aarch64
+    os_name = "mac" if system == "darwin" else system
+    cpu = "x86_64" if machine in ("x86_64", "amd64") else "arm64"
+    return os_name, cpu
 
-OS = {"darwin": "mac", "linux": "linux", "linux2": "linux", "win32": "windows"}[sys.platform]
-cpu = {"aarch64": "arm64", "amd64": "amd64", "arm64": "arm64", "x86_64": "amd64"}[platform.machine().lower()]
-gn = "gn.exe" if OS == "windows" else "gn"
-gn_path = os.path.join("bin", gn)
-gn_zip = os.path.join(tempfile.mkdtemp(), "gn.zip")
-rev = "103f8b437f5e791e0aef9d5c372521a5d675fabb"
 
-print(f"Fetching {gn} at {rev} for {OS} {cpu}")
+def main():
+    os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
 
-with open(gn_zip, "wb") as f:
-    url = f"https://chrome-infra-packages.appspot.com/dl/gn/gn/{OS}-{cpu}/+/git_revision:{rev}"
-    f.write(urlopen(url).read())
+    os_name, cpu = get_os_cpu()
+    is_windows = os_name == "windows"
+    exe_name = "gn.exe" if is_windows else "gn"
 
-with zipfile.ZipFile(gn_zip, "r") as f:
-    f.extract(gn, "bin")
+    rev = "103f8b437f5e791e0aef9d5c372521a5d675fabb"
+    url = f"https://chrome-infra-packages.appspot.com/dl/gn/gn/{os_name}-{cpu}/+/git_revision:{rev}"
 
-if OS != "windows":
-    os.chmod(gn_path, 0o755)
+    print(f"Fetching {exe_name} at {rev} for {os_name}-{cpu}")
+
+    with tempfile.TemporaryDirectory() as td:
+        zip_path = os.path.join(td, "gn.zip")
+        with urlopen(url, timeout=5) as r, open(zip_path, "wb") as f:
+            f.write(r.read())
+
+        with zipfile.ZipFile(zip_path, "r") as z:
+            z.extract(exe_name, "bin")
+
+    if not is_windows:
+        exe_path = os.path.join("bin", exe_name)
+        os.chmod(exe_path, 0o755)
+
+
+if __name__ == "__main__":
+    main()

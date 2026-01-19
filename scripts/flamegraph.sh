@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
+cd "$(dirname "$0")/.."
+
 BUILD_DIR="$1"
+bin/ninja -C "$BUILD_DIR"
 cd "$BUILD_DIR"
-ninja
 
 TMP_DIR="$(mktemp -d -t flamegraph)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -17,7 +19,9 @@ FOLDED="$TMP_DIR/stacks.folded"
 
 open -n "./Simple Text.app"
 xctrace record --template 'Time Profiler' --output "$TRACE" --attach "Simple Text"
-xctrace export --input "$TRACE" --xpath '/trace-toc/*/data/table[@schema="time-profile"]' --output "$XML"
+xctrace export --input "$TRACE" --xpath '/trace-toc/*/data/table[@schema="time-profile"]' --output "$XML" --quiet
 
 inferno-collapse-xctrace "$XML" >"$FOLDED"
 inferno-flamegraph --truncate-text-right "$FOLDED" >flamegraph.svg
+
+realpath flamegraph.svg

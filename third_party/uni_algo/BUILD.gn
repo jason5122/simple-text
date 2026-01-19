@@ -4,6 +4,11 @@ assert(path_exists("src/src"),
 source_set("uni_algo") {
   sources = [ "src/src/data.cpp" ]
 
+  # On Windows, don't error when redefining `WIN32_LEAN_AND_MEAN`.
+  if (is_win) {
+    cflags = [ "-Wno-macro-redefined" ]
+  }
+
   public_configs = [ ":uni_algo_includes" ]
 }
 

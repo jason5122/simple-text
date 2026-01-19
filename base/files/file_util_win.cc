@@ -1,5 +1,5 @@
 #include "base/files/file_util.h"
-#include "base/windows/unicode.h"
+#include "base/strings/sys_string_conversions.h"
 #include <stdlib.h>
 #include <windows.h>
 
@@ -65,7 +65,7 @@ void AppendModeCharacter(wchar_t mode_char, std::wstring* mode) {
 FILE* OpenFile(const FilePath& filename, const char* mode) {
     // 'N' is unconditionally added below, so be sure there is not one already
     // present before a comma in |mode|.
-    std::wstring w_mode = base::windows::convert_to_utf16(mode);
+    std::wstring w_mode = base::sys_utf8_to_wide(mode);
     AppendModeCharacter(L'N', &w_mode);
     return _wfsopen(filename.value().c_str(), w_mode.c_str(), _SH_DENYNO);
 }

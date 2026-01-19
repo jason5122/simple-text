@@ -1,4 +1,9 @@
 source_set("libc++") {
+  inputs = [
+    "include/__assertion_handler",
+    "include/__config_site",
+  ]
+
   sources = [
     "src/libcxx/src/algorithm.cpp",
     "src/libcxx/src/any.cpp",
@@ -51,6 +56,14 @@ source_set("libc++") {
   ]
   include_dirs = [ "src/libcxx/src" ]
 
+  if (is_win) {
+    sources += [
+      "src/libcxx/src/support/win32/locale_win32.cpp",
+      "src/libcxx/src/support/win32/support.cpp",
+      "src/libcxx/src/support/win32/thread_win32.cpp",
+    ]
+  }
+
   configs += [ ":config" ]
   configs -= [
     "//build/config/compiler:simple_text_code",
@@ -69,38 +82,40 @@ source_set("libc++") {
   }
 }
 
-source_set("libc++abi") {
-  sources = [
-    "src/libcxxabi/src/abort_message.cpp",
-    "src/libcxxabi/src/cxa_aux_runtime.cpp",
-    "src/libcxxabi/src/cxa_default_handlers.cpp",
-    "src/libcxxabi/src/cxa_demangle.cpp",
-    "src/libcxxabi/src/cxa_exception.cpp",
-    "src/libcxxabi/src/cxa_exception_storage.cpp",
-    "src/libcxxabi/src/cxa_guard.cpp",
-    "src/libcxxabi/src/cxa_handlers.cpp",
-    "src/libcxxabi/src/cxa_personality.cpp",
-    "src/libcxxabi/src/cxa_vector.cpp",
-    "src/libcxxabi/src/cxa_virtual.cpp",
-    "src/libcxxabi/src/fallback_malloc.cpp",
-    "src/libcxxabi/src/private_typeinfo.cpp",
-    "src/libcxxabi/src/stdlib_exception.cpp",
-    "src/libcxxabi/src/stdlib_stdexcept.cpp",
-    "src/libcxxabi/src/stdlib_typeinfo.cpp",
-  ]
-  include_dirs = [ "src/libcxx/src" ]
+if (!is_win) {
+  source_set("libc++abi") {
+    sources = [
+      "src/libcxxabi/src/abort_message.cpp",
+      "src/libcxxabi/src/cxa_aux_runtime.cpp",
+      "src/libcxxabi/src/cxa_default_handlers.cpp",
+      "src/libcxxabi/src/cxa_demangle.cpp",
+      "src/libcxxabi/src/cxa_exception.cpp",
+      "src/libcxxabi/src/cxa_exception_storage.cpp",
+      "src/libcxxabi/src/cxa_guard.cpp",
+      "src/libcxxabi/src/cxa_handlers.cpp",
+      "src/libcxxabi/src/cxa_personality.cpp",
+      "src/libcxxabi/src/cxa_vector.cpp",
+      "src/libcxxabi/src/cxa_virtual.cpp",
+      "src/libcxxabi/src/fallback_malloc.cpp",
+      "src/libcxxabi/src/private_typeinfo.cpp",
+      "src/libcxxabi/src/stdlib_exception.cpp",
+      "src/libcxxabi/src/stdlib_stdexcept.cpp",
+      "src/libcxxabi/src/stdlib_typeinfo.cpp",
+    ]
+    include_dirs = [ "src/libcxx/src" ]
 
-  configs += [ ":config" ]
-  configs -= [
-    "//build/config/compiler:simple_text_code",
-    "//build/config/compiler:no_exceptions",
-    "//build/config/compiler:no_rtti",
-  ]
-  configs += [
-    "//build/config/compiler:no_simple_text_code",
-    "//build/config/compiler:exceptions",
-    "//build/config/compiler:rtti",
-  ]
+    configs += [ ":config" ]
+    configs -= [
+      "//build/config/compiler:simple_text_code",
+      "//build/config/compiler:no_exceptions",
+      "//build/config/compiler:no_rtti",
+    ]
+    configs += [
+      "//build/config/compiler:no_simple_text_code",
+      "//build/config/compiler:exceptions",
+      "//build/config/compiler:rtti",
+    ]
+  }
 }
 
 # Used by libc++ and libc++abi.
@@ -115,8 +130,5 @@ config("config") {
     cflags_cc = [ "-std=c++20" ]
   }
 
-  defines = [
-    "_LIBCPP_BUILDING_LIBRARY",
-    "_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER",
-  ]
+  defines = [ "_LIBCPP_BUILDING_LIBRARY" ]
 }

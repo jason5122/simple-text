@@ -1,37 +1,24 @@
 import("//build/config/mac/mac_sdk.gni")
 
 config("compiler") {
-  asmflags = []
-  cflags = []
-  ldflags = []
+  # These flags are shared between the C compiler and linker.
+  common_mac_flags = []
 
-  if (target_cpu == "arm64") {
-    asmflags += [
-      "-target",
-      "arm64-apple-macos",
-    ]
-    cflags += [
-      "-target",
-      "arm64-apple-macos",
-    ]
-    ldflags += [
-      "-target",
-      "arm64-apple-macos",
-    ]
+  # CPU architecture.
+  if (current_cpu == "x64") {
+    clang_arch = "x86_64"
+  } else if (current_cpu == "x86") {
+    clang_arch = "i386"
+  } else if (current_cpu == "arm64") {
+    clang_arch = current_cpu
   } else {
-    asmflags += [
-      "-target",
-      "x86_64-apple-macos",
-    ]
-    cflags += [
-      "-target",
-      "x86_64-apple-macos",
-    ]
-    ldflags += [
-      "-target",
-      "x86_64-apple-macos",
-    ]
+    assert(false, "unknown current_cpu $current_cpu")
   }
+  common_mac_flags += [ "--target=$clang_arch-apple-macos" ]
+
+  asmflags = common_mac_flags
+  cflags = common_mac_flags
+  ldflags = common_mac_flags
 }
 
 config("runtime_library") {

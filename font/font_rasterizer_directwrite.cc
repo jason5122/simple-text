@@ -1,7 +1,7 @@
 #include "base/check.h"
-#include "base/windows/unicode.h"
+#include "base/strings/sys_string_conversions.h"
+#include "base/unicode/utf16_to_utf8_indices_map.h"
 #include "font/font_rasterizer.h"
-#include "unicode/utf16_to_utf8_indices_map.h"
 #include <combaseapi.h>
 #include <comdef.h>
 #include <cwchar>
@@ -96,7 +96,7 @@ FontRasterizer::FontRasterizer() : pimpl(new Impl()) {
 FontRasterizer::~FontRasterizer() {}
 
 FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle font_style) {
-    std::wstring font_name16 = base::windows::convert_to_utf16(font_name8);
+    std::wstring font_name16 = base::sys_utf8_to_wide(font_name8);
 
     ComPtr<IDWriteFontCollection> font_collection;
     pimpl->dwrite_factory->GetSystemFontCollection(&font_collection);
@@ -178,14 +178,14 @@ FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
     gdi_interop->CreateFontFromLOGFONT(&metrics.lfMessageFont, &sys_font);
 
     std::wstring font_name16 = GetFontFamilyName(sys_font.Get(), pimpl->locale);
-    std::string font_name8 = base::windows::convert_to_utf8(font_name16);
+    std::string font_name8 = base::sys_wide_to_utf8(font_name16);
     return add_font(font_name8, font_size, font_style);
 }
 
 FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
     ComPtr<IDWriteFont> font = font_id_to_native[font_id].font;
     std::wstring font_name16 = GetFontFamilyName(font.Get(), pimpl->locale);
-    std::string font_name8 = base::windows::convert_to_utf8(font_name16);
+    std::string font_name8 = base::sys_wide_to_utf8(font_name16);
     return add_font(font_name8, font_size);
 }
 
@@ -424,7 +424,7 @@ public:
             // TODO: Verify that rounding up is correct.
             int advance = std::ceil(glyph_run->glyphAdvances[i] * scale_factor);
 
-            size_t utf8_index = indices_map.map_index(text_position + inverted_cluster_map[i]);
+            size_t utf8_index = indices_map[text_position + inverted_cluster_map[i]];
             ShapedGlyph glyph = {
                 .font_id = run_font_id,
                 .glyph_id = glyph_id,
@@ -491,7 +491,7 @@ private:
 
     ULONG ref_count;
     ComPtr<IDWriteFontCollection> font_collection;
-    unicode::UTF16ToUTF8IndicesMap indices_map;
+    base::UTF16ToUTF8IndicesMap indices_map;
 
     // Outputs for FontRasterizer.
     friend class ::font::FontRasterizer;
@@ -504,7 +504,7 @@ private:
 LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
     DCHECK_EQ(str8.find('\n'), std::string_view::npos);
 
-    std::wstring str16 = base::windows::convert_to_utf16(str8);
+    std::wstring str16 = base::sys_utf8_to_wide(str8);
 
     auto& native_font = font_id_to_native[font_id];
     const auto& dwrite_info = pimpl->font_id_to_dwrite_info[font_id];
@@ -596,7 +596,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
         .descent = descent,
         .font_size = font_size,
     };
-    impl::DWriteInfo dwrite_info = {
+    Impl::DWriteInfo dwrite_info = {
         .font_name16 = GetFontFamilyName(dwrite_font.Get(), pimpl->locale),
         .em_size = em_size,
     };
@@ -606,7 +606,7 @@ FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
     font_id_to_native.emplace_back(std::move(native_font));
     font_id_to_metrics.emplace_back(std::move(metrics));
     // TODO: See if we can prevent this conversion.
-    std::string font_name8 = base::windows::convert_to_utf8(font_name);
+    std::string font_name8 = base::sys_wide_to_utf8(font_name);
     font_id_to_postscript_name.emplace_back(std::move(font_name8));
     pimpl->font_id_to_dwrite_info.emplace_back(std::move(dwrite_info));
     return font_id;
@@ -649,8 +649,9 @@ std::wstring GetLocaleName(IDWriteLocalizedStrings* strings, std::wstring_view l
     UINT32 length = 0;
     strings->GetStringLength(index, &length);
 
-    wchar_t name[length + 1];
-    strings->GetString(index, name, length + 1);
+    std::wstring name;
+    name.resize(length + 1);
+    strings->GetString(index, name.data(), length + 1);
     return name;
 }
 

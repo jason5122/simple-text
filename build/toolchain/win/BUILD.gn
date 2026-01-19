@@ -1,4 +1,5 @@
 import("//build/config/clang/clang.gni")
+import("//build/toolchain/toolchain.gni")
 
 toolchain("clang") {
   prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
@@ -6,12 +7,15 @@ toolchain("clang") {
   link = "${prefix}lld-link"
   lib = "$link /lib"
 
+  lib_switch = ""
+  lib_dir_switch = "/LIBPATH:"
+
   tool("link") {
     exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
     rspfile = "$exename.rsp"
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{ldflags}}"
 
-    command = "$link {{ldflags}} \"/OUT:$exename\" /nologo \"@$rspfile\""
+    command = "$link \"/OUT:$exename\" /nologo \"@$rspfile\""
     description = "LINK {{output}}"
 
     outputs = [ exename ]
@@ -77,14 +81,12 @@ toolchain("clang") {
   }
 
   tool("stamp") {
-    command = "cmd /c type nul > \"{{output}}\""
-    description = "STAMP {{output}}"
+    command = stamp_command
+    description = stamp_description
   }
 
-  # Taken from //chromium/src/third_party/perfetto/gn/standalone/toolchain/BUILD.gn.
   tool("copy") {
-    cp_py = rebase_path("cp.py")
-    command = "cmd.exe /c python \"$cp_py\" {{source}} {{output}}"
-    description = "COPY {{source}} {{output}}"
+    command = copy_command
+    description = copy_description
   }
 }

@@ -1,0 +1,6 @@
+declare_args() {
+  # True when building Windows on a non-Windows host using xwin sysroot.
+  use_xwin = host_os != "win"
+
+  xwin_root = "//third_party/xwin"
+}

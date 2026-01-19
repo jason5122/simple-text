@@ -1,10 +1,33 @@
 import("//build/config/c++/c++.gni")
+import("//build/config/win/win.gni")
 
 config("runtime_library") {
   # libc++ expects `__assertion_handler` and `__config_site`.
-  include_dirs = [ "//third_party/llvm/include" ]
+  include_dirs = [ "$llvm_root/include" ]
 
-  if (!is_win) {
+  if (is_win) {
+    # We don't use libc++abi on Windows because libc++abi only implements the Itanium C++ ABI and
+    # not the Microsoft ABI.
+    cflags_cc = [ "-I" + rebase_path("$libcxx_prefix/include", root_build_dir) ]
+
+    if (use_xwin) {
+      cflags = [
+        "-imsvc" + rebase_path("$xwin_root/crt/include", root_build_dir),
+        "-imsvc" + rebase_path("$xwin_root/sdk/include/ucrt", root_build_dir),
+        "-imsvc" + rebase_path("$xwin_root/sdk/include/um", root_build_dir),
+        "-imsvc" + rebase_path("$xwin_root/sdk/include/shared", root_build_dir),
+        "-imsvc" + rebase_path("$xwin_root/sdk/include/winrt", root_build_dir),
+      ]
+
+      ldflags = [
+        "/LIBPATH:" + rebase_path("$xwin_root/crt/lib/x86_64", root_build_dir),
+        "/LIBPATH:" +
+            rebase_path("$xwin_root/sdk/lib/ucrt/x86_64", root_build_dir),
+        "/LIBPATH:" +
+            rebase_path("$xwin_root/sdk/lib/um/x86_64", root_build_dir),
+      ]
+    }
+  } else {
     cflags_cc = [
       "-nostdinc++",
       "-isystem" + rebase_path("$libcxx_prefix/include", root_build_dir),

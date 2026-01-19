@@ -42,6 +42,9 @@ if (is_linux || is_win) {
     # Required for CoInitializeEx()/CoUninitialize().
     # TODO: Consider moving this to //gui/win32/.
     if (is_win) {
+      configs -= [ "//build/config/win:console" ]
+      configs += [ "//build/config/win:windowed" ]
+
       libs = [ "ole32.lib" ]
     }
   }

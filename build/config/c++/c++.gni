@@ -1,2 +1,6 @@
-libcxx_prefix = "//third_party/llvm/src/libcxx"
-libcxxabi_prefix = "//third_party/llvm/src/libcxxabi"
+declare_args() {
+  llvm_root = "//third_party/llvm"
+}
+
+libcxx_prefix = "$llvm_root/src/libcxx"
+libcxxabi_prefix = "$llvm_root/src/libcxxabi"

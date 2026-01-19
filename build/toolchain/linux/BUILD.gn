@@ -1,4 +1,5 @@
 import("//build/config/clang/clang.gni")
+import("//build/toolchain/toolchain.gni")
 
 toolchain("clang") {
   prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
@@ -66,12 +67,12 @@ toolchain("clang") {
   }
 
   tool("stamp") {
-    command = "touch {{output}}"
-    description = "STAMP {{output}}"
+    command = stamp_command
+    description = stamp_description
   }
 
   tool("copy") {
-    command = "ln -f {{source}} {{output}} 2>/dev/null || (rm -rf {{output}} && cp -af {{source}} {{output}})"
-    description = "COPY {{source}} {{output}}"
+    command = copy_command
+    description = copy_description
   }
 }

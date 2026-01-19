@@ -1,32 +1,12 @@
 #pragma once
 
-#include "build/build_config.h"
-#include <string>
-
 namespace base {
 
 class Location {
 public:
-    static constexpr Location current(const char* function_name = __builtin_FUNCTION(),
-                                      const char* file_name = __builtin_FILE(),
-                                      int line_number = __builtin_LINE()) {
-        // Keep file names relative to the root folder.
-        //
-        // For example, "../../base/file.cc" becoming "base/file.cc" is a common case. The "../../"
-        // comes from the build folder being something like "out/release".
-#if BUILDFLAG(IS_WIN)
-        constexpr char kCurrentFile[] = "base\\location.h";
-#else
-        constexpr char kCurrentFile[] = "base/location.h";
-#endif
-        constexpr size_t path_len = std::char_traits<char>::length(__FILE__);
-        constexpr size_t stripped_len = std::char_traits<char>::length(kCurrentFile);
-        static_assert(std::string_view(__FILE__).ends_with(kCurrentFile));
-        static_assert(path_len >= stripped_len);
-        constexpr size_t kStrippedPrefixLength = path_len - stripped_len;
-
-        return Location(function_name, file_name + kStrippedPrefixLength, line_number);
-    }
+    static Location current(const char* function_name = __builtin_FUNCTION(),
+                            const char* file_name = __builtin_FILE(),
+                            int line_number = __builtin_LINE());
 
     const char* function_name() const { return function_name_; }
     const char* file_name() const { return file_name_; }

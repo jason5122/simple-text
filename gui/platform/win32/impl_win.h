@@ -8,14 +8,14 @@
 
 namespace gui {
 
-class App::impl {
+class App::Impl {
 public:
     DummyContext dummy_context;
 };
 
-class WindowWidget::impl {
+class WindowWidget::Impl {
 public:
-    impl(WindowWidget& app_window, DummyContext& dummy_context)
+    Impl(WindowWidget& app_window, DummyContext& dummy_context)
         : win32_window(app_window, dummy_context) {}
 
     Win32Window win32_window;
@@ -24,7 +24,7 @@ public:
     int wid = 0;
 };
 
-class Menu::impl {
+class Menu::Impl {
 public:
 };
 

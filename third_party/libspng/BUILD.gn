@@ -19,5 +19,7 @@ static_library("libspng") {
 }
 
 config("libspng_includes") {
+  defines = [ "SPNG_STATIC" ]
+
   include_dirs = [ "src/spng" ]
 }

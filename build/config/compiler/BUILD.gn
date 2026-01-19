@@ -43,8 +43,8 @@ config("compiler") {
   }
 
   # ThinLTO cache.
-  # Limit cache size to the lesser of 10% of available disk space, 40GB and 100000 files.
-  cache_policy = "cache_size=10%:cache_size_bytes=40g:cache_size_files=100000"
+  # Limit cache size to the lesser of 40GB or 100000 files.
+  cache_policy = "cache_size_bytes=40g:cache_size_files=100000"
   cache_dir = rebase_path("$root_out_dir/thinlto-cache", root_build_dir)
   if (is_win) {
     ldflags += [

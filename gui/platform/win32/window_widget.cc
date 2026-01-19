@@ -4,7 +4,7 @@
 namespace gui {
 
 WindowWidget::WindowWidget(App& app, int width, int height)
-    : pimpl{new impl{*this, app.pimpl->dummy_context}} {}
+    : pimpl{new Impl{*this, app.pimpl->dummy_context}} {}
 
 WindowWidget::~WindowWidget() {}
 

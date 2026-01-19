@@ -28,8 +28,6 @@ source_set("skia") {
   public += skcms_public_headers
   sources += skcms_public
   sources += skcms_TransformBaseline
-  sources += skcms_TransformHsw
-  sources += skcms_TransformSkx
 
   if (is_win) {
     sources += [ "src/src/ports/SkDebug_win.cpp" ]

@@ -7,7 +7,7 @@
 
 namespace gui {
 
-App::App() : pimpl{new impl{}} {}
+App::App() : pimpl{new Impl{}} {}
 
 App::~App() {}
 

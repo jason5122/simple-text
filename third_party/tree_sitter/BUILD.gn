@@ -7,6 +7,10 @@ static_library("tree_sitter") {
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
 
+  if (is_win) {
+    cflags = [ "-Wno-microsoft-include" ]
+  }
+
   public_configs = [ ":tree_sitter_includes" ]
 
   # Enable Wasmtime feature for loading languages.

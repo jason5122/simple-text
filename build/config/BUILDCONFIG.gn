@@ -61,17 +61,26 @@ if (is_release) {
   default_compiler_configs += [ "//build/config/compiler:release" ]
 }
 
-set_defaults("executable") {
+_linker_configs = []
+if (is_win) {
+  # Default to console-mode apps. Most of our targets don't use the windows subsystem.
+  _linker_configs += [ "//build/config/win:console" ]
+}
+
+set_defaults("static_library") {
   configs = default_compiler_configs
 }
-set_defaults("static_library") {
+set_defaults("source_set") {
   configs = default_compiler_configs
 }
 set_defaults("shared_library") {
   configs = default_compiler_configs
 }
-set_defaults("source_set") {
+set_defaults("loadable_module") {
   configs = default_compiler_configs
+}
+set_defaults("executable") {
+  configs = default_compiler_configs + _linker_configs
 }
 
 set_default_toolchain("//build/toolchain/$target_os:clang")

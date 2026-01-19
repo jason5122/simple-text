@@ -1,7 +1,35 @@
 config("compiler") {
-  cflags = [
-    "/utf-8",  # Assume UTF-8 by default to avoid code page dependencies.
-  ]
+  cflags = []
+
+  if (current_cpu == "x86") {
+    if (host_cpu == "x86" || host_cpu == "x64") {
+      cflags += [ "-m32" ]
+    } else {
+      cflags += [ "--target=i386-windows" ]
+    }
+  } else if (current_cpu == "x64") {
+    if (host_cpu == "x86" || host_cpu == "x64") {
+      cflags += [ "-m64" ]
+    } else {
+      cflags += [ "--target=x86_64-windows" ]
+    }
+  } else if (current_cpu == "arm64") {
+    cflags += [ "--target=aarch64-pc-windows" ]
+  } else {
+    assert(false, "unknown current_cpu " + current_cpu)
+  }
+
+  # Assume UTF-8 by default to avoid code page dependencies.
+  cflags += [ "/utf-8" ]
+
+  # Consistently use backslash as the path separator when expanding the __FILE__ macro when
+  # targeting Windows regardless of the build environment.
+  cflags += [ "-ffile-reproducible" ]
+
+  # Force C/C++ mode for the given GN detected file type. This is necessary for precompiled headers
+  # where the same source file is compiled in both modes.
+  cflags_c = [ "/TC" ]
+  cflags_cc = [ "/TP" ]
 }
 
 # Character set ----------------------------------------------------------------
@@ -52,9 +80,15 @@ config("winver") {
 config("static_crt") {
   if (is_release) {
     cflags = [ "/MT" ]
+
+    # On Windows, including libcpmt[d] explicitly links the C++ standard library, which libc++ needs
+    # for exception_ptr internals.
+    ldflags = [ "/DEFAULTLIB:libcpmt.lib" ]
   } else {
     # This pulls in the static debug CRT and defines _DEBUG.
     cflags = [ "/MTd" ]
+
+    ldflags = [ "/DEFAULTLIB:libcpmtd.lib" ]
   }
 }
 
@@ -65,4 +99,17 @@ config("no_crt_deprecation_warnings") {
     "_CRT_SECURE_NO_WARNINGS",
     "_SCL_SECURE_NO_DEPRECATE",
   ]
+}
+
+# This is appended to the subsystem to specify a minimum version.
+# The number after the comma is the minimum required OS version.
+# Set to 10.0 since we only support >= Win10.
+subsystem_version_suffix = ",10.0"
+
+config("console") {
+  ldflags = [ "/SUBSYSTEM:CONSOLE$subsystem_version_suffix" ]
+}
+
+config("windowed") {
+  ldflags = [ "/SUBSYSTEM:WINDOWS$subsystem_version_suffix" ]
 }

@@ -3,7 +3,7 @@
 
 namespace gui {
 
-Menu::Menu() : pimpl{new impl{}} {}
+Menu::Menu() : pimpl{new Impl{}} {}
 
 Menu::~Menu() {}
 

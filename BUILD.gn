@@ -12,17 +12,19 @@ group("tests") {
 
 group("experiments") {
   deps = [
-    "//experiments/cpu_renderer",
     "//experiments/fuzz",
-    "//experiments/gui_api_redesign",
-    "//experiments/message_loop",
     "//experiments/parser",
     "//experiments/playground",
-    "//experiments/rasterizer",
-    "//experiments/renderer",
   ]
 
   if (is_mac) {
-    deps += [ "//experiments/mac_startup_benchmark" ]
+    deps += [
+      "//experiments/cpu_renderer",
+      "//experiments/gui_api_redesign",
+      "//experiments/mac_startup_benchmark",
+      "//experiments/message_loop",
+      "//experiments/rasterizer",
+      "//experiments/renderer",
+    ]
   }
 }

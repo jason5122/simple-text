@@ -25,12 +25,13 @@ bin/ninja -C out/release -t compdb cc cxx objc objcxx > compile_commands.json
 
 ```bash
 brew install xwin
-xwin --accept-license --arch x86_64 splat --output third_party/xwin
+# Pick one of x86_64, aarch64, or both.
+xwin --accept-license --arch x86_64,aarch64 splat --output third_party/xwin
 ```
 
 ```bash
 bin/gn args out/windows-x64
-# When args.gn opens, set `target_os` (and optionally `target_cpu`). Example for Windows x86_64:
+# When args.gn opens, set `target_os` and `target_cpu`. Example for Windows x86_64:
 # target_os = "win"
 # target_cpu = "x64"
 

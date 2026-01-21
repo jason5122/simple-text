@@ -19,12 +19,21 @@ config("runtime_library") {
         "-imsvc" + rebase_path("$xwin_root/sdk/include/winrt", root_build_dir),
       ]
 
+      if (current_cpu == "x64") {
+        xwin_arch = "x86_64"
+      } else if (current_cpu == "arm64") {
+        xwin_arch = "aarch64"
+      } else {
+        assert(false, "unknown current_cpu $current_cpu")
+      }
+
       ldflags = [
-        "/LIBPATH:" + rebase_path("$xwin_root/crt/lib/x86_64", root_build_dir),
         "/LIBPATH:" +
-            rebase_path("$xwin_root/sdk/lib/ucrt/x86_64", root_build_dir),
+            rebase_path("$xwin_root/crt/lib/$xwin_arch", root_build_dir),
         "/LIBPATH:" +
-            rebase_path("$xwin_root/sdk/lib/um/x86_64", root_build_dir),
+            rebase_path("$xwin_root/sdk/lib/ucrt/$xwin_arch", root_build_dir),
+        "/LIBPATH:" +
+            rebase_path("$xwin_root/sdk/lib/um/$xwin_arch", root_build_dir),
       ]
     }
   } else {

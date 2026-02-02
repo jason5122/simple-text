@@ -39,6 +39,7 @@ source_set("base") {
       "files/file_util_mac.mm",
       "path_service_mac.cc",
       "strings/sys_string_conversions_mac.mm",
+      "time/time_mac.cc",
     ]
     frameworks += [
       "Foundation.framework",
@@ -81,6 +82,7 @@ source_set("base_unittests") {
     "rand_util_unittest.cc",
     "strings/string_util_unittest.cc",
     "strings/utf_string_conversions_unittest.cc",
+    "time/time_unittest.cc",
     "unicode/unicode_unittest.cc",
     "unicode/utf16_to_utf8_indices_map_unittest.cc",
     "unicode/utf8_decoder_unittest.cc",

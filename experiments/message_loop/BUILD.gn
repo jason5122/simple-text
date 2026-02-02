@@ -1,10 +1,17 @@
 executable("message_loop") {
   sources = [
     "main.mm",
+    "message_pump.cc",
     "message_pump_mac.mm",
   ]
 
-  frameworks = [ "AppKit.framework" ]
+  frameworks = [
+    "Foundation.framework",
+    "AppKit.framework",
+  ]
 
-  deps = [ "//third_party/spdlog" ]
+  deps = [
+    "//base",
+    "//third_party/spdlog",
+  ]
 }

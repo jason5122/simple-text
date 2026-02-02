@@ -4,7 +4,7 @@
 
 namespace base {
 
-TEST(Hash, StringDeterministic) {
+TEST(HashTest, StringDeterministic) {
     EXPECT_EQ(hash_string(""), hash_string(""));
     EXPECT_EQ(hash_string("abc"), hash_string("abc"));
     // Embedded NUL shouldn’t truncate
@@ -13,7 +13,7 @@ TEST(Hash, StringDeterministic) {
 }
 
 #if BUILDFLAG(IS_WIN)
-TEST(Hash, WStringBytesMatch) {
+TEST(HashTest, WStringBytesMatch) {
     // Only asserts our wstring overload hashes raw bytes as documented.
     std::wstring w = L"A\u00E9\u6C34";  // depends on platform width/endianness
     const auto* bytes = reinterpret_cast<const char*>(w.data());
@@ -22,14 +22,14 @@ TEST(Hash, WStringBytesMatch) {
 }
 #endif
 
-TEST(Hash, CombineOrderMattersUsually) {
+TEST(HashTest, CombineOrderMattersUsually) {
     // Not a strict guarantee, but a good smoke check that it's not symmetric.
     size_t a = hash_string("a");
     size_t b = hash_string("b");
     EXPECT_NE(hash_combine(a, b), hash_combine(b, a));
 }
 
-TEST(Hash, CombineChangesWithEitherInput) {
+TEST(HashTest, CombineChangesWithEitherInput) {
     size_t seed = 0x12345678u;
     size_t h1 = hash_combine(seed, hash_string("x"));
     size_t h2 = hash_combine(seed, hash_string("y"));

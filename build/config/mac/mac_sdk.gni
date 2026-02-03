@@ -8,11 +8,16 @@ declare_args() {
   # will refuse to launch the application.
   mac_deployment_target = "11.0"
 
+  # Minimum supported version of the Mac SDK.
+  mac_sdk_min = "15"
+
   # Path to a specific version of the Mac SDK, not including a slash at the end.
   mac_sdk_path = ""
 }
 
 if (mac_sdk_path == "") {
-  mac_sdk_path =
-      exec_script("//build/config/mac/get_sdk_path.py", [], "trim string")
+  find_sdk_args = [ mac_sdk_min ]
+  mac_sdk_path = exec_script("//build/config/mac/find_sdk.py",
+                             find_sdk_args,
+                             "trim string")
 }

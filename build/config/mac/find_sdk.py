@@ -1,5 +1,4 @@
 import os
-import plistlib
 import re
 import subprocess
 import sys
@@ -27,9 +26,9 @@ def main():
         raise Exception("Error %d running xcrun" % job.returncode)
 
     dev_dir = out.decode("UTF-8").rstrip()
-    sdk_dir = os.path.join(dev_dir, "SDKs")
+    sdk_dir = os.path.join(dev_dir, "Platforms/MacOSX.platform/Developer/SDKs")
     if not os.path.isdir(sdk_dir):
-        raise Exception("Command Line Tools not found. Install via `xcode-select --install`")
+        raise Exception("Xcode not found. Run `sudo xcode-select -s /path/to/Xcode.app`.")
 
     sdk_dir_list = os.listdir(sdk_dir)
     sdks = [re.findall(r"^MacOSX(\d+\.\d+)\.sdk$", s) for s in sdk_dir_list]

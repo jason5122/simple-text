@@ -5,8 +5,47 @@
 
 #define _LIBCPP_HARDENING_MODE_DEFAULT _LIBCPP_HARDENING_MODE_NONE
 
-// Prevents errors like "error: 'to_chars' is unavailable: introduced in macOS 13.3".
-#define _LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS
+// =================================================================================================
+// https://source.chromium.org/chromium/chromium/src/+/9568498c9dd3b7e61c66944915abe7561ab984df:buildtools/third_party/libc++/__config_site
+// =================================================================================================
+#define _LIBCPP_ABI_FORCE_ITANIUM 0
+#define _LIBCPP_ABI_FORCE_MICROSOFT 0
+#define _LIBCPP_HAS_THREADS 1
+#define _LIBCPP_HAS_MONOTONIC_CLOCK 1
+#define _LIBCPP_HAS_TERMINAL 1
+#define _LIBCPP_HAS_MUSL_LIBC 0
+
+#ifdef _WIN32
+#define _LIBCPP_HAS_THREAD_API_PTHREAD 0
+#define _LIBCPP_HAS_THREAD_API_EXTERNAL 0
+#define _LIBCPP_HAS_THREAD_API_WIN32 1
+#else
+#define _LIBCPP_HAS_THREAD_API_PTHREAD 1
+#define _LIBCPP_HAS_THREAD_API_EXTERNAL 0
+#define _LIBCPP_HAS_THREAD_API_WIN32 0
+#endif
+
+#define _LIBCPP_HAS_VENDOR_AVAILABILITY_ANNOTATIONS 0
+#define _LIBCPP_HAS_FILESYSTEM 1
+#define _LIBCPP_HAS_RANDOM_DEVICE 1
+#define _LIBCPP_HAS_LOCALIZATION 1
+#define _LIBCPP_HAS_UNICODE 1
+#define _LIBCPP_HAS_WIDE_CHARACTERS 1
+#define _LIBCPP_HAS_TIME_ZONE_DATABASE 1
+
+// PSTL backends
+#if defined(__APPLE__)
+#define _LIBCPP_PSTL_BACKEND_LIBDISPATCH
+#else
+#define _LIBCPP_PSTL_BACKEND_STD_THREAD
+#endif
+
+// Define _LIBCPP_ASSERTION_SEMANTIC_DEFAULT instead of _LIBCPP_ASSERTION_SEMANTIC because the
+// latter requires setting _LIBCPP_HAS_EXPERIMENTAL_LIBRARY too.
+#define _LIBCPP_ASSERTION_SEMANTIC_DEFAULT _LIBCPP_ASSERTION_SEMANTIC_HARDENING_DEPENDENT
+
+#define _LIBCPP_LIBC_PICOLIBC 0
+#define _LIBCPP_LIBC_NEWLIB 0
 
 // =================================================================================================
 // Settings below aren't part of __config_site upstream. We set them here since we want them to

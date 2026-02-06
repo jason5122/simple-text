@@ -4,63 +4,81 @@ source_set("libc++") {
     "include/__config_site",
   ]
 
+  # https://github.com/llvm/llvm-project/blob/2078da43e25a4623cab2d0d60decddf709aaea28/libcxx/src/CMakeLists.txt
   sources = [
     "src/libcxx/src/algorithm.cpp",
     "src/libcxx/src/any.cpp",
-    "src/libcxx/src/atomic.cpp",
-    "src/libcxx/src/barrier.cpp",
     "src/libcxx/src/bind.cpp",
     "src/libcxx/src/call_once.cpp",
     "src/libcxx/src/charconv.cpp",
     "src/libcxx/src/chrono.cpp",
-    "src/libcxx/src/condition_variable.cpp",
-    "src/libcxx/src/condition_variable_destructor.cpp",
     "src/libcxx/src/error_category.cpp",
     "src/libcxx/src/exception.cpp",
-    "src/libcxx/src/filesystem/directory_iterator.cpp",
+    "src/libcxx/src/expected.cpp",
+    "src/libcxx/src/filesystem/filesystem_clock.cpp",
     "src/libcxx/src/filesystem/filesystem_error.cpp",
-    "src/libcxx/src/filesystem/operations.cpp",
     "src/libcxx/src/filesystem/path.cpp",
-    "src/libcxx/src/fstream.cpp",
     "src/libcxx/src/functional.cpp",
-    "src/libcxx/src/future.cpp",
     "src/libcxx/src/hash.cpp",
-    "src/libcxx/src/ios.cpp",
-    "src/libcxx/src/ios.instantiations.cpp",
-    "src/libcxx/src/iostream.cpp",
-    "src/libcxx/src/legacy_pointer_safety.cpp",
-    "src/libcxx/src/locale.cpp",
     "src/libcxx/src/memory.cpp",
-    "src/libcxx/src/mutex.cpp",
-    "src/libcxx/src/mutex_destructor.cpp",
-    "src/libcxx/src/new.cpp",
+    "src/libcxx/src/memory_resource.cpp",
     "src/libcxx/src/new_handler.cpp",
     "src/libcxx/src/new_helpers.cpp",
     "src/libcxx/src/optional.cpp",
-    "src/libcxx/src/ostream.cpp",
     "src/libcxx/src/print.cpp",
-    "src/libcxx/src/random.cpp",
     "src/libcxx/src/random_shuffle.cpp",
-    "src/libcxx/src/regex.cpp",
     "src/libcxx/src/ryu/d2fixed.cpp",
     "src/libcxx/src/ryu/d2s.cpp",
     "src/libcxx/src/ryu/f2s.cpp",
-    "src/libcxx/src/shared_mutex.cpp",
     "src/libcxx/src/stdexcept.cpp",
     "src/libcxx/src/string.cpp",
-    "src/libcxx/src/strstream.cpp",
     "src/libcxx/src/system_error.cpp",
-    "src/libcxx/src/thread.cpp",
     "src/libcxx/src/typeinfo.cpp",
     "src/libcxx/src/valarray.cpp",
     "src/libcxx/src/variant.cpp",
     "src/libcxx/src/vector.cpp",
     "src/libcxx/src/verbose_abort.cpp",
+
+    # Threads.
+    "src/libcxx/src/atomic.cpp",
+    "src/libcxx/src/barrier.cpp",
+    "src/libcxx/src/condition_variable.cpp",
+    "src/libcxx/src/condition_variable_destructor.cpp",
+    "src/libcxx/src/future.cpp",
+    "src/libcxx/src/mutex.cpp",
+    "src/libcxx/src/mutex_destructor.cpp",
+    "src/libcxx/src/shared_mutex.cpp",
+    "src/libcxx/src/thread.cpp",
+
+    # Random device.
+    "src/libcxx/src/random.cpp",
+
+    # Localization.
+    "src/libcxx/src/fstream.cpp",
+    "src/libcxx/src/ios.cpp",
+    "src/libcxx/src/ios.instantiations.cpp",
+    "src/libcxx/src/iostream.cpp",
+    "src/libcxx/src/locale.cpp",
+    "src/libcxx/src/ostream.cpp",
+    "src/libcxx/src/regex.cpp",
+    "src/libcxx/src/strstream.cpp",
+
+    # Filesystem
+    "src/libcxx/src/filesystem/directory_entry.cpp",
+    "src/libcxx/src/filesystem/directory_iterator.cpp",
+    "src/libcxx/src/filesystem/operations.cpp",
+
+    # `new`/`delete` definitions.
+    "src/libcxx/src/new.cpp",
   ]
-  include_dirs = [ "src/libcxx/src" ]
+  include_dirs = [
+    "src/libcxx/src",
+    "src/libc",
+  ]
 
   if (is_win) {
     sources += [
+      "src/libcxx/src/support/win32/compiler_rt_shims.cpp",
       "src/libcxx/src/support/win32/locale_win32.cpp",
       "src/libcxx/src/support/win32/support.cpp",
       "src/libcxx/src/support/win32/thread_win32.cpp",

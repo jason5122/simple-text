@@ -1,8 +1,6 @@
 import("//build/config/mac/mac_app_bundle.gni")
 
-mac_app_bundle("mac_startup_benchmark") {
-  output_name = "Mac Startup Benchmark"
-
+executable("mac_startup_benchmark") {
   sources = [ "main.mm" ]
 
   frameworks = [

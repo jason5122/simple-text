@@ -21,6 +21,7 @@ source_set("libc++") {
     "src/libcxx/src/filesystem/filesystem_error.cpp",
     "src/libcxx/src/filesystem/operations.cpp",
     "src/libcxx/src/filesystem/path.cpp",
+    "src/libcxx/src/fstream.cpp",
     "src/libcxx/src/functional.cpp",
     "src/libcxx/src/future.cpp",
     "src/libcxx/src/hash.cpp",
@@ -36,6 +37,8 @@ source_set("libc++") {
     "src/libcxx/src/new_handler.cpp",
     "src/libcxx/src/new_helpers.cpp",
     "src/libcxx/src/optional.cpp",
+    "src/libcxx/src/ostream.cpp",
+    "src/libcxx/src/print.cpp",
     "src/libcxx/src/random.cpp",
     "src/libcxx/src/random_shuffle.cpp",
     "src/libcxx/src/regex.cpp",
@@ -124,10 +127,10 @@ config("config") {
   if (is_win) {
     # libc++ wants to redefine the macros WIN32_LEAN_AND_MEAN and _CRT_RAND_S.
     cflags += [ "-Wno-macro-redefined" ]
-    cflags_cc = [ "-std:c++20" ]
+    cflags_cc = [ "-std:c++23preview" ]
   } else {
     cflags += [ "-fPIC" ]
-    cflags_cc = [ "-std=c++20" ]
+    cflags_cc = [ "-std=c++23" ]
   }
 
   defines = [ "_LIBCPP_BUILDING_LIBRARY" ]

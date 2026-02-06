@@ -79,6 +79,7 @@ int main(int argc, const char* argv[]) {
         }
 
         [window setTitle:@"Bare macOS App"];
+        NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
         [window makeKeyAndOrderFront:nil];
 
         [NSApp run];

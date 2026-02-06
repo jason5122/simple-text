@@ -19,11 +19,11 @@ config("compiler") {
   }
 
   if (is_win) {
-    cflags_c += [ "/std:c17" ]
-    cflags_cc += [ "/std:c++20" ]
+    cflags_c += [ "/std:c11" ]
+    cflags_cc += [ "/std:c++23preview" ]
   } else {
-    cflags_c += [ "-std=c17" ]
-    cflags_cc += [ "-std=c++20" ]
+    cflags_c += [ "-std=c11" ]
+    cflags_cc += [ "-std=c++23" ]
   }
 
   if (!is_win) {

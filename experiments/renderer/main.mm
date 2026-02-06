@@ -179,6 +179,8 @@ const auto kQuads = make_random_quads(3000, 2000);
     int64_t delay_ns = (int64_t)(1.0 * NSEC_PER_SEC);
     dispatch_time_t deadline = dispatch_time(DISPATCH_TIME_NOW, delay_ns);
     dispatch_source_set_timer(stop_timer_, deadline, DISPATCH_TIME_FOREVER, 10 * NSEC_PER_MSEC);
+
+    [self.layer setNeedsDisplay];
 }
 
 @end

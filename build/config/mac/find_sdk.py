@@ -28,7 +28,9 @@ def main():
     dev_dir = out.decode("UTF-8").rstrip()
     sdk_dir = os.path.join(dev_dir, "Platforms/MacOSX.platform/Developer/SDKs")
     if not os.path.isdir(sdk_dir):
-        raise Exception("Xcode not found. Run `sudo xcode-select -s /path/to/Xcode.app`.")
+        raise Exception(
+            "Xcode not found. Install and open Xcode, sign the agreement, then run `sudo xcode-select -s /path/to/Xcode.app`."
+        )
 
     sdk_dir_list = os.listdir(sdk_dir)
     sdks = [re.findall(r"^MacOSX(\d+\.\d+)\.sdk$", s) for s in sdk_dir_list]

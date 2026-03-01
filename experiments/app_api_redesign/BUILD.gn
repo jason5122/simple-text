@@ -1,0 +1,5 @@
+executable("app_api_redesign") {
+  sources = [ "main.cc" ]
+
+  deps = [ "//app" ]
+}

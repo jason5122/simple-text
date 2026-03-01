@@ -5,9 +5,7 @@
 
 namespace gfx {
 
-enum class Backend {
-    kOpenGL,
-};
+enum class Backend { kOpenGL, kMetal };
 
 class Device {
 public:

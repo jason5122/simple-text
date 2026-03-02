@@ -17,20 +17,12 @@ std::unique_ptr<App> GLApp::create() {
     // TODO: Call this in `applicationWillFinishLaunching` like Chromium.
     NSWindow.allowsAutomaticWindowTabbing = NO;
 
-    NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@""];
-    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    NSMenu* submenu = [[NSMenu alloc] initWithTitle:@""];
-    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Quit"
-                                                action:@selector(terminate:)
-                                         keyEquivalent:@"q"]];
-    item.submenu = submenu;
-    [main_menu addItem:item];
-    NSApp.mainMenu = main_menu;
-
     return std::unique_ptr<App>(new GLApp());
 }
 
 namespace {
+
+// TODO: Move TaskRunner to a separate file.
 class TaskRunner : public base::MessagePump::Delegate {
 public:
     using Task = std::function<void()>;
@@ -53,6 +45,19 @@ public:
 private:
     std::queue<Task> tasks_;
 };
+
+void build_main_menu() {
+    NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@""];
+    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    NSMenu* submenu = [[NSMenu alloc] initWithTitle:@""];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Quit"
+                                                action:@selector(terminate:)
+                                         keyEquivalent:@"q"]];
+    item.submenu = submenu;
+    [main_menu addItem:item];
+    NSApp.mainMenu = main_menu;
+}
+
 }  // namespace
 
 void GLApp::run() {
@@ -60,6 +65,8 @@ void GLApp::run() {
     CHECK_EQ(nil, NSApp.delegate);
     AppController* app_controller = AppController.sharedController;
     CHECK_NE(nil, NSApp.delegate);
+
+    build_main_menu();
 
     TaskRunner task_runner;
     task_runner.post_task([]() { std::println("task 1"); });

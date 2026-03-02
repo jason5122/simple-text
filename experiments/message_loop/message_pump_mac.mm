@@ -109,14 +109,9 @@ bool MessagePumpCFRunLoopBase::run_work() {
 // =================================================================================================
 // MessagePumpNSApplication
 // =================================================================================================
-namespace {
-// The MessagePump controlling [NSApp run].
-MessagePumpNSApplication* g_app_pump;
-}  // namespace
+MessagePumpNSApplication::MessagePumpNSApplication() = default;
 
-MessagePumpNSApplication::MessagePumpNSApplication() { g_app_pump = this; }
-
-MessagePumpNSApplication::~MessagePumpNSApplication() { g_app_pump = nullptr; }
+MessagePumpNSApplication::~MessagePumpNSApplication() = default;
 
 void MessagePumpNSApplication::do_run(Delegate* delegate) { [NSApp run]; }
 

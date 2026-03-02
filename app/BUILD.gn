@@ -2,13 +2,23 @@ source_set("app") {
   if (is_mac) {
     sources = [
       "app.cc",
+      "cocoa/app_controller.mm",
       "cocoa/gl_app.mm",
+      "cocoa/gl_view.mm",
       "cocoa/gl_window.mm",
       "window.cc",
     ]
 
-    frameworks = [ "Cocoa.framework" ]
+    frameworks = [
+      "Cocoa.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
   }
 
-  deps = [ "//base" ]
+  deps = [
+    "//base",
+    "//gfx",
+  ]
 }

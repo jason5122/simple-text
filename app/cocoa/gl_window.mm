@@ -1,3 +1,4 @@
+#include "app/cocoa/gl_view.h"
 #include "app/cocoa/gl_window.h"
 #include "base/strings/sys_string_conversions.h"
 
@@ -12,6 +13,9 @@ GLWindow::GLWindow(const WindowOptions& options) {
                                             styleMask:style
                                               backing:NSBackingStoreBuffered
                                                 defer:false];
+
+    GLView* gl_view = [[GLView alloc] initWithFrame:frame];
+    ns_window.contentView = gl_view;
 
     set_title(options.title);
     [ns_window makeKeyAndOrderFront:nil];

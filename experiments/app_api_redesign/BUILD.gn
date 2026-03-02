@@ -1,4 +1,8 @@
-executable("app_api_redesign") {
+import("//build/config/mac/mac_app_bundle.gni")
+
+mac_app_bundle("app_api_redesign") {
+  output_name = "App API Redesign"
+
   sources = [ "main.cc" ]
 
   deps = [ "//app" ]

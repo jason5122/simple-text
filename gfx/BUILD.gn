@@ -8,5 +8,8 @@ source_set("gfx") {
     "gl/gl_surface.cc",
   ]
 
-  deps = [ "//third_party/spdlog" ]
+  deps = [
+    "//gl",
+    "//third_party/spdlog",
+  ]
 }

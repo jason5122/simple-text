@@ -18,8 +18,6 @@
 
 // This is the Apple-approved place to override the default handlers.
 - (void)applicationWillFinishLaunching:(NSNotification*)notification {
-    std::println("applicationWillFinishLaunching");
-
     // TODO: We create windows before [NSApp run], so setting this here is too late. Find out how
     // Chromium creates windows after [NSApp run].
     // NSWindow.allowsAutomaticWindowTabbing = NO;

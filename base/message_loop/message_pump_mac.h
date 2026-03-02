@@ -1,9 +1,11 @@
 #pragma once
 
 #include "base/apple/scoped_cftyperef.h"
-#include "experiments/message_loop/message_pump.h"
+#include "base/message_loop/message_pump.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <memory>
+
+namespace base {
 
 class MessagePumpCFRunLoopBase : public MessagePump {
 public:
@@ -53,3 +55,5 @@ public:
 namespace message_pump_mac {
 std::unique_ptr<MessagePump> create();
 }
+
+}  // namespace base

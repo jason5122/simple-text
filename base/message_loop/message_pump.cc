@@ -1,9 +1,11 @@
+#include "base/message_loop/message_pump.h"
 #include "build/build_config.h"
-#include "experiments/message_loop/message_pump.h"
 
 #if BUILDFLAG(IS_MAC)
-#include "experiments/message_loop/message_pump_mac.h"
+#include "base/message_loop/message_pump_mac.h"
 #endif
+
+namespace base {
 
 MessagePump::MessagePump() = default;
 
@@ -15,3 +17,5 @@ std::unique_ptr<MessagePump> MessagePump::create() {
 #endif
     NOTREACHED();
 }
+
+}  // namespace base

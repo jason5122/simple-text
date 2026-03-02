@@ -37,6 +37,8 @@ source_set("base") {
       "apple/foundation_util.mm",
       "apple/owned_nsevent.mm",
       "files/file_util_mac.mm",
+      "message_loop/message_pump.cc",
+      "message_loop/message_pump_mac.mm",
       "path_service_mac.cc",
       "strings/sys_string_conversions_mac.mm",
       "time/time_mac.cc",

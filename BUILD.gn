@@ -23,7 +23,6 @@ group("experiments") {
       "//experiments/cpu_renderer",
       "//experiments/gui_api_redesign",
       "//experiments/mac_startup_benchmark",
-      "//experiments/message_loop",
       "//experiments/rasterizer",
       "//experiments/renderer",
     ]

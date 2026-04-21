@@ -1,11 +1,11 @@
 #import <Cocoa/Cocoa.h>
-#import <dispatch/dispatch.h>
 
 #include <corral/CBPortal.h>
 #include <corral/corral.h>
 
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -38,6 +38,13 @@ struct AppState {
 
 static AppState g_app;
 
+static void post_to_run_loop(CFRunLoopRef run_loop, std::function<void()> fn) {
+    CFRunLoopPerformBlock(run_loop, kCFRunLoopCommonModes, ^{
+      fn();
+    });
+    CFRunLoopWakeUp(run_loop);
+}
+
 static void request_redraw() {
     if (g_app.view) {
         [g_app.view setNeedsDisplay:YES];
@@ -54,10 +61,7 @@ static bool request_quit() {
     g_app.quit_requested = true;
 
     if (g_app.emit_quit) {
-        auto emit_quit = g_app.emit_quit;
-        dispatch_async(dispatch_get_main_queue(), ^{
-          emit_quit();
-        });
+        g_app.emit_quit();
         return true;
     }
     return false;
@@ -69,6 +73,7 @@ static bool request_quit() {
 
 struct CocoaLoop {
     NSApplication* app;
+    CFRunLoopRef run_loop;
 };
 
 namespace corral {
@@ -86,18 +91,18 @@ struct EventLoopTraits<CocoaLoop> {
     static void stop(CocoaLoop& loop) {
         // Wake the run loop after stop:, otherwise AppKit can remain blocked
         // waiting for the next event.
-        dispatch_async(dispatch_get_main_queue(), ^{
-          [loop.app stop:nil];
-          NSEvent* wake = [NSEvent otherEventWithType:NSEventTypeApplicationDefined
-                                             location:NSZeroPoint
-                                        modifierFlags:0
-                                            timestamp:0
-                                         windowNumber:0
-                                              context:nil
-                                              subtype:0
-                                                data1:0
-                                                data2:0];
-          [loop.app postEvent:wake atStart:NO];
+        post_to_run_loop(loop.run_loop, [app = loop.app] {
+            [app stop:nil];
+            NSEvent* wake = [NSEvent otherEventWithType:NSEventTypeApplicationDefined
+                                               location:NSZeroPoint
+                                          modifierFlags:0
+                                              timestamp:0
+                                           windowNumber:0
+                                                context:nil
+                                                subtype:0
+                                                  data1:0
+                                                  data2:0];
+            [app postEvent:wake atStart:NO];
         });
     }
 };
@@ -108,33 +113,61 @@ struct EventLoopTraits<CocoaLoop> {
 // Corral awaitables
 // ============================================================
 
-static corral::Task<void> sleep_on_main(std::chrono::milliseconds delay) {
-    corral::CBPortal<> portal;
+static corral::Task<void> sleep_on_main(CFRunLoopRef run_loop, std::chrono::milliseconds delay) {
+    struct TimerState {
+        CFRunLoopTimerRef timer = nullptr;
+    };
+
+    using Callback = corral::CBPortal<>::Callback;
+    auto state = std::make_shared<TimerState>();
     co_await corral::untilCBCalled(
-        [delay](auto cb) {
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delay.count() * NSEC_PER_MSEC),
-                           dispatch_get_main_queue(), ^{
-                             cb();
-                           });
+        [delay, run_loop, state](Callback cb) mutable {
+            CFAbsoluteTime fire_at =
+                CFAbsoluteTimeGetCurrent() + (static_cast<double>(delay.count()) / 1000.0);
+            state->timer = CFRunLoopTimerCreateWithHandler(nullptr, fire_at, 0, 0, 0,
+                                                           ^(CFRunLoopTimerRef timer) {
+                                                             if (state->timer == timer) {
+                                                                 state->timer = nullptr;
+                                                             }
+                                                             CFRunLoopTimerInvalidate(timer);
+                                                             CFRelease(timer);
+                                                             cb();
+                                                           });
+            CFRunLoopAddTimer(run_loop, state->timer, kCFRunLoopCommonModes);
+            CFRunLoopWakeUp(run_loop);
         },
-        portal);
+        [state] {
+            if (state->timer) {
+                CFRunLoopTimerInvalidate(state->timer);
+                CFRelease(state->timer);
+                state->timer = nullptr;
+            }
+        });
 }
 
-static corral::Task<void> animate_click() {
+static corral::Task<void> animate_click(CFRunLoopRef run_loop) {
     g_app.busy = true;
     g_app.pressed = true;
     g_app.label = "Working...";
     request_redraw();
 
-    co_await sleep_on_main(800ms);
+    co_await sleep_on_main(run_loop, 800ms);
 
     g_app.pressed = false;
     g_app.label = "Done. Click again";
     request_redraw();
 
-    co_await sleep_on_main(700ms);
+    co_await sleep_on_main(run_loop, 700ms);
 
     g_app.busy = false;
+    g_app.label = "Click me";
+    request_redraw();
+}
+
+static void reset_button_state() {
+    g_app.busy = false;
+    g_app.pressed = false;
+    g_app.hovered = false;
     g_app.label = "Click me";
     request_redraw();
 }
@@ -145,11 +178,14 @@ static corral::Task<void> animate_click() {
 // backpressures clicks by ignoring them while busy.
 static corral::Task<void> ui_main() {
     corral::CBPortal<EventKind> portal;
+    CFRunLoopRef run_loop = CFRunLoopGetCurrent();
 
     auto event = co_await corral::untilCBCalled(
-        [](auto cb) {
+        [run_loop](auto cb) {
             g_app.emit_click = [cb]() mutable { cb(EventKind::Click); };
-            g_app.emit_quit = [cb]() mutable { cb(EventKind::Quit); };
+            g_app.emit_quit = [run_loop, cb]() mutable {
+                post_to_run_loop(run_loop, [cb]() mutable { cb(EventKind::Quit); });
+            };
         },
         portal);
 
@@ -159,7 +195,20 @@ static corral::Task<void> ui_main() {
         }
 
         if (event == EventKind::Click) {
-            co_await animate_click();
+            auto [animation_done, next_event] =
+                co_await corral::anyOf(animate_click(run_loop), portal);
+            if (next_event.has_value()) {
+                event = *next_event;
+                if (event == EventKind::Quit) {
+                    reset_button_state();
+                }
+                continue;
+            }
+
+            if (animation_done.has_value()) {
+                event = co_await portal;
+                continue;
+            }
         }
 
         event = co_await portal;
@@ -317,27 +366,32 @@ static void create_window(AppDelegate* delegate) {
     [window makeKeyAndOrderFront:nil];
 }
 
-int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
-
+int main() {
     @autoreleasepool {
         NSApplication* app = [NSApplication sharedApplication];
-        [app setActivationPolicy:NSApplicationActivationPolicyRegular];
+        app.activationPolicy = NSApplicationActivationPolicyRegular;
 
         AppDelegate* delegate = [AppDelegate new];
         app.delegate = delegate;
 
+        NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@""];
+        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+        NSMenu* submenu = [[NSMenu alloc] initWithTitle:@""];
+        [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Quit"
+                                                    action:@selector(terminate:)
+                                             keyEquivalent:@"q"]];
+        item.submenu = submenu;
+        [main_menu addItem:item];
+        NSApp.mainMenu = main_menu;
+
         create_window(delegate);
         [app activateIgnoringOtherApps:YES];
 
-        CocoaLoop loop{app};
+        CocoaLoop loop{app, CFRunLoopGetCurrent()};
         corral::run(loop, ui_main());
 
         g_app.view = nil;
         g_app.window = nil;
         app.delegate = nil;
     }
-
-    return 0;
 }

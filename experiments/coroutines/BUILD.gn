@@ -1,5 +1,8 @@
 executable("coroutines") {
-  sources = [ "main.mm" ]
+  sources = [
+    "app.mm",
+    "main.cc",
+  ]
 
   if (is_mac) {
     frameworks = [ "Cocoa.framework" ]

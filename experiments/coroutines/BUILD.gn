@@ -1,0 +1,9 @@
+executable("coroutines") {
+  sources = [ "main.mm" ]
+
+  if (is_mac) {
+    frameworks = [ "Cocoa.framework" ]
+  }
+
+  deps = [ "//third_party/corral" ]
+}

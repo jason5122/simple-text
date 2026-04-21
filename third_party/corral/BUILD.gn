@@ -1,0 +1,7 @@
+group("corral") {
+  public_configs = [ ":corral_includes" ]
+}
+
+config("corral_includes") {
+  include_dirs = [ "src" ]
+}

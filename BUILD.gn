@@ -20,6 +20,7 @@ group("experiments") {
   if (is_mac) {
     deps += [
       "//experiments/app_api_redesign",
+      "//experiments/coroutines",
       "//experiments/cpu_renderer",
       "//experiments/gui_api_redesign",
       "//experiments/mac_startup_benchmark",

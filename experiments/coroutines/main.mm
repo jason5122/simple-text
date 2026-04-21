@@ -25,6 +25,7 @@ struct AppState {
     bool hovered = false;
     bool pressed = false;
     bool busy = false;
+    bool quit_requested = false;
     std::string label = "Click me";
 
     NSView* view = nil;
@@ -41,6 +42,25 @@ static void request_redraw() {
     if (g_app.view) {
         [g_app.view setNeedsDisplay:YES];
     }
+}
+
+static bool request_quit() {
+    g_app.hovered = false;
+    g_app.pressed = false;
+
+    if (g_app.quit_requested) {
+        return false;
+    }
+    g_app.quit_requested = true;
+
+    if (g_app.emit_quit) {
+        auto emit_quit = g_app.emit_quit;
+        dispatch_async(dispatch_get_main_queue(), ^{
+          emit_quit();
+        });
+        return true;
+    }
+    return false;
 }
 
 // ============================================================
@@ -256,20 +276,17 @@ static corral::Task<void> ui_main() {
     (void)sender;
 
     // Turn Cmd-Q / app termination into a structured quit event.
-    if (g_app.emit_quit) {
-        g_app.emit_quit();
+    if (g_app.quit_requested || request_quit()) {
         return NSTerminateCancel;
     }
     return NSTerminateNow;
 }
 
-- (void)windowWillClose:(NSNotification*)notification {
-    (void)notification;
+- (BOOL)windowShouldClose:(NSWindow*)sender {
+    (void)sender;
 
-    // Same idea for window close.
-    if (g_app.emit_quit) {
-        g_app.emit_quit();
-    }
+    request_quit();
+    return NO;
 }
 
 @end
@@ -316,6 +333,10 @@ int main(int argc, char** argv) {
 
         CocoaLoop loop{app};
         corral::run(loop, ui_main());
+
+        g_app.view = nil;
+        g_app.window = nil;
+        app.delegate = nil;
     }
 
     return 0;

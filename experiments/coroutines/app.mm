@@ -24,10 +24,9 @@ static void post_to_run_loop(CFRunLoopRef run_loop, std::function<void()> fn) {
 }
 
 struct TaskScopeState {
-    explicit TaskScopeState(UiLoop& loop)
-        : nursery(std::make_unique<corral::UnsafeNursery>(loop)) {}
-
-    std::unique_ptr<corral::UnsafeNursery> nursery;
+    corral::Nursery* nursery = nullptr;
+    bool cancel_requested = false;
+    std::vector<std::function<corral::Task<void>()>> pending_tasks;
 };
 
 struct ButtonState {
@@ -47,12 +46,16 @@ struct WindowState : std::enable_shared_from_this<WindowState> {
     void add_button(const std::shared_ptr<ButtonState>& button);
     bool should_close();
     void did_close();
+    corral::Task<void> run();
+    void flush_pending_tasks();
 
     std::shared_ptr<AppState> app;
     WindowOptions options;
     std::shared_ptr<TaskScopeState> task_scope;
     std::vector<std::shared_ptr<ButtonState>> buttons;
     std::function<bool()> on_close_request;
+    std::function<void()> emit_close;
+    bool close_requested = false;
     NSWindow* window = nil;
     NSStackView* stack_view = nil;
 };
@@ -77,13 +80,29 @@ struct AppState : std::enable_shared_from_this<AppState> {
 
     corral::Task<void> run_until_quit() {
         using Callback = corral::CBPortal<>::Callback;
-        co_await corral::untilCBCalled(
+        auto await_quit = corral::untilCBCalled(
             [this](Callback cb) {
                 emit_quit = [this, cb]() mutable {
                     post_to_run_loop(loop.run_loop, [cb]() mutable { cb(); });
                 };
+                if (quit_requested) {
+                    emit_quit();
+                }
             },
             [this] { emit_quit = nullptr; });
+
+        CORRAL_WITH_NURSERY(nursery) {
+            app_nursery = &nursery;
+            for (const auto& window_state : windows) {
+                nursery.start([window_state]() -> corral::Task<void> {
+                    co_await window_state->run();
+                });
+            }
+            co_await std::move(await_quit);
+            co_return corral::cancel;
+        };
+
+        app_nursery = nullptr;
         emit_quit = nullptr;
     }
 
@@ -94,6 +113,7 @@ struct AppState : std::enable_shared_from_this<AppState> {
     }
 
     UiLoop loop;
+    corral::Nursery* app_nursery = nullptr;
     bool quit_requested = false;
     std::function<void()> emit_quit;
     std::vector<std::shared_ptr<WindowState>> windows;
@@ -121,9 +141,53 @@ bool WindowState::should_close() {
 }
 
 void WindowState::did_close() {
-    task_scope->nursery->cancel();
+    close_requested = true;
+    if (emit_close) {
+        emit_close();
+    }
     window = nil;
     stack_view = nil;
+}
+
+void WindowState::flush_pending_tasks() {
+    if (!task_scope->nursery) {
+        return;
+    }
+
+    auto pending_tasks = std::move(task_scope->pending_tasks);
+    for (auto& task_factory : pending_tasks) {
+        task_scope->nursery->start(
+            [task_factory = std::move(task_factory)]() mutable -> corral::Task<void> {
+                co_await task_factory();
+            });
+    }
+}
+
+corral::Task<void> WindowState::run() {
+    using Callback = corral::CBPortal<>::Callback;
+    auto await_close = corral::untilCBCalled(
+        [self = shared_from_this()](Callback cb) {
+            self->emit_close = [run_loop = self->app->loop.run_loop, cb]() mutable {
+                post_to_run_loop(run_loop, [cb]() mutable { cb(); });
+            };
+            if (self->close_requested) {
+                self->emit_close();
+            }
+        },
+        [self = shared_from_this()] { self->emit_close = nullptr; });
+
+    CORRAL_WITH_NURSERY(nursery) {
+        task_scope->nursery = &nursery;
+        flush_pending_tasks();
+        if (task_scope->cancel_requested) {
+            nursery.cancel();
+        }
+        co_await std::move(await_close);
+        co_return corral::cancel;
+    };
+
+    task_scope->nursery = nullptr;
+    emit_close = nullptr;
 }
 
 }  // namespace app::internal
@@ -307,7 +371,7 @@ namespace app::internal {
 WindowState::WindowState(std::shared_ptr<AppState> app_state, WindowOptions window_options)
     : app(std::move(app_state)),
       options(window_options),
-      task_scope(std::make_shared<TaskScopeState>(app->loop)) {}
+      task_scope(std::make_shared<TaskScopeState>()) {}
 
 }  // namespace app::internal
 
@@ -316,20 +380,29 @@ namespace app {
 TaskScope::TaskScope(std::shared_ptr<internal::TaskScopeState> state) : state_(std::move(state)) {}
 
 void TaskScope::cancel() const {
-    if (state_ && state_->nursery) {
+    if (!state_) {
+        return;
+    }
+
+    state_->cancel_requested = true;
+    if (state_->nursery) {
         state_->nursery->cancel();
     }
 }
 
 void TaskScope::start_impl(std::function<corral::Task<void>()> task_factory) const {
-    if (!state_ || !state_->nursery) {
+    if (!state_) {
         return;
     }
 
-    state_->nursery->start(
-        [task_factory = std::move(task_factory)]() mutable -> corral::Task<void> {
-            co_await task_factory();
-        });
+    if (!state_->nursery) {
+        state_->pending_tasks.push_back(std::move(task_factory));
+        return;
+    }
+
+    state_->nursery->start([task_factory = std::move(task_factory)]() mutable -> corral::Task<void> {
+        co_await task_factory();
+    });
 }
 
 Button::Button(std::shared_ptr<internal::ButtonState> state) : state_(std::move(state)) {}
@@ -393,6 +466,11 @@ Window App::create_window(WindowOptions options) {
     auto window_state = std::make_shared<internal::WindowState>(state_, options);
     window_state->window = create_native_window(window_state, state_->delegate);
     state_->windows.push_back(window_state);
+    if (state_->app_nursery) {
+        state_->app_nursery->start([window_state]() -> corral::Task<void> {
+            co_await window_state->run();
+        });
+    }
     return Window(window_state);
 }
 

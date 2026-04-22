@@ -21,6 +21,13 @@ struct WindowOptions {
     int height = 600;
 };
 
+struct Color {
+    double red = 1.0;
+    double green = 1.0;
+    double blue = 1.0;
+    double alpha = 1.0;
+};
+
 class TaskScope {
 public:
     TaskScope() = default;
@@ -39,6 +46,7 @@ private:
     std::shared_ptr<internal::TaskScopeState> state_;
 
     friend class Window;
+    friend class Button;
 };
 
 class Button {
@@ -48,6 +56,10 @@ public:
     static Button create(std::string title = "Button");
 
     void on_click(std::function<void()> handler) const;
+    void on_click(std::function<void(Button)> handler) const;
+    void on_click_task(std::function<corral::Task<void>()> handler) const;
+    void on_click_task(std::function<corral::Task<void>(Button)> handler) const;
+    void set_status_text(std::string text) const;
 
 private:
     explicit Button(std::shared_ptr<internal::ButtonState> state);
@@ -62,6 +74,7 @@ public:
     Window() = default;
 
     void set_title(std::string title) const;
+    void set_background_color(Color color) const;
     void add(Button button) const;
     TaskScope task_scope() const;
     void on_close_request(std::function<bool()> handler) const;

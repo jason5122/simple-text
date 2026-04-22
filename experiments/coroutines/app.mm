@@ -29,12 +29,15 @@ struct TaskScopeState {
     std::vector<std::function<corral::Task<void>()>> pending_tasks;
 };
 
-struct ButtonState {
+struct ButtonState : std::enable_shared_from_this<ButtonState> {
     explicit ButtonState(std::string button_title) : title(std::move(button_title)) {}
 
     std::string title;
-    std::function<void()> on_click;
+    std::function<void(std::shared_ptr<ButtonState>)> on_click;
+    std::shared_ptr<TaskScopeState> owner_scope;
     NSButton* control = nil;
+    NSTextField* status_label = nil;
+    NSStackView* row = nil;
 };
 
 struct AppState;
@@ -43,6 +46,7 @@ struct WindowState : std::enable_shared_from_this<WindowState> {
     WindowState(std::shared_ptr<AppState> app_state, WindowOptions window_options);
 
     void set_title(std::string title);
+    void set_background_color(Color color);
     void add_button(const std::shared_ptr<ButtonState>& button);
     bool should_close();
     void did_close();
@@ -57,6 +61,7 @@ struct WindowState : std::enable_shared_from_this<WindowState> {
     std::function<void()> emit_close;
     bool close_requested = false;
     NSWindow* window = nil;
+    NSView* content_view = nil;
     NSStackView* stack_view = nil;
 };
 
@@ -94,9 +99,8 @@ struct AppState : std::enable_shared_from_this<AppState> {
         CORRAL_WITH_NURSERY(nursery) {
             app_nursery = &nursery;
             for (const auto& window_state : windows) {
-                nursery.start([window_state]() -> corral::Task<void> {
-                    co_await window_state->run();
-                });
+                nursery.start(
+                    [window_state]() -> corral::Task<void> { co_await window_state->run(); });
             }
             co_await std::move(await_quit);
             co_return corral::cancel;
@@ -126,10 +130,20 @@ void WindowState::set_title(std::string title) {
     }
 }
 
+void WindowState::set_background_color(Color color) {
+    if (window) {
+        window.backgroundColor = [NSColor colorWithCalibratedRed:color.red
+                                                           green:color.green
+                                                            blue:color.blue
+                                                           alpha:color.alpha];
+    }
+}
+
 void WindowState::add_button(const std::shared_ptr<ButtonState>& button) {
     if (!stack_view || !button) {
         return;
     }
+    button->owner_scope = task_scope;
     buttons.push_back(button);
 }
 
@@ -250,7 +264,7 @@ using app::internal::WindowState;
     auto* control = static_cast<AppButtonControl*>(sender);
     auto* state = static_cast<ButtonState*>(control->cpp_state);
     if (state && state->on_click) {
-        state->on_click();
+        state->on_click(state->shared_from_this());
     }
 }
 
@@ -334,6 +348,13 @@ static NSStackView* create_stack_view() {
     return stack_view;
 }
 
+static NSTextField* create_status_label() {
+    NSTextField* label = [NSTextField labelWithString:@""];
+    label.textColor = [NSColor secondaryLabelColor];
+    label.hidden = YES;
+    return label;
+}
+
 static NSWindow* create_native_window(const std::shared_ptr<WindowState>& state, id delegate) {
     NSRect frame = NSMakeRect(0, 0, state->options.width, state->options.height);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
@@ -357,9 +378,11 @@ static NSWindow* create_native_window(const std::shared_ptr<WindowState>& state,
     ]];
 
     window.contentView = content;
+    window.backgroundColor = [NSColor windowBackgroundColor];
     [window center];
     [window makeKeyAndOrderFront:nil];
 
+    state->content_view = content;
     state->stack_view = stack_view;
     return window;
 }
@@ -400,9 +423,10 @@ void TaskScope::start_impl(std::function<corral::Task<void>()> task_factory) con
         return;
     }
 
-    state_->nursery->start([task_factory = std::move(task_factory)]() mutable -> corral::Task<void> {
-        co_await task_factory();
-    });
+    state_->nursery->start(
+        [task_factory = std::move(task_factory)]() mutable -> corral::Task<void> {
+            co_await task_factory();
+        });
 }
 
 Button::Button(std::shared_ptr<internal::ButtonState> state) : state_(std::move(state)) {}
@@ -413,8 +437,60 @@ Button Button::create(std::string title) {
 
 void Button::on_click(std::function<void()> handler) const {
     if (state_) {
-        state_->on_click = std::move(handler);
+        state_->on_click = [handler = std::move(handler)](
+                               const std::shared_ptr<internal::ButtonState>&) { handler(); };
     }
+}
+
+void Button::on_click(std::function<void(Button)> handler) const {
+    if (state_) {
+        state_->on_click =
+            [handler = std::move(handler)](const std::shared_ptr<internal::ButtonState>& state) {
+                handler(Button(state));
+            };
+    }
+}
+
+void Button::on_click_task(std::function<corral::Task<void>()> handler) const {
+    if (!state_) {
+        return;
+    }
+
+    state_->on_click =
+        [handler = std::move(handler)](const std::shared_ptr<internal::ButtonState>& state) {
+            if (!state->owner_scope) {
+                return;
+            }
+            TaskScope(state->owner_scope).start([handler = std::move(handler)]() mutable {
+                return handler();
+            });
+        };
+}
+
+void Button::on_click_task(std::function<corral::Task<void>(Button)> handler) const {
+    if (!state_) {
+        return;
+    }
+
+    state_->on_click =
+        [handler = std::move(handler)](const std::shared_ptr<internal::ButtonState>& state) {
+            if (!state->owner_scope) {
+                return;
+            }
+            TaskScope(state->owner_scope).start([handler = std::move(handler), state]() mutable {
+                return handler(Button(state));
+            });
+        };
+}
+
+void Button::set_status_text(std::string text) const {
+    if (!state_ || !state_->status_label) {
+        return;
+    }
+
+    NSString* status = [NSString stringWithUTF8String:text.c_str()];
+    state_->status_label.stringValue = status;
+    state_->status_label.hidden = text.empty();
 }
 
 Window::Window(std::shared_ptr<internal::WindowState> state) : state_(std::move(state)) {}
@@ -425,17 +501,30 @@ void Window::set_title(std::string title) const {
     }
 }
 
+void Window::set_background_color(Color color) const {
+    if (state_) {
+        state_->set_background_color(color);
+    }
+}
+
 void Window::add(Button button) const {
     if (!state_ || !button.state_) {
         return;
     }
 
+    button.state_->owner_scope = state_->task_scope;
     AppButtonControl* control = [AppButtonControl buttonWithTitle:@(button.state_->title.c_str())
                                                            target:[AppButtonDispatcher shared]
                                                            action:@selector(button_pressed:)];
     control->cpp_state = button.state_.get();
     button.state_->control = control;
-    [state_->stack_view addArrangedSubview:control];
+    button.state_->status_label = create_status_label();
+    button.state_->row =
+        [NSStackView stackViewWithViews:@[ control, button.state_->status_label ]];
+    button.state_->row.orientation = NSUserInterfaceLayoutOrientationHorizontal;
+    button.state_->row.alignment = NSLayoutAttributeCenterY;
+    button.state_->row.spacing = 12;
+    [state_->stack_view addArrangedSubview:button.state_->row];
     state_->buttons.push_back(std::move(button.state_));
 }
 
@@ -467,9 +556,8 @@ Window App::create_window(WindowOptions options) {
     window_state->window = create_native_window(window_state, state_->delegate);
     state_->windows.push_back(window_state);
     if (state_->app_nursery) {
-        state_->app_nursery->start([window_state]() -> corral::Task<void> {
-            co_await window_state->run();
-        });
+        state_->app_nursery->start(
+            [window_state]() -> corral::Task<void> { co_await window_state->run(); });
     }
     return Window(window_state);
 }

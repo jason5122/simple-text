@@ -28,3 +28,6 @@
 [submodule "third_party/llvm/src"]
 	path = third_party/llvm/src
 	url = https://github.com/llvm/llvm-project
+[submodule "third_party/libcurl/src"]
+	path = third_party/libcurl/src
+	url = https://github.com/curl/curl

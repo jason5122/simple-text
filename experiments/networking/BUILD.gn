@@ -1,0 +1,5 @@
+executable("networking") {
+  sources = [ "main.cc" ]
+
+  deps = [ "//third_party/libcurl" ]
+}

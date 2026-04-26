@@ -1,17 +1,11 @@
 #include "gfx/gl/gl_device.h"
 #include "gfx/gl/gl_surface.h"
-#include "gl/loader.h"
 #include <spdlog/spdlog.h>
 using namespace gl;
 
 namespace gfx {
 
 std::unique_ptr<Surface> GLDevice::create_surface(int width, int height) {
-    if (!initialized_) {
-        gl::load_global_function_pointers();
-        initialized_ = true;
-    }
-
     return std::make_unique<GLSurface>(*this, width, height);
 }
 
@@ -86,12 +80,6 @@ bool GLDevice::init_quad_pipeline() {
         glDeleteProgram(prog);
         return false;
     }
-    GLint translate_loc = glGetUniformLocation(prog, "u_translate_px");
-    if (translate_loc < 0) {
-        spdlog::error("GL uniform not found: u_translate_px");
-        glDeleteProgram(prog);
-        return false;
-    }
 
     GLuint vao = 0;
     glGenVertexArrays(1, &vao);
@@ -103,12 +91,12 @@ bool GLDevice::init_quad_pipeline() {
 
     // Vertex layout: vec2 pos @ location 0, vec4 color @ location 1
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex),
-                          (void*)offsetof(Vertex, x));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(GLVertex),
+                          (void*)offsetof(GLVertex, x));
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex),
-                          (void*)offsetof(Vertex, r));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(GLVertex),
+                          (void*)offsetof(GLVertex, r));
 
     // Unbind to keep state tidy.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -118,9 +106,38 @@ bool GLDevice::init_quad_pipeline() {
     pipeline_.vao = vao;
     pipeline_.vbo = vbo;
     pipeline_.u_viewport_loc = viewport_loc;
-    pipeline_.u_translate_loc = translate_loc;
     pipeline_.initialized = true;
     return true;
+}
+
+void GLDevice::draw_solid_quads(std::span<const GLVertex> vertices,
+                                int viewport_width,
+                                int viewport_height) {
+    if (vertices.empty()) return;
+    if (viewport_width <= 0 || viewport_height <= 0) return;
+
+    if (!init_quad_pipeline()) {
+        spdlog::error("GLDevice quad pipeline init failed");
+        return;
+    }
+
+    glUseProgram(pipeline_.program);
+    glUniform2f(pipeline_.u_viewport_loc, (float)viewport_width, (float)viewport_height);
+
+    glBindVertexArray(pipeline_.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, pipeline_.vbo);
+
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(),
+                 GL_STREAM_DRAW);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 }  // namespace gfx

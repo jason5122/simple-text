@@ -8,6 +8,7 @@
 @interface GLLayer : CAOpenGLLayer {
 @public
     std::unique_ptr<gfx::Device> device_;
+    std::unique_ptr<gfx::Surface> surface_;
     float scroll_y_;
 }
 
@@ -89,6 +90,9 @@
     device_ = gfx::create_device(gfx::Backend::kOpenGL);
     if (!device_) std::abort();
 
+    surface_ = device_->create_surface(0, 0);
+    if (!surface_) std::abort();
+
     return self;
 }
 
@@ -119,14 +123,11 @@
     int w = (int)llround(s.width * scale);
     int h = (int)llround(s.height * scale);
 
-    // TODO: Move surface somewhere more sensible.
-    auto surface = device_->create_surface(w, h);
-    if (!surface) std::abort();
+    surface_->resize(w, h);
 
-    auto frame = surface->begin_frame();
+    auto frame = surface_->begin_frame();
     if (!frame) std::abort();
 
-    frame->set_viewport(w, h);
     frame->clear({1.f, 1.f, 1.f, 1.f});
 
     // Build a few quads in pixel coordinates (top-left origin).
@@ -139,7 +140,7 @@
     frame->draw_quads(quads, 0, -scroll_y_);
     // frame->draw_quads(kQuads, 0, -scroll_y_);
 
-    frame->present();
+    frame->finish();
 }
 
 @end

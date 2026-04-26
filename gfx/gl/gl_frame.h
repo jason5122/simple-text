@@ -12,15 +12,14 @@ public:
     GLFrame(GLDevice& device, GLSurface& surface) : device_(device), surface_(surface) {}
 
     void clear(const Color& c) override;
-    void set_viewport(int width, int height) override;
     void draw_quads(std::span<const Quad> quads, float transform_x, float transform_y) override;
-    void present() override;
+    void finish() override;
 
 private:
     GLDevice& device_;
     GLSurface& surface_;
 
-    std::vector<Vertex> scratch_;
+    std::vector<GLVertex> vertices_;
 };
 
 }  // namespace gfx

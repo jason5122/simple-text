@@ -1,6 +1,8 @@
 #include "base/apple/display_link_mac.h"
+#include "base/debug/profiler.h"
 #include "base/rand_util.h"
 #include "gfx/device.h"
+#include "gl/loader.h"
 #include <Cocoa/Cocoa.h>
 #include <cmath>
 #include <cstdint>
@@ -51,6 +53,8 @@ const auto kQuads = make_random_quads(3000, 2000);
 @implementation GLLayer {
 @public
     std::unique_ptr<gfx::Device> device_;
+    std::unique_ptr<gfx::Surface> surface_;
+    bool gl_functions_loaded_;
     float scroll_y_;
 }
 
@@ -59,11 +63,6 @@ const auto kQuads = make_random_quads(3000, 2000);
     if (!self) return nil;
 
     self.contentsScale = NSScreen.mainScreen.backingScaleFactor;
-
-    scroll_y_ = 0.0f;
-
-    device_ = gfx::create_device(gfx::Backend::kOpenGL);
-    if (!device_) std::abort();
 
     return self;
 }
@@ -88,21 +87,32 @@ const auto kQuads = make_random_quads(3000, 2000);
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
+    base::Profiler profiler_{"draw"};
+
     CGLSetCurrentContext(glContext);
+
+    // TODO: Can we initialize once somewhere during setup?
+    if (!gl_functions_loaded_) {
+        gl::load_global_function_pointers();
+        gl_functions_loaded_ = true;
+    }
+    if (!device_) {
+        device_ = gfx::create_device(gfx::Backend::kOpenGL);
+    }
+    if (!surface_) {
+        surface_ = device_->create_surface(0, 0);
+    }
 
     CGSize s = self.bounds.size;
     CGFloat scale = self.contentsScale;
     int w = (int)llround(s.width * scale);
     int h = (int)llround(s.height * scale);
 
-    // TODO: Move surface somewhere more sensible.
-    auto surface = device_->create_surface(w, h);
-    if (!surface) std::abort();
+    surface_->resize(w, h);
 
-    auto frame = surface->begin_frame();
+    auto frame = surface_->begin_frame();
     if (!frame) std::abort();
 
-    frame->set_viewport(w, h);
     frame->clear({1.f, 1.f, 1.f, 1.f});
 
     // Build a few quads in pixel coordinates (top-left origin).
@@ -112,10 +122,11 @@ const auto kQuads = make_random_quads(3000, 2000);
         gfx::Quad{1600.f, 800.f, 40.f, 600.f, 0.2f, 0.4f, 1.f, 1.f},
         gfx::Quad{2000.f, 800.f, 40.f, 600.f, 127.f / 255, 127.f / 255, 127.f / 255, 1.f},
     };
-    frame->draw_quads(quads, 0, -scroll_y_);
-    // frame->draw_quads(kQuads, 0, -scroll_y_);
+    // frame->draw_quads(quads, 0, -scroll_y_);
+    frame->draw_quads(kQuads, 0, -scroll_y_);
 
-    frame->present();
+    profiler_.stop_micro();
+    frame->finish();
 }
 
 @end
@@ -186,6 +197,9 @@ const auto kQuads = make_random_quads(3000, 2000);
 @end
 
 int main() {
+    // Disable stdout buffering.
+    std::setbuf(stdout, nullptr);
+
     @autoreleasepool {
         [NSApplication sharedApplication];
 

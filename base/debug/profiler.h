@@ -1,7 +1,7 @@
 #pragma once
 
 #include <chrono>
-#include <iostream>
+#include <print>
 #include <string>
 
 namespace base {
@@ -16,24 +16,24 @@ public:
 
     void stop_micro() {
         if (stopped) {
-            std::cout << "Warning: profiler was already stopped.";
+            std::println("Warning: profiler was already stopped.");
             return;
         }
         stopped = true;
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-        std::cout << name << ": " << duration << " µs\n";
+        std::println("{}: {} µs", name, duration);
     }
 
     void stop_mili() {
         if (stopped) {
-            std::cout << "Warning: profiler was already stopped.";
+            std::println("Warning: profiler was already stopped.");
             return;
         }
         stopped = true;
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-        std::cout << name << ": " << duration << " ms\n";
+        std::println("{}: {} ms", name, duration);
     }
 
 private:

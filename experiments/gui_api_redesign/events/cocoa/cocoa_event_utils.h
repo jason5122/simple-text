@@ -1,6 +1,6 @@
 #pragma once
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
 namespace ui {
 

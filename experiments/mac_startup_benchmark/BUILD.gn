@@ -9,3 +9,15 @@ executable("mac_startup_benchmark") {
   ]
   defines = [ "GL_SILENCE_DEPRECATION" ]
 }
+
+executable("coroutine_startup_benchmark") {
+  sources = [ "coroutine_startup_benchmark.mm" ]
+
+  frameworks = [
+    "Cocoa.framework",
+    "QuartzCore.framework",
+  ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
+
+  deps = [ "//third_party/corral" ]
+}

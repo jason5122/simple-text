@@ -1,11 +1,10 @@
 #pragma once
 
 #include <chrono>
+#include <corral/corral.h>
 #include <functional>
 #include <memory>
 #include <string>
-
-#include <corral/corral.h>
 
 namespace app {
 

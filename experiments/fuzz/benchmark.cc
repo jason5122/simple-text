@@ -1,7 +1,7 @@
 #include "base/debug/profiler.h"
 #include "base/rand_util.h"
+#include <print>
 #include <set>
-#include <spdlog/spdlog.h>
 #include <string_view>
 
 #include "clrs.h"
@@ -45,7 +45,7 @@ void benchmark_third_party_red_black_tree(const std::vector<int>& nums) {
 
 int main() {
     for (int N = 1'000; N <= 1'000'000; N *= 10) {
-        std::cout << "N = " << N << '\n';
+        std::println("N = {}", N);
 
         std::vector<int> nums(N);
         for (size_t i = 0; i < N; i++) nums[i] = base::rand_int(0, 4096);
@@ -54,6 +54,6 @@ int main() {
         benchmark_third_party_red_black_tree(nums);
         benchmark_red_black_tree(nums);
 
-        std::cout << '\n';
+        std::println();
     }
 }

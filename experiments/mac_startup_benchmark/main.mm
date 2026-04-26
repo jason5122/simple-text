@@ -1,7 +1,6 @@
 #include <Cocoa/Cocoa.h>
 #include <QuartzCore/QuartzCore.h>
-
-#include <iostream>
+#include <print>
 
 constexpr bool kBenchmarkMode = true;
 constexpr bool kUseOpenGL = true;
@@ -16,7 +15,7 @@ constexpr bool kUseOpenGL = true;
     return self;
 }
 - (void)drawRect:(NSRect)dirtyRect {
-    std::cout << "draw" << std::endl;
+    std::println("draw");
     if constexpr (kBenchmarkMode) {
         [NSApp terminate:nil];
     }
@@ -38,7 +37,7 @@ constexpr bool kUseOpenGL = true;
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    std::cout << "draw" << std::endl;
+    std::println("draw");
     if constexpr (kBenchmarkMode) {
         [NSApp terminate:nil];
     }

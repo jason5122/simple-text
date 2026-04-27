@@ -1,0 +1,8 @@
+executable("platform_renderer") {
+  sources = [ "main.cc" ]
+
+  deps = [
+    "//gfx",
+    "//platform",
+  ]
+}

@@ -1,0 +1,23 @@
+source_set("platform") {
+  sources = [ "app.cc" ]
+
+  if (is_mac) {
+    sources += [
+      "cocoa/app_mac.mm",
+      "cocoa/window_mac.mm",
+    ]
+
+    frameworks = [
+      "Cocoa.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+  }
+
+  deps = [
+    "//base",
+    "//gfx",
+  ]
+}

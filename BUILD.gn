@@ -28,6 +28,7 @@ group("experiments") {
       "//experiments/platform_renderer",
       "//experiments/rasterizer",
       "//experiments/renderer",
+      "//experiments/ui_button_demo",
     ]
   }
 }

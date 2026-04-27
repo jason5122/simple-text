@@ -5,14 +5,8 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <variant>
 
 namespace {
-
-template <class... Ts>
-struct Overloaded : Ts... {
-    using Ts::operator()...;
-};
 
 std::array<gfx::Quad, 8> make_animation_quads(double t, int viewport_width, int viewport_height) {
     constexpr float kPi = 3.14159265358979323846f;
@@ -51,32 +45,22 @@ std::array<gfx::Quad, 8> make_animation_quads(double t, int viewport_width, int 
 
 class RendererDelegate final : public platform::WindowDelegate {
 public:
-    void on_event(platform::Window& window, const platform::Event& event) override {
-        std::visit(Overloaded{
-                       [&](const platform::DrawEvent& draw) { on_draw(draw); },
-                       [&](const platform::ResizeEvent&) {},
-                       [&](const platform::ScrollEvent& scroll) {
-                           scroll_y_ += scroll.dy;
-                           window.request_redraw();
-                       },
-                       [&](const platform::CloseRequestEvent& close_request) {
-                           if (close_request.allow_close) {
-                               *close_request.allow_close = true;
-                           }
-                       },
-                       [&](const platform::CloseEvent&) {},
-                   },
-                   event);
+    void on_draw(platform::Window& window,
+                 gfx::Frame& frame,
+                 const platform::FrameInfo& frame_info) override {
+        (void)window;
+        frame.clear({1.0f, 1.0f, 1.0f, 1.0f});
+        const auto quads =
+            make_animation_quads(frame_info.time_seconds, frame_info.width_px, frame_info.height_px);
+        frame.draw_quads(quads, 0, -scroll_y_);
+    }
+
+    void on_scroll(platform::Window& window, const platform::ScrollInfo& scroll_info) override {
+        scroll_y_ += scroll_info.dy;
+        window.request_redraw();
     }
 
 private:
-    void on_draw(const platform::DrawEvent& draw) {
-        draw.frame.clear({1.0f, 1.0f, 1.0f, 1.0f});
-        const auto quads = make_animation_quads(
-            draw.frame_info.time_seconds, draw.frame_info.width_px, draw.frame_info.height_px);
-        draw.frame.draw_quads(quads, 0, -scroll_y_);
-    }
-
     float scroll_y_ = 0;
 };
 

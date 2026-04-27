@@ -1,0 +1,15 @@
+source_set("ui") {
+  sources = [
+    "controls/button.cc",
+    "controls/column.cc",
+    "controls/label.cc",
+    "paint_context.cc",
+    "root_view_host.cc",
+    "view.cc",
+  ]
+
+  deps = [
+    "//gfx",
+    "//platform",
+  ]
+}

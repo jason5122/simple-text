@@ -26,6 +26,7 @@
 @public
     platform::WindowMac* window;
     std::unique_ptr<base::apple::DisplayLinkMac> display_link;
+    NSTrackingArea* tracking_area;
 }
 - (instancetype)initWithFrame:(NSRect)frameRect window:(platform::WindowMac*)window;
 - (void)setContinuousRedraw:(bool)enabled;
@@ -102,13 +103,12 @@
 
     if (width_px != last_width_px || height_px != last_height_px ||
         scale_factor != last_scale_factor) {
-        platform::ResizeEvent resize_event{
+        platform::ResizeInfo resize_info{
             .width_px = width_px,
             .height_px = height_px,
             .scale_factor = scale_factor,
         };
-        platform::Event event{resize_event};
-        window->emit_event(event);
+        window->emit_resize(resize_info);
         last_width_px = width_px;
         last_height_px = height_px;
         last_scale_factor = scale_factor;
@@ -124,8 +124,7 @@
         .height_px = height_px,
         .scale_factor = scale_factor,
     };
-    platform::Event event{platform::DrawEvent{.frame = *frame, .frame_info = frame_info}};
-    window->emit_event(event);
+    window->emit_draw(*frame, frame_info);
     frame->finish();
 }
 
@@ -140,6 +139,7 @@
     window = initWindow;
     self.wantsLayer = YES;
     self.layer = [[PlatformGLLayer alloc] initWithWindow:initWindow];
+    tracking_area = nil;
 
     CGDirectDisplayID display_id = CGMainDisplayID();
     display_link = base::apple::DisplayLinkMac::create_for_display(display_id);
@@ -154,6 +154,10 @@
         display_link->set_callback(nullptr);
         display_link->stop();
     }
+    if (tracking_area) {
+        [self removeTrackingArea:tracking_area];
+        tracking_area = nil;
+    }
 }
 
 - (BOOL)acceptsFirstResponder {
@@ -165,13 +169,52 @@
     [self.layer setNeedsDisplay];
 }
 
+- (void)updateTrackingAreas {
+    [super updateTrackingAreas];
+    if (tracking_area) {
+        [self removeTrackingArea:tracking_area];
+    }
+    NSTrackingAreaOptions options =
+        NSTrackingMouseMoved | NSTrackingActiveInKeyWindow | NSTrackingInVisibleRect;
+    tracking_area = [[NSTrackingArea alloc] initWithRect:NSZeroRect
+                                                 options:options
+                                                   owner:self
+                                                userInfo:nil];
+    [self addTrackingArea:tracking_area];
+}
+
+- (platform::PointerInfo)pointerInfoFromEvent:(NSEvent*)event {
+    NSPoint point = [self convertPoint:event.locationInWindow fromView:nil];
+    CGFloat scale = self.layer.contentsScale;
+    return platform::PointerInfo{
+        .x_px = static_cast<float>(point.x * scale),
+        .y_px = static_cast<float>((self.bounds.size.height - point.y) * scale),
+        .button = static_cast<int>(event.buttonNumber),
+    };
+}
+
+- (void)mouseMoved:(NSEvent*)event {
+    window->emit_pointer_move([self pointerInfoFromEvent:event]);
+}
+
+- (void)mouseDragged:(NSEvent*)event {
+    window->emit_pointer_move([self pointerInfoFromEvent:event]);
+}
+
+- (void)mouseDown:(NSEvent*)event {
+    window->emit_pointer_down([self pointerInfoFromEvent:event]);
+}
+
+- (void)mouseUp:(NSEvent*)event {
+    window->emit_pointer_up([self pointerInfoFromEvent:event]);
+}
+
 - (void)scrollWheel:(NSEvent*)event {
-    platform::ScrollEvent scroll_event{
+    platform::ScrollInfo scroll_info{
         .dx = static_cast<float>(event.scrollingDeltaX),
         .dy = static_cast<float>(event.scrollingDeltaY),
     };
-    platform::Event platform_event{scroll_event};
-    window->emit_event(platform_event);
+    window->emit_scroll(scroll_info);
 }
 
 - (void)setContinuousRedraw:(bool)enabled {
@@ -254,24 +297,41 @@ void WindowMac::request_redraw() { [gl_view_.layer setNeedsDisplay]; }
 void WindowMac::set_continuous_redraw(bool enabled) { [gl_view_ setContinuousRedraw:enabled]; }
 
 bool WindowMac::should_close() {
-    bool allow_close = true;
-    Event event{CloseRequestEvent{.allow_close = &allow_close}};
-    emit_event(event);
-    return allow_close;
+    if (!delegate_) return true;
+    return delegate_->on_close_request(*this);
 }
 
 void WindowMac::did_close() {
-    Event event{CloseEvent{}};
-    emit_event(event);
+    if (delegate_) {
+        delegate_->on_close(*this);
+    }
     ns_window_ = nil;
     gl_view_ = nil;
     window_delegate_ = nil;
 }
 
-void WindowMac::emit_event(const Event& event) {
-    if (delegate_) {
-        delegate_->on_event(*this, event);
-    }
+void WindowMac::emit_resize(const ResizeInfo& resize_info) {
+    if (delegate_) delegate_->on_resize(*this, resize_info);
+}
+
+void WindowMac::emit_scroll(const ScrollInfo& scroll_info) {
+    if (delegate_) delegate_->on_scroll(*this, scroll_info);
+}
+
+void WindowMac::emit_pointer_move(const PointerInfo& pointer_info) {
+    if (delegate_) delegate_->on_pointer_move(*this, pointer_info);
+}
+
+void WindowMac::emit_pointer_down(const PointerInfo& pointer_info) {
+    if (delegate_) delegate_->on_pointer_down(*this, pointer_info);
+}
+
+void WindowMac::emit_pointer_up(const PointerInfo& pointer_info) {
+    if (delegate_) delegate_->on_pointer_up(*this, pointer_info);
+}
+
+void WindowMac::emit_draw(gfx::Frame& frame, const FrameInfo& frame_info) {
+    if (delegate_) delegate_->on_draw(*this, frame, frame_info);
 }
 
 AppMac& WindowMac::app() { return app_; }

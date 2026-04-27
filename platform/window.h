@@ -3,7 +3,6 @@
 #include "gfx/frame.h"
 #include <string>
 #include <string_view>
-#include <variant>
 
 namespace platform {
 
@@ -20,36 +19,37 @@ struct FrameInfo {
     float scale_factor = 1.0f;
 };
 
-struct DrawEvent {
-    gfx::Frame& frame;
-    FrameInfo frame_info;
-};
-
-struct ResizeEvent {
+struct ResizeInfo {
     int width_px = 0;
     int height_px = 0;
     float scale_factor = 1.0f;
 };
 
-struct ScrollEvent {
+struct ScrollInfo {
     float dx = 0;
     float dy = 0;
 };
 
-struct CloseRequestEvent {
-    bool* allow_close = nullptr;
+struct PointerInfo {
+    float x_px = 0;
+    float y_px = 0;
+    int button = 0;
 };
-
-struct CloseEvent {};
-
-using Event = std::variant<DrawEvent, ResizeEvent, ScrollEvent, CloseRequestEvent, CloseEvent>;
 
 class Window;
 
 class WindowDelegate {
 public:
     virtual ~WindowDelegate() = default;
-    virtual void on_event(Window& window, const Event& event) = 0;
+
+    virtual void on_draw(Window& window, gfx::Frame& frame, const FrameInfo& frame_info) {}
+    virtual void on_resize(Window& window, const ResizeInfo& resize_info) {}
+    virtual void on_scroll(Window& window, const ScrollInfo& scroll_info) {}
+    virtual void on_pointer_move(Window& window, const PointerInfo& pointer_info) {}
+    virtual void on_pointer_down(Window& window, const PointerInfo& pointer_info) {}
+    virtual void on_pointer_up(Window& window, const PointerInfo& pointer_info) {}
+    virtual bool on_close_request(Window& window) { return true; }
+    virtual void on_close(Window& window) {}
 };
 
 class Window {

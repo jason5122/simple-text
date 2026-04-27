@@ -24,7 +24,12 @@ public:
 
     bool should_close();
     void did_close();
-    void emit_event(const Event& event);
+    void emit_resize(const ResizeInfo& resize_info);
+    void emit_scroll(const ScrollInfo& scroll_info);
+    void emit_pointer_move(const PointerInfo& pointer_info);
+    void emit_pointer_down(const PointerInfo& pointer_info);
+    void emit_pointer_up(const PointerInfo& pointer_info);
+    void emit_draw(gfx::Frame& frame, const FrameInfo& frame_info);
     AppMac& app();
 
 private:

@@ -12,10 +12,7 @@ void Button::set_text(std::string text) {
 
 void Button::on_click(std::function<void()> callback) { on_click_ = std::move(callback); }
 
-Size Button::preferred_size(Size available) const {
-    (void)available;
-    return Size{180, 44};
-}
+Size Button::preferred_size(Size available) const { return Size{180, 44}; }
 
 void Button::paint(PaintContext& context) {
     Color fill = hovered_ ? Color{0.68f, 0.80f, 0.96f, 1.0f} : Color{0.78f, 0.86f, 0.98f, 1.0f};

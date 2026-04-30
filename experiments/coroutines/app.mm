@@ -277,12 +277,10 @@ using app::internal::WindowState;
 @implementation AppDelegate
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender {
-    (void)sender;
     return YES;
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)sender {
-    (void)sender;
     auto* state = static_cast<AppState*>(cpp_state);
     if (state && (state->quit_requested || state->request_quit())) {
         return NSTerminateCancel;

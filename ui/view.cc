@@ -29,20 +29,11 @@ View* View::hit_test(Point point) {
     return accepts_pointer() ? this : nullptr;
 }
 
-bool View::on_pointer_move(const platform::PointerInfo& pointer_info) {
-    (void)pointer_info;
-    return false;
-}
+bool View::on_pointer_move(const platform::PointerInfo& pointer_info) { return false; }
 
-bool View::on_pointer_down(const platform::PointerInfo& pointer_info) {
-    (void)pointer_info;
-    return false;
-}
+bool View::on_pointer_down(const platform::PointerInfo& pointer_info) { return false; }
 
-bool View::on_pointer_up(const platform::PointerInfo& pointer_info) {
-    (void)pointer_info;
-    return false;
-}
+bool View::on_pointer_up(const platform::PointerInfo& pointer_info) { return false; }
 
 void View::set_invalidation_callback(std::function<void()> invalidate) {
     invalidate_ = std::move(invalidate);

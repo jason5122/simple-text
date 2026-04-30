@@ -13,12 +13,10 @@
 @implementation PlatformAppDelegate
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender {
-    (void)sender;
     return YES;
 }
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)sender {
-    (void)sender;
     return YES;
 }
 

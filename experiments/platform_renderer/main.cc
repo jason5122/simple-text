@@ -48,10 +48,9 @@ public:
     void on_draw(platform::Window& window,
                  gfx::Frame& frame,
                  const platform::FrameInfo& frame_info) override {
-        (void)window;
         frame.clear({1.0f, 1.0f, 1.0f, 1.0f});
-        const auto quads =
-            make_animation_quads(frame_info.time_seconds, frame_info.width_px, frame_info.height_px);
+        const auto quads = make_animation_quads(frame_info.time_seconds, frame_info.width_px,
+                                                frame_info.height_px);
         frame.draw_quads(quads, 0, -scroll_y_);
     }
 

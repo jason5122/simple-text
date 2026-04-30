@@ -32,7 +32,6 @@ void RootViewHost::on_resize(platform::Window& window, const platform::ResizeInf
 }
 
 void RootViewHost::on_scroll(platform::Window& window, const platform::ScrollInfo& scroll_info) {
-    (void)scroll_info;
     window_ = &window;
 }
 

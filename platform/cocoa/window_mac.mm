@@ -55,8 +55,6 @@
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    (void)mask;
-
     CGLPixelFormatObj pixel_format = nullptr;
     GLint pixel_format_count = 0;
     CGLPixelFormatAttribute attrs[] = {
@@ -78,9 +76,6 @@
              pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)timeInterval
              displayTime:(const CVTimeStamp*)timeStamp {
-    (void)pixelFormat;
-    (void)timeStamp;
-
     CGLSetCurrentContext(glContext);
 
     if (!gl_functions_loaded) {
@@ -238,12 +233,10 @@
 }
 
 - (BOOL)windowShouldClose:(NSWindow*)sender {
-    (void)sender;
     return window->should_close();
 }
 
 - (void)windowWillClose:(NSNotification*)notification {
-    (void)notification;
     platform::WindowMac* closing_window = window;
     closing_window->did_close();
     closing_window->app().window_did_close(closing_window);

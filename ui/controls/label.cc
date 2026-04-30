@@ -10,10 +10,7 @@ void Label::set_text(std::string_view text) {
     invalidate();
 }
 
-Size Label::preferred_size(Size available) const {
-    (void)available;
-    return Size{260, 28};
-}
+Size Label::preferred_size(Size available) const { return Size{260, 28}; }
 
 void Label::paint(PaintContext& context) {
     context.fill_rect(bounds(), Color{0.90f, 0.92f, 0.95f, 1.0f});

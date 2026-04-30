@@ -1,5 +1,6 @@
 #pragma once
 
+#include "platform/task.h"
 #include "platform/window.h"
 #include <memory>
 
@@ -18,6 +19,7 @@ public:
     static std::unique_ptr<App> create(AppOptions options = {});
 
     virtual Window* create_window(WindowOptions options, WindowDelegate* delegate) = 0;
+    virtual TaskScope task_scope() const = 0;
     virtual int run() = 0;
     virtual void quit() = 0;
 };

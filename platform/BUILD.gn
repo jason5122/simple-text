@@ -1,5 +1,8 @@
 source_set("platform") {
-  sources = [ "app.cc" ]
+  sources = [
+    "app.cc",
+    "task.cc",
+  ]
 
   if (is_mac) {
     sources += [
@@ -15,6 +18,10 @@ source_set("platform") {
 
     defines = [ "GL_SILENCE_DEPRECATION" ]
   }
+
+  public_deps = [
+    "//third_party/corral",
+  ]
 
   deps = [
     "//base",

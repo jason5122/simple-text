@@ -5,9 +5,11 @@
 #include "gl/loader.h"
 #include "platform/cocoa/app_mac.h"
 #include "platform/cocoa/window_mac.h"
+#include "platform/task_internal.h"
 #include <Cocoa/Cocoa.h>
 #include <QuartzCore/CAOpenGLLayer.h>
 #include <cmath>
+#include <utility>
 
 @interface PlatformGLLayer : CAOpenGLLayer {
 @public
@@ -238,8 +240,7 @@
 
 - (void)windowWillClose:(NSNotification*)notification {
     platform::WindowMac* closing_window = window;
-    closing_window->did_close();
-    closing_window->app().window_did_close(closing_window);
+    closing_window->app().window_requested_close(closing_window);
 }
 
 @end
@@ -253,7 +254,9 @@ std::unique_ptr<WindowMac> WindowMac::create(AppMac& app,
 }
 
 WindowMac::WindowMac(AppMac& app, WindowOptions options, WindowDelegate* delegate)
-    : app_(app), delegate_(delegate) {
+    : app_(app),
+      delegate_(delegate),
+      task_scope_(std::make_shared<internal::TaskScopeState>()) {
     NSRect frame = NSMakeRect(0, 0, options.width, options.height);
     NSUInteger style =
         NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
@@ -285,6 +288,10 @@ void WindowMac::set_title(std::string_view title) {
     [ns_window_ setTitle:ns_title];
 }
 
+TaskScope WindowMac::task_scope() const { return TaskScope(task_scope_); }
+
+void* WindowMac::native_handle() const { return (__bridge void*)ns_window_; }
+
 void WindowMac::request_redraw() { [gl_view_.layer setNeedsDisplay]; }
 
 void WindowMac::set_continuous_redraw(bool enabled) { [gl_view_ setContinuousRedraw:enabled]; }
@@ -295,12 +302,38 @@ bool WindowMac::should_close() {
 }
 
 void WindowMac::did_close() {
+    close_requested_ = true;
+    if (emit_close_) {
+        emit_close_();
+    }
     if (delegate_) {
         delegate_->on_close(*this);
     }
     ns_window_ = nil;
     gl_view_ = nil;
     window_delegate_ = nil;
+}
+
+corral::Task<void> WindowMac::run_until_closed() {
+    using Callback = corral::CBPortal<>::Callback;
+    auto await_close = corral::untilCBCalled(
+        [this](Callback cb) {
+            emit_close_ = [cb]() mutable { cb(); };
+            if (close_requested_) {
+                emit_close_();
+            }
+        },
+        [this] { emit_close_ = nullptr; });
+
+    CORRAL_WITH_NURSERY(nursery) {
+        task_scope_->bind(nursery);
+        co_await std::move(await_close);
+        task_scope_->unbind(nursery);
+        co_return corral::cancel;
+    };
+
+    task_scope_->nursery = nullptr;
+    emit_close_ = nullptr;
 }
 
 void WindowMac::emit_resize(const ResizeInfo& resize_info) {

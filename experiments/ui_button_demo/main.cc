@@ -1,12 +1,21 @@
 #include "platform/app.h"
-#include "ui/controls/button.h"
-#include "ui/controls/column.h"
-#include "ui/controls/label.h"
-#include "ui/root_view_host.h"
+#include "ui/button.h"
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
+#include <print>
 #include <memory>
-#include <string>
+
+using namespace std::chrono_literals;
+
+namespace {
+
+int next_task_id() {
+    static std::atomic<int> next_id = 1;
+    return next_id.fetch_add(1, std::memory_order_relaxed);
+}
+
+}  // namespace
 
 int main() {
     std::setbuf(stdout, nullptr);
@@ -14,20 +23,44 @@ int main() {
     auto app = platform::App::create({.renderer_backend = platform::RendererBackend::kOpenGL});
     if (!app) std::abort();
 
-    auto root = std::make_unique<ui::Column>();
-    ui::Label* label = root->add_child(std::make_unique<ui::Label>("Button has not been clicked"));
-    ui::Button* button = root->add_child(std::make_unique<ui::Button>("Click"));
-
-    int click_count = 0;
-    button->on_click([label, &click_count] {
-        ++click_count;
-        label->set_text("Clicked " + std::to_string(click_count));
-    });
-
-    ui::RootViewHost host(std::move(root));
     platform::Window* window =
-        app->create_window({.width = 640, .height = 420, .title = "UI Button Demo"}, &host);
+        app->create_window({.width = 640, .height = 420, .title = "UI Button Demo"}, nullptr);
     if (!window) std::abort();
+
+    ui::Button fetch_button("Fetch data");
+    fetch_button.on_click_task([window](ui::Button& button) -> corral::Task<void> {
+        const int task_id = next_task_id();
+        bool completed = false;
+        std::println("task {} started", task_id);
+        button.set_status_text("Loading...");
+        co_await corral::try_([&]() -> corral::Task<void> {
+            co_await platform::sleep_for(1s);
+            co_await platform::resume_on_ui();
+            window->set_title("Fetched data");
+            button.set_status_text("");
+            completed = true;
+        }).finally([task_id, &completed, &button]() -> corral::Task<void> {
+            if (completed) {
+                std::println("task {} completed", task_id);
+                co_return;
+            }
+
+            std::println("task {} was cancelled", task_id);
+            co_await platform::resume_on_ui();
+            button.set_status_text("");
+        });
+    });
+    fetch_button.add_to(*window);
+
+    ui::Button quick_button("Set title after 250ms");
+    quick_button.on_click_task([window](ui::Button& button) -> corral::Task<void> {
+        button.set_status_text("Waiting...");
+        co_await platform::sleep_for(250ms);
+        co_await platform::resume_on_ui();
+        window->set_title("Coroutine button clicked");
+        button.set_status_text("");
+    });
+    quick_button.add_to(*window);
 
     return app->run();
 }

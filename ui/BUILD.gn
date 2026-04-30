@@ -1,15 +1,12 @@
 source_set("ui") {
-  sources = [
-    "controls/button.cc",
-    "controls/column.cc",
-    "controls/label.cc",
-    "paint_context.cc",
-    "root_view_host.cc",
-    "view.cc",
-  ]
+  if (is_mac) {
+    sources = [
+      "button.h",
+      "button.mm",
+    ]
 
-  deps = [
-    "//gfx",
-    "//platform",
-  ]
+    frameworks = [ "Cocoa.framework" ]
+  }
+
+  deps = [ "//platform" ]
 }

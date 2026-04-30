@@ -4,5 +4,6 @@ executable("platform_renderer") {
   deps = [
     "//gfx",
     "//platform",
+    "//ui",
   ]
 }

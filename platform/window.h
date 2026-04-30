@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/frame.h"
+#include "platform/task.h"
 #include <string>
 #include <string_view>
 
@@ -57,6 +58,8 @@ public:
     virtual ~Window();
 
     virtual void set_title(std::string_view title) = 0;
+    virtual TaskScope task_scope() const = 0;
+    virtual void* native_handle() const = 0;
     virtual void request_redraw() = 0;
     virtual void set_continuous_redraw(bool enabled) = 0;
 };

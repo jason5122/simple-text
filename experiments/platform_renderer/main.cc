@@ -25,9 +25,9 @@ std::array<gfx::Quad, 8> make_animation_quads(double t, int viewport_width, int 
     const float size = 56.0f + 18.0f * std::sin(t * 2.0);
 
     for (size_t i = 0; i < 6; ++i) {
-        const float phase = static_cast<float>(t * 1.8 + i * (kPi / 3.0f));
-        const float x = cx + radius * std::cos(phase) - size * 0.5f;
-        const float y = cy + radius * std::sin(phase) - size * 0.5f;
+        const double phase = t * 1.8 + i * (kPi / 3.0);
+        const float x = cx + radius * static_cast<float>(std::cos(phase)) - size * 0.5f;
+        const float y = cy + radius * static_cast<float>(std::sin(phase)) - size * 0.5f;
         const float hue = static_cast<float>(i) / 6.0f;
         quads[i] = gfx::Quad{
             x,

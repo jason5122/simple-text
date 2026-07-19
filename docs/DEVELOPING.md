@@ -15,17 +15,13 @@ bin/ninja -C out/release
 
 ## LSP Support (Optional)
 
-It is recommended to use a clangd that matches the version of the LLVM toolchain:
+It is recommended to use a version of clangd that matches the LLVM toolchain:
 
 ```bash
 python3 bin/fetch-llvm-toolchain --package=clangd
 ```
 
-Whichever clangd is used, use Ninja to generate `compile_commands.json`:
-
-```bash
-bin/ninja -C out/release -t compdb cc cxx objc objcxx > compile_commands.json
-```
+GN automatically generates `compile_commands.json` in the build directory (e.g., `out/release`). Configure clangd to search this directory.
 
 ## Cross Compilation
 

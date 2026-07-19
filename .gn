@@ -2,3 +2,5 @@ buildconfig = "//build/config/BUILDCONFIG.gn"
 
 # Use `python3` for compatibility with the default Python on macOS.
 script_executable = "python3"
+
+export_compile_commands = [ "*" ]

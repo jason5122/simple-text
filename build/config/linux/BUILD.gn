@@ -1,0 +1,9 @@
+import("//build/config/sysroot.gni")
+
+config("runtime_library") {
+  sysroot_flags = [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
+  asmflags = sysroot_flags
+  ldflags = sysroot_flags
+  cflags_c = sysroot_flags
+  cflags_cc = sysroot_flags
+}

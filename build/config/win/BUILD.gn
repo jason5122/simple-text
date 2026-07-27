@@ -1,3 +1,5 @@
+import("//build/config/sysroot.gni")
+
 config("compiler") {
   cflags = []
 
@@ -39,6 +41,9 @@ config("runtime_library") {
   # On Windows, including libcpmt explicitly links the C++ standard library, which libc++ needs for
   # exception_ptr internals.
   ldflags = [ "/DEFAULTLIB:libcpmt.lib" ]
+
+  cflags += [ "/winsysroot" + rebase_path(sysroot, root_build_dir) ]
+  ldflags += [ "/winsysroot:" + rebase_path(sysroot, root_build_dir) ]
 }
 
 # Character set ----------------------------------------------------------------

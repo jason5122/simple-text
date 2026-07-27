@@ -1,4 +1,4 @@
-import("//build/config/mac/mac_sdk.gni")
+import("//build/config/sysroot.gni")
 
 config("compiler") {
   # These flags are shared between the C compiler and linker.
@@ -24,7 +24,7 @@ config("compiler") {
 config("runtime_library") {
   common_flags = [
     "-isysroot",
-    rebase_path(mac_sdk_path, root_build_dir),
+    rebase_path(sysroot, root_build_dir),
     "-mmacos-version-min=$mac_deployment_target",
   ]
 

@@ -79,6 +79,8 @@ config("runtime_library") {
     configs += [ "//build/config/mac:runtime_library" ]
   } else if (is_win) {
     configs += [ "//build/config/win:runtime_library" ]
+  } else if (is_linux) {
+    configs += [ "//build/config/linux:runtime_library" ]
   }
 }
 

@@ -1,0 +1,18 @@
+if (is_mac) {
+  import("//build/config/mac/mac_sdk.gni")
+  sysroot = mac_sdk_path
+} else if (is_linux) {
+  target_sysroot_dir = "//third_party/linux-sysroot"
+
+  if (current_cpu == "x64") {
+    sysroot = "$target_sysroot_dir/debian_bullseye_amd64-sysroot"
+  } else if (current_cpu == "arm64") {
+    sysroot = "$target_sysroot_dir/debian_bullseye_arm64-sysroot"
+  } else {
+    assert(false, "No linux sysroot for cpu: $current_cpu")
+  }
+  assert(path_exists(sysroot),
+         "Missing sysroot ($sysroot). Run the fetch script.")
+} else if (is_win) {
+  sysroot = "//third_party/xwin"
+}

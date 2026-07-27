@@ -1,0 +1,3 @@
+executable("compiler_builtins_canary") {
+  sources = [ "compiler_builtins_canary.c" ]
+}

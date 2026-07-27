@@ -73,6 +73,8 @@ config("compiler") {
 config("runtime_library") {
   configs = [ "//build/config/c++:runtime_library" ]
 
+  configs += [ "//build/config/clang:compiler_builtins" ]
+
   if (is_mac) {
     configs += [ "//build/config/mac:runtime_library" ]
   } else if (is_win) {

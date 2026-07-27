@@ -1,1 +1,7 @@
 clang_base_path = "//third_party/llvm-toolchain"
+
+# TODO: Is this the right place to declare this? How do we keep this in sync with the LLVM
+# toolchain download?
+# Chromium declares this in `build/toolchain/toolchain.gni`:
+# https://source.chromium.org/chromium/chromium/src/+/refs/tags/150.0.7871.186:build/toolchain/toolchain.gni;l=44
+clang_version = "22"

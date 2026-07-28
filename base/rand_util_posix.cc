@@ -8,7 +8,7 @@
 #include <spdlog/spdlog.h>
 #include <unistd.h>
 
-#if BUILDFLAG(IS_MAC)
+#if BUILDFLAG(IS_POSIX)
 #include <sys/random.h>
 #endif
 
@@ -47,7 +47,7 @@ void rand_bytes(std::span<uint8_t> output) {
         return;
     }
 #elif BUILDFLAG(IS_LINUX)
-    if (getrandom(output.data(), output.size())) {
+    if (getrandom(output.data(), output.size(), 0) == static_cast<ssize_t>(output.size())) {
         return;
     }
 #endif

@@ -12,6 +12,8 @@ config("compiler") {
     configs += [ "//build/config/mac:compiler" ]
   } else if (is_win) {
     configs += [ "//build/config/win:compiler" ]
+  } else if (is_linux) {
+    configs += [ "//build/config/linux:compiler" ]
   }
 
   if (is_linux) {

@@ -1,5 +1,18 @@
 import("//build/config/sysroot.gni")
 
+config("compiler") {
+  if (current_cpu == "x64") {
+    _target = "x86_64-unknown-linux-gnu"
+  } else if (current_cpu == "arm64") {
+    _target = "aarch64-unknown-linux-gnu"
+  } else {
+    assert(false, "unhandled cpu $current_cpu")
+  }
+  cflags = [ "--target=" + _target ]
+  asmflags = [ "--target=" + _target ]
+  ldflags = [ "--target=" + _target ]
+}
+
 config("runtime_library") {
   sysroot_flags = [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
   asmflags = sysroot_flags

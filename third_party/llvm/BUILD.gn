@@ -115,6 +115,7 @@ if (!is_win) {
       "src/libcxxabi/src/cxa_guard.cpp",
       "src/libcxxabi/src/cxa_handlers.cpp",
       "src/libcxxabi/src/cxa_personality.cpp",
+      "src/libcxxabi/src/cxa_thread_atexit.cpp",
       "src/libcxxabi/src/cxa_vector.cpp",
       "src/libcxxabi/src/cxa_virtual.cpp",
       "src/libcxxabi/src/fallback_malloc.cpp",

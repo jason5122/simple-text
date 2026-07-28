@@ -2,6 +2,7 @@ bin/gn
 bin/gn.exe
 bin/ninja
 bin/ninja.exe
+third_party/linux-sysroot/
 third_party/llvm-toolchain/
 third_party/xwin/
 .xwin-cache/

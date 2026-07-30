@@ -1,0 +1,11 @@
+source_set("canvas") {
+  sources = [
+    "canvas.cc",
+    "glyph_atlas.cc",
+  ]
+
+  deps = [
+    "//gfx",
+    "//text",
+  ]
+}

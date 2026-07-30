@@ -1,0 +1,311 @@
+#include "base/apple/scoped_cftyperef.h"
+#include "base/apple/scoped_cgtyperef.h"
+#include "base/check.h"
+#include "base/strings/sys_string_conversions.h"
+#include "base/unicode/utf16_to_utf8_indices_map.h"
+#include "text/font_rasterizer.h"
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <CoreText/CoreText.h>
+#include <spdlog/spdlog.h>
+
+using base::apple::OwnershipPolicy;
+using base::apple::ScopedCFTypeRef;
+using base::apple::ScopedCGColorSpace;
+using base::apple::ScopedCGContext;
+
+// References:
+// https://github.com/servo/font-kit/blob/d49041ca57da4e9b412951f96f74cb34e3b6324f/src/loader.rs#L199
+// https://github.com/zed-industries/zed/blob/40ecc38dd25ffdec4deb6e27ee91b72e85a019eb/crates/gpui/src/platform/mac/text_system.rs#L345
+
+namespace text {
+
+namespace {
+
+ScopedCFTypeRef<CTLineRef> create_ct_line(CTFontRef ct_font,
+                                          FontId font_id,
+                                          std::string_view str8) {
+    auto cf_str = base::sys_utf8_to_cfstring_ref(str8);
+
+    auto attr = ScopedCFTypeRef<CFMutableDictionaryRef>(CFDictionaryCreateMutable(
+        kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+    CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ct_font);
+
+    auto attr_string = ScopedCFTypeRef<CFAttributedStringRef>(
+        CFAttributedStringCreate(kCFAllocatorDefault, cf_str.get(), attr.get()));
+
+    return ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(attr_string.get()),
+                                      OwnershipPolicy::kRetain);
+}
+
+// https://github.com/alacritty/crossfont/blob/9cd8ed05c9cc7ec17fe69183912560f97c050a1a/src/darwin/mod.rs#L275
+bool font_smoothing_enabled() {
+    auto pref = ScopedCFTypeRef<CFPropertyListRef>(
+        CFPreferencesCopyAppValue(CFSTR("AppleFontSmoothing"), kCFPreferencesCurrentApplication));
+
+    // Case 0: The preference does not exist. By default, macOS smooths fonts.
+    if (!pref.get()) {
+        return true;
+    }
+    // Case 1: The preference is an integer. Anything greater than 0 enables smoothing.
+    else if (CFGetTypeID(pref.get()) == CFNumberGetTypeID()) {
+        CFNumberRef cfnumber = static_cast<CFNumberRef>(pref.get());
+        int value;
+        CFNumberGetValue(cfnumber, kCFNumberIntType, &value);
+        return value != 0;
+    }
+    // Case 2: The preference is a string. Parse it as an integer.
+    else if (CFGetTypeID(pref.get()) == CFStringGetTypeID()) {
+        CFStringRef cfstring = static_cast<CFStringRef>(pref.get());
+        int value = CFStringGetIntValue(cfstring);
+        return value != 0;
+    }
+    return true;
+}
+
+}  // namespace
+
+struct FontRasterizer::NativeFontType {
+    ScopedCFTypeRef<CTFontRef> font;
+
+    // We don't use a default policy to keep things explicit.
+    NativeFontType(CTFontRef ctfont, OwnershipPolicy policy) : font(ctfont, policy) {}
+};
+
+class FontRasterizer::Impl {};
+
+FontRasterizer::FontRasterizer() {}
+
+FontRasterizer::~FontRasterizer() {}
+
+FontId FontRasterizer::add_font(std::string_view font_name8, int font_size, FontStyle font_style) {
+    std::string style;
+    if (font_style == FontStyle::kNone) {
+        style = "Regular";
+    } else if (font_style == FontStyle::kBold) {
+        style = "Bold";
+    } else if (font_style == FontStyle::kItalic) {
+        style = "Italic";
+    } else if (font_style == (FontStyle::kBold | FontStyle::kItalic)) {
+        style = "Bold Italic";
+    }
+
+    auto font_name_cfstring = base::sys_utf8_to_cfstring_ref(font_name8);
+    auto font_style_cfstring = base::sys_utf8_to_cfstring_ref(style);
+    CFTypeRef keys[] = {kCTFontFamilyNameAttribute, kCTFontStyleNameAttribute};
+    CFTypeRef values[] = {font_name_cfstring.get(), font_style_cfstring.get()};
+    static_assert(std::size(keys) == std::size(values));
+    auto attributes = ScopedCFTypeRef<CFDictionaryRef>(
+        CFDictionaryCreate(kCFAllocatorDefault, keys, values, std::size(keys),
+                           &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+
+    auto descriptor = ScopedCFTypeRef<CTFontDescriptorRef>(
+        CTFontDescriptorCreateWithAttributes(attributes.get()));
+
+    CTFontRef ct_font = CTFontCreateWithFontDescriptor(descriptor.get(), font_size, nullptr);
+    return cache_font({ct_font, OwnershipPolicy::kRetain}, font_size);
+}
+
+FontId FontRasterizer::add_system_font(int font_size, FontStyle font_style) {
+    bool is_bold = (font_style & FontStyle::kBold) != FontStyle::kNone;
+    CTFontUIFontType font_type = is_bold ? kCTFontUIFontEmphasizedSystem : kCTFontUIFontSystem;
+
+    CTFontRef sys_font = CTFontCreateUIFontForLanguage(font_type, font_size, nullptr);
+    return cache_font({sys_font, OwnershipPolicy::kRetain}, font_size);
+}
+
+FontId FontRasterizer::resize_font(FontId font_id, int font_size) {
+    const auto& font_ref = font_id_to_native[font_id].font;
+    CTFontRef copy = CTFontCreateCopyWithAttributes(font_ref.get(), font_size, nullptr, nullptr);
+    return cache_font({copy, OwnershipPolicy::kRetain}, font_size);
+}
+
+RasterizedGlyph FontRasterizer::rasterize(FontId font_id, uint32_t glyph_id) const {
+    // DEBUG: Perform expensive work.
+    // std::function<uint64_t(int)> fibonacci = [&](int n) {
+    //     return (n < 2) ? n : fibonacci(n - 1) + fibonacci(n - 2);
+    // };
+    // fibonacci(30);
+
+    CTFontRef font_ref = font_id_to_native[font_id].font.get();
+    CHECK(font_ref);
+
+    CGGlyph glyph_index = glyph_id;
+    CGRect bounds = CTFontGetBoundingRectsForGlyphs(font_ref, kCTFontOrientationDefault,
+                                                    &glyph_index, nullptr, 1);
+
+    // TODO: Don't hard-code scale factor.
+    int scale_factor = 2;
+
+    int left = std::floor(bounds.origin.x);
+    int descent = std::ceil(-bounds.origin.y);
+    int ascent = std::ceil(bounds.origin.y + bounds.size.height);
+    int width = std::ceil(bounds.origin.x + bounds.size.width);
+    int height = ascent + descent;
+    int top = ascent;
+
+    width *= 2;
+    height *= 2;
+    top *= 2;
+    // TODO: Why do we not scale `top` and `left` here?
+    // left *= 2;
+    // descent *= 2;
+
+    if (width < 0 || height < 0) {
+        spdlog::warn("width/height < 0 for font ID = {}, glyph ID = {}, font name = {}", font_id,
+                     glyph_id, font_id_to_postscript_name[font_id]);
+        return {};
+    }
+
+    std::vector<uint8_t> bitmap_data(height * width * 4);
+    auto color_space_ref = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
+    auto context = ScopedCGContext(CGBitmapContextCreate(
+        bitmap_data.data(), width, height, 8, width * 4, color_space_ref.get(),
+        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
+
+    CGContextSetAllowsFontSmoothing(context.get(), true);
+    CGContextSetShouldSmoothFonts(context.get(), font_smoothing_enabled());
+    CGContextSetAllowsFontSubpixelQuantization(context.get(), true);
+    CGContextSetShouldSubpixelQuantizeFonts(context.get(), true);
+    CGContextSetAllowsFontSubpixelPositioning(context.get(), true);
+    CGContextSetShouldSubpixelPositionFonts(context.get(), true);
+    CGContextSetAllowsAntialiasing(context.get(), true);
+    CGContextSetShouldAntialias(context.get(), true);
+
+    CGContextSetRGBFillColor(context.get(), 1.0, 1.0, 1.0, 1.0);
+
+    // TODO: Why do we not offset by `-left` here?
+    CGPoint rasterization_origin = CGPointMake(0, descent);
+    CGContextScaleCTM(context.get(), scale_factor, scale_factor);
+
+    CTFontDrawGlyphs(font_ref, &glyph_index, &rasterization_origin, 1, context.get());
+
+    // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
+    // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
+    bool colored_font = CTFontGetSymbolicTraits(font_ref) & kCTFontTraitColorGlyphs;
+    auto outline_path =
+        ScopedCFTypeRef<CGPathRef>(CTFontCreatePathForGlyph(font_ref, glyph_index, nullptr));
+    bool colored = colored_font && !outline_path;
+
+    return {
+        .left = left,
+        .top = top,
+        .width = static_cast<int32_t>(width),
+        .height = static_cast<int32_t>(height),
+        .buffer = std::move(bitmap_data),
+        .colored = colored,
+    };
+}
+
+// https://skia.googlesource.com/skia/+/0a7c7b0b96fc897040e71ea3304d9d6a042cda8b/modules/skshaper/src/SkShaper_coretext.cpp#195
+LineLayout FontRasterizer::layout_line(FontId font_id, std::string_view str8) {
+    DCHECK_EQ(str8.find('\n'), std::string_view::npos);
+
+    base::UTF16ToUTF8IndicesMap indices_map;
+    CHECK(indices_map.set_utf8(str8));
+
+    CTFontRef ct_font = font_id_to_native[font_id].font.get();
+    auto ct_line = ScopedCFTypeRef<CTLineRef>(create_ct_line(ct_font, font_id, str8));
+
+    int total_advance = 0;
+    std::vector<ShapedGlyph> glyphs;
+    CFArrayRef run_array = CTLineGetGlyphRuns(ct_line.get());
+    CFIndex run_count = CFArrayGetCount(run_array);
+
+    for (CFIndex i = 0; i < run_count; ++i) {
+        CTRunRef ct_run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(run_array, i));
+
+        auto ct_font = static_cast<CTFontRef>(
+            CFDictionaryGetValue(CTRunGetAttributes(ct_run), kCTFontAttributeName));
+        int font_size = CTFontGetSize(ct_font);
+        FontId run_font_id = cache_font({ct_font, OwnershipPolicy::kRetain}, font_size);
+
+        CFIndex glyph_count = CTRunGetGlyphCount(ct_run);
+        std::vector<CGGlyph> glyph_ids(glyph_count);
+        std::vector<CFIndex> indices(glyph_count);
+        std::vector<CGPoint> positions(glyph_count);
+        std::vector<CGSize> advances(glyph_count);
+
+        CTRunGetGlyphs(ct_run, {0, glyph_count}, glyph_ids.data());
+        CTRunGetStringIndices(ct_run, {0, glyph_count}, indices.data());
+        CTRunGetPositions(ct_run, {0, glyph_count}, positions.data());
+        CTRunGetAdvances(ct_run, {0, glyph_count}, advances.data());
+
+        // TODO: Don't hard-code scale factor.
+        int scale_factor = 2;
+
+        for (CFIndex i = 0; i < glyph_count; ++i) {
+            // TODO: Use subpixel variants instead of rounding.
+            Point position = {
+                .x = total_advance,
+                // TODO: Do we scale y here?
+                .y = static_cast<int>(std::ceil(positions[i].y)),
+            };
+            Point advance = {
+                .x = static_cast<int>(std::ceil(advances[i].width * scale_factor)),
+                .y = static_cast<int>(std::ceil(advances[i].height * scale_factor)),
+            };
+
+            size_t utf8_index = indices_map[indices[i]];
+            ShapedGlyph glyph = {
+                .font_id = run_font_id,
+                .glyph_id = glyph_ids[i],
+                .position = std::move(position),
+                .advance = std::move(advance),
+                .index = utf8_index,
+            };
+            glyphs.emplace_back(std::move(glyph));
+
+            total_advance += advance.x;
+        }
+    }
+
+    return {
+        .layout_font_id = font_id,
+        .width = total_advance,
+        .length = str8.length(),
+        .glyphs = std::move(glyphs),
+    };
+}
+
+FontId FontRasterizer::cache_font(NativeFontType native_font, int font_size) {
+    CTFontRef ct_font = native_font.font.get();
+    auto ct_font_name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(ct_font));
+    std::string font_name = base::sys_cfstring_ref_to_utf8(ct_font_name.get());
+    CHECK(!font_name.empty());
+
+    // If the font is already present, return its ID.
+    size_t hash = hash_font(font_name, font_size);
+    if (auto it = font_hash_to_id.find(hash); it != font_hash_to_id.end()) {
+        return it->second;
+    }
+
+    // TODO: Don't hard-code scale factor.
+    int scale_factor = 2;
+
+    // TODO: Do we multiply before std::ceil()? That is correct for DirectWrite.
+    int ascent = std::ceil(CTFontGetAscent(ct_font));
+    int descent = std::ceil(CTFontGetDescent(ct_font));
+    int leading = std::ceil(CTFontGetLeading(ct_font));
+    ascent *= scale_factor;
+    descent *= scale_factor;
+    leading *= scale_factor;
+
+    int line_height = ascent + descent + leading;
+
+    Metrics metrics = {
+        .line_height = line_height,
+        .ascent = ascent,
+        .descent = descent,
+        .font_size = font_size,
+    };
+
+    FontId font_id = font_hash_to_id.size();
+    font_hash_to_id.emplace(hash, font_id);
+    font_id_to_native.emplace_back(std::move(native_font));
+    font_id_to_metrics.emplace_back(std::move(metrics));
+    font_id_to_postscript_name.emplace_back(std::move(font_name));
+    return font_id;
+}
+
+}  // namespace text

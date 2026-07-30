@@ -1,0 +1,38 @@
+import("//build/config/linux/pkg_config.gni")
+
+source_set("text") {
+  sources = [ "font_rasterizer.cc" ]
+
+  deps = [
+    "//base",
+    "//third_party/spdlog",
+  ]
+
+  if (is_mac) {
+    sources += [ "font_rasterizer_core_text.cc" ]
+    frameworks = [
+      "CoreText.framework",
+      "CoreGraphics.framework",
+      "CoreFoundation.framework",
+    ]
+  }
+
+  if (is_linux) {
+    sources += [ "font_rasterizer_pango.cc" ]
+    configs += [ ":linux_font_libs" ]
+  }
+
+  if (is_win) {
+    sources += [ "font_rasterizer_directwrite.cc" ]
+    libs = [
+      "d2d1.lib",
+      "dwrite.lib",
+    ]
+  }
+}
+
+if (is_linux) {
+  pkg_config("linux_font_libs") {
+    packages = [ "pangocairo" ]
+  }
+}

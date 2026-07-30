@@ -2,8 +2,10 @@ executable("platform_renderer") {
   sources = [ "main.cc" ]
 
   deps = [
+    "//canvas",
     "//gfx",
     "//platform",
+    "//text",
     "//ui",
   ]
 }

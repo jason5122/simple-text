@@ -148,11 +148,8 @@ source_set("base_unittests") {
 
   deps = [
     ":base",
-    "//third_party/googletest:gtest",
+    "//testing:gtest",
   ]
-  if (is_mac) {
-    deps += [ "//testing:gtest_mac" ]
-  }
 }
 
 source_set("base_perftests") {
@@ -162,6 +159,6 @@ source_set("base_perftests") {
 
   deps = [
     ":base",
-    "//third_party/googletest:gtest",
+    "//testing:gtest",
   ]
 }

@@ -1,22 +1,32 @@
+source_set("gtest") {
+  testonly = true
+
+  public_deps = [ "//third_party/googletest:gtest" ]
+
+  if (is_mac) {
+    sources = [
+      "gtest_mac.h",
+      "gtest_mac.mm",
+    ]
+
+    frameworks = [ "Foundation.framework" ]
+  }
+}
+
 executable("unit_tests") {
   testonly = true
 
   sources = [ "main.cc" ]
-
   if (is_mac) {
     sources += [ "gtest_mac_unittest.mm" ]
   }
 
   deps = [
+    ":gtest",
     "//base:base_unittests",
     "//editor:editor_unittests",
     "//font:font_unittests",
-    "//third_party/googletest:gtest",
   ]
-
-  if (is_mac) {
-    deps += [ ":gtest_mac" ]
-  }
 }
 
 executable("perf_tests") {
@@ -25,24 +35,9 @@ executable("perf_tests") {
   sources = [ "main.cc" ]
 
   deps = [
+    ":gtest",
     "//base:base_perftests",
     "//editor:editor_perftests",
     "//font:font_perftests",
-    "//third_party/googletest:gtest",
   ]
-}
-
-if (is_mac) {
-  source_set("gtest_mac") {
-    testonly = true
-
-    sources = [
-      "gtest_mac.h",
-      "gtest_mac.mm",
-    ]
-
-    frameworks = [ "Foundation.framework" ]
-
-    public_deps = [ "//third_party/googletest:gtest" ]
-  }
 }

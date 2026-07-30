@@ -44,7 +44,7 @@ source_set("font_unittests") {
 
   deps = [
     ":font",
-    "//third_party/googletest:gtest",
+    "//testing:gtest",
   ]
 }
 
@@ -56,6 +56,6 @@ source_set("font_perftests") {
   deps = [
     ":font",
     "//base",
-    "//third_party/googletest:gtest",
+    "//testing:gtest",
   ]
 }

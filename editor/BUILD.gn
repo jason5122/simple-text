@@ -29,7 +29,7 @@ source_set("editor_unittests") {
   deps = [
     ":editor",
     "//base",
-    "//third_party/googletest:gtest",
+    "//testing:gtest",
     "//third_party/spdlog",
     "//third_party/uni_algo",
   ]
@@ -47,6 +47,6 @@ source_set("editor_perftests") {
   deps = [
     ":editor",
     "//base",
-    "//third_party/googletest:gtest",
+    "//testing:gtest",
   ]
 }

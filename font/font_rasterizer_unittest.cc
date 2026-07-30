@@ -1,9 +1,34 @@
+#include "build/build_config.h"
 #include "font/font_rasterizer.h"
 #include <gtest/gtest.h>
 
+#if BUILDFLAG(IS_WIN)
+#include "base/win/scoped_com_initializer.h"
+#include <memory>
+#endif
+
 namespace font {
 
-TEST(FontRasterizerTest, LayoutLine1) {
+// FontRasterizer::instance() constructs WIC/Direct2D/DirectWrite factories,
+// which require COM to be initialized on the calling thread. Bracket the suite
+// so the apartment is up for exactly these tests and no others.
+class FontRasterizerTest : public ::testing::Test {
+#if BUILDFLAG(IS_WIN)
+protected:
+    static void SetUpTestSuite() {
+        com_ = std::make_unique<base::win::ScopedCOMInitializer>();
+    }
+    static void TearDownTestSuite() { com_.reset(); }
+
+    static std::unique_ptr<base::win::ScopedCOMInitializer> com_;
+#endif
+};
+
+#if BUILDFLAG(IS_WIN)
+std::unique_ptr<base::win::ScopedCOMInitializer> FontRasterizerTest::com_;
+#endif
+
+TEST_F(FontRasterizerTest, LayoutLine1) {
     auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.add_system_font(32);
     auto layout = rasterizer.layout_line(font_id, "Hello😄🙂hi");
@@ -39,7 +64,7 @@ TEST(FontRasterizerTest, LayoutLine1) {
     }
 }
 
-TEST(FontRasterizerTest, LayoutLine2) {
+TEST_F(FontRasterizerTest, LayoutLine2) {
     auto& rasterizer = FontRasterizer::instance();
     size_t font_id = rasterizer.add_system_font(32);
     auto layout = rasterizer.layout_line(font_id, "Hello😄🙂hi");

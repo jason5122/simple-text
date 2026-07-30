@@ -1,12 +1,17 @@
 source_set("platform") {
   sources = [
     "app.cc",
+    "app.h",
     "task.cc",
+    "task.h",
+    "window.h",
   ]
 
   if (is_mac) {
     sources += [
+      "cocoa/app_mac.h",
       "cocoa/app_mac.mm",
+      "cocoa/window_mac.h",
       "cocoa/window_mac.mm",
     ]
 

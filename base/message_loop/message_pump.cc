@@ -1,3 +1,4 @@
+#include "base/check.h"
 #include "base/message_loop/message_pump.h"
 #include "build/build_config.h"
 

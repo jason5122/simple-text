@@ -11,12 +11,12 @@ namespace {
 void apply_blend(BlendMode blend) {
     glEnable(GL_BLEND);
     switch (blend) {
-        case BlendMode::kAlpha:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-        case BlendMode::kPremultiplied:
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            break;
+    case BlendMode::kAlpha:
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+    case BlendMode::kPremultiplied:
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
     }
 }
 

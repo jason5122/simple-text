@@ -44,9 +44,11 @@ config("compiler") {
   }
 
   # ThinLTO.
-  cflags += [ "-flto=thin" ]
-  if (is_posix) {
-    ldflags += [ "-flto=thin" ]
+  if (is_release) {
+    cflags += [ "-flto=thin" ]
+    if (is_posix) {
+      ldflags += [ "-flto=thin" ]
+    }
   }
 
   # ThinLTO cache.

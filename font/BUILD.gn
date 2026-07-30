@@ -1,7 +1,11 @@
 import("//build/config/linux/pkg_config.gni")
 
 source_set("font") {
-  sources = [ "font_rasterizer.cc" ]
+  sources = [
+    "font_rasterizer.cc",
+    "font_rasterizer.h",
+    "types.h",
+  ]
 
   deps = [
     "//base",
@@ -44,6 +48,7 @@ source_set("font_unittests") {
 
   deps = [
     ":font",
+    "//base",
     "//testing:gtest",
   ]
 }

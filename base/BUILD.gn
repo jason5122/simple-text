@@ -106,6 +106,8 @@ source_set("base") {
       "path_service_win.cc",
       "rand_util_win.cc",
       "strings/sys_string_conversions_win.cc",
+      "win/scoped_com_initializer.cc",
+      "win/scoped_com_initializer.h",
     ]
     libs += [ "shell32.lib" ]
   }

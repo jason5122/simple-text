@@ -29,6 +29,7 @@ source_set("editor_unittests") {
   deps = [
     ":editor",
     "//base",
+    "//font",
     "//testing:gtest",
     "//third_party/spdlog",
     "//third_party/uni_algo",

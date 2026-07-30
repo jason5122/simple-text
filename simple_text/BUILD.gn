@@ -3,18 +3,18 @@ import("//build/config/mac/mac_app_bundle.gni")
 
 common_sources = [
   "editor_app.cc",
+  "editor_app.h",
   "editor_window.cc",
+  "editor_window.h",
   "main.cc",
 ]
 
 common_deps = [
   "//base",
+  "//font",
   "//gl",
   "//gui",
   "//third_party/spdlog",
-
-  # TODO: Find a way to include Tree-sitter headers without listing the dependency here.
-  # "//third_party/tree_sitter",
 ]
 
 if (is_mac) {
@@ -32,16 +32,17 @@ if (is_mac) {
   icon("icon") {
     sources = [ "resources/app.iconset" ]
   }
-}
-
-if (is_linux || is_win) {
+} else if (is_linux) {
+  executable("simple_text") {
+    sources = common_sources
+    deps = common_deps
+  }
+} else if (is_win) {
   executable("simple_text") {
     sources = common_sources
     deps = common_deps
 
-    if (is_win) {
-      configs -= [ "//build/config/win:console" ]
-      configs += [ "//build/config/win:windowed" ]
-    }
+    configs -= [ "//build/config/win:console" ]
+    configs += [ "//build/config/win:windowed" ]
   }
 }

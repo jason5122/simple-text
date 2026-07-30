@@ -1,6 +1,6 @@
 buildconfig = "//build/config/BUILDCONFIG.gn"
 
-# Use `python3` for compatibility with the default Python on macOS.
+# On Windows, this will look for python3.exe and python3.bat.
 script_executable = "python3"
 
 export_compile_commands = [ "*" ]

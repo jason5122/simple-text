@@ -2,16 +2,52 @@ source_set("base") {
   sources = [
     "check.cc",
     "check.h",
+    "compiler_specific.h",
+    "containers/fixed_flat_map.h",
+    "containers/flat_map.h",
+    "containers/flat_tree.h",
+    "containers/span_util.h",
+    "debug/profiler.h",
+    "debug/timer.h",
+    "files/file.h",
     "files/file_path.cc",
+    "files/file_path.h",
     "files/file_reader.cc",
+    "files/file_reader.h",
     "files/file_util.cc",
+    "files/file_util.h",
+    "files/scoped_file.h",
+    "functional/scope_exit.h",
+    "hash/hash.h",
     "location.cc",
+    "location.h",
+    "memory/atomic_flag.h",
+    "memory/atomic_ref_count.h",
+    "memory/ref_counted.h",
+    "memory/scoped_refptr.h",
+    "memory/weak_ptr.h",
+    "message_loop/message_pump.cc",
+    "message_loop/message_pump.h",
+    "no_destructor.h",
+    "numeric/safe_conversions.h",
+    "numeric/saturation_arithmetic.h",
     "path_service.cc",
+    "path_service.h",
+    "posix/eintr_wrapper.h",
     "rand_util.cc",
+    "rand_util.h",
     "strings/string_util.cc",
+    "strings/string_util.h",
+    "strings/sys_string_conversions.h",
     "strings/utf_string_conversions.cc",
+    "strings/utf_string_conversions.h",
+    "third_party/icu/icu_utf.h",
+    "time/time.h",
     "unicode/unicode.cc",
+    "unicode/unicode.h",
     "unicode/utf16_to_utf8_indices_map.cc",
+    "unicode/utf16_to_utf8_indices_map.h",
+    "unicode/utf8_decoder.h",
   ]
   deps = [ "//third_party/spdlog" ]
 
@@ -32,13 +68,21 @@ source_set("base") {
 
   if (is_mac) {
     sources += [
+      "apple/ca_display_link_mac.h",
       "apple/ca_display_link_mac.mm",
+      "apple/cv_display_link_mac.h",
       "apple/cv_display_link_mac.mm",
+      "apple/display_link_mac.h",
       "apple/display_link_mac.mm",
+      "apple/foundation_util.h",
       "apple/foundation_util.mm",
+      "apple/owned_nsevent.h",
       "apple/owned_nsevent.mm",
+      "apple/scoped_cftyperef.h",
+      "apple/scoped_cgtyperef.h",
+      "apple/scoped_typeref.h",
       "files/file_util_mac.mm",
-      "message_loop/message_pump.cc",
+      "message_loop/message_pump_mac.h",
       "message_loop/message_pump_mac.mm",
       "path_service_mac.cc",
       "strings/sys_string_conversions_mac.mm",
@@ -106,6 +150,9 @@ source_set("base_unittests") {
     ":base",
     "//third_party/googletest:gtest",
   ]
+  if (is_mac) {
+    deps += [ "//testing:gtest_mac" ]
+  }
 }
 
 source_set("base_perftests") {

@@ -1,7 +1,9 @@
 source_set("gl") {
   sources = [
     "gl.cc",
+    "gl.h",
     "loader.cc",
+    "loader.h",
   ]
 
   if (is_mac) {
@@ -14,6 +16,9 @@ source_set("gl") {
   }
 
   if (is_linux) {
-    sources += [ "loader_egl.cc" ]
+    sources += [
+      "egl_types.h",
+      "loader_egl.cc",
+    ]
   }
 }

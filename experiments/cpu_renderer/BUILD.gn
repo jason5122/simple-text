@@ -9,6 +9,7 @@ executable("cpu_renderer") {
   ]
 
   deps = [
+    "//base",
     "//third_party/skia",
     "//third_party/spdlog",
   ]

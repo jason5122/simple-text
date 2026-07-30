@@ -4,10 +4,7 @@ executable("unit_tests") {
   sources = [ "main.cc" ]
 
   if (is_mac) {
-    sources += [
-      "gtest_mac.mm",
-      "gtest_mac_unittest.mm",
-    ]
+    sources += [ "gtest_mac_unittest.mm" ]
   }
 
   deps = [
@@ -16,6 +13,10 @@ executable("unit_tests") {
     "//font:font_unittests",
     "//third_party/googletest:gtest",
   ]
+
+  if (is_mac) {
+    deps += [ ":gtest_mac" ]
+  }
 }
 
 executable("perf_tests") {
@@ -29,4 +30,19 @@ executable("perf_tests") {
     "//font:font_perftests",
     "//third_party/googletest:gtest",
   ]
+}
+
+if (is_mac) {
+  source_set("gtest_mac") {
+    testonly = true
+
+    sources = [
+      "gtest_mac.h",
+      "gtest_mac.mm",
+    ]
+
+    frameworks = [ "Foundation.framework" ]
+
+    public_deps = [ "//third_party/googletest:gtest" ]
+  }
 }

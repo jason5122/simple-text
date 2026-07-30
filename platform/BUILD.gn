@@ -19,12 +19,11 @@ source_set("platform") {
     defines = [ "GL_SILENCE_DEPRECATION" ]
   }
 
-  public_deps = [
-    "//third_party/corral",
-  ]
+  public_deps = [ "//third_party/corral" ]
 
   deps = [
     "//base",
     "//gfx",
+    "//gl",
   ]
 }

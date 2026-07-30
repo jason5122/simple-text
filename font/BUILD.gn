@@ -55,6 +55,7 @@ source_set("font_perftests") {
 
   deps = [
     ":font",
+    "//base",
     "//third_party/googletest:gtest",
   ]
 }

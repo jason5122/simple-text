@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import os
-import platform
-import tempfile
-import zipfile
-from urllib.request import urlopen
 
+from fetch_util import extract_zip, get_os_cpu
+
+REPO_URL = "https://github.com/ninja-build/ninja"
+VERSION = "v1.13.2"
 ASSET_BY_OS_CPU = {
     ("mac", "x86_64"): "ninja-mac.zip",
     ("mac", "arm64"): "ninja-mac.zip",
@@ -15,37 +15,17 @@ ASSET_BY_OS_CPU = {
 }
 
 
-def get_os_cpu() -> tuple[str, str]:
-    system = platform.system().lower()  # darwin, linux, windows
-    machine = platform.machine().lower()  # x86_64, amd64, arm64, aarch64
-    os_name = "mac" if system == "darwin" else system
-    cpu = "x86_64" if machine in ("x86_64", "amd64") else "arm64"
-    return os_name, cpu
-
-
 def main():
+    # Navigate to project root.
     os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
 
     os_name, cpu = get_os_cpu()
     is_windows = os_name == "windows"
     exe_name = "ninja.exe" if is_windows else "ninja"
 
-    version = "v1.13.2"
-    asset = ASSET_BY_OS_CPU[(os_name, cpu)]
-    url = f"https://github.com/ninja-build/ninja/releases/download/{version}/{asset}"
-
-    print(f"Fetching {asset} {version} for {os_name}-{cpu}")
-
-    with tempfile.TemporaryDirectory() as td:
-        zip_path = os.path.join(td, "ninja.zip")
-        with urlopen(url, timeout=5) as r, open(zip_path, "wb") as f:
-            f.write(r.read())
-
-        with zipfile.ZipFile(zip_path, "r") as z:
-            z.extract(exe_name, "bin")
-
+    url = f"{REPO_URL}/releases/download/{VERSION}/{ASSET_BY_OS_CPU[(os_name, cpu)]}"
+    exe_path = extract_zip(url, "bin", exe_name)
     if not is_windows:
-        exe_path = os.path.join("bin", exe_name)
         os.chmod(exe_path, 0o755)
 
 

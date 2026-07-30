@@ -3,9 +3,6 @@ executable("unit_tests") {
 
   sources = [ "main.cc" ]
 
-  if (is_win) {
-    libs = [ "ole32.lib" ]
-  }
   if (is_mac) {
     sources += [
       "gtest_mac.mm",
@@ -25,10 +22,6 @@ executable("perf_tests") {
   testonly = true
 
   sources = [ "main.cc" ]
-
-  if (is_win) {
-    libs = [ "ole32.lib" ]
-  }
 
   deps = [
     "//base:base_perftests",

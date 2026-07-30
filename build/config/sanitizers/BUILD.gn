@@ -1,25 +1,38 @@
+import("//build/config/clang/clang.gni")
+import("//build/config/sanitizers/sanitizers.gni")
+
 config("default_sanitizer_flags") {
-  if (!is_release) {
-    cflags = []
-    ldflags = []
+  configs = [
+    ":asan_flags",
+    ":ubsan_flags",
+  ]
+}
 
-    # TODO: Run sanitizers on Windows.
-    if (is_win) {
-      # sanitizers = "address"  # ASan
-      # cflags += [ "/fsanitize=$sanitizers" ]
-    } else {
-      sanitizers = [
-        "address",  # ASan
-        "undefined",  # UBSan
+config("asan_flags") {
+  if (is_asan) {
+    cflags = [ "-fsanitize=address" ]
 
-        # TODO: Figure out why this was removed.
-        # "leak",  #LSan
-      ]
+    if (is_posix) {
+      ldflags = [ "-fsanitize=address" ]
+    } else if (is_win) {
+      # TODO: Copy these to the build dir.
+      assert(current_cpu == "x64", "WinASan is x64-only")
+      _clang_lib_dir = "$clang_base_path/lib/clang/$clang_version/lib/windows"
+      libs = [ "$_clang_lib_dir/clang_rt.asan_dynamic-x86_64.lib" ]
+      ldflags =
+          [ "-wholearchive:clang_rt.asan_static_runtime_thunk-x86_64.lib" ]
+      libs +=
+          [ "$_clang_lib_dir/clang_rt.asan_static_runtime_thunk-x86_64.lib" ]
+    }
+  }
+}
 
-      foreach(sanitizer, sanitizers) {
-        cflags += [ "-fsanitize=$sanitizer" ]
-        ldflags += [ "-fsanitize=$sanitizer" ]
-      }
+config("ubsan_flags") {
+  if (is_ubsan) {
+    cflags = [ "-fsanitize=undefined" ]
+
+    if (is_posix) {
+      ldflags = [ "-fsanitize=undefined" ]
     }
   }
 }

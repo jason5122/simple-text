@@ -2,6 +2,7 @@
 #include "base/files/file_util.h"
 #include "base/posix/eintr_wrapper.h"
 #include <fcntl.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 namespace base {

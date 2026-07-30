@@ -1,0 +1,20 @@
+# This config defines the default libraries applied to all targets.
+config("default_libs") {
+  if (is_win) {
+    libs = [ "ole32.lib" ]
+  } else if (is_mac) {
+    # Targets should choose to explicitly link frameworks they require. Since linking can have
+    # run-time side effects, nothing should be listed here.
+    libs = []
+  } else if (is_linux) {
+    libs = [
+      "dl",
+      "pthread",
+      "rt",
+    ]
+  }
+}
+
+config("release") {
+  defines = [ "NDEBUG" ]
+}

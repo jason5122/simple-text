@@ -1,6 +1,8 @@
 import("//build/config/c++/c++.gni")
 
 config("runtime_library") {
+  defines = [ "_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS" ]
+
   # libc++ expects `__assertion_handler` and `__config_site`.
   include_dirs = [ "$llvm_root/include" ]
 

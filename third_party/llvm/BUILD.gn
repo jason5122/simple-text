@@ -4,7 +4,7 @@ source_set("libc++") {
     "include/__config_site",
   ]
 
-  # https://github.com/llvm/llvm-project/blob/2078da43e25a4623cab2d0d60decddf709aaea28/libcxx/src/CMakeLists.txt
+  # https://github.com/llvm/llvm-project/blob/53d18800/libcxx/src/CMakeLists.txt
   sources = [
     "src/libcxx/src/algorithm.cpp",
     "src/libcxx/src/any.cpp",
@@ -78,7 +78,6 @@ source_set("libc++") {
 
   if (is_win) {
     sources += [
-      "src/libcxx/src/support/win32/compiler_rt_shims.cpp",
       "src/libcxx/src/support/win32/locale_win32.cpp",
       "src/libcxx/src/support/win32/support.cpp",
       "src/libcxx/src/support/win32/thread_win32.cpp",
@@ -97,13 +96,15 @@ source_set("libc++") {
     "//build/config/compiler:rtti",
   ]
 
-  if (!is_win) {
+  if (is_posix) {
     defines = [ "LIBCXX_BUILDING_LIBCXXABI" ]
     deps = [ ":libc++abi" ]
   }
 }
 
-if (!is_win) {
+# We don't use libc++abi on Windows because libc++abi only implements the Itanium C++ ABI and not
+# the Microsoft ABI.
+if (is_posix) {
   source_set("libc++abi") {
     sources = [
       "src/libcxxabi/src/abort_message.cpp",
@@ -115,7 +116,6 @@ if (!is_win) {
       "src/libcxxabi/src/cxa_guard.cpp",
       "src/libcxxabi/src/cxa_handlers.cpp",
       "src/libcxxabi/src/cxa_personality.cpp",
-      "src/libcxxabi/src/cxa_thread_atexit.cpp",
       "src/libcxxabi/src/cxa_vector.cpp",
       "src/libcxxabi/src/cxa_virtual.cpp",
       "src/libcxxabi/src/fallback_malloc.cpp",
@@ -124,6 +124,13 @@ if (!is_win) {
       "src/libcxxabi/src/stdlib_stdexcept.cpp",
       "src/libcxxabi/src/stdlib_typeinfo.cpp",
     ]
+
+    if (is_linux) {
+      sources += [ "src/libcxxabi/src/cxa_thread_atexit.cpp" ]
+    }
+
+    defines = [ "LIBCXXABI_SILENT_TERMINATE" ]
+
     include_dirs = [ "src/libcxx/src" ]
 
     configs += [ ":config" ]
@@ -140,16 +147,28 @@ if (!is_win) {
   }
 }
 
-# Used by libc++ and libc++abi.
 config("config") {
-  cflags = [ "-fstrict-aliasing" ]
+  cflags = [
+    "-fstrict-aliasing",
+    "-Wundef",
+    "-Wno-pragma-clang-attribute",
+    "-Wno-ignored-attributes",
+  ]
   if (is_win) {
-    # libc++ wants to redefine the macros WIN32_LEAN_AND_MEAN and _CRT_RAND_S.
-    cflags += [ "-Wno-macro-redefined" ]
-    cflags_cc = [ "-std:c++23preview" ]
+    cflags += [
+      # libc++ wants to redefine the macros WIN32_LEAN_AND_MEAN and _CRT_RAND_S in its implementation.
+      "-Wno-macro-redefined",
+    ]
   } else {
     cflags += [ "-fPIC" ]
-    cflags_cc = [ "-std=c++23" ]
+  }
+
+  # We want to use a uniform C++ version, but upstream libc++ requires C++26.
+  if (is_win) {
+    # cl.exe does not yet have a C++26 flag. clang-cl maps c++latest to C++26.
+    cflags_cc = [ "-std:c++latest" ]
+  } else {
+    cflags_cc = [ "-std=c++26" ]
   }
 
   defines = [ "_LIBCPP_BUILDING_LIBRARY" ]

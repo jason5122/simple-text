@@ -57,10 +57,10 @@ if (is_win) {
   ]
 }
 if (is_release) {
-  default_compiler_configs += [ "//build/config/compiler:release" ]
+  default_compiler_configs += [ "//build/config:release" ]
 }
 
-_linker_configs = []
+_linker_configs = [ "//build/config:default_libs" ]
 if (is_win) {
   # Default to console-mode apps. Most of our targets don't use the windows subsystem.
   _linker_configs += [ "//build/config/win:console" ]

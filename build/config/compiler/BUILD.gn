@@ -18,6 +18,11 @@ config("compiler") {
 
   if (is_linux) {
     defines += [ "_GNU_SOURCE" ]
+
+    # Do not use the -pthread ldflag here since it becomes a no-op when using -nodefaultlibs, which
+    # would cause an unused argument error.
+    # "-lpthread" is added in //build/config:default_libs.
+    cflags += [ "-pthread" ]
   }
 
   if (is_win) {
@@ -28,7 +33,7 @@ config("compiler") {
     cflags_cc += [ "-std=c++23" ]
   }
 
-  if (!is_win) {
+  if (is_posix) {
     ldflags += [ "-fuse-ld=lld" ]
 
     if (is_mac) {
@@ -40,7 +45,7 @@ config("compiler") {
 
   # ThinLTO.
   cflags += [ "-flto=thin" ]
-  if (!is_win) {
+  if (is_posix) {
     ldflags += [ "-flto=thin" ]
   }
 
@@ -283,8 +288,4 @@ config("prevent_unsafe_narrowing") {
     "-Wsign-conversion",
     "-Wtautological-unsigned-zero-compare",
   ]
-}
-
-config("release") {
-  defines = [ "NDEBUG" ]
 }

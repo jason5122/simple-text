@@ -1,0 +1,4 @@
+declare_args() {
+  is_asan = false
+  is_ubsan = false
+}

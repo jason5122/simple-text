@@ -28,3 +28,6 @@
 [submodule "third_party/llvm/src"]
 	path = third_party/llvm/src
 	url = https://github.com/llvm/llvm-project
+[submodule "third_party/fuzztest/src"]
+	path = third_party/fuzztest/src
+	url = https://github.com/google/fuzztest.git

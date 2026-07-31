@@ -74,6 +74,12 @@ config("compiler") {
     ldflags += [ "-Wl,--strict-auto-link" ]
   }
 
+  if (is_posix) {
+    # http://gcc.gnu.org/wiki/Visibility
+    cflags += [ "-fvisibility=hidden" ]
+    cflags_cc += [ "-fvisibility-inlines-hidden" ]
+  }
+
   # Pass the same C/C++ flags to the Objective-C/C++ compiler.
   cflags_objc += cflags_c
   cflags_objcc += cflags_cc

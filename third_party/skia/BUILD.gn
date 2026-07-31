@@ -32,9 +32,11 @@ source_set("skia") {
   if (is_win) {
     sources += [ "src/src/ports/SkDebug_win.cpp" ]
   } else {
-    sources += [ "src/src/ports/SkDebug_stdio.cpp" ]
-    sources += [ "src/src/ports/SkOSFile_posix.cpp" ]
-    sources += [ "src/src/ports/SkMemory_malloc.cpp" ]
+    sources += [
+      "src/src/ports/SkDebug_stdio.cpp",
+      "src/src/ports/SkMemory_malloc.cpp",
+      "src/src/ports/SkOSFile_posix.cpp",
+    ]
   }
 
   configs -= [ "//build/config/compiler:simple_text_code" ]
@@ -48,7 +50,45 @@ source_set("skia") {
     ]
   }
 
+  if (current_cpu == "x64") {
+    deps = [
+      ":skia_hsw",
+      ":skia_skx",
+    ]
+  }
+
   public_configs = [ ":skia_config" ]
+}
+
+if (current_cpu == "x64") {
+  source_set("skia_hsw") {
+    sources = skia_opts.hsw_sources + skcms_TransformHsw
+    if (is_win) {
+      cflags = [ "/arch:AVX2" ]
+    } else {
+      cflags = [ "-march=x86-64-v3" ]
+    }
+
+    configs -= [ "//build/config/compiler:simple_text_code" ]
+    configs += [ "//build/config/compiler:no_simple_text_code" ]
+    configs += [ ":skia_config" ]
+  }
+
+  source_set("skia_skx") {
+    sources = skcms_TransformSkx
+    if (is_win) {
+      cflags = [ "/arch:AVX512" ]
+    } else {
+      cflags = [
+        "-march=x86-64-v4",
+        "-mprefer-vector-width=512",
+      ]
+    }
+
+    configs -= [ "//build/config/compiler:simple_text_code" ]
+    configs += [ "//build/config/compiler:no_simple_text_code" ]
+    configs += [ ":skia_config" ]
+  }
 }
 
 config("skia_config") {

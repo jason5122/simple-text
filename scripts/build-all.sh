@@ -3,9 +3,11 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+export NINJA_STATUS="[%f/%t %w] "
+
 targets=(
     mac-arm64
-    # mac-x64
+    mac-x64
     linux-arm64
     linux-x64
     win-arm64

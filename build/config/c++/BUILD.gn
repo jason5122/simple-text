@@ -1,7 +1,11 @@
 import("//build/config/c++/c++.gni")
 
 config("runtime_library") {
+  # Don't leak any symbols on a static build.
   defines = [ "_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS" ]
+  if (is_posix) {
+    defines += [ "_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS" ]
+  }
 
   # libc++ expects `__assertion_handler` and `__config_site`.
   include_dirs = [ "$llvm_root/include" ]

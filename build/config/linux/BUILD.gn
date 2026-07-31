@@ -6,11 +6,11 @@ config("compiler") {
   } else if (current_cpu == "arm64") {
     _target = "aarch64-unknown-linux-gnu"
   } else {
-    assert(false, "unhandled cpu $current_cpu")
+    assert(false, "unsupported current_cpu: $current_cpu")
   }
-  cflags = [ "--target=" + _target ]
-  asmflags = [ "--target=" + _target ]
-  ldflags = [ "--target=" + _target ]
+  cflags = [ "--target=$_target" ]
+  asmflags = cflags
+  ldflags = cflags
 }
 
 config("runtime_library") {

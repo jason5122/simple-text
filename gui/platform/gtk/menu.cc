@@ -3,7 +3,7 @@
 
 namespace gui {
 
-Menu::Menu() : pimpl{new impl{}} {
+Menu::Menu() : pimpl{new Impl{}} {
     pimpl->menu = g_menu_new();  // TODO: Use smart pointer.
 }
 

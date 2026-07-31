@@ -6,7 +6,7 @@
 namespace gui {
 
 WindowWidget::WindowWidget(App& app, int width, int height)
-    : pimpl{new impl{app.pimpl->app, this, app.pimpl->context}} {}
+    : pimpl{new Impl{app.pimpl->app, this, app.pimpl->context}} {}
 
 WindowWidget::~WindowWidget() {}
 
@@ -41,7 +41,7 @@ void WindowWidget::set_cursor_style(CursorStyle style) {
     }
 
     if (cursor) {
-        GtkWidget* gtk_window = pimpl->main_window.gtkWindow();
+        GtkWidget* gtk_window = pimpl->main_window.gtk_window();
         gtk_widget_set_cursor(gtk_window, cursor);
         g_object_unref(cursor);
     }
@@ -49,7 +49,7 @@ void WindowWidget::set_cursor_style(CursorStyle style) {
 
 namespace {
 gboolean TickCallback(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer user_data) {
-    auto* pimpl = static_cast<WindowWidget::impl*>(user_data);
+    auto* pimpl = static_cast<WindowWidget::Impl*>(user_data);
     WindowWidget* app_window = pimpl->main_window.app_window();
 
     gint64 frame_time = gdk_frame_clock_get_frame_time(frame_clock);
@@ -59,13 +59,13 @@ gboolean TickCallback(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer us
 
     gint64 d = frame_time - pimpl->first_frame_time;
     gint64 ms = d / 1000;
-    app_window->onFrame(ms);
+    app_window->on_frame(ms);
 
     return G_SOURCE_CONTINUE;
 }
 }  // namespace
 
-void WindowWidget::impl::set_auto_redraw(bool auto_redraw) {
+void WindowWidget::Impl::set_auto_redraw(bool auto_redraw) {
     GtkWidget* gtk_window = main_window.gl_area();
     if (!auto_redraw && has_tick_callback) {
         gtk_widget_remove_tick_callback(gtk_window, tick_callback_id);

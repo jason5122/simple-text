@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 
-from fetch_util import extract_zip, get_os_cpu
+from download import extract_zip, get_os_cpu
 
 REPO_URL = "https://github.com/ninja-build/ninja"
 VERSION = "v1.13.2"

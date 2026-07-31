@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 
-from fetch_util import extract_zip, get_os_cpu
+from download import extract_zip, get_os_cpu
 
 CIPD_URL = "https://chrome-infra-packages.appspot.com"
 REV = "103f8b437f5e791e0aef9d5c372521a5d675fabb"

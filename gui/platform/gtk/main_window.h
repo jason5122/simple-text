@@ -15,17 +15,17 @@ public:
     void show();
     void close();
     void redraw();
-    int scale_dactor();
+    int scale_factor();
     bool is_dark_mode();
     void set_title(std::string_view title);
     WindowWidget* app_window() const;
     GtkWidget* gtk_window() const;
-    GtkWidget* gl_area() const { return gl_area; }
+    GtkWidget* gl_area() const { return gl_area_; }
 
 private:
-    WindowWidget* app_window;
-    GtkWidget* window;
-    GtkWidget* gl_area;
+    WindowWidget* app_window_;
+    GtkWidget* window_;
+    GtkWidget* gl_area_;
 };
 
 }  // namespace gui

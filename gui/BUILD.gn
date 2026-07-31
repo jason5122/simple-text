@@ -1,35 +1,75 @@
 source_set("gui") {
   sources = [
+    "platform/action.h",
+    "platform/app.h",
+    "platform/key.h",
+    "platform/menu.h",
+    "platform/window_widget.h",
     "renderer/atlas.cc",
+    "renderer/atlas.h",
     "renderer/debug/renderer_lite.cc",
+    "renderer/debug/renderer_lite.h",
     "renderer/line_layout_cache.cc",
+    "renderer/line_layout_cache.h",
     "renderer/rect_renderer.cc",
+    "renderer/rect_renderer.h",
     "renderer/renderer.cc",
+    "renderer/renderer.h",
     "renderer/selection_renderer.cc",
+    "renderer/selection_renderer.h",
     "renderer/shader.cc",
+    "renderer/shader.h",
     "renderer/texture_cache.cc",
+    "renderer/texture_cache.h",
     "renderer/texture_renderer.cc",
+    "renderer/texture_renderer.h",
+    "renderer/types.h",
+    "types.h",
     "widget/button_widget.cc",
+    "widget/button_widget.h",
+    "widget/container/container_widget.h",
     "widget/container/horizontal_layout_widget.cc",
+    "widget/container/horizontal_layout_widget.h",
     "widget/container/horizontal_resizing_widget.cc",
+    "widget/container/horizontal_resizing_widget.h",
     "widget/container/layout_widget.cc",
+    "widget/container/layout_widget.h",
+    "widget/container/multi_view_widget.h",
     "widget/container/vertical_layout_widget.cc",
+    "widget/container/vertical_layout_widget.h",
     "widget/container/vertical_resizing_widget.cc",
+    "widget/container/vertical_resizing_widget.h",
     "widget/debug/atlas_widget.cc",
+    "widget/debug/atlas_widget.h",
     "widget/debug/solid_color_widget.cc",
+    "widget/debug/solid_color_widget.h",
     "widget/editor_widget.cc",
+    "widget/editor_widget.h",
     "widget/find_panel_widget.cc",
+    "widget/find_panel_widget.h",
     "widget/image_button_widget.cc",
+    "widget/image_button_widget.h",
     "widget/label_widget.cc",
+    "widget/label_widget.h",
     "widget/padding_widget.cc",
+    "widget/padding_widget.h",
     "widget/scrollable_widget.cc",
+    "widget/scrollable_widget.h",
     "widget/side_bar_widget.cc",
+    "widget/side_bar_widget.h",
     "widget/status_bar_widget.cc",
+    "widget/status_bar_widget.h",
     "widget/tab_bar_label_widget.cc",
+    "widget/tab_bar_label_widget.h",
     "widget/tab_bar_widget.cc",
+    "widget/tab_bar_widget.h",
     "widget/text_button_widget.cc",
+    "widget/text_button_widget.h",
     "widget/text_edit_widget.cc",
+    "widget/text_edit_widget.h",
     "widget/text_input_widget.cc",
+    "widget/text_input_widget.h",
+    "widget/widget.h",
   ]
 
   deps = [
@@ -41,8 +81,72 @@ source_set("gui") {
     "//third_party/libjpeg_turbo",
     "//third_party/libspng",
     "//third_party/spdlog",
-
-    # TODO: Refactor this.
-    "//gui/platform",
   ]
+
+  if (is_mac) {
+    sources += [
+      "platform/cocoa/app.mm",
+      "platform/cocoa/display_gl.h",
+      "platform/cocoa/display_gl.mm",
+      "platform/cocoa/gl_layer.h",
+      "platform/cocoa/gl_layer.mm",
+      "platform/cocoa/gl_view.h",
+      "platform/cocoa/gl_view.mm",
+      "platform/cocoa/impl_cocoa.h",
+      "platform/cocoa/menu.mm",
+      "platform/cocoa/menu/app_menu_bridge.h",
+      "platform/cocoa/menu/app_menu_bridge.mm",
+      "platform/cocoa/menu/app_menu_cocoa_controller.h",
+      "platform/cocoa/menu/app_menu_cocoa_controller.mm",
+      "platform/cocoa/window_controller.h",
+      "platform/cocoa/window_controller.mm",
+      "platform/cocoa/window_widget.mm",
+    ]
+
+    frameworks = [
+      "Cocoa.framework",
+      "QuartzCore.framework",
+      "OpenGL.framework",
+    ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+  } else if (is_linux) {
+    sources += [
+      "platform/gtk/app.cc",
+      "platform/gtk/impl_gtk.h",
+      "platform/gtk/main_window.cc",
+      "platform/gtk/main_window.h",
+      "platform/gtk/menu.cc",
+      "platform/gtk/window_widget.cc",
+    ]
+
+    public_configs = [ ":gtk4" ]
+  } else if (is_win) {
+    sources += [
+      "platform/win32/app.cc",
+      "platform/win32/dummy_context.cc",
+      "platform/win32/dummy_context.h",
+      "platform/win32/impl_win.h",
+      "platform/win32/menu.cc",
+      "platform/win32/resources.h",
+      "platform/win32/win32_window.cc",
+      "platform/win32/win32_window.h",
+      "platform/win32/window_widget.cc",
+    ]
+
+    libs = [
+      "user32.lib",
+      "opengl32.lib",
+      "gdi32.lib",
+      "dwrite.lib",
+      "shcore.lib",
+    ]
+  }
+}
+
+if (is_linux) {
+  import("//build/config/linux/pkg_config.gni")
+
+  pkg_config("gtk4") {
+    packages = [ "gtk4" ]
+  }
 }

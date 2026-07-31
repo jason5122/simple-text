@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 
-from fetch_util import extract_tar, get_os_cpu
+from download import extract_tar, get_os_cpu
 
 CLANG_REVISION = "llvmorg-23-init-19482-g53d18800"
 CLANG_SUB_REVISION = 1

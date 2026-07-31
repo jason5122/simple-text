@@ -1,5 +1,5 @@
+#include "base/unicode/unicode.h"
 #include "gui/platform/gtk/main_window.h"
-#include "unicode/unicode.h"
 #include <cmath>
 #include <format>
 #include <spdlog/spdlog.h>
@@ -35,18 +35,18 @@ gboolean key_pressed(GtkEventControllerKey* self,
 }  // namespace
 
 MainWindow::MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLContext* context)
-    : app_window(app_window),
-      window(gtk_application_window_new(gtk_app)),
-      gl_area(gtk_gl_area_new()) {
+    : app_window_(app_window),
+      window_(gtk_application_window_new(gtk_app)),
+      gl_area_(gtk_gl_area_new()) {
 
-    gtk_window_set_title(GTK_WINDOW(window), "Simple Text");
+    gtk_window_set_title(GTK_WINDOW(window_), "Simple Text");
 
     GtkWidget* gtk_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_window_set_child(GTK_WINDOW(window), gtk_box);
+    gtk_window_set_child(GTK_WINDOW(window_), gtk_box);
 
-    gtk_widget_set_hexpand(gl_area, true);
-    gtk_widget_set_vexpand(gl_area, true);
-    gtk_box_append(GTK_BOX(gtk_box), gl_area);
+    gtk_widget_set_hexpand(gl_area_, true);
+    gtk_widget_set_vexpand(gl_area_, true);
+    gtk_box_append(GTK_BOX(gtk_box), gl_area_);
 
     // Add menu bar.
     {
@@ -58,7 +58,7 @@ MainWindow::MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLC
         g_menu_append_item(file_menu, quit_menu_item);
         gtk_application_set_menubar(gtk_app, G_MENU_MODEL(menu_bar));
 
-        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window), true);
+        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window_), true);
 
         const GActionEntry entries[] = {{"quit", quit_callback}};
         g_action_map_add_action_entries(G_ACTION_MAP(gtk_app), entries, G_N_ELEMENTS(entries),
@@ -70,80 +70,83 @@ MainWindow::MainWindow(GtkApplication* gtk_app, WindowWidget* app_window, GdkGLC
     }
 
     // GtkWindow callbacks.
-    g_signal_connect(window, "destroy", G_CALLBACK(destroy), app_window);
+    g_signal_connect(window_, "destroy", G_CALLBACK(destroy), app_window);
     // GtkGLArea callbacks.
-    g_signal_connect(gl_area, "create-context", G_CALLBACK(create_context), context);
-    g_signal_connect(gl_area, "realize", G_CALLBACK(realize), app_window);
-    g_signal_connect(gl_area, "render", G_CALLBACK(render), app_window);
-    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), this);
+    g_signal_connect(gl_area_, "create-context", G_CALLBACK(create_context), context);
+    g_signal_connect(gl_area_, "realize", G_CALLBACK(realize), app_window);
+    g_signal_connect(gl_area_, "render", G_CALLBACK(render), app_window);
+    g_signal_connect(gl_area_, "resize", G_CALLBACK(resize), this);
 
     GtkEventControllerScrollFlags scroll_flags = static_cast<GtkEventControllerScrollFlags>(
         GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES | GTK_EVENT_CONTROLLER_SCROLL_KINETIC);
     GtkEventController* scroll_event_controller = gtk_event_controller_scroll_new(scroll_flags);
-    gtk_widget_add_controller(gl_area, scroll_event_controller);
+    gtk_widget_add_controller(gl_area_, scroll_event_controller);
     g_signal_connect(scroll_event_controller, "scroll", G_CALLBACK(scroll), this);
     g_signal_connect(scroll_event_controller, "decelerate", G_CALLBACK(decelerate), this);
 
     GtkGesture* gesture = gtk_gesture_click_new();
-    gtk_widget_add_controller(gl_area, GTK_EVENT_CONTROLLER(gesture));
+    gtk_widget_add_controller(gl_area_, GTK_EVENT_CONTROLLER(gesture));
     g_signal_connect(gesture, "pressed", G_CALLBACK(pressed), app_window);
     g_signal_connect(gesture, "released", G_CALLBACK(released), app_window);
 
     GtkEventController* motion_event_controller = gtk_event_controller_motion_new();
-    gtk_widget_add_controller(gl_area, motion_event_controller);
+    gtk_widget_add_controller(gl_area_, motion_event_controller);
     g_signal_connect(motion_event_controller, "motion", G_CALLBACK(motion), this);
 
     GtkEventController* key_event_controller = gtk_event_controller_key_new();
-    gtk_widget_add_controller(window, key_event_controller);
+    gtk_widget_add_controller(window_, key_event_controller);
     g_signal_connect(key_event_controller, "key-pressed", G_CALLBACK(key_pressed), app_window);
 
     // gtk_window_maximize(GTK_WINDOW(window));
-    gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
+    gtk_window_set_default_size(GTK_WINDOW(window_), 1000, 600);
 }
 
-void MainWindow::show() { gtk_window_present(GTK_WINDOW(window)); }
+void MainWindow::show() { gtk_window_present(GTK_WINDOW(window_)); }
 
-void MainWindow::close() { gtk_window_close(GTK_WINDOW(window)); }
+void MainWindow::close() { gtk_window_close(GTK_WINDOW(window_)); }
 
-void MainWindow::redraw() { gtk_widget_queue_draw(gl_area); }
+void MainWindow::redraw() { gtk_widget_queue_draw(gl_area_); }
 
-int MainWindow::scale_factor() { return gtk_widget_get_scale_factor(window); }
+int MainWindow::scale_factor() { return gtk_widget_get_scale_factor(window_); }
 
 // TODO: Implement this.
 bool MainWindow::is_dark_mode() { return false; }
 
 void MainWindow::set_title(std::string_view title) {
-    gtk_window_set_title(GTK_WINDOW(window), title.data());
+    gtk_window_set_title(GTK_WINDOW(window_), title.data());
 }
 
-WindowWidget* MainWindow::app_window() const { return app_window; }
+WindowWidget* MainWindow::app_window() const { return app_window_; }
 
-GtkWidget* MainWindow::gtk_window() const { return window; }
+GtkWidget* MainWindow::gtk_window() const { return window_; }
 
 namespace {
 
 void destroy(GtkWidget* self, gpointer user_data) {
     WindowWidget* app_window = static_cast<WindowWidget*>(user_data);
-    app_window->onClose();
+    app_window->on_close();
 }
 
 GdkGLContext* create_context(GtkGLArea* self, gpointer user_data) {
     GdkGLContext* context = static_cast<GdkGLContext*>(user_data);
-    return g_object_ref(context);
+    return GDK_GL_CONTEXT(context);
 }
 
 void realize(GtkGLArea* self, gpointer user_data) {
     gtk_gl_area_make_current(self);
     if (gtk_gl_area_get_error(self) != nullptr) return;
 
-    GdkGLAPI api = gtk_gl_area_get_api(self);
-    if (api == GDK_GL_API_GLES) {
-        spdlog::error("GDK_GL_API_GLES is unsupported!");
-        std::abort();
-    }
+    // TODO: Our GTK version is too old to use `gtk_gl_area_get_api()`. Consider bumping the
+    // sysroot version.
+
+    // GdkGLAPI api = gtk_gl_area_get_api(self);
+    // if (api == GDK_GL_API_GLES) {
+    //     spdlog::error("GDK_GL_API_GLES is unsupported!");
+    //     std::abort();
+    // }
 
     WindowWidget* app_window = static_cast<WindowWidget*>(user_data);
-    app_window->onOpenGLActivate();
+    app_window->on_opengl_activate();
 }
 
 // NOTE: GtkGLArea's size is in physical pixels. Most GTK widgets use logical pixels.
@@ -220,7 +223,7 @@ void decelerate(GtkEventControllerScroll* self, gdouble vel_x, gdouble vel_y, gp
     // delta *= scale_factor;
 
     WindowWidget* app_window = main_window->app_window();
-    app_window->onScrollDecelerate(std::move(mouse_pos), std::move(delta));
+    app_window->on_scroll_decelerate(std::move(mouse_pos), std::move(delta));
 }
 
 void pressed(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data) {
@@ -310,16 +313,16 @@ gboolean key_pressed(GtkEventControllerKey* self,
 
     Key key = KeyFromKeyval(keyval);
     ModifierKey modifiers = ModifierFromState(state);
-    bool handled = app_window->onKeyDown(key, modifiers);
+    bool handled = app_window->on_key_down(key, modifiers);
 
     if (!handled) {
         guint32 codepoint = gdk_keyval_to_unicode(keyval);
         if (codepoint > 0) {
-            char utf8[unicode::kMaxBytesInUTF8Sequence];
-            size_t utf8_len = unicode::ToUTF8(codepoint, utf8);
+            char utf8[base::kMaxBytesInUTF8Sequence];
+            size_t utf8_len = base::codepoint_to_utf8(codepoint, utf8);
 
             std::string str8(utf8, utf8_len);
-            app_window->onInsertText(str8);
+            app_window->on_insert_text(str8);
 
             spdlog::info("str8 = {}, codepoint = {}", str8, codepoint);
         }

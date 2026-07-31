@@ -1,7 +1,5 @@
-bin/gn
-bin/gn.exe
-bin/ninja
-bin/ninja.exe
+bin/
+third_party/mac-sysroot/
 third_party/linux-sysroot/
 third_party/llvm-toolchain/
 third_party/xwin/

@@ -36,6 +36,7 @@ private:
 #elif BUILDFLAG(IS_LINUX)
     static constexpr int kMainFontSize = 12;
     static constexpr int kUIFontSizeSmall = 11;
+    static constexpr int kUIFontSizeRegular = 12;
     const std::string kMainFontFace = "Source Code Pro";
     // const std::string kMainFontFace = "Monospace";
 #endif

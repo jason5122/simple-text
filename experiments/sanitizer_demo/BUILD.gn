@@ -2,11 +2,15 @@ executable("sanitizer_demo") {
   sources = [ "main.cc" ]
 }
 
-# Exceptions are off tree-wide (-fno-exceptions), so demonstrating the
-# std::terminate death path needs its own target that re-enables them.
 executable("uncaught_exception") {
   sources = [ "uncaught_exception.cc" ]
 
-  configs -= [ "//build/config/compiler:no_exceptions" ]
-  configs += [ "//build/config/compiler:exceptions" ]
+  configs -= [
+    "//build/config/compiler:no_exceptions",
+    "//build/config/compiler:no_rtti",
+  ]
+  configs += [
+    "//build/config/compiler:exceptions",
+    "//build/config/compiler:rtti",
+  ]
 }

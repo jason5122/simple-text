@@ -1,12 +1,21 @@
 source_set("editor") {
   sources = [
     "buffer/piece_tree.cc",
+    "buffer/piece_tree.h",
     "buffer/red_black_tree.cc",
+    "buffer/red_black_tree.h",
     "movement.cc",
+    "movement.h",
     "search/ac_fast.cc",
+    "search/ac_fast.h",
     "search/ac_slow.cc",
+    "search/ac_slow.h",
     "search/aho_corasick.cc",
+    "search/aho_corasick.h",
+    "selection.h",
   ]
+
+  public_deps = [ "//font" ]
 
   deps = [
     "//base",

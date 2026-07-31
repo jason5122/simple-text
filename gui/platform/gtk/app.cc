@@ -12,17 +12,17 @@ static void activate(GtkApplication* gtk_app, gpointer p_app) {
     app->pimpl->context = gdk_display_create_gl_context(display, &error);
 
     gdk_gl_context_make_current(app->pimpl->context);
-    app->onLaunch();
+    app->on_launch();
     gdk_gl_context_clear_current();
 }
 
-App::App() : pimpl{new impl{}} {
+App::App() : pimpl{new Impl{}} {
     g_setenv("GDK_DEBUG", "gl-prefer-gl", 1);
     // TODO: Disable Cairo when not testing with emulator.
     //       We enable Cairo since OpenGL has a 1-2 second startup delay on emulator.
     // g_setenv("GSK_RENDERER", "cairo", 1);
 
-    pimpl->app = gtk_application_new("com.jason.simple-text", G_APPLICATION_DEFAULT_FLAGS);
+    pimpl->app = gtk_application_new("com.jason.simple-text", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(pimpl->app, "activate", G_CALLBACK(activate), this);
 }
 

@@ -1,5 +1,3 @@
-import("//build/config/linux/pkg_config.gni")
-
 source_set("text") {
   sources = [ "font_rasterizer.cc" ]
 
@@ -32,6 +30,8 @@ source_set("text") {
 }
 
 if (is_linux) {
+  import("//build/config/linux/pkg_config.gni")
+
   pkg_config("linux_font_libs") {
     packages = [ "pangocairo" ]
   }

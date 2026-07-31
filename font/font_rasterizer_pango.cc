@@ -113,7 +113,11 @@ RasterizedGlyph FontRasterizer::rasterize(size_t font_id, uint32_t glyph_id) con
     pango_glyph_string_set_size(glyph_string.get(), 1);
 
     PangoGlyphInfo gi = pimpl->glyph_info_cache[font_id][glyph_id];
-    bool colored = gi.attr.is_color;
+    // TODO: Our Pango version is too old to use PangoGlyphVisAttr::is_color. Consider upgrading
+    // the sysroot version or removing Pango.
+
+    // bool colored = gi.attr.is_color;
+    bool colored = false;
     glyph_string->glyphs[0] = std::move(gi);
 
     std::vector<uint8_t> bitmap_data(height * width * 4);

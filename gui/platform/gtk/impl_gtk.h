@@ -8,15 +8,15 @@
 
 namespace gui {
 
-class App::impl {
+class App::Impl {
 public:
     GtkApplication* app;
     GdkGLContext* context;
 };
 
-class WindowWidget::impl {
+class WindowWidget::Impl {
 public:
-    impl(GtkApplication* app, WindowWidget* app_window, GdkGLContext* context)
+    Impl(GtkApplication* app, WindowWidget* app_window, GdkGLContext* context)
         : main_window(app, app_window, context) {}
 
     MainWindow main_window;
@@ -24,10 +24,10 @@ public:
     guint tick_callback_id = 0;
     gint64 first_frame_time = 0;
 
-    void setAutoRedraw(bool auto_redraw);
+    void set_auto_redraw(bool auto_redraw);
 };
 
-class Menu::impl {
+class Menu::Impl {
 public:
     GMenu* menu;  // TODO: Use smart pointer.
 };

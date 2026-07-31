@@ -5,9 +5,9 @@
 This repository uses Git submodules. Clone it recursively with `git clone --recursive`.
 
 ```bash
-python3 bin/fetch-gn
-python3 bin/fetch-ninja
-python3 bin/fetch-llvm-toolchain
+python3 scripts/fetch_gn.py
+python3 scripts/fetch_ninja.py
+python3 scripts/fetch_llvm_toolchain.py  # Fetches clang and your host OS runtime library.
 
 bin/gn gen out/release --args='is_release=true'
 bin/ninja -C out/release
@@ -18,7 +18,7 @@ bin/ninja -C out/release
 It is recommended to use a version of clangd that matches the LLVM toolchain:
 
 ```bash
-python3 bin/fetch-llvm-toolchain --package=clangd
+python3 scripts/fetch_llvm_toolchain.py clangd
 ```
 
 GN automatically generates `compile_commands.json` in the build directory (e.g., `out/release`). Configure clangd to search this directory.

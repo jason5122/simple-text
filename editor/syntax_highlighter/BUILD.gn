@@ -1,8 +1,12 @@
 source_set("syntax_highlighter") {
   sources = [
     "highlighter.cc",
+    "highlighter.h",
     "language.cc",
+    "language.h",
     "parse_tree.cc",
+    "parse_tree.h",
+    "types.h",
   ]
 
   deps = [

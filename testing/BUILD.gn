@@ -13,6 +13,14 @@ source_set("gtest") {
   }
 }
 
+group("fuzztest") {
+  testonly = true
+  public_deps = [
+    ":gtest",
+    "//third_party/fuzztest:init_fuzztest",
+  ]
+}
+
 executable("unit_tests") {
   testonly = true
 
@@ -22,9 +30,10 @@ executable("unit_tests") {
   }
 
   deps = [
-    ":gtest",
+    ":fuzztest",
     "//base:base_unittests",
     "//editor:editor_unittests",
+    "//experiments/fuzztest_demo",
     "//font:font_unittests",
   ]
 }
@@ -35,7 +44,7 @@ executable("perf_tests") {
   sources = [ "main.cc" ]
 
   deps = [
-    ":gtest",
+    ":fuzztest",
     "//base:base_perftests",
     "//editor:editor_perftests",
     "//font:font_perftests",

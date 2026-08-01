@@ -1,0 +1,10 @@
+source_set("fuzztest_demo") {
+  testonly = true
+
+  sources = [
+    "fuzztest_demo.h",
+    "fuzztest_demo_test.cc",
+  ]
+
+  deps = [ "//testing:fuzztest" ]
+}

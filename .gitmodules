@@ -31,3 +31,6 @@
 [submodule "third_party/fuzztest/src"]
 	path = third_party/fuzztest/src
 	url = https://github.com/google/fuzztest.git
+[submodule "third_party/abseil-cpp/src"]
+	path = third_party/abseil-cpp/src
+	url = https://github.com/abseil/abseil-cpp.git

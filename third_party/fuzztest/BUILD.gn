@@ -1,0 +1,132 @@
+assert(path_exists("src/fuzztest"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
+source_set("fuzztest") {
+  testonly = true
+
+  sources = [
+    "src/common/bazel.cc",
+    "src/common/bazel.h",
+    "src/common/blob_file.cc",
+    "src/common/blob_file.h",
+    "src/common/crashing_input_filename.cc",
+    "src/common/crashing_input_filename.h",
+    "src/common/defs.h",
+    "src/common/hash.cc",
+    "src/common/hash.h",
+    "src/common/logging.h",
+    "src/common/remote_file.cc",
+    "src/common/remote_file.h",
+    "src/common/remote_file_oss.cc",
+    "src/common/sha1.cc",
+    "src/common/sha1.h",
+    "src/common/temp_dir.cc",
+    "src/common/temp_dir.h",
+    "src/fuzztest/domain_core.h",
+    "src/fuzztest/fuzzing_bit_gen.cc",
+    "src/fuzztest/fuzzing_bit_gen.h",
+    "src/fuzztest/fuzztest_core.h",
+    "src/fuzztest/fuzztest_macros.cc",
+    "src/fuzztest/fuzztest_macros.h",
+    "src/fuzztest/googletest_fixture_adapter.h",
+    "src/fuzztest/internal/any.h",
+    "src/fuzztest/internal/configuration.cc",
+    "src/fuzztest/internal/configuration.h",
+    "src/fuzztest/internal/corpus_database.cc",
+    "src/fuzztest/internal/corpus_database.h",
+    "src/fuzztest/internal/coverage.cc",
+    "src/fuzztest/internal/coverage.h",
+    "src/fuzztest/internal/domains/absl_helpers.h",
+    "src/fuzztest/internal/domains/aggregate_of_impl.h",
+    "src/fuzztest/internal/domains/arbitrary_impl.h",
+    "src/fuzztest/internal/domains/bit_flag_combination_of_impl.h",
+    "src/fuzztest/internal/domains/bit_gen_ref.h",
+    "src/fuzztest/internal/domains/container_mutation_helpers.h",
+    "src/fuzztest/internal/domains/container_of_impl.h",
+    "src/fuzztest/internal/domains/domain_base.h",
+    "src/fuzztest/internal/domains/element_of_impl.h",
+    "src/fuzztest/internal/domains/filter_impl.h",
+    "src/fuzztest/internal/domains/flat_map_impl.h",
+    "src/fuzztest/internal/domains/in_range_impl.h",
+    "src/fuzztest/internal/domains/map_impl.h",
+    "src/fuzztest/internal/domains/one_of_impl.h",
+    "src/fuzztest/internal/domains/optional_of_impl.h",
+    "src/fuzztest/internal/domains/rune.cc",
+    "src/fuzztest/internal/domains/rune.h",
+    "src/fuzztest/internal/domains/serialization_helpers.h",
+    "src/fuzztest/internal/domains/smart_pointer_of_impl.h",
+    "src/fuzztest/internal/domains/unique_elements_container_of_impl.h",
+    "src/fuzztest/internal/domains/utf.cc",
+    "src/fuzztest/internal/domains/utf.h",
+    "src/fuzztest/internal/domains/value_mutation_helpers.h",
+    "src/fuzztest/internal/domains/variant_of_impl.h",
+    "src/fuzztest/internal/escaping.cc",
+    "src/fuzztest/internal/escaping.h",
+    "src/fuzztest/internal/fixture_driver.cc",
+    "src/fuzztest/internal/fixture_driver.h",
+    "src/fuzztest/internal/googletest_adaptor.cc",
+    "src/fuzztest/internal/googletest_adaptor.h",
+    "src/fuzztest/internal/io.cc",
+    "src/fuzztest/internal/io.h",
+    "src/fuzztest/internal/logging.cc",
+    "src/fuzztest/internal/logging.h",
+    "src/fuzztest/internal/meta.h",
+    "src/fuzztest/internal/register_absl_fuzzing_mocks.cc",
+    "src/fuzztest/internal/register_absl_fuzzing_mocks.h",
+    "src/fuzztest/internal/registration.h",
+    "src/fuzztest/internal/registry.cc",
+    "src/fuzztest/internal/registry.h",
+    "src/fuzztest/internal/runtime.cc",
+    "src/fuzztest/internal/runtime.h",
+    "src/fuzztest/internal/sanitizer_interface.cc",
+    "src/fuzztest/internal/sanitizer_interface.h",
+    "src/fuzztest/internal/seed_seq.cc",
+    "src/fuzztest/internal/seed_seq.h",
+    "src/fuzztest/internal/serialization.cc",
+    "src/fuzztest/internal/serialization.h",
+    "src/fuzztest/internal/status.cc",
+    "src/fuzztest/internal/status.h",
+    "src/fuzztest/internal/subprocess.cc",
+    "src/fuzztest/internal/subprocess.h",
+    "src/fuzztest/internal/table_of_recent_compares.h",
+    "src/fuzztest/internal/type_support.cc",
+    "src/fuzztest/internal/type_support.h",
+  ]
+
+  public_configs = [ ":fuzztest_config" ]
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
+  public_deps = [
+    "//testing:gtest",
+    "//third_party/abseil-cpp:absl_full",
+  ]
+}
+
+source_set("init_fuzztest") {
+  testonly = true
+  sources = [
+    "src/fuzztest/init_fuzztest.cc",
+    "src/fuzztest/init_fuzztest.h",
+  ]
+  public_deps = [ ":fuzztest" ]
+  deps = [
+    "//testing:gtest",
+    "//third_party/abseil-cpp:absl_full",
+  ]
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+}
+
+config("fuzztest_config") {
+  include_dirs = [ "src" ]
+  defines = [
+    "CENTIPEDE_DISABLE_RIEGELI",
+    "FUZZTEST_NO_LEGACY_COVERAGE",
+  ]
+  cflags = [
+    "-Wno-sign-compare",
+    "-Wno-nullability-completeness",
+  ]
+}

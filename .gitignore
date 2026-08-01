@@ -1,13 +1,10 @@
-bin/
-third_party/mac-sysroot/
-third_party/linux-sysroot/
-third_party/llvm-toolchain/
-third_party/xwin/
+/third_party/mac-sysroot/
+/third_party/linux-sysroot/
+/third_party/llvm-toolchain/
+/third_party/xwin/
+/bin/
+/out/
+
 .xwin-cache/
-
-out/
-__pycache__/
-
-# Ignore clangd files.
-compile_commands.json
 .cache/
+__pycache__/

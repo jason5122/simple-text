@@ -1,4 +1,5 @@
 declare_args() {
   is_asan = false
   is_ubsan = false
+  enable_fuzztest_fuzz = false
 }

@@ -1,3 +1,5 @@
+import("//build/config/sanitizers/sanitizers.gni")
+
 assert(path_exists("src/fuzztest"),
        "Missing submodules. Run: git submodule update --init --recursive")
 
@@ -121,10 +123,12 @@ source_set("init_fuzztest") {
 
 config("fuzztest_config") {
   include_dirs = [ "src" ]
-  defines = [
-    "CENTIPEDE_DISABLE_RIEGELI",
-    "FUZZTEST_NO_LEGACY_COVERAGE",
-  ]
+
+  defines = [ "CENTIPEDE_DISABLE_RIEGELI" ]
+  if (!enable_fuzztest_fuzz) {
+    defines += [ "FUZZTEST_NO_LEGACY_COVERAGE" ]
+  }
+
   cflags = [
     "-Wno-sign-compare",
     "-Wno-nullability-completeness",

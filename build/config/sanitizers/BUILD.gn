@@ -5,6 +5,7 @@ config("default_sanitizer_flags") {
   configs = [
     ":asan_flags",
     ":ubsan_flags",
+    ":fuzztest_coverage",
   ]
 }
 
@@ -34,5 +35,11 @@ config("ubsan_flags") {
     if (is_posix) {
       ldflags = [ "-fsanitize=undefined" ]
     }
+  }
+}
+
+config("fuzztest_coverage") {
+  if (enable_fuzztest_fuzz) {
+    cflags = [ "-fsanitize-coverage=inline-8bit-counters" ]
   }
 }

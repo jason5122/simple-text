@@ -23,6 +23,6 @@ for t in "${targets[@]}"; do
         sanitizers=""
     fi
     rm -rf "out/$t"
-    bin/gn gen "out/$t" --args="target_os=\"$os\" target_cpu=\"$cpu\" $sanitizers"
+    bin/gn gen "out/$t" --args="target_os=\"$os\" target_cpu=\"$cpu\" is_release=true $sanitizers"
     bin/ninja -C "out/$t"
 done

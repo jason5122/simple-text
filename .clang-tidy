@@ -8,4 +8,6 @@ clang-analyzer-*,
 misc-*,
 -misc-unused-parameters,
 -misc-const-correctness,
--misc-no-recursion'
+-misc-no-recursion,
+-misc-use-internal-linkage,
+-misc-use-anonymous-namespace'

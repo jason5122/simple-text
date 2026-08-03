@@ -1,28 +1,36 @@
 #include "experiments/fuzztest_demo/fuzztest_demo.h"
+#include <algorithm>
 #include <fuzztest/fuzztest_core.h>
 #include <gtest/gtest.h>
 #include <string>
 
 namespace fuzztest_demo {
-namespace {
 
-// A plain GoogleTest test still works alongside fuzz tests.
-TEST(AddTest, IsCommutative) { EXPECT_EQ(Add(2, 3), Add(3, 2)); }
+TEST(FuzzTestDemo, IsCommutative) { EXPECT_EQ(add(2, 3), add(3, 2)); }
 
-// Property: adding zero returns the original value. FuzzTest will try many
-// values of `n` (and mutate toward interesting ones like INT_MIN/INT_MAX).
-void AddingZeroIsIdentity(int n) { EXPECT_EQ(Add(n, 0), n); }
-FUZZ_TEST(AddTest, AddingZeroIsIdentity);
+void AddingZeroIsIdentity(int n) { EXPECT_EQ(add(n, 0), n); }
+FUZZ_TEST(FuzzTestDemo, AddingZeroIsIdentity);
 
-// Property: reversing a string twice yields the original string.
-void ReverseIsItsOwnInverse(const std::string& s) { EXPECT_EQ(Reverse(Reverse(s)), s); }
-FUZZ_TEST(ReverseTest, ReverseIsItsOwnInverse);
+void ReverseIsItsOwnInverse(const std::string& s) { EXPECT_EQ(reverse(reverse(s)), s); }
+FUZZ_TEST(FuzzTestDemo, ReverseIsItsOwnInverse);
 
-// Property: a string followed by its reverse is always a palindrome.
 void StringWithItsReverseIsAPalindrome(const std::string& s) {
-    EXPECT_TRUE(IsPalindrome(s + Reverse(s)));
+    EXPECT_TRUE(is_palindrome(s + reverse(s)));
 }
-FUZZ_TEST(PalindromeTest, StringWithItsReverseIsAPalindrome);
+FUZZ_TEST(FuzzTestDemo, StringWithItsReverseIsAPalindrome);
 
-}  // namespace
+void AverageIsBetweenInputs(int a, int b) {
+    const int lo = std::min(a, b);
+    const int hi = std::max(a, b);
+    const int avg = average(a, b);
+    EXPECT_GE(avg, lo);
+    EXPECT_LE(avg, hi);
+}
+FUZZ_TEST(FuzzTestDemo, AverageIsBetweenInputs);
+
+void EncodeDecodeNewlinesRoundtrips(const std::string& s) {
+    EXPECT_EQ(decode_newlines(encode_newlines(s)), s);
+}
+FUZZ_TEST(FuzzTestDemo, EncodeDecodeNewlinesRoundtrips);
+
 }  // namespace fuzztest_demo

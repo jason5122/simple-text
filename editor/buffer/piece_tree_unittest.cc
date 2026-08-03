@@ -1,8 +1,10 @@
 #include "base/rand_util.h"
 #include "editor/buffer/piece_tree.h"
 #include <algorithm>
+#include <fuzztest/fuzztest_core.h>
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
+#include <tuple>
 
 namespace editor {
 
@@ -969,5 +971,80 @@ TEST(PieceTreeTest, FindTest2) {
 
     ASSERT_FALSE(tree.find("\x8F\x9F"));
 }
+
+// Property-based (FuzzTest) versions of the differential `*RandomTest` cases
+// above: they hold a plain `std::string` as the reference model, apply the same
+// operations to it and to the `PieceTree`, and assert the two stay in sync. The
+// fuzzer drives the inputs and mutates toward interesting ones (empty strings,
+// embedded '\n'/'\0', boundary offsets), so these explore far more states than
+// the fixed-iteration random tests. Run one continuously with e.g.
+// `unit_tests --fuzz=PieceTreeFuzzTest.EditsMatchStringModel`.
+
+// A freshly constructed tree reproduces its input exactly, for any bytes.
+void ConstructionMatchesInput(const std::string& s) {
+    PieceTree tree{s};
+    EXPECT_EQ(tree.str(), s);
+    EXPECT_EQ(tree.length(), s.length());
+}
+FUZZ_TEST(PieceTreeFuzzTest, ConstructionMatchesInput);
+
+// An arbitrary sequence of inserts and erases keeps the tree equal to the same
+// edits applied to a std::string. Each edit is (is_insert, offset, count, text);
+// the offset is taken modulo length+1 so it is always valid for both.
+void EditsMatchStringModel(const std::string& initial,
+                           const std::vector<std::tuple<bool, size_t, size_t, std::string>>& edits) {
+    std::string str = initial;
+    PieceTree tree{initial};
+    ASSERT_EQ(tree.str(), str);
+
+    for (const auto& [is_insert, raw_offset, count, text] : edits) {
+        const size_t offset = raw_offset % (str.length() + 1);
+        if (is_insert) {
+            str.insert(offset, text);
+            tree.insert(offset, text);
+        } else {
+            str.erase(offset, count);
+            tree.erase(offset, count);
+        }
+        ASSERT_EQ(tree.str(), str);
+        ASSERT_EQ(tree.length(), str.length());
+    }
+}
+FUZZ_TEST(PieceTreeFuzzTest, EditsMatchStringModel);
+
+// substr(offset, count) matches std::string::substr for any offset/count.
+void SubstrMatchesStringModel(const std::string& s, size_t raw_offset, size_t count) {
+    PieceTree tree{s};
+    const size_t offset = raw_offset % (s.length() + 1);
+    EXPECT_EQ(tree.substr(offset, count), s.substr(offset, count));
+}
+FUZZ_TEST(PieceTreeFuzzTest, SubstrMatchesStringModel);
+
+// line_column_at agrees with a direct scan of the text at every offset.
+void LineColumnAtMatchesScan(const std::string& s) {
+    PieceTree tree{s};
+    size_t line = 0;
+    size_t col = 0;
+    for (size_t i = 0; i <= s.length(); ++i) {
+        const BufferCursor expected{line, col};
+        ASSERT_EQ(tree.line_column_at(i), expected);
+        if (i < s.length() && s[i] == '\n') {
+            ++line;
+            col = 0;
+        } else {
+            ++col;
+        }
+    }
+}
+FUZZ_TEST(PieceTreeFuzzTest, LineColumnAtMatchesScan);
+
+// The reported line-feed/line counts match the number of '\n' bytes.
+void LineFeedCountMatchesNewlines(const std::string& s) {
+    PieceTree tree{s};
+    const size_t newlines = std::ranges::count(s, '\n');
+    EXPECT_EQ(tree.line_feed_count(), newlines);
+    EXPECT_EQ(tree.line_count(), newlines + 1);
+}
+FUZZ_TEST(PieceTreeFuzzTest, LineFeedCountMatchesNewlines);
 
 }  // namespace editor

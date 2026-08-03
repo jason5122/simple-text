@@ -39,7 +39,7 @@ source_set("editor_unittests") {
     ":editor",
     "//base",
     "//font",
-    "//testing:gtest",
+    "//testing:fuzztest",
     "//third_party/spdlog",
     "//third_party/uni_algo",
   ]

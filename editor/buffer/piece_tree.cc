@@ -267,7 +267,7 @@ PieceTree::PieceTree(std::string_view txt) {
             .length = buf.buffer.size(),
             .lf_count = last_line,
         };
-        root_.insert(0, {piece});
+        root_ = root_.insert(0, {piece});
     }
 }
 
@@ -302,7 +302,11 @@ std::string PieceTree::str() const {
 
 std::string PieceTree::substr(size_t offset, size_t count) const {
     std::string str;
-    str.reserve(count);
+    // Reserve only what can actually be produced: `count` may be a sentinel like
+    // std::string::npos, and reserving that much throws length_error (which
+    // aborts under -fno-exceptions).
+    const size_t remaining = offset < length() ? length() - offset : 0;
+    str.reserve(std::min(count, remaining));
     TreeWalker walker{*this, offset};
     for (size_t i = 0; i < count && !walker.exhausted(); ++i) {
         str.push_back(walker.next());
@@ -428,13 +432,12 @@ void PieceTree::combine_pieces(NodePosition existing, Piece new_piece) {
     // This transformation is only valid under the following conditions.
     DCHECK_EQ(existing.node.piece().type, BufferType::Mod);
     // This assumes that the piece was just built.
-    // DCHECK_EQ(existing.node.piece().last, new_piece.first);
+    DCHECK_EQ(existing.node.piece().last, new_piece.first);
     auto old_piece = existing.node.piece();
     new_piece.first = old_piece.first;
     new_piece.lf_count = new_piece.lf_count + old_piece.lf_count;
     new_piece.length = new_piece.length + old_piece.length;
-    root_.remove(existing.start_offset);
-    root_.insert(existing.start_offset, {new_piece});
+    root_ = root_.remove(existing.start_offset).insert(existing.start_offset, {new_piece});
 }
 
 void PieceTree::remove_node_range(NodePosition first, size_t length) {
@@ -458,7 +461,7 @@ void PieceTree::remove_node_range(NodePosition first, size_t length) {
     size_t deleted_len = 0;
     while (deleted_len < length && first.node) {
         deleted_len += first.node.piece().length;
-        root_.remove(delete_at_offset);
+        root_ = root_.remove(delete_at_offset);
         first = node_at(root_, buffers_, delete_at_offset);
     }
 }
@@ -474,7 +477,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
 
     if (!root_) {
         auto piece = build_piece(txt);
-        root_.insert(0, {piece});
+        root_ = root_.insert(0, {piece});
         return;
     }
 
@@ -512,7 +515,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
             }
         }
         auto piece = build_piece(txt);
-        root_.insert(offset, {piece});
+        root_ = root_.insert(offset, {piece});
         return;
     }
 
@@ -533,7 +536,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
         }
         // Insert the new piece at the end.
         auto piece = build_piece(txt);
-        root_.insert(offset, {piece});
+        root_ = root_.insert(offset, {piece});
         return;
     }
 
@@ -555,18 +558,18 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     auto new_piece = build_piece(txt);
 
     // Remove the original node.
-    root_.remove(node_start_offset);
+    root_ = root_.remove(node_start_offset);
 
     // Insert the left.
-    root_.insert(node_start_offset, {new_piece_left});
+    root_ = root_.insert(node_start_offset, {new_piece_left});
 
     // Insert the new mid.
     node_start_offset = node_start_offset + new_piece_left.length;
-    root_.insert(node_start_offset, {new_piece});
+    root_ = root_.insert(node_start_offset, {new_piece});
 
     // Insert remainder.
     node_start_offset = node_start_offset + new_piece.length;
-    root_.insert(node_start_offset, {new_piece_right});
+    root_ = root_.insert(node_start_offset, {new_piece_right});
 }
 
 void PieceTree::erase(size_t offset, size_t count) {
@@ -596,11 +599,11 @@ void PieceTree::erase(size_t offset, size_t count) {
         auto left = trim_piece_right(buffers_, first_node.piece(), start_split_pos);
         auto right = trim_piece_left(buffers_, first_node.piece(), end_split_pos);
 
-        root_.remove(first.start_offset);
+        root_ = root_.remove(first.start_offset);
         // Note: We insert right first so that the 'left' will be inserted to the right node's
         // left.
-        if (right.length > 0) root_.insert(first.start_offset, {right});
-        if (left.length > 0) root_.insert(first.start_offset, {left});
+        if (right.length > 0) root_ = root_.insert(first.start_offset, {right});
+        if (left.length > 0) root_ = root_.insert(first.start_offset, {left});
         return;
     }
 
@@ -624,13 +627,13 @@ void PieceTree::erase(size_t offset, size_t count) {
         // this scenario to avoid inserting a duplicate of 'last'.
         if (last.remainder != 0) {
             if (new_last.length != 0) {
-                root_.insert(first.start_offset, {new_last});
+                root_ = root_.insert(first.start_offset, {new_last});
             }
         }
     }
 
     if (new_first.length != 0) {
-        root_.insert(first.start_offset, {new_first});
+        root_ = root_.insert(first.start_offset, {new_first});
     }
 }
 

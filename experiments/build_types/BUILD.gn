@@ -1,0 +1,33 @@
+group("build_types") {
+  deps = [
+    ":build_types_demo",
+    ":greeter_module",
+    ":greeter_shared",
+  ]
+}
+
+executable("build_types_demo") {
+  sources = [ "main.cc" ]
+  deps = [
+    ":greeter_source_set",
+    ":greeter_static",
+  ]
+}
+
+source_set("greeter_source_set") {
+  sources = [ "greeter_source_set.cc" ]
+  public = [ "greeter_source_set.h" ]
+}
+
+static_library("greeter_static") {
+  sources = [ "greeter_static.cc" ]
+  public = [ "greeter_static.h" ]
+}
+
+shared_library("greeter_shared") {
+  sources = [ "greeter_shared.cc" ]
+}
+
+loadable_module("greeter_module") {
+  sources = [ "greeter_module.cc" ]
+}

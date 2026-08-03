@@ -12,6 +12,7 @@ group("tests") {
 
 group("experiments") {
   deps = [
+    "//experiments/build_types",
     "//experiments/compiler_builtins_canary",
     "//experiments/fuzz",
     "//experiments/parser",

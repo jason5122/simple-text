@@ -12,6 +12,9 @@ toolchain("clang") {
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
 
     command = "$cxx {{ldflags}} -o {{output}} @$rspfile"
+    if (is_release) {
+      command += " && ${prefix}llvm-strip -x -S {{output}}"
+    }
     description = "LINK {{output}}"
 
     outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
@@ -40,11 +43,34 @@ toolchain("clang") {
     rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
 
     command = "$cxx -dynamiclib {{ldflags}} -o {{output}} @$rspfile"
+    if (is_release) {
+      command += " && ${prefix}llvm-strip -x -S {{output}}"
+    }
     description = "SOLINK {{output}}"
 
     outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
-    default_output_dir = "{{target_out_dir}}"
+    default_output_dir = "{{root_out_dir}}"
     default_output_extension = ".dylib"
+    output_prefix = "lib"
+
+    # A shared_library has dependents, so let ninja skip relinking them when the relinked library
+    # comes out unchanged.
+    restat = true
+  }
+
+  tool("solink_module") {
+    rspfile = "{{output}}.rsp"
+    rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{frameworks}}"
+
+    command = "$cxx -bundle {{ldflags}} -o {{output}} @$rspfile"
+    if (is_release) {
+      command += " && ${prefix}llvm-strip -x -S {{output}}"
+    }
+    description = "SOLINK_MODULE {{output}}"
+
+    outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
+    default_output_dir = "{{root_out_dir}}"
+    default_output_extension = ".so"
     output_prefix = "lib"
   }
 

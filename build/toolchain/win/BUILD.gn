@@ -62,6 +62,20 @@ toolchain("clang") {
     restat = true
   }
 
+  tool("solink_module") {
+    dllname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    rspfile = "${dllname}.rsp"
+    rspfile_content = "{{inputs}} {{libs}} {{solibs}} {{ldflags}}"
+
+    command = "$link /DLL /noimplib \"/OUT:$dllname\" /nologo \"@$rspfile\""
+    description = "LINK_MODULE(DLL) {{output}}"
+
+    outputs = [ dllname ]
+    runtime_outputs = outputs
+    default_output_dir = "{{root_out_dir}}"
+    default_output_extension = ".dll"
+  }
+
   tool("cc") {
     depsformat = "msvc"
     precompiled_header_type = "msvc"

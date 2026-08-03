@@ -12,6 +12,9 @@ toolchain("clang") {
     rspfile_content = "{{inputs}} {{libs}} {{solibs}}"
 
     command = "$cxx {{ldflags}} -o {{output}} @$rspfile"
+    if (is_release) {
+      command += " && ${prefix}llvm-strip {{output}}"
+    }
     description = "LINK {{output}}"
 
     outputs = [ "{{output_dir}}/{{target_output_name}}{{output_extension}}" ]
@@ -33,6 +36,29 @@ toolchain("clang") {
     default_output_dir = "{{target_out_dir}}"
     default_output_extension = ".a"
     output_prefix = "lib"
+  }
+
+  tool("solink") {
+    soname = "{{target_output_name}}{{output_extension}}"  # e.g. "libfoo.so".
+    sofile = "{{output_dir}}/$soname"
+    rspfile = "$sofile.rsp"
+    rspfile_content = "{{inputs}} {{libs}} {{solibs}}"
+
+    command =
+        "$cxx -shared {{ldflags}} -Wl,-soname=$soname -o $sofile @$rspfile"
+    if (is_release) {
+      command += " && ${prefix}llvm-strip $sofile"
+    }
+    description = "SOLINK $sofile"
+
+    outputs = [ sofile ]
+    link_output = sofile
+    depend_output = sofile
+    restat = true
+
+    output_prefix = "lib"
+    default_output_extension = ".so"
+    default_output_dir = "{{root_out_dir}}"
   }
 
   tool("solink_module") {

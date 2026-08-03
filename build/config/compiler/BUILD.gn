@@ -188,8 +188,10 @@ config("simple_text_code") {
     # Opt in to additional [[nodiscard]] on standard library methods.
     defines = [ "_HAS_NODISCARD" ]
   } else {
-    cflags += [ "-Wall" ]
-    cflags += [ "-Wextra" ]  # Clang-specific.
+    cflags += [
+      "-Wall",
+      "-Wextra",
+    ]
   }
 
   if (is_mac) {

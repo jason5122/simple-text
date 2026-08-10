@@ -72,6 +72,7 @@ struct ShapedLine {
     double width;
     double ascent;
     double descent;
+    double leading;
 };
 
 class TextShaper {
@@ -90,8 +91,7 @@ struct GlyphBitmap {
 
 class GlyphRasterizer {
 public:
-    GlyphBitmap rasterize(
-        const FontHandle& font, GlyphId glyph, double origin_x, double origin_y, int scale) const;
+    GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, int scale) const;
 };
 
 }  // namespace font

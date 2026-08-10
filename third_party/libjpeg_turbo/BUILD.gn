@@ -74,6 +74,9 @@ static_library("libjpeg16") {
     "BITS_IN_JSAMPLE=16",
   ]
 
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
   public_configs = [ ":libjpeg_includes" ]
 }
 
@@ -85,6 +88,9 @@ static_library("libjpeg12") {
     "NO_PUTENV",
     "BITS_IN_JSAMPLE=12",
   ]
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
 
   public_configs = [ ":libjpeg_includes" ]
 }

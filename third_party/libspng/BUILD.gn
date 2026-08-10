@@ -1,11 +1,8 @@
-assert(path_exists("src/spng"),
+assert(path_exists("src/.git"),
        "Missing submodules. Run: git submodule update --init --recursive")
 
 static_library("libspng") {
   sources = [ "src/spng/spng.c" ]
-
-  # https://libspng.org/docs/build/#miniz
-  defines = [ "SPNG_USE_MINIZ" ]
 
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
@@ -15,7 +12,7 @@ static_library("libspng") {
 
   public_configs = [ ":libspng_includes" ]
 
-  deps = [ "//third_party/miniz" ]
+  deps = [ "//third_party/zlib-ng" ]
 }
 
 config("libspng_includes") {

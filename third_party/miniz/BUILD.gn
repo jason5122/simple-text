@@ -9,6 +9,9 @@ static_library("miniz") {
     "src/miniz_zip.c",
   ]
 
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
   public_configs = [ ":miniz_includes" ]
 }
 

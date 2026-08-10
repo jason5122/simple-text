@@ -1,0 +1,49 @@
+assert(path_exists("src/.git"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
+static_library("freetype") {
+  sources = [
+    "src/src/autofit/autofit.c",
+    "src/src/base/ftbase.c",
+    "src/src/base/ftsystem.c",
+    "src/src/base/ftbbox.c",
+    "src/src/base/ftbitmap.c",
+    "src/src/base/ftdebug.c",
+    "src/src/base/ftfstype.c",
+    "src/src/base/ftgasp.c",
+    "src/src/base/ftglyph.c",
+    "src/src/base/ftinit.c",
+    "src/src/base/ftmm.c",
+    "src/src/base/ftstroke.c",
+    "src/src/base/fttype1.c",
+    "src/src/cff/cff.c",
+    "src/src/gzip/ftgzip.c",
+    "src/src/psaux/psaux.c",
+    "src/src/pshinter/pshinter.c",
+    "src/src/psnames/psnames.c",
+    "src/src/raster/raster.c",
+    "src/src/sfnt/sfnt.c",
+    "src/src/smooth/smooth.c",
+    "src/src/truetype/truetype.c",
+  ]
+
+  defines = [
+    "FT2_BUILD_LIBRARY",
+
+    # Use the trimmed module registry (ftmodule.h) matching the drivers
+    # compiled above, instead of FreeType's default full list.
+    "FT_CONFIG_MODULES_H=<ftmodule.h>",
+  ]
+
+  # ftmodule.h lives at the port root; private to the FreeType build.
+  include_dirs = [ "." ]
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
+  public_configs = [ ":freetype_config" ]
+}
+
+config("freetype_config") {
+  include_dirs = [ "src/include" ]
+}

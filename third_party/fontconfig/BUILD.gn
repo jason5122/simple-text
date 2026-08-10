@@ -1,0 +1,69 @@
+assert(path_exists("src/.git"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
+static_library("fontconfig") {
+  sources = [
+    "src/src/fcatomic.c",
+    "src/src/fccache.c",
+    "src/src/fccfg.c",
+    "src/src/fccharset.c",
+    "src/src/fccompat.c",
+    "src/src/fcconffile.c",
+    "src/src/fcdbg.c",
+    "src/src/fcdefault.c",
+    "src/src/fcdir.c",
+    "src/src/fcformat.c",
+    "src/src/fcfreetype.c",
+    "src/src/fcfs.c",
+    "src/src/fcgenericalias.c",
+    "src/src/fchash.c",
+    "src/src/fcinit.c",
+    "src/src/fclang.c",
+    "src/src/fclist.c",
+    "src/src/fcmatch.c",
+    "src/src/fcmatrix.c",
+    "src/src/fcname.c",
+    "src/src/fcobjs.c",
+    "src/src/fcpat.c",
+    "src/src/fcptrlist.c",
+    "src/src/fcrange.c",
+    "src/src/fcserialize.c",
+    "src/src/fcstat.c",
+    "src/src/fcstr.c",
+    "src/src/fcweight.c",
+    "src/src/fcxml.c",
+    "src/src/ftglue.c",
+  ]
+
+  defines = [
+    "HAVE_CONFIG_H",
+
+    # Fontconfig symbols should not be exported.
+    "FC_ATTRIBUTE_VISIBILITY_HIDDEN=__attribute((visibility(\"hidden\")))",
+    "FC_ATTRIBUTE_VISIBILITY_EXPORT=__attribute((visibility(\"hidden\")))",
+  ]
+
+  cflags = [ "-Wno-incompatible-pointer-types-discards-qualifiers" ]
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
+  public_configs = [ ":fontconfig_config" ]
+
+  deps = [
+    "//third_party/expat",
+    "//third_party/freetype",
+  ]
+}
+
+config("fontconfig_config") {
+  include_dirs = [
+    ".",  # config.h, fcstdint.h
+    "src",  # checked-in public headers: <fontconfig/{fcprivate,fcfreetype}.h>
+    "include",  # generated public header: <fontconfig/fontconfig.h>
+
+    # Generated internal headers (fclang.h, fcobjshash.h, empty alias headers)
+    # and the base that resolves fcstr.c's #include "../fc-case/fccase.h".
+    "include/src",
+  ]
+}

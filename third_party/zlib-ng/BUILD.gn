@@ -1,0 +1,205 @@
+assert(path_exists("src/.git"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
+assert(current_cpu == "arm64" || current_cpu == "x64",
+       "zlib-ng here supports arm64 and x64 only (no 32-bit x86).")
+
+# Each SIMD tier is a separate source_set: GN applies cflags per target, not per
+# file, and every tier must be built with ONLY its own feature flags so the
+# runtime dispatcher can still fall back on CPUs that lack the higher ISA. They
+# all share zlib-ng's build defines (zlib_ng_internal), include dirs
+# (zlib_ng_config), and third-party warning suppression.
+template("zlib_ng_simd") {
+  source_set(target_name) {
+    visibility = [ ":*" ]
+    forward_variables_from(invoker, [ "sources", "cflags_c" ])
+
+    configs -= [ "//build/config/compiler:simple_text_code" ]
+    configs += [ "//build/config/compiler:no_simple_text_code" ]
+    configs += [
+      ":zlib_ng_internal",
+      ":zlib_ng_config",
+    ]
+  }
+}
+
+static_library("zlib-ng") {
+  sources = [
+    "src/adler32.c",
+    "src/compress.c",
+    "src/crc32.c",
+    "src/crc32_braid_comb.c",
+    "src/deflate.c",
+    "src/deflate_fast.c",
+    "src/deflate_huff.c",
+    "src/deflate_medium.c",
+    "src/deflate_quick.c",
+    "src/deflate_rle.c",
+    "src/deflate_slow.c",
+    "src/deflate_stored.c",
+    "src/functable.c",
+    "src/infback.c",
+    "src/inflate.c",
+    "src/inftrees.c",
+    "src/insert_string.c",
+    "src/insert_string_roll.c",
+    "src/trees.c",
+    "src/uncompr.c",
+    "src/zutil.c",
+
+    # CPU feature detection plus the generic C implementations the function
+    # table dispatches to. These stay compiled as runtime fallbacks
+    # (WITH_ALL_FALLBACKS) even with the SIMD paths enabled.
+    "src/cpu_features.c",
+    "src/arch/generic/adler32_c.c",
+    "src/arch/generic/adler32_fold_c.c",
+    "src/arch/generic/chunkset_c.c",
+    "src/arch/generic/compare256_c.c",
+    "src/arch/generic/crc32_braid_c.c",
+    "src/arch/generic/crc32_fold_c.c",
+    "src/arch/generic/slide_hash_c.c",
+
+    # Software CRC fallback that functable references once WITH_OPTIM is set.
+    "src/arch/generic/crc32_chorba_c.c",
+  ]
+
+  deps = []
+
+  if (current_cpu == "arm64") {
+    # NEON is baseline on arm64, so these need no special compile flags. The
+    # ARMv8 hardware-CRC path needs +crc and lives in a source_set below.
+    sources += [
+      "src/arch/arm/arm_features.c",
+      "src/arch/arm/adler32_neon.c",
+      "src/arch/arm/chunkset_neon.c",
+      "src/arch/arm/compare256_neon.c",
+      "src/arch/arm/slide_hash_neon.c",
+    ]
+    deps += [ ":zlib_ng_arm_crc32" ]
+  } else if (current_cpu == "x64") {
+    # SSE2 is baseline on x86_64, so these need no compile flags. Higher ISA
+    # tiers (SSSE3+) each get their own flagged source_set below.
+    sources += [
+      "src/arch/x86/x86_features.c",
+      "src/arch/x86/chorba_sse2.c",
+      "src/arch/x86/chunkset_sse2.c",
+      "src/arch/x86/compare256_sse2.c",
+      "src/arch/x86/slide_hash_sse2.c",
+    ]
+    deps += [
+      ":zlib_ng_x86_ssse3",
+      ":zlib_ng_x86_sse41",
+      ":zlib_ng_x86_sse42_pclmul",
+      ":zlib_ng_x86_avx2",
+    ]
+  }
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+  configs += [ ":zlib_ng_internal" ]
+
+  public_configs = [ ":zlib_ng_config" ]
+}
+
+if (current_cpu == "arm64") {
+  zlib_ng_simd("zlib_ng_arm_crc32") {
+    # crc32_armv8.c emits the ARMv8 CRC32 instructions via the inline-asm
+    # helpers in acle_intrins.h, which the assembler only accepts with +crc.
+    # --target=arm64-apple-macos does NOT enable +crc by default; the flag is
+    # also correct on non-Apple aarch64.
+    sources = [ "src/arch/arm/crc32_armv8.c" ]
+    cflags_c = [ "-march=armv8-a+crc" ]
+  }
+} else if (current_cpu == "x64") {
+  zlib_ng_simd("zlib_ng_x86_ssse3") {
+    sources = [
+      "src/arch/x86/adler32_ssse3.c",
+      "src/arch/x86/chunkset_ssse3.c",
+    ]
+    cflags_c = [ "-mssse3" ]
+  }
+  zlib_ng_simd("zlib_ng_x86_sse41") {
+    sources = [ "src/arch/x86/chorba_sse41.c" ]
+    cflags_c = [ "-msse4.1" ]
+  }
+  zlib_ng_simd("zlib_ng_x86_sse42_pclmul") {
+    # Both need SSE4.2; crc32_pclmulqdq also needs PCLMUL. adler32_sse42 emits
+    # no PCLMUL, so sharing the flag is safe and both run under has_sse42.
+    sources = [
+      "src/arch/x86/adler32_sse42.c",
+      "src/arch/x86/crc32_pclmulqdq.c",
+    ]
+    cflags_c = [
+      "-msse4.2",
+      "-mpclmul",
+    ]
+  }
+  zlib_ng_simd("zlib_ng_x86_avx2") {
+    # -mbmi2 matches upstream: the AVX2 path is gated on BMI2 at runtime and
+    # uses flagless shifts.
+    sources = [
+      "src/arch/x86/adler32_avx2.c",
+      "src/arch/x86/chunkset_avx2.c",
+      "src/arch/x86/compare256_avx2.c",
+      "src/arch/x86/slide_hash_avx2.c",
+    ]
+    cflags_c = [
+      "-mavx2",
+      "-mbmi2",
+    ]
+  }
+}
+
+# Build-internal defines shared by the library and its per-arch source_sets;
+# the public zlib.h/zconf.h reference none of these. Mirrors what zlib-ng's
+# CMake sets for a runtime-CPU-detection build. AVX512 tiers are intentionally
+# omitted for now.
+config("zlib_ng_internal") {
+  defines = [
+    "ZLIB_COMPAT",  # emit the classic zlib API (deflate/inflate/...) via PREFIX()
+    "WITH_ALL_FALLBACKS",  # pre-fill the functable with generic C before arch overrides
+    "WITH_OPTIM",  # enable the arch dispatch in functable
+    "HAVE_BUILTIN_CTZ",
+    "HAVE_BUILTIN_CTZLL",  # enables the SIMD compare256/longest_match paths
+  ]
+
+  if (current_cpu == "arm64") {
+    defines += [
+      "ARM_FEATURES",  # cpu_features.c calls arm_check_features()
+      "ARM_NEON",
+      "ARM_NEON_HASLD4",  # native vld1q_*_x4 (aarch64 clang has them)
+      "ARM_CRC32",
+    ]
+  } else if (current_cpu == "x64") {
+    defines += [
+      "X86_FEATURES",  # cpu_features.c calls x86_check_features()
+      "X86_SSE2",
+      "X86_SSSE3",
+      "X86_SSE41",
+      "X86_SSE42",
+      "X86_PCLMULQDQ_CRC",
+      "X86_AVX2",
+    ]
+
+    # x86_features.c reads CPUID via <intrin.h> under MSVC (_xgetbv needs it)
+    # and <cpuid.h> elsewhere.
+    if (is_win) {
+      defines += [ "HAVE_CPUID_MS" ]
+    } else {
+      defines += [ "HAVE_CPUID_GNU" ]
+    }
+  }
+}
+
+config("zlib_ng_config") {
+  include_dirs = [
+    ".",
+    "src",
+  ]
+
+  if (is_posix) {
+    # zconf.h gates <unistd.h> (off_t, SEEK_*) on HAVE_UNISTD_H; consumers must
+    # see the same value the library was built with, so this stays public.
+    defines = [ "HAVE_UNISTD_H" ]
+  }
+}

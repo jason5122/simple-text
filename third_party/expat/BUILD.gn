@@ -1,0 +1,30 @@
+assert(path_exists("src/expat/lib/xmlparse.c"),
+       "Missing submodules. Run: git submodule update --init --recursive")
+
+static_library("expat") {
+  sources = [
+    "src/expat/lib/xmlparse.c",
+    "src/expat/lib/xmlrole.c",
+    "src/expat/lib/xmltok.c",
+
+    # Entropy backend selected by HAVE_GETENTROPY in expat_config.h. xmltok.c
+    # #includes xmltok_impl.c / xmltok_ns.c, so those are not listed here.
+    "src/expat/lib/random_getentropy.c",
+  ]
+
+  # expat_config.h lives at the port root and is #included by the sources
+  # (quote include); private to the expat build.
+  include_dirs = [ "." ]
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
+  public_configs = [ ":expat_config" ]
+}
+
+config("expat_config") {
+  include_dirs = [ "src/expat/lib" ]  # <expat.h>
+
+  # Static link: no __declspec(dllimport) on the public API.
+  defines = [ "XML_STATIC" ]
+}

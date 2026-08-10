@@ -70,14 +70,15 @@ std::optional<font::FontHandle> FontDatabase::create_font(FontFaceId face, doubl
             CTFontCreateUIFontForLanguage(kCTFontUIFontLabel, size_px, CFSTR("en-US")));
     } else {
         ct = ScopedCFTypeRef<CTFontRef>(CTFontCreateWithName(f.name.get(), size_px, nullptr));
-        // Request the family's real bold/italic member; null if it has none (no synthesis here).
-        if (f.traits) {
-            auto styled = ScopedCFTypeRef<CTFontRef>(CTFontCreateCopyWithSymbolicTraits(
-                ct.get(), size_px, nullptr, f.traits, f.traits));
-            if (styled) ct = std::move(styled);
-        }
     }
     if (!ct) return std::nullopt;
+
+    // Try setting bold/italic. Fall back to default font otherwise.
+    if (f.traits) {
+        auto styled = ScopedCFTypeRef<CTFontRef>(
+            CTFontCreateCopyWithSymbolicTraits(ct.get(), size_px, nullptr, f.traits, f.traits));
+        if (styled) ct = std::move(styled);
+    }
 
     FontHandle out;
     out.impl_ = std::make_unique<FontHandle::Impl>();
@@ -163,11 +164,12 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
 
             size_t utf8_index = indices_map[indices[i]];
             glyph_placements.push_back({
-                .glyph = glyphs[i],
+                .glyph_id = glyphs[i],
                 .x_advance = x_advance,
                 .y_advance = advances[i].height,
                 .x_offset = positions[i].x + mono_delta,
-                .y_offset = positions[i].y,
+                // Core Text positions are y-up; negate to the library's y-down convention.
+                .y_offset = -positions[i].y,
                 .cluster = utf8_index,
             });
             pen_x += x_advance;
@@ -191,17 +193,17 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
     };
 }
 
-GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font, GlyphId glyph, int scale) const {
+GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font, GlyphId glyph, double s) const {
     CTFontRef ctfont = font.impl_->ctfont.get();
     CGGlyph g = glyph;
-    const double s = scale;
 
     CGRect bbox =
         CTFontGetBoundingRectsForGlyphs(ctfont, kCTFontOrientationHorizontal, &g, nullptr, 1);
     if (CGRectIsEmpty(bbox)) return {};
 
-    // Box in device pixels, baseline-relative and y-up (draw_pixels composites in a y-up
-    // CoreGraphics context). ST ceils the extent (frintp) and rounds the top/left origin (frinta)
+    // Ink box in device pixels, baseline-relative. The tiny raster context below is Core
+    // Graphics-native (y-up, origin bottom-left), so x0/y0 are the bitmap's bottom-left corner in
+    // that space. ST ceils the extent (frintp) and rounds the top/left origin (frinta)
     // independently, then pads 2px on every side. The per-line ascent that ST folds into its
     // offset cancels for a single-glyph bitmap.
     const long ceil_w = (long)std::ceil(bbox.size.width * s);
@@ -232,8 +234,11 @@ GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font, GlyphId glyph, in
         .width = w,
         .height = h,
         .bytes_per_pixel = bytes_per_pixel,
+        // Convert the y-up raster origin to the library's top-left convention: x is unchanged (no
+        // flip); bearing_y flips the bottom edge (y0, y-up) to the top edge (y-down), so it is
+        // negative when the glyph rises above the baseline.
         .bearing_x = x0,
-        .bearing_y = y0,
+        .bearing_y = -(y0 + (int)h),
         .pixels = std::move(pixels),
     };
 }

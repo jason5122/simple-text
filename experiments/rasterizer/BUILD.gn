@@ -9,7 +9,11 @@ executable("rasterizer") {
     "CoreGraphics.framework",
     "CoreFoundation.framework",
     "ImageIO.framework",
+    "AppKit.framework",
   ]
+
+  # TODO: Enable this.
+  # configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
   deps = [
     "//base",

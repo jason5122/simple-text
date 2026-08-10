@@ -53,13 +53,14 @@ private:
 
 using GlyphId = uint32_t;
 
+// In device-independent points.
 struct GlyphPlacement {
-    GlyphId glyph = 0;
+    GlyphId glyph_id = 0;
     double x_advance = 0;
     double y_advance = 0;
-    double x_offset = 0;
-    double y_offset = 0;
-    size_t cluster = 0;  // Byte offset in UTF8.
+    double x_offset = 0;  // pen-relative, top-left
+    double y_offset = 0;  // pen-relative, top-left (down is positive)
+    size_t cluster = 0;   // byte offset in the UTF-8 source
 };
 
 struct ShapedRun {
@@ -80,6 +81,7 @@ public:
     ShapedLine shape(const FontHandle& font, std::string_view utf8) const;
 };
 
+// In device pixels.
 struct GlyphBitmap {
     size_t width;
     size_t height;
@@ -87,11 +89,13 @@ struct GlyphBitmap {
     int bearing_x;
     int bearing_y;
     std::vector<uint8_t> pixels;
+
+    constexpr bool empty() const { return width == 0 || height == 0; }
 };
 
 class GlyphRasterizer {
 public:
-    GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, int scale) const;
+    GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double scale) const;
 };
 
 }  // namespace font

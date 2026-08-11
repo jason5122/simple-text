@@ -64,7 +64,7 @@ void show_window(CGContextRef ctx, double scale) {
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
     NSWindow* window =
-        [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 1000)
+        [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1728, 1117)
                                     styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                                               NSWindowStyleMaskResizable
                                       backing:NSBackingStoreBuffered

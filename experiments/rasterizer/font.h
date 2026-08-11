@@ -95,7 +95,13 @@ struct GlyphBitmap {
 
 class GlyphRasterizer {
 public:
-    GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double scale) const;
+    // subpixel_x is a fractional horizontal offset in device pixels baked into the glyph's
+    // antialiasing, letting the caller place the bitmap on an integer pixel while rendering the
+    // glyph at a sub-pixel horizontal position.
+    GlyphBitmap rasterize(const FontHandle& font,
+                          GlyphId glyph,
+                          double scale,
+                          double subpixel_x = 0.0) const;
 };
 
 }  // namespace font

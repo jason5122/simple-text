@@ -19,7 +19,11 @@ using base::apple::ScopedCGImage;
 
 namespace {
 
-void draw_text(CGContextRef ctx, const font::ShapedLine& shaped, size_t line_index, double scale) {
+void draw_text(CGContextRef ctx,
+               const font::ShapedLine& shaped,
+               size_t line_index,
+               double scale,
+               bool use_subpixel_positioning) {
     const double ascent = std::ceil(shaped.ascent);
     const double line_height = ascent + std::ceil(shaped.descent) + std::ceil(shaped.leading);
     const double baseline_y = ascent + line_height * line_index;
@@ -27,19 +31,28 @@ void draw_text(CGContextRef ctx, const font::ShapedLine& shaped, size_t line_ind
     font::GlyphRasterizer rasterizer;
     for (const auto& run : shaped.runs) {
         for (const auto& g : run.glyphs) {
-            font::GlyphBitmap bmp = rasterizer.rasterize(run.font, g.glyph_id, scale);
-            if (bmp.empty()) continue;
-
-            // We don't do sub-pixel placement yet. ST does this at ~half-pixel phases.
-            // TODO: Implement this when we move to OpenGL.
             double glyph_x = g.x_offset;               // points
             double glyph_y = baseline_y + g.y_offset;  // points
-            long dst_x = std::lround(glyph_x * scale) + bmp.bearing_x;
-            long dst_y = std::lround(glyph_y * scale) + bmp.bearing_y;
 
-            // Debug use. Helps us line up with Sublime Text for pixel perfect comparison.
-            dst_x += 2;
-            dst_y += 124;
+            // At <=16pt Sublime positions glyphs with 6-phase horizontal sub-pixel precision: pick
+            // phase = floor(frac(device_x) * 6), render the glyph shifted by phase*scale/6 device
+            // px (6 phases span one point), and snap the bitmap to the whole pixel below. Above
+            // the gate it snaps to the nearest whole pixel.
+            const double device_x_f = glyph_x * scale;
+            long device_x = std::lround(device_x_f);
+            double subpixel_x = 0.0;
+            if (use_subpixel_positioning) {
+                device_x = (long)std::floor(device_x_f);
+                int phase = (int)std::floor((device_x_f - device_x) * 6.0);
+                subpixel_x = phase * scale / 6.0;
+            }
+
+            font::GlyphBitmap bmp = rasterizer.rasterize(run.font, g.glyph_id, scale, subpixel_x);
+            if (bmp.empty()) continue;
+
+            // +2 / +124 are debug margins to line up with the Sublime capture.
+            long dst_x = device_x + bmp.bearing_x + 2;
+            long dst_y = std::lround(glyph_y * scale) + bmp.bearing_y + 124;
 
             BitmapView img = {
                 .pixels = bmp.pixels,
@@ -53,9 +66,12 @@ void draw_text(CGContextRef ctx, const font::ShapedLine& shaped, size_t line_ind
 
 }  // namespace
 
-int main() {
+int main(int argc, char* argv[]) {
     std::vector<std::string> lines = {
-        "Sphinx of black quartz, judge my vow! 😀😀😀",
+        "",
+        "",
+        "",
+        "Sphinx of black quartz, judge my vow!",
         "The quick brown fox jumps over the lazy dog. 你好",
         "",
         "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod",
@@ -64,10 +80,8 @@ int main() {
         "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse",
         "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non",
         "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        "",
-        "=== ==> => !== != ==",
     };
-    auto family = "Fira Code";
+    auto family = "system";
     double font_size = 16;
 
     constexpr size_t width = 2000;
@@ -82,10 +96,11 @@ int main() {
 
     font::TextShaper shaper;
 
+    const bool use_subpixel_positioning = font_size <= 16.0;
     auto ctx = create_context(width, height);
     for (size_t i = 0; i < lines.size(); i++) {
         auto shaped = shaper.shape(*handle, lines[i]);
-        draw_text(ctx.get(), shaped, i, scale);
+        draw_text(ctx.get(), shaped, i, scale, use_subpixel_positioning);
     }
     show_window(ctx.get(), scale);
 

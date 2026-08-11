@@ -193,7 +193,10 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
     };
 }
 
-GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font, GlyphId glyph, double s) const {
+GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font,
+                                       GlyphId glyph,
+                                       double s,
+                                       double subpixel_x) const {
     CTFontRef ctfont = font.impl_->ctfont.get();
     CGGlyph g = glyph;
 
@@ -227,7 +230,10 @@ GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font, GlyphId glyph, do
     CGContextScaleCTM(ctx.get(), s, s);
     CGContextSetGrayFillColor(ctx.get(), 0.0, 1.0);
 
-    CGPoint pos = {-x0 / s, -y0 / s};
+    // subpixel_x nudges the draw position by a fraction of a device pixel (converted to points),
+    // baking the glyph's horizontal phase into the antialiasing. The 2px border absorbs the shift,
+    // so bearing_x/bearing_y stay unchanged.
+    CGPoint pos = {(-x0 + subpixel_x) / s, -y0 / s};
     CTFontDrawGlyphs(ctfont, &g, &pos, 1, ctx.get());
 
     return {

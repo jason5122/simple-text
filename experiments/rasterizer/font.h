@@ -8,6 +8,12 @@
 
 namespace font {
 
+// At or below this point size Sublime Text uses a distinct small-size text path: the shaper snaps
+// monospace advances to whole points (TextShaper::shape) and the renderer positions glyphs with
+// 6-phase horizontal sub-pixel precision (draw_text). Above it, advances stay fractional and
+// glyphs snap to whole device pixels.
+inline constexpr double kSmallSizeThresholdPt = 16.0;
+
 using FontFaceId = uint32_t;
 
 class FontHandle {
@@ -20,6 +26,9 @@ public:
     FontHandle& operator=(const FontHandle&) = delete;
 
     bool valid() const;
+    double ascent() const;
+    double descent() const;
+    double leading() const;
 
 private:
     struct Impl;
@@ -71,9 +80,6 @@ struct ShapedRun {
 struct ShapedLine {
     std::vector<ShapedRun> runs;
     double width;
-    double ascent;
-    double descent;
-    double leading;
 };
 
 class TextShaper {
@@ -81,11 +87,12 @@ public:
     ShapedLine shape(const FontHandle& font, std::string_view utf8) const;
 };
 
-// In device pixels.
+// In device pixels. Dimensions are unsigned: they size `pixels` and feed CoreGraphics, both of
+// which take size_t. Bearings are signed because a glyph's ink can sit left of the pen origin or
+// above the baseline. The buffer is RGBA8 (4 bytes/pixel), implied by how it's rasterized/blitted.
 struct GlyphBitmap {
     size_t width;
     size_t height;
-    size_t bytes_per_pixel;
     int bearing_x;
     int bearing_y;
     std::vector<uint8_t> pixels;

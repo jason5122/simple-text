@@ -1,5 +1,6 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
+#include "base/numeric/safe_conversions.h"
 #include "base/strings/sys_string_conversions.h"
 #include "base/unicode/utf16_to_utf8_indices_map.h"
 #include "experiments/rasterizer/font.h"
@@ -44,7 +45,7 @@ std::optional<FontFaceId> FontDatabase::match(const FontRequest& request) {
     face.traits = traits;
     if (!face.is_system) face.name = base::sys_utf8_to_cfstring_ref(request.family);
 
-    const FontFaceId id = impl_->faces.size();
+    const FontFaceId id = base::checked_cast<FontFaceId>(impl_->faces.size());
     impl_->faces.push_back(std::move(face));
     impl_->key_to_id.emplace(std::move(key), id);
     return id;
@@ -59,6 +60,9 @@ FontHandle::FontHandle(FontHandle&& other) = default;
 FontHandle& FontHandle::operator=(FontHandle&& other) = default;
 
 bool FontHandle::valid() const { return impl_ && impl_->ctfont.get() != nullptr; }
+double FontHandle::ascent() const { return CTFontGetAscent(impl_->ctfont.get()); }
+double FontHandle::descent() const { return CTFontGetDescent(impl_->ctfont.get()); }
+double FontHandle::leading() const { return CTFontGetLeading(impl_->ctfont.get()); }
 
 std::optional<font::FontHandle> FontDatabase::create_font(FontFaceId face, double size_px) {
     if (face >= impl_->faces.size()) return std::nullopt;
@@ -108,7 +112,7 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
     CFIndex run_count = CFArrayGetCount(runs);
 
     std::vector<ShapedRun> shaped_runs;
-    shaped_runs.reserve(run_count);
+    shaped_runs.reserve(base::checked_cast<size_t>(run_count));
     base::UTF16ToUTF8IndicesMap indices_map;
     indices_map.set_utf8(utf8);
 
@@ -120,8 +124,8 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
 
     for (CFIndex r = 0; r < run_count; r++) {
         CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(runs, r);
-        CFIndex n = CTRunGetGlyphCount(run);
-        if (n <= 0) continue;
+        const size_t n = base::checked_cast<size_t>(CTRunGetGlyphCount(run));
+        if (n == 0) continue;
 
         std::vector<CGGlyph> glyphs(n);
         std::vector<CGPoint> positions(n);
@@ -141,17 +145,18 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
             if (v) run_font = (CTFontRef)v;
         }
 
-        // Sublime snaps a monospace font's advance to a whole point so columns land on a pixel
-        // grid (e.g. Source Code Pro 9.6pt -> 10pt). It does this only for monospace faces and
-        // only at small sizes (a hardcoded <= 16pt gate in ST), leaving proportional faces on
-        // their fractional advances. Rounding is in points, before the device scale.
+        // Small-size layout half of Sublime's behavior (the rendering half is 6-phase sub-pixel
+        // positioning in draw_text): snap a monospace font's advance to a whole point so columns
+        // land on a pixel grid (e.g. Source Code Pro 9.6pt -> 10pt). Monospace only --
+        // proportional faces keep their fractional advances. Rounding is in points, before the
+        // device scale.
         bool snap_advance = (CTFontGetSymbolicTraits(run_font) & kCTFontTraitMonoSpace) &&
-                            CTFontGetSize(run_font) <= 16.0;
+                            CTFontGetSize(run_font) <= kSmallSizeThresholdPt;
 
         std::vector<GlyphPlacement> glyph_placements;
         glyph_placements.reserve(n);
 
-        for (CFIndex i = 0; i < n; i++) {
+        for (size_t i = 0; i < n; i++) {
             // TODO: Handle kCFNotFound case in TextShaper::shape().
             if (indices[i] == kCFNotFound) {
                 spdlog::error("TODO: Handle kCFNotFound case in TextShaper::shape()");
@@ -162,7 +167,7 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
             double x_advance = snap_advance ? std::round(shaped) : shaped;
             mono_delta += x_advance - shaped;
 
-            size_t utf8_index = indices_map[indices[i]];
+            size_t utf8_index = indices_map[base::checked_cast<size_t>(indices[i])];
             glyph_placements.push_back({
                 .glyph_id = glyphs[i],
                 .x_advance = x_advance,
@@ -181,15 +186,9 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
         shaped_runs.emplace_back(std::move(handle), glyph_placements);
     }
 
-    CGFloat ascent = CTFontGetAscent(ctfont);
-    CGFloat descent = CTFontGetDescent(ctfont);
-    CGFloat leading = CTFontGetLeading(ctfont);
     return {
         .runs = std::move(shaped_runs),
         .width = pen_x,
-        .ascent = ascent,
-        .descent = descent,
-        .leading = leading,
     };
 }
 
@@ -198,7 +197,7 @@ GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font,
                                        double s,
                                        double subpixel_x) const {
     CTFontRef ctfont = font.impl_->ctfont.get();
-    CGGlyph g = glyph;
+    CGGlyph g = base::checked_cast<CGGlyph>(glyph);  // Core Text glyph ids are 16-bit
 
     CGRect bbox =
         CTFontGetBoundingRectsForGlyphs(ctfont, kCTFontOrientationHorizontal, &g, nullptr, 1);
@@ -206,24 +205,28 @@ GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font,
 
     // Ink box in device pixels, baseline-relative. The tiny raster context below is Core
     // Graphics-native (y-up, origin bottom-left), so x0/y0 are the bitmap's bottom-left corner in
-    // that space. ST ceils the extent (frintp) and rounds the top/left origin (frinta)
-    // independently, then pads 2px on every side. The per-line ascent that ST folds into its
-    // offset cancels for a single-glyph bitmap.
-    const long ceil_w = (long)std::ceil(bbox.size.width * s);
-    const long ceil_h = (long)std::ceil(bbox.size.height * s);
-    const size_t w = (size_t)(ceil_w + 4);
-    const size_t h = (size_t)(ceil_h + 4);
-    const int x0 = (int)std::lround(bbox.origin.x * s) - 2;
-    const int y0 = (int)std::lround((bbox.origin.y + bbox.size.height) * s) - (int)ceil_h - 2;
+    // that space. ST ceils the extent and rounds the top/left origin independently, then pads a
+    // border on every side. The per-line ascent that ST folds into its offset cancels for a
+    // single-glyph bitmap. Geometry stays in int (offsets can be negative); we cross to size_t
+    // only at the vector/Core Graphics boundary below.
+    constexpr int kBorder = 2;
+    constexpr int kBytesPerPixel = 4;
+    const int ceil_w = base::clamp_ceil<int>(bbox.size.width * s);
+    const int ceil_h = base::clamp_ceil<int>(bbox.size.height * s);
+    const int w = ceil_w + 2 * kBorder;
+    const int h = ceil_h + 2 * kBorder;
+    const int x0 = base::clamp_round<int>(bbox.origin.x * s) - kBorder;
+    const int y0 =
+        base::clamp_round<int>((bbox.origin.y + bbox.size.height) * s) - ceil_h - kBorder;
+    const int bytes_per_row = w * kBytesPerPixel;
 
-    const size_t bytes_per_pixel = 4;
-    const size_t bytes_per_row = w * bytes_per_pixel;
-    std::vector<uint8_t> pixels(h * bytes_per_row);
+    std::vector<uint8_t> pixels(base::checked_cast<size_t>(h * bytes_per_row));
 
     auto cs = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
-    auto ctx = ScopedCGContext(
-        CGBitmapContextCreate(pixels.data(), w, h, 8, bytes_per_row, cs.get(),
-                              kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
+    auto ctx = ScopedCGContext(CGBitmapContextCreate(
+        pixels.data(), base::checked_cast<size_t>(w), base::checked_cast<size_t>(h), 8,
+        base::checked_cast<size_t>(bytes_per_row), cs.get(),
+        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
 
     CGContextSetShouldAntialias(ctx.get(), true);
     CGContextSetShouldSmoothFonts(ctx.get(), true);
@@ -237,14 +240,13 @@ GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font,
     CTFontDrawGlyphs(ctfont, &g, &pos, 1, ctx.get());
 
     return {
-        .width = w,
-        .height = h,
-        .bytes_per_pixel = bytes_per_pixel,
+        .width = base::checked_cast<size_t>(w),
+        .height = base::checked_cast<size_t>(h),
         // Convert the y-up raster origin to the library's top-left convention: x is unchanged (no
         // flip); bearing_y flips the bottom edge (y0, y-up) to the top edge (y-down), so it is
         // negative when the glyph rises above the baseline.
         .bearing_x = x0,
-        .bearing_y = -(y0 + (int)h),
+        .bearing_y = -(y0 + h),
         .pixels = std::move(pixels),
     };
 }

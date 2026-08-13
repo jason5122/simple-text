@@ -5,7 +5,6 @@
 #include "base/unicode/utf16_to_utf8_indices_map.h"
 #include "experiments/rasterizer/font.h"
 #include <CoreText/CoreText.h>
-#include <map>
 #include <spdlog/spdlog.h>
 #include <utility>
 
@@ -16,41 +15,6 @@ using base::apple::ScopedCGContext;
 
 namespace font {
 
-class FontDatabase::Impl {
-public:
-    struct Face {
-        bool is_system = false;
-        ScopedCFTypeRef<CFStringRef> name;  // family/PostScript name; unset when is_system
-        CTFontSymbolicTraits traits = 0;    // bold/italic, applied in create_font()
-    };
-
-    std::vector<Face> faces;  // FontFaceId indexes this
-    std::map<std::pair<std::string, CTFontSymbolicTraits>, FontFaceId> key_to_id;
-};
-
-FontDatabase::FontDatabase() : impl_(std::make_unique<Impl>()) {}
-
-FontDatabase::~FontDatabase() = default;
-
-std::optional<FontFaceId> FontDatabase::match(const FontRequest& request) {
-    CTFontSymbolicTraits traits = 0;
-    if (request.weight == Weight::Bold) traits |= kCTFontTraitBold;
-    if (request.slant == Slant::Italic) traits |= kCTFontTraitItalic;
-
-    auto key = std::make_pair(request.family, traits);
-    if (auto it = impl_->key_to_id.find(key); it != impl_->key_to_id.end()) return it->second;
-
-    Impl::Face face;
-    face.is_system = request.family.empty() || request.family == "system";
-    face.traits = traits;
-    if (!face.is_system) face.name = base::sys_utf8_to_cfstring_ref(request.family);
-
-    const FontFaceId id = base::checked_cast<FontFaceId>(impl_->faces.size());
-    impl_->faces.push_back(std::move(face));
-    impl_->key_to_id.emplace(std::move(key), id);
-    return id;
-}
-
 struct FontHandle::Impl {
     ScopedCFTypeRef<CTFontRef> ctfont;
 };
@@ -59,39 +23,45 @@ FontHandle::~FontHandle() = default;
 FontHandle::FontHandle(FontHandle&& other) = default;
 FontHandle& FontHandle::operator=(FontHandle&& other) = default;
 
+FontHandle::FontHandle(CTFontRef ct_font) : impl_(std::make_unique<Impl>()) {
+    impl_->ctfont = ScopedCFTypeRef<CTFontRef>(ct_font, OwnershipPolicy::kRetain);
+}
+
 bool FontHandle::valid() const { return impl_ && impl_->ctfont.get() != nullptr; }
 double FontHandle::ascent() const { return CTFontGetAscent(impl_->ctfont.get()); }
 double FontHandle::descent() const { return CTFontGetDescent(impl_->ctfont.get()); }
 double FontHandle::leading() const { return CTFontGetLeading(impl_->ctfont.get()); }
+const void* FontHandle::native_handle() const { return impl_->ctfont.get(); }
+CTFontRef FontHandle::ct_font() const { return impl_->ctfont.get(); }
 
-std::optional<font::FontHandle> FontDatabase::create_font(FontFaceId face, double size_px) {
-    if (face >= impl_->faces.size()) return std::nullopt;
-    const Impl::Face& f = impl_->faces[face];
-
+std::optional<font::FontHandle> create_font(std::string family,
+                                            double size_px,
+                                            Weight weight,
+                                            Slant slant) {
     ScopedCFTypeRef<CTFontRef> ct;
-    if (f.is_system) {
-        ct = ScopedCFTypeRef<CTFontRef>(
-            CTFontCreateUIFontForLanguage(kCTFontUIFontLabel, size_px, CFSTR("en-US")));
+    if (family == "system") {
+        ct.reset(CTFontCreateUIFontForLanguage(kCTFontUIFontLabel, size_px, CFSTR("en-US")));
     } else {
-        ct = ScopedCFTypeRef<CTFontRef>(CTFontCreateWithName(f.name.get(), size_px, nullptr));
+        auto ct_family = base::sys_utf8_to_cfstring_ref(family);
+        ct.reset(CTFontCreateWithName(ct_family.get(), size_px, nullptr));
     }
     if (!ct) return std::nullopt;
 
     // Try setting bold/italic. Fall back to default font otherwise.
-    if (f.traits) {
-        auto styled = ScopedCFTypeRef<CTFontRef>(
-            CTFontCreateCopyWithSymbolicTraits(ct.get(), size_px, nullptr, f.traits, f.traits));
-        if (styled) ct = std::move(styled);
+    CTFontSymbolicTraits traits = 0;
+    if (weight == Weight::Bold) traits |= kCTFontTraitBold;
+    if (slant == Slant::Italic) traits |= kCTFontTraitItalic;
+    if (traits) {
+        if (CTFontRef styled =
+                CTFontCreateCopyWithSymbolicTraits(ct.get(), size_px, nullptr, traits, traits)) {
+            ct.reset(styled);
+        }
     }
-
-    FontHandle out;
-    out.impl_ = std::make_unique<FontHandle::Impl>();
-    out.impl_->ctfont = std::move(ct);
-    return out;
+    return FontHandle(ct.get());
 }
 
-ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) const {
-    CTFontRef ctfont = font.impl_->ctfont.get();
+ShapedLine shape(const FontHandle& font, std::string_view utf8) {
+    auto ctfont = static_cast<CTFontRef>(font.native_handle());
 
     // TODO: Is disabling kerning correct? Sublime Text seems to lay out as if kerning is disabled,
     // but I'm not sure if they literally disable kerning or if they just make glyphs context-free.
@@ -142,7 +112,7 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
         CFDictionaryRef run_attrs = CTRunGetAttributes(run);
         if (run_attrs) {
             auto v = CFDictionaryGetValue(run_attrs, kCTFontAttributeName);
-            if (v) run_font = (CTFontRef)v;
+            if (v) run_font = static_cast<CTFontRef>(v);
         }
 
         // Small-size layout half of Sublime's behavior (the rendering half is 6-phase sub-pixel
@@ -151,7 +121,7 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
         // proportional faces keep their fractional advances. Rounding is in points, before the
         // device scale.
         bool snap_advance = (CTFontGetSymbolicTraits(run_font) & kCTFontTraitMonoSpace) &&
-                            CTFontGetSize(run_font) <= kSmallSizeThresholdPt;
+                            CTFontGetSize(run_font) <= kMonospaceSnapMaxPt;
 
         std::vector<GlyphPlacement> glyph_placements;
         glyph_placements.reserve(n);
@@ -171,7 +141,7 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
             glyph_placements.push_back({
                 .glyph_id = glyphs[i],
                 .x_advance = x_advance,
-                .y_advance = advances[i].height,
+                // TODO: `x_offset` is a misleading name because it carries absolute x positions.
                 .x_offset = positions[i].x + mono_delta,
                 // Core Text positions are y-up; negate to the library's y-down convention.
                 .y_offset = -positions[i].y,
@@ -180,23 +150,14 @@ ShapedLine TextShaper::shape(const FontHandle& font, std::string_view utf8) cons
             pen_x += x_advance;
         }
 
-        FontHandle handle;
-        handle.impl_ = std::make_unique<FontHandle::Impl>();
-        handle.impl_->ctfont = ScopedCFTypeRef<CTFontRef>(run_font, OwnershipPolicy::kRetain);
-        shaped_runs.emplace_back(std::move(handle), glyph_placements);
+        shaped_runs.emplace_back(FontHandle(run_font), glyph_placements);
     }
 
-    return {
-        .runs = std::move(shaped_runs),
-        .width = pen_x,
-    };
+    return {.runs = std::move(shaped_runs), .width = pen_x};
 }
 
-GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font,
-                                       GlyphId glyph,
-                                       double s,
-                                       double subpixel_x) const {
-    CTFontRef ctfont = font.impl_->ctfont.get();
+GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double s, double subpixel_x) {
+    auto ctfont = static_cast<CTFontRef>(font.native_handle());
     CGGlyph g = base::checked_cast<CGGlyph>(glyph);  // Core Text glyph ids are 16-bit
 
     CGRect bbox =
@@ -239,6 +200,10 @@ GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font,
     CGPoint pos = {(-x0 + subpixel_x) / s, -y0 / s};
     CTFontDrawGlyphs(ctfont, &g, &pos, 1, ctx.get());
 
+    // Color fonts (emoji) draw real RGBA that must not be tinted; monochrome fonts draw a coverage
+    // mask. This is a font-level trait -- fine for emoji, where every glyph is colored.
+    const bool is_color = (CTFontGetSymbolicTraits(ctfont) & kCTFontTraitColorGlyphs) != 0;
+
     return {
         .width = base::checked_cast<size_t>(w),
         .height = base::checked_cast<size_t>(h),
@@ -247,6 +212,7 @@ GlyphBitmap GlyphRasterizer::rasterize(const FontHandle& font,
         // negative when the glyph rises above the baseline.
         .bearing_x = x0,
         .bearing_y = -(y0 + h),
+        .is_color = is_color,
         .pixels = std::move(pixels),
     };
 }

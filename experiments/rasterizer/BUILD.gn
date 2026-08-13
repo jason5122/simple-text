@@ -1,19 +1,27 @@
 executable("rasterizer") {
   sources = [
+    "atlas.cc",
     "font_core_text.cc",
-    "main.mm",
+    "gl_renderer.mm",
+    "main.cc",
+  ]
+
+  inputs = [
+    "glyph_vert.glsl",
+    "glyph_frag.glsl",
   ]
 
   frameworks = [
     "CoreText.framework",
     "CoreGraphics.framework",
     "CoreFoundation.framework",
-    "ImageIO.framework",
     "AppKit.framework",
+    "QuartzCore.framework",
+    "OpenGL.framework",
   ]
+  defines = [ "GL_SILENCE_DEPRECATION" ]
 
-  # TODO: Enable this.
-  # configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
   deps = [
     "//base",

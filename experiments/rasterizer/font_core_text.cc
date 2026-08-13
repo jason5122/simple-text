@@ -31,6 +31,7 @@ bool FontHandle::valid() const { return impl_ && impl_->ctfont.get() != nullptr;
 double FontHandle::ascent() const { return CTFontGetAscent(impl_->ctfont.get()); }
 double FontHandle::descent() const { return CTFontGetDescent(impl_->ctfont.get()); }
 double FontHandle::leading() const { return CTFontGetLeading(impl_->ctfont.get()); }
+double FontHandle::size() const { return CTFontGetSize(impl_->ctfont.get()); }
 const void* FontHandle::native_handle() const { return impl_->ctfont.get(); }
 CTFontRef FontHandle::ct_font() const { return impl_->ctfont.get(); }
 
@@ -60,11 +61,13 @@ std::optional<font::FontHandle> create_font(std::string family,
     return FontHandle(ct.get());
 }
 
-ShapedLine shape(const FontHandle& font, std::string_view utf8) {
-    auto ctfont = static_cast<CTFontRef>(font.native_handle());
+namespace {
 
-    // TODO: Is disabling kerning correct? Sublime Text seems to lay out as if kerning is disabled,
-    // but I'm not sure if they literally disable kerning or if they just make glyphs context-free.
+// Lay out `utf8` in `ctfont` with kerning disabled and return the Core Text line.
+//
+// TODO: Is disabling kerning correct? Sublime Text seems to lay out as if kerning is disabled, but
+// I'm not sure if they literally disable kerning or if they just make glyphs context-free.
+ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont, std::string_view utf8) {
     double kern_zero = 0.0;
     auto kern = ScopedCFTypeRef<CFNumberRef>(
         CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &kern_zero));
@@ -76,7 +79,14 @@ ShapedLine shape(const FontHandle& font, std::string_view utf8) {
     auto text = base::sys_utf8_to_cfstring_ref(utf8);
     auto as = ScopedCFTypeRef<CFAttributedStringRef>(
         CFAttributedStringCreate(kCFAllocatorDefault, text.get(), attrs.get()));
-    auto line = ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(as.get()));
+    return ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(as.get()));
+}
+
+}  // namespace
+
+ShapedLine shape(const FontHandle& font, std::string_view utf8) {
+    auto ctfont = static_cast<CTFontRef>(font.native_handle());
+    auto line = make_ctline(ctfont, utf8);
 
     CFArrayRef runs = CTLineGetGlyphRuns(line.get());
     CFIndex run_count = CFArrayGetCount(runs);
@@ -86,12 +96,7 @@ ShapedLine shape(const FontHandle& font, std::string_view utf8) {
     base::UTF16ToUTF8IndicesMap indices_map;
     indices_map.set_utf8(utf8);
 
-    // Line-level accumulators (LTR-only). pen_x is the total advance, for the returned width.
-    // mono_delta accumulates the monospace advance-rounding nudge (round(adv)-adv), added on top
-    // of each glyph's shaped position below.
     double pen_x = 0;
-    double mono_delta = 0;
-
     for (CFIndex r = 0; r < run_count; r++) {
         CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(runs, r);
         const size_t n = base::checked_cast<size_t>(CTRunGetGlyphCount(run));
@@ -115,14 +120,6 @@ ShapedLine shape(const FontHandle& font, std::string_view utf8) {
             if (v) run_font = static_cast<CTFontRef>(v);
         }
 
-        // Small-size layout half of Sublime's behavior (the rendering half is 6-phase sub-pixel
-        // positioning in draw_text): snap a monospace font's advance to a whole point so columns
-        // land on a pixel grid (e.g. Source Code Pro 9.6pt -> 10pt). Monospace only --
-        // proportional faces keep their fractional advances. Rounding is in points, before the
-        // device scale.
-        bool snap_advance = (CTFontGetSymbolicTraits(run_font) & kCTFontTraitMonoSpace) &&
-                            CTFontGetSize(run_font) <= kMonospaceSnapMaxPt;
-
         std::vector<GlyphPlacement> glyph_placements;
         glyph_placements.reserve(n);
 
@@ -133,21 +130,16 @@ ShapedLine shape(const FontHandle& font, std::string_view utf8) {
                 NOTREACHED();
             }
 
-            double shaped = advances[i].width;
-            double x_advance = snap_advance ? std::round(shaped) : shaped;
-            mono_delta += x_advance - shaped;
-
             size_t utf8_index = indices_map[base::checked_cast<size_t>(indices[i])];
             glyph_placements.push_back({
                 .glyph_id = glyphs[i],
-                .x_advance = x_advance,
-                // TODO: `x_offset` is a misleading name because it carries absolute x positions.
-                .x_offset = positions[i].x + mono_delta,
+                .x_advance = advances[i].width,
+                .x_offset = positions[i].x,
                 // Core Text positions are y-up; negate to the library's y-down convention.
                 .y_offset = -positions[i].y,
                 .cluster = utf8_index,
             });
-            pen_x += x_advance;
+            pen_x += advances[i].width;
         }
 
         shaped_runs.emplace_back(FontHandle(run_font), glyph_placements);
@@ -200,9 +192,11 @@ GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double s, double su
     CGPoint pos = {(-x0 + subpixel_x) / s, -y0 / s};
     CTFontDrawGlyphs(ctfont, &g, &pos, 1, ctx.get());
 
-    // Color fonts (emoji) draw real RGBA that must not be tinted; monochrome fonts draw a coverage
-    // mask. This is a font-level trait -- fine for emoji, where every glyph is colored.
-    const bool is_color = (CTFontGetSymbolicTraits(ctfont) & kCTFontTraitColorGlyphs) != 0;
+    // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
+    // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744
+    bool colored_font = CTFontGetSymbolicTraits(ctfont) & kCTFontTraitColorGlyphs;
+    auto outline_path = ScopedCFTypeRef<CGPathRef>(CTFontCreatePathForGlyph(ctfont, g, nullptr));
+    bool colored = colored_font && !outline_path;
 
     return {
         .width = base::checked_cast<size_t>(w),
@@ -212,7 +206,7 @@ GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double s, double su
         // negative when the glyph rises above the baseline.
         .bearing_x = x0,
         .bearing_y = -(y0 + h),
-        .is_color = is_color,
+        .colored = colored,
         .pixels = std::move(pixels),
     };
 }

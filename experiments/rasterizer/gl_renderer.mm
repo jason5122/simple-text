@@ -279,7 +279,7 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
         Atlas::UV uv;
         int w;
         int h;
-        bool is_color;
+        bool colored;
     };
     std::map<GlyphKey, Placement> placements;
     for (const auto& [key, bmp] : _source->bitmaps) {
@@ -288,11 +288,11 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
         const int w = static_cast<int>(bmp.width);
         const int h = static_cast<int>(bmp.height);
         if (_atlas->insert(w, h, bmp.pixels, uv)) {
-            placements[key] = {uv, w, h, bmp.is_color};
+            placements[key] = {uv, w, h, bmp.colored};
         }
     }
 
-    // One instance per glyph. is_color (as a flag) and the tint color are per-instance fields, so
+    // One instance per glyph. colored (as a flag) and the tint color are per-instance fields, so
     // mono and color glyphs draw together in a single instanced call -- no grouping, no per-vertex
     // duplication. Per-glyph syntax colors will just vary the color field.
     std::vector<InstanceData> instances;
@@ -314,7 +314,7 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
             .g = 0.0f,
             .b = 0.0f,
             .a = 1.0f,
-            .flags = p.is_color ? kFlagColor : kFlagMono,
+            .flags = p.colored ? kFlagColor : kFlagMono,
         });
     }
     _glyph_instance_count = static_cast<GLsizei>(instances.size());

@@ -45,27 +45,6 @@ void draw_glyph(GlyphAtlasSource& out,
     out.instances.push_back({.key = key, .dst_x = dst_x, .dst_y = dst_y});
 }
 
-void draw_text(GlyphAtlasSource& out,
-               const font::FontHandle& font,
-               std::string_view utf8,
-               size_t line_index,
-               double scale,
-               bool use_subpixel_positioning) {
-    const double ascent = std::ceil(font.ascent());
-    const double descent = std::ceil(font.descent());
-    const double leading = std::ceil(font.leading());
-    const double line_height = ascent + descent + leading;
-    const double baseline_y = ascent + line_height * line_index;
-
-    const font::ShapedLine shaped = font::shape(font, utf8);
-    for (const auto& run : shaped.runs) {
-        for (const auto& g : run.glyphs) {
-            draw_glyph(out, run.font, g.glyph_id, g.x_offset, baseline_y + g.y_offset, scale,
-                       use_subpixel_positioning);
-        }
-    }
-}
-
 // The 32 printable-ASCII punctuation characters Sublime builds programming ligatures from (==, !=,
 // ->, ...). This is exactly Sublime's documented set, and matches the four-range check in its
 // binary: every printable ASCII character except space, the digits, and the letters. Those three
@@ -85,40 +64,19 @@ bool is_monospace(const font::FontHandle& handle) {
     return std::abs(font::shape(handle, "i").width - font::shape(handle, "M").width) < 0.01;
 }
 
-void draw_text_2(GlyphAtlasSource& out,
-                 const font::FontHandle& font,
-                 std::string_view utf8,
-                 size_t line_index,
-                 double scale,
-                 bool use_subpixel_positioning) {
-    // Combining marks (non-base characters) attach to the preceding base, so a grapheme cluster --
-    // base plus its trailing marks -- must be shaped as one unit. Shaped standalone, each mark
-    // gets a real advance and spreads instead of stacking. Runs with no marks are single
-    // codepoints, so Latin/CJK are unchanged (CJK aren't non-base). This is Sublime's
-    // grapheme-boundary exception.
+template <typename Visit>
+void for_each_cluster(std::string_view utf8, bool monospace, Visit&& visit) {
     CFCharacterSetRef nonbase = CFCharacterSetGetPredefined(kCFCharacterSetNonBase);
-    const bool monospace = is_monospace(font);
-
     // A codepoint is a combining mark if it's in the non-base set; an invalid codepoint (-1)
     // isn't.
     auto is_mark = [&](base::Unichar cp) {
         return cp >= 0 && CFCharacterSetIsLongCharacterMember(nonbase, static_cast<UTF32Char>(cp));
     };
 
-    double pen = 0.0;  // accumulated advance in points
-    const double ascent = std::ceil(font.ascent());
-    const double descent = std::ceil(font.descent());
-    const double leading = std::ceil(font.leading());
-    const double line_height = ascent + descent + leading;
-    const double baseline_y = ascent + line_height * line_index;
-
     for (size_t i = 0; i < utf8.size();) {
         size_t cluster_end = i;
         const base::Unichar base_cp = base::next_utf8(utf8, cluster_end);
 
-        // Extend the cluster. Combining marks take precedence (matching ST): a base plus its
-        // trailing non-base marks is one grapheme. Otherwise, in a monospace font, a run of ASCII
-        // operators shapes together so CoreText forms programming ligatures (==, !=, ->, ...).
         size_t peek = cluster_end;
         const bool next_is_mark =
             cluster_end < utf8.size() && is_mark(base::next_utf8(utf8, peek));
@@ -136,18 +94,55 @@ void draw_text_2(GlyphAtlasSource& out,
             }
         }
 
-        const font::ShapedLine shaped = font::shape(font, utf8.substr(i, cluster_end - i));
+        visit(utf8.substr(i, cluster_end - i));
         i = cluster_end;
+    }
+}
 
-        const double origin_x = pen;
-        for (const auto& run : shaped.runs) {
-            for (const auto& g : run.glyphs) {
-                draw_glyph(out, run.font, g.glyph_id, origin_x + g.x_offset,
-                           baseline_y + g.y_offset, scale, use_subpixel_positioning);
-                pen += g.x_advance;
-            }
+void draw_cluster(GlyphAtlasSource& out,
+                  const font::FontHandle& font,
+                  std::string_view cluster,
+                  bool monospace,
+                  double baseline_y,
+                  double scale,
+                  bool use_subpixel_positioning,
+                  double& pen) {
+    const double origin_x = pen;
+    const font::ShapedLine shaped = font::shape(font, cluster);
+    double delta = 0.0;
+    for (const auto& run : shaped.runs) {
+        // Monospaced text lays entirely on the cell grid, so when the *primary* font is monospace,
+        // snap every run's advance.
+        const bool snap = monospace && run.font.size() <= font::kMonospaceSnapMaxPt;
+        for (const auto& g : run.glyphs) {
+            const double x_advance = snap ? std::round(g.x_advance) : g.x_advance;
+            delta += x_advance - g.x_advance;
+            draw_glyph(out, run.font, g.glyph_id, origin_x + g.x_offset + delta,
+                       baseline_y + g.y_offset, scale, use_subpixel_positioning);
+            pen += x_advance;
         }
     }
+}
+
+void draw_text(GlyphAtlasSource& out,
+               const font::FontHandle& font,
+               std::string_view utf8,
+               size_t line_index,
+               double scale,
+               bool use_subpixel_positioning) {
+    const bool monospace = is_monospace(font);
+
+    const double ascent = std::ceil(font.ascent());
+    const double descent = std::ceil(font.descent());
+    const double leading = std::ceil(font.leading());
+    const double line_height = ascent + descent + leading;
+    const double baseline_y = ascent + line_height * line_index;
+
+    double pen = 0.0;  // accumulated advance in points
+    for_each_cluster(utf8, monospace, [&](std::string_view cluster) {
+        draw_cluster(out, font, cluster, monospace, baseline_y, scale, use_subpixel_positioning,
+                     pen);
+    });
 }
 
 }  // namespace
@@ -204,23 +199,16 @@ int main(int argc, char* argv[]) {
         };
     }
 
+    // TODO: Get scale from the display.
     constexpr double scale = 2.0;
-
-    constexpr bool kUseIndividualShaping = true;
 
     auto handle = font::create_font(family, font_size, weight, slant);
     if (!handle) return 1;
 
-    // Lay the text out into per-glyph draw instances + the unique bitmaps for the atlas; the GL
-    // renderer packs and draws them.
     GlyphAtlasSource source;
     const bool use_subpixel_positioning = font_size <= font::kSubpixelMaxPt;
     for (size_t i = 0; i < lines.size(); i++) {
-        if (kUseIndividualShaping) {
-            draw_text_2(source, *handle, lines[i], i, scale, use_subpixel_positioning);
-        } else {
-            draw_text(source, *handle, lines[i], i, scale, use_subpixel_positioning);
-        }
+        draw_text(source, *handle, lines[i], i, scale, use_subpixel_positioning);
     }
 
     show_window_gl(source, scale);

@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "base/strings/string_util.h"
 #include <gtest/gtest.h>
 
@@ -111,9 +112,9 @@ TEST(StringUtilTest, IsStringASCII) {
             for (size_t len = 0, max_len = string_length - offset; len < max_len; ++len) {
                 EXPECT_TRUE(is_string_ascii(std::string_view(char_ascii + offset, len)));
                 for (size_t char_pos = offset; char_pos < len; ++char_pos) {
-                    char_ascii[char_pos] |= '\x80';
+                    UNSAFE_TODO(char_ascii[char_pos]) |= '\x80';
                     EXPECT_FALSE(is_string_ascii(std::string_view(char_ascii + offset, len)));
-                    char_ascii[char_pos] &= ~'\x80';
+                    UNSAFE_TODO(char_ascii[char_pos]) &= ~'\x80';
                 }
             }
         }
@@ -123,15 +124,18 @@ TEST(StringUtilTest, IsStringASCII) {
         const size_t string_length = std::size(char16_ascii) - 1;
         for (size_t offset = 0; offset < 4; ++offset) {
             for (size_t len = 0, max_len = string_length - offset; len < max_len; ++len) {
-                EXPECT_TRUE(is_string_ascii(std::u16string_view(char16_ascii + offset, len)));
+                EXPECT_TRUE(
+                    is_string_ascii(std::u16string_view(UNSAFE_TODO(char16_ascii + offset), len)));
                 for (size_t char_pos = offset; char_pos < len; ++char_pos) {
-                    char16_ascii[char_pos] |= 0x80;
-                    EXPECT_FALSE(is_string_ascii(std::u16string_view(char16_ascii + offset, len)));
-                    char16_ascii[char_pos] &= ~0x80;
+                    UNSAFE_TODO(char16_ascii[char_pos]) |= 0x80;
+                    EXPECT_FALSE(is_string_ascii(
+                        std::u16string_view(UNSAFE_TODO(char16_ascii + offset), len)));
+                    UNSAFE_TODO(char16_ascii[char_pos]) &= ~0x80;
                     // Also test when the upper half is non-zero.
-                    char16_ascii[char_pos] |= 0x100;
-                    EXPECT_FALSE(is_string_ascii(std::u16string_view(char16_ascii + offset, len)));
-                    char16_ascii[char_pos] &= ~0x100;
+                    UNSAFE_TODO(char16_ascii[char_pos]) |= 0x100;
+                    EXPECT_FALSE(is_string_ascii(
+                        std::u16string_view(UNSAFE_TODO(char16_ascii + offset), len)));
+                    UNSAFE_TODO(char16_ascii[char_pos]) &= ~0x100;
                 }
             }
         }

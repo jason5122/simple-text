@@ -13,12 +13,6 @@ using CTFontRef = const struct __CTFont*;
 
 namespace font {
 
-// Sublime's small-size text path has two cutoffs:
-//   - The shaper snaps monospace advances to whole points at 16.0pt and below.
-//   - The renderer positions glyphs with 6-phase horizontal sub-pixel precision below 17pt.
-inline constexpr double kMonospaceSnapMaxPt = 16.0;
-inline constexpr double kSubpixelMaxPt = 16.5;
-
 using FontFaceId = uint32_t;
 
 class FontHandle {
@@ -35,6 +29,9 @@ public:
     double ascent() const;
     double descent() const;
     double leading() const;
+    // True if the font is fixed-pitch, by Sublime's metric: 'i' and 'M' advance within 0.001pt.
+    // Computed once and cached.
+    bool is_monospace() const;
 
     // TODO: Remove this. If we need a unique key, consider adding PostScript name.
     const void* native_handle() const;
@@ -65,11 +62,6 @@ struct ShapedRun {
     std::vector<GlyphPlacement> glyphs;
 };
 
-struct ShapedLine {
-    std::vector<ShapedRun> runs;
-    double width;
-};
-
 // In device pixels.
 struct GlyphBitmap {
     size_t width;
@@ -90,7 +82,7 @@ std::optional<FontHandle> create_font(std::string family,
                                       Weight weight = Weight::Normal,
                                       Slant slant = Slant::Normal);
 
-ShapedLine shape(const FontHandle& font, std::string_view utf8);
+std::vector<ShapedRun> shape(const FontHandle& font, std::string_view utf8);
 
 GlyphBitmap rasterize(const FontHandle& font,
                       GlyphId glyph,

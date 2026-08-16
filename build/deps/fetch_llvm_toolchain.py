@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
+"""Download LLVM/clang toolchain packages from Chromium's prebuilt bucket.
+
+Pins come from deps.json (llvm_toolchain). Pass the package name(s) to install; sync.py
+computes the set from the host plus any selected targets/dev-tools.
+"""
+
 import argparse
 import os
 import sys
 
-from download import extract_tar, get_os_cpu
+from download import extract_tar, get_os_cpu, load_pins
 
-CLANG_REVISION = "llvmorg-23-init-19482-g53d18800"
-CLANG_SUB_REVISION = 1
-RELEASE_VERSION = "23"
+_PINS = load_pins("llvm_toolchain")
+CLANG_REVISION = _PINS["clang_revision"]
+CLANG_SUB_REVISION = _PINS["clang_sub_revision"]
+RELEASE_VERSION = _PINS["release_version"]
 PACKAGE_VERSION = f"{CLANG_REVISION}-{CLANG_SUB_REVISION}"
 CDS_URL = "https://commondatastorage.googleapis.com/chromium-browser-clang"
+# Host platforms with a prebuilt clang (sync derives its host-support guard from this).
 PLATFORM_BY_OS_CPU = {
     ("linux", "x86_64"): "Linux_x64",
     ("mac", "x86_64"): "Mac",
     ("mac", "arm64"): "Mac_arm64",
     ("windows", "x86_64"): "Win",
-}
-RUNTIME_LIBRARY_BY_OS = {
-    "mac": "clang-mac-runtime-library",
-    "linux": "clang-linux-runtime-library",
-    "windows": "clang-win-runtime-library",
 }
 OUTPUT_DIR = "third_party/llvm-toolchain"
 PACKAGES = (
@@ -56,6 +59,7 @@ def extract_linux_runtime(output_dir):
     extract_tar(get_url("clang", "Linux_x64"), output_dir, path_prefixes)
 
 
+# compiler-rt-<os> installs that OS's runtime libraries (all arches it ships).
 RUNTIME_EXTRACTORS = {
     "compiler-rt-mac": extract_mac_runtime,
     "compiler-rt-win": extract_windows_runtime,
@@ -70,17 +74,11 @@ def get_platform():
     return PLATFORM_BY_OS_CPU[os_cpu]
 
 
-def get_default_packages():
-    os_name, _ = get_os_cpu()
-    return ["clang", RUNTIME_LIBRARY_BY_OS[os_name]]
-
-
 def download_packages(packages):
-    # Navigate to project root.
-    os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
+    # Navigate to project root (//build/deps -> //).
+    os.chdir(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 
     print(f"Selected packages: {packages}")
-
     for package in packages:
         if extractor := RUNTIME_EXTRACTORS.get(package):
             extractor(OUTPUT_DIR)
@@ -90,19 +88,13 @@ def download_packages(packages):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Downloads the LLVM toolchain.",
+        description=__doc__,
         epilog="available packages:\n" + "\n".join(f"  {package}" for package in PACKAGES),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument(
-        "packages",
-        help="Packages to download. Defaults to clang plus the host OS runtime library.",
-        nargs="*",
-        metavar="PACKAGE",
-        choices=PACKAGES,
-    )
+    parser.add_argument("packages", nargs="+", metavar="PACKAGE", choices=PACKAGES)
     args = parser.parse_args()
-    download_packages(args.packages or get_default_packages())
+    download_packages(args.packages)
 
 
 if __name__ == "__main__":

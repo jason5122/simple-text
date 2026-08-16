@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "editor/search/ac_fast.h"
 #include "editor/search/ac_slow.h"
 #include <cassert>
@@ -68,7 +69,7 @@ ACBuffer* ACConverter::alloc_buffer() {
 
 void ACConverter::populate_root_goto_func(ACBuffer* buf, GotoVect& goto_vect) {
     unsigned char* buf_base = reinterpret_cast<unsigned char*>(buf);
-    input_t* root_gotos = static_cast<input_t*>(buf_base + buf->root_goto_ofst);
+    input_t* root_gotos = static_cast<input_t*>(UNSAFE_TODO(buf_base + buf->root_goto_ofst));
     const ACSlowState* root_state = _acs.root();
 
     root_state->Get_Sorted_Gotos(goto_vect);
@@ -77,7 +78,7 @@ void ACConverter::populate_root_goto_func(ACBuffer* buf, GotoVect& goto_vect) {
     uint32 new_id = 1;
     bool full_fantout = (goto_vect.size() == 255);
     if (!full_fantout) [[likely]] {
-        memset(root_gotos, '\0', 256 * sizeof(input_t));
+        UNSAFE_TODO(memset(root_gotos, '\0', 256 * sizeof(input_t)));
     }
 
     for (auto i = goto_vect.begin(), e = goto_vect.end(); i != e; i++, new_id++) {
@@ -86,7 +87,7 @@ void ACConverter::populate_root_goto_func(ACBuffer* buf, GotoVect& goto_vect) {
         _id_map[s->id()] = new_id;
 
         if (!full_fantout) [[likely]] {
-            root_gotos[c] = new_id;
+            UNSAFE_TODO(root_gotos[c]) = new_id;
         }
     }
 }
@@ -119,11 +120,11 @@ ACBuffer* ACConverter::convert() {
         _id_map[s->id()] = id;
     }
 
-    ACOffset* state_ofst_vect = (ACOffset*)(buf_base + buf->states_ofst_ofst);
+    ACOffset* state_ofst_vect = (ACOffset*)(UNSAFE_TODO(buf_base + buf->states_ofst_ofst));
     ACOffset ofst = buf->first_state_ofst;
     for (uint32 idx = 0; idx < wl.size(); idx++) {
         const ACSlowState* old_s = wl[idx];
-        ACState* new_s = (ACState*)(buf_base + ofst);
+        ACState* new_s = (ACState*)(UNSAFE_TODO(buf_base + ofst));
 
         // This property should hold as we:
         //  - States are appended to worklist in the BFS order.
@@ -133,7 +134,7 @@ ACBuffer* ACConverter::convert() {
         StateID state_id = idx + 1;
         assert(_id_map[old_s->id()] == state_id);
 
-        state_ofst_vect[state_id] = ofst;
+        UNSAFE_TODO(state_ofst_vect[state_id]) = ofst;
 
         new_s->first_kid = wl.size() + 1;
         new_s->depth = old_s->depth();
@@ -148,7 +149,7 @@ ACBuffer* ACConverter::convert() {
         uint32 id = wl.size() + 1;
         input_t* input_vect = new_s->input_vect;
         for (auto i = gotovect.begin(), e = gotovect.end(); i != e; i++, id++, input_idx++) {
-            input_vect[input_idx] = i->first;
+            UNSAFE_TODO(input_vect[input_idx]) = i->first;
 
             ACSlowState* kid = i->second;
             _id_map[kid->id()] = id;
@@ -166,7 +167,8 @@ ACBuffer* ACConverter::convert() {
     for (auto i = wl.begin(), e = wl.end(); i != e; i++) {
         const ACSlowState* slow_s = *i;
         StateID fast_s_id = _id_map[slow_s->id()];
-        ACState* fast_s = reinterpret_cast<ACState*>(buf_base + state_ofst_vect[fast_s_id]);
+        ACState* fast_s =
+            reinterpret_cast<ACState*>(UNSAFE_TODO(buf_base + state_ofst_vect[fast_s_id]));
         if (const ACSlowState* fl = slow_s->fail_link()) {
             StateID id = _id_map[fl->id()];
             fast_s->fail_link = id;

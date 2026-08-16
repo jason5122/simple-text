@@ -26,5 +26,6 @@ executable("rasterizer") {
   deps = [
     "//base",
     "//third_party/spdlog",
+    "//third_party/uni_algo",
   ]
 }

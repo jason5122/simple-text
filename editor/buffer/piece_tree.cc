@@ -1,4 +1,5 @@
 #include "base/check.h"
+#include "base/compiler_specific.h"
 #include "base/functional/scope_exit.h"
 #include "base/numeric/saturation_arithmetic.h"
 #include "base/unicode/utf8_decoder.h"
@@ -671,7 +672,7 @@ char TreeWalker::next() {
         if (first_ptr_ == last_ptr_) return next();
     }
     total_offset_++;
-    return *first_ptr_++;
+    return UNSAFE_TODO(*first_ptr_++);
 }
 
 char TreeWalker::current() {
@@ -680,7 +681,7 @@ char TreeWalker::current() {
         // If this is exhausted, we're done.
         if (exhausted()) return '\0';
     }
-    return *first_ptr_;
+    return UNSAFE_TODO(*first_ptr_);
 }
 
 void TreeWalker::seek(size_t offset) {
@@ -752,8 +753,8 @@ void TreeWalker::populate_ptrs() {
         const auto& buffer = get_buffer(buffers_, piece.type);
         auto first_offset = get_offset(buffers_, piece.type, piece.first);
         auto last_offset = get_offset(buffers_, piece.type, piece.last);
-        first_ptr_ = buffer.buffer.data() + first_offset;
-        last_ptr_ = buffer.buffer.data() + last_offset;
+        first_ptr_ = UNSAFE_TODO(buffer.buffer.data() + first_offset);
+        last_ptr_ = UNSAFE_TODO(buffer.buffer.data() + last_offset);
         // Change this direction.
         stack_.back().dir = Direction::Right;
         return;
@@ -784,8 +785,8 @@ void TreeWalker::fast_forward_to(size_t offset) {
             const auto& buffer = get_buffer(buffers_, piece.type);
             auto first_offset = get_offset(buffers_, piece.type, piece.first);
             auto last_offset = get_offset(buffers_, piece.type, piece.last);
-            first_ptr_ = buffer.buffer.data() + first_offset + offset;
-            last_ptr_ = buffer.buffer.data() + last_offset;
+            first_ptr_ = UNSAFE_TODO(buffer.buffer.data() + first_offset + offset);
+            last_ptr_ = UNSAFE_TODO(buffer.buffer.data() + last_offset);
             return;
         } else {
             DCHECK(!stack_.empty());
@@ -821,7 +822,7 @@ char ReverseTreeWalker::next() {
     total_offset_--;
     // A dereference is the pointer value _before_ this actual pointer, just like STL reverse
     // iterator models.
-    return *(--first_ptr_);
+    return UNSAFE_TODO(*(--first_ptr_));
 }
 
 char ReverseTreeWalker::current() {
@@ -830,7 +831,7 @@ char ReverseTreeWalker::current() {
         // If this is exhausted, we're done.
         if (exhausted()) return '\0';
     }
-    return *(first_ptr_ - 1);
+    return UNSAFE_TODO(*(first_ptr_ - 1));
 }
 
 void ReverseTreeWalker::seek(size_t offset) {
@@ -903,8 +904,8 @@ void ReverseTreeWalker::populate_ptrs() {
         const auto& buffer = get_buffer(buffers_, piece.type);
         auto first_offset = get_offset(buffers_, piece.type, piece.first);
         auto last_offset = get_offset(buffers_, piece.type, piece.last);
-        last_ptr_ = buffer.buffer.data() + first_offset;
-        first_ptr_ = buffer.buffer.data() + last_offset;
+        last_ptr_ = UNSAFE_TODO(buffer.buffer.data() + first_offset);
+        first_ptr_ = UNSAFE_TODO(buffer.buffer.data() + last_offset);
         // Change this direction.
         stack_.back().dir = Direction::Left;
         return;
@@ -935,8 +936,8 @@ void ReverseTreeWalker::fast_forward_to(size_t offset) {
             auto& piece = node.piece();
             const auto& buffer = get_buffer(buffers_, piece.type);
             auto first_offset = get_offset(buffers_, piece.type, piece.first);
-            last_ptr_ = buffer.buffer.data() + first_offset;
-            first_ptr_ = buffer.buffer.data() + first_offset + offset;
+            last_ptr_ = UNSAFE_TODO(buffer.buffer.data() + first_offset);
+            first_ptr_ = UNSAFE_TODO(buffer.buffer.data() + first_offset + offset);
             return;
         } else {
             // For when we revisit this node.

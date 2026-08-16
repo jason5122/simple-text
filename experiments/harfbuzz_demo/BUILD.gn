@@ -1,0 +1,44 @@
+executable("harfbuzz_demo") {
+  sources = []
+  deps = [
+    "//base",
+    "//third_party/harfbuzz",
+  ]
+
+  if (is_mac) {
+    sources += [ "core_text.cc" ]
+    frameworks = [
+      "CoreFoundation.framework",
+      "CoreGraphics.framework",
+      "CoreText.framework",
+    ]
+  }
+
+  if (is_win) {
+    sources += [ "directwrite.cc" ]
+    libs = [ "dwrite.lib" ]
+  }
+
+  if (is_linux) {
+    sources = [ "fontconfig.cc" ]
+    deps += [
+      "//third_party/fontconfig",
+      "//third_party/freetype",
+    ]
+  }
+}
+
+# The FreeType/Fontconfig discovery path as its own target, built on Linux
+# (production) and macOS (for debugging the FreeType/Fontconfig code off its
+# native platform). On Linux this mirrors harfbuzz_demo above.
+if (is_linux || is_mac) {
+  executable("fontconfig_demo") {
+    sources = [ "fontconfig.cc" ]
+    deps = [
+      "//base",
+      "//third_party/fontconfig",
+      "//third_party/freetype",
+      "//third_party/harfbuzz",
+    ]
+  }
+}

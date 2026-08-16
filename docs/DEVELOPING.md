@@ -30,7 +30,7 @@ GN automatically generates `compile_commands.json` in the build directory (e.g.,
 ```bash
 brew install xwin
 # Pick one of x86_64, aarch64, or both.
-xwin --accept-license --arch x86_64,aarch64 splat --use-winsysroot-style --preserve-ms-arch-notation --output third_party/xwin
+xwin --accept-license --arch x86_64,aarch64 splat --use-winsysroot-style --preserve-ms-arch-notation --include-debug-symbols --output third_party/win-sysroot
 ```
 
 ```bash

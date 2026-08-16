@@ -30,3 +30,28 @@ config("compiler_builtins") {
   _clang_lib_dir = "$clang_base_path/lib/clang/$clang_version/lib"
   libs = [ "$_clang_lib_dir/$_dir/$_lib_file" ]
 }
+
+# https://clang.llvm.org/docs/SafeBuffers.html
+config("unsafe_buffers") {
+  _unsafe_buffers_paths = "//build/config/unsafe_buffers_paths.txt"
+
+  inputs = [ _unsafe_buffers_paths ]
+  cflags = [
+    # If -Werror is set, the plugin still suppresses the warning from printing, but clang still
+    # exits with a nonzero status because an error occurred.
+    # To prevent this, we use -Wno-error. If -Werror is set, the plugin upgrades this to an error
+    # manually, thus ignoring the -Wno-error.
+    "-Wunsafe-buffer-usage",
+    "-Wno-error=unsafe-buffer-usage",
+
+    "-Xclang",
+    "-add-plugin",
+    "-Xclang",
+    "unsafe-buffers",
+
+    "-Xclang",
+    "-plugin-arg-unsafe-buffers",
+    "-Xclang",
+    rebase_path(_unsafe_buffers_paths, root_build_dir),
+  ]
+}

@@ -273,6 +273,16 @@ config("treat_warnings_as_errors") {
   }
 }
 
+config("default_symbols") {
+  if (is_win) {
+    cflags = [ "/Z7" ]
+    ldflags = [ "/DEBUG" ]
+  } else {
+    cflags = [ "-g2" ]
+    asmflags = cflags
+  }
+}
+
 # Warnings that prevent narrowing or comparisons of integer types that are likely to cause
 # out-of-bound read/writes or Undefined Behaviour. In particular, size_t is used for memory sizes,
 # allocation, indexing, and offsets. Using other integer types along with size_t produces risk of

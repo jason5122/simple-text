@@ -1,5 +1,6 @@
 #include "file_path.h"
 
+#include "base/compiler_specific.h"
 #include <algorithm>
 #include <array>
 #include <numeric>
@@ -58,21 +59,15 @@ bool FilePath::operator!=(const FilePath& other) const {
 #endif
 }
 
-const FilePath::StringType& FilePath::value() const {
-    return path_;
-}
+const FilePath::StringType& FilePath::value() const { return path_; }
 
-bool FilePath::empty() const {
-    return path_.empty();
-}
+bool FilePath::empty() const { return path_.empty(); }
 
-void FilePath::clear() {
-    path_.clear();
-}
+void FilePath::clear() { path_.clear(); }
 
 bool FilePath::IsSeparator(CharType character) {
     for (size_t i = 0; i < kSeparatorsLength - 1; ++i) {
-        if (character == kSeparators[i]) {
+        if (character == UNSAFE_TODO(kSeparators[i])) {
             return true;
         }
     }
@@ -210,9 +205,7 @@ FilePath FilePath::Append(StringPieceType component) const {
     return new_path;
 }
 
-FilePath FilePath::Append(const FilePath& component) const {
-    return Append(component.value());
-}
+FilePath FilePath::Append(const FilePath& component) const { return Append(component.value()); }
 
 std::vector<FilePath::StringType> FilePath::GetComponents() const {
     std::vector<StringType> ret_val;

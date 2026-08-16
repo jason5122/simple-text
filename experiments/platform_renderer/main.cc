@@ -160,7 +160,7 @@ public:
         const canvas::Color ink{51 / 255.f, 51 / 255.f, 51 / 255.f, 1.0f};
 
         const int line_height = rasterizer.metrics(font_id_).line_height;
-        int y = 60 + 56;
+        int y = 60 + 64;
         for (const text::LineLayout& line : lines_) {
             canvas_->draw_text(line, {0, y}, ink);
             y += line_height;

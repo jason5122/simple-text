@@ -32,3 +32,27 @@
 #else
 #define NO_UNIQUE_ADDRESS
 #endif
+
+// Annotates code indicating that it should be permanently exempted from
+// `-Wunsafe-buffer-usage`. For temporary cases such as migrating callers to
+// safer patterns, use `UNSAFE_TODO()` instead; see documentation there.
+//
+// ** USE OF THIS MACRO SHOULD BE VERY RARE.** Using this macro indicates that
+// the compiler cannot verify that the code avoids OOB, and manual review is
+// required. Even with manual review, it's easy for assumptions to change and
+// security bugs to creep in over time. Prefer safer patterns instead.
+//
+// Disabling `clang-format` allows each `_Pragma` to be on its own line, as
+// recommended by https://gcc.gnu.org/onlinedocs/cpp/Pragmas.html.
+// clang-format off
+#define UNSAFE_BUFFERS(...)                  \
+  _Pragma("clang unsafe_buffer_usage begin") \
+  __VA_ARGS__                                \
+  _Pragma("clang unsafe_buffer_usage end")
+// clang-format on
+
+// Annotates code indicating that it should be temporarily exempted from
+// `-Wunsafe-buffer-usage`. While this is functionally the same as
+// `UNSAFE_BUFFERS()`, semantically it indicates that this is for migration
+// purposes, and should be cleaned up as soon as possible.
+#define UNSAFE_TODO(...) UNSAFE_BUFFERS(__VA_ARGS__)

@@ -2,11 +2,12 @@
 #include "base/unicode/unicode.h"
 #include "experiments/rasterizer/font.h"
 #include "experiments/rasterizer/gl_helpers.h"
-#include <CoreFoundation/CoreFoundation.h>
 #include <cmath>
 #include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <string_view>
+#include <uni_algo/prop.h>
+#include <uni_algo/ranges_grapheme.h>
 #include <vector>
 
 namespace {
@@ -16,21 +17,16 @@ void draw_glyph(GlyphAtlasSource& out,
                 font::GlyphId glyph_id,
                 double glyph_x,  // points
                 double glyph_y,  // points
-                double scale,
-                bool use_subpixel_positioning) {
+                double scale) {
+    // TODO: Is this clean? Any unnecessary steps or variables here?
     constexpr double kEpsilon = 1e-6;
     const double device_x_f = glyph_x * scale + kEpsilon;
-    int device_x = base::clamp_round<int>(device_x_f);
-    double subpixel_x = 0.0;
-    int phase = 0;
-    if (use_subpixel_positioning) {
-        device_x = base::clamp_floor<int>(device_x_f);
-        const double frac = device_x_f - device_x;
-        phase = base::clamp_floor<int>(frac * 6.0);
-        subpixel_x = phase * scale / 6.0;
-    }
+    const int device_x = base::clamp_floor<int>(device_x_f);
+    const double frac = device_x_f - device_x;
+    const int phase = base::clamp_floor<int>(frac * 6.0);
+    const double subpixel_x = phase * scale / 6.0;
 
-    const GlyphKey key{run_font.native_handle(), glyph_id, phase};
+    const GlyphKey key = {run_font.native_handle(), glyph_id, phase};
     auto it = out.bitmaps.find(key);
     if (it == out.bitmaps.end()) {
         it =
@@ -59,34 +55,46 @@ bool is_ascii_operator(base::Unichar cp) {
            (cp >= 0x5B && cp <= 0x60) || (cp >= 0x7B && cp <= 0x7E);
 }
 
-// Only monospace fonts get operator ligatures.
-bool is_monospace(const font::FontHandle& handle) {
-    return std::abs(font::shape(handle, "i").width - font::shape(handle, "M").width) < 0.01;
+// A combining mark (general category Mn/Mc/Me). Sublime -- like Core Text's non-base set -- stacks
+// every combining mark onto the preceding base, so marks must shape as one cluster with it.
+bool is_mark(base::Unichar cp) {
+    if (cp < 0) return false;
+    const una::codepoint::prop p{static_cast<char32_t>(cp)};
+    return p.General_Category_Mn() || p.General_Category_Mc() || p.General_Category_Me();
+}
+
+// Byte length of the first UAX #29 extended grapheme cluster in `s`, from uni_algo's grapheme
+// view.
+size_t first_grapheme_len(std::string_view s) {
+    auto graphemes = una::views::grapheme::utf8(s);
+    auto it = graphemes.begin();
+    return it == graphemes.end() ? 0 : (*it).size();
 }
 
 template <typename Visit>
 void for_each_cluster(std::string_view utf8, bool monospace, Visit&& visit) {
-    CFCharacterSetRef nonbase = CFCharacterSetGetPredefined(kCFCharacterSetNonBase);
-    // A codepoint is a combining mark if it's in the non-base set; an invalid codepoint (-1)
-    // isn't.
-    auto is_mark = [&](base::Unichar cp) {
-        return cp >= 0 && CFCharacterSetIsLongCharacterMember(nonbase, static_cast<UTF32Char>(cp));
-    };
-
     for (size_t i = 0; i < utf8.size();) {
-        size_t cluster_end = i;
-        const base::Unichar base_cp = base::next_utf8(utf8, cluster_end);
+        // One UAX #29 extended grapheme cluster, so combining marks, regional-indicator flags,
+        // emoji ZWJ sequences, and skin-tone modifiers stay together and the shaper composes them.
+        size_t cluster_end = i + first_grapheme_len(utf8.substr(i));
 
-        size_t peek = cluster_end;
-        const bool next_is_mark =
-            cluster_end < utf8.size() && is_mark(base::next_utf8(utf8, peek));
-        if (next_is_mark) {
-            while (cluster_end < utf8.size()) {
-                size_t next = cluster_end;
-                if (!is_mark(base::next_utf8(utf8, next))) break;
-                cluster_end = next;
-            }
-        } else if (monospace && is_ascii_operator(base_cp)) {
+        // UAX #29 splits some spacing combining marks (e.g. Tai Tham vowel signs, which are Mc but
+        // excluded from SpacingMark) into their own clusters. Sublime stacks every combining mark
+        // onto the base, so re-attach trailing marks; otherwise they shape standalone, pick up
+        // real advances, and spread instead of stacking.
+        while (cluster_end < utf8.size()) {
+            size_t next = cluster_end;
+            if (!is_mark(base::next_utf8(utf8, next))) break;
+            cluster_end = next;
+        }
+
+        // Operator ligatures ride on top of grapheme clustering (UAX #29 never merges "=="): in a
+        // monospace font a run of lone ASCII operators shapes together so the font forms ==, !=,
+        // ->. Each operator is its own single-codepoint grapheme (base_end == cluster_end), so
+        // this never disturbs a marks/emoji cluster.
+        size_t base_end = i;
+        const base::Unichar base_cp = base::next_utf8(utf8, base_end);
+        if (monospace && base_end == cluster_end && is_ascii_operator(base_cp)) {
             while (cluster_end < utf8.size()) {
                 size_t next = cluster_end;
                 if (!is_ascii_operator(base::next_utf8(utf8, next))) break;
@@ -102,23 +110,22 @@ void for_each_cluster(std::string_view utf8, bool monospace, Visit&& visit) {
 void draw_cluster(GlyphAtlasSource& out,
                   const font::FontHandle& font,
                   std::string_view cluster,
-                  bool monospace,
                   double baseline_y,
                   double scale,
-                  bool use_subpixel_positioning,
                   double& pen) {
     const double origin_x = pen;
-    const font::ShapedLine shaped = font::shape(font, cluster);
+    const auto shaped = font::shape(font, cluster);
     double delta = 0.0;
-    for (const auto& run : shaped.runs) {
-        // Monospaced text lays entirely on the cell grid, so when the *primary* font is monospace,
-        // snap every run's advance.
-        const bool snap = monospace && run.font.size() <= font::kMonospaceSnapMaxPt;
+    for (const auto& run : shaped) {
+        // Sublime's shaper snaps monospace advances to whole points at 16.0pt and below.
+        // TODO: Should we hoist this calculation into main()?
+        const bool snap = font.is_monospace() && font.size() <= 16.0;
+
         for (const auto& g : run.glyphs) {
             const double x_advance = snap ? std::round(g.x_advance) : g.x_advance;
             delta += x_advance - g.x_advance;
             draw_glyph(out, run.font, g.glyph_id, origin_x + g.x_offset + delta,
-                       baseline_y + g.y_offset, scale, use_subpixel_positioning);
+                       baseline_y + g.y_offset, scale);
             pen += x_advance;
         }
     }
@@ -128,10 +135,7 @@ void draw_text(GlyphAtlasSource& out,
                const font::FontHandle& font,
                std::string_view utf8,
                size_t line_index,
-               double scale,
-               bool use_subpixel_positioning) {
-    const bool monospace = is_monospace(font);
-
+               double scale) {
     const double ascent = std::ceil(font.ascent());
     const double descent = std::ceil(font.descent());
     const double leading = std::ceil(font.leading());
@@ -139,9 +143,8 @@ void draw_text(GlyphAtlasSource& out,
     const double baseline_y = ascent + line_height * line_index;
 
     double pen = 0.0;  // accumulated advance in points
-    for_each_cluster(utf8, monospace, [&](std::string_view cluster) {
-        draw_cluster(out, font, cluster, monospace, baseline_y, scale, use_subpixel_positioning,
-                     pen);
+    for_each_cluster(utf8, font.is_monospace(), [&](std::string_view cluster) {
+        draw_cluster(out, font, cluster, baseline_y, scale, pen);
     });
 }
 
@@ -152,9 +155,9 @@ int main(int argc, char* argv[]) {
     std::setbuf(stdout, nullptr);
 
     std::vector<std::string> lines = {
-        "",
-        "",
-        "",
+        // "",
+        // "",
+        // "",
         "Sphinx of black quartz, judge my vow!",
         "The quick brown fox jumps over the lazy dog. 你好",
         "",
@@ -206,10 +209,8 @@ int main(int argc, char* argv[]) {
     if (!handle) return 1;
 
     GlyphAtlasSource source;
-    const bool use_subpixel_positioning = font_size <= font::kSubpixelMaxPt;
     for (size_t i = 0; i < lines.size(); i++) {
-        draw_text(source, *handle, lines[i], i, scale, use_subpixel_positioning);
+        draw_text(source, *handle, lines[i], i, scale);
     }
-
     show_window_gl(source, scale);
 }

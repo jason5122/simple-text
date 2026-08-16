@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/compiler_specific.h"
 #include <cstdint>
 
 namespace base {
@@ -10,11 +11,11 @@ namespace base {
 class UTF8Decoder {
 public:
     constexpr void put(uint8_t byte) {
-        uint32_t type = kStateTable[byte];
+        uint32_t type = UNSAFE_TODO(kStateTable[byte]);
 
         value_ = (state > kRejectState) ? (byte & 0x3fu) | (value_ << 6) : (0xff >> type) & (byte);
 
-        state = kStateTable[256 + state + type];
+        state = UNSAFE_TODO(kStateTable[256 + state + type]);
     }
 
     constexpr bool done() const { return state == kAcceptState; }
@@ -52,8 +53,8 @@ private:
 class ReverseUTF8Decoder {
 public:
     constexpr void put(uint8_t byte) {
-        uint32_t type = kStateTable[byte];
-        uint8_t next_state = kStateTable[256 + state + type];
+        uint32_t type = UNSAFE_TODO(kStateTable[byte]);
+        uint8_t next_state = UNSAFE_TODO(kStateTable[256 + state + type]);
 
         if (next_state <= kRejectState) {
             value_ |= (((0xff >> type) & (byte)) << shift);

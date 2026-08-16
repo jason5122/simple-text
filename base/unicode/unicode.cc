@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "base/third_party/icu/icu_utf.h"
 #include "base/unicode/unicode.h"
 
@@ -10,7 +11,7 @@ int count_utf8(std::string_view utf8) {
     int count = 0;
     for (size_t i = 0; i < len;) {
         base_icu::UChar32 cp;
-        CBU8_NEXT(src, i, len, cp);
+        UNSAFE_TODO(CBU8_NEXT(src, i, len, cp));
         if (!is_valid_codepoint(cp)) return -1;
         ++count;
     }
@@ -24,7 +25,7 @@ int count_utf16(std::u16string_view utf16) {
     int count = 0;
     for (size_t i = 0; i < len;) {
         base_icu::UChar32 cp;
-        CBU16_NEXT(src, i, len, cp);
+        UNSAFE_TODO(CBU16_NEXT(src, i, len, cp));
         if (!is_valid_codepoint(cp)) return -1;
         ++count;
     }
@@ -37,7 +38,7 @@ Unichar next_utf8(std::string_view utf8, size_t& i) {
 
     if (i < len) {
         base_icu::UChar32 cp;
-        CBU8_NEXT(src, i, len, cp);
+        UNSAFE_TODO(CBU8_NEXT(src, i, len, cp));
         if (is_valid_codepoint(cp)) return cp;
     }
     return -1;
@@ -49,7 +50,7 @@ Unichar next_utf16(std::u16string_view utf16, size_t& i) {
 
     if (i < len) {
         base_icu::UChar32 cp;
-        CBU16_NEXT(src, i, len, cp);
+        UNSAFE_TODO(CBU16_NEXT(src, i, len, cp));
         if (is_valid_codepoint(cp)) return cp;
     }
     return -1;
@@ -60,7 +61,7 @@ int codepoint_to_utf8(Unichar cp, char utf8[base::kMaxBytesInUTF8Sequence]) {
 
     if (utf8) {
         size_t _ = 0;
-        CBU8_APPEND_UNSAFE(reinterpret_cast<uint8_t*>(utf8), _, cp);
+        UNSAFE_TODO(CBU8_APPEND_UNSAFE(reinterpret_cast<uint8_t*>(utf8), _, cp));
     }
     return CBU8_LENGTH(cp);
 }
@@ -70,7 +71,7 @@ int codepoint_to_utf16(Unichar cp, uint16_t utf16[2]) {
 
     if (utf16) {
         size_t _ = 0;
-        CBU16_APPEND_UNSAFE(utf16, _, cp);
+        UNSAFE_TODO(CBU16_APPEND_UNSAFE(utf16, _, cp));
     }
     return CBU16_LENGTH(cp);
 }

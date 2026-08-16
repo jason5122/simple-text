@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "editor/search/ac_slow.h"
 #include <cassert>
 
@@ -6,7 +7,7 @@ namespace editor {
 ACSlowConstructor::ACSlowConstructor() : _next_node_id(1) {
     _root = new_state();
     _root_char = new input_t[256];
-    memset((void*)_root_char, '\0', 256);
+    UNSAFE_TODO(memset((void*)_root_char, '\0', 256));
 }
 
 ACSlowConstructor::~ACSlowConstructor() {
@@ -96,7 +97,7 @@ void ACSlowConstructor::construct(const std::vector<std::string>& patterns) {
 
     const ACSlowGotoMap& m = _root->goto_map();
     for (auto i = m.begin(); i != m.end(); ++i) {
-        p[i->first] = 1;
+        UNSAFE_TODO(p[i->first]) = 1;
     }
 }
 

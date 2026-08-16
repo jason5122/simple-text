@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import sys
@@ -20,6 +21,12 @@ def get_os_cpu():
     else:
         sys.exit(f"unsupported architecture: {machine}")
     return os_name, cpu
+
+
+def load_pins(group):
+    # Single source of truth for versions + checksums; every fetcher reads from here.
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "deps.json")) as f:
+        return json.load(f)[group]
 
 
 def extract_zip(url, output_dir, member):

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import os
 
-from download import extract_zip, get_os_cpu
+from download import extract_zip, get_os_cpu, load_pins
 
 REPO_URL = "https://github.com/ninja-build/ninja"
-VERSION = "v1.13.2"
 ASSET_BY_OS_CPU = {
     ("mac", "x86_64"): "ninja-mac.zip",
     ("mac", "arm64"): "ninja-mac.zip",
@@ -16,14 +15,15 @@ ASSET_BY_OS_CPU = {
 
 
 def main():
-    # Navigate to project root.
-    os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
+    # Navigate to project root (//build/deps -> //).
+    os.chdir(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 
     os_name, cpu = get_os_cpu()
     is_windows = os_name == "windows"
     exe_name = "ninja.exe" if is_windows else "ninja"
 
-    url = f"{REPO_URL}/releases/download/{VERSION}/{ASSET_BY_OS_CPU[(os_name, cpu)]}"
+    version = load_pins("ninja")["version"]
+    url = f"{REPO_URL}/releases/download/{version}/{ASSET_BY_OS_CPU[(os_name, cpu)]}"
     exe_path = extract_zip(url, "bin", exe_name)
     if not is_windows:
         os.chmod(exe_path, 0o755)

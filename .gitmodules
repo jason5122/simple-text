@@ -1,9 +1,6 @@
 [submodule "third_party/googletest/src"]
 	path = third_party/googletest/src
 	url = https://github.com/google/googletest
-[submodule "third_party/miniz/src"]
-	path = third_party/miniz/src
-	url = https://github.com/richgel999/miniz
 [submodule "third_party/libspng/src"]
 	path = third_party/libspng/src
 	url = https://github.com/randy408/libspng/
@@ -46,6 +43,3 @@
 [submodule "third_party/expat/src"]
 	path = third_party/expat/src
 	url = https://github.com/libexpat/libexpat.git
-[submodule "third_party/libgrapheme/src"]
-	path = third_party/libgrapheme/src
-	url = https://git.suckless.org/libgrapheme

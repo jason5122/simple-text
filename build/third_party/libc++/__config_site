@@ -1,0 +1,71 @@
+// -*- C++ -*-
+
+#ifndef _LIBCPP_CONFIG_SITE
+#define _LIBCPP_CONFIG_SITE
+
+// We use hardening across all builds because Chromium also does. The performance hit is small.
+// https://security.googleblog.com/2024/11/retrofitting-spatial-safety-to-hundreds.html
+#define _LIBCPP_HARDENING_MODE _LIBCPP_HARDENING_MODE_EXTENSIVE
+
+// =================================================================================================
+// https://source.chromium.org/chromium/chromium/src/+/9568498c9dd3b7e61c66944915abe7561ab984df:buildtools/third_party/libc++/__config_site
+// =================================================================================================
+#define _LIBCPP_ABI_FORCE_ITANIUM 0
+#define _LIBCPP_ABI_FORCE_MICROSOFT 0
+#define _LIBCPP_HAS_THREADS 1
+#define _LIBCPP_HAS_MONOTONIC_CLOCK 1
+#define _LIBCPP_HAS_TERMINAL 1
+#define _LIBCPP_HAS_MUSL_LIBC 0
+
+#ifdef _WIN32
+#define _LIBCPP_HAS_THREAD_API_PTHREAD 0
+#define _LIBCPP_HAS_THREAD_API_EXTERNAL 0
+#define _LIBCPP_HAS_THREAD_API_WIN32 1
+#else
+#define _LIBCPP_HAS_THREAD_API_PTHREAD 1
+#define _LIBCPP_HAS_THREAD_API_EXTERNAL 0
+#define _LIBCPP_HAS_THREAD_API_WIN32 0
+#endif
+
+#define _LIBCPP_HAS_VENDOR_AVAILABILITY_ANNOTATIONS 0
+#define _LIBCPP_HAS_FILESYSTEM 1
+#define _LIBCPP_HAS_RANDOM_DEVICE 1
+#define _LIBCPP_HAS_LOCALIZATION 1
+#define _LIBCPP_HAS_UNICODE 1
+#define _LIBCPP_HAS_WIDE_CHARACTERS 1
+#define _LIBCPP_HAS_TIME_ZONE_DATABASE 1
+
+// PSTL backends
+#if defined(__APPLE__)
+#define _LIBCPP_PSTL_BACKEND_LIBDISPATCH
+#else
+#define _LIBCPP_PSTL_BACKEND_STD_THREAD
+#endif
+
+// Define _LIBCPP_ASSERTION_SEMANTIC_DEFAULT instead of _LIBCPP_ASSERTION_SEMANTIC because the
+// latter requires setting _LIBCPP_HAS_EXPERIMENTAL_LIBRARY too.
+#define _LIBCPP_ASSERTION_SEMANTIC_DEFAULT _LIBCPP_ASSERTION_SEMANTIC_HARDENING_DEPENDENT
+
+#define _LIBCPP_LIBC_PICOLIBC 0
+#define _LIBCPP_LIBC_NEWLIB 0
+#define _LIBCPP_LIBC_LLVM_LIBC 0
+
+// =================================================================================================
+// Settings below aren't part of __config_site upstream. We set them here since we want them to
+// take effect everywhere, unconditionally.
+// =================================================================================================
+// https://libcxx.llvm.org/DesignDocs/HeaderRemovalPolicy.html
+#define _LIBCPP_REMOVE_TRANSITIVE_INCLUDES
+
+// Prevent libc++ from embedding linker flags to try to automatically link against its runtime
+// library. This is unnecessary with our build system, and can also result in build failures if
+// libc++'s name for a library does not match ours. Only has an effect on Windows.
+#define _LIBCPP_NO_AUTO_LINK
+
+// Disable header include for parallel algorithms.
+#define _LIBCPP_HAS_NO_INCOMPLETE_PSTL
+
+// TODO: If upstream adds a "latest" magic number, switch to that.
+#define _LIBCPP_AVAILABILITY_MINIMUM_HEADER_VERSION 999
+
+#endif  // _LIBCPP_CONFIG_SITE

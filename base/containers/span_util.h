@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/compiler_specific.h"
 #include <span>
 #include <type_traits>
 
@@ -19,7 +20,7 @@ std::span<uint8_t> as_writable_u8_span(T&& t) {
     // Uses std::span's rules for vector/string/array/etc.
     auto s = std::span(std::forward<T>(t));
     auto b = std::as_writable_bytes(s);
-    return {reinterpret_cast<uint8_t*>(b.data()), b.size()};
+    return UNSAFE_TODO({reinterpret_cast<uint8_t*>(b.data()), b.size()});
 }
 
 // Writable: single objects
@@ -27,7 +28,7 @@ template <class T>
     requires(!SpanConstructibleFrom<T&> && std::is_trivially_copyable_v<T>)
 std::span<uint8_t> as_writable_u8_span(T& obj) noexcept {
     auto b = std::as_writable_bytes(std::span<T, 1>(&obj, 1));
-    return {reinterpret_cast<uint8_t*>(b.data()), b.size()};
+    return UNSAFE_TODO({reinterpret_cast<uint8_t*>(b.data()), b.size()});
 }
 
 // Readable: anything span-constructible
@@ -37,7 +38,7 @@ std::span<const uint8_t> as_u8_span(const T& t) noexcept {
     // Uses std::span's rules for vector/string/array/etc.
     auto s = std::span(t);
     auto b = std::as_bytes(s);
-    return {reinterpret_cast<const uint8_t*>(b.data()), b.size()};
+    return UNSAFE_TODO({reinterpret_cast<const uint8_t*>(b.data()), b.size()});
 }
 
 // Readable: single objects
@@ -45,7 +46,7 @@ template <class T>
     requires(!SpanConstructibleFrom<const T&> && std::is_trivially_copyable_v<T>)
 std::span<const uint8_t> as_u8_span(const T& obj) noexcept {
     auto b = std::as_bytes(std::span<const T, 1>(&obj, 1));
-    return {reinterpret_cast<const uint8_t*>(b.data()), b.size()};
+    return UNSAFE_TODO({reinterpret_cast<const uint8_t*>(b.data()), b.size()});
 }
 
 }  // namespace base

@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "base/location.h"
 #include <string>
 
@@ -34,7 +35,7 @@ constexpr size_t kStrippedPrefixLength = stripped_file_path_prefix_length();
 }  // namespace
 
 Location Location::current(const char* function_name, const char* file_name, int line_number) {
-    return Location(function_name, file_name + kStrippedPrefixLength, line_number);
+    return Location(function_name, UNSAFE_TODO(file_name + kStrippedPrefixLength), line_number);
 }
 
 }  // namespace base

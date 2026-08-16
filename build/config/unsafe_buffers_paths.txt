@@ -1,0 +1,14 @@
+# Checks to enable.
+.buffers,libc,unique_ptr
+
+# Path to source root from the directory containing this file.
+$../../
+
+# Directories to exempt from checks, relative to source root.
+-third_party/
+
+# TODO: Remove these entries. We have these here temporarily while we get compilation to work.
+-experiments/
+-base/
+-font/
+-gui/

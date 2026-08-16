@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/third_party/icu/icu_utf.h"
@@ -23,19 +24,19 @@ concept BitsAre = std::integral<Char> && CHAR_BIT * sizeof(Char) == N;
 template <typename Char>
     requires(BitsAre<Char, 8>)
 void UnicodeAppendUnsafe(Char* out, size_t* size, base_icu::UChar32 code_point) {
-    CBU8_APPEND_UNSAFE(reinterpret_cast<uint8_t*>(out), *size, code_point);
+    UNSAFE_TODO(CBU8_APPEND_UNSAFE(reinterpret_cast<uint8_t*>(out), *size, code_point));
 }
 
 template <typename Char>
     requires(BitsAre<Char, 16>)
 void UnicodeAppendUnsafe(Char* out, size_t* size, base_icu::UChar32 code_point) {
-    CBU16_APPEND_UNSAFE(out, *size, code_point);
+    UNSAFE_TODO(CBU16_APPEND_UNSAFE(out, *size, code_point));
 }
 
 template <typename Char>
     requires(BitsAre<Char, 32>)
 void UnicodeAppendUnsafe(Char* out, size_t* size, base_icu::UChar32 code_point) {
-    out[(*size)++] = static_cast<Char>(code_point);
+    UNSAFE_TODO(out[(*size)++]) = static_cast<Char>(code_point);
 }
 
 // DoUTFConversion ------------------------------------------------------------
@@ -48,7 +49,7 @@ bool DoUTFConversion(const char* src, size_t src_len, DestChar* dest, size_t* de
 
     for (size_t i = 0; i < src_len;) {
         base_icu::UChar32 code_point;
-        CBU8_NEXT(reinterpret_cast<const uint8_t*>(src), i, src_len, code_point);
+        UNSAFE_TODO(CBU8_NEXT(reinterpret_cast<const uint8_t*>(src), i, src_len, code_point));
 
         if (!is_valid_codepoint(code_point)) {
             success = false;
@@ -80,15 +81,15 @@ bool DoUTFConversion(const char16_t* src, size_t src_len, DestChar* dest, size_t
     while (i + 1 < src_len) {
         base_icu::UChar32 code_point;
 
-        if (CBU16_IS_LEAD(src[i]) && CBU16_IS_TRAIL(src[i + 1])) {
-            code_point = CBU16_GET_SUPPLEMENTARY(src[i], src[i + 1]);
+        if (UNSAFE_TODO(CBU16_IS_LEAD(src[i])) && UNSAFE_TODO(CBU16_IS_TRAIL(src[i + 1]))) {
+            code_point = UNSAFE_TODO(CBU16_GET_SUPPLEMENTARY(src[i], src[i + 1]));
             if (!is_valid_codepoint(code_point)) {
                 code_point = kErrorCodePoint;
                 success = false;
             }
             i += 2;
         } else {
-            code_point = ConvertSingleChar(src[i]);
+            code_point = ConvertSingleChar(UNSAFE_TODO(src[i]));
             ++i;
         }
 
@@ -96,7 +97,7 @@ bool DoUTFConversion(const char16_t* src, size_t src_len, DestChar* dest, size_t
     }
 
     if (i < src_len) {
-        UnicodeAppendUnsafe(dest, dest_len, ConvertSingleChar(src[i]));
+        UnicodeAppendUnsafe(dest, dest_len, ConvertSingleChar(UNSAFE_TODO(src[i])));
     }
 
     return success;

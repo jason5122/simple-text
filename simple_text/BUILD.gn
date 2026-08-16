@@ -29,9 +29,9 @@ if (is_mac) {
     # deps += [ ":icon" ]
   }
 
-  icon("icon") {
-    sources = [ "resources/app.iconset" ]
-  }
+  # icon("icon") {
+  #   sources = [ "resources/app.iconset" ]
+  # }
 } else if (is_linux) {
   executable("simple_text") {
     sources = common_sources

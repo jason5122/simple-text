@@ -1,5 +1,3 @@
-import("//build/config/c++/c++.gni")
-
 config("runtime_library") {
   # Don't leak any symbols on a static build.
   defines = [ "_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS" ]
@@ -8,17 +6,19 @@ config("runtime_library") {
   }
 
   # libc++ expects `__assertion_handler` and `__config_site`.
-  include_dirs = [ "$llvm_root/include" ]
+  include_dirs = [ "//build/third_party/libc++" ]
 
   if (is_win) {
     # We don't use libc++abi on Windows because libc++abi only implements the Itanium C++ ABI and
     # not the Microsoft ABI.
-    cflags_cc = [ "-I" + rebase_path("$libcxx_prefix/include", root_build_dir) ]
+    cflags_cc =
+        [ "-I" + rebase_path("//third_party/libc++/include", root_build_dir) ]
   } else {
     cflags_cc = [
       "-nostdinc++",
-      "-isystem" + rebase_path("$libcxx_prefix/include", root_build_dir),
-      "-isystem" + rebase_path("$libcxxabi_prefix/include", root_build_dir),
+      "-isystem" + rebase_path("//third_party/libc++/include", root_build_dir),
+      "-isystem" +
+          rebase_path("//third_party/libc++abi/include", root_build_dir),
     ]
     cflags_objcc = cflags_cc
 

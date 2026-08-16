@@ -1,0 +1,70 @@
+# We don't use libc++abi on Windows because libc++abi only implements the Itanium C++ ABI and not
+# the Microsoft ABI.
+source_set("libc++abi") {
+  sources = [
+    "//third_party/libc++abi/src/abort_message.cpp",
+    "//third_party/libc++abi/src/cxa_aux_runtime.cpp",
+    "//third_party/libc++abi/src/cxa_default_handlers.cpp",
+    "//third_party/libc++abi/src/cxa_demangle.cpp",
+    "//third_party/libc++abi/src/cxa_exception.cpp",
+    "//third_party/libc++abi/src/cxa_exception_storage.cpp",
+    "//third_party/libc++abi/src/cxa_guard.cpp",
+    "//third_party/libc++abi/src/cxa_handlers.cpp",
+    "//third_party/libc++abi/src/cxa_personality.cpp",
+    "//third_party/libc++abi/src/cxa_vector.cpp",
+    "//third_party/libc++abi/src/cxa_virtual.cpp",
+    "//third_party/libc++abi/src/fallback_malloc.cpp",
+    "//third_party/libc++abi/src/private_typeinfo.cpp",
+    "//third_party/libc++abi/src/stdlib_exception.cpp",
+    "//third_party/libc++abi/src/stdlib_stdexcept.cpp",
+    "//third_party/libc++abi/src/stdlib_typeinfo.cpp",
+  ]
+
+  if (is_linux) {
+    sources += [ "//third_party/libc++abi/src/cxa_thread_atexit.cpp" ]
+  }
+
+  defines = [ "LIBCXXABI_SILENT_TERMINATE" ]
+
+  # libc++abi depends on libc++ internals.
+  include_dirs = [ "//third_party/libc++/src" ]
+
+  configs += [ ":config" ]
+  configs -= [
+    "//build/config/compiler:simple_text_code",
+    "//build/config/compiler:no_exceptions",
+    "//build/config/compiler:no_rtti",
+  ]
+  configs += [
+    "//build/config/compiler:no_simple_text_code",
+    "//build/config/compiler:exceptions",
+    "//build/config/compiler:rtti",
+  ]
+}
+
+config("config") {
+  cflags = [
+    "-fstrict-aliasing",
+    "-Wundef",
+    "-Wno-pragma-clang-attribute",
+    "-Wno-ignored-attributes",
+  ]
+  if (is_win) {
+    cflags += [
+      # libc++ wants to redefine the macros WIN32_LEAN_AND_MEAN and _CRT_RAND_S in its implementation.
+      "-Wno-macro-redefined",
+    ]
+  } else {
+    cflags += [ "-fPIC" ]
+  }
+
+  # We want to use a uniform C++ version, but upstream libc++ requires C++26.
+  if (is_win) {
+    # cl.exe does not yet have a C++26 flag. clang-cl maps c++latest to C++26.
+    cflags_cc = [ "-std:c++latest" ]
+  } else {
+    cflags_cc = [ "-std=c++26" ]
+  }
+
+  defines = [ "_LIBCPP_BUILDING_LIBRARY" ]
+}

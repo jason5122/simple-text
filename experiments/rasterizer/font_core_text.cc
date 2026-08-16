@@ -5,6 +5,7 @@
 #include "base/unicode/utf16_to_utf8_indices_map.h"
 #include "experiments/rasterizer/font.h"
 #include <CoreText/CoreText.h>
+#include <cmath>
 #include <spdlog/spdlog.h>
 #include <utility>
 
@@ -17,6 +18,7 @@ namespace font {
 
 struct FontHandle::Impl {
     ScopedCFTypeRef<CTFontRef> ctfont;
+    std::optional<bool> monospace;
 };
 
 FontHandle::~FontHandle() = default;
@@ -34,6 +36,20 @@ double FontHandle::leading() const { return CTFontGetLeading(impl_->ctfont.get()
 double FontHandle::size() const { return CTFontGetSize(impl_->ctfont.get()); }
 const void* FontHandle::native_handle() const { return impl_->ctfont.get(); }
 CTFontRef FontHandle::ct_font() const { return impl_->ctfont.get(); }
+
+bool FontHandle::is_monospace() const {
+    if (!impl_->monospace) {
+        auto advance = [this](std::string_view text) {
+            double sum = 0.0;
+            for (const auto& run : shape(*this, text)) {
+                for (const auto& g : run.glyphs) sum += g.x_advance;
+            }
+            return sum;
+        };
+        impl_->monospace = std::abs(advance("i") - advance("M")) < 0.001;
+    }
+    return *impl_->monospace;
+}
 
 std::optional<font::FontHandle> create_font(std::string family,
                                             double size_px,
@@ -63,18 +79,11 @@ std::optional<font::FontHandle> create_font(std::string family,
 
 namespace {
 
-// Lay out `utf8` in `ctfont` with kerning disabled and return the Core Text line.
-//
-// TODO: Is disabling kerning correct? Sublime Text seems to lay out as if kerning is disabled, but
-// I'm not sure if they literally disable kerning or if they just make glyphs context-free.
 ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont, std::string_view utf8) {
-    double kern_zero = 0.0;
-    auto kern = ScopedCFTypeRef<CFNumberRef>(
-        CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &kern_zero));
-    const void* keys[] = {kCTFontAttributeName, kCTKernAttributeName};
-    const void* vals[] = {ctfont, kern.get()};
+    const void* keys[] = {kCTFontAttributeName};
+    const void* vals[] = {ctfont};
     auto attrs = ScopedCFTypeRef<CFDictionaryRef>(
-        CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 2, &kCFTypeDictionaryKeyCallBacks,
+        CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 1, &kCFTypeDictionaryKeyCallBacks,
                            &kCFTypeDictionaryValueCallBacks));
     auto text = base::sys_utf8_to_cfstring_ref(utf8);
     auto as = ScopedCFTypeRef<CFAttributedStringRef>(
@@ -84,7 +93,7 @@ ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont, std::string_view utf8) 
 
 }  // namespace
 
-ShapedLine shape(const FontHandle& font, std::string_view utf8) {
+std::vector<ShapedRun> shape(const FontHandle& font, std::string_view utf8) {
     auto ctfont = static_cast<CTFontRef>(font.native_handle());
     auto line = make_ctline(ctfont, utf8);
 
@@ -96,7 +105,6 @@ ShapedLine shape(const FontHandle& font, std::string_view utf8) {
     base::UTF16ToUTF8IndicesMap indices_map;
     indices_map.set_utf8(utf8);
 
-    double pen_x = 0;
     for (CFIndex r = 0; r < run_count; r++) {
         CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(runs, r);
         const size_t n = base::checked_cast<size_t>(CTRunGetGlyphCount(run));
@@ -139,13 +147,11 @@ ShapedLine shape(const FontHandle& font, std::string_view utf8) {
                 .y_offset = -positions[i].y,
                 .cluster = utf8_index,
             });
-            pen_x += advances[i].width;
         }
 
         shaped_runs.emplace_back(FontHandle(run_font), glyph_placements);
     }
-
-    return {.runs = std::move(shaped_runs), .width = pen_x};
+    return shaped_runs;
 }
 
 GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double s, double subpixel_x) {
@@ -201,10 +207,8 @@ GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double s, double su
     return {
         .width = base::checked_cast<size_t>(w),
         .height = base::checked_cast<size_t>(h),
-        // Convert the y-up raster origin to the library's top-left convention: x is unchanged (no
-        // flip); bearing_y flips the bottom edge (y0, y-up) to the top edge (y-down), so it is
-        // negative when the glyph rises above the baseline.
         .bearing_x = x0,
+        // Core Text positions are y-up; negate to the library's y-down convention.
         .bearing_y = -(y0 + h),
         .colored = colored,
         .pixels = std::move(pixels),

@@ -14,5 +14,5 @@ if (is_mac) {
   assert(path_exists(sysroot),
          "Missing sysroot ($sysroot). Run the fetch script.")
 } else if (is_win) {
-  sysroot = "//third_party/xwin"
+  sysroot = "//third_party/win-sysroot"
 }

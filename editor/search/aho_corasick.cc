@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "editor/search/ac_fast.h"
 #include "editor/search/ac_slow.h"
 #include "editor/search/aho_corasick.h"
@@ -32,7 +33,7 @@ namespace {
 inline ACState* get_state_addr(unsigned char* buf_base, ACOffset* StateOfstVect, uint32 state_id) {
     assert(state_id != 0 && "root node is handled in speical way");
     assert(state_id < ((ACBuffer*)buf_base)->state_num);
-    return (ACState*)(buf_base + StateOfstVect[state_id]);
+    return (ACState*)(UNSAFE_TODO(buf_base + StateOfstVect[state_id]));
 }
 
 // The performance of the binary search is critical to this work. This is a modified version of
@@ -40,7 +41,7 @@ inline ACState* get_state_addr(unsigned char* buf_base, ACOffset* StateOfstVect,
 inline bool binary_search_input(input_t* input_vect, int vect_len, input_t input, int& idx) {
     if (vect_len <= 8) {
         for (int i = 0; i < vect_len; ++i) {
-            if (input_vect[i] == input) {
+            if (UNSAFE_TODO(input_vect[i]) == input) {
                 idx = i;
                 return true;
             }
@@ -56,7 +57,7 @@ inline bool binary_search_input(input_t* input_vect, int vect_len, input_t input
     int high = vect_len - 1;
     while (low <= high) {
         int mid = (low + high) >> 1;
-        input_t mid_c = input_vect[mid];
+        input_t mid_c = UNSAFE_TODO(input_vect[mid]);
 
         if (input < mid_c) {
             high = mid - 1;
@@ -75,8 +76,9 @@ AhoCorasick::MatchResult AhoCorasick::match(const PieceTree& tree) const {
     ACBuffer* buf = static_cast<ACBuffer*>(this->buf);
 
     unsigned char* buf_base = reinterpret_cast<unsigned char*>(buf);
-    unsigned char* root_goto = buf_base + buf->root_goto_ofst;
-    ACOffset* states_ofst_vect = reinterpret_cast<ACOffset*>(buf_base + buf->states_ofst_ofst);
+    unsigned char* root_goto = UNSAFE_TODO(buf_base + buf->root_goto_ofst);
+    ACOffset* states_ofst_vect =
+        reinterpret_cast<ACOffset*>(UNSAFE_TODO(buf_base + buf->states_ofst_ofst));
 
     ACState* state = 0;
     // TODO: Implement starting/stopping at a specific index.
@@ -86,7 +88,7 @@ AhoCorasick::MatchResult AhoCorasick::match(const PieceTree& tree) const {
     if (buf->root_goto_num != 255) [[likely]] {
         while (!walker.exhausted()) {
             unsigned char c = walker.next();
-            if (unsigned char kid_id = root_goto[c]) {
+            if (unsigned char kid_id = UNSAFE_TODO(root_goto[c])) {
                 state = get_state_addr(buf_base, states_ofst_vect, kid_id);
                 break;
             }
@@ -131,7 +133,7 @@ AhoCorasick::MatchResult AhoCorasick::match(const PieceTree& tree) const {
                 //
                 while (!walker.exhausted()) {
                     input_t c = walker.next();
-                    if (unsigned char kid_id = root_goto[c]) {
+                    if (unsigned char kid_id = UNSAFE_TODO(root_goto[c])) {
                         state = get_state_addr(buf_base, states_ofst_vect, kid_id);
                         break;
                     }

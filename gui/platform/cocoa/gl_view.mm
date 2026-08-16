@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "gui/platform/cocoa/gl_layer.h"
 #include "gui/platform/cocoa/gl_view.h"
 #include "gui/types.h"
@@ -433,8 +434,8 @@ constexpr Key KeyFromKeyCode(unsigned short vk) {
     };
 
     for (size_t i = 0; i < std::size(gPair); ++i) {
-        if (gPair[i].fVK == vk) {
-            return gPair[i].fKey;
+        if (UNSAFE_TODO(gPair[i]).fVK == vk) {
+            return UNSAFE_TODO(gPair[i]).fKey;
         }
     }
 

@@ -1,0 +1,4 @@
+executable("zlib_ng_demo") {
+  sources = [ "main.cc" ]
+  deps = [ "//third_party/zlib-ng" ]
+}

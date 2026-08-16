@@ -1,3 +1,4 @@
+#include "base/compiler_specific.h"
 #include "base/files/file_reader.h"
 #include <spdlog/spdlog.h>
 
@@ -16,14 +17,14 @@ std::string ReadFile(std::string_view file_name) {
     size_t size = ftell(fp);
     contents.resize(size);
     rewind(fp);
-    fread(&contents[0], 1, size, fp);
+    UNSAFE_BUFFERS(fread(&contents[0], 1, size, fp));
     fclose(fp);
     return contents;
 }
 
 void WriteFile(std::string_view file_name, std::string_view contents) {
     FILE* fp = fopen(file_name.data(), "wb");
-    fwrite(&contents[0], 1, contents.length(), fp);
+    UNSAFE_BUFFERS(fwrite(&contents[0], 1, contents.length(), fp));
     fclose(fp);
 }
 
@@ -34,7 +35,7 @@ std::unique_ptr<char[]> ReadFileBinary(std::string_view file_name, size_t& file_
     fseek(file, 0L, SEEK_SET);
 
     auto data = std::make_unique<char[]>(file_size);
-    fread(data.get(), file_size, 1, file);
+    UNSAFE_BUFFERS(fread(data.get(), file_size, 1, file));
     fclose(file);
     return data;
 }

@@ -37,13 +37,15 @@ is_posix = !is_win
 # TARGET DEFAULTS
 # ──────────────────────────────────────────────────────────────────────────────────────────────────
 default_compiler_configs = [
+  "//build/config/clang:unsafe_buffers",
   "//build/config/compiler:compiler",
   "//build/config/compiler:default_include_dirs",
   "//build/config/compiler:default_optimization",
+  "//build/config/compiler:default_symbols",
   "//build/config/compiler:no_exceptions",
-  "//build/config/compiler:simple_text_code",
   "//build/config/compiler:no_rtti",
   "//build/config/compiler:runtime_library",
+  "//build/config/compiler:simple_text_code",
   "//build/config/sanitizers:default_sanitizer_flags",
 ]
 
@@ -118,7 +120,7 @@ foreach(_target_type,
         deps = []
       }
 
-      deps += [ "//third_party/llvm:libc++" ]
+      deps += [ "//build/third_party/libc++" ]
     }
   }
 }

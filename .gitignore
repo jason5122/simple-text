@@ -1,10 +1,15 @@
 /third_party/mac-sysroot/
 /third_party/linux-sysroot/
+/third_party/win-sysroot/
 /third_party/llvm-toolchain/
-/third_party/xwin/
+/third_party/libc++/
+/third_party/libc++abi/
+/third_party/llvm-libc/
 /bin/
 /out/
 
-.xwin-cache/
 .cache/
 __pycache__/
+
+# TODO: Can we remove the need for this by timestamping inside the subfolders instead?
+.libcxx.stamp

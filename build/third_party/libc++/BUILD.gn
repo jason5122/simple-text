@@ -1,0 +1,132 @@
+source_set("libc++") {
+  inputs = [
+    "__assertion_handler",
+    "__config_site",
+  ]
+
+  # https://github.com/llvm/llvm-project/blob/53d18800/libcxx/src/CMakeLists.txt
+  sources = [
+    "//third_party/libc++/src/algorithm.cpp",
+    "//third_party/libc++/src/any.cpp",
+    "//third_party/libc++/src/bind.cpp",
+    "//third_party/libc++/src/call_once.cpp",
+    "//third_party/libc++/src/charconv.cpp",
+    "//third_party/libc++/src/chrono.cpp",
+    "//third_party/libc++/src/error_category.cpp",
+    "//third_party/libc++/src/exception.cpp",
+    "//third_party/libc++/src/expected.cpp",
+    "//third_party/libc++/src/filesystem/filesystem_clock.cpp",
+    "//third_party/libc++/src/filesystem/filesystem_error.cpp",
+    "//third_party/libc++/src/filesystem/path.cpp",
+    "//third_party/libc++/src/functional.cpp",
+    "//third_party/libc++/src/hash.cpp",
+    "//third_party/libc++/src/memory.cpp",
+    "//third_party/libc++/src/memory_resource.cpp",
+    "//third_party/libc++/src/new_handler.cpp",
+    "//third_party/libc++/src/new_helpers.cpp",
+    "//third_party/libc++/src/optional.cpp",
+    "//third_party/libc++/src/print.cpp",
+    "//third_party/libc++/src/random_shuffle.cpp",
+    "//third_party/libc++/src/ryu/d2fixed.cpp",
+    "//third_party/libc++/src/ryu/d2s.cpp",
+    "//third_party/libc++/src/ryu/f2s.cpp",
+    "//third_party/libc++/src/stdexcept.cpp",
+    "//third_party/libc++/src/string.cpp",
+    "//third_party/libc++/src/system_error.cpp",
+    "//third_party/libc++/src/typeinfo.cpp",
+    "//third_party/libc++/src/valarray.cpp",
+    "//third_party/libc++/src/variant.cpp",
+    "//third_party/libc++/src/vector.cpp",
+    "//third_party/libc++/src/verbose_abort.cpp",
+
+    # Threads.
+    "//third_party/libc++/src/atomic.cpp",
+    "//third_party/libc++/src/barrier.cpp",
+    "//third_party/libc++/src/condition_variable.cpp",
+    "//third_party/libc++/src/condition_variable_destructor.cpp",
+    "//third_party/libc++/src/future.cpp",
+    "//third_party/libc++/src/mutex.cpp",
+    "//third_party/libc++/src/mutex_destructor.cpp",
+    "//third_party/libc++/src/shared_mutex.cpp",
+    "//third_party/libc++/src/thread.cpp",
+
+    # Random device.
+    "//third_party/libc++/src/random.cpp",
+
+    # Localization.
+    "//third_party/libc++/src/fstream.cpp",
+    "//third_party/libc++/src/ios.cpp",
+    "//third_party/libc++/src/ios.instantiations.cpp",
+    "//third_party/libc++/src/iostream.cpp",
+    "//third_party/libc++/src/locale.cpp",
+    "//third_party/libc++/src/ostream.cpp",
+    "//third_party/libc++/src/regex.cpp",
+    "//third_party/libc++/src/strstream.cpp",
+
+    # Filesystem
+    "//third_party/libc++/src/filesystem/directory_entry.cpp",
+    "//third_party/libc++/src/filesystem/directory_iterator.cpp",
+    "//third_party/libc++/src/filesystem/operations.cpp",
+
+    # `new`/`delete` definitions.
+    "//third_party/libc++/src/new.cpp",
+  ]
+  include_dirs = [
+    "//third_party/libc++/src",
+    "//third_party/llvm-libc",
+  ]
+
+  if (is_win) {
+    sources += [
+      "//third_party/libc++/src/support/win32/locale_win32.cpp",
+      "//third_party/libc++/src/support/win32/support.cpp",
+      "//third_party/libc++/src/support/win32/thread_win32.cpp",
+    ]
+  }
+
+  configs += [ ":config" ]
+  configs -= [
+    "//build/config/compiler:simple_text_code",
+    "//build/config/compiler:no_exceptions",
+    "//build/config/compiler:no_rtti",
+  ]
+  configs += [
+    "//build/config/compiler:no_simple_text_code",
+    "//build/config/compiler:exceptions",
+    "//build/config/compiler:rtti",
+  ]
+
+  # We don't use libc++abi on Windows because libc++abi only implements the Itanium C++ ABI and not
+  # the Microsoft ABI.
+  if (is_posix) {
+    defines = [ "LIBCXX_BUILDING_LIBCXXABI" ]
+    deps = [ "//build/third_party/libc++abi" ]
+  }
+}
+
+config("config") {
+  cflags = [
+    "-fstrict-aliasing",
+    "-Wundef",
+    "-Wno-pragma-clang-attribute",
+    "-Wno-ignored-attributes",
+  ]
+  if (is_win) {
+    cflags += [
+      # libc++ wants to redefine the macros WIN32_LEAN_AND_MEAN and _CRT_RAND_S in its implementation.
+      "-Wno-macro-redefined",
+    ]
+  } else {
+    cflags += [ "-fPIC" ]
+  }
+
+  # We want to use a uniform C++ version, but upstream libc++ requires C++26.
+  if (is_win) {
+    # cl.exe does not yet have a C++26 flag. clang-cl maps c++latest to C++26.
+    cflags_cc = [ "-std:c++latest" ]
+  } else {
+    cflags_cc = [ "-std=c++26" ]
+  }
+
+  defines = [ "_LIBCPP_BUILDING_LIBRARY" ]
+}

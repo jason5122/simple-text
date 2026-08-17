@@ -34,7 +34,7 @@ for t in "${targets[@]}"; do
     if [[ "$use_sanitizers" == "1" && "$t" != "win-arm64" ]]; then
         sanitizers="is_asan=true is_ubsan=true enable_fuzztest_fuzz=true"
     fi
-    mac_sdk_path='"//third_party/mac-sysroot/MacOSX14.0.sdk"'
+    mac_sdk_path='"//third_party/mac-sysroot/Xcode.app"'
 
     out="out/$t-$mode"
     rm -rf "$out"

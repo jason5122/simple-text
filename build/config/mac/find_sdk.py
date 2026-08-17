@@ -1,55 +1,60 @@
+"""Print the path to a macOS SDK for the build.
+
+find_sdk.py 14              # discover the host's SDK via xcrun (mac host)
+find_sdk.py --sysroot DIR   # find a MacOSX*.sdk staged under DIR (any host)
+"""
+
+import glob
 import os
-import re
 import subprocess
 import sys
 
 
 def parse_version(version_str):
-    """'10.6' => [10, 6]"""
-    return [int(s) for s in re.findall(r"(\d+)", version_str)]
+    """'14.0' => [14, 0]"""
+    return [int(part) for part in version_str.split(".")]
 
 
-def main():
-    if len(sys.argv) != 2:
-        raise Exception("usage: find_sdk.py <minimum SDK version>")
-    min_sdk_version = sys.argv[1]
+def _from_xcrun(min_version):
+    def xcrun(*args):
+        try:
+            return subprocess.check_output(["xcrun", "--sdk", "macosx", *args], text=True).strip()
+        except (OSError, subprocess.CalledProcessError):
+            sys.exit(
+                "Could not query the macOS SDK. Install Xcode or the Command Line Tools "
+                "(`xcode-select --install`) and select it (`xcode-select -s` or DEVELOPER_DIR)."
+            )
 
-    job = subprocess.Popen(
-        ["xcode-select", "-print-path"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    out, err = job.communicate()
-    if job.returncode != 0:
-        print(out, file=sys.stderr)
-        print(err, file=sys.stderr)
-        raise Exception("Error %d running xcrun" % job.returncode)
-
-    dev_dir = out.decode("UTF-8").rstrip()
-    sdk_dir = os.path.join(dev_dir, "Platforms/MacOSX.platform/Developer/SDKs")
-    if not os.path.isdir(sdk_dir):
-        raise Exception(
-            "Xcode not found. Install and open Xcode, sign the agreement, then run `sudo xcode-select -s /path/to/Xcode.app`."
+    sdk_version = xcrun("--show-sdk-version")
+    if parse_version(sdk_version) < parse_version(min_version):
+        sys.exit(
+            f"macOS SDK {sdk_version} is older than the required {min_version}; "
+            f"install a newer Xcode or Command Line Tools."
         )
+    return xcrun("--show-sdk-path")
 
-    sdk_dir_list = os.listdir(sdk_dir)
-    sdks = [re.findall(r"^MacOSX(\d+\.\d+)\.sdk$", s) for s in sdk_dir_list]
-    sdks = [s[0] for s in sdks if s]  # [['10.5'], ['10.6']] => ['10.5', '10.6']
-    sdks = [
-        s
-        for s in sdks  # ['10.5', '10.6'] => ['10.6']
-        if parse_version(s) >= parse_version(min_sdk_version)
-    ]
-    if not sdks:
-        raise Exception(f"No {min_sdk_version}+ SDK found. {sdk_dir} contains: {sdk_dir_list}")
-    best_sdk = sorted(sdks, key=parse_version)[0]
-    sdk_name = "MacOSX" + best_sdk + ".sdk"
-    sdk_path = os.path.join(sdk_dir, sdk_name)
 
-    print(sdk_path)
+def _from_sysroot(sysroot):
+    if sysroot.rstrip("/").endswith(".sdk"):
+        return sysroot
+    xcode_sdks = "Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs"
+    for base in (sysroot, os.path.join(sysroot, xcode_sdks)):
+        if matches := sorted(glob.glob(os.path.join(base, "MacOSX*.sdk"))):
+            return matches[-1]  # highest-versioned
+    sys.exit(
+        f"no MacOSX*.sdk staged under {sysroot}; put a macOS SDK there "
+        f"(extract it from Xcode -- see the docs)."
+    )
+
+
+def main(argv):
+    if len(argv) == 2 and not argv[1].startswith("--"):
+        print(_from_xcrun(argv[1]))
+    elif len(argv) == 3 and argv[1] == "--sysroot":
+        print(_from_sysroot(argv[2]))
+    else:
+        raise Exception("usage: find_sdk.py <min-version> | --sysroot DIR")
 
 
 if __name__ == "__main__":
-    if sys.platform != "darwin":
-        raise Exception("This script only runs on Mac")
-    sys.exit(main())
+    main(sys.argv)

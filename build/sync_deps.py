@@ -144,7 +144,7 @@ class Component:
 
 
 class BinaryComponent(Component):
-    """A single executable extracted from a downloaded zip into //bin."""
+    """A single executable installed into //bin."""
 
     def install_path(self, platform):
         return os.path.join(BIN_DIR, self.name + platform.exe_suffix)
@@ -152,14 +152,34 @@ class BinaryComponent(Component):
     def _url(self, platform):
         raise NotImplementedError
 
+    def _place(self, url, dest):
+        # Fetch `url` and leave the executable at `dest`; subclasses pick the mechanism.
+        raise NotImplementedError
+
     def fetch(self, platform):
         os.makedirs(BIN_DIR, exist_ok=True)
-        exe = _extract_zip(self._url(platform), BIN_DIR, self.name + platform.exe_suffix)
+        dest = self.install_path(platform)
+        self._place(self._url(platform), dest)
         if not platform.is_windows:
-            os.chmod(exe, 0o755)
+            os.chmod(dest, 0o755)
 
 
-class Gn(BinaryComponent):
+class ZipBinary(BinaryComponent):
+    """An executable extracted from a downloaded zip."""
+
+    def _place(self, url, dest):
+        _extract_zip(url, os.path.dirname(dest), os.path.basename(dest))
+
+
+class RawBinary(BinaryComponent):
+    """An executable downloaded directly, without an enclosing archive."""
+
+    def _place(self, url, dest):
+        with open(dest, "wb") as f:
+            _download(url, f)
+
+
+class Gn(ZipBinary):
     name = "gn"
     revision = "64cfb8344ec3e8585a89a3836716a026e2771fcb"
     _CIPD_URL = "https://chrome-infra-packages.appspot.com"
@@ -168,7 +188,7 @@ class Gn(BinaryComponent):
         return f"{self._CIPD_URL}/dl/gn/gn/{platform.os_name}-{platform.cpu}/+/git_revision:{self.revision}"
 
 
-class Ninja(BinaryComponent):
+class Ninja(ZipBinary):
     name = "ninja"
     version = "v1.13.2"
     _REPO_URL = "https://github.com/ninja-build/ninja"
@@ -185,6 +205,25 @@ class Ninja(BinaryComponent):
     def _url(self, platform):
         asset = self._ASSETS[(platform.os_name, platform.cpu)]
         return f"{self._REPO_URL}/releases/download/{self.version}/{asset}"
+
+
+class ClangFormat(RawBinary):
+    name = "clang-format"
+    optional = True
+    _BUCKET = "https://storage.googleapis.com/chromium-clang-format"
+    # Content-addressed object per host, taken from Chromium's DEPS.
+    _OBJECTS = {
+        ("windows", "x86_64"): "fb0bcaf406ad6f0bd6b4a6347d2abe78a94fb13e",
+        ("mac", "x86_64"): "35ddc571ab654a4f58d7b35f394b04835d0b98f9",
+        ("mac", "arm64"): "945e45cbcb5443c3e569d5e0783fd012154fc4a7",
+        ("linux", "x86_64"): "f5485c39451137ee943021a0fb63738b306c5026",
+    }
+
+    def _url(self, platform):
+        key = (platform.os_name, platform.cpu)
+        if key not in self._OBJECTS:
+            sys.exit(f"no prebuilt clang-format for {platform.os_name}-{platform.cpu}")
+        return f"{self._BUCKET}/{self._OBJECTS[key]}"
 
 
 class ToolchainPackage(Component):
@@ -479,6 +518,7 @@ COMPONENTS = [
     LinuxSysroot(),
     WindowsSysroot(),
     # Optional: dev tools, only when named or with --all.
+    ClangFormat(),
     *(ToolchainTool(name, optional=True) for name in _DEV_TOOLS),
 ]
 

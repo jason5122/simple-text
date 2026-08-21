@@ -33,8 +33,12 @@ public:
     // Computed once and cached.
     bool is_monospace() const;
 
-    // TODO: Remove this. If we need a unique key, consider adding PostScript name.
     const void* native_handle() const;
+
+    // Stable identity for glyph-cache keys: PostScript name + point size. Unlike native_handle(),
+    // this stays valid after the FontHandle it came from is destroyed, so it's safe to cache
+    // rasterized glyphs (which outlive any one shaped run's temporary fallback-font handles) by it.
+    std::string cache_key() const;
 
 #if BUILDFLAG(IS_MAC)
     explicit FontHandle(CTFontRef ct_font);
@@ -77,10 +81,20 @@ struct GlyphBitmap {
 enum class Weight { Normal, Bold };
 enum class Slant { Normal, Italic };
 
+// A requested font, i.e. everything create_font() needs. Handy for callers that
+// carry a font around and mutate it (e.g. changing size or face at runtime).
+struct FontSpec {
+    std::string family;
+    double size = 14.0;
+    Weight weight = Weight::Normal;
+    Slant slant = Slant::Normal;
+};
+
 std::optional<FontHandle> create_font(std::string family,
                                       double size_px,
                                       Weight weight = Weight::Normal,
                                       Slant slant = Slant::Normal);
+std::optional<FontHandle> create_font(const FontSpec& spec);
 
 std::vector<ShapedRun> shape(const FontHandle& font, std::string_view utf8);
 

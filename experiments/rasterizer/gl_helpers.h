@@ -1,38 +1,37 @@
 #pragma once
 
+#include "experiments/rasterizer/capture.h"
 #include "experiments/rasterizer/font.h"
-#include <map>
-#include <tuple>
+#include "experiments/rasterizer/layout.h"
+#include <functional>
+#include <string>
 #include <vector>
 
-// Identifies a unique rasterized glyph bitmap: the font it came from, its glyph id, and the
-// horizontal sub-pixel phase baked into its antialiasing (always 0 when sub-pixel positioning is
-// off). Two placements sharing a key sample the same atlas cell.
-struct GlyphKey {
-    const void* font;
-    font::GlyphId glyph;
-    int phase;
+// Lays out a page of text for a given font. The interactive window calls this at startup and again
+// on every runtime font change, so each call fully re-shapes and re-rasterizes for the new
+// face/size.
+using SourceProvider = std::function<GlyphAtlasSource(const font::FontSpec&)>;
 
-    auto operator<=>(const GlyphKey&) const = default;
+// Opens a window that draws each glyph as its own textured quad sampled from a glyph atlas, plus
+// the whole atlas in the upper-right corner as a debug view. The user can change the font live:
+//   - / +  shrink / grow the size      [ / ]  previous / next family (cycles `families`)
+//   b      toggle bold                 i      toggle italic
+// Each change re-runs `provider` and rebuilds the atlas. `initial` is the starting font (its
+// family must be `families.front()`); `scale` is the device-pixel ratio the glyphs are positioned
+// at, used as the layer's contents scale.
+void run_text_window(const font::FontSpec& initial,
+                     std::vector<std::string> families,
+                     double scale,
+                     SourceProvider provider);
+
+// One screenshot to produce: a font + the lines of text to render, and where to save the PNG.
+struct TestShot {
+    font::FontSpec font;
+    std::vector<std::string> lines;
+    std::string out_path;
 };
 
-// One glyph to draw, positioned on the device-pixel grid with a top-left origin. The bearing is
-// already folded into dst_x/dst_y, so this is the top-left corner of the glyph bitmap.
-struct GlyphInstance {
-    GlyphKey key;
-    int dst_x;
-    int dst_y;
-};
-
-// Everything the GL renderer needs: the glyphs to draw and, keyed the same way, the unique bitmaps
-// to pack into the atlas. Rasterization runs on the CPU while the fonts are alive; the atlas
-// upload is deferred until a GL context exists (the layer's first draw).
-struct GlyphAtlasSource {
-    std::vector<GlyphInstance> instances;
-    std::map<GlyphKey, font::GlyphBitmap> bitmaps;
-};
-
-// Opens a window and draws each glyph as its own textured quad sampled from a glyph atlas, plus
-// the whole atlas in the upper-right corner as a debug view. `scale` is the device-pixel ratio the
-// glyphs were positioned at, used as the layer's contents scale.
-void show_window_gl(const GlyphAtlasSource& source, double scale);
+// Runs the screenshot test suite in a single persistent window: for each shot, swaps in the new
+// font/text and captures the window (cropped to `crop`) once the frame settles -- no per-shot
+// relaunch, no fixed delays. `scale` is the device-pixel ratio.
+void run_test_window(std::vector<TestShot> shots, capture::Crop crop, double scale);

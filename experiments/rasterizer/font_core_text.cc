@@ -19,6 +19,7 @@ namespace font {
 struct FontHandle::Impl {
     ScopedCFTypeRef<CTFontRef> ctfont;
     std::optional<bool> monospace;
+    std::optional<std::string> cache_key;
 };
 
 FontHandle::~FontHandle() = default;
@@ -36,6 +37,15 @@ double FontHandle::leading() const { return CTFontGetLeading(impl_->ctfont.get()
 double FontHandle::size() const { return CTFontGetSize(impl_->ctfont.get()); }
 const void* FontHandle::native_handle() const { return impl_->ctfont.get(); }
 CTFontRef FontHandle::ct_font() const { return impl_->ctfont.get(); }
+
+std::string FontHandle::cache_key() const {
+    if (!impl_->cache_key) {
+        auto name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(impl_->ctfont.get()));
+        std::string name_str = name ? base::sys_cfstring_ref_to_utf8(name.get()) : "?";
+        impl_->cache_key = name_str + "@" + std::to_string(size());
+    }
+    return *impl_->cache_key;
+}
 
 bool FontHandle::is_monospace() const {
     if (!impl_->monospace) {
@@ -75,6 +85,10 @@ std::optional<font::FontHandle> create_font(std::string family,
         }
     }
     return FontHandle(ct.get());
+}
+
+std::optional<font::FontHandle> create_font(const FontSpec& spec) {
+    return create_font(spec.family, spec.size, spec.weight, spec.slant);
 }
 
 namespace {

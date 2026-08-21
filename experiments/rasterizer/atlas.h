@@ -9,7 +9,8 @@
 // the atlas's lifetime, which is all the demo's fixed corpus needs.
 class Atlas {
 public:
-    static constexpr int kSize = 1024;
+    static constexpr int kSize = 4096;
+    static constexpr bool kRenderDebugView = false;
 
     struct UV {
         float x, y, w, h;  // normalized to [0, 1]

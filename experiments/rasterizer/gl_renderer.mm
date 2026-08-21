@@ -5,10 +5,15 @@
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/gl3.h>
 #include <QuartzCore/QuartzCore.h>
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <deque>
 #include <map>
 #include <memory>
+#include <spdlog/spdlog.h>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -170,33 +175,79 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
     // clang-format on
 }
 
+// Sublime Text-style scroll axis-lock: snaps near-horizontal / near-vertical trackpad scrolling to
+// a single axis so jitter on the other axis vanishes, while leaving deliberate diagonal scrolling
+// free. The lock is decided from the summed absolute deltas over a trailing time window, not the
+// current event, so brief perpendicular wobble is outweighed by the dominant axis yet an
+// intentional curve into a diagonal releases within the window. Recovered from Sublime Text's
+// scroll_area_control::handle_event; see reverse_engineering/.
+class ScrollAxisLock {
+public:
+    // `now` is a monotonic timestamp in seconds. Returns the delta with the off-axis component
+    // zeroed while locked. Call with gesture_ended once per gesture end to reset the window.
+    std::pair<double, double> apply(double dx, double dy, double now, bool gesture_ended) {
+        if (gesture_ended) {
+            samples_.clear();
+            return {dx, dy};
+        }
+        while (!samples_.empty() && samples_.front().t + kWindow < now) samples_.pop_front();
+        samples_.push_back({now, dx, dy});
+
+        // TODO: Is this slow? Could we use a monotonic stack approach to avoid looping?
+        double sx = 0.0, sy = 0.0;
+        for (const auto& s : samples_) {
+            sx += std::abs(s.dx);
+            sy += std::abs(s.dy);
+        }
+        // Treat (sx, sy) as a first-quadrant vector: lock to whichever axis it falls within kCone
+        // of, comparing against its Euclidean length so the middle wedge is a genuine diagonal
+        // dead-zone.
+        const double mag = std::sqrt(sx * sx + sy * sy);
+        if (sx > kCone * mag) return {dx, 0.0};
+        if (sy > kCone * mag) return {0.0, dy};
+        return {dx, dy};
+    }
+
+private:
+    static constexpr double kWindow = 0.2;  // seconds of history the lock decision considers
+    static constexpr double kCone = 0.85;   // cos(31.8 deg): half-angle of each axis's lock cone
+    struct Sample {
+        double t, dx, dy;
+    };
+    std::deque<Sample> samples_;
+};
+
 }  // namespace
 
-// Draws the shaped text as one textured quad per glyph, sampled from a glyph atlas, plus the whole
-// atlas in the upper-right corner for debugging. Everything static (atlas + glyph vertex buffer)
-// is built once on the first draw, when a GL context first exists.
+// Renders a page of text (a GlyphAtlasSource) as one textured quad per glyph, sampled from a glyph
+// atlas, plus the whole atlas in the upper-right corner for debugging. Content is swapped with
+// setSource:; who decides what to show (interactive font control vs the test suite) lives outside.
+// Static GL objects are built once when a context first exists; the atlas and glyph geometry are
+// (re)uploaded whenever the source changes.
 @interface AtlasGLView : CAOpenGLLayer {
-    const GlyphAtlasSource* _source;  // borrowed; outlives the layer
-    double _scroll_x;                 // content scrolled left past the left edge, in device pixels
-    double _scroll_y;                 // content scrolled up past the top edge, in device pixels
-    double _yaw;                      // text tilt about the vertical axis, in radians
-    double _pitch;                    // text tilt about the horizontal axis, in radians (unbound)
+    GlyphAtlasSource _source;
 
-    bool _ready;
+    double _scroll_x;  // content scrolled left past the left edge, in device pixels
+    double _scroll_y;  // content scrolled up past the top edge, in device pixels
+    double _yaw;       // text tilt about the vertical axis, in radians
+    double _pitch;     // text tilt about the horizontal axis, in radians (unbound)
+
+    // Static GL objects, built once on the first draw.
+    bool _gl_ready;
     GLuint _program;
     GLint _u_proj;
     GLint _u_tex;
-
-    std::unique_ptr<Atlas> _atlas;
-
     GLuint _glyph_vao;
     GLuint _glyph_vbo;  // per-glyph InstanceData
-    GLsizei _glyph_instance_count;
-
     GLuint _debug_vao;
     GLuint _debug_vbo;  // one InstanceData for the atlas debug quad, refreshed per frame
+
+    // Content GL state, rebuilt from `_source` whenever it changes.
+    bool _needs_upload;
+    std::unique_ptr<Atlas> _atlas;
+    GLsizei _glyph_instance_count;
 }
-- (instancetype)initWithSource:(const GlyphAtlasSource*)source;
+- (void)setSource:(GlyphAtlasSource)source;
 - (void)scrollByPoints:(double)dy;   // dy in view points; positive scrolls content down
 - (void)scrollXByPoints:(double)dx;  // dx in view points; positive scrolls content right
 - (void)yawByPoints:(double)dx;      // dx in view points; tilts the text about the vertical axis
@@ -205,11 +256,10 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
 
 @implementation AtlasGLView
 
-- (instancetype)initWithSource:(const GlyphAtlasSource*)source {
-    if (self = [super init]) {
-        _source = source;
-    }
-    return self;
+- (void)setSource:(GlyphAtlasSource)source {
+    _source = std::move(source);
+    _needs_upload = true;
+    [self setNeedsDisplay];
 }
 
 - (void)scrollByPoints:(double)dy {
@@ -227,8 +277,7 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
 }
 
 - (void)yawByPoints:(double)dx {
-    // Just for fun: horizontal scroll spins the text about its vertical axis. Clamped short of
-    // edge-on (+-90 deg) so the page never disappears or flips to its back.
+    // Just for fun: horizontal scroll spins the text about its vertical axis.
     constexpr double kRadPerPoint = 0.004;
     _yaw += dx * kRadPerPoint;
     [self setNeedsDisplay];
@@ -267,12 +316,36 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
     return YES;
 }
 
-// Uploads every unique glyph bitmap into the atlas and builds the static glyph vertex buffer.
-- (void)buildResources {
+// Builds the static GL objects that don't depend on content: the shader program and the two vertex
+// arrays. Attributes are bound here (the buffers need not hold data yet); the buffers are filled
+// by uploadSource and the per-frame debug refresh.
+- (void)setUpGL {
     _program = link_program(kGlyphVS, kGlyphFS);
     _u_proj = glGetUniformLocation(_program, "u_proj");
     _u_tex = glGetUniformLocation(_program, "u_tex");
 
+    glGenVertexArrays(1, &_glyph_vao);
+    glBindVertexArray(_glyph_vao);
+    glGenBuffers(1, &_glyph_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, _glyph_vbo);
+    set_instance_attribs();
+
+    // The atlas debug view is a single instance, refreshed each frame from the framebuffer size.
+    glGenVertexArrays(1, &_debug_vao);
+    glBindVertexArray(_debug_vao);
+    glGenBuffers(1, &_debug_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, _debug_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData), nullptr, GL_DYNAMIC_DRAW);
+    set_instance_attribs();
+
+    glBindVertexArray(0);
+    _gl_ready = true;
+}
+
+// Packs the current source's unique bitmaps into a fresh atlas and (re)uploads one InstanceData
+// per glyph. Called on the first draw and after every setSource:.
+- (void)uploadSource {
+    // A fresh atlas each time; the previous texture is freed with the old Atlas.
     _atlas = std::make_unique<Atlas>();
 
     struct Placement {
@@ -282,7 +355,7 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
         bool colored;
     };
     std::map<GlyphKey, Placement> placements;
-    for (const auto& [key, bmp] : _source->bitmaps) {
+    for (const auto& [key, bmp] : _source.bitmaps) {
         if (bmp.empty()) continue;
         Atlas::UV uv;
         const int w = static_cast<int>(bmp.width);
@@ -292,12 +365,12 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
         }
     }
 
-    // One instance per glyph. colored (as a flag) and the tint color are per-instance fields, so
-    // mono and color glyphs draw together in a single instanced call -- no grouping, no per-vertex
-    // duplication. Per-glyph syntax colors will just vary the color field.
+    // colored (as a flag) and the tint color are per-instance fields, so mono and color glyphs
+    // draw together in a single instanced call -- no grouping, no per-vertex duplication.
+    // Per-glyph syntax colors will just vary the color field.
     std::vector<InstanceData> instances;
-    instances.reserve(_source->instances.size());
-    for (const auto& inst : _source->instances) {
+    instances.reserve(_source.instances.size());
+    for (const auto& inst : _source.instances) {
         auto it = placements.find(inst.key);
         if (it == placements.end()) continue;
         const Placement& p = it->second;
@@ -310,33 +383,20 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
             .v = p.uv.y,
             .uw = p.uv.w,
             .vh = p.uv.h,
-            .r = 0.0f,  // black tint for now
-            .g = 0.0f,
-            .b = 0.0f,
+            .r = 51 / 255.f,
+            .g = 51 / 255.f,
+            .b = 51 / 255.f,
             .a = 1.0f,
             .flags = p.colored ? kFlagColor : kFlagMono,
         });
     }
     _glyph_instance_count = static_cast<GLsizei>(instances.size());
 
-    glGenVertexArrays(1, &_glyph_vao);
-    glBindVertexArray(_glyph_vao);
-    glGenBuffers(1, &_glyph_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, _glyph_vbo);
     glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(instances.size() * sizeof(InstanceData)),
-                 instances.data(), GL_STATIC_DRAW);
-    set_instance_attribs();
+                 instances.data(), GL_DYNAMIC_DRAW);
 
-    // The atlas debug view is a single instance, refreshed each frame from the framebuffer size.
-    glGenVertexArrays(1, &_debug_vao);
-    glBindVertexArray(_debug_vao);
-    glGenBuffers(1, &_debug_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, _debug_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(InstanceData), nullptr, GL_DYNAMIC_DRAW);
-    set_instance_attribs();
-
-    glBindVertexArray(0);
-    _ready = true;
+    _needs_upload = false;
 }
 
 - (void)drawInCGLContext:(CGLContextObj)glContext
@@ -346,76 +406,83 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
     base::Profiler _("draw");
 
     CGLSetCurrentContext(glContext);
-    if (!_ready) [self buildResources];
+    if (!_gl_ready) [self setUpGL];
+    if (_needs_upload) [self uploadSource];
 
     const auto fb_w = static_cast<GLsizei>(self.bounds.size.width * self.contentsScale);
     const auto fb_h = static_cast<GLsizei>(self.bounds.size.height * self.contentsScale);
     glViewport(0, 0, fb_w, fb_h);
-    glClearColor(1, 1, 1, 1);
+    glClearColor(252 / 255.f, 253 / 255.f, 253 / 255.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // premultiplied over
 
-    glUseProgram(_program);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _atlas->tex());
-    glUniform1i(_u_tex, 0);
+    // Nothing to draw until a source has been uploaded (the test window's priming frame).
+    if (_atlas) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // premultiplied over
 
-    // The atlas HUD uses a plain pixel ortho so it stays pinned. The text rides a full camera
-    // instead, which is the whole point of a matrix uniform: scroll, the y-flip, a 3D tilt about
-    // the viewport center, and a perspective all compose on the CPU while the shader stays `proj *
-    // pos`.
-    const float fb_w_f = static_cast<float>(fb_w);
-    const float fb_h_f = static_cast<float>(fb_h);
-    const float scroll_x = static_cast<float>(_scroll_x);
-    const float scroll_y = static_cast<float>(_scroll_y);
-    const float cx = fb_w_f * 0.5f;
-    const float cy = fb_h_f * 0.5f;
+        glUseProgram(_program);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, _atlas->tex());
+        glUniform1i(_u_tex, 0);
 
-    // Perspective chosen so a fronto-parallel page exactly fills the viewport (identical to the
-    // old ortho at zero tilt); the camera sits back by that same distance.
-    const float fovy = 50.0f * 3.14159265f / 180.0f;
-    const float dist = cy / std::tan(fovy * 0.5f);
+        // The atlas HUD uses a plain pixel ortho so it stays pinned. The text rides a full camera
+        // instead, which is the whole point of a matrix uniform: scroll, the y-flip, a 3D tilt
+        // about the viewport center, and a perspective all compose on the CPU while the shader
+        // stays `proj * pos`.
+        const float fb_w_f = static_cast<float>(fb_w);
+        const float fb_h_f = static_cast<float>(fb_h);
+        const float scroll_x = static_cast<float>(_scroll_x);
+        const float scroll_y = static_cast<float>(_scroll_y);
+        const float cx = fb_w_f * 0.5f;
+        const float cy = fb_h_f * 0.5f;
 
-    const Mat4 center =
-        mul(scale(1.0f, -1.0f, 1.0f), translate(-(cx + scroll_x), -(cy + scroll_y), 0.0f));
-    const Mat4 tilt =
-        mul(rotate_y(static_cast<float>(_yaw)), rotate_x(static_cast<float>(_pitch)));
-    const Mat4 view = translate(0.0f, 0.0f, -dist);
-    const Mat4 proj = perspective(fovy, fb_w_f / fb_h_f, 1.0f, dist * 4.0f);
-    const Mat4 content_proj = mul(proj, mul(view, mul(tilt, center)));
+        // Perspective chosen so a fronto-parallel page exactly fills the viewport (identical to
+        // the old ortho at zero tilt); the camera sits back by that same distance.
+        const float fovy = 50.0f * 3.14159265f / 180.0f;
+        const float dist = cy / std::tan(fovy * 0.5f);
 
-    const Mat4 screen_proj = ortho(0.0f, fb_w_f, fb_h_f, 0.0f, -1.0f, 1.0f);
+        const Mat4 center =
+            mul(scale(1.0f, -1.0f, 1.0f), translate(-(cx + scroll_x), -(cy + scroll_y), 0.0f));
+        const Mat4 tilt =
+            mul(rotate_y(static_cast<float>(_yaw)), rotate_x(static_cast<float>(_pitch)));
+        const Mat4 view = translate(0.0f, 0.0f, -dist);
+        const Mat4 proj = perspective(fovy, fb_w_f / fb_h_f, 1.0f, dist * 4.0f);
+        const Mat4 content_proj = mul(proj, mul(view, mul(tilt, center)));
 
-    // Text: one instanced draw for every glyph. The per-instance flag selects mono-tint vs color
-    // passthrough in the shader, so mono and color glyphs mix freely in a single call.
-    glUniformMatrix4fv(_u_proj, 1, GL_FALSE, content_proj.data());
-    glBindVertexArray(_glyph_vao);
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, _glyph_instance_count);
+        const Mat4 screen_proj = ortho(0.0f, fb_w_f, fb_h_f, 0.0f, -1.0f, 1.0f);
 
-    // Atlas debug view: one instance covering the whole atlas at 1:1, pinned via screen_proj.
-    constexpr float kMargin = 24.0f;
-    constexpr float kSide = static_cast<float>(Atlas::kSize);
-    const InstanceData debug = {
-        .x = static_cast<float>(fb_w) - kMargin - kSide,
-        .y = kMargin,
-        .w = kSide,
-        .h = kSide,
-        .u = 0.0f,
-        .v = 0.0f,
-        .uw = 1.0f,
-        .vh = 1.0f,
-        .r = 0.0f,
-        .g = 0.0f,
-        .b = 0.0f,
-        .a = 1.0f,
-        .flags = kFlagDebug,
-    };
-    glUniformMatrix4fv(_u_proj, 1, GL_FALSE, screen_proj.data());
-    glBindVertexArray(_debug_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, _debug_vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(debug), &debug);
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
+        // Text: one instanced draw for every glyph. The per-instance flag selects mono-tint vs
+        // color passthrough in the shader, so mono and color glyphs mix freely in a single call.
+        glUniformMatrix4fv(_u_proj, 1, GL_FALSE, content_proj.data());
+        glBindVertexArray(_glyph_vao);
+        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, _glyph_instance_count);
+
+        // Atlas debug view: one instance covering the whole atlas at 1:1, pinned via screen_proj.
+        if constexpr (Atlas::kRenderDebugView) {
+            constexpr float kMargin = 24.0f;
+            constexpr float kSide = static_cast<float>(Atlas::kSize);
+            const InstanceData debug = {
+                .x = static_cast<float>(fb_w) - kMargin - kSide,
+                .y = kMargin,
+                .w = kSide,
+                .h = kSide,
+                .u = 0.0f,
+                .v = 0.0f,
+                .uw = 1.0f,
+                .vh = 1.0f,
+                .r = 0.0f,
+                .g = 0.0f,
+                .b = 0.0f,
+                .a = 1.0f,
+                .flags = kFlagDebug,
+            };
+            glUniformMatrix4fv(_u_proj, 1, GL_FALSE, screen_proj.data());
+            glBindVertexArray(_debug_vao);
+            glBindBuffer(GL_ARRAY_BUFFER, _debug_vbo);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(debug), &debug);
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
+        }
+    }
 
     [super drawInCGLContext:glContext
                 pixelFormat:pixelFormat
@@ -425,12 +492,72 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
 
 @end
 
-// Hosts the GL layer and forwards scroll gestures to it. Scroll events are delivered to the view,
-// not the layer, so the translation lives here.
-@interface RasterHostView : NSView
+// Hosts the GL layer for interactive use: owns the current font and forwards input. Scroll and key
+// events are delivered to the view, not the layer, so the font control lives here. On any change
+// it re-lays-out via `_provider` and pushes the new page to the layer.
+@interface RasterHostView : NSView {
+    SourceProvider _provider;
+    std::vector<std::string> _families;
+    size_t _family_index;
+    double _size;
+    font::Weight _weight;
+    font::Slant _slant;
+    ScrollAxisLock _scroll_lock;
+}
+- (instancetype)initWithFrame:(NSRect)frame
+                         spec:(const font::FontSpec&)spec
+                     families:(std::vector<std::string>)families
+                     provider:(SourceProvider)provider;
+- (void)relayout;  // lay out the current font and push it to the layer
 @end
 
 @implementation RasterHostView
+
+- (instancetype)initWithFrame:(NSRect)frame
+                         spec:(const font::FontSpec&)spec
+                     families:(std::vector<std::string>)families
+                     provider:(SourceProvider)provider {
+    if (self = [super initWithFrame:frame]) {
+        _provider = std::move(provider);
+        _families = std::move(families);
+        _family_index = 0;  // families.front() == spec.family by contract
+        _size = spec.size;
+        _weight = spec.weight;
+        _slant = spec.slant;
+    }
+    return self;
+}
+
+- (void)relayout {
+    AtlasGLView* layer = (AtlasGLView*)self.layer;
+    [layer setSource:_provider({_families[_family_index], _size, _weight, _slant})];
+}
+
+- (void)changeSizeBy:(double)delta {
+    _size = std::clamp(_size + delta, 4.0, 400.0);
+    [self relayout];
+}
+
+- (void)cycleFamilyBy:(int)dir {
+    const int n = static_cast<int>(_families.size());
+    _family_index = static_cast<size_t>(((static_cast<int>(_family_index) + dir) % n + n) % n);
+    [self relayout];
+}
+
+- (void)toggleBold {
+    _weight = _weight == font::Weight::Bold ? font::Weight::Normal : font::Weight::Bold;
+    [self relayout];
+}
+
+- (void)toggleItalic {
+    _slant = _slant == font::Slant::Italic ? font::Slant::Normal : font::Slant::Italic;
+    [self relayout];
+}
+
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
 - (void)scrollWheel:(NSEvent*)event {
     // Precise (trackpad) deltas are already in points; line-based (mouse wheel) deltas are small
     // integers, so scale them to a usable step.
@@ -440,37 +567,85 @@ Mat4 ortho(float left, float right, float bottom, float top, float near, float f
         dx *= 10.0;
         dy *= 10.0;
     }
+    const bool ended = (event.phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) != 0;
+    const auto locked = _scroll_lock.apply(dx, dy, event.timestamp, ended);
+    dx = locked.first;
+    dy = locked.second;
     AtlasGLView* layer = (AtlasGLView*)self.layer;
     [layer scrollByPoints:dy];
     [layer scrollXByPoints:dx];
     // [layer pitchByPoints:dy];
     // [layer yawByPoints:dx];
 }
+
+- (void)keyDown:(NSEvent*)event {
+    NSString* chars = event.charactersIgnoringModifiers;
+    switch (chars.length ? [chars characterAtIndex:0] : 0) {
+    case '-':
+        [self changeSizeBy:-0.5];
+        break;
+    case '+':
+    case '=':
+        [self changeSizeBy:0.5];
+        break;
+    case '[':
+        [self cycleFamilyBy:-1];
+        break;
+    case ']':
+        [self cycleFamilyBy:1];
+        break;
+    case 'b':
+        [self toggleBold];
+        break;
+    case 'i':
+        [self toggleItalic];
+        break;
+    default:
+        [super keyDown:event];
+        break;
+    }
+}
+
 @end
 
-void show_window_gl(const GlyphAtlasSource& source, double scale) {
+// Builds a window hosting a fresh AtlasGLView and returns the layer. `borderless` gives the test
+// suite a chrome-free window whose backing store is exactly the content (so crop rects are
+// content-relative).
+static AtlasGLView* attach_layer(NSWindow* window, NSView* view, double scale) {
+    AtlasGLView* layer = [[AtlasGLView alloc] init];
+    layer.contentsScale = scale;  // 2x backing on Retina
+    layer.needsDisplayOnBoundsChange = YES;
+    layer.opaque = YES;
+    view.layer = layer;
+    view.wantsLayer = YES;
+    window.contentView = view;
+    return layer;
+}
+
+void run_text_window(const font::FontSpec& initial,
+                     std::vector<std::string> families,
+                     double scale,
+                     SourceProvider provider) {
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
+    NSRect frame = NSMakeRect(0, 0, 1728, 1117);
     NSWindow* window =
-        [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1728, 1117)
+        [[NSWindow alloc] initWithContentRect:frame
                                     styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                                               NSWindowStyleMaskResizable
                                       backing:NSBackingStoreBuffered
                                         defer:NO];
-
-    AtlasGLView* layer = [[AtlasGLView alloc] initWithSource:&source];
-    layer.contentsScale = scale;  // 2x backing on Retina
-    layer.needsDisplayOnBoundsChange = YES;
-    layer.opaque = YES;
-
-    RasterHostView* view = [[RasterHostView alloc] initWithFrame:NSMakeRect(0, 0, 1728, 1117)];
-    view.layer = layer;
-    view.wantsLayer = YES;
-    window.contentView = view;
+    RasterHostView* view = [[RasterHostView alloc] initWithFrame:frame
+                                                            spec:initial
+                                                        families:std::move(families)
+                                                        provider:std::move(provider)];
+    AtlasGLView* layer = attach_layer(window, view, scale);
 
     [window center];
     [window makeKeyAndOrderFront:nil];
+    [window makeFirstResponder:view];
+    [view relayout];  // initial page, now that the layer is wired up
 
     NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@""];
     NSMenuItem* app_item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
@@ -482,8 +657,51 @@ void show_window_gl(const GlyphAtlasSource& source, double scale) {
     [main_menu addItem:app_item];
     NSApp.mainMenu = main_menu;
 
-    [NSApp activateIgnoringOtherApps:YES];
+    // [NSApp activateIgnoringOtherApps:YES];
     [layer setNeedsDisplay];
 
     [NSApp run];
+}
+
+void run_test_window(std::vector<TestShot> shots, capture::Crop crop, double scale) {
+    [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    // Borderless so the window's backing store is exactly the content: crop rects are then simply
+    // content-relative device pixels.
+    NSRect frame = NSMakeRect(0, 0, 1728, 1117);
+    NSWindow* window = [[NSWindow alloc] initWithContentRect:frame
+                                                   styleMask:NSWindowStyleMaskBorderless
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    window.releasedWhenClosed = NO;
+    AtlasGLView* layer = attach_layer(window, [[NSView alloc] initWithFrame:frame], scale);
+
+    [window setFrameOrigin:NSMakePoint(0, 0)];
+    [window makeKeyAndOrderFront:nil];
+    // [NSApp activateIgnoringOtherApps:YES];
+
+    const uint32_t window_id = static_cast<uint32_t>(window.windowNumber);
+
+    // Prime the empty window so the first shot has a baseline to change from.
+    for (int i = 0; i < 8; i++) capture::pump(0.008);
+    capture::Frame baseline = capture::capture_frame(window_id, crop);
+
+    for (size_t i = 0; i < shots.size(); i++) {
+        const TestShot& shot = shots[i];
+        auto handle = font::create_font(shot.font);
+        if (!handle) {
+            spdlog::error("skipping \"{}\": could not create font \"{}\"", shot.out_path,
+                          shot.font.family);
+            continue;
+        }
+        [layer setSource:layout_text(*handle, shot.lines, scale)];
+
+        capture::Frame settled = capture::wait_settled(window_id, crop, baseline);
+        bool ok = settled && capture::frame_to_png(settled, shot.out_path.c_str());
+        spdlog::info("[{}/{}] {}{}", i + 1, shots.size(), shot.out_path, ok ? "" : "  (FAILED)");
+        capture::release_frame(baseline);
+        baseline = settled;
+    }
+    capture::release_frame(baseline);
 }

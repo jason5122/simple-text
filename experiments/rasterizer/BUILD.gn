@@ -3,7 +3,8 @@ executable("rasterizer") {
     "atlas.cc",
     "font_core_text.cc",
     "gl_renderer.mm",
-    "main.cc",
+    "layout.cc",
+    "rasterizer.cc",
   ]
 
   inputs = [
@@ -24,8 +25,38 @@ executable("rasterizer") {
   configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
   deps = [
+    ":capture",
     "//base",
     "//third_party/spdlog",
     "//third_party/uni_algo",
   ]
+}
+
+executable("capture_server") {
+  sources = [ "capture_server.cc" ]
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
+  deps = [
+    ":capture",
+    "//third_party/spdlog",
+  ]
+}
+
+source_set("capture") {
+  sources = [
+    "capture.h",
+    "capture.mm",
+  ]
+
+  framework_dirs = [ "/System/Library/PrivateFrameworks" ]
+  frameworks = [
+    "AppKit.framework",
+    "CoreFoundation.framework",
+    "CoreGraphics.framework",
+    "ImageIO.framework",
+    "SkyLight.framework",
+  ]
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 }

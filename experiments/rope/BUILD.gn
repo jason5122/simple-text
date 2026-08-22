@@ -1,0 +1,34 @@
+source_set("rope_lib") {
+  sources = [
+    "rope.cc",
+    "rope.h",
+  ]
+
+  deps = [ "//base" ]
+}
+
+executable("rope") {
+  sources = [ "main.cc" ]
+
+  deps = [ ":rope_lib" ]
+}
+
+executable("rope_benchmark") {
+  sources = [ "rope_benchmark.cc" ]
+
+  deps = [
+    ":rope_lib",
+    "//base",
+  ]
+}
+
+source_set("rope_unittest") {
+  testonly = true
+
+  sources = [ "rope_unittest.cc" ]
+
+  deps = [
+    ":rope_lib",
+    "//testing:fuzztest",
+  ]
+}

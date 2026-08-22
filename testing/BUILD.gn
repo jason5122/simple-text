@@ -34,6 +34,7 @@ executable("unit_tests") {
     "//base:base_unittests",
     "//editor:editor_unittests",
     "//experiments/fuzztest_demo",
+    "//experiments/rope:rope_unittest",
     "//font:font_unittests",
   ]
 }

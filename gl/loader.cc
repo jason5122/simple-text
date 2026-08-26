@@ -21,6 +21,8 @@ void load_global_function_pointers() {
     LOAD_GL_FUNC(glScissor);
     LOAD_GL_FUNC(glDisable);
     LOAD_GL_FUNC(glFlush);
+    LOAD_GL_FUNC(glGetString);
+    LOAD_GL_FUNC(glReadPixels);
 
     // 1.1
     LOAD_GL_FUNC(glGenTextures);
@@ -64,14 +66,21 @@ void load_global_function_pointers() {
     LOAD_GL_FUNC(glUniform1i);
     LOAD_GL_FUNC(glGetAttribLocation);
     LOAD_GL_FUNC(glDetachShader);
+    LOAD_GL_FUNC(glUniformMatrix4fv);
 
     // 3.0
     LOAD_GL_FUNC(glBindVertexArray);
     LOAD_GL_FUNC(glGenVertexArrays);
     LOAD_GL_FUNC(glDeleteVertexArrays);
     LOAD_GL_FUNC(glVertexAttribIPointer);
+    LOAD_GL_FUNC(glGenFramebuffers);
+    LOAD_GL_FUNC(glBindFramebuffer);
+    LOAD_GL_FUNC(glFramebufferTexture2D);
+    LOAD_GL_FUNC(glCheckFramebufferStatus);
+    LOAD_GL_FUNC(glDeleteFramebuffers);
 
     // 3.1
+    LOAD_GL_FUNC(glDrawArraysInstanced);
     LOAD_GL_FUNC(glDrawElementsInstanced);
 
     // 3.3

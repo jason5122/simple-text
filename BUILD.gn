@@ -17,6 +17,7 @@ group("experiments") {
     "//experiments/fuzz",
     "//experiments/harfbuzz_demo",
     "//experiments/parser",
+    "//experiments/platform2",
     "//experiments/playground",
     "//experiments/rope",
     "//experiments/sanitizer_demo",
@@ -35,5 +36,9 @@ group("experiments") {
       "//experiments/renderer",
       "//experiments/ui_button_demo",
     ]
+  }
+
+  if (is_win) {
+    deps += [ "//experiments/rasterizer" ]
   }
 }

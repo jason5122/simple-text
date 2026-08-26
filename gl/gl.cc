@@ -17,6 +17,8 @@ PFNGLBLENDFUNCPROC glBlendFunc = nullptr;
 PFNGLSCISSORPROC glScissor = nullptr;
 PFNGLDISABLEPROC glDisable = nullptr;
 PFNGLFLUSHPROC glFlush = nullptr;
+PFNGLGETSTRINGPROC glGetString = nullptr;
+PFNGLREADPIXELSPROC glReadPixels = nullptr;
 
 // 1.1
 PFNGLGENTEXTURESPROC glGenTextures = nullptr;
@@ -60,14 +62,21 @@ PFNGLUNIFORM1FPROC glUniform1f = nullptr;
 PFNGLUNIFORM1IPROC glUniform1i = nullptr;
 PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = nullptr;
 PFNGLDETACHSHADERPROC glDetachShader = nullptr;
+PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = nullptr;
 
 // 3.0
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = nullptr;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = nullptr;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = nullptr;
 PFNGLVERTEXATTRIBIPOINTERPROC glVertexAttribIPointer = nullptr;
+PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers = nullptr;
+PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer = nullptr;
+PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D = nullptr;
+PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus = nullptr;
+PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers = nullptr;
 
 // 3.1
+PFNGLDRAWARRAYSINSTANCEDPROC glDrawArraysInstanced = nullptr;
 PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced = nullptr;
 
 // 3.3

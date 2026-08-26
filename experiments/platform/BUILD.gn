@@ -1,0 +1,250 @@
+# A clean-room reimplementation of Sublime Text's platform abstraction ("px"), recovered from its
+# shipping binaries. Adding a backend means implementing px.h again and touching nothing above it,
+# which is the property being tested -- px.h and everything that includes it are identical between
+# the macOS and Windows builds.
+
+source_set("px") {
+  sources = [
+    "px.h",
+    "px_gl.h",
+  ]
+
+  if (is_mac) {
+    # CAOpenGLLayer, CGL and the GL entry points are all deprecated as of 10.14. ST 4200 ships on
+    # them, and reproducing that is the experiment.
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+
+    sources += [
+      "mac/px_app.mm",
+      "mac/px_gl_layer.mm",
+      "mac/px_keycode.mm",
+      "mac/px_mac_private.h",
+      "mac/px_window.mm",
+    ]
+
+    frameworks = [
+      "AppKit.framework",
+      "CoreGraphics.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+  }
+
+  if (is_win) {
+    sources += [
+      "win/px_app.cc",
+      "win/px_gl.cc",
+      "win/px_keycode.cc",
+      "win/px_win_private.h",
+      "win/px_window.cc",
+    ]
+
+    libs = [
+      "advapi32.lib",  # RegGetValueW, for the dark-mode preference
+      "gdi32.lib",  # pixel formats, regions
+      "imm32.lib",  # IME composition
+      "opengl32.lib",  # GL 1.1; anything newer goes through wglGetProcAddress
+      "shell32.lib",  # DragAcceptFiles, ShellExecuteW
+      "user32.lib",
+    ]
+  }
+
+  if (is_linux) {
+    # ST's own binary dlopen/dlsym's GTK rather than linking it (see px_linux_private.h) -- a
+    # distribution trick for running against either GTK2 or GTK3, not part of the platform
+    # abstraction. This links gtk+-3.0 normally, as instructed.
+    sources += [
+      "linux/px_app.cc",
+      "linux/px_gl.cc",
+      "linux/px_keycode.cc",
+      "linux/px_linux_private.h",
+      "linux/px_window.cc",
+    ]
+
+    public_configs = [ ":gtk3_internal_config" ]
+
+    # GL entry points past 1.1 are ordinary linked symbols on Linux too -- see px_gl.h.
+    libs = [ "GL" ]
+  }
+}
+
+if (is_linux) {
+  import("//build/config/linux/pkg_config.gni")
+
+  # GN doesn't check visibility for configs so this gets an obviously internal name to discourage
+  # random targets from depending on it directly and bypassing :px's visibility -- the same
+  # convention Chromium uses for its own gtk_internal_config.
+  pkg_config("gtk3_internal_config") {
+    # gtk+-3.0 requires gmodule/gthread but does not always list them as dependencies.
+    packages = [
+      "gmodule-2.0",
+      "gthread-2.0",
+      "gtk+-3.0",
+    ]
+  }
+}
+
+# The app-side half: window_impl bridging `window` to px_window_event_handler, plus the
+# window_aspect chain. Portable by construction -- it includes px.h and nothing platform-specific.
+source_set("window") {
+  sources = [
+    "window.cc",
+    "window.h",
+  ]
+
+  public_deps = [ ":px" ]
+}
+
+executable("platform_demo") {
+  sources = [ "demo/main.cc" ]
+
+  deps = [ ":window" ]
+
+  if (is_mac) {
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+    frameworks = [ "OpenGL.framework" ]
+  }
+
+  if (is_win) {
+    libs = [
+      "opengl32.lib",
+      "user32.lib",
+    ]
+  }
+
+  if (is_linux) {
+    libs = [ "GL" ]
+  }
+}
+
+# Same window, controls, dirty rectangles, and one-frame macOS layer fence as platform_demo, but
+# with the pre-texture-buffer single-VBO rectangle batcher retained for latency comparisons.
+executable("platform_fence_demo") {
+  sources = [ "demo/main.cc" ]
+
+  defines = [ "PX_DEMO_FENCE_RECT_BATCH" ]
+  deps = [ ":window" ]
+
+  if (is_mac) {
+    defines += [ "GL_SILENCE_DEPRECATION" ]
+    frameworks = [ "OpenGL.framework" ]
+  }
+
+  if (is_win) {
+    libs = [
+      "opengl32.lib",
+      "user32.lib",
+    ]
+  }
+
+  if (is_linux) {
+    libs = [ "GL" ]
+  }
+}
+
+if (is_mac) {
+  executable("platform_drag_latency_benchmark") {
+    sources = [ "reverse_engineering/drag_latency_benchmark.mm" ]
+
+    deps = [ ":px" ]
+
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+    frameworks = [
+      "AppKit.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+  }
+
+  executable("platform_lag_probe") {
+    sources = [ "reverse_engineering/lag_probe.mm" ]
+
+    deps = [ "//experiments/rasterizer:capture" ]
+
+    frameworks = [
+      "AppKit.framework",
+      "CoreGraphics.framework",
+    ]
+  }
+
+  executable("platform_video_lag_probe") {
+    sources = [ "reverse_engineering/video_lag_probe.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("cg_window_probe") {
+    sources = [ "reverse_engineering/cg_window_probe.mm" ]
+
+    frameworks = [
+      "ApplicationServices.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("st_drag_probe") {
+    sources = [ "reverse_engineering/st_drag_probe.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("video_count") {
+    sources = [ "reverse_engineering/video_count.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("video_frame_dump") {
+    sources = [ "reverse_engineering/video_frame_dump.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreGraphics.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+      "ImageIO.framework",
+    ]
+  }
+}
+
+group("platform_reverse_engineering") {
+  if (is_mac) {
+    deps = [
+      ":cg_window_probe",
+      ":platform_drag_latency_benchmark",
+      ":platform_lag_probe",
+      ":platform_video_lag_probe",
+      ":st_drag_probe",
+      ":video_count",
+      ":video_frame_dump",
+    ]
+  }
+}
+
+group("platform") {
+  deps = [
+    ":platform_demo",
+    ":platform_fence_demo",
+  ]
+  if (is_mac) {
+    deps += [ ":platform_reverse_engineering" ]
+  }
+}

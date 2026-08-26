@@ -2851,6 +2851,8 @@ extern PFNGLBLENDFUNCPROC glBlendFunc;
 extern PFNGLSCISSORPROC glScissor;
 extern PFNGLDISABLEPROC glDisable;
 extern PFNGLFLUSHPROC glFlush;
+extern PFNGLGETSTRINGPROC glGetString;
+extern PFNGLREADPIXELSPROC glReadPixels;
 
 // 1.1
 extern PFNGLGENTEXTURESPROC glGenTextures;
@@ -2894,14 +2896,21 @@ extern PFNGLUNIFORM1FPROC glUniform1f;
 extern PFNGLUNIFORM1IPROC glUniform1i;
 extern PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 extern PFNGLDETACHSHADERPROC glDetachShader;
+extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 
 // 3.0
 extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
 extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
 extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
 extern PFNGLVERTEXATTRIBIPOINTERPROC glVertexAttribIPointer;
+extern PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+extern PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
+extern PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+extern PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
+extern PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
 
 // 3.1
+extern PFNGLDRAWARRAYSINSTANCEDPROC glDrawArraysInstanced;
 extern PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;
 
 // 3.3

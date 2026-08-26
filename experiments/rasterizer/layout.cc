@@ -1,6 +1,7 @@
+#include "experiments/rasterizer/layout.h"
 #include "base/numeric/safe_conversions.h"
 #include "base/unicode/unicode.h"
-#include "experiments/rasterizer/layout.h"
+#include "build/build_config.h"
 #include <cmath>
 #include <string_view>
 #include <uni_algo/prop.h>
@@ -8,7 +9,7 @@
 namespace {
 
 void draw_glyph(GlyphAtlasSource& out,
-                const font::FontHandle& run_font,
+                const font::FontHandle& font,
                 font::GlyphId glyph_id,
                 double glyph_x,  // points
                 double glyph_y,  // points
@@ -18,7 +19,10 @@ void draw_glyph(GlyphAtlasSource& out,
     // error, so by ~glyph 35 on a long line the value dips just under the boundary (e.g.
     // 692.99999999999977 vs 693.0). A bare floor would drop those glyphs to the pixel below (phase
     // 5). This nudge absorbs that sub-ULP drift; it's orders of magnitude smaller than a real
-    // sub-pixel gap, so it never affects a glyph that isn't already on a boundary.
+    // sub-pixel gap, so it never affects a glyph that isn't already on a boundary. Still net
+    // positive even after storing glyph placements as float32 (matching ST's fx_layout cache) --
+    // that closes some phase-boundary gaps but doesn't eliminate the double-accumulation drift
+    // this compensates for.
     constexpr double kEpsilon = 1e-6;
     const double device_x_f = glyph_x * scale + kEpsilon;
     const int device_x = base::clamp_floor<int>(device_x_f);
@@ -26,18 +30,24 @@ void draw_glyph(GlyphAtlasSource& out,
     const int phase = base::clamp_floor<int>(frac * 6.0);
     const double subpixel_x = phase * scale / 6.0;
 
-    const GlyphKey key = {run_font.cache_key(), glyph_id, phase};
+    const GlyphKey key = {font.id(), glyph_id, phase, scale};
     auto it = out.bitmaps.find(key);
     if (it == out.bitmaps.end()) {
-        it =
-            out.bitmaps.emplace(key, font::rasterize(run_font, glyph_id, scale, subpixel_x)).first;
+        it = out.bitmaps.emplace(key, font::rasterize(font, glyph_id, scale, subpixel_x)).first;
     }
     const font::GlyphBitmap& bmp = it->second;
     if (bmp.empty()) return;
 
-    // +2 / +124 are debug margins to line up with the Sublime capture.
-    const int dst_x = device_x + bmp.bearing_x + 2;
-    const int dst_y = base::clamp_round<int>(glyph_y * scale) + bmp.bearing_y + 68;
+    int dst_x = device_x + bmp.bearing_x;
+    int dst_y = base::clamp_round<int>(glyph_y * scale) + bmp.bearing_y;
+    // Debug margins to line up with the Sublime capture.
+#if BUILDFLAG(IS_MAC)
+    dst_x += 2;
+    dst_y += 68;
+#elif BUILDFLAG(IS_WIN)
+    dst_x += 2;
+    dst_y += 107;
+#endif
     out.instances.push_back({.key = key, .dst_x = dst_x, .dst_y = dst_y});
 }
 
@@ -124,20 +134,19 @@ void draw_cluster(GlyphAtlasSource& out,
                   double scale,
                   double& pen) {
     const double origin_x = pen;
-    const auto shaped = font::shape(font, cluster);
-    double delta = 0.0;
-    for (const auto& run : shaped) {
-        // Sublime's shaper snaps monospace advances to whole points at 16.0pt and below.
-        // TODO: Should we hoist this calculation into main()?
-        const bool snap = font.is_monospace() && font.size() <= 16.0;
+    const font::ShapedText shaped = font::shape(font, cluster);
 
-        for (const auto& g : run.glyphs) {
-            const double x_advance = snap ? std::round(g.x_advance) : g.x_advance;
-            delta += x_advance - g.x_advance;
-            draw_glyph(out, run.font, g.glyph_id, origin_x + g.x_offset + delta,
-                       baseline_y + g.y_offset, scale);
-            pen += x_advance;
-        }
+    // Sublime's shaper snaps monospace advances to whole points at 16.0pt and below.
+    // TODO: Should we hoist this calculation into main()?
+    const bool snap = font.is_monospace() && font.size() <= 16.0;
+
+    double delta = 0.0;
+    for (const auto& g : shaped.glyphs) {
+        const double x_advance = snap ? std::round(g.x_advance) : g.x_advance;
+        delta += x_advance - g.x_advance;
+        draw_glyph(out, font, g.glyph_id, origin_x + g.x_offset + delta, baseline_y + g.y_offset,
+                   scale);
+        pen += x_advance;
     }
 }
 

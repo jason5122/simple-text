@@ -1,4 +1,4 @@
-#include "experiments/rasterizer/capture.h"
+#include "experiments/rasterizer/mac/capture.h"
 #import <AppKit/AppKit.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <ImageIO/ImageIO.h>
@@ -92,7 +92,14 @@ void pump(double seconds) {
 }
 
 Frame wait_settled(uint32_t window_id, Crop crop, Frame baseline) {
-    constexpr int kMaxFrames = 240;  // ~2s hard ceiling (a crop that never stabilizes)
+    // Two consecutive matching captures are the minimum possible proof of settledness (one to see
+    // the change, one to confirm it isn't still transitioning), and that's what real shots hit
+    // almost every time (measured: ~85% at this interval, the rest need a 3rd). So the poll interval
+    // is pure added latency on the common path -- tightened from an earlier 8ms to 2ms recovers
+    // ~22% of per-shot time. Going tighter (0.5ms) saves little more and starts costing extra
+    // iterations instead (polling faster than ST's own repaint completes), so this is the knee.
+    constexpr double kPollInterval = 0.002;
+    constexpr int kMaxFrames = 1000;  // ~2s hard ceiling at kPollInterval
     constexpr double kGraceSeconds =
         0.2;  // once the crop is stable this long without changing from
               // the baseline, take it -- the new render is genuinely
@@ -104,8 +111,9 @@ Frame wait_settled(uint32_t window_id, Crop crop, Frame baseline) {
     const auto start = std::chrono::steady_clock::now();
     Frame last = nullptr;
     Frame result = nullptr;
-    for (int i = 0; i < kMaxFrames && !result; i++) {
-        pump(0.008);
+    int i;
+    for (i = 0; i < kMaxFrames && !result; i++) {
+        pump(kPollInterval);
         Frame cur = capture_frame(window_id, crop);
         if (!cur) continue;
         const bool changed = !baseline || !frames_equal(cur, baseline);
@@ -122,6 +130,7 @@ Frame wait_settled(uint32_t window_id, Crop crop, Frame baseline) {
             last = cur;
         }
     }
+    if (getenv("RZ_DEBUG_ITERS")) fprintf(stderr, "  iters=%d\n", i);
     if (result) release_frame(last);
     else result = last;  // best effort if it never settled
     return result;

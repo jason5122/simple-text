@@ -1,10 +1,70 @@
 executable("rasterizer") {
+  sources = [ "rasterizer.cc" ]
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
+  if (is_win) {
+    configs -= [ "//build/config/win:console" ]
+    configs += [ "//build/config/win:windowed" ]
+
+    # The windowed subsystem otherwise expects WinMain. Point the linker at the CRT startup that
+    # calls main(argc, argv) instead, so the command line still selects the font and --test mode.
+    ldflags = [ "/ENTRY:mainCRTStartup" ]
+  }
+
+  deps = [
+    ":renderer",
+    "//base",
+    "//third_party/spdlog",
+  ]
+}
+
+source_set("font") {
+  sources = [ "font.h" ]
+
+  if (is_mac) {
+    sources += [ "mac/font_core_text.cc" ]
+    frameworks = [
+      "CoreFoundation.framework",
+      "CoreGraphics.framework",
+      "CoreText.framework",
+    ]
+  } else if (is_win) {
+    sources += [ "win/font_direct_write.cc" ]
+    libs = [
+      "dwrite.lib",
+      "gdi32.lib",
+      "user32.lib",
+    ]
+  }
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
+  public_deps = [ "//base" ]
+  deps = [ "//third_party/spdlog" ]
+}
+
+source_set("layout") {
+  sources = [
+    "layout.cc",
+    "layout.h",
+  ]
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
+  public_deps = [ ":font" ]
+  deps = [
+    "//base",
+    "//third_party/uni_algo",
+  ]
+}
+
+source_set("renderer") {
   sources = [
     "atlas.cc",
-    "font_core_text.cc",
-    "gl_renderer.mm",
-    "layout.cc",
-    "rasterizer.cc",
+    "atlas.h",
+    "gl.h",
+    "gl_helpers.h",
   ]
 
   inputs = [
@@ -12,51 +72,64 @@ executable("rasterizer") {
     "glyph_frag.glsl",
   ]
 
-  frameworks = [
-    "CoreText.framework",
-    "CoreGraphics.framework",
-    "CoreFoundation.framework",
-    "AppKit.framework",
-    "QuartzCore.framework",
-    "OpenGL.framework",
-  ]
-  defines = [ "GL_SILENCE_DEPRECATION" ]
+  if (is_mac) {
+    sources += [ "mac/gl_renderer.mm" ]
+    frameworks = [
+      "AppKit.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+    deps = [
+      ":capture",
+      "//third_party/spdlog",
+    ]
+  } else if (is_win) {
+    sources += [ "win/gl_renderer.cc" ]
+    libs = [
+      "user32.lib",
+      "gdi32.lib",
+      "shcore.lib",
+    ]
+    deps = [
+      "//gl",
+      "//third_party/libspng",
+      "//third_party/spdlog",
+    ]
+  }
 
   configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
-  deps = [
-    ":capture",
-    "//base",
-    "//third_party/spdlog",
-    "//third_party/uni_algo",
-  ]
+  public_deps = [ ":layout" ]
 }
 
-executable("capture_server") {
-  sources = [ "capture_server.cc" ]
+if (is_mac) {
+  source_set("capture") {
+    sources = [
+      "mac/capture.h",
+      "mac/capture.mm",
+    ]
 
-  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+    framework_dirs = [ "/System/Library/PrivateFrameworks" ]
+    frameworks = [
+      "AppKit.framework",
+      "CoreFoundation.framework",
+      "CoreGraphics.framework",
+      "ImageIO.framework",
+      "SkyLight.framework",
+    ]
 
-  deps = [
-    ":capture",
-    "//third_party/spdlog",
-  ]
-}
+    configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+  }
 
-source_set("capture") {
-  sources = [
-    "capture.h",
-    "capture.mm",
-  ]
+  executable("capture_server") {
+    sources = [ "mac/capture_server.cc" ]
 
-  framework_dirs = [ "/System/Library/PrivateFrameworks" ]
-  frameworks = [
-    "AppKit.framework",
-    "CoreFoundation.framework",
-    "CoreGraphics.framework",
-    "ImageIO.framework",
-    "SkyLight.framework",
-  ]
+    configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
-  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+    deps = [
+      ":capture",
+      "//third_party/spdlog",
+    ]
+  }
 }

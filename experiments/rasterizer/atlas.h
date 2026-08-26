@@ -1,6 +1,6 @@
 #pragma once
 
-#include <OpenGL/gl3.h>
+#include "experiments/rasterizer/gl.h"
 #include <cstdint>
 #include <vector>
 

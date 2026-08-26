@@ -16,50 +16,60 @@ using base::apple::ScopedCGContext;
 
 namespace font {
 
-struct FontHandle::Impl {
-    ScopedCFTypeRef<CTFontRef> ctfont;
+struct FontHandle::FontData {
+    // faces[0] is what create_font resolved to; 1.. are the fallbacks shaping discovered. Sublime
+    // keeps the same append-only vector (core_text_font+0x38) and never reorders or evicts it,
+    // which is what makes a bare index safe as a cache key for the font's lifetime.
+    std::vector<ScopedCFTypeRef<CTFontRef>> faces;
+    FontId id = 0;
     std::optional<bool> monospace;
-    std::optional<std::string> cache_key;
+
+    CTFontRef primary() const { return faces.front().get(); }
 };
 
+struct FontHandle::Impl {
+    std::shared_ptr<FontData> data;
+};
+
+FontHandle::FontHandle() = default;
 FontHandle::~FontHandle() = default;
 FontHandle::FontHandle(FontHandle&& other) = default;
 FontHandle& FontHandle::operator=(FontHandle&& other) = default;
 
-FontHandle::FontHandle(CTFontRef ct_font) : impl_(std::make_unique<Impl>()) {
-    impl_->ctfont = ScopedCFTypeRef<CTFontRef>(ct_font, OwnershipPolicy::kRetain);
-}
+FontHandle::FontHandle(std::shared_ptr<FontData> data)
+    : impl_(std::make_unique<Impl>(std::move(data))) {}
 
-bool FontHandle::valid() const { return impl_ && impl_->ctfont.get() != nullptr; }
-double FontHandle::ascent() const { return CTFontGetAscent(impl_->ctfont.get()); }
-double FontHandle::descent() const { return CTFontGetDescent(impl_->ctfont.get()); }
-double FontHandle::leading() const { return CTFontGetLeading(impl_->ctfont.get()); }
-double FontHandle::size() const { return CTFontGetSize(impl_->ctfont.get()); }
-const void* FontHandle::native_handle() const { return impl_->ctfont.get(); }
-CTFontRef FontHandle::ct_font() const { return impl_->ctfont.get(); }
+FontHandle::FontData& FontHandle::data() const { return *impl_->data; }
 
-std::string FontHandle::cache_key() const {
-    if (!impl_->cache_key) {
-        auto name = ScopedCFTypeRef<CFStringRef>(CTFontCopyPostScriptName(impl_->ctfont.get()));
-        std::string name_str = name ? base::sys_cfstring_ref_to_utf8(name.get()) : "?";
-        impl_->cache_key = name_str + "@" + std::to_string(size());
-    }
-    return *impl_->cache_key;
-}
+bool FontHandle::valid() const { return impl_ && impl_->data && !impl_->data->faces.empty(); }
+FontId FontHandle::id() const { return impl_->data->id; }
+double FontHandle::ascent() const { return CTFontGetAscent(impl_->data->primary()); }
+double FontHandle::descent() const { return CTFontGetDescent(impl_->data->primary()); }
+double FontHandle::leading() const { return CTFontGetLeading(impl_->data->primary()); }
+double FontHandle::size() const { return CTFontGetSize(impl_->data->primary()); }
 
 bool FontHandle::is_monospace() const {
-    if (!impl_->monospace) {
-        auto advance = [this](std::string_view text) {
-            double sum = 0.0;
-            for (const auto& run : shape(*this, text)) {
-                for (const auto& g : run.glyphs) sum += g.x_advance;
-            }
-            return sum;
-        };
-        impl_->monospace = std::abs(advance("i") - advance("M")) < 0.001;
+    if (!impl_->data->monospace) {
+        impl_->data->monospace =
+            std::abs(shape(*this, "i").advance - shape(*this, "M").advance) < 0.001;
     }
-    return *impl_->monospace;
+    return *impl_->data->monospace;
 }
+
+namespace {
+
+// Appends `face` to the font's registry if it isn't already there and returns its index. Sublime
+// compares with CFEqual rather than by pointer (0x1002b4544): Core Text can hand back distinct
+// CTFontRef instances for the same font, which a pointer compare would register twice.
+FontFaceId register_face(FontHandle::FontData& data, CTFontRef face) {
+    for (size_t i = 0; i < data.faces.size(); i++) {
+        if (CFEqual(data.faces[i].get(), face)) return static_cast<FontFaceId>(i);
+    }
+    data.faces.emplace_back(face, OwnershipPolicy::kRetain);
+    return static_cast<FontFaceId>(data.faces.size() - 1);
+}
+
+}  // namespace
 
 std::optional<font::FontHandle> create_font(std::string family,
                                             double size_px,
@@ -84,7 +94,13 @@ std::optional<font::FontHandle> create_font(std::string family,
             ct.reset(styled);
         }
     }
-    return FontHandle(ct.get());
+    auto data = std::make_shared<FontHandle::FontData>();
+    // Process-unique and never reused: a glyph key outliving its font must fail to match, not
+    // collide with whatever font is created next.
+    static FontId next_id = 1;
+    data->id = next_id++;
+    data->faces.emplace_back(ct.get(), OwnershipPolicy::kRetain);
+    return FontHandle(std::move(data));
 }
 
 std::optional<font::FontHandle> create_font(const FontSpec& spec) {
@@ -107,17 +123,29 @@ ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont, std::string_view utf8) 
 
 }  // namespace
 
-std::vector<ShapedRun> shape(const FontHandle& font, std::string_view utf8) {
-    auto ctfont = static_cast<CTFontRef>(font.native_handle());
+void set_debug_use_analysis_path(bool) {}
+void set_debug_rendering_params(float, float) {}
+
+std::string rasterizer_debug_info() { return "Core Graphics, grayscale antialiasing"; }
+
+ShapedText shape(const FontHandle& font, std::string_view utf8) {
+    FontHandle::FontData& data = font.data();
+    CTFontRef ctfont = data.primary();
     auto line = make_ctline(ctfont, utf8);
 
     CFArrayRef runs = CTLineGetGlyphRuns(line.get());
     CFIndex run_count = CFArrayGetCount(runs);
 
-    std::vector<ShapedRun> shaped_runs;
-    shaped_runs.reserve(base::checked_cast<size_t>(run_count));
+    ShapedText shaped;
+    shaped.line_height = static_cast<float>(std::ceil(CTFontGetAscent(ctfont)) +
+                                            std::ceil(CTFontGetDescent(ctfont)) +
+                                            std::ceil(CTFontGetLeading(ctfont)));
     base::UTF16ToUTF8IndicesMap indices_map;
-    indices_map.set_utf8(utf8);
+    if (!indices_map.set_utf8(utf8)) {
+        // Malformed UTF-8. Shaping still works, but the map is empty and operator[] is unchecked,
+        // so the cluster lookup below has to be skipped rather than read out of bounds.
+        spdlog::warn("could not map UTF-16 to UTF-8 indices; cluster offsets will be 0");
+    }
 
     for (CFIndex r = 0; r < run_count; r++) {
         CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(runs, r);
@@ -142,8 +170,8 @@ std::vector<ShapedRun> shape(const FontHandle& font, std::string_view utf8) {
             if (v) run_font = static_cast<CTFontRef>(v);
         }
 
-        std::vector<GlyphPlacement> glyph_placements;
-        glyph_placements.reserve(n);
+        const FontFaceId face = register_face(data, run_font);
+        shaped.glyphs.reserve(shaped.glyphs.size() + n);
 
         for (size_t i = 0; i < n; i++) {
             // TODO: Handle kCFNotFound case in TextShaper::shape().
@@ -152,25 +180,30 @@ std::vector<ShapedRun> shape(const FontHandle& font, std::string_view utf8) {
                 NOTREACHED();
             }
 
-            size_t utf8_index = indices_map[base::checked_cast<size_t>(indices[i])];
-            glyph_placements.push_back({
-                .glyph_id = glyphs[i],
-                .x_advance = advances[i].width,
-                .x_offset = positions[i].x,
+            const size_t utf16_index = base::checked_cast<size_t>(indices[i]);
+            const size_t utf8_index =
+                utf16_index < indices_map.size() ? indices_map[utf16_index] : 0;
+            shaped.glyphs.push_back({
+                .glyph_id = pack_glyph(face, glyphs[i]),
+                .x_advance = static_cast<float>(advances[i].width),
+                .x_offset = static_cast<float>(positions[i].x),
                 // Core Text positions are y-up; negate to the library's y-down convention.
-                .y_offset = -positions[i].y,
+                .y_offset = static_cast<float>(-positions[i].y),
                 .cluster = utf8_index,
             });
+            shaped.advance += static_cast<float>(advances[i].width);
         }
-
-        shaped_runs.emplace_back(FontHandle(run_font), glyph_placements);
     }
-    return shaped_runs;
+    return shaped;
 }
 
 GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double s, double subpixel_x) {
-    auto ctfont = static_cast<CTFontRef>(font.native_handle());
-    CGGlyph g = base::checked_cast<CGGlyph>(glyph);  // Core Text glyph ids are 16-bit
+    const FontHandle::FontData& data = font.data();
+    const FontFaceId face = face_index_of(glyph);
+    if (face >= data.faces.size()) return {};
+
+    CTFontRef ctfont = data.faces[face].get();
+    CGGlyph g = glyph_index_of(glyph);  // Core Text glyph ids are 16-bit
 
     CGRect bbox =
         CTFontGetBoundingRectsForGlyphs(ctfont, kCTFontOrientationHorizontal, &g, nullptr, 1);
@@ -211,6 +244,15 @@ GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double s, double su
     // so bearing_x/bearing_y stay unchanged.
     CGPoint pos = {(-x0 + subpixel_x) / s, -y0 / s};
     CTFontDrawGlyphs(ctfont, &g, &pos, 1, ctx.get());
+
+    // The glyph was drawn in black, so coverage sits in alpha and rgb is 0. GlyphBitmap carries
+    // per-channel coverage (DirectWrite's ClearType puts a different one in each channel), so
+    // spread alpha across rgb. Core Graphics antialiasing is grayscale, so the three are equal and
+    // the shader's per-channel blend reduces exactly to the single-alpha case.
+    for (size_t i = 0; i < pixels.size(); i += kBytesPerPixel) {
+        const uint8_t coverage = pixels[i + 3];  // premultiplied-first, host order: b g r a
+        pixels[i] = pixels[i + 1] = pixels[i + 2] = coverage;
+    }
 
     // If the font is a color font and the glyph doesn't have an outline, it is a color glyph.
     // https://github.com/sublimehq/sublime_text/issues/3747#issuecomment-726837744

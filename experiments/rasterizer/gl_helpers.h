@@ -1,11 +1,15 @@
 #pragma once
 
-#include "experiments/rasterizer/capture.h"
 #include "experiments/rasterizer/font.h"
 #include "experiments/rasterizer/layout.h"
 #include <functional>
 #include <string>
 #include <vector>
+
+// A crop rectangle in device pixels, top-left origin. A zero-size rect means the whole window.
+struct Crop {
+    int x = 0, y = 0, w = 0, h = 0;
+};
 
 // Lays out a page of text for a given font. The interactive window calls this at startup and again
 // on every runtime font change, so each call fully re-shapes and re-rasterizes for the new
@@ -34,4 +38,4 @@ struct TestShot {
 // Runs the screenshot test suite in a single persistent window: for each shot, swaps in the new
 // font/text and captures the window (cropped to `crop`) once the frame settles -- no per-shot
 // relaunch, no fixed delays. `scale` is the device-pixel ratio.
-void run_test_window(std::vector<TestShot> shots, capture::Crop crop, double scale);
+void run_test_window(std::vector<TestShot> shots, Crop crop, double scale);

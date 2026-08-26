@@ -9,7 +9,7 @@
 // composable, and churn-free. Per-shot timing goes to stderr.
 //
 // Usage: capture_server (--pid <n> | --owner <name>) [--crop x,y,w,h]
-#include "experiments/rasterizer/capture.h"
+#include "experiments/rasterizer/mac/capture.h"
 
 #include <chrono>
 #include <cstdio>

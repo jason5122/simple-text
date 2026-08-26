@@ -1,9 +1,9 @@
 #include "base/debug/profiler.h"
 #include "experiments/rasterizer/atlas.h"
+#include "experiments/rasterizer/mac/capture.h"
 #include "experiments/rasterizer/gl_helpers.h"
 #include <AppKit/AppKit.h>
 #include <OpenGL/OpenGL.h>
-#include <OpenGL/gl3.h>
 #include <QuartzCore/QuartzCore.h>
 #include <algorithm>
 #include <array>
@@ -188,23 +188,26 @@ public:
     std::pair<double, double> apply(double dx, double dy, double now, bool gesture_ended) {
         if (gesture_ended) {
             samples_.clear();
+            sum_x_ = sum_y_ = 0.0;
             return {dx, dy};
         }
-        while (!samples_.empty() && samples_.front().t + kWindow < now) samples_.pop_front();
-        samples_.push_back({now, dx, dy});
-
-        // TODO: Is this slow? Could we use a monotonic stack approach to avoid looping?
-        double sx = 0.0, sy = 0.0;
-        for (const auto& s : samples_) {
-            sx += std::abs(s.dx);
-            sy += std::abs(s.dy);
+        // Keep the |Δ| sums over the trailing window incrementally (add on push, subtract on evict)
+        // so each event is O(1). The running error is bounded by the gesture and reset on its end.
+        while (!samples_.empty() && samples_.front().t + kWindow < now) {
+            sum_x_ -= std::abs(samples_.front().dx);
+            sum_y_ -= std::abs(samples_.front().dy);
+            samples_.pop_front();
         }
-        // Treat (sx, sy) as a first-quadrant vector: lock to whichever axis it falls within kCone
-        // of, comparing against its Euclidean length so the middle wedge is a genuine diagonal
+        samples_.push_back({now, dx, dy});
+        sum_x_ += std::abs(dx);
+        sum_y_ += std::abs(dy);
+
+        // Treat (sum_x, sum_y) as a first-quadrant vector: lock to whichever axis it falls within
+        // kCone of, comparing against its Euclidean length so the middle wedge is a genuine diagonal
         // dead-zone.
-        const double mag = std::sqrt(sx * sx + sy * sy);
-        if (sx > kCone * mag) return {dx, 0.0};
-        if (sy > kCone * mag) return {0.0, dy};
+        const double mag = std::sqrt(sum_x_ * sum_x_ + sum_y_ * sum_y_);
+        if (sum_x_ > kCone * mag) return {dx, 0.0};
+        if (sum_y_ > kCone * mag) return {0.0, dy};
         return {dx, dy};
     }
 
@@ -215,6 +218,7 @@ private:
         double t, dx, dy;
     };
     std::deque<Sample> samples_;
+    double sum_x_ = 0.0, sum_y_ = 0.0;
 };
 
 }  // namespace
@@ -227,10 +231,12 @@ private:
 @interface AtlasGLView : CAOpenGLLayer {
     GlyphAtlasSource _source;
 
-    double _scroll_x;  // content scrolled left past the left edge, in device pixels
-    double _scroll_y;  // content scrolled up past the top edge, in device pixels
-    double _yaw;       // text tilt about the vertical axis, in radians
-    double _pitch;     // text tilt about the horizontal axis, in radians (unbound)
+    double _scroll_x;       // content scrolled left past the left edge, in device pixels
+    double _scroll_y;       // content scrolled up past the top edge, in device pixels
+    double _scroll_frac_x;  // sub-pixel remainder carried between events so _scroll_x stays integral
+    double _scroll_frac_y;  // sub-pixel remainder carried between events so _scroll_y stays integral
+    double _yaw;            // text tilt about the vertical axis, in radians
+    double _pitch;          // text tilt about the horizontal axis, in radians (unbound)
 
     // Static GL objects, built once on the first draw.
     bool _gl_ready;
@@ -263,16 +269,24 @@ private:
 }
 
 - (void)scrollByPoints:(double)dy {
-    // Points -> device pixels so the content tracks the gesture 1:1. Clamped at the top; the
-    // bottom is left open (a real editor would clamp to content height).
-    _scroll_y -= dy * self.contentsScale;
+    // Points -> device pixels so the content tracks the gesture 1:1. Apply only whole device pixels
+    // and carry the sub-pixel remainder into the next event: this keeps the page texel-aligned so
+    // glyphs don't resample and shimmer mid-scroll, while the carry preserves smooth 1:1 tracking.
+    // Sublime's scroll_area_control::handle_event does the equivalent via its set/read-back position
+    // leftover (see reverse_engineering/).
+    const double want = _scroll_frac_y - dy * self.contentsScale;
+    const double step = std::round(want);
+    _scroll_frac_y = want - step;
+    _scroll_y += step;
     [self setNeedsDisplay];
 }
 
 - (void)scrollXByPoints:(double)dx {
-    // Horizontal counterpart of scrollByPoints:. Unclamped on both sides (a real editor would
-    // clamp to the widest line).
-    _scroll_x -= dx * self.contentsScale;
+    // Horizontal counterpart of scrollByPoints:, with the same whole-pixel snap and remainder carry.
+    const double want = _scroll_frac_x - dx * self.contentsScale;
+    const double step = std::round(want);
+    _scroll_frac_x = want - step;
+    _scroll_x += step;
     [self setNeedsDisplay];
 }
 
@@ -418,7 +432,10 @@ private:
     // Nothing to draw until a source has been uploaded (the test window's priming frame).
     if (_atlas) {
         glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // premultiplied over
+        // Premultiplied over, with the second fragment output supplying the coverage so each
+        // channel blends independently -- see glyph_frag.glsl.
+        glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC1_COLOR, GL_ONE,
+                            GL_ONE_MINUS_SRC1_ALPHA);
 
         glUseProgram(_program);
         glActiveTexture(GL_TEXTURE0);
@@ -663,7 +680,7 @@ void run_text_window(const font::FontSpec& initial,
     [NSApp run];
 }
 
-void run_test_window(std::vector<TestShot> shots, capture::Crop crop, double scale) {
+void run_test_window(std::vector<TestShot> shots, Crop crop, double scale) {
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
@@ -682,10 +699,11 @@ void run_test_window(std::vector<TestShot> shots, capture::Crop crop, double sca
     // [NSApp activateIgnoringOtherApps:YES];
 
     const uint32_t window_id = static_cast<uint32_t>(window.windowNumber);
+    const capture::Crop capture_crop = {crop.x, crop.y, crop.w, crop.h};
 
     // Prime the empty window so the first shot has a baseline to change from.
     for (int i = 0; i < 8; i++) capture::pump(0.008);
-    capture::Frame baseline = capture::capture_frame(window_id, crop);
+    capture::Frame baseline = capture::capture_frame(window_id, capture_crop);
 
     for (size_t i = 0; i < shots.size(); i++) {
         const TestShot& shot = shots[i];
@@ -697,7 +715,7 @@ void run_test_window(std::vector<TestShot> shots, capture::Crop crop, double sca
         }
         [layer setSource:layout_text(*handle, shot.lines, scale)];
 
-        capture::Frame settled = capture::wait_settled(window_id, crop, baseline);
+        capture::Frame settled = capture::wait_settled(window_id, capture_crop, baseline);
         bool ok = settled && capture::frame_to_png(settled, shot.out_path.c_str());
         spdlog::info("[{}/{}] {}{}", i + 1, shots.size(), shot.out_path, ok ? "" : "  (FAILED)");
         capture::release_frame(baseline);

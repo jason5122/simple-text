@@ -17,7 +17,7 @@ group("experiments") {
     "//experiments/fuzz",
     "//experiments/harfbuzz_demo",
     "//experiments/parser",
-    "//experiments/platform2",
+    "//experiments/platform",
     "//experiments/playground",
     "//experiments/rope",
     "//experiments/sanitizer_demo",

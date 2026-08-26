@@ -119,6 +119,30 @@ executable("platform_demo") {
   }
 }
 
+# Small, stable input-to-presentation workload. Its macOS recording harness lives beside it in
+# benchmark/, but the application uses only the portable platform API.
+executable("platform_benchmark") {
+  sources = [ "benchmark/benchmark.cc" ]
+
+  deps = [ ":px" ]
+
+  if (is_mac) {
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+    frameworks = [ "OpenGL.framework" ]
+  }
+
+  if (is_win) {
+    libs = [
+      "opengl32.lib",
+      "user32.lib",
+    ]
+  }
+
+  if (is_linux) {
+    libs = [ "GL" ]
+  }
+}
+
 # Same window, controls, dirty rectangles, and one-frame macOS layer fence as platform_demo, but
 # with the pre-texture-buffer single-VBO rectangle batcher retained for latency comparisons.
 executable("platform_fence_demo") {
@@ -145,32 +169,8 @@ executable("platform_fence_demo") {
 }
 
 if (is_mac) {
-  executable("platform_drag_latency_benchmark") {
-    sources = [ "reverse_engineering/drag_latency_benchmark.mm" ]
-
-    deps = [ ":px" ]
-
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-    frameworks = [
-      "AppKit.framework",
-      "OpenGL.framework",
-      "QuartzCore.framework",
-    ]
-  }
-
-  executable("platform_lag_probe") {
-    sources = [ "reverse_engineering/lag_probe.mm" ]
-
-    deps = [ "//experiments/rasterizer:capture" ]
-
-    frameworks = [
-      "AppKit.framework",
-      "CoreGraphics.framework",
-    ]
-  }
-
-  executable("platform_video_lag_probe") {
-    sources = [ "reverse_engineering/video_lag_probe.mm" ]
+  executable("platform_benchmark_analyzer") {
+    sources = [ "benchmark/analyzer.mm" ]
 
     frameworks = [
       "AVFoundation.framework",
@@ -180,71 +180,29 @@ if (is_mac) {
     ]
   }
 
-  executable("cg_window_probe") {
-    sources = [ "reverse_engineering/cg_window_probe.mm" ]
-
-    frameworks = [
-      "ApplicationServices.framework",
-      "Foundation.framework",
-    ]
-  }
-
-  executable("st_drag_probe") {
-    sources = [ "reverse_engineering/st_drag_probe.mm" ]
-
-    frameworks = [
-      "AVFoundation.framework",
-      "CoreMedia.framework",
-      "CoreVideo.framework",
-      "Foundation.framework",
-    ]
-  }
-
-  executable("video_count") {
-    sources = [ "reverse_engineering/video_count.mm" ]
-
-    frameworks = [
-      "AVFoundation.framework",
-      "CoreMedia.framework",
-      "CoreVideo.framework",
-      "Foundation.framework",
-    ]
-  }
-
-  executable("video_frame_dump") {
-    sources = [ "reverse_engineering/video_frame_dump.mm" ]
-
-    frameworks = [
-      "AVFoundation.framework",
-      "CoreGraphics.framework",
-      "CoreMedia.framework",
-      "CoreVideo.framework",
-      "Foundation.framework",
-      "ImageIO.framework",
-    ]
+  executable("move_mouse") {
+    sources = [ "benchmark/move_mouse.cc" ]
+    frameworks = [ "ApplicationServices.framework" ]
   }
 }
 
-group("platform_reverse_engineering") {
+group("platform_benchmark_suite") {
+  deps = [ ":platform_benchmark" ]
   if (is_mac) {
-    deps = [
-      ":cg_window_probe",
-      ":platform_drag_latency_benchmark",
-      ":platform_lag_probe",
-      ":platform_video_lag_probe",
-      ":st_drag_probe",
-      ":video_count",
-      ":video_frame_dump",
+    deps += [
+      ":move_mouse",
+      ":platform_benchmark_analyzer",
     ]
   }
 }
 
 group("platform") {
   deps = [
+    ":platform_benchmark",
     ":platform_demo",
     ":platform_fence_demo",
   ]
   if (is_mac) {
-    deps += [ ":platform_reverse_engineering" ]
+    deps += [ ":platform_benchmark_suite" ]
   }
 }

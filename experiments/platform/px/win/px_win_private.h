@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "experiments/platform/px.h"
+#include "experiments/platform/px/px.h"
 
 // ST registers a class literally named PX_WINDOW_CLASS. Its WNDCLASSEXW, read out of the binary at
 // 0x1401c5f3d, is:
@@ -27,42 +27,43 @@
 inline constexpr wchar_t kPxWindowClass[] = L"PX_WINDOW_CLASS";
 
 struct px_window_t {
-  HWND hwnd = nullptr;
-  HDC hdc = nullptr;
-  HGLRC hglrc = nullptr;
+    HWND hwnd = nullptr;
+    HDC hdc = nullptr;
+    HGLRC hglrc = nullptr;
 
-  px_window_event_handler* handler = nullptr;
+    px_window_event_handler* handler = nullptr;
 
-  bool did_first_paint = false;
-  bool closing = false;
-  bool tracking_mouse = false;
-  bool use_gl = true;
+    bool did_first_paint = false;
+    bool closing = false;
+    bool tracking_mouse = false;
+    bool use_gl = true;
+    bool has_stencil = false;
 
-  // Device pixels per point. WM_DPICHANGED keeps it current.
-  double dpi_scale = 1.0;
+    // Device pixels per point. WM_DPICHANGED keeps it current.
+    double dpi_scale = 1.0;
 
-  fcolor background{0.0f, 0.0f, 0.0f, 1.0f};
-  px_cursor_t cursor = PX_CURSOR_ARROW;
-  HBRUSH background_brush = nullptr;
+    fcolor background{0.0f, 0.0f, 0.0f, 1.0f};
+    px_cursor_t cursor = PX_CURSOR_ARROW;
+    HBRUSH background_brush = nullptr;
 
-  // Pending regions in window-space points, drained into InvalidateRect.
-  std::vector<rect> dirty;
+    // Pending regions in window-space points, drained into InvalidateRect.
+    std::vector<rect> dirty;
 
-  double last_flush = 0.0;
+    double last_flush = 0.0;
 
-  // Set between WM_IME_STARTCOMPOSITION and WM_IME_ENDCOMPOSITION.
-  bool composing = false;
+    // Set between WM_IME_STARTCOMPOSITION and WM_IME_ENDCOMPOSITION.
+    bool composing = false;
 
-  // Set when a WM_KEYDOWN was consumed by a binding, so the WM_CHAR that TranslateMessage already
-  // queued for it does not also get typed. Cleared on the next key down either way.
-  bool suppress_char = false;
+    // Set when a WM_KEYDOWN was consumed by a binding, so the WM_CHAR that TranslateMessage
+    // already queued for it does not also get typed. Cleared on the next key down either way.
+    bool suppress_char = false;
 
-  // WM_CHAR delivers astral codepoints as two messages.
-  wchar_t pending_high_surrogate = 0;
+    // WM_CHAR delivers astral codepoints as two messages.
+    wchar_t pending_high_surrogate = 0;
 
-  // Saved across a borderless-fullscreen toggle.
-  RECT saved_frame = {};
-  LONG_PTR saved_style = 0;
+    // Saved across a borderless-fullscreen toggle.
+    RECT saved_frame = {};
+    LONG_PTR saved_style = 0;
 };
 
 // px_window.cc

@@ -1,4 +1,4 @@
-// Portable access to the GL entry points a drawing layer needs.
+// Platform-specific access to the GL entry points a drawing layer needs.
 //
 // macOS: the CAOpenGLLayer's context is 3.2 core, so the SDK's gl3.h symbols are linkable
 // directly.
@@ -18,9 +18,7 @@
 
 #include <OpenGL/gl3.h>
 
-inline bool px_gl_has_shaders() {
-  return true;
-}
+inline bool px_gl_has_shaders() { return true; }
 
 #elif defined(_WIN32)
 
@@ -53,15 +51,31 @@ using GLintptr = signed long long;
 #define GL_TRUE 1
 #define GL_TRIANGLES 0x0004
 #define GL_TRIANGLE_STRIP 0x0005
+#define GL_ONE 1
+#define GL_EQUAL 0x0202
+#define GL_ALWAYS 0x0207
+#define GL_KEEP 0x1E00
+#define GL_REPLACE 0x1E01
+#define GL_DEPTH_TEST 0x0B71
+#define GL_BLEND 0x0BE2
 #define GL_SCISSOR_TEST 0x0C11
+#define GL_STENCIL_TEST 0x0B90
 #define GL_FLOAT 0x1406
 #define GL_VERSION 0x1F02
+#define GL_STENCIL_BUFFER_BIT 0x00000400
 #define GL_COLOR_BUFFER_BIT 0x00004000
+#define GL_ONE_MINUS_SRC_ALPHA 0x0303
 
 // GL 1.1, linked directly.
 extern "C" {
 __declspec(dllimport) void APIENTRY glClear(GLbitfield mask);
 __declspec(dllimport) void APIENTRY glClearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a);
+__declspec(dllimport) void APIENTRY glClearStencil(GLint value);
+__declspec(dllimport) void APIENTRY glBlendFunc(GLenum source, GLenum destination);
+__declspec(dllimport) void APIENTRY glColorMask(GLboolean r,
+                                                GLboolean g,
+                                                GLboolean b,
+                                                GLboolean a);
 __declspec(dllimport) void APIENTRY glDisable(GLenum cap);
 __declspec(dllimport) void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count);
 __declspec(dllimport) void APIENTRY glEnable(GLenum cap);
@@ -70,6 +84,9 @@ __declspec(dllimport) void APIENTRY glGenTextures(GLsizei count, GLuint* texture
 __declspec(dllimport) void APIENTRY glBindTexture(GLenum target, GLuint texture);
 __declspec(dllimport) const GLubyte* APIENTRY glGetString(GLenum name);
 __declspec(dllimport) void APIENTRY glScissor(GLint x, GLint y, GLsizei w, GLsizei h);
+__declspec(dllimport) void APIENTRY glStencilFunc(GLenum function, GLint reference, GLuint mask);
+__declspec(dllimport) void APIENTRY glStencilMask(GLuint mask);
+__declspec(dllimport) void APIENTRY glStencilOp(GLenum fail, GLenum depth_fail, GLenum depth_pass);
 __declspec(dllimport) void APIENTRY glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
 }
 
@@ -96,6 +113,9 @@ using PFN_glCreateProgram = GLuint(APIENTRY*)(void);
 using PFN_glAttachShader = void(APIENTRY*)(GLuint, GLuint);
 using PFN_glBindAttribLocation = void(APIENTRY*)(GLuint, GLuint, const GLchar*);
 using PFN_glLinkProgram = void(APIENTRY*)(GLuint);
+using PFN_glGetProgramiv = void(APIENTRY*)(GLuint, GLenum, GLint*);
+using PFN_glGetProgramInfoLog = void(APIENTRY*)(GLuint, GLsizei, GLsizei*, GLchar*);
+using PFN_glDeleteProgram = void(APIENTRY*)(GLuint);
 using PFN_glUseProgram = void(APIENTRY*)(GLuint);
 using PFN_glGetUniformLocation = GLint(APIENTRY*)(GLuint, const GLchar*);
 using PFN_glUniform2f = void(APIENTRY*)(GLint, GLfloat, GLfloat);
@@ -123,6 +143,9 @@ extern PFN_glCreateProgram px_glCreateProgram;
 extern PFN_glAttachShader px_glAttachShader;
 extern PFN_glBindAttribLocation px_glBindAttribLocation;
 extern PFN_glLinkProgram px_glLinkProgram;
+extern PFN_glGetProgramiv px_glGetProgramiv;
+extern PFN_glGetProgramInfoLog px_glGetProgramInfoLog;
+extern PFN_glDeleteProgram px_glDeleteProgram;
 extern PFN_glUseProgram px_glUseProgram;
 extern PFN_glGetUniformLocation px_glGetUniformLocation;
 extern PFN_glUniform2f px_glUniform2f;
@@ -151,6 +174,9 @@ bool px_gl_has_shaders();
 #define glAttachShader px_glAttachShader
 #define glBindAttribLocation px_glBindAttribLocation
 #define glLinkProgram px_glLinkProgram
+#define glGetProgramiv px_glGetProgramiv
+#define glGetProgramInfoLog px_glGetProgramInfoLog
+#define glDeleteProgram px_glDeleteProgram
 #define glUseProgram px_glUseProgram
 #define glGetUniformLocation px_glGetUniformLocation
 #define glUniform2f px_glUniform2f
@@ -174,8 +200,8 @@ bool px_gl_has_shaders();
 // ordinary NEEDED-library imports in its .dynsym, not resolved through glXGetProcAddress, and the
 // binary contains no "glX" strings at all). That is only possible because Mesa's libGL.so exports
 // the full core profile as real symbols rather than gating it behind the extension-query API the
-// GLX spec technically requires; ST is relying on that Mesa behavior rather than working around it.
-// This header does the same: plain prototypes, resolved by the dynamic linker at load time, no
+// GLX spec technically requires; ST is relying on that Mesa behavior rather than working around
+// it. This header does the same: plain prototypes, resolved by the dynamic linker at load time, no
 // function-pointer indirection. px_gl_has_shaders() is unconditionally true for the same reason
 // px.h's macOS branch is -- if the symbols were not there, the process would have failed to start.
 //
@@ -210,10 +236,20 @@ using GLintptr = int64_t;
 #define GL_TRUE 1
 #define GL_TRIANGLES 0x0004
 #define GL_TRIANGLE_STRIP 0x0005
+#define GL_ONE 1
+#define GL_EQUAL 0x0202
+#define GL_ALWAYS 0x0207
+#define GL_KEEP 0x1E00
+#define GL_REPLACE 0x1E01
+#define GL_DEPTH_TEST 0x0B71
+#define GL_BLEND 0x0BE2
 #define GL_SCISSOR_TEST 0x0C11
+#define GL_STENCIL_TEST 0x0B90
 #define GL_FLOAT 0x1406
 #define GL_VERSION 0x1F02
+#define GL_STENCIL_BUFFER_BIT 0x00000400
 #define GL_COLOR_BUFFER_BIT 0x00004000
+#define GL_ONE_MINUS_SRC_ALPHA 0x0303
 #define GL_FRAGMENT_SHADER 0x8B30
 #define GL_VERTEX_SHADER 0x8B31
 #define GL_COMPILE_STATUS 0x8B81
@@ -226,12 +262,17 @@ using GLintptr = int64_t;
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41
 #define GL_COLOR_ATTACHMENT0 0x8CE0
+#define GL_STENCIL_ATTACHMENT 0x8D20
 #define GL_FRAMEBUFFER_COMPLETE 0x8CD5
 #define GL_RGBA8 0x8058
+#define GL_STENCIL_INDEX8 0x8D48
 
 extern "C" {
 void glClear(GLbitfield mask);
 void glClearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a);
+void glClearStencil(GLint value);
+void glBlendFunc(GLenum source, GLenum destination);
+void glColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a);
 void glDisable(GLenum cap);
 void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 void glEnable(GLenum cap);
@@ -240,6 +281,9 @@ void glGenTextures(GLsizei, GLuint*);
 void glBindTexture(GLenum, GLuint);
 const GLubyte* glGetString(GLenum name);
 void glScissor(GLint x, GLint y, GLsizei w, GLsizei h);
+void glStencilFunc(GLenum function, GLint reference, GLuint mask);
+void glStencilMask(GLuint mask);
+void glStencilOp(GLenum fail, GLenum depth_fail, GLenum depth_pass);
 void glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
 
 GLuint glCreateShader(GLenum);
@@ -252,6 +296,9 @@ GLuint glCreateProgram(void);
 void glAttachShader(GLuint, GLuint);
 void glBindAttribLocation(GLuint, GLuint, const GLchar*);
 void glLinkProgram(GLuint);
+void glGetProgramiv(GLuint, GLenum, GLint*);
+void glGetProgramInfoLog(GLuint, GLsizei, GLsizei*, GLchar*);
+void glDeleteProgram(GLuint);
 void glUseProgram(GLuint);
 GLint glGetUniformLocation(GLuint, const GLchar*);
 void glUniform2f(GLint, GLfloat, GLfloat);
@@ -279,9 +326,7 @@ void glBindRenderbuffer(GLenum, GLuint);
 void glRenderbufferStorage(GLenum, GLenum, GLsizei, GLsizei);
 }
 
-inline bool px_gl_has_shaders() {
-  return true;
-}
+inline bool px_gl_has_shaders() { return true; }
 
 #else
 #error "px_gl.h has no backend for this platform"

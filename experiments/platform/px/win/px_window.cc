@@ -21,8 +21,9 @@
 //     WM_KILLFOCUS               -> 14
 //     WM_SETTINGCHANGE           -> 21
 
-#include "experiments/platform/px_gl.h"
-#include "experiments/platform/win/px_win_private.h"
+#include "experiments/platform/px/gl_render_context.h"
+#include "experiments/platform/px/px_gl.h"
+#include "experiments/platform/px/win/px_win_private.h"
 
 #include <imm.h>
 #include <shellapi.h>
@@ -155,35 +156,6 @@ RECT physical_rect(const px_window_t* window, rect r) {
 
 // ── render context ──────────────────────────────────────────────────────────────────────────────
 
-class GLRenderContext final : public px_render_context {
-public:
-    GLRenderContext(vec2 device_size, double scale) : device_size_(device_size), scale_(scale) {}
-
-    vec2 device_size() const override { return device_size_; }
-    double dpi_scale_factor() const override { return scale_; }
-
-    void scissor_box(rect r, int out_xywh[4]) const override {
-        const double x0 = r.x * scale_;
-        const double x1 = r.right() * scale_;
-        const double y0 = device_size_.y - r.bottom() * scale_;
-        const double y1 = device_size_.y - r.y * scale_;
-
-        const double cx0 = std::clamp(std::floor(x0), 0.0, device_size_.x);
-        const double cy0 = std::clamp(std::floor(y0), 0.0, device_size_.y);
-        const double cx1 = std::clamp(std::ceil(x1), 0.0, device_size_.x);
-        const double cy1 = std::clamp(std::ceil(y1), 0.0, device_size_.y);
-
-        out_xywh[0] = static_cast<int>(cx0);
-        out_xywh[1] = static_cast<int>(cy0);
-        out_xywh[2] = static_cast<int>(std::max(0.0, cx1 - cx0));
-        out_xywh[3] = static_cast<int>(std::max(0.0, cy1 - cy0));
-    }
-
-private:
-    vec2 device_size_;
-    double scale_;
-};
-
 // ── IME ─────────────────────────────────────────────────────────────────────────────────────────
 
 px_input_client* input_client_for(px_window_t* window) {
@@ -269,8 +241,19 @@ void paint_window(px_window_t* window) {
 
         glViewport(0, 0, static_cast<GLsizei>(device.x), static_cast<GLsizei>(device.y));
 
-        GLRenderContext rc(device, scale);
-        window->handler->paint(&rc, bounds, dirty.data(), static_cast<int>(dirty.size()));
+        const rect paint_bounds = gl_render_context::normalize_dirty_rects(&dirty, bounds);
+        if (!window->has_stencil && dirty.size() > 1) {
+            // Without stencil the bounding scissor is the only exact clip available. Treat its
+            // clean gaps as damaged too, making the fallback conservative rather than corrupting
+            // pixels the application still considers preserved.
+            dirty.clear();
+            dirty.push_back(paint_bounds);
+        }
+        gl_render_context rc(device, scale, dirty.data(), static_cast<int>(dirty.size()),
+                             window->has_stencil);
+        window->handler->paint(&rc, rc.paint_bounds(), dirty.data(),
+                               static_cast<int>(dirty.size()));
+        rc.finish();
 
         // Single-buffered: glFlush is the whole presentation step. ST imports no SwapBuffers.
         glFlush();

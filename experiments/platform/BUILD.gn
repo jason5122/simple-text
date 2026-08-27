@@ -1,25 +1,72 @@
-# A clean-room reimplementation of Sublime Text's platform abstraction ("px"), recovered from its
-# shipping binaries. Adding a backend means implementing px.h again and touching nothing above it,
-# which is the property being tested -- px.h and everything that includes it are identical between
-# the macOS and Windows builds.
+group("platform") {
+  deps = [ ":platform_demo" ]
+
+  if (is_mac) {
+    deps += [ ":platform_benchmark_suite" ]
+  }
+}
+
+group("platform_benchmark_suite") {
+  deps = [ ":platform_benchmark" ]
+  if (is_mac) {
+    deps += [
+      ":move_mouse",
+      ":platform_benchmark_analyzer",
+    ]
+  }
+}
+
+executable("platform_demo") {
+  sources = [ "demo/main.cc" ]
+  deps = [ ":window" ]
+}
+
+executable("platform_benchmark") {
+  sources = [ "benchmark/benchmark.cc" ]
+  deps = [ ":px" ]
+}
+
+if (is_mac) {
+  executable("platform_benchmark_analyzer") {
+    sources = [ "benchmark/analyzer.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("move_mouse") {
+    sources = [ "benchmark/move_mouse.cc" ]
+    frameworks = [ "ApplicationServices.framework" ]
+  }
+}
+
+source_set("window") {
+  sources = [
+    "ui/window.cc",
+    "ui/window.h",
+  ]
+  public_deps = [ ":px" ]
+}
 
 source_set("px") {
   sources = [
-    "px.h",
-    "px_gl.h",
+    "px/gl_render_context.cc",
+    "px/gl_render_context.h",
+    "px/px.h",
+    "px/px_gl.h",
   ]
 
   if (is_mac) {
-    # CAOpenGLLayer, CGL and the GL entry points are all deprecated as of 10.14. ST 4200 ships on
-    # them, and reproducing that is the experiment.
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-
     sources += [
-      "mac/px_app.mm",
-      "mac/px_gl_layer.mm",
-      "mac/px_keycode.mm",
-      "mac/px_mac_private.h",
-      "mac/px_window.mm",
+      "px/mac/px_app.mm",
+      "px/mac/px_gl_layer.mm",
+      "px/mac/px_keycode.mm",
+      "px/mac/px_mac_private.h",
+      "px/mac/px_window.mm",
     ]
 
     frameworks = [
@@ -30,15 +77,16 @@ source_set("px") {
       "OpenGL.framework",
       "QuartzCore.framework",
     ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
   }
 
   if (is_win) {
     sources += [
-      "win/px_app.cc",
-      "win/px_gl.cc",
-      "win/px_keycode.cc",
-      "win/px_win_private.h",
-      "win/px_window.cc",
+      "px/win/px_app.cc",
+      "px/win/px_gl.cc",
+      "px/win/px_keycode.cc",
+      "px/win/px_win_private.h",
+      "px/win/px_window.cc",
     ]
 
     libs = [
@@ -56,11 +104,11 @@ source_set("px") {
     # distribution trick for running against either GTK2 or GTK3, not part of the platform
     # abstraction. This links gtk+-3.0 normally, as instructed.
     sources += [
-      "linux/px_app.cc",
-      "linux/px_gl.cc",
-      "linux/px_keycode.cc",
-      "linux/px_linux_private.h",
-      "linux/px_window.cc",
+      "px/linux/px_app.cc",
+      "px/linux/px_gl.cc",
+      "px/linux/px_keycode.cc",
+      "px/linux/px_linux_private.h",
+      "px/linux/px_window.cc",
     ]
 
     public_configs = [ ":gtk3_internal_config" ]
@@ -83,126 +131,5 @@ if (is_linux) {
       "gthread-2.0",
       "gtk+-3.0",
     ]
-  }
-}
-
-# The app-side half: window_impl bridging `window` to px_window_event_handler, plus the
-# window_aspect chain. Portable by construction -- it includes px.h and nothing platform-specific.
-source_set("window") {
-  sources = [
-    "window.cc",
-    "window.h",
-  ]
-
-  public_deps = [ ":px" ]
-}
-
-executable("platform_demo") {
-  sources = [ "demo/main.cc" ]
-
-  deps = [ ":window" ]
-
-  if (is_mac) {
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-    frameworks = [ "OpenGL.framework" ]
-  }
-
-  if (is_win) {
-    libs = [
-      "opengl32.lib",
-      "user32.lib",
-    ]
-  }
-
-  if (is_linux) {
-    libs = [ "GL" ]
-  }
-}
-
-# Small, stable input-to-presentation workload. Its macOS recording harness lives beside it in
-# benchmark/, but the application uses only the portable platform API.
-executable("platform_benchmark") {
-  sources = [ "benchmark/benchmark.cc" ]
-
-  deps = [ ":px" ]
-
-  if (is_mac) {
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-    frameworks = [ "OpenGL.framework" ]
-  }
-
-  if (is_win) {
-    libs = [
-      "opengl32.lib",
-      "user32.lib",
-    ]
-  }
-
-  if (is_linux) {
-    libs = [ "GL" ]
-  }
-}
-
-# Same window, controls, dirty rectangles, and one-frame macOS layer fence as platform_demo, but
-# with the pre-texture-buffer single-VBO rectangle batcher retained for latency comparisons.
-executable("platform_fence_demo") {
-  sources = [ "demo/main.cc" ]
-
-  defines = [ "PX_DEMO_FENCE_RECT_BATCH" ]
-  deps = [ ":window" ]
-
-  if (is_mac) {
-    defines += [ "GL_SILENCE_DEPRECATION" ]
-    frameworks = [ "OpenGL.framework" ]
-  }
-
-  if (is_win) {
-    libs = [
-      "opengl32.lib",
-      "user32.lib",
-    ]
-  }
-
-  if (is_linux) {
-    libs = [ "GL" ]
-  }
-}
-
-if (is_mac) {
-  executable("platform_benchmark_analyzer") {
-    sources = [ "benchmark/analyzer.mm" ]
-
-    frameworks = [
-      "AVFoundation.framework",
-      "CoreMedia.framework",
-      "CoreVideo.framework",
-      "Foundation.framework",
-    ]
-  }
-
-  executable("move_mouse") {
-    sources = [ "benchmark/move_mouse.cc" ]
-    frameworks = [ "ApplicationServices.framework" ]
-  }
-}
-
-group("platform_benchmark_suite") {
-  deps = [ ":platform_benchmark" ]
-  if (is_mac) {
-    deps += [
-      ":move_mouse",
-      ":platform_benchmark_analyzer",
-    ]
-  }
-}
-
-group("platform") {
-  deps = [
-    ":platform_benchmark",
-    ":platform_demo",
-    ":platform_fence_demo",
-  ]
-  if (is_mac) {
-    deps += [ ":platform_benchmark_suite" ]
   }
 }

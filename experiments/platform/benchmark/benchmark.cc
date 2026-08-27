@@ -4,13 +4,10 @@
 // latency-critical CAOpenGLLayer path; the drawing code itself uses the same two-slot rectangle
 // stream as the main demo. benchmark/record_platform_drag.sh drives and measures this binary.
 
-#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 
-#include "experiments/platform/demo/rect_batch.h"
-#include "experiments/platform/px.h"
-#include "experiments/platform/px_gl.h"
+#include "experiments/platform/px/px.h"
 
 namespace {
 
@@ -23,17 +20,6 @@ constexpr fcolor kOrange{0.95f, 0.55f, 0.25f, 1.0f};
 rect square_rect(vec2 center) {
     return rect{center.x - kSquareSize * 0.5, center.y - kSquareSize * 0.5, kSquareSize,
                 kSquareSize};
-}
-
-void clear_rect(px_render_context* context, rect area, fcolor color) {
-    int box[4];
-    context->scissor_box(area, box);
-    if (box[2] <= 0 || box[3] <= 0) {
-        return;
-    }
-    glScissor(box[0], box[1], box[2], box[3]);
-    glClearColor(color.r, color.g, color.b, color.a);
-    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 class BenchmarkHandler final : public px_window_event_handler {
@@ -71,35 +57,19 @@ public:
                rect bounds,
                const rect* dirty,
                int dirty_count) override {
-        batch_.ensure_initialized();
-        glEnable(GL_SCISSOR_TEST);
-
-        // A fast input burst can accumulate many overlapping old/new square bounds before the next
-        // paint. Clear their union once instead of issuing work for every historical mouse event.
-        if (dirty_count > 0) {
-            double left = dirty[0].x;
-            double top = dirty[0].y;
-            double right = dirty[0].right();
-            double bottom = dirty[0].bottom();
-            for (int i = 1; i < dirty_count; ++i) {
-                left = std::min(left, dirty[i].x);
-                top = std::min(top, dirty[i].y);
-                right = std::max(right, dirty[i].right());
-                bottom = std::max(bottom, dirty[i].bottom());
-            }
-            clear_rect(context, rect{left, top, right - left, bottom - top}, kBackground);
-        }
+        (void)dirty;
+        (void)dirty_count;
+        context->begin_rect_batch();
+        context->draw_rect(bounds, kBackground);
 
         if (visible_) {
-            batch_.add(square_rect(position_), kOrange);
+            context->draw_rect(square_rect(position_), kOrange);
         }
-        batch_.flush(vec2{bounds.w, bounds.h});
-        glDisable(GL_SCISSOR_TEST);
+        context->end_rect_batch();
     }
 
 private:
     px_window_t* window_ = nullptr;
-    px_demo::RectBatch batch_;
     vec2 position_;
     bool visible_ = false;
 };

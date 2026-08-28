@@ -9,7 +9,7 @@
 
 #include "experiments/platform/px/mac/px_mac_private.h"
 
-#include <chrono>
+#include <mach/mach_time.h>
 #include <string>
 #include <vector>
 
@@ -17,8 +17,6 @@ namespace {
 
 px_application_event_handler* g_app_handler = nullptr;
 px_application_event_handler g_default_app_handler;
-
-std::chrono::steady_clock::time_point g_start;
 
 px_application_event_handler& app_handler() {
     return g_app_handler ? *g_app_handler : g_default_app_handler;
@@ -108,7 +106,6 @@ void build_main_menu(const char* app_name) {
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
     (void)notification;
-    [NSApp activateIgnoringOtherApps:YES];
 
     [NSDistributedNotificationCenter.defaultCenter
         addObserver:self
@@ -179,8 +176,6 @@ void px_init(const char* app_name, const char* bundle_id, int argc, char** argv,
     (void)argc;
     (void)argv;
     (void)flags;
-
-    g_start = std::chrono::steady_clock::now();
 
     // Instantiating the shared application through our subclass is what makes NSApp a
     // PXApplication; there is no Info.plist NSPrincipalClass in play here.
@@ -280,6 +275,15 @@ void px_open_url(const char* url) {
 }
 
 double px_now() {
-    const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - g_start;
-    return elapsed.count();
+    return px_mac_host_time_seconds(mach_absolute_time());
+}
+
+double px_mac_host_time_seconds(uint64_t ticks) {
+    static const mach_timebase_info_data_t timebase = [] {
+        mach_timebase_info_data_t value{};
+        mach_timebase_info(&value);
+        return value;
+    }();
+    return static_cast<double>(ticks) * static_cast<double>(timebase.numer) /
+           static_cast<double>(timebase.denom) / 1'000'000'000.0;
 }

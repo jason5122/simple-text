@@ -1,7 +1,5 @@
 #include "experiments/platform/ui/window.h"
 
-#include <algorithm>
-
 window_impl::window_impl(double width, double height, const char* title, fcolor background) {
     // The handler goes in at construction, the way px_create_window takes it as its first
     // argument.

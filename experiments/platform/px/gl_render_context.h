@@ -32,6 +32,11 @@ public:
     gl_render_context& operator=(const gl_render_context&) = delete;
 
     void draw_rect(rect area, fill_mode fill) override;
+    void draw_shaped_text(px_font_t* font,
+                          vec2 position,
+                          fcolor color,
+                          fx_layout* layout,
+                          bool subpixel_positioning) override;
 
     void translate(double x, double y) override;
     void scale(double x, double y) override;
@@ -45,6 +50,8 @@ public:
     double dpi_scale_factor() override { return dpi_scale_; }
 
     bool supports_batching() const override { return true; }
+    void begin_text_batch() override;
+    void end_text_batch() override;
     void begin_rect_batch() override;
     void end_rect_batch() override;
 
@@ -59,6 +66,11 @@ public:
     // ST replaces more than 128 dirty rectangles with their union before rendering. Platform paint
     // paths call this after any framebuffer-resize full invalidation and before constructing us.
     static rect normalize_dirty_rects(std::vector<rect>* dirty, rect window_bounds);
+
+    // The rasterizer comparison swaps thousands of independent pages through one persistent
+    // window. Its reference renderer starts each page with a fresh atlas, so request the same on
+    // the next text draw. Deferred because callers do not own the current GL context.
+    static void reset_glyph_atlas_for_testing();
 
 private:
     struct saved_state {

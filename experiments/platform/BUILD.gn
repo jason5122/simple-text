@@ -2,22 +2,31 @@ group("platform") {
   deps = [ ":platform_demo" ]
 
   if (is_mac) {
-    deps += [ ":platform_benchmark_suite" ]
+    deps += [
+      ":platform_benchmark_suite",
+      ":platform_rasterizer",
+    ]
   }
 }
 
 group("platform_benchmark_suite") {
-  deps = [ ":platform_benchmark" ]
+  deps = [
+    ":platform_animation_benchmark",
+    ":platform_benchmark",
+    ":platform_demo_isolation",
+  ]
   if (is_mac) {
     deps += [
       ":move_mouse",
+      ":platform_animation_analyzer",
       ":platform_benchmark_analyzer",
+      ":scroll_wheel",
     ]
   }
 }
 
 executable("platform_demo") {
-  sources = [ "demo/main.cc" ]
+  sources = [ "demo.cc" ]
   deps = [ ":window" ]
 }
 
@@ -26,9 +35,41 @@ executable("platform_benchmark") {
   deps = [ ":px" ]
 }
 
+executable("platform_animation_benchmark") {
+  sources = [ "benchmark/animation_benchmark.cc" ]
+  deps = [ ":px" ]
+}
+
+executable("platform_demo_isolation") {
+  sources = [ "benchmark/demo_isolation.cc" ]
+  deps = [ ":window" ]
+}
+
 if (is_mac) {
+  # Drop-in command-line counterpart to //experiments/rasterizer:rasterizer. Its
+  # --test mode keeps that probe's capture geometry and filenames but draws
+  # through px/fx/gl_render_context.
+  executable("platform_rasterizer") {
+    sources = [ "rasterizer.cc" ]
+    deps = [
+      ":px",
+      "//experiments/rasterizer:capture",
+    ]
+  }
+
   executable("platform_benchmark_analyzer") {
     sources = [ "benchmark/analyzer.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("platform_animation_analyzer") {
+    sources = [ "benchmark/animation_analyzer.mm" ]
 
     frameworks = [
       "AVFoundation.framework",
@@ -42,6 +83,11 @@ if (is_mac) {
     sources = [ "benchmark/move_mouse.cc" ]
     frameworks = [ "ApplicationServices.framework" ]
   }
+
+  executable("scroll_wheel") {
+    sources = [ "benchmark/scroll_wheel.cc" ]
+    frameworks = [ "ApplicationServices.framework" ]
+  }
 }
 
 source_set("window") {
@@ -52,6 +98,22 @@ source_set("window") {
   public_deps = [ ":px" ]
 }
 
+if (is_mac) {
+  # Renderer-independent font mechanics backed by the CoreText implementation shared with
+  # //experiments/rasterizer. This stays separate because fx sits beneath px_font_t and is also
+  # consumable by non-window renderers.
+  source_set("fx") {
+    sources = [
+      "fx/fx.cc",
+      "fx/fx.h",
+      "fx/mac/core_text_font.cc",
+    ]
+
+    public_deps = [ "//experiments/rasterizer:font" ]
+    deps = [ "//third_party/uni_algo" ]
+  }
+}
+
 source_set("px") {
   sources = [
     "px/gl_render_context.cc",
@@ -60,9 +122,17 @@ source_set("px") {
     "px/px_gl.h",
   ]
 
+  inputs = [
+    "px/gl_glyph_frag.glsl",
+    "px/gl_glyph_vert.glsl",
+    "px/gl_rect_frag.glsl",
+    "px/gl_rect_vert.glsl",
+  ]
+
   if (is_mac) {
     sources += [
       "px/mac/px_app.mm",
+      "px/mac/px_font.cc",
       "px/mac/px_gl_layer.mm",
       "px/mac/px_keycode.mm",
       "px/mac/px_mac_private.h",
@@ -78,10 +148,12 @@ source_set("px") {
       "QuartzCore.framework",
     ]
     defines = [ "GL_SILENCE_DEPRECATION" ]
+    deps = [ ":fx" ]
   }
 
   if (is_win) {
     sources += [
+      "px/px_font_stub.cc",
       "px/win/px_app.cc",
       "px/win/px_gl.cc",
       "px/win/px_keycode.cc",
@@ -109,6 +181,7 @@ source_set("px") {
       "px/linux/px_keycode.cc",
       "px/linux/px_linux_private.h",
       "px/linux/px_window.cc",
+      "px/px_font_stub.cc",
     ]
 
     public_configs = [ ":gtk3_internal_config" ]

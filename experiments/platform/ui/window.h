@@ -21,7 +21,6 @@
 #pragma once
 
 #include <functional>
-#include <memory>
 #include <vector>
 
 #include "experiments/platform/px/px.h"

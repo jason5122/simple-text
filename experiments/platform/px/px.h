@@ -25,12 +25,15 @@
 
 #include <cstdint>
 #include <functional>
+#include <string_view>
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // OPAQUE HANDLES
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // Defined only inside the per-platform translation units. Portable code never sees the contents.
 struct px_window_t;
+struct px_font_t;
+struct fx_layout;
 
 class px_render_context;
 class px_window_event_handler;
@@ -79,6 +82,13 @@ struct fcolor {
     float g = 0.0f;
     float b = 0.0f;
     float a = 1.0f;
+};
+
+struct px_font_metrics {
+    float ascent = 0.0f;
+    float descent = 0.0f;
+    float leading = 0.0f;
+    float line_height = 0.0f;
 };
 
 // ST's fill_mode also represents textured/repeating fills. Solid color is the first useful slice
@@ -264,16 +274,28 @@ inline bool px_set_event_text(px_event_t* event, const char* utf8, size_t length
 // RENDER CONTEXT
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // Handed to px_window_event_handler::paint. This is the backend-neutral 2D drawing interface; ST
-// has both gl_render_context and skia_render_context implementations. The recovered interface is
-// larger (text, gradients, paths and custom drawing), but those methods depend on px_font_t,
-// fx_layout and texture types that are not present in this experiment. This is the faithful,
-// functional solid-rectangle/state slice rather than a collection of no-op placeholders.
+// has both gl_render_context and skia_render_context implementations. Text and solid rectangles
+// are implemented here; gradients, paths, textures and custom drawing remain outside this slice.
 class px_render_context {
 public:
     virtual ~px_render_context() = default;
 
     virtual void draw_rect(rect area, fill_mode fill) = 0;
     void draw_rect(rect area, fcolor color) { draw_rect(area, fill_mode(color)); }
+
+    // The convenience path shapes transient text through the px_font_t's fx_font, then dispatches
+    // the resulting layout to the active renderer. Cached callers may keep and draw an fx_layout
+    // directly, which is the split present in ST's px_render_context vtable.
+    void draw_text(px_font_t* font,
+                   vec2 position,
+                   fcolor color,
+                   std::string_view utf8,
+                   bool subpixel_positioning = true);
+    virtual void draw_shaped_text(px_font_t* font,
+                                  vec2 position,
+                                  fcolor color,
+                                  fx_layout* layout,
+                                  bool subpixel_positioning) = 0;
 
     // Transform operations compose exactly as ST's GL implementation does: translation is first
     // multiplied by the current scale, while scale multiplies the current scale component-wise.
@@ -293,6 +315,8 @@ public:
     virtual double dpi_scale_factor() = 0;
 
     virtual bool supports_batching() const { return false; }
+    virtual void begin_text_batch() {}
+    virtual void end_text_batch() {}
     virtual void begin_rect_batch() {}
     virtual void end_rect_batch() {}
 };
@@ -353,7 +377,7 @@ public:
         return false;
     }
 
-    // Driven by the window's CVDisplayLink. `now` is seconds since px_init.
+    // Driven by the platform's display clock. `now` uses the same monotonic clock as px_now().
     virtual void animation_tick(double now) { (void)now; }
 
     // The IME target, or null if this window takes no text input.
@@ -450,12 +474,25 @@ enum : uint32_t {
         PX_WINDOW_RESIZABLE | PX_WINDOW_TITLED | PX_WINDOW_CLOSABLE | PX_WINDOW_MINIATURIZABLE,
 };
 
+enum : uint32_t {
+    PX_FONT_NORMAL = 0,
+    PX_FONT_BOLD = 1u << 0,
+    PX_FONT_ITALIC = 1u << 1,
+};
+
 // Set PX_NO_GL=1 in the environment to take the software path, mirroring the pxw->use_gl flag that
 // -[PXView makeBackingLayer] branches on.
 void px_init(const char* app_name, const char* bundle_id, int argc, char** argv, uint32_t flags);
 void px_set_application_event_handler(px_application_event_handler* handler);
 void px_run_event_loop();
 void px_exit_event_loop();
+
+// Fonts are process-cached and returned at stable addresses, matching ST's font_key -> px_font_t
+// map. Callers do not destroy them individually.
+px_font_t* px_create_font(const char* family, float size, uint32_t attrs = PX_FONT_NORMAL);
+float px_font_em_width(px_font_t* font);
+bool px_font_is_monospace(px_font_t* font);
+px_font_metrics px_font_get_metrics(px_font_t* font);
 
 // The handler must outlive the window. Passing null installs the dummy handler.
 px_window_t* px_create_window(px_window_event_handler* handler,
@@ -499,5 +536,5 @@ double px_caret_blink_time();  // seconds; 0 means "do not blink"
 void px_show_error(px_window_t* parent, const char* message);
 void px_open_url(const char* url);
 
-// Seconds since px_init. The clock animation_tick is stamped from.
+// Monotonic seconds. The epoch is platform-defined.
 double px_now();

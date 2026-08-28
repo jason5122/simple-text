@@ -775,7 +775,6 @@ CVReturn display_link_callback(CVDisplayLinkRef link,
                                void* context) {
     (void)link;
     (void)now;
-    (void)output_time;
     (void)flags_in;
     (void)flags_out;
 
@@ -783,19 +782,19 @@ CVReturn display_link_callback(CVDisplayLinkRef link,
     if (!window) {
         return kCVReturnSuccess;
     }
-    // The link fires on its own thread. Coalesce so a slow main thread cannot accumulate a
-    // backlog.
-    bool expected = false;
-    if (!window->tick_pending.compare_exchange_strong(expected, true)) {
+    window->latest_animation_time.store(px_mac_host_time_seconds(output_time->hostTime),
+                                        std::memory_order_release);
+    if (window->tick_pending.exchange(true, std::memory_order_acq_rel)) {
         return kCVReturnSuccess;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-      window->tick_pending.store(false);
+      // Clear first so a display frame arriving during this callback queues the next drain.
+      window->tick_pending.store(false, std::memory_order_release);
       if (window->closing || !window->handler) {
           return;
       }
-      window->handler->animation_tick(px_now());
-      px_mac_flush_dirty_rects(window);
+      const double target_time = window->latest_animation_time.load(std::memory_order_acquire);
+      window->handler->animation_tick(target_time);
     });
     return kCVReturnSuccess;
 }

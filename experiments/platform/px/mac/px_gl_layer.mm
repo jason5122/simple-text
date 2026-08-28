@@ -79,16 +79,6 @@ void ensure_shared_gl() {
     CGLSetParameter(g_context, kCGLCPSwapInterval, &swap_interval);
 }
 
-double host_time_seconds(uint64_t ticks) {
-    static const mach_timebase_info_data_t timebase = [] {
-        mach_timebase_info_data_t value{};
-        mach_timebase_info(&value);
-        return value;
-    }();
-    return static_cast<double>(ticks) * static_cast<double>(timebase.numer) /
-           static_cast<double>(timebase.denom) / 1'000'000'000.0;
-}
-
 double trace_quantile(const double* values, int count, double q) {
     std::vector<double> sorted(values, values + count);
     std::sort(sorted.begin(), sorted.end());
@@ -238,11 +228,11 @@ double trace_quantile(const double* values, int count, double q) {
         if (motionSerial != 0 && motionSerial != _traceLastMotionSerial) {
             _traceLastMotionSerial = motionSerial;
             traceEventTime = _pxw->last_motion_event_time.load(std::memory_order_relaxed);
-            traceDrawTime = host_time_seconds(mach_absolute_time());
+            traceDrawTime = px_mac_host_time_seconds(mach_absolute_time());
             traceSampleIndex = _traceCount;
             _traceEventToDraw[traceSampleIndex] = (traceDrawTime - traceEventTime) * 1000.0;
             if (ts && (ts->flags & kCVTimeStampHostTimeValid)) {
-                const double targetTime = host_time_seconds(ts->hostTime);
+                const double targetTime = px_mac_host_time_seconds(ts->hostTime);
                 _traceDrawToTarget[_traceTargetCount] = (targetTime - traceDrawTime) * 1000.0;
                 _traceEventToTarget[_traceTargetCount] = (targetTime - traceEventTime) * 1000.0;
                 ++_traceTargetCount;
@@ -373,7 +363,7 @@ double trace_quantile(const double* values, int count, double q) {
     }
 
     if (addedTraceSample) {
-        const double returnTime = host_time_seconds(mach_absolute_time());
+        const double returnTime = px_mac_host_time_seconds(mach_absolute_time());
         _traceDrawToReturn[traceSampleIndex] = (returnTime - traceDrawTime) * 1000.0;
         _traceEventToReturn[traceSampleIndex] = (returnTime - traceEventTime) * 1000.0;
     }
@@ -430,10 +420,6 @@ CALayer* px_mac_make_gl_layer(px_window_t* window) {
     layer.needsDisplayOnBoundsChange = YES;
     layer.opaque = window->background.a >= 1.0f;
     layer.contentsScale = px_window_dpi_scale_factor(window);
-
-    CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-    layer.colorspace = cs;
-    CGColorSpaceRelease(cs);
 
     return layer;
 }

@@ -45,9 +45,10 @@ struct px_window_t {
     // Pending regions, in window-space points. Drained by flush_dirty_rects into the layer.
     std::vector<rect> dirty;
 
-    // Coalesces display-link ticks: the link fires on its own thread, and only one hop to the main
-    // thread is allowed to be outstanding.
+    // Keep one main-thread hop outstanding while allowing newer display frames to replace its
+    // timestamp.
     std::atomic<bool> tick_pending{false};
+    std::atomic<double> latest_animation_time{0.0};
 
     // Timestamp of the last flush, used to rate-limit event-driven repaints the way ST does.
     double last_flush = 0.0;
@@ -66,6 +67,7 @@ void px_mac_flush_dirty_rects(px_window_t* window);
 void px_mac_update_display_link(px_window_t* window);
 void px_mac_dispatch_post_event_callbacks();
 void px_mac_install_before_waiting_observer();
+double px_mac_host_time_seconds(uint64_t ticks);
 
 // Converts a Cocoa rect in the view's (flipped) coordinate space to our top-left point space.
 rect px_mac_rect_from_ns(NSRect r);

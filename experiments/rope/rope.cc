@@ -2,6 +2,7 @@
 
 #include "base/check.h"
 #include <algorithm>
+#include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <format>
@@ -18,113 +19,51 @@ namespace {
 constexpr size_t kMaxLeafLen = 4096;
 constexpr size_t kOrder = 8;
 
-// Shape shared by any per-node tree aggregate that isn't a plain sum: a
-// leaf-local base case, plus a rule for combining two adjacent subtrees'
-// values into their parent's. LineWidthMetric is the first instance; a
-// future visual-row-count for soft wrap would be the second, and
-// combine_children() below is what lets it reuse this same shape instead of
-// another hand-written fold.
+// Shape needed to fold a per-node aggregate across siblings: a rule for
+// combining two adjacent subtrees' values into their parent's.
+// combine_children() below is what lets an aggregate (e.g. a future
+// visual-row-count for soft wrap) reuse this shape instead of another
+// hand-written fold. Leaf-level computation deliberately isn't part of
+// this shape: length/newline_count compute their own leaf value directly
+// in recompute_metadata (they're intrinsic to the text), while
+// LineWidthMetric's leaf values come from outside via Rope::LeafHandle,
+// since width needs a font and length/newline_count don't -- see
+// rope.h and reverse_engineering/node_types.md for why ST draws the same
+// line around its own TokenBuffer.
 template <typename M>
-concept Metric = requires(std::string_view text, const M& left, const M& right) {
-    { M::of_leaf(text) } -> std::same_as<M>;
+concept Combinable = requires(const M& left, const M& right) {
     { M::combine(left, right) } -> std::same_as<M>;
 };
-
-// Placeholder for a real font/text-shaping backend (Core Text, DirectWrite,
-// Pango, ...) -- //experiments/rasterizer isn't wired up yet. Sublime Text
-// has the same kind of stand-in (MockUnicodeFont, NullFont) for building/
-// testing layout logic before a real backend exists. Deliberately not
-// uniform (some characters wider/narrower than others) so a "widest by
-// width" test can differ from "longest by character count" and actually
-// prove the metric measures width.
-double fake_char_width(char c) {
-    switch (c) {
-    case '\t':
-        return 4.0;
-    case 'i':
-    case 'l':
-    case '.':
-    case ',':
-    case '\'':
-        return 0.5;
-    case 'm':
-    case 'w':
-    case 'M':
-    case 'W':
-        return 1.5;
-    default:
-        return 1.0;
-    }
-}
-
-// Unlike length/newline_count, a line's width can't be reduced to a single
-// size_t summed by descend<Nav, Acc>, because a line can span a leaf
-// boundary. A node caches:
-//   - widest_complete_line: the widest line fully contained in this
-//     subtree (both ends closed off by a '\n' somewhere in the tree).
-//   - leading_open / trailing_open: the width of the still-unclosed run at
-//     the very start / end of this subtree's text.
-// Combining two children has to consider a line that spans the boundary
-// between them (left's trailing_open + right's leading_open) as a
-// candidate for the widest line -- the same "does the maximum subarray
-// cross the midpoint" case a segment tree has to handle, just applied to a
-// B-tree instead of a flat array.
-struct LineWidthMetric {
-    double widest_complete_line = 0;
-    double leading_open = 0;
-    double trailing_open = 0;
-    size_t newline_count = 0;
-
-    // Base case: measures a leaf's own text directly.
-    static LineWidthMetric of_leaf(std::string_view text) {
-        LineWidthMetric result;
-        double current = 0;
-        for (char c : text) {
-            if (c == '\n') {
-                result.widest_complete_line = std::max(result.widest_complete_line, current);
-                if (result.newline_count == 0) {
-                    result.leading_open = current;
-                }
-                ++result.newline_count;
-                current = 0;
-            } else {
-                current += fake_char_width(c);
-            }
-        }
-        result.trailing_open = current;
-        if (result.newline_count == 0) {
-            result.leading_open = current;
-        }
-        return result;
-    }
-
-    // Combines two adjacent subtrees' metrics into their parent's.
-    static LineWidthMetric combine(const LineWidthMetric& left, const LineWidthMetric& right) {
-        LineWidthMetric result;
-        result.newline_count = left.newline_count + right.newline_count;
-
-        // The run spanning the boundary (left's still-open tail + right's
-        // still-open head) is only a genuinely complete line if something
-        // closes it off on both sides -- i.e. left contains a '\n' of its
-        // own (so left.trailing_open isn't secretly all of left) and
-        // likewise for right. Otherwise it's still open and has to
-        // propagate outward as this node's own leading/trailing, not get
-        // counted as "complete" yet.
-        double boundary = left.trailing_open + right.leading_open;
-        result.widest_complete_line =
-            std::max(left.widest_complete_line, right.widest_complete_line);
-        if (left.newline_count > 0 && right.newline_count > 0) {
-            result.widest_complete_line = std::max(result.widest_complete_line, boundary);
-        }
-
-        result.leading_open = left.newline_count > 0 ? left.leading_open : boundary;
-        result.trailing_open = right.newline_count > 0 ? right.trailing_open : boundary;
-        return result;
-    }
-};
-static_assert(Metric<LineWidthMetric>);
+static_assert(Combinable<LineWidthMetric>);
 
 }  // namespace
+
+// Matches LineWidthMetric's declaration in rope.h, so it has to live at
+// rope:: scope rather than in the anonymous namespace above.
+//
+// The run spanning a child boundary (left's still-open tail + right's
+// still-open head) is only a genuinely complete line if something closes
+// it off on both sides -- i.e. left contains a '\n' of its own (so
+// left.trailing_open isn't secretly all of left) and likewise for right.
+// Otherwise it's still open and has to propagate outward as this node's
+// own leading/trailing, not get counted as "complete" yet. The same "does
+// the maximum subarray cross the midpoint" case a segment tree has to
+// handle, just applied to a B-tree instead of a flat array.
+LineWidthMetric LineWidthMetric::combine(const LineWidthMetric& left,
+                                         const LineWidthMetric& right) {
+    LineWidthMetric result;
+    result.newline_count = left.newline_count + right.newline_count;
+
+    double boundary = left.trailing_open + right.leading_open;
+    result.widest_complete_line = std::max(left.widest_complete_line, right.widest_complete_line);
+    if (left.newline_count > 0 && right.newline_count > 0) {
+        result.widest_complete_line = std::max(result.widest_complete_line, boundary);
+    }
+
+    result.leading_open = left.newline_count > 0 ? left.leading_open : boundary;
+    result.trailing_open = right.newline_count > 0 ? right.trailing_open : boundary;
+    return result;
+}
 
 // Matches rope.h's forward declaration, so it has to live at rope:: scope
 // rather than in the anonymous namespace above. One flat struct for both
@@ -142,6 +81,30 @@ struct Node {
     size_t length = 0;
     size_t newline_count = 0;
     LineWidthMetric line_width;
+    // Whether line_width reflects the leaf's current text. Starts true (an
+    // unmeasured leaf has nothing meaningful cached yet); set_leaf_width()
+    // clears it, any edit to the leaf's text re-sets it. Meaningless on
+    // internal nodes -- their line_width is always re-derived from
+    // children, never independently stale.
+    bool line_width_dirty = true;
+    // Null for the root. Set in recompute_metadata()'s internal-node
+    // branch (the same place children last changed), except when a single
+    // child becomes the new root during erase()'s collapse, which clears
+    // it directly since no recompute happens there. Walked upward by
+    // set_leaf_width() to re-aggregate line_width without a full-tree walk.
+    Node* parent = nullptr;
+
+    // Soft wrap: one slot per currently-registered wrap width, index-
+    // aligned with Rope::wrap_widths_. Unlike line_width, this can't be a
+    // single hardcoded field -- soft wrap is inherently per-view (two
+    // panes can wrap the same document differently), matching what
+    // Sublime Text's TokenBuffer does (see
+    // reverse_engineering/soft_wrap_caching.md): a growable per-node array
+    // kept in index-sync with a central registry, not a generic
+    // pluggable-metric system. wrap_dirty mirrors line_width_dirty, just
+    // one per slot instead of one for the whole leaf.
+    std::vector<SoftWrapMetric> wrap_layouts;
+    std::vector<bool> wrap_dirty;
 
     // Leaf-only.
     std::string text;
@@ -155,15 +118,31 @@ struct Node {
 
 namespace {
 
-std::unique_ptr<Node> make_leaf() { return std::make_unique<Node>(/*leaf=*/true); }
-std::unique_ptr<Node> make_internal() { return std::make_unique<Node>(/*leaf=*/false); }
+// `wrap_count` sizes the new node's wrap_layouts/wrap_dirty to match
+// however many widths are currently registered (Rope::wrap_widths_.size()),
+// so the invariant "every node's wrap vectors are exactly wrap_widths_
+// long" holds unconditionally -- simpler than letting new nodes start
+// short and having every reader (dirty scan, combine, set_leaf_wrap) treat
+// a missing slot as an implicit default.
+std::unique_ptr<Node> make_leaf(size_t wrap_count) {
+    auto node = std::make_unique<Node>(/*leaf=*/true);
+    node->wrap_layouts.resize(wrap_count);
+    node->wrap_dirty.assign(wrap_count, true);
+    return node;
+}
+std::unique_ptr<Node> make_internal(size_t wrap_count) {
+    auto node = std::make_unique<Node>(/*leaf=*/false);
+    node->wrap_layouts.resize(wrap_count);
+    node->wrap_dirty.assign(wrap_count, true);
+    return node;
+}
 
-// Folds a Metric field across `children` left to right via M::combine,
+// Folds a Combinable field across `children` left to right via M::combine,
 // starting from the first child's own value. The generic counterpart to
-// LineWidthMetric::combine's use in recompute_metadata: any future Metric
-// field just calls this the same way, rather than another hand-written
-// first/combine loop.
-template <Metric M, M Node::* Field>
+// LineWidthMetric::combine's use in recompute_metadata: any future
+// Combinable field just calls this the same way, rather than another
+// hand-written first/combine loop.
+template <Combinable M, M Node::* Field>
 M combine_children(const std::vector<std::unique_ptr<Node>>& children) {
     // recompute_metadata() runs on an internal node even when erase_from()
     // just emptied its last child (the empty check happens after), so this
@@ -179,11 +158,85 @@ M combine_children(const std::vector<std::unique_ptr<Node>>& children) {
     return result;
 }
 
-void recompute_metadata(Node* node) {
+// Rows a single logical line of `width` occupies once wrapped at
+// `wrap_width` -- always at least 1, even for an empty (width-0) line.
+size_t rows_for(double width, double wrap_width) {
+    return width > 0 ? static_cast<size_t>(std::ceil(width / wrap_width)) : size_t{1};
+}
+
+// Combines two adjacent subtrees' wrap metrics at one specific wrap width.
+// Exactly LineWidthMetric::combine's boundary-crossing logic (a logical
+// line can span a leaf boundary, so this decides whether left's still-open
+// tail + right's still-open head make a genuinely complete line yet, or
+// have to keep propagating outward) -- see SoftWrapMetric's comment in
+// rope.h for why it's built on top of that instead of tracking wrap
+// positions directly. Only converts a completed line's width to a row
+// count via rows_for(), once, right when that line closes. Doesn't fit the
+// Combinable concept -- unlike LineWidthMetric::combine, this needs an
+// extra parameter -- so it's a plain function instead of a static member
+// forced through combine_children().
+SoftWrapMetric combine_wrap(const SoftWrapMetric& left, const SoftWrapMetric& right,
+                            double wrap_width) {
+    SoftWrapMetric result;
+    result.newline_count = left.newline_count + right.newline_count;
+
+    double boundary = left.trailing_open_width + right.leading_open_width;
+    result.complete_rows = left.complete_rows + right.complete_rows;
+    if (left.newline_count > 0 && right.newline_count > 0) {
+        result.complete_rows += rows_for(boundary, wrap_width);
+    }
+
+    result.leading_open_width = left.newline_count > 0 ? left.leading_open_width : boundary;
+    result.trailing_open_width = right.newline_count > 0 ? right.trailing_open_width : boundary;
+    return result;
+}
+
+// combine_wrap()'s counterpart to combine_children(): folds slot `index`
+// across `children` left to right. Can't reuse combine_children() itself,
+// since combine_wrap needs `wrap_width` alongside the two values and
+// Combinable's M::combine doesn't carry extra arguments.
+SoftWrapMetric combine_wrap_children(const std::vector<std::unique_ptr<Node>>& children,
+                                     size_t index, double wrap_width) {
+    if (children.empty()) {
+        return SoftWrapMetric{};
+    }
+    SoftWrapMetric result = children.front()->wrap_layouts[index];
+    for (size_t i = 1; i < children.size(); ++i) {
+        result = combine_wrap(result, children[i]->wrap_layouts[index], wrap_width);
+    }
+    return result;
+}
+
+// Visits every node in the subtree rooted at `node`, leaves and internal
+// nodes alike, in no particular order -- used by register/unregister to
+// touch every node's wrap-layout slots. Not used by any hot path (insert,
+// erase, and the metric combines above only ever touch the nodes they
+// already need), so a template callback is just for consistency with the
+// rest of this file, not a perf requirement.
+template <typename Visit>
+void for_each_node(Node* node, const Visit& visit) {
+    visit(node);
+    if (!node->is_leaf) {
+        for (auto& child : node->children) {
+            for_each_node(child.get(), visit);
+        }
+    }
+}
+
+// `wrap_widths` is Rope::wrap_widths_, threaded down through every
+// tree-mutating function in this file so this can recombine wrap_layouts
+// for every registered width, not just line_width.
+void recompute_metadata(Node* node, const std::vector<double>& wrap_widths) {
     if (node->is_leaf) {
         node->length = node->text.size();
         node->newline_count = std::count(node->text.begin(), node->text.end(), '\n');
-        node->line_width = LineWidthMetric::of_leaf(node->text);
+        // line_width/wrap_layouts are deliberately untouched here -- they
+        // aren't derivable from text alone (see LineWidthMetric's and
+        // SoftWrapMetric's comments in rope.h), so this only marks them
+        // stale. set_leaf_width()/set_leaf_wrap() are what actually update
+        // them, once something outside the rope has measured them.
+        node->line_width_dirty = true;
+        std::fill(node->wrap_dirty.begin(), node->wrap_dirty.end(), true);
         return;
     }
     size_t length = 0;
@@ -191,10 +244,31 @@ void recompute_metadata(Node* node) {
     for (const auto& child : node->children) {
         length += child->length;
         newline_count += child->newline_count;
+        // Fixed up here rather than at every children-mutating call site:
+        // this already runs immediately after every insert/erase/split
+        // that can change `node`'s children, so it's the natural place to
+        // keep parent pointers current for set_leaf_width()'s upward walk.
+        child->parent = node;
     }
     node->length = length;
     node->newline_count = newline_count;
     node->line_width = combine_children<LineWidthMetric, &Node::line_width>(node->children);
+    // Structural changes (a child added/removed/replaced) invalidate the
+    // cached combine regardless of any individual child's own dirty state
+    // -- same reasoning as line_width just above, applied per wrap width.
+    for (size_t i = 0; i < wrap_widths.size(); ++i) {
+        node->wrap_layouts[i] = combine_wrap_children(node->children, i, wrap_widths[i]);
+    }
+}
+
+// Marks a leaf's text-derived caches stale after an incremental (not
+// recompute_metadata()) edit -- factored out since it has to happen at
+// every such call site (insert_into_leaf's non-overflow path, erase_from's
+// leaf branch) and it's easy to add a new externally-measured metric later
+// and forget one.
+void mark_leaf_dirty(Node* node) {
+    node->line_width_dirty = true;
+    std::fill(node->wrap_dirty.begin(), node->wrap_dirty.end(), true);
 }
 
 // Every "find the leaf for X" query in this file -- leaf_containing,
@@ -237,13 +311,18 @@ const Node* descend(const Node* node, size_t& pos, bool strict, size_t& accumula
 }
 
 // Forward declarations for the mutually-recursive insert helpers.
-std::vector<std::unique_ptr<Node>> insert_into(Node* node, size_t pos, std::string_view text);
-std::vector<std::unique_ptr<Node>> split_overflowing_internal(Node* node);
+// `wrap_widths` (Rope::wrap_widths_) is threaded through this whole family
+// -- needed to size new nodes' wrap vectors (make_leaf()/make_internal())
+// and to recombine wrap_layouts (recompute_metadata()).
+std::vector<std::unique_ptr<Node>> insert_into(Node* node, size_t pos, std::string_view text,
+                                               const std::vector<double>& wrap_widths);
+std::vector<std::unique_ptr<Node>> split_overflowing_internal(
+    Node* node, const std::vector<double>& wrap_widths);
 
 // Returns any new right-hand siblings produced by a split, empty if none.
-std::vector<std::unique_ptr<Node>> insert_into_leaf(Node* node,
-                                                    size_t pos,
-                                                    std::string_view text) {
+std::vector<std::unique_ptr<Node>> insert_into_leaf(Node* node, size_t pos,
+                                                    std::string_view text,
+                                                    const std::vector<double>& wrap_widths) {
     node->text.insert(pos, text);
 
     std::vector<std::unique_ptr<Node>> new_leaves;
@@ -253,11 +332,7 @@ std::vector<std::unique_ptr<Node>> insert_into_leaf(Node* node,
         // whole (up to kMaxLeafLen-character) leaf for a small insert.
         node->length = node->text.size();
         node->newline_count += std::count(text.begin(), text.end(), '\n');
-        // line_width isn't incremental like the above: inserting in the
-        // middle of an open run changes that run's width regardless of
-        // how little text was added, so it needs the whole (still
-        // kMaxLeafLen-bounded) leaf rescanned.
-        node->line_width = LineWidthMetric::of_leaf(node->text);
+        mark_leaf_dirty(node);
         return new_leaves;
     }
 
@@ -266,23 +341,23 @@ std::vector<std::unique_ptr<Node>> insert_into_leaf(Node* node,
     Node* prev = node;
     size_t offset = kMaxLeafLen;
     while (offset < node->text.size()) {
-        auto next_leaf = make_leaf();
+        auto next_leaf = make_leaf(wrap_widths.size());
         next_leaf->text = node->text.substr(offset, kMaxLeafLen);
         next_leaf->next = prev->next;
         prev->next = next_leaf.get();
         prev = next_leaf.get();
-        recompute_metadata(next_leaf.get());
+        recompute_metadata(next_leaf.get(), wrap_widths);
         new_leaves.push_back(std::move(next_leaf));
         offset += kMaxLeafLen;
     }
     node->text.resize(kMaxLeafLen);
-    recompute_metadata(node);
+    recompute_metadata(node, wrap_widths);
     return new_leaves;
 }
 
-std::vector<std::unique_ptr<Node>> insert_into_internal(Node* node,
-                                                        size_t pos,
-                                                        std::string_view text) {
+std::vector<std::unique_ptr<Node>> insert_into_internal(Node* node, size_t pos,
+                                                        std::string_view text,
+                                                        const std::vector<double>& wrap_widths) {
     auto& children = node->children;
     size_t running = 0;
     size_t chosen = children.size() - 1;
@@ -294,18 +369,19 @@ std::vector<std::unique_ptr<Node>> insert_into_internal(Node* node,
         running += children[i]->length;
     }
 
-    auto new_children = insert_into(children[chosen].get(), pos - running, text);
+    auto new_children = insert_into(children[chosen].get(), pos - running, text, wrap_widths);
     children.insert(children.begin() + chosen + 1, std::make_move_iterator(new_children.begin()),
                     std::make_move_iterator(new_children.end()));
-    recompute_metadata(node);
-    return split_overflowing_internal(node);
+    recompute_metadata(node, wrap_widths);
+    return split_overflowing_internal(node, wrap_widths);
 }
 
-std::vector<std::unique_ptr<Node>> insert_into(Node* node, size_t pos, std::string_view text) {
+std::vector<std::unique_ptr<Node>> insert_into(Node* node, size_t pos, std::string_view text,
+                                               const std::vector<double>& wrap_widths) {
     if (node->is_leaf) {
-        return insert_into_leaf(node, pos, text);
+        return insert_into_leaf(node, pos, text, wrap_widths);
     }
-    return insert_into_internal(node, pos, text);
+    return insert_into_internal(node, pos, text, wrap_widths);
 }
 
 // Splits `node`'s children into ceil(count / kOrder) balanced groups when
@@ -315,7 +391,8 @@ std::vector<std::unique_ptr<Node>> insert_into(Node* node, size_t pos, std::stri
 // common one-over-kOrder overflow leaves `node` with just 1 child, and
 // since inserts at the same edge (e.g. repeated appends) keep overflowing
 // that same node, the imbalance compounds into a pathologically deep spine.
-std::vector<std::unique_ptr<Node>> split_overflowing_internal(Node* node) {
+std::vector<std::unique_ptr<Node>> split_overflowing_internal(
+    Node* node, const std::vector<double>& wrap_widths) {
     std::vector<std::unique_ptr<Node>> new_siblings;
     size_t total = node->children.size();
     if (total <= kOrder) {
@@ -333,12 +410,12 @@ std::vector<std::unique_ptr<Node>> split_overflowing_internal(Node* node) {
         std::unique_ptr<Node> owned_sibling;
         Node* target = node;
         if (g > 0) {
-            owned_sibling = make_internal();
+            owned_sibling = make_internal(wrap_widths.size());
             target = owned_sibling.get();
         }
         target->children.assign(std::make_move_iterator(all_children.begin() + idx),
                                 std::make_move_iterator(all_children.begin() + idx + group_size));
-        recompute_metadata(target);
+        recompute_metadata(target, wrap_widths);
         if (g > 0) {
             new_siblings.push_back(std::move(owned_sibling));
         }
@@ -405,7 +482,8 @@ size_t line_start_offset(const Node* root, size_t line) {
 // that when an erased leaf empties out, its predecessor can be repointed
 // past it, and so the predecessor can be advanced when a leaf survives.
 // Returns true if `node` is now empty and should be removed by its caller.
-bool erase_from(Node* node, size_t pos, size_t count, Node*& left_of_range) {
+bool erase_from(Node* node, size_t pos, size_t count, Node*& left_of_range,
+                const std::vector<double>& wrap_widths) {
     if (node->is_leaf) {
         // Incremental, not recompute_metadata(node): count newlines in just
         // the erased range (before it's gone) instead of rescanning
@@ -422,11 +500,11 @@ bool erase_from(Node* node, size_t pos, size_t count, Node*& left_of_range) {
             }
             return true;
         }
-        // Not incremental like the above, for the same reason as the
-        // insert side: erasing from the middle of an open run changes
-        // that run's width, so line_width needs the surviving text
-        // rescanned. Skipped above when the leaf is about to be dropped.
-        node->line_width = LineWidthMetric::of_leaf(node->text);
+        // Same reasoning as the insert side: line_width/wrap_layouts can't
+        // be updated incrementally, so they're just marked stale. Skipped
+        // above when the leaf is about to be dropped -- nothing left to
+        // measure.
+        mark_leaf_dirty(node);
         left_of_range = node;
         return false;
     }
@@ -443,7 +521,7 @@ bool erase_from(Node* node, size_t pos, size_t count, Node*& left_of_range) {
 
         size_t local_pos = pos > running ? pos - running : 0;
         size_t local_count = std::min(count, child->length - local_pos);
-        bool child_emptied = erase_from(child, local_pos, local_count, left_of_range);
+        bool child_emptied = erase_from(child, local_pos, local_count, left_of_range, wrap_widths);
         count -= local_count;
 
         if (child_emptied) {
@@ -453,7 +531,7 @@ bool erase_from(Node* node, size_t pos, size_t count, Node*& left_of_range) {
             ++i;
         }
     }
-    recompute_metadata(node);
+    recompute_metadata(node, wrap_widths);
     return children.empty();
 }
 
@@ -540,18 +618,18 @@ std::string Rope::str() const {
 void Rope::insert(size_t pos, std::string_view text) {
     CHECK_LE(pos, size());
     if (text.empty()) return;
-    if (!root_) root_ = make_leaf();
+    if (!root_) root_ = make_leaf(wrap_widths_.size());
 
-    auto new_siblings = insert_into(root_.get(), pos, text);
+    auto new_siblings = insert_into(root_.get(), pos, text, wrap_widths_);
     while (!new_siblings.empty()) {
-        auto new_root = make_internal();
+        auto new_root = make_internal(wrap_widths_.size());
         new_root->children.push_back(std::move(root_));
         for (auto& sibling : new_siblings) {
             new_root->children.push_back(std::move(sibling));
         }
-        recompute_metadata(new_root.get());
+        recompute_metadata(new_root.get(), wrap_widths_);
         root_ = std::move(new_root);
-        new_siblings = split_overflowing_internal(root_.get());
+        new_siblings = split_overflowing_internal(root_.get(), wrap_widths_);
     }
 }
 
@@ -560,7 +638,7 @@ void Rope::erase(size_t pos, size_t count) {
     if (count == 0 || !root_) return;
 
     Node* left_of_range = pos > 0 ? leaf_at(root_.get(), pos - 1) : nullptr;
-    if (erase_from(root_.get(), pos, count, left_of_range)) {
+    if (erase_from(root_.get(), pos, count, left_of_range, wrap_widths_)) {
         root_.reset();
         return;
     }
@@ -569,7 +647,148 @@ void Rope::erase(size_t pos, size_t count) {
     // doesn't keep a chain of single-child levels above its real content.
     while (!root_->is_leaf && root_->children.size() == 1) {
         root_ = std::move(root_->children.front());
+        // No recompute_metadata() call here to fix this up (nothing about
+        // length/newline_count/line_width changed, only which node is
+        // root), so it's the one place parent has to be cleared by hand.
+        root_->parent = nullptr;
     }
+}
+
+std::vector<Rope::LeafHandle> Rope::dirty_leaves() const {
+    std::vector<LeafHandle> result;
+    if (!root_) {
+        return result;
+    }
+
+    Node* node = root_.get();
+    while (!node->is_leaf) {
+        node = node->children.front().get();
+    }
+    for (Node* leaf = node; leaf; leaf = leaf->next) {
+        if (leaf->line_width_dirty) {
+            result.push_back(LeafHandle(leaf));
+        }
+    }
+    return result;
+}
+
+std::string_view Rope::leaf_text(LeafHandle leaf) const { return leaf.node_->text; }
+
+void Rope::set_leaf_width(LeafHandle leaf, LineWidthMetric width) {
+    Node* node = leaf.node_;
+    node->line_width = width;
+    node->line_width_dirty = false;
+
+    // Re-aggregate only the ancestors of `leaf`, not the whole tree -- the
+    // same "only touch the dirty path" shape as Sublime Text's
+    // updateChildExtents. Siblings' line_width is untouched and already
+    // correct, so each ancestor just needs a fresh combine over its
+    // (unchanged set of) children.
+    for (Node* ancestor = node->parent; ancestor; ancestor = ancestor->parent) {
+        ancestor->line_width =
+            combine_children<LineWidthMetric, &Node::line_width>(ancestor->children);
+    }
+}
+
+namespace {
+
+// Translates a stable WrapHandle::id_ to its current (possibly shifted)
+// position in wrap_widths_/wrap_ids_ and every node's wrap_layouts/
+// wrap_dirty. Linear, not a hash lookup -- see wrap_ids_'s comment in
+// rope.h for why that's fine.
+size_t wrap_index_for(const std::vector<size_t>& wrap_ids, size_t id) {
+    for (size_t i = 0; i < wrap_ids.size(); ++i) {
+        if (wrap_ids[i] == id) {
+            return i;
+        }
+    }
+    // Only reachable by calling a WrapHandle method after that handle's own
+    // width was unregistered -- not a supported use, same category as
+    // using a LeafHandle from before the most recent edit.
+    NOTREACHED();
+}
+
+}  // namespace
+
+Rope::WrapHandle Rope::register_wrap_width(double width) {
+    size_t id = next_wrap_id_++;
+    wrap_widths_.push_back(width);
+    wrap_ids_.push_back(id);
+    if (root_) {
+        for_each_node(root_.get(), [](Node* node) {
+            node->wrap_layouts.emplace_back();
+            node->wrap_dirty.push_back(true);
+        });
+    }
+    return WrapHandle(id);
+}
+
+void Rope::unregister_wrap_width(WrapHandle handle) {
+    size_t index = wrap_index_for(wrap_ids_, handle.id_);
+    wrap_widths_.erase(wrap_widths_.begin() + index);
+    wrap_ids_.erase(wrap_ids_.begin() + index);
+    if (root_) {
+        for_each_node(root_.get(), [index](Node* node) {
+            node->wrap_layouts.erase(node->wrap_layouts.begin() + index);
+            node->wrap_dirty.erase(node->wrap_dirty.begin() + index);
+        });
+    }
+}
+
+std::vector<Rope::LeafHandle> Rope::dirty_leaves_for_wrap(WrapHandle handle) const {
+    std::vector<LeafHandle> result;
+    if (!root_) {
+        return result;
+    }
+    size_t index = wrap_index_for(wrap_ids_, handle.id_);
+
+    Node* node = root_.get();
+    while (!node->is_leaf) {
+        node = node->children.front().get();
+    }
+    for (Node* leaf = node; leaf; leaf = leaf->next) {
+        if (leaf->wrap_dirty[index]) {
+            result.push_back(LeafHandle(leaf));
+        }
+    }
+    return result;
+}
+
+void Rope::set_leaf_wrap(LeafHandle leaf, WrapHandle handle, SoftWrapMetric metric) {
+    size_t index = wrap_index_for(wrap_ids_, handle.id_);
+    Node* node = leaf.node_;
+    node->wrap_layouts[index] = metric;
+    node->wrap_dirty[index] = false;
+
+    double wrap_width = wrap_widths_[index];
+    for (Node* ancestor = node->parent; ancestor; ancestor = ancestor->parent) {
+        ancestor->wrap_layouts[index] =
+            combine_wrap_children(ancestor->children, index, wrap_width);
+    }
+}
+
+size_t Rope::visual_row_count(WrapHandle handle) const {
+    if (!root_) {
+        // Unlike widest_line_width() (0 is a legitimate "no width"
+        // answer), an empty document still occupies exactly one (empty)
+        // row -- same convention rows_for() uses for any empty line.
+        return 1;
+    }
+    size_t index = wrap_index_for(wrap_ids_, handle.id_);
+    const auto& m = root_->wrap_layouts[index];
+    double wrap_width = wrap_widths_[index];
+    if (m.newline_count == 0) {
+        // No '\n' anywhere in the document: it's all one logical line, and
+        // leading_open_width/trailing_open_width both describe that same
+        // line, not two separate ones -- same edge case
+        // widest_line_width() has to consider.
+        return rows_for(m.leading_open_width, wrap_width);
+    }
+    // leading_open_width and trailing_open_width are each a real, distinct
+    // logical line here (the document's first and last) -- same reasoning
+    // as widest_line_width()'s treatment of the root.
+    return m.complete_rows + rows_for(m.leading_open_width, wrap_width) +
+          rows_for(m.trailing_open_width, wrap_width);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────

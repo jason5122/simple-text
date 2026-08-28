@@ -29,10 +29,8 @@ constexpr GlyphId pack_glyph(FontFaceId face, uint16_t glyph) {
     return (static_cast<GlyphId>(face) << 16) | glyph;
 }
 
-// In device-independent points. float, not double: ST's grapheme_shaper caches each glyph's
-// fx_layout entry (advance, x_off, y_off) as float32 -- see reverse_engineering/. Matching that
-// storage precision (not just the final pen accumulation) is what earlier float32 experiments in
-// this file's history missed.
+// In device-independent points. ST stores each fx_layout entry as float32, so convert Core Text's
+// CGFloat values at this boundary rather than after accumulating them as doubles.
 struct GlyphPlacement {
     GlyphId glyph_id = 0;  // packed; see pack_glyph
     float x_advance = 0;
@@ -108,6 +106,10 @@ std::optional<FontHandle> create_font(std::string family,
                                       double size_px,
                                       Weight weight = Weight::Normal,
                                       Slant slant = Slant::Normal);
+#if defined(__APPLE__)
+std::optional<FontHandle> create_font(
+    std::string family, double size_px, Weight weight, Slant slant, uint32_t feature_flags);
+#endif
 std::optional<FontHandle> create_font(const FontSpec& spec);
 
 ShapedText shape(const FontHandle& font, std::string_view utf8);

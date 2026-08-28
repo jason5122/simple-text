@@ -1,5 +1,8 @@
 group("platform") {
-  deps = [ ":platform_demo" ]
+  deps = [
+    ":platform_demo",
+    ":platform_editor",
+  ]
 
   if (is_mac) {
     deps += [
@@ -27,6 +30,11 @@ group("platform_benchmark_suite") {
 
 executable("platform_demo") {
   sources = [ "demo.cc" ]
+  deps = [ ":window" ]
+}
+
+executable("platform_editor") {
+  sources = [ "editor.cc" ]
   deps = [ ":window" ]
 }
 

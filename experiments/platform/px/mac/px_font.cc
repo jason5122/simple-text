@@ -67,7 +67,7 @@ px_font_metrics px_font_get_metrics(px_font_t* font) {
     return {metrics.ascent, metrics.descent, metrics.leading, metrics.line_height};
 }
 
-std::vector<fx_layout_batch> px_shape_text(px_font_t* font, std::string_view utf8) {
+std::vector<fx_layout_batch> shape_text_buffer_batches(px_font_t* font, std::string_view utf8) {
     if (!font || !font->font || utf8.empty()) {
         return {};
     }
@@ -112,9 +112,11 @@ void px_render_context::draw_text(px_font_t* font,
                                   fcolor color,
                                   std::string_view utf8,
                                   bool subpixel_positioning) {
-    std::vector<fx_layout_batch> batches = px_shape_text(font, utf8);
-    for (fx_layout_batch& batch : batches) {
-        draw_shaped_text(font, vec2{position.x + batch.x_offset, position.y}, color, &batch.layout,
-                         subpixel_positioning);
+    if (!font || !font->font || utf8.empty()) {
+        return;
+    }
+    std::unique_ptr<fx_layout> layout = font->font->shape(utf8);
+    if (layout) {
+        draw_shaped_text(font, position, color, layout.get(), subpixel_positioning);
     }
 }

@@ -74,14 +74,14 @@ double initial_scroll_offset(ScrollMode mode) {
 using LayoutBatches = std::vector<fx_layout_batch>;
 
 LayoutBatches shape_text(px_font_t* font, std::string_view text) {
-    return px_shape_text(font, text);
+    return shape_text_buffer_batches(font, text);
 }
 
-void draw_cached_text(px_render_context* context,
-                      px_font_t* font,
-                      vec2 position,
-                      fcolor color,
-                      LayoutBatches* batches) {
+void draw_layout_batches(px_render_context* context,
+                         px_font_t* font,
+                         vec2 position,
+                         fcolor color,
+                         LayoutBatches* batches) {
     for (fx_layout_batch& batch : *batches) {
         context->draw_shaped_text(font, vec2{position.x + batch.x_offset, position.y}, color,
                                   &batch.layout, true);
@@ -222,20 +222,22 @@ public:
                     LayoutBatches* title_layouts = visible.section
                                                                ? &section_layouts_[title_index]
                                                                : &source_layouts_[title_index];
-                    draw_cached_text(context, body_font_, vec2{88.0, visible.y + 19.0},
-                                     title_color, title_layouts);
-                    draw_cached_text(context, detail_font_, vec2{88.0, visible.y + 34.0},
-                                     fcolor{0.39f, 0.45f, 0.54f, 1.0f},
-                                     &detail_layouts_[detail_index]);
+                    draw_layout_batches(context, body_font_, vec2{88.0, visible.y + 19.0},
+                                        title_color, title_layouts);
+                    draw_layout_batches(context, detail_font_, vec2{88.0, visible.y + 34.0},
+                                        fcolor{0.39f, 0.45f, 0.54f, 1.0f},
+                                        &detail_layouts_[detail_index]);
                 } else {
                     const std::string_view title = visible.section
                                                        ? kSectionTitles[title_index]
                                                        : kSourceLines[title_index];
-                    context->draw_text(body_font_, vec2{88.0, visible.y + 19.0}, title_color,
-                                       title);
-                    context->draw_text(detail_font_, vec2{88.0, visible.y + 34.0},
-                                       fcolor{0.39f, 0.45f, 0.54f, 1.0f},
-                                       kDetailLines[detail_index]);
+                    LayoutBatches title_layouts = shape_text(body_font_, title);
+                    LayoutBatches detail_layouts =
+                        shape_text(detail_font_, kDetailLines[detail_index]);
+                    draw_layout_batches(context, body_font_, vec2{88.0, visible.y + 19.0},
+                                        title_color, &title_layouts);
+                    draw_layout_batches(context, detail_font_, vec2{88.0, visible.y + 34.0},
+                                        fcolor{0.39f, 0.45f, 0.54f, 1.0f}, &detail_layouts);
                 }
             }
         }

@@ -283,9 +283,9 @@ public:
     virtual void draw_rect(rect area, fill_mode fill) = 0;
     void draw_rect(rect area, fcolor color) { draw_rect(area, fill_mode(color)); }
 
-    // The convenience path shapes transient text through the px_font_t's fx_font, then dispatches
-    // the resulting layout to the active renderer. Cached callers may keep and draw an fx_layout
-    // directly, which is the split present in ST's px_render_context vtable.
+    // Sublime's UI-text convenience path shapes the entire substring once through the px_font_t's
+    // fx_font, then dispatches that layout to the active renderer. Cached controls such as labels
+    // keep and draw an fx_layout directly instead.
     void draw_text(px_font_t* font,
                    vec2 position,
                    fcolor color,

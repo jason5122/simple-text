@@ -1,5 +1,6 @@
 #include "experiments/platform/px/gl_render_context.h"
 #include "experiments/platform/px/px.h"
+#include "experiments/platform/px/px_font_private.h"
 
 #include "experiments/rasterizer/font.h"
 #include "experiments/rasterizer/mac/capture.h"
@@ -158,8 +159,13 @@ public:
         const double first_baseline = kTextTop + std::ceil(metrics_.ascent) - scroll_y_;
         rc->begin_text_batch();
         for (size_t line = 0; line < lines_.size(); ++line) {
-            rc->draw_text(font_, vec2{kTextLeft, first_baseline + metrics_.line_height * line},
-                          kForeground, lines_[line]);
+            std::vector<fx_layout_batch> batches = shape_text_buffer_batches(font_, lines_[line]);
+            for (fx_layout_batch& batch : batches) {
+                rc->draw_shaped_text(
+                    font_,
+                    vec2{kTextLeft + batch.x_offset, first_baseline + metrics_.line_height * line},
+                    kForeground, &batch.layout, true);
+            }
         }
         rc->end_text_batch();
     }

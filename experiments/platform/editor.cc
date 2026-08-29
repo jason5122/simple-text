@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <memory>
 #include <print>
 #include <string>
 #include <string_view>
@@ -20,6 +21,8 @@ constexpr float kSidebarFontSize = 12.0f;
 constexpr double kSidebarWidth = 277.0;
 constexpr double kSidebarTopPadding = 10.0;
 constexpr double kSidebarLeftPadding = 16.0;
+constexpr double kSidebarIndentWidth = 12.0;
+constexpr double kSidebarIndentOffset = 5.0;
 constexpr double kSidebarRowTopPadding = 3.0;
 constexpr double kSidebarRowBottomPadding = 3.0;
 constexpr size_t kSelectedSidebarLine = 1;
@@ -36,14 +39,25 @@ constexpr double kScrollbarMargin = 4.0;
 constexpr double kMinimumThumbHeight = 36.0;
 constexpr size_t kDocumentLineCount = 500;
 
-constexpr std::array<std::string_view, 7> kSidebarLines = {
-    "FOLDERS",
-    "User",
-    "buffer_demo.py",
-    "Default.sublime-commands",
-    "Preferences.sublime-settings",
-    "rasterizer_loop.py",
-    "rasterizer_render.py",
+struct SidebarLine {
+    std::string_view text;
+    size_t indent_level = 0;
+};
+
+constexpr std::array<SidebarLine, 13> kSidebarLines = {
+    SidebarLine{"FOLDERS", 0},
+    SidebarLine{"User", 1},
+    SidebarLine{"temp1", 2},
+    SidebarLine{"temp2", 3},
+    SidebarLine{"temp3", 4},
+    SidebarLine{"ffi", 3},
+    SidebarLine{"سلام", 3},
+    SidebarLine{"buffer_demo.py", 2},
+    SidebarLine{"Default.sublime-commands", 2},
+    SidebarLine{"Default.sublime-theme", 2},
+    SidebarLine{"Preferences.sublime-settings", 2},
+    SidebarLine{"rasterizer_loop.py", 2},
+    SidebarLine{"rasterizer_render.py", 2},
 };
 
 constexpr std::array<std::string_view, 32> kSourceLines = {
@@ -133,7 +147,7 @@ HighlightedLine highlight_line(px_font_t* font, std::string_view text) {
     HighlightedLine result;
     double x = 0.0;
     auto append = [&](std::string_view token, fcolor color) {
-        LayoutBatches batches = px_shape_text(font, token);
+        LayoutBatches batches = shape_text_buffer_batches(font, token);
         const double advance = layout_advance(batches);
         result.push_back({.x_offset = x, .color = color, .batches = std::move(batches)});
         x += advance;
@@ -232,11 +246,14 @@ public:
         }
         line_number_layouts_.reserve(kDocumentLineCount);
         for (size_t i = 0; i < kDocumentLineCount; ++i) {
-            line_number_layouts_.push_back(px_shape_text(gutter_font_, std::to_string(i + 1)));
+            line_number_layouts_.push_back(
+                shape_text_buffer_batches(gutter_font_, std::to_string(i + 1)));
         }
         for (size_t i = 0; i < kSidebarLines.size(); ++i) {
             px_font_t* font = i == 0 ? sidebar_title_font_ : sidebar_font_;
-            sidebar_layouts_[i] = px_shape_text(font, kSidebarLines[i]);
+            if (font && font->font) {
+                sidebar_layouts_[i] = font->font->shape(kSidebarLines[i].text);
+            }
         }
     }
 
@@ -332,8 +349,15 @@ public:
                 const fcolor color =
                     i == 0 ? fcolor{0.45f, 0.47f, 0.51f, 1.0f} : fcolor{0.20f, 0.22f, 0.25f, 1.0f};
                 px_font_t* font = i == 0 ? sidebar_title_font_ : sidebar_font_;
-                draw_layout(context, font, vec2{kSidebarLeftPadding, sidebar_text_baseline(i)},
-                            color, &sidebar_layouts_[i]);
+                const size_t indent_level = kSidebarLines[i].indent_level;
+                const double indent =
+                    indent_level == 0 ? 0.0
+                                      : kSidebarIndentOffset + indent_level * kSidebarIndentWidth;
+                const double x = kSidebarLeftPadding + indent;
+                if (sidebar_layouts_[i]) {
+                    context->draw_shaped_text(font, vec2{x, sidebar_text_baseline(i)}, color,
+                                              sidebar_layouts_[i].get(), true);
+                }
             }
         }
 
@@ -445,7 +469,7 @@ private:
     double scrollbar_drag_offset_ = 0.0;
     std::array<HighlightedLine, kSourceLines.size()> highlighted_lines_;
     std::vector<LayoutBatches> line_number_layouts_;
-    std::array<LayoutBatches, kSidebarLines.size()> sidebar_layouts_;
+    std::array<std::unique_ptr<fx_layout>, kSidebarLines.size()> sidebar_layouts_;
 };
 
 }  // namespace

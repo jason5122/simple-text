@@ -69,15 +69,15 @@ public:
                 px_font_t* body_font,
                 px_font_t* detail_font)
         : window_(w), hover_(hover), body_font_(body_font), detail_font_(detail_font) {
-        header_layout_ = px_shape_text(body_font_, kHeaderText);
+        header_layout_ = shape_text_buffer_batches(body_font_, kHeaderText);
         for (size_t i = 0; i < kSectionTitles.size(); ++i) {
-            section_layouts_[i] = px_shape_text(body_font_, kSectionTitles[i]);
+            section_layouts_[i] = shape_text_buffer_batches(body_font_, kSectionTitles[i]);
         }
         for (size_t i = 0; i < kSourceLines.size(); ++i) {
-            source_layouts_[i] = px_shape_text(body_font_, kSourceLines[i]);
+            source_layouts_[i] = shape_text_buffer_batches(body_font_, kSourceLines[i]);
         }
         for (size_t i = 0; i < kDetailLines.size(); ++i) {
-            detail_layouts_[i] = px_shape_text(detail_font_, kDetailLines[i]);
+            detail_layouts_[i] = shape_text_buffer_batches(detail_font_, kDetailLines[i]);
         }
     }
 

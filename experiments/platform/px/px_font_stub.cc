@@ -10,6 +10,6 @@ bool px_font_is_monospace(px_font_t*) { return false; }
 
 px_font_metrics px_font_get_metrics(px_font_t*) { return {}; }
 
-std::vector<fx_layout_batch> px_shape_text(px_font_t*, std::string_view) { return {}; }
+std::vector<fx_layout_batch> shape_text_buffer_batches(px_font_t*, std::string_view) { return {}; }
 
 void px_render_context::draw_text(px_font_t*, vec2, fcolor, std::string_view, bool) {}

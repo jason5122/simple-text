@@ -1,6 +1,6 @@
 R"(
 
-#version 330 core
+#version 410
 
 // Instanced glyph quads: no per-vertex data. The four corners come from gl_VertexID; each glyph is
 // one instance carrying its device-pixel rect, atlas uv rect, tint color, and a flag. u_proj maps

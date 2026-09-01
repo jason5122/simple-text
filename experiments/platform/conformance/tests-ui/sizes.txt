@@ -1,0 +1,5 @@
+# UI font sizes. The fractional values exercise rounding at small, realistic sidebar sizes.
+8.5
+11.5
+16
+24

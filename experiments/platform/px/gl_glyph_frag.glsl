@@ -15,9 +15,8 @@ void main() {
         frag_color = sample_color * glyph_color.a;
         frag_coverage = vec4(sample_color.a * glyph_color.a);
     } else {
-        vec4 coverage = vec4(sample_color.rgb, sample_color.a) * glyph_color.a;
         frag_color = glyph_color;
-        frag_coverage = coverage;
+        frag_coverage = sample_color * glyph_color.a;
     }
 }
 )"

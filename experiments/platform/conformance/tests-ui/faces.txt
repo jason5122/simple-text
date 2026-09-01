@@ -1,0 +1,7 @@
+# UI-focused faces. Every face is combined with every size and text corpus.
+system
+Hoefler Text
+Times New Roman
+Geeza Pro
+Fira Code
+Apple Color Emoji

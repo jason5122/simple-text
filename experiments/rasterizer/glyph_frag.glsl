@@ -1,6 +1,6 @@
 R"(
 
-#version 330 core
+#version 410
 
 in vec2 v_uv;
 flat in vec4 v_color;

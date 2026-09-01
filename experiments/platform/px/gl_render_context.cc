@@ -11,7 +11,7 @@
 
 #include "experiments/platform/px/px_gl.h"
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
 #include "experiments/platform/px/px_font_private.h"
 #endif
 
@@ -66,7 +66,7 @@ constexpr const char* kRectFragmentShader =
 #include "experiments/platform/px/gl_rect_frag.glsl"
     ;
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
 constexpr const char* kGlyphVertexShader =
 #include "experiments/platform/px/gl_glyph_vert.glsl"
     ;
@@ -76,9 +76,9 @@ constexpr const char* kGlyphFragmentShader =
     ;
 #endif
 
-GLuint compile_shader(GLenum type, const char* source) {
+GLuint compile_shader_sources(GLenum type, const char* const* sources, GLsizei source_count) {
     const GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
+    glShaderSource(shader, source_count, sources, nullptr);
     glCompileShader(shader);
     GLint ok = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
@@ -90,6 +90,31 @@ GLuint compile_shader(GLenum type, const char* source) {
         return 0;
     }
     return shader;
+}
+
+GLuint compile_shader(GLenum type, const char* source) {
+    return compile_shader_sources(type, &source, 1);
+}
+
+GLuint link_program(GLuint vertex, GLuint fragment, const char* name, bool dual_source = false) {
+    const GLuint program = glCreateProgram();
+    glAttachShader(program, vertex);
+    glAttachShader(program, fragment);
+    if (dual_source) {
+        glBindFragDataLocationIndexed(program, 0, 0, "frag_color");
+        glBindFragDataLocationIndexed(program, 0, 1, "frag_coverage");
+    }
+    glLinkProgram(program);
+    GLint linked = GL_FALSE;
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        char log[1024] = {};
+        glGetProgramInfoLog(program, sizeof(log), nullptr, log);
+        std::fprintf(stderr, "px: %s program link failed: %s\n", name, log);
+        glDeleteProgram(program);
+        return 0;
+    }
+    return program;
 }
 
 // Persistent GL resources and the two alternating dynamic streams. ST has the same split between
@@ -185,13 +210,14 @@ gl_render_state& render_state() {
     return *state;
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
 
 struct glyph_atlas_key {
     const px_font_t* font = nullptr;
     uint32_t glyph = 0;
     int phase = 0;
     int scale_percent = 100;
+    bool alternate = false;
 
     auto operator<=>(const glyph_atlas_key&) const = default;
 };
@@ -205,11 +231,25 @@ struct glyph_atlas_placement {
     bool colored = false;
 };
 
-struct glyph_instance {
+struct glyph_instance_data {
     float x, y, width, height;
     float u, v, uv_width, uv_height;
     float r, g, b, a;
     float colored, pad0, pad1, pad2;
+};
+
+struct glyph_instance {
+    glyph_instance_data data;
+    bool colored = false;
+};
+
+struct glyph_program {
+    GLuint id = 0;
+    GLint viewport_uniform = -1;
+    GLint instances_uniform = -1;
+    GLint instance_offset_uniform = -1;
+    GLint tex_uniform = -1;
+    GLint texture_size_uniform = -1;
 };
 
 class gl_text_render_state {
@@ -247,7 +287,7 @@ public:
               vec2 viewport,
               bool subpixel_positioning) {
         ensure_initialized();
-        if (!program_ || !font || !font->font || layout.glyphs.empty()) {
+        if (!program_.id || !font || !font->font || layout.glyphs.empty()) {
             return;
         }
         if (reset_requested_.exchange(false, std::memory_order_acq_rel)) {
@@ -270,17 +310,31 @@ public:
         instances.reserve(layout.glyphs.size());
         const double device_origin_x = translation.x + origin.x * scale.x;
         const double device_origin_y = translation.y + origin.y * scale.y;
+        const float lightness =
+            (std::max({color.r, color.g, color.b}) + std::min({color.r, color.g, color.b})) * 0.5f;
+        // Sublime selects the inverted glyph-cache polarity only for very light tints
+        // (ucomiss against 0.75 at 0x1402cc583).  The comparison is `lightness > 0.75`;
+        // reversing the operands makes ordinary black text render as solid glyph tiles.
+        const bool alternate = lightness > 0.75f;
 
         for (const fx_glyph& glyph : layout.glyphs) {
             const double x = device_origin_x + static_cast<double>(glyph.x_offset) * scale.x;
-            const double y = device_origin_y + static_cast<double>(glyph.y_offset) * scale.y;
-            const int device_x = static_cast<int>(std::floor(x));
-            const double fraction = x - device_x;
+            double y = device_origin_y +
+                       static_cast<double>(glyph.y_offset - layout.primary_y_offset) * scale.y;
+            if (layout.primary_face_ascent != 0.0f && glyph.face_ascent != 0.0f) {
+                const double ascent_delta =
+                    std::round(static_cast<double>(glyph.face_ascent) * raster_scale) -
+                    std::round(static_cast<double>(layout.primary_face_ascent) * raster_scale);
+                y += scale.y < 0.0 ? -ascent_delta : ascent_delta;
+            }
+            const double raster_x = x + static_cast<double>(glyph.raster_x_delta) * scale.x;
+            const int device_x = static_cast<int>(std::floor(raster_x));
+            const double fraction = raster_x - std::floor(raster_x);
             const int phase =
                 subpixel_positioning ? std::clamp(static_cast<int>(fraction * 6.0), 0, 5) : 0;
-            const glyph_atlas_key key{font, glyph.id, phase, scale_percent};
+            const glyph_atlas_key key{font, glyph.id, phase, scale_percent, alternate};
             const fx_glyph_cache::glyph_data& glyph_data =
-                cache.lookup_glyph_data(glyph.id, static_cast<unsigned>(phase), false);
+                cache.lookup_glyph_data(glyph.id, static_cast<unsigned>(phase), alternate);
             if (glyph_data.bitmap.empty()) {
                 continue;
             }
@@ -300,22 +354,23 @@ public:
                 static_cast<float>(std::ceil(y - 0.5) + glyph_data.bitmap.bearing_y);
 
             instances.push_back({
-                .x = instance_x,
-                .y = instance_y,
-                .width = placement->width,
-                .height = placement->height,
-                .u = placement->u,
-                .v = placement->v,
-                .uv_width = placement->width,
-                .uv_height = placement->height,
-                .r = color.r,
-                .g = color.g,
-                .b = color.b,
-                .a = color.a,
-                .colored = placement->colored ? 1.0f : 0.0f,
-                .pad0 = 0.0f,
-                .pad1 = 0.0f,
-                .pad2 = 0.0f,
+                .data =
+                    {
+                        .x = instance_x,
+                        .y = instance_y,
+                        .width = placement->width,
+                        .height = placement->height,
+                        .u = placement->u,
+                        .v = placement->v,
+                        .uv_width = placement->width,
+                        .uv_height = placement->height,
+                        .r = color.r,
+                        .g = color.g,
+                        .b = color.b,
+                        .a = color.a,
+                        .colored = placement->colored ? 1.0f : 0.0f,
+                    },
+                .colored = placement->colored,
             });
             if (batch_depth_ != 0 && placement->colored) {
                 add_to_batch(placement->color_page, instances.back());
@@ -343,12 +398,13 @@ private:
     };
 
     void add_to_batch(int color_page, const glyph_instance& instance) {
-        auto found = std::find_if(
-            batch_groups_.begin(), batch_groups_.end(),
-            [color_page](const batch_group& group) { return group.color_page == color_page; });
+        auto found = std::find_if(batch_groups_.begin(), batch_groups_.end(),
+                                  [color_page](const batch_group& group) {
+                                      return group.color_page == color_page;
+                                  });
         if (found == batch_groups_.end()) {
             batch_groups_.push_back({.color_page = color_page});
-            found = batch_groups_.end() - 1;
+            found = std::prev(batch_groups_.end());
         }
         found->instances.push_back(instance);
     }
@@ -365,39 +421,44 @@ private:
             return;
         }
 
-        glUseProgram(program_);
-        glUniform2f(viewport_uniform_, static_cast<float>(viewport.x),
-                    static_cast<float>(viewport.y));
-        glUniform1f(texture_size_uniform_, static_cast<float>(kAtlasSize));
+        std::vector<glyph_instance_data> instance_data;
+        instance_data.reserve(instances.size());
+        for (const glyph_instance& instance : instances) {
+            instance_data.push_back(instance.data);
+        }
 
         glActiveTexture(GL_TEXTURE0);
         glBindBuffer(GL_TEXTURE_BUFFER, instance_buffer_);
         glBufferData(GL_TEXTURE_BUFFER,
-                     static_cast<GLsizeiptr>(instances.size() * sizeof(glyph_instance)),
-                     instances.data(), GL_STREAM_DRAW);
+                     static_cast<GLsizeiptr>(instance_data.size() * sizeof(glyph_instance_data)),
+                     instance_data.data(), GL_STREAM_DRAW);
         glBindTexture(GL_TEXTURE_BUFFER, instance_texture_);
         glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, instance_buffer_);
-        glUniform1i(instances_uniform_, 0);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, atlas_);
-        glUniform1i(atlas_uniform_, 1);
 
         glBindVertexArray(vao_);
+        glUseProgram(program_.id);
+        glUniform2f(program_.viewport_uniform, static_cast<float>(viewport.x),
+                    static_cast<float>(viewport.y));
+        glUniform1f(program_.texture_size_uniform, static_cast<float>(kAtlasSize));
+        glUniform1i(program_.instances_uniform, 0);
+        glUniform1i(program_.tex_uniform, 1);
         size_t first = 0;
         while (first < instances.size()) {
-            const bool colored = instances[first].colored > 0.5f;
+            const bool colored = instances[first].colored;
             size_t last = first + 1;
-            while (last < instances.size() && (instances[last].colored > 0.5f) == colored) {
+            while (last < instances.size() && instances[last].colored == colored) {
                 ++last;
             }
+            glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first));
             if (colored) {
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             } else {
                 glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ONE,
                                     GL_ONE_MINUS_SRC1_ALPHA);
             }
-            glUniform1i(instance_offset_uniform_, static_cast<GLint>(first));
             glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(last - first));
             first = last;
         }
@@ -449,7 +510,8 @@ private:
             glyph_atlas_key phase_key = requested_key;
             phase_key.phase = phase;
             const fx_glyph_bitmap& bitmap =
-                cache.lookup_glyph_data(requested_key.glyph, static_cast<unsigned>(phase), false)
+                cache.lookup_glyph_data(requested_key.glyph, static_cast<unsigned>(phase),
+                                        requested_key.alternate)
                     .bitmap;
             color_page_for_glyph_.emplace(phase_key,
                                           allocate_color_page(static_cast<int>(bitmap.width),
@@ -474,30 +536,18 @@ private:
             }
             return;
         }
-        program_ = glCreateProgram();
-        glAttachShader(program_, vertex);
-        glAttachShader(program_, fragment);
-        glBindFragDataLocationIndexed(program_, 0, 0, "frag_color");
-        glBindFragDataLocationIndexed(program_, 0, 1, "frag_coverage");
-        glLinkProgram(program_);
+        program_.id = link_program(vertex, fragment, "glyph", true);
         glDeleteShader(vertex);
         glDeleteShader(fragment);
-        GLint linked = GL_FALSE;
-        glGetProgramiv(program_, GL_LINK_STATUS, &linked);
-        if (!linked) {
-            char log[1024] = {};
-            glGetProgramInfoLog(program_, sizeof(log), nullptr, log);
-            std::fprintf(stderr, "px: glyph program link failed: %s\n", log);
-            glDeleteProgram(program_);
-            program_ = 0;
+        if (!program_.id) {
             return;
         }
 
-        viewport_uniform_ = glGetUniformLocation(program_, "viewport");
-        instances_uniform_ = glGetUniformLocation(program_, "instances");
-        instance_offset_uniform_ = glGetUniformLocation(program_, "instance_offset");
-        atlas_uniform_ = glGetUniformLocation(program_, "atlas");
-        texture_size_uniform_ = glGetUniformLocation(program_, "texture_size");
+        program_.viewport_uniform = glGetUniformLocation(program_.id, "viewport");
+        program_.instances_uniform = glGetUniformLocation(program_.id, "instances");
+        program_.instance_offset_uniform = glGetUniformLocation(program_.id, "instance_offset");
+        program_.tex_uniform = glGetUniformLocation(program_.id, "atlas");
+        program_.texture_size_uniform = glGetUniformLocation(program_.id, "texture_size");
         glGenVertexArrays(1, &vao_);
         glGenBuffers(1, &instance_buffer_);
         glGenTextures(1, &instance_texture_);
@@ -566,16 +616,11 @@ private:
     }
 
     bool initialized_ = false;
-    GLuint program_ = 0;
+    glyph_program program_;
     GLuint vao_ = 0;
     GLuint instance_buffer_ = 0;
     GLuint instance_texture_ = 0;
     GLuint atlas_ = 0;
-    GLint viewport_uniform_ = -1;
-    GLint instances_uniform_ = -1;
-    GLint instance_offset_uniform_ = -1;
-    GLint atlas_uniform_ = -1;
-    GLint texture_size_uniform_ = -1;
     std::atomic<bool> reset_requested_ = false;
     std::map<glyph_atlas_key, glyph_atlas_placement> placements_;
     std::map<glyph_atlas_key, int> color_page_for_glyph_;
@@ -771,7 +816,7 @@ void gl_render_context::draw_rect(rect area, fill_mode fill) {
 
 void gl_render_context::draw_shaped_text(
     px_font_t* font, vec2 position, fcolor color, fx_layout* layout, bool subpixel_positioning) {
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
     if (!layout || color.a <= 0.0f) {
         return;
     }
@@ -842,14 +887,14 @@ void gl_render_context::begin_rect_batch() {
 }
 
 void gl_render_context::begin_text_batch() {
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
     if (rect_batch_) rect_batch_->flush();
     text_render_state().begin_batch(device_size_);
 #endif
 }
 
 void gl_render_context::end_text_batch() {
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
     text_render_state().end_batch();
 #endif
 }
@@ -865,13 +910,13 @@ void gl_render_context::finish() {
     // scopes.
     while (!state_stack_.empty()) pop_state();
     rect_batch_.reset();
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
     text_render_state().finish_batch();
 #endif
 }
 
 void gl_render_context::reset_glyph_atlas_for_testing() {
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
     text_render_state().request_reset();
 #endif
 }

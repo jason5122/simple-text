@@ -1,5 +1,5 @@
 R"(
-#version 150
+#version 410
 
 // Instanced solid-rectangle vertex shader.
 

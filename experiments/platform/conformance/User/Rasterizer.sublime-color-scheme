@@ -1,0 +1,7 @@
+{
+  "name": "Rasterizer",
+  "globals": {
+    "background": "#FFFFFF",
+    "foreground": "#000000"
+  }
+}

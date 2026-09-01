@@ -184,6 +184,10 @@ std::vector<fx_layout_batch> fx_shape_graphemes(fx_font* font,
                 result.push_back({.x_offset = batch_origin, .layout = std::move(*cluster)});
                 batch_origin += static_cast<double>(advance);
             } else {
+                if (batch.glyphs.empty()) {
+                    batch.primary_y_offset = cluster->primary_y_offset;
+                    batch.primary_face_ascent = cluster->primary_face_ascent;
+                }
                 batch.glyphs.reserve(batch.glyphs.size() + cluster->glyphs.size());
                 for (const fx_glyph& glyph : cluster->glyphs) {
                     fx_glyph positioned = glyph;
@@ -221,6 +225,28 @@ const fx_glyph_cache::glyph_data& fx_glyph_cache::lookup_glyph_data(uint32_t gly
     if (font_) {
         const float subpixel_x = static_cast<float>(phase % 6) * (1.0f / 6.0f) * scale_;
         data.bitmap = font_->rasterise(glyph, scale_, subpixel_x);
+        if (!data.bitmap.colored) {
+            if (const fx_gamma_ramp* ramp = font_->gamma_ramp()) {
+                for (size_t i = 0; i + 3 < data.bitmap.pixels.size(); i += 4) {
+                    data.bitmap.pixels[i] = ramp->values[data.bitmap.pixels[i]];
+                    data.bitmap.pixels[i + 1] = ramp->values[data.bitmap.pixels[i + 1]];
+                    data.bitmap.pixels[i + 2] = ramp->values[data.bitmap.pixels[i + 2]];
+                    if (ramp->complement_inverse && !alternate) {
+                        data.bitmap.pixels[i] =
+                            0xFF ^ ramp->inverse_values[0xFF ^ data.bitmap.pixels[i]];
+                        data.bitmap.pixels[i + 1] =
+                            0xFF ^ ramp->inverse_values[0xFF ^ data.bitmap.pixels[i + 1]];
+                        data.bitmap.pixels[i + 2] =
+                            0xFF ^ ramp->inverse_values[0xFF ^ data.bitmap.pixels[i + 2]];
+                    }
+                    if (alternate) {
+                        data.bitmap.pixels[i] ^= 0xFF;
+                        data.bitmap.pixels[i + 1] ^= 0xFF;
+                        data.bitmap.pixels[i + 2] ^= 0xFF;
+                    }
+                }
+            }
+        }
     }
     return cache.emplace(cache_key, std::move(data)).first->second;
 }

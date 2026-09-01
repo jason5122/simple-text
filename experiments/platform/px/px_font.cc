@@ -3,6 +3,7 @@
 #include "experiments/platform/px/px_font_private.h"
 
 #include <bit>
+#include <cmath>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -41,7 +42,11 @@ px_font_t* px_create_font(const char* family, float size, uint32_t attrs) {
         return found->second.get();
     }
 
-    std::unique_ptr<fx_font> font = fx_create_font(family, size, attrs);
+    float native_size = size;
+#if defined(_WIN32)
+    native_size = std::floor(size * 96.0f / 72.0f + 0.5f);
+#endif
+    std::unique_ptr<fx_font> font = fx_create_font(family, native_size, attrs);
     if (!font) {
         return nullptr;
     }
@@ -91,8 +96,8 @@ std::vector<fx_layout_batch> shape_text_buffer_batches(px_font_t* font, std::str
 
         // TextBuffer lays out a token together with its trailing whitespace. The token width is
         // accumulated in float by the shaper, then added to the line pen in double precision.
-        std::vector<fx_layout_batch> batches = fx_shape_graphemes(
-            font->font.get(), utf8.substr(start, end - start), font->size <= 16.0f);
+        std::vector<fx_layout_batch> batches =
+            fx_shape_graphemes(font->font.get(), utf8.substr(start, end - start), false);
         for (fx_layout_batch& batch : batches) {
             batch.x_offset += pen_x;
         }
@@ -103,6 +108,36 @@ std::vector<fx_layout_batch> shape_text_buffer_batches(px_font_t* font, std::str
         result.insert(result.end(), std::make_move_iterator(batches.begin()),
                       std::make_move_iterator(batches.end()));
         start = end;
+    }
+
+    // ST snaps fixed-pitch caret positions by rounding the cumulative native advance, rather
+    // than rounding each glyph independently. Keep that accumulator continuous across TextBuffer
+    // token and 32-glyph batch boundaries: for Consolas 16 pt this produces 0, 12, 23, 35, 46,
+    // ... from its native 11.545898... advance instead of incorrectly producing 0, 12, 24, 36.
+    // The raster delta preserves that native position because ST snaps the caret, not the ink.
+    if (font->size <= 16.0f && font->font->widths().monospace) {
+        double raw_pen = 0.0;
+        for (fx_layout_batch& batch : result) {
+            const double raw_batch_origin = batch.x_offset;
+            const double snapped_batch_origin = std::round(raw_batch_origin);
+            const float raw_batch_advance = batch.layout.advance;
+            for (fx_glyph& glyph : batch.layout.glyphs) {
+                const double snapped_start = std::round(raw_pen);
+                const double raw_glyph_x = raw_batch_origin + glyph.x_offset;
+                const double snapped_glyph_x =
+                    raw_batch_origin + glyph.x_offset + snapped_start - raw_pen -
+                    snapped_batch_origin;
+                glyph.x_offset = static_cast<float>(snapped_glyph_x);
+                glyph.raster_x_delta = static_cast<float>(
+                    raw_glyph_x - (snapped_batch_origin + snapped_glyph_x));
+                raw_pen += glyph.advance;
+                const double snapped_end = std::round(raw_pen);
+                glyph.advance = static_cast<float>(snapped_end - snapped_start);
+            }
+            batch.x_offset = snapped_batch_origin;
+            batch.layout.advance = static_cast<float>(
+                std::round(raw_batch_origin + raw_batch_advance) - snapped_batch_origin);
+        }
     }
     return result;
 }

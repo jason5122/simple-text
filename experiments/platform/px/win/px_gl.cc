@@ -20,6 +20,7 @@
 #include "experiments/platform/px/px_gl.h"
 #include "experiments/platform/px/win/px_win_private.h"
 
+#include <cstdio>
 #include <print>
 
 // Defined here, declared in px_gl.h.
@@ -32,6 +33,7 @@ PFN_glDeleteShader px_glDeleteShader = nullptr;
 PFN_glCreateProgram px_glCreateProgram = nullptr;
 PFN_glAttachShader px_glAttachShader = nullptr;
 PFN_glBindAttribLocation px_glBindAttribLocation = nullptr;
+PFN_glBindFragDataLocationIndexed px_glBindFragDataLocationIndexed = nullptr;
 PFN_glLinkProgram px_glLinkProgram = nullptr;
 PFN_glGetProgramiv px_glGetProgramiv = nullptr;
 PFN_glGetProgramInfoLog px_glGetProgramInfoLog = nullptr;
@@ -39,7 +41,9 @@ PFN_glDeleteProgram px_glDeleteProgram = nullptr;
 PFN_glUseProgram px_glUseProgram = nullptr;
 PFN_glGetUniformLocation px_glGetUniformLocation = nullptr;
 PFN_glUniform2f px_glUniform2f = nullptr;
+PFN_glUniform1f px_glUniform1f = nullptr;
 PFN_glUniform1i px_glUniform1i = nullptr;
+PFN_glBlendFuncSeparate px_glBlendFuncSeparate = nullptr;
 PFN_glActiveTexture px_glActiveTexture = nullptr;
 PFN_glGenVertexArrays px_glGenVertexArrays = nullptr;
 PFN_glBindVertexArray px_glBindVertexArray = nullptr;
@@ -110,6 +114,7 @@ void load_modern_gl() {
     ok &= load(&px_glCreateProgram, "glCreateProgram");
     ok &= load(&px_glAttachShader, "glAttachShader");
     ok &= load(&px_glBindAttribLocation, "glBindAttribLocation");
+    ok &= load(&px_glBindFragDataLocationIndexed, "glBindFragDataLocationIndexed");
     ok &= load(&px_glLinkProgram, "glLinkProgram");
     ok &= load(&px_glGetProgramiv, "glGetProgramiv");
     ok &= load(&px_glGetProgramInfoLog, "glGetProgramInfoLog");
@@ -117,7 +122,9 @@ void load_modern_gl() {
     ok &= load(&px_glUseProgram, "glUseProgram");
     ok &= load(&px_glGetUniformLocation, "glGetUniformLocation");
     ok &= load(&px_glUniform2f, "glUniform2f");
+    ok &= load(&px_glUniform1f, "glUniform1f");
     ok &= load(&px_glUniform1i, "glUniform1i");
+    ok &= load(&px_glBlendFuncSeparate, "glBlendFuncSeparate");
     ok &= load(&px_glActiveTexture, "glActiveTexture");
     ok &= load(&px_glGenVertexArrays, "glGenVertexArrays");
     ok &= load(&px_glBindVertexArray, "glBindVertexArray");
@@ -201,9 +208,9 @@ bool px_win_gl_create(px_window_t* window) {
         if (g_create_context_attribs) {
             const int attribs[] = {
                 kWglContextMajorVersionArb,
-                3,
+                4,
                 kWglContextMinorVersionArb,
-                2,
+                1,
                 kWglContextProfileMaskArb,
                 kWglContextCoreProfileBitArb,
                 0,
@@ -211,7 +218,7 @@ bool px_win_gl_create(px_window_t* window) {
             g_shared_context = g_create_context_attribs(window->hdc, nullptr, attribs);
         }
         if (!g_shared_context) {
-            // No WGL_ARB_create_context, or the driver refused 3.2 core. A legacy context still
+            // No WGL_ARB_create_context, or the driver refused 4.1 core. A legacy context still
             // lets the window come up and the event trace run; drawing degrades via
             // px_gl_has_shaders().
             g_shared_context = wglCreateContext(window->hdc);
@@ -224,6 +231,13 @@ bool px_win_gl_create(px_window_t* window) {
         load_modern_gl();
 
         const GLubyte* version = glGetString(GL_VERSION);
+        int major = 0;
+        int minor = 0;
+        const bool version_ok =
+            version &&
+            std::sscanf(reinterpret_cast<const char*>(version), "%d.%d", &major, &minor) == 2 &&
+            (major > 4 || (major == 4 && minor >= 1));
+        g_has_shaders = g_has_shaders && version_ok;
         std::println(stderr, "px: GL {}, shaders={}, stencil={}",
                      version ? reinterpret_cast<const char*>(version) : "?",
                      px_gl_has_shaders() ? 1 : 0, window->has_stencil ? 1 : 0);

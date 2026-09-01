@@ -8,7 +8,7 @@
 //     context, so glyph atlases and buffers are shared for free.
 //
 //   * The pixel format request, read out of __TEXT,__const at 0x100509e44, is
-//     {kCGLPFAColorSize 24, kCGLPFAAlphaSize 8, kCGLPFAOpenGLProfile 0x4100 (3.2 Core),
+//     {kCGLPFAColorSize 24, kCGLPFAAlphaSize 8, kCGLPFAOpenGLProfile 0x4100 (4.1 Core),
 //      kCGLPFANoRecovery, kCGLPFAAllowOfflineRenderers, kCGLPFABackingStore, 0}.
 //     The persistent FBO below, rather than CA's rotating drawable, is what makes repainting only
 //     dirty rectangles deterministic.
@@ -54,7 +54,7 @@ void ensure_shared_gl() {
     const CGLPixelFormatAttribute attributes[] = {
         kCGLPFAColorSize,     static_cast<CGLPixelFormatAttribute>(24),
         kCGLPFAAlphaSize,     static_cast<CGLPixelFormatAttribute>(8),
-        kCGLPFAOpenGLProfile, static_cast<CGLPixelFormatAttribute>(kCGLOGLPVersion_3_2_Core),
+        kCGLPFAOpenGLProfile, static_cast<CGLPixelFormatAttribute>(kCGLOGLPVersion_GL4_Core),
         kCGLPFANoRecovery,    kCGLPFAAllowOfflineRenderers,
         kCGLPFABackingStore,  static_cast<CGLPixelFormatAttribute>(0),
     };

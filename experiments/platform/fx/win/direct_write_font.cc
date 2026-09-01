@@ -2,7 +2,6 @@
 
 #include "experiments/platform/fx/font_private.h"
 
-#include <cmath>
 #include <string>
 
 namespace {
@@ -41,22 +40,19 @@ fx_glyph_bitmap convert_bitmap(fx_detail::GlyphBitmap bitmap) {
     };
 }
 
-class core_text_font final : public fx_font {
+}  // namespace
+
+class direct_write_font final : public fx_font {
 public:
-    core_text_font(fx_detail::FontHandle handle, uint32_t attrs)
-        : handle_(std::move(handle)), attrs_(attrs) {
-        for (size_t i = 0; i < gamma_.values.size(); ++i) {
-            gamma_.values[i] = static_cast<uint8_t>(i);
-            gamma_.inverse_values[i] = static_cast<uint8_t>(i);
-        }
-    }
+    direct_write_font(fx_detail::FontHandle handle, uint32_t attrs)
+        : handle_(std::move(handle)), attrs_(attrs), gamma_(fx_detail::rendering_gamma_ramp()) {}
 
     uint32_t attrs() const override { return attrs_; }
 
     fx_font_metrics metrics() const override {
-        const float ascent = static_cast<float>(std::ceil(handle_.ascent()));
-        const float descent = static_cast<float>(std::ceil(handle_.descent()));
-        const float leading = static_cast<float>(std::ceil(handle_.leading()));
+        const float ascent = static_cast<float>(handle_.ascent());
+        const float descent = static_cast<float>(handle_.descent());
+        const float leading = static_cast<float>(handle_.leading());
         return {
             .ascent = ascent,
             .descent = descent,
@@ -66,7 +62,7 @@ public:
     }
 
     float raster_ascent() const override {
-        return static_cast<float>(std::ceil(handle_.raster_ascent()));
+        return static_cast<float>(handle_.raster_ascent());
     }
 
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override {
@@ -122,9 +118,8 @@ public:
         return fx_detail::rasterize(handle_, glyph, 1.0, 0.0).colored;
     }
 
-    // ST returns true on macOS 10.14 and newer. Every macOS version supported by this experiment
-    // falls on that side of its compatibility check.
-    bool bg_affects_rasterise() const override { return true; }
+    // The Windows direct_write_font vtable points at a shared false-returning stub.
+    bool bg_affects_rasterise() const override { return false; }
     const fx_gamma_ramp* gamma_ramp() const override { return &gamma_; }
 
 private:
@@ -132,8 +127,6 @@ private:
     uint32_t attrs_ = 0;
     fx_gamma_ramp gamma_;
 };
-
-}  // namespace
 
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs) {
     std::optional<fx_detail::FontHandle> handle = fx_detail::create_font(
@@ -143,5 +136,5 @@ std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uin
     if (!handle) {
         return nullptr;
     }
-    return std::make_unique<core_text_font>(std::move(*handle), attrs);
+    return std::make_unique<direct_write_font>(std::move(*handle), attrs);
 }

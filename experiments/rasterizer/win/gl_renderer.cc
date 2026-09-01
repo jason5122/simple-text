@@ -124,7 +124,7 @@ void set_pixel_format(HDC dc) {
     SetPixelFormat(dc, ChoosePixelFormat(dc, &pfd), &pfd);
 }
 
-// A 3.3 core context needs wglCreateContextAttribsARB, which can only be resolved through a
+// A 4.1 core context needs wglCreateContextAttribsARB, which can only be resolved through a
 // context that already exists -- hence the throwaway window and legacy context first.
 HGLRC create_core_context(HDC dc) {
     HWND dummy = CreateWindowExW(0, L"STATIC", L"", WS_POPUP, 0, 0, 1, 1, nullptr, nullptr,
@@ -141,9 +141,9 @@ HGLRC create_core_context(HDC dc) {
     if (create_attribs) {
         const int attribs[] = {
             kWglContextMajorVersionArb,
-            3,
+            4,
             kWglContextMinorVersionArb,
-            3,
+            1,
             kWglContextProfileMaskArb,
             kWglContextCoreProfileBitArb,
             0,
@@ -157,7 +157,7 @@ HGLRC create_core_context(HDC dc) {
     DestroyWindow(dummy);
 
     // Without the extension, take whatever wglCreateContext gives: drivers usually return their
-    // highest supported version in the compatibility profile, which still runs `#version 330`.
+    // highest supported version in the compatibility profile, which still runs `#version 410`.
     if (!context) context = wglCreateContext(dc);
     return context;
 }
@@ -171,11 +171,13 @@ bool make_current_and_load(HDC dc, HGLRC context) {
 
     const auto* version =
         glGetString ? reinterpret_cast<const char*>(glGetString(GL_VERSION)) : nullptr;
-    // A pre-3.3 context still resolves the 1.x entry points, so probe the ones this renderer
-    // cannot do without rather than trusting the version string.
-    if (!glGenVertexArrays || !glDrawArraysInstanced || !glVertexAttribDivisor ||
+    int major = 0;
+    int minor = 0;
+    const bool version_ok = version && std::sscanf(version, "%d.%d", &major, &minor) == 2 &&
+                            (major > 4 || (major == 4 && minor >= 1));
+    if (!version_ok || !glGenVertexArrays || !glDrawArraysInstanced || !glVertexAttribDivisor ||
         !glUniformMatrix4fv || !glGenFramebuffers) {
-        spdlog::error("OpenGL 3.3 is required; this context reports \"{}\"",
+        spdlog::error("OpenGL 4.1 is required; this context reports \"{}\"",
                       version ? version : "?");
         return false;
     }

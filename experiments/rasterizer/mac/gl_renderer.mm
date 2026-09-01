@@ -308,7 +308,7 @@ private:
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
     CGLPixelFormatAttribute attrs[] = {
         kCGLPFAOpenGLProfile,
-        (CGLPixelFormatAttribute)kCGLOGLPVersion_GL4_Core,  // 4.1 core -> GLSL 330
+        (CGLPixelFormatAttribute)kCGLOGLPVersion_GL4_Core,  // 4.1 core -> GLSL 410
         kCGLPFAColorSize,
         (CGLPixelFormatAttribute)24,
         kCGLPFAAlphaSize,

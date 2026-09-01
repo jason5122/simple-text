@@ -1,0 +1,11 @@
+# Windows font families to screenshot, one per line.
+Segoe UI
+Consolas
+Times New Roman
+Arial
+Georgia
+Calibri
+Cambria
+Courier New
+Comic Sans MS
+Segoe UI Emoji

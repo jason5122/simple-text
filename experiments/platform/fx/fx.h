@@ -42,7 +42,12 @@ struct fx_glyph {
     uint32_t id = 0;
     float advance = 0.0f;
     float x_offset = 0.0f;
+    // Fixed-pitch layout can snap the caret while the glyph keeps its native raster position.
+    float raster_x_delta = 0.0f;
     float y_offset = 0.0f;
+    // DirectWrite snaps each fallback face's ascent at raster scale. Keeping it here lets the
+    // renderer preserve that device-pixel correction after shaping has established run baselines.
+    float face_ascent = 0.0f;
     size_t cluster = 0;
 };
 
@@ -51,6 +56,8 @@ struct fx_glyph {
 struct fx_layout {
     float advance = 0.0f;
     float line_height = 0.0f;
+    float primary_y_offset = 0.0f;
+    float primary_face_ascent = 0.0f;
     std::vector<fx_glyph> glyphs;
 };
 
@@ -75,6 +82,8 @@ struct fx_glyph_bitmap {
 
 struct fx_gamma_ramp {
     std::array<uint8_t, 256> values{};
+    std::array<uint8_t, 256> inverse_values{};
+    bool complement_inverse = false;
 };
 
 class fx_font {
@@ -83,6 +92,8 @@ public:
 
     virtual uint32_t attrs() const = 0;
     virtual fx_font_metrics metrics() const = 0;
+    // Unrounded top-to-baseline distance used when the first line is aligned to device pixels.
+    virtual float raster_ascent() const = 0;
     virtual std::unique_ptr<fx_layout> shape(std::string_view utf8) = 0;
     virtual std::unique_ptr<fx_layout> shape(std::u32string_view utf32) = 0;
     virtual bool extents(uint32_t glyph, float scale, fx_vec2* origin, fx_vec2* size) = 0;
@@ -141,8 +152,8 @@ private:
 // Applies the shared bitmap glow operation used before a glyph is handed to either renderer.
 void fx_apply_font_glow(fx_glyph_bitmap* bitmap, float radius, bool preserve_source);
 
-// Creates the CoreText implementation on macOS. Returns null if the requested family cannot be
-// resolved. "system" uses the native UI font, matching the rasterizer experiment.
+// Creates the native implementation (Core Text on macOS, DirectWrite on Windows). Returns null if
+// the requested family cannot be resolved. "system" uses the native UI font.
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs);
 
 // Shapes text using the policy recovered from Sublime's grapheme_shaper rather than passing the

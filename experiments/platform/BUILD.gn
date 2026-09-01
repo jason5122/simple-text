@@ -1,18 +1,163 @@
 group("platform") {
   deps = [
+    ":benchmark",
+    ":conformance",
     ":platform_demo",
     ":platform_editor",
   ]
+}
+
+# ──────────────────────────────────────────────────────────────────────────────────────────────────
+# Demos
+# ──────────────────────────────────────────────────────────────────────────────────────────────────
+executable("platform_demo") {
+  sources = [ "demo.cc" ]
+  deps = [ ":window" ]
+}
+
+executable("platform_editor") {
+  sources = [ "editor.cc" ]
+  deps = [ ":window" ]
+}
+
+# ──────────────────────────────────────────────────────────────────────────────────────────────────
+# Conformance
+# ──────────────────────────────────────────────────────────────────────────────────────────────────
+group("conformance") {
+  deps = [ ":platform_rasterizer" ]
 
   if (is_mac) {
     deps += [
-      ":platform_benchmark_suite",
-      ":platform_rasterizer",
+      ":platform_capture_server",
+      ":platform_sidebar",
     ]
   }
 }
 
-group("platform_benchmark_suite") {
+executable("platform_rasterizer") {
+  sources = [ "rasterizer.cc" ]
+  deps = [
+    ":capture",
+    ":px",
+    ":scripts",
+    ":test_config",
+    ":test_corpus",
+  ]
+}
+
+copy("scripts") {
+  sources = [ "conformance/capture/diff.sh" ]
+  if (is_mac) {
+    sources += [
+      "conformance/capture/diff-ui.sh",
+      "conformance/capture/mac/capture-ours-ui.sh",
+      "conformance/capture/mac/capture-ours.sh",
+      "conformance/capture/mac/capture-sublime-ui.sh",
+      "conformance/capture/mac/capture-sublime.sh",
+    ]
+  } else if (is_win) {
+    sources += [
+      "conformance/capture/win/capture-ours.sh",
+      "conformance/capture/win/capture-sublime.sh",
+    ]
+  }
+  outputs = [ "$root_out_dir/{{source_file_part}}" ]
+}
+
+copy("test_config") {
+  sources = [ "conformance/tests/sizes.txt" ]
+  if (is_mac) {
+    sources += [ "conformance/tests/faces-mac.txt" ]
+  } else if (is_win) {
+    sources += [ "conformance/tests/faces-win.txt" ]
+  }
+  outputs = [ "$root_out_dir/capture-tests/{{source_file_part}}" ]
+}
+
+copy("test_corpus") {
+  sources = [
+    "conformance/tests/texts/emoji.txt",
+    "conformance/tests/texts/kerning.txt",
+    "conformance/tests/texts/ligatures.txt",
+    "conformance/tests/texts/marks.txt",
+    "conformance/tests/texts/pangram.txt",
+    "conformance/tests/texts/scripts.txt",
+  ]
+  outputs = [ "$root_out_dir/capture-tests/texts/{{source_file_part}}" ]
+}
+
+if (is_mac) {
+  copy("ui_test_config") {
+    sources = [
+      "conformance/tests-ui/faces.txt",
+      "conformance/tests-ui/sizes.txt",
+    ]
+    outputs = [ "$root_out_dir/capture-tests-ui/{{source_file_part}}" ]
+  }
+
+  copy("ui_test_corpus") {
+    sources = [
+      "conformance/tests-ui/texts/arabic.txt",
+      "conformance/tests-ui/texts/code.txt",
+      "conformance/tests-ui/texts/emoji.txt",
+      "conformance/tests-ui/texts/fallback.txt",
+      "conformance/tests-ui/texts/kerning.txt",
+      "conformance/tests-ui/texts/ligatures.txt",
+    ]
+    outputs = [ "$root_out_dir/capture-tests-ui/texts/{{source_file_part}}" ]
+  }
+
+  executable("platform_sidebar") {
+    sources = [ "sidebar.cc" ]
+    deps = [
+      ":capture",
+      ":px",
+      ":scripts",
+      ":ui_test_config",
+      ":ui_test_corpus",
+    ]
+  }
+
+  executable("platform_capture_server") {
+    sources = [ "conformance/capture/mac/capture_server.cc" ]
+    deps = [
+      ":capture",
+      "//third_party/spdlog",
+    ]
+  }
+}
+
+source_set("capture") {
+  sources = [ "conformance/capture/capture.h" ]
+
+  if (is_mac) {
+    sources += [ "conformance/capture/mac/capture.mm" ]
+    framework_dirs = [ "/System/Library/PrivateFrameworks" ]
+    frameworks = [
+      "AppKit.framework",
+      "CoreFoundation.framework",
+      "CoreGraphics.framework",
+      "ImageIO.framework",
+      "SkyLight.framework",
+    ]
+  } else {
+    sources += [ "conformance/capture/win/capture.cc" ]
+    deps = [ ":px" ]
+    libs = [
+      "ole32.lib",
+      "opengl32.lib",
+      "user32.lib",
+      "windowscodecs.lib",
+    ]
+  }
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+}
+
+# ──────────────────────────────────────────────────────────────────────────────────────────────────
+# Benchmark
+# ──────────────────────────────────────────────────────────────────────────────────────────────────
+group("benchmark") {
   deps = [
     ":platform_animation_benchmark",
     ":platform_benchmark",
@@ -26,16 +171,6 @@ group("platform_benchmark_suite") {
       ":scroll_wheel",
     ]
   }
-}
-
-executable("platform_demo") {
-  sources = [ "demo.cc" ]
-  deps = [ ":window" ]
-}
-
-executable("platform_editor") {
-  sources = [ "editor.cc" ]
-  deps = [ ":window" ]
 }
 
 executable("platform_benchmark") {
@@ -54,17 +189,6 @@ executable("platform_demo_isolation") {
 }
 
 if (is_mac) {
-  # Drop-in command-line counterpart to //experiments/rasterizer:rasterizer. Its
-  # --test mode keeps that probe's capture geometry and filenames but draws
-  # through px/fx/gl_render_context.
-  executable("platform_rasterizer") {
-    sources = [ "rasterizer.cc" ]
-    deps = [
-      ":px",
-      "//experiments/rasterizer:capture",
-    ]
-  }
-
   executable("platform_benchmark_analyzer") {
     sources = [ "benchmark/analyzer.mm" ]
 
@@ -106,20 +230,41 @@ source_set("window") {
   public_deps = [ ":px" ]
 }
 
-if (is_mac) {
-  # Renderer-independent font mechanics backed by the CoreText implementation shared with
-  # //experiments/rasterizer. This stays separate because fx sits beneath px_font_t and is also
-  # consumable by non-window renderers.
-  source_set("fx") {
-    sources = [
-      "fx/fx.cc",
-      "fx/fx.h",
+source_set("fx") {
+  sources = [
+    "fx/font_private.h",
+    "fx/fx.cc",
+    "fx/fx.h",
+  ]
+
+  if (is_mac) {
+    sources += [
+      "fx/mac/core_text_backend.cc",
       "fx/mac/core_text_font.cc",
     ]
-
-    public_deps = [ "//experiments/rasterizer:font" ]
-    deps = [ "//third_party/uni_algo" ]
+    frameworks = [
+      "CoreFoundation.framework",
+      "CoreGraphics.framework",
+      "CoreText.framework",
+    ]
+  } else {
+    sources += [
+      "fx/win/direct_write_backend.cc",
+      "fx/win/direct_write_font.cc",
+    ]
+    libs = [
+      "dwrite.lib",
+      "gdi32.lib",
+      "user32.lib",
+    ]
   }
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+  public_deps = [ "//base" ]
+  deps = [
+    "//third_party/spdlog",
+    "//third_party/uni_algo",
+  ]
 }
 
 source_set("px") {
@@ -137,10 +282,12 @@ source_set("px") {
     "px/gl_rect_vert.glsl",
   ]
 
+  sources += [ "px/px_font.cc" ]
+  deps = [ ":fx" ]
+
   if (is_mac) {
     sources += [
       "px/mac/px_app.mm",
-      "px/mac/px_font.cc",
       "px/mac/px_gl_layer.mm",
       "px/mac/px_keycode.mm",
       "px/mac/px_mac_private.h",
@@ -156,12 +303,10 @@ source_set("px") {
       "QuartzCore.framework",
     ]
     defines = [ "GL_SILENCE_DEPRECATION" ]
-    deps = [ ":fx" ]
   }
 
   if (is_win) {
     sources += [
-      "px/px_font_stub.cc",
       "px/win/px_app.cc",
       "px/win/px_gl.cc",
       "px/win/px_keycode.cc",
@@ -180,9 +325,10 @@ source_set("px") {
   }
 
   if (is_linux) {
-    # ST's own binary dlopen/dlsym's GTK rather than linking it (see px_linux_private.h) -- a
-    # distribution trick for running against either GTK2 or GTK3, not part of the platform
-    # abstraction. This links gtk+-3.0 normally, as instructed.
+    # ST's own binary dlopen/dlsym's GTK rather than linking it (see
+    # px_linux_private.h) -- a distribution trick for running against either
+    # GTK2 or GTK3, not part of the platform abstraction. This links gtk+-3.0
+    # normally, as instructed.
     sources += [
       "px/linux/px_app.cc",
       "px/linux/px_gl.cc",
@@ -194,7 +340,8 @@ source_set("px") {
 
     public_configs = [ ":gtk3_internal_config" ]
 
-    # GL entry points past 1.1 are ordinary linked symbols on Linux too -- see px_gl.h.
+    # GL entry points past 1.1 are ordinary linked symbols on Linux too -- see
+    # px_gl.h.
     libs = [ "GL" ]
   }
 }
@@ -202,11 +349,13 @@ source_set("px") {
 if (is_linux) {
   import("//build/config/linux/pkg_config.gni")
 
-  # GN doesn't check visibility for configs so this gets an obviously internal name to discourage
-  # random targets from depending on it directly and bypassing :px's visibility -- the same
-  # convention Chromium uses for its own gtk_internal_config.
+  # GN doesn't check visibility for configs so this gets an obviously internal
+  # name to discourage random targets from depending on it directly and
+  # bypassing :px's visibility -- the same convention Chromium uses for its own
+  # gtk_internal_config.
   pkg_config("gtk3_internal_config") {
-    # gtk+-3.0 requires gmodule/gthread but does not always list them as dependencies.
+    # gtk+-3.0 requires gmodule/gthread but does not always list them as
+    # dependencies.
     packages = [
       "gmodule-2.0",
       "gthread-2.0",

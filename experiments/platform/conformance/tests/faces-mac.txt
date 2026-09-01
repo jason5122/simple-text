@@ -1,0 +1,23 @@
+# Font families to screenshot, one per line. Read by both the platform rasterizer and the Sublime
+# Text plugin, so the two stay in sync. Lines starting with # are ignored.
+system
+Source Code Pro
+Menlo
+Times New Roman
+Apple Color Emoji
+Geeza Pro
+Fira Code
+
+# More proportional faces: different metrics/hinting/kerning tables than the ones above, to spread
+# the pen-precision and phase-boundary edge cases (Fira Code alone caught one Menlo/SCP didn't).
+Helvetica
+Georgia
+Avenir Next
+Baskerville
+
+# Decorative/script faces with extreme metrics: huge ligature substitutions and large negative side
+# bearings (Zapfino), irregular baselines (Papyrus), unusual hinting (Comic Sans MS, Chalkduster).
+Zapfino
+Papyrus
+Comic Sans MS
+Chalkduster

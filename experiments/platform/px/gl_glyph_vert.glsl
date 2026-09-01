@@ -13,7 +13,7 @@ flat out float glyph_colored;
 void main() {
     int instance_index = gl_InstanceID + instance_offset;
     vec4 dst = texelFetch(instances, instance_index * 4 + 0);
-    vec4 uv = texelFetch(instances, instance_index * 4 + 1);
+    vec4 texture_source = texelFetch(instances, instance_index * 4 + 1);
     glyph_color = texelFetch(instances, instance_index * 4 + 2);
     glyph_colored = texelFetch(instances, instance_index * 4 + 3).x;
 
@@ -23,7 +23,7 @@ void main() {
     vec2 position = dst.xy + corner * dst.zw;
     vec2 ndc = position / viewport * 2.0 - 1.0;
     gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
-    vec2 texture_position = uv.xy + corner * uv.zw;
+    vec2 texture_position = texture_source.xy + corner * texture_source.zw;
     glyph_uv = texture_position / texture_size;
 }
 )"

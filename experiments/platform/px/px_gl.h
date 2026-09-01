@@ -1,6 +1,6 @@
 // Platform-specific access to the GL entry points a drawing layer needs.
 //
-// macOS: the CAOpenGLLayer's context is 3.2 core, so the SDK's gl3.h symbols are linkable
+// macOS: the CAOpenGLLayer's context is 4.1 core, so the SDK's gl3.h symbols are linkable
 // directly.
 //
 // Windows: opengl32.dll exports only GL 1.1, and everything newer has to come through
@@ -60,8 +60,25 @@ using GLintptr = signed long long;
 #define GL_BLEND 0x0BE2
 #define GL_SCISSOR_TEST 0x0C11
 #define GL_STENCIL_TEST 0x0B90
+#define GL_SRC1_COLOR 0x88F9
+#define GL_ONE_MINUS_SRC1_COLOR 0x88FA
+#define GL_ONE_MINUS_SRC1_ALPHA 0x88FB
 #define GL_FLOAT 0x1406
+#define GL_UNSIGNED_BYTE 0x1401
 #define GL_VERSION 0x1F02
+#define GL_FRONT 0x0404
+#define GL_PACK_ALIGNMENT 0x0D05
+#define GL_UNPACK_ALIGNMENT 0x0CF5
+#define GL_BGRA 0x80E1
+#define GL_NO_ERROR 0
+#define GL_TEXTURE_2D 0x0DE1
+#define GL_TEXTURE1 0x84C1
+#define GL_TEXTURE_WRAP_S 0x2802
+#define GL_TEXTURE_WRAP_T 0x2803
+#define GL_TEXTURE_MIN_FILTER 0x2801
+#define GL_TEXTURE_MAG_FILTER 0x2800
+#define GL_CLAMP_TO_EDGE 0x812F
+#define GL_NEAREST 0x2600
 #define GL_STENCIL_BUFFER_BIT 0x00000400
 #define GL_COLOR_BUFFER_BIT 0x00004000
 #define GL_ONE_MINUS_SRC_ALPHA 0x0303
@@ -79,14 +96,40 @@ __declspec(dllimport) void APIENTRY glColorMask(GLboolean r,
 __declspec(dllimport) void APIENTRY glDisable(GLenum cap);
 __declspec(dllimport) void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count);
 __declspec(dllimport) void APIENTRY glEnable(GLenum cap);
+__declspec(dllimport) void APIENTRY glFinish(void);
 __declspec(dllimport) void APIENTRY glFlush(void);
 __declspec(dllimport) void APIENTRY glGenTextures(GLsizei count, GLuint* textures);
 __declspec(dllimport) void APIENTRY glBindTexture(GLenum target, GLuint texture);
 __declspec(dllimport) const GLubyte* APIENTRY glGetString(GLenum name);
+__declspec(dllimport) GLenum APIENTRY glGetError(void);
+__declspec(dllimport) void APIENTRY glGetIntegerv(GLenum name, GLint* value);
+__declspec(dllimport) void APIENTRY glPixelStorei(GLenum name, GLint value);
+__declspec(dllimport) void APIENTRY glReadBuffer(GLenum buffer);
+__declspec(dllimport) void APIENTRY glReadPixels(
+    GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels);
 __declspec(dllimport) void APIENTRY glScissor(GLint x, GLint y, GLsizei w, GLsizei h);
 __declspec(dllimport) void APIENTRY glStencilFunc(GLenum function, GLint reference, GLuint mask);
 __declspec(dllimport) void APIENTRY glStencilMask(GLuint mask);
 __declspec(dllimport) void APIENTRY glStencilOp(GLenum fail, GLenum depth_fail, GLenum depth_pass);
+__declspec(dllimport) void APIENTRY glTexImage2D(GLenum target,
+                                                 GLint level,
+                                                 GLint internal_format,
+                                                 GLsizei width,
+                                                 GLsizei height,
+                                                 GLint border,
+                                                 GLenum format,
+                                                 GLenum type,
+                                                 const void* pixels);
+__declspec(dllimport) void APIENTRY glTexParameteri(GLenum target, GLenum name, GLint value);
+__declspec(dllimport) void APIENTRY glTexSubImage2D(GLenum target,
+                                                    GLint level,
+                                                    GLint x,
+                                                    GLint y,
+                                                    GLsizei width,
+                                                    GLsizei height,
+                                                    GLenum format,
+                                                    GLenum type,
+                                                    const void* pixels);
 __declspec(dllimport) void APIENTRY glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
 }
 
@@ -100,6 +143,7 @@ __declspec(dllimport) void APIENTRY glViewport(GLint x, GLint y, GLsizei w, GLsi
 #define GL_TEXTURE0 0x84C0
 #define GL_TEXTURE_BUFFER 0x8C2A
 #define GL_RGBA32F 0x8814
+#define GL_RGBA8 0x8058
 
 // Resolved by the platform layer once the GL context is current. Named px_gl* and then macro'd
 // onto the standard spellings, so drawing code reads the same on both platforms.
@@ -112,6 +156,8 @@ using PFN_glDeleteShader = void(APIENTRY*)(GLuint);
 using PFN_glCreateProgram = GLuint(APIENTRY*)(void);
 using PFN_glAttachShader = void(APIENTRY*)(GLuint, GLuint);
 using PFN_glBindAttribLocation = void(APIENTRY*)(GLuint, GLuint, const GLchar*);
+using PFN_glBindFragDataLocationIndexed =
+    void(APIENTRY*)(GLuint, GLuint, GLuint, const GLchar*);
 using PFN_glLinkProgram = void(APIENTRY*)(GLuint);
 using PFN_glGetProgramiv = void(APIENTRY*)(GLuint, GLenum, GLint*);
 using PFN_glGetProgramInfoLog = void(APIENTRY*)(GLuint, GLsizei, GLsizei*, GLchar*);
@@ -119,7 +165,9 @@ using PFN_glDeleteProgram = void(APIENTRY*)(GLuint);
 using PFN_glUseProgram = void(APIENTRY*)(GLuint);
 using PFN_glGetUniformLocation = GLint(APIENTRY*)(GLuint, const GLchar*);
 using PFN_glUniform2f = void(APIENTRY*)(GLint, GLfloat, GLfloat);
+using PFN_glUniform1f = void(APIENTRY*)(GLint, GLfloat);
 using PFN_glUniform1i = void(APIENTRY*)(GLint, GLint);
+using PFN_glBlendFuncSeparate = void(APIENTRY*)(GLenum, GLenum, GLenum, GLenum);
 using PFN_glActiveTexture = void(APIENTRY*)(GLenum);
 using PFN_glGenVertexArrays = void(APIENTRY*)(GLsizei, GLuint*);
 using PFN_glBindVertexArray = void(APIENTRY*)(GLuint);
@@ -142,6 +190,7 @@ extern PFN_glDeleteShader px_glDeleteShader;
 extern PFN_glCreateProgram px_glCreateProgram;
 extern PFN_glAttachShader px_glAttachShader;
 extern PFN_glBindAttribLocation px_glBindAttribLocation;
+extern PFN_glBindFragDataLocationIndexed px_glBindFragDataLocationIndexed;
 extern PFN_glLinkProgram px_glLinkProgram;
 extern PFN_glGetProgramiv px_glGetProgramiv;
 extern PFN_glGetProgramInfoLog px_glGetProgramInfoLog;
@@ -149,7 +198,9 @@ extern PFN_glDeleteProgram px_glDeleteProgram;
 extern PFN_glUseProgram px_glUseProgram;
 extern PFN_glGetUniformLocation px_glGetUniformLocation;
 extern PFN_glUniform2f px_glUniform2f;
+extern PFN_glUniform1f px_glUniform1f;
 extern PFN_glUniform1i px_glUniform1i;
+extern PFN_glBlendFuncSeparate px_glBlendFuncSeparate;
 extern PFN_glActiveTexture px_glActiveTexture;
 extern PFN_glGenVertexArrays px_glGenVertexArrays;
 extern PFN_glBindVertexArray px_glBindVertexArray;
@@ -173,6 +224,7 @@ bool px_gl_has_shaders();
 #define glCreateProgram px_glCreateProgram
 #define glAttachShader px_glAttachShader
 #define glBindAttribLocation px_glBindAttribLocation
+#define glBindFragDataLocationIndexed px_glBindFragDataLocationIndexed
 #define glLinkProgram px_glLinkProgram
 #define glGetProgramiv px_glGetProgramiv
 #define glGetProgramInfoLog px_glGetProgramInfoLog
@@ -180,7 +232,9 @@ bool px_gl_has_shaders();
 #define glUseProgram px_glUseProgram
 #define glGetUniformLocation px_glGetUniformLocation
 #define glUniform2f px_glUniform2f
+#define glUniform1f px_glUniform1f
 #define glUniform1i px_glUniform1i
+#define glBlendFuncSeparate px_glBlendFuncSeparate
 #define glActiveTexture px_glActiveTexture
 #define glGenVertexArrays px_glGenVertexArrays
 #define glBindVertexArray px_glBindVertexArray

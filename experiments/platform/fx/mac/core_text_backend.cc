@@ -174,16 +174,6 @@ ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont,
 
 }  // namespace
 
-void set_debug_use_analysis_path(bool) {}
-void set_debug_rendering_params(float, float) {}
-void set_debug_gamma_ramp_exponent(float) {}
-void set_debug_literal_gamma_ramp(bool) {}
-void set_debug_inverted_mask(bool) {}
-void set_debug_cleartype_level(float) {}
-void set_debug_direct_bitmap(bool) {}
-
-std::string rasterizer_debug_info() { return "Core Graphics, grayscale antialiasing"; }
-
 ShapedText shape(const FontHandle& font, std::string_view utf8) {
     FontHandle::FontData& data = font.data();
     CTFontRef ctfont = data.primary();

@@ -29,9 +29,9 @@ esac
 
 cd "$(dirname "$0")/../../.."
 repo_root=$PWD
-benchmark="$repo_root/out/release/platform_animation_benchmark"
+benchmark="$repo_root/out/release/animation_benchmark"
 scroller="$repo_root/out/release/scroll_wheel"
-analyzer="$repo_root/out/release/platform_animation_analyzer"
+analyzer="$repo_root/out/release/animation_analyzer"
 log=$(mktemp /tmp/platform-animation-benchmark.XXXXXX)
 
 for executable in "$benchmark" "$scroller" "$analyzer"; do

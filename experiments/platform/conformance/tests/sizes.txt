@@ -1,5 +1,5 @@
 # Font sizes to screenshot, one per line. Used verbatim as both the value and the filename label,
-# so the platform rasterizer and Sublime Text produce identically-named PNGs.
+# so buffer_conformance and Sublime Text produce identically-named PNGs.
 #
 # Thinned from the full 8.0-20.5-by-0.5 sweep to keep the suite's runtime in check now that
 # faces/texts have grown: every whole size 8-20, plus dense half-point coverage around 16.0

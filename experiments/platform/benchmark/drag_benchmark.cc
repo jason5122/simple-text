@@ -22,7 +22,7 @@ rect square_rect(vec2 center) {
                 kSquareSize};
 }
 
-class BenchmarkHandler final : public px_window_event_handler {
+class DragBenchmarkHandler final : public px_window_event_handler {
 public:
     void attach(px_window_t* window) { window_ = window; }
 
@@ -96,12 +96,11 @@ int main(int argc, char** argv) {
 #else
     setenv("PX_NO_ANIMATION", "1", 1);
 #endif
-    px_init("platform_benchmark", "com.example.platform-benchmark", argc, argv, 0);
+    px_init("drag-benchmark", "com.example.drag-benchmark", argc, argv, 0);
 
-    BenchmarkHandler handler;
-    px_window_t* window =
-        px_create_window(&handler, nullptr, kWindowWidth, kWindowHeight, "platform drag benchmark",
-                         kBackground, PX_WINDOW_DEFAULT);
+    DragBenchmarkHandler handler;
+    px_window_t* window = px_create_window(&handler, nullptr, kWindowWidth, kWindowHeight,
+                                           "drag benchmark", kBackground, PX_WINDOW_DEFAULT);
     handler.attach(window);
     px_show_window(window);
     px_mark_dirty(window);

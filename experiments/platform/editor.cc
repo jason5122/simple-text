@@ -478,9 +478,9 @@ int main(int argc, char** argv) {
 #if defined(__APPLE__)
     setenv("PX_NO_DISPLAY_LINK", "1", 1);
 #endif
-    px_init("platform_editor", "com.example.platform-editor", argc, argv, 0);
+    px_init("editor", "com.example.editor", argc, argv, 0);
 
-    window_impl window(1000.0, 700.0, "platform editor", fcolor{1.0f, 1.0f, 1.0f, 1.0f});
+    window_impl window(1000.0, 700.0, "editor", fcolor{1.0f, 1.0f, 1.0f, 1.0f});
     window_basic_aspect basic(&window);
     window.add_window_aspect(&basic);
 

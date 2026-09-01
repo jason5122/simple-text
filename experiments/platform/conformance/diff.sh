@@ -1,4 +1,5 @@
 #!/bin/bash
+# Diffs every buffer-conformance capture against its Sublime Text counterpart.
 set -e
 
 cd "$(dirname "$0")"
@@ -16,7 +17,7 @@ diff_one() {
   fi
 
   # The PNG coder prefix is needed because BSD mktemp only substitutes trailing Xs.
-  temporary=$(mktemp "/tmp/platform-rasterizer-diff.XXXXXX")
+  temporary=$(mktemp "/tmp/buffer-conformance-diff.XXXXXX")
   trap 'rm -f "$temporary"' EXIT
   count=$(magick "$ours" "$reference" -alpha off -compose difference -composite \
     -threshold 0 -separate -evaluate-sequence max \

@@ -1,21 +1,21 @@
 group("platform") {
   deps = [
-    ":benchmark",
+    ":benchmarks",
     ":conformance",
-    ":platform_demo",
-    ":platform_editor",
+    ":demo",
+    ":editor",
   ]
 }
 
 # ──────────────────────────────────────────────────────────────────────────────────────────────────
 # Demos
 # ──────────────────────────────────────────────────────────────────────────────────────────────────
-executable("platform_demo") {
+executable("demo") {
   sources = [ "demo.cc" ]
   deps = [ ":window" ]
 }
 
-executable("platform_editor") {
+executable("editor") {
   sources = [ "editor.cc" ]
   deps = [ ":window" ]
 }
@@ -24,18 +24,18 @@ executable("platform_editor") {
 # Conformance
 # ──────────────────────────────────────────────────────────────────────────────────────────────────
 group("conformance") {
-  deps = [ ":platform_rasterizer" ]
+  deps = [ ":buffer_conformance" ]
 
   if (is_mac) {
     deps += [
-      ":platform_capture_server",
-      ":platform_sidebar",
+      ":capture_server",
+      ":ui_conformance",
     ]
   }
 }
 
-executable("platform_rasterizer") {
-  sources = [ "rasterizer.cc" ]
+executable("buffer_conformance") {
+  sources = [ "conformance/buffer.cc" ]
   deps = [
     ":capture",
     ":px",
@@ -46,19 +46,19 @@ executable("platform_rasterizer") {
 }
 
 copy("scripts") {
-  sources = [ "conformance/capture/diff.sh" ]
+  sources = [ "conformance/diff.sh" ]
   if (is_mac) {
     sources += [
-      "conformance/capture/diff-ui.sh",
-      "conformance/capture/mac/capture-ours-ui.sh",
-      "conformance/capture/mac/capture-ours.sh",
-      "conformance/capture/mac/capture-sublime-ui.sh",
-      "conformance/capture/mac/capture-sublime.sh",
+      "conformance/diff-ui.sh",
+      "conformance/mac/capture-ours-ui.sh",
+      "conformance/mac/capture-ours.sh",
+      "conformance/mac/capture-sublime-ui.sh",
+      "conformance/mac/capture-sublime.sh",
     ]
   } else if (is_win) {
     sources += [
-      "conformance/capture/win/capture-ours.sh",
-      "conformance/capture/win/capture-sublime.sh",
+      "conformance/win/capture-ours.sh",
+      "conformance/win/capture-sublime.sh",
     ]
   }
   outputs = [ "$root_out_dir/{{source_file_part}}" ]
@@ -107,8 +107,8 @@ if (is_mac) {
     outputs = [ "$root_out_dir/capture-tests-ui/texts/{{source_file_part}}" ]
   }
 
-  executable("platform_sidebar") {
-    sources = [ "sidebar.cc" ]
+  executable("ui_conformance") {
+    sources = [ "conformance/ui.cc" ]
     deps = [
       ":capture",
       ":px",
@@ -118,8 +118,8 @@ if (is_mac) {
     ]
   }
 
-  executable("platform_capture_server") {
-    sources = [ "conformance/capture/mac/capture_server.cc" ]
+  executable("capture_server") {
+    sources = [ "conformance/mac/capture_server.cc" ]
     deps = [
       ":capture",
       "//third_party/spdlog",
@@ -128,10 +128,10 @@ if (is_mac) {
 }
 
 source_set("capture") {
-  sources = [ "conformance/capture/capture.h" ]
+  sources = [ "conformance/capture.h" ]
 
   if (is_mac) {
-    sources += [ "conformance/capture/mac/capture.mm" ]
+    sources += [ "conformance/mac/capture.mm" ]
     framework_dirs = [ "/System/Library/PrivateFrameworks" ]
     frameworks = [
       "AppKit.framework",
@@ -141,7 +141,7 @@ source_set("capture") {
       "SkyLight.framework",
     ]
   } else {
-    sources += [ "conformance/capture/win/capture.cc" ]
+    sources += [ "conformance/win/capture.cc" ]
     deps = [ ":px" ]
     libs = [
       "ole32.lib",
@@ -157,39 +157,39 @@ source_set("capture") {
 # ──────────────────────────────────────────────────────────────────────────────────────────────────
 # Benchmark
 # ──────────────────────────────────────────────────────────────────────────────────────────────────
-group("benchmark") {
+group("benchmarks") {
   deps = [
-    ":platform_animation_benchmark",
-    ":platform_benchmark",
-    ":platform_demo_isolation",
+    ":animation_benchmark",
+    ":drag_benchmark",
+    ":demo_isolation",
   ]
   if (is_mac) {
     deps += [
       ":move_mouse",
-      ":platform_animation_analyzer",
-      ":platform_benchmark_analyzer",
+      ":animation_analyzer",
+      ":benchmark_analyzer",
       ":scroll_wheel",
     ]
   }
 }
 
-executable("platform_benchmark") {
-  sources = [ "benchmark/benchmark.cc" ]
+executable("drag_benchmark") {
+  sources = [ "benchmark/drag_benchmark.cc" ]
   deps = [ ":px" ]
 }
 
-executable("platform_animation_benchmark") {
+executable("animation_benchmark") {
   sources = [ "benchmark/animation_benchmark.cc" ]
   deps = [ ":px" ]
 }
 
-executable("platform_demo_isolation") {
+executable("demo_isolation") {
   sources = [ "benchmark/demo_isolation.cc" ]
   deps = [ ":window" ]
 }
 
 if (is_mac) {
-  executable("platform_benchmark_analyzer") {
+  executable("benchmark_analyzer") {
     sources = [ "benchmark/analyzer.mm" ]
 
     frameworks = [
@@ -200,7 +200,7 @@ if (is_mac) {
     ]
   }
 
-  executable("platform_animation_analyzer") {
+  executable("animation_analyzer") {
     sources = [ "benchmark/animation_analyzer.mm" ]
 
     frameworks = [

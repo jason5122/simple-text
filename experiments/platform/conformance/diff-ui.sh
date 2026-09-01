@@ -1,5 +1,5 @@
 #!/bin/bash
-# Diffs every ours-ui/*.png against its sublime-ui/ counterpart serially.
+# Diffs every UI-conformance capture against its Sublime Text counterpart serially.
 set -e
 cd "$(dirname "$0")"
 
@@ -26,7 +26,7 @@ for ours in "${images[@]}"; do
     exit 2
   fi
 
-  temporary=$(mktemp "/tmp/platform-sidebar-diff.XXXXXX")
+  temporary=$(mktemp "/tmp/ui-conformance-diff.XXXXXX")
   count=$(magick "$ours" "$reference" -alpha off -compose difference -composite \
     -threshold 0 -separate -evaluate-sequence max \
     -write "png:$temporary" \

@@ -101,13 +101,11 @@ int main(int argc, char** argv) {
     const double height = large ? 800.0 : 600.0;
 
     std::setvbuf(stdout, nullptr, _IONBF, 0);
-    px_init("platform_animation_benchmark", "com.example.platform-animation-benchmark", argc,
-            argv, 0);
+    px_init("animation-benchmark", "com.example.animation-benchmark", argc, argv, 0);
 
     AnimationHandler handler(rectangle_count);
-    px_window_t* window = px_create_window(&handler, nullptr, width, height,
-                                           "platform animation benchmark", kBackground,
-                                           PX_WINDOW_DEFAULT);
+    px_window_t* window = px_create_window(&handler, nullptr, width, height, "animation benchmark",
+                                           kBackground, PX_WINDOW_DEFAULT);
     handler.attach(window);
     px_show_window(window);
     px_mark_dirty(window);

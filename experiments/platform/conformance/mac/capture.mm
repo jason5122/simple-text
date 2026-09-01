@@ -1,4 +1,4 @@
-#include "experiments/platform/conformance/capture/capture.h"
+#include "experiments/platform/conformance/capture.h"
 #import <AppKit/AppKit.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <ImageIO/ImageIO.h>

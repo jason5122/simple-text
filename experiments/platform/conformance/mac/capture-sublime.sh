@@ -6,7 +6,7 @@ build_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_root="$(cd "$build_dir/../.." && pwd)"
 app="$repo_root/experiments/platform/conformance/Sublime Text.app"
 subl="$app/Contents/SharedSupport/bin/subl"
-server="$build_dir/platform_capture_server"
+server="$build_dir/capture_server"
 out="$build_dir/sublime"
 crop="${1:-0,58,1600,600}"
 

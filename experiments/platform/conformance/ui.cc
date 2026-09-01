@@ -1,4 +1,4 @@
-#include "experiments/platform/conformance/capture/capture.h"
+#include "experiments/platform/conformance/capture.h"
 #include "experiments/platform/px/gl_render_context.h"
 #include "experiments/platform/px/px.h"
 #include "experiments/platform/px/px_font_private.h"
@@ -30,13 +30,6 @@ constexpr double kSidebarRowBottomPadding = 3.0;
 constexpr fcolor kSidebarBackground = {1.0f, 1.0f, 1.0f, 1.0f};
 constexpr fcolor kSidebarHeading = {0.0f, 0.0f, 0.0f, 1.0f};
 constexpr fcolor kSidebarLabel = {0.0f, 0.0f, 0.0f, 1.0f};
-
-struct Crop {
-    int x = 0;
-    int y = 80;
-    int w = 600;
-    int h = 500;
-};
 
 struct TestCase {
     std::string stem;
@@ -158,14 +151,7 @@ public:
         return heading_layout_ != nullptr;
     }
 
-    bool handle_event(px_event_t* event) override {
-        if (event->type == PX_EVENT_KEY && event->pressed && event->key == PX_KEY_ESCAPE &&
-            window_) {
-            px_close_window(window_);
-            return true;
-        }
-        return false;
-    }
+    bool handle_event(px_event_t*) override { return false; }
 
     void paint(px_render_context* context,
                rect bounds,
@@ -209,24 +195,16 @@ private:
 };
 
 int run_tests(int argc, char* argv[]) {
-    Crop crop;
-    std::vector<std::string> positionals;
-    for (int i = 2; i < argc; ++i) {
-        const std::string_view argument = argv[i];
-        if (argument == "--crop" && i + 1 < argc) {
-            std::sscanf(argv[++i], "%d,%d,%d,%d", &crop.x, &crop.y, &crop.w, &crop.h);
-        } else {
-            positionals.emplace_back(argument);
-        }
-    }
-    if (positionals.size() != 2) {
-        std::fprintf(stderr, "usage: platform_sidebar --test <tests_dir> <out_dir> "
-                             "[--crop x,y,w,h]\n");
+    capture::Crop crop{.x = 0, .y = 80, .w = 600, .h = 500};
+    if ((argc != 3 && argc != 5) || (argc == 5 && (std::string_view(argv[3]) != "--crop" ||
+                                                   std::sscanf(argv[4], "%d,%d,%d,%d", &crop.x,
+                                                               &crop.y, &crop.w, &crop.h) != 4))) {
+        std::fprintf(stderr, "usage: ui_conformance <tests_dir> <out_dir> [--crop x,y,w,h]\n");
         return 2;
     }
 
-    const std::string& tests_dir = positionals[0];
-    const std::string& out_dir = positionals[1];
+    const std::string tests_dir = argv[1];
+    const std::string out_dir = argv[2];
     const std::vector<TestCase> test_cases = read_test_cases(tests_dir);
     if (test_cases.empty()) {
         std::fprintf(stderr, "no UI test cases found in %s\n", tests_dir.c_str());
@@ -235,10 +213,10 @@ int run_tests(int argc, char* argv[]) {
     std::error_code error;
     std::filesystem::create_directories(out_dir, error);
 
-    px_init("platform-sidebar", "com.example.platform-sidebar", argc, argv, 0);
+    px_init("ui-conformance", "com.example.ui-conformance", argc, argv, 0);
     SidebarPage page;
     px_window_t* window = px_create_window(&page, nullptr, kWindowWidth, kWindowHeight,
-                                           "platform sidebar", kSidebarBackground, 0);
+                                           "UI conformance", kSidebarBackground, 0);
     page.attach(window);
     px_set_window_position(window, vec2{0.0, 0.0});
     px_show_window_without_focus(window);
@@ -249,13 +227,12 @@ int run_tests(int argc, char* argv[]) {
     }
     const capture::WindowId window_id = capture::find_window_for_pid(getpid());
     if (!window_id) {
-        std::fprintf(stderr, "could not find the platform sidebar window\n");
+        std::fprintf(stderr, "could not find the UI conformance window\n");
         px_destroy_window(window);
         return 1;
     }
 
-    const capture::Crop capture_crop{crop.x, crop.y, crop.w, crop.h};
-    capture::Frame baseline = capture::capture_frame(window_id, capture_crop);
+    capture::Frame baseline = capture::capture_frame(window_id, crop);
     int failures = 0;
     for (size_t i = 0; i < test_cases.size(); ++i) {
         const TestCase& test_case = test_cases[i];
@@ -266,7 +243,7 @@ int run_tests(int argc, char* argv[]) {
             continue;
         }
 
-        capture::Frame settled = capture::wait_settled(window_id, capture_crop, baseline);
+        capture::Frame settled = capture::wait_settled(window_id, crop, baseline);
         const std::string out_path = out_dir + "/" + test_case.stem + "-" + test_case.face + "-" +
                                      test_case.size_label + ".png";
         const bool ok = settled && capture::frame_to_png(settled, out_path.c_str());
@@ -281,34 +258,6 @@ int run_tests(int argc, char* argv[]) {
     return failures == 0 ? 0 : 1;
 }
 
-int run_interactive(int argc, char* argv[]) {
-    const std::string_view face = argc > 1 ? argv[1] : "system";
-    const float size = argc > 2 ? std::stof(argv[2]) : 12.0f;
-    const std::string_view text = argc > 3 ? argv[3] : "User";
-
-    px_init("platform-sidebar", "com.example.platform-sidebar", argc, argv, 0);
-    SidebarPage page;
-    if (!page.set_content({std::string(text)}, face, size)) {
-        std::fprintf(stderr, "could not create font %.*s\n", static_cast<int>(face.size()),
-                     face.data());
-        return 1;
-    }
-    px_window_t* window =
-        px_create_window(&page, nullptr, kWindowWidth, kWindowHeight, "platform sidebar",
-                         kSidebarBackground, PX_WINDOW_DEFAULT);
-    page.attach(window);
-    px_show_window(window);
-    px_mark_dirty(window);
-    px_run_event_loop();
-    px_destroy_window(window);
-    return 0;
-}
-
 }  // namespace
 
-int main(int argc, char* argv[]) {
-    if (argc >= 2 && std::string_view(argv[1]) == "--test") {
-        return run_tests(argc, argv);
-    }
-    return run_interactive(argc, argv);
-}
+int main(int argc, char* argv[]) { return run_tests(argc, argv); }

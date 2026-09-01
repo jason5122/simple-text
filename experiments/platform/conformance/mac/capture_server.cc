@@ -6,8 +6,8 @@
 // changed and settled, writes the PNG, and replies "ok <path>" / "err <path>" on stdout ("quit"
 // stops it). Per-shot timing goes to stderr.
 //
-// Usage: platform_capture_server (--pid <n> | --owner <name>) [--crop x,y,w,h]
-#include "experiments/platform/conformance/capture/capture.h"
+// Usage: capture_server (--pid <n> | --owner <name>) [--crop x,y,w,h]
+#include "experiments/platform/conformance/capture.h"
 #include <chrono>
 #include <cstdio>
 #include <iostream>
@@ -63,8 +63,7 @@ int main(int argc, char* argv[]) {
         }
     }
     if (!pid && !owner) {
-        spdlog::error(
-            "usage: platform_capture_server (--pid <n> | --owner <name>) [--crop x,y,w,h]");
+        spdlog::error("usage: capture_server (--pid <n> | --owner <name>) [--crop x,y,w,h]");
         return 2;
     }
     return serve(pid, owner, crop);

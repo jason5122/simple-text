@@ -127,39 +127,4 @@ GlyphBitmap rasterize(const FontHandle& font,
 // contrast.
 fx_gamma_ramp rendering_gamma_ramp();
 
-// Describes how the platform rasteriser is currently configured, for --dump-glyph. Exists because
-// the settings that shape antialiasing (DirectWrite's gamma, contrast and ClearType level) are
-// otherwise invisible from outside the backend.
-std::string rasterizer_debug_info();
-
-// Debug: selects DirectWrite's CreateGlyphRunAnalysis instead of its bitmap render target. The two
-// are different mask sources -- the render target applies colour-dependent gamma and contrast, the
-// alpha texture returns raw coverage. No effect on other platforms.
-void set_debug_use_analysis_path(bool enabled);
-
-// Debug: overrides the gamma and enhanced contrast handed to the rasteriser. A negative gamma
-// restores the backend's own choice. No effect on other platforms.
-void set_debug_rendering_params(float gamma, float contrast);
-
-// Debug: overrides the exponent used for the post-raster coverage conversion table. A negative
-// exponent restores the table derived from the monitor rendering parameters. No effect on other
-// platforms.
-void set_debug_gamma_ramp_exponent(float exponent);
-
-// Debug: uses the gamma tables captured from Sublime on the Windows test VM. No effect on other
-// platforms.
-void set_debug_literal_gamma_ramp(bool enabled);
-
-// Debug: rasterizes monochrome glyphs as black on white before converting the result back to a
-// coverage mask. No effect on other platforms.
-void set_debug_inverted_mask(bool enabled);
-
-// Debug: overrides DirectWrite's ClearType level. A negative value restores the monitor setting.
-// No effect on other platforms.
-void set_debug_cleartype_level(float level);
-
-// Debug: uploads DirectWrite's black-on-white result as an opaque bitmap instead of converting it
-// back to a glyph mask. No effect on other platforms.
-void set_debug_direct_bitmap(bool enabled);
-
 }  // namespace fx_detail

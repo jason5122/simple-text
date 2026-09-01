@@ -18,9 +18,9 @@ esac
 
 cd "$(dirname "$0")/../../.."
 repo_root=$PWD
-benchmark="$repo_root/out/release/platform_benchmark"
+benchmark="$repo_root/out/release/drag_benchmark"
 mover="$repo_root/out/release/move_mouse"
-analyzer="$repo_root/out/release/platform_benchmark_analyzer"
+analyzer="$repo_root/out/release/benchmark_analyzer"
 log=$(mktemp /tmp/platform-drag-benchmark.XXXXXX)
 
 if [ ! -x "$benchmark" ]; then

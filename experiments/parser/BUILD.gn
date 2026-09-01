@@ -1,5 +1,0 @@
-executable("parser") {
-  sources = [ "main.cc" ]
-
-  deps = [ "//third_party/tree_sitter" ]
-}

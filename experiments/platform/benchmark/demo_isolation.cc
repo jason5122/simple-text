@@ -409,12 +409,12 @@ int main(int argc, char** argv) {
     }
 
     std::setvbuf(stdout, nullptr, _IONBF, 0);
-    px_init("platform_demo_isolation", "com.example.platform-demo-isolation", argc, argv, 0);
+    px_init("demo-isolation", "com.example.demo-isolation", argc, argv, 0);
 
     DemoApp app;
     px_set_application_event_handler(&app);
 
-    DemoWindow window(large ? 1400.0 : 900.0, large ? 800.0 : 600.0, "platform demo isolation",
+    DemoWindow window(large ? 1400.0 : 900.0, large ? 800.0 : 600.0, "demo isolation",
                       fcolor{0.09f, 0.10f, 0.12f, 1.0f});
     window_basic_aspect basic(&window);
     window_hover_aspect hover(&window);

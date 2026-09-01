@@ -322,8 +322,7 @@ int main(int argc, char** argv) {
     DemoApp app;
     px_set_application_event_handler(&app);
 
-    DemoWindow win(900, 600, "platform - gl_render_context demo",
-                   fcolor{0.09f, 0.10f, 0.12f, 1.0f});
+    DemoWindow win(900, 600, "gl_render_context demo", fcolor{0.09f, 0.10f, 0.12f, 1.0f});
 
     window_basic_aspect basic(&win);
     window_hover_aspect hover(&win);

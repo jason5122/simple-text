@@ -16,7 +16,6 @@ group("experiments") {
     "//experiments/compiler_builtins_canary",
     "//experiments/fuzz",
     "//experiments/harfbuzz_demo",
-    "//experiments/parser",
     "//experiments/playground",
     "//experiments/rope",
     "//experiments/sanitizer_demo",

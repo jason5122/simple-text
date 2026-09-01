@@ -1,8 +1,8 @@
 #include "base/numeric/safe_conversions.h"
 #include "base/strings/sys_string_conversions.h"
 #include "base/unicode/utf16_to_utf8_indices_map.h"
-#include "experiments/platform/fx/fx.h"
 #include "experiments/platform/fx/font_private.h"
+#include "experiments/platform/fx/fx.h"
 #include <windows.h>
 // clang-format off: windows.h supplies the GDI types dwrite_2.h uses in its bitmap render target.
 #include <dwrite_2.h>
@@ -12,7 +12,6 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
-#include <format>
 #include <iterator>
 #include <limits>
 #include <spdlog/spdlog.h>
@@ -58,59 +57,6 @@ enum FontFlags : uint32_t {
 // kGrayAntialias collapses it to a single coverage, which is what a renderer without dual-source
 // blending would need.
 constexpr uint32_t kDefaultFlags = 0;
-
-// Debug overrides, set through set_debug_* below. They exist so the rasteriser's settings can be
-// swept from the command line rather than recompiled for each experiment.
-bool g_use_analysis_path = false;
-bool use_analysis_path() { return g_use_analysis_path; }
-float g_debug_gamma = -1.0f;
-float g_debug_contrast = 0.0f;
-float g_debug_gamma_ramp_exponent = -1.0f;
-bool g_debug_literal_gamma_ramp = false;
-bool g_debug_inverted_mask = false;
-float g_debug_cleartype_level = -1.0f;
-float g_analysis_gamma = -1.0f;
-float g_analysis_contrast = -1.0f;
-float g_analysis_cleartype_level = -1.0f;
-bool g_debug_direct_bitmap = false;
-
-// Sublime's live forward and inverse tables for this VM's gamma 1.8 and contrast 0.5.
-constexpr std::array<uint8_t, 256> kLiteralGammaValues = {
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3,
-    3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 7, 7, 8, 8, 9,
-    9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17,
-    18, 18, 19, 19, 20, 21, 21, 22, 23, 23, 24, 25, 25, 26, 27, 27,
-    28, 29, 29, 30, 31, 31, 32, 33, 34, 34, 35, 36, 37, 38, 38, 39,
-    40, 41, 42, 42, 43, 44, 45, 46, 46, 47, 48, 49, 50, 51, 52, 53,
-    53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 64, 65, 66, 67,
-    68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 83, 84,
-    85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 97, 98, 99, 100, 101,
-    102, 103, 104, 106, 107, 108, 109, 110, 111, 113, 114, 115, 116, 117, 119, 120,
-    121, 122, 123, 125, 126, 127, 128, 130, 131, 132, 133, 135, 136, 137, 138, 140,
-    141, 142, 143, 145, 146, 147, 149, 150, 151, 153, 154, 155, 157, 158, 159, 161,
-    162, 163, 165, 166, 167, 169, 170, 171, 173, 174, 176, 177, 178, 180, 181, 183,
-    184, 185, 187, 188, 190, 191, 193, 194, 196, 197, 198, 200, 201, 203, 204, 206,
-    207, 209, 210, 212, 213, 215, 216, 218, 219, 221, 222, 224, 225, 227, 228, 230,
-    231, 233, 235, 236, 238, 239, 241, 242, 244, 245, 247, 249, 250, 252, 253, 255
-};
-constexpr std::array<uint8_t, 256> kLiteralInverseGammaValues = {
-    0, 8, 12, 16, 19, 22, 24, 27, 29, 32, 34, 36, 38, 40, 42, 43,
-    45, 47, 49, 50, 52, 54, 55, 57, 58, 60, 61, 63, 64, 66, 67, 68,
-    70, 71, 72, 74, 75, 76, 78, 79, 80, 81, 83, 84, 85, 86, 87, 89,
-    90, 91, 92, 93, 94, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106,
-    107, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
-    124, 125, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138,
-    138, 139, 140, 141, 142, 143, 144, 145, 146, 146, 147, 148, 149, 150, 151, 152,
-    152, 153, 154, 155, 156, 157, 158, 158, 159, 160, 161, 162, 162, 163, 164, 165,
-    166, 167, 167, 168, 169, 170, 171, 171, 172, 173, 174, 175, 175, 176, 177, 178,
-    178, 179, 180, 181, 181, 182, 183, 184, 185, 185, 186, 187, 188, 188, 189, 190,
-    191, 191, 192, 193, 194, 194, 195, 196, 196, 197, 198, 199, 199, 200, 201, 202,
-    202, 203, 204, 204, 205, 206, 207, 207, 208, 209, 209, 210, 211, 211, 212, 213,
-    214, 214, 215, 216, 216, 217, 218, 218, 219, 220, 220, 221, 222, 222, 223, 224,
-    225, 225, 226, 227, 227, 228, 229, 229, 230, 231, 231, 232, 233, 233, 234, 235,
-    235, 236, 236, 237, 238, 238, 239, 240, 240, 241, 242, 242, 243, 244, 244, 245,
-    246, 246, 247, 247, 248, 249, 249, 250, 251, 251, 252, 252, 253, 254, 254, 255
-};
 
 // Sublime rounds with floor(x + 0.4999999999999998) rather than std::round (0x1401bba8f). The
 // nudged constant avoids the double-rounding std::round can hit, and it breaks ties downward where
@@ -235,9 +181,7 @@ FontFaceId register_face(FontData& data, IDWriteFontFace* face) {
 // holding references to the caller's locals is safe. We do the same, minus the fake refcount.
 class RunVisitor final : public IDWriteTextRenderer {
 public:
-    RunVisitor(FontData& data,
-               const base::UTF16ToUTF8IndicesMap& indices_map,
-               ShapedText& out)
+    RunVisitor(FontData& data, const base::UTF16ToUTF8IndicesMap& indices_map, ShapedText& out)
         : data_(data), indices_map_(indices_map), out_(out) {}
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
@@ -455,8 +399,7 @@ DWRITE_MEASURING_MODE measuring_mode(uint32_t flags) {
 ComPtr<IDWriteRenderingParams> params_for(uint32_t flags) {
     const Globals& g = globals();
     if (!g.rendering_params) return g.rendering_params;
-    if (g_debug_gamma <= 0.0f && g_debug_cleartype_level < 0.0f &&
-        !(flags & (kNoAntialias | kGrayAntialias))) {
+    if (!(flags & (kNoAntialias | kGrayAntialias))) {
         // The ordinary DirectWrite path hands the selected monitor parameters straight to
         // IDWriteBitmapRenderTarget::DrawGlyphRun (0x1401bbf2d).  A neutral intermediate mask
         // changes the coverage curve before the glyph-cache gamma table ever sees it.
@@ -469,11 +412,9 @@ ComPtr<IDWriteRenderingParams> params_for(uint32_t flags) {
                                            : g.rendering_params->GetRenderingMode();
     const FLOAT normalized_contrast =
         std::min(g.rendering_params->GetEnhancedContrast(), 4.0f) / 5.0f;
-    const FLOAT gamma = g_debug_gamma > 0 ? g_debug_gamma : 1.0f + normalized_contrast;
-    const FLOAT contrast = g_debug_gamma > 0 ? g_debug_contrast : 0.0f;
-    const FLOAT cleartype_level =
-        g_debug_cleartype_level >= 0 ? g_debug_cleartype_level
-                                     : g.rendering_params->GetClearTypeLevel();
+    const FLOAT gamma = 1.0f + normalized_contrast;
+    constexpr FLOAT contrast = 0.0f;
+    const FLOAT cleartype_level = g.rendering_params->GetClearTypeLevel();
 
     ComPtr<IDWriteRenderingParams> custom;
     if (FAILED(g.factory->CreateCustomRenderingParams(
@@ -553,57 +494,13 @@ void read_color_target(IDWriteBitmapRenderTarget* target,
             const uint32_t b = pixel & 0xFF;
             const uint32_t gr = (pixel >> 8) & 0xFF;
             const uint32_t r = (pixel >> 16) & 0xFF;
-            dst[y * static_cast<size_t>(w) + x] =
-                pixel | (((r + gr + b) / 3) << 24);
+            dst[y * static_cast<size_t>(w) + x] = pixel | (((r + gr + b) / 3) << 24);
         }
     }
 }
 
-void read_target_inverted(IDWriteBitmapRenderTarget* target,
-                          int w,
-                          int h,
-                          std::vector<uint8_t>& out) {
-    DIBSECTION dib{};
-    HBITMAP bitmap = static_cast<HBITMAP>(GetCurrentObject(target->GetMemoryDC(), OBJ_BITMAP));
-    if (GetObjectW(bitmap, sizeof(dib), &dib) == 0 || !dib.dsBm.bmBits) return;
-
-    const auto* src = static_cast<const uint32_t*>(dib.dsBm.bmBits);
-    const size_t stride = static_cast<size_t>(dib.dsBm.bmWidthBytes) / 4;
-    auto* dst = reinterpret_cast<uint32_t*>(out.data());
-    for (size_t y = 0; y < static_cast<size_t>(h); y++) {
-        for (size_t x = 0; x < static_cast<size_t>(w); x++) {
-            const uint32_t pixel = src[y * stride + x];
-            const uint32_t b = 255 - (pixel & 0xFF);
-            const uint32_t gr = 255 - ((pixel >> 8) & 0xFF);
-            const uint32_t r = 255 - ((pixel >> 16) & 0xFF);
-            dst[y * static_cast<size_t>(w) + x] =
-                (((b + gr + r) / 3) << 24) | (r << 16) | (gr << 8) | b;
-        }
-    }
-}
-
-void read_target_opaque(IDWriteBitmapRenderTarget* target,
-                        int w,
-                        int h,
-                        std::vector<uint8_t>& out) {
-    DIBSECTION dib{};
-    HBITMAP bitmap = static_cast<HBITMAP>(GetCurrentObject(target->GetMemoryDC(), OBJ_BITMAP));
-    if (GetObjectW(bitmap, sizeof(dib), &dib) == 0 || !dib.dsBm.bmBits) return;
-
-    const auto* src = static_cast<const uint32_t*>(dib.dsBm.bmBits);
-    const size_t stride = static_cast<size_t>(dib.dsBm.bmWidthBytes) / 4;
-    auto* dst = reinterpret_cast<uint32_t*>(out.data());
-    for (size_t y = 0; y < static_cast<size_t>(h); y++) {
-        for (size_t x = 0; x < static_cast<size_t>(w); x++) {
-            dst[y * static_cast<size_t>(w) + x] =
-                0xFF000000 | (src[y * stride + x] & 0x00FFFFFF);
-        }
-    }
-}
-
-// The path Sublime falls back to when GdiInterop is unavailable. Kept because it is the only way
-// to see DirectWrite's raw three-channel coverage, which is what a dual-source-blending renderer
-// would want.
+// Fallback for a failed GDI bitmap render target. This exposes DirectWrite's raw three-channel
+// coverage, which is the closest available input for the dual-source-blending renderer.
 bool rasterize_via_analysis(const FontData& data,
                             const DWRITE_GLYPH_RUN& run,
                             double scale,
@@ -620,9 +517,6 @@ bool rasterize_via_analysis(const FontData& data,
         return false;
     }
 
-    analysis->GetAlphaBlendParams(globals().rendering_params.Get(), &g_analysis_gamma,
-                                  &g_analysis_contrast, &g_analysis_cleartype_level);
-
     const RECT bounds = {0, 0, w, h};
     const bool aliased = (data.flags & kNoAntialias) != 0;
     const DWRITE_TEXTURE_TYPE type =
@@ -637,11 +531,10 @@ bool rasterize_via_analysis(const FontData& data,
 
     auto* dst = reinterpret_cast<uint32_t*>(out.data());
     for (size_t i = 0; i < static_cast<size_t>(w) * static_cast<size_t>(h); i++) {
-        uint32_t rgb = 0, sum = 0;
+        uint32_t rgb = 0;
         for (size_t s = 0; s < 3; s++) {
             const uint32_t v = alpha[i * samples + (samples == 1 ? 0 : s)];
             rgb |= v << (8 * (2 - s));  // CLEARTYPE_3x1 is R, G, B in order
-            sum += v;
         }
         dst[i] = 0xFF000000 | rgb;
     }
@@ -796,41 +689,8 @@ std::optional<FontHandle> create_font(const FontSpec& spec) {
     return create_font(spec.family, spec.size, spec.weight, spec.slant);
 }
 
-void set_debug_use_analysis_path(bool enabled) { g_use_analysis_path = enabled; }
-
-void set_debug_rendering_params(float gamma, float contrast) {
-    g_debug_gamma = gamma;
-    g_debug_contrast = contrast;
-}
-
-void set_debug_gamma_ramp_exponent(float exponent) {
-    g_debug_gamma_ramp_exponent = exponent;
-}
-
-void set_debug_literal_gamma_ramp(bool enabled) {
-    g_debug_literal_gamma_ramp = enabled;
-}
-
-void set_debug_inverted_mask(bool enabled) {
-    g_debug_inverted_mask = enabled;
-}
-
-void set_debug_cleartype_level(float level) {
-    g_debug_cleartype_level = level;
-}
-
-void set_debug_direct_bitmap(bool enabled) {
-    g_debug_direct_bitmap = enabled;
-}
-
 fx_gamma_ramp rendering_gamma_ramp() {
     fx_gamma_ramp ramp;
-    if (g_debug_literal_gamma_ramp) {
-        ramp.values = kLiteralGammaValues;
-        ramp.inverse_values = kLiteralInverseGammaValues;
-        return ramp;
-    }
-
     const ComPtr<IDWriteRenderingParams> params = globals().rendering_params;
     // Sublime folds DirectWrite's enhanced-contrast setting into the cache gamma
     // (0x1401bb8dd..0x1401bb91e). Keep the arithmetic in float to match its scalar
@@ -838,14 +698,9 @@ fx_gamma_ramp rendering_gamma_ramp() {
     double exponent = 1.0;
     if (params) {
         const float contrast = std::min(params->GetEnhancedContrast(), 4.0f) / 5.0f;
-        const float float_exponent =
-            std::max(params->GetGamma() - contrast, 1.0f) - contrast;
+        const float float_exponent = std::max(params->GetGamma() - contrast, 1.0f) - contrast;
         exponent = static_cast<double>(float_exponent);
     }
-    if (g_debug_gamma_ramp_exponent >= 0.0f) {
-        exponent = g_debug_gamma_ramp_exponent;
-    }
-
     for (size_t i = 0; i < ramp.values.size(); ++i) {
         const double input = static_cast<double>(static_cast<float>(i) / 255.0f);
         ramp.values[i] = static_cast<uint8_t>(
@@ -854,28 +709,6 @@ fx_gamma_ramp rendering_gamma_ramp() {
             std::min(255.0, std::floor(255.0 * std::pow(input, 1.0 / exponent) + 0.5)));
     }
     return ramp;
-}
-
-std::string rasterizer_debug_info() {
-    const Globals& g = globals();
-    if (!g.rendering_params) return "DirectWrite unavailable";
-
-    auto describe = [](IDWriteRenderingParams* p, std::string_view label) {
-        return std::format("{}: gamma {:.3f}  contrast {:.3f}  cleartype {:.3f}  geometry {}  "
-                           "mode {}",
-                           label, p->GetGamma(), p->GetEnhancedContrast(), p->GetClearTypeLevel(),
-                           static_cast<int>(p->GetPixelGeometry()),
-                           static_cast<int>(p->GetRenderingMode()));
-    };
-    const ComPtr<IDWriteRenderingParams> used = params_for(kDefaultFlags);
-    return std::string(use_analysis_path() ? "CreateGlyphRunAnalysis" : "BitmapRenderTarget") +
-           "\n  " + describe(g.rendering_params.Get(), "monitor") + "\n  " +
-           describe(used.Get(), "in use ") +
-           std::format("\n  flags {:#x}  rendering mode {}  measuring mode {}", kDefaultFlags,
-                       static_cast<int>(rendering_mode(kDefaultFlags)),
-                       static_cast<int>(measuring_mode(kDefaultFlags))) +
-           std::format("\n  alpha blend gamma {:.3f}  contrast {:.3f}  cleartype {:.3f}",
-                       g_analysis_gamma, g_analysis_contrast, g_analysis_cleartype_level);
 }
 
 ShapedText shape(const FontHandle& font, std::string_view utf8) {
@@ -985,13 +818,12 @@ GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double scale, doubl
     std::vector<uint8_t> pixels(static_cast<size_t>(tile->width) *
                                 static_cast<size_t>(tile->height) * 4);
 
-    // Sublime's primary path is IDWriteBitmapRenderTarget::DrawGlyphRun into a GDI DIB; it only
-    // falls back to CreateGlyphRunAnalysis when GdiInterop is missing (0x1401bb9c1).
-    if (!use_analysis_path() && ensure_target(data, tile->width, tile->height, scale)) {
+    // Sublime's primary path is IDWriteBitmapRenderTarget::DrawGlyphRun into a GDI DIB; fall back
+    // to CreateGlyphRunAnalysis if the bitmap render target cannot be created (0x1401bb9c1).
+    if (ensure_target(data, tile->width, tile->height, scale)) {
         HDC hdc = data.target->GetMemoryDC();
         const RECT rect = {0, 0, tile->width, tile->height};
-        HBRUSH brush = CreateSolidBrush(
-            !colored && g_debug_inverted_mask ? RGB(255, 255, 255) : RGB(0, 0, 0));
+        HBRUSH brush = CreateSolidBrush(RGB(0, 0, 0));
         FillRect(hdc, &rect, brush);
         DeleteObject(brush);
 
@@ -1016,10 +848,9 @@ GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double scale, doubl
                                  layer->glyphRun.glyphIndices[0], layer->runColor.r,
                                  layer->runColor.g, layer->runColor.b, layer->runColor.a);
                 }
-                const COLORREF color =
-                    RGB(static_cast<int>(layer->runColor.r * 255.0f),
-                        static_cast<int>(layer->runColor.g * 255.0f),
-                        static_cast<int>(layer->runColor.b * 255.0f));
+                const COLORREF color = RGB(static_cast<int>(layer->runColor.r * 255.0f),
+                                           static_cast<int>(layer->runColor.g * 255.0f),
+                                           static_cast<int>(layer->runColor.b * 255.0f));
                 data.target->DrawGlyphRun(
                     static_cast<FLOAT>(origin_x / scale), static_cast<FLOAT>(origin_y / scale),
                     DWRITE_MEASURING_MODE_NATURAL, &layer->glyphRun, params.Get(), color, nullptr);
@@ -1035,18 +866,8 @@ GlyphBitmap rasterize(const FontHandle& font, GlyphId glyph, double scale, doubl
         } else {
             data.target->DrawGlyphRun(
                 static_cast<FLOAT>(origin_x / scale), static_cast<FLOAT>(origin_y / scale),
-                measuring_mode(data.flags), &run, params.Get(),
-                g_debug_inverted_mask ? RGB(0, 0, 0) : RGB(255, 255, 255), nullptr);
-            if (g_debug_inverted_mask) {
-                if (g_debug_direct_bitmap) {
-                    read_target_opaque(data.target.Get(), tile->width, tile->height, pixels);
-                    colored = true;
-                } else {
-                    read_target_inverted(data.target.Get(), tile->width, tile->height, pixels);
-                }
-            } else {
-                read_target(data.target.Get(), tile->width, tile->height, pixels);
-            }
+                measuring_mode(data.flags), &run, params.Get(), RGB(255, 255, 255), nullptr);
+            read_target(data.target.Get(), tile->width, tile->height, pixels);
         }
     } else if (rasterize_via_analysis(data, run, scale, origin_x, origin_y, tile->width,
                                       tile->height, pixels)) {

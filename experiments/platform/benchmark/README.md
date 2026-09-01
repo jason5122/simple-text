@@ -7,7 +7,7 @@ driver, recording settings, analysis model, and output format.
 From the repository root, build the complete benchmark with:
 
 ```sh
-bin/ninja -C out/release platform_benchmark_suite
+bin/ninja -C out/release benchmarks
 ```
 
 Then run:

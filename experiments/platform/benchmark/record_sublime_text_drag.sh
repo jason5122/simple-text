@@ -18,7 +18,7 @@ esac
 cd "$(dirname "$0")/../../.."
 repo_root=$PWD
 mover="$repo_root/out/release/move_mouse"
-analyzer="$repo_root/out/release/platform_benchmark_analyzer"
+analyzer="$repo_root/out/release/benchmark_analyzer"
 app="${SUBLIME_TEXT_APP:-/Applications/Sublime Text.app}"
 
 if [ ! -x "$mover" ]; then

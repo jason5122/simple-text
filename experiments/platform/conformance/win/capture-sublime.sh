@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs the native Windows Sublime Text reference suite through Parallels.
+# Captures the native Windows Sublime Text reference suite through Parallels.
 set -e
 
 build_dir="$(cd "$(dirname "$0")" && pwd)"

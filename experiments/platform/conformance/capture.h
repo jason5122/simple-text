@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-// Window-server screen capture: take a screenshot of a window and return an image. Captures a
+// Native window capture: take a screenshot of a window and return an image. Captures a
 // window's composited backing store directly (so occlusion and window position don't matter),
 // which is faster and more robust than shelling out to `screencapture` against a fixed screen
 // rectangle. This is a dumb capture API -- multi-shot orchestration lives in the binary using it.

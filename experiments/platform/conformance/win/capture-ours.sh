@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs the native Windows rasterizer suite through Parallels.
+# Captures the native Windows buffer conformance suite through Parallels.
 set -e
 
 build_dir="$(cd "$(dirname "$0")" && pwd)"
@@ -13,8 +13,7 @@ fi
 
 rm -rf "$build_dir/ours"
 prlctl exec "$vm" --current-user \
-  "$windows_share\\platform_rasterizer.exe" \
-  --test \
+  "$windows_share\\buffer_conformance.exe" \
   "$windows_share\\capture-tests" \
   "$windows_share\\ours" \
   "$@"

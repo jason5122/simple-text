@@ -1,4 +1,4 @@
-# Font families to screenshot, one per line. Read by both the platform rasterizer and the Sublime
+# Font families to screenshot, one per line. Read by both buffer_conformance and the Sublime
 # Text plugin, so the two stay in sync. Lines starting with # are ignored.
 system
 Source Code Pro

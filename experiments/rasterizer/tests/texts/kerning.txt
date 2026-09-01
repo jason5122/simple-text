@@ -1,8 +1,0 @@
-AVA AWA AYA TAY WAY YAY VAV FAV LTA PA WA YA — kerning-pair stress
-Waffle Effective Toffee Auto Value Wave Type Rave Tallow Warp
-THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG
-the quick brown fox jumps over the lazy dog
-0123456789 !@#$%^&*()_+-=[]{}|;:'",.<>/?`~
-'single' "double" — em—dash –en–dash… ellipsis
-fi fl ffi ffl Th Ta To Tr Ty Wa We Wo — ligature-adjacent pairs
-1 l I | i j 0 O o — ambiguous-glyph stress

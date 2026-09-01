@@ -35,13 +35,8 @@ group("experiments") {
       "//experiments/gui_api_redesign",
       "//experiments/mac_startup_benchmark",
       "//experiments/platform_renderer",
-      "//experiments/rasterizer",
       "//experiments/renderer",
       "//experiments/ui_button_demo",
     ]
-  }
-
-  if (is_win) {
-    deps += [ "//experiments/rasterizer" ]
   }
 }

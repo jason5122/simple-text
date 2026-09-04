@@ -42,7 +42,7 @@ bool px_linux_gl_create(px_window_t* window) {
         return false;
     }
 
-    gdk_gl_context_set_required_version(window->gl_context, 3, 2);
+    gdk_gl_context_set_required_version(window->gl_context, 4, 1);
     if (!gdk_gl_context_realize(window->gl_context, &error)) {
         std::fprintf(stderr, "px: gdk_gl_context_realize failed: %s\n",
                      error ? error->message : "?");

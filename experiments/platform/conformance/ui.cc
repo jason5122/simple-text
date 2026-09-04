@@ -1,7 +1,7 @@
 #include "experiments/platform/conformance/capture.h"
 #include "experiments/platform/px/gl_render_context.h"
 #include "experiments/platform/px/px.h"
-#include "experiments/platform/px/px_font_private.h"
+#include "experiments/platform/ui/retained_text.h"
 #include <algorithm>
 #include <cstdio>
 #include <filesystem>
@@ -131,16 +131,16 @@ public:
 
     bool set_content(const std::vector<std::string>& labels, std::string_view face, float size) {
         font_ = px_create_font(std::string(face).c_str(), size);
-        if (!font_ || !font_->font) {
+        if (!font_) {
             return false;
         }
         metrics_ = px_font_get_metrics(font_);
-        heading_layout_ = font_->font->shape("FOLDERS");
+        heading_layout_ = prepare_retained_text(font_, "FOLDERS");
         label_layouts_.clear();
         label_layouts_.reserve(labels.size());
         for (const std::string& label : labels) {
-            std::unique_ptr<fx_layout> layout = font_->font->shape(label);
-            if (!layout) {
+            retained_text layout = prepare_retained_text(font_, label);
+            if (layout.batches.empty()) {
                 return false;
             }
             label_layouts_.push_back(std::move(layout));
@@ -148,7 +148,7 @@ public:
         if (window_) {
             px_mark_dirty(window_);
         }
-        return heading_layout_ != nullptr;
+        return !heading_layout_.batches.empty();
     }
 
     bool handle_event(px_event_t*) override { return false; }
@@ -157,22 +157,20 @@ public:
                rect bounds,
                const rect* dirty,
                int dirty_count) override {
-        (void)dirty;
-        (void)dirty_count;
         context->draw_rect(bounds, kSidebarBackground);
-        if (!font_ || !heading_layout_) {
+        if (!font_ || heading_layout_.batches.empty()) {
             return;
         }
 
         context->begin_text_batch();
-        context->draw_shaped_text(font_, vec2{kSidebarLeftPadding, text_baseline(0)},
-                                  kSidebarHeading, heading_layout_.get(), true);
+        draw_retained_text(context, font_, vec2{kSidebarLeftPadding, text_baseline(0)},
+                           kSidebarHeading, &heading_layout_);
         for (size_t i = 0; i < label_layouts_.size(); ++i) {
-            context->draw_shaped_text(
-                font_,
+            draw_retained_text(
+                context, font_,
                 vec2{kSidebarLeftPadding + kSidebarIndentOffset + kSidebarIndentWidth,
                      text_baseline(i + 1)},
-                kSidebarLabel, label_layouts_[i].get(), true);
+                kSidebarLabel, &label_layouts_[i]);
         }
         context->end_text_batch();
     }
@@ -190,8 +188,8 @@ private:
     px_window_t* window_ = nullptr;
     px_font_t* font_ = nullptr;
     px_font_metrics metrics_;
-    std::unique_ptr<fx_layout> heading_layout_;
-    std::vector<std::unique_ptr<fx_layout>> label_layouts_;
+    retained_text heading_layout_;
+    std::vector<retained_text> label_layouts_;
 };
 
 int run_tests(int argc, char* argv[]) {

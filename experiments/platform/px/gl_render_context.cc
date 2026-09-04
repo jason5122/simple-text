@@ -12,7 +12,7 @@
 #include "experiments/platform/px/px_gl.h"
 
 #if defined(__APPLE__) || defined(_WIN32)
-#include "experiments/platform/px/px_font_private.h"
+#include "experiments/platform/px/px_font_internal.h"
 #endif
 
 namespace {
@@ -96,14 +96,10 @@ GLuint compile_shader(GLenum type, const char* source) {
     return compile_shader_sources(type, &source, 1);
 }
 
-GLuint link_program(GLuint vertex, GLuint fragment, const char* name, bool dual_source = false) {
+GLuint link_program(GLuint vertex, GLuint fragment, const char* name) {
     const GLuint program = glCreateProgram();
     glAttachShader(program, vertex);
     glAttachShader(program, fragment);
-    if (dual_source) {
-        glBindFragDataLocationIndexed(program, 0, 0, "frag_color");
-        glBindFragDataLocationIndexed(program, 0, 1, "frag_coverage");
-    }
     glLinkProgram(program);
     GLint linked = GL_FALSE;
     glGetProgramiv(program, GL_LINK_STATUS, &linked);
@@ -216,7 +212,7 @@ struct glyph_atlas_key {
     const px_font_t* font = nullptr;
     uint32_t glyph = 0;
     int phase = 0;
-    int scale_percent = 100;
+    uint32_t scale_percent = 100;
     bool alternate = false;
 
     auto operator<=>(const glyph_atlas_key&) const = default;
@@ -235,12 +231,8 @@ struct glyph_instance_data {
     float x, y, width, height;
     float u, v, uv_width, uv_height;
     float r, g, b, a;
-    float colored, pad0, pad1, pad2;
-};
-
-struct glyph_instance {
-    glyph_instance_data data;
-    bool colored = false;
+    float colored, alternate, pad0, pad1;
+    float clip_left, clip_top, clip_right, clip_bottom;
 };
 
 struct glyph_program {
@@ -259,7 +251,10 @@ public:
     void begin_batch(vec2 viewport) {
         if (batch_depth_++ == 0) {
             batch_viewport_ = viewport;
-            batch_groups_.clear();
+            batch_instances_.clear();
+            for (color_batch_group& group : batch_color_groups_) {
+                group.instances.clear();
+            }
         }
     }
 
@@ -278,6 +273,12 @@ public:
         flush_batch();
     }
 
+    void flush_pending_batch() {
+        if (batch_depth_ != 0) {
+            flush_batch();
+        }
+    }
+
     void draw(px_font_t* font,
               const fx_layout& layout,
               vec2 origin,
@@ -285,12 +286,14 @@ public:
               vec2 translation,
               vec2 scale,
               vec2 viewport,
+              recti clip,
               bool subpixel_positioning) {
         ensure_initialized();
-        if (!program_.id || !font || !font->font || layout.glyphs.empty()) {
+        if (!program_.id || !font || !font->font || layout.glyphs.empty() || clip.empty()) {
             return;
         }
         if (reset_requested_.exchange(false, std::memory_order_acq_rel)) {
+            flush_batch();
             placements_.clear();
             color_page_for_glyph_.clear();
             color_pages_.clear();
@@ -304,10 +307,14 @@ public:
         }
 
         const float raster_scale = std::max(0.01f, static_cast<float>(std::abs(scale.x)));
-        const int scale_percent = static_cast<int>(raster_scale * 100.0f + 0.5f);
+        const uint32_t scale_percent =
+            static_cast<uint32_t>(static_cast<double>(raster_scale) * 100.0);
         fx_glyph_cache& cache = font->glyph_cache(raster_scale);
-        std::vector<glyph_instance> instances;
-        instances.reserve(layout.glyphs.size());
+        std::vector<glyph_instance_data> immediate_instances;
+        std::vector<batch_group> immediate_groups;
+        if (batch_depth_ == 0) {
+            immediate_instances.reserve(layout.glyphs.size());
+        }
         const double device_origin_x = translation.x + origin.x * scale.x;
         const double device_origin_y = translation.y + origin.y * scale.y;
         const float lightness =
@@ -319,70 +326,71 @@ public:
 
         for (const fx_glyph& glyph : layout.glyphs) {
             const double x = device_origin_x + static_cast<double>(glyph.x_offset) * scale.x;
-            double y = device_origin_y +
-                       static_cast<double>(glyph.y_offset - layout.primary_y_offset) * scale.y;
-            if (layout.primary_face_ascent != 0.0f && glyph.face_ascent != 0.0f) {
-                const double ascent_delta =
-                    std::round(static_cast<double>(glyph.face_ascent) * raster_scale) -
-                    std::round(static_cast<double>(layout.primary_face_ascent) * raster_scale);
-                y += scale.y < 0.0 ? -ascent_delta : ascent_delta;
-            }
-            const double raster_x = x + static_cast<double>(glyph.raster_x_delta) * scale.x;
-            const int device_x = static_cast<int>(std::floor(raster_x));
-            const double fraction = raster_x - std::floor(raster_x);
+            const double y = device_origin_y + static_cast<double>(glyph.y_offset) * scale.y;
+            const int device_x = static_cast<int>(std::floor(x));
+            const double fraction = x - std::floor(x);
             const int phase =
                 subpixel_positioning ? std::clamp(static_cast<int>(fraction * 6.0), 0, 5) : 0;
             const glyph_atlas_key key{font, glyph.id, phase, scale_percent, alternate};
-            const fx_glyph_cache::glyph_data& glyph_data =
+            const fx_glyph_bitmap& bitmap =
                 cache.lookup_glyph_data(glyph.id, static_cast<unsigned>(phase), alternate);
-            if (glyph_data.bitmap.empty()) {
+            if (bitmap.empty()) {
                 continue;
             }
-            if (glyph_data.bitmap.colored) {
+            if (bitmap.colored) {
                 ensure_color_phase_pages(key, cache);
             }
-            const glyph_atlas_placement* placement = place(key, glyph_data.bitmap);
+            const glyph_atlas_placement* placement = place(key, bitmap);
             if (!placement) {
                 continue;
             }
 
-            const float instance_x = static_cast<float>(device_x + glyph_data.bitmap.bearing_x);
+            const float instance_x = static_cast<float>(device_x + bitmap.bearing_x);
             // ST rounds in OpenGL's bottom-left coordinate system with frinta (nearest, ties away
             // from zero). Expressed in this renderer's top-left coordinates, the same operation
             // is nearest with half-pixel ties toward the top.
-            const float instance_y =
-                static_cast<float>(std::ceil(y - 0.5) + glyph_data.bitmap.bearing_y);
+            const float instance_y = static_cast<float>(std::ceil(y - 0.5) + bitmap.bearing_y);
+            const float instance_width = static_cast<float>(bitmap.width);
+            const float instance_height = static_cast<float>(bitmap.height);
+            if (instance_x + instance_width <= static_cast<float>(clip.left) ||
+                instance_x >= static_cast<float>(clip.right) ||
+                instance_y + instance_height <= static_cast<float>(clip.top) ||
+                instance_y >= static_cast<float>(clip.bottom)) {
+                continue;
+            }
 
-            instances.push_back({
-                .data =
-                    {
-                        .x = instance_x,
-                        .y = instance_y,
-                        .width = placement->width,
-                        .height = placement->height,
-                        .u = placement->u,
-                        .v = placement->v,
-                        .uv_width = placement->width,
-                        .uv_height = placement->height,
-                        .r = color.r,
-                        .g = color.g,
-                        .b = color.b,
-                        .a = color.a,
-                        .colored = placement->colored ? 1.0f : 0.0f,
-                    },
-                .colored = placement->colored,
-            });
-            if (batch_depth_ != 0 && placement->colored) {
-                add_to_batch(placement->color_page, instances.back());
-                instances.pop_back();
+            const glyph_instance_data instance{
+                .x = instance_x,
+                .y = instance_y,
+                .width = placement->width,
+                .height = placement->height,
+                .u = placement->u,
+                .v = placement->v,
+                .uv_width = placement->width,
+                .uv_height = placement->height,
+                .r = color.r,
+                .g = color.g,
+                .b = color.b,
+                .a = color.a,
+                .colored = placement->colored ? 1.0f : 0.0f,
+                .alternate = alternate ? 1.0f : 0.0f,
+                .clip_left = static_cast<float>(clip.left),
+                .clip_top = static_cast<float>(clip.top),
+                .clip_right = static_cast<float>(clip.right),
+                .clip_bottom = static_cast<float>(clip.bottom),
+            };
+            if (batch_depth_ != 0) {
+                add_to_batch(placement->color_page, placement->colored, instance);
+            } else {
+                add_immediate_instance(&immediate_instances, &immediate_groups, placement->colored,
+                                       instance);
             }
         }
 
-        if (instances.empty()) {
-            return;
+        if (batch_depth_ == 0) {
+            render_instances(immediate_instances, immediate_groups.data(), immediate_groups.size(),
+                             viewport);
         }
-
-        render_instances(instances, viewport);
     }
 
 private:
@@ -393,75 +401,149 @@ private:
     };
 
     struct batch_group {
-        int color_page = -1;
-        std::vector<glyph_instance> instances;
+        size_t first = 0;
+        size_t count = 0;
+        bool colored = false;
     };
 
-    void add_to_batch(int color_page, const glyph_instance& instance) {
-        auto found = std::find_if(batch_groups_.begin(), batch_groups_.end(),
-                                  [color_page](const batch_group& group) {
+    struct color_batch_group {
+        int color_page = -1;
+        std::vector<glyph_instance_data> instances;
+    };
+
+    static void add_immediate_instance(std::vector<glyph_instance_data>* instances,
+                                       std::vector<batch_group>* groups,
+                                       bool colored,
+                                       glyph_instance_data instance) {
+        if (groups->empty() || groups->back().colored != colored) {
+            groups->push_back({
+                .first = instances->size(),
+                .colored = colored,
+            });
+        }
+        instances->push_back(instance);
+        ++groups->back().count;
+    }
+
+    void add_to_batch(int color_page, bool colored, glyph_instance_data instance) {
+        if (!colored) {
+            batch_instances_.push_back(instance);
+            return;
+        }
+        auto found = std::find_if(batch_color_groups_.begin(), batch_color_groups_.end(),
+                                  [color_page](const color_batch_group& group) {
                                       return group.color_page == color_page;
                                   });
-        if (found == batch_groups_.end()) {
-            batch_groups_.push_back({.color_page = color_page});
-            found = std::prev(batch_groups_.end());
+        if (found == batch_color_groups_.end()) {
+            batch_color_groups_.push_back({.color_page = color_page});
+            found = std::prev(batch_color_groups_.end());
         }
         found->instances.push_back(instance);
     }
 
     void flush_batch() {
-        for (const batch_group& group : batch_groups_) {
-            render_instances(group.instances, batch_viewport_);
+        size_t instance_count = batch_instances_.size();
+        for (const color_batch_group& color_group : batch_color_groups_) {
+            instance_count += color_group.instances.size();
         }
-        batch_groups_.clear();
+        if (instance_count == 0) {
+            return;
+        }
+
+        begin_render(instance_count, batch_viewport_);
+        size_t first = 0;
+        upload_instances(batch_instances_, first);
+        first += batch_instances_.size();
+        for (const color_batch_group& color_group : batch_color_groups_) {
+            upload_instances(color_group.instances, first);
+            first += color_group.instances.size();
+        }
+
+        first = 0;
+        draw_instances(first, batch_instances_.size(), false);
+        first += batch_instances_.size();
+        for (color_batch_group& color_group : batch_color_groups_) {
+            draw_instances(first, color_group.instances.size(), true);
+            first += color_group.instances.size();
+            color_group.instances.clear();
+        }
+        end_render();
+        batch_instances_.clear();
     }
 
-    void render_instances(const std::vector<glyph_instance>& instances, vec2 viewport) {
+    void render_instances(const std::vector<glyph_instance_data>& instances,
+                          const batch_group* groups,
+                          size_t group_count,
+                          vec2 viewport) {
         if (instances.empty()) {
             return;
         }
 
-        std::vector<glyph_instance_data> instance_data;
-        instance_data.reserve(instances.size());
-        for (const glyph_instance& instance : instances) {
-            instance_data.push_back(instance.data);
+        begin_render(instances.size(), viewport);
+        upload_instances(instances, 0);
+        for (size_t group_index = 0; group_index < group_count; ++group_index) {
+            const batch_group& group = groups[group_index];
+            draw_instances(group.first, group.count, group.colored);
         }
+        end_render();
+    }
 
+    void begin_render(size_t instance_count, vec2 viewport) {
+        instance_slot_ ^= 1;
+        const size_t required = instance_count * sizeof(glyph_instance_data);
         glActiveTexture(GL_TEXTURE0);
-        glBindBuffer(GL_TEXTURE_BUFFER, instance_buffer_);
-        glBufferData(GL_TEXTURE_BUFFER,
-                     static_cast<GLsizeiptr>(instance_data.size() * sizeof(glyph_instance_data)),
-                     instance_data.data(), GL_STREAM_DRAW);
-        glBindTexture(GL_TEXTURE_BUFFER, instance_texture_);
-        glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, instance_buffer_);
+        glBindBuffer(GL_TEXTURE_BUFFER, instance_buffers_[instance_slot_]);
+        if (instance_capacities_[instance_slot_] < required) {
+            instance_capacities_[instance_slot_] =
+                std::max(required, instance_capacities_[instance_slot_] * 2);
+            glBufferData(GL_TEXTURE_BUFFER,
+                         static_cast<GLsizeiptr>(instance_capacities_[instance_slot_]), nullptr,
+                         GL_STREAM_DRAW);
+            glBindTexture(GL_TEXTURE_BUFFER, instance_textures_[instance_slot_]);
+            glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, instance_buffers_[instance_slot_]);
+        }
+        glBindTexture(GL_TEXTURE_BUFFER, instance_textures_[instance_slot_]);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, atlas_);
 
         glBindVertexArray(vao_);
         glUseProgram(program_.id);
+        // Per-instance clips let one text batch span clip-stack changes.
+        glDisable(GL_SCISSOR_TEST);
         glUniform2f(program_.viewport_uniform, static_cast<float>(viewport.x),
                     static_cast<float>(viewport.y));
         glUniform1f(program_.texture_size_uniform, static_cast<float>(kAtlasSize));
         glUniform1i(program_.instances_uniform, 0);
         glUniform1i(program_.tex_uniform, 1);
-        size_t first = 0;
-        while (first < instances.size()) {
-            const bool colored = instances[first].colored;
-            size_t last = first + 1;
-            while (last < instances.size() && instances[last].colored == colored) {
-                ++last;
-            }
-            glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first));
-            if (colored) {
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            } else {
-                glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ONE,
-                                    GL_ONE_MINUS_SRC1_ALPHA);
-            }
-            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(last - first));
-            first = last;
+    }
+
+    static void upload_instances(const std::vector<glyph_instance_data>& instances, size_t first) {
+        if (instances.empty()) {
+            return;
         }
+        glBufferSubData(GL_TEXTURE_BUFFER,
+                        static_cast<GLintptr>(first * sizeof(glyph_instance_data)),
+                        static_cast<GLsizeiptr>(instances.size() * sizeof(glyph_instance_data)),
+                        instances.data());
+    }
+
+    void draw_instances(size_t first, size_t count, bool colored) {
+        if (count == 0) {
+            return;
+        }
+        glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first));
+        if (colored) {
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        } else {
+            glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR, GL_ONE,
+                                GL_ONE_MINUS_SRC1_ALPHA);
+        }
+        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(count));
+    }
+
+    static void end_render() {
+        glEnable(GL_SCISSOR_TEST);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -509,10 +591,8 @@ private:
         for (int phase = 0; phase < 6; ++phase) {
             glyph_atlas_key phase_key = requested_key;
             phase_key.phase = phase;
-            const fx_glyph_bitmap& bitmap =
-                cache.lookup_glyph_data(requested_key.glyph, static_cast<unsigned>(phase),
-                                        requested_key.alternate)
-                    .bitmap;
+            const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(
+                requested_key.glyph, static_cast<unsigned>(phase), requested_key.alternate);
             color_page_for_glyph_.emplace(phase_key,
                                           allocate_color_page(static_cast<int>(bitmap.width),
                                                               static_cast<int>(bitmap.height)));
@@ -536,7 +616,7 @@ private:
             }
             return;
         }
-        program_.id = link_program(vertex, fragment, "glyph", true);
+        program_.id = link_program(vertex, fragment, "glyph");
         glDeleteShader(vertex);
         glDeleteShader(fragment);
         if (!program_.id) {
@@ -549,8 +629,8 @@ private:
         program_.tex_uniform = glGetUniformLocation(program_.id, "atlas");
         program_.texture_size_uniform = glGetUniformLocation(program_.id, "texture_size");
         glGenVertexArrays(1, &vao_);
-        glGenBuffers(1, &instance_buffer_);
-        glGenTextures(1, &instance_texture_);
+        glGenBuffers(2, instance_buffers_);
+        glGenTextures(2, instance_textures_);
         glGenTextures(1, &atlas_);
         glBindTexture(GL_TEXTURE_2D, atlas_);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kAtlasSize, kAtlasSize, 0, GL_BGRA,
@@ -618,8 +698,10 @@ private:
     bool initialized_ = false;
     glyph_program program_;
     GLuint vao_ = 0;
-    GLuint instance_buffer_ = 0;
-    GLuint instance_texture_ = 0;
+    GLuint instance_buffers_[2] = {};
+    GLuint instance_textures_[2] = {};
+    size_t instance_capacities_[2] = {};
+    int instance_slot_ = 0;
     GLuint atlas_ = 0;
     std::atomic<bool> reset_requested_ = false;
     std::map<glyph_atlas_key, glyph_atlas_placement> placements_;
@@ -630,7 +712,8 @@ private:
     int atlas_row_height_ = 0;
     int batch_depth_ = 0;
     vec2 batch_viewport_;
-    std::vector<batch_group> batch_groups_;
+    std::vector<glyph_instance_data> batch_instances_;
+    std::vector<color_batch_group> batch_color_groups_;
 };
 
 gl_text_render_state& text_render_state() {
@@ -805,32 +888,31 @@ void gl_render_context::establish_dirty_mask(const rect* dirty, int dirty_count)
 
 void gl_render_context::draw_rect(rect area, fill_mode fill) {
     const rect transformed = transformed_rect(area);
-    if (transformed.empty() || fill.color.a <= 0.0f) return;
+    const fcolor normalized = fill.color;
+    if (transformed.empty() || normalized.a <= 0.0f) return;
+#if defined(__APPLE__) || defined(_WIN32)
+    text_render_state().flush_pending_batch();
+#endif
     if (rect_batch_) {
-        rect_batch_->add(transformed, fill.color);
+        rect_batch_->add(transformed, normalized);
         return;
     }
     gl_rect_batch batch(device_size_);
-    batch.add(transformed, fill.color);
+    batch.add(transformed, normalized);
 }
 
 void gl_render_context::draw_shaped_text(
-    px_font_t* font, vec2 position, fcolor color, fx_layout* layout, bool subpixel_positioning) {
+    px_font_t* font, vec2 position, color value, fx_layout* layout, bool subpixel_positioning) {
 #if defined(__APPLE__) || defined(_WIN32)
-    if (!layout || color.a <= 0.0f) {
+    const fcolor normalized = value;
+    if (!layout || normalized.a <= 0.0f) {
         return;
     }
     if (rect_batch_) {
         rect_batch_->flush();
     }
-    text_render_state().draw(font, *layout, position, color, translation_, scale_, device_size_,
-                             subpixel_positioning);
-#else
-    (void)font;
-    (void)position;
-    (void)color;
-    (void)layout;
-    (void)subpixel_positioning;
+    text_render_state().draw(font, *layout, position, normalized, translation_, scale_, device_size_,
+                             clip_, subpixel_positioning);
 #endif
 }
 
@@ -879,6 +961,9 @@ void gl_render_context::pop_state() {
 }
 
 void gl_render_context::begin_rect_batch() {
+#if defined(__APPLE__) || defined(_WIN32)
+    text_render_state().flush_pending_batch();
+#endif
     if (rect_batch_) {
         ++rect_batch_->depth;
         return;
@@ -903,6 +988,10 @@ void gl_render_context::end_rect_batch() {
     if (!rect_batch_) return;
     if (--rect_batch_->depth == 0) rect_batch_.reset();
 }
+
+void gl_render_context::begin_line_batch() {}
+
+void gl_render_context::end_line_batch() {}
 
 void gl_render_context::finish() {
     // pop_state() first submits child work under the child clip and then restores its parent

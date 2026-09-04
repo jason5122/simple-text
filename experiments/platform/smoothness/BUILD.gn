@@ -1,0 +1,25 @@
+group("smoothness") {
+  deps = [ ":scroll_trace_data" ]
+
+  if (is_mac) {
+    deps += [ ":scroll_trace" ]
+  }
+}
+
+source_set("scroll_trace_data") {
+  sources = [
+    "scroll_trace.cc",
+    "scroll_trace.h",
+  ]
+}
+
+if (is_mac) {
+  executable("scroll_trace") {
+    sources = [ "scroll_trace.mm" ]
+    deps = [ ":scroll_trace_data" ]
+    frameworks = [
+      "AppKit.framework",
+      "ApplicationServices.framework",
+    ]
+  }
+}

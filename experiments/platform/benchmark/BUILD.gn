@@ -1,0 +1,93 @@
+group("benchmarks") {
+  deps = [
+    ":animation_benchmark",
+    ":demo_isolation",
+    ":drag_benchmark",
+    ":render_benchmark",
+    ":scroll_benchmark",
+    ":startup_benchmark",
+  ]
+  if (is_mac) {
+    deps += [
+      ":animation_analyzer",
+      ":benchmark_analyzer",
+      ":move_mouse",
+      ":scroll_wheel",
+    ]
+  }
+}
+
+executable("drag_benchmark") {
+  sources = [ "drag_benchmark.cc" ]
+  deps = [ "../px" ]
+}
+
+executable("animation_benchmark") {
+  sources = [ "animation_benchmark.cc" ]
+  deps = [ "../px" ]
+}
+
+executable("demo_isolation") {
+  sources = [ "demo_isolation.cc" ]
+  deps = [
+    "../ui:retained_text",
+    "../ui:window",
+  ]
+}
+
+executable("render_benchmark") {
+  sources = [ "render_benchmark.cc" ]
+  deps = [ "../ui:retained_text" ]
+
+  if (is_mac) {
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+  }
+}
+
+executable("scroll_benchmark") {
+  sources = [ "scroll_benchmark.cc" ]
+  deps = [
+    "../px",
+    "../smoothness:scroll_trace_data",
+    "../ui:retained_text",
+  ]
+}
+
+executable("startup_benchmark") {
+  sources = [ "startup_benchmark.cc" ]
+  deps = [ "../ui:window" ]
+}
+
+if (is_mac) {
+  executable("benchmark_analyzer") {
+    sources = [ "analyzer.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("animation_analyzer") {
+    sources = [ "animation_analyzer.mm" ]
+
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+    ]
+  }
+
+  executable("move_mouse") {
+    sources = [ "move_mouse.cc" ]
+    frameworks = [ "ApplicationServices.framework" ]
+  }
+
+  executable("scroll_wheel") {
+    sources = [ "scroll_wheel.cc" ]
+    frameworks = [ "ApplicationServices.framework" ]
+  }
+}

@@ -14,5 +14,5 @@ fi
 rm -rf "$build_dir/sublime"
 prlctl exec "$vm" --current-user \
   "$windows_share\\capture_windows.exe" \
-  suite \
+  "$windows_share\\capture-tests" \
   "$windows_share\\sublime"

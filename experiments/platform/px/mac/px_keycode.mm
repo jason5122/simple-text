@@ -128,8 +128,6 @@ uint32_t px_mac_modifiers_from_ns(NSEventModifierFlags flags) {
 px_key px_mac_keycode_to_px_key(NSString* chars_ignoring_modifiers,
                                 unsigned short key_code,
                                 NSEventModifierFlags flags) {
-    (void)flags;
-
     if (px_key named = named_key_for_keycode(key_code); named != PX_KEY_NONE) {
         return named;
     }

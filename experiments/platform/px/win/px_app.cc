@@ -38,9 +38,6 @@ std::map<UINT_PTR, std::function<void()>>& timers() {
 UINT_PTR g_next_timer_id = 1;
 
 void CALLBACK timer_proc(HWND hwnd, UINT message, UINT_PTR id, DWORD time) {
-    (void)hwnd;
-    (void)message;
-    (void)time;
     auto it = timers().find(id);
     if (it == timers().end()) {
         return;
@@ -92,12 +89,6 @@ void enable_dpi_awareness() {
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 
 void px_init(const char* app_name, const char* bundle_id, int argc, char** argv, uint32_t flags) {
-    (void)app_name;
-    (void)bundle_id;
-    (void)argc;
-    (void)argv;
-    (void)flags;
-
     g_start = std::chrono::steady_clock::now();
     enable_dpi_awareness();
     px_win_register_class();

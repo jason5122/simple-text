@@ -25,7 +25,6 @@ void post(CGEventType type, double x, double y) {
 // Keep the signal handler async-signal-safe. main() posts mouse-up before exiting, so Ctrl-C
 // cannot leave the synthetic drag button stuck down.
 void on_sigint(int signal) {
-    (void)signal;
     interrupted = 1;
 }
 

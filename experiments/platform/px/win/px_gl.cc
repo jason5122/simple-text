@@ -33,7 +33,6 @@ PFN_glDeleteShader px_glDeleteShader = nullptr;
 PFN_glCreateProgram px_glCreateProgram = nullptr;
 PFN_glAttachShader px_glAttachShader = nullptr;
 PFN_glBindAttribLocation px_glBindAttribLocation = nullptr;
-PFN_glBindFragDataLocationIndexed px_glBindFragDataLocationIndexed = nullptr;
 PFN_glLinkProgram px_glLinkProgram = nullptr;
 PFN_glGetProgramiv px_glGetProgramiv = nullptr;
 PFN_glGetProgramInfoLog px_glGetProgramInfoLog = nullptr;
@@ -114,7 +113,6 @@ void load_modern_gl() {
     ok &= load(&px_glCreateProgram, "glCreateProgram");
     ok &= load(&px_glAttachShader, "glAttachShader");
     ok &= load(&px_glBindAttribLocation, "glBindAttribLocation");
-    ok &= load(&px_glBindFragDataLocationIndexed, "glBindFragDataLocationIndexed");
     ok &= load(&px_glLinkProgram, "glLinkProgram");
     ok &= load(&px_glGetProgramiv, "glGetProgramiv");
     ok &= load(&px_glGetProgramInfoLog, "glGetProgramInfoLog");

@@ -34,7 +34,7 @@ public:
     void draw_rect(rect area, fill_mode fill) override;
     void draw_shaped_text(px_font_t* font,
                           vec2 position,
-                          fcolor color,
+                          color value,
                           fx_layout* layout,
                           bool subpixel_positioning) override;
 
@@ -54,6 +54,8 @@ public:
     void end_text_batch() override;
     void begin_rect_batch() override;
     void end_rect_batch() override;
+    void begin_line_batch() override;
+    void end_line_batch() override;
 
     // Submit pending batches and restore any unmatched pushed states. Platform backends call this
     // after paint() and before presenting, so a client that forgets an end/pop does not silently

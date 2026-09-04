@@ -57,8 +57,6 @@ public:
                rect bounds,
                const rect* dirty,
                int dirty_count) override {
-        (void)dirty;
-        (void)dirty_count;
         context->begin_rect_batch();
         context->draw_rect(bounds, kBackground);
 

@@ -1,0 +1,25 @@
+group("ui") {
+  deps = [
+    ":retained_text",
+    ":window",
+  ]
+}
+
+source_set("window") {
+  sources = [
+    "window.cc",
+    "window.h",
+  ]
+  deps = [ "../px" ]
+}
+
+source_set("retained_text") {
+  sources = [
+    "retained_text.cc",
+    "retained_text.h",
+  ]
+  deps = [
+    "../px",
+    "//fx",
+  ]
+}

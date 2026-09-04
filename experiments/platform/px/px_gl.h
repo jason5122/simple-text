@@ -156,8 +156,6 @@ using PFN_glDeleteShader = void(APIENTRY*)(GLuint);
 using PFN_glCreateProgram = GLuint(APIENTRY*)(void);
 using PFN_glAttachShader = void(APIENTRY*)(GLuint, GLuint);
 using PFN_glBindAttribLocation = void(APIENTRY*)(GLuint, GLuint, const GLchar*);
-using PFN_glBindFragDataLocationIndexed =
-    void(APIENTRY*)(GLuint, GLuint, GLuint, const GLchar*);
 using PFN_glLinkProgram = void(APIENTRY*)(GLuint);
 using PFN_glGetProgramiv = void(APIENTRY*)(GLuint, GLenum, GLint*);
 using PFN_glGetProgramInfoLog = void(APIENTRY*)(GLuint, GLsizei, GLsizei*, GLchar*);
@@ -190,7 +188,6 @@ extern PFN_glDeleteShader px_glDeleteShader;
 extern PFN_glCreateProgram px_glCreateProgram;
 extern PFN_glAttachShader px_glAttachShader;
 extern PFN_glBindAttribLocation px_glBindAttribLocation;
-extern PFN_glBindFragDataLocationIndexed px_glBindFragDataLocationIndexed;
 extern PFN_glLinkProgram px_glLinkProgram;
 extern PFN_glGetProgramiv px_glGetProgramiv;
 extern PFN_glGetProgramInfoLog px_glGetProgramInfoLog;
@@ -224,7 +221,6 @@ bool px_gl_has_shaders();
 #define glCreateProgram px_glCreateProgram
 #define glAttachShader px_glAttachShader
 #define glBindAttribLocation px_glBindAttribLocation
-#define glBindFragDataLocationIndexed px_glBindFragDataLocationIndexed
 #define glLinkProgram px_glLinkProgram
 #define glGetProgramiv px_glGetProgramiv
 #define glGetProgramInfoLog px_glGetProgramInfoLog

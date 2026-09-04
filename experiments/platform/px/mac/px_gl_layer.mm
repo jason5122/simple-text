@@ -187,25 +187,21 @@ double trace_quantile(const double* values, int count, double q) {
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    (void)mask;
     ensure_shared_gl();
     return g_pixel_format;
 }
 
 - (void)releaseCGLPixelFormat:(CGLPixelFormatObj)pf {
     // Intentionally empty: the pixel format is a shared global. `ret`, same as ST.
-    (void)pf;
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pf {
-    (void)pf;
     ensure_shared_gl();
     return g_context;
 }
 
 - (void)releaseCGLContext:(CGLContextObj)ctx {
     // Intentionally empty: the context is a shared global.
-    (void)ctx;
 }
 
 - (void)drawInCGLContext:(CGLContextObj)ctx

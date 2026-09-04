@@ -1,0 +1,56 @@
+group("examples") {
+  deps = [
+    ":control_char_demo",
+    ":dark_mode_demo",
+    ":demo",
+    ":editor",
+    ":glow_demo",
+  ]
+
+  if (is_mac) {
+    deps += [ ":skia_demo" ]
+  }
+}
+
+executable("demo") {
+  sources = [ "demo.cc" ]
+  deps = [
+    "../px",
+    "../ui:retained_text",
+    "../ui:window",
+  ]
+}
+
+executable("dark_mode_demo") {
+  sources = [ "dark_mode_demo.cc" ]
+  deps = [ "../ui:retained_text" ]
+}
+
+executable("control_char_demo") {
+  sources = [ "control_char_demo.cc" ]
+  deps = [ "../px" ]
+}
+
+executable("glow_demo") {
+  sources = [ "glow_demo.cc" ]
+  deps = [
+    "../px",
+    "//fx",
+  ]
+}
+
+executable("editor") {
+  sources = [ "editor.cc" ]
+  deps = [
+    "../px",
+    "../ui:retained_text",
+    "../ui:window",
+  ]
+}
+
+if (is_mac) {
+  executable("skia_demo") {
+    sources = [ "skia_demo.cc" ]
+    deps = [ "../px" ]
+  }
+}

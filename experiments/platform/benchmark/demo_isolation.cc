@@ -1,5 +1,5 @@
 #include "experiments/platform/px/px.h"
-#include "experiments/platform/px/px_font_private.h"
+#include "experiments/platform/ui/retained_text.h"
 #include "experiments/platform/ui/window.h"
 
 #include <array>
@@ -71,21 +71,16 @@ double initial_scroll_offset(ScrollMode mode) {
     return 0.0;
 }
 
-using LayoutBatches = std::vector<fx_layout_batch>;
+using PreparedText = retained_text;
 
-LayoutBatches shape_text(px_font_t* font, std::string_view text) {
-    return shape_text_buffer_batches(font, text);
+PreparedText prepare_text(px_font_t* font, std::string_view text) {
+    grapheme_shaper* shaper = grapheme_shaper::instance(font);
+    return prepare_retained_text(shaper, text);
 }
 
-void draw_layout_batches(px_render_context* context,
-                         px_font_t* font,
-                         vec2 position,
-                         fcolor color,
-                         LayoutBatches* batches) {
-    for (fx_layout_batch& batch : *batches) {
-        context->draw_shaped_text(font, vec2{position.x + batch.x_offset, position.y}, color,
-                                  &batch.layout, true);
-    }
+void draw_layout_batches(
+    px_render_context* context, px_font_t* font, vec2 position, fcolor color, PreparedText* text) {
+    draw_retained_text(context, font, position, color, text);
 }
 
 class DemoControl final : public control, public px_input_client {
@@ -106,13 +101,13 @@ public:
         if (content_mode_ == ContentMode::kAllCached ||
             content_mode_ == ContentMode::kTextCached) {
             for (size_t i = 0; i < kSectionTitles.size(); ++i) {
-                section_layouts_[i] = shape_text(body_font_, kSectionTitles[i]);
+                section_layouts_[i] = prepare_text(body_font_, kSectionTitles[i]);
             }
             for (size_t i = 0; i < kSourceLines.size(); ++i) {
-                source_layouts_[i] = shape_text(body_font_, kSourceLines[i]);
+                source_layouts_[i] = prepare_text(body_font_, kSourceLines[i]);
             }
             for (size_t i = 0; i < kDetailLines.size(); ++i) {
-                detail_layouts_[i] = shape_text(detail_font_, kDetailLines[i]);
+                detail_layouts_[i] = prepare_text(detail_font_, kDetailLines[i]);
             }
         }
     }
@@ -153,8 +148,6 @@ public:
               rect bounds,
               const rect* dirty,
               int dirty_count) override {
-        (void)dirty;
-        (void)dirty_count;
         std::vector<VisibleRow> visible_rows;
         visible_rows.reserve(static_cast<size_t>(bounds.h / 64.0) + 3);
 
@@ -168,8 +161,8 @@ public:
 
         const double document_y = content_top - scroll_offset_;
         const double document_width = std::max(280.0, bounds.w - 128.0);
-        const bool draw_rectangles = content_mode_ != ContentMode::kText &&
-                                     content_mode_ != ContentMode::kTextCached;
+        const bool draw_rectangles =
+            content_mode_ != ContentMode::kText && content_mode_ != ContentMode::kTextCached;
         if (draw_rectangles) {
             context->begin_rect_batch();
             context->draw_rect(rect{48.0, document_y, document_width, kDocumentHeight},
@@ -215,25 +208,22 @@ public:
                                                ? (visible.row / 8) % kSectionTitles.size()
                                                : visible.row % kSourceLines.size();
                 const size_t detail_index = visible.row % kDetailLines.size();
-                const fcolor title_color = visible.section
-                                               ? fcolor{0.70f, 0.84f, 0.96f, 1.0f}
-                                               : fcolor{0.63f, 0.68f, 0.76f, 1.0f};
+                const fcolor title_color = visible.section ? fcolor{0.70f, 0.84f, 0.96f, 1.0f}
+                                                           : fcolor{0.63f, 0.68f, 0.76f, 1.0f};
                 if (cached) {
-                    LayoutBatches* title_layouts = visible.section
-                                                               ? &section_layouts_[title_index]
-                                                               : &source_layouts_[title_index];
+                    PreparedText* title_layouts = visible.section ? &section_layouts_[title_index]
+                                                                  : &source_layouts_[title_index];
                     draw_layout_batches(context, body_font_, vec2{88.0, visible.y + 19.0},
                                         title_color, title_layouts);
                     draw_layout_batches(context, detail_font_, vec2{88.0, visible.y + 34.0},
                                         fcolor{0.39f, 0.45f, 0.54f, 1.0f},
                                         &detail_layouts_[detail_index]);
                 } else {
-                    const std::string_view title = visible.section
-                                                       ? kSectionTitles[title_index]
-                                                       : kSourceLines[title_index];
-                    LayoutBatches title_layouts = shape_text(body_font_, title);
-                    LayoutBatches detail_layouts =
-                        shape_text(detail_font_, kDetailLines[detail_index]);
+                    const std::string_view title =
+                        visible.section ? kSectionTitles[title_index] : kSourceLines[title_index];
+                    PreparedText title_layouts = prepare_text(body_font_, title);
+                    PreparedText detail_layouts =
+                        prepare_text(detail_font_, kDetailLines[detail_index]);
                     draw_layout_batches(context, body_font_, vec2{88.0, visible.y + 19.0},
                                         title_color, &title_layouts);
                     draw_layout_batches(context, detail_font_, vec2{88.0, visible.y + 34.0},
@@ -304,9 +294,9 @@ private:
     double scroll_distance_ = 0.0;
     double expected_scroll_distance_ = 640.0 * 12.0;
     bool reported_scroll_input_ = false;
-    std::array<LayoutBatches, kSectionTitles.size()> section_layouts_;
-    std::array<LayoutBatches, kSourceLines.size()> source_layouts_;
-    std::array<LayoutBatches, kDetailLines.size()> detail_layouts_;
+    std::array<PreparedText, kSectionTitles.size()> section_layouts_;
+    std::array<PreparedText, kSourceLines.size()> source_layouts_;
+    std::array<PreparedText, kDetailLines.size()> detail_layouts_;
     std::string committed_;
     std::string marked_;
 };
@@ -353,8 +343,8 @@ int main(int argc, char** argv) {
         } else if (mode == "offscreen") {
             scroll_mode = ScrollMode::kOffscreen;
         } else if (mode != "normal") {
-            std::println(stderr,
-                         "usage: {} [normal|onscreen|lower|offscreen] [small|large]", argv[0]);
+            std::println(stderr, "usage: {} [normal|onscreen|lower|offscreen] [small|large]",
+                         argv[0]);
             return 2;
         }
     }
@@ -364,8 +354,8 @@ int main(int argc, char** argv) {
         if (size == "large") {
             large = true;
         } else if (size != "small") {
-            std::println(stderr,
-                         "usage: {} [normal|onscreen|lower|offscreen] [small|large]", argv[0]);
+            std::println(stderr, "usage: {} [normal|onscreen|lower|offscreen] [small|large]",
+                         argv[0]);
             return 2;
         }
     }
@@ -393,18 +383,18 @@ int main(int argc, char** argv) {
         } else if (content == "text") {
             content_mode = ContentMode::kText;
         } else if (content != "all") {
-            std::println(
-                stderr,
-                "usage: {} [normal|onscreen|lower|offscreen] [small|large] [scroll_distance] [all|all-cached|rectangles|text|text-cached]",
-                argv[0]);
+            std::println(stderr,
+                         "usage: {} [normal|onscreen|lower|offscreen] [small|large] "
+                         "[scroll_distance] [all|all-cached|rectangles|text|text-cached]",
+                         argv[0]);
             return 2;
         }
     }
     if (argc > 5) {
-        std::println(
-            stderr,
-            "usage: {} [normal|onscreen|lower|offscreen] [small|large] [scroll_distance] [all|all-cached|rectangles|text|text-cached]",
-            argv[0]);
+        std::println(stderr,
+                     "usage: {} [normal|onscreen|lower|offscreen] [small|large] [scroll_distance] "
+                     "[all|all-cached|rectangles|text|text-cached]",
+                     argv[0]);
         return 2;
     }
 

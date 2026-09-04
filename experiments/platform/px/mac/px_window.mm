@@ -19,9 +19,13 @@
 
 #include "experiments/platform/px/mac/px_mac_private.h"
 
+#include "experiments/platform/px/skia_render_context.h"
+
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -176,7 +180,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent*)event {
-    (void)event;
     return YES;
 }
 
@@ -189,15 +192,124 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-    // Software path. ST reaches its CPU renderer here via
-    // -[PXView softwareDrawWithRects:width:height:...] and a px_canvas; no CPU rasteriser exists
-    // in this experiment, so this only clears to the window background.
-    if (!_pxw) {
+    if (!_pxw || !_pxw->handler) {
         return;
     }
-    const fcolor& bg = _pxw->background;
-    [[NSColor colorWithSRGBRed:bg.r green:bg.g blue:bg.b alpha:bg.a] setFill];
-    NSRectFill(dirtyRect);
+
+    _pxw->handler->pre_paint();
+    px_mac_dispatch_post_event_callbacks();
+
+    const NSRect* native_dirty = nullptr;
+    NSInteger native_dirty_count = 0;
+    [self getRectsBeingDrawn:&native_dirty count:&native_dirty_count];
+
+    std::vector<rect> dirty;
+    dirty.reserve(static_cast<size_t>(std::max<NSInteger>(native_dirty_count, 1)));
+    rect paint_bounds;
+    const auto add_dirty = [&](NSRect native) {
+        const rect area = px_mac_rect_from_ns(NSIntersectionRect(native, self.bounds));
+        if (area.empty()) {
+            return;
+        }
+        dirty.push_back(area);
+        if (paint_bounds.empty()) {
+            paint_bounds = area;
+        } else {
+            const double right = std::max(paint_bounds.right(), area.right());
+            const double bottom = std::max(paint_bounds.bottom(), area.bottom());
+            paint_bounds.x = std::min(paint_bounds.x, area.x);
+            paint_bounds.y = std::min(paint_bounds.y, area.y);
+            paint_bounds.w = right - paint_bounds.x;
+            paint_bounds.h = bottom - paint_bounds.y;
+        }
+    };
+    for (NSInteger i = 0; i < native_dirty_count; ++i) {
+        add_dirty(native_dirty[i]);
+    }
+    if (dirty.empty()) {
+        add_dirty(dirtyRect);
+    }
+    if (dirty.empty()) {
+        return;
+    }
+
+    const double dpi_scale = px_window_dpi_scale_factor(_pxw);
+    self.layer.contentsScale = dpi_scale;
+    const vec2 logical_size = px_window_size(_pxw);
+    const int width = static_cast<int>(logical_size.x * dpi_scale);
+    const int height = static_cast<int>(logical_size.y * dpi_scale);
+    if (width <= 0 || height <= 0 ||
+        static_cast<size_t>(width) > std::numeric_limits<size_t>::max() /
+                                         (static_cast<size_t>(height) * sizeof(uint32_t))) {
+        return;
+    }
+
+    // Sublime uses one process-wide scratch allocation for software paints. It only needs to
+    // survive until CGContextDrawImage returns: AppKit's backing store retains all pixels outside
+    // the current damage region.
+    static std::vector<uint32_t> pixels;
+    const size_t pixel_count = static_cast<size_t>(width) * static_cast<size_t>(height);
+    pixels.resize(pixel_count);
+    if (![self isOpaque]) {
+        std::fill(pixels.begin(), pixels.end(), 0u);
+    }
+
+    recti pixel_clip{
+        std::max(0, static_cast<int>(std::floor(paint_bounds.x * dpi_scale))),
+        std::max(0, static_cast<int>(std::floor(paint_bounds.y * dpi_scale))),
+        std::min(width, static_cast<int>(std::ceil(paint_bounds.right() * dpi_scale))),
+        std::min(height, static_cast<int>(std::ceil(paint_bounds.bottom() * dpi_scale))),
+    };
+    const size_t row_bytes = static_cast<size_t>(width) * sizeof(uint32_t);
+    skia_render_context rc(px_pixel_buffer{pixels.data(), width, height, row_bytes}, pixel_clip,
+                           dpi_scale);
+    if (!rc.valid()) {
+        return;
+    }
+    _pxw->handler->paint(&rc, paint_bounds, dirty.data(), static_cast<int>(dirty.size()));
+
+    CGContextRef destination = NSGraphicsContext.currentContext.CGContext;
+    if (!destination) {
+        return;
+    }
+    CGColorSpaceRef color_space = _pxw->window.colorSpace.CGColorSpace;
+    if (color_space) {
+        CGColorSpaceRetain(color_space);
+    } else {
+        color_space = CGColorSpaceCreateDeviceRGB();
+    }
+    if (!color_space) {
+        return;
+    }
+    CGDataProviderRef provider = CGDataProviderCreateWithData(
+        nullptr, pixels.data(), row_bytes * static_cast<size_t>(height), nullptr);
+    const CGBitmapInfo bitmap_info =
+        static_cast<CGBitmapInfo>(static_cast<uint32_t>(kCGImageAlphaPremultipliedFirst) |
+                                  static_cast<uint32_t>(kCGBitmapByteOrder32Little));
+    CGImageRef image = provider
+                           ? CGImageCreate(static_cast<size_t>(width), static_cast<size_t>(height),
+                                           8, 32, row_bytes, color_space, bitmap_info, provider,
+                                           nullptr, false, kCGRenderingIntentDefault)
+                           : nullptr;
+    if (image) {
+        CGContextSaveGState(destination);
+        CGContextClipToRect(destination, CGRectMake(paint_bounds.x, paint_bounds.y, paint_bounds.w,
+                                                    paint_bounds.h));
+        CGContextTranslateCTM(destination, 0.0, logical_size.y);
+        CGContextScaleCTM(destination, 1.0, -1.0);
+        CGContextSetBlendMode(destination, kCGBlendModeCopy);
+        CGContextDrawImage(destination, CGRectMake(0.0, 0.0, logical_size.x, logical_size.y),
+                           image);
+        CGContextRestoreGState(destination);
+        CGImageRelease(image);
+    }
+    if (provider) {
+        CGDataProviderRelease(provider);
+    }
+    CGColorSpaceRelease(color_space);
+
+    _pxw->did_first_paint = true;
+    _pxw->last_flush = px_now();
 }
 
 // ── tracking ────────────────────────────────────────────────────────────────────────────────────
@@ -388,7 +500,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
-    (void)sender;
     if (_pxw && _pxw->handler) {
         _pxw->handler->drag_drop_exit();
     }
@@ -480,7 +591,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 
 - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range
                                                actualRange:(NSRangePointer)actualRange {
-    (void)range;
     if (actualRange) {
         *actualRange = NSMakeRange(NSNotFound, 0);
     }
@@ -562,7 +672,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (void)windowDidResize:(NSNotification*)notification {
-    (void)notification;
     if (!_pxw) {
         return;
     }
@@ -577,7 +686,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification*)notification {
-    (void)notification;
     if (!_pxw) {
         return;
     }
@@ -595,26 +703,22 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (void)windowDidChangeScreen:(NSNotification*)notification {
-    (void)notification;
     px_mac_update_display_link(_pxw);
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification {
-    (void)notification;
     px_event_t e{};
     e.type = PX_EVENT_FOCUS_GAINED;  // tag 13, matching WM_SETFOCUS
     px_mac_send_event(_pxw, &e);
 }
 
 - (void)windowDidResignKey:(NSNotification*)notification {
-    (void)notification;
     px_event_t e{};
     e.type = PX_EVENT_FOCUS_LOST;  // tag 14, matching WM_KILLFOCUS
     px_mac_send_event(_pxw, &e);
 }
 
 - (BOOL)windowShouldClose:(NSWindow*)sender {
-    (void)sender;
     if (!_pxw || !_pxw->handler) {
         return YES;
     }
@@ -633,7 +737,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (void)windowWillClose:(NSNotification*)notification {
-    (void)notification;
     if (!_pxw) {
         return;
     }
@@ -725,10 +828,6 @@ void update_cursor_from_tracking_rects(px_window_t* window) {
 void before_waiting_callback(CFRunLoopObserverRef observer,
                              CFRunLoopActivity activity,
                              void* context) {
-    (void)observer;
-    (void)activity;
-    (void)context;
-
     // Work from a snapshot so list growth cannot invalidate the iterator. Deferred callbacks are
     // drained only after this loop. ST similarly obtains an NSApp.windows snapshot here.
     const std::vector<px_window_t*> windows = all_windows();
@@ -773,11 +872,6 @@ CVReturn display_link_callback(CVDisplayLinkRef link,
                                CVOptionFlags flags_in,
                                CVOptionFlags* flags_out,
                                void* context) {
-    (void)link;
-    (void)now;
-    (void)flags_in;
-    (void)flags_out;
-
     px_window_t* window = static_cast<px_window_t*>(context);
     if (!window) {
         return kCVReturnSuccess;
@@ -822,8 +916,6 @@ px_window_t* px_create_window(px_window_event_handler* handler,
                               const char* title,
                               fcolor background,
                               uint32_t flags) {
-    (void)parent;
-
     px_window_t* pxw = new px_window_t();
     pxw->handler = handler ? handler : &dummy_handler();
     pxw->background = background;
@@ -997,6 +1089,12 @@ void px_set_window_position(px_window_t* window, vec2 position) {
     const NSRect content = [window->window contentRectForFrameRect:frame];
     [window->window
         setFrameOrigin:NSMakePoint(position.x, screen_height - position.y - content.size.height)];
+}
+
+void px_set_window_maximized(px_window_t* window, bool maximized) {
+    if (window && window->window && window->window.isZoomed != maximized) {
+        [window->window zoom:nil];
+    }
 }
 
 double px_window_dpi_scale_factor(px_window_t* window) {

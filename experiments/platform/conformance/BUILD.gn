@@ -1,0 +1,177 @@
+group("conformance") {
+  deps = [
+    ":buffer_conformance",
+    ":metrics_conformance",
+  ]
+
+  if (is_win) {
+    deps += [ ":capture_windows" ]
+  }
+
+  if (is_mac) {
+    deps += [
+      ":capture_server",
+      ":ui_conformance",
+    ]
+  }
+}
+
+executable("buffer_conformance") {
+  sources = [ "buffer.cc" ]
+  deps = [
+    ":capture",
+    ":scripts",
+    ":test_config",
+    ":test_corpus",
+    "../px",
+    "../ui:retained_text",
+  ]
+}
+
+executable("metrics_conformance") {
+  sources = [ "metrics.cc" ]
+  deps = [
+    ":scripts",
+    ":test_config",
+    ":test_corpus",
+    "../px",
+    "//base",
+  ]
+}
+
+if (is_win) {
+  executable("capture_windows") {
+    sources = [ "win/capture_windows.cc" ]
+    deps = [
+      ":scripts",
+      ":test_config",
+      ":test_corpus",
+    ]
+    libs = [
+      "d3d11.lib",
+      "dxgi.lib",
+      "ole32.lib",
+      "user32.lib",
+      "windowscodecs.lib",
+    ]
+  }
+}
+
+copy("scripts") {
+  sources = [
+    "User/metrics_probe.py",
+    "capture-our-metrics.sh",
+    "diff-metrics.sh",
+    "diff.sh",
+  ]
+  if (is_mac) {
+    sources += [
+      "diff-ui.sh",
+      "mac/capture-ours-ui.sh",
+      "mac/capture-ours.sh",
+      "mac/capture-sublime-metrics.sh",
+      "mac/capture-sublime-ui.sh",
+      "mac/capture-sublime.sh",
+    ]
+  } else if (is_win) {
+    sources += [
+      "win/capture-our-metrics.ps1",
+      "win/capture-ours.sh",
+      "win/capture-sublime-metrics.ps1",
+      "win/capture-sublime-metrics.sh",
+      "win/capture-sublime.sh",
+    ]
+  }
+  outputs = [ "$root_out_dir/{{source_file_part}}" ]
+}
+
+copy("test_config") {
+  sources = [ "tests/sizes.txt" ]
+  if (is_mac) {
+    sources += [ "tests/faces-mac.txt" ]
+  } else if (is_win) {
+    sources += [ "tests/faces-win.txt" ]
+  }
+  outputs = [ "$root_out_dir/capture-tests/{{source_file_part}}" ]
+}
+
+copy("test_corpus") {
+  sources = [
+    "tests/texts/emoji.txt",
+    "tests/texts/kerning.txt",
+    "tests/texts/ligatures.txt",
+    "tests/texts/marks.txt",
+    "tests/texts/pangram.txt",
+    "tests/texts/scripts.txt",
+  ]
+  outputs = [ "$root_out_dir/capture-tests/texts/{{source_file_part}}" ]
+}
+
+if (is_mac) {
+  copy("ui_test_config") {
+    sources = [
+      "tests-ui/faces.txt",
+      "tests-ui/sizes.txt",
+    ]
+    outputs = [ "$root_out_dir/capture-tests-ui/{{source_file_part}}" ]
+  }
+
+  copy("ui_test_corpus") {
+    sources = [
+      "tests-ui/texts/arabic.txt",
+      "tests-ui/texts/code.txt",
+      "tests-ui/texts/emoji.txt",
+      "tests-ui/texts/fallback.txt",
+      "tests-ui/texts/kerning.txt",
+      "tests-ui/texts/ligatures.txt",
+    ]
+    outputs = [ "$root_out_dir/capture-tests-ui/texts/{{source_file_part}}" ]
+  }
+
+  executable("ui_conformance") {
+    sources = [ "ui.cc" ]
+    deps = [
+      ":capture",
+      ":scripts",
+      ":ui_test_config",
+      ":ui_test_corpus",
+      "../px",
+      "../ui:retained_text",
+    ]
+  }
+
+  executable("capture_server") {
+    sources = [ "mac/capture_server.cc" ]
+    deps = [
+      ":capture",
+      "//third_party/spdlog",
+    ]
+  }
+}
+
+source_set("capture") {
+  sources = [ "capture.h" ]
+
+  if (is_mac) {
+    sources += [ "mac/capture.mm" ]
+    framework_dirs = [ "/System/Library/PrivateFrameworks" ]
+    frameworks = [
+      "AppKit.framework",
+      "CoreFoundation.framework",
+      "CoreGraphics.framework",
+      "ImageIO.framework",
+      "SkyLight.framework",
+    ]
+  } else {
+    sources += [ "win/capture.cc" ]
+    deps = [ "../px" ]
+    libs = [
+      "ole32.lib",
+      "opengl32.lib",
+      "user32.lib",
+      "windowscodecs.lib",
+    ]
+  }
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+}

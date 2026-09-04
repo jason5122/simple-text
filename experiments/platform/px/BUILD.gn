@@ -1,0 +1,117 @@
+source_set("px") {
+  sources = [
+    "gl_render_context.cc",
+    "gl_render_context.h",
+    "grapheme_shaper.cc",
+    "grapheme_shaper.h",
+    "px.h",
+    "px_font.cc",
+    "px_font_internal.h",
+    "px_gl.h",
+  ]
+
+  inputs = [
+    "gl_glyph_frag.glsl",
+    "gl_glyph_vert.glsl",
+    "gl_rect_frag.glsl",
+    "gl_rect_vert.glsl",
+  ]
+
+  deps = [
+    "//base",
+    "//fx",
+    "//third_party/uni_algo",
+  ]
+
+  if (is_mac) {
+    sources += [
+      "mac/px_app.mm",
+      "mac/px_gl_layer.mm",
+      "mac/px_keycode.mm",
+      "mac/px_mac_private.h",
+      "mac/px_window.mm",
+      "skia_render_context.cc",
+      "skia_render_context.h",
+    ]
+
+    deps += [ "//third_party/skia" ]
+
+    frameworks = [
+      "AppKit.framework",
+      "CoreGraphics.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+  }
+
+  if (is_win) {
+    sources += [
+      "win/px_app.cc",
+      "win/px_gl.cc",
+      "win/px_keycode.cc",
+      "win/px_win_private.h",
+      "win/px_window.cc",
+    ]
+
+    libs = [
+      "advapi32.lib",  # RegGetValueW, for the dark-mode preference
+      "gdi32.lib",  # pixel formats, regions
+      "imm32.lib",  # IME composition
+      "opengl32.lib",  # GL 1.1; anything newer goes through wglGetProcAddress
+      "shell32.lib",  # DragAcceptFiles, ShellExecuteW
+      "user32.lib",
+    ]
+  }
+
+  if (is_linux) {
+    # ST's own binary dlopen/dlsym's GTK rather than linking it (see
+    # px_linux_private.h) -- a distribution trick for running against either
+    # GTK2 or GTK3, not part of the platform abstraction. This links gtk+-3.0
+    # normally, as instructed.
+    sources += [
+      "linux/px_app.cc",
+      "linux/px_gl.cc",
+      "linux/px_keycode.cc",
+      "linux/px_linux_private.h",
+      "linux/px_window.cc",
+    ]
+
+    public_configs = [ ":gtk3_internal_config" ]
+
+    # GL entry points past 1.1 are ordinary linked symbols on Linux too -- see
+    # px_gl.h.
+    libs = [ "GL" ]
+  }
+}
+
+executable("grapheme_shaper_unittests") {
+  testonly = true
+  sources = [ "grapheme_shaper_unittest.cc" ]
+  deps = [
+    ":px",
+    "../ui:retained_text",
+    "//base",
+    "//testing:fuzztest",
+  ]
+}
+
+if (is_linux) {
+  import("//build/config/linux/pkg_config.gni")
+
+  # GN doesn't check visibility for configs so this gets an obviously internal
+  # name to discourage random targets from depending on it directly and
+  # bypassing :px's visibility -- the same convention Chromium uses for its own
+  # gtk_internal_config.
+  pkg_config("gtk3_internal_config") {
+    # gtk+-3.0 requires gmodule/gthread but does not always list them as
+    # dependencies.
+    packages = [
+      "gmodule-2.0",
+      "gthread-2.0",
+      "gtk+-3.0",
+    ]
+  }
+}

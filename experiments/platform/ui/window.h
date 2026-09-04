@@ -70,6 +70,7 @@ public:
     virtual void hide() = 0;
     virtual void close() = 0;
     virtual void set_title(const char* title) = 0;
+    virtual void set_maximized(bool maximized) = 0;
     virtual vec2 size() const = 0;
     virtual double dpi_scale_factor() const = 0;
 
@@ -98,6 +99,7 @@ public:
     void hide() override;
     void close() override;
     void set_title(const char* title) override;
+    void set_maximized(bool maximized) override;
     vec2 size() const override;
     double dpi_scale_factor() const override;
     void mark_dirty() override;

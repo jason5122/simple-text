@@ -23,6 +23,9 @@
 
 #pragma once
 
+#include "base/color.h"
+#include "base/geometry.h"
+
 #include <cstdint>
 #include <functional>
 #include <string_view>
@@ -43,61 +46,23 @@ class px_input_client;
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // GEOMETRY
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
-// Coordinates are in device-independent points with a top-left origin and y growing downward. The
-// Cocoa backend flips them; -[PXView isFlipped] returns YES in ST for the same reason.
-struct vec2 {
-    double x = 0.0;
-    double y = 0.0;
-};
-
-// 4 doubles, matching ST: flush_dirty_rects walks its dirty vector with a 0x20 stride and loads
-// [x22], [x22+0x10] as two pairs.
-struct rect {
-    double x = 0.0;
-    double y = 0.0;
-    double w = 0.0;
-    double h = 0.0;
-
-    constexpr double right() const { return x + w; }
-    constexpr double bottom() const { return y + h; }
-    constexpr bool empty() const { return w <= 0.0 || h <= 0.0; }
-};
-
-// Device-pixel rectangle, stored as edges. This is the representation used by ST's render
-// contexts: gl_render_context::apply_clip loads four packed ints and computes right-left and
-// bottom-top immediately before glScissor.
-struct recti {
-    int left = 0;
-    int top = 0;
-    int right = 0;
-    int bottom = 0;
-
-    constexpr int width() const { return right - left; }
-    constexpr int height() const { return bottom - top; }
-    constexpr bool empty() const { return width() <= 0 || height() <= 0; }
-};
-
-struct fcolor {
-    float r = 0.0f;
-    float g = 0.0f;
-    float b = 0.0f;
-    float a = 1.0f;
-};
-
+// px interprets logical geometry with a top-left origin and y growing downward. The Cocoa backend
+// flips its native coordinates; -[PXView isFlipped] returns YES in ST for the same reason.
 struct px_font_metrics {
     float ascent = 0.0f;
     float descent = 0.0f;
     float leading = 0.0f;
     float line_height = 0.0f;
+    float raster_ascent = 0.0f;
 };
 
 // ST's fill_mode also represents textured/repeating fills. Solid color is the first useful slice
 // of that type and is the only one implemented until px_texture is reconstructed.
 struct fill_mode {
-    fcolor color;
+    ::color color;
 
     fill_mode() = default;
-    explicit fill_mode(fcolor value) : color(value) {}
+    explicit fill_mode(::color value) : color(value) {}
 };
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -281,30 +246,47 @@ public:
     virtual ~px_render_context() = default;
 
     virtual void draw_rect(rect area, fill_mode fill) = 0;
-    void draw_rect(rect area, fcolor color) { draw_rect(area, fill_mode(color)); }
+    void draw_rect(rect area, color value) { draw_rect(area, fill_mode(value)); }
 
     // Sublime's UI-text convenience path shapes the entire substring once through the px_font_t's
     // fx_font, then dispatches that layout to the active renderer. Cached controls such as labels
     // keep and draw an fx_layout directly instead.
-    void draw_text(px_font_t* font,
-                   vec2 position,
-                   fcolor color,
-                   std::string_view utf8,
-                   bool subpixel_positioning = true);
+    virtual void draw_text(px_font_t* font,
+                           vec2 position,
+                           color value,
+                           std::string_view utf8,
+                           bool subpixel_positioning = true);
     virtual void draw_shaped_text(px_font_t* font,
                                   vec2 position,
-                                  fcolor color,
+                                  color value,
                                   fx_layout* layout,
                                   bool subpixel_positioning) = 0;
+    virtual void draw_shaped_text_faded(px_font_t* font,
+                                        vec2 position,
+                                        color value,
+                                        fx_layout* layout,
+                                        bool subpixel_positioning,
+                                        float fade_start,
+                                        float fade_end) {
+        draw_shaped_text(font, position, value, layout, subpixel_positioning);
+    }
+    virtual void draw_shaped_text_clipped(px_font_t* font,
+                                          vec2 position,
+                                          color value,
+                                          fx_layout* layout,
+                                          bool subpixel_positioning,
+                                          float clip_start,
+                                          float clip_end) {
+        draw_shaped_text(font, position, value, layout, subpixel_positioning);
+    }
 
     // Transform operations compose exactly as ST's GL implementation does: translation is first
     // multiplied by the current scale, while scale multiplies the current scale component-wise.
     virtual void translate(double x, double y) = 0;
     virtual void scale(double x, double y) = 0;
 
-    // Intersects the current device-pixel clip with a transformed logical rectangle and applies it
-    // immediately. push_state(false) isolates an active batch, matching the behavior visible in
-    // gl_render_context::push_state(bool); true leaves the current batch active across the save.
+    // Intersects the current device-pixel clip with a transformed logical rectangle. GPU glyphs
+    // capture that clip per instance; state-backed primitives apply it immediately.
     virtual void restrict_clip_rect(rect area) = 0;
     virtual void push_state(bool preserve_batch) = 0;
     virtual void pop_state() = 0;
@@ -319,6 +301,8 @@ public:
     virtual void end_text_batch() {}
     virtual void begin_rect_batch() {}
     virtual void end_rect_batch() {}
+    virtual void begin_line_batch() {}
+    virtual void end_line_batch() {}
 };
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -353,32 +337,22 @@ public:
 
     // Returns the cursor for a window-space point. Called from -[PXView resetCursorRects].
     virtual px_cursor_t calculate_cursor(vec2 pos) {
-        (void)pos;
         return PX_CURSOR_ARROW;
     }
 
     virtual bool drag_drop_enter(vec2 pos, const char* const* paths, int count) {
-        (void)pos;
-        (void)paths;
-        (void)count;
         return false;
     }
     virtual bool drag_drop_motion(vec2 pos, const char* const* paths, int count) {
-        (void)pos;
-        (void)paths;
-        (void)count;
         return false;
     }
     virtual void drag_drop_exit() {}
     virtual bool drag_drop_accept(vec2 pos, const char* const* paths, int count) {
-        (void)pos;
-        (void)paths;
-        (void)count;
         return false;
     }
 
     // Driven by the platform's display clock. `now` uses the same monotonic clock as px_now().
-    virtual void animation_tick(double now) { (void)now; }
+    virtual void animation_tick(double now) {}
 
     // The IME target, or null if this window takes no text input.
     virtual px_input_client* get_input_client() { return nullptr; }
@@ -440,10 +414,7 @@ class px_application_event_handler {
 public:
     virtual ~px_application_event_handler() = default;
 
-    virtual void open_files(const char* const* paths, int count) {
-        (void)paths;
-        (void)count;
-    }
+    virtual void open_files(const char* const* paths, int count) {}
     virtual void new_file() {}
     virtual bool can_quit_without_prompt() { return true; }
     virtual void try_quit(std::function<void(bool)> done) { done(true); }
@@ -514,6 +485,7 @@ vec2 px_window_size(px_window_t* window);
 vec2 px_window_position(px_window_t* window);
 void px_set_window_size(px_window_t* window, double width, double height);
 void px_set_window_position(px_window_t* window, vec2 position);
+void px_set_window_maximized(px_window_t* window, bool maximized);
 double px_window_dpi_scale_factor(px_window_t* window);
 void px_set_full_screen(px_window_t* window, bool full_screen);
 

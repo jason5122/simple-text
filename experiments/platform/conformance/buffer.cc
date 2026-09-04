@@ -1,7 +1,9 @@
+#include "base/numeric/safe_conversions.h"
 #include "experiments/platform/conformance/capture.h"
 #include "experiments/platform/px/gl_render_context.h"
+#include "experiments/platform/px/grapheme_shaper.h"
 #include "experiments/platform/px/px.h"
-#include "experiments/platform/px/px_font_private.h"
+#include "experiments/platform/ui/retained_text.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -79,17 +81,56 @@ std::vector<std::string> read_config(const std::string& path) {
     return result;
 }
 
+retained_text prepare_conformance_line(grapheme_shaper* shaper, std::string_view text) {
+    retained_text result;
+    double x = 0.0;
+    const auto is_whitespace = [](char c) { return c == ' ' || c == '\t'; };
+    for (size_t start = 0; start < text.size();) {
+        size_t end = start;
+        if (is_whitespace(text[end])) {
+            while (end < text.size() && is_whitespace(text[end])) {
+                ++end;
+            }
+        } else {
+            while (end < text.size() && !is_whitespace(text[end])) {
+                ++end;
+            }
+            while (end < text.size() && is_whitespace(text[end])) {
+                ++end;
+            }
+        }
+
+        retained_text word = prepare_retained_text(shaper, text.substr(start, end - start));
+        for (retained_text_batch& batch : word.batches) {
+            batch.x_offset += x;
+            for (fx_glyph& glyph : batch.layout.glyphs) {
+                glyph.cluster = base::checked_cast<uint32_t>(start + glyph.cluster);
+            }
+            result.batches.push_back(std::move(batch));
+        }
+        x += word.advance;
+        start = end;
+    }
+    result.advance = x;
+    return result;
+}
+
 class TextPage final : public px_window_event_handler {
 public:
     void attach(px_window_t* window) { window_ = window; }
 
     bool set_content(const TestShot& shot) {
         font_ = px_create_font(shot.family.c_str(), static_cast<float>(shot.size));
-        lines_ = shot.lines;
         if (!font_) {
             return false;
         }
         metrics_ = px_font_get_metrics(font_);
+        lines_.clear();
+        lines_.reserve(shot.lines.size());
+        grapheme_shaper* shaper = grapheme_shaper::instance(font_);
+        for (std::string_view line : shot.lines) {
+            lines_.push_back(prepare_conformance_line(shaper, line));
+        }
         if (window_) {
             px_mark_dirty(window_);
         }
@@ -99,8 +140,6 @@ public:
     bool handle_event(px_event_t*) override { return false; }
 
     void paint(px_render_context* rc, rect bounds, const rect* dirty, int dirty_count) override {
-        (void)dirty;
-        (void)dirty_count;
         rc->draw_rect(bounds, kBackground);
         if (!font_) {
             return;
@@ -112,17 +151,13 @@ public:
         // public ascent first creates a repeating one-pixel error as the requested size changes.
         first_baseline =
             kTextTop +
-            std::floor(font_->font->raster_ascent() * kScale + 0.4999999999999998) / kScale;
+            std::floor(metrics_.raster_ascent * kScale + 0.4999999999999998) / kScale;
 #endif
         rc->begin_text_batch();
         for (size_t line = 0; line < lines_.size(); ++line) {
-            std::vector<fx_layout_batch> batches = shape_text_buffer_batches(font_, lines_[line]);
-            for (fx_layout_batch& batch : batches) {
-                rc->draw_shaped_text(
-                    font_,
-                    vec2{kTextLeft + batch.x_offset, first_baseline + metrics_.line_height * line},
-                    kForeground, &batch.layout, true);
-            }
+            draw_retained_text(rc, font_,
+                               {kTextLeft, first_baseline + metrics_.line_height * line},
+                               kForeground, &lines_[line]);
         }
         rc->end_text_batch();
     }
@@ -131,7 +166,7 @@ private:
     px_window_t* window_ = nullptr;
     px_font_t* font_ = nullptr;
     px_font_metrics metrics_;
-    std::vector<std::string> lines_;
+    std::vector<retained_text> lines_;
 };
 
 int run_tests(int argc, char* argv[]) {

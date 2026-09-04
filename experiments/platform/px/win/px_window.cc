@@ -949,6 +949,12 @@ void px_set_window_position(px_window_t* window, vec2 position) {
                  SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
+void px_set_window_maximized(px_window_t* window, bool maximized) {
+    if (window && window->hwnd) {
+        ShowWindow(window->hwnd, maximized ? SW_MAXIMIZE : SW_RESTORE);
+    }
+}
+
 double px_window_dpi_scale_factor(px_window_t* window) { return window ? window->dpi_scale : 1.0; }
 
 void px_set_full_screen(px_window_t* window, bool full_screen) {

@@ -868,6 +868,17 @@ void px_set_window_position(px_window_t* window, vec2 position) {
     }
 }
 
+void px_set_window_maximized(px_window_t* window, bool maximized) {
+    if (!window || !window->window) {
+        return;
+    }
+    if (maximized) {
+        gtk_window_maximize(GTK_WINDOW(window->window));
+    } else {
+        gtk_window_unmaximize(GTK_WINDOW(window->window));
+    }
+}
+
 double px_window_dpi_scale_factor(px_window_t* window) { return window ? window->dpi_scale : 1.0; }
 
 void px_set_full_screen(px_window_t* window, bool full_screen) {

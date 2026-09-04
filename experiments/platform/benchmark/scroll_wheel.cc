@@ -47,7 +47,6 @@ void post_scroll(int delta) {
 }
 
 void on_sigint(int signal) {
-    (void)signal;
     interrupted = 1;
 }
 

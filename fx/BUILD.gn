@@ -1,0 +1,29 @@
+source_set("fx") {
+  sources = [
+    "fx.cc",
+    "fx.h",
+  ]
+
+  if (is_mac) {
+    sources += [ "core_text_backend.cc" ]
+    frameworks = [
+      "CoreFoundation.framework",
+      "CoreGraphics.framework",
+      "CoreText.framework",
+    ]
+  } else {
+    sources += [ "direct_write_backend.cc" ]
+    libs = [
+      "dwrite.lib",
+      "gdi32.lib",
+      "user32.lib",
+    ]
+  }
+
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
+  deps = [
+    "//base",
+    "//third_party/spdlog",
+  ]
+}

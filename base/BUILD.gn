@@ -2,6 +2,7 @@ source_set("base") {
   sources = [
     "check.cc",
     "check.h",
+    "color.h",
     "compiler_specific.h",
     "containers/fixed_flat_map.h",
     "containers/flat_map.h",
@@ -18,6 +19,7 @@ source_set("base") {
     "files/file_util.h",
     "files/scoped_file.h",
     "functional/scope_exit.h",
+    "geometry.h",
     "hash/hash.h",
     "location.cc",
     "location.h",
@@ -117,11 +119,13 @@ source_set("base_unittests") {
   testonly = true
 
   sources = [
+    "color_unittest.cc",
     "containers/fixed_flat_map_unittest.cc",
     "containers/flat_map_unittest.cc",
     "containers/flat_tree_unittest.cc",
     "containers/span_util_unittest.cc",
     "files/file_path_unittest.cc",
+    "geometry_unittest.cc",
     "hash/hash_unittest.cc",
     "location_unittest.cc",
     "memory/weak_ptr_unittest.cc",

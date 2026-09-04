@@ -69,12 +69,6 @@ void install_pre_sleep_source() {
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 
 void px_init(const char* app_name, const char* bundle_id, int argc, char** argv, uint32_t flags) {
-    (void)app_name;
-    (void)bundle_id;
-    (void)argc;
-    (void)argv;
-    (void)flags;
-
     g_start = std::chrono::steady_clock::now();
     gtk_init(nullptr, nullptr);
     install_pre_sleep_source();

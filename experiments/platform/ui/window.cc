@@ -24,6 +24,8 @@ void window_impl::close() { px_close_window(px_window_); }
 
 void window_impl::set_title(const char* title) { px_set_window_title(px_window_, title); }
 
+void window_impl::set_maximized(bool maximized) { px_set_window_maximized(px_window_, maximized); }
+
 vec2 window_impl::size() const { return px_window_size(px_window_); }
 
 double window_impl::dpi_scale_factor() const { return px_window_dpi_scale_factor(px_window_); }
@@ -65,7 +67,6 @@ bool window_impl::handle_event(px_event_t* event) {
 }
 
 void window_impl::paint(px_render_context* rc, rect bounds, const rect* dirty, int dirty_count) {
-    (void)bounds;
     if (root_) {
         // ST passes the dirty union as `bounds` to window_impl::paint, then draw_controls obtains
         // the root control's actual geometry separately. Our smaller control bridge has no layout
@@ -92,11 +93,10 @@ void window_impl::try_close(std::function<void(bool)> done) {
 }
 
 px_cursor_t window_impl::calculate_cursor(vec2 pos) {
-    (void)pos;
     return PX_CURSOR_ARROW;
 }
 
-void window_impl::animation_tick(double now) { (void)now; }
+void window_impl::animation_tick(double now) {}
 
 // ── stock aspects ───────────────────────────────────────────────────────────────────────────────
 

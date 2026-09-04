@@ -105,8 +105,6 @@ void build_main_menu(const char* app_name) {
 @implementation PXApplicationDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
-    (void)notification;
-
     [NSDistributedNotificationCenter.defaultCenter
         addObserver:self
            selector:@selector(osAppearanceChanged:)
@@ -115,14 +113,12 @@ void build_main_menu(const char* app_name) {
 }
 
 - (BOOL)application:(NSApplication*)application openFile:(NSString*)filename {
-    (void)application;
     const char* path = filename.UTF8String;
     app_handler().open_files(&path, 1);
     return YES;
 }
 
 - (void)application:(NSApplication*)application openFiles:(NSArray<NSString*>*)filenames {
-    (void)application;
     PathBuffer buffer;
     buffer.assign(filenames);
     app_handler().open_files(buffer.pointers.empty() ? nullptr : buffer.pointers.data(),
@@ -131,13 +127,11 @@ void build_main_menu(const char* app_name) {
 }
 
 - (BOOL)applicationOpenUntitledFile:(NSApplication*)application {
-    (void)application;
     app_handler().new_file();
     return YES;
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)application {
-    (void)application;
     if (app_handler().can_quit_without_prompt()) {
         return NSTerminateNow;
     }
@@ -148,7 +142,6 @@ void build_main_menu(const char* app_name) {
 }
 
 - (void)osAppearanceChanged:(NSNotification*)notification {
-    (void)notification;
     // The notification arrives before NSApp.effectiveAppearance updates, so ST bounces through the
     // main queue before reading it back. Same trick here.
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -157,7 +150,6 @@ void build_main_menu(const char* app_name) {
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)application {
-    (void)application;
     return YES;
 }
 
@@ -172,11 +164,6 @@ PXApplicationDelegate* g_app_delegate = nil;
 }
 
 void px_init(const char* app_name, const char* bundle_id, int argc, char** argv, uint32_t flags) {
-    (void)bundle_id;
-    (void)argc;
-    (void)argv;
-    (void)flags;
-
     // Instantiating the shared application through our subclass is what makes NSApp a
     // PXApplication; there is no Info.plist NSPrincipalClass in play here.
     [PXApplication sharedApplication];

@@ -101,12 +101,17 @@ retained_text prepare_conformance_line(grapheme_shaper* shaper, std::string_view
         }
 
         retained_text word = prepare_retained_text(shaper, text.substr(start, end - start));
-        for (retained_text_batch& batch : word.batches) {
-            batch.x_offset += x;
-            for (fx_glyph& glyph : batch.layout.glyphs) {
-                glyph.cluster = base::checked_cast<uint32_t>(start + glyph.cluster);
+        // Match Sublime's observed line-level culling when a token's logical end is left of the
+        // viewport. This matters for an orphan combining-mark run: DirectWrite gives it a negative
+        // advance even though its first glyph's bitmap extends right of the run origin.
+        if (x + word.advance >= 0.0) {
+            for (retained_text_batch& batch : word.batches) {
+                batch.x_offset += x;
+                for (fx_glyph& glyph : batch.layout.glyphs) {
+                    glyph.cluster = base::checked_cast<uint32_t>(start + glyph.cluster);
+                }
+                result.batches.push_back(std::move(batch));
             }
-            result.batches.push_back(std::move(batch));
         }
         x += word.advance;
         start = end;
@@ -249,7 +254,6 @@ int run_tests(int argc, char* argv[]) {
     bool success = true;
     for (size_t i = 0; i < shots.size(); ++i) {
         const TestShot& shot = shots[i];
-        gl_render_context::reset_glyph_atlas_for_testing();
         if (!page.set_content(shot)) {
             std::println("skipping {}: could not create font {}", shot.out_path, shot.family);
             success = false;

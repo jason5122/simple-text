@@ -69,9 +69,8 @@ public:
     // paths call this after any framebuffer-resize full invalidation and before constructing us.
     static rect normalize_dirty_rects(std::vector<rect>* dirty, rect window_bounds);
 
-    // The rasterizer comparison swaps thousands of independent pages through one persistent
-    // window. Its reference renderer starts each page with a fresh atlas, so request the same on
-    // the next text draw. Deferred because callers do not own the current GL context.
+    // Discard renderer-side atlas placements on the next text draw. Deferred because test callers
+    // do not own the current GL context.
     static void reset_glyph_atlas_for_testing();
 
 private:

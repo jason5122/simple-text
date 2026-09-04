@@ -123,9 +123,13 @@ public:
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override;
     std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override;
     void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) override;
-    fx_glyph_bitmap rasterise(uint32_t glyph, vec2 subpixel_offset, float scale) override;
+    void rasterize(uint32_t glyph,
+                   vec2 position,
+                   float scale,
+                   fx_glyph_bitmap& bitmap,
+                   color foreground) override;
     bool is_color_glyph(uint32_t glyph) override;
-    bool bg_affects_rasterise() const override { return false; }
+    bool bg_affects_rasterize() const override { return false; }
     const fx_gamma_ramp* gamma_ramp() const override { return &gamma_; }
 
 private:
@@ -708,13 +712,17 @@ std::unique_ptr<fx_layout> direct_write_font::shape(std::string_view utf8) {
     return shaped;
 }
 
-fx_glyph_bitmap direct_write_font::rasterise(uint32_t glyph, vec2 subpixel_offset, float scale) {
+void direct_write_font::rasterize(
+    uint32_t glyph, vec2 position, float scale, fx_glyph_bitmap& bitmap, color foreground) {
     const uint32_t face_index = glyph >> 16;
 
-    if (face_index >= faces.size()) return {};
-
-    const std::optional<Tile> tile = glyph_tile(glyph, scale);
-    if (!tile) return {};
+    if (face_index >= faces.size() || bitmap.empty() ||
+        bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||
+        bitmap.height > static_cast<size_t>(std::numeric_limits<int>::max()) || scale <= 0.0f) {
+        return;
+    }
+    const int width = static_cast<int>(bitmap.width);
+    const int height = static_cast<int>(bitmap.height);
 
     UINT16 index = static_cast<uint16_t>(glyph);
     FLOAT advance = 0;
@@ -730,12 +738,10 @@ fx_glyph_bitmap direct_write_font::rasterise(uint32_t glyph, vec2 subpixel_offse
         .bidiLevel = 0,
     };
 
-    // The subpixel offset is in device pixels and only shifts the draw position. The border
-    // absorbs it, so the bearings stay whole and every phase of a glyph shares one tile size.
-    const double origin_x = tile->origin_x + subpixel_offset.x;
-    const double origin_y = tile->origin_y +
-                            st_round(static_cast<double>(face_ascents[face_index]) * scale) +
-                            subpixel_offset.y;
+    const double origin_x = position.x;
+    const double origin_y = position.y +
+                            st_round(static_cast<double>(face_ascents[face_index]) * scale) -
+                            std::round(static_cast<double>(face_ascents[0]) * scale);
 
     ComPtr<IDWriteColorGlyphRunEnumerator> color_layers;
     if (globals().factory2) {
@@ -747,16 +753,13 @@ fx_glyph_bitmap direct_write_font::rasterise(uint32_t glyph, vec2 subpixel_offse
             color_layers.Reset();
         }
     }
-    bool colored = color_layers != nullptr;
-
-    std::vector<uint8_t> pixels(static_cast<size_t>(tile->width) *
-                                static_cast<size_t>(tile->height) * 4);
+    const bool colored = color_layers != nullptr;
 
     // Sublime's primary path is IDWriteBitmapRenderTarget::DrawGlyphRun into a GDI DIB; fall back
     // to CreateGlyphRunAnalysis if the bitmap render target cannot be created (0x1401bb9c1).
-    if (ensure_target(tile->width, tile->height, scale)) {
+    if (ensure_target(width, height, scale)) {
         HDC hdc = target->GetMemoryDC();
-        const RECT rect = {0, 0, tile->width, tile->height};
+        const RECT rect = {0, 0, width, height};
         HBRUSH brush = CreateSolidBrush(RGB(0, 0, 0));
         FillRect(hdc, &rect, brush);
         DeleteObject(brush);
@@ -797,64 +800,17 @@ fx_glyph_bitmap direct_write_font::rasterise(uint32_t glyph, vec2 subpixel_offse
             // DirectWrite leaves color-layer coverage in the DIB's high byte. Sublime preserves
             // it by ORing in the mean RGB value rather than replacing it
             // (0x1401bbffc..0x1401bc05c).
-            read_color_target(target.Get(), tile->width, tile->height, pixels);
+            read_color_target(target.Get(), width, height, bitmap.pixels);
         } else {
-            target->DrawGlyphRun(static_cast<FLOAT>(origin_x / scale),
-                                 static_cast<FLOAT>(origin_y / scale), measuring_mode(flags_),
-                                 &run, params.Get(), RGB(255, 255, 255), nullptr);
-            read_target(target.Get(), tile->width, tile->height, pixels);
+            target->DrawGlyphRun(
+                static_cast<FLOAT>(origin_x / scale), static_cast<FLOAT>(origin_y / scale),
+                measuring_mode(flags_), &run, params.Get(),
+                RGB(foreground.red(), foreground.green(), foreground.blue()), nullptr);
+            read_target(target.Get(), width, height, bitmap.pixels);
         }
-    } else if (rasterize_via_analysis(run, scale, origin_x, origin_y, tile->width, tile->height,
-                                      pixels)) {
-        colored = false;  // this path rasterizes the plain run, color layers and all
-    } else {
-        return {};
+    } else if (!colored) {
+        rasterize_via_analysis(run, scale, origin_x, origin_y, width, height, bitmap.pixels);
     }
-
-    int left = tile->width;
-    int top = tile->height;
-    int right = -1;
-    int bottom = -1;
-    const auto* words = reinterpret_cast<const uint32_t*>(pixels.data());
-    for (int y = 0; y < tile->height; ++y) {
-        for (int x = 0; x < tile->width; ++x) {
-            if (words[static_cast<size_t>(y) * static_cast<size_t>(tile->width) +
-                      static_cast<size_t>(x)] == 0) {
-                continue;
-            }
-            left = std::min(left, x);
-            top = std::min(top, y);
-            right = std::max(right, x);
-            bottom = std::max(bottom, y);
-        }
-    }
-    if (right < left || bottom < top) return {};
-
-    const int cropped_width = right - left + 1;
-    const int cropped_height = bottom - top + 1;
-    std::vector<uint8_t> cropped(static_cast<size_t>(cropped_width) *
-                                 static_cast<size_t>(cropped_height) * 4);
-    for (int y = 0; y < cropped_height; ++y) {
-        const uint8_t* source =
-            pixels.data() + (static_cast<size_t>(top + y) * static_cast<size_t>(tile->width) +
-                             static_cast<size_t>(left)) *
-                                4;
-        uint8_t* destination =
-            cropped.data() + static_cast<size_t>(y) * static_cast<size_t>(cropped_width) * 4;
-        std::copy_n(source, static_cast<size_t>(cropped_width) * 4, destination);
-    }
-
-    // fx_glyph_bitmap bearings are baseline-relative. DirectWrite's cropped cache coordinates are
-    // line-top-relative, so remove the primary face's snapped device ascent here.
-    return {
-        .width = static_cast<size_t>(cropped_width),
-        .height = static_cast<size_t>(cropped_height),
-        .bearing_x = left - base::clamp_round<int>(tile->origin_x),
-        .bearing_y = top - base::clamp_round<int>(tile->origin_y) -
-                     base::clamp_round<int>(static_cast<double>(face_ascents[0]) * scale),
-        .colored = colored,
-        .pixels = std::move(cropped),
-    };
 }
 
 std::string utf32_to_utf8(std::u32string_view input) {
@@ -908,12 +864,34 @@ void direct_write_font::extents(uint32_t glyph, float scale, vec2& origin, vec2&
         return;
     }
 
-    origin = {tile->origin_x, tile->origin_y};
+    origin = {tile->origin_x,
+              tile->origin_y + std::round(static_cast<double>(face_ascents[0]) * scale)};
     size = {static_cast<double>(tile->width - 1), static_cast<double>(tile->height)};
 }
 
 bool direct_write_font::is_color_glyph(uint32_t glyph) {
-    return rasterise(glyph, {}, 1.0f).colored;
+    const uint32_t face_index = glyph >> 16;
+    if (!globals().factory2 || face_index >= faces.size()) {
+        return false;
+    }
+
+    UINT16 index = static_cast<uint16_t>(glyph);
+    FLOAT advance = 0;
+    DWRITE_GLYPH_OFFSET offset{};
+    const DWRITE_GLYPH_RUN run = {
+        .fontFace = faces[face_index].Get(),
+        .fontEmSize = em_size_,
+        .glyphCount = 1,
+        .glyphIndices = &index,
+        .glyphAdvances = &advance,
+        .glyphOffsets = &offset,
+        .isSideways = FALSE,
+        .bidiLevel = 0,
+    };
+    ComPtr<IDWriteColorGlyphRunEnumerator> color_layers;
+    const HRESULT result = globals().factory2->TranslateColorGlyphRun(
+        0.0f, 0.0f, &run, nullptr, DWRITE_MEASURING_MODE_NATURAL, nullptr, 0, &color_layers);
+    return result == S_OK && color_layers != nullptr;
 }
 
 }  // namespace

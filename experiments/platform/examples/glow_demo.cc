@@ -137,6 +137,7 @@ private:
         const int padding = static_cast<int>(std::ceil(line.spec.glow_radius * scale)) + 1;
         const double device_origin_x = 64.0 * scale;
         const double device_origin_y = line.spec.baseline * scale;
+        fx_glyph_cache cache(line.font.get(), static_cast<float>(scale));
 
         for (const fx_glyph& glyph : line.layout->glyphs) {
             const double x = device_origin_x + static_cast<double>(glyph.x_offset) * scale;
@@ -144,9 +145,8 @@ private:
 
             const double fraction = x - std::floor(x);
             const int phase = std::clamp(static_cast<int>(fraction * 6.0), 0, 5);
-            fx_glyph_bitmap bitmap = line.font->rasterise(
-                glyph.id, {.x = static_cast<double>(phase) * (1.0 / 6.0) * scale},
-                static_cast<float>(scale));
+            fx_glyph_bitmap bitmap =
+                cache.lookup_glyph_data(glyph.id, static_cast<unsigned>(phase));
             bitmap = pad_bitmap(std::move(bitmap), padding);
             fx_apply_font_glow(&bitmap, line.spec.glow_radius * static_cast<float>(scale), true);
 

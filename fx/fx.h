@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "base/color.h"
 #include "base/geometry.h"
 
 #include <array>
@@ -60,9 +61,8 @@ struct fx_layout {
     std::vector<fx_glyph> glyphs;
 };
 
-// Premultiplied BGRA in host byte order, exactly what the proven rasterizer backend produces and
-// what the GL texture upload consumes. For a monochrome glyph RGB contains coverage; for a color
-// glyph it contains premultiplied color.
+// Premultiplied BGRA in host byte order. The shared cache sets `colored` after asking the native
+// font whether the glyph has intrinsic color; native rasterizers only paint the supplied buffer.
 struct fx_glyph_bitmap {
     size_t width = 0;
     size_t height = 0;
@@ -91,9 +91,11 @@ public:
     virtual std::unique_ptr<fx_layout> shape(std::string_view utf8) = 0;
     virtual std::unique_ptr<fx_layout> shape(std::u32string_view utf32) = 0;
     virtual void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) = 0;
-    virtual fx_glyph_bitmap rasterise(uint32_t glyph, vec2 subpixel_offset, float scale) = 0;
+    // `position` is a device-pixel offset into a buffer allocated from extents().
+    virtual void rasterize(
+        uint32_t glyph, vec2 position, float scale, fx_glyph_bitmap& bitmap, color foreground) = 0;
     virtual bool is_color_glyph(uint32_t glyph) = 0;
-    virtual bool bg_affects_rasterise() const = 0;
+    virtual bool bg_affects_rasterize() const = 0;
     virtual const fx_gamma_ramp* gamma_ramp() const = 0;
 
     // core_text_font has a UTF-16 overload outside its vtable. Keep that same distinction here.
@@ -125,6 +127,7 @@ private:
 
     fx_font* font_ = nullptr;
     float scale_ = 1.0f;
+    std::unordered_map<uint32_t, bool> color_glyphs_;
     std::unordered_map<uint64_t, fx_glyph_bitmap> normal_;
     std::unordered_map<uint64_t, fx_glyph_bitmap> alternate_;
 };

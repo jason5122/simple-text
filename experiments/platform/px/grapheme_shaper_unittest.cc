@@ -8,6 +8,7 @@
 #include <fuzztest/init_fuzztest.h>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <memory>
@@ -63,9 +64,9 @@ public:
     }
 
     void extents(uint32_t, float, vec2&, vec2&) override {}
-    fx_glyph_bitmap rasterise(uint32_t, vec2, float) override { return {}; }
+    void rasterize(uint32_t, vec2, float, fx_glyph_bitmap&, color) override {}
     bool is_color_glyph(uint32_t) override { return false; }
-    bool bg_affects_rasterise() const override { return false; }
+    bool bg_affects_rasterize() const override { return false; }
     const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
 
     void clear_shaped_texts() { shaped_texts_.clear(); }
@@ -111,6 +112,102 @@ private:
     size_t large_cluster_glyph_count_ = 0;
     std::vector<std::u32string> shaped_texts_;
 };
+
+class cache_font final : public fx_font {
+public:
+    cache_font(bool colored, bool background_affects_rasterization)
+        : colored_(colored), background_affects_rasterization_(background_affects_rasterization) {}
+
+    uint32_t attrs() const override { return 0; }
+    fx_font_metrics metrics() const override { return {}; }
+    float raster_ascent() const override { return 8.0f; }
+    std::unique_ptr<fx_layout> shape(std::string_view) override { return {}; }
+    std::unique_ptr<fx_layout> shape(std::u32string_view) override { return {}; }
+    void extents(uint32_t, float, vec2& origin, vec2& size) override {
+        origin = {2.0, 3.0};
+        size = {3.0, 3.0};
+    }
+    void rasterize(
+        uint32_t, vec2 position, float, fx_glyph_bitmap& bitmap, color foreground) override {
+        ++rasterize_count;
+        raster_position = position;
+        raster_foreground = foreground;
+        initial_pixel = {bitmap.pixels[0], bitmap.pixels[1], bitmap.pixels[2], bitmap.pixels[3]};
+
+        const size_t offset = (bitmap.width + 1) * 4;
+        if (colored_) {
+            bitmap.pixels[offset] = 30;
+            bitmap.pixels[offset + 1] = 20;
+            bitmap.pixels[offset + 2] = 10;
+            bitmap.pixels[offset + 3] = 40;
+        } else {
+            bitmap.pixels[offset] = foreground.blue();
+            bitmap.pixels[offset + 1] = foreground.green();
+            bitmap.pixels[offset + 2] = foreground.red();
+            bitmap.pixels[offset + 3] = foreground.alpha();
+        }
+    }
+    bool is_color_glyph(uint32_t) override {
+        ++classification_count;
+        return colored_;
+    }
+    bool bg_affects_rasterize() const override { return background_affects_rasterization_; }
+    const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
+
+    int classification_count = 0;
+    int rasterize_count = 0;
+    vec2 raster_position;
+    color raster_foreground;
+    std::array<uint8_t, 4> initial_pixel{};
+
+private:
+    bool colored_ = false;
+    bool background_affects_rasterization_ = false;
+};
+
+TEST(FxGlyphCacheTest, ReusesColorClassificationAcrossSubpixelPhases) {
+    cache_font font(false, false);
+    fx_glyph_cache cache(&font, 2.0f);
+
+    const fx_glyph_bitmap& first = cache.lookup_glyph_data(42, 0);
+    const fx_glyph_bitmap& second = cache.lookup_glyph_data(42, 1);
+    cache.lookup_glyph_data(42, 1);
+
+    EXPECT_EQ(font.classification_count, 1);
+    EXPECT_EQ(font.rasterize_count, 2);
+    EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 0}));
+    EXPECT_FALSE(first.colored);
+    EXPECT_FALSE(second.colored);
+    EXPECT_DOUBLE_EQ(font.raster_position.x, 2.0 + 1.0 / 3.0);
+    EXPECT_DOUBLE_EQ(font.raster_position.y, 3.0);
+}
+
+TEST(FxGlyphCacheTest, SuppliesInverseColorsWhenTheBackgroundAffectsRasterization) {
+    cache_font font(false, true);
+    fx_glyph_cache cache(&font, 1.0f);
+
+    const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(42, 0, true);
+
+    EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{255, 255, 255, 255}));
+    EXPECT_EQ(font.raster_foreground, color::from_normalised(0.0f, 0.0f, 0.0f, 1.0f));
+    ASSERT_EQ(bitmap.pixels.size(), 4u);
+    EXPECT_EQ(bitmap.pixels[0], 0);
+    EXPECT_EQ(bitmap.pixels[1], 0);
+    EXPECT_EQ(bitmap.pixels[2], 0);
+    EXPECT_EQ(bitmap.pixels[3], 255);
+}
+
+TEST(FxGlyphCacheTest, PreservesIntrinsicColorPixels) {
+    cache_font font(true, true);
+    fx_glyph_cache cache(&font, 1.0f);
+
+    const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(42, 0, true);
+
+    EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 0}));
+    EXPECT_EQ(font.raster_foreground, color::from_normalised(1.0f, 1.0f, 1.0f, 1.0f));
+    EXPECT_TRUE(bitmap.colored);
+    EXPECT_EQ(bitmap.pixels, (std::vector<uint8_t>{30, 20, 10, 40}));
+}
 
 struct shaper_fixture {
     explicit shaper_fixture(bool monospace = true, uint32_t flags = 0)

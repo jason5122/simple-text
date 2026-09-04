@@ -7,7 +7,7 @@
 
 #include <CoreText/CoreText.h>
 #include <cmath>
-#include <cstring>
+#include <limits>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
@@ -31,9 +31,13 @@ public:
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override;
     std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override;
     void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) override;
-    fx_glyph_bitmap rasterise(uint32_t glyph, vec2 subpixel_offset, float scale) override;
+    void rasterize(uint32_t glyph,
+                   vec2 position,
+                   float scale,
+                   fx_glyph_bitmap& bitmap,
+                   color foreground) override;
     bool is_color_glyph(uint32_t glyph) override;
-    bool bg_affects_rasterise() const override { return true; }
+    bool bg_affects_rasterize() const override { return true; }
     const fx_gamma_ramp* gamma_ramp() const override { return identity_gamma_ramp(); }
 
 private:
@@ -234,99 +238,43 @@ std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
     return shaped;
 }
 
-fx_glyph_bitmap core_text_font::rasterise(uint32_t glyph, vec2 subpixel_offset, float scale) {
+void core_text_font::rasterize(
+    uint32_t glyph, vec2 position, float scale, fx_glyph_bitmap& bitmap, color foreground) {
     const uint32_t face = glyph >> 16;
-    if (face >= faces_.size()) return {};
+    if (face >= faces_.size() || bitmap.empty() ||
+        bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||
+        bitmap.height > static_cast<size_t>(std::numeric_limits<int>::max()) || scale <= 0.0f) {
+        return;
+    }
 
     CTFontRef ctfont = faces_[face].get();
     CGGlyph core_text_glyph = static_cast<uint16_t>(glyph);
-
-    CGRect bbox = CTFontGetBoundingRectsForGlyphs(ctfont, kCTFontOrientationHorizontal,
-                                                  &core_text_glyph, nullptr, 1);
-    if (CGRectIsEmpty(bbox)) return {};
-
-    // Ink box in device pixels, baseline-relative. ST ceils the extent and rounds the top/left
-    // origin independently, then pads a border on every side.
-    constexpr int kBorder = 2;
-    constexpr int kBytesPerPixel = 4;
-    const int ceil_w = base::clamp_ceil<int>(bbox.size.width * scale);
-    const int ceil_h = base::clamp_ceil<int>(bbox.size.height * scale);
-    const int width = ceil_w + 2 * kBorder + 1;
-    const int height = ceil_h + 2 * kBorder;
-    const int x0 = base::clamp_round<int>(bbox.origin.x * scale) - kBorder;
-    const int y0 =
-        base::clamp_round<int>((bbox.origin.y + bbox.size.height) * scale) - ceil_h - kBorder;
-    const int bytes_per_row = width * kBytesPerPixel;
-
-    const bool colored = is_color_glyph(glyph);
-
-    std::vector<uint8_t> pixels(base::checked_cast<size_t>(height * bytes_per_row));
+    constexpr size_t kBytesPerPixel = 4;
+    const size_t bytes_per_row = bitmap.width * kBytesPerPixel;
 
     auto color_space = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
     auto context = ScopedCGContext(CGBitmapContextCreate(
-        pixels.data(), base::checked_cast<size_t>(width), base::checked_cast<size_t>(height), 8,
-        base::checked_cast<size_t>(bytes_per_row), color_space.get(),
+        bitmap.pixels.data(), bitmap.width, bitmap.height, 8, bytes_per_row, color_space.get(),
         kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
+    if (!context) {
+        return;
+    }
 
-    const CGFloat component = colored ? 1.0 : 0.0;
-    const CGFloat fill[] = {component, component, component, 1.0};
+    const CGFloat fill[] = {static_cast<CGFloat>(foreground.red()) / 255.0,
+                            static_cast<CGFloat>(foreground.green()) / 255.0,
+                            static_cast<CGFloat>(foreground.blue()) / 255.0,
+                            static_cast<CGFloat>(foreground.alpha()) / 255.0};
     CGContextSetFillColorSpace(context.get(), color_space.get());
     CGContextSetFillColor(context.get(), fill);
     CGContextSetShouldAntialias(context.get(), true);
     CGContextSetShouldSmoothFonts(context.get(), true);
     CGContextScaleCTM(context.get(), scale, scale);
 
-    CGPoint position = {(-x0 + subpixel_offset.x) / scale, (-y0 - subpixel_offset.y) / scale};
-    CTFontDrawGlyphs(ctfont, &core_text_glyph, &position, 1, context.get());
-
-    if (!colored) {
-        // The normal glyph was drawn in black, so coverage sits in alpha and rgb is 0. Spread
-        // alpha across rgb; Core Graphics antialiasing is grayscale.
-        for (size_t i = 0; i < pixels.size(); i += kBytesPerPixel) {
-            const uint8_t coverage = pixels[i + 3];  // host-order BGRA
-            pixels[i] = pixels[i + 1] = pixels[i + 2] = coverage;
-        }
-    }
-
-    int ink_left = width;
-    int ink_top = height;
-    int ink_right = -1;
-    int ink_bottom = -1;
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            const size_t offset = static_cast<size_t>((y * width + x) * kBytesPerPixel);
-            uint32_t pixel = 0;
-            std::memcpy(&pixel, pixels.data() + offset, sizeof(pixel));
-            if (pixel != 0) {
-                ink_left = std::min(ink_left, x);
-                ink_top = std::min(ink_top, y);
-                ink_right = std::max(ink_right, x);
-                ink_bottom = std::max(ink_bottom, y);
-            }
-        }
-    }
-    if (ink_right < ink_left || ink_bottom < ink_top) return {};
-
-    const int ink_width = ink_right - ink_left + 1;
-    const int ink_height = ink_bottom - ink_top + 1;
-    std::vector<uint8_t> cropped(
-        base::checked_cast<size_t>(ink_width * ink_height * kBytesPerPixel));
-    for (int y = 0; y < ink_height; ++y) {
-        const uint8_t* source =
-            pixels.data() + ((ink_top + y) * width + ink_left) * kBytesPerPixel;
-        uint8_t* destination = cropped.data() + y * ink_width * kBytesPerPixel;
-        std::memcpy(destination, source, base::checked_cast<size_t>(ink_width * kBytesPerPixel));
-    }
-
-    return {
-        .width = base::checked_cast<size_t>(ink_width),
-        .height = base::checked_cast<size_t>(ink_height),
-        .bearing_x = x0 + ink_left,
-        // Core Text positions are y-up; negate to the library's y-down convention.
-        .bearing_y = -(y0 + height) + ink_top,
-        .colored = colored,
-        .pixels = std::move(cropped),
+    const CGPoint glyph_position = {
+        position.x / scale,
+        (static_cast<double>(bitmap.height) - position.y) / scale,
     };
+    CTFontDrawGlyphs(ctfont, &core_text_glyph, &glyph_position, 1, context.get());
 }
 
 std::string utf32_to_utf8(std::u32string_view input) {
@@ -405,8 +353,7 @@ void core_text_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& si
     constexpr double kBorder = 2.0;
     origin = {
         std::round(-bounds.origin.x * scale) + kBorder,
-        std::round((bounds.origin.y + bounds.size.height - CTFontGetAscent(primary())) * scale) +
-            kBorder,
+        std::round((bounds.origin.y + bounds.size.height) * scale) + kBorder,
     };
     size = {
         std::ceil(bounds.size.width * scale) + 2.0 * kBorder,

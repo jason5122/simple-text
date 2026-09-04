@@ -9,7 +9,7 @@
 // strings "OPENGL32.dll" and "wglGetProcAddress" for the rest.
 //
 // px_gl_has_shaders() reports whether the modern pipeline actually resolved. It can be false on a
-// machine whose GL is a software rasteriser stuck at 1.1, which is a real possibility inside a VM,
+// machine whose GL is a software rasterizer stuck at 1.1, which is a real possibility inside a VM,
 // so drawing code should degrade rather than crash.
 
 #pragma once

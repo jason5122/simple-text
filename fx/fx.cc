@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <limits>
 #include <string>
 
 namespace {
@@ -73,11 +75,88 @@ const fx_glyph_bitmap& fx_glyph_cache::lookup_glyph_data(uint32_t glyph,
 
     fx_glyph_bitmap bitmap;
     if (font_) {
+        auto [color_entry, inserted] = color_glyphs_.try_emplace(glyph, false);
+        if (inserted) {
+            color_entry->second = font_->is_color_glyph(glyph);
+        }
+        const bool colored = color_entry->second;
+        const bool background_affects_rasterization = font_->bg_affects_rasterize();
+        const bool native_alternate = !colored && alternate && background_affects_rasterization;
+        const color transparent = color::from_normalised(0.0f, 0.0f, 0.0f, 0.0f);
+        const color black = color::from_normalised(0.0f, 0.0f, 0.0f, 1.0f);
+        const color white = color::from_normalised(1.0f, 1.0f, 1.0f, 1.0f);
+        // Canonical colors keep monochrome cache entries reusable for every renderer tint.
+        const color background = colored || !background_affects_rasterization
+                                     ? transparent
+                                     : (native_alternate ? white : black);
+        const color foreground = native_alternate ? black : white;
+
+        vec2 origin;
+        vec2 size;
+        font_->extents(glyph, scale_, origin, size);
+        if (!std::isfinite(origin.x) || !std::isfinite(origin.y) || !std::isfinite(size.x) ||
+            !std::isfinite(size.y) || size.x <= 0.0 || size.y <= 0.0 ||
+            size.x >= static_cast<double>(std::numeric_limits<int>::max()) ||
+            size.y >= static_cast<double>(std::numeric_limits<int>::max())) {
+            return cache.emplace(cache_key, std::move(bitmap)).first->second;
+        }
+
+        const size_t width = static_cast<size_t>(std::ceil(size.x)) + 1;
+        const size_t height = static_cast<size_t>(std::ceil(size.y));
+        if (width > std::numeric_limits<size_t>::max() / 4 / height) {
+            return cache.emplace(cache_key, std::move(bitmap)).first->second;
+        }
+        bitmap.width = width;
+        bitmap.height = height;
+        bitmap.colored = colored;
+        bitmap.pixels.resize(width * height * 4);
+        for (size_t i = 0; i < bitmap.pixels.size(); i += 4) {
+            bitmap.pixels[i] = background.blue();
+            bitmap.pixels[i + 1] = background.green();
+            bitmap.pixels[i + 2] = background.red();
+            bitmap.pixels[i + 3] = background.alpha();
+        }
+
         const double subpixel_x = static_cast<double>(phase % 6) * (1.0 / 6.0) * scale_;
-        bitmap = font_->rasterise(glyph, {.x = subpixel_x}, scale_);
-        if (!bitmap.colored) {
-            if (const fx_gamma_ramp* ramp = font_->gamma_ramp()) {
-                for (size_t i = 0; i + 3 < bitmap.pixels.size(); i += 4) {
+        font_->rasterize(glyph, {.x = origin.x + subpixel_x, .y = origin.y}, scale_, bitmap,
+                         foreground);
+
+        size_t left = width;
+        size_t top = height;
+        size_t right = 0;
+        size_t bottom = 0;
+        bool has_ink = false;
+        for (size_t y = 0; y < height; ++y) {
+            for (size_t x = 0; x < width; ++x) {
+                const size_t offset = (y * width + x) * 4;
+                const bool differs = bitmap.pixels[offset] != background.blue() ||
+                                     bitmap.pixels[offset + 1] != background.green() ||
+                                     bitmap.pixels[offset + 2] != background.red() ||
+                                     bitmap.pixels[offset + 3] != background.alpha();
+                if (!differs) {
+                    continue;
+                }
+                has_ink = true;
+                left = std::min(left, x);
+                top = std::min(top, y);
+                right = std::max(right, x);
+                bottom = std::max(bottom, y);
+            }
+        }
+        if (!has_ink) {
+            bitmap = {};
+            return cache.emplace(cache_key, std::move(bitmap)).first->second;
+        }
+
+        if (!colored) {
+            const fx_gamma_ramp* ramp = font_->gamma_ramp();
+            for (size_t i = 0; i + 3 < bitmap.pixels.size(); i += 4) {
+                const unsigned mean = static_cast<unsigned>(bitmap.pixels[i]) +
+                                      static_cast<unsigned>(bitmap.pixels[i + 1]) +
+                                      static_cast<unsigned>(bitmap.pixels[i + 2]);
+                bitmap.pixels[i + 3] =
+                    static_cast<uint8_t>(native_alternate ? 255u - mean / 3u : mean / 3u);
+                if (ramp) {
                     bitmap.pixels[i] = ramp->values[bitmap.pixels[i]];
                     bitmap.pixels[i + 1] = ramp->values[bitmap.pixels[i + 1]];
                     bitmap.pixels[i + 2] = ramp->values[bitmap.pixels[i + 2]];
@@ -88,14 +167,27 @@ const fx_glyph_bitmap& fx_glyph_cache::lookup_glyph_data(uint32_t glyph,
                         bitmap.pixels[i + 2] =
                             0xFF ^ ramp->inverse_values[0xFF ^ bitmap.pixels[i + 2]];
                     }
-                    if (alternate) {
-                        bitmap.pixels[i] ^= 0xFF;
-                        bitmap.pixels[i + 1] ^= 0xFF;
-                        bitmap.pixels[i + 2] ^= 0xFF;
-                    }
+                }
+                if (alternate && !native_alternate) {
+                    bitmap.pixels[i] ^= 0xFF;
+                    bitmap.pixels[i + 1] ^= 0xFF;
+                    bitmap.pixels[i + 2] ^= 0xFF;
                 }
             }
         }
+
+        const size_t cropped_width = right - left + 1;
+        const size_t cropped_height = bottom - top + 1;
+        std::vector<uint8_t> cropped(cropped_width * cropped_height * 4);
+        for (size_t y = 0; y < cropped_height; ++y) {
+            const uint8_t* source = bitmap.pixels.data() + ((top + y) * width + left) * 4;
+            std::memcpy(cropped.data() + y * cropped_width * 4, source, cropped_width * 4);
+        }
+        bitmap.width = cropped_width;
+        bitmap.height = cropped_height;
+        bitmap.bearing_x = static_cast<int>(left) - static_cast<int>(std::round(origin.x));
+        bitmap.bearing_y = static_cast<int>(top) - static_cast<int>(std::round(origin.y));
+        bitmap.pixels = std::move(cropped);
     }
     return cache.emplace(cache_key, std::move(bitmap)).first->second;
 }

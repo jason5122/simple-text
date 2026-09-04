@@ -261,7 +261,7 @@ void paint_window(px_window_t* window) {
         window->did_first_paint = true;
         window->last_flush = px_now();
     } else {
-        // Software path. ST reaches its CPU renderer from here; no CPU rasteriser exists in this
+        // Software path. ST reaches its CPU renderer from here; no CPU rasterizer exists in this
         // experiment, so this only fills with the window background.
         const fcolor& bg = window->background;
         HBRUSH brush =

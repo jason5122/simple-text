@@ -7,6 +7,7 @@
 #include "experiments/platform/px/px.h"
 #include "experiments/platform/px/px_gl.h"
 #include "experiments/platform/ui/retained_text.h"
+#include "build/build_config.h"
 
 #include <algorithm>
 #include <array>
@@ -373,7 +374,7 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
     _putenv_s("PX_NO_ANIMATION", "1");
 #else
     setenv("PX_NO_ANIMATION", "1", 1);

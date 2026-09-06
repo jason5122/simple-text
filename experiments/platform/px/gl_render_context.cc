@@ -1,5 +1,7 @@
 #include "experiments/platform/px/gl_render_context.h"
 
+#include "build/build_config.h"
+
 #include <algorithm>
 #include <atomic>
 #include <bit>
@@ -90,7 +92,7 @@ GLuint compile_shader_sources(GLenum type, const char* const* sources, GLsizei s
 }
 
 GLuint compile_shader(GLenum type, const char* source) {
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
     // Parallels' virtual GPU exposes OpenGL/GLSL 4.0. These shaders require only 4.0 features;
     // native macOS and Windows retain the 4.10 declaration recovered from Sublime's shaders.
     constexpr const char* version = "#version 400\n#define PX_LINUX_EXACT_COMPOSITE 1\n";
@@ -324,7 +326,7 @@ public:
             batch_depth_ != 0 ? batch_groups_ : immediate_groups;
         const double device_origin_x = translation.x + origin.x * scale.x;
         double device_origin_y = translation.y + origin.y * scale.y;
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
         // Pango's recovered glyph-tile origin is relative to the top of its primary font's line,
         // unlike the baseline-relative Core Text and DirectWrite tiles consumed by this shared
         // renderer. Sublime makes the same ascent adjustment at the Linux renderer boundary.
@@ -343,27 +345,29 @@ public:
             const int device_x = static_cast<int>(std::floor(x));
             const double fraction = x - std::floor(x);
             const int phase =
-                subpixel_positioning ? std::clamp(static_cast<int>(fraction * 6.0), 0, 5) : 0;
+                subpixel_positioning
+                    ? std::clamp(static_cast<int>(fraction * fx_glyph_cache::phase_count), 0,
+                                 static_cast<int>(fx_glyph_cache::phase_count) - 1)
+                    : 0;
             const glyph_atlas_key key{font,          glyph.id,       phase,
                                       scale_percent, subpixel_order, alternate};
-            ensure_phase_pages(&atlas, key, cache);
-            const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(
-                glyph.id, static_cast<unsigned>(phase), alternate, subpixel_order);
-            if (bitmap.empty()) {
-                continue;
-            }
-            const glyph_atlas_placement* placement = place(&atlas, key, bitmap);
+            const fx_glyph_cache::glyph_data& data =
+                cache.lookup_glyph_data(glyph.id, subpixel_order, alternate);
+            ensure_phase_pages(&atlas, key, data);
+            const fx_glyph_cache::glyph_phase& glyph_phase = data.phase_at(phase);
+            const glyph_atlas_placement* placement = place(&atlas, key, glyph_phase, data.colored);
             if (!placement) {
                 continue;
             }
 
-            const float instance_x = static_cast<float>(device_x + bitmap.bearing_x);
+            const float instance_x = static_cast<float>(device_x + glyph_phase.bearing_x);
             // ST rounds in OpenGL's bottom-left coordinate system with frinta (nearest, ties away
             // from zero). Expressed in this renderer's top-left coordinates, the same operation
             // is nearest with half-pixel ties toward the top.
-            const float instance_y = static_cast<float>(std::ceil(y - 0.5) + bitmap.bearing_y);
-            const float instance_width = static_cast<float>(bitmap.width);
-            const float instance_height = static_cast<float>(bitmap.height);
+            const float instance_y =
+                static_cast<float>(std::ceil(y - 0.5) + glyph_phase.bearing_y);
+            const float instance_width = static_cast<float>(glyph_phase.width);
+            const float instance_height = static_cast<float>(glyph_phase.height);
             if (instance_x + instance_width <= static_cast<float>(clip.left) ||
                 instance_x >= static_cast<float>(clip.right) ||
                 instance_y + instance_height <= static_cast<float>(clip.top) ||
@@ -420,7 +424,7 @@ private:
                               int page,
                               bool colored,
                               glyph_instance_data instance) {
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
         // Linux's GL 4.0 compatibility compositor copies and draws each glyph in submission order.
         if (groups->empty() || groups->back().atlas != atlas || groups->back().page != page ||
             groups->back().colored != colored) {
@@ -489,7 +493,7 @@ private:
                     static_cast<float>(viewport.y));
         glUniform1i(program_.instances_uniform, 0);
         glUniform1i(program_.tex_uniform, 1);
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
         // GLSL 4.0 has no portable way to read the pixel being replaced. Keep a framebuffer-sized
         // scratch texture and populate only the small regions touched by glyphs below.
         const int width = std::max(1, static_cast<int>(viewport.x));
@@ -537,7 +541,7 @@ private:
         glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first));
         glUniform1f(program_.texture_size_uniform, static_cast<float>(atlas->size));
         glUniform1i(program_.colored_uniform, colored ? 1 : 0);
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
         // Fixed-function RGBA8 blending cannot express Sublime's Linux byte-rounding rules. Copy
         // each destination glyph rectangle on the GPU, then let the fragment shader perform the
         // recovered integer source-over operation. One draw per glyph also preserves overlap
@@ -579,13 +583,13 @@ private:
 
     void end_render() {
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
         glReadBuffer(static_cast<GLenum>(previous_read_buffer_));
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, 0);
 #endif
         glBindVertexArray(0);
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
         glActiveTexture(GL_TEXTURE1);
 #endif
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -603,20 +607,18 @@ private:
 
     void ensure_phase_pages(atlas_set* atlas,
                             const glyph_atlas_key& requested_key,
-                            fx_glyph_cache& cache) {
+                            const fx_glyph_cache::glyph_data& data) {
         glyph_atlas_key first_phase = requested_key;
         first_phase.phase = 0;
         if (atlas->placements.contains(first_phase)) return;
 
-        // A gl_glyph_cache miss in ST rasterizes and uploads all six horizontal subpixel phases.
-        // Atlas-page assignment intentionally controls the draw order when glyphs overlap.
-        for (int phase = 0; phase < 6; ++phase) {
+        // A gl_glyph_cache miss rasterizes and uploads every platform phase: six on Mac/Windows
+        // and phase zero on Linux. Atlas-page assignment controls draw order when glyphs overlap.
+        for (size_t phase = 0; phase < fx_glyph_cache::phase_count; ++phase) {
             glyph_atlas_key phase_key = requested_key;
-            phase_key.phase = phase;
-            const fx_glyph_bitmap& bitmap =
-                cache.lookup_glyph_data(requested_key.glyph, static_cast<unsigned>(phase),
-                                        requested_key.alternate, requested_key.subpixel_order);
-            if (!bitmap.empty()) place(atlas, phase_key, bitmap);
+            phase_key.phase = static_cast<int>(phase);
+            const fx_glyph_cache::glyph_phase& glyph_phase = data.phase_at(phase);
+            place(atlas, phase_key, glyph_phase, data.colored);
         }
     }
 
@@ -654,7 +656,7 @@ private:
         glGenVertexArrays(1, &vao_);
         glGenBuffers(2, instance_buffers_);
         glGenTextures(2, instance_textures_);
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
         glGenTextures(1, &destination_texture_);
 #endif
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -685,14 +687,15 @@ private:
 
     static const glyph_atlas_placement* place(atlas_set* atlas,
                                               const glyph_atlas_key& key,
-                                              const fx_glyph_bitmap& bitmap) {
+                                              const fx_glyph_cache::glyph_phase& glyph_phase,
+                                              bool colored) {
         auto found = atlas->placements.find(key);
         if (found != atlas->placements.end()) {
             return &found->second;
         }
 
-        const int width = static_cast<int>(bitmap.width);
-        const int height = static_cast<int>(bitmap.height);
+        const int width = static_cast<int>(glyph_phase.width);
+        const int height = static_cast<int>(glyph_phase.height);
         if (width <= 0 || height <= 0 || width > atlas->size || height > atlas->size) {
             return nullptr;
         }
@@ -718,7 +721,7 @@ private:
         // byte order; using a packed integer type here needlessly makes component interpretation
         // depend on host integer layout.
         glTexSubImage2D(GL_TEXTURE_2D, 0, atlas_x, atlas_y, width, height, GL_BGRA,
-                        GL_UNSIGNED_BYTE, bitmap.pixels.data());
+                        GL_UNSIGNED_BYTE, glyph_phase.pixels);
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glyph_atlas_placement placement{
@@ -727,7 +730,7 @@ private:
             .width = static_cast<float>(width),
             .height = static_cast<float>(height),
             .page = page_index,
-            .colored = bitmap.colored,
+            .colored = colored,
         };
         page->row_x += width;
         page->row_height = std::max(page->row_height, height);
@@ -741,7 +744,7 @@ private:
     GLuint instance_textures_[2] = {};
     size_t instance_capacities_[2] = {};
     int instance_slot_ = 0;
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
     GLuint destination_texture_ = 0;
     int destination_width_ = 0;
     int destination_height_ = 0;

@@ -1,7 +1,9 @@
 #include "base/apple/scoped_cftyperef.h"
 #include "base/apple/scoped_cgtyperef.h"
+#include "base/check.h"
 #include "base/numeric/safe_conversions.h"
 #include "base/strings/sys_string_conversions.h"
+#include "base/unicode/unicode.h"
 #include "base/unicode/utf16_to_utf8_indices_map.h"
 #include "fx/fx.h"
 
@@ -34,7 +36,7 @@ public:
     void rasterize(uint32_t glyph,
                    vec2 position,
                    float scale,
-                   fx_glyph_bitmap& bitmap,
+                   fx_pixel_buffer* buffer,
                    color foreground,
                    uint32_t subpixel_order) override;
     bool is_color_glyph(uint32_t glyph) override;
@@ -242,24 +244,28 @@ std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
 void core_text_font::rasterize(uint32_t glyph,
                                vec2 position,
                                float scale,
-                               fx_glyph_bitmap& bitmap,
+                               fx_pixel_buffer* buffer,
                                color foreground,
                                uint32_t) {
+    DCHECK(buffer);
+    DCHECK(buffer->pixels);
+    DCHECK(buffer->width > 0);
+    DCHECK(buffer->height > 0);
+    DCHECK(buffer->row_pixels >= buffer->width);
     const uint32_t face = glyph >> 16;
-    if (face >= faces_.size() || bitmap.empty() ||
-        bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||
-        bitmap.height > static_cast<size_t>(std::numeric_limits<int>::max()) || scale <= 0.0f) {
+    if (face >= faces_.size() || scale <= 0.0f) {
         return;
     }
 
     CTFontRef ctfont = faces_[face].get();
     CGGlyph core_text_glyph = static_cast<uint16_t>(glyph);
     constexpr size_t kBytesPerPixel = 4;
-    const size_t bytes_per_row = bitmap.width * kBytesPerPixel;
+    const size_t bytes_per_row = static_cast<size_t>(buffer->row_pixels) * kBytesPerPixel;
 
     auto color_space = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
     auto context = ScopedCGContext(CGBitmapContextCreate(
-        bitmap.pixels.data(), bitmap.width, bitmap.height, 8, bytes_per_row, color_space.get(),
+        buffer->pixels, static_cast<size_t>(buffer->width), static_cast<size_t>(buffer->height), 8,
+        bytes_per_row, color_space.get(),
         kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host));
     if (!context) {
         return;
@@ -277,32 +283,9 @@ void core_text_font::rasterize(uint32_t glyph,
 
     const CGPoint glyph_position = {
         position.x / scale,
-        (static_cast<double>(bitmap.height) - position.y) / scale,
+        (static_cast<double>(buffer->height) - position.y) / scale,
     };
     CTFontDrawGlyphs(ctfont, &core_text_glyph, &glyph_position, 1, context.get());
-}
-
-std::string utf32_to_utf8(std::u32string_view input) {
-    std::string output;
-    output.reserve(input.size());
-    for (uint32_t cp : input) {
-        if (cp <= 0x7f) {
-            output.push_back(static_cast<char>(cp));
-        } else if (cp <= 0x7ff) {
-            output.push_back(static_cast<char>(0xc0 | (cp >> 6)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else if (cp <= 0xffff) {
-            output.push_back(static_cast<char>(0xe0 | (cp >> 12)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else if (cp <= 0x10ffff) {
-            output.push_back(static_cast<char>(0xf0 | (cp >> 18)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        }
-    }
-    return output;
 }
 
 const fx_gamma_ramp* identity_gamma_ramp() {
@@ -334,7 +317,7 @@ float core_text_font::raster_ascent() const {
 }
 
 std::unique_ptr<fx_layout> core_text_font::shape(std::u32string_view utf32) {
-    return shape(utf32_to_utf8(utf32));
+    return shape(base::utf32_to_utf8(utf32));
 }
 
 void core_text_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) {

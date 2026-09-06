@@ -1,5 +1,8 @@
 #include "fx/fx.h"
 
+#include "base/check.h"
+#include "base/unicode/unicode.h"
+
 #include <cairo-ft.h>
 #include <cmath>
 #include <limits>
@@ -48,29 +51,6 @@ const fx_gamma_ramp* identity_gamma_ramp() {
     return &ramp;
 }
 
-std::string utf32_to_utf8(std::u32string_view input) {
-    std::string output;
-    output.reserve(input.size());
-    for (const uint32_t cp : input) {
-        if (cp <= 0x7f) {
-            output.push_back(static_cast<char>(cp));
-        } else if (cp <= 0x7ff) {
-            output.push_back(static_cast<char>(0xc0 | (cp >> 6)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else if (cp <= 0xffff) {
-            output.push_back(static_cast<char>(0xe0 | (cp >> 12)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else if (cp <= 0x10ffff) {
-            output.push_back(static_cast<char>(0xf0 | (cp >> 18)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        }
-    }
-    return output;
-}
-
 std::string font_features(uint32_t attrs) {
     std::string result;
     auto feature = [&result](std::string_view name, bool enabled) {
@@ -101,13 +81,13 @@ public:
     float raster_ascent() const override { return metrics().ascent; }
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override;
     std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override {
-        return shape(utf32_to_utf8(utf32));
+        return shape(base::utf32_to_utf8(utf32));
     }
     void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) override;
     void rasterize(uint32_t glyph,
                    vec2 position,
                    float scale,
-                   fx_glyph_bitmap& bitmap,
+                   fx_pixel_buffer* buffer,
                    color foreground,
                    uint32_t subpixel_order) override;
     bool is_color_glyph(uint32_t glyph) override;
@@ -327,7 +307,7 @@ void pango_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) 
     size = {bounds.width * native_scale, bounds.height * native_scale};
 
     // Sublime adds no border at 1x. At every other scale it pads each side by 2*ceil(scale),
-    // large enough for Cairo's scaled/filtering footprint and the six horizontal phases.
+    // large enough for Cairo's scaled/filtering footprint.
     if (scale != 1.0f) {
         const double padding = static_cast<double>(std::ceil(scale));
         origin.x += 2.0 * padding;
@@ -340,19 +320,22 @@ void pango_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) 
 void pango_font::rasterize(uint32_t glyph,
                            vec2 position,
                            float scale,
-                           fx_glyph_bitmap& bitmap,
+                           fx_pixel_buffer* buffer,
                            color foreground,
                            uint32_t subpixel_order) {
+    DCHECK(buffer);
+    DCHECK(buffer->pixels);
+    DCHECK(buffer->width > 0);
+    DCHECK(buffer->height > 0);
+    DCHECK(buffer->row_pixels >= buffer->width);
     PangoFont* native_face = face(glyph);
-    if (!native_face || bitmap.empty() || !(scale > 0.0f) || !std::isfinite(scale) ||
-        bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||
-        bitmap.height > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    if (!native_face || !(scale > 0.0f) || !std::isfinite(scale)) {
         return;
     }
 
     cairo_surface_ptr surface(cairo_image_surface_create_for_data(
-        bitmap.pixels.data(), CAIRO_FORMAT_ARGB32, static_cast<int>(bitmap.width),
-        static_cast<int>(bitmap.height), static_cast<int>(bitmap.width * 4)));
+        reinterpret_cast<unsigned char*>(buffer->pixels), CAIRO_FORMAT_ARGB32, buffer->width,
+        buffer->height, buffer->row_pixels * static_cast<int>(sizeof(uint32_t))));
     if (!surface || cairo_surface_status(surface.get()) != CAIRO_STATUS_SUCCESS) return;
     cairo_context_ptr context(cairo_create(surface.get()));
     if (!context || cairo_status(context.get()) != CAIRO_STATUS_SUCCESS) return;
@@ -382,19 +365,19 @@ void pango_font::rasterize(uint32_t glyph,
         {},
     };
     int glyph_count = 1;
-    if (static_cast<float>(bitmap.width) >= requested_size_) {
+    if (static_cast<float>(buffer->width) >= requested_size_) {
         if (space_glyph_ < 0) {
             const std::unique_ptr<fx_layout> space = shape(" ");
             space_glyph_ = space && !space->glyphs.empty()
                                ? static_cast<int32_t>(space->glyphs.front().id & 0xffff)
                                : 0;
         }
-        glyphs[1] = {static_cast<unsigned long>(space_glyph_),
-                     (position.x - static_cast<double>(bitmap.width)) / static_cast<double>(scale),
-                     y};
-        glyphs[2] = {static_cast<unsigned long>(space_glyph_),
-                     (position.x + static_cast<double>(bitmap.width)) / static_cast<double>(scale),
-                     y};
+        glyphs[1] = {
+            static_cast<unsigned long>(space_glyph_),
+            (position.x - static_cast<double>(buffer->width)) / static_cast<double>(scale), y};
+        glyphs[2] = {
+            static_cast<unsigned long>(space_glyph_),
+            (position.x + static_cast<double>(buffer->width)) / static_cast<double>(scale), y};
         glyph_count = 3;
     }
     cairo_show_glyphs(context.get(), glyphs, glyph_count);

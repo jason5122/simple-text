@@ -1,6 +1,7 @@
 #include "experiments/platform/ui/grapheme_shaper.h"
 
 #include "base/unicode/unicode.h"
+#include "build/build_config.h"
 #include "experiments/platform/px/px_font_internal.h"
 #include "experiments/platform/ui/retained_text.h"
 
@@ -64,7 +65,7 @@ public:
     }
 
     void extents(uint32_t, float, vec2&, vec2&) override {}
-    void rasterize(uint32_t, vec2, float, fx_glyph_bitmap&, color, uint32_t) override {}
+    void rasterize(uint32_t, vec2, float, fx_pixel_buffer*, color, uint32_t) override {}
     bool is_color_glyph(uint32_t) override { return false; }
     bool bg_affects_rasterize() const override { return false; }
     const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
@@ -130,26 +131,31 @@ public:
     void rasterize(uint32_t,
                    vec2 position,
                    float,
-                   fx_glyph_bitmap& bitmap,
+                   fx_pixel_buffer* buffer,
                    color foreground,
                    uint32_t subpixel_order) override {
         ++rasterize_count;
         raster_position = position;
         raster_foreground = foreground;
         raster_subpixel_order = subpixel_order;
-        initial_pixel = {bitmap.pixels[0], bitmap.pixels[1], bitmap.pixels[2], bitmap.pixels[3]};
+        raster_buffers.push_back(buffer->pixels);
+        raster_width = buffer->width;
+        raster_height = buffer->height;
+        raster_row_pixels = buffer->row_pixels;
+        auto* pixels = reinterpret_cast<uint8_t*>(buffer->pixels);
+        initial_pixel = {pixels[0], pixels[1], pixels[2], pixels[3]};
 
-        const size_t offset = (bitmap.width + 1) * 4;
+        const size_t offset = (static_cast<size_t>(buffer->row_pixels) + 1) * 4;
         if (colored_) {
-            bitmap.pixels[offset] = 30;
-            bitmap.pixels[offset + 1] = 20;
-            bitmap.pixels[offset + 2] = 10;
-            bitmap.pixels[offset + 3] = 40;
+            pixels[offset] = 30;
+            pixels[offset + 1] = 20;
+            pixels[offset + 2] = 10;
+            pixels[offset + 3] = 40;
         } else {
-            bitmap.pixels[offset] = foreground.blue();
-            bitmap.pixels[offset + 1] = foreground.green();
-            bitmap.pixels[offset + 2] = foreground.red();
-            bitmap.pixels[offset + 3] = foreground.alpha();
+            pixels[offset] = foreground.blue();
+            pixels[offset + 1] = foreground.green();
+            pixels[offset + 2] = foreground.red();
+            pixels[offset + 3] = foreground.alpha();
         }
     }
     bool is_color_glyph(uint32_t) override {
@@ -165,67 +171,106 @@ public:
     color raster_foreground;
     uint32_t raster_subpixel_order = 0;
     std::array<uint8_t, 4> initial_pixel{};
+    std::vector<uint32_t*> raster_buffers;
+    int raster_width = 0;
+    int raster_height = 0;
+    int raster_row_pixels = 0;
 
 private:
     bool colored_ = false;
     bool background_affects_rasterization_ = false;
 };
 
-TEST(FxGlyphCacheTest, ReusesColorClassificationAcrossSubpixelPhases) {
+TEST(FxGlyphCacheTest, RasterizesPlatformSubpixelPhasesOnFirstLookup) {
     cache_font font(false, false);
     fx_glyph_cache cache(&font, 2.0f);
 
-    const fx_glyph_bitmap& first = cache.lookup_glyph_data(42, 0);
-    const fx_glyph_bitmap& second = cache.lookup_glyph_data(42, 1);
-    cache.lookup_glyph_data(42, 1);
+    const fx_glyph_cache::glyph_data& first = cache.lookup_glyph_data(42);
+    const fx_glyph_cache::glyph_data& second = cache.lookup_glyph_data(42);
 
     EXPECT_EQ(font.classification_count, 1);
-    EXPECT_EQ(font.rasterize_count, 2);
+    EXPECT_EQ(font.rasterize_count, fx_glyph_cache::phase_count);
+    EXPECT_EQ(font.raster_buffers.size(), fx_glyph_cache::phase_count);
+    EXPECT_TRUE(std::all_of(
+        font.raster_buffers.begin(), font.raster_buffers.end(),
+        [&](const uint32_t* pixels) { return pixels == font.raster_buffers.front(); }));
+    EXPECT_EQ(font.raster_width, 4);
+    EXPECT_EQ(font.raster_height, 3);
+    EXPECT_EQ(font.raster_row_pixels, 4);
+#if BUILDFLAG(IS_WIN)
+    EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 0}));
+#else
     EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 255}));
+#endif
     EXPECT_FALSE(first.colored);
     EXPECT_FALSE(second.colored);
-    EXPECT_DOUBLE_EQ(font.raster_position.x, 2.0 + 1.0 / 3.0);
+    EXPECT_EQ(&first, &second);
+    EXPECT_GT(first.phases[0].width, 0);
+    EXPECT_GT(first.phases[0].height, 0);
+    if constexpr (fx_glyph_cache::phase_count > 1) {
+        EXPECT_GT(first.phases[5].width, 0);
+        EXPECT_GT(first.phases[5].height, 0);
+        EXPECT_NE(first.phases[0].pixels, first.phases[5].pixels);
+    }
+    EXPECT_DOUBLE_EQ(font.raster_position.x,
+                     2.0 + static_cast<double>(fx_glyph_cache::phase_count - 1) / 3.0);
     EXPECT_DOUBLE_EQ(font.raster_position.y, 3.0);
 }
 
-TEST(FxGlyphCacheTest, SeparatesDisplaySubpixelOrders) {
+TEST(FxGlyphCacheTest, UsesThePlatformSubpixelOrderCachePolicy) {
     cache_font font(false, false);
     fx_glyph_cache cache(&font, 1.0f);
 
-    cache.lookup_glyph_data(42, 0, false, 1);
-    cache.lookup_glyph_data(42, 0, false, 1);
-    cache.lookup_glyph_data(42, 0, false, 2);
+    cache.lookup_glyph_data(42, 1);
+    cache.lookup_glyph_data(42, 1);
+    cache.lookup_glyph_data(42, 2);
 
-    EXPECT_EQ(font.classification_count, 1);
-    EXPECT_EQ(font.rasterize_count, 2);
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN)
+    EXPECT_EQ(font.classification_count, 2);
+    EXPECT_EQ(font.rasterize_count, 2 * fx_glyph_cache::phase_count);
     EXPECT_EQ(font.raster_subpixel_order, 2u);
+#else
+    EXPECT_EQ(font.classification_count, 1);
+    EXPECT_EQ(font.rasterize_count, fx_glyph_cache::phase_count);
+    EXPECT_EQ(font.raster_subpixel_order, 1u);
+#endif
 }
 
 TEST(FxGlyphCacheTest, SuppliesInverseColorsWhenTheBackgroundAffectsRasterization) {
     cache_font font(false, true);
     fx_glyph_cache cache(&font, 1.0f);
 
-    const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(42, 0, true);
+    const fx_glyph_cache::glyph_data& data = cache.lookup_glyph_data(42, 0, true);
+    const fx_glyph_cache::glyph_phase& phase = data.phases[0];
+    const auto* pixels = reinterpret_cast<const uint8_t*>(phase.pixels);
 
     EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{255, 255, 255, 255}));
     EXPECT_EQ(font.raster_foreground, color::from_normalised(0.0f, 0.0f, 0.0f, 1.0f));
-    ASSERT_EQ(bitmap.pixels.size(), 4u);
-    EXPECT_EQ(bitmap.pixels[0], 0);
-    EXPECT_EQ(bitmap.pixels[1], 0);
-    EXPECT_EQ(bitmap.pixels[2], 0);
-    EXPECT_EQ(bitmap.pixels[3], 255);
+    ASSERT_EQ(phase.width, 1u);
+    ASSERT_EQ(phase.height, 1u);
+    ASSERT_NE(pixels, nullptr);
+    EXPECT_EQ(pixels[0], 0);
+    EXPECT_EQ(pixels[1], 0);
+    EXPECT_EQ(pixels[2], 0);
+    EXPECT_EQ(pixels[3], 255);
 }
 
 TEST(FxGlyphCacheTest, PreservesIntrinsicColorPixels) {
     cache_font font(true, true);
     fx_glyph_cache cache(&font, 1.0f);
 
-    const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(42, 0, true);
+    const fx_glyph_cache::glyph_data& data = cache.lookup_glyph_data(42, 0, true);
+    const fx_glyph_cache::glyph_phase& phase = data.phases[0];
+    const auto* pixels = reinterpret_cast<const uint8_t*>(phase.pixels);
 
     EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 0}));
     EXPECT_EQ(font.raster_foreground, color::from_normalised(1.0f, 1.0f, 1.0f, 1.0f));
-    EXPECT_TRUE(bitmap.colored);
-    EXPECT_EQ(bitmap.pixels, (std::vector<uint8_t>{30, 20, 10, 40}));
+    EXPECT_TRUE(data.colored);
+    ASSERT_EQ(phase.width, 1u);
+    ASSERT_EQ(phase.height, 1u);
+    ASSERT_NE(pixels, nullptr);
+    EXPECT_EQ((std::array<uint8_t, 4>{pixels[0], pixels[1], pixels[2], pixels[3]}),
+              (std::array<uint8_t, 4>{30, 20, 10, 40}));
 }
 
 struct shaper_fixture {
@@ -686,7 +731,7 @@ TEST(GraphemeShaperTest, OperatorRunsPreemptFollowingGraphemeGroupingDuringDrawi
               (std::vector<std::u32string>{U">-", U"\u200d", U"<0x7f>"}));
 }
 
-#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
+#if BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
 TEST(SystemFontIntegrationTest, SystemAliasProvidesUsableMetricsAndShapesText) {
     px_font_t* font = px_create_font("system", 12.0f);
     ASSERT_NE(font, nullptr);

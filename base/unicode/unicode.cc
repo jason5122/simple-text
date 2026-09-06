@@ -4,6 +4,29 @@
 
 namespace base {
 
+std::string utf32_to_utf8(std::u32string_view input) {
+    std::string output;
+    output.reserve(input.size());
+    for (const uint32_t cp : input) {
+        if (cp <= 0x7f) {
+            output.push_back(static_cast<char>(cp));
+        } else if (cp <= 0x7ff) {
+            output.push_back(static_cast<char>(0xc0 | (cp >> 6)));
+            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
+        } else if (cp <= 0xffff) {
+            output.push_back(static_cast<char>(0xe0 | (cp >> 12)));
+            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
+            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
+        } else if (cp <= 0x10ffff) {
+            output.push_back(static_cast<char>(0xf0 | (cp >> 18)));
+            output.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3f)));
+            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
+            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
+        }
+    }
+    return output;
+}
+
 int count_utf8(std::string_view utf8) {
     const auto* src = reinterpret_cast<const uint8_t*>(utf8.data());
     size_t len = utf8.length();

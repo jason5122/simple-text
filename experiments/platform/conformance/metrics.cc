@@ -2,6 +2,7 @@
 #include "experiments/platform/ui/grapheme_shaper.h"
 
 #include "base/unicode/unicode.h"
+#include "build/build_config.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -78,9 +79,9 @@ void write_json_string(std::ostream& output, std::string_view value) {
 }
 
 const char* platform_name() {
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
     return "windows";
-#elif defined(__APPLE__)
+#elif BUILDFLAG(IS_MAC)
     return "osx";
 #else
     return "linux";

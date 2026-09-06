@@ -1,5 +1,6 @@
 #include "experiments/platform/px/skia_render_context.h"
 
+#include "build/build_config.h"
 #include "experiments/platform/px/px_font_internal.h"
 
 #include <algorithm>
@@ -34,7 +35,7 @@ recti intersect_recti(recti a, recti b) {
 }
 
 uint8_t multiply_bytes(uint8_t a, uint8_t b, bool boundary_bias = false) {
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
     const unsigned product = static_cast<unsigned>(a) * b;
     if (boundary_bias) {
         // Sublime's ARM monochrome compositor rounds up only at products one below a multiple of
@@ -62,7 +63,7 @@ uint8_t source_over_channel(uint8_t source,
 
 uint8x8_t multiply_bytes(uint8x8_t a, uint8x8_t b, bool boundary_bias = false) {
     const uint16x8_t product = vmull_u8(a, b);
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
     if (!boundary_bias) {
         const uint16x8_t adjusted = vqaddq_u16(product, vdupq_n_u16(1));
         return vshrn_n_u16(vqaddq_u16(adjusted, vshrq_n_u16(product, 8)), 8);
@@ -265,7 +266,7 @@ void skia_render_context::draw_shaped_text(
     fx_glyph_cache& cache = font->glyph_cache(raster_scale);
     const double device_origin_x = translation_.x + position.x * scale_.x;
     double device_origin_y = translation_.y + position.y * scale_.y;
-#if defined(__linux__)
+#if BUILDFLAG(IS_LINUX)
     device_origin_y -= static_cast<double>(font->font->metrics().ascent) * scale_.y;
 #endif
     const float lightness =
@@ -283,19 +284,18 @@ void skia_render_context::draw_shaped_text(
         const int device_x = static_cast<int>(std::floor(x));
         const double fraction = x - std::floor(x);
         const int phase =
-            subpixel_positioning ? std::clamp(static_cast<int>(fraction * 6.0), 0, 5) : 0;
-        const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(
-            glyph.id, static_cast<unsigned>(phase), alternate, subpixel_order_);
-        if (bitmap.empty() ||
-            bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||
-            bitmap.height > static_cast<size_t>(std::numeric_limits<int>::max())) {
-            continue;
-        }
+            subpixel_positioning
+                ? std::clamp(static_cast<int>(fraction * fx_glyph_cache::phase_count), 0,
+                             static_cast<int>(fx_glyph_cache::phase_count) - 1)
+                : 0;
+        const fx_glyph_cache::glyph_data& data =
+            cache.lookup_glyph_data(glyph.id, subpixel_order_, alternate);
+        const fx_glyph_cache::glyph_phase& glyph_phase = data.phase_at(phase);
 
-        const int glyph_left = device_x + bitmap.bearing_x;
-        const int glyph_top = static_cast<int>(std::ceil(y - 0.5)) + bitmap.bearing_y;
-        const int bitmap_width = static_cast<int>(bitmap.width);
-        const int bitmap_height = static_cast<int>(bitmap.height);
+        const int glyph_left = device_x + glyph_phase.bearing_x;
+        const int glyph_top = static_cast<int>(std::ceil(y - 0.5)) + glyph_phase.bearing_y;
+        const int bitmap_width = static_cast<int>(glyph_phase.width);
+        const int bitmap_height = static_cast<int>(glyph_phase.height);
         const int left = std::max(clip_.left, glyph_left);
         const int top = std::max(clip_.top, glyph_top);
         const int right = std::min(clip_.right, glyph_left + bitmap_width);
@@ -308,11 +308,11 @@ void skia_render_context::draw_shaped_text(
             const int source_y = destination_y - glyph_top;
             uint8_t* dst = destination + static_cast<size_t>(destination_y) * buffer_.row_bytes +
                            static_cast<size_t>(left) * 4u;
-            const uint8_t* src =
-                bitmap.pixels.data() + (static_cast<size_t>(source_y) * bitmap.width +
-                                        static_cast<size_t>(left - glyph_left)) *
-                                           4u;
-            composite_glyph_scanline(dst, src, right - left, tint, bitmap.colored, alternate);
+            const auto* pixels = reinterpret_cast<const uint8_t*>(glyph_phase.pixels);
+            const uint8_t* src = pixels + (static_cast<size_t>(source_y) * glyph_phase.width +
+                                           static_cast<size_t>(left - glyph_left)) *
+                                              4u;
+            composite_glyph_scanline(dst, src, right - left, tint, data.colored, alternate);
         }
     }
 }

@@ -1,6 +1,7 @@
 #include "experiments/platform/px/px.h"
 #include "experiments/platform/ui/retained_text.h"
 #include "experiments/platform/ui/window.h"
+#include "build/build_config.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -455,7 +456,7 @@ private:
 }  // namespace
 
 int main(int argc, char** argv) {
-#if defined(__APPLE__)
+#if BUILDFLAG(IS_MAC)
     setenv("PX_NO_DISPLAY_LINK", "1", 1);
 #endif
     px_init("editor", "com.example.editor", argc, argv, 0);

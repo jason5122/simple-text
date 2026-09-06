@@ -3,6 +3,12 @@
 
 namespace base {
 
+TEST(UnicodeTest, UTF32ToUTF8) {
+    EXPECT_EQ(utf32_to_utf8(U""), "");
+    EXPECT_EQ(utf32_to_utf8(U"A\u00a9\u20ac\U0001f600"),
+              "A\xC2\xA9\xE2\x82\xAC\xF0\x9F\x98\x80");
+}
+
 TEST(UnicodeTest, CountUTF8) {
     EXPECT_EQ(count_utf8(""), 0);
     EXPECT_EQ(count_utf8("hello world"), 11);

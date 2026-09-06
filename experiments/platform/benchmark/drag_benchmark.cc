@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "build/build_config.h"
 #include "experiments/platform/px/px.h"
 
 namespace {
@@ -89,7 +90,7 @@ int main(int argc, char** argv) {
     std::setvbuf(stdout, nullptr, _IONBF, 0);
 
     // The benchmark must be wholly event driven. Continuous animation is a different workload.
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
     _putenv_s("PX_NO_ANIMATION", "1");
 #else
     setenv("PX_NO_ANIMATION", "1", 1);

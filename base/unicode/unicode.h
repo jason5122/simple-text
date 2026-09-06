@@ -2,9 +2,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <string_view>
 
 namespace base {
+
+std::string utf32_to_utf8(std::u32string_view input);
 
 using Unichar = int32_t;
 constexpr unsigned kMaxBytesInUTF8Sequence = 4;

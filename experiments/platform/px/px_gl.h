@@ -14,13 +14,15 @@
 
 #pragma once
 
-#if defined(__APPLE__)
+#include "build/build_config.h"
+
+#if BUILDFLAG(IS_MAC)
 
 #include <OpenGL/gl3.h>
 
 inline bool px_gl_has_shaders() { return true; }
 
-#elif defined(_WIN32)
+#elif BUILDFLAG(IS_WIN)
 
 #include <windows.h>
 
@@ -243,7 +245,7 @@ bool px_gl_has_shaders();
 #define glEnableVertexAttribArray px_glEnableVertexAttribArray
 #define glVertexAttribPointer px_glVertexAttribPointer
 
-#elif defined(__linux__)
+#elif BUILDFLAG(IS_LINUX)
 
 // Unlike Windows, ST's Linux binary links every GL entry point it uses -- including the ones past
 // 1.1 -- directly against libGL.so.1 (confirmed: glCreateShader, glGenFramebuffers and friends are

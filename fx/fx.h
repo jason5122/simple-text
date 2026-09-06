@@ -1,14 +1,8 @@
-// Sublime Text's renderer-independent font mechanics.
-//
-// The interface is reconstructed from the fx_font/core_text_font vtables in ST 4200. Platform
-// font implementations shape text and rasterize one glyph; the shared layer owns layout values,
-// width classification, gamma metadata, and CPU glyph caches. Renderer-specific caches (such as
-// gl_glyph_cache and its texture atlases) intentionally live above this directory.
-
 #pragma once
 
 #include "base/color.h"
 #include "base/geometry.h"
+#include "build/build_config.h"
 
 #include <array>
 #include <cstddef>
@@ -41,7 +35,6 @@ enum : uint32_t {
     FX_FONT_SS10 = 1u << 24,
 };
 
-// Four floats, matching core_text_font::metrics()'s register return in the binary.
 struct fx_font_metrics {
     float ascent = 0.0f;
     float descent = 0.0f;
@@ -62,26 +55,26 @@ struct fx_glyph {
 };
 static_assert(sizeof(fx_glyph) == 16);
 
-// ST stores one flat array. Fallback-face identity is packed into the upper half of each glyph id,
-// so a layout does not need separate font runs.
 struct fx_layout {
     float advance = 0.0f;
     float line_height = 0.0f;
     std::vector<fx_glyph> glyphs;
 };
 
-// Premultiplied BGRA in host byte order. The shared cache sets `colored` after asking the native
-// font whether the glyph has intrinsic color; native rasterizers only paint the supplied buffer.
-struct fx_glyph_bitmap {
-    size_t width = 0;
-    size_t height = 0;
-    int bearing_x = 0;
-    int bearing_y = 0;
-    bool colored = false;
-    std::vector<uint8_t> pixels;
-
-    bool empty() const { return width == 0 || height == 0; }
+// Non-owning premultiplied-BGRA raster target. Sublime calls the corresponding type
+// px_pixel_buffer; keep the fx prefix here because this view is part of the font interface rather
+// than the platform render-context interface.
+struct fx_pixel_buffer {
+    uint32_t* pixels = nullptr;
+    int width = 0;
+    int height = 0;
+    int row_pixels = 0;
 };
+static_assert(offsetof(fx_pixel_buffer, pixels) == 0x0);
+static_assert(offsetof(fx_pixel_buffer, width) == 0x8);
+static_assert(offsetof(fx_pixel_buffer, height) == 0xc);
+static_assert(offsetof(fx_pixel_buffer, row_pixels) == 0x10);
+static_assert(sizeof(fx_pixel_buffer) == 0x18);
 
 struct fx_gamma_ramp {
     std::array<uint8_t, 256> values{};
@@ -106,7 +99,7 @@ public:
     virtual void rasterize(uint32_t glyph,
                            vec2 position,
                            float scale,
-                           fx_glyph_bitmap& bitmap,
+                           fx_pixel_buffer* buffer,
                            color foreground,
                            uint32_t subpixel_order) = 0;
     virtual bool is_color_glyph(uint32_t glyph) = 0;
@@ -124,34 +117,66 @@ private:
     fx_font_widths widths_;
 };
 
-// One cache is constructed for one font and one device scale. Its two internal maps correspond to
-// ST's normal and alternate/background-dependent cache slots. The renderer chooses the slot from
-// its text/background policy; retaining the split keeps that renderer-facing contract intact.
+// A cache is constructed for one font and one device scale.
 class fx_glyph_cache {
 public:
+#if BUILDFLAG(IS_LINUX)
+    // Pango does not use subpixel positioning.
+    static constexpr size_t phase_count = 1;
+#else
+    static constexpr size_t phase_count = 6;
+#endif
+
+    struct glyph_phase {
+        uint32_t* pixels = nullptr;
+        uint16_t width = 0;
+        uint16_t height = 0;
+        int16_t bearing_x = 0;
+        int16_t bearing_y = 0;
+    };
+    static_assert(offsetof(glyph_phase, pixels) == 0x0);
+    static_assert(offsetof(glyph_phase, width) == 0x8);
+    static_assert(offsetof(glyph_phase, height) == 0xa);
+    static_assert(offsetof(glyph_phase, bearing_x) == 0xc);
+    static_assert(offsetof(glyph_phase, bearing_y) == 0xe);
+    static_assert(sizeof(glyph_phase) == 16);
+
+    struct glyph_data {
+        std::array<glyph_phase, phase_count> phases{};
+        bool colored = false;
+
+        const glyph_phase& phase_at(size_t phase) const {
+            return phases[phase_count == 1 ? 0 : phase];
+        }
+    };
+#if BUILDFLAG(IS_LINUX)
+    static_assert(offsetof(glyph_data, colored) == 0x10);
+    static_assert(sizeof(glyph_data) == 0x18);
+#else
+    static_assert(offsetof(glyph_data, colored) == 0x60);
+    static_assert(sizeof(glyph_data) == 0x68);
+#endif
+
     fx_glyph_cache(fx_font* font, float scale);
-    const fx_glyph_bitmap& lookup_glyph_data(uint32_t glyph,
-                                             unsigned phase,
-                                             bool alternate = false,
-                                             uint32_t subpixel_order = 0);
+    const glyph_data& lookup_glyph_data(uint32_t glyph,
+                                        uint32_t subpixel_order = 0,
+                                        bool alternate = false);
 
     fx_font* font() const { return font_; }
     float scale() const { return scale_; }
 
 private:
-    static uint64_t key(uint32_t glyph, unsigned phase, uint32_t subpixel_order);
+    static uint64_t cache_key(uint32_t glyph, uint32_t subpixel_order);
 
     fx_font* font_ = nullptr;
+    const fx_gamma_ramp* gamma_ramp_ = nullptr;
     float scale_ = 1.0f;
-    std::unordered_map<uint32_t, bool> color_glyphs_;
-    std::unordered_map<uint64_t, fx_glyph_bitmap> normal_;
-    std::unordered_map<uint64_t, fx_glyph_bitmap> alternate_;
+    std::unordered_map<uint64_t, glyph_data> normal_;
+    std::unordered_map<uint64_t, glyph_data> alternate_;
+    std::vector<std::unique_ptr<uint32_t[]>> pixel_allocations_;
 };
 
 // Applies the shared bitmap glow operation used before a glyph is handed to either renderer.
-void fx_apply_font_glow(fx_glyph_bitmap* bitmap, float radius, bool preserve_source);
+void fx_apply_font_glow(fx_pixel_buffer* buffer, float radius, bool preserve_source);
 
-// Creates the native implementation (Core Text on macOS, DirectWrite on Windows, Pango/Cairo on
-// Linux). Returns null if the requested family cannot be resolved. "system" uses the native UI
-// font.
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs);

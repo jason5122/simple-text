@@ -1,5 +1,6 @@
 #include "experiments/platform/px/px.h"
 
+#include "build/build_config.h"
 #include "experiments/platform/px/px_font_internal.h"
 
 #include <bit>
@@ -42,10 +43,10 @@ px_font_t* px_create_font(const char* family, float size, uint32_t attrs) {
     }
 
     float native_size = size;
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
     // DirectWrite consumes DIPs while Sublime's setting is a typographic point size.
     native_size = std::floor(size * 96.0f / 72.0f + 0.5f);
-#elif defined(__linux__)
+#elif BUILDFLAG(IS_LINUX)
     // The Linux factory passes this exact scale as a separate double before the Pango backend
     // converts native pixels back to points. Do not apply DirectWrite's integer-size rounding.
     native_size = size * 96.0f / 72.0f;

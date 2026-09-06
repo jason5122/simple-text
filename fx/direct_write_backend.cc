@@ -1,5 +1,7 @@
+#include "base/check.h"
 #include "base/numeric/safe_conversions.h"
 #include "base/strings/sys_string_conversions.h"
+#include "base/unicode/unicode.h"
 #include "base/unicode/utf16_to_utf8_indices_map.h"
 #include "fx/fx.h"
 #include <windows.h>
@@ -126,7 +128,7 @@ public:
     void rasterize(uint32_t glyph,
                    vec2 position,
                    float scale,
-                   fx_glyph_bitmap& bitmap,
+                   fx_pixel_buffer* buffer,
                    color foreground,
                    uint32_t subpixel_order) override;
     bool is_color_glyph(uint32_t glyph) override;
@@ -146,7 +148,7 @@ private:
                                 double origin_y,
                                 int width,
                                 int height,
-                                std::vector<uint8_t>& out) const;
+                                fx_pixel_buffer* out) const;
 
     ComPtr<IDWriteTextFormat> format;
     // ST stores these as parallel vectors at direct_write_font+0x48 and +0x60. Index 0 is the
@@ -395,39 +397,36 @@ uint32_t coverage_pixel(uint32_t bgra) {
 }
 
 // Copies the render target's DIB into `out`, which is w*h premultiplied BGRA.
-void read_target(IDWriteBitmapRenderTarget* target, int w, int h, std::vector<uint8_t>& out) {
+void read_target(IDWriteBitmapRenderTarget* target, int w, int h, fx_pixel_buffer* out) {
     DIBSECTION dib{};
     HBITMAP bitmap = static_cast<HBITMAP>(GetCurrentObject(target->GetMemoryDC(), OBJ_BITMAP));
     if (GetObjectW(bitmap, sizeof(dib), &dib) == 0 || !dib.dsBm.bmBits) return;
 
     const auto* src = static_cast<const uint32_t*>(dib.dsBm.bmBits);
     const size_t stride = static_cast<size_t>(dib.dsBm.bmWidthBytes) / 4;
-    auto* dst = reinterpret_cast<uint32_t*>(out.data());
     for (size_t y = 0; y < static_cast<size_t>(h); y++) {
         for (size_t x = 0; x < static_cast<size_t>(w); x++) {
-            dst[y * static_cast<size_t>(w) + x] = coverage_pixel(src[y * stride + x]);
+            out->pixels[y * static_cast<size_t>(out->row_pixels) + x] =
+                coverage_pixel(src[y * stride + x]);
         }
     }
 }
 
-void read_color_target(IDWriteBitmapRenderTarget* target,
-                       int w,
-                       int h,
-                       std::vector<uint8_t>& out) {
+void read_color_target(IDWriteBitmapRenderTarget* target, int w, int h, fx_pixel_buffer* out) {
     DIBSECTION dib{};
     HBITMAP bitmap = static_cast<HBITMAP>(GetCurrentObject(target->GetMemoryDC(), OBJ_BITMAP));
     if (GetObjectW(bitmap, sizeof(dib), &dib) == 0 || !dib.dsBm.bmBits) return;
 
     const auto* src = static_cast<const uint32_t*>(dib.dsBm.bmBits);
     const size_t stride = static_cast<size_t>(dib.dsBm.bmWidthBytes) / 4;
-    auto* dst = reinterpret_cast<uint32_t*>(out.data());
     for (size_t y = 0; y < static_cast<size_t>(h); y++) {
         for (size_t x = 0; x < static_cast<size_t>(w); x++) {
             const uint32_t pixel = src[y * stride + x];
             const uint32_t b = pixel & 0xFF;
             const uint32_t gr = (pixel >> 8) & 0xFF;
             const uint32_t r = (pixel >> 16) & 0xFF;
-            dst[y * static_cast<size_t>(w) + x] = pixel | (((r + gr + b) / 3) << 24);
+            out->pixels[y * static_cast<size_t>(out->row_pixels) + x] =
+                pixel | (((r + gr + b) / 3) << 24);
         }
     }
 }
@@ -440,7 +439,7 @@ bool direct_write_font::rasterize_via_analysis(const DWRITE_GLYPH_RUN& run,
                                                double origin_y,
                                                int w,
                                                int h,
-                                               std::vector<uint8_t>& out) const {
+                                               fx_pixel_buffer* out) const {
     ComPtr<IDWriteGlyphRunAnalysis> analysis;
     if (FAILED(globals().factory->CreateGlyphRunAnalysis(
             &run, static_cast<FLOAT>(scale), nullptr, rendering_mode(flags_),
@@ -461,14 +460,16 @@ bool direct_write_font::rasterize_via_analysis(const DWRITE_GLYPH_RUN& run,
         return false;
     }
 
-    auto* dst = reinterpret_cast<uint32_t*>(out.data());
-    for (size_t i = 0; i < static_cast<size_t>(w) * static_cast<size_t>(h); i++) {
-        uint32_t rgb = 0;
-        for (size_t s = 0; s < 3; s++) {
-            const uint32_t v = alpha[i * samples + (samples == 1 ? 0 : s)];
-            rgb |= v << (8 * (2 - s));  // CLEARTYPE_3x1 is R, G, B in order
+    for (size_t y = 0; y < static_cast<size_t>(h); ++y) {
+        for (size_t x = 0; x < static_cast<size_t>(w); ++x) {
+            const size_t pixel = y * static_cast<size_t>(w) + x;
+            uint32_t rgb = 0;
+            for (size_t s = 0; s < 3; ++s) {
+                const uint32_t v = alpha[pixel * samples + (samples == 1 ? 0 : s)];
+                rgb |= v << (8 * (2 - s));  // CLEARTYPE_3x1 is R, G, B in order
+            }
+            out->pixels[y * static_cast<size_t>(out->row_pixels) + x] = 0xFF000000 | rgb;
         }
-        dst[i] = 0xFF000000 | rgb;
     }
     return true;
 }
@@ -716,18 +717,21 @@ std::unique_ptr<fx_layout> direct_write_font::shape(std::string_view utf8) {
 void direct_write_font::rasterize(uint32_t glyph,
                                   vec2 position,
                                   float scale,
-                                  fx_glyph_bitmap& bitmap,
+                                  fx_pixel_buffer* buffer,
                                   color foreground,
                                   uint32_t) {
+    DCHECK(buffer);
+    DCHECK(buffer->pixels);
+    DCHECK(buffer->width > 0);
+    DCHECK(buffer->height > 0);
+    DCHECK(buffer->row_pixels >= buffer->width);
     const uint32_t face_index = glyph >> 16;
 
-    if (face_index >= faces.size() || bitmap.empty() ||
-        bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||
-        bitmap.height > static_cast<size_t>(std::numeric_limits<int>::max()) || scale <= 0.0f) {
+    if (face_index >= faces.size() || scale <= 0.0f) {
         return;
     }
-    const int width = static_cast<int>(bitmap.width);
-    const int height = static_cast<int>(bitmap.height);
+    const int width = buffer->width;
+    const int height = buffer->height;
 
     UINT16 index = static_cast<uint16_t>(glyph);
     FLOAT advance = 0;
@@ -805,40 +809,17 @@ void direct_write_font::rasterize(uint32_t glyph,
             // DirectWrite leaves color-layer coverage in the DIB's high byte. Sublime preserves
             // it by ORing in the mean RGB value rather than replacing it
             // (0x1401bbffc..0x1401bc05c).
-            read_color_target(target.Get(), width, height, bitmap.pixels);
+            read_color_target(target.Get(), width, height, buffer);
         } else {
             target->DrawGlyphRun(
                 static_cast<FLOAT>(origin_x / scale), static_cast<FLOAT>(origin_y / scale),
                 measuring_mode(flags_), &run, params.Get(),
                 RGB(foreground.red(), foreground.green(), foreground.blue()), nullptr);
-            read_target(target.Get(), width, height, bitmap.pixels);
+            read_target(target.Get(), width, height, buffer);
         }
     } else if (!colored) {
-        rasterize_via_analysis(run, scale, origin_x, origin_y, width, height, bitmap.pixels);
+        rasterize_via_analysis(run, scale, origin_x, origin_y, width, height, buffer);
     }
-}
-
-std::string utf32_to_utf8(std::u32string_view input) {
-    std::string output;
-    output.reserve(input.size());
-    for (uint32_t cp : input) {
-        if (cp <= 0x7f) {
-            output.push_back(static_cast<char>(cp));
-        } else if (cp <= 0x7ff) {
-            output.push_back(static_cast<char>(0xc0 | (cp >> 6)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else if (cp <= 0xffff) {
-            output.push_back(static_cast<char>(0xe0 | (cp >> 12)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else if (cp <= 0x10ffff) {
-            output.push_back(static_cast<char>(0xf0 | (cp >> 18)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        }
-    }
-    return output;
 }
 
 fx_font_metrics direct_write_font::metrics() const {
@@ -851,7 +832,7 @@ fx_font_metrics direct_write_font::metrics() const {
 }
 
 std::unique_ptr<fx_layout> direct_write_font::shape(std::u32string_view utf32) {
-    return shape(utf32_to_utf8(utf32));
+    return shape(base::utf32_to_utf8(utf32));
 }
 
 void direct_write_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) {

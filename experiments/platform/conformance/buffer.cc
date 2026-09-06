@@ -1,4 +1,5 @@
 #include "base/numeric/safe_conversions.h"
+#include "build/build_config.h"
 #include "experiments/platform/conformance/capture.h"
 #include "experiments/platform/px/gl_render_context.h"
 #include "experiments/platform/px/px.h"
@@ -16,7 +17,7 @@
 #include <string_view>
 #include <vector>
 
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
 #include <process.h>
 #else
 #include <unistd.h>
@@ -33,9 +34,9 @@ constexpr double kTextTop = 0.0;
 constexpr fcolor kBackground = {1.0f, 1.0f, 1.0f, 1.0f};
 constexpr fcolor kForeground = {0.0f, 0.0f, 0.0f, 1.0f};
 
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
 constexpr std::string_view kFacesFilename = "faces-win.txt";
-#elif defined(__linux__)
+#elif BUILDFLAG(IS_LINUX)
 constexpr std::string_view kFacesFilename = "faces-linux.txt";
 #else
 constexpr std::string_view kFacesFilename = "faces-mac.txt";
@@ -154,7 +155,7 @@ public:
         }
 
         double first_baseline = kTextTop + std::ceil(metrics_.ascent);
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
         // ST rounds the unrounded DirectWrite ascent after scaling to device pixels. Rounding the
         // public ascent first creates a repeating one-pixel error as the requested size changes.
         first_baseline =
@@ -260,7 +261,7 @@ int run_tests(int argc, char* argv[]) {
     for (int i = 0; i < 8; ++i) {
         capture::pump(0.008);
     }
-#if defined(_WIN32)
+#if BUILDFLAG(IS_WIN)
     const int process_id = _getpid();
 #else
     const int process_id = getpid();

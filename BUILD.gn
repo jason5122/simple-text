@@ -15,12 +15,10 @@ group("experiments") {
     "//experiments/build_types",
     "//experiments/compiler_builtins_canary",
     "//experiments/fuzz",
-    "//experiments/harfbuzz_demo",
     "//experiments/platform",
     "//experiments/playground",
     "//experiments/rope",
     "//experiments/sanitizer_demo",
-    "//experiments/zlib_ng_demo",
   ]
 
   if (is_mac) {

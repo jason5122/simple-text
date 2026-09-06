@@ -23,6 +23,7 @@
 
 #include "experiments/platform/px/gl_render_context.h"
 #include "experiments/platform/px/px_gl.h"
+#include "experiments/platform/px/skia_render_context.h"
 #include "experiments/platform/px/win/px_win_private.h"
 
 #include <imm.h>
@@ -33,6 +34,7 @@
 #include <cmath>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <print>
 #include <string>
 
@@ -261,14 +263,55 @@ void paint_window(px_window_t* window) {
         window->did_first_paint = true;
         window->last_flush = px_now();
     } else {
-        // Software path. ST reaches its CPU renderer from here; no CPU rasterizer exists in this
-        // experiment, so this only fills with the window background.
-        const fcolor& bg = window->background;
-        HBRUSH brush =
-            CreateSolidBrush(RGB(static_cast<int>(bg.r * 255.0f), static_cast<int>(bg.g * 255.0f),
-                                 static_cast<int>(bg.b * 255.0f)));
-        FillRect(ps.hdc, &ps.rcPaint, brush);
-        DeleteObject(brush);
+        // Software path, mirroring mac/linux: rasterize through Skia into a BGRA scratch buffer,
+        // then blit with StretchDIBits -- GDI has no direct BGRA surface of its own.
+        const int width = static_cast<int>(device.x);
+        const int height = static_cast<int>(device.y);
+        if (width >= 1 && height >= 1 &&
+            static_cast<size_t>(width) <= std::numeric_limits<size_t>::max() /
+                                               (static_cast<size_t>(height) * sizeof(uint32_t))) {
+            window->handler->pre_paint();
+            px_win_dispatch_post_event_callbacks();
+
+            const rect paint_bounds = gl_render_context::normalize_dirty_rects(&dirty, bounds);
+
+            static std::vector<uint32_t> pixels;
+            pixels.resize(static_cast<size_t>(width) * static_cast<size_t>(height));
+            const size_t row_bytes = static_cast<size_t>(width) * sizeof(uint32_t);
+            const recti pixel_clip{
+                std::max(0, static_cast<int>(std::floor(paint_bounds.x * scale))),
+                std::max(0, static_cast<int>(std::floor(paint_bounds.y * scale))),
+                std::min(width, static_cast<int>(std::ceil(paint_bounds.right() * scale))),
+                std::min(height, static_cast<int>(std::ceil(paint_bounds.bottom() * scale))),
+            };
+
+            skia_render_context rc(px_pixel_buffer{pixels.data(), width, height, row_bytes},
+                                   pixel_clip, scale);
+            if (rc.valid()) {
+                window->handler->paint(&rc, paint_bounds, dirty.data(),
+                                       static_cast<int>(dirty.size()));
+            }
+
+            BITMAPINFO bmi = {};
+            bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+            bmi.bmiHeader.biWidth = width;
+            bmi.bmiHeader.biHeight = -height;  // top-down, matching skia_render_context's row order
+            bmi.bmiHeader.biPlanes = 1;
+            bmi.bmiHeader.biBitCount = 32;
+            bmi.bmiHeader.biCompression = BI_RGB;
+            StretchDIBits(ps.hdc, 0, 0, width, height, 0, 0, width, height, pixels.data(), &bmi,
+                         DIB_RGB_COLORS, SRCCOPY);
+
+            window->did_first_paint = true;
+            window->last_flush = px_now();
+        } else {
+            const fcolor& bg = window->background;
+            HBRUSH brush = CreateSolidBrush(RGB(static_cast<int>(bg.r * 255.0f),
+                                               static_cast<int>(bg.g * 255.0f),
+                                               static_cast<int>(bg.b * 255.0f)));
+            FillRect(ps.hdc, &ps.rcPaint, brush);
+            DeleteObject(brush);
+        }
     }
 
     EndPaint(window->hwnd, &ps);

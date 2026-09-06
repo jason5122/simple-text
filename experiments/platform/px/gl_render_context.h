@@ -25,7 +25,8 @@ public:
                       double dpi_scale,
                       const rect* dirty,
                       int dirty_count,
-                      bool has_stencil = true);
+                      bool has_stencil = true,
+                      uint32_t subpixel_order = 0);
     ~gl_render_context() override;
 
     gl_render_context(const gl_render_context&) = delete;
@@ -91,6 +92,7 @@ private:
     rect paint_bounds_;
     recti clip_;
     double dpi_scale_ = 1.0;
+    uint32_t subpixel_order_ = 0;
     bool has_stencil_ = true;
     vec2 translation_;
     vec2 scale_{1.0, 1.0};

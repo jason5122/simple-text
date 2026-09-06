@@ -59,15 +59,17 @@ fx_font_widths fx_font::widths() {
 fx_glyph_cache::fx_glyph_cache(fx_font* font, float scale)
     : font_(font), scale_(scale > 0.0f ? scale : 1.0f) {}
 
-uint64_t fx_glyph_cache::key(uint32_t glyph, unsigned phase) {
-    return (static_cast<uint64_t>(phase) << 32) | glyph;
+uint64_t fx_glyph_cache::key(uint32_t glyph, unsigned phase, uint32_t subpixel_order) {
+    return (static_cast<uint64_t>(subpixel_order) << 40) | (static_cast<uint64_t>(phase) << 32) |
+           glyph;
 }
 
 const fx_glyph_bitmap& fx_glyph_cache::lookup_glyph_data(uint32_t glyph,
                                                          unsigned phase,
-                                                         bool alternate) {
+                                                         bool alternate,
+                                                         uint32_t subpixel_order) {
     auto& cache = alternate ? alternate_ : normal_;
-    const uint64_t cache_key = key(glyph, phase);
+    const uint64_t cache_key = key(glyph, phase, subpixel_order);
     auto found = cache.find(cache_key);
     if (found != cache.end()) {
         return found->second;
@@ -85,10 +87,17 @@ const fx_glyph_bitmap& fx_glyph_cache::lookup_glyph_data(uint32_t glyph,
         const color transparent = color::from_normalised(0.0f, 0.0f, 0.0f, 0.0f);
         const color black = color::from_normalised(0.0f, 0.0f, 0.0f, 1.0f);
         const color white = color::from_normalised(1.0f, 1.0f, 1.0f, 1.0f);
-        // Canonical colors keep monochrome cache entries reusable for every renderer tint.
+#if defined(_WIN32)
+        // DirectWrite copies untouched pixels with zero alpha; keep its comparison background
+        // transparent so those pixels remain outside the cropped glyph bounds.
         const color background = colored || !background_affects_rasterization
                                      ? transparent
                                      : (native_alternate ? white : black);
+#else
+        // Core Text and Cairo composite into the supplied bitmap, so monochrome glyphs need an
+        // opaque background to preserve their coverage channels.
+        const color background = colored ? transparent : (native_alternate ? white : black);
+#endif
         const color foreground = native_alternate ? black : white;
 
         vec2 origin;
@@ -119,7 +128,7 @@ const fx_glyph_bitmap& fx_glyph_cache::lookup_glyph_data(uint32_t glyph,
 
         const double subpixel_x = static_cast<double>(phase % 6) * (1.0 / 6.0) * scale_;
         font_->rasterize(glyph, {.x = origin.x + subpixel_x, .y = origin.y}, scale_, bitmap,
-                         foreground);
+                         foreground, subpixel_order);
 
         size_t left = width;
         size_t top = height;
@@ -151,11 +160,9 @@ const fx_glyph_bitmap& fx_glyph_cache::lookup_glyph_data(uint32_t glyph,
         if (!colored) {
             const fx_gamma_ramp* ramp = font_->gamma_ramp();
             for (size_t i = 0; i + 3 < bitmap.pixels.size(); i += 4) {
-                const unsigned mean = static_cast<unsigned>(bitmap.pixels[i]) +
-                                      static_cast<unsigned>(bitmap.pixels[i + 1]) +
-                                      static_cast<unsigned>(bitmap.pixels[i + 2]);
-                bitmap.pixels[i + 3] =
-                    static_cast<uint8_t>(native_alternate ? 255u - mean / 3u : mean / 3u);
+                // Preserve native alpha. DirectWrite synthesizes destination coverage from the
+                // RGB mean while copying its DIB, whereas Core Text and Cairo provide alpha
+                // directly. Sublime's shared cache only transforms the three color channels.
                 if (ramp) {
                     bitmap.pixels[i] = ramp->values[bitmap.pixels[i]];
                     bitmap.pixels[i + 1] = ramp->values[bitmap.pixels[i + 1]];

@@ -1,4 +1,4 @@
-#include "experiments/platform/px/grapheme_shaper.h"
+#include "experiments/platform/ui/grapheme_shaper.h"
 
 #include "base/unicode/unicode.h"
 #include "experiments/platform/px/px_font_internal.h"
@@ -64,7 +64,7 @@ public:
     }
 
     void extents(uint32_t, float, vec2&, vec2&) override {}
-    void rasterize(uint32_t, vec2, float, fx_glyph_bitmap&, color) override {}
+    void rasterize(uint32_t, vec2, float, fx_glyph_bitmap&, color, uint32_t) override {}
     bool is_color_glyph(uint32_t) override { return false; }
     bool bg_affects_rasterize() const override { return false; }
     const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
@@ -127,11 +127,16 @@ public:
         origin = {2.0, 3.0};
         size = {3.0, 3.0};
     }
-    void rasterize(
-        uint32_t, vec2 position, float, fx_glyph_bitmap& bitmap, color foreground) override {
+    void rasterize(uint32_t,
+                   vec2 position,
+                   float,
+                   fx_glyph_bitmap& bitmap,
+                   color foreground,
+                   uint32_t subpixel_order) override {
         ++rasterize_count;
         raster_position = position;
         raster_foreground = foreground;
+        raster_subpixel_order = subpixel_order;
         initial_pixel = {bitmap.pixels[0], bitmap.pixels[1], bitmap.pixels[2], bitmap.pixels[3]};
 
         const size_t offset = (bitmap.width + 1) * 4;
@@ -158,6 +163,7 @@ public:
     int rasterize_count = 0;
     vec2 raster_position;
     color raster_foreground;
+    uint32_t raster_subpixel_order = 0;
     std::array<uint8_t, 4> initial_pixel{};
 
 private:
@@ -175,11 +181,24 @@ TEST(FxGlyphCacheTest, ReusesColorClassificationAcrossSubpixelPhases) {
 
     EXPECT_EQ(font.classification_count, 1);
     EXPECT_EQ(font.rasterize_count, 2);
-    EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 0}));
+    EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 255}));
     EXPECT_FALSE(first.colored);
     EXPECT_FALSE(second.colored);
     EXPECT_DOUBLE_EQ(font.raster_position.x, 2.0 + 1.0 / 3.0);
     EXPECT_DOUBLE_EQ(font.raster_position.y, 3.0);
+}
+
+TEST(FxGlyphCacheTest, SeparatesDisplaySubpixelOrders) {
+    cache_font font(false, false);
+    fx_glyph_cache cache(&font, 1.0f);
+
+    cache.lookup_glyph_data(42, 0, false, 1);
+    cache.lookup_glyph_data(42, 0, false, 1);
+    cache.lookup_glyph_data(42, 0, false, 2);
+
+    EXPECT_EQ(font.classification_count, 1);
+    EXPECT_EQ(font.rasterize_count, 2);
+    EXPECT_EQ(font.raster_subpixel_order, 2u);
 }
 
 TEST(FxGlyphCacheTest, SuppliesInverseColorsWhenTheBackgroundAffectsRasterization) {
@@ -667,7 +686,7 @@ TEST(GraphemeShaperTest, OperatorRunsPreemptFollowingGraphemeGroupingDuringDrawi
               (std::vector<std::u32string>{U">-", U"\u200d", U"<0x7f>"}));
 }
 
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
 TEST(SystemFontIntegrationTest, SystemAliasProvidesUsableMetricsAndShapesText) {
     px_font_t* font = px_create_font("system", 12.0f);
     ASSERT_NE(font, nullptr);

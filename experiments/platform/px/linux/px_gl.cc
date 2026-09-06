@@ -10,11 +10,10 @@
 //     with glFlush -- exactly the Windows finding (glFlush, no SwapBuffers) and the reason
 //     kCGLPFABackingStore matters on macOS. All three platforms render into a persistent,
 //     compositor-owned drawable rather than swapping one. On GTK3 specifically, "compositor-owned"
-//     means cairo: ST allocates its own framebuffer with directly-linked
-//     glGenFramebuffers/glFramebufferRenderbuffer/glGenRenderbuffers/glRenderbufferStorage (all
-//     confirmed direct imports, unlike the dlsym'd GTK/GDK surface) and hands the result to
-//     gdk_cairo_draw_from_gl, which composites it into the window the normal cairo way. That FBO
-//     is reproduced here.
+//     means cairo: ST allocates its own framebuffer and hands its color attachment to
+//     gdk_cairo_draw_from_gl, which composites it into the window the normal cairo way. On a
+//     screen with an RGBA visual, ST uses an RGBA8 texture attachment; RGB8 renderbuffer storage
+//     is its fallback for screens without one.
 //
 // GDK shares GL object namespaces implicitly across every context created against the same
 // GdkDisplay, so unlike the Windows backend's explicit wglShareLists dance, one context per window
@@ -42,7 +41,9 @@ bool px_linux_gl_create(px_window_t* window) {
         return false;
     }
 
-    gdk_gl_context_set_required_version(window->gl_context, 4, 1);
+    // The shared shaders require GLSL 4.0. Parallels' virtual GPU tops out there, while asking
+    // GDK for 4.1 silently yielded a legacy 4.0 context anyway.
+    gdk_gl_context_set_required_version(window->gl_context, 4, 0);
     if (!gdk_gl_context_realize(window->gl_context, &error)) {
         std::fprintf(stderr, "px: gdk_gl_context_realize failed: %s\n",
                      error ? error->message : "?");
@@ -78,21 +79,25 @@ bool px_linux_gl_ensure_target(px_window_t* window, int width, int height) {
 
     if (window->fbo != 0) {
         glDeleteFramebuffers(1, &window->fbo);
-        glDeleteRenderbuffers(1, &window->color_renderbuffer);
+        glDeleteTextures(1, &window->color_texture);
         glDeleteRenderbuffers(1, &window->stencil_renderbuffer);
         window->fbo = 0;
-        window->color_renderbuffer = 0;
+        window->color_texture = 0;
         window->stencil_renderbuffer = 0;
     }
 
-    glGenRenderbuffers(1, &window->color_renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, window->color_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
+    glGenTextures(1, &window->color_texture);
+    glBindTexture(GL_TEXTURE_2D, window->color_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
 
     glGenFramebuffers(1, &window->fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, window->fbo);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
-                              window->color_renderbuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           window->color_texture, 0);
 
     glGenRenderbuffers(1, &window->stencil_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, window->stencil_renderbuffer);
@@ -104,10 +109,10 @@ bool px_linux_gl_ensure_target(px_window_t* window, int width, int height) {
     if (!complete) {
         std::fprintf(stderr, "px: GL framebuffer incomplete\n");
         glDeleteFramebuffers(1, &window->fbo);
-        glDeleteRenderbuffers(1, &window->color_renderbuffer);
+        glDeleteTextures(1, &window->color_texture);
         glDeleteRenderbuffers(1, &window->stencil_renderbuffer);
         window->fbo = 0;
-        window->color_renderbuffer = 0;
+        window->color_texture = 0;
         window->stencil_renderbuffer = 0;
         return false;
     }
@@ -128,10 +133,10 @@ void px_linux_gl_destroy(px_window_t* window) {
         gdk_gl_context_make_current(window->gl_context);
         if (window->fbo != 0) {
             glDeleteFramebuffers(1, &window->fbo);
-            glDeleteRenderbuffers(1, &window->color_renderbuffer);
+            glDeleteTextures(1, &window->color_texture);
             glDeleteRenderbuffers(1, &window->stencil_renderbuffer);
             window->fbo = 0;
-            window->color_renderbuffer = 0;
+            window->color_texture = 0;
             window->stencil_renderbuffer = 0;
         }
         gdk_gl_context_clear_current();

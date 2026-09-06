@@ -5,11 +5,8 @@ group("examples") {
     ":demo",
     ":editor",
     ":glow_demo",
+    ":skia_demo",
   ]
-
-  if (is_mac) {
-    deps += [ ":skia_demo" ]
-  }
 }
 
 executable("demo") {
@@ -28,7 +25,7 @@ executable("dark_mode_demo") {
 
 executable("control_char_demo") {
   sources = [ "control_char_demo.cc" ]
-  deps = [ "../px" ]
+  deps = [ "../ui:grapheme_shaper" ]
 }
 
 executable("glow_demo") {
@@ -48,9 +45,7 @@ executable("editor") {
   ]
 }
 
-if (is_mac) {
-  executable("skia_demo") {
-    sources = [ "skia_demo.cc" ]
-    deps = [ "../px" ]
-  }
+executable("skia_demo") {
+  sources = [ "skia_demo.cc" ]
+  deps = [ "../px" ]
 }

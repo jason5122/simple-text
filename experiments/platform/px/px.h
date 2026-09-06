@@ -28,6 +28,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string_view>
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -464,6 +465,8 @@ px_font_t* px_create_font(const char* family, float size, uint32_t attrs = PX_FO
 float px_font_em_width(px_font_t* font);
 bool px_font_is_monospace(px_font_t* font);
 px_font_metrics px_font_get_metrics(px_font_t* font);
+std::unique_ptr<fx_layout> px_shape_text(px_font_t* font, std::string_view utf8);
+std::unique_ptr<fx_layout> px_shape_text(px_font_t* font, std::u32string_view utf32);
 
 // The handler must outlive the window. Passing null installs the dummy handler.
 px_window_t* px_create_window(px_window_event_handler* handler,

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -23,7 +24,10 @@ class skia_render_context final : public px_render_context {
 public:
     using px_render_context::draw_rect;
 
-    skia_render_context(px_pixel_buffer buffer, recti clip, double dpi_scale);
+    skia_render_context(px_pixel_buffer buffer,
+                        recti clip,
+                        double dpi_scale,
+                        uint32_t subpixel_order = 0);
     ~skia_render_context() override;
 
     skia_render_context(const skia_render_context&) = delete;
@@ -64,6 +68,7 @@ private:
     px_pixel_buffer buffer_;
     recti clip_;
     double dpi_scale_ = 1.0;
+    uint32_t subpixel_order_ = 0;
     vec2 translation_;
     vec2 scale_{1.0, 1.0};
     std::unique_ptr<impl> impl_;

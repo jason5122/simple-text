@@ -4,6 +4,8 @@ source_set("fx") {
     "fx.h",
   ]
 
+  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+
   if (is_mac) {
     sources += [ "core_text_backend.cc" ]
     frameworks = [
@@ -11,19 +13,31 @@ source_set("fx") {
       "CoreGraphics.framework",
       "CoreText.framework",
     ]
-  } else {
+  } else if (is_win) {
     sources += [ "direct_write_backend.cc" ]
     libs = [
       "dwrite.lib",
       "gdi32.lib",
       "user32.lib",
     ]
+  } else if (is_linux) {
+    sources += [ "pango_backend.cc" ]
+    configs += [ ":linux_font_libs" ]
   }
-
-  configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
   deps = [
     "//base",
     "//third_party/spdlog",
   ]
+}
+
+if (is_linux) {
+  import("//build/config/linux/pkg_config.gni")
+
+  pkg_config("linux_font_libs") {
+    packages = [
+      "freetype2",
+      "pangocairo",
+    ]
+  }
 }

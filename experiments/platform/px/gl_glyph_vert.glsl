@@ -1,6 +1,4 @@
 R"(
-#version 410
-
 uniform samplerBuffer instances;
 uniform vec2 viewport;
 uniform int instance_offset;

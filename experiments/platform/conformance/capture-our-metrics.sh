@@ -6,6 +6,25 @@ tests="$build_dir/capture-tests"
 out="$build_dir/our-metrics"
 limit="${METRICS_LIMIT:-0}"
 
+# prlctl enters a Linux guest as root. Fontconfig has per-user configuration and caches, so run
+# the probe as the same desktop user as Sublime or fallback selection can differ even when all
+# primary-font metrics agree.
+if [[ "$(uname -s)" == "Linux" && "$(id -u)" -eq 0 ]]; then
+  desktop_user="${LINUX_DESKTOP_USER:-$(loginctl list-sessions --no-legend | awk '$3 != "root" { print $3; exit }')}"
+  if [[ -z "$desktop_user" ]]; then
+    echo "could not find an active non-root desktop user" >&2
+    exit 1
+  fi
+  desktop_lang="$(awk -F= '$1 == "LANG" { gsub(/"/, "", $2); print $2; exit }' \
+    /etc/locale.conf 2>/dev/null || true)"
+  desktop_lang="${desktop_lang:-${LANG:-C.UTF-8}}"
+  exec runuser -u "$desktop_user" -- env \
+    HOME="$(getent passwd "$desktop_user" | cut -d: -f6)" \
+    LANG="$desktop_lang" \
+    METRICS_LIMIT="$limit" \
+    bash "$0"
+fi
+
 if [[ -f "$build_dir/metrics_conformance.exe" ]]; then
   vm="${PARALLELS_VM:-Windows 11}"
   windows_share="${WINDOWS_SHARE:-\\\\Mac\\win-arm64}"

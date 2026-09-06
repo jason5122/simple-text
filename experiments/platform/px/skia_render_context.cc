@@ -33,26 +33,55 @@ recti intersect_recti(recti a, recti b) {
     return result;
 }
 
-uint8_t multiply_bytes(uint8_t a, uint8_t b) {
+uint8_t multiply_bytes(uint8_t a, uint8_t b, bool boundary_bias = false) {
+#if defined(__linux__)
+    const unsigned product = static_cast<unsigned>(a) * b;
+    if (boundary_bias) {
+        // Sublime's ARM monochrome compositor rounds up only at products one below a multiple of
+        // 255. Its intrinsic-color path uses exact division, so preserve the distinction here.
+        return static_cast<uint8_t>(std::min((product + (product >> 8) + 2u) >> 8, 255u));
+    }
+    return static_cast<uint8_t>(product / 255u);
+#else
+    (void)boundary_bias;
     return static_cast<uint8_t>((static_cast<unsigned>(a) * b + 127u) / 255u);
+#endif
 }
 
-uint8_t source_over_channel(uint8_t source, uint8_t destination, uint8_t source_alpha) {
+uint8_t source_over_channel(uint8_t source,
+                            uint8_t destination,
+                            uint8_t source_alpha,
+                            bool boundary_bias = false) {
     const unsigned value =
-        static_cast<unsigned>(source) + multiply_bytes(destination, 255u - source_alpha);
+        static_cast<unsigned>(source) +
+        multiply_bytes(destination, 255u - source_alpha, boundary_bias);
     return static_cast<uint8_t>(std::min(value, 255u));
 }
 
 #if defined(__ARM_NEON)
 
-uint8x8_t multiply_bytes(uint8x8_t a, uint8x8_t b) {
+uint8x8_t multiply_bytes(uint8x8_t a, uint8x8_t b, bool boundary_bias = false) {
     const uint16x8_t product = vmull_u8(a, b);
+#if defined(__linux__)
+    if (!boundary_bias) {
+        const uint16x8_t adjusted = vqaddq_u16(product, vdupq_n_u16(1));
+        return vshrn_n_u16(vqaddq_u16(adjusted, vshrq_n_u16(product, 8)), 8);
+    }
+    const uint16x8_t adjusted = vqaddq_u16(product, vdupq_n_u16(2));
+    return vshrn_n_u16(vqaddq_u16(adjusted, vshrq_n_u16(product, 8)), 8);
+#else
+    (void)boundary_bias;
     const uint16x8_t biased = vaddq_u16(product, vdupq_n_u16(128));
     return vshrn_n_u16(vaddq_u16(biased, vshrq_n_u16(biased, 8)), 8);
+#endif
 }
 
-uint8x8_t source_over_channel(uint8x8_t source, uint8x8_t destination, uint8x8_t source_alpha) {
-    return vqadd_u8(source, multiply_bytes(destination, vmvn_u8(source_alpha)));
+uint8x8_t source_over_channel(uint8x8_t source,
+                              uint8x8_t destination,
+                              uint8x8_t source_alpha,
+                              bool boundary_bias = false) {
+    return vqadd_u8(source,
+                    multiply_bytes(destination, vmvn_u8(source_alpha), boundary_bias));
 }
 
 #endif
@@ -91,7 +120,8 @@ void composite_glyph_scanline(uint8_t* destination,
                 const uint8x8_t coverage =
                     opaque_tint ? src.val[channel] : multiply_bytes(src.val[channel], tint_alpha);
                 const uint8x8_t tinted = multiply_bytes(vdup_n_u8(tint[channel]), coverage);
-                result.val[channel] = source_over_channel(tinted, dst.val[channel], coverage);
+                result.val[channel] =
+                    source_over_channel(tinted, dst.val[channel], coverage, true);
             }
             const uint8x8_t coverage =
                 opaque_tint ? src.val[3] : multiply_bytes(src.val[3], tint_alpha);
@@ -119,7 +149,8 @@ void composite_glyph_scanline(uint8_t* destination,
                     alternate ? static_cast<uint8_t>(source[channel] ^ 0xffu) : source[channel];
                 const uint8_t coverage = multiply_bytes(glyph_coverage, tint[3]);
                 const uint8_t tinted = multiply_bytes(tint[channel], coverage);
-                destination[channel] = source_over_channel(tinted, destination[channel], coverage);
+                destination[channel] =
+                    source_over_channel(tinted, destination[channel], coverage, true);
             }
             const uint8_t coverage = multiply_bytes(source[3], tint[3]);
             destination[3] = source_over_channel(coverage, destination[3], coverage);
@@ -160,10 +191,14 @@ private:
     bool pixels_changed_ = false;
 };
 
-skia_render_context::skia_render_context(px_pixel_buffer buffer, recti clip, double dpi_scale)
+skia_render_context::skia_render_context(px_pixel_buffer buffer,
+                                         recti clip,
+                                         double dpi_scale,
+                                         uint32_t subpixel_order)
     : buffer_(buffer),
       clip_(intersect_recti(clip, recti{0, 0, buffer.width, buffer.height})),
       dpi_scale_(dpi_scale > 0.0 ? dpi_scale : 1.0),
+      subpixel_order_(subpixel_order),
       scale_{dpi_scale_, dpi_scale_},
       impl_(std::make_unique<impl>(buffer)) {
     if (SkCanvas* canvas = impl_->canvas(); canvas && !clip_.empty()) {
@@ -229,7 +264,10 @@ void skia_render_context::draw_shaped_text(
     const float raster_scale = std::max(0.01f, static_cast<float>(std::abs(scale_.x)));
     fx_glyph_cache& cache = font->glyph_cache(raster_scale);
     const double device_origin_x = translation_.x + position.x * scale_.x;
-    const double device_origin_y = translation_.y + position.y * scale_.y;
+    double device_origin_y = translation_.y + position.y * scale_.y;
+#if defined(__linux__)
+    device_origin_y -= static_cast<double>(font->font->metrics().ascent) * scale_.y;
+#endif
     const float lightness =
         (std::max({normalized.r, normalized.g, normalized.b}) +
          std::min({normalized.r, normalized.g, normalized.b})) *
@@ -246,8 +284,8 @@ void skia_render_context::draw_shaped_text(
         const double fraction = x - std::floor(x);
         const int phase =
             subpixel_positioning ? std::clamp(static_cast<int>(fraction * 6.0), 0, 5) : 0;
-        const fx_glyph_bitmap& bitmap =
-            cache.lookup_glyph_data(glyph.id, static_cast<unsigned>(phase), alternate);
+        const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(
+            glyph.id, static_cast<unsigned>(phase), alternate, subpixel_order_);
         if (bitmap.empty() ||
             bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||
             bitmap.height > static_cast<size_t>(std::numeric_limits<int>::max())) {

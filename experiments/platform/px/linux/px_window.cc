@@ -25,16 +25,20 @@
 
 #include "experiments/platform/px/gl_render_context.h"
 #include "experiments/platform/px/linux/px_linux_private.h"
+#include "experiments/platform/px/skia_render_context.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <vector>
 
 namespace {
 
 constexpr double kMinEventFlushInterval = 1.0 / 120.0;
+constexpr GLenum kGdkGLTexture = 0x1702;
 
 std::vector<px_window_t*>& windows_storage() {
     static std::vector<px_window_t*> windows;
@@ -172,6 +176,13 @@ gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
     const rect bounds{0.0, 0.0, size.x, size.y};
     const int device_w = static_cast<int>(alloc.width * scale_factor);
     const int device_h = static_cast<int>(alloc.height * scale_factor);
+    uint32_t subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
+    if (GdkScreen* screen = gdk_screen_get_default()) {
+        if (const cairo_font_options_t* options = gdk_screen_get_font_options(screen)) {
+            subpixel_order =
+                static_cast<uint32_t>(cairo_font_options_get_subpixel_order(options));
+        }
+    }
 
     std::vector<rect> dirty;
     GdkRectangle clip;
@@ -196,7 +207,8 @@ gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
         }
         gl_render_context::normalize_dirty_rects(&dirty, bounds);
         gl_render_context rc(vec2{static_cast<double>(device_w), static_cast<double>(device_h)},
-                             scale, dirty.data(), static_cast<int>(dirty.size()));
+                             scale, dirty.data(), static_cast<int>(dirty.size()), true,
+                             subpixel_order);
         window->handler->paint(&rc, rc.paint_bounds(), dirty.data(),
                                static_cast<int>(dirty.size()));
         rc.finish();
@@ -206,15 +218,62 @@ gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
         // cairo-composited window -- GTK3 has no GL-native present path the way CAOpenGLLayer or
         // an HDC-backed HGLRC do.
         glFlush();
-        gdk_cairo_draw_from_gl(cr, gtk_widget_get_window(widget), window->color_renderbuffer,
-                               GL_RENDERBUFFER, scale_factor, 0, 0, device_w, device_h);
+        gdk_cairo_draw_from_gl(cr, gtk_widget_get_window(widget), window->color_texture,
+                               kGdkGLTexture, scale_factor, 0, 0, device_w, device_h);
 
         window->did_first_paint = true;
         window->last_flush = px_now();
     } else {
-        const fcolor& bg = window->background;
-        cairo_set_source_rgba(cr, bg.r, bg.g, bg.b, bg.a);
-        cairo_paint_with_alpha(cr, 1.0);
+        window->handler->pre_paint();
+        px_linux_dispatch_post_event_callbacks();
+
+        if (!window->did_first_paint) {
+            dirty.clear();
+            dirty.push_back(bounds);
+        }
+        const rect paint_bounds = gl_render_context::normalize_dirty_rects(&dirty, bounds);
+        const size_t pixel_count = static_cast<size_t>(device_w) * static_cast<size_t>(device_h);
+        if (device_w > 0 && device_h > 0 &&
+            static_cast<size_t>(device_w) <=
+                std::numeric_limits<size_t>::max() / static_cast<size_t>(device_h) /
+                    sizeof(uint32_t)) {
+            window->software_pixels.resize(pixel_count);
+            window->software_width = device_w;
+            window->software_height = device_h;
+            const recti pixel_clip{
+                std::max(0, static_cast<int>(std::floor(paint_bounds.x * scale))),
+                std::max(0, static_cast<int>(std::floor(paint_bounds.y * scale))),
+                std::min(device_w, static_cast<int>(std::ceil(paint_bounds.right() * scale))),
+                std::min(device_h, static_cast<int>(std::ceil(paint_bounds.bottom() * scale))),
+            };
+            const size_t row_bytes = static_cast<size_t>(device_w) * sizeof(uint32_t);
+            {
+                skia_render_context rc(
+                    px_pixel_buffer{window->software_pixels.data(), device_w, device_h, row_bytes},
+                    pixel_clip, scale, subpixel_order);
+                if (rc.valid()) {
+                    window->handler->paint(&rc, paint_bounds, dirty.data(),
+                                           static_cast<int>(dirty.size()));
+                }
+            }
+
+            cairo_surface_t* surface = cairo_image_surface_create_for_data(
+                reinterpret_cast<unsigned char*>(window->software_pixels.data()),
+                CAIRO_FORMAT_ARGB32, device_w, device_h, static_cast<int>(row_bytes));
+            if (cairo_surface_status(surface) == CAIRO_STATUS_SUCCESS) {
+                cairo_surface_mark_dirty(surface);
+                cairo_surface_set_device_scale(surface, scale, scale);
+                cairo_save(cr);
+                cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+                cairo_set_source_surface(cr, surface, 0.0, 0.0);
+                cairo_paint(cr);
+                cairo_restore(cr);
+            }
+            cairo_surface_destroy(surface);
+        }
+
+        window->did_first_paint = true;
+        window->last_flush = px_now();
     }
     return FALSE;
 }
@@ -689,7 +748,9 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     px_window_t* window = new px_window_t();
     window->handler = handler ? handler : &dummy_handler();
     window->background = background;
-    window->use_gl = g_getenv("PX_NO_GL") == nullptr;
+    // Sublime's Linux renderer defaults to its software backing store. Hardware acceleration is
+    // opt-in on this platform; keeping the GL path available is useful for parity experiments.
+    window->use_gl = g_getenv("PX_USE_GL") != nullptr && g_getenv("PX_NO_GL") == nullptr;
 
     window->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window->window), title ? title : "");

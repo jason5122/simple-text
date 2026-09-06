@@ -1,0 +1,8 @@
+# Linux font families installed in the Fedora conformance VM, one per line.
+system
+Source Code Pro
+Noto Sans
+Noto Sans Mono
+Liberation Serif
+Noto Naskh Arabic
+Noto Color Emoji

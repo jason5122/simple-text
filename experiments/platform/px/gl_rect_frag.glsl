@@ -1,6 +1,4 @@
 R"(
-#version 410
-
 // Solid-rectangle fragment shader.
 
 in vec4 v_color;

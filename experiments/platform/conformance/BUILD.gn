@@ -1,18 +1,30 @@
+if (is_linux) {
+  import("//build/config/linux/pkg_config.gni")
+}
+
 group("conformance") {
-  deps = [
-    ":buffer_conformance",
-    ":metrics_conformance",
-  ]
-
-  if (is_win) {
-    deps += [ ":capture_windows" ]
-  }
-
-  if (is_mac) {
-    deps += [
-      ":capture_server",
-      ":ui_conformance",
+  if (is_linux) {
+    deps = [
+      ":buffer_conformance",
+      ":linux_capture",
+      ":metrics_conformance",
     ]
+  } else {
+    deps = [
+      ":buffer_conformance",
+      ":metrics_conformance",
+    ]
+
+    if (is_win) {
+      deps += [ ":capture_windows" ]
+    }
+
+    if (is_mac) {
+      deps += [
+        ":capture_server",
+        ":ui_conformance",
+      ]
+    }
   }
 }
 
@@ -35,6 +47,7 @@ executable("metrics_conformance") {
     ":test_config",
     ":test_corpus",
     "../px",
+    "../ui:grapheme_shaper",
     "//base",
   ]
 }
@@ -81,6 +94,18 @@ copy("scripts") {
       "win/capture-sublime-metrics.sh",
       "win/capture-sublime.sh",
     ]
+  } else if (is_linux) {
+    sources += [
+      "linux/capture-once-vm.sh",
+      "linux/capture-once.sh",
+      "linux/capture-our-metrics-vm.sh",
+      "linux/capture-ours-vm.sh",
+      "linux/capture-ours.sh",
+      "linux/capture-sublime-metrics-vm.sh",
+      "linux/capture-sublime-metrics.sh",
+      "linux/capture-sublime-vm.sh",
+      "linux/capture-sublime.sh",
+    ]
   }
   outputs = [ "$root_out_dir/{{source_file_part}}" ]
 }
@@ -91,6 +116,8 @@ copy("test_config") {
     sources += [ "tests/faces-mac.txt" ]
   } else if (is_win) {
     sources += [ "tests/faces-win.txt" ]
+  } else if (is_linux) {
+    sources += [ "tests/faces-linux.txt" ]
   }
   outputs = [ "$root_out_dir/capture-tests/{{source_file_part}}" ]
 }
@@ -149,6 +176,38 @@ if (is_mac) {
   }
 }
 
+if (is_linux) {
+  group("linux_capture") {
+    deps = [
+      ":capture_server",
+      ":scripts",
+      ":test_config",
+      ":test_corpus",
+    ]
+  }
+
+  pkg_config("linux_capture_config") {
+    packages = [
+      "gio-2.0",
+      "libpipewire-0.3",
+      "x11",
+      "xcomposite",
+    ]
+  }
+
+  executable("capture_server") {
+    sources = [
+      "linux/capture_frame.cc",
+      "linux/capture_frame.h",
+      "linux/capture_mutter.cc",
+      "linux/capture_server.cc",
+      "linux/capture_x11.cc",
+    ]
+    configs += [ ":linux_capture_config" ]
+    deps = [ "//third_party/libspng" ]
+  }
+}
+
 source_set("capture") {
   sources = [ "capture.h" ]
 
@@ -162,7 +221,7 @@ source_set("capture") {
       "ImageIO.framework",
       "SkyLight.framework",
     ]
-  } else {
+  } else if (is_win) {
     sources += [ "win/capture.cc" ]
     deps = [ "../px" ]
     libs = [
@@ -170,6 +229,15 @@ source_set("capture") {
       "opengl32.lib",
       "user32.lib",
       "windowscodecs.lib",
+    ]
+  } else if (is_linux) {
+    sources += [
+      "linux/capture.cc",
+      "linux/capture_frame.cc",
+    ]
+    deps = [
+      "../px",
+      "//third_party/libspng",
     ]
   }
 

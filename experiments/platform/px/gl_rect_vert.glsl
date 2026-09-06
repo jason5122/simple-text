@@ -1,6 +1,4 @@
 R"(
-#version 410
-
 // Instanced solid-rectangle vertex shader.
 
 out vec4 v_color;

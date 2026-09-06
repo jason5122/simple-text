@@ -295,8 +295,25 @@ using GLintptr = int64_t;
 #define GL_BLEND 0x0BE2
 #define GL_SCISSOR_TEST 0x0C11
 #define GL_STENCIL_TEST 0x0B90
+#define GL_SRC1_COLOR 0x88F9
+#define GL_ONE_MINUS_SRC1_COLOR 0x88FA
 #define GL_FLOAT 0x1406
+#define GL_UNSIGNED_BYTE 0x1401
 #define GL_VERSION 0x1F02
+#define GL_PACK_ALIGNMENT 0x0D05
+#define GL_UNPACK_ALIGNMENT 0x0CF5
+#define GL_RGBA 0x1908
+#define GL_BGRA 0x80E1
+#define GL_NO_ERROR 0
+#define GL_TEXTURE_2D 0x0DE1
+#define GL_TEXTURE1 0x84C1
+#define GL_TEXTURE2 0x84C2
+#define GL_TEXTURE_WRAP_S 0x2802
+#define GL_TEXTURE_WRAP_T 0x2803
+#define GL_TEXTURE_MIN_FILTER 0x2801
+#define GL_TEXTURE_MAG_FILTER 0x2800
+#define GL_CLAMP_TO_EDGE 0x812F
+#define GL_NEAREST 0x2600
 #define GL_STENCIL_BUFFER_BIT 0x00000400
 #define GL_COLOR_BUFFER_BIT 0x00004000
 #define GL_ONE_MINUS_SRC_ALPHA 0x0303
@@ -314,6 +331,8 @@ using GLintptr = int64_t;
 #define GL_COLOR_ATTACHMENT0 0x8CE0
 #define GL_STENCIL_ATTACHMENT 0x8D20
 #define GL_FRAMEBUFFER_COMPLETE 0x8CD5
+#define GL_FRAMEBUFFER_BINDING 0x8CA6
+#define GL_READ_BUFFER 0x0C02
 #define GL_RGBA8 0x8058
 #define GL_STENCIL_INDEX8 0x8D48
 
@@ -326,16 +345,55 @@ void glColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a);
 void glDisable(GLenum cap);
 void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 void glEnable(GLenum cap);
+void glFinish(void);
 void glFlush(void);
+GLenum glGetError(void);
+void glGetIntegerv(GLenum pname, GLint* data);
 void glGenTextures(GLsizei, GLuint*);
+void glDeleteTextures(GLsizei, const GLuint*);
 void glBindTexture(GLenum, GLuint);
 const GLubyte* glGetString(GLenum name);
 void glScissor(GLint x, GLint y, GLsizei w, GLsizei h);
 void glStencilFunc(GLenum function, GLint reference, GLuint mask);
 void glStencilMask(GLuint mask);
 void glStencilOp(GLenum fail, GLenum depth_fail, GLenum depth_pass);
+void glTexImage2D(GLenum target,
+                  GLint level,
+                  GLint internal_format,
+                  GLsizei width,
+                  GLsizei height,
+                  GLint border,
+                  GLenum format,
+                  GLenum type,
+                  const void* pixels);
+void glTexParameteri(GLenum target, GLenum name, GLint value);
+void glTexSubImage2D(GLenum target,
+                     GLint level,
+                     GLint x,
+                     GLint y,
+                     GLsizei width,
+                     GLsizei height,
+                     GLenum format,
+                     GLenum type,
+                     const void* pixels);
+void glCopyTexSubImage2D(GLenum target,
+                         GLint level,
+                         GLint x_offset,
+                         GLint y_offset,
+                         GLint x,
+                         GLint y,
+                         GLsizei width,
+                         GLsizei height);
 void glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
-
+void glPixelStorei(GLenum pname, GLint param);
+void glReadBuffer(GLenum source);
+void glReadPixels(GLint x,
+                  GLint y,
+                  GLsizei width,
+                  GLsizei height,
+                  GLenum format,
+                  GLenum type,
+                  void* pixels);
 GLuint glCreateShader(GLenum);
 void glShaderSource(GLuint, GLsizei, const GLchar* const*, const GLint*);
 void glCompileShader(GLuint);
@@ -352,6 +410,7 @@ void glDeleteProgram(GLuint);
 void glUseProgram(GLuint);
 GLint glGetUniformLocation(GLuint, const GLchar*);
 void glUniform2f(GLint, GLfloat, GLfloat);
+void glUniform1f(GLint, GLfloat);
 void glUniform1i(GLint, GLint);
 void glActiveTexture(GLenum);
 void glGenVertexArrays(GLsizei, GLuint*);
@@ -368,6 +427,7 @@ void glVertexAttribPointer(GLuint, GLint, GLenum, GLboolean, GLsizei, const void
 void glGenFramebuffers(GLsizei, GLuint*);
 void glDeleteFramebuffers(GLsizei, const GLuint*);
 void glBindFramebuffer(GLenum, GLuint);
+void glFramebufferTexture2D(GLenum, GLenum, GLenum, GLuint, GLint);
 void glFramebufferRenderbuffer(GLenum, GLenum, GLenum, GLuint);
 GLenum glCheckFramebufferStatus(GLenum);
 void glGenRenderbuffers(GLsizei, GLuint*);

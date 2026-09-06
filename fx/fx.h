@@ -30,6 +30,15 @@ enum : uint32_t {
     FX_FONT_NO_CALT = 1u << 13,
     FX_FONT_DLIG = 1u << 14,
     FX_FONT_SS01 = 1u << 15,
+    FX_FONT_SS02 = 1u << 16,
+    FX_FONT_SS03 = 1u << 17,
+    FX_FONT_SS04 = 1u << 18,
+    FX_FONT_SS05 = 1u << 19,
+    FX_FONT_SS06 = 1u << 20,
+    FX_FONT_SS07 = 1u << 21,
+    FX_FONT_SS08 = 1u << 22,
+    FX_FONT_SS09 = 1u << 23,
+    FX_FONT_SS10 = 1u << 24,
 };
 
 // Four floats, matching core_text_font::metrics()'s register return in the binary.
@@ -91,9 +100,15 @@ public:
     virtual std::unique_ptr<fx_layout> shape(std::string_view utf8) = 0;
     virtual std::unique_ptr<fx_layout> shape(std::u32string_view utf32) = 0;
     virtual void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) = 0;
-    // `position` is a device-pixel offset into a buffer allocated from extents().
-    virtual void rasterize(
-        uint32_t glyph, vec2 position, float scale, fx_glyph_bitmap& bitmap, color foreground) = 0;
+    // `position` is a device-pixel offset into a buffer allocated from extents(). On Linux,
+    // `subpixel_order` is cairo_subpixel_order_t's numeric value, supplied by the display. The
+    // other native rasterizers ignore it.
+    virtual void rasterize(uint32_t glyph,
+                           vec2 position,
+                           float scale,
+                           fx_glyph_bitmap& bitmap,
+                           color foreground,
+                           uint32_t subpixel_order) = 0;
     virtual bool is_color_glyph(uint32_t glyph) = 0;
     virtual bool bg_affects_rasterize() const = 0;
     virtual const fx_gamma_ramp* gamma_ramp() const = 0;
@@ -117,13 +132,14 @@ public:
     fx_glyph_cache(fx_font* font, float scale);
     const fx_glyph_bitmap& lookup_glyph_data(uint32_t glyph,
                                              unsigned phase,
-                                             bool alternate = false);
+                                             bool alternate = false,
+                                             uint32_t subpixel_order = 0);
 
     fx_font* font() const { return font_; }
     float scale() const { return scale_; }
 
 private:
-    static uint64_t key(uint32_t glyph, unsigned phase);
+    static uint64_t key(uint32_t glyph, unsigned phase, uint32_t subpixel_order);
 
     fx_font* font_ = nullptr;
     float scale_ = 1.0f;
@@ -135,6 +151,7 @@ private:
 // Applies the shared bitmap glow operation used before a glyph is handed to either renderer.
 void fx_apply_font_glow(fx_glyph_bitmap* bitmap, float radius, bool preserve_source);
 
-// Creates the native implementation (Core Text on macOS, DirectWrite on Windows). Returns null if
-// the requested family cannot be resolved. "system" uses the native UI font.
+// Creates the native implementation (Core Text on macOS, DirectWrite on Windows, Pango/Cairo on
+// Linux). Returns null if the requested family cannot be resolved. "system" uses the native UI
+// font.
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs);

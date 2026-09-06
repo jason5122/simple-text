@@ -2,12 +2,12 @@ source_set("px") {
   sources = [
     "gl_render_context.cc",
     "gl_render_context.h",
-    "grapheme_shaper.cc",
-    "grapheme_shaper.h",
     "px.h",
     "px_font.cc",
     "px_font_internal.h",
     "px_gl.h",
+    "skia_render_context.cc",
+    "skia_render_context.h",
   ]
 
   inputs = [
@@ -20,7 +20,7 @@ source_set("px") {
   deps = [
     "//base",
     "//fx",
-    "//third_party/uni_algo",
+    "//third_party/skia",
   ]
 
   if (is_mac) {
@@ -30,11 +30,7 @@ source_set("px") {
       "mac/px_keycode.mm",
       "mac/px_mac_private.h",
       "mac/px_window.mm",
-      "skia_render_context.cc",
-      "skia_render_context.h",
     ]
-
-    deps += [ "//third_party/skia" ]
 
     frameworks = [
       "AppKit.framework",
@@ -45,9 +41,7 @@ source_set("px") {
       "QuartzCore.framework",
     ]
     defines = [ "GL_SILENCE_DEPRECATION" ]
-  }
-
-  if (is_win) {
+  } else if (is_win) {
     sources += [
       "win/px_app.cc",
       "win/px_gl.cc",
@@ -64,13 +58,8 @@ source_set("px") {
       "shell32.lib",  # DragAcceptFiles, ShellExecuteW
       "user32.lib",
     ]
-  }
-
-  if (is_linux) {
-    # ST's own binary dlopen/dlsym's GTK rather than linking it (see
-    # px_linux_private.h) -- a distribution trick for running against either
-    # GTK2 or GTK3, not part of the platform abstraction. This links gtk+-3.0
-    # normally, as instructed.
+  } else if (is_linux) {
+    # TODO: We should dlopen/dlsym GTK rather than linking it.
     sources += [
       "linux/px_app.cc",
       "linux/px_gl.cc",
@@ -85,17 +74,6 @@ source_set("px") {
     # px_gl.h.
     libs = [ "GL" ]
   }
-}
-
-executable("grapheme_shaper_unittests") {
-  testonly = true
-  sources = [ "grapheme_shaper_unittest.cc" ]
-  deps = [
-    ":px",
-    "../ui:retained_text",
-    "//base",
-    "//testing:fuzztest",
-  ]
 }
 
 if (is_linux) {

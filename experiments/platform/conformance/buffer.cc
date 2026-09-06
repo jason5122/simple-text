@@ -1,12 +1,13 @@
 #include "base/numeric/safe_conversions.h"
 #include "experiments/platform/conformance/capture.h"
 #include "experiments/platform/px/gl_render_context.h"
-#include "experiments/platform/px/grapheme_shaper.h"
 #include "experiments/platform/px/px.h"
+#include "experiments/platform/ui/grapheme_shaper.h"
 #include "experiments/platform/ui/retained_text.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -34,6 +35,8 @@ constexpr fcolor kForeground = {0.0f, 0.0f, 0.0f, 1.0f};
 
 #if defined(_WIN32)
 constexpr std::string_view kFacesFilename = "faces-win.txt";
+#elif defined(__linux__)
+constexpr std::string_view kFacesFilename = "faces-linux.txt";
 #else
 constexpr std::string_view kFacesFilename = "faces-mac.txt";
 #endif
@@ -221,6 +224,21 @@ int run_tests(int argc, char* argv[]) {
             }
         }
     }
+    if (const char* filter = std::getenv("BUFFER_FILTER")) {
+        std::erase_if(shots, [filter](const TestShot& shot) {
+            return shot.out_path.find(filter) == std::string::npos;
+        });
+    }
+    if (const char* limit_text = std::getenv("BUFFER_LIMIT")) {
+        const long limit = std::strtol(limit_text, nullptr, 10);
+        if (limit > 0 && static_cast<size_t>(limit) < shots.size()) {
+            shots.resize(static_cast<size_t>(limit));
+        }
+    }
+    double hold_seconds = 0.0;
+    if (const char* hold_text = std::getenv("BUFFER_HOLD_SECONDS")) {
+        hold_seconds = std::max(0.0, std::strtod(hold_text, nullptr));
+    }
 
     std::println("rendering {} shots -> {}", shots.size(), out_dir);
     px_init("buffer-conformance", "com.example.buffer-conformance", argc, argv, 0);
@@ -229,9 +247,13 @@ int run_tests(int argc, char* argv[]) {
                                            "buffer conformance", kBackground, 0);
     page.attach(window);
     px_set_window_position(window, vec2{0.0, 0.0});
-    // Window-server capture reads the backing store directly, so the suite does not need focus or
-    // activation. Keep the borderless test window behind whatever the user is working in.
-    px_show_window_without_focus(window);
+    // Normal conformance reads the private backing store and does not need focus. A held frame is
+    // intended for an external capture probe, so focus it for Mutter's RecordWindow API.
+    if (hold_seconds > 0.0) {
+        px_show_window(window);
+    } else {
+        px_show_window_without_focus(window);
+    }
     px_mark_dirty(window);
 
     // Match the original probe: establish an empty, composited baseline before replacing the page.
@@ -264,6 +286,10 @@ int run_tests(int argc, char* argv[]) {
         const bool ok = settled && capture::frame_to_png(settled, shot.out_path.c_str());
         std::println("[{}/{}] {}{}", i + 1, shots.size(), shot.out_path, ok ? "" : "  (FAILED)");
         success &= ok;
+        if (hold_seconds > 0.0) {
+            std::println("holding the rendered window for {} seconds", hold_seconds);
+            capture::pump(hold_seconds);
+        }
         capture::release_frame(baseline);
         baseline = settled;
     }

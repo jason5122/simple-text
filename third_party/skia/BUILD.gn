@@ -30,7 +30,11 @@ source_set("skia") {
   sources += skcms_TransformBaseline
 
   if (is_win) {
-    sources += [ "src/src/ports/SkDebug_win.cpp" ]
+    sources += [
+      "src/src/ports/SkDebug_win.cpp",
+      "src/src/ports/SkMemory_malloc.cpp",
+      "src/src/ports/SkOSFile_win.cpp",
+    ]
   } else {
     sources += [
       "src/src/ports/SkDebug_stdio.cpp",

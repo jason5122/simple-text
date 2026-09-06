@@ -1,7 +1,23 @@
 group("ui") {
   deps = [
+    ":grapheme_shaper",
     ":retained_text",
     ":window",
+  ]
+}
+
+source_set("grapheme_shaper") {
+  sources = [
+    "grapheme_shaper.cc",
+    "grapheme_shaper.h",
+  ]
+  public_deps = [
+    "../px",
+    "//fx",
+  ]
+  deps = [
+    "//base",
+    "//third_party/uni_algo",
   ]
 }
 
@@ -18,8 +34,22 @@ source_set("retained_text") {
     "retained_text.cc",
     "retained_text.h",
   ]
-  deps = [
+  public_deps = [
+    ":grapheme_shaper",
     "../px",
     "//fx",
+  ]
+}
+
+executable("grapheme_shaper_unittests") {
+  testonly = true
+  sources = [ "grapheme_shaper_unittest.cc" ]
+  deps = [
+    ":grapheme_shaper",
+    ":retained_text",
+    "../px",
+    "//base",
+    "//fx",
+    "//testing:fuzztest",
   ]
 }

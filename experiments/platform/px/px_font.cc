@@ -43,7 +43,12 @@ px_font_t* px_create_font(const char* family, float size, uint32_t attrs) {
 
     float native_size = size;
 #if defined(_WIN32)
+    // DirectWrite consumes DIPs while Sublime's setting is a typographic point size.
     native_size = std::floor(size * 96.0f / 72.0f + 0.5f);
+#elif defined(__linux__)
+    // The Linux factory passes this exact scale as a separate double before the Pango backend
+    // converts native pixels back to points. Do not apply DirectWrite's integer-size rounding.
+    native_size = size * 96.0f / 72.0f;
 #endif
     std::unique_ptr<fx_font> font = fx_create_font(family, native_size, attrs);
     if (!font) {
@@ -77,15 +82,23 @@ px_font_metrics px_font_get_metrics(px_font_t* font) {
     };
 }
 
+std::unique_ptr<fx_layout> px_shape_text(px_font_t* font, std::string_view utf8) {
+    return font && font->font ? font->font->shape(utf8) : nullptr;
+}
+
+std::unique_ptr<fx_layout> px_shape_text(px_font_t* font, std::u32string_view utf32) {
+    return font && font->font ? font->font->shape(utf32) : nullptr;
+}
+
 void px_render_context::draw_text(px_font_t* font,
                                   vec2 position,
                                   color value,
                                   std::string_view utf8,
                                   bool subpixel_positioning) {
-    if (!font || !font->font || utf8.empty()) {
+    if (utf8.empty()) {
         return;
     }
-    std::unique_ptr<fx_layout> layout = font->font->shape(utf8);
+    std::unique_ptr<fx_layout> layout = px_shape_text(font, utf8);
     if (layout) {
         draw_shaped_text(font, position, value, layout.get(), subpixel_positioning);
     }

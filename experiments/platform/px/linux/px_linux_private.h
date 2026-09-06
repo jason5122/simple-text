@@ -49,10 +49,14 @@ struct px_window_t {
     // to the drawing area's allocation in device pixels, and blitted into the "draw" signal's
     // cairo_t with gdk_cairo_draw_from_gl every frame. Recreated on resize.
     GLuint fbo = 0;
-    GLuint color_renderbuffer = 0;
+    GLuint color_texture = 0;
     GLuint stencil_renderbuffer = 0;
     int fbo_width = 0;
     int fbo_height = 0;
+
+    std::vector<uint32_t> software_pixels;
+    int software_width = 0;
+    int software_height = 0;
 
     // Currently-held keyvals, so key-press-event can report repeat. GDK's detectable-autorepeat
     // mode (the default) sends only repeated press events with no interleaved release, unlike

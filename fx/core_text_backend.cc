@@ -35,7 +35,8 @@ public:
                    vec2 position,
                    float scale,
                    fx_glyph_bitmap& bitmap,
-                   color foreground) override;
+                   color foreground,
+                   uint32_t subpixel_order) override;
     bool is_color_glyph(uint32_t glyph) override;
     bool bg_affects_rasterize() const override { return true; }
     const fx_gamma_ramp* gamma_ramp() const override { return identity_gamma_ramp(); }
@@ -238,8 +239,12 @@ std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
     return shaped;
 }
 
-void core_text_font::rasterize(
-    uint32_t glyph, vec2 position, float scale, fx_glyph_bitmap& bitmap, color foreground) {
+void core_text_font::rasterize(uint32_t glyph,
+                               vec2 position,
+                               float scale,
+                               fx_glyph_bitmap& bitmap,
+                               color foreground,
+                               uint32_t) {
     const uint32_t face = glyph >> 16;
     if (face >= faces_.size() || bitmap.empty() ||
         bitmap.width > static_cast<size_t>(std::numeric_limits<int>::max()) ||

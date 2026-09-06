@@ -1,8 +1,7 @@
-#include "experiments/platform/px/grapheme_shaper.h"
+#include "experiments/platform/ui/grapheme_shaper.h"
 
 #include "base/numeric/safe_conversions.h"
 #include "base/unicode/unicode.h"
-#include "experiments/platform/px/px_font_internal.h"
 
 #include <algorithm>
 #include <array>
@@ -362,14 +361,14 @@ bool grapheme_shaper::should_draw_as_control(char32_t codepoint) const {
 }
 
 std::unique_ptr<fx_layout> grapheme_shaper::shape_control(char32_t codepoint) {
-    if (!font_ || !font_->font) {
+    if (!font_) {
         return nullptr;
     }
 
     if (flags_ & GRAPHEME_SHAPER_USE_CONTROL_NAMES) {
         if (const char* name = control_name(codepoint)) {
             const std::string label = std::string("<") + name + ">";
-            return font_->font->shape(ascii_to_utf32(label));
+            return px_shape_text(font_, ascii_to_utf32(label));
         }
     }
 
@@ -381,7 +380,7 @@ std::unique_ptr<fx_layout> grapheme_shaper::shape_control(char32_t codepoint) {
         // The Build 4200 binary uses exactly four lowercase nibbles for this path.
         std::snprintf(label, sizeof(label), "<0x%04x>", cp & 0xffffu);
     }
-    return font_->font->shape(ascii_to_utf32(label));
+    return px_shape_text(font_, ascii_to_utf32(label));
 }
 
 fx_layout* grapheme_shaper::find_layout(char32_t codepoint) {
@@ -391,12 +390,12 @@ fx_layout* grapheme_shaper::find_layout(char32_t codepoint) {
     }
 
     std::unique_ptr<fx_layout> layout;
-    if (font_ && font_->font) {
+    if (font_) {
         if (should_draw_as_control(codepoint)) {
             layout = shape_control(codepoint);
         } else {
             const char32_t text[] = {codepoint};
-            layout = font_->font->shape(std::u32string_view(text, 1));
+            layout = px_shape_text(font_, std::u32string_view(text, 1));
         }
     }
     fx_layout* result = layout.get();
@@ -409,7 +408,7 @@ fx_layout* grapheme_shaper::find_layout(std::string_view utf8) {
     if (found != utf8_layouts_.end()) {
         return found->second.get();
     }
-    std::unique_ptr<fx_layout> layout = font_ && font_->font ? font_->font->shape(utf8) : nullptr;
+    std::unique_ptr<fx_layout> layout = px_shape_text(font_, utf8);
     auto inserted = utf8_layouts_.emplace(std::string(utf8), std::move(layout)).first;
     return inserted->second.get();
 }
@@ -419,7 +418,7 @@ fx_layout* grapheme_shaper::find_layout(std::u32string_view utf32) {
     if (found != utf32_layouts_.end()) {
         return found->second.get();
     }
-    std::unique_ptr<fx_layout> layout = font_ && font_->font ? font_->font->shape(utf32) : nullptr;
+    std::unique_ptr<fx_layout> layout = px_shape_text(font_, utf32);
     auto inserted = utf32_layouts_.emplace(std::u32string(utf32), std::move(layout)).first;
     return inserted->second.get();
 }
@@ -483,13 +482,13 @@ void grapheme_shaper::draw_string_impl(Callback& callback,
                                        Text text,
                                        bool draw_spaces,
                                        color space_color) {
-    if (!font_ || !font_->font || text.empty()) {
+    if (!font_ || text.empty()) {
         return;
     }
 
     double batch_origin = x;
     fx_layout batch;
-    batch.line_height = font_->font->metrics().line_height;
+    batch.line_height = px_font_get_metrics(font_).line_height;
     color batch_color = ordinary_color;
 
     const auto flush_batch = [&] {
@@ -500,7 +499,7 @@ void grapheme_shaper::draw_string_impl(Callback& callback,
         callback({batch_origin, y}, batch_color, &batch);
         batch_origin += static_cast<double>(advance);
         batch = {};
-        batch.line_height = font_->font->metrics().line_height;
+        batch.line_height = px_font_get_metrics(font_).line_height;
     };
 
     for (size_t start = 0; start < text.size();) {

@@ -12,9 +12,7 @@
 
 #include "experiments/platform/px/px_gl.h"
 
-#if defined(__APPLE__) || defined(_WIN32)
 #include "experiments/platform/px/px_font_internal.h"
-#endif
 
 namespace {
 
@@ -67,7 +65,6 @@ constexpr const char* kRectFragmentShader =
 #include "experiments/platform/px/gl_rect_frag.glsl"
     ;
 
-#if defined(__APPLE__) || defined(_WIN32)
 constexpr const char* kGlyphVertexShader =
 #include "experiments/platform/px/gl_glyph_vert.glsl"
     ;
@@ -75,7 +72,6 @@ constexpr const char* kGlyphVertexShader =
 constexpr const char* kGlyphFragmentShader =
 #include "experiments/platform/px/gl_glyph_frag.glsl"
     ;
-#endif
 
 GLuint compile_shader_sources(GLenum type, const char* const* sources, GLsizei source_count) {
     const GLuint shader = glCreateShader(type);
@@ -94,7 +90,15 @@ GLuint compile_shader_sources(GLenum type, const char* const* sources, GLsizei s
 }
 
 GLuint compile_shader(GLenum type, const char* source) {
-    return compile_shader_sources(type, &source, 1);
+#if defined(__linux__)
+    // Parallels' virtual GPU exposes OpenGL/GLSL 4.0. These shaders require only 4.0 features;
+    // native macOS and Windows retain the 4.10 declaration recovered from Sublime's shaders.
+    constexpr const char* version = "#version 400\n#define PX_LINUX_EXACT_COMPOSITE 1\n";
+#else
+    constexpr const char* version = "#version 410\n";
+#endif
+    const char* sources[] = {version, source};
+    return compile_shader_sources(type, sources, 2);
 }
 
 GLuint link_program(GLuint vertex, GLuint fragment, const char* name) {
@@ -207,13 +211,12 @@ gl_render_state& render_state() {
     return *state;
 }
 
-#if defined(__APPLE__) || defined(_WIN32)
-
 struct glyph_atlas_key {
     const px_font_t* font = nullptr;
     uint32_t glyph = 0;
     int phase = 0;
     uint32_t scale_percent = 100;
+    uint32_t subpixel_order = 0;
     bool alternate = false;
 
     auto operator<=>(const glyph_atlas_key&) const = default;
@@ -242,6 +245,7 @@ struct glyph_program {
     GLint instances_uniform = -1;
     GLint instance_offset_uniform = -1;
     GLint tex_uniform = -1;
+    GLint destination_uniform = -1;
     GLint texture_size_uniform = -1;
     GLint colored_uniform = -1;
 };
@@ -286,7 +290,8 @@ public:
               vec2 scale,
               vec2 viewport,
               recti clip,
-              bool subpixel_positioning) {
+              bool subpixel_positioning,
+              uint32_t subpixel_order) {
         ensure_initialized();
         if (!program_.id || !font || !font->font || layout.glyphs.empty() || clip.empty()) {
             return;
@@ -318,7 +323,13 @@ public:
         std::vector<texture_batch_group>& groups =
             batch_depth_ != 0 ? batch_groups_ : immediate_groups;
         const double device_origin_x = translation.x + origin.x * scale.x;
-        const double device_origin_y = translation.y + origin.y * scale.y;
+        double device_origin_y = translation.y + origin.y * scale.y;
+#if defined(__linux__)
+        // Pango's recovered glyph-tile origin is relative to the top of its primary font's line,
+        // unlike the baseline-relative Core Text and DirectWrite tiles consumed by this shared
+        // renderer. Sublime makes the same ascent adjustment at the Linux renderer boundary.
+        device_origin_y -= static_cast<double>(font->font->metrics().ascent) * scale.y;
+#endif
         const float lightness =
             (std::max({color.r, color.g, color.b}) + std::min({color.r, color.g, color.b})) * 0.5f;
         // Sublime selects the inverted glyph-cache polarity only for very light tints
@@ -333,10 +344,11 @@ public:
             const double fraction = x - std::floor(x);
             const int phase =
                 subpixel_positioning ? std::clamp(static_cast<int>(fraction * 6.0), 0, 5) : 0;
-            const glyph_atlas_key key{font, glyph.id, phase, scale_percent, alternate};
+            const glyph_atlas_key key{font,          glyph.id,       phase,
+                                      scale_percent, subpixel_order, alternate};
             ensure_phase_pages(&atlas, key, cache);
-            const fx_glyph_bitmap& bitmap =
-                cache.lookup_glyph_data(glyph.id, static_cast<unsigned>(phase), alternate);
+            const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(
+                glyph.id, static_cast<unsigned>(phase), alternate, subpixel_order);
             if (bitmap.empty()) {
                 continue;
             }
@@ -408,6 +420,14 @@ private:
                               int page,
                               bool colored,
                               glyph_instance_data instance) {
+#if defined(__linux__)
+        // Linux's GL 4.0 compatibility compositor copies and draws each glyph in submission order.
+        if (groups->empty() || groups->back().atlas != atlas || groups->back().page != page ||
+            groups->back().colored != colored) {
+            groups->push_back({.atlas = atlas, .page = page, .colored = colored});
+        }
+        groups->back().instances.push_back(instance);
+#else
         auto found = std::find_if(groups->begin(), groups->end(),
                                   [atlas, page, colored](const texture_batch_group& group) {
                                       return group.atlas == atlas && group.page == page &&
@@ -418,6 +438,7 @@ private:
             found = std::prev(groups->end());
         }
         found->instances.push_back(instance);
+#endif
     }
 
     void flush_batch() {
@@ -440,7 +461,7 @@ private:
         }
         first = 0;
         for (const texture_batch_group& group : groups) {
-            draw_instances(first, group.instances.size(), group.atlas, group.page, group.colored);
+            draw_instances(first, group.instances, group.atlas, group.page, group.colored);
             first += group.instances.size();
         }
         end_render();
@@ -468,6 +489,27 @@ private:
                     static_cast<float>(viewport.y));
         glUniform1i(program_.instances_uniform, 0);
         glUniform1i(program_.tex_uniform, 1);
+#if defined(__linux__)
+        // GLSL 4.0 has no portable way to read the pixel being replaced. Keep a framebuffer-sized
+        // scratch texture and populate only the small regions touched by glyphs below.
+        const int width = std::max(1, static_cast<int>(viewport.x));
+        const int height = std::max(1, static_cast<int>(viewport.y));
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, destination_texture_);
+        if (destination_width_ != width || destination_height_ != height) {
+            destination_width_ = width;
+            destination_height_ = height;
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                         nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
+        glUniform1i(program_.destination_uniform, 2);
+        glGetIntegerv(GL_READ_BUFFER, &previous_read_buffer_);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+#endif
     }
 
     static void upload_instances(const std::vector<glyph_instance_data>& instances, size_t first) {
@@ -480,8 +522,12 @@ private:
                         instances.data());
     }
 
-    void draw_instances(
-        size_t first, size_t count, const atlas_set* atlas, int page, bool colored) {
+    void draw_instances(size_t first,
+                        const std::vector<glyph_instance_data>& instances,
+                        const atlas_set* atlas,
+                        int page,
+                        bool colored) {
+        const size_t count = instances.size();
         if (count == 0) {
             return;
         }
@@ -491,17 +537,57 @@ private:
         glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first));
         glUniform1f(program_.texture_size_uniform, static_cast<float>(atlas->size));
         glUniform1i(program_.colored_uniform, colored ? 1 : 0);
+#if defined(__linux__)
+        // Fixed-function RGBA8 blending cannot express Sublime's Linux byte-rounding rules. Copy
+        // each destination glyph rectangle on the GPU, then let the fragment shader perform the
+        // recovered integer source-over operation. One draw per glyph also preserves overlap
+        // order on GL 4.0, where framebuffer-fetch and fragment-interlock are unavailable.
+        // See conformance/linux-opengl-notes.md for the driver constraints and follow-up.
+        glDisable(GL_BLEND);
+        for (size_t index = 0; index < count; ++index) {
+            const glyph_instance_data& instance = instances[index];
+            const int left = std::clamp(static_cast<int>(instance.x), 0, destination_width_);
+            const int top = std::clamp(static_cast<int>(instance.y), 0, destination_height_);
+            const int right = std::clamp(static_cast<int>(instance.x + instance.width), 0,
+                                         destination_width_);
+            const int bottom = std::clamp(static_cast<int>(instance.y + instance.height), 0,
+                                          destination_height_);
+            if (left >= right || top >= bottom) {
+                continue;
+            }
+            const int copy_y = destination_height_ - bottom;
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, destination_texture_);
+            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, left, copy_y, left, copy_y, right - left,
+                                bottom - top);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, atlas->pages[static_cast<size_t>(page)].texture);
+            glUniform1i(program_.instance_offset_uniform,
+                        static_cast<GLint>(first + index));
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
+        }
+        glEnable(GL_BLEND);
+#else
         if (colored) {
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         } else {
             glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         }
         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(count));
+#endif
     }
 
-    static void end_render() {
+    void end_render() {
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+#if defined(__linux__)
+        glReadBuffer(static_cast<GLenum>(previous_read_buffer_));
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, 0);
+#endif
         glBindVertexArray(0);
+#if defined(__linux__)
+        glActiveTexture(GL_TEXTURE1);
+#endif
         glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, 0);
@@ -527,8 +613,9 @@ private:
         for (int phase = 0; phase < 6; ++phase) {
             glyph_atlas_key phase_key = requested_key;
             phase_key.phase = phase;
-            const fx_glyph_bitmap& bitmap = cache.lookup_glyph_data(
-                requested_key.glyph, static_cast<unsigned>(phase), requested_key.alternate);
+            const fx_glyph_bitmap& bitmap =
+                cache.lookup_glyph_data(requested_key.glyph, static_cast<unsigned>(phase),
+                                        requested_key.alternate, requested_key.subpixel_order);
             if (!bitmap.empty()) place(atlas, phase_key, bitmap);
         }
     }
@@ -561,11 +648,15 @@ private:
         program_.instances_uniform = glGetUniformLocation(program_.id, "instances");
         program_.instance_offset_uniform = glGetUniformLocation(program_.id, "instance_offset");
         program_.tex_uniform = glGetUniformLocation(program_.id, "atlas");
+        program_.destination_uniform = glGetUniformLocation(program_.id, "destination");
         program_.texture_size_uniform = glGetUniformLocation(program_.id, "texture_size");
         program_.colored_uniform = glGetUniformLocation(program_.id, "colored");
         glGenVertexArrays(1, &vao_);
         glGenBuffers(2, instance_buffers_);
         glGenTextures(2, instance_textures_);
+#if defined(__linux__)
+        glGenTextures(1, &destination_texture_);
+#endif
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
@@ -650,6 +741,12 @@ private:
     GLuint instance_textures_[2] = {};
     size_t instance_capacities_[2] = {};
     int instance_slot_ = 0;
+#if defined(__linux__)
+    GLuint destination_texture_ = 0;
+    int destination_width_ = 0;
+    int destination_height_ = 0;
+    GLint previous_read_buffer_ = GL_COLOR_ATTACHMENT0;
+#endif
     std::atomic<bool> reset_requested_ = false;
     std::map<std::pair<const px_font_t*, uint32_t>, atlas_set> atlas_sets_;
     int batch_depth_ = 0;
@@ -661,8 +758,6 @@ gl_text_render_state& text_render_state() {
     static auto* state = new gl_text_render_state;
     return *state;
 }
-
-#endif
 
 }  // namespace
 
@@ -713,10 +808,15 @@ rect gl_render_context::normalize_dirty_rects(std::vector<rect>* dirty, rect win
     return bounds;
 }
 
-gl_render_context::gl_render_context(
-    vec2 device_size, double dpi_scale, const rect* dirty, int dirty_count, bool has_stencil)
+gl_render_context::gl_render_context(vec2 device_size,
+                                     double dpi_scale,
+                                     const rect* dirty,
+                                     int dirty_count,
+                                     bool has_stencil,
+                                     uint32_t subpixel_order)
     : device_size_(device_size),
       dpi_scale_(dpi_scale > 0.0 ? dpi_scale : 1.0),
+      subpixel_order_(subpixel_order),
       has_stencil_(has_stencil),
       scale_{dpi_scale_, dpi_scale_} {
     const rect full_bounds{0.0, 0.0, device_size.x / dpi_scale_, device_size.y / dpi_scale_};
@@ -831,9 +931,7 @@ void gl_render_context::draw_rect(rect area, fill_mode fill) {
     const rect transformed = transformed_rect(area);
     const fcolor normalized = fill.color;
     if (transformed.empty() || normalized.a <= 0.0f) return;
-#if defined(__APPLE__) || defined(_WIN32)
     text_render_state().flush_pending_batch();
-#endif
     if (rect_batch_) {
         rect_batch_->add(transformed, normalized);
         return;
@@ -844,7 +942,6 @@ void gl_render_context::draw_rect(rect area, fill_mode fill) {
 
 void gl_render_context::draw_shaped_text(
     px_font_t* font, vec2 position, color value, fx_layout* layout, bool subpixel_positioning) {
-#if defined(__APPLE__) || defined(_WIN32)
     const fcolor normalized = value;
     if (!layout || normalized.a <= 0.0f) {
         return;
@@ -853,8 +950,7 @@ void gl_render_context::draw_shaped_text(
         rect_batch_->flush();
     }
     text_render_state().draw(font, *layout, position, normalized, translation_, scale_,
-                             device_size_, clip_, subpixel_positioning);
-#endif
+                             device_size_, clip_, subpixel_positioning, subpixel_order_);
 }
 
 void gl_render_context::translate(double x, double y) {
@@ -869,9 +965,7 @@ void gl_render_context::scale(double x, double y) {
 
 void gl_render_context::restrict_clip_rect(rect area) {
     if (rect_batch_) rect_batch_->flush();
-#if defined(__APPLE__) || defined(_WIN32)
     text_render_state().flush_pending_batch();
-#endif
     clip_ = intersect_recti(clip_, device_rect(area));
     apply_clip();
 }
@@ -887,11 +981,9 @@ void gl_render_context::push_state(bool preserve_batch) {
 
 void gl_render_context::pop_state() {
     if (state_stack_.empty()) return;
-#if defined(__APPLE__) || defined(_WIN32)
     // Glyph instances do not carry a clip rectangle. Submit child text while the child scissor is
     // still active, before restoring the parent state below.
     text_render_state().flush_pending_batch();
-#endif
     saved_state state = std::move(state_stack_.back());
     state_stack_.pop_back();
     if (state.has_batch_state) {
@@ -910,9 +1002,7 @@ void gl_render_context::pop_state() {
 }
 
 void gl_render_context::begin_rect_batch() {
-#if defined(__APPLE__) || defined(_WIN32)
     text_render_state().flush_pending_batch();
-#endif
     if (rect_batch_) {
         ++rect_batch_->depth;
         return;
@@ -921,17 +1011,11 @@ void gl_render_context::begin_rect_batch() {
 }
 
 void gl_render_context::begin_text_batch() {
-#if defined(__APPLE__) || defined(_WIN32)
     if (rect_batch_) rect_batch_->flush();
     text_render_state().begin_batch(device_size_);
-#endif
 }
 
-void gl_render_context::end_text_batch() {
-#if defined(__APPLE__) || defined(_WIN32)
-    text_render_state().end_batch();
-#endif
-}
+void gl_render_context::end_text_batch() { text_render_state().end_batch(); }
 
 void gl_render_context::end_rect_batch() {
     if (!rect_batch_) return;
@@ -948,13 +1032,7 @@ void gl_render_context::finish() {
     // scopes.
     while (!state_stack_.empty()) pop_state();
     rect_batch_.reset();
-#if defined(__APPLE__) || defined(_WIN32)
     text_render_state().finish_batch();
-#endif
 }
 
-void gl_render_context::reset_glyph_atlas_for_testing() {
-#if defined(__APPLE__) || defined(_WIN32)
-    text_render_state().request_reset();
-#endif
-}
+void gl_render_context::reset_glyph_atlas_for_testing() { text_render_state().request_reset(); }

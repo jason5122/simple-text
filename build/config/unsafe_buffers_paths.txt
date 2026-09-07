@@ -9,7 +9,11 @@ $../../
 
 # TODO: Remove these entries. We have these here temporarily while we get compilation to work.
 -experiments/
--fx/
 -base/
 -font/
 -gui/
+-fx/
+-px/
+-ui/
+-benchmark/
+-conformance/

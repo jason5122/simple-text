@@ -1,12 +1,55 @@
-source_set("ui") {
-  if (is_mac) {
-    sources = [
-      "button.h",
-      "button.mm",
-    ]
+group("ui") {
+  deps = [
+    ":grapheme_shaper",
+    ":retained_text",
+    ":window",
+  ]
+}
 
-    frameworks = [ "Cocoa.framework" ]
-  }
+source_set("grapheme_shaper") {
+  sources = [
+    "grapheme_shaper.cc",
+    "grapheme_shaper.h",
+  ]
+  public_deps = [
+    "//fx",
+    "//px",
+  ]
+  deps = [
+    "//base",
+    "//third_party/uni_algo",
+  ]
+}
 
-  deps = [ "//platform" ]
+source_set("window") {
+  sources = [
+    "window.cc",
+    "window.h",
+  ]
+  deps = [ "//px" ]
+}
+
+source_set("retained_text") {
+  sources = [
+    "retained_text.cc",
+    "retained_text.h",
+  ]
+  public_deps = [
+    ":grapheme_shaper",
+    "//fx",
+    "//px",
+  ]
+}
+
+executable("grapheme_shaper_unittests") {
+  testonly = true
+  sources = [ "grapheme_shaper_unittest.cc" ]
+  deps = [
+    ":grapheme_shaper",
+    ":retained_text",
+    "//base",
+    "//fx",
+    "//px",
+    "//testing:fuzztest",
+  ]
 }

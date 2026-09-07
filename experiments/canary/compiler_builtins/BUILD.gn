@@ -1,0 +1,3 @@
+executable("compiler_builtins") {
+  sources = [ "compiler_builtins.c" ]
+}

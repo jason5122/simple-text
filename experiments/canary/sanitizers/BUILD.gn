@@ -1,0 +1,16 @@
+executable("sanitizers") {
+  sources = [ "main.cc" ]
+}
+
+executable("uncaught_exception") {
+  sources = [ "uncaught_exception.cc" ]
+
+  configs -= [
+    "//build/config/compiler:no_exceptions",
+    "//build/config/compiler:no_rtti",
+  ]
+  configs += [
+    "//build/config/compiler:exceptions",
+    "//build/config/compiler:rtti",
+  ]
+}

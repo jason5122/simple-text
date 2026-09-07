@@ -1,5 +1,9 @@
 group("all") {
-  deps = [ "//simple_text" ]
+  deps = [
+    "//benchmark",
+    "//conformance",
+    "//simple_text",
+  ]
 }
 
 group("tests") {
@@ -12,23 +16,14 @@ group("tests") {
 
 group("experiments") {
   deps = [
-    "//experiments/build_types",
-    "//experiments/compiler_builtins_canary",
+    "//experiments/canary",
+    "//experiments/examples",
     "//experiments/fuzz",
-    "//experiments/platform",
     "//experiments/playground",
     "//experiments/rope",
-    "//experiments/sanitizer_demo",
   ]
 
   if (is_mac) {
-    deps += [
-      "//experiments/coroutines",
-      "//experiments/gui_api_redesign",
-      "//experiments/mac_startup_benchmark",
-      "//experiments/platform_renderer",
-      "//experiments/renderer",
-      "//experiments/ui_button_demo",
-    ]
+    deps += [ "//experiments/mac_startup_benchmark" ]
   }
 }

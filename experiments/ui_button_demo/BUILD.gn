@@ -1,8 +1,0 @@
-executable("ui_button_demo") {
-  sources = [ "main.cc" ]
-
-  deps = [
-    "//platform",
-    "//ui",
-  ]
-}

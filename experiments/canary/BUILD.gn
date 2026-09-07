@@ -1,0 +1,7 @@
+group("canary") {
+  deps = [
+    "build_types",
+    "compiler_builtins",
+    "sanitizers",
+  ]
+}

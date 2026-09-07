@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gfx/texture.h"
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include <cstdint>
 #include <span>
 

@@ -1,9 +1,9 @@
 source_set("gl") {
   sources = [
-    "gl.cc",
-    "gl.h",
     "loader.cc",
     "loader.h",
+    "opengl.cc",
+    "opengl.h",
   ]
 
   if (is_mac) {

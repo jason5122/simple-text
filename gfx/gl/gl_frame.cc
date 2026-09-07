@@ -1,6 +1,6 @@
 #include "gfx/gl/gl_frame.h"
 #include "gfx/gl/gl_texture.h"
-#include "gl/gl.h"
+#include "gl/opengl.h"
 using namespace gl;
 
 namespace gfx {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"

@@ -30,6 +30,11 @@ constexpr auto kFrameQuiet = std::chrono::milliseconds(100);
 constexpr auto kFirstFrameGrace = std::chrono::milliseconds(200);
 constexpr auto kPoll = std::chrono::milliseconds(10);
 
+// A window that is being driven produces a frame every time; several in a row that produce nothing
+// means the stream is attached to something that never repaints, and every remaining shot in the
+// run would burn kFrameTimeout to write nothing useful.
+constexpr int kMaxConsecutiveTimeouts = 2;
+
 bool wait_settled(Source* source, Crop crop, const Frame* baseline, Frame* result) {
     const auto started = std::chrono::steady_clock::now();
     auto last_change = started;
@@ -65,6 +70,7 @@ bool wait_settled(Source* source, Crop crop, const Frame* baseline, Frame* resul
 int serve(std::unique_ptr<Source> source, Crop crop) {
     Frame baseline;
     bool have_baseline = false;
+    int consecutive_timeouts = 0;
     std::string output_path;
     while (std::getline(std::cin, output_path)) {
         if (output_path.empty()) continue;
@@ -82,8 +88,19 @@ int serve(std::unique_ptr<Source> source, Crop crop) {
         std::printf("%s %s\n", ok ? "ok" : "err", output_path.c_str());
         std::fflush(stdout);
         if (captured) {
+            consecutive_timeouts = 0;
             baseline = std::move(settled);
             have_baseline = true;
+            continue;
+        }
+        if (++consecutive_timeouts >= kMaxConsecutiveTimeouts) {
+            std::fprintf(stderr,
+                         "no frames for %d captures in a row: the stream is attached to a window "
+                         "that is not repainting. Mutter records whichever window had focus when "
+                         "this server started, so anything that took focus is being captured "
+                         "instead of Sublime Text.\n",
+                         consecutive_timeouts);
+            return 1;
         }
     }
     return 0;

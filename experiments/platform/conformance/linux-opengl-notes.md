@@ -93,10 +93,10 @@ was the source of the remaining one-to-three-byte differences.
 
 ## Conformance commands
 
-Run from `out/linux-arm64` on the macOS host:
+Run from `out/linux-arm64-release` on the macOS host:
 
 ```sh
-PX_USE_GL=1 LINUX_OUR_OUTPUT=/media/psf/linux-arm64/ours-gl ./capture-ours-vm.sh
+PX_USE_GL=1 LINUX_OUR_OUTPUT=/media/psf/linux-arm64-release/ours-gl ./capture-ours-vm.sh
 OURS_DIR=ours-gl DIFF_RESULTS_DIR=diff-gl ./diff.sh
 ```
 

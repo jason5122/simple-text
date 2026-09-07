@@ -1,4 +1,4 @@
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include "gui/renderer/renderer.h"
 
 using namespace gl;

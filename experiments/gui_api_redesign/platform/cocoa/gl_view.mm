@@ -1,5 +1,5 @@
 #include "experiments/gui_api_redesign/platform/cocoa/gl_view.h"
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include "gl/loader.h"
 
 using namespace gl;

@@ -1,9 +1,3 @@
-assert(path_exists("src/.git"),
-       "Missing submodules. Run: git submodule update --init --recursive")
-
-assert(current_cpu == "arm64" || current_cpu == "x64",
-       "zlib-ng here supports arm64 and x64 only (no 32-bit x86).")
-
 # Each SIMD tier is a separate source_set: GN applies cflags per target, not per
 # file, and every tier must be built with ONLY its own feature flags so the
 # runtime dispatcher can still fall back on CPUs that lack the higher ISA. They
@@ -12,7 +6,11 @@ assert(current_cpu == "arm64" || current_cpu == "x64",
 template("zlib_ng_simd") {
   source_set(target_name) {
     visibility = [ ":*" ]
-    forward_variables_from(invoker, [ "sources", "cflags_c" ])
+    forward_variables_from(invoker,
+                           [
+                             "sources",
+                             "cflags_c",
+                           ])
 
     configs -= [ "//build/config/compiler:simple_text_code" ]
     configs += [ "//build/config/compiler:no_simple_text_code" ]
@@ -50,7 +48,6 @@ static_library("zlib-ng") {
     # CPU feature detection plus the generic C implementations the function
     # table dispatches to. These stay compiled as runtime fallbacks
     # (WITH_ALL_FALLBACKS) even with the SIMD paths enabled.
-    "src/cpu_features.c",
     "src/arch/generic/adler32_c.c",
     "src/arch/generic/adler32_fold_c.c",
     "src/arch/generic/chunkset_c.c",
@@ -58,6 +55,7 @@ static_library("zlib-ng") {
     "src/arch/generic/crc32_braid_c.c",
     "src/arch/generic/crc32_fold_c.c",
     "src/arch/generic/slide_hash_c.c",
+    "src/cpu_features.c",
 
     # Software CRC fallback that functable references once WITH_OPTIM is set.
     "src/arch/generic/crc32_chorba_c.c",
@@ -69,8 +67,8 @@ static_library("zlib-ng") {
     # NEON is baseline on arm64, so these need no special compile flags. The
     # ARMv8 hardware-CRC path needs +crc and lives in a source_set below.
     sources += [
-      "src/arch/arm/arm_features.c",
       "src/arch/arm/adler32_neon.c",
+      "src/arch/arm/arm_features.c",
       "src/arch/arm/chunkset_neon.c",
       "src/arch/arm/compare256_neon.c",
       "src/arch/arm/slide_hash_neon.c",
@@ -80,17 +78,17 @@ static_library("zlib-ng") {
     # SSE2 is baseline on x86_64, so these need no compile flags. Higher ISA
     # tiers (SSSE3+) each get their own flagged source_set below.
     sources += [
-      "src/arch/x86/x86_features.c",
       "src/arch/x86/chorba_sse2.c",
       "src/arch/x86/chunkset_sse2.c",
       "src/arch/x86/compare256_sse2.c",
       "src/arch/x86/slide_hash_sse2.c",
+      "src/arch/x86/x86_features.c",
     ]
     deps += [
-      ":zlib_ng_x86_ssse3",
+      ":zlib_ng_x86_avx2",
       ":zlib_ng_x86_sse41",
       ":zlib_ng_x86_sse42_pclmul",
-      ":zlib_ng_x86_avx2",
+      ":zlib_ng_x86_ssse3",
     ]
   }
 
@@ -156,8 +154,10 @@ if (current_cpu == "arm64") {
 # omitted for now.
 config("zlib_ng_internal") {
   defines = [
-    "ZLIB_COMPAT",  # emit the classic zlib API (deflate/inflate/...) via PREFIX()
-    "WITH_ALL_FALLBACKS",  # pre-fill the functable with generic C before arch overrides
+    "ZLIB_COMPAT",  # emit the classic zlib API (deflate/inflate/...) via
+                    # PREFIX()
+    "WITH_ALL_FALLBACKS",  # pre-fill the functable with generic C before arch
+                           # overrides
     "WITH_OPTIM",  # enable the arch dispatch in functable
     "HAVE_BUILTIN_CTZ",
     "HAVE_BUILTIN_CTZLL",  # enables the SIMD compare256/longest_match paths

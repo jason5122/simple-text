@@ -241,9 +241,15 @@ private:
             return false;
         }
 
-        pw_properties* properties =
-            pw_properties_new(PW_KEY_MEDIA_TYPE, "Video", PW_KEY_MEDIA_CATEGORY, "Capture",
-                              PW_KEY_MEDIA_ROLE, "Screen", nullptr);
+        // Pin the stream to Mutter's node. Without this the session manager treats it as an
+        // ordinary video consumer and, once Mutter's node goes away, silently relinks it to
+        // whatever other Video/Source exists -- in a Parallels guest that is the host's
+        // passed-through webcam, whose NV12-only formats share nothing with the ones requested
+        // below, so every later frame fails to negotiate rather than reporting that the window
+        // stream ended.
+        pw_properties* properties = pw_properties_new(
+            PW_KEY_MEDIA_TYPE, "Video", PW_KEY_MEDIA_CATEGORY, "Capture", PW_KEY_MEDIA_ROLE,
+            "Screen", PW_KEY_NODE_DONT_RECONNECT, "true", nullptr);
         stream_ = pw_stream_new(core_, "conformance window capture", properties);
         if (!stream_) {
             *error = "pw_stream_new failed";

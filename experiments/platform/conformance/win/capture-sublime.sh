@@ -4,7 +4,7 @@ set -e
 
 build_dir="$(cd "$(dirname "$0")" && pwd)"
 vm="${PARALLELS_VM:-Windows 11}"
-windows_share="${WINDOWS_SHARE:-\\\\Mac\\win-arm64}"
+windows_share="${WINDOWS_SHARE:-\\\\Mac\\$(basename "$build_dir")}"
 
 if ! command -v prlctl >/dev/null; then
   echo "prlctl not found; run this script from the macOS host" >&2

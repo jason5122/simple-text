@@ -1,9 +1,6 @@
 import("//build/config/sanitizers/sanitizers.gni")
 
-assert(path_exists("src/fuzztest"),
-       "Missing submodules. Run: git submodule update --init --recursive")
-
-source_set("fuzztest") {
+static_library("fuzztest") {
   testonly = true
 
   sources = [
@@ -106,7 +103,7 @@ source_set("fuzztest") {
   ]
 }
 
-source_set("init_fuzztest") {
+static_library("init_fuzztest") {
   testonly = true
   sources = [
     "src/fuzztest/init_fuzztest.cc",

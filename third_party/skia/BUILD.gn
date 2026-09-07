@@ -1,18 +1,13 @@
-assert(path_exists("src/src"),
-       "Missing submodules. Run: git submodule update --init --recursive")
-
 import("src/gn/shared_sources.gni")
 import("src/modules/skcms/skcms.gni")
 
-source_set("skia") {
+static_library("skia") {
   sources = []
   public = []
 
   public += skia_core_public
-  public += skia_pathops_public
   public += skia_utils_public
   public += skia_effects_public
-  public += skia_encode_public
 
   sources += skia_core_sources
   sources += skia_ports_sources
@@ -22,37 +17,26 @@ source_set("skia") {
   sources += skia_colorfilters_sources
   sources += skia_effects_sources
   sources += skia_effects_imagefilter_sources
-  sources += skia_pathops_sources
-  sources += skia_encode_srcs
 
   public += skcms_public_headers
   sources += skcms_public
   sources += skcms_TransformBaseline
 
+  sources += [ "src/src/ports/SkMemory_malloc.cpp" ]
   if (is_win) {
     sources += [
-      "src/src/ports/SkDebug_win.cpp",
-      "src/src/ports/SkMemory_malloc.cpp",
+      "src/src/ports/SkLog_win.cpp",
       "src/src/ports/SkOSFile_win.cpp",
     ]
   } else {
     sources += [
-      "src/src/ports/SkDebug_stdio.cpp",
-      "src/src/ports/SkMemory_malloc.cpp",
+      "src/src/ports/SkLog_stdio.cpp",
       "src/src/ports/SkOSFile_posix.cpp",
     ]
   }
 
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
-
-  if (is_mac) {
-    frameworks = [
-      "CoreFoundation.framework",
-      "CoreGraphics.framework",
-      "CoreText.framework",
-    ]
-  }
 
   if (current_cpu == "x64") {
     deps = [
@@ -97,4 +81,6 @@ if (current_cpu == "x64") {
 
 config("skia_config") {
   include_dirs = [ "src" ]
+
+  defines = [ "SK_DISABLE_EFFECT_DESERIALIZATION" ]
 }

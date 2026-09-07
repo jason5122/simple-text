@@ -1,7 +1,4 @@
-assert(path_exists("src/src"),
-       "Missing submodules. Run: git submodule update --init --recursive")
-
-source_set("uni_algo") {
+static_library("uni_algo") {
   sources = [ "src/src/data.cpp" ]
 
   # On Windows, don't error when redefining `WIN32_LEAN_AND_MEAN`.

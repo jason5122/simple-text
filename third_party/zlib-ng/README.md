@@ -1,5 +1,8 @@
 # zlib-ng
 
+- Version: 2.3.3
+- Upstream: https://github.com/zlib-ng/zlib-ng
+
 ## Changes
 
 ```bash

@@ -27,7 +27,7 @@ fi
 
 if [[ -f "$build_dir/metrics_conformance.exe" ]]; then
   vm="${PARALLELS_VM:-Windows 11}"
-  windows_share="${WINDOWS_SHARE:-\\\\Mac\\win-arm64}"
+  windows_share="${WINDOWS_SHARE:-\\\\Mac\\$(basename "$build_dir")}"
   if ! command -v prlctl >/dev/null; then
     echo "prlctl not found; run this script from the macOS host" >&2
     exit 1

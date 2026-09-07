@@ -9,9 +9,6 @@ Table of Contents:
 
 ## Setup
 
-This repo uses Git submodules — clone with `git clone --recursive` (or, in an existing
-clone, run `git submodule update --init --recursive`).
-
 ```bash
 python3 build/sync_deps.py   # fetch host build dependencies (clang, gn, ninja, ...)
 bin/gn gen out/debug         # create a build directory

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include <string>
 
 namespace gui {

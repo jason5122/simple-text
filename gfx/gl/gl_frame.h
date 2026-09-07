@@ -3,7 +3,7 @@
 #include "gfx/frame.h"
 #include "gfx/gl/gl_device.h"
 #include "gfx/gl/gl_surface.h"
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include <cstddef>
 #include <vector>
 

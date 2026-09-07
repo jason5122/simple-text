@@ -1,29 +1,8 @@
-// WGL context creation and the modern-GL entry point loader.
-//
-// Two decisions copied from ST's binary:
-//
-//   * The pixel format is SINGLE buffered. sublime_text.exe imports neither SwapBuffers (gdi32)
-//     nor wglSwapLayerBuffers, and carries no such string; it imports glFlush and finishes frames
-//     with that. A single-buffered drawable persists between frames, which is precisely what makes
-//     repainting only the invalid rects correct -- the same property kCGLPFABackingStore buys on
-//     macOS. Both backends are dirty-rect renderers for the same underlying reason.
-//
-//   * Modern GL is resolved at runtime. The import table holds 23 GL 1.1 entry points and the
-//     binary carries the strings "OPENGL32.dll" and "wglGetProcAddress"; everything past 1.1 is
-//     looked up rather than linked.
-//
-// One departure: ST imports wglShareLists, implying a context per window sharing one object
-// namespace. This creates a single context and makes it current against each window's HDC, which
-// is legal because every window is given the same pixel format, and is closer to what the macOS
-// side does (one process-wide CGLContextObj).
-
 #include "experiments/platform/px/px_gl.h"
 #include "experiments/platform/px/win/px_win_private.h"
-
 #include <cstdio>
 #include <print>
 
-// Defined here, declared in px_gl.h.
 PFN_glCreateShader px_glCreateShader = nullptr;
 PFN_glShaderSource px_glShaderSource = nullptr;
 PFN_glCompileShader px_glCompileShader = nullptr;
@@ -57,24 +36,22 @@ PFN_glVertexAttribPointer px_glVertexAttribPointer = nullptr;
 
 namespace {
 
-// WGL_ARB_create_context, spelled out so this does not need wglext.h.
-constexpr int kWglContextMajorVersionArb = 0x2091;
-constexpr int kWglContextMinorVersionArb = 0x2092;
-constexpr int kWglContextProfileMaskArb = 0x9126;
-constexpr int kWglContextCoreProfileBitArb = 0x00000001;
-
-using PFN_wglCreateContextAttribsARB = HGLRC(WINAPI*)(HDC, HGLRC, const int*);
+using PFN_wglGetProcAddress = PROC(WINAPI*)(LPCSTR);
 
 HGLRC g_shared_context = nullptr;
-PFN_wglCreateContextAttribsARB g_create_context_attribs = nullptr;
-bool g_probed = false;
 bool g_has_shaders = false;
 
+// Set once the driver has been rejected, so later windows go straight to the software path instead
+// of creating and tearing down a context each.
+bool g_gl_unusable = false;
+
+PFN_wglGetProcAddress g_get_proc_address = nullptr;
+
+// TODO: Get rid of stencil (`pfd.cStencilBits = 0`). Also understand the lack of PFD_DOUBLEBUFFER.
 PIXELFORMATDESCRIPTOR describe_pixel_format() {
     PIXELFORMATDESCRIPTOR pfd = {};
     pfd.nSize = sizeof(pfd);
     pfd.nVersion = 1;
-    // No PFD_DOUBLEBUFFER: see the file comment.
     pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
     pfd.iPixelType = PFD_TYPE_RGBA;
     pfd.cColorBits = 24;
@@ -84,93 +61,67 @@ PIXELFORMATDESCRIPTOR describe_pixel_format() {
     return pfd;
 }
 
-void* resolve(const char* name) {
-    if (void* p = reinterpret_cast<void*>(wglGetProcAddress(name))) {
-        return p;
-    }
-    // wglGetProcAddress returns null for GL 1.1 entry points; those live in the DLL's export
-    // table.
-    if (HMODULE gl = GetModuleHandleW(L"opengl32.dll")) {
-        return reinterpret_cast<void*>(GetProcAddress(gl, name));
-    }
-    return nullptr;
-}
-
+// Every name loaded here postdates 1.1, so opengl32.dll's own export table cannot answer for any
+// of them and only the driver's wglGetProcAddress will do.
 template <typename T>
 bool load(T* slot, const char* name) {
-    *slot = reinterpret_cast<T>(resolve(name));
-    return *slot != nullptr;
+    *slot = reinterpret_cast<T>(g_get_proc_address(name));
+    if (*slot) {
+        return true;
+    }
+    std::println(stderr, "px: failed to load OpenGL function: {}", name);
+    return false;
 }
 
-void load_modern_gl() {
-    bool ok = true;
-    ok &= load(&px_glCreateShader, "glCreateShader");
-    ok &= load(&px_glShaderSource, "glShaderSource");
-    ok &= load(&px_glCompileShader, "glCompileShader");
-    ok &= load(&px_glGetShaderiv, "glGetShaderiv");
-    ok &= load(&px_glGetShaderInfoLog, "glGetShaderInfoLog");
-    ok &= load(&px_glDeleteShader, "glDeleteShader");
-    ok &= load(&px_glCreateProgram, "glCreateProgram");
-    ok &= load(&px_glAttachShader, "glAttachShader");
-    ok &= load(&px_glBindAttribLocation, "glBindAttribLocation");
-    ok &= load(&px_glLinkProgram, "glLinkProgram");
-    ok &= load(&px_glGetProgramiv, "glGetProgramiv");
-    ok &= load(&px_glGetProgramInfoLog, "glGetProgramInfoLog");
-    ok &= load(&px_glDeleteProgram, "glDeleteProgram");
-    ok &= load(&px_glUseProgram, "glUseProgram");
-    ok &= load(&px_glGetUniformLocation, "glGetUniformLocation");
-    ok &= load(&px_glUniform2f, "glUniform2f");
-    ok &= load(&px_glUniform1f, "glUniform1f");
-    ok &= load(&px_glUniform1i, "glUniform1i");
-    ok &= load(&px_glBlendFuncSeparate, "glBlendFuncSeparate");
-    ok &= load(&px_glActiveTexture, "glActiveTexture");
-    ok &= load(&px_glGenVertexArrays, "glGenVertexArrays");
-    ok &= load(&px_glBindVertexArray, "glBindVertexArray");
-    ok &= load(&px_glGenBuffers, "glGenBuffers");
-    ok &= load(&px_glBindBuffer, "glBindBuffer");
-    ok &= load(&px_glBufferData, "glBufferData");
-    ok &= load(&px_glBufferSubData, "glBufferSubData");
-    ok &= load(&px_glTexBuffer, "glTexBuffer");
-    ok &= load(&px_glDrawArraysInstanced, "glDrawArraysInstanced");
-    ok &= load(&px_glEnableVertexAttribArray, "glEnableVertexAttribArray");
-    ok &= load(&px_glVertexAttribPointer, "glVertexAttribPointer");
-    g_has_shaders = ok;
+// Returns false at the first entry point the driver cannot supply, as ST's loader does.
+bool load_modern_gl() {
+    HMODULE gl = LoadLibraryA("opengl32.dll");
+    if (!gl) {
+        std::println(stderr, "px: failed to load opengl32.dll (error {})", GetLastError());
+        return false;
+    }
+    g_get_proc_address =
+        reinterpret_cast<PFN_wglGetProcAddress>(GetProcAddress(gl, "wglGetProcAddress"));
+    if (!g_get_proc_address) {
+        std::println(stderr, "px: opengl32.dll exports no wglGetProcAddress");
+        return false;
+    }
+
+    return load(&px_glCreateShader, "glCreateShader") &&
+           load(&px_glShaderSource, "glShaderSource") &&
+           load(&px_glCompileShader, "glCompileShader") &&
+           load(&px_glGetShaderiv, "glGetShaderiv") &&
+           load(&px_glGetShaderInfoLog, "glGetShaderInfoLog") &&
+           load(&px_glDeleteShader, "glDeleteShader") &&
+           load(&px_glCreateProgram, "glCreateProgram") &&
+           load(&px_glAttachShader, "glAttachShader") &&
+           load(&px_glBindAttribLocation, "glBindAttribLocation") &&
+           load(&px_glLinkProgram, "glLinkProgram") &&
+           load(&px_glGetProgramiv, "glGetProgramiv") &&
+           load(&px_glGetProgramInfoLog, "glGetProgramInfoLog") &&
+           load(&px_glDeleteProgram, "glDeleteProgram") &&
+           load(&px_glUseProgram, "glUseProgram") &&
+           load(&px_glGetUniformLocation, "glGetUniformLocation") &&
+           load(&px_glUniform2f, "glUniform2f") && load(&px_glUniform1f, "glUniform1f") &&
+           load(&px_glUniform1i, "glUniform1i") &&
+           load(&px_glBlendFuncSeparate, "glBlendFuncSeparate") &&
+           load(&px_glActiveTexture, "glActiveTexture") &&
+           load(&px_glGenVertexArrays, "glGenVertexArrays") &&
+           load(&px_glBindVertexArray, "glBindVertexArray") &&
+           load(&px_glGenBuffers, "glGenBuffers") && load(&px_glBindBuffer, "glBindBuffer") &&
+           load(&px_glBufferData, "glBufferData") &&
+           load(&px_glBufferSubData, "glBufferSubData") && load(&px_glTexBuffer, "glTexBuffer") &&
+           load(&px_glDrawArraysInstanced, "glDrawArraysInstanced") &&
+           load(&px_glEnableVertexAttribArray, "glEnableVertexAttribArray") &&
+           load(&px_glVertexAttribPointer, "glVertexAttribPointer");
 }
 
-// wglCreateContextAttribsARB can only be resolved from a context that already exists, so a
-// throwaway window and legacy context go first.
-void probe_wgl_extensions() {
-    if (g_probed) {
-        return;
-    }
-    g_probed = true;
-
-    WNDCLASSEXW wc = {};
-    wc.cbSize = sizeof(wc);
-    wc.lpfnWndProc = DefWindowProcW;
-    wc.lpszClassName = L"PX_WGL_PROBE";
-    RegisterClassExW(&wc);
-
-    HWND hwnd = CreateWindowExW(0, L"PX_WGL_PROBE", L"", WS_OVERLAPPED, 0, 0, 1, 1, nullptr,
-                                nullptr, nullptr, nullptr);
-    if (!hwnd) {
-        return;
-    }
-    HDC hdc = GetDC(hwnd);
-    PIXELFORMATDESCRIPTOR pfd = describe_pixel_format();
-    const int format = ChoosePixelFormat(hdc, &pfd);
-    if (format != 0 && SetPixelFormat(hdc, format, &pfd)) {
-        if (HGLRC rc = wglCreateContext(hdc)) {
-            wglMakeCurrent(hdc, rc);
-            g_create_context_attribs = reinterpret_cast<PFN_wglCreateContextAttribsARB>(
-                resolve("wglCreateContextAttribsARB"));
-            wglMakeCurrent(nullptr, nullptr);
-            wglDeleteContext(rc);
-        }
-    }
-    ReleaseDC(hwnd, hdc);
-    DestroyWindow(hwnd);
-    UnregisterClassW(L"PX_WGL_PROBE", nullptr);
+bool driver_supports_gl_41(const GLubyte* version) {
+    int major = 0;
+    int minor = 0;
+    return version &&
+           std::sscanf(reinterpret_cast<const char*>(version), "%d.%d", &major, &minor) == 2 &&
+           (major > 4 || (major == 4 && minor >= 1));
 }
 
 }  // namespace
@@ -182,7 +133,9 @@ bool px_win_gl_create(px_window_t* window) {
         return false;
     }
 
-    probe_wgl_extensions();
+    if (g_gl_unusable) {
+        return false;
+    }
 
     window->hdc = GetDC(window->hwnd);
     if (!window->hdc) {
@@ -203,42 +156,43 @@ bool px_win_gl_create(px_window_t* window) {
     }
 
     if (!g_shared_context) {
-        if (g_create_context_attribs) {
-            const int attribs[] = {
-                kWglContextMajorVersionArb,
-                4,
-                kWglContextMinorVersionArb,
-                1,
-                kWglContextProfileMaskArb,
-                kWglContextCoreProfileBitArb,
-                0,
-            };
-            g_shared_context = g_create_context_attribs(window->hdc, nullptr, attribs);
-        }
-        if (!g_shared_context) {
-            // No WGL_ARB_create_context, or the driver refused 4.1 core. A legacy context still
-            // lets the window come up and the event trace run; drawing degrades via
-            // px_gl_has_shaders().
-            g_shared_context = wglCreateContext(window->hdc);
-        }
+        // Plain wglCreateContext: whatever the driver gives back is judged below, not requested up
+        // front.
+        g_shared_context = wglCreateContext(window->hdc);
         if (!g_shared_context) {
             std::println(stderr, "px: wglCreateContext failed (error {})", GetLastError());
             return false;
         }
         wglMakeCurrent(window->hdc, g_shared_context);
-        load_modern_gl();
 
         const GLubyte* version = glGetString(GL_VERSION);
-        int major = 0;
-        int minor = 0;
-        const bool version_ok =
-            version &&
-            std::sscanf(reinterpret_cast<const char*>(version), "%d.%d", &major, &minor) == 2 &&
-            (major > 4 || (major == 4 && minor >= 1));
-        g_has_shaders = g_has_shaders && version_ok;
-        std::println(stderr, "px: GL {}, shaders={}, stencil={}",
-                     version ? reinterpret_cast<const char*>(version) : "?",
-                     px_gl_has_shaders() ? 1 : 0, window->has_stencil ? 1 : 0);
+        if (!driver_supports_gl_41(version)) {
+            std::println(stderr,
+                         "px: driver does not support required OpenGL version 4.1 (got {})",
+                         version ? reinterpret_cast<const char*>(version) : "?");
+            wglMakeCurrent(nullptr, nullptr);
+            wglDeleteContext(g_shared_context);
+            g_shared_context = nullptr;
+            g_gl_unusable = true;
+            return false;
+        }
+
+        const GLubyte* renderer = glGetString(GL_RENDERER);
+        std::println(
+            stderr, "px: GL {}, renderer {}, stencil={}", reinterpret_cast<const char*>(version),
+            renderer ? reinterpret_cast<const char*>(renderer) : "?", window->has_stencil ? 1 : 0);
+
+        g_has_shaders = load_modern_gl();
+        if (!g_has_shaders) {
+            // Drop GL entirely rather than painting through half-resolved entry points, which is
+            // also what ST does when its loader fails.
+            std::println(stderr, "px: failed to load OpenGL functions");
+            wglMakeCurrent(nullptr, nullptr);
+            wglDeleteContext(g_shared_context);
+            g_shared_context = nullptr;
+            g_gl_unusable = true;
+            return false;
+        }
     }
 
     window->hglrc = g_shared_context;

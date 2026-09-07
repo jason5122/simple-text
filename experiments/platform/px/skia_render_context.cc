@@ -12,12 +12,12 @@
 #include <arm_neon.h>
 #endif
 
-#include "include/core/SkCanvas.h"
-#include "include/core/SkColor.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkSurface.h"
+#include "third_party/skia/src/include/core/SkCanvas.h"
+#include "third_party/skia/src/include/core/SkColor.h"
+#include "third_party/skia/src/include/core/SkImageInfo.h"
+#include "third_party/skia/src/include/core/SkPaint.h"
+#include "third_party/skia/src/include/core/SkRect.h"
+#include "third_party/skia/src/include/core/SkSurface.h"
 
 namespace {
 
@@ -53,9 +53,8 @@ uint8_t source_over_channel(uint8_t source,
                             uint8_t destination,
                             uint8_t source_alpha,
                             bool boundary_bias = false) {
-    const unsigned value =
-        static_cast<unsigned>(source) +
-        multiply_bytes(destination, 255u - source_alpha, boundary_bias);
+    const unsigned value = static_cast<unsigned>(source) +
+                           multiply_bytes(destination, 255u - source_alpha, boundary_bias);
     return static_cast<uint8_t>(std::min(value, 255u));
 }
 
@@ -81,8 +80,7 @@ uint8x8_t source_over_channel(uint8x8_t source,
                               uint8x8_t destination,
                               uint8x8_t source_alpha,
                               bool boundary_bias = false) {
-    return vqadd_u8(source,
-                    multiply_bytes(destination, vmvn_u8(source_alpha), boundary_bias));
+    return vqadd_u8(source, multiply_bytes(destination, vmvn_u8(source_alpha), boundary_bias));
 }
 
 #endif
@@ -269,10 +267,9 @@ void skia_render_context::draw_shaped_text(
 #if BUILDFLAG(IS_LINUX)
     device_origin_y -= static_cast<double>(font->font->metrics().ascent) * scale_.y;
 #endif
-    const float lightness =
-        (std::max({normalized.r, normalized.g, normalized.b}) +
-         std::min({normalized.r, normalized.g, normalized.b})) *
-        0.5f;
+    const float lightness = (std::max({normalized.r, normalized.g, normalized.b}) +
+                             std::min({normalized.r, normalized.g, normalized.b})) *
+                            0.5f;
     const bool alternate = lightness > 0.75f;
     const uint8_t tint[] = {value.blue(), value.green(), value.red(), value.alpha()};
 

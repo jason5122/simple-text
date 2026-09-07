@@ -1,6 +1,3 @@
-assert(path_exists("src/googletest"),
-       "Missing submodules. Run: git submodule update --init --recursive")
-
 static_library("gtest") {
   testonly = true
 

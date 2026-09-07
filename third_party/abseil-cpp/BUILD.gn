@@ -119,6 +119,16 @@ source_set("absl_base_core_headers") {
   deps = [ ":absl_base_config" ]
 }
 
+source_set("absl_base_cpu_detect") {
+  public_configs = [ ":absl_include_config" ]
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+  sources = [ "src/absl/base/internal/cpu_detect.cc" ]
+  public = [ "src/absl/base/internal/cpu_detect.h" ]
+  visibility = [ ":*" ]
+  deps = [ ":absl_base_config" ]
+}
+
 source_set("absl_base_cycleclock_internal") {
   public_configs = [ ":absl_include_config" ]
   public = [
@@ -176,6 +186,9 @@ source_set("absl_base_fast_type_id") {
 
 source_set("absl_base_hardening") {
   public_configs = [ ":absl_include_config" ]
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+  sources = [ "src/absl/base/internal/hardening.cc" ]
   public = [ "src/absl/base/internal/hardening.h" ]
   visibility = [ ":*" ]
   deps = [
@@ -782,19 +795,6 @@ source_set("absl_container_raw_hash_set_resize_impl") {
   deps = [ ":absl_base_config" ]
 }
 
-source_set("absl_crc_cpu_detect") {
-  public_configs = [ ":absl_include_config" ]
-  configs -= [ "//build/config/compiler:simple_text_code" ]
-  configs += [ "//build/config/compiler:no_simple_text_code" ]
-  sources = [ "src/absl/crc/internal/cpu_detect.cc" ]
-  public = [ "src/absl/crc/internal/cpu_detect.h" ]
-  visibility = [ ":*" ]
-  deps = [
-    ":absl_base_base",
-    ":absl_base_config",
-  ]
-}
-
 source_set("absl_crc_crc32c") {
   public_configs = [ ":absl_include_config" ]
   configs -= [ "//build/config/compiler:simple_text_code" ]
@@ -815,9 +815,9 @@ source_set("absl_crc_crc32c") {
   deps = [
     ":absl_base_config",
     ":absl_base_core_headers",
+    ":absl_base_cpu_detect",
     ":absl_base_endian",
     ":absl_base_prefetch",
-    ":absl_crc_cpu_detect",
     ":absl_crc_crc_internal",
     ":absl_crc_non_temporal_memcpy",
     ":absl_strings_str_format",
@@ -858,10 +858,10 @@ source_set("absl_crc_crc_internal") {
   deps = [
     ":absl_base_config",
     ":absl_base_core_headers",
+    ":absl_base_cpu_detect",
     ":absl_base_endian",
     ":absl_base_prefetch",
     ":absl_base_raw_logging_internal",
-    ":absl_crc_cpu_detect",
     ":absl_memory_memory",
     ":absl_numeric_bits",
   ]
@@ -1545,10 +1545,7 @@ source_set("absl_log_internal_config") {
   public_configs = [ ":absl_include_config" ]
   public = [ "src/absl/log/internal/config.h" ]
   visibility = [ ":*" ]
-  deps = [
-    ":absl_base_config",
-    ":absl_base_core_headers",
-  ]
+  deps = [ ":absl_base_config" ]
 }
 
 source_set("absl_log_internal_container") {
@@ -1664,7 +1661,6 @@ source_set("absl_log_internal_log_message") {
     ":absl_log_log_entry",
     ":absl_log_log_sink",
     ":absl_log_log_sink_registry",
-    ":absl_memory_memory",
     ":absl_strings_internal",
     ":absl_strings_string_view",
     ":absl_strings_strings",
@@ -1796,12 +1792,12 @@ source_set("absl_log_internal_vlog_config") {
   visibility = [ ":*" ]
   deps = [
     ":absl_base_base",
+    ":absl_base_base_internal",
     ":absl_base_config",
     ":absl_base_core_headers",
     ":absl_base_no_destructor",
     ":absl_base_nullability",
     ":absl_log_internal_fnmatch",
-    ":absl_memory_memory",
     ":absl_strings_string_view",
     ":absl_strings_strings",
     ":absl_synchronization_synchronization",
@@ -2194,6 +2190,7 @@ source_set("absl_random_internal_entropy_pool") {
   public = [ "src/absl/random/internal/entropy_pool.h" ]
   visibility = [ ":*" ]
   deps = [
+    ":absl_algorithm_container",
     ":absl_base_base",
     ":absl_base_config",
     ":absl_base_core_headers",
@@ -2320,9 +2317,10 @@ source_set("absl_random_internal_randen") {
   public = [ "src/absl/random/internal/randen.h" ]
   visibility = [ ":*" ]
   deps = [
-    ":absl_base_raw_logging_internal",
+    ":absl_base_config",
     ":absl_random_internal_platform",
     ":absl_random_internal_randen_hwaes",
+    ":absl_random_internal_randen_hwaes_impl",
     ":absl_random_internal_randen_slow",
   ]
 }
@@ -2344,15 +2342,11 @@ source_set("absl_random_internal_randen_hwaes") {
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
   sources = [ "src/absl/random/internal/randen_detect.cc" ]
-  public = [
-    "src/absl/random/internal/randen_detect.h",
-    "src/absl/random/internal/randen_hwaes.h",
-  ]
+  public = [ "src/absl/random/internal/randen_detect.h" ]
   visibility = [ ":*" ]
   deps = [
     ":absl_base_config",
     ":absl_random_internal_platform",
-    ":absl_random_internal_randen_hwaes_impl",
   ]
 }
 
@@ -2360,14 +2354,11 @@ source_set("absl_random_internal_randen_hwaes_impl") {
   public_configs = [ ":absl_include_config" ]
   configs -= [ "//build/config/compiler:simple_text_code" ]
   configs += [ "//build/config/compiler:no_simple_text_code" ]
-  sources = [
-    "src/absl/random/internal/randen_hwaes.cc",
-    "src/absl/random/internal/randen_hwaes.h",
-  ]
+  sources = [ "src/absl/random/internal/randen_hwaes.cc" ]
+  public = [ "src/absl/random/internal/randen_hwaes.h" ]
   visibility = [ ":*" ]
   deps = [
     ":absl_base_config",
-    ":absl_base_core_headers",
     ":absl_numeric_int128",
     ":absl_random_internal_platform",
   ]
@@ -3042,7 +3033,6 @@ source_set("absl_strings_strings") {
     "src/absl/strings/internal/damerau_levenshtein_distance.cc",
     "src/absl/strings/internal/memutil.cc",
     "src/absl/strings/internal/memutil.h",
-    "src/absl/strings/internal/stl_type_traits.h",
     "src/absl/strings/internal/str_join_internal.h",
     "src/absl/strings/internal/str_split_internal.h",
     "src/absl/strings/internal/stringify_sink.cc",
@@ -3102,6 +3092,7 @@ source_set("absl_synchronization_graphcycles_internal") {
   public = [ "src/absl/synchronization/internal/graphcycles.h" ]
   visibility = [ ":*" ]
   deps = [
+    ":absl_algorithm_container",
     ":absl_base_base",
     ":absl_base_base_internal",
     ":absl_base_config",
@@ -3119,9 +3110,7 @@ source_set("absl_synchronization_kernel_timeout_internal") {
   public = [ "src/absl/synchronization/internal/kernel_timeout.h" ]
   visibility = [ ":*" ]
   deps = [
-    ":absl_base_base",
     ":absl_base_config",
-    ":absl_base_core_headers",
     ":absl_base_raw_logging_internal",
     ":absl_time_time",
   ]
@@ -3318,21 +3307,6 @@ source_set("absl_types_any_span") {
     ":absl_base_throw_delegate",
     ":absl_meta_type_traits",
   ]
-}
-
-source_set("absl_types_bad_any_cast") {
-  public_configs = [ ":absl_include_config" ]
-  visibility = [ ":*" ]
-}
-
-source_set("absl_types_bad_optional_access") {
-  public_configs = [ ":absl_include_config" ]
-  visibility = [ ":*" ]
-}
-
-source_set("absl_types_bad_variant_access") {
-  public_configs = [ ":absl_include_config" ]
-  visibility = [ ":*" ]
 }
 
 source_set("absl_types_compare") {

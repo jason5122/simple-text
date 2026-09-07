@@ -1,5 +1,5 @@
 #include "font/font_rasterizer.h"
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include "gui/renderer/renderer.h"
 #include "gui/renderer/texture_renderer.h"
 #include <algorithm>

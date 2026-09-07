@@ -2,7 +2,7 @@
 
 #include "gfx/device.h"
 #include "gfx/frame.h"
-#include "gl/gl.h"
+#include "gl/opengl.h"
 #include <cstdint>
 #include <memory>
 #include <span>

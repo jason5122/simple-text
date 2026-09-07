@@ -1,12 +1,16 @@
 // Platform-specific access to the GL entry points a drawing layer needs.
 //
 // macOS: the CAOpenGLLayer's context is 4.1 core, so the SDK's gl3.h symbols are linkable
-// directly.
+// directly. ST does the same -- its macOS binary leaves 73 gl* entry points undefined against
+// OpenGL.framework, from glClear all the way up to glTexStorage2D, and resolves none of them by
+// hand.
 //
 // Windows: opengl32.dll exports only GL 1.1, and everything newer has to come through
-// wglGetProcAddress. ST does exactly this -- its import table lists 23 GL 1.1 entry points
-// (glDrawArrays, glTexImage2D, glScissor, glViewport, glFlush, ...) and the binary carries the
-// strings "OPENGL32.dll" and "wglGetProcAddress" for the rest.
+// wglGetProcAddress. ST does exactly this. Its OPENGL32.dll import table holds 23 symbols -- 19 GL
+// 1.1 entry points (glDrawArrays, glTexImage2D, glScissor, glViewport, glFlush, ...) plus
+// wglCreateContext, wglDeleteContext, wglMakeCurrent and wglShareLists -- which is precisely what
+// including <GL/gl.h> and linking opengl32.lib produces, so this file does that too. The other 53
+// entry points ST uses are resolved at runtime; see win/px_gl.cc.
 //
 // px_gl_has_shaders() reports whether the modern pipeline actually resolved. It can be false on a
 // machine whose GL is a software rasterizer stuck at 1.1, which is a real possibility inside a VM,
@@ -26,126 +30,28 @@ inline bool px_gl_has_shaders() { return true; }
 
 #include <windows.h>
 
-// The Windows SDK's <GL/gl.h> is deliberately not included: this repository has its own GL/gl.h at
-// its root, and the root is on the include path, so the angle-bracket include resolves to the
-// wrong header. Declaring the GL 1.1 surface directly keeps this file self-contained and
-// unambiguous. opengl32.lib supplies the symbols.
+#include <GL/gl.h>
 
-using GLenum = unsigned int;
-using GLboolean = unsigned char;
-using GLbitfield = unsigned int;
-using GLbyte = signed char;
-using GLshort = short;
-using GLint = int;
-using GLsizei = int;
-using GLubyte = unsigned char;
-using GLushort = unsigned short;
-using GLuint = unsigned int;
-using GLfloat = float;
-using GLclampf = float;
-using GLdouble = double;
-using GLvoid = void;
+// Types and constants GL 1.1 predates, so <GL/gl.h> does not carry them.
 using GLchar = char;
 using GLsizeiptr = signed long long;
 using GLintptr = signed long long;
 
-#define GL_FALSE 0
-#define GL_TRUE 1
-#define GL_TRIANGLES 0x0004
-#define GL_TRIANGLE_STRIP 0x0005
-#define GL_ONE 1
-#define GL_EQUAL 0x0202
-#define GL_ALWAYS 0x0207
-#define GL_KEEP 0x1E00
-#define GL_REPLACE 0x1E01
-#define GL_DEPTH_TEST 0x0B71
-#define GL_BLEND 0x0BE2
-#define GL_SCISSOR_TEST 0x0C11
-#define GL_STENCIL_TEST 0x0B90
-#define GL_SRC1_COLOR 0x88F9
-#define GL_ONE_MINUS_SRC1_COLOR 0x88FA
-#define GL_ONE_MINUS_SRC1_ALPHA 0x88FB
-#define GL_FLOAT 0x1406
-#define GL_UNSIGNED_BYTE 0x1401
-#define GL_VERSION 0x1F02
-#define GL_FRONT 0x0404
-#define GL_PACK_ALIGNMENT 0x0D05
-#define GL_UNPACK_ALIGNMENT 0x0CF5
-#define GL_BGRA 0x80E1
-#define GL_NO_ERROR 0
-#define GL_TEXTURE_2D 0x0DE1
-#define GL_TEXTURE1 0x84C1
-#define GL_TEXTURE_WRAP_S 0x2802
-#define GL_TEXTURE_WRAP_T 0x2803
-#define GL_TEXTURE_MIN_FILTER 0x2801
-#define GL_TEXTURE_MAG_FILTER 0x2800
 #define GL_CLAMP_TO_EDGE 0x812F
-#define GL_NEAREST 0x2600
-#define GL_STENCIL_BUFFER_BIT 0x00000400
-#define GL_COLOR_BUFFER_BIT 0x00004000
-#define GL_ONE_MINUS_SRC_ALPHA 0x0303
-
-// GL 1.1, linked directly.
-extern "C" {
-__declspec(dllimport) void APIENTRY glClear(GLbitfield mask);
-__declspec(dllimport) void APIENTRY glClearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a);
-__declspec(dllimport) void APIENTRY glClearStencil(GLint value);
-__declspec(dllimport) void APIENTRY glBlendFunc(GLenum source, GLenum destination);
-__declspec(dllimport) void APIENTRY glColorMask(GLboolean r,
-                                                GLboolean g,
-                                                GLboolean b,
-                                                GLboolean a);
-__declspec(dllimport) void APIENTRY glDisable(GLenum cap);
-__declspec(dllimport) void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count);
-__declspec(dllimport) void APIENTRY glEnable(GLenum cap);
-__declspec(dllimport) void APIENTRY glFinish(void);
-__declspec(dllimport) void APIENTRY glFlush(void);
-__declspec(dllimport) void APIENTRY glGenTextures(GLsizei count, GLuint* textures);
-__declspec(dllimport) void APIENTRY glBindTexture(GLenum target, GLuint texture);
-__declspec(dllimport) const GLubyte* APIENTRY glGetString(GLenum name);
-__declspec(dllimport) GLenum APIENTRY glGetError(void);
-__declspec(dllimport) void APIENTRY glGetIntegerv(GLenum name, GLint* value);
-__declspec(dllimport) void APIENTRY glPixelStorei(GLenum name, GLint value);
-__declspec(dllimport) void APIENTRY glReadBuffer(GLenum buffer);
-__declspec(dllimport) void APIENTRY glReadPixels(
-    GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels);
-__declspec(dllimport) void APIENTRY glScissor(GLint x, GLint y, GLsizei w, GLsizei h);
-__declspec(dllimport) void APIENTRY glStencilFunc(GLenum function, GLint reference, GLuint mask);
-__declspec(dllimport) void APIENTRY glStencilMask(GLuint mask);
-__declspec(dllimport) void APIENTRY glStencilOp(GLenum fail, GLenum depth_fail, GLenum depth_pass);
-__declspec(dllimport) void APIENTRY glTexImage2D(GLenum target,
-                                                 GLint level,
-                                                 GLint internal_format,
-                                                 GLsizei width,
-                                                 GLsizei height,
-                                                 GLint border,
-                                                 GLenum format,
-                                                 GLenum type,
-                                                 const void* pixels);
-__declspec(dllimport) void APIENTRY glTexParameteri(GLenum target, GLenum name, GLint value);
-__declspec(dllimport) void APIENTRY glTexSubImage2D(GLenum target,
-                                                    GLint level,
-                                                    GLint x,
-                                                    GLint y,
-                                                    GLsizei width,
-                                                    GLsizei height,
-                                                    GLenum format,
-                                                    GLenum type,
-                                                    const void* pixels);
-__declspec(dllimport) void APIENTRY glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
-}
-
-// Constants GL 1.1 predates.
+#define GL_BGRA 0x80E1
+#define GL_TEXTURE0 0x84C0
+#define GL_TEXTURE1 0x84C1
+#define GL_ARRAY_BUFFER 0x8892
+#define GL_STREAM_DRAW 0x88E0
 #define GL_FRAGMENT_SHADER 0x8B30
 #define GL_VERTEX_SHADER 0x8B31
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
-#define GL_ARRAY_BUFFER 0x8892
-#define GL_STREAM_DRAW 0x88E0
-#define GL_TEXTURE0 0x84C0
+#define GL_SRC1_COLOR 0x88F9
+#define GL_ONE_MINUS_SRC1_COLOR 0x88FA
+#define GL_ONE_MINUS_SRC1_ALPHA 0x88FB
 #define GL_TEXTURE_BUFFER 0x8C2A
 #define GL_RGBA32F 0x8814
-#define GL_RGBA8 0x8058
 
 // Resolved by the platform layer once the GL context is current. Named px_gl* and then macro'd
 // onto the standard spellings, so drawing code reads the same on both platforms.
@@ -389,13 +295,8 @@ void glCopyTexSubImage2D(GLenum target,
 void glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
 void glPixelStorei(GLenum pname, GLint param);
 void glReadBuffer(GLenum source);
-void glReadPixels(GLint x,
-                  GLint y,
-                  GLsizei width,
-                  GLsizei height,
-                  GLenum format,
-                  GLenum type,
-                  void* pixels);
+void glReadPixels(
+    GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels);
 GLuint glCreateShader(GLenum);
 void glShaderSource(GLuint, GLsizei, const GLchar* const*, const GLint*);
 void glCompileShader(GLuint);
@@ -440,6 +341,4 @@ void glRenderbufferStorage(GLenum, GLenum, GLsizei, GLsizei);
 
 inline bool px_gl_has_shaders() { return true; }
 
-#else
-#error "px_gl.h has no backend for this platform"
 #endif

@@ -22,5 +22,5 @@ exec prlctl exec "$vm" env \
   CAPTURE_TESTS="$capture_tests" \
   CAPTURE_OUTPUT="$capture_output" \
   LINUX_CAPTURE_BACKEND="${LINUX_CAPTURE_BACKEND:-auto}" \
-  LINUX_CAPTURE_LOGICAL_TOP_INSET="${LINUX_CAPTURE_LOGICAL_TOP_INSET:-47}" \
+  LINUX_CAPTURE_LOGICAL_TOP_INSET="${LINUX_CAPTURE_LOGICAL_TOP_INSET:-37}" \
   bash "$linux_share/capture-sublime.sh" "$@"

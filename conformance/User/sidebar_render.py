@@ -6,12 +6,32 @@ import sublime_plugin
 
 _THEME_NAME = "Sidebar Rasterizer.sublime-theme"
 _EMPTY_FOLDER_NAME = "sidebar-rasterizer-empty"
+_READY_DELAY_MS = 100
+
+
+def _write_ready(ready_path, ready_token):
+    ready_directory = os.path.dirname(ready_path)
+    if ready_directory:
+        os.makedirs(ready_directory, exist_ok=True)
+    temporary_path = f"{ready_path}.tmp"
+    with open(temporary_path, "w", encoding="utf-8") as ready_file:
+        ready_file.write(str(ready_token))
+    os.replace(temporary_path, ready_path)
 
 
 class SidebarRenderCommand(sublime_plugin.WindowCommand):
-    def run(self, text_path, face, size):
+    def run(self, text_path, face, size, ready_path=None, ready_token=None):
         user_package_path = os.path.join(sublime.packages_path(), "User")
         empty_folder_root = os.path.join(user_package_path, _EMPTY_FOLDER_NAME)
+        # Sublime's Windows and Linux theme sizes are points, while the renderer API takes
+        # logical pixels. Convert at 96 DPI so both sides exercise the same requested size.
+        # Windows quantizes theme sizes to whole points before creating the font.
+        if sublime.platform() == "osx":
+            theme_size = float(size)
+        elif sublime.platform() == "windows":
+            theme_size = round(float(size) * (4.0 / 3.0))
+        else:
+            theme_size = float(size) * (4.0 / 3.0)
         with open(text_path, encoding="utf-8") as text_file:
             labels = text_file.read().splitlines()
         folder_paths = [os.path.join(empty_folder_root, str(i)) for i in range(len(labels))]
@@ -29,13 +49,13 @@ class SidebarRenderCommand(sublime_plugin.WindowCommand):
                 {
                     "class": "sidebar_label",
                     "font.face": face,
-                    "font.size": float(size),
+                    "font.size": theme_size,
                     "color": [0, 0, 0],
                 },
                 {
                     "class": "sidebar_heading",
                     "font.face": face,
-                    "font.size": float(size),
+                    "font.size": theme_size,
                     "font.bold": False,
                     "color": [0, 0, 0],
                 },
@@ -59,3 +79,11 @@ class SidebarRenderCommand(sublime_plugin.WindowCommand):
             }
         )
         self.window.set_sidebar_visible(True, animate=False)
+        if ready_path is not None:
+            # Theme resources reload asynchronously after the preference changes. Delay the
+            # acknowledgement to a later UI turn, then let the native capturer perform its own
+            # pixel-settle check before saving the image.
+            sublime.set_timeout(
+                lambda: _write_ready(ready_path, ready_token),
+                _READY_DELAY_MS,
+            )

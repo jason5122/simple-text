@@ -4,7 +4,6 @@
 // of px_render_context operations followed by a backend synchronization. There is no synthetic
 // input, display cadence, screen recording, or pixel tracking in the measurement.
 
-#include "build/build_config.h"
 #include "px/px.h"
 #include "px/px_gl.h"
 #include "ui/retained_text.h"
@@ -372,12 +371,6 @@ int main(int argc, char** argv) {
         usage(argv[0]);
         return 2;
     }
-
-#if BUILDFLAG(IS_WIN)
-    _putenv_s("PX_NO_ANIMATION", "1");
-#else
-    setenv("PX_NO_ANIMATION", "1", 1);
-#endif
 
     std::setvbuf(stdout, nullptr, _IONBF, 0);
     px_init("render-benchmark", "com.example.render-benchmark", argc, argv, 0);

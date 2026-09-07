@@ -29,14 +29,19 @@ source_set("px") {
       "mac/px_gl_layer.mm",
       "mac/px_keycode.mm",
       "mac/px_mac_private.h",
+      "mac/px_metal_layer.mm",
       "mac/px_window.mm",
+      "metal_render_context.h",
+      "metal_render_context.mm",
     ]
+    inputs += [ "metal_shaders.metal" ]
 
     frameworks = [
       "AppKit.framework",
       "CoreGraphics.framework",
       "CoreVideo.framework",
       "Foundation.framework",
+      "Metal.framework",
       "OpenGL.framework",
       "QuartzCore.framework",
     ]

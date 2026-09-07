@@ -30,7 +30,7 @@ stems=()
 commands=()
 read_config() { grep -vE '^[[:space:]]*(#|$)' "$1" | sed -E 's/^[[:space:]]*//; s/[[:space:]]*$//'; }
 faces=()
-while IFS= read -r line; do faces+=("$line"); done < <(read_config "$tests/faces.txt")
+while IFS= read -r line; do faces+=("$line"); done < <(read_config "$tests/faces-mac.txt")
 sizes=()
 while IFS= read -r line; do sizes+=("$line"); done < <(read_config "$tests/sizes.txt")
 text_paths=("$tests"/texts/*.txt)

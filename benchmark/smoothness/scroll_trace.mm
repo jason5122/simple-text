@@ -337,9 +337,9 @@ int replay_trace(const char* path, pid_t pid) {
     const uint64_t lead_time = nanoseconds_to_ticks(2'000'000'000ULL, timebase);
     const uint64_t start = mach_absolute_time() + lead_time;
     std::fprintf(stderr,
-                 "scroll_trace: point at the target window; replaying %zu samples to pid %d in 2 "
-                 "seconds\n",
-                 samples.size(), pid);
+                 "scroll_trace: put the pointer over the window of pid %d and leave it there; "
+                 "replaying %zu samples in 2 seconds\n",
+                 pid, samples.size());
 
     mach_wait_until(start);
     CGEventRef location_event = CGEventCreate(source);
@@ -366,7 +366,12 @@ int replay_trace(const char* path, pid_t pid) {
             std::fprintf(stderr, "scroll_trace: could not create a scroll event\n");
             return 3;
         }
-        CGEventPostToPid(pid, event);
+        // Posting to the HID tap rather than to `pid`. CGEventPostToPid hands the event straight to
+        // the process and skips the window server's hit testing, and AppKit only routes a scroll to
+        // -scrollWheel: off that hit test -- measured against this repo's editor, PostToPid
+        // delivered nothing at all while the same trace on the HID tap drove every frame. The cost
+        // is that replay is now genuinely global: whatever sits under the pointer receives it.
+        CGEventPost(kCGHIDEventTap, event);
         CFRelease(event);
     }
     CFRelease(source);

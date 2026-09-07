@@ -10,8 +10,6 @@
 //   * The pixel format request, read out of __TEXT,__const at 0x100509e44, is
 //     {kCGLPFAColorSize 24, kCGLPFAAlphaSize 8, kCGLPFAOpenGLProfile 0x4100 (4.1 Core),
 //      kCGLPFANoRecovery, kCGLPFAAllowOfflineRenderers, kCGLPFABackingStore, 0}.
-//     The persistent FBO below, rather than CA's rotating drawable, is what makes repainting only
-//     dirty rectangles deterministic.
 //
 //   * setAsynchronous:NO. Drawing is driven by setNeedsDisplayInRect: and the display link, not by
 //     Core Animation polling canDrawInCGLContext:.
@@ -19,16 +17,17 @@
 //   * Rendering goes into a layer-owned persistent FBO. Its RGBA8 color and 8-bit stencil
 //     renderbuffers grow with 30 pixels of slack, matching the binary. Dirty regions update that
 //     stable image, then the complete visible area is blitted into CA's current drawable.
+//
+// Known limitation of CAOpenGLLayer itself, reproduced with a bare layer and no px: when the
+// window grows quickly (tens of points per frame) the Core Animation commit occasionally blocks
+// the main thread for ~500 ms before drawInCGLContext: is called. CAMetalLayer does not, which is
+// why Metal is the default backing and this layer is opt-in with PX_GL=1.
 
 #include "px/gl_render_context.h"
 #include "px/mac/px_mac_private.h"
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/gl3.h>
 #include <algorithm>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <mach/mach_time.h>
 #include <mutex>
 #include <vector>
 
@@ -70,20 +69,12 @@ void ensure_shared_gl() {
     }
 
     // ST writes zero to kCGLCPSwapInterval immediately after creating the process-wide context
-    // (CGLSetParameter parameter 0xde). CAOpenGLLayer owns the actual presentation schedule;
-    // leaving drawable swaps themselves synchronized can build a short queue between our eager
-    // event-driven redraws and WindowServer.
+    // (CGLSetParameter parameter 0xde). The value turns out not to matter either way: setting it to
+    // 1 was measured to leave the redraw rate unchanged, because presentation goes through
+    // -[CAOpenGLLayer drawInCGLContext:] rather than a CGL drawable swap. Nothing reachable from
+    // CGL paces this renderer against the display; only a display link can.
     const GLint swap_interval = 0;
     CGLSetParameter(g_context, kCGLCPSwapInterval, &swap_interval);
-}
-
-double trace_quantile(const double* values, int count, double q) {
-    std::vector<double> sorted(values, values + count);
-    std::sort(sorted.begin(), sorted.end());
-    const double index = q * static_cast<double>(count - 1);
-    const int lo = static_cast<int>(std::floor(index));
-    const int hi = static_cast<int>(std::ceil(index));
-    return sorted[lo] * (1.0 - (index - lo)) + sorted[hi] * (index - lo);
 }
 
 }  // namespace
@@ -99,21 +90,7 @@ double trace_quantile(const double* values, int count, double q) {
     GLuint _stencilRenderbuffer;
     GLsizei _backingWidth;
     GLsizei _backingHeight;
-    bool _traceEnabled;
-    bool _finishAfterPresent;
-    int _maxFramesInFlight;
-    int _presentationFenceIndex;
-    GLsync _presentationFences[3];
-    bool _tracePrintedTimestamp;
-    uint64_t _traceLastMotionSerial;
-    int _traceCount;
-    int _traceTargetCount;
-    int _traceBatchSize;
-    double _traceEventToDraw[512];
-    double _traceDrawToTarget[512];
-    double _traceEventToTarget[512];
-    double _traceDrawToReturn[512];
-    double _traceEventToReturn[512];
+    GLsync _presentationFence;
 }
 - (instancetype)initWithPXW:(px_window_t*)pxw;
 - (void)addDirtyRect:(rect)r;
@@ -130,25 +107,7 @@ double trace_quantile(const double* values, int count, double q) {
         _stencilRenderbuffer = 0;
         _backingWidth = 0;
         _backingHeight = 0;
-        _traceEnabled = getenv("PX_LAG_TRACE") != nullptr;
-        _finishAfterPresent = getenv("PX_GL_FINISH_AFTER_PRESENT") != nullptr;
-        // Keep one submitted frame outstanding. This gives the CPU and GPU useful overlap without
-        // allowing a trivial renderer to run far ahead of WindowServer. ST gets equivalent
-        // back-pressure from repeatedly updating its small ring of dynamic GL buffers.
-        _maxFramesInFlight = 1;
-        if (const char* requested = getenv("PX_GL_MAX_FRAMES_IN_FLIGHT")) {
-            _maxFramesInFlight = std::clamp(std::atoi(requested), 0, 3);
-        }
-        _presentationFenceIndex = 0;
-        std::fill(std::begin(_presentationFences), std::end(_presentationFences), nullptr);
-        _tracePrintedTimestamp = false;
-        _traceLastMotionSerial = 0;
-        _traceCount = 0;
-        _traceTargetCount = 0;
-        _traceBatchSize = 512;
-        if (const char* requested = getenv("PX_LAG_TRACE_SAMPLES")) {
-            _traceBatchSize = std::clamp(std::atoi(requested), 1, 512);
-        }
+        _presentationFence = nullptr;
         // -[OpenGLLayer initWithPXW:] seeds the list with a full-size rect so the first frame is a
         // complete repaint.
         _dirty.push_back(rect{0.0, 0.0, px_window_size(pxw).x, px_window_size(pxw).y});
@@ -162,20 +121,12 @@ double trace_quantile(const double* values, int count, double q) {
 }
 
 - (void)dealloc {
-    const bool hasPresentationFence =
-        std::any_of(std::begin(_presentationFences), std::end(_presentationFences),
-                    [](GLsync fence) { return fence != nullptr; });
     if (g_context &&
-        (_framebuffer || _colorRenderbuffer || _stencilRenderbuffer || hasPresentationFence)) {
+        (_framebuffer || _colorRenderbuffer || _stencilRenderbuffer || _presentationFence)) {
         CGLContextObj previous = CGLGetCurrentContext();
         CGLLockContext(g_context);
         CGLSetCurrentContext(g_context);
-        for (GLsync& fence : _presentationFences) {
-            if (fence) {
-                glDeleteSync(fence);
-                fence = nullptr;
-            }
-        }
+        if (_presentationFence) glDeleteSync(_presentationFence);
         if (_stencilRenderbuffer) glDeleteRenderbuffers(1, &_stencilRenderbuffer);
         if (_colorRenderbuffer) glDeleteRenderbuffers(1, &_colorRenderbuffer);
         if (_framebuffer) glDeleteFramebuffers(1, &_framebuffer);
@@ -213,29 +164,6 @@ double trace_quantile(const double* values, int count, double q) {
     const double scale = px_window_dpi_scale_factor(_pxw);
     self.contentsScale = scale;
 
-    bool addedTraceSample = false;
-    int traceSampleIndex = 0;
-    double traceEventTime = 0.0;
-    double traceDrawTime = 0.0;
-    if (_traceEnabled) {
-        const uint64_t motionSerial = _pxw->motion_serial.load(std::memory_order_acquire);
-        if (motionSerial != 0 && motionSerial != _traceLastMotionSerial) {
-            _traceLastMotionSerial = motionSerial;
-            traceEventTime = _pxw->last_motion_event_time.load(std::memory_order_relaxed);
-            traceDrawTime = px_mac_host_time_seconds(mach_absolute_time());
-            traceSampleIndex = _traceCount;
-            _traceEventToDraw[traceSampleIndex] = (traceDrawTime - traceEventTime) * 1000.0;
-            if (ts && (ts->flags & kCVTimeStampHostTimeValid)) {
-                const double targetTime = px_mac_host_time_seconds(ts->hostTime);
-                _traceDrawToTarget[_traceTargetCount] = (targetTime - traceDrawTime) * 1000.0;
-                _traceEventToTarget[_traceTargetCount] = (targetTime - traceEventTime) * 1000.0;
-                ++_traceTargetCount;
-            }
-            ++_traceCount;
-            addedTraceSample = true;
-        }
-    }
-
     const vec2 size = px_window_size(_pxw);
     const vec2 device{size.x * scale, size.y * scale};
     const GLsizei width = static_cast<GLsizei>(device.x);
@@ -244,25 +172,19 @@ double trace_quantile(const double* values, int count, double q) {
         return;
     }
 
-    // ST's renderer alternates between two VBOs for each dynamic primitive stream and updates them
-    // with glBufferSubData. Reusing a still-busy buffer supplies implicit driver back-pressure.
-    // The opt-in fence ring models that resource-hazard limit for this glClear-only latency
-    // benchmark, which otherwise has no reusable GPU resource capable of bounding frames in
-    // flight.
-    if (_maxFramesInFlight != 0) {
-        GLsync& fence = _presentationFences[_presentationFenceIndex];
-        if (fence) {
-            for (;;) {
-                const GLenum result =
-                    glClientWaitSync(fence, GL_SYNC_FLUSH_COMMANDS_BIT, 1'000'000'000ULL);
-                if (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED ||
-                    result == GL_WAIT_FAILED) {
-                    break;
-                }
+    // One submitted frame outstanding. ST gets equivalent back-pressure from reusing its small
+    // ring of dynamic GL buffers; a fence models that limit for scenes too light to hit it.
+    if (_presentationFence) {
+        for (;;) {
+            const GLenum result =
+                glClientWaitSync(_presentationFence, GL_SYNC_FLUSH_COMMANDS_BIT, 1'000'000'000ULL);
+            if (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED ||
+                result == GL_WAIT_FAILED) {
+                break;
             }
-            glDeleteSync(fence);
-            fence = nullptr;
         }
+        glDeleteSync(_presentationFence);
+        _presentationFence = nullptr;
     }
 
     std::vector<rect> dirty;
@@ -270,6 +192,12 @@ double trace_quantile(const double* values, int count, double q) {
         const std::lock_guard lock(_dirtyMutex);
         dirty.swap(_dirty);
     }
+    // AppKit displays the layer synchronously inside a window resize, after windowDidResize: has
+    // marked the window dirty but before the run-loop observer has handed those rectangles to the
+    // layer. Take them here: this frame draws them, and the later flush then finds nothing and
+    // schedules no second display of content already on screen.
+    dirty.insert(dirty.end(), _pxw->dirty.begin(), _pxw->dirty.end());
+    _pxw->dirty.clear();
     if (dirty.empty()) {
         dirty.push_back(rect{0.0, 0.0, size.x, size.y});
     }
@@ -299,7 +227,8 @@ double trace_quantile(const double* values, int count, double q) {
                                   _colorRenderbuffer);
 
         glBindRenderbuffer(GL_RENDERBUFFER, _stencilRenderbuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, _backingWidth, _backingHeight);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, _backingWidth,
+                              _backingHeight);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                                   _stencilRenderbuffer);
 
@@ -314,8 +243,7 @@ double trace_quantile(const double* values, int count, double q) {
         NSLog(@"px: persistent framebuffer is incomplete; drawing directly to CA drawable");
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, static_cast<GLuint>(destinationDrawFramebuffer));
         // A CA drawable is not our persistent backing store. Reconstruct it completely, and use
-        // only the coarse scissor path because the failed FBO is where the stencil attachment
-        // lived.
+        // only the coarse scissor path: the drawable has no stencil.
         dirty.clear();
         dirty.push_back(rect{0.0, 0.0, size.x, size.y});
     }
@@ -323,10 +251,13 @@ double trace_quantile(const double* values, int count, double q) {
     glViewport(0, 0, width, height);
     const rect windowBounds{0.0, 0.0, size.x, size.y};
     gl_render_context::normalize_dirty_rects(&dirty, windowBounds);
-    gl_render_context rc(device, scale, dirty.data(), static_cast<int>(dirty.size()),
-                         framebufferComplete);
-    _pxw->handler->paint(&rc, rc.paint_bounds(), dirty.data(), static_cast<int>(dirty.size()));
-    rc.finish();
+    {
+        gl_render_context rc(device, scale, dirty.data(), static_cast<int>(dirty.size()),
+                             framebufferComplete);
+        _pxw->handler->paint(&rc, rc.paint_bounds(), dirty.data(),
+                             static_cast<int>(dirty.size()));
+        rc.finish();
+    }
 
     if (framebufferComplete) {
         glDisable(GL_SCISSOR_TEST);
@@ -339,67 +270,11 @@ double trace_quantile(const double* values, int count, double q) {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, static_cast<GLuint>(destinationDrawFramebuffer));
 
     _pxw->did_first_paint = true;
-    _pxw->last_flush = px_now();
 
     // Flushes and swaps.
     [super drawInCGLContext:ctx pixelFormat:pf forLayerTime:t displayTime:ts];
 
-    // Diagnostic only. ST does not import glFinish, but serializing the submitted GL work lets the
-    // latency probe distinguish a GPU command/surface backlog from a later Core Animation or
-    // WindowServer delay. Keep this opt-in: forcing completion normally sacrifices throughput.
-    if (_finishAfterPresent) {
-        glFinish();
-    }
-    if (_maxFramesInFlight != 0) {
-        _presentationFences[_presentationFenceIndex] =
-            glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-        _presentationFenceIndex = (_presentationFenceIndex + 1) % _maxFramesInFlight;
-    }
-
-    if (addedTraceSample) {
-        const double returnTime = px_mac_host_time_seconds(mach_absolute_time());
-        _traceDrawToReturn[traceSampleIndex] = (returnTime - traceDrawTime) * 1000.0;
-        _traceEventToReturn[traceSampleIndex] = (returnTime - traceEventTime) * 1000.0;
-    }
-
-    if (_traceEnabled && !_tracePrintedTimestamp) {
-        _tracePrintedTimestamp = true;
-        std::fprintf(
-            stderr,
-            "LAG timestamp flags=%#llx host=%llu video=%lld scale=%d rate=%.3f layer=%.6f\n",
-            ts ? static_cast<unsigned long long>(ts->flags) : 0,
-            ts ? static_cast<unsigned long long>(ts->hostTime) : 0,
-            ts ? static_cast<long long>(ts->videoTime) : 0,
-            ts ? static_cast<int>(ts->videoTimeScale) : 0, ts ? ts->rateScalar : 0.0, t);
-    }
-
-    // One terminal write per trace batch, after submission, keeps tracing out of the
-    // latency-critical path. PX_LAG_TRACE is intentionally opt-in; PX_LAG_TRACE_SAMPLES shortens
-    // controlled probes.
-    if (addedTraceSample && _traceCount == _traceBatchSize) {
-        std::fprintf(stderr, "LAG n=%d event->draw p50=%.3f p90=%.3f ms", _traceBatchSize,
-                     trace_quantile(_traceEventToDraw, _traceCount, 0.5),
-                     trace_quantile(_traceEventToDraw, _traceCount, 0.9));
-        std::fprintf(stderr,
-                     "; draw->return p50=%.3f p90=%.3f; event->return p50=%.3f p90=%.3f ms",
-                     trace_quantile(_traceDrawToReturn, _traceCount, 0.5),
-                     trace_quantile(_traceDrawToReturn, _traceCount, 0.9),
-                     trace_quantile(_traceEventToReturn, _traceCount, 0.5),
-                     trace_quantile(_traceEventToReturn, _traceCount, 0.9));
-        if (_traceTargetCount != 0) {
-            std::fprintf(stderr,
-                         "; target-n=%d draw->target p50=%.3f p90=%.3f; "
-                         "event->target p50=%.3f p90=%.3f ms",
-                         _traceTargetCount,
-                         trace_quantile(_traceDrawToTarget, _traceTargetCount, 0.5),
-                         trace_quantile(_traceDrawToTarget, _traceTargetCount, 0.9),
-                         trace_quantile(_traceEventToTarget, _traceTargetCount, 0.5),
-                         trace_quantile(_traceEventToTarget, _traceTargetCount, 0.9));
-        }
-        std::fputc('\n', stderr);
-        _traceCount = 0;
-        _traceTargetCount = 0;
-    }
+    _presentationFence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
 @end

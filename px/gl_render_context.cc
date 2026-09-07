@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+
 namespace {
 
 constexpr int kMaximumDirtyRects = 128;
@@ -246,6 +247,7 @@ struct glyph_program {
     GLint destination_uniform = -1;
     GLint texture_size_uniform = -1;
     GLint colored_uniform = -1;
+    GLint alternate_uniform = -1;
 };
 
 class gl_text_render_state {
@@ -385,7 +387,12 @@ public:
                 .effect_start = 0.0f,
                 .effect_end = 0.0f,
             };
-            add_to_groups(&groups, &atlas, placement->page, placement->colored, instance);
+            add_to_groups(&groups,
+                          {.atlas = &atlas,
+                           .page = placement->page,
+                           .colored = placement->colored,
+                           .alternate = alternate},
+                          instance);
         }
 
         if (batch_depth_ == 0) {
@@ -408,33 +415,39 @@ private:
         size_t active_page_count = 0;
     };
 
-    struct texture_batch_group {
+    // Everything that has to be identical for two glyphs to share one draw call: the atlas page to
+    // bind, plus the fragment shader's two modes. Polarity belongs here because a single text batch
+    // mixes light and dark tints, whose glyphs share an atlas page but need opposite shader
+    // handling.
+    struct batch_key {
         const atlas_set* atlas = nullptr;
         int page = -1;
         bool colored = false;
+        bool alternate = false;
+
+        bool operator==(const batch_key&) const = default;
+    };
+
+    struct texture_batch_group {
+        batch_key key;
         std::vector<glyph_instance_data> instances;
     };
 
     static void add_to_groups(std::vector<texture_batch_group>* groups,
-                              const atlas_set* atlas,
-                              int page,
-                              bool colored,
+                              const batch_key& key,
                               glyph_instance_data instance) {
 #if BUILDFLAG(IS_LINUX)
         // Linux's GL 4.0 compatibility compositor copies and draws each glyph in submission order.
-        if (groups->empty() || groups->back().atlas != atlas || groups->back().page != page ||
-            groups->back().colored != colored) {
-            groups->push_back({.atlas = atlas, .page = page, .colored = colored});
+        if (groups->empty() || groups->back().key != key) {
+            groups->push_back({.key = key});
         }
         groups->back().instances.push_back(instance);
 #else
-        auto found = std::find_if(groups->begin(), groups->end(),
-                                  [atlas, page, colored](const texture_batch_group& group) {
-                                      return group.atlas == atlas && group.page == page &&
-                                             group.colored == colored;
-                                  });
+        auto found = std::find_if(
+            groups->begin(), groups->end(),
+            [&key](const texture_batch_group& group) { return group.key == key; });
         if (found == groups->end()) {
-            groups->push_back({.atlas = atlas, .page = page, .colored = colored});
+            groups->push_back({.key = key});
             found = std::prev(groups->end());
         }
         found->instances.push_back(instance);
@@ -461,7 +474,7 @@ private:
         }
         first = 0;
         for (const texture_batch_group& group : groups) {
-            draw_instances(first, group.instances, group.atlas, group.page, group.colored);
+            draw_instances(first, group.instances, group.key);
             first += group.instances.size();
         }
         end_render();
@@ -524,19 +537,20 @@ private:
 
     void draw_instances(size_t first,
                         const std::vector<glyph_instance_data>& instances,
-                        const atlas_set* atlas,
-                        int page,
-                        bool colored) {
+                        const batch_key& key) {
         const size_t count = instances.size();
         if (count == 0) {
             return;
         }
+        const atlas_set* atlas = key.atlas;
+        const int page = key.page;
         if (!atlas || page < 0 || static_cast<size_t>(page) >= atlas->active_page_count) return;
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, atlas->pages[static_cast<size_t>(page)].texture);
         glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first));
         glUniform1f(program_.texture_size_uniform, static_cast<float>(atlas->size));
-        glUniform1i(program_.colored_uniform, colored ? 1 : 0);
+        glUniform1i(program_.colored_uniform, key.colored ? 1 : 0);
+        glUniform1i(program_.alternate_uniform, key.alternate ? 1 : 0);
 #if BUILDFLAG(IS_LINUX)
         // Fixed-function RGBA8 blending cannot express Sublime's Linux byte-rounding rules. Copy
         // each destination glyph rectangle on the GPU, then let the fragment shader perform the
@@ -567,7 +581,7 @@ private:
         }
         glEnable(GL_BLEND);
 #else
-        if (colored) {
+        if (key.colored) {
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         } else {
             glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
@@ -648,6 +662,7 @@ private:
         program_.destination_uniform = glGetUniformLocation(program_.id, "destination");
         program_.texture_size_uniform = glGetUniformLocation(program_.id, "texture_size");
         program_.colored_uniform = glGetUniformLocation(program_.id, "colored");
+        program_.alternate_uniform = glGetUniformLocation(program_.id, "alternate");
         glGenVertexArrays(1, &vao_);
         glGenBuffers(2, instance_buffers_);
         glGenTextures(2, instance_textures_);

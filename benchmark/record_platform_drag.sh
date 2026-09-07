@@ -55,8 +55,7 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-PX_LAG_TRACE=1 PX_LAG_TRACE_SAMPLES=512 \
-  "$benchmark" >"$log" 2>&1 &
+"$benchmark" >"$log" 2>&1 &
 benchmark_pid=$!
 
 # Wait for px_show_window() and the geometry print. This also leaves enough time for the first

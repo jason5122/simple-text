@@ -419,6 +419,7 @@ int main(int argc, char** argv) {
     window.set_input_client(&root);
 
     window.show();
+    px_set_animating(window.px_window(), true);
     const vec2 origin = px_window_position(window.px_window());
     const vec2 size = px_window_size(window.px_window());
     std::printf("capture_rect=%.0f,%.0f,%.0f,%.0f\n", origin.x, origin.y, size.x, size.y);

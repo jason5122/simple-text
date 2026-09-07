@@ -1,0 +1,7 @@
+# UI-focused families installed in the Windows conformance VM.
+system
+Georgia
+Times New Roman
+Segoe UI
+Consolas
+Segoe UI Emoji

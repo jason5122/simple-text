@@ -748,7 +748,7 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     window->background = background;
     // Sublime's Linux renderer defaults to its software backing store. Hardware acceleration is
     // opt-in on this platform; keeping the GL path available is useful for parity experiments.
-    window->use_gl = g_getenv("PX_USE_GL") != nullptr && g_getenv("PX_NO_GL") == nullptr;
+    window->use_gl = g_getenv("PX_USE_GL") != nullptr && g_getenv("PX_SKIA") == nullptr;
 
     window->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window->window), title ? title : "");
@@ -809,7 +809,6 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     g_signal_connect(window->area, "leave-notify-event", G_CALLBACK(on_leave_notify_event),
                      window);
     g_signal_connect(window->area, "scroll-event", G_CALLBACK(on_scroll_event), window);
-    gtk_widget_add_tick_callback(window->area, on_tick, window, nullptr);
 
     // Manual target list rather than gtk_drag_dest_add_text_targets: only "text/uri-list" is
     // wanted (file drops), which is the one URI-specific target ST's confirmed symbol set does not
@@ -939,6 +938,19 @@ void px_set_window_maximized(px_window_t* window, bool maximized) {
 }
 
 double px_window_dpi_scale_factor(px_window_t* window) { return window ? window->dpi_scale : 1.0; }
+
+void px_set_animating(px_window_t* window, bool animating) {
+    if (!window || !window->area) {
+        return;
+    }
+    if (animating && window->tick_callback_id == 0) {
+        window->tick_callback_id =
+            gtk_widget_add_tick_callback(window->area, on_tick, window, nullptr);
+    } else if (!animating && window->tick_callback_id != 0) {
+        gtk_widget_remove_tick_callback(window->area, window->tick_callback_id);
+        window->tick_callback_id = 0;
+    }
+}
 
 void px_set_full_screen(px_window_t* window, bool full_screen) {
     if (!window || !window->window) {

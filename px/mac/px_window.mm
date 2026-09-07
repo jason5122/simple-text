@@ -14,8 +14,13 @@
 //
 //   * send_event's post-condition, decoded at 0x1002c3008: after dispatching, if the window has
 //     painted at least once (+0x38 == 1) and the event tag is >= 2 -- i.e. not a key or character
-//     event -- and enough wall time has passed, it calls pre_paint() and flush_dirty_rects().
-//     Then dispatch_post_event_callbacks() runs unconditionally.
+//     event -- and at least 1/60 s has passed since the last flush, ST calls pre_paint() and
+//     flush_dirty_rects(). Then dispatch_post_event_callbacks() runs unconditionally.
+//
+//     This reimplementation deliberately drops that eager, throttled flush. The
+//     kCFRunLoopBeforeWaiting observer below flushes every turn anyway, and the layers take the
+//     window's pending rectangles at display time, so the eager path never changed how many
+//     frames were drawn; it only moved the hand-off earlier within the same turn.
 
 #include "px/mac/px_mac_private.h"
 #include "px/skia_render_context.h"
@@ -34,10 +39,6 @@
 @end
 
 namespace {
-
-// Exact f64 loaded by ST's send_event tail. This is only the eager event-path flush; the
-// kCFRunLoopBeforeWaiting observer below is the reliable end-of-turn submission point.
-constexpr double kMinEventFlushInterval = 1.0 / 60.0;
 
 std::vector<std::function<void()>>& post_event_callbacks() {
     static std::vector<std::function<void()>> callbacks;
@@ -154,7 +155,14 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
     if (self) {
         _pxw = pxw;
         self.wantsLayer = YES;
-        self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawDuringViewResize;
+        // No layerContentsRedrawPolicy: ST sets none, and the backing layer's own
+        // needsDisplayOnBoundsChange already redraws on resize.
+        //
+        // When a resize frame is late, the compositor shows the previous frame's surface in the
+        // new bounds. With the default placement it is stretched, so every late frame wobbles the
+        // whole window; anchored top-left the text stays put and only the far edges are momentarily
+        // stale. simple_text does this; ST does not.
+        self.layerContentsPlacement = NSViewLayerContentsPlacementTopLeft;
     }
     return self;
 }
@@ -182,7 +190,15 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (CALayer*)makeBackingLayer {
-    // The branch -[PXView makeBackingLayer] makes on pxw->use_gl (+0x570).
+    // The branch -[PXView makeBackingLayer] makes on pxw->use_gl (+0x570). Metal is our own
+    // addition and falls back to GL when no device exists.
+    if (_pxw && _pxw->use_metal) {
+        if (CALayer* layer = px_mac_make_metal_layer(_pxw)) {
+            return layer;
+        }
+        _pxw->use_metal = false;
+        _pxw->use_gl = true;
+    }
     if (_pxw && _pxw->use_gl) {
         return px_mac_make_gl_layer(_pxw);
     }
@@ -191,6 +207,11 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 
 - (void)drawRect:(NSRect)dirtyRect {
     if (!_pxw || !_pxw->handler) {
+        return;
+    }
+    if (_pxw->use_gl || _pxw->use_metal) {
+        // The backing layer draws itself; this would paint the software path through Core
+        // Graphics over it. Never observed to be called in that mode, but harmless to guard.
         return;
     }
 
@@ -307,7 +328,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
     CGColorSpaceRelease(color_space);
 
     _pxw->did_first_paint = true;
-    _pxw->last_flush = px_now();
 }
 
 // ── tracking ────────────────────────────────────────────────────────────────────────────────────
@@ -361,8 +381,6 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
     e.type = PX_EVENT_MOUSE_MOTION;
     e.pos = [self pxPointFor:event];
     e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
-    _pxw->last_motion_event_time.store(event.timestamp, std::memory_order_relaxed);
-    _pxw->motion_serial.fetch_add(1, std::memory_order_release);
     px_mac_send_event(_pxw, &e);
 }
 
@@ -757,16 +775,8 @@ void px_mac_send_event(px_window_t* window, px_event_t* event) {
     event->window = window;
     window->handler->handle_event(event);
 
-    // send_event's tail. Key (0) and character (1) events skip the repaint flush; everything from
-    // mouse button (2) upward can trigger one, rate-limited.
-    if (window->did_first_paint && event->type >= PX_EVENT_MOUSE_BUTTON) {
-        const double now = px_now();
-        if (now - window->last_flush > kMinEventFlushInterval) {
-            window->handler->pre_paint();
-            px_mac_flush_dirty_rects(window);
-        }
-    }
-
+    // Repaints are flushed once per run-loop turn by the kCFRunLoopBeforeWaiting observer, not
+    // here; see the header comment.
     px_mac_dispatch_post_event_callbacks();
 }
 
@@ -774,14 +784,14 @@ void px_mac_flush_dirty_rects(px_window_t* window) {
     if (!window || window->dirty.empty()) {
         return;
     }
-
     for (const rect& r : window->dirty) {
-        if (window->use_gl) {
+        if (window->use_gl || window->use_metal) {
             CALayer* layer = window->view.layer;
-            // CAOpenGLLayer does not clip to the invalidated sub-rect, so this only marks the
-            // layer as needing display; the authoritative region list is the one handed to paint()
-            // below.
+            // Neither CAOpenGLLayer nor CAMetalLayer clips to the invalidated sub-rect, so this
+            // only marks the layer as needing display; the authoritative region list is the one
+            // handed to paint() below.
             px_mac_gl_layer_add_dirty(layer, r);
+            px_mac_metal_layer_add_dirty(layer, r);
             [layer setNeedsDisplayInRect:px_mac_ns_from_rect(r)];
         } else {
             [window->view setNeedsDisplayInRect:px_mac_ns_from_rect(r)];
@@ -917,7 +927,13 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     px_window_t* pxw = new px_window_t();
     pxw->handler = handler ? handler : &dummy_handler();
     pxw->background = background;
-    pxw->use_gl = getenv("PX_NO_GL") == nullptr && !(flags & PX_WINDOW_SOFTWARE);
+    // Metal by default: CAOpenGLLayer occasionally blocks the main thread for ~500 ms during fast
+    // resizes and CAMetalLayer never does (see px_gl_layer.mm). PX_GL=1 selects ST's OpenGL
+    // layer, PX_SKIA=1 the Skia software path. makeBackingLayer falls back to GL if there is no
+    // Metal device.
+    const bool software = getenv("PX_SKIA") != nullptr || (flags & PX_WINDOW_SOFTWARE) != 0;
+    pxw->use_gl = !software && getenv("PX_GL") != nullptr;
+    pxw->use_metal = !software && !pxw->use_gl;
 
     NSWindowStyleMask mask = 0;
     if (flags & PX_WINDOW_TITLED) mask |= NSWindowStyleMaskTitled;
@@ -956,20 +972,6 @@ px_window_t* px_create_window(px_window_event_handler* handler,
 
     [pxw->window center];
 
-    // One CVDisplayLink per window, retargeted whenever the window changes screen. The explicit
-    // opt-out makes the event-driven experiment genuine. PX_NO_ANIMATION is accepted as a
-    // compatibility alias for the demo's existing A/B command line. PX_KEEP_DISPLAY_LINK lets the
-    // latency probe isolate display-link participation while leaving the demo animation disabled.
-    const bool keep_display_link = getenv("PX_KEEP_DISPLAY_LINK") != nullptr;
-    const bool disable_display_link = getenv("PX_NO_DISPLAY_LINK") != nullptr ||
-                                      (getenv("PX_NO_ANIMATION") != nullptr && !keep_display_link);
-    if (!disable_display_link &&
-        CVDisplayLinkCreateWithActiveCGDisplays(&pxw->display_link) == kCVReturnSuccess) {
-        CVDisplayLinkSetOutputCallback(pxw->display_link, &display_link_callback, pxw);
-        px_mac_update_display_link(pxw);
-        CVDisplayLinkStart(pxw->display_link);
-    }
-
     all_windows().push_back(pxw);
     return pxw;
 }
@@ -999,6 +1001,12 @@ void px_destroy_window(px_window_t* window) {
 void px_show_window(px_window_t* window) {
     if (!window) {
         return;
+    }
+
+    // Direct-to-display scanout is gated on the window owning the whole display, so comparing
+    // windowed against full-screen presentation needs to be a one-variable change.
+    if (getenv("PX_FULLSCREEN") != nullptr) {
+        px_set_full_screen(window, true);
     }
 
     // makeKeyAndOrderFront: only orders within this application; it does not reliably take focus
@@ -1101,6 +1109,25 @@ double px_window_dpi_scale_factor(px_window_t* window) {
     }
     const CGFloat scale = window->window.backingScaleFactor;
     return scale > 0.0 ? scale : 1.0;
+}
+
+// One CVDisplayLink per window while animating, retargeted whenever the window changes screen.
+void px_set_animating(px_window_t* window, bool animating) {
+    if (!window) {
+        return;
+    }
+    if (animating && !window->display_link) {
+        if (CVDisplayLinkCreateWithActiveCGDisplays(&window->display_link) == kCVReturnSuccess) {
+            CVDisplayLinkSetOutputCallback(window->display_link, &display_link_callback, window);
+            px_mac_update_display_link(window);
+            CVDisplayLinkStart(window->display_link);
+        }
+    } else if (!animating && window->display_link) {
+        // A tick already hopped to the main queue still runs once; the callback tolerates that.
+        CVDisplayLinkStop(window->display_link);
+        CVDisplayLinkRelease(window->display_link);
+        window->display_link = nullptr;
+    }
 }
 
 void px_set_full_screen(px_window_t* window, bool full_screen) {

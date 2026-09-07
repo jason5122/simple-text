@@ -1,0 +1,7 @@
+# UI-focused families installed in the Fedora conformance VM.
+system
+Liberation Serif
+Noto Sans
+Noto Naskh Arabic
+Source Code Pro
+Noto Color Emoji

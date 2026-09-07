@@ -127,6 +127,7 @@ int main(int argc, char** argv) {
     demo.set_fonts(px_create_font("Menlo", 24.0f), px_create_font("Menlo", 14.0f));
 
     px_show_window(window);
+    px_set_animating(window, true);
     px_run_event_loop();
     px_destroy_window(window);
     return 0;

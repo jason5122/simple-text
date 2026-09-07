@@ -291,9 +291,6 @@ public:
     void set_control(DemoControl* c) { control_ = c; }
 
     void animation_tick(double now) override {
-        if (getenv("PX_NO_ANIMATION")) {
-            return;
-        }
         if (!control_) {
             return;
         }
@@ -335,6 +332,10 @@ int main(int argc, char** argv) {
     win.set_input_client(&root);
 
     win.show();
+    // PX_NO_ANIMATION=1 keeps this demo event driven, for A/B against the animated default.
+    if (getenv("PX_NO_ANIMATION") == nullptr) {
+        px_set_animating(win.px_window(), true);
+    }
     px_run_event_loop();
     return 0;
 }

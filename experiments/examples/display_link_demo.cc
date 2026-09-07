@@ -1,9 +1,15 @@
+// editor.cc, but redrawn from the platform display clock instead of only on input. The window
+// asks for the display link with px_set_animating and every tick marks it dirty, so this draws
+// continuously whether or not anything changed. The HUD reports tick rate against
+// actual draw rate, which is where overproduction shows up.
+
 #include "px/px.h"
 #include "ui/retained_text.h"
 #include "ui/window.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <format>
 #include <memory>
 #include <print>
 #include <string>
@@ -38,29 +44,11 @@ constexpr double kScrollbarMargin = 4.0;
 constexpr double kMinimumThumbHeight = 36.0;
 constexpr size_t kDocumentLineCount = 500;
 
-// The find panel along the bottom, after Sublime's: a close mark, four option toggles, the query
-// field with its match count, and the three action buttons hugging the right edge. Cmd+F shows
-// it, Escape hides it. The document area ends where the panel begins.
-constexpr double kFindPanelHeight = 40.0;
-constexpr double kFindPanelPadding = 8.0;
-constexpr double kFindItemHeight = 24.0;
-constexpr double kFindItemGap = 6.0;
-constexpr double kFindToggleWidth = 28.0;
-constexpr double kFindButtonPadding = 12.0;
-constexpr double kFindTextInset = 7.0;
-
-constexpr fcolor kFindPanelBackground{0.925f, 0.930f, 0.940f, 1.0f};
-constexpr fcolor kFindPanelBorder{0.80f, 0.81f, 0.83f, 1.0f};
-constexpr fcolor kFindInputBackground{1.0f, 1.0f, 1.0f, 1.0f};
-constexpr fcolor kFindInputBorder{0.35f, 0.58f, 0.92f, 1.0f};
-constexpr fcolor kFindButtonBackground{0.985f, 0.985f, 0.99f, 1.0f};
-constexpr fcolor kFindButtonBorder{0.76f, 0.77f, 0.80f, 1.0f};
-constexpr fcolor kFindToggleOnBackground{0.80f, 0.86f, 0.96f, 1.0f};
-constexpr fcolor kFindLabelColor{0.22f, 0.23f, 0.26f, 1.0f};
-constexpr fcolor kFindMutedColor{0.50f, 0.52f, 0.56f, 1.0f};
-
-constexpr std::array<std::string_view, 4> kFindToggleLabels = {".*", "Aa", "ab", "↩"};
-constexpr std::array<std::string_view, 3> kFindButtonLabels = {"Find", "Find Prev", "Find All"};
+constexpr double kRateWindowSeconds = 0.5;
+constexpr double kHudPadding = 8.0;
+constexpr double kSweepHeight = 3.0;
+constexpr double kSweepWidth = 80.0;
+constexpr double kSweepPeriodSeconds = 2.0;
 
 struct SidebarLine {
     std::string_view text;
@@ -239,26 +227,19 @@ public:
                   px_font_t* body_font,
                   px_font_t* sidebar_title_font,
                   px_font_t* sidebar_font,
-                  px_font_t* gutter_font)
+                  px_font_t* gutter_font,
+                  px_font_t* hud_font)
         : window_(window),
           body_font_(body_font),
           sidebar_title_font_(sidebar_title_font),
           sidebar_font_(sidebar_font),
           gutter_font_(gutter_font),
+          hud_font_(hud_font),
           line_height_(px_font_get_metrics(body_font).line_height),
-          body_metrics_(px_font_get_metrics(body_font)),
           sidebar_title_metrics_(px_font_get_metrics(sidebar_title_font)),
-          sidebar_metrics_(px_font_get_metrics(sidebar_font)) {
-        std::println("sidebar title line height: {}", sidebar_title_metrics_.line_height);
+          sidebar_metrics_(px_font_get_metrics(sidebar_font)),
+          hud_metrics_(px_font_get_metrics(hud_font)) {
         grapheme_shaper* body_shaper = grapheme_shaper::instance(body_font_);
-        grapheme_shaper* ui_shaper = grapheme_shaper::instance(sidebar_font_);
-        find_close_layout_ = prepare_retained_text(ui_shaper, "×");
-        for (size_t i = 0; i < kFindToggleLabels.size(); ++i) {
-            find_toggle_layouts_[i] = prepare_retained_text(ui_shaper, kFindToggleLabels[i]);
-        }
-        for (size_t i = 0; i < kFindButtonLabels.size(); ++i) {
-            find_button_layouts_[i] = prepare_retained_text(ui_shaper, kFindButtonLabels[i]);
-        }
         for (size_t i = 0; i < kSourceLines.size(); ++i) {
             highlighted_lines_[i] = highlight_line(body_shaper, kSourceLines[i]);
         }
@@ -274,46 +255,24 @@ public:
         }
     }
 
+    // One display-link tick. `now` is the frame's target presentation time.
+    void note_tick(double now) {
+        tick_time_ = now;
+        ++ticks_;
+        update_rates(now);
+    }
+
     bool handle_event(const px_event_t* event) override {
         switch (event->type) {
         case PX_EVENT_KEY:
             if (event->pressed && event->key == PX_KEY_ESCAPE) {
-                if (find_panel_visible_) {
-                    find_panel_visible_ = false;
-                    window_->mark_dirty();
-                } else {
-                    window_->close();
-                }
+                window_->close();
                 return true;
             }
             if (event->pressed && event->key == static_cast<px_key>('0') &&
                 (event->modifiers & ~PX_MOD_CAPS_LOCK) == PX_MOD_SUPER) {
                 sidebar_visible_ = !sidebar_visible_;
                 window_->mark_dirty();
-                return true;
-            }
-            if (event->pressed && event->key == static_cast<px_key>('f') &&
-                (event->modifiers & ~PX_MOD_CAPS_LOCK) == PX_MOD_SUPER) {
-                find_panel_visible_ = true;
-                window_->mark_dirty();
-                return true;
-            }
-            if (event->pressed && event->key == PX_KEY_BACKSPACE && find_panel_visible_ &&
-                !find_query_.empty()) {
-                // Drop one UTF-8 codepoint: continuation bytes first, then the lead byte.
-                while (!find_query_.empty() &&
-                       (static_cast<unsigned char>(find_query_.back()) & 0xC0) == 0x80) {
-                    find_query_.pop_back();
-                }
-                find_query_.pop_back();
-                set_find_query(find_query_);
-                return true;
-            }
-            break;
-        case PX_EVENT_CHARACTER:
-            if (find_panel_visible_ && event->text[0] != '\0' &&
-                (event->modifiers & (PX_MOD_SUPER | PX_MOD_CONTROL)) == 0) {
-                set_find_query(find_query_ + event->text);
                 return true;
             }
             break;
@@ -332,9 +291,6 @@ public:
                     return true;
                 }
                 break;
-            }
-            if (find_panel_visible_ && click_find_panel(event->pos)) {
-                return true;
             }
             if (point_in_rect(event->pos, scrollbar_track())) {
                 const rect thumb = scrollbar_thumb();
@@ -372,6 +328,7 @@ public:
               rect bounds,
               const rect* dirty,
               int dirty_count) override {
+        ++draws_;
         const double sidebar_width = sidebar_visible_ ? kSidebarWidth : 0.0;
         context->begin_rect_batch();
         context->draw_rect(bounds, fcolor{1.0f, 1.0f, 1.0f, 1.0f});
@@ -408,8 +365,7 @@ public:
         }
 
         context->push_state(false);
-        context->restrict_clip_rect(
-            rect{sidebar_width, 0.0, bounds.w - sidebar_width, content_bottom()});
+        context->restrict_clip_rect(rect{sidebar_width, 0.0, bounds.w - sidebar_width, bounds.h});
         const int first_line = std::max(
             0, static_cast<int>(std::floor((scroll_offset_ - kTextTop) / line_height_)) - 1);
         const int last_line = std::min(
@@ -433,168 +389,56 @@ public:
 
         const rect track = scrollbar_track();
         const rect thumb = scrollbar_thumb();
+        const rect hud = hud_bounds(bounds);
         context->begin_rect_batch();
         context->draw_rect(track, fcolor{0.965f, 0.965f, 0.965f, 1.0f});
         context->draw_rect(thumb, dragging_scrollbar_ ? fcolor{0.55f, 0.56f, 0.58f, 1.0f}
                                                       : fcolor{0.70f, 0.71f, 0.73f, 1.0f});
+        context->draw_rect(sweep_bounds(bounds), fcolor{0.20f, 0.55f, 0.90f, 1.0f});
+        context->draw_rect(hud, fcolor{0.13f, 0.14f, 0.16f, 1.0f});
         context->end_rect_batch();
 
-        if (find_panel_visible_) {
-            draw_find_panel(context);
+        if (!rate_layout_.batches.empty()) {
+            context->begin_text_batch();
+            draw_layout(context, hud_font_,
+                        vec2{hud.x + kHudPadding, hud.y + kHudPadding + hud_metrics_.ascent},
+                        fcolor{0.92f, 0.93f, 0.95f, 1.0f}, &rate_layout_);
+            context->end_text_batch();
         }
     }
 
 private:
-    struct FindPanelLayout {
-        rect panel;
-        rect close;
-        std::array<rect, kFindToggleLabels.size()> toggles;
-        rect input;
-        std::array<rect, kFindButtonLabels.size()> buttons;
-    };
-
-    // Where the document ends: the top of the find panel when it is showing.
-    double content_bottom() const {
-        return window_->size().y - (find_panel_visible_ ? kFindPanelHeight : 0.0);
+    // Rates over a sliding window rather than per frame, so the readout stays legible. Ticks and
+    // draws diverge when the renderer outruns or misses the display clock.
+    void update_rates(double now) {
+        if (rate_window_start_ == 0.0) {
+            rate_window_start_ = now;
+            return;
+        }
+        const double elapsed = now - rate_window_start_;
+        if (elapsed < kRateWindowSeconds) {
+            return;
+        }
+        rate_layout_ = prepare_retained_text(
+            grapheme_shaper::instance(hud_font_),
+            std::format("tick {:6.1f} Hz   draw {:6.1f} Hz", ticks_ / elapsed, draws_ / elapsed));
+        rate_window_start_ = now;
+        ticks_ = 0;
+        draws_ = 0;
     }
 
-    FindPanelLayout find_panel_layout() const {
-        const vec2 size = window_->size();
-        FindPanelLayout layout;
-        layout.panel = rect{0.0, size.y - kFindPanelHeight, size.x, kFindPanelHeight};
-        const double y = layout.panel.y + (kFindPanelHeight - kFindItemHeight) * 0.5;
-
-        double x = kFindPanelPadding;
-        layout.close = rect{x, y, kFindItemHeight, kFindItemHeight};
-        x += kFindItemHeight + kFindItemGap;
-        for (rect& toggle : layout.toggles) {
-            toggle = rect{x, y, kFindToggleWidth, kFindItemHeight};
-            x += kFindToggleWidth + kFindItemGap;
-        }
-
-        // The buttons hug the right edge but read left to right.
-        double right = size.x - kFindPanelPadding;
-        for (size_t i = layout.buttons.size(); i-- > 0;) {
-            const double w = find_button_layouts_[i].advance + 2.0 * kFindButtonPadding;
-            layout.buttons[i] = rect{right - w, y, w, kFindItemHeight};
-            right -= w + kFindItemGap;
-        }
-
-        layout.input = rect{x, y, std::max(0.0, right - x), kFindItemHeight};
-        return layout;
+    rect hud_bounds(rect bounds) const {
+        const double w = rate_layout_.advance + kHudPadding * 2.0;
+        const double h = hud_metrics_.line_height + kHudPadding * 2.0;
+        return rect{bounds.w - kScrollbarMargin - kScrollbarWidth - kHudPadding - w,
+                    kScrollbarTop + kHudPadding, w, h};
     }
 
-    bool click_find_panel(vec2 pos) {
-        const FindPanelLayout layout = find_panel_layout();
-        if (!point_in_rect(pos, layout.panel)) {
-            return false;
-        }
-        if (point_in_rect(pos, layout.close)) {
-            find_panel_visible_ = false;
-        }
-        for (size_t i = 0; i < layout.toggles.size(); ++i) {
-            if (point_in_rect(pos, layout.toggles[i])) {
-                find_toggle_on_[i] = !find_toggle_on_[i];
-            }
-        }
-        // The action buttons are visual only; a click on them just lands in the panel.
-        window_->mark_dirty();
-        return true;
-    }
-
-    void set_find_query(std::string query) {
-        find_query_ = std::move(query);
-        find_match_count_ = 0;
-        if (find_query_.empty()) {
-            find_query_layout_ = PreparedText{};
-            find_count_layout_ = PreparedText{};
-        } else {
-            find_query_layout_ =
-                prepare_retained_text(grapheme_shaper::instance(body_font_), find_query_);
-            // The document repeats kSourceLines, so count each source line once and weight it by
-            // how many document lines it stands for.
-            for (size_t i = 0; i < kSourceLines.size(); ++i) {
-                size_t per_line = 0;
-                for (size_t at = kSourceLines[i].find(find_query_); at != std::string_view::npos;
-                     at = kSourceLines[i].find(find_query_, at + find_query_.size())) {
-                    ++per_line;
-                }
-                const size_t repeats = kDocumentLineCount / kSourceLines.size() +
-                                       (i < kDocumentLineCount % kSourceLines.size() ? 1 : 0);
-                find_match_count_ += per_line * repeats;
-            }
-            find_count_layout_ = prepare_retained_text(
-                grapheme_shaper::instance(sidebar_font_),
-                std::to_string(find_match_count_) +
-                    (find_match_count_ == 1 ? " match" : " matches"));
-        }
-        window_->mark_dirty();
-    }
-
-    static void draw_box(px_render_context* context, rect box, fcolor fill, fcolor border) {
-        context->draw_rect(box, border);
-        context->draw_rect(rect{box.x + 1.0, box.y + 1.0, box.w - 2.0, box.h - 2.0}, fill);
-    }
-
-    // Centers a prepared label in a box.
-    static void draw_centered(px_render_context* context,
-                              px_font_t* font,
-                              const px_font_metrics& metrics,
-                              rect box,
-                              fcolor color,
-                              PreparedText* text) {
-        const double x = box.x + (box.w - text->advance) * 0.5;
-        const double baseline = box.y + (box.h - metrics.line_height) * 0.5 + metrics.ascent;
-        draw_layout(context, font, vec2{x, baseline}, color, text);
-    }
-
-    void draw_find_panel(px_render_context* context) {
-        const FindPanelLayout layout = find_panel_layout();
-
-        context->begin_rect_batch();
-        context->draw_rect(layout.panel, kFindPanelBackground);
-        context->draw_rect(rect{layout.panel.x, layout.panel.y, layout.panel.w, 1.0},
-                           kFindPanelBorder);
-        for (size_t i = 0; i < layout.toggles.size(); ++i) {
-            draw_box(context, layout.toggles[i],
-                     find_toggle_on_[i] ? kFindToggleOnBackground : kFindButtonBackground,
-                     kFindButtonBorder);
-        }
-        draw_box(context, layout.input, kFindInputBackground, kFindInputBorder);
-        for (const rect& button : layout.buttons) {
-            draw_box(context, button, kFindButtonBackground, kFindButtonBorder);
-        }
-        const double caret_x = layout.input.x + kFindTextInset + find_query_layout_.advance;
-        context->draw_rect(rect{caret_x, layout.input.y + 5.0, 1.0, kFindItemHeight - 10.0},
-                           kFindLabelColor);
-        context->end_rect_batch();
-
-        context->begin_text_batch();
-        draw_centered(context, sidebar_font_, sidebar_metrics_, layout.close, kFindMutedColor,
-                      &find_close_layout_);
-        for (size_t i = 0; i < layout.toggles.size(); ++i) {
-            draw_centered(context, sidebar_font_, sidebar_metrics_, layout.toggles[i],
-                          kFindLabelColor, &find_toggle_layouts_[i]);
-        }
-        for (size_t i = 0; i < layout.buttons.size(); ++i) {
-            draw_centered(context, sidebar_font_, sidebar_metrics_, layout.buttons[i],
-                          kFindLabelColor, &find_button_layouts_[i]);
-        }
-        if (!find_query_.empty()) {
-            const double baseline = layout.input.y +
-                                    (kFindItemHeight - body_metrics_.line_height) * 0.5 +
-                                    body_metrics_.ascent;
-            draw_layout(context, body_font_, vec2{layout.input.x + kFindTextInset, baseline},
-                        kFindLabelColor, &find_query_layout_);
-            const double count_baseline =
-                layout.input.y + (kFindItemHeight - sidebar_metrics_.line_height) * 0.5 +
-                sidebar_metrics_.ascent;
-            draw_layout(context, sidebar_font_,
-                        vec2{layout.input.right() - kFindTextInset - find_count_layout_.advance,
-                             count_baseline},
-                        kFindMutedColor, &find_count_layout_);
-        }
-        context->end_text_batch();
+    // Moves every tick, so a stalled or coalesced redraw is visible without reading the numbers.
+    rect sweep_bounds(rect bounds) const {
+        const double phase = std::fmod(tick_time_, kSweepPeriodSeconds) / kSweepPeriodSeconds;
+        const double travel = bounds.w + kSweepWidth;
+        return rect{phase * travel - kSweepWidth, 0.0, kSweepWidth, kSweepHeight};
     }
 
     double sidebar_row_height() const {
@@ -615,18 +459,18 @@ private:
     double document_height() const { return kTextTop + kDocumentLineCount * line_height_; }
 
     double maximum_scroll_offset() const {
-        return std::max(0.0, document_height() - content_bottom());
+        return std::max(0.0, document_height() - window_->size().y);
     }
 
     rect scrollbar_track() const {
         const vec2 size = window_->size();
         return rect{size.x - kScrollbarMargin - kScrollbarWidth, kScrollbarTop, kScrollbarWidth,
-                    std::max(0.0, content_bottom() - kScrollbarTop - kScrollbarMargin)};
+                    std::max(0.0, size.y - kScrollbarTop - kScrollbarMargin)};
     }
 
     rect scrollbar_thumb() const {
         const rect track = scrollbar_track();
-        const double viewport_height = content_bottom();
+        const double viewport_height = window_->size().y;
         const double thumb_height = std::min(
             track.h, std::max(kMinimumThumbHeight, track.h * viewport_height / document_height()));
         const double travel = track.h - thumb_height;
@@ -665,34 +509,51 @@ private:
     px_font_t* sidebar_title_font_ = nullptr;
     px_font_t* sidebar_font_ = nullptr;
     px_font_t* gutter_font_ = nullptr;
+    px_font_t* hud_font_ = nullptr;
     double line_height_ = 0.0;
-    px_font_metrics body_metrics_;
     px_font_metrics sidebar_title_metrics_;
     px_font_metrics sidebar_metrics_;
+    px_font_metrics hud_metrics_;
     double scroll_offset_ = 0.0;
     bool sidebar_visible_ = true;
-    bool find_panel_visible_ = true;
-    std::string find_query_;
-    size_t find_match_count_ = 0;
-    PreparedText find_query_layout_;
-    PreparedText find_count_layout_;
-    PreparedText find_close_layout_;
-    std::array<PreparedText, kFindToggleLabels.size()> find_toggle_layouts_;
-    std::array<bool, kFindToggleLabels.size()> find_toggle_on_{};
-    std::array<PreparedText, kFindButtonLabels.size()> find_button_layouts_;
     bool dragging_scrollbar_ = false;
     double scrollbar_drag_offset_ = 0.0;
+    double tick_time_ = 0.0;
+    double rate_window_start_ = 0.0;
+    int ticks_ = 0;
+    int draws_ = 0;
+    PreparedText rate_layout_;
     std::array<HighlightedLine, kSourceLines.size()> highlighted_lines_;
     std::vector<PreparedText> line_number_layouts_;
     std::array<PreparedText, kSidebarLines.size()> sidebar_layouts_;
 };
 
+// Routes the display-link tick into the control and requests a redraw unconditionally. ST keeps a
+// list of animating controls on window_impl and ticks those instead.
+class DisplayLinkWindow final : public window_impl {
+public:
+    using window_impl::window_impl;
+
+    void set_control(EditorControl* c) { control_ = c; }
+
+    void animation_tick(double now) override {
+        if (!control_) {
+            return;
+        }
+        control_->note_tick(now);
+        mark_dirty();
+    }
+
+private:
+    EditorControl* control_ = nullptr;
+};
+
 }  // namespace
 
 int main(int argc, char** argv) {
-    px_init("editor", "com.example.editor", argc, argv, 0);
+    px_init("display_link_demo", "com.example.display_link_demo", argc, argv, 0);
 
-    window_impl window(1000.0, 700.0, "editor", fcolor{1.0f, 1.0f, 1.0f, 1.0f});
+    DisplayLinkWindow window(1000.0, 700.0, "display link demo", fcolor{1.0f, 1.0f, 1.0f, 1.0f});
     window_basic_aspect basic(&window);
     window.add_window_aspect(&basic);
 
@@ -700,11 +561,14 @@ int main(int argc, char** argv) {
     px_font_t* sidebar_title_font = px_create_font("system", kSidebarTitleFontSize, PX_FONT_BOLD);
     px_font_t* sidebar_font = px_create_font("system", kSidebarFontSize);
     px_font_t* gutter_font = px_create_font("Source Code Pro", kMainFontSize);
-    EditorControl root(&window, body_font, sidebar_title_font, sidebar_font, gutter_font);
+    px_font_t* hud_font = px_create_font("Source Code Pro", kSidebarFontSize);
+    EditorControl root(&window, body_font, sidebar_title_font, sidebar_font, gutter_font, hud_font);
+    window.set_control(&root);
     window.set_root_control(&root);
 
     window.set_maximized(true);
     window.show();
+    px_set_animating(window.px_window(), true);
     px_run_event_loop();
     return 0;
 }

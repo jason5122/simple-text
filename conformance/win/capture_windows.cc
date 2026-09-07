@@ -20,8 +20,13 @@ using DwmGetDxSharedSurfaceFn = BOOL(WINAPI*)(HWND, HANDLE*, LUID*, ULONG*, ULON
 constexpr DWORD kFrameTimeoutMs = 3000;
 constexpr DWORD kFrameQuietMs = 100;
 constexpr DWORD kFramePollMs = 10;
-constexpr UINT kCaptureWidth = 1600;
-constexpr UINT kCaptureHeight = 600;
+
+struct Crop {
+    int x = 0;
+    int y = 0;
+    int width = 0;
+    int height = 0;
+};
 
 template <typename T>
 void release(T*& object) {
@@ -362,7 +367,7 @@ public:
         return false;
     }
 
-    bool save(HWND window, const wchar_t* output_path) {
+    bool save(HWND window, const wchar_t* output_path, Crop crop) {
         SurfaceInfo surface;
         if (!query(window, &surface, true)) return false;
         if (!ensure_device(surface.adapter_luid)) return false;
@@ -382,8 +387,24 @@ public:
             release(texture);
             return false;
         }
-        client_box.right = std::min(client_box.right, client_box.left + kCaptureWidth);
-        client_box.bottom = std::min(client_box.bottom, client_box.top + kCaptureHeight);
+
+        const int client_width = static_cast<int>(client_box.right - client_box.left);
+        const int client_height = static_cast<int>(client_box.bottom - client_box.top);
+        const int left = std::clamp(crop.x, 0, client_width);
+        const int top = std::clamp(crop.y, 0, client_height);
+        const int requested_width = crop.width > 0 ? crop.width : client_width - left;
+        const int requested_height = crop.height > 0 ? crop.height : client_height - top;
+        const int width = std::clamp(requested_width, 0, client_width - left);
+        const int height = std::clamp(requested_height, 0, client_height - top);
+        if (width == 0 || height == 0) {
+            std::fwprintf(stderr, L"The crop is outside the Sublime Text client area\n");
+            release(texture);
+            return false;
+        }
+        client_box.left += static_cast<UINT>(left);
+        client_box.top += static_cast<UINT>(top);
+        client_box.right = client_box.left + static_cast<UINT>(width);
+        client_box.bottom = client_box.top + static_cast<UINT>(height);
 
         const bool saved =
             save_bgra_png(output_path, desc, client_box, device_, context_, texture, wic_factory_);
@@ -652,33 +673,76 @@ bool find_subl_path(const WindowInfo& window, std::wstring* subl_path) {
     return true;
 }
 
+bool wait_for_ready(const std::wstring& ready_path,
+                    const std::wstring& ready_token,
+                    const std::wstring& subl_path,
+                    const std::wstring& command) {
+    const ULONGLONG started_at = GetTickCount64();
+    ULONGLONG last_launch_at = started_at;
+    while (GetTickCount64() - started_at < 2000) {
+        if (GetFileAttributesW(ready_path.c_str()) != INVALID_FILE_ATTRIBUTES) {
+            std::wstring contents;
+            if (read_utf8_file(ready_path, &contents) && contents == ready_token) return true;
+        }
+        const ULONGLONG now = GetTickCount64();
+        if (now - last_launch_at >= 500) {
+            if (!launch_sublime_command(subl_path, command)) return false;
+            last_launch_at = now;
+        }
+        Sleep(20);
+    }
+    std::fwprintf(stderr, L"Timed out waiting for sidebar theme token %ls\n", ready_token.c_str());
+    return false;
+}
+
 bool run_render_case(DwmCapture* capture,
                      const WindowInfo& window,
                      const std::wstring& subl_path,
+                     std::wstring_view command_name,
+                     bool ui_mode,
                      const std::wstring& input_path,
                      const std::wstring& face,
                      const std::wstring& size,
                      const std::wstring& output_path,
+                     Crop crop,
                      std::size_t current,
                      std::size_t total) {
     SurfaceInfo before;
     if (!capture->query(window.window, &before, true)) return false;
 
-    std::wstring command = L"rasterizer_render {\"text_path\":\"";
+    std::wstring command(command_name);
+    command += L" {\"text_path\":\"";
     command += json_escape(input_path);
     command += L"\",\"face\":\"";
     command += json_escape(face);
     command += L"\",\"size\":";
     command += size;
+    std::wstring ready_path;
+    std::wstring ready_token;
+    if (ui_mode) {
+        ready_path = output_path + L".ready";
+        ready_token = std::to_wstring(current);
+        DeleteFileW(ready_path.c_str());
+        command += L",\"ready_path\":\"";
+        command += json_escape(ready_path);
+        command += L"\",\"ready_token\":\"";
+        command += ready_token;
+        command += L"\"";
+    }
     command += L"}";
 
     if (!launch_sublime_command(subl_path, command)) return false;
-
+    if (ui_mode && !wait_for_ready(ready_path, ready_token, subl_path, command)) {
+        DeleteFileW(ready_path.c_str());
+        return false;
+    }
     if (!wait_for_settled_frame(capture, window.window, before.update_id)) {
+        if (ui_mode) DeleteFileW(ready_path.c_str());
         return false;
     }
 
-    const bool ok = capture->save(window.window, output_path.c_str());
+    const bool ok = capture->save(window.window, output_path.c_str(), crop);
+    if (ui_mode) DeleteFileW(ready_path.c_str());
     std::wprintf(L"[%zu/%zu] %ls%ls\n", current, total, output_path.c_str(),
                  ok ? L"" : L"  (FAILED)");
     return ok;
@@ -687,7 +751,9 @@ bool run_render_case(DwmCapture* capture,
 int run_tests(DwmCapture* capture,
               const WindowInfo& window,
               const std::wstring& test_directory,
-              const std::wstring& output_directory) {
+              const std::wstring& output_directory,
+              bool ui_mode,
+              Crop crop) {
     std::vector<std::wstring> faces;
     std::vector<std::wstring> sizes;
     std::vector<TextInput> texts;
@@ -710,8 +776,9 @@ int run_tests(DwmCapture* capture,
                 ++current;
                 const std::wstring label = text.stem + L"-" + face + L"-" + size;
                 const std::wstring output_path = join_path(output_directory, label + L".png");
-                if (!run_render_case(capture, window, subl_path, text.path, face, size,
-                                     output_path, current, total)) {
+                if (!run_render_case(capture, window, subl_path,
+                                     ui_mode ? L"sidebar_render" : L"rasterizer_render", ui_mode,
+                                     text.path, face, size, output_path, crop, current, total)) {
                     return 1;
                 }
             }
@@ -724,9 +791,32 @@ int run_tests(DwmCapture* capture,
 
 int wmain(int argc, wchar_t** argv) {
     std::setbuf(stdout, nullptr);
-    if (argc != 3) {
-        std::fwprintf(stderr, L"usage: capture_windows <tests_dir> <out_dir>\n");
+    if (argc < 3) {
+        std::fwprintf(stderr, L"usage: capture_windows <tests_dir> <out_dir> [--ui] "
+                              L"[--crop x,y,w,h]\n");
         return 2;
+    }
+    bool ui_mode = false;
+    bool has_crop = false;
+    Crop crop;
+    for (int i = 3; i < argc; ++i) {
+        if (std::wstring_view(argv[i]) == L"--ui") {
+            ui_mode = true;
+        } else if (std::wstring_view(argv[i]) == L"--crop" && i + 1 < argc) {
+            has_crop = std::swscanf(argv[++i], L"%d,%d,%d,%d", &crop.x, &crop.y, &crop.width,
+                                    &crop.height) == 4;
+            if (!has_crop || crop.x < 0 || crop.y < 0 || crop.width < 0 || crop.height < 0) {
+                std::fwprintf(stderr, L"invalid crop: %ls\n", argv[i]);
+                return 2;
+            }
+        } else {
+            std::fwprintf(stderr, L"unknown argument: %ls\n", argv[i]);
+            return 2;
+        }
+    }
+    if (!has_crop) {
+        crop.width = ui_mode ? 600 : 1600;
+        crop.height = ui_mode ? 500 : 600;
     }
     if (!SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
         print_last_error(L"SetThreadDpiAwarenessContext");
@@ -749,7 +839,7 @@ int wmain(int argc, wchar_t** argv) {
     {
         DwmCapture capture;
         if (capture.initialize()) {
-            result = run_tests(&capture, window, argv[1], argv[2]);
+            result = run_tests(&capture, window, argv[1], argv[2], ui_mode, crop);
         }
     }
     if (SUCCEEDED(com_result)) CoUninitialize();

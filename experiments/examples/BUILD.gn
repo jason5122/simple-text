@@ -3,10 +3,16 @@ group("examples") {
     ":control_char_demo",
     ":dark_mode_demo",
     ":demo",
+    ":display_link_demo",
     ":editor",
+    ":empty_scene",
     ":glow_demo",
+    ":resize_demo",
     ":skia_demo",
   ]
+  if (is_mac) {
+    deps += [ ":empty_window" ]
+  }
 }
 
 executable("demo") {
@@ -36,6 +42,15 @@ executable("glow_demo") {
   ]
 }
 
+executable("display_link_demo") {
+  sources = [ "display_link_demo.cc" ]
+  deps = [
+    "//px",
+    "//ui:retained_text",
+    "//ui:window",
+  ]
+}
+
 executable("editor") {
   sources = [ "editor.cc" ]
   deps = [
@@ -48,4 +63,30 @@ executable("editor") {
 executable("skia_demo") {
   sources = [ "skia_demo.cc" ]
   deps = [ "//px" ]
+}
+
+executable("resize_demo") {
+  sources = [ "resize_demo.cc" ]
+  deps = [
+    "//fx",
+    "//px",
+  ]
+}
+
+executable("empty_scene") {
+  sources = [ "empty_scene.cc" ]
+  deps = [ "//px" ]
+}
+
+if (is_mac) {
+  executable("empty_window") {
+    sources = [ "empty_window.mm" ]
+    frameworks = [
+      "AppKit.framework",
+      "Metal.framework",
+      "OpenGL.framework",
+      "QuartzCore.framework",
+    ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
+  }
 }

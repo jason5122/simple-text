@@ -1,6 +1,7 @@
 R"(
 uniform sampler2D atlas;
 uniform bool colored;
+uniform bool alternate;
 #if defined(PX_LINUX_EXACT_COMPOSITE)
 uniform sampler2D destination;
 #endif
@@ -12,6 +13,12 @@ layout(location = 0, index = 1) out vec4 frag_coverage;
 
 void main() {
     vec4 sample_color = texture(atlas, glyph_uv);
+    if (alternate && !colored) {
+        // The alternate cache stores monochrome glyphs at reversed polarity: black ink on an
+        // opaque white background. Recover coverage the same way the software compositor does
+        // (composite_glyph_scanline), leaving the rasterized alpha alone.
+        sample_color.rgb = vec3(1.0) - sample_color.rgb;
+    }
 #if defined(PX_LINUX_EXACT_COMPOSITE)
     uvec4 sample_bytes = uvec4(round(clamp(sample_color, 0.0, 1.0) * 255.0));
     uvec4 tint_bytes = uvec4(round(clamp(glyph_color, 0.0, 1.0) * 255.0));

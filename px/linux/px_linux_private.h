@@ -19,6 +19,7 @@
 struct px_window_t {
     GtkWidget* window = nullptr;  // GtkWindow, the toplevel.
     GtkWidget* area = nullptr;    // GtkDrawingArea, the whole content area.
+    guint tick_callback_id = 0;   // Non-zero while animating.
     GdkGLContext* gl_context = nullptr;
     GtkIMContext* im_context = nullptr;
 

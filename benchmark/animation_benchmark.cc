@@ -107,6 +107,7 @@ int main(int argc, char** argv) {
                                            kBackground, PX_WINDOW_DEFAULT);
     handler.attach(window);
     px_show_window(window);
+    px_set_animating(window, true);
     px_mark_dirty(window);
 
     const vec2 origin = px_window_position(window);

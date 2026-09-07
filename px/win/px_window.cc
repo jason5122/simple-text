@@ -854,8 +854,8 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     window->handler = handler ? handler : &dummy_handler();
     window->background = background;
 
-    wchar_t no_gl[8] = {};
-    window->use_gl = GetEnvironmentVariableW(L"PX_NO_GL", no_gl, 8) == 0;
+    wchar_t skia[8] = {};
+    window->use_gl = GetEnvironmentVariableW(L"PX_SKIA", skia, 8) == 0;
 
     DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     if (flags & PX_WINDOW_TITLED) style |= WS_CAPTION | WS_SYSMENU;
@@ -898,8 +898,18 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     }
 
     DragAcceptFiles(window->hwnd, TRUE);
-    SetTimer(window->hwnd, kAnimationTimerId, kAnimationIntervalMs, nullptr);
     return window;
+}
+
+void px_set_animating(px_window_t* window, bool animating) {
+    if (!window || !window->hwnd) {
+        return;
+    }
+    if (animating) {
+        SetTimer(window->hwnd, kAnimationTimerId, kAnimationIntervalMs, nullptr);
+    } else {
+        KillTimer(window->hwnd, kAnimationTimerId);
+    }
 }
 
 void px_destroy_window(px_window_t* window) {

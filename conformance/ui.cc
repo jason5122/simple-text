@@ -1,8 +1,13 @@
+#include "build/build_config.h"
 #include "conformance/capture.h"
 #include "px/gl_render_context.h"
 #include "px/px.h"
+#if BUILDFLAG(IS_MAC)
+#include "px/metal_render_context.h"
+#endif
 #include "ui/retained_text.h"
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -10,22 +15,36 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <unistd.h>
 #include <utility>
 #include <vector>
+
+#if BUILDFLAG(IS_WIN)
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace {
 
 constexpr double kWindowWidth = 300.0;
 constexpr double kWindowHeight = 290.0;
 // Align the borderless test window with Sublime's sidebar after the standard y=80 Retina crop.
+#if BUILDFLAG(IS_MAC)
 constexpr double kSidebarContentTop = 28.0;
+#else
+constexpr double kSidebarContentTop = 0.0;
+#endif
 constexpr double kSidebarTopPadding = 10.0;
+#if BUILDFLAG(IS_WIN)
+constexpr double kSidebarRowTopPadding = 2.0;
+constexpr double kSidebarRowBottomPadding = 2.0;
+#else
+constexpr double kSidebarRowTopPadding = 3.0;
+constexpr double kSidebarRowBottomPadding = 3.0;
+#endif
 constexpr double kSidebarLeftPadding = 16.0;
 constexpr double kSidebarIndentWidth = 12.0;
 constexpr double kSidebarIndentOffset = 5.0;
-constexpr double kSidebarRowTopPadding = 3.0;
-constexpr double kSidebarRowBottomPadding = 3.0;
 
 constexpr fcolor kSidebarBackground = {1.0f, 1.0f, 1.0f, 1.0f};
 constexpr fcolor kSidebarHeading = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -38,6 +57,14 @@ struct TestCase {
     float size = 0.0f;
     std::vector<std::string> labels;
 };
+
+#if BUILDFLAG(IS_WIN)
+constexpr std::string_view kFacesFilename = "faces-win.txt";
+#elif BUILDFLAG(IS_LINUX)
+constexpr std::string_view kFacesFilename = "faces-linux.txt";
+#else
+constexpr std::string_view kFacesFilename = "faces-mac.txt";
+#endif
 
 std::string read_file(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
@@ -90,7 +117,8 @@ std::vector<std::string> read_config(const std::string& path) {
 
 std::vector<TestCase> read_test_cases(const std::string& tests_dir) {
     std::vector<TestCase> result;
-    const std::vector<std::string> faces = read_config(tests_dir + "/faces.txt");
+    const std::vector<std::string> faces =
+        read_config(tests_dir + "/" + std::string(kFacesFilename));
     const std::vector<std::string> sizes = read_config(tests_dir + "/sizes.txt");
     std::error_code error;
     std::vector<std::filesystem::path> text_paths;
@@ -107,7 +135,7 @@ std::vector<TestCase> read_test_cases(const std::string& tests_dir) {
     for (const std::filesystem::path& text_path : text_paths) {
         const std::vector<std::string> labels = split_lines(read_file(text_path.string()));
         if (labels.empty()) {
-            std::fprintf(stderr, "empty UI test corpus: %s\n", text_path.c_str());
+            std::fprintf(stderr, "empty UI test corpus: %s\n", text_path.string().c_str());
             return {};
         }
         for (const std::string& face : faces) {
@@ -163,26 +191,53 @@ public:
         }
 
         context->begin_text_batch();
-        draw_retained_text(context, font_, vec2{kSidebarLeftPadding, text_baseline(0)},
-                           kSidebarHeading, &heading_layout_);
+        draw_row(context, bounds, 0, kSidebarLeftPadding, kSidebarHeading, &heading_layout_);
         for (size_t i = 0; i < label_layouts_.size(); ++i) {
-            draw_retained_text(
-                context, font_,
-                vec2{kSidebarLeftPadding + kSidebarIndentOffset + kSidebarIndentWidth,
-                     text_baseline(i + 1)},
-                kSidebarLabel, &label_layouts_[i]);
+            draw_row(context, bounds, i + 1,
+                     kSidebarLeftPadding + kSidebarIndentOffset + kSidebarIndentWidth,
+                     kSidebarLabel, &label_layouts_[i]);
         }
         context->end_text_batch();
     }
 
 private:
+    void draw_row(px_render_context* context,
+                  rect bounds,
+                  size_t index,
+                  double x,
+                  fcolor color,
+                  retained_text* layout) const {
+#if BUILDFLAG(IS_LINUX)
+        context->push_state(true);
+        context->restrict_clip_rect(rect{x, row_top(index) + kSidebarRowTopPadding,
+                                         std::max(0.0, bounds.right() - x), metrics_.line_height});
+#endif
+        draw_retained_text(context, font_, vec2{x, text_baseline(index)}, color, layout);
+#if BUILDFLAG(IS_LINUX)
+        context->pop_state();
+#endif
+    }
+
     double row_height() const {
         return kSidebarRowTopPadding + metrics_.line_height + kSidebarRowBottomPadding;
     }
 
+    double row_top(size_t index) const {
+        return kSidebarContentTop + kSidebarTopPadding + index * row_height();
+    }
+
     double text_baseline(size_t index) const {
-        return kSidebarContentTop + kSidebarTopPadding + index * row_height() +
-               kSidebarRowTopPadding + metrics_.ascent;
+        return row_top(index) + kSidebarRowTopPadding + text_ascent();
+    }
+
+    double text_ascent() const {
+#if BUILDFLAG(IS_WIN)
+        // Match Sublime's DirectWrite baseline: snap the unrounded ascent after applying the 2x
+        // conformance-capture scale. The public ascent is rounded too early for half sizes.
+        return std::floor(metrics_.raster_ascent * 2.0 + 0.4999999999999998) / 2.0;
+#else
+        return metrics_.ascent;
+#endif
     }
 
     px_window_t* window_ = nullptr;
@@ -223,7 +278,12 @@ int run_tests(int argc, char* argv[]) {
     for (int i = 0; i < 8; ++i) {
         capture::pump(0.008);
     }
-    const capture::WindowId window_id = capture::find_window_for_pid(getpid());
+#if BUILDFLAG(IS_WIN)
+    const int process_id = _getpid();
+#else
+    const int process_id = getpid();
+#endif
+    const capture::WindowId window_id = capture::find_window_for_pid(process_id);
     if (!window_id) {
         std::fprintf(stderr, "could not find the UI conformance window\n");
         px_destroy_window(window);
@@ -235,6 +295,9 @@ int run_tests(int argc, char* argv[]) {
     for (size_t i = 0; i < test_cases.size(); ++i) {
         const TestCase& test_case = test_cases[i];
         gl_render_context::reset_glyph_atlas_for_testing();
+#if BUILDFLAG(IS_MAC)
+        metal_render_context::reset_glyph_atlas_for_testing();
+#endif
         if (!page.set_content(test_case.labels, test_case.face, test_case.size)) {
             std::fprintf(stderr, "could not create font %s\n", test_case.face.c_str());
             ++failures;

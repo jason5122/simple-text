@@ -239,8 +239,9 @@ inline bool px_set_event_text(px_event_t* event, const char* utf8, size_t length
 // RENDER CONTEXT
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // Handed to px_window_event_handler::paint. This is the backend-neutral 2D drawing interface; ST
-// has both gl_render_context and skia_render_context implementations. Text and solid rectangles
-// are implemented here; gradients, paths, textures and custom drawing remain outside this slice.
+// has both gl_render_context and skia_render_context implementations, and this reimplementation
+// adds metal_render_context on macOS. Text and solid rectangles are implemented here; gradients,
+// paths, textures and custom drawing remain outside this slice.
 class px_render_context {
 public:
     virtual ~px_render_context() = default;
@@ -443,8 +444,9 @@ enum : uint32_t {
     PX_FONT_ITALIC = 1u << 1,
 };
 
-// Set PX_NO_GL=1 in the environment to take the software path, mirroring the pxw->use_gl flag that
-// -[PXView makeBackingLayer] branches on.
+// Set PX_SKIA=1 in the environment to take the Skia software path, mirroring the pxw->use_gl flag
+// that -[PXView makeBackingLayer] branches on. On macOS the default backing is CAMetalLayer with
+// metal_render_context, which has no ST counterpart; PX_GL=1 selects ST's CAOpenGLLayer instead.
 void px_init(const char* app_name, const char* bundle_id, int argc, char** argv, uint32_t flags);
 void px_set_application_event_handler(px_application_event_handler* handler);
 void px_run_event_loop();
@@ -482,6 +484,11 @@ void px_set_window_position(px_window_t* window, vec2 position);
 void px_set_window_maximized(px_window_t* window, bool maximized);
 double px_window_dpi_scale_factor(px_window_t* window);
 void px_set_full_screen(px_window_t* window, bool full_screen);
+
+// Starts or stops the platform's display clock, which drives animation_tick. Off until asked, as
+// in ST, where the display link runs only while something is animating; an event-driven window
+// never pays for it.
+void px_set_animating(px_window_t* window, bool animating);
 
 // Accumulates into the window's dirty list. Flushed to setNeedsDisplayInRect: after the current
 // event settles, exactly as ST's flush_dirty_rects does.

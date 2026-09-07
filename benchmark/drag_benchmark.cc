@@ -4,10 +4,8 @@
 // latency-critical CAOpenGLLayer path; the drawing code itself uses the same two-slot rectangle
 // stream as the main demo. benchmark/record_platform_drag.sh drives and measures this binary.
 
-#include "build/build_config.h"
 #include "px/px.h"
 #include <cstdio>
-#include <cstdlib>
 
 namespace {
 
@@ -88,12 +86,6 @@ void print_geometry(px_window_t* window) {
 int main(int argc, char** argv) {
     std::setvbuf(stdout, nullptr, _IONBF, 0);
 
-    // The benchmark must be wholly event driven. Continuous animation is a different workload.
-#if BUILDFLAG(IS_WIN)
-    _putenv_s("PX_NO_ANIMATION", "1");
-#else
-    setenv("PX_NO_ANIMATION", "1", 1);
-#endif
     px_init("drag-benchmark", "com.example.drag-benchmark", argc, argv, 0);
 
     DragBenchmarkHandler handler;

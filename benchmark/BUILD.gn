@@ -4,6 +4,7 @@ group("benchmark") {
     ":demo_isolation",
     ":drag_benchmark",
     ":render_benchmark",
+    ":resize_benchmark",
     ":scroll_benchmark",
     ":startup_benchmark",
   ]
@@ -42,6 +43,17 @@ executable("render_benchmark") {
   if (is_mac) {
     defines = [ "GL_SILENCE_DEPRECATION" ]
   }
+}
+
+executable("resize_benchmark") {
+  sources = [
+    "resize_benchmark.cc",
+    "resize_sweep.h",
+  ]
+  deps = [
+    "//fx",
+    "//px",
+  ]
 }
 
 executable("scroll_benchmark") {

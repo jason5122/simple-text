@@ -24,6 +24,7 @@ constexpr double kLineHeight = 20.0;
 constexpr double kTextTop = 18.0;
 constexpr double kWarmupSeconds = 0.5;
 constexpr double kSettleSeconds = 0.25;
+constexpr int kSettledTicks = 30;  // consecutive display ticks at one size, for --fullscreen
 
 constexpr fcolor kWindowBackground{0.055f, 0.060f, 0.070f, 1.0f};
 constexpr fcolor kSidebarBackground{0.105f, 0.115f, 0.135f, 1.0f};
@@ -75,6 +76,7 @@ struct Options {
     int repetitions = 1;
     bool dump_frames = false;
     bool keep_open = false;
+    bool full_screen = false;
 };
 
 bool parse_positive_int(const char* text, int maximum, int* value) {
@@ -91,8 +93,10 @@ bool parse_positive_int(const char* text, int maximum, int* value) {
 }
 
 void usage(const char* program) {
-    std::fprintf(stderr, "usage: %s TRACE.tsv [--repetitions N] [--dump-frames] [--keep-open]\n",
-                 program);
+    std::fprintf(
+        stderr,
+        "usage: %s TRACE.tsv [--repetitions N] [--dump-frames] [--keep-open] [--fullscreen]\n",
+        program);
 }
 
 bool parse_options(int argc, char** argv, Options* options) {
@@ -113,6 +117,8 @@ bool parse_options(int argc, char** argv, Options* options) {
             options->dump_frames = true;
         } else if (std::strcmp(argv[i], "--keep-open") == 0) {
             options->keep_open = true;
+        } else if (std::strcmp(argv[i], "--fullscreen") == 0) {
+            options->full_screen = true;
         } else {
             return false;
         }
@@ -183,6 +189,16 @@ public:
             px_close_window(window_);
             return true;
         }
+        // Hand scrolling, so --keep-open leaves something you can actually feel. Refused until the
+        // run has reported: while the trace is playing the offset belongs to the trace, and letting
+        // the trackpad move it too would quietly corrupt the numbers this harness exists to
+        // produce. Once playback ends animation_tick stops writing the offset, so the two never
+        // fight.
+        if (event->type == PX_EVENT_SCROLL && reported_) {
+            scroll_offset_ -= event->scroll_delta.y;
+            px_mark_dirty(window_);
+            return true;
+        }
         return false;
     }
 
@@ -193,7 +209,7 @@ public:
             return;
         }
         if (playback_start_time_ == 0.0) {
-            if (now - first_tick_time_ < kWarmupSeconds) {
+            if (!warmed_up(now)) {
                 px_mark_dirty(window_);
                 return;
             }
@@ -232,7 +248,9 @@ public:
             elapsed >= trace_end + kSettleSeconds) {
             report();
             reported_ = true;
-            if (!options_.keep_open) {
+            if (options_.keep_open) {
+                std::printf("playback_finished scroll_to_explore=1 quit=escape\n");
+            } else {
                 px_set_timeout([window = window_] { px_close_window(window); }, 0);
             }
         }
@@ -282,6 +300,25 @@ public:
     }
 
 private:
+    // Entering full screen animates the window size over several frames. Sampling before it settles
+    // would measure the resize rather than the scroll, so wait for the size to hold steady instead
+    // of guessing at a fixed delay.
+    bool warmed_up(double now) {
+        if (now - first_tick_time_ < kWarmupSeconds) {
+            return false;
+        }
+        if (!options_.full_screen) {
+            return true;
+        }
+        const vec2 size = px_window_size(window_);
+        if (size.x != settled_size_.x || size.y != settled_size_.y) {
+            settled_size_ = size;
+            settled_ticks_ = 0;
+            return false;
+        }
+        return ++settled_ticks_ >= kSettledTicks;
+    }
+
     static void draw_batches(px_render_context* context,
                              px_font_t* font,
                              vec2 origin,
@@ -381,10 +418,12 @@ private:
             }
         }
 
+        const vec2 size = px_window_size(window_);
         std::printf("benchmark=scroll backend=%s trace=%s samples=%zu trace_duration=%.3fms "
-                    "repetitions=%d input_distance=%.3fpt\n",
+                    "repetitions=%d input_distance=%.3fpt presentation=%s viewport=%.0fx%.0f\n",
                     backend_ ? backend_ : "unknown", options_.trace_path, samples_.size(),
-                    duration_ms, options_.repetitions, input_distance_);
+                    duration_ms, options_.repetitions, input_distance_,
+                    options_.full_screen ? "fullscreen" : "windowed", size.x, size.y);
         print_distribution("display_tick_interval", "ms", tick_intervals_ms_);
         print_distribution("paint_interval", "ms", paint_intervals_ms_);
         print_distribution("render_submit", "ms", render_times_ms_);
@@ -408,6 +447,8 @@ private:
     std::vector<PreparedText> sidebar_;
     std::vector<PreparedText> line_numbers_;
     const char* backend_ = nullptr;
+    vec2 settled_size_;
+    int settled_ticks_ = 0;
     size_t next_sample_ = 0;
     size_t input_ticks_ = 0;
     size_t motion_ticks_ = 0;
@@ -460,6 +501,11 @@ int main(int argc, char** argv) {
     }
     benchmark.attach(window);
     px_show_window(window);
+    px_set_animating(window, true);
+    if (options.full_screen) {
+        // After show: AppKit only animates into full screen for a window that is already on screen.
+        px_set_full_screen(window, true);
+    }
     px_mark_dirty(window);
     px_run_event_loop();
     px_destroy_window(window);

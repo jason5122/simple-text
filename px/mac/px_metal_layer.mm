@@ -25,7 +25,6 @@
 #import <QuartzCore/CAMetalLayer.h>
 #include <algorithm>
 #include <cmath>
-#include <dispatch/dispatch.h>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -40,7 +39,6 @@
     NSUInteger _backingWidth;
     NSUInteger _backingHeight;
     bool _stencilUnavailable;
-    dispatch_semaphore_t _framesInFlight;
 }
 - (instancetype)initWithPXW:(px_window_t*)pxw device:(id<MTLDevice>)device;
 - (void)addDirtyRect:(rect)r;
@@ -56,12 +54,10 @@
         _backingWidth = 0;
         _backingHeight = 0;
         _stencilUnavailable = false;
-        // One submitted frame outstanding, like the GL layer's fence: enough CPU/GPU overlap
-        // without letting a trivial scene run ahead of the window server.
-        _framesInFlight = dispatch_semaphore_create(1);
 
         self.device = device;
         self.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        self.maximumDrawableCount = 3;
         // The drawable is only ever a blit destination, which framebufferOnly forbids.
         self.framebufferOnly = NO;
         self.presentsWithTransaction = YES;
@@ -173,12 +169,11 @@
         return;
     }
 
-    // Wait before recording so the bound blocks here, at the top of the frame, rather than
-    // inside nextDrawable.
-    dispatch_semaphore_wait(_framesInFlight, DISPATCH_TIME_FOREVER);
+    // The queue serializes each backing-texture update and its following blit. Let
+    // CAMetalLayer's three-drawable swap queue provide backpressure instead of waiting for the
+    // previous frame to finish on the GPU.
     id<MTLCommandBuffer> commandBuffer = [_queue commandBuffer];
     if (!commandBuffer) {
-        dispatch_semaphore_signal(_framesInFlight);
         return;
     }
     commandBuffer.label = @"px frame";
@@ -213,10 +208,6 @@
         [blit endEncoding];
     }
 
-    dispatch_semaphore_t framesInFlight = _framesInFlight;
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
-      dispatch_semaphore_signal(framesInFlight);
-    }];
     [commandBuffer commit];
     if (drawable) {
         // presentsWithTransaction requires the buffer to be scheduled before the drawable is

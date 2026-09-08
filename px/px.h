@@ -249,9 +249,11 @@ public:
     virtual void draw_rect(rect area, fill_mode fill) = 0;
     void draw_rect(rect area, color value) { draw_rect(area, fill_mode(value)); }
 
-    // Sublime's UI-text convenience path shapes the entire substring once through the px_font_t's
-    // fx_font, then dispatches that layout to the active renderer. Cached controls such as labels
-    // keep and draw an fx_layout directly instead.
+    // Text positions are alphabetic baselines in px's logical, top-left-origin, y-down coordinate
+    // space. To place a line by its top edge, add the font's positive ascent to that edge. Sublime's
+    // UI-text convenience path shapes the entire substring once through the px_font_t's fx_font,
+    // then dispatches that layout to the active renderer. Cached controls such as labels keep and
+    // draw an fx_layout directly instead.
     virtual void draw_text(px_font_t* font,
                            vec2 position,
                            color value,

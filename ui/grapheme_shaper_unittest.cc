@@ -764,6 +764,21 @@ TEST(SystemFontIntegrationTest, GlyphExtentsAreFiniteAndNonempty) {
     EXPECT_GT(size.y, 0.0);
 }
 
+TEST(SystemFontIntegrationTest, GlyphCacheBearingIsRelativeToAlphabeticBaseline) {
+    px_font_t* font = px_create_font("system", 12.0f);
+    ASSERT_NE(font, nullptr);
+
+    const std::unique_ptr<fx_layout> layout = font->font->shape("H");
+    ASSERT_NE(layout, nullptr);
+    ASSERT_FALSE(layout->glyphs.empty());
+
+    const fx_glyph_cache::glyph_data& data =
+        font->glyph_cache(1.0f).lookup_glyph_data(layout->glyphs.front().id);
+    const fx_glyph_cache::glyph_phase& phase = data.phase_at(0);
+    ASSERT_GT(phase.height, 0u);
+    EXPECT_LT(phase.bearing_y, 0);
+}
+
 TEST(SystemFontIntegrationTest, DistinguishesOutlineAndColorGlyphs) {
     px_font_t* font = px_create_font("system", 12.0f);
     ASSERT_NE(font, nullptr);

@@ -116,12 +116,12 @@ bool load_modern_gl() {
            load(&px_glVertexAttribPointer, "glVertexAttribPointer");
 }
 
-bool driver_supports_gl_41(const GLubyte* version) {
+bool driver_supports_gl_33(const GLubyte* version) {
     int major = 0;
     int minor = 0;
     return version &&
            std::sscanf(reinterpret_cast<const char*>(version), "%d.%d", &major, &minor) == 2 &&
-           (major > 4 || (major == 4 && minor >= 1));
+           (major > 3 || (major == 3 && minor >= 3));
 }
 
 }  // namespace
@@ -166,9 +166,9 @@ bool px_win_gl_create(px_window_t* window) {
         wglMakeCurrent(window->hdc, g_shared_context);
 
         const GLubyte* version = glGetString(GL_VERSION);
-        if (!driver_supports_gl_41(version)) {
+        if (!driver_supports_gl_33(version)) {
             std::println(stderr,
-                         "px: driver does not support required OpenGL version 4.1 (got {})",
+                         "px: driver does not support required OpenGL version 3.3 (got {})",
                          version ? reinterpret_cast<const char*>(version) : "?");
             wglMakeCurrent(nullptr, nullptr);
             wglDeleteContext(g_shared_context);

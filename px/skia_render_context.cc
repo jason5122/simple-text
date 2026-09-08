@@ -260,10 +260,7 @@ void skia_render_context::draw_shaped_text(
     const float raster_scale = std::max(0.01f, static_cast<float>(std::abs(scale_.x)));
     fx_glyph_cache& cache = font->glyph_cache(raster_scale);
     const double device_origin_x = translation_.x + position.x * scale_.x;
-    double device_origin_y = translation_.y + position.y * scale_.y;
-#if BUILDFLAG(IS_LINUX)
-    device_origin_y -= static_cast<double>(font->font->metrics().ascent) * scale_.y;
-#endif
+    const double device_origin_y = translation_.y + position.y * scale_.y;
     const float lightness = (std::max({normalized.r, normalized.g, normalized.b}) +
                              std::min({normalized.r, normalized.g, normalized.b})) *
                             0.5f;

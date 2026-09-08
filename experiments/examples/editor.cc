@@ -249,7 +249,6 @@ public:
           body_metrics_(px_font_get_metrics(body_font)),
           sidebar_title_metrics_(px_font_get_metrics(sidebar_title_font)),
           sidebar_metrics_(px_font_get_metrics(sidebar_font)) {
-        std::println("sidebar title line height: {}", sidebar_title_metrics_.line_height);
         grapheme_shaper* body_shaper = grapheme_shaper::instance(body_font_);
         grapheme_shaper* ui_shaper = grapheme_shaper::instance(sidebar_font_);
         find_close_layout_ = prepare_retained_text(ui_shaper, "×");
@@ -523,10 +522,10 @@ private:
                                        (i < kDocumentLineCount % kSourceLines.size() ? 1 : 0);
                 find_match_count_ += per_line * repeats;
             }
-            find_count_layout_ = prepare_retained_text(
-                grapheme_shaper::instance(sidebar_font_),
-                std::to_string(find_match_count_) +
-                    (find_match_count_ == 1 ? " match" : " matches"));
+            find_count_layout_ =
+                prepare_retained_text(grapheme_shaper::instance(sidebar_font_),
+                                      std::to_string(find_match_count_) +
+                                          (find_match_count_ == 1 ? " match" : " matches"));
         }
         window_->mark_dirty();
     }
@@ -586,9 +585,9 @@ private:
                                     body_metrics_.ascent;
             draw_layout(context, body_font_, vec2{layout.input.x + kFindTextInset, baseline},
                         kFindLabelColor, &find_query_layout_);
-            const double count_baseline =
-                layout.input.y + (kFindItemHeight - sidebar_metrics_.line_height) * 0.5 +
-                sidebar_metrics_.ascent;
+            const double count_baseline = layout.input.y +
+                                          (kFindItemHeight - sidebar_metrics_.line_height) * 0.5 +
+                                          sidebar_metrics_.ascent;
             draw_layout(context, sidebar_font_,
                         vec2{layout.input.right() - kFindTextInset - find_count_layout_.advance,
                              count_baseline},

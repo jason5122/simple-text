@@ -1,21 +1,26 @@
 # Sublime Text Linux Renderer Notes
 
-Status: the CPU/Skia and OpenGL conformance paths both match all 672 Sublime Text reference
-captures pixel-for-pixel.
+Status: the CPU/Skia path matches all 672 Sublime Text CPU-renderer reference captures
+pixel-for-pixel. The OpenGL path mirrors Sublime's recovered GPU shader and blend state; it cannot
+be compared directly with Sublime's GPU output in the current VM.
 
 Binary: Sublime Text Build 4200, Linux x86-64, captured in the Fedora ARM64 VM
 
-Last updated: 2026-09-05
+Last updated: 2026-09-07
 
 ## Parallels OpenGL limitation
 
-The Fedora 42 ARM64 Parallels VM currently exposes:
+The Fedora 42 ARM64 Parallels VM's default capability report is:
 
 ```text
 OpenGL renderer: virgl (Apple M4 Max (Compat))
 OpenGL version: 4.0 (Compatibility Profile) Mesa 25.1.4
 GLSL version: 4.00
 ```
+
+When the local GDK backend requests its OpenGL 3.3 feature floor, the same driver realizes a 4.0
+core context (`gdk_gl_context_is_legacy() == false`). The shared GLSL 3.30 shaders compile there and
+the local OpenGL path runs successfully.
 
 This is a virtual-GPU capability limit rather than a missing Mesa package. Sublime Text's Linux GL
 shaders request GLSL 4.10, so Sublime exits with the following error before its GPU renderer can be
@@ -25,47 +30,28 @@ captured in this VM:
 Failed to initialize OpenGL rendering: GLSL 4.10 is not supported.
 ```
 
-The VM also does not advertise the destination-read and synchronization facilities relevant to a
-fast exact compositor, including shader image load/store, texture barriers, framebuffer fetch, and
-fragment-shader interlock. The local shaders use only GLSL 4.00 so the reconstructed GL path can
-still run in the VM, but it cannot use a single-pass destination-read implementation there.
+The limitation prevents a direct pixel comparison against Sublime's GPU output. The available
+reference captures come from Sublime's CPU renderer, whose byte-level compositing differs from
+hardware RGBA8 blending.
 
-Consequently, the VM blocks two kinds of follow-up work:
+## Current OpenGL path
 
-- Direct pixel comparison against Sublime's own GPU output. The current GL oracle is Sublime's
-  pixel-perfect CPU output.
-- Development of the preferred batched exact-compositing path using modern destination access.
+The recovered `glyph_subpixel` fragment shader emits the tint and per-channel coverage as
+dual-source outputs. Disassembly of Build 4200 confirms that its draw path selects
+`glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR)` and restores
+`glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)` afterward. It does not read the framebuffer or
+perform integer source-over in the shader.
 
-It does not block correctness work: the compatibility implementation is 672/672 pixel-perfect.
+The local renderer now follows the same design on every platform:
 
-## Current exact compatibility path
+1. Batch adjacent glyphs that use the same atlas page and shader mode while preserving submission
+   order for overlapping marks and layered emoji.
+2. Emit tint and coverage from the shared fragment shader.
+3. Use dual-source fixed-function blending for monochrome glyphs and premultiplied-alpha blending
+   for intrinsic-color glyphs.
 
-Ordinary RGBA8 fixed-function blending is insufficient. The VM rounds blend results to the nearest
-byte, while Sublime's Linux monochrome compositor mostly divides by 255 exactly but rounds up when
-the product is one below a multiple of 255. Intrinsic-color glyphs use exact division without that
-boundary adjustment. Most of these byte mappings cannot be represented by changing only the GL
-source color and blend factors.
-
-The Linux GL renderer therefore uses this compatibility algorithm:
-
-1. Preserve glyph submission order instead of regrouping nonadjacent atlas batches.
-2. Copy the framebuffer rectangle covered by the next glyph into an RGBA8 scratch texture with
-   `glCopyTexSubImage2D`.
-3. Sample the glyph atlas and copied destination in the fragment shader.
-4. Perform Sublime's recovered source-over operation with unsigned integer arithmetic.
-5. Draw one glyph before copying the destination for the next glyph.
-
-All rendering data stays on the GPU; there is no GPU-to-CPU readback. The cost is nevertheless
-significant compared with a conventional text batch:
-
-- one GPU-to-GPU region copy per glyph
-- one draw call per glyph
-- a serial copy/draw dependency to preserve overlapping-glyph order
-- one additional framebuffer-sized RGBA8 scratch texture, although only glyph rectangles are
-  copied into it
-
-This path prioritizes conformance over throughput. The CPU/Skia renderer remains the Linux default;
-set `PX_USE_GL=1` to select OpenGL.
+There is no Linux shader define, destination scratch texture, framebuffer copy, or per-glyph draw
+loop. The CPU/Skia renderer remains the Linux default; set `PX_USE_GL=1` to select OpenGL.
 
 ## Real-hardware follow-up
 
@@ -73,23 +59,11 @@ On real Linux hardware, first record the native driver and extension set:
 
 ```sh
 glxinfo -B
-glxinfo -l | rg 'shader_image_load_store|texture_barrier|framebuffer_fetch|fragment_shader_interlock'
 ```
 
-GLSL 4.10 or newer should allow Sublime's own GPU renderer to start, making a direct CPU-versus-GPU
-Sublime capture possible. For our renderer, investigate these optimizations in increasing order of
-scope:
-
-1. Use a texture barrier to read the attached color texture between ordered glyph draws, eliminating
-   the region copies while retaining the current integer shader.
-2. Use shader image load/store with explicit barriers, also eliminating the scratch copies.
-3. If the hardware supplies a suitable ordered framebuffer-fetch or fragment-interlock mechanism,
-   restore multi-glyph batching while retaining exact integer source-over behavior.
-4. Keep the GL 4.0 copy-based implementation as the compatibility fallback and compare both paths
-   against the same 672-image suite.
-
-Do not replace the integer compositor with fixed-function blending as an optimization: the latter
-was the source of the remaining one-to-three-byte differences.
+GLSL 4.10 or newer should allow Sublime's own GPU renderer to start. Capture that output before
+drawing conclusions from differences against the CPU oracle; fixed-function blend quantization is
+driver and framebuffer dependent.
 
 ## Conformance commands
 
@@ -100,10 +74,14 @@ PX_USE_GL=1 LINUX_OUR_OUTPUT=/media/psf/linux-arm64-release/ours-gl ./capture-ou
 OURS_DIR=ours-gl DIFF_RESULTS_DIR=diff-gl ./diff.sh
 ```
 
-The result recorded on 2026-09-05 was:
+The comparison against Sublime's CPU-renderer captures recorded on 2026-09-07 was:
 
 ```text
-Correct:       672
-Small diffs:     0
-Large diffs:     0
+Correct:       278
+Small diffs:   160
+Large diffs:   234
 ```
+
+"Large" means more than 200 affected pixels, not a visually large error. Differences are generally
+edge quantization; the maximum observed per-channel delta was 6/255. This result must not be used
+as evidence that Sublime's GPU renderer performs the CPU renderer's integer rounding.

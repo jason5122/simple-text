@@ -48,6 +48,8 @@ void ensure_shared_gl() {
         return;
     }
 
+    // CGL has no 3.3 profile selector. Keep its 4.1 core context while the shared renderer uses
+    // only the OpenGL 3.3 feature set and GLSL 3.30.
     const CGLPixelFormatAttribute attributes[] = {
         kCGLPFAColorSize,     static_cast<CGLPixelFormatAttribute>(24),
         kCGLPFAAlphaSize,     static_cast<CGLPixelFormatAttribute>(8),

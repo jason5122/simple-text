@@ -1,4 +1,3 @@
-#include "build/build_config.h"
 #include "px/gl_render_context.h"
 #include "px/px_font_internal.h"
 #include "px/px_gl.h"
@@ -89,13 +88,7 @@ GLuint compile_shader_sources(GLenum type, const char* const* sources, GLsizei s
 }
 
 GLuint compile_shader(GLenum type, const char* source) {
-#if BUILDFLAG(IS_LINUX)
-    // Parallels' virtual GPU exposes OpenGL/GLSL 4.0. These shaders require only 4.0 features;
-    // native macOS and Windows retain the 4.10 declaration recovered from Sublime's shaders.
-    constexpr const char* version = "#version 400\n#define PX_LINUX_EXACT_COMPOSITE 1\n";
-#else
-    constexpr const char* version = "#version 410\n";
-#endif
+    constexpr const char* version = "#version 330\n";
     const char* sources[] = {version, source};
     return compile_shader_sources(type, sources, 2);
 }
@@ -244,7 +237,6 @@ struct glyph_program {
     GLint instances_uniform = -1;
     GLint instance_offset_uniform = -1;
     GLint tex_uniform = -1;
-    GLint destination_uniform = -1;
     GLint texture_size_uniform = -1;
     GLint colored_uniform = -1;
     GLint alternate_uniform = -1;
@@ -323,13 +315,7 @@ public:
         std::vector<texture_batch_group>& groups =
             batch_depth_ != 0 ? batch_groups_ : immediate_groups;
         const double device_origin_x = translation.x + origin.x * scale.x;
-        double device_origin_y = translation.y + origin.y * scale.y;
-#if BUILDFLAG(IS_LINUX)
-        // Pango's recovered glyph-tile origin is relative to the top of its primary font's line,
-        // unlike the baseline-relative Core Text and DirectWrite tiles consumed by this shared
-        // renderer. Sublime makes the same ascent adjustment at the Linux renderer boundary.
-        device_origin_y -= static_cast<double>(font->font->metrics().ascent) * scale.y;
-#endif
+        const double device_origin_y = translation.y + origin.y * scale.y;
         const float lightness =
             (std::max({color.r, color.g, color.b}) + std::min({color.r, color.g, color.b})) * 0.5f;
         // Sublime selects the inverted glyph-cache polarity only for very light tints
@@ -436,22 +422,13 @@ private:
     static void add_to_groups(std::vector<texture_batch_group>* groups,
                               const batch_key& key,
                               glyph_instance_data instance) {
-#if BUILDFLAG(IS_LINUX)
-        // Linux's GL 4.0 compatibility compositor copies and draws each glyph in submission order.
+        // A glyph can overlap the preceding glyph (combining marks, emoji layers, and fallback
+        // runs). Coalesce adjacent compatible glyphs without regrouping across an intervening
+        // atlas page or shader mode, which would change submission order.
         if (groups->empty() || groups->back().key != key) {
             groups->push_back({.key = key});
         }
         groups->back().instances.push_back(instance);
-#else
-        auto found = std::find_if(
-            groups->begin(), groups->end(),
-            [&key](const texture_batch_group& group) { return group.key == key; });
-        if (found == groups->end()) {
-            groups->push_back({.key = key});
-            found = std::prev(groups->end());
-        }
-        found->instances.push_back(instance);
-#endif
     }
 
     void flush_batch() {
@@ -502,27 +479,6 @@ private:
                     static_cast<float>(viewport.y));
         glUniform1i(program_.instances_uniform, 0);
         glUniform1i(program_.tex_uniform, 1);
-#if BUILDFLAG(IS_LINUX)
-        // GLSL 4.0 has no portable way to read the pixel being replaced. Keep a framebuffer-sized
-        // scratch texture and populate only the small regions touched by glyphs below.
-        const int width = std::max(1, static_cast<int>(viewport.x));
-        const int height = std::max(1, static_cast<int>(viewport.y));
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, destination_texture_);
-        if (destination_width_ != width || destination_height_ != height) {
-            destination_width_ = width;
-            destination_height_ = height;
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                         nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-        glUniform1i(program_.destination_uniform, 2);
-        glGetIntegerv(GL_READ_BUFFER, &previous_read_buffer_);
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
-#endif
     }
 
     static void upload_instances(const std::vector<glyph_instance_data>& instances, size_t first) {
@@ -551,56 +507,18 @@ private:
         glUniform1f(program_.texture_size_uniform, static_cast<float>(atlas->size));
         glUniform1i(program_.colored_uniform, key.colored ? 1 : 0);
         glUniform1i(program_.alternate_uniform, key.alternate ? 1 : 0);
-#if BUILDFLAG(IS_LINUX)
-        // Fixed-function RGBA8 blending cannot express Sublime's Linux byte-rounding rules. Copy
-        // each destination glyph rectangle on the GPU, then let the fragment shader perform the
-        // recovered integer source-over operation. One draw per glyph also preserves overlap
-        // order on GL 4.0, where framebuffer-fetch and fragment-interlock are unavailable.
-        // See conformance/linux-opengl-notes.md for the driver constraints and follow-up.
-        glDisable(GL_BLEND);
-        for (size_t index = 0; index < count; ++index) {
-            const glyph_instance_data& instance = instances[index];
-            const int left = std::clamp(static_cast<int>(instance.x), 0, destination_width_);
-            const int top = std::clamp(static_cast<int>(instance.y), 0, destination_height_);
-            const int right =
-                std::clamp(static_cast<int>(instance.x + instance.width), 0, destination_width_);
-            const int bottom =
-                std::clamp(static_cast<int>(instance.y + instance.height), 0, destination_height_);
-            if (left >= right || top >= bottom) {
-                continue;
-            }
-            const int copy_y = destination_height_ - bottom;
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, destination_texture_);
-            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, left, copy_y, left, copy_y, right - left,
-                                bottom - top);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, atlas->pages[static_cast<size_t>(page)].texture);
-            glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first + index));
-            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
-        }
-        glEnable(GL_BLEND);
-#else
         if (key.colored) {
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         } else {
             glBlendFunc(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR);
         }
         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(count));
-#endif
     }
 
     void end_render() {
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#if BUILDFLAG(IS_LINUX)
-        glReadBuffer(static_cast<GLenum>(previous_read_buffer_));
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, 0);
-#endif
         glBindVertexArray(0);
-#if BUILDFLAG(IS_LINUX)
         glActiveTexture(GL_TEXTURE1);
-#endif
         glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, 0);
@@ -659,16 +577,12 @@ private:
         program_.instances_uniform = glGetUniformLocation(program_.id, "instances");
         program_.instance_offset_uniform = glGetUniformLocation(program_.id, "instance_offset");
         program_.tex_uniform = glGetUniformLocation(program_.id, "atlas");
-        program_.destination_uniform = glGetUniformLocation(program_.id, "destination");
         program_.texture_size_uniform = glGetUniformLocation(program_.id, "texture_size");
         program_.colored_uniform = glGetUniformLocation(program_.id, "colored");
         program_.alternate_uniform = glGetUniformLocation(program_.id, "alternate");
         glGenVertexArrays(1, &vao_);
         glGenBuffers(2, instance_buffers_);
         glGenTextures(2, instance_textures_);
-#if BUILDFLAG(IS_LINUX)
-        glGenTextures(1, &destination_texture_);
-#endif
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
@@ -754,12 +668,6 @@ private:
     GLuint instance_textures_[2] = {};
     size_t instance_capacities_[2] = {};
     int instance_slot_ = 0;
-#if BUILDFLAG(IS_LINUX)
-    GLuint destination_texture_ = 0;
-    int destination_width_ = 0;
-    int destination_height_ = 0;
-    GLint previous_read_buffer_ = GL_COLOR_ATTACHMENT0;
-#endif
     std::atomic<bool> reset_requested_ = false;
     std::map<std::pair<const px_font_t*, uint32_t>, atlas_set> atlas_sets_;
     int batch_depth_ = 0;

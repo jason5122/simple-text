@@ -16,10 +16,41 @@ constexpr double kGutterWidth = 64.0;
 constexpr double kLineHeight = 20.0;
 constexpr double kTextTop = 18.0;
 
-constexpr fcolor kWindowBackground{0.055f, 0.060f, 0.070f, 1.0f};
-constexpr fcolor kSidebarBackground{0.105f, 0.115f, 0.135f, 1.0f};
-constexpr fcolor kDocumentBackground{0.075f, 0.082f, 0.098f, 1.0f};
-constexpr fcolor kGutterBackground{0.068f, 0.074f, 0.088f, 1.0f};
+// Light palette. Each dark value is kept commented out above its light replacement so the demo
+// can be flipped back by swapping the comment markers.
+// constexpr fcolor kWindowBackground{0.055f, 0.060f, 0.070f, 1.0f};
+constexpr fcolor kWindowBackground{1.0f, 1.0f, 1.0f, 1.0f};
+// constexpr fcolor kSidebarBackground{0.105f, 0.115f, 0.135f, 1.0f};
+constexpr fcolor kSidebarBackground{0.955f, 0.958f, 0.963f, 1.0f};
+// constexpr fcolor kDocumentBackground{0.075f, 0.082f, 0.098f, 1.0f};
+constexpr fcolor kDocumentBackground{1.0f, 1.0f, 1.0f, 1.0f};
+// constexpr fcolor kGutterBackground{0.068f, 0.074f, 0.088f, 1.0f};
+constexpr fcolor kGutterBackground{0.985f, 0.985f, 0.985f, 1.0f};
+// constexpr fcolor kSidebarSelection{0.18f, 0.35f, 0.58f, 1.0f};
+constexpr fcolor kSidebarSelection{0.86f, 0.91f, 0.98f, 1.0f};
+// constexpr fcolor kSidebarDivider{0.20f, 0.22f, 0.26f, 1.0f};
+constexpr fcolor kSidebarDivider{0.82f, 0.83f, 0.85f, 1.0f};
+// constexpr fcolor kSidebarText{0.72f, 0.75f, 0.82f, 1.0f};
+constexpr fcolor kSidebarText{0.20f, 0.22f, 0.25f, 1.0f};
+// constexpr fcolor kGutterDivider{0.16f, 0.17f, 0.20f, 1.0f};
+constexpr fcolor kGutterDivider{0.90f, 0.90f, 0.90f, 1.0f};
+// constexpr fcolor kLineBand{0.105f, 0.135f, 0.185f, 0.32f};
+constexpr fcolor kLineBand{0.86f, 0.91f, 0.98f, 0.45f};
+// constexpr fcolor kScrollbarThumb{0.38f, 0.42f, 0.50f, 0.9f};
+constexpr fcolor kScrollbarThumb{0.70f, 0.71f, 0.73f, 0.9f};
+// constexpr fcolor kLineNumber{0.48f, 0.50f, 0.56f, 1.0f};
+constexpr fcolor kLineNumber{0.58f, 0.59f, 0.62f, 1.0f};
+
+// constexpr std::array<fcolor, 5> kLineColors = {
+//     fcolor{0.78f, 0.80f, 0.86f, 1.0f}, fcolor{0.48f, 0.72f, 0.96f, 1.0f},
+//     fcolor{0.72f, 0.52f, 0.91f, 1.0f}, fcolor{0.91f, 0.58f, 0.36f, 1.0f},
+//     fcolor{0.50f, 0.75f, 0.58f, 1.0f},
+// };
+constexpr std::array<fcolor, 5> kLineColors = {
+    fcolor{0.23f, 0.24f, 0.27f, 1.0f}, fcolor{0.10f, 0.40f, 0.67f, 1.0f},
+    fcolor{0.50f, 0.22f, 0.68f, 1.0f}, fcolor{0.72f, 0.28f, 0.19f, 1.0f},
+    fcolor{0.36f, 0.48f, 0.37f, 1.0f},
+};
 
 constexpr std::array<std::string_view, 20> kSourceLines = {
     "namespace editor::rendering {",
@@ -76,13 +107,8 @@ public:
 
         lines_.reserve(kSourceLines.size());
         for (size_t i = 0; i < kSourceLines.size(); ++i) {
-            const std::array<fcolor, 5> colors = {
-                fcolor{0.78f, 0.80f, 0.86f, 1.0f}, fcolor{0.48f, 0.72f, 0.96f, 1.0f},
-                fcolor{0.72f, 0.52f, 0.91f, 1.0f}, fcolor{0.91f, 0.58f, 0.36f, 1.0f},
-                fcolor{0.50f, 0.75f, 0.58f, 1.0f},
-            };
             lines_.push_back(PreparedLine{prepare_text(body_font_, kSourceLines[i]),
-                                          colors[i % colors.size()]});
+                                          kLineColors[i % kLineColors.size()]});
         }
         for (std::string_view text : kSidebarLines) {
             sidebar_.push_back(prepare_text(ui_font_, text));
@@ -128,20 +154,17 @@ private:
         context->begin_rect_batch();
         context->draw_rect(viewport, kWindowBackground);
         context->draw_rect(rect{0.0, 0.0, kSidebarWidth, viewport.h}, kSidebarBackground);
-        context->draw_rect(rect{0.0, 36.0, kSidebarWidth, 24.0},
-                           fcolor{0.18f, 0.35f, 0.58f, 1.0f});
-        context->draw_rect(rect{kSidebarWidth - 1.0, 0.0, 1.0, viewport.h},
-                           fcolor{0.20f, 0.22f, 0.26f, 1.0f});
+        context->draw_rect(rect{0.0, 36.0, kSidebarWidth, 24.0}, kSidebarSelection);
+        context->draw_rect(rect{kSidebarWidth - 1.0, 0.0, 1.0, viewport.h}, kSidebarDivider);
         context->end_rect_batch();
 
         context->begin_text_batch();
-        draw_batches(context, heading_font_, vec2{16.0, 25.0}, fcolor{0.72f, 0.75f, 0.82f, 1.0f},
-                     &sidebar_[0]);
+        draw_batches(context, heading_font_, vec2{16.0, 25.0}, kSidebarText, &sidebar_[0]);
         for (size_t i = 1; i < sidebar_.size(); ++i) {
             draw_batches(context, ui_font_,
                          vec2{18.0 + static_cast<double>(i % 4) * 11.0,
                               25.0 + static_cast<double>(i) * 25.0},
-                         fcolor{0.72f, 0.75f, 0.82f, 1.0f}, &sidebar_[i]);
+                         kSidebarText, &sidebar_[i]);
         }
         context->end_text_batch();
 
@@ -161,20 +184,19 @@ private:
         context->draw_rect(rect{kSidebarWidth, 0.0, kGutterWidth, viewport.h}, kGutterBackground);
         context->draw_rect(rect{document_left, 0.0, viewport.w - document_left, viewport.h},
                            kDocumentBackground);
-        context->draw_rect(rect{document_left - 1.0, 0.0, 1.0, viewport.h},
-                           fcolor{0.16f, 0.17f, 0.20f, 1.0f});
+        context->draw_rect(rect{document_left - 1.0, 0.0, 1.0, viewport.h}, kGutterDivider);
         for (int row = -1; row < visible_rows; ++row) {
             const int64_t line = first_line + row;
             const double y = kTextTop + row * kLineHeight - fractional_scroll;
             if (line % 11 == 0) {
                 context->draw_rect(
                     rect{document_left, y - 14.0, viewport.w - document_left, kLineHeight},
-                    fcolor{0.105f, 0.135f, 0.185f, 0.32f});
+                    kLineBand);
             }
         }
         const double thumb_progress = std::fmod(std::abs(scroll_offset_), 4000.0) / 4000.0;
         context->draw_rect(rect{viewport.w - 8.0, thumb_progress * (viewport.h - 80.0), 5.0, 80.0},
-                           fcolor{0.38f, 0.42f, 0.50f, 0.9f});
+                           kScrollbarThumb);
         context->end_rect_batch();
 
         context->begin_text_batch();
@@ -185,8 +207,8 @@ private:
             const size_t number_index = wrapped_index(line, line_numbers_.size());
             draw_batches(context, body_font_, vec2{document_left + 10.0, y},
                          lines_[line_index].color, &lines_[line_index].text);
-            draw_batches(context, ui_font_, vec2{kSidebarWidth + 12.0, y},
-                         fcolor{0.48f, 0.50f, 0.56f, 1.0f}, &line_numbers_[number_index]);
+            draw_batches(context, ui_font_, vec2{kSidebarWidth + 12.0, y}, kLineNumber,
+                         &line_numbers_[number_index]);
         }
         context->end_text_batch();
         context->pop_state();
@@ -208,8 +230,10 @@ int main(int argc, char** argv) {
     px_init("dark-mode-demo", "com.example.dark-mode-demo", argc, argv, 0);
 
     DarkModeDemo demo;
+    // px_window_t* window = px_create_window(&demo, nullptr, kWindowWidth, kWindowHeight,
+    //                                        "dark mode demo", kWindowBackground, PX_WINDOW_DEFAULT);
     px_window_t* window = px_create_window(&demo, nullptr, kWindowWidth, kWindowHeight,
-                                           "dark mode demo", kWindowBackground, PX_WINDOW_DEFAULT);
+                                           "light mode demo", kWindowBackground, PX_WINDOW_DEFAULT);
     if (!window) {
         return 1;
     }

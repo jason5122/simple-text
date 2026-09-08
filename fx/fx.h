@@ -36,6 +36,9 @@ enum : uint32_t {
 };
 
 struct fx_font_metrics {
+    // Distances are positive logical units. `ascent` extends upward from the alphabetic baseline,
+    // `descent` extends downward, and `leading` is the remaining interline space. Coordinates
+    // exposed by fx are otherwise top-left-origin with y growing downward.
     float ascent = 0.0f;
     float descent = 0.0f;
     float leading = 0.0f;
@@ -49,6 +52,8 @@ struct fx_font_widths {
 
 struct fx_glyph {
     uint32_t id = 0;
+    // Position relative to the layout's alphabetic baseline in logical y-down coordinates. Thus a
+    // normal glyph has y_offset == 0, while an upward displacement has a negative y_offset.
     float x_offset = 0.0f;
     float y_offset = 0.0f;
     uint32_t cluster = 0;
@@ -92,10 +97,12 @@ public:
     virtual float raster_ascent() const = 0;
     virtual std::unique_ptr<fx_layout> shape(std::string_view utf8) = 0;
     virtual std::unique_ptr<fx_layout> shape(std::u32string_view utf32) = 0;
+    // Reports the scratch-buffer size and the glyph's alphabetic baseline origin within that
+    // buffer, both in device pixels with y growing downward.
     virtual void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) = 0;
-    // `position` is a device-pixel offset into a buffer allocated from extents(). On Linux,
-    // `subpixel_order` is cairo_subpixel_order_t's numeric value, supplied by the display. The
-    // other native rasterizers ignore it.
+    // `position` is the device-pixel alphabetic baseline in a buffer allocated from extents(). On
+    // Linux, `subpixel_order` is cairo_subpixel_order_t's numeric value, supplied by the display.
+    // The other native rasterizers ignore it.
     virtual void rasterize(uint32_t glyph,
                            vec2 position,
                            float scale,
@@ -131,6 +138,8 @@ public:
         uint32_t* pixels = nullptr;
         uint16_t width = 0;
         uint16_t height = 0;
+        // Device-pixel offset from the glyph's alphabetic baseline to the cropped bitmap's
+        // top-left corner, in y-down coordinates.
         int16_t bearing_x = 0;
         int16_t bearing_y = 0;
     };

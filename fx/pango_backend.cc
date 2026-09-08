@@ -302,7 +302,9 @@ void pango_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) 
     const double native_scale = static_cast<double>(scale);
     origin = {
         std::round(-bounds.x_bearing * native_scale),
-        std::round((-bounds.y_bearing - static_cast<double>(metrics().ascent)) * native_scale),
+        // Cairo reports a negative y bearing for ink above the baseline. Keep the scratch origin
+        // baseline-relative here so every fx backend produces bearings with the same meaning.
+        std::round(-bounds.y_bearing * native_scale),
     };
     size = {bounds.width * native_scale, bounds.height * native_scale};
 
@@ -358,7 +360,7 @@ void pango_font::rasterize(uint32_t glyph,
     cairo_scale(context.get(), static_cast<double>(scale), static_cast<double>(scale));
 
     const double x = position.x / static_cast<double>(scale);
-    const double y = position.y / static_cast<double>(scale) + metrics().ascent;
+    const double y = position.y / static_cast<double>(scale);
     cairo_glyph_t glyphs[3] = {
         {static_cast<unsigned long>(static_cast<uint16_t>(glyph)), x, y},
         {},

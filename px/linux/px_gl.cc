@@ -40,9 +40,9 @@ bool px_linux_gl_create(px_window_t* window) {
         return false;
     }
 
-    // The shared shaders require GLSL 4.0. Parallels' virtual GPU tops out there, while asking
-    // GDK for 4.1 silently yielded a legacy 4.0 context anyway.
-    gdk_gl_context_set_required_version(window->gl_context, 4, 0);
+    // The shared renderer uses the OpenGL 3.3 core feature set. Accept a later compatibility
+    // context too; requiring these features does not require rejecting a compatibility profile.
+    gdk_gl_context_set_required_version(window->gl_context, 3, 3);
     if (!gdk_gl_context_realize(window->gl_context, &error)) {
         std::fprintf(stderr, "px: gdk_gl_context_realize failed: %s\n",
                      error ? error->message : "?");

@@ -21,7 +21,9 @@ constexpr double kPauseCadenceMultiple = 2.5;
 constexpr double kSeedIntervalSeconds = 1.0 / 120.0;
 
 constexpr double kSettleSeconds = 0.050;
-constexpr double kIdleSeconds = 1.0;
+
+// Ticks with nothing to do before the display clock may stop; Chromium's kMaxKeepAliveCount.
+constexpr int kKeepAliveTicks = 20;
 
 }  // namespace
 
@@ -49,16 +51,18 @@ bool smooth_scroll::scroll(double delta, double timestamp, double maximum) {
         animating_ = true;
     }
     settled_ = false;
+    idle_ticks_ = 0;
     last_input_time_ = timestamp;
 
     // Phase markers (gesture began or ended, momentum ended) carry no motion. Fed to the
     // predictor they would flatten its last segment and stall a frame at the hand-off from
     // finger to momentum.
-    if (delta != 0.0) {
-        target_ = std::clamp(target_ + delta, 0.0, maximum);
-        last_delta_ = delta;
-        predictor_.update(target_, timestamp);
+    if (delta == 0.0) {
+        return starting;
     }
+    target_ = std::clamp(target_ + delta, 0.0, maximum);
+    last_delta_ = delta;
+    predictor_.update(target_, timestamp);
     return starting;
 }
 
@@ -66,18 +70,24 @@ bool smooth_scroll::tick(double now, double maximum) {
     if (!animating_) {
         return false;
     }
-    const double idle = now - last_input_time_;
-    if (idle >= kIdleSeconds) {
+    const double previous = offset_;
+    if (!sample_tick(now, maximum)) {
+        offset_ = std::clamp(offset_, 0.0, maximum);
+    }
+
+    const bool changed = offset_ != previous;
+    idle_ticks_ = changed ? 0 : idle_ticks_ + 1;
+    if (idle_ticks_ >= kKeepAliveTicks) {
         animating_ = false;
+    }
+    return changed;
+}
+
+// Returns false once the gesture has settled and there is nothing left to sample.
+bool smooth_scroll::sample_tick(double now, double maximum) {
+    if (settled_) {
         return false;
     }
-
-    const double previous = offset_;
-    if (settled_) {
-        offset_ = std::clamp(offset_, 0.0, maximum);
-        return offset_ != previous;
-    }
-
     double sampled = std::clamp(predictor_.sample(now - kResampleLatencySeconds), 0.0, maximum);
     // Chromium suppresses predicted deltas that oppose the latest real delta. Without this, a
     // small over-prediction shows up as a one-frame backward twitch.
@@ -88,12 +98,12 @@ bool smooth_scroll::tick(double now, double maximum) {
     }
     offset_ = sampled;
 
-    if (idle >= kSettleSeconds) {
+    if (now - last_input_time_ >= kSettleSeconds) {
         // The finger stopped or lifted without momentum. Rest where the trajectory ended: it can
         // be ahead of the finger's final position by up to a frame of motion, which is invisible,
         // whereas snapping back to the accumulated input was a visible twitch.
         target_ = offset_;
         settled_ = true;
     }
-    return offset_ != previous;
+    return true;
 }

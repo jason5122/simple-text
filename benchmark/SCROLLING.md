@@ -20,7 +20,10 @@ editor and `scroll_benchmark` both drive it the same way.
    the drawable with `presentsWithTransaction`, the same path an event-driven frame takes.
 
 Everything else (scrollbar, keyboard, a line-based wheel) goes through `jump_to`, which ends the
-gesture.
+gesture. The display link is started on the first event of a gesture and stopped after 20
+consecutive ticks with nothing to draw, the keep-alive Chromium's Mac begin-frame source uses
+(`kMaxKeepAliveCount`); restarting it costs 0.02 ms and drops no frames, so the tail only has
+to outlast the 33 ms gaps at the end of a momentum tail.
 
 The sample point is one 120 Hz input interval plus delivery jitter behind the tick, so it normally
 falls inside the recent events and is interpolated. A tick whose interval received no event (the
@@ -44,6 +47,55 @@ the last five intervals, by at most 4 ms so a real pause is kept), then fits a l
 events of the last 24 ms and evaluates it at the sample time. Replaying that captured flick into
 the editor, the per-frame steps through the momentum phase went from 22, 16, 32, 37, 7, 33, 21,
 39 with two-point interpolation to 25, 31, 36, 35, 41, 45, 40, 37 with the fit.
+
+## Resampling versus Chromium's trackpad model
+
+Chromium resamples only touchscreens. For trackpads it shows, each frame, the sum of the deltas
+that arrived since the previous frame, with a deadline that folds events arriving up to a third
+of a frame after the begin-frame into the frame being built. That works because macOS momentum
+events are phase-locked to the display (in a 58 s recording of real use, phase drift 0-14 us per
+event, jitter 0.1-0.4 ms) and delivered with little jitter. Both models were replayed against
+that recording (the accumulate mode was removed again afterwards; the user found it choppier):
+
+| | resample | accumulate |
+|---|---|---|
+| frames on the 8.33 ms cadence | 4941 of 5067 | 2810 of 3936 |
+| momentum step deviation p50 / p90 | 4.0% / 15.5% | 27.7% / 39.1% |
+| input to glass while moving, p50 | 27.2 ms | 27.0 ms |
+
+Accumulation depends on when events *arrive* relative to the tick; in the recording, 5 of 27
+momentum gestures had events landing within 1 ms of a tick, which is where a gesture starts
+alternating between empty and doubled frames. Replay delivery is jerkier than live delivery, so
+the replayed accumulate numbers are pessimistic, but resampling is immune to arrival time by
+construction and measured no slower, because latency is dominated by the 20 ms from tick to
+glass and the event phase, not by the 9.5 ms sample offset. Without Chromium's deadline
+machinery there is no room on this pipeline anyway: the tick fires about 3 ms before the vsync
+whose interval the window server composites the frame in, so the commit has to leave within a
+millisecond or two of it.
+
+## Where the last 1% goes
+
+Live, the cadence is already 99.8%: in a 58 s session of real use, 9 of 5054 moving frames landed
+a refresh late, and only one of those followed a late tick. The benchmark and replays show 1-3%
+because they add load. What the remaining frames are not:
+
+- Not deadline misses on our side. Delaying the tick's hop to the main thread
+  (`PX_TICK_DELAY_MS`, since removed) mapped the window server's deadline: 1 ms later and frames
+  start being superseded, 2 ms later and every frame is a refresh late. The commit normally
+  leaves 0.7 ms after the tick, so the margin is about 1 ms. Scheduling each frame's tick 3 ms
+  ahead of the next callback (`PX_TICK_LEAD_MS`, since removed) tripled that margin and cost 2 ms
+  of latency, and over 12 interleaved runs, quiet and with six busy CPU threads, dropped exactly
+  as many frames (0-2 per 145) as the plain tick. The residual falls anywhere in a run.
+- Not the link. CADisplayLink (macOS 14) fires 0.06 ms after a vsync where CVDisplayLink fires
+  3.2 ms before it; as a drop-in every frame landed a refresh later (paint to glass 24.2 ms vs
+  19.4 ms), and its full-rate request did not shorten the gesture-start ramp (30-34 ms vs 23-28
+  ms from first motion to first displayed movement). It was tried and removed.
+
+What is left is the window server's own scheduling. A game gets a perfect cadence by presenting
+straight to the display, which macOS only allows a full-screen window, and windowed presentation
+without the transaction runs at 60 Hz (above). ProMotion adds its own variation: with an
+external monitor attached the built-in panel idles at 60 Hz and takes seconds and a visible
+stall to switch to 120 Hz, which shows up as 16.67 ms tick and presentation intervals together.
 
 ## What was measured (2026-09-09, M4 Max, built-in ProMotion panel, windowed)
 
@@ -93,7 +145,9 @@ out/release/scroll_benchmark /tmp/px-scroll.tsv [--input-phase-ms 4] [--fullscre
 refresh, `dropped_presentations` (drawables that never reached the glass) should be in the single
 digits, and `presented_step_error` is the smoothness number; `presented_position_error` and
 `input_to_present` are the price paid in lag. `target_to_present` and `tick_delay` separate the
-window server's latency from the app's.
+window server's latency from the app's. The report tool prints the same lag for the editor as
+"input to glass while moving": how long after the accumulated input reached a frame's offset
+the frame appeared.
 
 ## Recording your own scrolling
 

@@ -2,7 +2,7 @@
 #include "smoothness/scroll_trace.h"
 #include "smoothness/timed_input.h"
 #include "ui/retained_text.h"
-#include "ui/scroll_predictor.h"
+#include "ui/smooth_scroll.h"
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -27,8 +27,11 @@ constexpr double kLineHeight = 20.0;
 constexpr double kTextTop = 18.0;
 constexpr double kWarmupSeconds = 0.5;
 constexpr double kSettleSeconds = 0.25;
-constexpr double kPredictionTailSeconds = 0.050;
 constexpr double kNominalFrameInterval = 1.0 / 120.0;
+// Room to scroll either way from the start: the document wraps, and a recorded trace may run in
+// either direction.
+constexpr double kInitialOffset = 100000.0;
+constexpr double kMaximumOffset = 200000.0;
 constexpr int kSettledTicks = 30;  // consecutive display ticks at one size, for --fullscreen
 
 constexpr fcolor kWindowBackground{0.055f, 0.060f, 0.070f, 1.0f};
@@ -77,21 +80,13 @@ struct PreparedLine {
 };
 
 struct Options {
-    enum class Mode { event, resampled };
-
     const char* trace_path = nullptr;
     int repetitions = 1;
-    Mode mode = Mode::event;
     double input_phase_ms = 4.0;
-    double sample_offset_ms = 9.5;  // behind the tick time, as the editor does
     bool dump_frames = false;
     bool keep_open = false;
     bool full_screen = false;
 };
-
-const char* mode_name(Options::Mode mode) {
-    return mode == Options::Mode::event ? "event" : "resampled";
-}
 
 bool parse_positive_int(const char* text, int maximum, int* value) {
     if (!text || !*text) {
@@ -108,9 +103,8 @@ bool parse_positive_int(const char* text, int maximum, int* value) {
 
 void usage(const char* program) {
     std::fprintf(stderr,
-                 "usage: %s TRACE.tsv [--mode event|resampled] [--input-phase-ms N] "
-                 "[--sample-offset-ms N] [--repetitions N] [--dump-frames] [--keep-open] "
-                 "[--fullscreen]\n",
+                 "usage: %s TRACE.tsv [--input-phase-ms N] [--repetitions N] [--dump-frames] "
+                 "[--keep-open] [--fullscreen]\n",
                  program);
 }
 
@@ -124,27 +118,11 @@ bool parse_options(int argc, char** argv, Options* options) {
     }
     options->trace_path = argv[1];
     for (int i = 2; i < argc; ++i) {
-        if (std::strcmp(argv[i], "--mode") == 0 && i + 1 < argc) {
-            const char* mode = argv[++i];
-            if (std::strcmp(mode, "event") == 0) {
-                options->mode = Options::Mode::event;
-            } else if (std::strcmp(mode, "resampled") == 0) {
-                options->mode = Options::Mode::resampled;
-            } else {
-                return false;
-            }
-        } else if (std::strcmp(argv[i], "--input-phase-ms") == 0 && i + 1 < argc) {
+        if (std::strcmp(argv[i], "--input-phase-ms") == 0 && i + 1 < argc) {
             char* end = nullptr;
             options->input_phase_ms = std::strtod(argv[++i], &end);
             if (!end || *end != '\0' || !std::isfinite(options->input_phase_ms) ||
                 options->input_phase_ms < 0.0 || options->input_phase_ms > 100.0) {
-                return false;
-            }
-        } else if (std::strcmp(argv[i], "--sample-offset-ms") == 0 && i + 1 < argc) {
-            char* end = nullptr;
-            options->sample_offset_ms = std::strtod(argv[++i], &end);
-            if (!end || *end != '\0' || !std::isfinite(options->sample_offset_ms) ||
-                options->sample_offset_ms < -50.0 || options->sample_offset_ms > 100.0) {
                 return false;
             }
         } else if (std::strcmp(argv[i], "--repetitions") == 0 && i + 1 < argc) {
@@ -230,11 +208,16 @@ public:
         // Hand scrolling, so --keep-open leaves something you can actually feel. Refused until the
         // run has reported: while the trace is playing the offset belongs to the trace, and
         // letting the trackpad move it too would quietly corrupt the numbers this harness exists
-        // to produce. Once playback ends animation_tick stops writing the offset, so the two never
-        // fight.
+        // to produce.
         if (event->type == PX_EVENT_SCROLL && reported_) {
-            scroll_offset_ -= event->scroll_delta.y;
-            px_mark_dirty(window_);
+            if (event->precise_scroll) {
+                if (scroll_.scroll(-event->scroll_delta.y, event->timestamp, kMaximumOffset)) {
+                    px_mark_dirty(window_);
+                }
+            } else {
+                scroll_.jump_to(scroll_.offset() - event->scroll_delta.y, kMaximumOffset);
+                px_mark_dirty(window_);
+            }
             return true;
         }
         return false;
@@ -255,34 +238,24 @@ public:
             }
             playback_start_time_ = px_now();
             previous_tick_time_ = now;
-            previous_rendered_offset_ = scroll_offset_;
-            previous_presented_offset_ = scroll_offset_;
+            scroll_.jump_to(kInitialOffset, kMaximumOffset);
+            previous_rendered_offset_ = scroll_.offset();
+            previous_presented_offset_ = scroll_.offset();
+            last_painted_offset_ = scroll_.offset();
             px_set_frame_presented_callback(window_,
                                             [this](uint64_t frame_id, double presented_time) {
                                                 frame_presented(frame_id, presented_time);
                                             });
             schedule_input();
-            std::printf("playback_started mode=%s input_phase=%.3fms target_time=%.6f\n",
-                        mode_name(options_.mode), options_.input_phase_ms, now);
+            std::printf("playback_started input_phase=%.3fms target_time=%.6f\n",
+                        options_.input_phase_ms, now);
         } else if (delivered_samples_ < samples_.size()) {
             tick_intervals_ms_.push_back((now - previous_tick_time_) * 1000.0);
             previous_tick_time_ = now;
         }
 
-        if (options_.mode == Options::Mode::resampled && delivered_samples_ != 0) {
-            double sampled = predictor_.sample(px_now() - options_.sample_offset_ms / 1000.0);
-            const bool settling = px_now() - last_input_time_ >= kPredictionTailSeconds;
-            if (settling) {
-                sampled = input_offset_;
-            } else if (last_input_delta_ > 0.0) {
-                sampled = std::max(sampled, scroll_offset_);
-            } else if (last_input_delta_ < 0.0) {
-                sampled = std::min(sampled, scroll_offset_);
-            }
-            if (sampled != scroll_offset_) {
-                scroll_offset_ = sampled;
-                px_mark_dirty(window_);
-            }
+        if (scroll_.tick(px_now(), kMaximumOffset)) {
+            px_mark_dirty(window_);
         }
 
         const double elapsed = std::max(0.0, px_now() - playback_start_time_);
@@ -313,7 +286,8 @@ public:
         draw_scene(context, bounds);
         const auto end = std::chrono::steady_clock::now();
 
-        if (playback_start_time_ == 0.0 || reported_ || scroll_offset_ == last_painted_offset_) {
+        const double scroll_offset = scroll_.offset();
+        if (playback_start_time_ == 0.0 || reported_ || scroll_offset == last_painted_offset_) {
             return;
         }
 
@@ -331,22 +305,22 @@ public:
                                         .tick_target_time = tick_target_time_,
                                         .tick_delay_ms = tick_delay_ms_,
                                         .last_input_time = last_input_time_,
-                                        .offset = scroll_offset_});
+                                        .offset = scroll_offset});
         }
-        last_painted_offset_ = scroll_offset_;
+        last_painted_offset_ = scroll_offset;
 
-        const double motion_step = std::abs(scroll_offset_ - previous_rendered_offset_);
+        const double motion_step = std::abs(scroll_offset - previous_rendered_offset_);
         if (motion_step != 0.0) {
             motion_steps_.push_back(motion_step);
             displayed_distance_ += motion_step;
-            previous_rendered_offset_ = scroll_offset_;
+            previous_rendered_offset_ = scroll_offset;
         }
         if (pending_motion_ticks_ > 1) {
             coalesced_motion_ticks_ += pending_motion_ticks_ - 1;
         }
         if (options_.dump_frames) {
             std::printf("FRAME time=%.6f offset=%.3f events=%zu motion_ticks=%zu render=%.3fms\n",
-                        paint_time - playback_start_time_, scroll_offset_, pending_events_,
+                        paint_time - playback_start_time_, scroll_offset, pending_events_,
                         pending_motion_ticks_, render_times_ms_.back());
         }
         pending_events_ = 0;
@@ -383,36 +357,27 @@ private:
         }
 
         const double delta = -samples_[index].scrolling_delta_y;
-        if (!predictor_.has_input()) {
-            predictor_.update(scroll_offset_, now - 0.000001);
-            input_offset_ = scroll_offset_;
+        if (scroll_.scroll(delta, now, kMaximumOffset)) {
+            px_mark_dirty(window_);
         }
-        input_offset_ += delta;
-        predictor_.update(input_offset_, now);
         last_input_time_ = now;
         ++delivered_samples_;
         ++input_ticks_;
         ++pending_events_;
         if (delta != 0.0) {
-            last_input_delta_ = delta;
             ++motion_ticks_;
             ++pending_motion_ticks_;
-        }
-
-        if (options_.mode == Options::Mode::event) {
-            scroll_offset_ = input_offset_;
-            px_mark_dirty(window_);
         }
     }
 
     double ideal_offset_at(double elapsed) const {
         elapsed -= options_.input_phase_ms / 1000.0;
         if (elapsed < 0.0) {
-            return 0.0;
+            return kInitialOffset;
         }
 
         const uint64_t elapsed_ns = static_cast<uint64_t>(elapsed * 1'000'000'000.0);
-        double before = 0.0;
+        double before = kInitialOffset;
         uint64_t before_time = 0;
         for (const scroll_trace::Sample& sample : samples_) {
             const double after = before - sample.scrolling_delta_y;
@@ -532,8 +497,9 @@ private:
         const double document_left = kSidebarWidth + kGutterWidth;
         const rect document_clip{kSidebarWidth, 0.0, viewport.w - kSidebarWidth, viewport.h};
         const int visible_rows = static_cast<int>(std::ceil(viewport.h / kLineHeight)) + 2;
-        const int64_t first_line = static_cast<int64_t>(std::floor(scroll_offset_ / kLineHeight));
-        const double fractional_scroll = scroll_offset_ - first_line * kLineHeight;
+        const double scroll_offset = scroll_.offset();
+        const int64_t first_line = static_cast<int64_t>(std::floor(scroll_offset / kLineHeight));
+        const double fractional_scroll = scroll_offset - first_line * kLineHeight;
 
         context->push_state(false);
         context->restrict_clip_rect(document_clip);
@@ -555,7 +521,7 @@ private:
                 }
             }
         }
-        const double thumb_progress = std::fmod(std::abs(scroll_offset_), 4000.0) / 4000.0;
+        const double thumb_progress = std::fmod(std::abs(scroll_offset), 4000.0) / 4000.0;
         context->draw_rect(rect{viewport.w - 8.0, thumb_progress * (viewport.h - 80.0), 5.0, 80.0},
                            fcolor{0.38f, 0.42f, 0.50f, 0.9f});
         context->end_rect_batch();
@@ -596,12 +562,11 @@ private:
         }
 
         const vec2 size = px_window_size(window_);
-        std::printf("benchmark=scroll mode=%s backend=%s trace=%s samples=%zu "
-                    "trace_duration=%.3fms input_phase=%.3fms sample_offset=%.3fms "
-                    "repetitions=%d input_distance=%.3fpt presentation=%s viewport=%.0fx%.0f\n",
-                    mode_name(options_.mode), backend_ ? backend_ : "unknown", options_.trace_path,
-                    samples_.size(), duration_ms, options_.input_phase_ms,
-                    options_.sample_offset_ms, options_.repetitions, input_distance_,
+        std::printf("benchmark=scroll backend=%s trace=%s samples=%zu trace_duration=%.3fms "
+                    "input_phase=%.3fms repetitions=%d input_distance=%.3fpt presentation=%s "
+                    "viewport=%.0fx%.0f\n",
+                    backend_ ? backend_ : "unknown", options_.trace_path, samples_.size(),
+                    duration_ms, options_.input_phase_ms, options_.repetitions, input_distance_,
                     options_.full_screen ? "fullscreen" : "windowed", size.x, size.y);
         print_distribution("display_tick_interval", "ms", tick_intervals_ms_);
         print_distribution("paint_interval", "ms", paint_intervals_ms_);
@@ -652,10 +617,7 @@ private:
     double previous_presentation_time_ = 0.0;
     double tick_target_time_ = 0.0;
     double tick_delay_ms_ = 0.0;
-    double scroll_offset_ = 0.0;
-    double input_offset_ = 0.0;
     double last_input_time_ = 0.0;
-    double last_input_delta_ = 0.0;
     double last_painted_offset_ = 0.0;
     double previous_rendered_offset_ = 0.0;
     double previous_presented_offset_ = 0.0;
@@ -666,7 +628,7 @@ private:
     bool have_previous_presented_frame_ = false;
     size_t stalled_presentations_ = 0;
     size_t dropped_presentations_ = 0;
-    scroll_predictor predictor_;
+    smooth_scroll scroll_;
     std::unordered_map<uint64_t, painted_frame> awaiting_presentation_;
     std::vector<double> tick_intervals_ms_;
     std::vector<double> paint_intervals_ms_;

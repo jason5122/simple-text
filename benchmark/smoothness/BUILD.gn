@@ -17,9 +17,6 @@ if (is_mac) {
   executable("scroll_trace") {
     sources = [ "scroll_trace.mm" ]
     deps = [ ":scroll_trace_data" ]
-    frameworks = [
-      "AppKit.framework",
-      "ApplicationServices.framework",
-    ]
+    frameworks = [ "ApplicationServices.framework" ]
   }
 }

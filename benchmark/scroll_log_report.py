@@ -165,6 +165,49 @@ def print_window(entries, origin, start, end):
         print(describe(kind, fields, origin, time))
 
 
+def display_lag(scrolls, presents):
+    """How long after the input reached each displayed offset the frame showing it appeared.
+
+    The input trajectory is the running sum of deltas at their own timestamps, re-based to the
+    displayed offset whenever a gesture starts (a gap of 25 ms or more), since the app rests
+    where its trajectory ended rather than exactly on the accumulated input. Returns lag values
+    in ms for frames that moved."""
+    shown = [p for p in presents if p["t"] > 0]
+    if len(shown) < 2 or not scrolls:
+        return []
+    lags = []
+    trajectory = []  # (time, position) of the accumulated input
+    position = 0.0
+    previous_time = None
+    frame_index = 0
+    for event in scrolls:
+        if previous_time is None or event["ts"] - previous_time >= 0.025:
+            # Gesture start: the content is wherever the last frame before this event left it.
+            while frame_index + 1 < len(shown) and shown[frame_index + 1]["t"] <= event["ts"]:
+                frame_index += 1
+            position = shown[frame_index]["offset"]
+            trajectory = [(event["ts"], position)]
+        previous_time = event["ts"]
+        position += event["delta"]
+        trajectory.append((event["ts"], position))
+    trajectory.sort()
+
+    def time_input_reached(offset, direction):
+        for (t0, p0), (t1, p1) in zip(trajectory, trajectory[1:]):
+            if (p0 - offset) * direction <= 0 <= (p1 - offset) * direction and p1 != p0:
+                return t0 + (t1 - t0) * (offset - p0) / (p1 - p0)
+        return None
+
+    for before, frame in zip(shown, shown[1:]):
+        step = frame["offset"] - before["offset"]
+        if abs(step) < VISIBLE_STEP:
+            continue
+        reached = time_input_reached(frame["offset"], 1.0 if step > 0 else -1.0)
+        if reached is not None and 0 <= frame["t"] - reached < 0.2:
+            lags.append((frame["t"] - reached) * 1000.0)
+    return lags
+
+
 def report(args):
     records = read_log(args.log)
     scrolls = scroll_records(records)
@@ -175,6 +218,7 @@ def report(args):
     refresh = refresh_interval(presents)
     flag_presents(presents, refresh)
     flag_scrolls(scrolls)
+    lags = sorted(display_lag(scrolls, presents))
 
     origin = scrolls[0]["ts"]
     shown = [p for p in presents if p["t"] > 0]
@@ -185,6 +229,9 @@ def report(args):
     late_inputs = sum(1 for s in scrolls if s["flags"])
     print(f"frames on the refresh cadence: {on_time} of {len(shown) - 1}; "
           f"flagged frames: {flagged_frames}; late input events: {late_inputs}")
+    if lags:
+        print(f"input to glass while moving: p50 {lags[len(lags) // 2]:.1f} ms, "
+              f"p90 {lags[9 * len(lags) // 10]:.1f} ms over {len(lags)} frames")
 
     marks = marks_from_trace(args.trace, origin) if args.trace else marks_from_log(records)
     if args.trace:

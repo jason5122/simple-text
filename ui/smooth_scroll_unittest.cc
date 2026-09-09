@@ -118,13 +118,21 @@ TEST(SmoothScroll, ContinuesForwardWhenScrollingResumesAfterAPause) {
     EXPECT_LT(scroll.offset(), before_pause + 60.0);
 }
 
-TEST(SmoothScroll, StopsAnimatingAfterASecondOfIdleInput) {
+TEST(SmoothScroll, StopsAnimatingAfterTwentyIdleTicks) {
     smooth_scroll scroll;
     scroll.scroll(0.0, 1.0, kNoLimit);
     scroll.scroll(10.0, 1.0 + kInterval, kNoLimit);
-    scroll.tick(1.5, kNoLimit);
+    double time = 1.0 + kInterval;
+    for (int i = 0; i < 19; ++i) {
+        time += kInterval;
+        scroll.tick(time + kTickPhase, kNoLimit);
+    }
+    // The first ticks still move toward the input; only ticks that changed nothing count.
     EXPECT_TRUE(scroll.animating());
-    scroll.tick(2.1, kNoLimit);
+    for (int i = 0; i < 20; ++i) {
+        time += kInterval;
+        scroll.tick(time + kTickPhase, kNoLimit);
+    }
     EXPECT_FALSE(scroll.animating());
 }
 

@@ -3,6 +3,7 @@ group("ui") {
     ":grapheme_shaper",
     ":retained_text",
     ":scroll_predictor",
+    ":smooth_scroll",
     ":window",
   ]
 }
@@ -14,11 +15,23 @@ source_set("scroll_predictor") {
   ]
 }
 
+source_set("smooth_scroll") {
+  sources = [
+    "smooth_scroll.cc",
+    "smooth_scroll.h",
+  ]
+  deps = [ ":scroll_predictor" ]
+}
+
 source_set("ui_unittests") {
   testonly = true
-  sources = [ "scroll_predictor_unittest.cc" ]
+  sources = [
+    "scroll_predictor_unittest.cc",
+    "smooth_scroll_unittest.cc",
+  ]
   deps = [
     ":scroll_predictor",
+    ":smooth_scroll",
     "//testing:gtest",
   ]
 }

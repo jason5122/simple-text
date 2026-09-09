@@ -1,6 +1,6 @@
 #include "px/px.h"
 #include "ui/retained_text.h"
-#include "ui/scroll_predictor.h"
+#include "ui/smooth_scroll.h"
 #include "ui/window.h"
 #include <algorithm>
 #include <array>
@@ -40,22 +40,6 @@ constexpr double kScrollbarMargin = 4.0;
 
 constexpr double kMinimumThumbHeight = 36.0;
 constexpr size_t kDocumentLineCount = 500;
-// Input this long after the previous event is a pause (or a new gesture), whichever is longer of
-// a fixed floor and a multiple of the stream's own cadence: a momentum tail slows to 33 ms
-// intervals and must not count as pausing.
-constexpr double kScrollPauseSeconds = 0.025;
-constexpr double kScrollPauseCadenceMultiple = 2.5;
-constexpr double kScrollPredictionIdleSeconds = 0.050;
-constexpr double kScrollDisplayLinkIdleSeconds = 1.0;
-constexpr double kScrollSeedIntervalSeconds = 1.0 / 120.0;
-// How far behind the tick the input trajectory is sampled: one 120 Hz input interval plus delivery
-// jitter, so the sample normally falls between two real events and is interpolated. A tick whose
-// interval happened to receive no event then still advances along the line instead of repeating
-// the previous frame and doubling up on the next one, which is the beat pattern between the input
-// and display clocks that reads as judder. Chromium's LinearResampling does the same at 5 ms
-// behind its (vsync-aligned) frame time.
-constexpr double kScrollResampleLatencySeconds = 0.0095;
-
 // The find panel along the bottom, after Sublime's: a close mark, four option toggles, the query
 // field with its match count, and the three action buttons hugging the right edge. Cmd+F shows
 // it, Escape hides it. The document area ends where the panel begins.
@@ -340,12 +324,21 @@ public:
             }
             break;
         case PX_EVENT_SCROLL: {
-            if (event->precise_scroll) {
-                queue_scroll_delta(-event->scroll_delta.y, event->timestamp);
-            } else {
-                stop_scroll_animation();
-                set_scroll_offset(scroll_offset_ - event->scroll_delta.y);
+            if (kScrollTrace) {
+                std::println(stderr, "scroll ts={:.6f} dt={:.3f}ms lag={:.3f}ms delta={:.3f}",
+                             event->timestamp, (event->timestamp - last_scroll_time_) * 1000.0,
+                             (px_now() - event->timestamp) * 1000.0, -event->scroll_delta.y);
+                last_scroll_time_ = event->timestamp;
             }
+            if (event->precise_scroll) {
+                if (scroll_.scroll(-event->scroll_delta.y, event->timestamp,
+                                   maximum_scroll_offset())) {
+                    window_->mark_dirty();
+                }
+            } else {
+                jump_scroll_to(scroll_.offset() - event->scroll_delta.y);
+            }
+            window_->set_animating(scroll_.animating());
             return true;
         }
         case PX_EVENT_MOUSE_BUTTON:
@@ -400,48 +393,17 @@ public:
     }
 
     void animation_tick(double now) override {
-        if (!scroll_animation_active_) {
-            return;
-        }
-        // `now` is the frame's display time on macOS and the tick time elsewhere; sample against
-        // the tick time so the offset means the same thing on every platform.
+        // `now` is the frame's display time on macOS and the tick time elsewhere; the scroll
+        // samples against the tick time so it means the same thing on every platform.
         const double tick_time = px_now();
-        const double input_idle = tick_time - last_scroll_input_time_;
-        if (input_idle >= kScrollDisplayLinkIdleSeconds) {
-            stop_scroll_animation();
-            return;
-        }
-        if (scroll_prediction_settled_) {
-            return;
-        }
-
-        double sampled =
-            std::clamp(scroll_predictor_.sample(tick_time - kScrollResampleLatencySeconds), 0.0,
-                       maximum_scroll_offset());
-        if (kScrollTrace) {
-            std::println(stderr,
-                         "tick target={:.6f} now={:.6f} sampled={:.3f} latest_input={:.3f}", now,
-                         tick_time, sampled, scroll_predictor_.latest_position());
-        }
-        // Chromium suppresses predicted deltas that oppose the latest real delta. Without this, a
-        // small over-prediction shows up as a one-frame backward twitch.
-        if (last_scroll_delta_ > 0.0) {
-            sampled = std::max(sampled, scroll_offset_);
-        } else if (last_scroll_delta_ < 0.0) {
-            sampled = std::min(sampled, scroll_offset_);
-        }
-        if (sampled != scroll_offset_) {
-            scroll_offset_ = sampled;
+        if (scroll_.tick(tick_time, maximum_scroll_offset())) {
             window_->mark_dirty();
         }
-
-        if (input_idle >= kScrollPredictionIdleSeconds) {
-            // The finger stopped or lifted without momentum. Rest where the trajectory ended: it
-            // can be ahead of the finger's final position by up to a frame of motion, which is
-            // invisible, whereas snapping back to the accumulated input was a visible twitch.
-            scroll_target_offset_ = scroll_offset_;
-            scroll_prediction_settled_ = true;
+        if (kScrollTrace && scroll_.animating()) {
+            std::println(stderr, "tick target={:.6f} now={:.6f} offset={:.3f}", now, tick_time,
+                         scroll_.offset());
         }
+        window_->set_animating(scroll_.animating());
     }
 
     void frame_presented(uint64_t frame_id, double presented_time) {
@@ -467,7 +429,7 @@ public:
               int dirty_count) override {
         if (kScrollTrace) {
             if (const uint64_t frame_id = px_current_frame_id(window_->px_window())) {
-                painted_offsets_.insert_or_assign(frame_id, scroll_offset_);
+                painted_offsets_.insert_or_assign(frame_id, scroll_.offset());
             }
         }
         const double sidebar_width = sidebar_visible_ ? kSidebarWidth : 0.0;
@@ -508,16 +470,16 @@ public:
         context->push_state(false);
         context->restrict_clip_rect(
             rect{sidebar_width, 0.0, bounds.w - sidebar_width, content_bottom()});
+        const double scroll_offset = scroll_.offset();
         const int first_line = std::max(
-            0, static_cast<int>(std::floor((scroll_offset_ - kTextTop) / line_height_)) - 1);
+            0, static_cast<int>(std::floor((scroll_offset - kTextTop) / line_height_)) - 1);
         const int last_line = std::min(
             static_cast<int>(kDocumentLineCount),
-            static_cast<int>(std::ceil((scroll_offset_ + bounds.h - kTextTop) / line_height_)) +
-                1);
+            static_cast<int>(std::ceil((scroll_offset + bounds.h - kTextTop) / line_height_)) + 1);
         context->begin_text_batch();
         for (int line = first_line; line < last_line; ++line) {
             const size_t i = static_cast<size_t>(line);
-            const double y = kTextTop + i * line_height_ - scroll_offset_;
+            const double y = kTextTop + i * line_height_ - scroll_offset;
             const double number_x = sidebar_width + kGutterWidth - kGutterRightPadding -
                                     line_number_layouts_[i].advance;
             draw_layout(context, gutter_font_, vec2{number_x, y},
@@ -729,7 +691,7 @@ private:
             track.h, std::max(kMinimumThumbHeight, track.h * viewport_height / document_height()));
         const double travel = track.h - thumb_height;
         const double maximum_offset = maximum_scroll_offset();
-        const double progress = maximum_offset > 0.0 ? scroll_offset_ / maximum_offset : 0.0;
+        const double progress = maximum_offset > 0.0 ? scroll_.offset() / maximum_offset : 0.0;
         return rect{track.x + 2.0, track.y + travel * progress, track.w - 4.0, thumb_height};
     }
 
@@ -738,64 +700,10 @@ private:
                point.y < bounds.bottom();
     }
 
-    void set_scroll_offset(double offset) {
-        const double next_offset = std::clamp(offset, 0.0, maximum_scroll_offset());
-        if (next_offset != scroll_offset_) {
-            scroll_offset_ = next_offset;
-            window_->mark_dirty();
-        }
-        scroll_target_offset_ = next_offset;
-    }
-
-    void queue_scroll_delta(double delta, double timestamp) {
-        if (kScrollTrace) {
-            std::println(stderr, "scroll ts={:.6f} dt={:.3f}ms lag={:.3f}ms delta={:.3f}",
-                         timestamp, (timestamp - last_scroll_input_time_) * 1000.0,
-                         (px_now() - timestamp) * 1000.0, delta);
-        }
-        const double pause = std::max(kScrollPauseSeconds,
-                                      kScrollPauseCadenceMultiple * scroll_predictor_.cadence());
-        if (!scroll_animation_active_ || timestamp - last_scroll_input_time_ >= pause) {
-            // A new gesture, or the finger resuming after a pause. The trajectory restarts from
-            // where the content is: after a pause that can be a frame of motion ahead of the
-            // accumulated input, and continuing from there is invisible, whereas standing still
-            // until the input caught up, or jumping back, is not. Seeding one interval in the
-            // past lets the first delta carry a velocity instead of a jump.
-            const double seed_interval = scroll_predictor_.cadence() > 0.0
-                                             ? scroll_predictor_.cadence()
-                                             : kScrollSeedIntervalSeconds;
-            scroll_predictor_.reset();
-            scroll_predictor_.update(scroll_offset_, timestamp - seed_interval);
-            scroll_target_offset_ = scroll_offset_;
-            last_scroll_delta_ = 0.0;
-            scroll_animation_active_ = true;
-            window_->set_animating(true);
-            // An unchanged frame, so the window server starts leaving its idle refresh rate on
-            // the touch rather than on the first motion.
-            window_->mark_dirty();
-        }
-        scroll_prediction_settled_ = false;
-        last_scroll_input_time_ = timestamp;
-        if (delta == 0.0) {
-            // Phase markers (gesture began or ended, momentum ended) carry no motion. Fed to the
-            // predictor they would flatten its last segment and stall a frame at the hand-off from
-            // finger to momentum.
-            return;
-        }
-
-        scroll_target_offset_ =
-            std::clamp(scroll_target_offset_ + delta, 0.0, maximum_scroll_offset());
-        last_scroll_delta_ = delta;
-        scroll_predictor_.update(scroll_target_offset_, timestamp);
-    }
-
-    void stop_scroll_animation() {
-        if (!scroll_animation_active_) {
-            return;
-        }
-        scroll_animation_active_ = false;
-        scroll_predictor_.reset();
+    void jump_scroll_to(double offset) {
+        scroll_.jump_to(offset, maximum_scroll_offset());
         window_->set_animating(false);
+        window_->mark_dirty();
     }
 
     void scroll_thumb_to(double pointer_y) {
@@ -807,7 +715,7 @@ private:
         }
         const double thumb_y =
             std::clamp(pointer_y - scrollbar_drag_offset_, track.y, track.bottom() - thumb.h);
-        set_scroll_offset((thumb_y - track.y) / travel * maximum_scroll_offset());
+        jump_scroll_to((thumb_y - track.y) / travel * maximum_scroll_offset());
     }
 
     window* window_ = nullptr;
@@ -819,13 +727,8 @@ private:
     px_font_metrics body_metrics_;
     px_font_metrics sidebar_title_metrics_;
     px_font_metrics sidebar_metrics_;
-    double scroll_offset_ = 0.0;
-    double scroll_target_offset_ = 0.0;
-    double last_scroll_input_time_ = 0.0;
-    double last_scroll_delta_ = 0.0;
-    bool scroll_animation_active_ = false;
-    bool scroll_prediction_settled_ = false;
-    scroll_predictor scroll_predictor_;
+    smooth_scroll scroll_;
+    double last_scroll_time_ = 0.0;  // trace only
     std::unordered_map<uint64_t, double> painted_offsets_;
     double previous_presented_time_ = 0.0;
     double previous_presented_offset_ = 0.0;

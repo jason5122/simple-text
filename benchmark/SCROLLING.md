@@ -5,12 +5,22 @@ how to measure it again.
 
 ## The pipeline
 
-1. Scroll events feed a `scroll_predictor` (ui/scroll_predictor.h) with the event's own timestamp
-   (`px_event_t::timestamp`, the HID time on macOS). They never draw a frame themselves.
-2. While a gesture is live the window's display link runs. Each tick samples the input trajectory
-   9.5 ms behind the tick time, sets the scroll offset to that, and marks the window dirty.
+`smooth_scroll` (ui/smooth_scroll.h) is the whole policy, one instance per scrolled axis; the
+editor and `scroll_benchmark` both drive it the same way.
+
+1. Precise scroll events go to `smooth_scroll::scroll` with the event's own timestamp
+   (`px_event_t::timestamp`, the HID time on macOS). They never draw a frame themselves. The
+   call returns true when a gesture starts, which is when the app turns the display link on and
+   draws one unchanged frame.
+2. While a gesture is live the window's display link runs. Each tick calls
+   `smooth_scroll::tick`, which samples the input trajectory (a `scroll_predictor`) 9.5 ms behind
+   the tick time and moves the offset to it; the app marks the window dirty when it changed and
+   turns the display link off once `animating()` is false.
 3. Core Animation's own commit at the end of the run-loop turn displays the layer, which presents
    the drawable with `presentsWithTransaction`, the same path an event-driven frame takes.
+
+Everything else (scrollbar, keyboard, a line-based wheel) goes through `jump_to`, which ends the
+gesture.
 
 The sample point is one 120 Hz input interval plus delivery jitter behind the tick, so it normally
 falls inside the recent events and is interpolated. A tick whose interval received no event (the
@@ -47,7 +57,7 @@ the editor, the per-frame steps through the momentum phase went from 22, 16, 32,
   11.6 ms before the display link's output time and the frame lands one refresh after it. Roughly
   3-5% of frames land a refresh late; `nextDrawable` never blocks and the tick's delivery to the
   main thread varies by under 0.1 ms, so the misses are on the window server's side.
-- Sampling 2 ms behind the display time (the previous design) with a half-interval extrapolation
+- Sampling 2 ms behind the display time (an earlier design) with a half-interval extrapolation
   cap left the sampled value equal to "latest input plus a constant", so a tick without a new
   event repeated the previous frame: 29 doubled intervals in 68 during a replayed gesture in the
   editor. Sampling behind the tick removed all of them.
@@ -76,8 +86,7 @@ out/release/scroll_trace synthesize /tmp/px-scroll.tsv
 display link and reports `presentedTime` feedback:
 
 ```sh
-benchmark/run_scroll_comparison.sh out/release /tmp/px-scroll.tsv
-out/release/scroll_benchmark /tmp/px-scroll.tsv --mode resampled --sample-offset-ms 9.5 --dump-frames
+out/release/scroll_benchmark /tmp/px-scroll.tsv [--input-phase-ms 4] [--fullscreen] [--dump-frames]
 ```
 
 `presentation_interval` should sit at the refresh interval with a p99 no worse than one missed

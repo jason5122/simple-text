@@ -1,5 +1,4 @@
 #include "benchmark/smoothness/scroll_trace.h"
-#include <AppKit/AppKit.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <algorithm>
 #include <cerrno>
@@ -73,126 +72,6 @@ private:
     size_t sample_count_ = 0;
 };
 
-ScrollSample sample_from_event(NSEvent* event, CGEventTimestamp* first_timestamp) {
-    ScrollSample sample;
-    sample.delta_x = event.deltaX;
-    sample.delta_y = event.deltaY;
-    sample.scrolling_delta_x = event.scrollingDeltaX;
-    sample.scrolling_delta_y = event.scrollingDeltaY;
-    sample.precise = event.hasPreciseScrollingDeltas == YES;
-
-    CGEventRef cg_event = event.CGEvent;
-    if (!cg_event) {
-        return sample;
-    }
-    const CGEventTimestamp timestamp = CGEventGetTimestamp(cg_event);
-    if (*first_timestamp == 0) {
-        *first_timestamp = timestamp;
-    }
-    sample.time_ns = timestamp - *first_timestamp;
-    sample.line_delta_x = CGEventGetIntegerValueField(cg_event, kCGScrollWheelEventDeltaAxis2);
-    sample.line_delta_y = CGEventGetIntegerValueField(cg_event, kCGScrollWheelEventDeltaAxis1);
-    sample.fixed_delta_x =
-        CGEventGetDoubleValueField(cg_event, kCGScrollWheelEventFixedPtDeltaAxis2);
-    sample.fixed_delta_y =
-        CGEventGetDoubleValueField(cg_event, kCGScrollWheelEventFixedPtDeltaAxis1);
-    sample.point_delta_x =
-        CGEventGetIntegerValueField(cg_event, kCGScrollWheelEventPointDeltaAxis2);
-    sample.point_delta_y =
-        CGEventGetIntegerValueField(cg_event, kCGScrollWheelEventPointDeltaAxis1);
-    sample.phase = CGEventGetIntegerValueField(cg_event, kCGScrollWheelEventScrollPhase);
-    sample.momentum_phase =
-        CGEventGetIntegerValueField(cg_event, kCGScrollWheelEventMomentumPhase);
-    sample.continuous =
-        CGEventGetIntegerValueField(cg_event, kCGScrollWheelEventIsContinuous) != 0;
-    return sample;
-}
-
-}  // namespace
-
-@interface ScrollTraceView : NSView {
-    TraceWriter* _writer;
-    CGEventTimestamp _firstTimestamp;
-}
-- (instancetype)initWithFrame:(NSRect)frame writer:(TraceWriter*)writer;
-@end
-
-@implementation ScrollTraceView
-
-- (instancetype)initWithFrame:(NSRect)frame writer:(TraceWriter*)writer {
-    self = [super initWithFrame:frame];
-    if (self) {
-        _writer = writer;
-        _firstTimestamp = 0;
-    }
-    return self;
-}
-
-- (BOOL)acceptsFirstResponder {
-    return YES;
-}
-
-- (void)scrollWheel:(NSEvent*)event {
-    _writer->write(sample_from_event(event, &_firstTimestamp));
-}
-
-- (void)drawRect:(NSRect)dirty_rect {
-    [[NSColor windowBackgroundColor] setFill];
-    NSRectFill(self.bounds);
-
-    NSDictionary* attributes = @{
-        NSFontAttributeName : [NSFont systemFontOfSize:18.0 weight:NSFontWeightMedium],
-        NSForegroundColorAttributeName : [NSColor labelColor],
-    };
-    NSString* instructions = @"Scroll or fling over this window. Close the window when finished.";
-    NSSize text_size = [instructions sizeWithAttributes:attributes];
-    NSPoint origin = NSMakePoint((NSWidth(self.bounds) - text_size.width) * 0.5,
-                                 (NSHeight(self.bounds) - text_size.height) * 0.5);
-    [instructions drawAtPoint:origin withAttributes:attributes];
-}
-
-@end
-
-@interface ScrollTraceDelegate : NSObject <NSApplicationDelegate> {
-    TraceWriter* _writer;
-    NSWindow* _window;
-}
-- (instancetype)initWithWriter:(TraceWriter*)writer;
-@end
-
-@implementation ScrollTraceDelegate
-
-- (instancetype)initWithWriter:(TraceWriter*)writer {
-    self = [super init];
-    if (self) {
-        _writer = writer;
-    }
-    return self;
-}
-
-- (void)applicationDidFinishLaunching:(NSNotification*)notification {
-    const NSRect frame = NSMakeRect(0.0, 0.0, 760.0, 320.0);
-    _window =
-        [[NSWindow alloc] initWithContentRect:frame
-                                    styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
-                                              NSWindowStyleMaskMiniaturizable
-                                      backing:NSBackingStoreBuffered
-                                        defer:NO];
-    _window.title = @"Scroll Trace Recorder";
-    _window.contentView = [[ScrollTraceView alloc] initWithFrame:frame writer:_writer];
-    [_window center];
-    [_window makeKeyAndOrderFront:nil];
-    [NSApp activateIgnoringOtherApps:YES];
-}
-
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender {
-    return YES;
-}
-
-@end
-
-namespace {
-
 uint64_t nanoseconds_to_ticks(uint64_t nanoseconds, const mach_timebase_info_data_t& timebase) {
     const unsigned __int128 scaled = static_cast<unsigned __int128>(nanoseconds) * timebase.denom;
     return static_cast<uint64_t>(scaled / timebase.numer);
@@ -234,24 +113,6 @@ CGEventRef create_event(const ScrollSample& sample, CGEventSourceRef source, CGP
     CGEventSetIntegerValueField(event, kCGScrollWheelEventMomentumPhase,
                                 static_cast<int64_t>(sample.momentum_phase));
     return event;
-}
-
-int record_trace(const char* path) {
-    TraceWriter writer(path);
-    if (!writer.valid()) {
-        return 3;
-    }
-
-    @autoreleasepool {
-        NSApplication* application = [NSApplication sharedApplication];
-        application.activationPolicy = NSApplicationActivationPolicyRegular;
-        ScrollTraceDelegate* delegate = [[ScrollTraceDelegate alloc] initWithWriter:&writer];
-        application.delegate = delegate;
-        [application run];
-    }
-    std::fprintf(stderr, "scroll_trace: recorded %zu samples in %s\n", writer.sample_count(),
-                 path);
-    return writer.sample_count() == 0 ? 4 : 0;
 }
 
 ScrollSample synthetic_sample(uint64_t time_ns,
@@ -396,10 +257,9 @@ int replay_trace(const char* path, pid_t pid) {
 void usage(const char* program) {
     std::fprintf(stderr,
                  "usage:\n"
-                 "  %s record TRACE.tsv\n"
                  "  %s synthesize TRACE.tsv\n"
                  "  %s replay TRACE.tsv PID\n",
-                 program, program, program);
+                 program, program);
 }
 
 bool parse_pid(const char* text, pid_t* pid) {
@@ -417,9 +277,6 @@ bool parse_pid(const char* text, pid_t* pid) {
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc == 3 && std::strcmp(argv[1], "record") == 0) {
-        return record_trace(argv[2]);
-    }
     if (argc == 3 && std::strcmp(argv[1], "synthesize") == 0) {
         return synthesize_trace(argv[2]);
     }

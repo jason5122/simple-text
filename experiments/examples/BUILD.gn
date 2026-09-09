@@ -56,7 +56,7 @@ executable("editor") {
   deps = [
     "//px",
     "//ui:retained_text",
-    "//ui:scroll_predictor",
+    "//ui:smooth_scroll",
     "//ui:window",
   ]
 }

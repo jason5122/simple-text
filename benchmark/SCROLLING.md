@@ -91,11 +91,18 @@ because they add load. What the remaining frames are not:
   19.4 ms), and its full-rate request did not shorten the gesture-start ramp (30-34 ms vs 23-28
   ms from first motion to first displayed movement). It was tried and removed.
 
-What is left is the window server's own scheduling. A game gets a perfect cadence by presenting
-straight to the display, which macOS only allows a full-screen window, and windowed presentation
-without the transaction runs at 60 Hz (above). ProMotion adds its own variation: with an
-external monitor attached the built-in panel idles at 60 Hz and takes seconds and a visible
-stall to switch to 120 Hz, which shows up as 16.67 ms tick and presentation intervals together.
+What is left is the window server's own scheduling, and a full-screen experiment confirmed it.
+A game gets a perfect cadence by presenting straight to the display, which macOS only allows a
+full-screen window (windowed presentation without the transaction runs at 60 Hz, above). Full
+screen with the transaction is the worst case, p95 cadence a refresh late in three of three
+runs; presenting straight from the command buffer with a two-drawable pool held the 8.33 ms
+cadence with no dropped frames in nine of nine, at 11 ms from paint to glass when the window
+server chose to scan the layer out (the Metal HUD's "Direct") and 19 or 27 ms when it
+composited instead, a choice it made per run. That was tried and deliberately not kept: one
+presentation path for both modes is worth more than a full-screen-only gain. ProMotion adds
+variation of its own: with a 60 Hz external monitor attached the built-in panel idled at 60 Hz
+for seconds and switched to 120 Hz with a visible stall, which shows up as 16.67 ms tick and
+presentation intervals together.
 
 ## What was measured (2026-09-09, M4 Max, built-in ProMotion panel, windowed)
 

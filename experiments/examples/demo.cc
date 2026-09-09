@@ -1,5 +1,6 @@
 #include "px/px.h"
 #include "ui/retained_text.h"
+#include "ui/smooth_scroll.h"
 #include "ui/window.h"
 #include <array>
 #include <cmath>
@@ -66,8 +67,13 @@ public:
     DemoControl(window* w,
                 const window_hover_aspect* hover,
                 px_font_t* body_font,
-                px_font_t* detail_font)
-        : window_(w), hover_(hover), body_font_(body_font), detail_font_(detail_font) {
+                px_font_t* detail_font,
+                bool animate_phase)
+        : window_(w),
+          hover_(hover),
+          body_font_(body_font),
+          detail_font_(detail_font),
+          animate_phase_(animate_phase) {
         header_layout_ = prepare_text(body_font_, kHeaderText);
         for (size_t i = 0; i < kSectionTitles.size(); ++i) {
             section_layouts_[i] = prepare_text(body_font_, kSectionTitles[i]);
@@ -80,8 +86,6 @@ public:
         }
     }
 
-    void set_phase(double phase) { phase_ = phase; }
-
     bool handle_event(const px_event_t* event) override {
         switch (event->type) {
         case PX_EVENT_KEY:
@@ -92,9 +96,15 @@ public:
             break;
 
         case PX_EVENT_SCROLL:
-            scroll_offset_ =
-                std::clamp(scroll_offset_ - event->scroll_delta.y, 0.0, kDocumentHeight - 120.0);
-            window_->mark_dirty();
+            if (event->precise_scroll) {
+                if (scroll_.scroll(-event->scroll_delta.y, event->timestamp, kMaximumScroll)) {
+                    window_->mark_dirty();
+                }
+            } else {
+                scroll_.jump_to(scroll_.offset() - event->scroll_delta.y, kMaximumScroll);
+                window_->mark_dirty();
+            }
+            window_->set_animating(animate_phase_ || scroll_.animating());
             break;
 
         case PX_EVENT_MOUSE_MOTION:
@@ -109,6 +119,17 @@ public:
             break;
         }
         return false;
+    }
+
+    void animation_tick(double now) override {
+        if (animate_phase_) {
+            phase_ = now * 1.5;
+            window_->mark_dirty();
+        }
+        if (scroll_.tick(px_now(), kMaximumScroll)) {
+            window_->mark_dirty();
+        }
+        window_->set_animating(animate_phase_ || scroll_.animating());
     }
 
     void draw(px_render_context* rc, rect bounds, const rect* dirty, int dirty_count) override {
@@ -131,7 +152,7 @@ public:
             }
         }
 
-        const double document_y = 72.0 - scroll_offset_;
+        const double document_y = 72.0 - scroll_.offset();
         const double document_width = std::max(280.0, bounds.w - 128.0);
         rc->draw_rect(rect{48.0, document_y, document_width, kDocumentHeight},
                       fcolor{0.105f, 0.115f, 0.135f, 1.0f});
@@ -271,8 +292,10 @@ private:
     px_font_t* body_font_ = nullptr;
     px_font_t* detail_font_ = nullptr;
     static constexpr double kDocumentHeight = 5200.0;
+    static constexpr double kMaximumScroll = kDocumentHeight - 120.0;
+    bool animate_phase_ = true;
     double phase_ = 0.0;
-    double scroll_offset_ = 0.0;
+    smooth_scroll scroll_;
     vec2 last_hover_pos_;
     PreparedText header_layout_;
     std::array<PreparedText, kSectionTitles.size()> section_layouts_;
@@ -280,26 +303,6 @@ private:
     std::array<PreparedText, kDetailLines.size()> detail_layouts_;
     std::string committed_;
     std::string marked_;
-};
-
-// A window_impl subclass only to route animation_tick into the control. ST does the equivalent by
-// keeping a list of animating controls on window_impl and ticking them from the display link.
-class DemoWindow final : public window_impl {
-public:
-    using window_impl::window_impl;
-
-    void set_control(DemoControl* c) { control_ = c; }
-
-    void animation_tick(double now) override {
-        if (!control_) {
-            return;
-        }
-        control_->set_phase(now * 1.5);
-        mark_dirty();
-    }
-
-private:
-    DemoControl* control_ = nullptr;
 };
 
 class DemoApp final : public px_application_event_handler {
@@ -317,7 +320,7 @@ int main(int argc, char** argv) {
     DemoApp app;
     px_set_application_event_handler(&app);
 
-    DemoWindow win(900, 600, "gl_render_context demo", fcolor{0.09f, 0.10f, 0.12f, 1.0f});
+    window_impl win(900, 600, "gl_render_context demo", fcolor{0.09f, 0.10f, 0.12f, 1.0f});
 
     window_basic_aspect basic(&win);
     window_hover_aspect hover(&win);
@@ -326,16 +329,15 @@ int main(int argc, char** argv) {
 
     px_font_t* body_font = px_create_font("Menlo", 15.0f);
     px_font_t* detail_font = px_create_font("Menlo", 12.0f);
-    DemoControl root(&win, &hover, body_font, detail_font);
-    win.set_control(&root);
+    // PX_NO_ANIMATION=1 keeps this demo event driven, for A/B against the animated default. The
+    // display link then runs only while a scroll gesture does.
+    const bool animate_phase = getenv("PX_NO_ANIMATION") == nullptr;
+    DemoControl root(&win, &hover, body_font, detail_font, animate_phase);
     win.set_root_control(&root);
     win.set_input_client(&root);
 
     win.show();
-    // PX_NO_ANIMATION=1 keeps this demo event driven, for A/B against the animated default.
-    if (getenv("PX_NO_ANIMATION") == nullptr) {
-        px_set_animating(win.px_window(), true);
-    }
+    win.set_animating(animate_phase);
     px_run_event_loop();
     return 0;
 }

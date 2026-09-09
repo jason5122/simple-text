@@ -20,13 +20,17 @@ executable("demo") {
   deps = [
     "//px",
     "//ui:retained_text",
+    "//ui:smooth_scroll",
     "//ui:window",
   ]
 }
 
 executable("dark_mode_demo") {
   sources = [ "dark_mode_demo.cc" ]
-  deps = [ "//ui:retained_text" ]
+  deps = [
+    "//ui:retained_text",
+    "//ui:smooth_scroll",
+  ]
 }
 
 executable("control_char_demo") {

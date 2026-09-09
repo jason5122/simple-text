@@ -1,5 +1,6 @@
 #include "px/px.h"
 #include "ui/retained_text.h"
+#include "ui/smooth_scroll.h"
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -92,6 +93,9 @@ struct PreparedLine {
     fcolor color;
 };
 
+// The document repeats without end, so only its top bounds the scroll.
+constexpr double kMaximumScroll = 1e9;
+
 size_t wrapped_index(int64_t index, size_t count) {
     const int64_t signed_count = static_cast<int64_t>(count);
     const int64_t remainder = index % signed_count;
@@ -123,8 +127,15 @@ public:
 
     bool handle_event(px_event_t* event) override {
         if (event->type == PX_EVENT_SCROLL) {
-            scroll_offset_ -= event->scroll_delta.y;
-            px_mark_dirty(window_);
+            if (event->precise_scroll) {
+                if (scroll_.scroll(-event->scroll_delta.y, event->timestamp, kMaximumScroll)) {
+                    px_mark_dirty(window_);
+                }
+            } else {
+                scroll_.jump_to(scroll_.offset() - event->scroll_delta.y, kMaximumScroll);
+                px_mark_dirty(window_);
+            }
+            px_set_animating(window_, scroll_.animating());
             return true;
         }
         if (event->type == PX_EVENT_KEY && event->pressed && event->key == PX_KEY_ESCAPE) {
@@ -132,6 +143,13 @@ public:
             return true;
         }
         return false;
+    }
+
+    void animation_tick(double now) override {
+        if (scroll_.tick(px_now(), kMaximumScroll)) {
+            px_mark_dirty(window_);
+        }
+        px_set_animating(window_, scroll_.animating());
     }
 
     void paint(px_render_context* context,
@@ -175,8 +193,9 @@ private:
         const double document_left = kSidebarWidth + kGutterWidth;
         const rect document_clip{kSidebarWidth, 0.0, viewport.w - kSidebarWidth, viewport.h};
         const int visible_rows = static_cast<int>(std::ceil(viewport.h / kLineHeight)) + 2;
-        const int64_t first_line = static_cast<int64_t>(std::floor(scroll_offset_ / kLineHeight));
-        const double fractional_scroll = scroll_offset_ - first_line * kLineHeight;
+        const double scroll_offset = scroll_.offset();
+        const int64_t first_line = static_cast<int64_t>(std::floor(scroll_offset / kLineHeight));
+        const double fractional_scroll = scroll_offset - first_line * kLineHeight;
 
         context->push_state(false);
         context->restrict_clip_rect(document_clip);
@@ -194,7 +213,7 @@ private:
                     kLineBand);
             }
         }
-        const double thumb_progress = std::fmod(std::abs(scroll_offset_), 4000.0) / 4000.0;
+        const double thumb_progress = std::fmod(std::abs(scroll_offset), 4000.0) / 4000.0;
         context->draw_rect(rect{viewport.w - 8.0, thumb_progress * (viewport.h - 80.0), 5.0, 80.0},
                            kScrollbarThumb);
         context->end_rect_batch();
@@ -221,7 +240,7 @@ private:
     std::vector<PreparedLine> lines_;
     std::vector<PreparedText> sidebar_;
     std::vector<PreparedText> line_numbers_;
-    double scroll_offset_ = 0.0;
+    smooth_scroll scroll_;
 };
 
 }  // namespace
@@ -231,9 +250,11 @@ int main(int argc, char** argv) {
 
     DarkModeDemo demo;
     // px_window_t* window = px_create_window(&demo, nullptr, kWindowWidth, kWindowHeight,
-    //                                        "dark mode demo", kWindowBackground, PX_WINDOW_DEFAULT);
-    px_window_t* window = px_create_window(&demo, nullptr, kWindowWidth, kWindowHeight,
-                                           "light mode demo", kWindowBackground, PX_WINDOW_DEFAULT);
+    //                                        "dark mode demo", kWindowBackground,
+    //                                        PX_WINDOW_DEFAULT);
+    px_window_t* window =
+        px_create_window(&demo, nullptr, kWindowWidth, kWindowHeight, "light mode demo",
+                         kWindowBackground, PX_WINDOW_DEFAULT);
     if (!window) {
         return 1;
     }

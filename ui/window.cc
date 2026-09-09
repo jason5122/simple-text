@@ -34,6 +34,8 @@ void window_impl::mark_dirty() { px_mark_dirty(px_window_); }
 
 void window_impl::mark_rect_dirty(rect r) { px_mark_rect_dirty(px_window_, r); }
 
+void window_impl::set_animating(bool animating) { px_set_animating(px_window_, animating); }
+
 void window_impl::add_window_aspect(window_aspect* aspect) {
     if (aspect) {
         aspects_.push_back(aspect);
@@ -94,7 +96,11 @@ void window_impl::try_close(std::function<void(bool)> done) {
 
 px_cursor_t window_impl::calculate_cursor(vec2 pos) { return PX_CURSOR_ARROW; }
 
-void window_impl::animation_tick(double now) {}
+void window_impl::animation_tick(double now) {
+    if (root_) {
+        root_->animation_tick(now);
+    }
+}
 
 // ── stock aspects ───────────────────────────────────────────────────────────────────────────────
 

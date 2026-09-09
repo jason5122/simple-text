@@ -27,7 +27,7 @@ case "$rectangle_count" in
     ;;
 esac
 
-cd "$(dirname "$0")/../../.."
+cd "$(dirname "$0")/.."
 repo_root=$PWD
 benchmark="$repo_root/out/release/animation_benchmark"
 scroller="$repo_root/out/release/scroll_wheel"

@@ -25,7 +25,12 @@ struct px_window_t {
 
     px_window_event_handler* handler = nullptr;
 
+    // Created off the main thread when the window is made (the first CVDisplayLink a process
+    // creates takes ~30 ms) and kept for the window's lifetime; only its thread starts and stops.
     CVDisplayLinkRef display_link = nullptr;
+    bool display_link_pending = false;
+    // The state px_set_animating last asked for, applied once the link exists.
+    bool animating = false;
 
     // Set the first time the layer's draw callback runs (ST reads the same flag at
     // px_window_t+0x38, which drawInCGLContext: sets to 1).
@@ -52,6 +57,12 @@ struct px_window_t {
     // timestamp.
     std::atomic<bool> tick_pending{false};
     std::atomic<double> latest_animation_time{0.0};
+
+    // Copied into each submitted drawable's completion block, so an in-flight notification never
+    // dereferences a window that has since closed.
+    std::function<void(uint64_t, double)> frame_presented_callback;
+    uint64_t next_frame_id = 0;
+    uint64_t current_frame_id = 0;
 };
 
 // Implemented in px_window.mm.

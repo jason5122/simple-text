@@ -46,10 +46,10 @@ FramePosition locate_bar(CMSampleBufferRef sample, double points_width, double t
     CVPixelBufferLockBaseAddress(pixels, kCVPixelBufferLock_ReadOnly);
     const int width = static_cast<int>(CVPixelBufferGetWidth(pixels));
     const int height = static_cast<int>(CVPixelBufferGetHeight(pixels));
-    const int scan_height = top_points > 0.0
-                                ? std::min(height, static_cast<int>(std::ceil(
-                                                       top_points * width / points_width)))
-                                : height;
+    const int scan_height =
+        top_points > 0.0
+            ? std::min(height, static_cast<int>(std::ceil(top_points * width / points_width)))
+            : height;
     const size_t stride = CVPixelBufferGetBytesPerRow(pixels);
     const auto* bytes = static_cast<const uint8_t*>(CVPixelBufferGetBaseAddress(pixels));
 
@@ -211,6 +211,7 @@ int main(int argc, char** argv) {
     std::vector<double> position_error;
     std::vector<double> step_error;
     std::vector<double> observed_speed;
+    std::vector<double> capture_interval;
     int stalled_frames = 0;
     for (size_t i = 0; i < selected.size(); ++i) {
         const FramePosition& frame = selected[i];
@@ -224,6 +225,7 @@ int main(int argc, char** argv) {
         if (dt <= 0.0) {
             continue;
         }
+        capture_interval.push_back(dt * 1000.0);
         const double advance = frame.x - previous.x;
         const double expected_advance = speed_pixels * dt;
         step_error.push_back(std::abs(advance - expected_advance) / pixels_per_point);
@@ -248,5 +250,6 @@ int main(int argc, char** argv) {
     print_distribution("position error", "points", position_error);
     print_distribution("step error", "points/frame", step_error);
     print_distribution("observed speed", "points/s", observed_speed);
+    print_distribution("capture interval", "ms", capture_interval);
     return 0;
 }

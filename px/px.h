@@ -178,6 +178,12 @@ struct px_event_t {
     px_event_type type = PX_EVENT_KEY;
     px_window_t* window = nullptr;
 
+    // When the event happened, on the px_now() clock. Input events carry the platform's own
+    // timestamp (the HID time on macOS), which is what a scroll predictor should use; the time the
+    // main thread got around to the event is jittered by whatever it was doing. Zero is never
+    // sent: the funnel fills in px_now() for events with no native time.
+    double timestamp = 0.0;
+
     // PX_EVENT_KEY / PX_EVENT_CHARACTER / all mouse events.
     uint32_t modifiers = 0;
 
@@ -250,10 +256,10 @@ public:
     void draw_rect(rect area, color value) { draw_rect(area, fill_mode(value)); }
 
     // Text positions are alphabetic baselines in px's logical, top-left-origin, y-down coordinate
-    // space. To place a line by its top edge, add the font's positive ascent to that edge. Sublime's
-    // UI-text convenience path shapes the entire substring once through the px_font_t's fx_font,
-    // then dispatches that layout to the active renderer. Cached controls such as labels keep and
-    // draw an fx_layout directly instead.
+    // space. To place a line by its top edge, add the font's positive ascent to that edge.
+    // Sublime's UI-text convenience path shapes the entire substring once through the px_font_t's
+    // fx_font, then dispatches that layout to the active renderer. Cached controls such as labels
+    // keep and draw an fx_layout directly instead.
     virtual void draw_text(px_font_t* font,
                            vec2 position,
                            color value,
@@ -491,6 +497,14 @@ void px_set_full_screen(px_window_t* window, bool full_screen);
 // in ST, where the display link runs only while something is animating; an event-driven window
 // never pays for it.
 void px_set_animating(px_window_t* window, bool animating);
+
+// Optional presentation telemetry. On the macOS Metal backend, the callback runs on the main
+// thread after Core Animation reports that a drawable reached the display. Other backends do not
+// currently report presentation. Passing an empty function disables the observer.
+void px_set_frame_presented_callback(
+    px_window_t* window, std::function<void(uint64_t frame_id, double presented_time)> callback);
+// Valid only during px_window_event_handler::paint; zero on backends without frame telemetry.
+uint64_t px_current_frame_id(px_window_t* window);
 
 // Accumulates into the window's dirty list. Flushed to setNeedsDisplayInRect: after the current
 // event settles, exactly as ST's flush_dirty_rects does.

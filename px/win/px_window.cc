@@ -327,6 +327,9 @@ void px_win_send_event(px_window_t* window, px_event_t* event) {
         return;
     }
     event->window = window;
+    if (event->timestamp == 0.0) {
+        event->timestamp = px_now();
+    }
     window->handler->handle_event(event);
 
     // send_event's tail: key (0) and character (1) events skip the repaint flush; anything from
@@ -911,6 +914,12 @@ void px_set_animating(px_window_t* window, bool animating) {
         KillTimer(window->hwnd, kAnimationTimerId);
     }
 }
+
+void px_set_frame_presented_callback(px_window_t*, std::function<void(uint64_t, double)>) {
+    // The Win32 backend does not have presentation feedback wired up yet.
+}
+
+uint64_t px_current_frame_id(px_window_t*) { return 0; }
 
 void px_destroy_window(px_window_t* window) {
     if (!window) {

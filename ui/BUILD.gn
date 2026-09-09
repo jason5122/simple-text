@@ -2,7 +2,24 @@ group("ui") {
   deps = [
     ":grapheme_shaper",
     ":retained_text",
+    ":scroll_predictor",
     ":window",
+  ]
+}
+
+source_set("scroll_predictor") {
+  sources = [
+    "scroll_predictor.cc",
+    "scroll_predictor.h",
+  ]
+}
+
+source_set("ui_unittests") {
+  testonly = true
+  sources = [ "scroll_predictor_unittest.cc" ]
+  deps = [
+    ":scroll_predictor",
+    "//testing:gtest",
   ]
 }
 

@@ -6,18 +6,18 @@
 //   * One process-wide device and command queue, owned by metal_render_context.mm, so pipelines
 //     and glyph atlases are shared by every window the way the single CGL context shares them.
 //
-//   * Rendering goes into a layer-owned persistent BGRA8 texture with an 8-bit stencil, both grown
-//     with 30 pixels of slack. Dirty regions update that stable image, then the visible area is
-//     blitted into whichever drawable Core Animation hands out. That is the Metal spelling of the
-//     persistent FBO plus glBlitFramebuffer. Rendering straight into the drawable, as Zed does,
-//     measured no smoother; the persistent texture keeps ST's dirty-rectangle economy.
+//   * Rendering goes into a persistent BGRA8 texture, preserving ST's dirty-region economy before
+//     a blit to the drawable.
 //
 //   * Drawing is driven by setNeedsDisplayInRect: and the display link through an override of
 //     -display. Nothing polls.
 //
 //   * Presentation is tied to the Core Animation transaction (presentsWithTransaction), which is
 //     what CAOpenGLLayer's synchronous drawInCGLContext: provided implicitly: the frame that
-//     answers a resize lands in the same commit as the new bounds.
+//     answers a resize lands in the same commit as the new bounds. Display-link frames take the
+//     same path; the tick only marks the window dirty. Presenting drawables directly from the
+//     tick was measured to run the windowed layer at 60 Hz with 40 ms of latency, and mixing the
+//     two modes made the window server discard most frames.
 
 #include "px/mac/px_mac_private.h"
 #include "px/metal_render_context.h"
@@ -169,9 +169,8 @@
         return;
     }
 
-    // The queue serializes each backing-texture update and its following blit. Let
-    // CAMetalLayer's three-drawable swap queue provide backpressure instead of waiting for the
-    // previous frame to finish on the GPU.
+    // The queue serializes each backing-texture update and its following blit. Let CAMetalLayer's
+    // three-drawable swap queue provide backpressure instead of waiting on the GPU ourselves.
     id<MTLCommandBuffer> commandBuffer = [_queue commandBuffer];
     if (!commandBuffer) {
         return;
@@ -183,14 +182,17 @@
         std::unique_ptr<metal_frame> frame =
             metal_frame_begin(commandBuffer, _color, _stencil, device);
         metal_render_context rc(frame.get(), scale, dirty.data(), static_cast<int>(dirty.size()));
-        _pxw->handler->paint(&rc, rc.paint_bounds(), dirty.data(),
-                             static_cast<int>(dirty.size()));
+        _pxw->current_frame_id = ++_pxw->next_frame_id;
+        _pxw->handler->paint(&rc, rc.paint_bounds(), dirty.data(), static_cast<int>(dirty.size()));
+        _pxw->current_frame_id = 0;
         rc.finish();
     }
 
-    // Acquired only now, after the scene is recorded, so a drawable shortage never stalls
-    // painting.
+    // Acquire only after recording the persistent scene so a temporary drawable shortage never
+    // delays painting.
     id<CAMetalDrawable> drawable = [self nextDrawable];
+    const uint64_t frameId = _pxw->next_frame_id;
+    const std::function<void(uint64_t, double)> presentedCallback = _pxw->frame_presented_callback;
     if (drawable) {
         id<MTLTexture> destination = drawable.texture;
         id<MTLBlitCommandEncoder> blit = [commandBuffer blitCommandEncoder];
@@ -207,6 +209,14 @@
             destinationOrigin:MTLOriginMake(0, 0, 0)];
         [blit endEncoding];
     }
+    if (drawable && presentedCallback) {
+        [drawable addPresentedHandler:^(id<MTLDrawable> presentedDrawable) {
+          const double presentedTime = presentedDrawable.presentedTime;
+          dispatch_async(dispatch_get_main_queue(), ^{
+            presentedCallback(frameId, presentedTime);
+          });
+        }];
+    }
 
     [commandBuffer commit];
     if (drawable) {
@@ -218,6 +228,9 @@
         // The pool was exhausted. The persistent texture is up to date, so another display will
         // put it on screen.
         [self setNeedsDisplay];
+        if (presentedCallback) {
+            presentedCallback(frameId, 0.0);
+        }
     }
 
     _pxw->did_first_paint = true;

@@ -13,6 +13,7 @@ group("benchmark") {
       ":animation_analyzer",
       ":benchmark_analyzer",
       ":move_mouse",
+      ":screen_cadence",
       ":scroll_wheel",
     ]
   }
@@ -57,11 +58,20 @@ executable("resize_benchmark") {
 }
 
 executable("scroll_benchmark") {
-  sources = [ "scroll_benchmark.cc" ]
+  sources = [
+    "scroll_benchmark.cc",
+    "smoothness/timed_input.h",
+  ]
+  if (is_mac) {
+    sources += [ "smoothness/timed_input_mac.mm" ]
+  } else {
+    sources += [ "smoothness/timed_input_portable.cc" ]
+  }
   deps = [
     "//benchmark/smoothness:scroll_trace_data",
     "//px",
     "//ui:retained_text",
+    "//ui:scroll_predictor",
   ]
 }
 
@@ -101,5 +111,15 @@ if (is_mac) {
   executable("scroll_wheel") {
     sources = [ "scroll_wheel.cc" ]
     frameworks = [ "ApplicationServices.framework" ]
+  }
+
+  executable("screen_cadence") {
+    sources = [ "screen_cadence.mm" ]
+    frameworks = [
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Foundation.framework",
+      "ScreenCaptureKit.framework",
+    ]
   }
 }

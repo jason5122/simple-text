@@ -198,6 +198,11 @@ uint64_t nanoseconds_to_ticks(uint64_t nanoseconds, const mach_timebase_info_dat
     return static_cast<uint64_t>(scaled / timebase.numer);
 }
 
+uint64_t ticks_to_nanoseconds(uint64_t ticks, const mach_timebase_info_data_t& timebase) {
+    const unsigned __int128 scaled = static_cast<unsigned __int128>(ticks) * timebase.numer;
+    return static_cast<uint64_t>(scaled / timebase.denom);
+}
+
 double ticks_to_microseconds(uint64_t ticks, const mach_timebase_info_data_t& timebase) {
     const long double nanoseconds =
         static_cast<long double>(ticks) * timebase.numer / timebase.denom;
@@ -341,6 +346,9 @@ int replay_trace(const char* path, pid_t pid) {
                  "replaying %zu samples in 2 seconds\n",
                  pid, samples.size());
 
+    // A single two-second wait wakes tens of milliseconds late (timer coalescing), which would
+    // bunch the first samples together at the window server. Wake early, then wait precisely.
+    mach_wait_until(start - nanoseconds_to_ticks(100'000'000ULL, timebase));
     mach_wait_until(start);
     CGEventRef location_event = CGEventCreate(source);
     if (!location_event) {
@@ -366,11 +374,16 @@ int replay_trace(const char* path, pid_t pid) {
             std::fprintf(stderr, "scroll_trace: could not create a scroll event\n");
             return 3;
         }
-        // Posting to the HID tap rather than to `pid`. CGEventPostToPid hands the event straight to
-        // the process and skips the window server's hit testing, and AppKit only routes a scroll to
-        // -scrollWheel: off that hit test -- measured against this repo's editor, PostToPid
-        // delivered nothing at all while the same trace on the HID tap drove every frame. The cost
-        // is that replay is now genuinely global: whatever sits under the pointer receives it.
+        // Stamp the sample's scheduled time rather than the posting time, so a late wake-up here
+        // looks to the app like a late-delivered event from a regular device, which is what a
+        // trackpad's HID timestamps give it.
+        CGEventSetTimestamp(event, ticks_to_nanoseconds(deadline, timebase));
+        // Posting to the HID tap rather than to `pid`. CGEventPostToPid hands the event straight
+        // to the process and skips the window server's hit testing, and AppKit only routes a
+        // scroll to -scrollWheel: off that hit test -- measured against this repo's editor,
+        // PostToPid delivered nothing at all while the same trace on the HID tap drove every
+        // frame. The cost is that replay is now genuinely global: whatever sits under the pointer
+        // receives it.
         CGEventPost(kCGHIDEventTap, event);
         CFRelease(event);
     }

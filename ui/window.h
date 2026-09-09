@@ -57,6 +57,7 @@ public:
     virtual ~control() = default;
     virtual bool handle_event(const px_event_t* event) = 0;
     virtual void draw(px_render_context* rc, rect bounds, const rect* dirty, int dirty_count) = 0;
+    virtual void animation_tick(double now) {}
 };
 
 // Portable window interface. Deliberately not a base class you subclass to get behaviour -- it is
@@ -75,6 +76,7 @@ public:
 
     virtual void mark_dirty() = 0;
     virtual void mark_rect_dirty(rect r) = 0;
+    virtual void set_animating(bool animating) = 0;
 
     virtual void add_window_aspect(window_aspect* aspect) = 0;
     virtual void set_root_control(control* root) = 0;
@@ -103,6 +105,7 @@ public:
     double dpi_scale_factor() const override;
     void mark_dirty() override;
     void mark_rect_dirty(rect r) override;
+    void set_animating(bool animating) override;
     void add_window_aspect(window_aspect* aspect) override;
     void set_root_control(control* root) override;
     void set_handler(window_handler* handler) override;

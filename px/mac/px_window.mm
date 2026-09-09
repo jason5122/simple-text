@@ -160,8 +160,8 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
         //
         // When a resize frame is late, the compositor shows the previous frame's surface in the
         // new bounds. With the default placement it is stretched, so every late frame wobbles the
-        // whole window; anchored top-left the text stays put and only the far edges are momentarily
-        // stale. simple_text does this; ST does not.
+        // whole window; anchored top-left the text stays put and only the far edges are
+        // momentarily stale. simple_text does this; ST does not.
         self.layerContentsPlacement = NSViewLayerContentsPlacementTopLeft;
     }
     return self;
@@ -368,6 +368,7 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 - (void)sendMouseButton:(NSEvent*)event button:(px_mouse_button)button pressed:(BOOL)pressed {
     px_event_t e{};
     e.type = PX_EVENT_MOUSE_BUTTON;
+    e.timestamp = event.timestamp;
     e.pos = [self pxPointFor:event];
     e.button = button;
     e.pressed = pressed == YES;
@@ -379,6 +380,7 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 - (void)sendMouseMotion:(NSEvent*)event {
     px_event_t e{};
     e.type = PX_EVENT_MOUSE_MOTION;
+    e.timestamp = event.timestamp;
     e.pos = [self pxPointFor:event];
     e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
     px_mac_send_event(_pxw, &e);
@@ -418,6 +420,7 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 - (void)mouseExited:(NSEvent*)event {
     px_event_t e{};
     e.type = PX_EVENT_MOUSE_LEAVE;
+    e.timestamp = event.timestamp;
     e.pos = [self pxPointFor:event];
     e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
     px_mac_send_event(_pxw, &e);
@@ -426,6 +429,7 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 - (void)scrollWheel:(NSEvent*)event {
     px_event_t e{};
     e.type = PX_EVENT_SCROLL;
+    e.timestamp = event.timestamp;
     e.pos = [self pxPointFor:event];
     e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
     e.precise_scroll = event.hasPreciseScrollingDeltas == YES;
@@ -455,6 +459,7 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
     if (!hadMarkedText && _pxw && _pxw->handler) {
         px_event_t e{};
         e.type = PX_EVENT_KEY;
+        e.timestamp = event.timestamp;
         e.key = px_mac_keycode_to_px_key(event.charactersIgnoringModifiers, event.keyCode,
                                          event.modifierFlags);
         e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
@@ -475,6 +480,7 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 - (void)keyUp:(NSEvent*)event {
     px_event_t e{};
     e.type = PX_EVENT_KEY;
+    e.timestamp = event.timestamp;
     e.key = px_mac_keycode_to_px_key(event.charactersIgnoringModifiers, event.keyCode,
                                      event.modifierFlags);
     e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
@@ -487,6 +493,7 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
     // modifier-dependent state (hover decorations, alt-drag modes).
     px_event_t e{};
     e.type = PX_EVENT_KEY;
+    e.timestamp = event.timestamp;
     e.key = PX_KEY_NONE;
     e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
     px_mac_send_event(_pxw, &e);
@@ -773,6 +780,9 @@ void px_mac_send_event(px_window_t* window, px_event_t* event) {
         return;
     }
     event->window = window;
+    if (event->timestamp == 0.0) {
+        event->timestamp = px_now();
+    }
     window->handler->handle_event(event);
 
     // Repaints are flushed once per run-loop turn by the kCFRunLoopBeforeWaiting observer, not
@@ -896,6 +906,11 @@ CVReturn display_link_callback(CVDisplayLinkRef link,
           return;
       }
       const double target_time = window->latest_animation_time.load(std::memory_order_acquire);
+      // Only marks dirty. The frame is drawn by Core Animation's own commit at the end of this
+      // run-loop turn, like any event-driven frame. Displaying the layer from here instead (with
+      // displayIfNeeded, inside or outside an explicit CATransaction) makes the window server
+      // discard most of the presented drawables: measured 70-90% never reaching the glass, with
+      // stalls of up to 900 ms, versus a full 120 Hz cadence when the commit drives the display.
       window->handler->animation_tick(target_time);
     });
     return kCVReturnSuccess;
@@ -912,6 +927,44 @@ void px_mac_update_display_link(px_window_t* window) {
         CVDisplayLinkSetCurrentCGDisplay(window->display_link, screen_number.unsignedIntValue);
     }
 }
+
+namespace {
+
+// Creating the process's first CVDisplayLink blocks for ~30 ms (later ones take well under a
+// millisecond). Done on the main thread inside the first scroll event of a gesture, that delayed
+// the opening frames enough for the window server to skip them, so the link is built in the
+// background as soon as the window exists.
+void prepare_display_link(px_window_t* window) {
+    window->display_link_pending = true;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+      CVDisplayLinkRef link = nullptr;
+      if (CVDisplayLinkCreateWithActiveCGDisplays(&link) != kCVReturnSuccess) {
+          link = nullptr;
+      }
+      dispatch_async(dispatch_get_main_queue(), ^{
+        const std::vector<px_window_t*>& windows = all_windows();
+        if (std::find(windows.begin(), windows.end(), window) == windows.end()) {
+            // Destroyed while the link was being made.
+            if (link) {
+                CVDisplayLinkRelease(link);
+            }
+            return;
+        }
+        window->display_link_pending = false;
+        if (!link) {
+            return;
+        }
+        window->display_link = link;
+        CVDisplayLinkSetOutputCallback(link, &display_link_callback, window);
+        px_mac_update_display_link(window);
+        if (window->animating) {
+            CVDisplayLinkStart(link);
+        }
+      });
+    });
+}
+
+}  // namespace
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // FLAT API: WINDOWS
@@ -973,6 +1026,7 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     [pxw->window center];
 
     all_windows().push_back(pxw);
+    prepare_display_link(pxw);
     return pxw;
 }
 
@@ -1111,24 +1165,36 @@ double px_window_dpi_scale_factor(px_window_t* window) {
     return scale > 0.0 ? scale : 1.0;
 }
 
-// One CVDisplayLink per window while animating, retargeted whenever the window changes screen.
+// Starts or stops the window's display link thread; the link itself lives as long as the window
+// (see prepare_display_link).
 void px_set_animating(px_window_t* window, bool animating) {
     if (!window) {
         return;
     }
-    if (animating && !window->display_link) {
-        if (CVDisplayLinkCreateWithActiveCGDisplays(&window->display_link) == kCVReturnSuccess) {
-            CVDisplayLinkSetOutputCallback(window->display_link, &display_link_callback, window);
-            px_mac_update_display_link(window);
-            CVDisplayLinkStart(window->display_link);
+    window->animating = animating;
+    if (!window->display_link) {
+        if (animating && !window->display_link_pending) {
+            prepare_display_link(window);
         }
-    } else if (!animating && window->display_link) {
+        return;
+    }
+    const bool running = CVDisplayLinkIsRunning(window->display_link) == YES;
+    if (animating && !running) {
+        CVDisplayLinkStart(window->display_link);
+    } else if (!animating && running) {
         // A tick already hopped to the main queue still runs once; the callback tolerates that.
         CVDisplayLinkStop(window->display_link);
-        CVDisplayLinkRelease(window->display_link);
-        window->display_link = nullptr;
     }
 }
+
+void px_set_frame_presented_callback(px_window_t* window,
+                                     std::function<void(uint64_t, double)> callback) {
+    if (window) {
+        window->frame_presented_callback = std::move(callback);
+    }
+}
+
+uint64_t px_current_frame_id(px_window_t* window) { return window ? window->current_frame_id : 0; }
 
 void px_set_full_screen(px_window_t* window, bool full_screen) {
     if (!window) {

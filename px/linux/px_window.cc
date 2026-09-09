@@ -690,6 +690,9 @@ void px_linux_send_event(px_window_t* window, px_event_t* event) {
         return;
     }
     event->window = window;
+    if (event->timestamp == 0.0) {
+        event->timestamp = px_now();
+    }
     window->handler->handle_event(event);
 
     // Key (0) and character (1) events skip the repaint flush; anything from mouse button (2) up
@@ -951,6 +954,12 @@ void px_set_animating(px_window_t* window, bool animating) {
         window->tick_callback_id = 0;
     }
 }
+
+void px_set_frame_presented_callback(px_window_t*, std::function<void(uint64_t, double)>) {
+    // GTK's frame clock does not expose the actual scanout time through this backend yet.
+}
+
+uint64_t px_current_frame_id(px_window_t*) { return 0; }
 
 void px_set_full_screen(px_window_t* window, bool full_screen) {
     if (!window || !window->window) {

@@ -65,6 +65,9 @@ constexpr fcolor kFindButtonBorder{0.76f, 0.77f, 0.80f, 1.0f};
 constexpr fcolor kFindToggleOnBackground{0.80f, 0.86f, 0.96f, 1.0f};
 constexpr fcolor kFindLabelColor{0.22f, 0.23f, 0.26f, 1.0f};
 constexpr fcolor kFindMutedColor{0.50f, 0.52f, 0.56f, 1.0f};
+// Rows whose text needs a fallback font (the emoji line) get this band, sized from the body
+// font's metrics exactly as Sublime sizes a line, so the glyphs can be checked against the row.
+constexpr fcolor kLineBand{0.86f, 0.91f, 0.98f, 0.45f};
 
 constexpr std::array<std::string_view, 4> kFindToggleLabels = {".*", "Aa", "ab", "↩"};
 constexpr std::array<std::string_view, 3> kFindButtonLabels = {"Find", "Find Prev", "Find All"};
@@ -122,7 +125,7 @@ constexpr std::array<std::string_view, 32> kSourceLines = {
     "constexpr double kLineHeight = 24.0;",
     "constexpr size_t kVisiblePadding = 2;",
     "",
-    "}  // namespace editor",
+    "}  // Emoji and color glyphs: 👋 🌍 ✨ 🚀",
 };
 
 using PreparedText = retained_text;
@@ -157,6 +160,15 @@ constexpr std::array<std::string_view, 14> kTypes = {
 template <size_t Size>
 bool contains_token(const std::array<std::string_view, Size>& tokens, std::string_view token) {
     return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
+}
+
+constexpr bool has_non_ascii(std::string_view text) {
+    for (unsigned char c : text) {
+        if (c >= 0x80) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool is_identifier_start(char c) {
@@ -476,6 +488,18 @@ public:
         const int last_line = std::min(
             static_cast<int>(kDocumentLineCount),
             static_cast<int>(std::ceil((scroll_offset + bounds.h - kTextTop) / line_height_)) + 1);
+        context->begin_rect_batch();
+        for (int line = first_line; line < last_line; ++line) {
+            const size_t i = static_cast<size_t>(line);
+            if (!has_non_ascii(kSourceLines[i % kSourceLines.size()])) {
+                continue;
+            }
+            const double baseline = kTextTop + i * line_height_ - scroll_offset;
+            context->draw_rect(rect{sidebar_width + kGutterWidth, baseline - body_metrics_.ascent,
+                                    bounds.w - sidebar_width - kGutterWidth, line_height_},
+                               kLineBand);
+        }
+        context->end_rect_batch();
         context->begin_text_batch();
         for (int line = first_line; line < last_line; ++line) {
             const size_t i = static_cast<size_t>(line);

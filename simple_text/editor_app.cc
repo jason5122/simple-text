@@ -1,5 +1,4 @@
 #include "base/path_service.h"
-#include "font/font_rasterizer.h"
 #include "gl/loader.h"
 #include "gui/renderer/renderer.h"
 #include "simple_text/editor_app.h"
@@ -14,10 +13,10 @@ void EditorApp::on_launch() {
     gl::load_global_function_pointers();
 
     // Load fonts.
-    auto& font_rasterizer = font::FontRasterizer::instance();
-    main_font_id = font_rasterizer.add_font(kMainFontFace, kMainFontSize);
-    ui_font_small_id = font_rasterizer.add_system_font(kUIFontSizeSmall);
-    ui_font_regular_id = font_rasterizer.add_system_font(kUIFontSizeRegular);
+    auto& font_cache = gui::Renderer::instance().font_cache();
+    main_font_id = font_cache.add_font(kMainFontFace, kMainFontSize);
+    ui_font_small_id = font_cache.add_system_font(kUIFontSizeSmall);
+    ui_font_regular_id = font_cache.add_system_font(kUIFontSizeRegular);
 
     // Load images.
     base::FilePath assets_path;

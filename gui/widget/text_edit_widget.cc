@@ -232,8 +232,7 @@ void TextEditWidget::update_font_id(size_t font_id) {
 }
 
 void TextEditWidget::draw() {
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
 
     // Calculate start and end lines.
     int main_line_height = metrics.line_height;
@@ -320,8 +319,7 @@ void TextEditWidget::left_mouse_drag(const Point& mouse_pos,
 void TextEditWidget::left_mouse_up(const Point& mouse_pos) { old_selection = selection; }
 
 void TextEditWidget::update_max_scroll() {
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
 
     // NOTE: We update the max width when iterating over visible lines, not here.
 
@@ -333,14 +331,13 @@ size_t TextEditWidget::line_at_y(int y) const {
         y = 0;
     }
 
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
 
     size_t line = y / metrics.line_height;
     return std::clamp(line, size_t{0}, tree.line_count() - 1);
 }
 
-inline const font::LineLayout& TextEditWidget::layout_at(size_t line) {
+inline const editor::LineLayout& TextEditWidget::layout_at(size_t line) {
     auto& line_layout_cache = Renderer::instance().line_layout_cache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache.get(font_id, line_str);
@@ -389,14 +386,12 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
                                kShadowColor, Layer::kForeground, 0, 0, false, true);
     }
 
+    // Text is clipped to the area right of the gutter.
     Point min_text_coords = {
-        .x = scroll_offset.x - kBorderThickness,
+        .x = position().x + gutter_width(),
         .y = position().y,
     };
-    Point max_text_coords = {
-        .x = scroll_offset.x + (size().width - (gutter_width() + kBorderThickness)),
-        .y = position().y + size().height,
-    };
+    Point max_text_coords = position() + size();
 
     // We set the max horizontal scroll to the max width out of each *visible* line. This means the
     // max horizontal scroll changes dynamically as the user scrolls through the buffer, but this
@@ -441,12 +436,9 @@ void TextEditWidget::render_text(int main_line_height, size_t start_line, size_t
         const auto line_number_highlight_callback = [&line, &selection_line](size_t) {
             return line == selection_line ? kSelectedLineNumberColor : kLineNumberColor;
         };
-        Point min_gutter_coords = {
-            .x = 0,
-            .y = position().y,
-        };
+        Point min_gutter_coords = position();
         Point max_gutter_coords = {
-            .x = gutter_width(),
+            .x = position().x + gutter_width(),
             .y = position().y + size().height,
         };
         texture_renderer.add_line_layout(line_number_layout, line_number_coords, min_gutter_coords,

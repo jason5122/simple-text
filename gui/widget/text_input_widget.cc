@@ -10,8 +10,7 @@ TextInputWidget::TextInputWidget(size_t font_id, int top_padding, int left_paddi
 
     update_max_scroll();
 
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
     line_height = metrics.line_height;
 
     int new_height = line_height;
@@ -34,13 +33,10 @@ void TextInputWidget::draw() {
     // pos.x += kCaretWidth / 2;  // Match Sublime Text.
 
     Point min_text_coords = {
-        .x = scroll_offset.x - kBorderThickness,
+        .x = position().x + left_padding,
         .y = position().y,
     };
-    Point max_text_coords = {
-        .x = scroll_offset.x + (size().width - (left_padding + kBorderThickness)),
-        .y = position().y + size().height,
-    };
+    Point max_text_coords = position() + size();
 
     // We set the max horizontal scroll to the max width out of each *visible* line. This means the
     // max horizontal scroll changes dynamically as the user scrolls through the buffer, but this
@@ -91,8 +87,7 @@ void TextInputWidget::draw() {
 }
 
 void TextInputWidget::update_max_scroll() {
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
 
     // NOTE: We update the max width when iterating over visible lines, not here.
 
@@ -120,14 +115,13 @@ void TextInputWidget::insert_text(std::string_view str8) {
 size_t TextInputWidget::line_at_y(int y) const {
     if (y < 0) y = 0;
 
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
 
     size_t line = y / metrics.line_height;
     return std::clamp(line, size_t{0}, tree.line_count() - 1);
 }
 
-inline const font::LineLayout& TextInputWidget::layout_at(size_t line) {
+inline const editor::LineLayout& TextInputWidget::layout_at(size_t line) {
     auto& line_layout_cache = Renderer::instance().line_layout_cache();
     std::string line_str = tree.get_line_content_for_layout_use(line);
     return line_layout_cache.get(font_id, line_str);

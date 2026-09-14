@@ -1,17 +1,19 @@
 #include "base/hash/hash.h"
-#include "font/font_rasterizer.h"
 #include "gui/renderer/line_layout_cache.h"
+#include "gui/renderer/renderer.h"
 
 namespace gui {
 
-const font::LineLayout& LineLayoutCache::get(size_t font_id, std::string_view str8) {
-    uint64_t str_hash = base::hash_string(str8);
-    if (auto it = cache.find(str_hash); it != cache.end()) {
+const editor::LineLayout& LineLayoutCache::get(size_t font_id, std::string_view str8) {
+    // The same string laid out in two fonts must not collide.
+    uint64_t key = base::hash_combine(font_id, base::hash_string(str8));
+    if (auto it = cache.find(key); it != cache.end()) {
         return it->second;
     } else {
-        auto& font_rasterizer = font::FontRasterizer::instance();
-        auto layout = font_rasterizer.layout_line(font_id, str8);
-        auto inserted = cache.emplace(str_hash, std::move(layout));
+        auto& font_cache = Renderer::instance().font_cache();
+        auto layout =
+            editor::layout_line(font_id, font_cache.font(font_id), FontCache::kScaleFactor, str8);
+        auto inserted = cache.emplace(key, std::move(layout));
         return inserted.first->second;
     }
 }

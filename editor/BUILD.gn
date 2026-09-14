@@ -4,6 +4,8 @@ source_set("editor") {
     "buffer/piece_tree.h",
     "buffer/red_black_tree.cc",
     "buffer/red_black_tree.h",
+    "line_layout.cc",
+    "line_layout.h",
     "movement.cc",
     "movement.h",
     "search/ac_fast.cc",
@@ -15,10 +17,9 @@ source_set("editor") {
     "selection.h",
   ]
 
-  public_deps = [ "//font" ]
-
   deps = [
     "//base",
+    "//fx",
     "//third_party/spdlog",
     "//third_party/uni_algo",
   ]
@@ -31,6 +32,7 @@ source_set("editor_unittests") {
     "buffer/piece_tree_unittest.cc",
     "buffer/red_black_tree_unittest.cc",
     "buffer/tree_walker_unittest.cc",
+    "line_layout_unittest.cc",
     "movement_unittest.cc",
     "search/aho_corasick_unittest.cc",
   ]
@@ -38,7 +40,7 @@ source_set("editor_unittests") {
   deps = [
     ":editor",
     "//base",
-    "//font",
+    "//fx",
     "//testing:fuzztest",
     "//third_party/spdlog",
     "//third_party/uni_algo",

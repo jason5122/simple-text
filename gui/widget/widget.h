@@ -1,11 +1,13 @@
 #pragma once
 
-#include "font/font_rasterizer.h"
 #include "gui/platform/key.h"
 #include "gui/types.h"
 #include <algorithm>
 #include <cmath>
 #include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace gui {
 
@@ -98,9 +100,6 @@ public:
         return (std::abs(point.y - bottom_offset) <= distance) &&
                (position_.x <= point.x && point.x < position_.x + size_.width);
     }
-
-    // TODO: Refactor singletons.
-    inline font::FontRasterizer& rasterizer() { return font::FontRasterizer::instance(); }
 
 private:
     Size size_ = {};

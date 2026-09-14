@@ -1,4 +1,3 @@
-#include "font/font_rasterizer.h"
 #include "gl/opengl.h"
 #include "gui/renderer/renderer.h"
 #include "gui/renderer/texture_renderer.h"
@@ -95,103 +94,55 @@ TextureRenderer& TextureRenderer::operator=(TextureRenderer&& other) noexcept {
     return *this;
 }
 
-void TextureRenderer::add_line_layout(const font::LineLayout& line_layout,
+void TextureRenderer::add_line_layout(const editor::LineLayout& line_layout,
                                       const Point& coords,
                                       const Point& min_coords,
                                       const Point& max_coords,
                                       const std::function<Rgb(size_t)>& highlight_callback) {
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(line_layout.layout_font_id);
-    int line_height = metrics.line_height;
+    auto& renderer = Renderer::instance();
+    auto& texture_cache = renderer.texture_cache();
+    const auto metrics = renderer.font_cache().metrics(line_layout.font_id);
 
-    auto& texture_cache = Renderer::instance().texture_cache();
+    // Everything below is in absolute device pixels, y-down. `coords` is the top-left corner of
+    // the line box, so the alphabetic baseline sits `ascent` below it.
+    const int baseline_y = coords.y + metrics.ascent;
 
-    // TODO: Consider using binary search to locate the starting point. This assumes glyph
-    // positions are monotonically increasing.
+    constexpr float kUvPerPixel = 1.0f / Atlas::kAtlasSize;
 
-    // TODO: Consider cleaning this up.
-    for (size_t i = 0; i < line_layout.glyphs.size(); ++i) {
-        const auto& glyph = line_layout.glyphs[i];
+    for (const auto& glyph : line_layout.glyphs) {
+        const auto& rglyph = texture_cache.get_glyph(line_layout.font_id, glyph.glyph_id);
+        if (rglyph.width <= 0 || rglyph.height <= 0) continue;
 
-        auto& rglyph = texture_cache.get_glyph(glyph.font_id, glyph.glyph_id);
-        int32_t left = rglyph.left;
-        int32_t top = rglyph.top;
-        int32_t width = rglyph.width;
-        int32_t height = rglyph.height;
+        // The bitmap's top-left corner is the pen position offset by the glyph's bearing.
+        const int left = coords.x + glyph.x + rglyph.bearing_x;
+        const int top = baseline_y + glyph.y + rglyph.bearing_y;
+        const int right = left + rglyph.width;
+        const int bottom = top + rglyph.height;
 
-        // Invert glyph y-offset since we're flipping across the y-axis in OpenGL.
-        top = line_height - top;
+        // Clip the bitmap to [min_coords, max_coords), trimming its UVs by the same amount.
+        const int clipped_left = std::max(left, min_coords.x);
+        const int clipped_top = std::max(top, min_coords.y);
+        const int clipped_right = std::min(right, max_coords.x);
+        const int clipped_bottom = std::min(bottom, max_coords.y);
+        if (clipped_left >= clipped_right || clipped_top >= clipped_bottom) continue;
 
-        // TODO: Refactor this whole thing... it's messy.
-        int left_edge = glyph.position.x;
-        int right_edge = left_edge + left + width;
-        // TODO: Check if `top_edge` and `bottom_edge` are correct.
-        int top_edge = coords.y + glyph.position.y - metrics.descent;
-        int bottom_edge = coords.y + height + top;
-
-        if (right_edge <= min_coords.x) continue;
-        if (left_edge > max_coords.x) return;
-        if (bottom_edge <= min_coords.y) continue;
-        if (top_edge > max_coords.y) return;
-
-        float uv_x = rglyph.uv.x;
-        float uv_y = rglyph.uv.y;
-        float uv_width = rglyph.uv.z;
-        float uv_height = rglyph.uv.w;
-
-        int pos_x = coords.x + left_edge;
-        int pos_y = coords.y - metrics.descent;
-
-        if (left_edge < min_coords.x) {
-            int diff1 = min_coords.x - left_edge;
-            int diff2 = left;
-            int diff = std::max(diff1 - diff2, 0);
-            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-            width -= diff;
-            uv_width -= uv_diff;
-            pos_x += diff;
-            uv_x += uv_diff;
-        }
-        if (right_edge > max_coords.x) {
-            int diff = right_edge - max_coords.x;
-            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-            width -= diff;
-            uv_width -= uv_diff;
-        }
-        if (top_edge < min_coords.y) {
-            int diff1 = min_coords.y - top_edge;
-            int diff2 = line_height - rglyph.top - glyph.position.y;
-            int diff = std::max(diff1 - diff2, 0);
-            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-            height -= diff;
-            uv_height -= uv_diff;
-            pos_y += diff;
-            uv_y += uv_diff;
-        }
-        if (bottom_edge > max_coords.y) {
-            int diff1 = bottom_edge - max_coords.y;
-            int diff2 = metrics.descent;
-            int diff = std::max(diff1 - diff2, 0);
-            float uv_diff = static_cast<float>(diff) / Atlas::kAtlasSize;
-            height -= diff;
-            uv_height -= uv_diff;
-        }
-
-        // TODO: Remove this.
-        if (width <= 0 || height <= 0) {
-            continue;
-        }
-
-        // TODO: Refactor these casts.
-        uint8_t alpha = rglyph.colored ? kColoredText : kPlainTexture;
-        InstanceData instance = {
-            .coords = {static_cast<float>(pos_x), static_cast<float>(pos_y)},
-            .glyph = {static_cast<float>(left), static_cast<float>(top), static_cast<float>(width),
-                      static_cast<float>(height)},
-            .uv = {uv_x, uv_y, uv_width, uv_height},
-            .color = Rgba::fromRgb(highlight_callback(glyph.index), alpha),
+        const int width = clipped_right - clipped_left;
+        const int height = clipped_bottom - clipped_top;
+        const Vec4 uv = {
+            .x = rglyph.uv.x + static_cast<float>(clipped_left - left) * kUvPerPixel,
+            .y = rglyph.uv.y + static_cast<float>(clipped_top - top) * kUvPerPixel,
+            .z = static_cast<float>(width) * kUvPerPixel,
+            .w = static_cast<float>(height) * kUvPerPixel,
         };
-        insert_into_batch(rglyph.page, std::move(instance));
+
+        const uint8_t kind = rglyph.colored ? kColoredText : kMonochromeText;
+        InstanceData instance = {
+            .coords = {static_cast<float>(clipped_left), static_cast<float>(clipped_top)},
+            .glyph = {0, 0, static_cast<float>(width), static_cast<float>(height)},
+            .uv = uv,
+            .color = Rgba::fromRgb(highlight_callback(glyph.index), kind),
+        };
+        insert_into_batch(rglyph.page, instance);
     }
 }
 

@@ -1,7 +1,8 @@
 #include "base/files/file_util.h"
 #include "base/files/scoped_file.h"
-#include "font/font_rasterizer.h"
+#include "gui/renderer/renderer.h"
 #include "gui/renderer/texture_cache.h"
+#include <cstring>
 #include <jpeglib.h>
 #include <spdlog/spdlog.h>
 #include <spng.h>
@@ -16,9 +17,10 @@ const TextureCache::Glyph& TextureCache::get_glyph(size_t font_id, uint32_t glyp
     }
 
     if (!cache[font_id].contains(glyph_id)) {
-        const auto& font_rasterizer = font::FontRasterizer::instance();
-        auto rglyph = font_rasterizer.rasterize(font_id, glyph_id);
-        cache[font_id].emplace(glyph_id, insert_into_atlas(std::move(rglyph)));
+        auto& glyph_cache = Renderer::instance().font_cache().glyph_cache(font_id);
+        // Widgets draw at whole device pixels, so the first subpixel phase is the only one used.
+        const auto& data = glyph_cache.lookup_glyph_data(glyph_id);
+        cache[font_id].emplace(glyph_id, insert_into_atlas(data.phase_at(0), data.colored));
     }
     return cache[font_id][glyph_id];
 }
@@ -58,29 +60,50 @@ const TextureCache::Image& TextureCache::get_image(size_t image_id) const {
 }
 
 // TODO: Refactor recursion.
-TextureCache::Glyph TextureCache::insert_into_atlas(const font::RasterizedGlyph& rglyph) {
+TextureCache::Glyph TextureCache::insert_into_atlas(const fx_glyph_cache::glyph_phase& phase,
+                                                    bool colored) {
+    const int width = phase.width;
+    const int height = phase.height;
+
+    // Glyphs without ink have no bitmap. Skip the atlas so they don't consume a row slot.
+    if (!phase.pixels || width == 0 || height == 0) {
+        return {
+            .bearing_x = phase.bearing_x,
+            .bearing_y = phase.bearing_y,
+            .width = 0,
+            .height = 0,
+            .uv = {},
+            .colored = colored,
+            .page = current_page,
+        };
+    }
+
+    // fx bitmaps are tightly packed premultiplied BGRA.
+    const size_t byte_count = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
+    std::vector<uint8_t> buffer(byte_count);
+    std::memcpy(buffer.data(), phase.pixels, byte_count);
+
     Atlas& atlas = atlas_pages[current_page];
 
     // TODO: Handle the case when a texture is too large for the atlas.
     //       Return an enum classifying the error instead of using a boolean.
     Vec4 uv;
-    bool success =
-        atlas.insert_texture(rglyph.width, rglyph.height, Atlas::Format::kBGRA, rglyph.buffer, uv);
+    bool success = atlas.insert_texture(width, height, Atlas::Format::kBGRA, buffer, uv);
 
     // The current page is full, so create a new page and try again.
     if (!success) {
         atlas_pages.emplace_back();
         ++current_page;
-        return insert_into_atlas(rglyph);
+        return insert_into_atlas(phase, colored);
     }
 
     return {
-        .left = rglyph.left,
-        .top = rglyph.top,
-        .width = rglyph.width,
-        .height = rglyph.height,
+        .bearing_x = phase.bearing_x,
+        .bearing_y = phase.bearing_y,
+        .width = width,
+        .height = height,
         .uv = uv,
-        .colored = rglyph.colored,
+        .colored = colored,
         .page = current_page,
     };
 }

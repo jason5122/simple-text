@@ -1,5 +1,6 @@
 #pragma once
 
+#include "editor/line_layout.h"
 #include "gui/renderer/types.h"
 #include "gui/widget/widget.h"
 
@@ -22,7 +23,7 @@ private:
     static constexpr Rgb kTextColor{216, 222, 233};  // Dark.
 
     Rgb bg_color;
-    font::LineLayout line_layout;
+    editor::LineLayout line_layout;
     int line_height;
 
     constexpr Point text_center();

@@ -6,8 +6,7 @@ namespace gui {
 TextButtonWidget::TextButtonWidget(
     size_t font_id, std::string_view str8, Rgb bg_color, const Size& padding, const Size& min_size)
     : bg_color(bg_color) {
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
     line_height = metrics.line_height;
 
     auto& line_layout_cache = Renderer::instance().line_layout_cache();
@@ -24,15 +23,7 @@ void TextButtonWidget::draw() {
     rect_renderer.add_rect(position(), size(), position(), position() + size(), bg_color,
                            Layer::kBackground, 4);
 
-    Point min_coords = {
-        .x = 0,
-        .y = position().y,
-    };
-    Point max_coords = {
-        .x = size().width,
-        .y = position().y + size().height,
-    };
-    texture_renderer.add_line_layout(line_layout, text_center(), min_coords, max_coords,
+    texture_renderer.add_line_layout(line_layout, text_center(), position(), position() + size(),
                                      [](size_t) { return kTextColor; });
 }
 

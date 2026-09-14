@@ -9,6 +9,8 @@ source_set("gui") {
     "renderer/atlas.h",
     "renderer/debug/renderer_lite.cc",
     "renderer/debug/renderer_lite.h",
+    "renderer/font_cache.cc",
+    "renderer/font_cache.h",
     "renderer/line_layout_cache.cc",
     "renderer/line_layout_cache.h",
     "renderer/rect_renderer.cc",
@@ -75,7 +77,7 @@ source_set("gui") {
   deps = [
     "//base",
     "//editor",
-    "//font",
+    "//fx",
     "//gl",
     "//gui/renderer/icons",
     "//third_party/libjpeg_turbo",

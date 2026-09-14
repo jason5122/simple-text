@@ -11,7 +11,6 @@ common_sources = [
 
 common_deps = [
   "//base",
-  "//font",
   "//gl",
   "//gui",
   "//third_party/spdlog",

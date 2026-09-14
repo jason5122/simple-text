@@ -25,11 +25,10 @@ constexpr CharKind to_kind(int32_t codepoint);
 
 }  // namespace
 
-size_t column_at_x(const font::LineLayout& layout, int x) {
+size_t column_at_x(const LineLayout& layout, int x) {
     for (size_t i = 0; i < layout.glyphs.size(); ++i) {
         const auto& glyph = layout.glyphs[i];
-        int glyph_x = glyph.position.x;
-        int glyph_center = std::midpoint(glyph_x, glyph_x + glyph.advance.x);
+        int glyph_center = std::midpoint(glyph.x, glyph.x + glyph.advance);
         if (glyph_center >= x) {
             return glyph.index;
         }
@@ -37,18 +36,18 @@ size_t column_at_x(const font::LineLayout& layout, int x) {
     return layout.length;
 }
 
-int x_at_column(const font::LineLayout& layout, size_t col) {
+int x_at_column(const LineLayout& layout, size_t col) {
     for (size_t i = 0; i < layout.glyphs.size(); ++i) {
         const auto& glyph = layout.glyphs[i];
         if (glyph.index >= col) {
-            return glyph.position.x;
+            return glyph.x;
         }
     }
     return layout.width;
 }
 
 namespace {
-inline size_t GlyphAtColumn(const std::vector<font::ShapedGlyph>& glyphs, size_t col) {
+inline size_t GlyphAtColumn(const std::vector<ShapedGlyph>& glyphs, size_t col) {
     for (size_t i = 0; i < glyphs.size(); ++i) {
         if (glyphs[i].index >= col) {
             return i;
@@ -58,7 +57,7 @@ inline size_t GlyphAtColumn(const std::vector<font::ShapedGlyph>& glyphs, size_t
 }
 }  // namespace
 
-size_t move_to_prev_glyph(const font::LineLayout& layout, size_t col) {
+size_t move_to_prev_glyph(const LineLayout& layout, size_t col) {
     const auto& glyphs = layout.glyphs;
     if (glyphs.empty()) return 0;
 
@@ -67,7 +66,7 @@ size_t move_to_prev_glyph(const font::LineLayout& layout, size_t col) {
     return col - glyphs[i].index;
 }
 
-size_t move_to_next_glyph(const font::LineLayout& layout, size_t col) {
+size_t move_to_next_glyph(const LineLayout& layout, size_t col) {
     const auto& glyphs = layout.glyphs;
 
     size_t i = GlyphAtColumn(glyphs, col);

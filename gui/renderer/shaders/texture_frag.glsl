@@ -12,9 +12,11 @@ layout(location = 0, index = 1) out vec3 alpha_mask;
 
 uniform sampler2D mask;
 
+// Keep in sync with TextureRenderer::InstanceKind.
 const int kPlainTexture = 0;
 const int kColoredText = 1;
 const int kColoredImage = 2;
+const int kMonochromeText = 3;
 
 void main() {
     const int kDebug = 0;
@@ -26,6 +28,14 @@ void main() {
 
     vec4 texel = texture(mask, tex_coords);
     int kind = int(tex_color.a);
+
+    // Monochrome glyphs from fx are white ink on an opaque black background, so their coverage
+    // lives in the color channels (one per subpixel) rather than in alpha.
+    if (kind == kMonochromeText) {
+        color = tex_color.rgb;
+        alpha_mask = texel.rgb;
+        return;
+    }
 
     alpha_mask = vec3(texel.a);
 

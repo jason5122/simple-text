@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font/types.h"
+#include "editor/line_layout.h"
 #include "gui/renderer/shader.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
@@ -18,7 +18,12 @@ public:
     TextureRenderer(TextureRenderer&& other) noexcept;
     TextureRenderer& operator=(TextureRenderer&& other) noexcept;
 
-    void add_line_layout(const font::LineLayout& line_layout,
+    // Draws `line_layout` with the top-left corner of its line box at `coords`; the text's
+    // alphabetic baseline sits at `coords.y + ascent`. Only the part of each glyph inside the
+    // rectangle spanning [min_coords, max_coords) is drawn. All coordinates are absolute device
+    // pixels with y growing downward. `highlight_callback` maps a glyph's UTF-8 index to its
+    // color.
+    void add_line_layout(const editor::LineLayout& line_layout,
                          const Point& coords,
                          const Point& min_coords,
                          const Point& max_coords,
@@ -46,10 +51,16 @@ private:
 
     void insert_into_batch(size_t page, const InstanceData& instance);
 
+    // Packed into the alpha channel of InstanceData::color. Keep in sync with texture_frag.glsl.
     enum InstanceKind {
+        // Alpha mask tinted with the instance color (icons).
         kPlainTexture = 0,
+        // Premultiplied color bitmap (emoji).
         kColoredText = 1,
+        // Straight-alpha RGBA image drawn as-is.
         kColoredImage = 2,
+        // Per-channel coverage in RGB tinted with the instance color (fx monochrome glyphs).
+        kMonochromeText = 3,
     };
 
     // DEBUG: Draws texture atlases.

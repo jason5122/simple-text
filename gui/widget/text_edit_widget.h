@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editor/buffer/piece_tree.h"
+#include "editor/line_layout.h"
 #include "editor/selection.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
@@ -80,7 +81,7 @@ private:
     static constexpr int kGutterRightPadding = 8 * 2;
 
     size_t line_at_y(int y) const;
-    inline const font::LineLayout& layout_at(size_t line);
+    inline const editor::LineLayout& layout_at(size_t line);
     inline constexpr Point text_offset();
     inline constexpr int gutter_width();
     inline int line_number_width();

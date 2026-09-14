@@ -1,14 +1,14 @@
 #include "editor/movement.h"
-#include "font/font_rasterizer.h"
+#include "fx/fx.h"
 #include <gtest/gtest.h>
+#include <memory>
 
 namespace editor {
 
 namespace {
-font::LineLayout CreateLayout(std::string_view str) {
-    auto& rasterizer = font::FontRasterizer::instance();
-    size_t font_id = rasterizer.add_system_font(32);
-    return rasterizer.layout_line(font_id, str);
+LineLayout CreateLayout(std::string_view str) {
+    static const std::unique_ptr<fx_font> font = fx_create_font("system", 32.0f, 0);
+    return layout_line(0, *font, 1.0f, str);
 }
 }  // namespace
 

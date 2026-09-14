@@ -41,12 +41,11 @@ source_set("grapheme_shaper") {
     "grapheme_shaper.cc",
     "grapheme_shaper.h",
   ]
-  public_deps = [
-    "//fx",
-    "//px",
-  ]
+
   deps = [
     "//base",
+    "//fx",
+    "//px",
     "//third_party/uni_algo",
   ]
 }
@@ -64,7 +63,8 @@ source_set("retained_text") {
     "retained_text.cc",
     "retained_text.h",
   ]
-  public_deps = [
+
+  deps = [
     ":grapheme_shaper",
     "//fx",
     "//px",

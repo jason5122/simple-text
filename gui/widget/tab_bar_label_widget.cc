@@ -45,17 +45,14 @@ void TabBarLabelWidget::draw() {
         texture_renderer.add_image(icon_id, icon_position, kFolderIconColor);
     }
 
-    const auto& font_rasterizer = font::FontRasterizer::instance();
-    const auto& metrics = font_rasterizer.metrics(font_id);
+    const auto metrics = Renderer::instance().font_cache().metrics(font_id);
     const auto& layout = line_layout_cache.get(font_id, label_str);
 
+    // Clip the label to the space between the left and right icons.
     Point coords = center_vertically(metrics.line_height) + left_offset;
-    Point min_coords = {
-        .x = 0,
-        .y = position().y,
-    };
+    Point min_coords = position() + left_offset;
     Point max_coords = {
-        .x = width() - left_padding - right_padding,
+        .x = position().x + width() - right_offset.x,
         .y = position().y + height(),
     };
     const auto highlight_callback = [this](size_t) { return color; };

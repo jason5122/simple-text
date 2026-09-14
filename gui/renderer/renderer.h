@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gui/renderer/font_cache.h"
 #include "gui/renderer/line_layout_cache.h"
 #include "gui/renderer/rect_renderer.h"
 #include "gui/renderer/selection_renderer.h"
@@ -15,6 +16,7 @@ public:
         return renderer;
     }
 
+    constexpr FontCache& font_cache() { return font_cache_; }
     constexpr TextureCache& texture_cache() { return texture_cache_; }
     constexpr LineLayoutCache& line_layout_cache() { return line_layout_cache_; }
 
@@ -27,6 +29,7 @@ public:
 private:
     Renderer();
 
+    FontCache font_cache_;
     TextureCache texture_cache_;
     LineLayoutCache line_layout_cache_;
 

@@ -415,34 +415,34 @@ bool EditorWindow::on_key_down(Key key, ModifierKey modifiers) {
 
     // TODO: Clean this up.
     if (key == Key::kMinus && modifiers == kPrimaryModifier) {
-        auto& font_rasterizer = font::FontRasterizer::instance();
-        const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
+        auto& font_cache = Renderer::instance().font_cache();
+        const auto metrics = font_cache.metrics(parent.main_font_id);
 
         int new_font_size = std::max(metrics.font_size - 1, 8);
         spdlog::info("font size = {}", new_font_size);
-        parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
+        parent.main_font_id = font_cache.resize_font(parent.main_font_id, new_font_size);
 
         editor_widget->update_font(parent.main_font_id);
 
         handled = true;
     } else if (key == Key::kEqual && modifiers == kPrimaryModifier) {
-        auto& font_rasterizer = font::FontRasterizer::instance();
-        const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
+        auto& font_cache = Renderer::instance().font_cache();
+        const auto metrics = font_cache.metrics(parent.main_font_id);
 
         int new_font_size = std::min(metrics.font_size + 1, 128);
         spdlog::info("font size = {}", new_font_size);
-        parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
+        parent.main_font_id = font_cache.resize_font(parent.main_font_id, new_font_size);
 
         editor_widget->update_font(parent.main_font_id);
 
         handled = true;
     } else if (key == Key::k0 && modifiers == kPrimaryModifier) {
-        auto& font_rasterizer = font::FontRasterizer::instance();
-        const auto& metrics = font_rasterizer.metrics(parent.main_font_id);
+        auto& font_cache = Renderer::instance().font_cache();
+        const auto metrics = font_cache.metrics(parent.main_font_id);
 
         int new_font_size = parent.kMainFontSize;
         spdlog::info("font size = {}", new_font_size);
-        parent.main_font_id = font_rasterizer.resize_font(parent.main_font_id, new_font_size);
+        parent.main_font_id = font_cache.resize_font(parent.main_font_id, new_font_size);
 
         editor_widget->update_font(parent.main_font_id);
 

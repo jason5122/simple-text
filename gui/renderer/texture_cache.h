@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/files/file_path.h"
-#include "font/types.h"
+#include "fx/fx.h"
 #include "gui/renderer/atlas.h"
 #include "gui/renderer/types.h"
 #include "gui/types.h"
@@ -16,14 +16,18 @@ public:
     TextureCache();
 
     struct Glyph {
-        int32_t left;
-        int32_t top;
+        // Device-pixel offset from the glyph's pen position on the alphabetic baseline to the
+        // top-left corner of its bitmap, y-down. `bearing_y` is therefore usually negative.
+        int32_t bearing_x;
+        int32_t bearing_y;
         int32_t width;
         int32_t height;
         Vec4 uv;
         bool colored;
         size_t page;
     };
+    // `font_id` is a FontCache ID and `glyph_id` an fx glyph ID from a layout in that font. A
+    // glyph with no ink (e.g. a space) has zero width and height.
     const Glyph& get_glyph(size_t font_id, uint32_t glyph_id);
 
     struct Image {
@@ -45,7 +49,7 @@ private:
     std::vector<robin_hood::unordered_node_map<uint32_t, Glyph>> cache;
     std::vector<Image> image_cache;
 
-    Glyph insert_into_atlas(const font::RasterizedGlyph& rglyph);
+    Glyph insert_into_atlas(const fx_glyph_cache::glyph_phase& phase, bool colored);
     bool load_png(const base::FilePath& path, Image& image);
     bool load_jpeg(const base::FilePath& path, Image& image);
 };

@@ -108,13 +108,9 @@ config("default_include_dirs") {
 
 config("optimize") {
   if (is_win) {
-    # TODO: Verify these flags do what we want on Windows.
     cflags = [
       "/O2",
-      "/Ob2",  # Both explicit and auto inlining.
-      "/Oy-",  # Disable omitting frame pointers, must be after /O2.
-      "/Zc:inline",  # Remove unreferenced COMDAT (faster links).
-      "/Oi",
+      "/clang:-O2",
     ]
   } else {
     cflags = [ "-O2" ]
@@ -123,14 +119,20 @@ config("optimize") {
 
 config("no_optimize") {
   if (is_win) {
-    # TODO: Verify these flags do what we want on Windows.
-    cflags = [
-      "/Od",  # Disable optimization.
-      "/Ob0",  # Disable all inlining (on by default).
-      "/GF",  # Enable string pooling (off by default).
-    ]
+    cflags = [ "/Od" ]
   } else {
     cflags = [ "-O0" ]
+  }
+}
+
+config("optimize_speed") {
+  if (is_win) {
+    cflags = [
+      "/O2",
+      "/clang:-O3",
+    ]
+  } else {
+    cflags = [ "-O3" ]
   }
 }
 

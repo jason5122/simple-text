@@ -1,0 +1,19 @@
+static_library("simdutf") {
+  sources = [ "simdutf.cpp" ]
+
+  cflags = [ "-Wno-array-bounds" ]
+
+  configs -= [ "//build/config/compiler:simple_text_code" ]
+  configs += [ "//build/config/compiler:no_simple_text_code" ]
+
+  if (is_release) {
+    configs -= [ "//build/config/compiler:default_optimization" ]
+    configs += [ "//build/config/compiler:optimize_speed" ]
+  }
+
+  public_deps = [ ":header" ]
+}
+
+source_set("header") {
+  sources = [ "simdutf.h" ]
+}

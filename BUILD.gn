@@ -21,6 +21,7 @@ group("experiments") {
     "//experiments/fuzz",
     "//experiments/playground",
     "//experiments/rope",
+    "//experiments/unicode:unicode_perftest",
   ]
 
   if (is_mac) {

@@ -28,8 +28,6 @@ source_set("base") {
     "memory/ref_counted.h",
     "memory/scoped_refptr.h",
     "memory/weak_ptr.h",
-    "message_loop/message_pump.cc",
-    "message_loop/message_pump.h",
     "no_destructor.h",
     "numeric/safe_conversions.h",
     "numeric/saturation_arithmetic.h",
@@ -53,8 +51,8 @@ source_set("base") {
   ]
   deps = [ "//third_party/spdlog" ]
 
-  # TODO: Consider checking all type conversions. These result in silent and subtle bugs. We
-  # previously spent one hour debugging one.
+  # TODO: Consider checking all type conversions. These result in silent and
+  # subtle bugs. We previously spent one hour debugging one.
   # configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
 
   libs = []
@@ -84,8 +82,6 @@ source_set("base") {
       "apple/scoped_cgtyperef.h",
       "apple/scoped_typeref.h",
       "files/file_util_mac.mm",
-      "message_loop/message_pump_mac.h",
-      "message_loop/message_pump_mac.mm",
       "path_service_mac.cc",
       "strings/sys_string_conversions_mac.mm",
       "time/time_mac.cc",

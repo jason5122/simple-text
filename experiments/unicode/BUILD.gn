@@ -1,0 +1,14 @@
+source_set("unicode") {
+  sources = [
+    "unicode.cc",
+    "unicode.h",
+  ]
+
+  deps = [ "//third_party/simdutf" ]
+}
+
+executable("unicode_perftest") {
+  sources = [ "unicode_perftest.cc" ]
+
+  deps = [ ":unicode" ]
+}

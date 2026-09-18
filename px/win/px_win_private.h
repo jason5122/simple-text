@@ -57,7 +57,7 @@ struct px_window_t {
     bool suppress_char = false;
 
     // WM_CHAR delivers astral codepoints as two messages.
-    wchar_t pending_high_surrogate = 0;
+    char16_t pending_high_surrogate = 0;
 
     // Saved across a borderless-fullscreen toggle.
     RECT saved_frame = {};

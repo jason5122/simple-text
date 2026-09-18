@@ -1,5 +1,5 @@
 #include "base/numeric/safe_conversions.h"
-#include "base/unicode/unicode.h"
+#include "base/unicode.h"
 #include "ui/grapheme_shaper.h"
 #include <algorithm>
 #include <array>
@@ -35,7 +35,7 @@ std::u32string ascii_to_utf32(std::string_view input) {
     return result;
 }
 
-bool is_ascii_operator(base::Unichar cp) {
+bool is_ascii_operator(char32_t cp) {
     return (cp >= 0x21 && cp <= 0x2f) || (cp >= 0x3a && cp <= 0x40) ||
            (cp >= 0x5b && cp <= 0x60) || (cp >= 0x7b && cp <= 0x7e);
 }
@@ -45,7 +45,7 @@ bool is_regional_indicator(char32_t codepoint) {
 }
 
 bool is_combining_char(char32_t codepoint) {
-    if (!base::is_valid_codepoint(static_cast<base::Unichar>(codepoint))) {
+    if (!una::codepoint::is_valid_scalar(codepoint)) {
         return false;
     }
     const una::codepoint::prop property{codepoint};
@@ -88,7 +88,7 @@ struct utf8_decoder {
 
     static size_t next_codepoint(std::string_view text, size_t start, char32_t* codepoint) {
         size_t end = start;
-        *codepoint = static_cast<char32_t>(base::next_utf8(text, end));
+        *codepoint = base::decode_utf8(text, end);
         return end;
     }
 
@@ -101,7 +101,7 @@ struct utf8_decoder {
         }
 
         size_t second_end = first_end;
-        const char32_t second = static_cast<char32_t>(base::next_utf8(text, second_end));
+        char32_t second = base::decode_utf8(text, second_end);
         if (is_trivial_grapheme(first, second)) {
             return first_end;
         }
@@ -112,7 +112,7 @@ struct utf8_decoder {
         }
         while (end < text.size()) {
             size_t next = end;
-            const char32_t codepoint = static_cast<char32_t>(base::next_utf8(text, next));
+            char32_t codepoint = base::decode_utf8(text, next);
             if (is_combining_char(codepoint)) {
                 end = next;
                 continue;
@@ -120,7 +120,7 @@ struct utf8_decoder {
             if (codepoint == 0x200d) {
                 end = next;
                 if (end < text.size()) {
-                    base::next_utf8(text, end);
+                    base::decode_utf8(text, end);
                 }
                 continue;
             }
@@ -129,7 +129,7 @@ struct utf8_decoder {
 
         if (end < text.size()) {
             size_t next = end;
-            if (is_sara_am(static_cast<char32_t>(base::next_utf8(text, next)))) {
+            if (is_sara_am(base::decode_utf8(text, next))) {
                 end = next;
             }
         }
@@ -508,12 +508,11 @@ void grapheme_shaper::draw_string_impl(Callback& callback,
             break;
         }
 
-        if (monospace_ && base_end == cluster_end &&
-            is_ascii_operator(static_cast<base::Unichar>(base_cp))) {
+        if (monospace_ && base_end == cluster_end && is_ascii_operator(base_cp)) {
             while (cluster_end < text.size()) {
                 char32_t next_cp = 0;
                 const size_t next_end = Decoder::next_codepoint(text, cluster_end, &next_cp);
-                if (!is_ascii_operator(static_cast<base::Unichar>(next_cp))) {
+                if (!is_ascii_operator(next_cp)) {
                     break;
                 }
                 cluster_end = next_end;

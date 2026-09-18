@@ -2,9 +2,10 @@
 #include "base/compiler_specific.h"
 #include "base/functional/scope_exit.h"
 #include "base/numeric/saturation_arithmetic.h"
-#include "base/unicode/utf8_decoder.h"
+#include "base/unicode.h"
 #include "editor/buffer/piece_tree.h"
 #include "editor/search/aho_corasick.h"
+#include <array>
 #include <string>
 #include <vector>
 
@@ -485,7 +486,7 @@ void PieceTree::insert(size_t offset, std::string_view txt) {
     auto result = node_at(root_, buffers_, offset);
     // If the offset is beyond the buffer, just select the last node.
     if (!result.node) {
-        auto off = base::sub_sat(length(), size_t{1});
+        auto off = base::sub_sat(length(), 1UZ);
         result = node_at(root_, buffers_, off);
     }
 
@@ -706,23 +707,39 @@ bool TreeWalker::exhausted() const {
     return false;
 }
 
+// TODO: This is kind of ugly. We should really be walking the tree in chunks, then using normal
+// Unicode algorithms. We're not refactoring this because we'll be migrating to rope soon.
 char32_t TreeWalker::next_codepoint() {
-    base::UTF8Decoder decoder;
-    while (!exhausted()) {
-        decoder.put(next());
-
-        if (decoder.done()) {
-            return decoder.value();
-        } else if (decoder.error()) {
-            return 0;
+    // Fast path: the whole sequence lies inside the current piece, so decode it in place.
+    if (first_ptr_ != last_ptr_) {
+        std::string_view piece = UNSAFE_TODO(std::string_view(first_ptr_, last_ptr_));
+        if (base::utf8_sequence_length(piece.front()) <= piece.size()) {
+            size_t i = 0;
+            char32_t cp = base::decode_utf8(piece, i);
+            UNSAFE_TODO(first_ptr_ += i);
+            total_offset_ += i;
+            return cp;
         }
     }
 
-    if (decoder.done()) {
-        return decoder.value();
-    } else {
-        return 0;
-    }
+    // Slow path: the sequence may straddle a piece boundary. Gather it a byte at a time, then
+    // decode the copy.
+    if (exhausted()) return 0;
+    const size_t start = total_offset_;
+    std::array<char, 4> bytes{};
+    bytes[0] = next();
+    const size_t len = base::utf8_sequence_length(bytes[0]);
+    for (size_t n = 1; n < len && !exhausted(); ++n) bytes[n] = next();
+    // `next()` reports exhaustion by returning '\0' without advancing, so count the bytes it
+    // actually delivered by offset.
+    const size_t n = total_offset_ - start;
+    if (n == 0) return 0;
+
+    size_t i = 0;
+    char32_t cp = base::decode_utf8(std::string_view{bytes}.substr(0, n), i);
+    // Ill-formed input: the bytes after `i` belong to the following code point. Hand them back.
+    if (i < n) seek(start + i);
+    return cp;
 }
 
 void TreeWalker::populate_ptrs() {
@@ -857,23 +874,41 @@ bool ReverseTreeWalker::exhausted() const {
     return false;
 }
 
+// TODO: This is kind of ugly. We should really be walking the tree in chunks, then using normal
+// Unicode algorithms. We're not refactoring this because we'll be migrating to rope soon.
 char32_t ReverseTreeWalker::next_codepoint() {
-    base::ReverseUTF8Decoder decoder;
-    while (!exhausted()) {
-        decoder.put(next());
-
-        if (decoder.done()) {
-            return decoder.value();
-        } else if (decoder.error()) {
-            return 0;
-        }
+    // Fast path: the piece holds at least four bytes before the cursor, so the code point ending
+    // there cannot straddle a piece boundary. Decode it in place.
+    std::string_view piece = UNSAFE_TODO(std::string_view(last_ptr_, first_ptr_));
+    if (piece.size() >= 4) {
+        size_t i = piece.size();
+        char32_t cp = base::decode_prev_utf8(piece, i);
+        const size_t len = piece.size() - i;
+        UNSAFE_TODO(first_ptr_ -= len);
+        total_offset_ -= len;
+        return cp;
     }
 
-    if (decoder.done()) {
-        return decoder.value();
-    } else {
-        return 0;
-    }
+    // Slow path: the code point may straddle a piece boundary. Gather backwards a byte at a time
+    // until the first byte that is not a trail byte (its lead byte, at most four bytes back), then
+    // decode the copy.
+    if (exhausted()) return 0;
+    const size_t start = total_offset_;
+    std::array<char, 4> bytes{};
+    size_t pos = bytes.size();
+    do {
+        bytes[--pos] = next();
+    } while (pos > 0 && !exhausted() && U8_IS_TRAIL(bytes[pos]));
+    // `next()` reports exhaustion by returning '\0' without advancing, so count the bytes it
+    // actually delivered by offset. They occupy the end of `bytes`.
+    const size_t n = start - total_offset_;
+    if (n == 0) return 0;
+
+    size_t i = n;
+    char32_t cp = base::decode_prev_utf8(std::string_view{bytes}.substr(bytes.size() - n), i);
+    // Ill-formed input: the bytes before `i` belong to the preceding code point. Hand them back.
+    if (i > 0) seek(total_offset_ + i);
+    return cp;
 }
 
 void ReverseTreeWalker::populate_ptrs() {

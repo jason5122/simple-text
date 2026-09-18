@@ -7,13 +7,13 @@
 // interface: pre_sleep() needs a hook at the moment the queue drains and the thread is about to
 // block, and GetMessageW gives you nowhere to put it.
 
+#include "base/strings.h"
+#include "base/unicode.h"
 #include "px/win/px_win_private.h"
 #include <chrono>
-#include <cstdio>
 #include <functional>
 #include <map>
 #include <shellapi.h>
-#include <string>
 #include <vector>
 
 namespace {
@@ -46,19 +46,6 @@ void CALLBACK timer_proc(HWND hwnd, UINT message, UINT_PTR id, DWORD time) {
     timers().erase(it);
     KillTimer(nullptr, id);
     fn();
-}
-
-std::wstring to_utf16(const char* utf8) {
-    if (!utf8 || !*utf8) {
-        return {};
-    }
-    const int needed = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, nullptr, 0);
-    if (needed <= 0) {
-        return {};
-    }
-    std::wstring out(static_cast<size_t>(needed - 1), L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, out.data(), needed);
-    return out;
 }
 
 // Per-monitor DPI awareness without a manifest. ST declares it in its manifest instead; doing it
@@ -161,13 +148,15 @@ double px_caret_blink_time() {
 }
 
 void px_show_error(px_window_t* parent, const char* message) {
-    MessageBoxW(parent ? parent->hwnd : nullptr, to_utf16(message).c_str(), L"Error",
+    auto message16 = base::utf8_to_utf16(message ? message : "");
+    MessageBoxW(parent ? parent->hwnd : nullptr, base::as_wcstr(message16), L"Error",
                 MB_OK | MB_ICONERROR);
 }
 
 void px_open_url(const char* url) {
     if (url) {
-        ShellExecuteW(nullptr, L"open", to_utf16(url).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        auto url16 = base::utf8_to_utf16(url ? url : "");
+        ShellExecuteW(nullptr, L"open", base::as_wcstr(url16), nullptr, nullptr, SW_SHOWNORMAL);
     }
 }
 

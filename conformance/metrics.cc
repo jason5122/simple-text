@@ -1,4 +1,4 @@
-#include "base/unicode/unicode.h"
+#include "base/unicode.h"
 #include "build/build_config.h"
 #include "px/px.h"
 #include "ui/grapheme_shaper.h"
@@ -142,7 +142,7 @@ bool collect_points(std::string_view text,
         }
 
         size_t next_offset = byte_offset;
-        const base::Unichar codepoint = base::next_utf8(text, next_offset);
+        char32_t codepoint = base::decode_utf8(text, next_offset);
         if (codepoint < 0 || next_offset <= byte_offset) {
             return false;
         }

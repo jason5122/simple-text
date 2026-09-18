@@ -22,7 +22,7 @@ public:
 
     void next_index() { index_ = (index_ + 1) % views_.size(); }
 
-    void last_index() { index_ = base::sub_sat(views_.size(), size_t{1}); }
+    void last_index() { index_ = base::sub_sat(views_.size(), 1UZ); }
 
     size_t index() { return index_; }
 
@@ -32,7 +32,7 @@ public:
         if (views_.empty()) return;
 
         views_.erase(views_.begin() + index);
-        index_ = std::clamp(index, size_t{0}, base::sub_sat(views_.size(), size_t{1}));
+        index_ = std::clamp(index, 0UZ, base::sub_sat(views_.size(), 1UZ));
     }
 
     void draw() override {

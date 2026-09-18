@@ -1,7 +1,11 @@
 #include "editor/buffer/piece_tree.h"
 #include "uni_algo/prop.h"
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <stack>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace editor {
 
@@ -101,7 +105,7 @@ TEST(TreeWalkerTest, TreeWalkerOffsetTest2) {
     PieceTree tree{"abcd"};
     TreeWalker w1{tree};
 
-    EXPECT_EQ(w1.offset(), size_t{0});
+    EXPECT_EQ(w1.offset(), 0UZ);
     EXPECT_FALSE(w1.exhausted());
 
     TreeWalker w2 = {tree, 4};
@@ -143,7 +147,7 @@ TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest1) {
             EXPECT_EQ(ch, str[i]);
             EXPECT_EQ(offset, i);
         }
-        EXPECT_EQ(reverse_walker.offset(), size_t{0});
+        EXPECT_EQ(reverse_walker.offset(), 0UZ);
     }
 }
 
@@ -151,11 +155,11 @@ TEST(TreeWalkerTest, ReverseTreeWalkerOffsetTest2) {
     PieceTree tree{"abcd"};
 
     ReverseTreeWalker rw1{tree};
-    EXPECT_EQ(rw1.offset(), size_t{0});
+    EXPECT_EQ(rw1.offset(), 0UZ);
     EXPECT_TRUE(rw1.exhausted());
 
     ReverseTreeWalker rw2 = {tree, 3};  // abc|d
-    EXPECT_EQ(rw2.offset(), size_t{3});
+    EXPECT_EQ(rw2.offset(), 3UZ);
     EXPECT_FALSE(rw2.exhausted());
     EXPECT_EQ(rw2.next(), 'c');
     EXPECT_EQ(rw2.next(), 'b');
@@ -299,6 +303,91 @@ TEST(TreeWalkerTest, ReverseWalkerConsistency) {
     codepoints = get_codepoints(tree, 0);
     expected = {};
     EXPECT_EQ(codepoints, expected);
+}
+
+namespace {
+
+size_t piece_count(const RedBlackTree& node) {
+    if (!node) return 0;
+    return 1 + piece_count(node.left()) + piece_count(node.right());
+}
+
+// Makes `offset` a piece boundary by splitting the piece that contains it.
+void split_at(PieceTree& tree, size_t offset) {
+    tree.insert(offset, "x");
+    tree.erase(offset, 1);
+}
+
+// (byte offset, code point) per code point, in text order.
+using Codepoints = std::vector<std::pair<size_t, char32_t>>;
+
+Codepoints forward_codepoints(const PieceTree& tree) {
+    Codepoints codepoints;
+    TreeWalker walker{tree};
+    while (!walker.exhausted()) {
+        size_t offset = walker.offset();
+        char32_t cp = walker.next_codepoint();
+        codepoints.emplace_back(offset, cp);
+    }
+    return codepoints;
+}
+
+Codepoints reverse_codepoints(const PieceTree& tree) {
+    Codepoints codepoints;
+    ReverseTreeWalker walker{tree, tree.length()};
+    while (!walker.exhausted()) {
+        char32_t cp = walker.next_codepoint();
+        codepoints.emplace_back(walker.offset(), cp);
+    }
+    std::ranges::reverse(codepoints);
+    return codepoints;
+}
+
+}  // namespace
+
+// Both walkers decode the same code points at the same offsets no matter where the piece
+// boundaries fall, including inside multi-byte sequences.
+TEST(TreeWalkerTest, CodepointsStraddlingPieceBoundaries) {
+    // "a" | U+1F642 (4 bytes) | "b" | U+2603 (3 bytes) | U+00E9 (2 bytes) | "c"
+    const std::string_view text = "a🙂b☃\u00E9c";
+    const Codepoints expected = {{0, U'a'},      {1, U'\U0001F642'}, {5, U'b'},
+                                 {6, U'\u2603'}, {9, U'\u00E9'},     {11, U'c'}};
+
+    // A piece boundary after every `stride` bytes. Stride 1 splits every multi-byte sequence at
+    // every byte; the largest stride leaves a single piece.
+    for (size_t stride = 1; stride <= text.size(); ++stride) {
+        PieceTree tree{text};
+        for (size_t offset = stride; offset < text.size(); offset += stride) {
+            split_at(tree, offset);
+        }
+        ASSERT_EQ(tree.str(), text);
+        ASSERT_EQ(piece_count(tree.root()), (text.size() + stride - 1) / stride);
+
+        EXPECT_EQ(forward_codepoints(tree), expected) << "stride " << stride;
+        EXPECT_EQ(reverse_codepoints(tree), expected) << "stride " << stride;
+    }
+}
+
+// Ill-formed bytes decode to U+FFFD in both directions, and both directions agree on where each
+// code point starts, whether or not a piece boundary falls inside the ill-formed sequence.
+TEST(TreeWalkerTest, IllFormedBytesDecodeToReplacementCharacter) {
+    // "a" | stray trail byte | truncated 3-byte sequence | "b" | lead byte with no trail | "A"
+    // clang-format off
+    const std::string_view text = "a\x80\xE2\x82" "b\xE2" "A";
+    // clang-format on
+    const Codepoints expected = {{0, U'a'}, {1, U'\uFFFD'}, {2, U'\uFFFD'},
+                                 {4, U'b'}, {5, U'\uFFFD'}, {6, U'A'}};
+
+    for (size_t stride = 1; stride <= text.size(); ++stride) {
+        PieceTree tree{text};
+        for (size_t offset = stride; offset < text.size(); offset += stride) {
+            split_at(tree, offset);
+        }
+        ASSERT_EQ(tree.str(), text);
+
+        EXPECT_EQ(forward_codepoints(tree), expected) << "stride " << stride;
+        EXPECT_EQ(reverse_codepoints(tree), expected) << "stride " << stride;
+    }
 }
 
 }  // namespace editor

@@ -107,7 +107,7 @@ void remeasure_all(Rope& r) {
 // than exposed, same reasoning as reference_char_width() mirroring
 // fake_char_width()). Always at least 1, even for an empty line.
 size_t rows_for(double width, double wrap_width) {
-    return width > 0 ? static_cast<size_t>(std::ceil(width / wrap_width)) : size_t{1};
+    return width > 0 ? static_cast<size_t>(std::ceil(width / wrap_width)) : 1UZ;
 }
 
 // Builds the SoftWrapMetric a real layout pass would push via
@@ -290,7 +290,7 @@ TEST(RopeTest, CharAtMatchesEveryPosition) {
 TEST(RopeTest, LineCountAndLineAt) {
     std::string text = "Line one\nLine two is longer\nShort\n\nLine five\nLast line";
     Rope r(text);
-    EXPECT_EQ(r.line_count(), size_t{6});
+    EXPECT_EQ(r.line_count(), 6UZ);
 
     size_t line = 0;
     for (size_t i = 0; i <= text.size(); ++i) {
@@ -369,13 +369,13 @@ TEST(RopeTest, DirtyLeavesInitiallyCoverWholeDocument) {
 TEST(RopeTest, LeafTextMatchesLeafContent) {
     Rope r("hello");
     auto leaves = r.dirty_leaves();
-    ASSERT_EQ(leaves.size(), size_t{1});
+    ASSERT_EQ(leaves.size(), 1UZ);
     EXPECT_EQ(r.leaf_text(leaves.front()), "hello");
 }
 
 TEST(RopeTest, SetLeafWidthClearsDirtyFlag) {
     Rope r("hello");
-    ASSERT_EQ(r.dirty_leaves().size(), size_t{1});
+    ASSERT_EQ(r.dirty_leaves().size(), 1UZ);
 
     r.set_leaf_width(r.dirty_leaves().front(), LineWidthMetric{});
     EXPECT_TRUE(r.dirty_leaves().empty());
@@ -387,7 +387,7 @@ TEST(RopeTest, EditingALeafMarksItDirtyAgain) {
     ASSERT_TRUE(r.dirty_leaves().empty());
 
     r.insert(5, "!!!");
-    EXPECT_EQ(r.dirty_leaves().size(), size_t{1});
+    EXPECT_EQ(r.dirty_leaves().size(), 1UZ);
 }
 
 TEST(RopeTest, PartiallyMeasuredTreeIsNotMeaningful) {
@@ -400,7 +400,7 @@ TEST(RopeTest, PartiallyMeasuredTreeIsNotMeaningful) {
     std::string wide_line(5000, 'a');  // Longer than one leaf (4096 cap).
     Rope r(wide_line + "\nshort");
     auto leaves = r.dirty_leaves();
-    ASSERT_GT(leaves.size(), size_t{1});
+    ASSERT_GT(leaves.size(), 1UZ);
 
     r.set_leaf_width(leaves.front(), measure_leaf_width(r.leaf_text(leaves.front())));
     // Not 5000: the still-dirty second leaf's default-zero leading_open
@@ -415,14 +415,14 @@ TEST(RopeTest, VisualRowCountOfEmptyRopeIsOne) {
     // (empty) row -- the fuzzer caught this returning 0 before the fix.
     Rope r;
     Rope::WrapHandle handle = r.register_wrap_width(80);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{1});
+    EXPECT_EQ(r.visual_row_count(handle), 1UZ);
 }
 
 TEST(RopeTest, VisualRowCountNoWrapNeeded) {
     Rope r("hello");
     Rope::WrapHandle handle = r.register_wrap_width(1000);
     remeasure_all_wrap(r, handle, 1000);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{1});
+    EXPECT_EQ(r.visual_row_count(handle), 1UZ);
 }
 
 TEST(RopeTest, VisualRowCountWithHardNewlinesOnly) {
@@ -431,7 +431,7 @@ TEST(RopeTest, VisualRowCountWithHardNewlinesOnly) {
     Rope r("a\nb\nc");
     Rope::WrapHandle handle = r.register_wrap_width(1000);
     remeasure_all_wrap(r, handle, 1000);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{3});
+    EXPECT_EQ(r.visual_row_count(handle), 3UZ);
 }
 
 TEST(RopeTest, VisualRowCountWithSoftWrapOnly) {
@@ -440,7 +440,7 @@ TEST(RopeTest, VisualRowCountWithSoftWrapOnly) {
     Rope r("aaaaaaa");
     Rope::WrapHandle handle = r.register_wrap_width(3);
     remeasure_all_wrap(r, handle, 3);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{3});
+    EXPECT_EQ(r.visual_row_count(handle), 3UZ);
 }
 
 TEST(RopeTest, VisualRowCountSpansMultipleLeaves) {
@@ -491,13 +491,13 @@ TEST(RopeTest, RegisteringAfterContentExistsMarksEverythingDirtyForIt) {
     Rope::WrapHandle handle = r.register_wrap_width(80);
     // Registered after the rope already had content -- every existing
     // leaf needs its first measurement at this width.
-    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{1});
+    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), 1UZ);
 }
 
 TEST(RopeTest, SetLeafWrapClearsDirtyFlag) {
     Rope r("hello");
     Rope::WrapHandle handle = r.register_wrap_width(80);
-    ASSERT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{1});
+    ASSERT_EQ(r.dirty_leaves_for_wrap(handle).size(), 1UZ);
 
     r.set_leaf_wrap(r.dirty_leaves_for_wrap(handle).front(), handle, SoftWrapMetric{});
     EXPECT_TRUE(r.dirty_leaves_for_wrap(handle).empty());
@@ -510,7 +510,7 @@ TEST(RopeTest, EditingALeafMarksItWrapDirtyAgain) {
     ASSERT_TRUE(r.dirty_leaves_for_wrap(handle).empty());
 
     r.insert(5, "!!!");
-    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{1});
+    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), 1UZ);
 }
 
 TEST(RopeTest, WrapAndWidthDirtyTrackingAreIndependent) {
@@ -522,12 +522,12 @@ TEST(RopeTest, WrapAndWidthDirtyTrackingAreIndependent) {
     remeasure_all(r);
     remeasure_all_wrap(r, handle, 80);
     r.insert(5, "!!!");
-    ASSERT_EQ(r.dirty_leaves().size(), size_t{1});
-    ASSERT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{1});
+    ASSERT_EQ(r.dirty_leaves().size(), 1UZ);
+    ASSERT_EQ(r.dirty_leaves_for_wrap(handle).size(), 1UZ);
 
     remeasure_all(r);  // Clears line_width's dirty flag only.
     EXPECT_TRUE(r.dirty_leaves().empty());
-    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{1});
+    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), 1UZ);
 }
 
 TEST(RopeTest, UnregisterDoesNotInvalidateOtherHandles) {
@@ -589,9 +589,9 @@ TEST(RopeTest, RegisterOnEmptyRopeThenInsertGetsCorrectSlots) {
     Rope::WrapHandle handle = r.register_wrap_width(80);
     r.insert(0, "hello");
 
-    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{1});
+    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), 1UZ);
     remeasure_all_wrap(r, handle, 80);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{1});
+    EXPECT_EQ(r.visual_row_count(handle), 1UZ);
 }
 
 TEST(RopeTest, LeafSplitDuringInsertGetsCorrectWrapSlots) {
@@ -607,8 +607,8 @@ TEST(RopeTest, LeafSplitDuringInsertGetsCorrectWrapSlots) {
     remeasure_all_wrap(r, b, 100);
 
     r.insert(r.size(), std::string(20, 'b'));  // Overflows the single leaf.
-    EXPECT_EQ(r.dirty_leaves_for_wrap(a).size(), size_t{2});
-    EXPECT_EQ(r.dirty_leaves_for_wrap(b).size(), size_t{2});
+    EXPECT_EQ(r.dirty_leaves_for_wrap(a).size(), 2UZ);
+    EXPECT_EQ(r.dirty_leaves_for_wrap(b).size(), 2UZ);
 
     std::string text(4090, 'a');
     text += std::string(20, 'b');
@@ -638,11 +638,11 @@ TEST(RopeTest, EraseRemovingALeafExcludesItFromDirtyTracking) {
     text += std::string(4096, 'B');
     Rope r(text);
     Rope::WrapHandle handle = r.register_wrap_width(80);
-    ASSERT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{2});
+    ASSERT_EQ(r.dirty_leaves_for_wrap(handle).size(), 2UZ);
 
     r.erase(0, 4096);  // Removes the first leaf entirely.
 
-    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), size_t{1});
+    EXPECT_EQ(r.dirty_leaves_for_wrap(handle).size(), 1UZ);
     EXPECT_EQ(r.leaf_text(r.dirty_leaves_for_wrap(handle).front()), std::string(4096, 'B'));
 }
 
@@ -654,7 +654,7 @@ TEST(RopeTest, EraseEntireDocumentThenWrapQueriesStillWork) {
     r.erase(0, r.size());
 
     EXPECT_TRUE(r.dirty_leaves_for_wrap(handle).empty());
-    EXPECT_EQ(r.visual_row_count(handle), size_t{1});  // Empty doc, one empty row.
+    EXPECT_EQ(r.visual_row_count(handle), 1UZ);  // Empty doc, one empty row.
 }
 
 TEST(RopeTest, WidestLineWidthLineEndsExactlyAtLeafBoundary) {
@@ -679,14 +679,14 @@ TEST(RopeTest, LineWidthExactlyAtWrapWidthIsOneRow) {
     Rope r(std::string(80, 'a'));  // Width == 80, wrap_width == 80.
     Rope::WrapHandle handle = r.register_wrap_width(80);
     remeasure_all_wrap(r, handle, 80);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{1});
+    EXPECT_EQ(r.visual_row_count(handle), 1UZ);
 }
 
 TEST(RopeTest, LineWidthOneOverWrapWidthIsTwoRows) {
     Rope r(std::string(81, 'a'));  // Width == 81, one over the threshold.
     Rope::WrapHandle handle = r.register_wrap_width(80);
     remeasure_all_wrap(r, handle, 80);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{2});
+    EXPECT_EQ(r.visual_row_count(handle), 2UZ);
 }
 
 TEST(RopeTest, EmptyLogicalLineCountsAsOneRow) {
@@ -695,7 +695,7 @@ TEST(RopeTest, EmptyLogicalLineCountsAsOneRow) {
     Rope r("a\n\nb");
     Rope::WrapHandle handle = r.register_wrap_width(80);
     remeasure_all_wrap(r, handle, 80);
-    EXPECT_EQ(r.visual_row_count(handle), size_t{3});
+    EXPECT_EQ(r.visual_row_count(handle), 3UZ);
 }
 
 TEST(RopeTest, VisualRowCountWithVeryLargeWrapWidthEqualsLineCount) {

@@ -45,8 +45,7 @@ void TextEditWidget::move(MoveBy by, bool forward, bool extend) {
             // Move to previous line if at beginning of line.
             if (delta == 0 && line > 0) {
                 const auto& prev_layout = layout_at(line - 1);
-                size_t index =
-                    tree.offset_at(line - 1, base::sub_sat(prev_layout.length, size_t{1}));
+                size_t index = tree.offset_at(line - 1, base::sub_sat(prev_layout.length, 1UZ));
                 selection.set_index(index, extend);
             }
         }
@@ -133,7 +132,7 @@ void TextEditWidget::left_delete() {
 
         // Delete newline if at beginning of line.
         if (delta == 0 && line > 0) {
-            selection.decrement(size_t{1}, false);
+            selection.decrement(1UZ, false);
             delta = 1;
         }
 
@@ -242,10 +241,10 @@ void TextEditWidget::draw() {
     size_t end_line = start_line + visible_lines;
 
     // Render two lines before start and after end. This ensures no sudden cutoff.
-    start_line = base::sub_sat(start_line, size_t{2});
-    end_line = base::add_sat(end_line, size_t{2});
-    start_line = std::clamp(start_line, size_t{0}, tree.line_count());
-    end_line = std::clamp(end_line, size_t{0}, tree.line_count());
+    start_line = base::sub_sat(start_line, 2UZ);
+    end_line = base::add_sat(end_line, 2UZ);
+    start_line = std::clamp(start_line, 0UZ, tree.line_count());
+    end_line = std::clamp(end_line, 0UZ, tree.line_count());
 
     render_text(main_line_height, start_line, end_line);
     render_selections(main_line_height, start_line, end_line);
@@ -334,7 +333,7 @@ size_t TextEditWidget::line_at_y(int y) const {
     const auto metrics = Renderer::instance().font_cache().metrics(font_id);
 
     size_t line = y / metrics.line_height;
-    return std::clamp(line, size_t{0}, tree.line_count() - 1);
+    return std::clamp(line, 0UZ, tree.line_count() - 1);
 }
 
 inline const editor::LineLayout& TextEditWidget::layout_at(size_t line) {

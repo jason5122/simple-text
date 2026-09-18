@@ -1,51 +1,14 @@
-#include "fx/fx.h"
-
 #include "base/check.h"
+#include "base/unicode.h"
 #include "build/build_config.h"
-
+#include "fx/fx.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <limits>
-#include <string>
-
-namespace {
-
-std::string utf16_to_utf8(std::u16string_view input) {
-    std::string output;
-    output.reserve(input.size());
-    for (size_t i = 0; i < input.size(); ++i) {
-        uint32_t cp = input[i];
-        if (cp >= 0xd800 && cp <= 0xdbff && i + 1 < input.size()) {
-            const uint32_t low = input[i + 1];
-            if (low >= 0xdc00 && low <= 0xdfff) {
-                cp = 0x10000 + ((cp - 0xd800) << 10) + (low - 0xdc00);
-                ++i;
-            }
-        }
-        if (cp <= 0x7f) {
-            output.push_back(static_cast<char>(cp));
-        } else if (cp <= 0x7ff) {
-            output.push_back(static_cast<char>(0xc0 | (cp >> 6)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else if (cp <= 0xffff) {
-            output.push_back(static_cast<char>(0xe0 | (cp >> 12)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        } else {
-            output.push_back(static_cast<char>(0xf0 | (cp >> 18)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3f)));
-            output.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
-        }
-    }
-    return output;
-}
-
-}  // namespace
 
 std::unique_ptr<fx_layout> fx_font::shape(std::u16string_view utf16) {
-    return shape(utf16_to_utf8(utf16));
+    return shape(base::utf16_to_utf8(utf16));
 }
 
 fx_font_widths fx_font::widths() {

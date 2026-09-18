@@ -15,7 +15,7 @@ void TabBarWidget::prev_index() { index_ = (index_ + labels_.size() - 1) % label
 
 void TabBarWidget::next_index() { index_ = (index_ + 1) % labels_.size(); }
 
-void TabBarWidget::last_index() { index_ = base::sub_sat(labels_.size(), size_t{1}); }
+void TabBarWidget::last_index() { index_ = base::sub_sat(labels_.size(), 1UZ); }
 
 void TabBarWidget::add_tab(std::string_view title) {
     Size label_size = {
@@ -33,7 +33,7 @@ void TabBarWidget::remove_tab(size_t index) {
     if (labels_.empty()) return;
 
     labels_.erase(labels_.begin() + index);
-    index_ = std::clamp(index, size_t{0}, base::sub_sat(labels_.size(), size_t{1}));
+    index_ = std::clamp(index, 0UZ, base::sub_sat(labels_.size(), 1UZ));
 }
 
 void TabBarWidget::draw() {
@@ -54,7 +54,7 @@ void TabBarWidget::draw() {
 
     size_t num_labels = labels_.size();
     for (size_t i = 0; i < num_labels; ++i) {
-        if (i == index_ || i == base::sub_sat(index_, size_t{1})) {
+        if (i == index_ || i == base::sub_sat(index_, 1UZ)) {
             continue;
         }
         if (i == num_labels - 1) {

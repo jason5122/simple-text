@@ -57,7 +57,7 @@ void remeasure_all(Rope& r) {
 // why row counts are derived from logical-line widths, not tracked
 // directly).
 size_t rows_for(double width, double wrap_width) {
-    return width > 0 ? static_cast<size_t>(std::ceil(width / wrap_width)) : size_t{1};
+    return width > 0 ? static_cast<size_t>(std::ceil(width / wrap_width)) : 1UZ;
 }
 
 rope::SoftWrapMetric measure_leaf_wrap(std::string_view text, double wrap_width) {
@@ -169,8 +169,8 @@ void benchmark_random_line_at(const Rope& r) {
 // laid out yet). `r` must be freshly built -- every leaf starts dirty by
 // construction, so this is really "cost of measuring the whole document."
 void benchmark_full_remeasure(Rope& r) {
-    auto prof = base::Profiler(std::format("Full remeasure (all leaves dirty) on {}-char rope",
-                                           r.size()));
+    auto prof =
+        base::Profiler(std::format("Full remeasure (all leaves dirty) on {}-char rope", r.size()));
     remeasure_all(r);
 }
 
@@ -200,8 +200,8 @@ void benchmark_dirty_leaves_scan_when_clean(Rope& r) {
 // cost correctly instead of blaming dirty tracking for splitting cost that
 // insert() would pay regardless.
 void benchmark_random_insert_into_packed_rope(Rope& r) {
-    auto prof = base::Profiler(
-        std::format("Random insert (no remeasure) on {}-char rope x{}", r.size(), kRandomEditCount));
+    auto prof = base::Profiler(std::format("Random insert (no remeasure) on {}-char rope x{}",
+                                           r.size(), kRandomEditCount));
     for (size_t i = 0; i < kRandomEditCount; ++i) {
         size_t pos = base::rand_int(0, static_cast<int>(r.size()));
         r.insert(pos, "x");
@@ -222,8 +222,8 @@ void benchmark_random_insert_into_packed_rope(Rope& r) {
 void benchmark_incremental_remeasure_after_edits(Rope& r) {
     remeasure_all(r);  // Start clean, like a real editor between keystrokes.
 
-    auto prof = base::Profiler(std::format(
-        "insert() + incremental remeasure on {}-char rope x{}", r.size(), kRandomEditCount));
+    auto prof = base::Profiler(std::format("insert() + incremental remeasure on {}-char rope x{}",
+                                           r.size(), kRandomEditCount));
     for (size_t i = 0; i < kRandomEditCount; ++i) {
         size_t pos = base::rand_int(0, static_cast<int>(r.size()));
         r.insert(pos, "x");
@@ -238,8 +238,7 @@ void benchmark_incremental_remeasure_after_edits(Rope& r) {
 // reverse_engineering/soft_wrap_caching.md for why this mirrors Sublime
 // Text's TokenStorage::addLayout).
 void benchmark_register_wrap_width(Rope& r) {
-    auto prof =
-        base::Profiler(std::format("register_wrap_width() on {}-char rope", r.size()));
+    auto prof = base::Profiler(std::format("register_wrap_width() on {}-char rope", r.size()));
     Rope::WrapHandle handle = r.register_wrap_width(80);
     static_cast<void>(handle);
 }
@@ -249,8 +248,7 @@ void benchmark_register_wrap_width(Rope& r) {
 // compact (mirrors TokenStorage::removeLayout).
 void benchmark_unregister_wrap_width(Rope& r) {
     Rope::WrapHandle handle = r.register_wrap_width(80);
-    auto prof =
-        base::Profiler(std::format("unregister_wrap_width() on {}-char rope", r.size()));
+    auto prof = base::Profiler(std::format("unregister_wrap_width() on {}-char rope", r.size()));
     r.unregister_wrap_width(handle);
 }
 

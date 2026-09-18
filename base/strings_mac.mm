@@ -1,5 +1,5 @@
 #include "base/numeric/safe_conversions.h"
-#include "base/strings/sys_string_conversions.h"
+#include "base/strings.h"
 #include <Foundation/Foundation.h>
 #include <vector>
 
@@ -73,38 +73,38 @@ StringType cfstring_to_string_with_encoding(CFStringRef cfstring, CFStringEncodi
 
 }  // namespace
 
-ScopedCFTypeRef<CFStringRef> sys_utf8_to_cfstring_ref(std::string_view utf8) {
+ScopedCFTypeRef<CFStringRef> utf8_to_cfstring(std::string_view utf8) {
     return string_piece_to_cfstring_with_encodings(utf8, kCFStringEncodingUTF8);
 }
 
-ScopedCFTypeRef<CFStringRef> sys_utf16_to_cfstring_ref(std::u16string_view utf16) {
+ScopedCFTypeRef<CFStringRef> utf16_to_cfstring(std::u16string_view utf16) {
     return string_piece_to_cfstring_with_encodings(utf16, kCFStringEncodingUTF16LE);
 }
 
-std::string sys_cfstring_ref_to_utf8(CFStringRef ref) {
+std::string cfstring_to_utf8(CFStringRef ref) {
     return cfstring_to_string_with_encoding<std::string>(ref, kCFStringEncodingUTF8);
 }
 
-std::u16string sys_cfstring_ref_to_utf16(CFStringRef ref) {
+std::u16string cfstring_to_utf16(CFStringRef ref) {
     return cfstring_to_string_with_encoding<std::u16string>(ref, kCFStringEncodingUTF16LE);
 }
 
-NSString* sys_utf8_to_nsstring(std::string_view utf8) {
-    return (__bridge_transfer NSString*)sys_utf8_to_cfstring_ref(utf8).release();
+NSString* utf8_to_nsstring(std::string_view utf8) {
+    return (__bridge_transfer NSString*)utf8_to_cfstring(utf8).release();
 }
 
-NSString* sys_utf16_to_nsstring(std::u16string_view utf16) {
-    return (__bridge_transfer NSString*)sys_utf16_to_cfstring_ref(utf16).release();
+NSString* utf16_to_nsstring(std::u16string_view utf16) {
+    return (__bridge_transfer NSString*)utf16_to_cfstring(utf16).release();
 }
 
-std::string sys_nsstring_to_utf8(NSString* nsstring) {
+std::string nsstring_to_utf8(NSString* nsstring) {
     if (!nsstring) return std::string();
-    return sys_cfstring_ref_to_utf8((__bridge CFStringRef)nsstring);
+    return cfstring_to_utf8((__bridge CFStringRef)nsstring);
 }
 
-std::u16string sys_nsstring_to_utf16(NSString* nsstring) {
+std::u16string nsstring_to_utf16(NSString* nsstring) {
     if (!nsstring) return std::u16string();
-    return sys_cfstring_ref_to_utf16((__bridge CFStringRef)nsstring);
+    return cfstring_to_utf16((__bridge CFStringRef)nsstring);
 }
 
 }  // namespace base

@@ -2,14 +2,11 @@
 #include "base/apple/scoped_cgtyperef.h"
 #include "base/check.h"
 #include "base/numeric/safe_conversions.h"
-#include "base/strings/sys_string_conversions.h"
-#include "base/unicode/unicode.h"
-#include "base/unicode/utf16_to_utf8_indices_map.h"
+#include "base/strings.h"
+#include "base/unicode.h"
 #include "fx/fx.h"
-
 #include <CoreText/CoreText.h>
 #include <cmath>
-#include <limits>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
@@ -26,6 +23,9 @@ const fx_gamma_ramp* identity_gamma_ramp();
 class core_text_font final : public fx_font {
 public:
     static std::unique_ptr<core_text_font> create(std::string family, float size, uint32_t attrs);
+    static std::unique_ptr<core_text_font> create_from_file(std::string path,
+                                                            float size,
+                                                            uint32_t attrs);
 
     uint32_t attrs() const override { return attrs_; }
     fx_font_metrics metrics() const override;
@@ -48,6 +48,11 @@ private:
         : requested_size_(requested_size), attrs_(attrs) {
         faces_.push_back(std::move(primary));
     }
+
+    // Applies the feature and style attributes shared by both constructors to a resolved face.
+    static std::unique_ptr<core_text_font> finish(ScopedCFTypeRef<CTFontRef> ct,
+                                                  float size_px,
+                                                  uint32_t attrs);
 
     uint32_t register_face(CTFontRef face);
     CTFontRef primary() const { return faces_.front().get(); }
@@ -110,11 +115,40 @@ std::unique_ptr<core_text_font> core_text_font::create(std::string family,
     if (family == "system") {
         ct.reset(CTFontCreateUIFontForLanguage(kCTFontUIFontLabel, size_px, CFSTR("en-US")));
     } else {
-        auto ct_family = base::sys_utf8_to_cfstring_ref(family);
+        auto ct_family = base::utf8_to_cfstring(family);
         ct.reset(CTFontCreateWithName(ct_family.get(), size_px, nullptr));
     }
     if (!ct) return nullptr;
+    return finish(std::move(ct), size_px, attrs);
+}
 
+std::unique_ptr<core_text_font> core_text_font::create_from_file(std::string path,
+                                                                 float size_px,
+                                                                 uint32_t attrs) {
+    auto url = ScopedCFTypeRef<CFURLRef>(CFURLCreateFromFileSystemRepresentation(
+        kCFAllocatorDefault, reinterpret_cast<const UInt8*>(path.data()),
+        base::checked_cast<CFIndex>(path.size()), false));
+    if (!url) return nullptr;
+
+    // One descriptor per face in the file, without registering it with the font manager: no
+    // process-wide side effect, and no name lookup that an installed font of the same name could
+    // win instead.
+    auto descriptors =
+        ScopedCFTypeRef<CFArrayRef>(CTFontManagerCreateFontDescriptorsFromURL(url.get()));
+    if (!descriptors || CFArrayGetCount(descriptors.get()) == 0) {
+        spdlog::error("could not load font file \"{}\"", path);
+        return nullptr;
+    }
+    auto descriptor =
+        static_cast<CTFontDescriptorRef>(CFArrayGetValueAtIndex(descriptors.get(), 0));
+    ScopedCFTypeRef<CTFontRef> ct(CTFontCreateWithFontDescriptor(descriptor, size_px, nullptr));
+    if (!ct) return nullptr;
+    return finish(std::move(ct), size_px, attrs);
+}
+
+std::unique_ptr<core_text_font> core_text_font::finish(ScopedCFTypeRef<CTFontRef> ct,
+                                                       float size_px,
+                                                       uint32_t attrs) {
     auto features = make_font_features(attrs);
     const void* descriptor_keys[] = {kCTFontFeatureSettingsAttribute};
     const void* descriptor_values[] = {features.get()};
@@ -152,7 +186,7 @@ ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont,
     auto attrs = ScopedCFTypeRef<CFDictionaryRef>(
         CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 2, &kCFTypeDictionaryKeyCallBacks,
                            &kCFTypeDictionaryValueCallBacks));
-    auto text = base::sys_utf8_to_cfstring_ref(utf8);
+    auto text = base::utf8_to_cfstring(utf8);
     auto as = ScopedCFTypeRef<CFAttributedStringRef>(
         CFAttributedStringCreate(kCFAllocatorDefault, text.get(), attrs.get()));
     return ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(as.get()));
@@ -161,6 +195,8 @@ ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont,
 }  // namespace
 
 std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
+    DCHECK(base::is_valid_utf8(utf8));
+
     CTFontRef ctfont = primary();
     auto line = make_ctline(ctfont, attrs_, utf8);
 
@@ -173,12 +209,7 @@ std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
                                              std::ceil(CTFontGetLeading(ctfont)));
     const bool snap_advances = (CTFontGetSymbolicTraits(ctfont) & kCTFontTraitMonoSpace) &&
                                requested_size_ <= 16.0f && !(attrs_ & FX_FONT_NO_ROUND);
-    base::UTF16ToUTF8IndicesMap indices_map;
-    if (!indices_map.set_utf8(utf8)) {
-        // Malformed UTF-8. Shaping still works, but the map is empty and operator[] is unchecked,
-        // so the cluster lookup below has to be skipped rather than read out of bounds.
-        spdlog::warn("could not map UTF-16 to UTF-8 indices; cluster offsets will be 0");
-    }
+    std::vector<size_t> indices_map = base::utf16_to_utf8_offsets(utf8);
 
     for (CFIndex r = 0; r < run_count; r++) {
         CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(runs, r);
@@ -317,6 +348,7 @@ float core_text_font::raster_ascent() const {
 }
 
 std::unique_ptr<fx_layout> core_text_font::shape(std::u32string_view utf32) {
+    DCHECK(base::is_valid_utf32(utf32));
     return shape(base::utf32_to_utf8(utf32));
 }
 
@@ -370,4 +402,10 @@ bool core_text_font::is_color_glyph(uint32_t glyph) {
 
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs) {
     return core_text_font::create(std::string(family), size, attrs);
+}
+
+std::unique_ptr<fx_font> fx_create_font_from_file(std::string_view path,
+                                                  float size,
+                                                  uint32_t attrs) {
+    return core_text_font::create_from_file(std::string(path), size, attrs);
 }

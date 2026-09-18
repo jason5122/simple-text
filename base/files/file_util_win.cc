@@ -1,5 +1,6 @@
 #include "base/files/file_util.h"
-#include "base/strings/sys_string_conversions.h"
+#include "base/strings.h"
+#include "base/unicode.h"
 #include <stdlib.h>
 #include <windows.h>
 
@@ -55,9 +56,9 @@ namespace {
 
 // Appends |mode_char| to |mode| before the optional character set encoding; see
 // https://msdn.microsoft.com/library/yeby3zcb.aspx for details.
-void AppendModeCharacter(wchar_t mode_char, std::wstring* mode) {
-    size_t comma_pos = mode->find(L',');
-    mode->insert(comma_pos == std::wstring::npos ? mode->length() : comma_pos, 1, mode_char);
+void AppendModeCharacter(char16_t mode_char, std::u16string* mode) {
+    size_t comma_pos = mode->find(u',');
+    mode->insert(comma_pos == std::u16string::npos ? mode->length() : comma_pos, 1, mode_char);
 }
 
 }  // namespace
@@ -65,9 +66,9 @@ void AppendModeCharacter(wchar_t mode_char, std::wstring* mode) {
 FILE* OpenFile(const FilePath& filename, const char* mode) {
     // 'N' is unconditionally added below, so be sure there is not one already
     // present before a comma in |mode|.
-    std::wstring w_mode = base::sys_utf8_to_wide(mode);
-    AppendModeCharacter(L'N', &w_mode);
-    return _wfsopen(filename.value().c_str(), w_mode.c_str(), _SH_DENYNO);
+    auto mode16 = base::utf8_to_utf16(mode);
+    AppendModeCharacter(u'N', &mode16);
+    return _wfsopen(filename.value().c_str(), base::as_wcstr(mode16), _SH_DENYNO);
 }
 
 }  // namespace base

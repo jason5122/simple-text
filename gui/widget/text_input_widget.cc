@@ -118,7 +118,7 @@ size_t TextInputWidget::line_at_y(int y) const {
     const auto metrics = Renderer::instance().font_cache().metrics(font_id);
 
     size_t line = y / metrics.line_height;
-    return std::clamp(line, size_t{0}, tree.line_count() - 1);
+    return std::clamp(line, 0UZ, tree.line_count() - 1);
 }
 
 inline const editor::LineLayout& TextInputWidget::layout_at(size_t line) {

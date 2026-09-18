@@ -639,13 +639,13 @@ TEST(PieceTreeTest, LineColumnAt2) {
     std::string str1 = "Hello world!";
     PieceTree tree1{str1};
     auto cursor1 = tree1.line_column_at(99999);
-    EXPECT_EQ(cursor1.line, size_t{0});
+    EXPECT_EQ(cursor1.line, 0UZ);
     EXPECT_EQ(cursor1.column, tree1.length());
 
     std::string str2 = "Hello\nworld!";
     PieceTree tree2{str2};
     auto cursor2 = tree2.line_column_at(99999);
-    EXPECT_EQ(cursor2.line, size_t{1});
+    EXPECT_EQ(cursor2.line, 1UZ);
     EXPECT_EQ(cursor2.column, tree2.length() - 6);
 }
 
@@ -658,12 +658,12 @@ TEST(PieceTreeTest, LineColumnAt3) {
     EXPECT_EQ(str, tree.str());
 
     auto cursor1 = tree.line_column_at(2);
-    EXPECT_EQ(cursor1.line, size_t{0});
-    EXPECT_EQ(cursor1.column, size_t{2});
+    EXPECT_EQ(cursor1.line, 0UZ);
+    EXPECT_EQ(cursor1.column, 2UZ);
 
     auto cursor2 = tree.line_column_at(7);
-    EXPECT_EQ(cursor2.line, size_t{1});
-    EXPECT_EQ(cursor2.column, size_t{1});
+    EXPECT_EQ(cursor2.line, 1UZ);
+    EXPECT_EQ(cursor2.column, 1UZ);
 }
 
 TEST(PieceTreeTest, RandStringWithNewlines) {
@@ -839,8 +839,8 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest1) {
     EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
     EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
     EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), size_t{2});
-    EXPECT_EQ(tree.line_count(), size_t{3});
+    EXPECT_EQ(tree.line_feed_count(), 2UZ);
+    EXPECT_EQ(tree.line_count(), 3UZ);
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertTest2) {
@@ -854,8 +854,8 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest2) {
     EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
     EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
     EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), size_t{2});
-    EXPECT_EQ(tree.line_count(), size_t{3});
+    EXPECT_EQ(tree.line_feed_count(), 2UZ);
+    EXPECT_EQ(tree.line_count(), 3UZ);
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertTest3) {
@@ -870,8 +870,8 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest3) {
     EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
     EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
     EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), size_t{2});
-    EXPECT_EQ(tree.line_count(), size_t{3});
+    EXPECT_EQ(tree.line_feed_count(), 2UZ);
+    EXPECT_EQ(tree.line_count(), 3UZ);
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertTest4) {
@@ -886,8 +886,8 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest4) {
     EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
     EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
     EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), size_t{2});
-    EXPECT_EQ(tree.line_count(), size_t{3});
+    EXPECT_EQ(tree.line_feed_count(), 2UZ);
+    EXPECT_EQ(tree.line_count(), 3UZ);
 }
 TEST(PieceTreeTest, GetLineContentAfterInsertTest5) {
     PieceTree tree;
@@ -901,8 +901,8 @@ TEST(PieceTreeTest, GetLineContentAfterInsertTest5) {
     EXPECT_EQ(tree.get_line_content_with_newline(0), "hello\n");
     EXPECT_EQ(tree.get_line_content_with_newline(1), "wasd\n");
     EXPECT_EQ(tree.get_line_content_with_newline(2), "world");
-    EXPECT_EQ(tree.line_feed_count(), size_t{2});
-    EXPECT_EQ(tree.line_count(), size_t{3});
+    EXPECT_EQ(tree.line_feed_count(), 2UZ);
+    EXPECT_EQ(tree.line_count(), 3UZ);
 }
 
 TEST(PieceTreeTest, GetLineContentAfterInsertRandomTest) {
@@ -947,27 +947,27 @@ TEST(PieceTreeTest, FindTest1) {
     PieceTree tree{"hello world"};
 
     ASSERT_TRUE(tree.find("world"));
-    EXPECT_EQ(*tree.find("world"), size_t{6});
+    EXPECT_EQ(*tree.find("world"), 6UZ);
 
     EXPECT_FALSE(tree.find("z"));
 
     ASSERT_TRUE(tree.find("hello world"));
-    EXPECT_EQ(*tree.find("hello world"), size_t{0});
+    EXPECT_EQ(*tree.find("hello world"), 0UZ);
 }
 
 TEST(PieceTreeTest, FindTest2) {
     PieceTree tree{"‼️😀🙂↕️"};
 
     ASSERT_TRUE(tree.find("😀"));
-    EXPECT_EQ(*tree.find("😀"), size_t{6});
+    EXPECT_EQ(*tree.find("😀"), 6UZ);
 
     EXPECT_FALSE(tree.find("Ò"));
 
     ASSERT_TRUE(tree.find("🙂↕️"));
-    EXPECT_EQ(*tree.find("🙂↕️"), size_t{10});
+    EXPECT_EQ(*tree.find("🙂↕️"), 10UZ);
 
     ASSERT_TRUE(tree.find("\x8F"));
-    EXPECT_EQ(*tree.find("\x8F"), size_t{5});
+    EXPECT_EQ(*tree.find("\x8F"), 5UZ);
 
     ASSERT_FALSE(tree.find("\x8F\x9F"));
 }
@@ -991,8 +991,9 @@ FUZZ_TEST(PieceTreeFuzzTest, ConstructionMatchesInput);
 // An arbitrary sequence of inserts and erases keeps the tree equal to the same
 // edits applied to a std::string. Each edit is (is_insert, offset, count, text);
 // the offset is taken modulo length+1 so it is always valid for both.
-void EditsMatchStringModel(const std::string& initial,
-                           const std::vector<std::tuple<bool, size_t, size_t, std::string>>& edits) {
+void EditsMatchStringModel(
+    const std::string& initial,
+    const std::vector<std::tuple<bool, size_t, size_t, std::string>>& edits) {
     std::string str = initial;
     PieceTree tree{initial};
     ASSERT_EQ(tree.str(), str);

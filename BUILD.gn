@@ -3,6 +3,10 @@ group("all") {
     "//benchmark",
     "//conformance",
     "//simple_text",
+
+    # TODO: Think about how we should structure perf tests. Loose executables
+    # are probably fine, but we need to organize them somehow.
+    "//base:unicode_perftest",
   ]
 }
 
@@ -21,7 +25,6 @@ group("experiments") {
     "//experiments/fuzz",
     "//experiments/playground",
     "//experiments/rope",
-    "//experiments/unicode:unicode_perftest",
   ]
 
   if (is_mac) {

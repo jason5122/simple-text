@@ -31,13 +31,34 @@ source_set("fx") {
   ]
 }
 
+source_set("fx_unittests") {
+  testonly = true
+
+  sources = [ "fx_unittest.cc" ]
+
+  deps = [
+    ":fx",
+    "//base",
+    "//testing:gtest",
+  ]
+  data_deps = [ ":test_fonts" ]
+}
+
+copy("test_fonts") {
+  testonly = true
+  sources = [ "Ahem.ttf" ]
+  outputs = [ "$root_out_dir/test_fonts/{{source_file_part}}" ]
+}
+
 if (is_linux) {
   import("//build/config/linux/pkg_config.gni")
 
   pkg_config("linux_font_libs") {
     packages = [
+      "fontconfig",
       "freetype2",
       "pangocairo",
+      "pangoft2",
     ]
   }
 }

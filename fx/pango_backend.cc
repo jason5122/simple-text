@@ -1,13 +1,16 @@
 #include "fx/fx.h"
 
 #include "base/check.h"
-#include "base/unicode/unicode.h"
+#include "base/unicode.h"
 
 #include <cairo-ft.h>
 #include <cmath>
+#include <fontconfig/fontconfig.h>
 #include <limits>
 #include <memory>
 #include <pango/pangocairo.h>
+#include <pango/pangofc-fontmap.h>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -38,6 +41,7 @@ using cairo_font_options_ptr =
 using cairo_surface_ptr =
     std::unique_ptr<cairo_surface_t, native_deleter<cairo_surface_t, cairo_surface_destroy>>;
 using cairo_context_ptr = std::unique_ptr<cairo_t, native_deleter<cairo_t, cairo_destroy>>;
+using fc_config_ptr = std::unique_ptr<FcConfig, native_deleter<FcConfig, FcConfigDestroy>>;
 
 const fx_gamma_ramp* identity_gamma_ramp() {
     static const fx_gamma_ramp ramp = [] {
@@ -75,12 +79,16 @@ std::string font_features(uint32_t attrs) {
 class pango_font final : public fx_font {
 public:
     static std::unique_ptr<pango_font> create(std::string family, float size, uint32_t attrs);
+    static std::unique_ptr<pango_font> create_from_file(std::string path,
+                                                        float size,
+                                                        uint32_t attrs);
 
     uint32_t attrs() const override { return attrs_; }
     fx_font_metrics metrics() const override;
     float raster_ascent() const override { return metrics().ascent; }
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override;
     std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override {
+        DCHECK(base::is_valid_utf32(utf32));
         return shape(base::utf32_to_utf8(utf32));
     }
     void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) override;
@@ -95,14 +103,16 @@ public:
     const fx_gamma_ramp* gamma_ramp() const override { return identity_gamma_ramp(); }
 
 private:
-    pango_font(g_object_ptr<PangoContext> context,
+    pango_font(fc_config_ptr config,
+               g_object_ptr<PangoContext> context,
                pango_description_ptr description,
                cairo_font_options_ptr font_options,
                g_object_ptr<PangoFontset> fontset,
                cairo_context_ptr measurement_context,
                float requested_size,
                uint32_t attrs)
-        : context_(std::move(context)),
+        : config_(std::move(config)),
+          context_(std::move(context)),
           description_(std::move(description)),
           font_options_(std::move(font_options)),
           fontset_(std::move(fontset)),
@@ -110,9 +120,17 @@ private:
           requested_size_(requested_size),
           attrs_(attrs) {}
 
+    // Builds the font from `map`, which is either the process default or a private map wrapping
+    // a font file, in which case `config` is the Fontconfig that map resolves through.
+    static std::unique_ptr<pango_font> finish(
+        PangoFontMap* map, fc_config_ptr config, std::string family, float size, uint32_t attrs);
+
     uint32_t register_face(PangoFont* face);
     PangoFont* face(uint32_t glyph) const;
 
+    // Null unless the font came from a file. Declared first so it outlives the context, which
+    // holds the font map that resolves through it.
+    fc_config_ptr config_;
     g_object_ptr<PangoContext> context_;
     pango_description_ptr description_;
     cairo_font_options_ptr font_options_;
@@ -147,8 +165,44 @@ PangoFont* pango_font::face(uint32_t glyph) const {
 }
 
 std::unique_ptr<pango_font> pango_font::create(std::string family, float size, uint32_t attrs) {
-    if (!(size > 0.0f) || !std::isfinite(size)) return nullptr;
     if (family == "system") family = "Sans";
+    PangoFontMap* map = pango_cairo_font_map_get_default();
+    if (!map) return nullptr;
+    return finish(map, nullptr, std::move(family), size, attrs);
+}
+
+std::unique_ptr<pango_font> pango_font::create_from_file(std::string path,
+                                                         float size,
+                                                         uint32_t attrs) {
+    // Pango resolves families through Fontconfig, so the file goes in as an application font of a
+    // private config rather than of the process-wide one: nothing leaks into fx_create_font, and
+    // two file fonts never see each other. The private config starts from the system fonts so
+    // that characters the file lacks fall back the way they do on the other platforms.
+    fc_config_ptr config(FcInitLoadConfigAndFonts());
+    if (!config) return nullptr;
+    if (!FcConfigAppFontAddFile(config.get(), reinterpret_cast<const FcChar8*>(path.c_str()))) {
+        spdlog::error("could not load font file \"{}\"", path);
+        return nullptr;
+    }
+    FcFontSet* application_fonts = FcConfigGetFonts(config.get(), FcSetApplication);
+    FcChar8* family = nullptr;
+    if (!application_fonts || application_fonts->nfont == 0 ||
+        FcPatternGetString(application_fonts->fonts[0], FC_FAMILY, 0, &family) != FcResultMatch) {
+        spdlog::error("\"{}\" is not a usable font file", path);
+        return nullptr;
+    }
+
+    g_object_ptr<PangoFontMap> map(pango_cairo_font_map_new_for_font_type(CAIRO_FONT_TYPE_FT));
+    if (!map) return nullptr;
+    // The map takes its own reference to the config; config_ keeps ours alongside it.
+    pango_fc_font_map_set_config(PANGO_FC_FONT_MAP(map.get()), config.get());
+    return finish(map.get(), std::move(config), reinterpret_cast<const char*>(family), size,
+                  attrs);
+}
+
+std::unique_ptr<pango_font> pango_font::finish(
+    PangoFontMap* map, fc_config_ptr config, std::string family, float size, uint32_t attrs) {
+    if (!(size > 0.0f) || !std::isfinite(size)) return nullptr;
 
     pango_description_ptr description(pango_font_description_new());
     if (!description) return nullptr;
@@ -179,8 +233,8 @@ std::unique_ptr<pango_font> pango_font::create(std::string family, float size, u
     }
     cairo_font_options_set_antialias(font_options.get(), antialias);
 
-    PangoFontMap* map = pango_cairo_font_map_get_default();
-    if (!map) return nullptr;
+    // The context references the map, so the default map and a private one are handled alike
+    // from here on.
     g_object_ptr<PangoContext> context(pango_font_map_create_context(map));
     if (!context) return nullptr;
     pango_context_set_font_description(context.get(), description.get());
@@ -197,15 +251,17 @@ std::unique_ptr<pango_font> pango_font::create(std::string family, float size, u
         return nullptr;
     }
 
-    return std::unique_ptr<pango_font>(
-        new pango_font(std::move(context), std::move(description), std::move(font_options),
-                       std::move(fontset), std::move(measurement_context), size, attrs));
+    return std::unique_ptr<pango_font>(new pango_font(
+        std::move(config), std::move(context), std::move(description), std::move(font_options),
+        std::move(fontset), std::move(measurement_context), size, attrs));
 }
 
 fx_font_metrics pango_font::metrics() const {
     if (metrics_valid_) return metrics_;
 
-    PangoFontMap* map = pango_cairo_font_map_get_default();
+    // The context's own map, not the process default: a font loaded from a file lives in a
+    // private map, and the default one would silently substitute another family for it.
+    PangoFontMap* map = pango_context_get_font_map(context_.get());
     g_object_ptr<PangoFont> primary(
         map ? pango_font_map_load_font(map, context_.get(), description_.get()) : nullptr);
     pango_metrics_ptr native_metrics(
@@ -225,6 +281,8 @@ fx_font_metrics pango_font::metrics() const {
 }
 
 std::unique_ptr<fx_layout> pango_font::shape(std::string_view utf8) {
+    DCHECK(base::is_valid_utf8(utf8));
+
     g_object_ptr<PangoLayout> layout(pango_layout_new(context_.get()));
     if (!layout) return nullptr;
 
@@ -410,4 +468,10 @@ bool pango_font::is_color_glyph(uint32_t glyph) {
 
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs) {
     return pango_font::create(std::string(family), size, attrs);
+}
+
+std::unique_ptr<fx_font> fx_create_font_from_file(std::string_view path,
+                                                  float size,
+                                                  uint32_t attrs) {
+    return pango_font::create_from_file(std::string(path), size, attrs);
 }

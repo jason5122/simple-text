@@ -1,4 +1,4 @@
-#include "base/unicode/unicode.h"
+#include "base/unicode.h"
 #include "gui/platform/gtk/main_window.h"
 #include <cmath>
 #include <format>
@@ -315,18 +315,19 @@ gboolean key_pressed(GtkEventControllerKey* self,
     ModifierKey modifiers = ModifierFromState(state);
     bool handled = app_window->on_key_down(key, modifiers);
 
-    if (!handled) {
-        guint32 codepoint = gdk_keyval_to_unicode(keyval);
-        if (codepoint > 0) {
-            char utf8[base::kMaxBytesInUTF8Sequence];
-            size_t utf8_len = base::codepoint_to_utf8(codepoint, utf8);
+    // TODO: This doesn't seem correct. Not fixing since we'll eventually refactor the GTK backend.
+    // if (!handled) {
+    //     guint32 codepoint = gdk_keyval_to_unicode(keyval);
+    //     if (codepoint > 0) {
+    //         char utf8[base::kMaxBytesInUTF8Sequence];
+    //         size_t utf8_len = base::codepoint_to_utf8(codepoint, utf8);
 
-            std::string str8(utf8, utf8_len);
-            app_window->on_insert_text(str8);
+    //         std::string str8(utf8, utf8_len);
+    //         app_window->on_insert_text(str8);
 
-            spdlog::info("str8 = {}, codepoint = {}", str8, codepoint);
-        }
-    }
+    //         spdlog::info("str8 = {}, codepoint = {}", str8, codepoint);
+    //     }
+    // }
     return false;  // TODO: See if we should return true/false here.
 }
 

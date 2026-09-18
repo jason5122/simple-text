@@ -1,12 +1,11 @@
 #include "base/check.h"
 #include "base/numeric/safe_conversions.h"
-#include "base/strings/sys_string_conversions.h"
-#include "base/unicode/unicode.h"
-#include "base/unicode/utf16_to_utf8_indices_map.h"
+#include "base/strings.h"
+#include "base/unicode.h"
 #include "fx/fx.h"
 #include <windows.h>
-// clang-format off: windows.h supplies the GDI types dwrite_2.h uses in its bitmap render target.
-#include <dwrite_2.h>
+// clang-format off: windows.h supplies the GDI types dwrite_3.h uses in its bitmap render target.
+#include <dwrite_3.h>
 #include <wrl/client.h>
 // clang-format on
 #include <algorithm>
@@ -73,6 +72,7 @@ bool starts_with_ci(std::string_view s, std::string_view prefix) {
 struct Globals {
     ComPtr<IDWriteFactory> factory;
     ComPtr<IDWriteFactory2> factory2;  // null before Windows 8.1; only used for color glyphs
+    ComPtr<IDWriteFactory3> factory3;  // null before Windows 10; only used for font files
     ComPtr<IDWriteGdiInterop> gdi_interop;
     ComPtr<IDWriteRenderingParams> rendering_params;
 };
@@ -89,6 +89,7 @@ const Globals& globals() {
                                 reinterpret_cast<IUnknown**>(result.factory.GetAddressOf()));
         }
         if (result.factory) {
+            result.factory.As(&result.factory3);
             result.factory->GetGdiInterop(&result.gdi_interop);
             const POINT origin{};
             const HMONITOR monitor = MonitorFromPoint(origin, MONITOR_DEFAULTTOPRIMARY);
@@ -118,6 +119,9 @@ public:
     static std::unique_ptr<direct_write_font> create(std::string family,
                                                      float size,
                                                      uint32_t attrs);
+    static std::unique_ptr<direct_write_font> create_from_file(std::string path,
+                                                               float size,
+                                                               uint32_t attrs);
 
     uint32_t attrs() const override { return attrs_; }
     fx_font_metrics metrics() const override;
@@ -138,6 +142,13 @@ public:
 private:
     explicit direct_write_font(uint32_t attrs)
         : flags_(attrs), attrs_(attrs), gamma_(rendering_gamma_ramp()) {}
+
+    // Builds the font around a resolved IDWriteFont. `collection` is what the text format shapes
+    // from: null for the system collection, or the private one wrapping a font file.
+    static std::unique_ptr<direct_write_font> finish(IDWriteFont* font,
+                                                     IDWriteFontCollection* collection,
+                                                     float size_px,
+                                                     uint32_t attrs);
 
     uint32_t register_face(IDWriteFontFace* face);
     std::optional<Tile> glyph_tile(uint32_t glyph, double scale) const;
@@ -483,30 +494,26 @@ std::unique_ptr<direct_write_font> direct_write_font::create(std::string family,
         return nullptr;
     }
 
-    auto result = std::unique_ptr<direct_write_font>(new direct_write_font(attrs));
-    direct_write_font& data = *result;
-    data.em_size_ = size_px;
-
     // Sublime resolves the family through GDI rather than IDWriteFontCollection::FindFamilyName:
     // it fills a LOGFONTW and calls CreateFontFromLOGFONT (0x1401bd51a, 0x1401bc214), which gets
     // GDI's family aliasing and substitution for free. lfHeight is the negated point size
     // truncated to an integer, and only selects the physical font -- the size DirectWrite renders
-    // at comes from CreateTextFormat below.
+    // at comes from CreateTextFormat in finish().
     // Sublime resolves its own "system" alias to Segoe UI before it ever reaches the font layer
     // (0x1401cebed).
     if (family == "system") family = "Segoe UI";
 
     LOGFONTW logfont{};
     logfont.lfHeight = -base::clamp_floor<LONG>(size_px);
-    logfont.lfWeight = (data.flags_ & FX_FONT_BOLD) ? FW_BOLD : 0;
-    logfont.lfItalic = (data.flags_ & FX_FONT_ITALIC) ? TRUE : FALSE;
+    logfont.lfWeight = (attrs & FX_FONT_BOLD) ? FW_BOLD : 0;
+    logfont.lfItalic = (attrs & FX_FONT_ITALIC) ? TRUE : FALSE;
     logfont.lfQuality = [&]() -> BYTE {
-        if (data.flags_ & FX_FONT_SUBPIXEL_ANTIALIAS) return CLEARTYPE_QUALITY;
-        if (data.flags_ & FX_FONT_GRAY_ANTIALIAS) return ANTIALIASED_QUALITY;
-        if (data.flags_ & FX_FONT_NO_ANTIALIAS) return NONANTIALIASED_QUALITY;
+        if (attrs & FX_FONT_SUBPIXEL_ANTIALIAS) return CLEARTYPE_QUALITY;
+        if (attrs & FX_FONT_GRAY_ANTIALIAS) return ANTIALIASED_QUALITY;
+        if (attrs & FX_FONT_NO_ANTIALIAS) return NONANTIALIASED_QUALITY;
         return DEFAULT_QUALITY;
     }();
-    const std::wstring family16 = base::sys_utf8_to_wide(family);
+    auto family16 = base::utf8_to_utf16(family);
     std::copy_n(family16.begin(), std::min<size_t>(family16.size(), LF_FACESIZE - 1),
                 logfont.lfFaceName);
 
@@ -516,8 +523,72 @@ std::unique_ptr<direct_write_font> direct_write_font::create(std::string family,
         return nullptr;
     }
 
-    // The family name DirectWrite reports back, not the one that was asked for: Sublime takes
-    // index 0 of the localized-name list without consulting the locale (0x1401bc26e).
+    std::unique_ptr<direct_write_font> result = finish(font.Get(), nullptr, size_px, attrs);
+    if (!result) return nullptr;
+
+    // CreateFontFromLOGFONT substitutes rather than failing, so an unavailable family comes back
+    // as a different one with no error. Sublime reports the same substitution ("font face ...
+    // could not be found, defaulting to ...") instead of rendering the wrong face quietly.
+    if (!starts_with_ci(result->family, family)) {
+        spdlog::warn("font face \"{}\" could not be found, defaulting to \"{}\"", family,
+                     result->family);
+    }
+    return result;
+}
+
+std::unique_ptr<direct_write_font> direct_write_font::create_from_file(std::string path,
+                                                                       float size_px,
+                                                                       uint32_t attrs) {
+    const Globals& g = globals();
+    if (!g.factory) {
+        spdlog::error("DirectWrite is unavailable");
+        return nullptr;
+    }
+    if (!g.factory3) {
+        spdlog::error("loading a font file requires DirectWrite 3 (Windows 10)");
+        return nullptr;
+    }
+
+    // A font file is in neither the system collection nor GDI's tables, so neither lookup in
+    // create() can see it. Wrap it in a one-font collection instead: IDWriteTextLayout then
+    // shapes with it exactly as it would with a system family, including fallback to system
+    // fonts for characters the file lacks.
+    auto path16 = base::utf8_to_utf16(path);
+    ComPtr<IDWriteFontFile> file;
+    if (FAILED(g.factory->CreateFontFileReference(base::as_wcstr(path16), nullptr, &file))) {
+        spdlog::error("could not open font file \"{}\"", path);
+        return nullptr;
+    }
+    ComPtr<IDWriteFontFaceReference> reference;
+    ComPtr<IDWriteFontSetBuilder> builder;
+    ComPtr<IDWriteFontSet> set;
+    ComPtr<IDWriteFontCollection1> collection;
+    if (FAILED(g.factory3->CreateFontFaceReference(file.Get(), 0, DWRITE_FONT_SIMULATIONS_NONE,
+                                                   &reference)) ||
+        FAILED(g.factory3->CreateFontSetBuilder(&builder)) ||
+        FAILED(builder->AddFontFaceReference(reference.Get())) ||
+        FAILED(builder->CreateFontSet(&set)) ||
+        FAILED(g.factory3->CreateFontCollectionFromFontSet(set.Get(), &collection)) ||
+        collection->GetFontFamilyCount() == 0) {
+        spdlog::error("\"{}\" is not a usable font file", path);
+        return nullptr;
+    }
+    ComPtr<IDWriteFontFamily> family;
+    ComPtr<IDWriteFont> font;
+    if (FAILED(collection->GetFontFamily(0, &family)) || FAILED(family->GetFont(0, &font))) {
+        return nullptr;
+    }
+    return finish(font.Get(), collection.Get(), size_px, attrs);
+}
+
+std::unique_ptr<direct_write_font> direct_write_font::finish(IDWriteFont* font,
+                                                             IDWriteFontCollection* collection,
+                                                             float size_px,
+                                                             uint32_t attrs) {
+    auto result = std::unique_ptr<direct_write_font>(new direct_write_font(attrs));
+    direct_write_font& data = *result;
+    data.em_size_ = size_px;
+
     ComPtr<IDWriteFontFamily> font_family;
     ComPtr<IDWriteLocalizedStrings> family_names;
     if (FAILED(font->GetFontFamily(&font_family)) ||
@@ -526,23 +597,14 @@ std::unique_ptr<direct_write_font> direct_write_font::create(std::string family,
     }
     UINT32 name_length = 0;
     family_names->GetStringLength(0, &name_length);
-    std::wstring resolved(name_length + 1, L'\0');
-    family_names->GetString(0, resolved.data(), name_length + 1);
+    std::u16string resolved(name_length + 1, u'\0');
+    family_names->GetString(0, base::as_writable_wcstr(resolved), name_length + 1);
     resolved.resize(name_length);
-    data.family = base::sys_wide_to_utf8(resolved);
+    data.family = base::utf16_to_utf8(resolved);
 
-    // CreateFontFromLOGFONT substitutes rather than failing, so an unavailable family comes back
-    // as a different one with no error. Sublime reports the same substitution ("font face ...
-    // could not be found, defaulting to ...") instead of rendering the wrong face quietly.
-    if (!starts_with_ci(data.family, family)) {
-        spdlog::warn("font face \"{}\" could not be found, defaulting to \"{}\"", family,
-                     data.family);
-    }
-
-    if (FAILED(g.factory->CreateTextFormat(resolved.c_str(), nullptr, font->GetWeight(),
-                                           font->GetStyle(), font->GetStretch(), data.em_size_,
-                                           // Sublime hardcodes this locale (0x1406a0690).
-                                           L"en-us", &data.format))) {
+    if (FAILED(globals().factory->CreateTextFormat(
+            base::as_wcstr(resolved), collection, font->GetWeight(), font->GetStyle(),
+            font->GetStretch(), data.em_size_, L"en-us", &data.format))) {
         return nullptr;
     }
 
@@ -554,8 +616,8 @@ std::unique_ptr<direct_write_font> direct_write_font::create(std::string family,
     data.descent_ = std::ceil(static_cast<float>(metrics.descent) * upem_scale);
     data.line_height_ = std::round(
         static_cast<float>(metrics.ascent + metrics.descent + metrics.lineGap) * upem_scale);
-    // A hardcoded Segoe fudge in Sublime (0x1401bc49b), presumably to match some other
-    // measurement of the Windows UI font.
+    // A hardcoded Segoe fudge in Sublime, presumably to match some other measurement of the
+    // Windows UI font.
     if (starts_with_ci(data.family, "segoe")) {
         data.raster_ascent_ -= 1.0f;
         data.ascent_ -= 1.0f;
@@ -594,10 +656,12 @@ fx_gamma_ramp rendering_gamma_ramp() {
 }
 
 std::unique_ptr<fx_layout> direct_write_font::shape(std::string_view utf8) {
+    DCHECK(base::is_valid_utf8(utf8));
+
     auto shaped = std::make_unique<fx_layout>();
     shaped->line_height = line_height_;
 
-    const std::wstring utf16 = base::sys_utf8_to_wide(utf8);
+    auto utf16 = base::utf8_to_utf16(utf8);
     const UINT32 length = base::checked_cast<UINT32>(utf16.size());
     if (length == 0) return shaped;
 
@@ -606,11 +670,11 @@ std::unique_ptr<fx_layout> direct_write_font::shape(std::string_view utf8) {
     HRESULT hr;
     if (flags_ & kGdiCompatible) {
         hr = globals().factory->CreateGdiCompatibleTextLayout(
-            utf16.c_str(), length, format.Get(), kUnbounded, kUnbounded, 1.0f, nullptr,
+            base::as_wcstr(utf16), length, format.Get(), kUnbounded, kUnbounded, 1.0f, nullptr,
             (flags_ & kClearTypeNatural) ? TRUE : FALSE, &layout);
     } else {
-        hr = globals().factory->CreateTextLayout(utf16.c_str(), length, format.Get(), kUnbounded,
-                                                 kUnbounded, &layout);
+        hr = globals().factory->CreateTextLayout(base::as_wcstr(utf16), length, format.Get(),
+                                                 kUnbounded, kUnbounded, &layout);
     }
     if (FAILED(hr)) return nullptr;
 
@@ -644,13 +708,7 @@ std::unique_ptr<fx_layout> direct_write_font::shape(std::string_view utf8) {
         layout->SetTypography(typography.Get(), {0, length});
     }
 
-    base::UTF16ToUTF8IndicesMap indices_map;
-    if (!indices_map.set_utf8(utf8)) {
-        // Malformed UTF-8. Shaping still works (the UTF-16 conversion substitutes replacements),
-        // but cluster offsets would be meaningless, so say so rather than report zeroes.
-        spdlog::warn("could not map UTF-16 to UTF-8 indices; cluster offsets will be 0");
-    }
-
+    std::vector<size_t> indices_map = base::utf16_to_utf8_offsets(utf8);
     auto visit_run = [this, &indices_map, &shaped](
                          FLOAT baseline_origin_x, FLOAT baseline_origin_y,
                          const DWRITE_GLYPH_RUN* run, const DWRITE_GLYPH_RUN_DESCRIPTION* desc) {
@@ -832,6 +890,7 @@ fx_font_metrics direct_write_font::metrics() const {
 }
 
 std::unique_ptr<fx_layout> direct_write_font::shape(std::u32string_view utf32) {
+    DCHECK(base::is_valid_utf32(utf32));
     return shape(base::utf32_to_utf8(utf32));
 }
 
@@ -884,4 +943,10 @@ bool direct_write_font::is_color_glyph(uint32_t glyph) {
 
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs) {
     return direct_write_font::create(std::string(family), size, attrs);
+}
+
+std::unique_ptr<fx_font> fx_create_font_from_file(std::string_view path,
+                                                  float size,
+                                                  uint32_t attrs) {
+    return direct_write_font::create_from_file(std::string(path), size, attrs);
 }

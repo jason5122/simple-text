@@ -189,3 +189,12 @@ private:
 void fx_apply_font_glow(fx_pixel_buffer* buffer, float radius, bool preserve_source);
 
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs);
+
+// Loads face 0 of a TrueType or OpenType file without registering it with the platform, so the
+// font is invisible to fx_create_font and to other processes. Characters the file lacks still
+// fall back to system fonts, exactly as they do for a named family. Style bits in `attrs` select
+// nothing here: a single-face file has no bold or italic variant to pick, and whether a backend
+// synthesizes one is platform-dependent.
+std::unique_ptr<fx_font> fx_create_font_from_file(std::string_view path,
+                                                  float size,
+                                                  uint32_t attrs);

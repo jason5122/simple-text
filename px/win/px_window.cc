@@ -21,6 +21,8 @@
 //     WM_KILLFOCUS               -> 14
 //     WM_SETTINGCHANGE           -> 21
 
+#include "base/strings.h"
+#include "base/unicode.h"
 #include "px/gl_render_context.h"
 #include "px/px_gl.h"
 #include "px/skia_render_context.h"
@@ -84,33 +86,6 @@ PathList& drop_paths() {
     return paths;
 }
 
-std::string to_utf8(const wchar_t* utf16, int length_in_units) {
-    if (!utf16 || length_in_units == 0) {
-        return {};
-    }
-    const int needed =
-        WideCharToMultiByte(CP_UTF8, 0, utf16, length_in_units, nullptr, 0, nullptr, nullptr);
-    if (needed <= 0) {
-        return {};
-    }
-    std::string out(static_cast<size_t>(needed), '\0');
-    WideCharToMultiByte(CP_UTF8, 0, utf16, length_in_units, out.data(), needed, nullptr, nullptr);
-    return out;
-}
-
-std::wstring to_utf16(const char* utf8) {
-    if (!utf8 || !*utf8) {
-        return {};
-    }
-    const int needed = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, nullptr, 0);
-    if (needed <= 0) {
-        return {};
-    }
-    std::wstring out(static_cast<size_t>(needed - 1), L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, out.data(), needed);
-    return out;
-}
-
 HCURSOR win_cursor(px_cursor_t cursor) {
     const wchar_t* name = IDC_ARROW;
     switch (cursor) {
@@ -167,9 +142,10 @@ std::string composition_string(HIMC himc, DWORD index) {
     if (bytes <= 0) {
         return {};
     }
-    std::wstring buffer(static_cast<size_t>(bytes) / sizeof(wchar_t), L'\0');
-    ImmGetCompositionStringW(himc, index, buffer.data(), static_cast<DWORD>(bytes));
-    return to_utf8(buffer.c_str(), static_cast<int>(buffer.size()));
+    std::u16string buffer(static_cast<size_t>(bytes) / sizeof(char16_t), u'\0');
+    ImmGetCompositionStringW(himc, index, base::as_writable_wcstr(buffer),
+                             static_cast<DWORD>(bytes));
+    return base::utf16_to_utf8(buffer);
 }
 
 // Keeps the candidate list next to the caret. ST imports ImmSetCandidateWindow for the same job.
@@ -455,7 +431,7 @@ LRESULT CALLBACK px_wnd_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpar
             window->suppress_char = false;
             return 0;
         }
-        wchar_t units[2] = {static_cast<wchar_t>(wparam), 0};
+        char16_t units[2] = {static_cast<char16_t>(wparam), 0};
         int count = 1;
         // Surrogate pairs arrive as two messages; hold the high half until its partner lands.
         if (units[0] >= 0xD800 && units[0] <= 0xDBFF) {
@@ -469,7 +445,8 @@ LRESULT CALLBACK px_wnd_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpar
             count = 2;
         }
 
-        const std::string utf8 = to_utf8(units, count);
+        std::u16string_view text(units, static_cast<size_t>(count));
+        auto utf8 = base::is_valid_utf16(text) ? base::utf16_to_utf8(text) : std::string();
         if (!utf8.empty()) {
             px_event_t e{};
             e.type = PX_EVENT_CHARACTER;
@@ -758,9 +735,9 @@ LRESULT CALLBACK px_wnd_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpar
         drop_paths().storage.clear();
         for (UINT i = 0; i < count; ++i) {
             const UINT length = DragQueryFileW(drop, i, nullptr, 0);
-            std::wstring path(length, L'\0');
-            DragQueryFileW(drop, i, path.data(), length + 1);
-            drop_paths().storage.push_back(to_utf8(path.c_str(), static_cast<int>(path.size())));
+            std::u16string path(length, u'\0');
+            DragQueryFileW(drop, i, base::as_writable_wcstr(path), length + 1);
+            drop_paths().storage.push_back(base::utf16_to_utf8(path));
         }
         drop_paths().rebuild_pointers();
 
@@ -880,10 +857,10 @@ px_window_t* px_create_window(px_window_event_handler* handler,
     RECT frame = {0, 0, static_cast<LONG>(width * scale), static_cast<LONG>(height * scale)};
     AdjustWindowRectEx(&frame, style, FALSE, 0);
 
-    const std::wstring wide_title = to_utf16(title);
+    auto title16 = base::utf8_to_utf16(title ? title : "");
     window->hwnd =
-        CreateWindowExW(0, kPxWindowClass, wide_title.c_str(), style, CW_USEDEFAULT, CW_USEDEFAULT,
-                        frame.right - frame.left, frame.bottom - frame.top,
+        CreateWindowExW(0, kPxWindowClass, base::as_wcstr(title16), style, CW_USEDEFAULT,
+                        CW_USEDEFAULT, frame.right - frame.left, frame.bottom - frame.top,
                         parent ? parent->hwnd : nullptr, nullptr, nullptr, nullptr);
     if (!window->hwnd) {
         std::println(stderr, "px: CreateWindowExW failed (error {})", GetLastError());
@@ -964,7 +941,8 @@ void px_close_window(px_window_t* window) {
 
 void px_set_window_title(px_window_t* window, const char* title) {
     if (window && window->hwnd) {
-        SetWindowTextW(window->hwnd, to_utf16(title).c_str());
+        auto title16 = base::utf8_to_utf16(title ? title : "");
+        SetWindowTextW(window->hwnd, base::as_wcstr(title16));
     }
 }
 

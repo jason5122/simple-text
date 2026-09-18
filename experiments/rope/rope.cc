@@ -161,7 +161,7 @@ M combine_children(const std::vector<std::unique_ptr<Node>>& children) {
 // Rows a single logical line of `width` occupies once wrapped at
 // `wrap_width` -- always at least 1, even for an empty (width-0) line.
 size_t rows_for(double width, double wrap_width) {
-    return width > 0 ? static_cast<size_t>(std::ceil(width / wrap_width)) : size_t{1};
+    return width > 0 ? static_cast<size_t>(std::ceil(width / wrap_width)) : 1UZ;
 }
 
 // Combines two adjacent subtrees' wrap metrics at one specific wrap width.
@@ -175,7 +175,8 @@ size_t rows_for(double width, double wrap_width) {
 // Combinable concept -- unlike LineWidthMetric::combine, this needs an
 // extra parameter -- so it's a plain function instead of a static member
 // forced through combine_children().
-SoftWrapMetric combine_wrap(const SoftWrapMetric& left, const SoftWrapMetric& right,
+SoftWrapMetric combine_wrap(const SoftWrapMetric& left,
+                            const SoftWrapMetric& right,
                             double wrap_width) {
     SoftWrapMetric result;
     result.newline_count = left.newline_count + right.newline_count;
@@ -196,7 +197,8 @@ SoftWrapMetric combine_wrap(const SoftWrapMetric& left, const SoftWrapMetric& ri
 // since combine_wrap needs `wrap_width` alongside the two values and
 // Combinable's M::combine doesn't carry extra arguments.
 SoftWrapMetric combine_wrap_children(const std::vector<std::unique_ptr<Node>>& children,
-                                     size_t index, double wrap_width) {
+                                     size_t index,
+                                     double wrap_width) {
     if (children.empty()) {
         return SoftWrapMetric{};
     }
@@ -314,13 +316,16 @@ const Node* descend(const Node* node, size_t& pos, bool strict, size_t& accumula
 // `wrap_widths` (Rope::wrap_widths_) is threaded through this whole family
 // -- needed to size new nodes' wrap vectors (make_leaf()/make_internal())
 // and to recombine wrap_layouts (recompute_metadata()).
-std::vector<std::unique_ptr<Node>> insert_into(Node* node, size_t pos, std::string_view text,
+std::vector<std::unique_ptr<Node>> insert_into(Node* node,
+                                               size_t pos,
+                                               std::string_view text,
                                                const std::vector<double>& wrap_widths);
 std::vector<std::unique_ptr<Node>> split_overflowing_internal(
     Node* node, const std::vector<double>& wrap_widths);
 
 // Returns any new right-hand siblings produced by a split, empty if none.
-std::vector<std::unique_ptr<Node>> insert_into_leaf(Node* node, size_t pos,
+std::vector<std::unique_ptr<Node>> insert_into_leaf(Node* node,
+                                                    size_t pos,
                                                     std::string_view text,
                                                     const std::vector<double>& wrap_widths) {
     node->text.insert(pos, text);
@@ -355,7 +360,8 @@ std::vector<std::unique_ptr<Node>> insert_into_leaf(Node* node, size_t pos,
     return new_leaves;
 }
 
-std::vector<std::unique_ptr<Node>> insert_into_internal(Node* node, size_t pos,
+std::vector<std::unique_ptr<Node>> insert_into_internal(Node* node,
+                                                        size_t pos,
                                                         std::string_view text,
                                                         const std::vector<double>& wrap_widths) {
     auto& children = node->children;
@@ -376,7 +382,9 @@ std::vector<std::unique_ptr<Node>> insert_into_internal(Node* node, size_t pos,
     return split_overflowing_internal(node, wrap_widths);
 }
 
-std::vector<std::unique_ptr<Node>> insert_into(Node* node, size_t pos, std::string_view text,
+std::vector<std::unique_ptr<Node>> insert_into(Node* node,
+                                               size_t pos,
+                                               std::string_view text,
                                                const std::vector<double>& wrap_widths) {
     if (node->is_leaf) {
         return insert_into_leaf(node, pos, text, wrap_widths);
@@ -482,7 +490,10 @@ size_t line_start_offset(const Node* root, size_t line) {
 // that when an erased leaf empties out, its predecessor can be repointed
 // past it, and so the predecessor can be advanced when a leaf survives.
 // Returns true if `node` is now empty and should be removed by its caller.
-bool erase_from(Node* node, size_t pos, size_t count, Node*& left_of_range,
+bool erase_from(Node* node,
+                size_t pos,
+                size_t count,
+                Node*& left_of_range,
                 const std::vector<double>& wrap_widths) {
     if (node->is_leaf) {
         // Incremental, not recompute_metadata(node): count newlines in just
@@ -788,7 +799,7 @@ size_t Rope::visual_row_count(WrapHandle handle) const {
     // logical line here (the document's first and last) -- same reasoning
     // as widest_line_width()'s treatment of the root.
     return m.complete_rows + rows_for(m.leading_open_width, wrap_width) +
-          rows_for(m.trailing_open_width, wrap_width);
+           rows_for(m.trailing_open_width, wrap_width);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────

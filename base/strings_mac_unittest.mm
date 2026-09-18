@@ -1,5 +1,5 @@
-#include "base/strings/sys_string_conversions.h"
-#include "base/strings/utf_string_conversions.h"
+#include "base/strings.h"
+#include "base/unicode.h"
 #include <Foundation/Foundation.h>
 #include <gtest/gtest.h>
 #include <vector>
@@ -7,11 +7,11 @@
 namespace base {
 
 TEST(SysStrings, ConversionsFromNSString) {
-    EXPECT_STREQ("Hello, world!", sys_nsstring_to_utf8(@"Hello, world!").c_str());
+    EXPECT_STREQ("Hello, world!", nsstring_to_utf8(@"Hello, world!").c_str());
 
     // Conversions should be able to handle a NULL value without crashing.
-    EXPECT_STREQ("", sys_nsstring_to_utf8(nil).c_str());
-    EXPECT_EQ(std::u16string(), sys_nsstring_to_utf16(nil));
+    EXPECT_STREQ("", nsstring_to_utf8(nil).c_str());
+    EXPECT_EQ(std::u16string(), nsstring_to_utf16(nil));
 }
 
 namespace {
@@ -31,8 +31,8 @@ std::vector<std::string> kConvertRoundtripCases({
 
 TEST(SysStrings, RoundTripsFromUTF8) {
     for (const auto& string8 : kConvertRoundtripCases) {
-        NSString* nsstring8 = sys_utf8_to_nsstring(string8);
-        std::string back8 = sys_nsstring_to_utf8(nsstring8);
+        NSString* nsstring8 = utf8_to_nsstring(string8);
+        std::string back8 = nsstring_to_utf8(nsstring8);
         EXPECT_EQ(string8, back8);
     }
 }
@@ -40,8 +40,8 @@ TEST(SysStrings, RoundTripsFromUTF8) {
 TEST(SysStrings, RoundTripsFromUTF16) {
     for (const auto& string8 : kConvertRoundtripCases) {
         std::u16string string16 = utf8_to_utf16(string8);
-        NSString* nsstring16 = sys_utf16_to_nsstring(string16);
-        std::u16string back16 = sys_nsstring_to_utf16(nsstring16);
+        NSString* nsstring16 = utf16_to_nsstring(string16);
+        std::u16string back16 = nsstring_to_utf16(nsstring16);
         EXPECT_EQ(string16, back16);
     }
 }

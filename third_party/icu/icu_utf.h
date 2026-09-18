@@ -4,6 +4,8 @@
 
 namespace icu_utf {
 
+// clang-format off
+
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // source/common/unicode/umachine.h
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -83,8 +85,35 @@ typedef int32_t UChar32;
 #endif
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
+// source/common/unicode/utf.h
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Is this code point a surrogate (U+d800..U+dfff)?
+ * @param c 32-bit code point
+ * @return true or false
+ * @stable ICU 2.4
+ */
+#define U_IS_SURROGATE(c) (((c)&0xfffff800)==0xd800)
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
 // source/common/unicode/utf8.h
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Counts the trail bytes for a UTF-8 lead byte.
+ * Returns 0 for 0..0xc1 as well as for 0xf5..0xff.
+ * leadByte might be evaluated multiple times.
+ *
+ * This is internal since it is not meant to be called directly by external clients;
+ * however it is called by public macros in this file and thus must remain stable.
+ *
+ * @param leadByte The first byte of a UTF-8 sequence. Must be 0..0xff.
+ * @internal
+ */
+#define U8_COUNT_TRAIL_BYTES(leadByte) \
+    (U8_IS_LEAD(leadByte) ? \
+        ((uint8_t)(leadByte)>=0xe0)+((uint8_t)(leadByte)>=0xf0)+1 : 0)
 
 /**
  * Internal bit vector for 3-byte UTF-8 validity check, for use in U8_IS_VALID_LEAD3_AND_T1.
@@ -113,6 +142,22 @@ typedef int32_t UChar32;
  * @stable ICU 2.4
  */
 #define U8_IS_SINGLE(c) ((int8_t)(c)>=0)
+
+/**
+ * Is this code unit (byte) a UTF-8 lead byte? (0xC2..0xF4)
+ * @param c 8-bit code unit (byte)
+ * @return true or false
+ * @stable ICU 2.4
+ */
+#define U8_IS_LEAD(c) ((uint8_t)((c)-0xc2)<=0x32)
+
+/**
+ * Is this code unit (byte) a UTF-8 trail byte? (0x80..0xBF)
+ * @param c 8-bit code unit (byte)
+ * @return true or false
+ * @stable ICU 2.4
+ */
+#define U8_IS_TRAIL(c) ((int8_t)(c)<-0x40)
 
 /**
  * Get a code point from a string at a code point boundary offset,
@@ -146,6 +191,32 @@ typedef int32_t UChar32;
         } \
     } \
 } UPRV_BLOCK_MACRO_END
+
+/**
+ * Get a code point from a string at a code point boundary offset,
+ * and advance the offset to the next code point boundary.
+ * (Post-incrementing forward iteration.)
+ * "Safe" macro, checks for illegal sequences and for string boundaries.
+ *
+ * The length can be negative for a NUL-terminated string.
+ *
+ * The offset may point to the lead byte of a multi-byte sequence,
+ * in which case the macro will read the whole sequence.
+ * If the offset points to a trail byte or an illegal UTF-8 sequence, then
+ * c is set to U+FFFD.
+ *
+ * This macro does not distinguish between a real U+FFFD in the text
+ * and U+FFFD returned for an ill-formed sequence.
+ * Use U8_NEXT() if that distinction is important.
+ *
+ * @param s const uint8_t * string
+ * @param i int32_t string offset, must be i<length
+ * @param length int32_t string length
+ * @param c output UChar32 variable, set to U+FFFD in case of an error
+ * @see U8_NEXT
+ * @stable ICU 51
+ */
+#define U8_NEXT_OR_FFFD(s, i, length, c) U8_INTERNAL_NEXT_OR_SUB(s, i, length, c, 0xfffd)
 
 /** @internal */
 #define U8_INTERNAL_NEXT_OR_SUB(s, i, length, c, sub) UPRV_BLOCK_MACRO_BEGIN { \
@@ -222,6 +293,31 @@ typedef int32_t UChar32;
 #define U16_IS_LEAD(c) (((c)&0xfffffc00)==0xd800)
 
 /**
+ * Is this code unit a trail surrogate (U+dc00..U+dfff)?
+ * @param c 16-bit code unit
+ * @return true or false
+ * @stable ICU 2.4
+ */
+#define U16_IS_TRAIL(c) (((c)&0xfffffc00)==0xdc00)
+
+/**
+ * Is this code unit a surrogate (U+d800..U+dfff)?
+ * @param c 16-bit code unit
+ * @return true or false
+ * @stable ICU 2.4
+ */
+#define U16_IS_SURROGATE(c) U_IS_SURROGATE(c)
+
+/**
+ * Assuming c is a surrogate code point (U16_IS_SURROGATE(c)),
+ * is it a lead surrogate?
+ * @param c 16-bit code unit
+ * @return true or false
+ * @stable ICU 2.4
+ */
+#define U16_IS_SURROGATE_LEAD(c) (((c)&0x400)==0)
+
+/**
  * Helper constant for U16_GET_SUPPLEMENTARY.
  * @internal
  */
@@ -268,6 +364,40 @@ typedef int32_t UChar32;
 } UPRV_BLOCK_MACRO_END
 
 /**
+ * Get a code point from a string at a code point boundary offset,
+ * and advance the offset to the next code point boundary.
+ * (Post-incrementing forward iteration.)
+ * "Safe" macro, handles unpaired surrogates and checks for string boundaries.
+ *
+ * The length can be negative for a NUL-terminated string.
+ *
+ * The offset may point to the lead surrogate unit
+ * for a supplementary code point, in which case the macro will read
+ * the following trail surrogate as well.
+ * If the offset points to a trail surrogate or
+ * to a single, unpaired lead surrogate, then c is set to U+FFFD.
+ *
+ * @param s const UChar * string
+ * @param i string offset, must be i<length
+ * @param length string length
+ * @param c output UChar32 variable
+ * @see U16_NEXT_UNSAFE
+ * @stable ICU 60
+ */
+#define U16_NEXT_OR_FFFD(s, i, length, c) UPRV_BLOCK_MACRO_BEGIN { \
+    (c)=(s)[(i)++]; \
+    if(U16_IS_SURROGATE(c)) { \
+        uint16_t __c2; \
+        if(U16_IS_SURROGATE_LEAD(c) && (i)!=(length) && U16_IS_TRAIL(__c2=(s)[(i)])) { \
+            ++(i); \
+            (c)=U16_GET_SUPPLEMENTARY((c), __c2); \
+        } else { \
+            (c)=0xfffd; \
+        } \
+    } \
+} UPRV_BLOCK_MACRO_END
+
+/**
  * Append a code point to a string, overwriting 1 or 2 code units.
  * The offset points to the current end of the string contents
  * and is advanced (post-increment).
@@ -288,5 +418,7 @@ typedef int32_t UChar32;
         (s)[(i)++]=(uint16_t)(((c)&0x3ff)|0xdc00); \
     } \
 } UPRV_BLOCK_MACRO_END
+
+// clang-format on
 
 }  // namespace icu_utf

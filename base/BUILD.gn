@@ -36,20 +36,16 @@ source_set("base") {
     "posix/eintr_wrapper.h",
     "rand_util.cc",
     "rand_util.h",
-    "strings/string_util.cc",
-    "strings/string_util.h",
-    "strings/sys_string_conversions.h",
-    "strings/utf_string_conversions.cc",
-    "strings/utf_string_conversions.h",
+    "strings.h",
     "third_party/icu/icu_utf.h",
     "time/time.h",
-    "unicode/unicode.cc",
-    "unicode/unicode.h",
-    "unicode/utf16_to_utf8_indices_map.cc",
-    "unicode/utf16_to_utf8_indices_map.h",
-    "unicode/utf8_decoder.h",
+    "unicode.cc",
+    "unicode.h",
   ]
-  deps = [ "//third_party/spdlog" ]
+  deps = [
+    "//third_party/simdutf",
+    "//third_party/spdlog",
+  ]
 
   # TODO: Consider checking all type conversions. These result in silent and
   # subtle bugs. We previously spent one hour debugging one.
@@ -83,7 +79,7 @@ source_set("base") {
       "apple/scoped_typeref.h",
       "files/file_util_mac.mm",
       "path_service_mac.cc",
-      "strings/sys_string_conversions_mac.mm",
+      "strings_mac.mm",
       "time/time_mac.cc",
     ]
     frameworks += [
@@ -103,7 +99,6 @@ source_set("base") {
       "files/file_util_win.cc",
       "path_service_win.cc",
       "rand_util_win.cc",
-      "strings/sys_string_conversions_win.cc",
       "win/scoped_com_initializer.cc",
       "win/scoped_com_initializer.h",
     ]
@@ -129,23 +124,16 @@ source_set("base_unittests") {
     "numeric/safe_conversions_unittest.cc",
     "numeric/saturation_arithmetic_unittest.cc",
     "rand_util_unittest.cc",
-    "strings/string_util_unittest.cc",
-    "strings/utf_string_conversions_unittest.cc",
     "time/time_unittest.cc",
-    "unicode/unicode_unittest.cc",
-    "unicode/utf16_to_utf8_indices_map_unittest.cc",
-    "unicode/utf8_decoder_unittest.cc",
+    "unicode_unittest.cc",
   ]
 
   if (is_mac) {
     sources += [
       "apple/foundation_util_unittest.mm",
       "apple/scoped_cftyperef_unittest.cc",
-      "strings/sys_string_conversions_mac_unittest.mm",
+      "strings_mac_unittest.mm",
     ]
-  }
-  if (is_win) {
-    sources += [ "strings/sys_string_conversions_win_unittest.cc" ]
   }
 
   deps = [
@@ -163,4 +151,9 @@ source_set("base_perftests") {
     ":base",
     "//testing:gtest",
   ]
+}
+
+executable("unicode_perftest") {
+  sources = [ "unicode_perftest.cc" ]
+  deps = [ ":base" ]
 }

@@ -1,4 +1,4 @@
-#include "base/unicode/unicode.h"
+#include "base/unicode.h"
 #include "build/build_config.h"
 #include "px/px_font_internal.h"
 #include "ui/grapheme_shaper.h"
@@ -17,30 +17,8 @@
 
 namespace {
 
-std::u32string decode_utf8(std::string_view input) {
-    std::u32string result;
-    for (size_t offset = 0; offset < input.size();) {
-        const base::Unichar codepoint = base::next_utf8(input, offset);
-        result.push_back(codepoint < 0 ? U'\ufffd' : static_cast<char32_t>(codepoint));
-    }
-    return result;
-}
-
 size_t utf8_length(char32_t codepoint) {
-    const int length = base::codepoint_to_utf8(static_cast<base::Unichar>(codepoint));
-    return length < 0 ? 3 : static_cast<size_t>(length);
-}
-
-std::string encode_utf8(std::u32string_view input) {
-    std::string result;
-    for (char32_t codepoint : input) {
-        char bytes[4];
-        const int length = base::codepoint_to_utf8(static_cast<base::Unichar>(codepoint), bytes);
-        if (length > 0) {
-            result.append(bytes, static_cast<size_t>(length));
-        }
-    }
-    return result;
+    return codepoint <= 0x7f ? 1 : codepoint <= 0x7ff ? 2 : codepoint <= 0xffff ? 3 : 4;
 }
 
 class fake_font final : public fx_font {
@@ -54,7 +32,7 @@ public:
     float raster_ascent() const override { return 8.0f; }
 
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override {
-        return shape_text(decode_utf8(utf8));
+        return shape_text(base::utf8_to_utf32(utf8));
     }
 
     std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override {
@@ -351,7 +329,7 @@ void convert_utf8_clusters_to_codepoint_indices(recording_context* context,
     uint32_t codepoint_index = 0;
     codepoint_indices[0] = 0;
     while (byte_offset < utf8.size()) {
-        base::next_utf8(utf8, byte_offset);
+        base::decode_utf8(utf8, byte_offset);
         codepoint_indices[byte_offset] = ++codepoint_index;
     }
 
@@ -797,7 +775,7 @@ TEST(SystemFontIntegrationTest, DistinguishesOutlineAndColorGlyphs) {
 
 void Utf8AndUtf32DrawingProduceEquivalentLayouts(const std::vector<char32_t>& codepoints) {
     const std::u32string utf32(codepoints.begin(), codepoints.end());
-    const std::string utf8 = encode_utf8(utf32);
+    const std::string utf8 = base::utf32_to_utf8(utf32);
     shaper_fixture utf8_fixture;
     shaper_fixture utf32_fixture;
     recording_context utf8_context;

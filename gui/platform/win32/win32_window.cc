@@ -1,4 +1,5 @@
-#include "base/strings/sys_string_conversions.h"
+#include "base/strings.h"
+#include "base/unicode.h"
 #include "gui/platform/key.h"
 #include "gui/platform/win32/resources.h"
 #include "gui/platform/win32/win32_window.h"
@@ -263,16 +264,17 @@ LRESULT Win32Window::handle_message(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         if (IS_HIGH_SURROGATE(wParam)) {
             high_surrogate = wParam;
         } else {
-            WCHAR utf16[3]{};  // Initialized to {'\0', '\0', '\0'}.
+            char16_t utf16[3]{};
 
             if (high_surrogate) {
-                utf16[0] = high_surrogate;
-                utf16[1] = static_cast<WCHAR>(wParam);
+                utf16[0] = static_cast<char16_t>(high_surrogate);
+                utf16[1] = static_cast<char16_t>(wParam);
             } else {
-                utf16[0] = static_cast<WCHAR>(wParam);
+                utf16[0] = static_cast<char16_t>(wParam);
             }
 
-            std::string str8 = base::sys_wide_to_utf8(utf16);
+            if (!base::is_valid_utf16(utf16)) return 0;
+            std::string str8 = base::utf16_to_utf8(utf16);
             // TODO: Implement fmtlib style "debug format" ({:?}) that escapes special chars.
             spdlog::info("WM_CHAR: {}", str8);
             app_window.on_insert_text(str8);
@@ -368,8 +370,8 @@ int Win32Window::scale() {
 }
 
 void Win32Window::set_title(std::string_view title) {
-    std::wstring str16 = base::sys_utf8_to_wide(title);
-    SetWindowText(m_hwnd, str16.data());
+    auto str16 = base::utf8_to_utf16(title);
+    SetWindowText(m_hwnd, base::as_wcstr(str16));
 }
 
 HWND Win32Window::get_hwnd() const { return m_hwnd; }

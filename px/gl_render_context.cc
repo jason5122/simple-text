@@ -422,13 +422,27 @@ private:
     static void add_to_groups(std::vector<texture_batch_group>* groups,
                               const batch_key& key,
                               glyph_instance_data instance) {
-        // A glyph can overlap the preceding glyph (combining marks, emoji layers, and fallback
-        // runs). Coalesce adjacent compatible glyphs without regrouping across an intervening
-        // atlas page or shader mode, which would change submission order.
+#if BUILDFLAG(IS_LINUX)
+        // Linux's GL 4.0 compatibility compositor copies and draws each glyph in submission order.
         if (groups->empty() || groups->back().key != key) {
             groups->push_back({.key = key});
         }
         groups->back().instances.push_back(instance);
+#else
+        // Sublime files each glyph into the existing group with the same texture and shader mode,
+        // wherever that group already sits, and renders groups in creation order (0x1002b8830).
+        // Grouping decides how overlapping glyphs are split across draws, and two sequential 8-bit
+        // blends round differently depending on that split, so a submission-order policy here
+        // costs a level on glyphs that stack (Arabic joins, fallback runs).
+        auto found = std::find_if(
+            groups->begin(), groups->end(),
+            [&key](const texture_batch_group& group) { return group.key == key; });
+        if (found == groups->end()) {
+            groups->push_back({.key = key});
+            found = std::prev(groups->end());
+        }
+        found->instances.push_back(instance);
+#endif
     }
 
     void flush_batch() {

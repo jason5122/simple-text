@@ -14,7 +14,6 @@
 #include <cstdlib>
 #include <iterator>
 #include <limits>
-#include <optional>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
@@ -105,13 +104,6 @@ const Globals& globals() {
 
 }  // namespace
 
-struct Tile {
-    int width = 0;
-    int height = 0;
-    double origin_x = 0;
-    double origin_y = 0;
-};
-
 fx_gamma_ramp rendering_gamma_ramp();
 
 class direct_write_font final : public fx_font {
@@ -151,7 +143,6 @@ private:
                                                      uint32_t attrs);
 
     uint32_t register_face(IDWriteFontFace* face);
-    std::optional<Tile> glyph_tile(uint32_t glyph, double scale) const;
     bool ensure_target(int width, int height, double scale);
     bool rasterize_via_analysis(const DWRITE_GLYPH_RUN& run,
                                 double scale,
@@ -270,63 +261,6 @@ private:
 };
 
 // Sublime's direct_write_font::glyph_extents (0x1401bb4f8).
-std::optional<Tile> direct_write_font::glyph_tile(uint32_t glyph, double scale) const {
-    const uint32_t face_index = glyph >> 16;
-    IDWriteFontFace* face = faces[face_index].Get();
-
-    DWRITE_FONT_METRICS metrics{};
-    if (flags_ & kGdiCompatible) {
-        face->GetGdiCompatibleMetrics(em_size_, 1.0f, nullptr, &metrics);
-    } else {
-        face->GetMetrics(&metrics);
-    }
-    if (metrics.designUnitsPerEm == 0) return std::nullopt;
-    const double upem_scale =
-        static_cast<double>(em_size_ / static_cast<float>(metrics.designUnitsPerEm));
-
-    const UINT16 index = static_cast<uint16_t>(glyph);
-    DWRITE_GLYPH_METRICS gm{};
-    if (FAILED(face->GetDesignGlyphMetrics(&index, 1, &gm, FALSE))) return std::nullopt;
-
-    const INT32 ink_w =
-        static_cast<INT32>(gm.advanceWidth) - (gm.leftSideBearing + gm.rightSideBearing);
-    const INT32 ink_h =
-        static_cast<INT32>(gm.advanceHeight) - (gm.topSideBearing + gm.bottomSideBearing);
-    if (ink_w <= 0 || ink_h <= 0) return std::nullopt;  // blank glyph, e.g. a space
-
-    // Sublime doubles the ink height before scaling and pads both axes by 2px. The doubling is
-    // slack for a rasterizer that can paint outside the design box (hinting, ClearType filtering)
-    // without having to measure first; the extra rows come out transparent.
-    constexpr double kPad = 2.0;
-    constexpr double kBorder = 1.0;
-    const double width =
-        std::ceil(static_cast<double>(static_cast<float>(ink_w)) * upem_scale * scale) + kPad;
-    const double height =
-        std::ceil(static_cast<double>(static_cast<float>(ink_h) * 2.0f) * upem_scale * scale) +
-        kPad;
-
-    // render_glyph adds the face ascent after snapping it to a device pixel (0x1401bba7b).
-    // Keep glyph_extents' origin separate because the glyph cache measures its bearing from this
-    // value after cropping the rendered bitmap.
-    const double ink_top =
-        static_cast<double>(gm.verticalOriginY - gm.topSideBearing) * upem_scale;
-    const double ascent = static_cast<double>(face_ascents[face_index]);
-    const double origin_x =
-        std::ceil(static_cast<double>(-gm.leftSideBearing) * upem_scale * scale) + kBorder;
-    const double origin_y = std::ceil((ink_top - ascent) * scale) + kBorder;
-
-    return Tile{
-        // One column wider than glyph_extents reports: Sublime's glyph cache adds it when it sizes
-        // the buffer (0x1402cd255, `edi = ceil(width) + 1`, used as both width and stride). That
-        // column is what holds the trailing antialiased edge once subpixel_x shifts the glyph
-        // right -- without it the right stem of d, m and q is cut off.
-        .width = base::clamp_ceil<int>(width) + 1,
-        .height = base::clamp_ceil<int>(height),
-        .origin_x = origin_x,
-        .origin_y = origin_y,
-    };
-}
-
 DWRITE_RENDERING_MODE rendering_mode(uint32_t flags) {
     if (flags & FX_FONT_NO_ANTIALIAS) return DWRITE_RENDERING_MODE_ALIASED;
     if (flags & kClearTypeClassic) return DWRITE_RENDERING_MODE_GDI_CLASSIC;
@@ -895,23 +829,58 @@ std::unique_ptr<fx_layout> direct_write_font::shape(std::u32string_view utf32) {
 }
 
 void direct_write_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) {
+    const auto give_up = [&] {
+        origin = {};
+        size = {};
+    };
     const uint32_t face_index = glyph >> 16;
-    if (face_index >= faces.size()) {
-        origin = {};
-        size = {};
-        return;
-    }
+    if (face_index >= faces.size()) return give_up();
+    IDWriteFontFace* face = faces[face_index].Get();
 
-    const std::optional<Tile> tile = glyph_tile(glyph, scale);
-    if (!tile) {
-        origin = {};
-        size = {};
-        return;
+    DWRITE_FONT_METRICS metrics{};
+    if (flags_ & kGdiCompatible) {
+        face->GetGdiCompatibleMetrics(em_size_, 1.0f, nullptr, &metrics);
+    } else {
+        face->GetMetrics(&metrics);
     }
+    if (metrics.designUnitsPerEm == 0) return give_up();
+    const double upem_scale =
+        static_cast<double>(em_size_ / static_cast<float>(metrics.designUnitsPerEm));
 
-    origin = {tile->origin_x,
-              tile->origin_y + std::round(static_cast<double>(face_ascents[0]) * scale)};
-    size = {static_cast<double>(tile->width - 1), static_cast<double>(tile->height)};
+    const UINT16 index = static_cast<uint16_t>(glyph);
+    DWRITE_GLYPH_METRICS gm{};
+    if (FAILED(face->GetDesignGlyphMetrics(&index, 1, &gm, FALSE))) return give_up();
+
+    const INT32 ink_w =
+        static_cast<INT32>(gm.advanceWidth) - (gm.leftSideBearing + gm.rightSideBearing);
+    const INT32 ink_h =
+        static_cast<INT32>(gm.advanceHeight) - (gm.topSideBearing + gm.bottomSideBearing);
+    if (ink_w <= 0 || ink_h <= 0) return give_up();  // blank glyph, e.g. a space
+
+    // Sublime computes all of this inline here (0x1401bb4f8). It doubles the ink height before
+    // scaling -- slack for a rasterizer that can paint outside the design box through hinting and
+    // ClearType filtering, without having to measure first -- then pads the reported size by 2 on
+    // both axes and the origin by 1. Both constants are literal doubles in its rdata.
+    constexpr double kSizePad = 2.0;
+    constexpr double kOriginPad = 1.0;
+    size = {
+        std::ceil(static_cast<double>(static_cast<float>(ink_w)) * upem_scale * scale) + kSizePad,
+        std::ceil(static_cast<double>(static_cast<float>(ink_h) * 2.0f) * upem_scale * scale) +
+            kSizePad,
+    };
+
+    const double ink_top =
+        static_cast<double>(gm.verticalOriginY - gm.topSideBearing) * upem_scale;
+    const double ascent = static_cast<double>(face_ascents[face_index]);
+    origin = {
+        std::ceil(static_cast<double>(-gm.leftSideBearing) * upem_scale * scale) + kOriginPad,
+        // Sublime stops at the line above and lets render_glyph add the face ascent
+        // (0x1401bba7b). We fold the primary face's snapped ascent in instead, so the shared glyph
+        // cache measures bearings from a baseline-relative origin as it does on the other
+        // backends; rasterize() subtracts it again before drawing.
+        std::ceil((ink_top - ascent) * scale) + kOriginPad +
+            std::round(static_cast<double>(face_ascents[0]) * scale),
+    };
 }
 
 bool direct_write_font::is_color_glyph(uint32_t glyph) {

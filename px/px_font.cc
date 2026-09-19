@@ -25,7 +25,7 @@ fx_glyph_cache& px_font_t::glyph_cache(float scale) {
     const uint32_t key = static_cast<uint32_t>(static_cast<double>(scale) * 100.0);
     auto& cache = glyph_caches[key];
     if (!cache) {
-        cache = std::make_unique<fx_glyph_cache>(font.get(), scale);
+        cache = std::make_unique<fx_glyph_cache>(*font, scale);
     }
     return *cache;
 }

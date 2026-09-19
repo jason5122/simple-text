@@ -86,8 +86,7 @@ void composite_glyph_scanline(uint8_t* destination,
                               const uint8_t* source,
                               int pixel_count,
                               const uint8_t tint[4],
-                              bool colored,
-                              bool alternate) {
+                              bool colored) {
     int x = 0;
 #if defined(__ARM_NEON)
     const bool opaque_tint = tint[3] == 255u;
@@ -110,9 +109,6 @@ void composite_glyph_scanline(uint8_t* destination,
                                 : source_over_channel(source_alpha, dst.val[3], source_alpha);
         } else {
             for (int channel = 0; channel < 3; ++channel) {
-                if (alternate) {
-                    src.val[channel] = vmvn_u8(src.val[channel]);
-                }
                 const uint8x8_t coverage =
                     opaque_tint ? src.val[channel] : multiply_bytes(src.val[channel], tint_alpha);
                 const uint8x8_t tinted = multiply_bytes(vdup_n_u8(tint[channel]), coverage);
@@ -141,9 +137,7 @@ void composite_glyph_scanline(uint8_t* destination,
             destination[3] = source_over_channel(source_alpha, destination[3], source_alpha);
         } else {
             for (int channel = 0; channel < 3; ++channel) {
-                const uint8_t glyph_coverage =
-                    alternate ? static_cast<uint8_t>(source[channel] ^ 0xffu) : source[channel];
-                const uint8_t coverage = multiply_bytes(glyph_coverage, tint[3]);
+                const uint8_t coverage = multiply_bytes(source[channel], tint[3]);
                 const uint8_t tinted = multiply_bytes(tint[channel], coverage);
                 destination[channel] =
                     source_over_channel(tinted, destination[channel], coverage, true);
@@ -264,7 +258,7 @@ void skia_render_context::draw_shaped_text(
     const float lightness = (std::max({normalized.r, normalized.g, normalized.b}) +
                              std::min({normalized.r, normalized.g, normalized.b})) *
                             0.5f;
-    const bool alternate = lightness > 0.75f;
+    const bool alternate = fx_glyph_cache::alternate_glyphs && lightness > 0.75f;
     const uint8_t tint[] = {value.blue(), value.green(), value.red(), value.alpha()};
 
     auto* destination = static_cast<uint8_t*>(buffer_.pixels);
@@ -303,7 +297,7 @@ void skia_render_context::draw_shaped_text(
             const uint8_t* src = pixels + (static_cast<size_t>(source_y) * glyph_phase.width +
                                            static_cast<size_t>(left - glyph_left)) *
                                               4u;
-            composite_glyph_scanline(dst, src, right - left, tint, data.colored, alternate);
+            composite_glyph_scanline(dst, src, right - left, tint, data.colored);
         }
     }
 }

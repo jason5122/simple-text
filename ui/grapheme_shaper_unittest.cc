@@ -35,14 +35,9 @@ public:
         return shape_text(base::utf8_to_utf32(utf8));
     }
 
-    std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override {
-        return shape_text(std::u32string(utf32));
-    }
-
     void extents(uint32_t, float, vec2&, vec2&) override {}
     void rasterize(uint32_t, vec2, float, fx_pixel_buffer*, color, uint32_t) override {}
     bool is_color_glyph(uint32_t) override { return false; }
-    bool bg_affects_rasterize() const override { return false; }
     const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
 
     void clear_shaped_texts() { shaped_texts_.clear(); }
@@ -91,14 +86,12 @@ private:
 
 class cache_font final : public fx_font {
 public:
-    cache_font(bool colored, bool background_affects_rasterization)
-        : colored_(colored), background_affects_rasterization_(background_affects_rasterization) {}
+    cache_font(bool colored) : colored_(colored) {}
 
     uint32_t attrs() const override { return 0; }
     fx_font_metrics metrics() const override { return {}; }
     float raster_ascent() const override { return 8.0f; }
     std::unique_ptr<fx_layout> shape(std::string_view) override { return {}; }
-    std::unique_ptr<fx_layout> shape(std::u32string_view) override { return {}; }
     void extents(uint32_t, float, vec2& origin, vec2& size) override {
         origin = {2.0, 3.0};
         size = {3.0, 3.0};
@@ -137,7 +130,6 @@ public:
         ++classification_count;
         return colored_;
     }
-    bool bg_affects_rasterize() const override { return background_affects_rasterization_; }
     const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
 
     int classification_count = 0;
@@ -153,12 +145,11 @@ public:
 
 private:
     bool colored_ = false;
-    bool background_affects_rasterization_ = false;
 };
 
 TEST(FxGlyphCacheTest, RasterizesPlatformSubpixelPhasesOnFirstLookup) {
-    cache_font font(false, false);
-    fx_glyph_cache cache(&font, 2.0f);
+    cache_font font(false);
+    fx_glyph_cache cache(font, 2.0f);
 
     const fx_glyph_cache::glyph_data& first = cache.lookup_glyph_data(42);
     const fx_glyph_cache::glyph_data& second = cache.lookup_glyph_data(42);
@@ -172,11 +163,7 @@ TEST(FxGlyphCacheTest, RasterizesPlatformSubpixelPhasesOnFirstLookup) {
     EXPECT_EQ(font.raster_width, 4);
     EXPECT_EQ(font.raster_height, 3);
     EXPECT_EQ(font.raster_row_pixels, 4);
-#if BUILDFLAG(IS_WIN)
-    EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 0}));
-#else
     EXPECT_EQ(font.initial_pixel, (std::array<uint8_t, 4>{0, 0, 0, 255}));
-#endif
     EXPECT_FALSE(first.colored);
     EXPECT_FALSE(second.colored);
     EXPECT_EQ(&first, &second);
@@ -187,14 +174,17 @@ TEST(FxGlyphCacheTest, RasterizesPlatformSubpixelPhasesOnFirstLookup) {
         EXPECT_GT(first.phases[5].height, 0);
         EXPECT_NE(first.phases[0].pixels, first.phases[5].pixels);
     }
+    // The cache steps phases in float before widening, as Sublime does.
     EXPECT_DOUBLE_EQ(font.raster_position.x,
-                     2.0 + static_cast<double>(fx_glyph_cache::phase_count - 1) / 3.0);
+                     2.0 +
+                         static_cast<double>(static_cast<float>(fx_glyph_cache::phase_count - 1) *
+                                             (1.0f / 6.0f) * 2.0f));
     EXPECT_DOUBLE_EQ(font.raster_position.y, 3.0);
 }
 
 TEST(FxGlyphCacheTest, UsesThePlatformSubpixelOrderCachePolicy) {
-    cache_font font(false, false);
-    fx_glyph_cache cache(&font, 1.0f);
+    cache_font font(false);
+    fx_glyph_cache cache(font, 1.0f);
 
     cache.lookup_glyph_data(42, 1);
     cache.lookup_glyph_data(42, 1);
@@ -211,9 +201,11 @@ TEST(FxGlyphCacheTest, UsesThePlatformSubpixelOrderCachePolicy) {
 #endif
 }
 
-TEST(FxGlyphCacheTest, SuppliesInverseColorsWhenTheBackgroundAffectsRasterization) {
-    cache_font font(false, true);
-    fx_glyph_cache cache(&font, 1.0f);
+// An alternate glyph is rasterized black on white and handed back as coverage, so the stored
+// pixel is the XOR of the black ink the fake font wrote.
+TEST(FxGlyphCacheTest, ConvertsAlternateGlyphsToCoverage) {
+    cache_font font(false);
+    fx_glyph_cache cache(font, 1.0f);
 
     const fx_glyph_cache::glyph_data& data = cache.lookup_glyph_data(42, 0, true);
     const fx_glyph_cache::glyph_phase& phase = data.phases[0];
@@ -224,15 +216,15 @@ TEST(FxGlyphCacheTest, SuppliesInverseColorsWhenTheBackgroundAffectsRasterizatio
     ASSERT_EQ(phase.width, 1u);
     ASSERT_EQ(phase.height, 1u);
     ASSERT_NE(pixels, nullptr);
-    EXPECT_EQ(pixels[0], 0);
-    EXPECT_EQ(pixels[1], 0);
-    EXPECT_EQ(pixels[2], 0);
+    EXPECT_EQ(pixels[0], 255);
+    EXPECT_EQ(pixels[1], 255);
+    EXPECT_EQ(pixels[2], 255);
     EXPECT_EQ(pixels[3], 255);
 }
 
 TEST(FxGlyphCacheTest, PreservesIntrinsicColorPixels) {
-    cache_font font(true, true);
-    fx_glyph_cache cache(&font, 1.0f);
+    cache_font font(true);
+    fx_glyph_cache cache(font, 1.0f);
 
     const fx_glyph_cache::glyph_data& data = cache.lookup_glyph_data(42, 0, true);
     const fx_glyph_cache::glyph_phase& phase = data.phases[0];

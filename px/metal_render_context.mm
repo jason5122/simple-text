@@ -83,7 +83,6 @@ struct glyph_vertex_uniforms {
 
 struct glyph_fragment_uniforms {
     uint32_t colored;
-    uint32_t alternate;
 };
 
 constexpr const char* kShaderSource =
@@ -594,7 +593,7 @@ public:
             static_cast<uint32_t>(static_cast<double>(raster_scale) * 100.0);
         fx_glyph_cache& cache = font->glyph_cache(raster_scale);
         atlas_set& atlas = atlas_sets_[{font, scale_percent}];
-        if (atlas.size == 0) atlas.size = atlas_size_for(*font, raster_scale);
+        if (atlas.size == 0) atlas.size = atlas_size_for(*font);
         std::vector<texture_batch_group> immediate_groups;
         std::vector<texture_batch_group>& groups =
             batch_depth_ != 0 ? batch_groups_ : immediate_groups;
@@ -603,7 +602,7 @@ public:
         const float lightness =
             (std::max({color.r, color.g, color.b}) + std::min({color.r, color.g, color.b})) * 0.5f;
         // Sublime selects the inverted glyph-cache polarity only for very light tints.
-        const bool alternate = lightness > 0.75f;
+        const bool alternate = fx_glyph_cache::alternate_glyphs && lightness > 0.75f;
 
         for (const fx_glyph& glyph : layout.glyphs) {
             const double x = device_origin_x + static_cast<double>(glyph.x_offset) * scale.x;
@@ -657,8 +656,7 @@ public:
             add_to_groups(&groups,
                           {.atlas = &atlas,
                            .page = placement->page,
-                           .colored = placement->colored,
-                           .alternate = alternate},
+                           .colored = placement->colored},
                           instance);
         }
 
@@ -682,11 +680,11 @@ private:
         size_t active_page_count = 0;
     };
 
+    // Sublime's group key is the same pair (0x1002b8838); polarity only selects the cache table.
     struct batch_key {
         const atlas_set* atlas = nullptr;
         int page = -1;
         bool colored = false;
-        bool alternate = false;
 
         bool operator==(const batch_key&) const = default;
     };
@@ -759,8 +757,7 @@ private:
                 static_cast<float>(atlas->size),
                 0.0f,
             };
-            const glyph_fragment_uniforms fragment_uniforms{group.key.colored ? 1u : 0u,
-                                                            group.key.alternate ? 1u : 0u};
+            const glyph_fragment_uniforms fragment_uniforms{group.key.colored ? 1u : 0u};
             [encoder setVertexBufferOffset:allocation.offset + first * sizeof(glyph_instance_data)
                                    atIndex:0];
             [encoder setVertexBytes:&vertex_uniforms length:sizeof(vertex_uniforms) atIndex:1];
@@ -776,10 +773,14 @@ private:
         }
     }
 
-    static int atlas_size_for(const px_font_t& font, float scale) {
-        const float line_height = font.font->metrics().line_height;
-        const unsigned target =
-            std::max(1u, static_cast<unsigned>(std::ceil(line_height * scale * 8.0f)));
+    // Sublime's create_text_batch sizes the main atlas from the font's logical ascent plus
+    // descent, truncated, times sixteen, rounded up to a power of two (0x1002be234). The device
+    // scale plays no part. Page size decides when a glyph lands on a new texture, and texture
+    // decides draw order for overlapping glyphs, so this has to match exactly.
+    static int atlas_size_for(const px_font_t& font) {
+        const fx_font_metrics metrics = font.font->metrics();
+        const int base = static_cast<int>(metrics.ascent + metrics.descent);
+        const unsigned target = static_cast<unsigned>(std::max(1, base * 16));
         return static_cast<int>(std::bit_ceil(target));
     }
 

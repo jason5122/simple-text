@@ -64,7 +64,6 @@ struct glyph_vertex_uniforms {
 
 struct glyph_fragment_uniforms {
     uint colored;
-    uint alternate;
 };
 
 struct glyph_varyings {
@@ -101,12 +100,6 @@ fragment glyph_output px_glyph_fragment(glyph_varyings in [[stage_in]],
                                         constant glyph_fragment_uniforms& uniforms [[buffer(0)]]) {
     constexpr sampler nearest(coord::normalized, filter::nearest, address::clamp_to_edge);
     float4 sample_color = atlas.sample(nearest, in.uv);
-    if (uniforms.alternate != 0 && uniforms.colored == 0) {
-        // The alternate cache stores monochrome glyphs at reversed polarity: black ink on an
-        // opaque white background. Recover coverage the same way composite_glyph_scanline does,
-        // leaving the rasterized alpha alone.
-        sample_color.rgb = 1.0 - sample_color.rgb;
-    }
     glyph_output out;
     if (uniforms.colored != 0) {
         out.color = sample_color * in.color.a;

@@ -43,18 +43,6 @@ using cairo_surface_ptr =
 using cairo_context_ptr = std::unique_ptr<cairo_t, native_deleter<cairo_t, cairo_destroy>>;
 using fc_config_ptr = std::unique_ptr<FcConfig, native_deleter<FcConfig, FcConfigDestroy>>;
 
-const fx_gamma_ramp* identity_gamma_ramp() {
-    static const fx_gamma_ramp ramp = [] {
-        fx_gamma_ramp result;
-        for (size_t i = 0; i < result.values.size(); ++i) {
-            result.values[i] = static_cast<uint8_t>(i);
-            result.inverse_values[i] = static_cast<uint8_t>(i);
-        }
-        return result;
-    }();
-    return &ramp;
-}
-
 std::string font_features(uint32_t attrs) {
     std::string result;
     auto feature = [&result](std::string_view name, bool enabled) {
@@ -87,10 +75,6 @@ public:
     fx_font_metrics metrics() const override;
     float raster_ascent() const override { return metrics().ascent; }
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override;
-    std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override {
-        DCHECK(base::is_valid_utf32(utf32));
-        return shape(base::utf32_to_utf8(utf32));
-    }
     void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) override;
     void rasterize(uint32_t glyph,
                    vec2 position,
@@ -99,8 +83,8 @@ public:
                    color foreground,
                    uint32_t subpixel_order) override;
     bool is_color_glyph(uint32_t glyph) override;
-    bool bg_affects_rasterize() const override { return false; }
-    const fx_gamma_ramp* gamma_ramp() const override { return identity_gamma_ramp(); }
+    // Cairo hands back the coverage it composited, with no correction of its own to undo.
+    const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
 
 private:
     pango_font(fc_config_ptr config,

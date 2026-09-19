@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/check.h"
 #include "fx/fx.h"
 #include <cstdint>
 #include <map>
@@ -16,8 +17,9 @@ struct px_font_t {
           requested_size(requested_size),
           attributes(attributes),
           font(std::move(font)) {
-        glyph_caches.emplace(100u, std::make_unique<fx_glyph_cache>(this->font.get(), 1.0f));
-        glyph_caches.emplace(200u, std::make_unique<fx_glyph_cache>(this->font.get(), 2.0f));
+        CHECK(this->font);
+        glyph_caches.emplace(100u, std::make_unique<fx_glyph_cache>(*this->font, 1.0f));
+        glyph_caches.emplace(200u, std::make_unique<fx_glyph_cache>(*this->font, 2.0f));
     }
 
     fx_glyph_cache& glyph_cache(float scale);

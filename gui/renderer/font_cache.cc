@@ -52,7 +52,7 @@ size_t FontCache::add_font(std::string_view family, int font_size, uint32_t attr
         .font_size = font_size,
     };
 
-    auto glyph_cache = std::make_unique<fx_glyph_cache>(font.get(), kScaleFactor);
+    auto glyph_cache = std::make_unique<fx_glyph_cache>(*font, kScaleFactor);
 
     const size_t font_id = fonts_.size();
     fonts_.push_back({

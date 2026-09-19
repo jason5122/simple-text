@@ -18,8 +18,6 @@ using base::apple::ScopedCGContext;
 
 namespace {
 
-const fx_gamma_ramp* identity_gamma_ramp();
-
 class core_text_font final : public fx_font {
 public:
     static std::unique_ptr<core_text_font> create(std::string family, float size, uint32_t attrs);
@@ -29,9 +27,8 @@ public:
 
     uint32_t attrs() const override { return attrs_; }
     fx_font_metrics metrics() const override;
-    float raster_ascent() const override;
+    float raster_ascent() const override { return metrics().ascent; }
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override;
-    std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override;
     void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) override;
     void rasterize(uint32_t glyph,
                    vec2 position,
@@ -40,8 +37,7 @@ public:
                    color foreground,
                    uint32_t subpixel_order) override;
     bool is_color_glyph(uint32_t glyph) override;
-    bool bg_affects_rasterize() const override { return true; }
-    const fx_gamma_ramp* gamma_ramp() const override { return identity_gamma_ramp(); }
+    const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
 
 private:
     core_text_font(ScopedCFTypeRef<CTFontRef> primary, float requested_size, uint32_t attrs)
@@ -187,6 +183,7 @@ ScopedCFTypeRef<CTLineRef> make_ctline(CTFontRef ctfont,
         CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 2, &kCFTypeDictionaryKeyCallBacks,
                            &kCFTypeDictionaryValueCallBacks));
     auto text = base::utf8_to_cfstring(utf8);
+    CHECK(text);
     auto as = ScopedCFTypeRef<CFAttributedStringRef>(
         CFAttributedStringCreate(kCFAllocatorDefault, text.get(), attrs.get()));
     return ScopedCFTypeRef<CTLineRef>(CTLineCreateWithAttributedString(as.get()));
@@ -204,16 +201,14 @@ std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
     CFIndex run_count = CFArrayGetCount(runs);
 
     auto shaped = std::make_unique<fx_layout>();
-    shaped->line_height = static_cast<float>(std::ceil(CTFontGetAscent(ctfont)) +
-                                             std::ceil(CTFontGetDescent(ctfont)) +
-                                             std::ceil(CTFontGetLeading(ctfont)));
-    const bool snap_advances = (CTFontGetSymbolicTraits(ctfont) & kCTFontTraitMonoSpace) &&
-                               requested_size_ <= 16.0f && !(attrs_ & FX_FONT_NO_ROUND);
+    shaped->line_height = metrics().line_height;
+    bool snap_advances = (CTFontGetSymbolicTraits(ctfont) & kCTFontTraitMonoSpace) &&
+                         requested_size_ <= 16.0f && !(attrs_ & FX_FONT_NO_ROUND);
     std::vector<size_t> indices_map = base::utf16_to_utf8_offsets(utf8);
 
     for (CFIndex r = 0; r < run_count; r++) {
-        CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(runs, r);
-        const size_t n = base::checked_cast<size_t>(CTRunGetGlyphCount(run));
+        auto run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, r));
+        size_t n = base::checked_cast<size_t>(CTRunGetGlyphCount(run));
         if (n == 0) continue;
 
         std::vector<CGGlyph> glyphs(n);
@@ -234,25 +229,19 @@ std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
             if (value) run_font = static_cast<CTFontRef>(value);
         }
 
-        const uint32_t face = register_face(run_font);
+        uint32_t face = register_face(run_font);
         shaped->glyphs.reserve(shaped->glyphs.size() + n);
         float advance_delta = 0.0f;
 
         for (size_t i = 0; i < n; i++) {
-            // TODO: Handle kCFNotFound case in TextShaper::shape().
-            if (indices[i] == kCFNotFound) {
-                spdlog::error("TODO: Handle kCFNotFound case in TextShaper::shape()");
-                NOTREACHED();
-            }
+            CHECK(indices[i] >= 0);
 
-            const size_t utf16_index = base::checked_cast<size_t>(indices[i]);
-            const size_t utf8_index =
-                utf16_index < indices_map.size() ? indices_map[utf16_index] : 0;
-            const float original_advance = static_cast<float>(advances[i].width);
+            size_t utf16_index = static_cast<size_t>(indices[i]);
+            float original_advance = static_cast<float>(advances[i].width);
             float x_advance = original_advance;
             if (snap_advances) {
                 if (attrs_ & FX_FONT_NO_ANTIALIAS) {
-                    const float lower = std::floor(x_advance);
+                    float lower = std::floor(x_advance);
                     x_advance = x_advance - lower < 0.25f ? lower : std::ceil(x_advance);
                 } else {
                     x_advance = std::round(x_advance);
@@ -260,11 +249,11 @@ std::unique_ptr<fx_layout> core_text_font::shape(std::string_view utf8) {
                 advance_delta += x_advance - original_advance;
             }
             shaped->glyphs.push_back({
-                .id = (face << 16) | static_cast<uint32_t>(glyphs[i]),
+                .id = (face << 16) | glyphs[i],
                 .x_offset = static_cast<float>(positions[i].x) + advance_delta,
                 // Core Text positions are y-up; negate to the library's y-down convention.
                 .y_offset = static_cast<float>(-positions[i].y),
-                .cluster = base::checked_cast<uint32_t>(utf8_index),
+                .cluster = static_cast<uint32_t>(indices_map[utf16_index]),
             });
             shaped->advance += x_advance;
         }
@@ -283,7 +272,7 @@ void core_text_font::rasterize(uint32_t glyph,
     DCHECK(buffer->width > 0);
     DCHECK(buffer->height > 0);
     DCHECK(buffer->row_pixels >= buffer->width);
-    const uint32_t face = glyph >> 16;
+    uint32_t face = glyph >> 16;
     if (face >= faces_.size() || scale <= 0.0f) {
         return;
     }
@@ -291,7 +280,7 @@ void core_text_font::rasterize(uint32_t glyph,
     CTFontRef ctfont = faces_[face].get();
     CGGlyph core_text_glyph = static_cast<uint16_t>(glyph);
     constexpr size_t kBytesPerPixel = 4;
-    const size_t bytes_per_row = static_cast<size_t>(buffer->row_pixels) * kBytesPerPixel;
+    size_t bytes_per_row = static_cast<size_t>(buffer->row_pixels) * kBytesPerPixel;
 
     auto color_space = ScopedCGColorSpace(CGColorSpaceCreateDeviceRGB());
     auto context = ScopedCGContext(CGBitmapContextCreate(
@@ -302,39 +291,25 @@ void core_text_font::rasterize(uint32_t glyph,
         return;
     }
 
-    const CGFloat fill[] = {static_cast<CGFloat>(foreground.red()) / 255.0,
-                            static_cast<CGFloat>(foreground.green()) / 255.0,
-                            static_cast<CGFloat>(foreground.blue()) / 255.0,
-                            static_cast<CGFloat>(foreground.alpha()) / 255.0};
+    const CGFloat fill[] = {foreground.red() / 255.0, foreground.green() / 255.0,
+                            foreground.blue() / 255.0, foreground.alpha() / 255.0};
     CGContextSetFillColorSpace(context.get(), color_space.get());
     CGContextSetFillColor(context.get(), fill);
     CGContextSetShouldAntialias(context.get(), true);
     CGContextSetShouldSmoothFonts(context.get(), true);
     CGContextScaleCTM(context.get(), scale, scale);
 
-    const CGPoint glyph_position = {
+    CGPoint glyph_position = {
         position.x / scale,
-        (static_cast<double>(buffer->height) - position.y) / scale,
+        (buffer->height - position.y) / scale,
     };
     CTFontDrawGlyphs(ctfont, &core_text_glyph, &glyph_position, 1, context.get());
 }
 
-const fx_gamma_ramp* identity_gamma_ramp() {
-    static const fx_gamma_ramp ramp = [] {
-        fx_gamma_ramp result;
-        for (size_t i = 0; i < result.values.size(); ++i) {
-            result.values[i] = static_cast<uint8_t>(i);
-            result.inverse_values[i] = static_cast<uint8_t>(i);
-        }
-        return result;
-    }();
-    return &ramp;
-}
-
 fx_font_metrics core_text_font::metrics() const {
-    const float ascent = static_cast<float>(std::ceil(CTFontGetAscent(primary())));
-    const float descent = static_cast<float>(std::ceil(CTFontGetDescent(primary())));
-    const float leading = static_cast<float>(std::ceil(CTFontGetLeading(primary())));
+    float ascent = static_cast<float>(std::ceil(CTFontGetAscent(primary())));
+    float descent = static_cast<float>(std::ceil(CTFontGetDescent(primary())));
+    float leading = static_cast<float>(std::ceil(CTFontGetLeading(primary())));
     return {
         .ascent = ascent,
         .descent = descent,
@@ -343,17 +318,8 @@ fx_font_metrics core_text_font::metrics() const {
     };
 }
 
-float core_text_font::raster_ascent() const {
-    return static_cast<float>(std::ceil(CTFontGetAscent(primary())));
-}
-
-std::unique_ptr<fx_layout> core_text_font::shape(std::u32string_view utf32) {
-    DCHECK(base::is_valid_utf32(utf32));
-    return shape(base::utf32_to_utf8(utf32));
-}
-
 void core_text_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) {
-    const uint32_t face = glyph >> 16;
+    uint32_t face = glyph >> 16;
     if (face >= faces_.size()) {
         origin = {};
         size = {};
@@ -362,8 +328,8 @@ void core_text_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& si
 
     CTFontRef ctfont = faces_[face].get();
     CGGlyph core_text_glyph = static_cast<uint16_t>(glyph);
-    const CGRect bounds = CTFontGetBoundingRectsForGlyphs(ctfont, kCTFontOrientationHorizontal,
-                                                          &core_text_glyph, nullptr, 1);
+    CGRect bounds = CTFontGetBoundingRectsForGlyphs(ctfont, kCTFontOrientationHorizontal,
+                                                    &core_text_glyph, nullptr, 1);
     if (CGRectIsEmpty(bounds)) {
         origin = {};
         size = {};
@@ -382,7 +348,7 @@ void core_text_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& si
 }
 
 bool core_text_font::is_color_glyph(uint32_t glyph) {
-    const uint32_t face = glyph >> 16;
+    uint32_t face = glyph >> 16;
     if (face >= faces_.size()) {
         return false;
     }
@@ -392,7 +358,7 @@ bool core_text_font::is_color_glyph(uint32_t glyph) {
         return false;
     }
 
-    const CGGlyph core_text_glyph = static_cast<uint16_t>(glyph);
+    CGGlyph core_text_glyph = static_cast<uint16_t>(glyph);
     auto outline_path =
         ScopedCFTypeRef<CGPathRef>(CTFontCreatePathForGlyph(ctfont, core_text_glyph, nullptr));
     return !outline_path;

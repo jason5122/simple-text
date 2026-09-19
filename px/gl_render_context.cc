@@ -239,7 +239,6 @@ struct glyph_program {
     GLint tex_uniform = -1;
     GLint texture_size_uniform = -1;
     GLint colored_uniform = -1;
-    GLint alternate_uniform = -1;
 };
 
 class gl_text_render_state {
@@ -311,6 +310,8 @@ public:
         fx_glyph_cache& cache = font->glyph_cache(raster_scale);
         atlas_set& atlas = atlas_sets_[{font, scale_percent}];
         if (atlas.size == 0) atlas.size = atlas_size_for(*font, raster_scale);
+        // Sublime's gl_text_batch lives from begin_text_batch to end_text_batch and batch::render
+        // merges every layout drawn in between into it, so groups are shared across the batch.
         std::vector<texture_batch_group> immediate_groups;
         std::vector<texture_batch_group>& groups =
             batch_depth_ != 0 ? batch_groups_ : immediate_groups;
@@ -321,7 +322,7 @@ public:
         // Sublime selects the inverted glyph-cache polarity only for very light tints
         // (ucomiss against 0.75 at 0x1402cc583).  The comparison is `lightness > 0.75`;
         // reversing the operands makes ordinary black text render as solid glyph tiles.
-        const bool alternate = lightness > 0.75f;
+        const bool alternate = fx_glyph_cache::alternate_glyphs && lightness > 0.75f;
 
         for (const fx_glyph& glyph : layout.glyphs) {
             const double x = device_origin_x + static_cast<double>(glyph.x_offset) * scale.x;
@@ -376,8 +377,7 @@ public:
             add_to_groups(&groups,
                           {.atlas = &atlas,
                            .page = placement->page,
-                           .colored = placement->colored,
-                           .alternate = alternate},
+                           .colored = placement->colored},
                           instance);
         }
 
@@ -402,14 +402,13 @@ private:
     };
 
     // Everything that has to be identical for two glyphs to share one draw call: the atlas page to
-    // bind, plus the fragment shader's two modes. Polarity belongs here because a single text batch
-    // mixes light and dark tints, whose glyphs share an atlas page but need opposite shader
-    // handling.
+    // bind, plus the fragment shader's color mode. Sublime's group key is the same pair
+    // (0x1002b8838); polarity only selects the cache table, since alternate entries already hold
+    // coverage.
     struct batch_key {
         const atlas_set* atlas = nullptr;
         int page = -1;
         bool colored = false;
-        bool alternate = false;
 
         bool operator==(const batch_key&) const = default;
     };
@@ -447,7 +446,7 @@ private:
 
     void flush_batch() {
         render_groups(batch_groups_, batch_viewport_);
-        for (texture_batch_group& group : batch_groups_) group.instances.clear();
+        batch_groups_.clear();
     }
 
     void render_groups(const std::vector<texture_batch_group>& groups, vec2 viewport) {
@@ -520,7 +519,6 @@ private:
         glUniform1i(program_.instance_offset_uniform, static_cast<GLint>(first));
         glUniform1f(program_.texture_size_uniform, static_cast<float>(atlas->size));
         glUniform1i(program_.colored_uniform, key.colored ? 1 : 0);
-        glUniform1i(program_.alternate_uniform, key.alternate ? 1 : 0);
         if (key.colored) {
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         } else {
@@ -593,7 +591,6 @@ private:
         program_.tex_uniform = glGetUniformLocation(program_.id, "atlas");
         program_.texture_size_uniform = glGetUniformLocation(program_.id, "texture_size");
         program_.colored_uniform = glGetUniformLocation(program_.id, "colored");
-        program_.alternate_uniform = glGetUniformLocation(program_.id, "alternate");
         glGenVertexArrays(1, &vao_);
         glGenBuffers(2, instance_buffers_);
         glGenTextures(2, instance_textures_);

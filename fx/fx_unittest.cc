@@ -1,7 +1,5 @@
 #include "base/files/file_path.h"
 #include "base/path_service.h"
-#include "base/strings.h"
-#include "base/unicode.h"
 #include "build/build_config.h"
 #include "fx/fx.h"
 #include <cstddef>
@@ -9,6 +7,11 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+
+#if BUILDFLAG(IS_WIN)
+#include "base/strings.h"
+#include "base/unicode.h"
+#endif
 
 namespace {
 
@@ -105,7 +108,6 @@ TEST(FxFontFileTest, ClustersAreUtf8ByteOffsets) {
         EXPECT_EQ(layout->advance, 3 * kSize) << encoding;
     };
     check(font->shape("AéB"), "utf8");
-    check(font->shape(u"AéB"), "utf16");
     check(font->shape(U"AéB"), "utf32");
 }
 
@@ -146,7 +148,7 @@ TEST(FxFontFileTest, GlyphCacheCropsToTheInk) {
         {"É", 16, -16},  // ascender only
     };
     for (int scale : {1, 2}) {
-        fx_glyph_cache cache(font.get(), static_cast<float>(scale));
+        fx_glyph_cache cache(*font, static_cast<float>(scale));
         for (const InkCase& c : cases) {
             SCOPED_TRACE(testing::Message() << c.text << " at " << scale << "x");
             const std::unique_ptr<fx_layout> layout = font->shape(c.text);
@@ -185,7 +187,7 @@ TEST(FxFontFileTest, SubpixelPhasesShiftTheInk) {
     }
     std::unique_ptr<fx_font> font = load_ahem(FX_FONT_GRAY_ANTIALIAS);
     ASSERT_TRUE(font);
-    fx_glyph_cache cache(font.get(), 1.0f);
+    fx_glyph_cache cache(*font, 1.0f);
     const std::unique_ptr<fx_layout> layout = font->shape("A");
     ASSERT_TRUE(layout);
     ASSERT_EQ(layout->glyphs.size(), 1u);

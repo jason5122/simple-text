@@ -3,7 +3,6 @@
 #include "base/color.h"
 #include "base/geometry.h"
 #include "build/build_config.h"
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -58,7 +57,6 @@ struct fx_glyph {
     float y_offset = 0.0f;
     uint32_t cluster = 0;
 };
-static_assert(sizeof(fx_glyph) == 16);
 
 struct fx_layout {
     float advance = 0.0f;
@@ -75,16 +73,9 @@ struct fx_pixel_buffer {
     int height = 0;
     int row_pixels = 0;
 };
-static_assert(offsetof(fx_pixel_buffer, pixels) == 0x0);
-static_assert(offsetof(fx_pixel_buffer, width) == 0x8);
-static_assert(offsetof(fx_pixel_buffer, height) == 0xc);
-static_assert(offsetof(fx_pixel_buffer, row_pixels) == 0x10);
-static_assert(sizeof(fx_pixel_buffer) == 0x18);
 
 struct fx_gamma_ramp {
     std::array<uint8_t, 256> values{};
-    std::array<uint8_t, 256> inverse_values{};
-    bool complement_inverse = false;
 };
 
 class fx_font {
@@ -96,7 +87,7 @@ public:
     // Unrounded top-to-baseline distance used when the first line is aligned to device pixels.
     virtual float raster_ascent() const = 0;
     virtual std::unique_ptr<fx_layout> shape(std::string_view utf8) = 0;
-    virtual std::unique_ptr<fx_layout> shape(std::u32string_view utf32) = 0;
+    std::unique_ptr<fx_layout> shape(std::u32string_view utf32);
     // Reports the scratch-buffer size and the glyph's alphabetic baseline origin within that
     // buffer, both in device pixels with y growing downward.
     virtual void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) = 0;
@@ -110,11 +101,8 @@ public:
                            color foreground,
                            uint32_t subpixel_order) = 0;
     virtual bool is_color_glyph(uint32_t glyph) = 0;
-    virtual bool bg_affects_rasterize() const = 0;
+    // Null means the platform does not need gamma correction.
     virtual const fx_gamma_ramp* gamma_ramp() const = 0;
-
-    // core_text_font has a UTF-16 overload outside its vtable. Keep that same distinction here.
-    std::unique_ptr<fx_layout> shape(std::u16string_view utf16);
 
     // Lazily shapes M and i. The binary caches these at fx_font+8 and +12.
     fx_font_widths widths();
@@ -143,12 +131,6 @@ public:
         int16_t bearing_x = 0;
         int16_t bearing_y = 0;
     };
-    static_assert(offsetof(glyph_phase, pixels) == 0x0);
-    static_assert(offsetof(glyph_phase, width) == 0x8);
-    static_assert(offsetof(glyph_phase, height) == 0xa);
-    static_assert(offsetof(glyph_phase, bearing_x) == 0xc);
-    static_assert(offsetof(glyph_phase, bearing_y) == 0xe);
-    static_assert(sizeof(glyph_phase) == 16);
 
     struct glyph_data {
         std::array<glyph_phase, phase_count> phases{};
@@ -158,26 +140,21 @@ public:
             return phases[phase_count == 1 ? 0 : phase];
         }
     };
-#if BUILDFLAG(IS_LINUX)
-    static_assert(offsetof(glyph_data, colored) == 0x10);
-    static_assert(sizeof(glyph_data) == 0x18);
-#else
-    static_assert(offsetof(glyph_data, colored) == 0x60);
-    static_assert(sizeof(glyph_data) == 0x68);
-#endif
 
-    fx_glyph_cache(fx_font* font, float scale);
+    // Core Text's font smoothing changes based on dark/light backgrounds. Renderers must not ask
+    // for `alternate` unless this is set.
+    static constexpr bool alternate_glyphs = BUILDFLAG(IS_MAC);
+
+    // The cache rasterizes through `font` on every miss, so it must outlive the cache.
+    fx_glyph_cache(fx_font& font, float scale);
     const glyph_data& lookup_glyph_data(uint32_t glyph,
                                         uint32_t subpixel_order = 0,
                                         bool alternate = false);
 
-    fx_font* font() const { return font_; }
-    float scale() const { return scale_; }
-
 private:
     static uint64_t cache_key(uint32_t glyph, uint32_t subpixel_order);
 
-    fx_font* font_ = nullptr;
+    fx_font& font_;
     const fx_gamma_ramp* gamma_ramp_ = nullptr;
     float scale_ = 1.0f;
     std::unordered_map<uint64_t, glyph_data> normal_;

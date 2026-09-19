@@ -119,7 +119,6 @@ public:
     fx_font_metrics metrics() const override;
     float raster_ascent() const override { return raster_ascent_; }
     std::unique_ptr<fx_layout> shape(std::string_view utf8) override;
-    std::unique_ptr<fx_layout> shape(std::u32string_view utf32) override;
     void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) override;
     void rasterize(uint32_t glyph,
                    vec2 position,
@@ -128,7 +127,6 @@ public:
                    color foreground,
                    uint32_t subpixel_order) override;
     bool is_color_glyph(uint32_t glyph) override;
-    bool bg_affects_rasterize() const override { return false; }
     const fx_gamma_ramp* gamma_ramp() const override { return &gamma_; }
 
 private:
@@ -583,8 +581,6 @@ fx_gamma_ramp rendering_gamma_ramp() {
         const double input = static_cast<double>(static_cast<float>(i) / 255.0f);
         ramp.values[i] = static_cast<uint8_t>(
             std::min(255.0, std::floor(255.0 * std::pow(input, exponent) + 0.5)));
-        ramp.inverse_values[i] = static_cast<uint8_t>(
-            std::min(255.0, std::floor(255.0 * std::pow(input, 1.0 / exponent) + 0.5)));
     }
     return ramp;
 }
@@ -821,11 +817,6 @@ fx_font_metrics direct_write_font::metrics() const {
         .leading = line_height_ - ascent_ - descent_,
         .line_height = line_height_,
     };
-}
-
-std::unique_ptr<fx_layout> direct_write_font::shape(std::u32string_view utf32) {
-    DCHECK(base::is_valid_utf32(utf32));
-    return shape(base::utf32_to_utf8(utf32));
 }
 
 void direct_write_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) {

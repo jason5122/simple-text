@@ -17,6 +17,7 @@ fi
 # which would force the GL path on even for a default/software-path run.
 env_args=(
   BUFFER_CROP="${BUFFER_CROP:-0,0,1600,600}"
+  BUFFER_HEADLESS="${BUFFER_HEADLESS:-}"
   BUFFER_FILTER_B64="$buffer_filter_b64"
   BUFFER_HOLD_SECONDS="${BUFFER_HOLD_SECONDS:-0}"
   BUFFER_LIMIT="${BUFFER_LIMIT:-0}"

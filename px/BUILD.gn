@@ -6,6 +6,7 @@ source_set("px") {
     "px_font.cc",
     "px_font_internal.h",
     "px_gl.h",
+    "px_offscreen.h",
     "skia_render_context.cc",
     "skia_render_context.h",
   ]
@@ -30,6 +31,10 @@ source_set("px") {
       "mac/px_keycode.mm",
       "mac/px_mac_private.h",
       "mac/px_metal_layer.mm",
+      "mac/px_offscreen_gl.mm",
+      "mac/px_offscreen_mac.h",
+      "mac/px_offscreen_mac.mm",
+      "mac/px_offscreen_metal.mm",
       "mac/px_window.mm",
       "metal_render_context.h",
       "metal_render_context.mm",
@@ -51,6 +56,7 @@ source_set("px") {
       "win/px_app.cc",
       "win/px_gl.cc",
       "win/px_keycode.cc",
+      "win/px_offscreen_gl.cc",
       "win/px_win_private.h",
       "win/px_window.cc",
     ]
@@ -70,6 +76,7 @@ source_set("px") {
       "linux/px_gl.cc",
       "linux/px_keycode.cc",
       "linux/px_linux_private.h",
+      "linux/px_offscreen_egl.cc",
       "linux/px_window.cc",
     ]
 
@@ -77,7 +84,10 @@ source_set("px") {
 
     # GL entry points past 1.1 are ordinary linked symbols on Linux too -- see
     # px_gl.h.
-    libs = [ "GL" ]
+    libs = [
+      "EGL",  # the offscreen surface's displayless context
+      "GL",
+    ]
   }
 }
 

@@ -54,8 +54,10 @@ bool px_linux_gl_create(px_window_t* window) {
 
     gdk_gl_context_make_current(window->gl_context);
     const GLubyte* version = glGetString(GL_VERSION);
-    std::fprintf(stderr, "px: GL %s, legacy=%d\n",
+    const GLubyte* renderer = glGetString(GL_RENDERER);
+    std::fprintf(stderr, "px: GL %s, renderer %s, legacy=%d\n",
                  version ? reinterpret_cast<const char*>(version) : "?",
+                 renderer ? reinterpret_cast<const char*>(renderer) : "?",
                  gdk_gl_context_is_legacy(window->gl_context) ? 1 : 0);
     return true;
 }

@@ -42,28 +42,23 @@ uint64_t fx_glyph_cache::cache_key(uint32_t glyph, uint32_t subpixel_order) {
 
 namespace {
 
-// Sublime's attrs bit 8 turns on a glow pass with a radius of one ascent (fx_rasterise_glyph,
-// 0x100393758). fx.h does not name the bit yet.
-constexpr uint32_t kGlowAttr = 1u << 8;
-
 // Bounds of everything the rasterizer changed, as an exclusive rect that is empty when it drew
-// nothing. `pixels` is one rendered phase: `width`-pixel rows laid end to end. Only a row's first
-// and last changed pixel can move the bounds, so this walks in from both edges and leaves the
-// interior alone, which is about twice as fast as testing every pixel.
-recti find_ink(std::span<const uint32_t> pixels, int width, uint32_t background) {
-    int height = static_cast<int>(pixels.size() / static_cast<size_t>(width));
-    recti ink = {.left = width, .top = height, .right = 0, .bottom = 0};
-    for (int y = 0; y < height; ++y) {
-        const std::span<const uint32_t> row = pixels.subspan(
-            static_cast<size_t>(y) * static_cast<size_t>(width), static_cast<size_t>(width));
+// nothing. Only a row's first and last changed pixel can move the bounds, so this walks in from
+// both edges and leaves the interior alone, which is about twice as fast as testing every pixel.
+recti find_ink(const fx_pixel_buffer& buffer, uint32_t background) {
+    recti ink = {.left = buffer.width, .top = buffer.height, .right = 0, .bottom = 0};
+    for (int y = 0; y < buffer.height; ++y) {
+        const std::span<const uint32_t> row{
+            buffer.pixels + static_cast<size_t>(y) * static_cast<size_t>(buffer.row_pixels),
+            static_cast<size_t>(buffer.width)};
         int left = 0;
-        while (left < width && row[static_cast<size_t>(left)] == background) {
+        while (left < buffer.width && row[static_cast<size_t>(left)] == background) {
             ++left;
         }
-        if (left == width) {
+        if (left == buffer.width) {
             continue;
         }
-        int right = width;
+        int right = buffer.width;
         while (row[static_cast<size_t>(right - 1)] == background) {
             --right;
         }
@@ -73,6 +68,151 @@ recti find_ink(std::span<const uint32_t> pixels, int width, uint32_t background)
         ink.bottom = y + 1;
     }
     return ink;
+}
+
+// Sublime's fx_apply_font_glow (0x1002abca8), which attrs bit 8 runs over each rendered phase
+// before the ink scan. `colored` is the glyph's is_color_glyph result; the binary re-reads it at
+// the call site rather than passing the cache's copy down.
+//
+// Two things keep the work proportional to the ink rather than to the padded scratch: the kernel
+// is only `r | 1` taps wide, and the blur covers the ink grown by half the radius, which is as
+// far as those taps reach. Everything outside keeps the background the rasterizer filled in, so
+// the 2*ceil(radius) padding the caller allocated is never all used.
+void fx_apply_font_glow(fx_pixel_buffer* buffer, float radius, bool colored) {
+    // The binary truncates toward zero and skips anything under two pixels. Its unsigned convert
+    // saturates, so a negative or NaN radius takes the same early return.
+    if (!(radius >= 2.0f)) {
+        return;
+    }
+    DCHECK(buffer);
+    DCHECK(buffer->pixels);
+    DCHECK(buffer->width > 0);
+    DCHECK(buffer->height > 0);
+    DCHECK(buffer->row_pixels >= buffer->width);
+    const int r = base::saturated_cast<int>(radius);
+
+    // The rasterizer fills the whole scratch with one background word before drawing, so the
+    // first pixel is that word, and ink is every pixel that no longer matches it.
+    const uint32_t background_word = buffer->pixels[0];
+    const recti ink = find_ink(*buffer, background_word);
+    if (ink.empty()) {
+        return;
+    }
+    const int half = (r | 1) / 2;
+    const recti region = {
+        .left = std::max(ink.left - r / 2, 0),
+        .top = std::max(ink.top - r / 2, 0),
+        .right = std::min(ink.right + r / 2, buffer->width),
+        .bottom = std::min(ink.bottom + r / 2, buffer->height),
+    };
+    const size_t region_width = static_cast<size_t>(region.width());
+    const size_t region_height = static_cast<size_t>(region.height());
+
+    auto pixel_at = [buffer](int x, int y) -> uint32_t* {
+        return buffer->pixels + static_cast<size_t>(y) * static_cast<size_t>(buffer->row_pixels) +
+               static_cast<size_t>(x);
+    };
+    // Straight, not premultiplied, 0..1 per channel: the same fcolor round trip the binary makes.
+    std::vector<fcolor> source(region_width * region_height);
+    for (size_t y = 0; y < region_height; ++y) {
+        const uint32_t* row = pixel_at(region.left, region.top + static_cast<int>(y));
+        for (size_t x = 0; x < region_width; ++x) {
+            source[y * region_width + x] = fcolor::from_packed_argb(row[x]);
+        }
+    }
+    // A monochrome glyph can carry different coverage per channel from subpixel antialiasing. The
+    // binary flattens the three to their mean before blurring, which keeps the halo grey; a color
+    // glyph keeps its channels.
+    if (!colored) {
+        for (fcolor& pixel : source) {
+            const float mean = (pixel.r + pixel.g + pixel.b) / 3.0f;
+            pixel.r = mean;
+            pixel.g = mean;
+            pixel.b = mean;
+        }
+    }
+
+    // exp(-x*x/2) sampled over `taps` positions a quarter-kernel apart, so the standard deviation
+    // is taps/4 and the window spans two of them either side. Centering on taps/2 while the taps
+    // are indexed from taps/2 rounded down puts the peak half a pixel past the middle tap, and
+    // the passes below then use every weight but the last.
+    const int taps = r | 1;
+    std::vector<float> weights(static_cast<size_t>(taps));
+    float weight_sum = 0.0f;
+    for (int i = 0; i < taps; ++i) {
+        const float x = (static_cast<float>(i) - static_cast<float>(taps) / 2.0f) /
+                        (static_cast<float>(taps) / 4.0f);
+        // Widened exactly where the binary widens it.
+        const double exponent = -0.5 * static_cast<double>(x) * static_cast<double>(x);
+        weights[static_cast<size_t>(i)] = static_cast<float>(std::exp(exponent));
+        weight_sum += weights[static_cast<size_t>(i)];
+    }
+    for (float& weight : weights) {
+        weight /= weight_sum;
+    }
+
+    // Horizontal into `blurred`, vertical back into `source`. Both divide by the weight they
+    // actually used, so a window clipped by the region edge does not darken the result.
+    std::vector<fcolor> blurred(source.size());
+    for (size_t y = 0; y < region_height; ++y) {
+        for (size_t x = 0; x < region_width; ++x) {
+            const size_t first = static_cast<size_t>(std::max(static_cast<int>(x) - half, 0));
+            const size_t last =
+                std::min(x + static_cast<size_t>(half), region_width);  // exclusive
+            fcolor sum{0.0f, 0.0f, 0.0f, 0.0f};
+            float used_weight = 0.0f;
+            for (size_t sx = first; sx < last; ++sx) {
+                const float weight = weights[sx - x + static_cast<size_t>(half)];
+                const fcolor& pixel = source[y * region_width + sx];
+                sum.r += pixel.r * weight;
+                sum.g += pixel.g * weight;
+                sum.b += pixel.b * weight;
+                sum.a += pixel.a * weight;
+                used_weight += weight;
+            }
+            blurred[y * region_width + x] = {sum.r / used_weight, sum.g / used_weight,
+                                             sum.b / used_weight, sum.a / used_weight};
+        }
+    }
+    for (size_t x = 0; x < region_width; ++x) {
+        for (size_t y = 0; y < region_height; ++y) {
+            const size_t first = static_cast<size_t>(std::max(static_cast<int>(y) - half, 0));
+            const size_t last =
+                std::min(y + static_cast<size_t>(half), region_height);  // exclusive
+            fcolor sum{0.0f, 0.0f, 0.0f, 0.0f};
+            float used_weight = 0.0f;
+            for (size_t sy = first; sy < last; ++sy) {
+                const float weight = weights[sy - y + static_cast<size_t>(half)];
+                const fcolor& pixel = blurred[sy * region_width + x];
+                sum.r += pixel.r * weight;
+                sum.g += pixel.g * weight;
+                sum.b += pixel.b * weight;
+                sum.a += pixel.a * weight;
+                used_weight += weight;
+            }
+            source[y * region_width + x] = {sum.r / used_weight, sum.g / used_weight,
+                                            sum.b / used_weight, sum.a / used_weight};
+        }
+    }
+
+    // The glow is added to what the glyph already contributes over the background, not swapped in
+    // for it, which is what keeps a glowing glyph's core opaque.
+    const fcolor background = fcolor::from_packed_argb(background_word);
+    const auto combine = [](float glow, float original, float base) {
+        return std::clamp(glow + (original - base), 0.0f, 1.0f);
+    };
+    for (size_t y = 0; y < region_height; ++y) {
+        uint32_t* row = pixel_at(region.left, region.top + static_cast<int>(y));
+        for (size_t x = 0; x < region_width; ++x) {
+            const fcolor glow = source[y * region_width + x];
+            const fcolor original = fcolor::from_packed_argb(row[x]);
+            row[x] = fcolor{combine(glow.r, original.r, background.r),
+                            combine(glow.g, original.g, background.g),
+                            combine(glow.b, original.b, background.b),
+                            combine(glow.a, original.a, background.a)}
+                         .packed_argb();
+        }
+    }
 }
 
 // Turns what the rasterizer drew into the coverage the renderers expect: the gamma ramp over the
@@ -127,7 +267,7 @@ void fx_rasterize_glyph(fx_font& font,
                         uint32_t subpixel_order,
                         const fx_gamma_ramp* ramp,
                         Callback&& store) {
-    bool glow = (font.attrs() & kGlowAttr) != 0;
+    bool glow = (font.attrs() & FX_FONT_GLOW) != 0;
     float glow_radius = font.metrics().ascent * scale;
 
     vec2 origin;
@@ -141,22 +281,22 @@ void fx_rasterize_glyph(fx_font& font,
         size.x += 2.0 * pad;
         size.y += 2.0 * pad;
     }
-    // Nothing to rasterize, which is ordinary: a glyph with no outline, such as a space, or a face
-    // the backend could not resolve. The negated comparisons also reject the NaN a broken font can
-    // report.
-    if (!(size.x > 0.0) || !(size.y > 0.0)) {
-        return;
-    }
-    // Sizes come from the platform rasterizer over a font we did not write, so they can still be
-    // larger than any scratch we could allocate. The bound leaves room for the spare column.
+
+    // Nothing to rasterize (e.g., a space), which is the zero case rather than the negative one.
+    // The negated comparisons also reject the NaN a broken font can report.
+    if (!(size.x > 0.0) || !(size.y > 0.0)) return;
+    // A pathological font could request a size larger than we can allocate.
     constexpr double kLimit = static_cast<double>(std::numeric_limits<int>::max()) - 1.0;
-    if (size.x >= kLimit || size.y >= kLimit) {
-        return;
-    }
+    if (size.x >= kLimit || size.y >= kLimit) return;
+
     // The spare column holds the trailing antialiased edge once a phase shifts the glyph right.
     int width = base::clamp_ceil<int>(size.x) + 1;
     int height = base::clamp_ceil<int>(size.y);
-    std::vector<uint32_t> scratch(static_cast<size_t>(width) * static_cast<size_t>(height));
+    // Every phase refills the whole buffer with the background before drawing, so the
+    // zero-initialization a std::vector would insist on is dead work.
+    size_t pixel_count = static_cast<size_t>(width) * static_cast<size_t>(height);
+    auto storage = std::make_unique_for_overwrite<uint32_t[]>(pixel_count);
+    std::span<uint32_t> scratch{storage.get(), pixel_count};
     fx_pixel_buffer buffer{scratch.data(), width, height, width};
 
     color transparent = color::from_normalised(0.0f, 0.0f, 0.0f, 0.0f);
@@ -164,11 +304,7 @@ void fx_rasterize_glyph(fx_font& font,
     color white = color::from_normalised(1.0f, 1.0f, 1.0f, 1.0f);
     color foreground = alternate && !colored ? black : white;
 #if BUILDFLAG(IS_WIN)
-    // DirectWrite's read-back leaves untouched pixels as zero words. Comparing against a
-    // transparent background is what crops a Windows tile to its ink, and tile size drives atlas
-    // packing, which drives which draw a glyph joins. Sublime fills opaque black here and so does
-    // not crop, but matching that costs a level on stacked glyphs (Windows buffer 957/960 instead
-    // of 960/960), so keep the cropped tiles.
+    // DirectWrite's background pixels always have a value of 0.
     color background = transparent;
 #else
     color background = colored ? transparent : (alternate ? white : black);
@@ -179,7 +315,7 @@ void fx_rasterize_glyph(fx_font& font,
                           base::saturated_cast<int>(origin.y)};
 
     for (size_t phase = 0; phase < fx_glyph_cache::phase_count; ++phase) {
-        std::fill(scratch.begin(), scratch.end(), background_word);
+        std::ranges::fill(scratch, background_word);
         // Sublime steps the phase in float and widens afterwards (0x1003938f8).
         float subpixel_x = static_cast<float>(phase) * (1.0f / 6.0f) * scale;
         font.rasterize(glyph, {.x = origin.x + static_cast<double>(subpixel_x), .y = origin.y},
@@ -188,7 +324,7 @@ void fx_rasterize_glyph(fx_font& font,
             fx_apply_font_glow(&buffer, glow_radius, colored);
         }
 
-        recti ink = find_ink(scratch, width, background_word);
+        recti ink = find_ink(buffer, background_word);
         if (!colored) {
             apply_coverage(scratch, ramp, alternate);
         }
@@ -211,9 +347,8 @@ const fx_glyph_cache::glyph_data& fx_glyph_cache::lookup_glyph_data(uint32_t gly
     data.colored = font_.is_color_glyph(glyph);
     auto store = [this, &data](size_t phase, const fx_pixel_buffer& buffer, recti ink,
                                vec2i origin) {
-        if (ink.empty()) {
-            return;
-        }
+        if (ink.empty()) return;
+
         int width = ink.width();
         int height = ink.height();
         // Widen before subtracting: a saturated origin can sit at INT_MIN.
@@ -225,13 +360,17 @@ const fx_glyph_cache::glyph_data& fx_glyph_cache::lookup_glyph_data(uint32_t gly
             return;
         }
         size_t row = static_cast<size_t>(width);
-        auto pixels = std::make_unique<uint32_t[]>(row * static_cast<size_t>(height));
-        for (int y = 0; y < height; ++y) {
-            const uint32_t* source =
-                buffer.pixels +
-                static_cast<size_t>(ink.top + y) * static_cast<size_t>(buffer.row_pixels) +
+        size_t count = row * static_cast<size_t>(height);
+        auto pixels = std::make_unique_for_overwrite<uint32_t[]>(count);
+        // Every element is written below, which is what makes the uninitialized allocation safe.
+        std::span<const uint32_t> scratch{buffer.pixels, static_cast<size_t>(buffer.row_pixels) *
+                                                             static_cast<size_t>(buffer.height)};
+        std::span<uint32_t> tile{pixels.get(), count};
+        for (size_t y = 0; y < static_cast<size_t>(height); ++y) {
+            size_t source =
+                (static_cast<size_t>(ink.top) + y) * static_cast<size_t>(buffer.row_pixels) +
                 static_cast<size_t>(ink.left);
-            std::copy_n(source, row, pixels.get() + static_cast<size_t>(y) * row);
+            std::ranges::copy(scratch.subspan(source, row), tile.subspan(y * row, row).begin());
         }
         data.phases[phase] = {
             .pixels = pixels.get(),
@@ -245,100 +384,4 @@ const fx_glyph_cache::glyph_data& fx_glyph_cache::lookup_glyph_data(uint32_t gly
     fx_rasterize_glyph(font_, glyph, alternate, data.colored, scale_, subpixel_order, gamma_ramp_,
                        store);
     return cache.emplace(key, data).first->second;
-}
-
-void fx_apply_font_glow(fx_pixel_buffer* buffer, float radius, bool preserve_source) {
-    int r = static_cast<int>(std::floor(radius));
-    if (r < 2) {
-        return;
-    }
-    DCHECK(buffer);
-    DCHECK(buffer->pixels);
-    DCHECK(buffer->width > 0);
-    DCHECK(buffer->height > 0);
-    DCHECK(buffer->row_pixels >= buffer->width);
-
-    size_t width = static_cast<size_t>(buffer->width);
-    size_t height = static_cast<size_t>(buffer->height);
-    std::vector<uint32_t> source(width * height);
-    for (size_t y = 0; y < height; ++y) {
-        std::memcpy(source.data() + y * width,
-                    buffer->pixels + y * static_cast<size_t>(buffer->row_pixels),
-                    width * sizeof(uint32_t));
-    }
-    const auto* source_bytes = reinterpret_cast<const uint8_t*>(source.data());
-    std::vector<float> weights(static_cast<size_t>(r * 2 + 1));
-    float sigma = std::max(0.5f, radius * 0.5f);
-    float weight_sum = 0.0f;
-    for (int i = -r; i <= r; ++i) {
-        float x = static_cast<float>(i);
-        float weight = std::exp(-(x * x) / (2.0f * sigma * sigma));
-        weights[static_cast<size_t>(i + r)] = weight;
-        weight_sum += weight;
-    }
-    for (float& weight : weights) {
-        weight /= weight_sum;
-    }
-
-    // The binary builds a one-dimensional float kernel, performs horizontal and vertical passes,
-    // and renormalizes at clipped edges. Do the same over all premultiplied channels.
-    std::vector<float> horizontal(source.size() * 4, 0.0f);
-    std::vector<uint32_t> blurred(source.size());
-    auto* blurred_bytes = reinterpret_cast<uint8_t*>(blurred.data());
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x) {
-            float used_weight = 0.0f;
-            float channels[4] = {};
-            for (int offset = -r; offset <= r; ++offset) {
-                int sx = static_cast<int>(x) + offset;
-                if (sx < 0 || sx >= static_cast<int>(width)) {
-                    continue;
-                }
-                float weight = weights[static_cast<size_t>(offset + r)];
-                size_t source_offset = (y * width + static_cast<size_t>(sx)) * 4;
-                for (size_t channel = 0; channel < 4; ++channel) {
-                    channels[channel] += source_bytes[source_offset + channel] * weight;
-                }
-                used_weight += weight;
-            }
-            size_t destination = (y * width + x) * 4;
-            for (size_t channel = 0; channel < 4; ++channel) {
-                horizontal[destination + channel] = channels[channel] / used_weight;
-            }
-        }
-    }
-
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x) {
-            float used_weight = 0.0f;
-            float channels[4] = {};
-            for (int offset = -r; offset <= r; ++offset) {
-                int sy = static_cast<int>(y) + offset;
-                if (sy < 0 || sy >= static_cast<int>(height)) {
-                    continue;
-                }
-                float weight = weights[static_cast<size_t>(offset + r)];
-                size_t source_offset = (static_cast<size_t>(sy) * width + x) * 4;
-                for (size_t channel = 0; channel < 4; ++channel) {
-                    channels[channel] += horizontal[source_offset + channel] * weight;
-                }
-                used_weight += weight;
-            }
-            size_t destination = (y * width + x) * 4;
-            for (size_t channel = 0; channel < 4; ++channel) {
-                blurred_bytes[destination + channel] = static_cast<uint8_t>(
-                    std::clamp(std::round(channels[channel] / used_weight), 0.0f, 255.0f));
-            }
-        }
-    }
-
-    if (preserve_source) {
-        for (size_t i = 0; i < blurred.size() * 4; ++i) {
-            blurred_bytes[i] = std::max(blurred_bytes[i], source_bytes[i]);
-        }
-    }
-    for (size_t y = 0; y < height; ++y) {
-        std::memcpy(buffer->pixels + y * static_cast<size_t>(buffer->row_pixels),
-                    blurred.data() + y * width, width * sizeof(uint32_t));
-    }
 }

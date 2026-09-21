@@ -2,6 +2,7 @@
 #include "conformance/capture.h"
 #include "px/gl_render_context.h"
 #include "px/px.h"
+#include "px/px_offscreen.h"
 #if BUILDFLAG(IS_MAC)
 #include "px/metal_render_context.h"
 #endif
@@ -9,6 +10,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <clocale>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -28,6 +31,8 @@ namespace {
 
 constexpr double kWindowWidth = 300.0;
 constexpr double kWindowHeight = 290.0;
+// The captures are device pixels from a 2x backing scale, as in the buffer harness.
+constexpr double kScale = 2.0;
 // Align the borderless test window with Sublime's sidebar after the standard y=80 Retina crop.
 #if BUILDFLAG(IS_MAC)
 constexpr double kSidebarContentTop = 28.0;
@@ -247,12 +252,92 @@ private:
     std::vector<retained_text> label_layouts_;
 };
 
+// See the notes on buffer.cc's copies: Windows needs px_init for the hidden window that carries its
+// GL context, and Linux needs only the locale that gtk_init would otherwise have set.
+bool platform_init_before_headless() {
+#if BUILDFLAG(IS_WIN)
+    return true;
+#else
+    return false;
+#endif
+}
+
+void prepare_headless_locale() {
+#if BUILDFLAG(IS_LINUX)
+    std::setlocale(LC_ALL, "");
+#endif
+}
+
+// Renders every case into an offscreen surface and writes the crop straight out, with no window
+// and no settle loop. See run_headless in buffer.cc: same shape, same guarantees.
+int run_headless(const std::vector<TestCase>& test_cases,
+                 capture::Crop crop,
+                 const std::string& out_dir) {
+    px_offscreen_t* surface = px_create_offscreen(kWindowWidth, kWindowHeight, kScale);
+    if (!surface) {
+        std::fprintf(stderr, "no offscreen surface on this platform\n");
+        return 1;
+    }
+    const int width = px_offscreen_width(surface);
+    const int height = px_offscreen_height(surface);
+    if (crop.w <= 0 || crop.h <= 0) {
+        crop = {.x = 0, .y = 0, .w = width, .h = height};
+    }
+    if (crop.x < 0 || crop.y < 0 || crop.x + crop.w > width || crop.y + crop.h > height) {
+        std::fprintf(stderr, "crop %d,%d,%d,%d does not fit the %dx%d surface\n", crop.x, crop.y,
+                     crop.w, crop.h, width, height);
+        px_destroy_offscreen(surface);
+        return 2;
+    }
+
+    SidebarPage page;
+    int failures = 0;
+    for (size_t i = 0; i < test_cases.size(); ++i) {
+        const TestCase& test_case = test_cases[i];
+        gl_render_context::reset_glyph_atlas_for_testing();
+#if BUILDFLAG(IS_MAC)
+        metal_render_context::reset_glyph_atlas_for_testing();
+#endif
+        if (!page.set_content(test_case.labels, test_case.face, test_case.size)) {
+            std::fprintf(stderr, "could not create font %s\n", test_case.face.c_str());
+            ++failures;
+            continue;
+        }
+        const std::string out_path = out_dir + "/" + test_case.stem + "-" + test_case.face + "-" +
+                                     test_case.size_label + ".png";
+        bool ok = px_offscreen_paint(surface, &page);
+        if (ok) {
+            const uint32_t* pixels = px_offscreen_pixels(surface) +
+                                     static_cast<size_t>(crop.y) * static_cast<size_t>(width) +
+                                     static_cast<size_t>(crop.x);
+            ok = capture::pixels_to_png(pixels, crop.w, crop.h, width, out_path.c_str());
+        }
+        std::fprintf(stderr, "[%zu/%zu] %s%s\n", i + 1, test_cases.size(), out_path.c_str(),
+                     ok ? "" : "  (FAILED)");
+        failures += ok ? 0 : 1;
+    }
+    px_destroy_offscreen(surface);
+    return failures == 0 ? 0 : 1;
+}
+
 int run_tests(int argc, char* argv[]) {
     capture::Crop crop{.x = 0, .y = 80, .w = 600, .h = 500};
-    if ((argc != 3 && argc != 5) || (argc == 5 && (std::string_view(argv[3]) != "--crop" ||
-                                                   std::sscanf(argv[4], "%d,%d,%d,%d", &crop.x,
-                                                               &crop.y, &crop.w, &crop.h) != 4))) {
-        std::fprintf(stderr, "usage: ui_conformance <tests_dir> <out_dir> [--crop x,y,w,h]\n");
+    bool headless = false;
+    bool usage_error = argc < 3;
+    for (int i = 3; i < argc && !usage_error; ++i) {
+        const std::string_view flag = argv[i];
+        if (flag == "--headless") {
+            headless = true;
+        } else if (flag == "--crop" && i + 1 < argc) {
+            usage_error = std::sscanf(argv[++i], "%d,%d,%d,%d", &crop.x, &crop.y, &crop.w,
+                                      &crop.h) != 4;
+        } else {
+            usage_error = true;
+        }
+    }
+    if (usage_error) {
+        std::fprintf(stderr,
+                     "usage: ui_conformance <tests_dir> <out_dir> [--crop x,y,w,h] [--headless]\n");
         return 2;
     }
 
@@ -266,7 +351,14 @@ int run_tests(int argc, char* argv[]) {
     std::error_code error;
     std::filesystem::create_directories(out_dir, error);
 
-    px_init("ui-conformance", "com.example.ui-conformance", argc, argv, 0);
+    if (!headless || platform_init_before_headless()) {
+        px_init("ui-conformance", "com.example.ui-conformance", argc, argv, 0);
+    }
+    if (headless) {
+        prepare_headless_locale();
+        return run_headless(test_cases, crop, out_dir);
+    }
+
     SidebarPage page;
     px_window_t* window = px_create_window(&page, nullptr, kWindowWidth, kWindowHeight,
                                            "UI conformance", kSidebarBackground, 0);

@@ -22,6 +22,11 @@ Frame capture_frame(WindowId window_id, Crop crop);  // null on failure
 void release_frame(Frame frame);
 bool frame_to_png(Frame frame, const char* out_path);
 
+// Writes device pixels straight to a PNG, for the headless path that renders into a texture
+// instead of a window. `pixels` is premultiplied BGRA with `stride` pixels per row and the first
+// row at the top; alpha is dropped, matching the diff scripts' -alpha off.
+bool pixels_to_png(const uint32_t* pixels, int width, int height, int stride, const char* out_path);
+
 // Runs the main run loop for `seconds`, letting a window (re)composite between captures.
 void pump(double seconds);
 

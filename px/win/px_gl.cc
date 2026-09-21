@@ -33,6 +33,15 @@ PFN_glTexBuffer px_glTexBuffer = nullptr;
 PFN_glDrawArraysInstanced px_glDrawArraysInstanced = nullptr;
 PFN_glEnableVertexAttribArray px_glEnableVertexAttribArray = nullptr;
 PFN_glVertexAttribPointer px_glVertexAttribPointer = nullptr;
+PFN_glGenFramebuffers px_glGenFramebuffers = nullptr;
+PFN_glDeleteFramebuffers px_glDeleteFramebuffers = nullptr;
+PFN_glBindFramebuffer px_glBindFramebuffer = nullptr;
+PFN_glFramebufferRenderbuffer px_glFramebufferRenderbuffer = nullptr;
+PFN_glCheckFramebufferStatus px_glCheckFramebufferStatus = nullptr;
+PFN_glGenRenderbuffers px_glGenRenderbuffers = nullptr;
+PFN_glDeleteRenderbuffers px_glDeleteRenderbuffers = nullptr;
+PFN_glBindRenderbuffer px_glBindRenderbuffer = nullptr;
+PFN_glRenderbufferStorage px_glRenderbufferStorage = nullptr;
 
 namespace {
 
@@ -113,7 +122,16 @@ bool load_modern_gl() {
            load(&px_glBufferSubData, "glBufferSubData") && load(&px_glTexBuffer, "glTexBuffer") &&
            load(&px_glDrawArraysInstanced, "glDrawArraysInstanced") &&
            load(&px_glEnableVertexAttribArray, "glEnableVertexAttribArray") &&
-           load(&px_glVertexAttribPointer, "glVertexAttribPointer");
+           load(&px_glVertexAttribPointer, "glVertexAttribPointer") &&
+           load(&px_glGenFramebuffers, "glGenFramebuffers") &&
+           load(&px_glDeleteFramebuffers, "glDeleteFramebuffers") &&
+           load(&px_glBindFramebuffer, "glBindFramebuffer") &&
+           load(&px_glFramebufferRenderbuffer, "glFramebufferRenderbuffer") &&
+           load(&px_glCheckFramebufferStatus, "glCheckFramebufferStatus") &&
+           load(&px_glGenRenderbuffers, "glGenRenderbuffers") &&
+           load(&px_glDeleteRenderbuffers, "glDeleteRenderbuffers") &&
+           load(&px_glBindRenderbuffer, "glBindRenderbuffer") &&
+           load(&px_glRenderbufferStorage, "glRenderbufferStorage");
 }
 
 bool driver_supports_gl_33(const GLubyte* version) {

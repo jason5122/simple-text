@@ -53,6 +53,16 @@ using GLintptr = signed long long;
 #define GL_TEXTURE_BUFFER 0x8C2A
 #define GL_RGBA32F 0x8814
 
+// Framebuffer objects. The windowed backend has no use for these -- it gets a ready-made default
+// framebuffer from the HDC -- but the offscreen surface renders into one.
+#define GL_FRAMEBUFFER 0x8D40
+#define GL_RENDERBUFFER 0x8D41
+#define GL_COLOR_ATTACHMENT0 0x8CE0
+#define GL_STENCIL_ATTACHMENT 0x8D20
+#define GL_FRAMEBUFFER_COMPLETE 0x8CD5
+#define GL_RGBA8 0x8058
+#define GL_STENCIL_INDEX8 0x8D48
+
 // Resolved by the platform layer once the GL context is current. Named px_gl* and then macro'd
 // onto the standard spellings, so drawing code reads the same on both platforms.
 using PFN_glCreateShader = GLuint(APIENTRY*)(GLenum);
@@ -86,6 +96,15 @@ using PFN_glDrawArraysInstanced = void(APIENTRY*)(GLenum, GLint, GLsizei, GLsize
 using PFN_glEnableVertexAttribArray = void(APIENTRY*)(GLuint);
 using PFN_glVertexAttribPointer =
     void(APIENTRY*)(GLuint, GLint, GLenum, GLboolean, GLsizei, const void*);
+using PFN_glGenFramebuffers = void(APIENTRY*)(GLsizei, GLuint*);
+using PFN_glDeleteFramebuffers = void(APIENTRY*)(GLsizei, const GLuint*);
+using PFN_glBindFramebuffer = void(APIENTRY*)(GLenum, GLuint);
+using PFN_glFramebufferRenderbuffer = void(APIENTRY*)(GLenum, GLenum, GLenum, GLuint);
+using PFN_glCheckFramebufferStatus = GLenum(APIENTRY*)(GLenum);
+using PFN_glGenRenderbuffers = void(APIENTRY*)(GLsizei, GLuint*);
+using PFN_glDeleteRenderbuffers = void(APIENTRY*)(GLsizei, const GLuint*);
+using PFN_glBindRenderbuffer = void(APIENTRY*)(GLenum, GLuint);
+using PFN_glRenderbufferStorage = void(APIENTRY*)(GLenum, GLenum, GLsizei, GLsizei);
 
 extern PFN_glCreateShader px_glCreateShader;
 extern PFN_glShaderSource px_glShaderSource;
@@ -117,6 +136,15 @@ extern PFN_glTexBuffer px_glTexBuffer;
 extern PFN_glDrawArraysInstanced px_glDrawArraysInstanced;
 extern PFN_glEnableVertexAttribArray px_glEnableVertexAttribArray;
 extern PFN_glVertexAttribPointer px_glVertexAttribPointer;
+extern PFN_glGenFramebuffers px_glGenFramebuffers;
+extern PFN_glDeleteFramebuffers px_glDeleteFramebuffers;
+extern PFN_glBindFramebuffer px_glBindFramebuffer;
+extern PFN_glFramebufferRenderbuffer px_glFramebufferRenderbuffer;
+extern PFN_glCheckFramebufferStatus px_glCheckFramebufferStatus;
+extern PFN_glGenRenderbuffers px_glGenRenderbuffers;
+extern PFN_glDeleteRenderbuffers px_glDeleteRenderbuffers;
+extern PFN_glBindRenderbuffer px_glBindRenderbuffer;
+extern PFN_glRenderbufferStorage px_glRenderbufferStorage;
 
 bool px_gl_has_shaders();
 
@@ -150,6 +178,15 @@ bool px_gl_has_shaders();
 #define glDrawArraysInstanced px_glDrawArraysInstanced
 #define glEnableVertexAttribArray px_glEnableVertexAttribArray
 #define glVertexAttribPointer px_glVertexAttribPointer
+#define glGenFramebuffers px_glGenFramebuffers
+#define glDeleteFramebuffers px_glDeleteFramebuffers
+#define glBindFramebuffer px_glBindFramebuffer
+#define glFramebufferRenderbuffer px_glFramebufferRenderbuffer
+#define glCheckFramebufferStatus px_glCheckFramebufferStatus
+#define glGenRenderbuffers px_glGenRenderbuffers
+#define glDeleteRenderbuffers px_glDeleteRenderbuffers
+#define glBindRenderbuffer px_glBindRenderbuffer
+#define glRenderbufferStorage px_glRenderbufferStorage
 
 #elif BUILDFLAG(IS_LINUX)
 
@@ -207,6 +244,7 @@ using GLintptr = int64_t;
 #define GL_ONE_MINUS_SRC1_COLOR 0x88FA
 #define GL_FLOAT 0x1406
 #define GL_UNSIGNED_BYTE 0x1401
+#define GL_RENDERER 0x1F01
 #define GL_VERSION 0x1F02
 #define GL_PACK_ALIGNMENT 0x0D05
 #define GL_UNPACK_ALIGNMENT 0x0CF5

@@ -20,8 +20,8 @@ constexpr MTLPixelFormat kColorFormat = MTLPixelFormatBGRA8Unorm;
 constexpr MTLPixelFormat kStencilFormat = MTLPixelFormatStencil8;
 
 // Per-frame instance data is bump-allocated out of shared buffers this large, pooled across frames
-// and returned by the command buffer's completion handler. ST gets the same effect from its pair of
-// alternating dynamic GL buffers.
+// and returned by the command buffer's completion handler. ST gets the same effect from its pair
+// of alternating dynamic GL buffers.
 constexpr size_t kUploadChunkBytes = 256 * 1024;
 constexpr size_t kUploadPoolLimit = 32;
 constexpr size_t kUploadAlignment = 256;
@@ -146,8 +146,8 @@ id<MTLRenderPipelineState> make_pipeline(id<MTLDevice> device,
     id<MTLRenderPipelineState> state = [device newRenderPipelineStateWithDescriptor:descriptor
                                                                               error:&error];
     if (!state) {
-        std::fprintf(stderr, "px: metal_render_context pipeline %s failed: %s\n",
-                     label.UTF8String, error.localizedDescription.UTF8String);
+        std::fprintf(stderr, "px: metal_render_context pipeline %s failed: %s\n", label.UTF8String,
+                     error.localizedDescription.UTF8String);
     }
     return state;
 }
@@ -173,9 +173,9 @@ id<MTLDepthStencilState> make_stencil_state(id<MTLDevice> device,
 }
 
 // Persistent Metal objects: the device and queue, one pipeline per (primitive, blend, stencil)
-// combination, the stencil states, and the upload-buffer pool. Process-lifetime for the same reason
-// as ST's g_gl_render_state: every window shares them, and tearing them down after the windows
-// would be pointless.
+// combination, the stencil states, and the upload-buffer pool. Process-lifetime for the same
+// reason as ST's g_gl_render_state: every window shares them, and tearing them down after the
+// windows would be pointless.
 class metal_device_state {
 public:
     id<MTLDevice> device() {
@@ -593,7 +593,12 @@ public:
             static_cast<uint32_t>(static_cast<double>(raster_scale) * 100.0);
         fx_glyph_cache& cache = font->glyph_cache(raster_scale);
         atlas_set& atlas = atlas_sets_[{font, scale_percent}];
-        if (atlas.size == 0) atlas.size = atlas_size_for(*font);
+        if (atlas.size == 0) {
+            const float line_height = font->font->metrics().line_height;
+            const unsigned target =
+                std::max(1u, static_cast<unsigned>(std::ceil(line_height * raster_scale * 8.0f)));
+            atlas.size = static_cast<int>(std::bit_ceil(target));
+        }
         std::vector<texture_batch_group> immediate_groups;
         std::vector<texture_batch_group>& groups =
             batch_depth_ != 0 ? batch_groups_ : immediate_groups;
@@ -653,11 +658,9 @@ public:
                 .effect_start = 0.0f,
                 .effect_end = 0.0f,
             };
-            add_to_groups(&groups,
-                          {.atlas = &atlas,
-                           .page = placement->page,
-                           .colored = placement->colored},
-                          instance);
+            add_to_groups(
+                &groups, {.atlas = &atlas, .page = placement->page, .colored = placement->colored},
+                instance);
         }
 
         if (batch_depth_ == 0) {
@@ -697,9 +700,9 @@ private:
     static void add_to_groups(std::vector<texture_batch_group>* groups,
                               const batch_key& key,
                               glyph_instance_data instance) {
-        auto found = std::find_if(
-            groups->begin(), groups->end(),
-            [&key](const texture_batch_group& group) { return group.key == key; });
+        auto found =
+            std::find_if(groups->begin(), groups->end(),
+                         [&key](const texture_batch_group& group) { return group.key == key; });
         if (found == groups->end()) {
             groups->push_back({.key = key});
             found = std::prev(groups->end());
@@ -771,17 +774,6 @@ private:
                       instanceCount:count];
             first += count;
         }
-    }
-
-    // Sublime's create_text_batch sizes the main atlas from the font's logical ascent plus
-    // descent, truncated, times sixteen, rounded up to a power of two (0x1002be234). The device
-    // scale plays no part. Page size decides when a glyph lands on a new texture, and texture
-    // decides draw order for overlapping glyphs, so this has to match exactly.
-    static int atlas_size_for(const px_font_t& font) {
-        const fx_font_metrics metrics = font.font->metrics();
-        const int base = static_cast<int>(metrics.ascent + metrics.descent);
-        const unsigned target = static_cast<unsigned>(std::max(1, base * 16));
-        return static_cast<int>(std::bit_ceil(target));
     }
 
     void ensure_phase_pages(atlas_set* atlas,

@@ -18,6 +18,7 @@ enum : uint32_t {
     FX_FONT_GRAY_ANTIALIAS = 1u << 3,
     FX_FONT_SUBPIXEL_ANTIALIAS = 1u << 4,
     FX_FONT_NO_ROUND = 1u << 7,
+    FX_FONT_GLOW = 1u << 8,
     FX_FONT_NO_LIGA = 1u << 11,
     FX_FONT_NO_CLIG = 1u << 12,
     FX_FONT_NO_CALT = 1u << 13,
@@ -161,9 +162,6 @@ private:
     std::unordered_map<uint64_t, glyph_data> alternate_;
     std::vector<std::unique_ptr<uint32_t[]>> pixel_allocations_;
 };
-
-// Applies the shared bitmap glow operation used before a glyph is handed to either renderer.
-void fx_apply_font_glow(fx_pixel_buffer* buffer, float radius, bool preserve_source);
 
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs);
 

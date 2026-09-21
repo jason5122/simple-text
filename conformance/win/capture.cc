@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cwchar>
 #include <limits>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <wincodec.h>
@@ -235,6 +236,25 @@ bool frame_to_png(Frame frame, const char* out_path) {
     const std::wstring wide_path = to_utf16(out_path);
     return windows_frame && !wide_path.empty() &&
            png_writer().write(windows_frame, wide_path.c_str());
+}
+
+bool pixels_to_png(const uint32_t* pixels, int width, int height, int stride,
+                   const char* out_path) {
+    if (!pixels || width <= 0 || height <= 0 || stride < width) return false;
+    const std::wstring wide_path = to_utf16(out_path);
+    if (wide_path.empty()) return false;
+
+    // The encoder wants tightly packed rows, so a crop is copied rather than pointed at.
+    WindowsFrame frame;
+    frame.width = static_cast<UINT>(width);
+    frame.height = static_cast<UINT>(height);
+    frame.pixels.resize(static_cast<size_t>(width) * static_cast<size_t>(height) * 4);
+    for (int y = 0; y < height; ++y) {
+        std::memcpy(frame.pixels.data() + static_cast<size_t>(y) * static_cast<size_t>(width) * 4,
+                    pixels + static_cast<size_t>(y) * static_cast<size_t>(stride),
+                    static_cast<size_t>(width) * 4);
+    }
+    return png_writer().write(&frame, wide_path.c_str());
 }
 
 void pump(double seconds) {

@@ -13,6 +13,11 @@ if [[ -n "${BUFFER_FILTER_B64:-}" ]]; then
 fi
 hold_seconds="${BUFFER_HOLD_SECONDS:-0}"
 
+# BUFFER_HEADLESS renders through the surfaceless EGL surface instead of a window. It still has to
+# re-enter the desktop session below -- fontconfig resolves different fallback fonts for root -- but
+# it needs none of the display plumbing.
+headless="${BUFFER_HEADLESS:-}"
+
 # prlctl exec enters as root, but fontconfig selection must use the same user configuration and
 # caches as Sublime Text. Re-enter the active desktop session; GTK also needs its display bus.
 if [[ "$(id -u)" -eq 0 ]]; then
@@ -39,11 +44,7 @@ if [[ "$(id -u)" -eq 0 ]]; then
   env_args=(
     HOME="$(getent passwd "$desktop_user" | cut -d: -f6)"
     LANG="$desktop_lang"
-    DISPLAY="${DISPLAY:-:0}"
-    WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
-    XDG_RUNTIME_DIR="$runtime_dir"
-    DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus"
-    XAUTHORITY="$xauthority"
+    BUFFER_HEADLESS="$headless"
     LINUX_CAPTURE_TESTS="$tests"
     LINUX_OUR_OUTPUT="$out"
     BUFFER_CROP="$crop"
@@ -51,6 +52,19 @@ if [[ "$(id -u)" -eq 0 ]]; then
     BUFFER_HOLD_SECONDS="$hold_seconds"
     BUFFER_LIMIT="$limit"
   )
+  # A windowed run needs the session's display, bus and X authority. A headless one needs none of
+  # them: its EGL context is surfaceless and it never opens a window. It does still need LANG above,
+  # because the binary's setlocale call is what makes complex-script fallback resolve the way every
+  # reference capture did.
+  if [[ -z "$headless" ]]; then
+    env_args+=(
+      DISPLAY="${DISPLAY:-:0}"
+      WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
+      XDG_RUNTIME_DIR="$runtime_dir"
+      DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus"
+      XAUTHORITY="$xauthority"
+    )
+  fi
   if [[ -n "${PX_USE_GL:-}" ]]; then
     env_args+=(PX_USE_GL="$PX_USE_GL")
   fi
@@ -64,5 +78,9 @@ fi
 
 rm -rf "$out"
 mkdir -p "$out"
+headless_args=()
+if [[ -n "$headless" ]]; then
+  headless_args+=(--headless)
+fi
 BUFFER_FILTER="$filter" BUFFER_HOLD_SECONDS="$hold_seconds" BUFFER_LIMIT="$limit" \
-  "$build_dir/buffer_conformance" "$tests" "$out" --crop "$crop"
+  "$build_dir/buffer_conformance" "$tests" "$out" --crop "$crop" "${headless_args[@]}"

@@ -131,6 +131,31 @@ bool frame_to_png(Frame frame, const char* out_path) {
     return linux_frame && linux_capture::write_png(*linux_frame, out_path);
 }
 
+bool pixels_to_png(const uint32_t* pixels, int width, int height, int stride,
+                   const char* out_path) {
+    if (!pixels || width <= 0 || height <= 0 || stride < width) return false;
+
+    // px hands over premultiplied BGRA; linux_capture::Frame is packed RGBA, so the crop is copied
+    // with the red and blue bytes exchanged.
+    linux_capture::Frame frame;
+    frame.width = width;
+    frame.height = height;
+    frame.rgba.resize(static_cast<size_t>(width) * static_cast<size_t>(height) * 4);
+    for (int y = 0; y < height; ++y) {
+        const uint32_t* source = pixels + static_cast<size_t>(y) * static_cast<size_t>(stride);
+        std::uint8_t* destination =
+            frame.rgba.data() + static_cast<size_t>(y) * static_cast<size_t>(width) * 4;
+        for (int x = 0; x < width; ++x) {
+            const uint32_t pixel = source[x];
+            destination[x * 4 + 0] = static_cast<std::uint8_t>((pixel >> 16) & 0xFF);
+            destination[x * 4 + 1] = static_cast<std::uint8_t>((pixel >> 8) & 0xFF);
+            destination[x * 4 + 2] = static_cast<std::uint8_t>(pixel & 0xFF);
+            destination[x * 4 + 3] = static_cast<std::uint8_t>((pixel >> 24) & 0xFF);
+        }
+    }
+    return linux_capture::write_png(frame, out_path);
+}
+
 void pump(double seconds) {
     for (px_window_t* window : px_linux_all_windows()) {
         px_linux_flush_dirty_rects(window);

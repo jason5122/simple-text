@@ -56,6 +56,20 @@ bool frames_equal(void* a, void* b) {
     return equal;
 }
 
+bool write_png(CGImageRef image, const char* out_path) {
+    CFStringRef path = CFStringCreateWithCString(nullptr, out_path, kCFStringEncodingUTF8);
+    CFURLRef url = CFURLCreateWithFileSystemPath(nullptr, path, kCFURLPOSIXPathStyle, false);
+    CFRelease(path);
+    CGImageDestinationRef destination =
+        CGImageDestinationCreateWithURL(url, CFSTR("public.png"), 1, nullptr);
+    CFRelease(url);
+    if (!destination) return false;
+    CGImageDestinationAddImage(destination, image, nullptr);
+    const bool ok = CGImageDestinationFinalize(destination);
+    CFRelease(destination);
+    return ok;
+}
+
 }  // namespace
 
 namespace capture {
@@ -75,16 +89,35 @@ void release_frame(Frame frame) {
 
 bool frame_to_png(Frame frame, const char* out_path) {
     if (!frame) return false;
-    CFStringRef path = CFStringCreateWithCString(nullptr, out_path, kCFStringEncodingUTF8);
-    CFURLRef url = CFURLCreateWithFileSystemPath(nullptr, path, kCFURLPOSIXPathStyle, false);
-    CFRelease(path);
-    CGImageDestinationRef destination =
-        CGImageDestinationCreateWithURL(url, CFSTR("public.png"), 1, nullptr);
-    CFRelease(url);
-    if (!destination) return false;
-    CGImageDestinationAddImage(destination, (CGImageRef)frame, nullptr);
-    bool ok = CGImageDestinationFinalize(destination);
-    CFRelease(destination);
+    return write_png((CGImageRef)frame, out_path);
+}
+
+bool pixels_to_png(const uint32_t* pixels, int width, int height, int stride,
+                   const char* out_path) {
+    if (!pixels || width <= 0 || height <= 0 || stride < width) return false;
+    const size_t row_bytes = static_cast<size_t>(stride) * 4;
+    CFDataRef data = CFDataCreate(nullptr, reinterpret_cast<const UInt8*>(pixels),
+                                  static_cast<CFIndex>(row_bytes * static_cast<size_t>(height)));
+    if (!data) return false;
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
+    CFRelease(data);
+    if (!provider) return false;
+
+    // The renderer wrote BGRA into a texture the window server would have shown untouched, so the
+    // bytes go out as-is. Skipping alpha rather than declaring it premultiplied keeps ImageIO from
+    // un-premultiplying values the diff would then compare against an opaque screenshot.
+    CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+    const CGBitmapInfo bitmap_info =
+        static_cast<CGBitmapInfo>(kCGImageAlphaNoneSkipFirst) | kCGBitmapByteOrder32Little;
+    CGImageRef image =
+        CGImageCreate(static_cast<size_t>(width), static_cast<size_t>(height), 8, 32, row_bytes,
+                      space, bitmap_info, provider, nullptr, false, kCGRenderingIntentDefault);
+    CGColorSpaceRelease(space);
+    CGDataProviderRelease(provider);
+    if (!image) return false;
+
+    const bool ok = write_png(image, out_path);
+    CGImageRelease(image);
     return ok;
 }
 

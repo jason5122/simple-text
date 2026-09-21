@@ -3,11 +3,13 @@
 #include "conformance/capture.h"
 #include "px/gl_render_context.h"
 #include "px/px.h"
+#include "px/px_offscreen.h"
 #include "ui/grapheme_shaper.h"
 #include "ui/retained_text.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <clocale>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -45,6 +47,7 @@ constexpr std::string_view kFacesFilename = "faces-mac.txt";
 struct TestShot {
     std::string family;
     double size = 0.0;
+    uint32_t attrs = PX_FONT_NORMAL;
     std::vector<std::string> lines;
     std::string out_path;
 };
@@ -129,7 +132,7 @@ public:
     void attach(px_window_t* window) { window_ = window; }
 
     bool set_content(const TestShot& shot) {
-        font_ = px_create_font(shot.family.c_str(), static_cast<float>(shot.size));
+        font_ = px_create_font(shot.family.c_str(), static_cast<float>(shot.size), shot.attrs);
         if (!font_) {
             return false;
         }
@@ -177,12 +180,93 @@ private:
     std::vector<retained_text> lines_;
 };
 
+// Whether a headless run still has to bring the platform layer up before capturing. Only Windows
+// does: its offscreen surface hangs the GL context off a hidden window, and the window class comes
+// from px_init. Metal needs nothing from AppKit, and Linux needs nothing from GTK -- see
+// prepare_headless_locale.
+bool platform_init_before_headless() {
+#if BUILDFLAG(IS_WIN)
+    return true;
+#else
+    return false;
+#endif
+}
+
+// Matches the one piece of gtk_init that the text actually depends on.
+//
+// A process starts in the "C" locale no matter what LANG says, and only setlocale moves it.
+// pango_language_get_default reads that locale, and the language it derives decides which fallback
+// face a complex script resolves to -- so skipping it lays Devanagari and Thai out differently from
+// every windowed capture, 128 of 672 shots. gtk_init calls setlocale(LC_ALL, "") from
+// setlocale_initialization (gtkmain.c); doing it here gets the same fonts with no GTK, no display
+// and no session.
+void prepare_headless_locale() {
+#if BUILDFLAG(IS_LINUX)
+    std::setlocale(LC_ALL, "");
+#endif
+}
+
+// Renders every shot into an offscreen surface and writes the crop straight out. No window, no run
+// loop, no settle loop: a paint is finished when the GPU says so, so each shot is one pass.
+int run_headless(const std::vector<TestShot>& shots, capture::Crop crop) {
+    px_offscreen_t* surface = px_create_offscreen(kWindowWidth, kWindowHeight, kScale);
+    if (!surface) {
+        std::println("no offscreen surface on this platform");
+        return 1;
+    }
+    const int width = px_offscreen_width(surface);
+    const int height = px_offscreen_height(surface);
+    if (crop.w <= 0 || crop.h <= 0) {
+        crop = {.x = 0, .y = 0, .w = width, .h = height};
+    }
+    if (crop.x < 0 || crop.y < 0 || crop.x + crop.w > width || crop.y + crop.h > height) {
+        std::println("crop {},{},{},{} does not fit the {}x{} surface", crop.x, crop.y, crop.w,
+                     crop.h, width, height);
+        px_destroy_offscreen(surface);
+        return 2;
+    }
+
+    TextPage page;
+    bool success = true;
+    for (size_t i = 0; i < shots.size(); ++i) {
+        const TestShot& shot = shots[i];
+        if (!page.set_content(shot)) {
+            std::println("skipping {}: could not create font {}", shot.out_path, shot.family);
+            success = false;
+            continue;
+        }
+        bool ok = px_offscreen_paint(surface, &page);
+        if (ok) {
+            const uint32_t* pixels = px_offscreen_pixels(surface) +
+                                     static_cast<size_t>(crop.y) * static_cast<size_t>(width) +
+                                     static_cast<size_t>(crop.x);
+            ok = capture::pixels_to_png(pixels, crop.w, crop.h, width, shot.out_path.c_str());
+        }
+        std::println("[{}/{}] {}{}", i + 1, shots.size(), shot.out_path, ok ? "" : "  (FAILED)");
+        success &= ok;
+    }
+    px_destroy_offscreen(surface);
+    return success ? 0 : 1;
+}
+
 int run_tests(int argc, char* argv[]) {
     capture::Crop crop{.x = 0, .y = 0, .w = 1600, .h = 600};
-    if ((argc != 3 && argc != 5) || (argc == 5 && (std::string_view(argv[3]) != "--crop" ||
-                                                   std::sscanf(argv[4], "%d,%d,%d,%d", &crop.x,
-                                                               &crop.y, &crop.w, &crop.h) != 4))) {
-        std::println("usage: buffer_conformance <tests_dir> <out_dir> [--crop x,y,w,h]");
+    bool headless = false;
+    bool usage_error = argc < 3;
+    for (int i = 3; i < argc && !usage_error; ++i) {
+        const std::string_view flag = argv[i];
+        if (flag == "--headless") {
+            headless = true;
+        } else if (flag == "--crop" && i + 1 < argc) {
+            usage_error = std::sscanf(argv[++i], "%d,%d,%d,%d", &crop.x, &crop.y, &crop.w,
+                                      &crop.h) != 4;
+        } else {
+            usage_error = true;
+        }
+    }
+    if (usage_error) {
+        std::println(
+            "usage: buffer_conformance <tests_dir> <out_dir> [--crop x,y,w,h] [--headless]");
         return 2;
     }
 
@@ -207,6 +291,10 @@ int run_tests(int argc, char* argv[]) {
     }
     std::filesystem::create_directories(out_dir, error);
 
+    // Sublime turns the glow on through a color scheme's font_style, which the reference plugin
+    // cannot vary per shot either, so the whole run is one polarity.
+    const uint32_t attrs = std::getenv("BUFFER_GLOW") ? PX_FONT_GLOW : PX_FONT_NORMAL;
+
     std::vector<TestShot> shots;
     for (const std::filesystem::path& path : texts) {
         const std::string stem = path.stem().string();
@@ -216,6 +304,7 @@ int run_tests(int argc, char* argv[]) {
                 shots.push_back({
                     .family = face,
                     .size = std::stod(size),
+                    .attrs = attrs,
                     .lines = lines,
                     .out_path = (std::filesystem::path(out_dir) /
                                  (stem + "-" + face + "-" + size + ".png"))
@@ -241,7 +330,17 @@ int run_tests(int argc, char* argv[]) {
     }
 
     std::println("rendering {} shots -> {}", shots.size(), out_dir);
-    px_init("buffer-conformance", "com.example.buffer-conformance", argc, argv, 0);
+    // The Windows offscreen surface carries its GL context on a hidden window, so the platform
+    // layer has to be up there even though nothing is ever shown. Elsewhere it stays down for a
+    // headless run: px_init brings up GTK on Linux, which needs the display this path exists to
+    // avoid, and NSApplication on macOS.
+    if (!headless || platform_init_before_headless()) {
+        px_init("buffer-conformance", "com.example.buffer-conformance", argc, argv, 0);
+    }
+    if (headless) {
+        prepare_headless_locale();
+        return run_headless(shots, crop);
+    }
     TextPage page;
     px_window_t* window = px_create_window(&page, nullptr, kWindowWidth, kWindowHeight,
                                            "buffer conformance", kBackground, 0);

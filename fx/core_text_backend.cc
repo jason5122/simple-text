@@ -126,9 +126,6 @@ std::unique_ptr<core_text_font> core_text_font::create_from_file(std::string pat
         base::checked_cast<CFIndex>(path.size()), false));
     if (!url) return nullptr;
 
-    // One descriptor per face in the file, without registering it with the font manager: no
-    // process-wide side effect, and no name lookup that an installed font of the same name could
-    // win instead.
     auto descriptors =
         ScopedCFTypeRef<CFArrayRef>(CTFontManagerCreateFontDescriptorsFromURL(url.get()));
     if (!descriptors || CFArrayGetCount(descriptors.get()) == 0) {

@@ -7,6 +7,8 @@ group("all") {
     # TODO: Think about how we should structure perf tests. Loose executables
     # are probably fine, but we need to organize them somehow.
     "//base:unicode_perftest",
+    "//fx:fx_glyph_cache_perftest",
+    "//fx:fx_perftest",
   ]
 }
 

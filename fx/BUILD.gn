@@ -62,3 +62,13 @@ if (is_linux) {
     ]
   }
 }
+
+executable("fx_perftest") {
+  sources = [ "fx_perftest.cc" ]
+  deps = [ ":fx" ]
+}
+
+executable("fx_glyph_cache_perftest") {
+  sources = [ "fx_glyph_cache_perftest.cc" ]
+  deps = [ ":fx" ]
+}

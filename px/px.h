@@ -450,6 +450,7 @@ enum : uint32_t {
     PX_FONT_NORMAL = 0,
     PX_FONT_BOLD = 1u << 0,
     PX_FONT_ITALIC = 1u << 1,
+    PX_FONT_GLOW = 1u << 8,
 };
 
 // Set PX_SKIA=1 in the environment to take the Skia software path, mirroring the pxw->use_gl flag

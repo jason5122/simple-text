@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace {
 
 constexpr int kMaximumDirtyRects = 128;
@@ -309,7 +308,12 @@ public:
             static_cast<uint32_t>(static_cast<double>(raster_scale) * 100.0);
         fx_glyph_cache& cache = font->glyph_cache(raster_scale);
         atlas_set& atlas = atlas_sets_[{font, scale_percent}];
-        if (atlas.size == 0) atlas.size = atlas_size_for(*font, raster_scale);
+        if (atlas.size == 0) {
+            const float line_height = font->font->metrics().line_height;
+            const unsigned target =
+                std::max(1u, static_cast<unsigned>(std::ceil(line_height * raster_scale * 8.0f)));
+            atlas.size = static_cast<int>(std::bit_ceil(target));
+        }
         // Sublime's gl_text_batch lives from begin_text_batch to end_text_batch and batch::render
         // merges every layout drawn in between into it, so groups are shared across the batch.
         std::vector<texture_batch_group> immediate_groups;
@@ -374,11 +378,9 @@ public:
                 .effect_start = 0.0f,
                 .effect_end = 0.0f,
             };
-            add_to_groups(&groups,
-                          {.atlas = &atlas,
-                           .page = placement->page,
-                           .colored = placement->colored},
-                          instance);
+            add_to_groups(
+                &groups, {.atlas = &atlas, .page = placement->page, .colored = placement->colored},
+                instance);
         }
 
         if (batch_depth_ == 0) {
@@ -433,9 +435,9 @@ private:
         // Grouping decides how overlapping glyphs are split across draws, and two sequential 8-bit
         // blends round differently depending on that split, so a submission-order policy here
         // costs a level on glyphs that stack (Arabic joins, fallback runs).
-        auto found = std::find_if(
-            groups->begin(), groups->end(),
-            [&key](const texture_batch_group& group) { return group.key == key; });
+        auto found =
+            std::find_if(groups->begin(), groups->end(),
+                         [&key](const texture_batch_group& group) { return group.key == key; });
         if (found == groups->end()) {
             groups->push_back({.key = key});
             found = std::prev(groups->end());
@@ -535,13 +537,6 @@ private:
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, 0);
         glBindBuffer(GL_TEXTURE_BUFFER, 0);
-    }
-
-    static int atlas_size_for(const px_font_t& font, float scale) {
-        const float line_height = font.font->metrics().line_height;
-        const unsigned target =
-            std::max(1u, static_cast<unsigned>(std::ceil(line_height * scale * 8.0f)));
-        return static_cast<int>(std::bit_ceil(target));
     }
 
     void ensure_phase_pages(atlas_set* atlas,

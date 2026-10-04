@@ -15,4 +15,5 @@ exec prlctl exec "$vm" env \
   LINUX_UI_CAPTURE_TESTS="${LINUX_UI_CAPTURE_TESTS:-$linux_share/capture-tests-ui}" \
   LINUX_UI_OUR_OUTPUT="${LINUX_UI_OUR_OUTPUT:-$linux_share/ours-ui}" \
   UI_CROP="${UI_CROP:-0,0,600,500}" \
+  UI_HEADLESS="${UI_HEADLESS:-}" \
   bash "$linux_share/capture-ours-ui.sh"

@@ -1,0 +1,8 @@
+[project]
+name = "simple-text"
+version = "0"
+requires-python = ">=3.12"
+dependencies = ["fonttools>=4.50"]
+
+[tool.uv]
+package = false

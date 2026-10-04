@@ -184,11 +184,11 @@ private:
 skia_render_context::skia_render_context(px_pixel_buffer buffer,
                                          recti clip,
                                          double dpi_scale,
-                                         uint32_t subpixel_order)
+                                         uint32_t platform_value)
     : buffer_(buffer),
       clip_(intersect_recti(clip, recti{0, 0, buffer.width, buffer.height})),
       dpi_scale_(dpi_scale > 0.0 ? dpi_scale : 1.0),
-      subpixel_order_(subpixel_order),
+      platform_value_(platform_value),
       scale_{dpi_scale_, dpi_scale_},
       impl_(std::make_unique<impl>(buffer)) {
     if (SkCanvas* canvas = impl_->canvas(); canvas && !clip_.empty()) {
@@ -274,7 +274,7 @@ void skia_render_context::draw_shaped_text(
                              static_cast<int>(fx_glyph_cache::phase_count) - 1)
                 : 0;
         const fx_glyph_cache::glyph_data& data =
-            cache.lookup_glyph_data(glyph.id, subpixel_order_, alternate);
+            cache.lookup_glyph_data(glyph.id, platform_value_, alternate);
         const fx_glyph_cache::glyph_phase& glyph_phase = data.phase_at(phase);
 
         const int glyph_left = device_x + glyph_phase.bearing_x;

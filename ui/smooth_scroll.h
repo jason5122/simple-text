@@ -2,9 +2,11 @@
 
 #include "ui/scroll_predictor.h"
 
-// Chromium-style smooth scrolling for one axis. Precise scroll events (trackpad, Magic Mouse)
-// feed a trajectory; a display-clock tick chooses the offset to show, sampled a little behind the
-// tick so that it interpolates between real events and moves the same distance every frame even
+// Chromium-style smooth scrolling for one axis, for a window whose frames come from the display
+// clock (PX_OS_SMOOTHS_EVENT_FRAMES is 0; where it is 1 the app paints each event's frame itself,
+// through jump_to, and never ticks). Precise scroll events (trackpad, Magic Mouse) feed a
+// trajectory; a display-clock tick chooses the offset to show, sampled a little behind the tick
+// so that it interpolates between real events and moves the same distance every frame even
 // though the input and display clocks drift against each other. Events never move the offset
 // themselves, so there is exactly one frame per refresh while a gesture runs. This is what
 // Chromium does for touchscreens; its trackpad model (show the sum of the deltas that arrived
@@ -18,8 +20,8 @@ class smooth_scroll {
 public:
     double offset() const { return offset_; }
 
-    // Puts the content at `offset` right away (scrollbar, keyboard, a line-based wheel) and ends
-    // any gesture in progress.
+    // Puts the content at `offset` right away (keyboard, a line-based wheel, a click in the
+    // scrollbar track) and ends any gesture or drag in progress.
     void jump_to(double offset, double maximum);
 
     // A precise scroll event, `delta` in offset units. Returns true when this starts a gesture:

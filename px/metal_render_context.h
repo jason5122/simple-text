@@ -58,7 +58,7 @@ public:
                          double dpi_scale,
                          const rect* dirty,
                          int dirty_count,
-                         uint32_t subpixel_order = 0);
+                         uint32_t platform_value = 0);
     ~metal_render_context() override;
 
     metal_render_context(const metal_render_context&) = delete;
@@ -125,7 +125,7 @@ private:
     rect paint_bounds_;
     recti clip_;
     double dpi_scale_ = 1.0;
-    uint32_t subpixel_order_ = 0;
+    uint32_t platform_value_ = 0;
     bool has_stencil_ = false;
     vec2 translation_;
     vec2 scale_{1.0, 1.0};

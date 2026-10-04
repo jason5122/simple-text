@@ -5,8 +5,11 @@
 #include "base/strings.h"
 #include "base/unicode.h"
 #include "fx/fx.h"
+#include "fx/fx_internal.h"
 #include <CoreText/CoreText.h>
 #include <cmath>
+#include <cstdint>
+#include <span>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
@@ -35,7 +38,7 @@ public:
                    float scale,
                    fx_pixel_buffer* buffer,
                    color foreground,
-                   uint32_t subpixel_order) override;
+                   uint32_t platform_value) override;
     bool is_color_glyph(uint32_t glyph) override;
     const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
 
@@ -88,6 +91,17 @@ ScopedCFTypeRef<CFArrayRef> make_font_features(uint32_t flags) {
     append_font_feature(features.get(), kContextualAlternatesType,
                         flags & FX_FONT_NO_CALT ? kContextualAlternatesOffSelector
                                                 : kContextualAlternatesOnSelector);
+    if (flags & FX_FONT_DLIG) {
+        append_font_feature(features.get(), kLigaturesType, kRareLigaturesOnSelector);
+    }
+    // Core Text maps these AAT selectors onto OpenType ss01..ss10 for an OpenType font; the "on"
+    // selectors are the even numbers from 2.
+    for (int i = 0; i < 10; ++i) {
+        if (flags & (FX_FONT_SS01 << i)) {
+            append_font_feature(features.get(), kStylisticAlternativesType,
+                                kStylisticAltOneOnSelector + 2 * i);
+        }
+    }
     return ScopedCFTypeRef<CFArrayRef>(features.release());
 }
 
@@ -288,8 +302,8 @@ void core_text_font::rasterize(uint32_t glyph,
         return;
     }
 
-    const CGFloat fill[] = {foreground.red() / 255.0, foreground.green() / 255.0,
-                            foreground.blue() / 255.0, foreground.alpha() / 255.0};
+    CGFloat fill[] = {foreground.red() / 255.0, foreground.green() / 255.0,
+                      foreground.blue() / 255.0, foreground.alpha() / 255.0};
     CGContextSetFillColorSpace(context.get(), color_space.get());
     CGContextSetFillColor(context.get(), fill);
     CGContextSetShouldAntialias(context.get(), true);
@@ -363,12 +377,14 @@ bool core_text_font::is_color_glyph(uint32_t glyph) {
 
 }  // namespace
 
-std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs) {
+std::unique_ptr<fx_font> fx_backend_create_font(std::string_view family,
+                                                float size,
+                                                uint32_t attrs) {
     return core_text_font::create(std::string(family), size, attrs);
 }
 
-std::unique_ptr<fx_font> fx_create_font_from_file(std::string_view path,
-                                                  float size,
-                                                  uint32_t attrs) {
+std::unique_ptr<fx_font> fx_backend_create_font_from_file(std::string_view path,
+                                                          float size,
+                                                          uint32_t attrs) {
     return core_text_font::create_from_file(std::string(path), size, attrs);
 }

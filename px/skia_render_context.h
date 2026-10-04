@@ -26,7 +26,7 @@ public:
     skia_render_context(px_pixel_buffer buffer,
                         recti clip,
                         double dpi_scale,
-                        uint32_t subpixel_order = 0);
+                        uint32_t platform_value = 0);
     ~skia_render_context() override;
 
     skia_render_context(const skia_render_context&) = delete;
@@ -67,7 +67,7 @@ private:
     px_pixel_buffer buffer_;
     recti clip_;
     double dpi_scale_ = 1.0;
-    uint32_t subpixel_order_ = 0;
+    uint32_t platform_value_ = 0;
     vec2 translation_;
     vec2 scale_{1.0, 1.0};
     std::unique_ptr<impl> impl_;

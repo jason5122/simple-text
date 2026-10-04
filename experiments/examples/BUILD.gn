@@ -19,23 +19,18 @@ executable("demo") {
   sources = [ "demo.cc" ]
   deps = [
     "//px",
-    "//ui:retained_text",
-    "//ui:smooth_scroll",
-    "//ui:window",
+    "//ui",
   ]
 }
 
 executable("dark_mode_demo") {
   sources = [ "dark_mode_demo.cc" ]
-  deps = [
-    "//ui:retained_text",
-    "//ui:smooth_scroll",
-  ]
+  deps = [ "//ui" ]
 }
 
 executable("control_char_demo") {
   sources = [ "control_char_demo.cc" ]
-  deps = [ "//ui:grapheme_shaper" ]
+  deps = [ "//ui" ]
 }
 
 executable("glow_demo") {
@@ -50,8 +45,7 @@ executable("display_link_demo") {
   sources = [ "display_link_demo.cc" ]
   deps = [
     "//px",
-    "//ui:retained_text",
-    "//ui:window",
+    "//ui",
   ]
 }
 
@@ -59,12 +53,9 @@ executable("editor") {
   sources = [ "editor.cc" ]
   deps = [
     "//px",
-    "//ui:retained_text",
-    "//ui:smooth_scroll",
-    "//ui:window",
+    "//ui",
   ]
 }
-
 executable("skia_demo") {
   sources = [ "skia_demo.cc" ]
   deps = [ "//px" ]

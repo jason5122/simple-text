@@ -2,6 +2,7 @@ source_set("fx") {
   sources = [
     "fx.cc",
     "fx.h",
+    "fx_internal.h",
   ]
 
   configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
@@ -14,7 +15,14 @@ source_set("fx") {
       "CoreText.framework",
     ]
   } else if (is_win) {
-    sources += [ "direct_write_backend.cc" ]
+    sources += [
+      "direct_write_backend.cc",
+      "win/dwrite_globals.cc",
+      "win/dwrite_globals.h",
+      "win/dwrite_raster_target.cc",
+      "win/dwrite_raster_target.h",
+      "win/dwrite_shaping.h",
+    ]
     libs = [
       "dwrite.lib",
       "gdi32.lib",
@@ -34,19 +42,36 @@ source_set("fx") {
 source_set("fx_unittests") {
   testonly = true
 
-  sources = [ "fx_unittest.cc" ]
+  sources = [
+    "fx_glyph_cache_unittest.cc",
+    "fx_unittest.cc",
+  ]
 
   deps = [
     ":fx",
     "//base",
-    "//testing:gtest",
+    "//testing:fuzztest",
   ]
   data_deps = [ ":test_fonts" ]
 }
 
 copy("test_fonts") {
   testonly = true
-  sources = [ "Ahem.ttf" ]
+  sources = [
+    "test_fonts/Ahem.ttf",
+    "test_fonts/far.ttf",
+    "test_fonts/features.ttf",
+    "test_fonts/giant.ttf",
+    "test_fonts/huge_metrics.ttf",
+    "test_fonts/large.ttf",
+    "test_fonts/negative_metrics.ttf",
+    "test_fonts/notdef_only.ttf",
+    "test_fonts/text.ttf",
+    "test_fonts/truncated.ttf",
+    "test_fonts/zero_advance.ttf",
+    "test_fonts/zero_bytes.ttf",
+    "test_fonts/zero_upem.ttf",
+  ]
   outputs = [ "$root_out_dir/test_fonts/{{source_file_part}}" ]
 }
 

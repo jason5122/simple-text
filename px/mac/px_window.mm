@@ -1,27 +1,3 @@
-// PXWindow / PXWindowDelegate / PXView, and the window half of the flat px API.
-//
-// Structure mirrored from ST's binary:
-//
-//   * PXWindow : NSWindow, PXView : NSView (not NSOpenGLView), PXWindowDelegate is a separate
-//     object conforming to NSWindowDelegate. PXView conforms to NSTextInputClient and forwards to
-//     whatever get_input_client() returns.
-//
-//   * Every AppKit entry point does the same three things: memset a px_event_t, fill the fields
-//     that matter for its tag, and call one funnel, send_event(px_window_t*, px_event_t*). The
-//     funnel is the only place that touches the handler's vtable.
-//     -[PXWindowDelegate windowDidResize:] is the clearest example: `mov w8, #0x8` for the tag,
-//     then `bl send_event`.
-//
-//   * send_event's post-condition, decoded at 0x1002c3008: after dispatching, if the window has
-//     painted at least once (+0x38 == 1) and the event tag is >= 2 -- i.e. not a key or character
-//     event -- and at least 1/60 s has passed since the last flush, ST calls pre_paint() and
-//     flush_dirty_rects(). Then dispatch_post_event_callbacks() runs unconditionally.
-//
-//     This reimplementation deliberately drops that eager, throttled flush. The
-//     kCFRunLoopBeforeWaiting observer below flushes every turn anyway, and the layers take the
-//     window's pending rectangles at display time, so the eager path never changed how many
-//     frames were drawn; it only moved the hand-off earlier within the same turn.
-
 #include "px/mac/px_mac_private.h"
 #include "px/skia_render_context.h"
 #include <algorithm>
@@ -785,8 +761,10 @@ void px_mac_send_event(px_window_t* window, px_event_t* event) {
     }
     window->handler->handle_event(event);
 
-    // Repaints are flushed once per run-loop turn by the kCFRunLoopBeforeWaiting observer, not
-    // here; see the header comment.
+    if (window->did_first_paint && event->type >= PX_EVENT_MOUSE_BUTTON) {
+        window->handler->pre_sleep();
+        px_mac_flush_dirty_rects(window);
+    }
     px_mac_dispatch_post_event_callbacks();
 }
 
@@ -853,7 +831,7 @@ void before_waiting_callback(CFRunLoopObserverRef observer,
         if (!window || window->closing || !window->handler) {
             continue;
         }
-        window->handler->pre_paint();
+        window->handler->pre_sleep();
         px_mac_flush_dirty_rects(window);
         update_cursor_from_tracking_rects(window);
     }

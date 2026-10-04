@@ -1,4 +1,5 @@
 #include "fx/fx.h"
+#include "fx/fx_internal.h"
 
 #include "base/check.h"
 #include "base/unicode.h"
@@ -57,8 +58,8 @@ std::string font_features(uint32_t attrs) {
     if (attrs & FX_FONT_DLIG) feature("dlig", true);
     for (uint32_t i = 0; i < 10; ++i) {
         if (!(attrs & (FX_FONT_SS01 << i))) continue;
-        const char name[] = {'s', 's', static_cast<char>('0' + (i + 1) / 10),
-                             static_cast<char>('0' + (i + 1) % 10), '\0'};
+        char name[] = {'s', 's', static_cast<char>('0' + (i + 1) / 10),
+                       static_cast<char>('0' + (i + 1) % 10), '\0'};
         feature(name, true);
     }
     return result;
@@ -81,7 +82,7 @@ public:
                    float scale,
                    fx_pixel_buffer* buffer,
                    color foreground,
-                   uint32_t subpixel_order) override;
+                   uint32_t platform_value) override;
     bool is_color_glyph(uint32_t glyph) override;
     // Cairo hands back the coverage it composited, with no correction of its own to undo.
     const fx_gamma_ramp* gamma_ramp() const override { return nullptr; }
@@ -144,7 +145,7 @@ uint32_t pango_font::register_face(PangoFont* face) {
 }
 
 PangoFont* pango_font::face(uint32_t glyph) const {
-    const uint32_t index = glyph >> 16;
+    uint32_t index = glyph >> 16;
     return index < faces_.size() ? faces_[index].get() : nullptr;
 }
 
@@ -195,7 +196,7 @@ std::unique_ptr<pango_font> pango_font::finish(
     // Pango sizes are points at 96 DPI, whereas Sublime's cross-platform size is in logical
     // pixels. The Linux binary performs these two float multiplies and truncates to an integer.
     constexpr float kPixelsToPoints = 72.0f / 96.0f;
-    const float pango_size = size * kPixelsToPoints * static_cast<float>(PANGO_SCALE);
+    float pango_size = size * kPixelsToPoints * static_cast<float>(PANGO_SCALE);
     if (pango_size > static_cast<float>(std::numeric_limits<int>::max())) return nullptr;
     pango_font_description_set_size(description.get(), static_cast<int>(pango_size));
     if (attrs & FX_FONT_ITALIC) {
@@ -235,21 +236,28 @@ std::unique_ptr<pango_font> pango_font::finish(
         return nullptr;
     }
 
-    return std::unique_ptr<pango_font>(new pango_font(
+    auto result = std::unique_ptr<pango_font>(new pango_font(
         std::move(config), std::move(context), std::move(description), std::move(font_options),
         std::move(fontset), std::move(measurement_context), size, attrs));
+
+    // The Core Text and DirectWrite backends seed face 0 with the primary face when the font is
+    // created, so a font can rasterize before it has shaped anything and its own glyphs always
+    // report face 0 with fallbacks after it. Pango only hands faces out per layout run, so load
+    // the primary explicitly. The map caches the fonts it loads, so a run that resolves to this
+    // face carries the same object and the pointer-identity registry maps it to 0.
+    g_object_ptr<PangoFont> primary(
+        pango_font_map_load_font(map, result->context_.get(), result->description_.get()));
+    if (!primary) return nullptr;
+    result->register_face(primary.get());
+    return result;
 }
 
 fx_font_metrics pango_font::metrics() const {
     if (metrics_valid_) return metrics_;
 
-    // The context's own map, not the process default: a font loaded from a file lives in a
-    // private map, and the default one would silently substitute another family for it.
-    PangoFontMap* map = pango_context_get_font_map(context_.get());
-    g_object_ptr<PangoFont> primary(
-        map ? pango_font_map_load_font(map, context_.get(), description_.get()) : nullptr);
+    PangoFont* primary = faces_.empty() ? nullptr : faces_.front().get();
     pango_metrics_ptr native_metrics(
-        primary ? pango_font_get_metrics(primary.get(), pango_language_get_default()) : nullptr);
+        primary ? pango_font_get_metrics(primary, pango_language_get_default()) : nullptr);
     if (native_metrics) {
         // PANGO_PIXELS is exactly the binary's `(value + 512) >> 10`, including its behavior for
         // negative values. Ascender and descender are normally non-negative here.
@@ -270,7 +278,7 @@ std::unique_ptr<fx_layout> pango_font::shape(std::string_view utf8) {
     g_object_ptr<PangoLayout> layout(pango_layout_new(context_.get()));
     if (!layout) return nullptr;
 
-    const std::string features = font_features(attrs_);
+    std::string features = font_features(attrs_);
     PangoAttribute* feature_attribute = pango_attr_font_features_new(features.c_str());
     pango_attribute_list_ptr attributes(pango_attr_list_new());
     if (feature_attribute && attributes) {
@@ -291,11 +299,11 @@ std::unique_ptr<fx_layout> pango_font::shape(std::string_view utf8) {
             PangoLayoutRun* run = pango_layout_iter_get_run_readonly(iterator.get());
             if (!run || !run->item || !run->glyphs || !run->item->analysis.font) continue;
 
-            const uint32_t face_index = register_face(run->item->analysis.font);
+            uint32_t face_index = register_face(run->item->analysis.font);
             PangoGlyphString* glyph_string = run->glyphs;
             for (int i = 0; i < glyph_string->num_glyphs; ++i) {
                 const PangoGlyphInfo& info = glyph_string->glyphs[i];
-                const float advance = static_cast<float>(PANGO_PIXELS(info.geometry.width));
+                float advance = static_cast<float>(PANGO_PIXELS(info.geometry.width));
                 // Pango's unknown-glyph flag occupies bits above the 16-bit glyph index. Sublime
                 // omits those entries because the upper half is reserved for our fallback face.
                 if (info.glyph <= std::numeric_limits<uint16_t>::max()) {
@@ -315,7 +323,7 @@ std::unique_ptr<fx_layout> pango_font::shape(std::string_view utf8) {
         } while (pango_layout_iter_next_run(iterator.get()));
     }
 
-    const fx_font_metrics font_metrics = metrics();
+    fx_font_metrics font_metrics = metrics();
     shaped->advance = pen;
     shaped->line_height = font_metrics.ascent + font_metrics.descent;
     return shaped;
@@ -336,12 +344,12 @@ void pango_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) 
         return;
     }
     cairo_set_scaled_font(measurement_context_.get(), scaled_font);
-    const cairo_glyph_t cairo_glyph = {static_cast<unsigned long>(static_cast<uint16_t>(glyph)),
-                                       0.0, 0.0};
+    cairo_glyph_t cairo_glyph = {static_cast<unsigned long>(static_cast<uint16_t>(glyph)), 0.0,
+                                 0.0};
     cairo_text_extents_t bounds{};
     cairo_glyph_extents(measurement_context_.get(), &cairo_glyph, 1, &bounds);
 
-    const double native_scale = static_cast<double>(scale);
+    double native_scale = static_cast<double>(scale);
     origin = {
         std::round(-bounds.x_bearing * native_scale),
         // Cairo reports a negative y bearing for ink above the baseline. Keep the scratch origin
@@ -353,7 +361,7 @@ void pango_font::extents(uint32_t glyph, float scale, vec2& origin, vec2& size) 
     // Sublime adds no border at 1x. At every other scale it pads each side by 2*ceil(scale),
     // large enough for Cairo's scaled/filtering footprint.
     if (scale != 1.0f) {
-        const double padding = static_cast<double>(std::ceil(scale));
+        double padding = static_cast<double>(std::ceil(scale));
         origin.x += 2.0 * padding;
         origin.y += 2.0 * padding;
         size.x += 4.0 * padding;
@@ -366,7 +374,7 @@ void pango_font::rasterize(uint32_t glyph,
                            float scale,
                            fx_pixel_buffer* buffer,
                            color foreground,
-                           uint32_t subpixel_order) {
+                           uint32_t platform_value) {
     DCHECK(buffer);
     DCHECK(buffer->pixels);
     DCHECK(buffer->width > 0);
@@ -397,12 +405,12 @@ void pango_font::rasterize(uint32_t glyph,
     // the glyph-cache key prevents a display/order change from reusing pixels rasterized for a
     // different physical stripe order.
     cairo_font_options_set_subpixel_order(font_options_.get(),
-                                          static_cast<cairo_subpixel_order_t>(subpixel_order));
+                                          static_cast<cairo_subpixel_order_t>(platform_value));
     cairo_set_font_options(context.get(), font_options_.get());
     cairo_scale(context.get(), static_cast<double>(scale), static_cast<double>(scale));
 
-    const double x = position.x / static_cast<double>(scale);
-    const double y = position.y / static_cast<double>(scale);
+    double x = position.x / static_cast<double>(scale);
+    double y = position.y / static_cast<double>(scale);
     cairo_glyph_t glyphs[3] = {
         {static_cast<unsigned long>(static_cast<uint16_t>(glyph)), x, y},
         {},
@@ -411,7 +419,7 @@ void pango_font::rasterize(uint32_t glyph,
     int glyph_count = 1;
     if (static_cast<float>(buffer->width) >= requested_size_) {
         if (space_glyph_ < 0) {
-            const std::unique_ptr<fx_layout> space = shape(" ");
+            std::unique_ptr<fx_layout> space = shape(" ");
             space_glyph_ = space && !space->glyphs.empty()
                                ? static_cast<int32_t>(space->glyphs.front().id & 0xffff)
                                : 0;
@@ -450,12 +458,14 @@ bool pango_font::is_color_glyph(uint32_t glyph) {
 
 }  // namespace
 
-std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs) {
+std::unique_ptr<fx_font> fx_backend_create_font(std::string_view family,
+                                                float size,
+                                                uint32_t attrs) {
     return pango_font::create(std::string(family), size, attrs);
 }
 
-std::unique_ptr<fx_font> fx_create_font_from_file(std::string_view path,
-                                                  float size,
-                                                  uint32_t attrs) {
+std::unique_ptr<fx_font> fx_backend_create_font_from_file(std::string_view path,
+                                                          float size,
+                                                          uint32_t attrs) {
     return pango_font::create_from_file(std::string(path), size, attrs);
 }

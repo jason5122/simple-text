@@ -1,47 +1,16 @@
-group("ui") {
-  deps = [
-    ":grapheme_shaper",
-    ":retained_text",
-    ":scroll_predictor",
-    ":smooth_scroll",
-    ":window",
-  ]
-}
-
-source_set("scroll_predictor") {
-  sources = [
-    "scroll_predictor.cc",
-    "scroll_predictor.h",
-  ]
-}
-
-source_set("smooth_scroll") {
-  sources = [
-    "smooth_scroll.cc",
-    "smooth_scroll.h",
-  ]
-  deps = [ ":scroll_predictor" ]
-}
-
-source_set("ui_unittests") {
-  testonly = true
-  sources = [
-    "scroll_predictor_unittest.cc",
-    "smooth_scroll_unittest.cc",
-  ]
-  deps = [
-    ":scroll_predictor",
-    ":smooth_scroll",
-    "//testing:gtest",
-  ]
-}
-
-source_set("grapheme_shaper") {
+source_set("ui") {
   sources = [
     "grapheme_shaper.cc",
     "grapheme_shaper.h",
+    "retained_text.cc",
+    "retained_text.h",
+    "scroll_predictor.cc",
+    "scroll_predictor.h",
+    "smooth_scroll.cc",
+    "smooth_scroll.h",
+    "window.cc",
+    "window.h",
   ]
-
   deps = [
     "//base",
     "//fx",
@@ -50,33 +19,15 @@ source_set("grapheme_shaper") {
   ]
 }
 
-source_set("window") {
-  sources = [
-    "window.cc",
-    "window.h",
-  ]
-  deps = [ "//px" ]
-}
-
-source_set("retained_text") {
-  sources = [
-    "retained_text.cc",
-    "retained_text.h",
-  ]
-
-  deps = [
-    ":grapheme_shaper",
-    "//fx",
-    "//px",
-  ]
-}
-
-executable("grapheme_shaper_unittests") {
+source_set("ui_unittests") {
   testonly = true
-  sources = [ "grapheme_shaper_unittest.cc" ]
+  sources = [
+    "grapheme_shaper_unittest.cc",
+    "scroll_predictor_unittest.cc",
+    "smooth_scroll_unittest.cc",
+  ]
   deps = [
-    ":grapheme_shaper",
-    ":retained_text",
+    ":ui",
     "//base",
     "//fx",
     "//px",

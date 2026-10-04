@@ -29,6 +29,9 @@
 #include <functional>
 #include <memory>
 #include <string_view>
+#if defined(__APPLE__)
+#include <Availability.h>
+#endif
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // OPAQUE HANDLES
@@ -330,11 +333,11 @@ public:
     // Animation asked for, in window-space points.
     virtual void paint(px_render_context* rc, rect bounds, const rect* dirty, int dirty_count) = 0;
 
-    // Called immediately before a paint, and after an input burst settles. Where ST reconciles
-    // layout so paint() can stay pure.
+    // Called immediately before a paint. Where ST reconciles layout so paint() can stay pure.
     virtual void pre_paint() {}
 
-    // The event loop is about to block. Last chance to flush lazy work.
+    // The event loop is about to block, and on macOS also after each non-keyboard event, ahead
+    // of the dirty flush (ST's send_event post-condition). Last chance to flush lazy work.
     virtual void pre_sleep() {}
 
     // Fast path for quit: may the window close without asking the user anything?
@@ -499,6 +502,21 @@ void px_set_full_screen(px_window_t* window, bool full_screen);
 // never pays for it.
 void px_set_animating(px_window_t* window, bool animating);
 
+// Whether the OS smooths frames painted from input events, so that an app can paint each scroll
+// or drag event's frame in the event's own turn and leave the display clock off. On macOS this
+// comes with the AppKit window a binary gets when it is linked against the macOS 26 SDK or later
+// (the SDK `vtool -show-build` reports, which is what AppKit keys on): the layer is displayed
+// once per refresh at a vsync-locked point, so a frame per event reaches the glass as regularly
+// as a frame per tick. Linked against an older SDK, AppKit displays at the end of the event's
+// run-loop turn at whatever phase the event had, and the window server discards paired commits;
+// there, and on Windows and Linux, the app runs the display clock (px_set_animating) and samples
+// the input from the tick (ui/smooth_scroll). Decided at compile time, from the SDK.
+#if defined(__MAC_OS_X_VERSION_MAX_ALLOWED) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+#define PX_OS_SMOOTHS_EVENT_FRAMES 1
+#else
+#define PX_OS_SMOOTHS_EVENT_FRAMES 0
+#endif
+
 // Optional presentation telemetry. On the macOS Metal backend, the callback runs on the main
 // thread after Core Animation reports that a drawable reached the display. Other backends do not
 // currently report presentation. Passing an empty function disables the observer.
@@ -506,7 +524,6 @@ void px_set_frame_presented_callback(
     px_window_t* window, std::function<void(uint64_t frame_id, double presented_time)> callback);
 // Valid only during px_window_event_handler::paint; zero on backends without frame telemetry.
 uint64_t px_current_frame_id(px_window_t* window);
-
 // Accumulates into the window's dirty list. Flushed to setNeedsDisplayInRect: after the current
 // event settles, exactly as ST's flush_dirty_rects does.
 void px_mark_rect_dirty(px_window_t* window, rect r);

@@ -183,9 +183,11 @@ class Gn(ZipBinary):
     name = "gn"
     revision = "64cfb8344ec3e8585a89a3836716a026e2771fcb"
     _CIPD_URL = "https://chrome-infra-packages.appspot.com"
+    _CPU_NAMES = {"x86_64": "amd64", "arm64": "arm64"}
 
     def _url(self, platform):
-        return f"{self._CIPD_URL}/dl/gn/gn/{platform.os_name}-{platform.cpu}/+/git_revision:{self.revision}"
+        cpu = self._CPU_NAMES[platform.cpu]
+        return f"{self._CIPD_URL}/dl/gn/gn/{platform.os_name}-{cpu}/+/git_revision:{self.revision}"
 
 
 class Ninja(ZipBinary):

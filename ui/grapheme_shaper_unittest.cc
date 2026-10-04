@@ -5,9 +5,7 @@
 #include "ui/retained_text.h"
 #include <array>
 #include <cmath>
-#include <cstdlib>
 #include <fuzztest/fuzztest_core.h>
-#include <fuzztest/init_fuzztest.h>
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
@@ -101,11 +99,11 @@ public:
                    float,
                    fx_pixel_buffer* buffer,
                    color foreground,
-                   uint32_t subpixel_order) override {
+                   uint32_t platform_value) override {
         ++rasterize_count;
         raster_position = position;
         raster_foreground = foreground;
-        raster_subpixel_order = subpixel_order;
+        raster_platform_value = platform_value;
         raster_buffers.push_back(buffer->pixels);
         raster_width = buffer->width;
         raster_height = buffer->height;
@@ -136,7 +134,7 @@ public:
     int rasterize_count = 0;
     vec2 raster_position;
     color raster_foreground;
-    uint32_t raster_subpixel_order = 0;
+    uint32_t raster_platform_value = 0;
     std::array<uint8_t, 4> initial_pixel{};
     std::vector<uint32_t*> raster_buffers;
     int raster_width = 0;
@@ -193,11 +191,11 @@ TEST(FxGlyphCacheTest, UsesThePlatformSubpixelOrderCachePolicy) {
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN)
     EXPECT_EQ(font.classification_count, 2);
     EXPECT_EQ(font.rasterize_count, 2 * fx_glyph_cache::phase_count);
-    EXPECT_EQ(font.raster_subpixel_order, 2u);
+    EXPECT_EQ(font.raster_platform_value, 2u);
 #else
     EXPECT_EQ(font.classification_count, 1);
     EXPECT_EQ(font.rasterize_count, fx_glyph_cache::phase_count);
-    EXPECT_EQ(font.raster_subpixel_order, 1u);
+    EXPECT_EQ(font.raster_platform_value, 1u);
 #endif
 }
 
@@ -826,12 +824,3 @@ void RepeatedDrawingReusesCachedLayouts(const std::vector<char32_t>& codepoints)
 FUZZ_TEST(GraphemeShaperFuzzTest, RepeatedDrawingReusesCachedLayouts).WithDomains(shaper_text());
 
 }  // namespace
-
-int main(int argc, char** argv) {
-    testing::InitGoogleTest(&argc, argv);
-    fuzztest::ParseAbslFlags(argc, argv);
-    if (std::getenv("RUN_FUZZTESTS")) {
-        fuzztest::InitFuzzTest(&argc, &argv);
-    }
-    return RUN_ALL_TESTS();
-}

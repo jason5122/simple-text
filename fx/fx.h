@@ -92,15 +92,20 @@ public:
     // Reports the scratch-buffer size and the glyph's alphabetic baseline origin within that
     // buffer, both in device pixels with y growing downward.
     virtual void extents(uint32_t glyph, float scale, vec2& origin, vec2& size) = 0;
-    // `position` is the device-pixel alphabetic baseline in a buffer allocated from extents(). On
-    // Linux, `subpixel_order` is cairo_subpixel_order_t's numeric value, supplied by the display.
-    // The other native rasterizers ignore it.
+    // `position` is the device-pixel alphabetic baseline in a buffer allocated from extents().
+    //
+    // `platform_value` identifies which rasterization parameters to use, and is opaque to fx: the
+    // platform layer chooses whatever varies the resulting pixels there, and the glyph cache keeps
+    // a separate table per value. Linux passes cairo_subpixel_order_t, supplied by the display.
+    // Sublime's Windows build passes a monitor index and selects that monitor's
+    // IDWriteRenderingParams with it; we always pass zero, so every display shares the primary
+    // monitor's parameters. Core Text ignores it on both.
     virtual void rasterize(uint32_t glyph,
                            vec2 position,
                            float scale,
                            fx_pixel_buffer* buffer,
                            color foreground,
-                           uint32_t subpixel_order) = 0;
+                           uint32_t platform_value) = 0;
     virtual bool is_color_glyph(uint32_t glyph) = 0;
     // Null means the platform does not need gamma correction.
     virtual const fx_gamma_ramp* gamma_ramp() const = 0;
@@ -146,23 +151,67 @@ public:
     // for `alternate` unless this is set.
     static constexpr bool alternate_glyphs = BUILDFLAG(IS_MAC);
 
+    // The largest glyph the cache rasterizes, measured on the scratch buffer with any glow
+    // padding included. Past either limit every phase stays empty and the glyph draws as blank,
+    // which is also what happens when a phase's bearings do not fit glyph_phase. The side limit
+    // is Skia's (SkGlyph::kMaxGlyphWidth): no renderer places a tile that wide. The area limit
+    // is the memory bound, 64 MB of scratch, past anything a text UI draws -- 4096 pixels square
+    // is a 1000pt face at 2x.
+    static constexpr int kMaxGlyphSide = 8192;
+    static constexpr int kMaxGlyphPixels = 4096 * 4096;
+    // The largest glow radius in device pixels, whatever the face's ascent asks for. It bounds
+    // the padding, which a huge ascent would otherwise push past the limits above for every
+    // glyph of the font, and the blur, whose cost grows with the radius.
+    static constexpr float kMaxGlowRadius = 192.0f;
+
     // The cache rasterizes through `font` on every miss, so it must outlive the cache.
     fx_glyph_cache(fx_font& font, float scale);
     const glyph_data& lookup_glyph_data(uint32_t glyph,
-                                        uint32_t subpixel_order = 0,
+                                        uint32_t platform_value = 0,
                                         bool alternate = false);
 
 private:
-    static uint64_t cache_key(uint32_t glyph, uint32_t subpixel_order);
+    // Sublime splits the cache one level above the hash: a small integer picks a table, and the
+    // glyph alone is the key within it. Exactly one of the two trailing lookup arguments becomes
+    // that selector on any given platform, and the other is only a rasterizer input. Mac selects
+    // on `alternate`, because Core Text smoothing depends on the background and nothing about a
+    // macOS display changes the pixels. Linux and Windows have no live polarity -- their
+    // equivalent of bg_affects_rasterise() is constant false -- and select on `platform_value`
+    // instead.
+    static size_t table_index(uint32_t platform_value, bool alternate);
 
     fx_font& font_;
     const fx_gamma_ramp* gamma_ramp_ = nullptr;
     float scale_ = 1.0f;
-    std::unordered_map<uint64_t, glyph_data> normal_;
-    std::unordered_map<uint64_t, glyph_data> alternate_;
+    // Grown on demand, as Sublime does. There is no compile-time bound to size against: the
+    // selector is whatever the platform layer supplies, and in Sublime's Windows build that is a
+    // monitor index. Reallocating moves the maps, which is safe because a container move is
+    // required to be constant time and so cannot relocate nodes -- references handed out by
+    // lookup_glyph_data() stay valid.
+    std::vector<std::unordered_map<uint32_t, glyph_data>> tables_;
     std::vector<std::unique_ptr<uint32_t[]>> pixel_allocations_;
 };
 
+#if BUILDFLAG(IS_WIN)
+// Maps a monitor to the `platform_value` that selects its rasterization parameters: the value to
+// pass to fx_font::rasterize and fx_glyph_cache::lookup_glyph_data for anything drawn on it.
+// `monitor` is an HMONITOR, taken as void* so this header stays free of windows.h.
+//
+// DirectWrite's gamma, enhanced contrast, ClearType level and pixel geometry are all per-monitor
+// settings, so a glyph rasterized for one display is not valid on another. Sublime enumerates the
+// display set from the paint arm of its WndProc (0x1401bfc8a), gives each monitor the index it
+// enumerates at, and creates that monitor's IDWriteRenderingParams the first time it sees it
+// (0x1401cb62e). This mirrors that, lazy creation included.
+//
+// Returns zero -- the first enumerated monitor's slot -- when `monitor` is null or is not among
+// the enumerated displays, and when DirectWrite is unavailable. Call from the thread that paints:
+// the mapping is unsynchronized, as Sublime's is.
+uint32_t fx_monitor_platform_value(void* monitor);
+#endif
+
+// `size` is in logical pixels and must be positive and finite. Null when the platform cannot
+// resolve the family, or when the font it resolves reports vertical metrics that are not the
+// finite, positive distances fx_font_metrics promises.
 std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uint32_t attrs);
 
 // Loads face 0 of a TrueType or OpenType file without registering it with the platform, so the
@@ -170,6 +219,11 @@ std::unique_ptr<fx_font> fx_create_font(std::string_view family, float size, uin
 // fall back to system fonts, exactly as they do for a named family. Style bits in `attrs` select
 // nothing here: a single-face file has no bold or italic variant to pick, and whether a backend
 // synthesizes one is platform-dependent.
+//
+// Null for a file that is not a font the platform can load, and for one whose metrics fail the
+// same check as fx_create_font: a malformed file can put its ascent below the baseline or divide
+// every metric by a zero unitsPerEm. A glyph the file makes too large to rasterize loads fine
+// and draws as blank; see fx_glyph_cache::kMaxGlyphSide and kMaxGlyphPixels.
 std::unique_ptr<fx_font> fx_create_font_from_file(std::string_view path,
                                                   float size,
                                                   uint32_t attrs);

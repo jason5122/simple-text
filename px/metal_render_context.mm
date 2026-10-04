@@ -505,7 +505,7 @@ struct glyph_atlas_key {
     uint32_t glyph = 0;
     int phase = 0;
     uint32_t scale_percent = 100;
-    uint32_t subpixel_order = 0;
+    uint32_t platform_value = 0;
     bool alternate = false;
 
     auto operator<=>(const glyph_atlas_key&) const = default;
@@ -572,7 +572,7 @@ public:
               metal_frame* frame,
               recti clip,
               bool subpixel_positioning,
-              uint32_t subpixel_order) {
+              uint32_t platform_value) {
         if (!frame || !device_state().usable() || !font || !font->font || layout.glyphs.empty() ||
             clip.empty()) {
             return;
@@ -620,9 +620,9 @@ public:
                                  static_cast<int>(fx_glyph_cache::phase_count) - 1)
                     : 0;
             const glyph_atlas_key key{font,          glyph.id,       phase,
-                                      scale_percent, subpixel_order, alternate};
+                                      scale_percent, platform_value, alternate};
             const fx_glyph_cache::glyph_data& data =
-                cache.lookup_glyph_data(glyph.id, subpixel_order, alternate);
+                cache.lookup_glyph_data(glyph.id, platform_value, alternate);
             ensure_phase_pages(&atlas, key, data);
             const fx_glyph_cache::glyph_phase& glyph_phase = data.phase_at(phase);
             const glyph_atlas_placement* placement = place(&atlas, key, glyph_phase, data.colored);
@@ -945,11 +945,11 @@ metal_render_context::metal_render_context(metal_frame* frame,
                                            double dpi_scale,
                                            const rect* dirty,
                                            int dirty_count,
-                                           uint32_t subpixel_order)
+                                           uint32_t platform_value)
     : frame_(frame),
       device_size_(frame ? frame->device_size() : vec2{}),
       dpi_scale_(dpi_scale > 0.0 ? dpi_scale : 1.0),
-      subpixel_order_(subpixel_order),
+      platform_value_(platform_value),
       has_stencil_(frame && frame->has_stencil()),
       scale_{dpi_scale_, dpi_scale_} {
     // A batch can only refer to the frame that opened it; anything left over belongs to a frame
@@ -1057,7 +1057,7 @@ void metal_render_context::draw_shaped_text(
         rect_batch_->flush();
     }
     text_render_state().draw(font, *layout, position, normalized, translation_, scale_, frame_,
-                             clip_, subpixel_positioning, subpixel_order_);
+                             clip_, subpixel_positioning, platform_value_);
 }
 
 void metal_render_context::translate(double x, double y) {

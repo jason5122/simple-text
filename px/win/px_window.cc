@@ -23,6 +23,7 @@
 
 #include "base/strings.h"
 #include "base/unicode.h"
+#include "fx/fx.h"
 #include "px/gl_render_context.h"
 #include "px/px_gl.h"
 #include "px/skia_render_context.h"
@@ -209,6 +210,13 @@ void paint_window(px_window_t* window) {
         dirty.push_back(bounds);
     }
 
+    // DirectWrite's gamma, contrast, ClearType level and pixel geometry are per-monitor, so glyphs
+    // cached for one display must not be reused on another. ST resolves the window's monitor here
+    // in the paint arm rather than at startup (0x1401bfc64), which is what lets a window dragged
+    // between displays pick up the new display's settings.
+    const uint32_t platform_value =
+        fx_monitor_platform_value(MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST));
+
     if (window->use_gl && device.x >= 1.0 && device.y >= 1.0) {
         px_win_gl_make_current(window);
 
@@ -226,7 +234,7 @@ void paint_window(px_window_t* window) {
             dirty.push_back(paint_bounds);
         }
         gl_render_context rc(device, scale, dirty.data(), static_cast<int>(dirty.size()),
-                             window->has_stencil);
+                             window->has_stencil, platform_value);
         window->handler->paint(&rc, rc.paint_bounds(), dirty.data(),
                                static_cast<int>(dirty.size()));
         rc.finish();
@@ -260,7 +268,7 @@ void paint_window(px_window_t* window) {
             };
 
             skia_render_context rc(px_pixel_buffer{pixels.data(), width, height, row_bytes},
-                                   pixel_clip, scale);
+                                   pixel_clip, scale, platform_value);
             if (rc.valid()) {
                 window->handler->paint(&rc, paint_bounds, dirty.data(),
                                        static_cast<int>(dirty.size()));

@@ -22,7 +22,7 @@ double elapsed_ms(clock_type::time_point start) {
 // land entirely inside the first benchmark and make it look slower than it is. Spinning raises the
 // clock; sleeping does not.
 void warm_up_clock() {
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     volatile uint64_t sink = 0;
     while (elapsed_ms(start) < 50.0) {
         for (int i = 0; i < 4096; ++i) {
@@ -61,7 +61,7 @@ void append_utf8(std::string& out, char32_t cp) {
 std::vector<fx_glyph> shape_all(fx_font& font, std::span<const std::string> lines) {
     std::vector<fx_glyph> glyphs;
     for (const std::string& line : lines) {
-        const std::unique_ptr<fx_layout> layout = font.shape(line);
+        std::unique_ptr<fx_layout> layout = font.shape(line);
         glyphs.insert(glyphs.end(), layout->glyphs.begin(), layout->glyphs.end());
     }
     return glyphs;
@@ -99,9 +99,9 @@ std::vector<uint32_t> make_glyph_universe(fx_font& font, size_t target) {
     std::unordered_set<uint32_t> seen;
     std::vector<uint32_t> ids;
     std::string line;
-    const auto shape_line = [&] {
+    auto shape_line = [&] {
         if (line.empty()) return;
-        const std::unique_ptr<fx_layout> layout = font.shape(line);
+        std::unique_ptr<fx_layout> layout = font.shape(line);
         for (const fx_glyph& glyph : layout->glyphs) {
             if (ids.size() < target && seen.insert(glyph.id).second) {
                 ids.push_back(glyph.id);
@@ -147,12 +147,12 @@ size_t cached_pixel_bytes(fx_glyph_cache& cache, std::span<const uint32_t> ids) 
 // its ink. This is what an editor pays the first time a character reaches the screen.
 void benchmark_fill(fx_font& font, std::span<const uint32_t> ids, float scale) {
     fx_glyph_cache cache(font, scale);
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     for (uint32_t id : ids) {
         cache.lookup_glyph_data(id);
     }
-    const double ms = elapsed_ms(start);
-    const size_t bytes = cached_pixel_bytes(cache, ids);
+    double ms = elapsed_ms(start);
+    size_t bytes = cached_pixel_bytes(cache, ids);
     std::println("fill (cold)        {:8.2f} ms  {} glyphs, {:.1f} us/glyph, {} KB of tiles", ms,
                  ids.size(), ms * 1000.0 / static_cast<double>(ids.size()), bytes / 1024);
 }
@@ -162,7 +162,7 @@ uint64_t time_lookups(fx_glyph_cache& cache,
                       size_t repeats,
                       double& ms_out) {
     uint64_t checksum = 0;
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     for (size_t r = 0; r < repeats; ++r) {
         for (uint32_t id : stream) {
             checksum += cache.lookup_glyph_data(id).phase_at(0).width;
@@ -188,18 +188,17 @@ void benchmark_editor_stream(fx_font& font,
     }
 
     uint64_t checksum = 0;
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     for (size_t r = 0; r < repeats; ++r) {
         for (const fx_glyph& glyph : glyphs) {
             const fx_glyph_cache::glyph_data& data = cache.lookup_glyph_data(glyph.id);
-            const size_t phase =
-                static_cast<size_t>(glyph.x_offset * fx_glyph_cache::phase_count) %
-                fx_glyph_cache::phase_count;
+            size_t phase = static_cast<size_t>(glyph.x_offset * fx_glyph_cache::phase_count) %
+                           fx_glyph_cache::phase_count;
             checksum += data.phase_at(phase).width;
         }
     }
-    const double ms = elapsed_ms(start);
-    const size_t lookups = glyphs.size() * repeats;
+    double ms = elapsed_ms(start);
+    size_t lookups = glyphs.size() * repeats;
     report_lookups("editor stream", ms, lookups, checksum);
 
     // A dense screenful is roughly 60 lines of 80 columns; the renderer does one lookup per glyph.
@@ -219,10 +218,10 @@ void benchmark_random(fx_font& font,
     for (uint32_t id : ids) {
         cache.lookup_glyph_data(id);
     }
-    const std::vector<uint32_t> stream = make_random_stream(ids, stream_length);
+    std::vector<uint32_t> stream = make_random_stream(ids, stream_length);
 
     double ms = 0.0;
-    const uint64_t checksum = time_lookups(cache, stream, repeats, ms);
+    uint64_t checksum = time_lookups(cache, stream, repeats, ms);
     report_lookups("random access", ms, stream.size() * repeats, checksum);
 }
 
@@ -247,16 +246,16 @@ void benchmark_working_set(fx_font& font, std::span<const uint32_t> universe, fl
     std::println("working set sweep (random access):");
     for (size_t size : kSizes) {
         if (size > shuffled.size()) continue;
-        const std::span<const uint32_t> ids = std::span<const uint32_t>{shuffled}.first(size);
+        std::span<const uint32_t> ids = std::span<const uint32_t>{shuffled}.first(size);
         fx_glyph_cache cache(font, scale);
         for (uint32_t id : ids) {
             cache.lookup_glyph_data(id);
         }
-        const std::vector<uint32_t> stream = make_random_stream(ids, kStreamLength);
+        std::vector<uint32_t> stream = make_random_stream(ids, kStreamLength);
 
         double ms = 0.0;
-        const uint64_t checksum = time_lookups(cache, stream, kRepeats, ms);
-        const size_t lookups = stream.size() * kRepeats;
+        uint64_t checksum = time_lookups(cache, stream, kRepeats, ms);
+        size_t lookups = stream.size() * kRepeats;
         std::println("  {:6} glyphs   {:8.2f} ms  {:.2f} ns/lookup, {} KB of tiles, checksum = {}",
                      size, ms, ms * 1e6 / static_cast<double>(lookups),
                      cached_pixel_bytes(cache, ids) / 1024, checksum);
@@ -279,29 +278,29 @@ void benchmark_alternate(fx_font& font,
             cache.lookup_glyph_data(id, 0, false);
             cache.lookup_glyph_data(id, 0, true);
         }
-        const std::vector<uint32_t> stream = make_random_stream(ids, stream_length);
+        std::vector<uint32_t> stream = make_random_stream(ids, stream_length);
 
         uint64_t checksum = 0;
-        const auto start = clock_type::now();
+        auto start = clock_type::now();
         for (size_t r = 0; r < repeats; ++r) {
             for (size_t i = 0; i < stream.size(); ++i) {
                 checksum += cache.lookup_glyph_data(stream[i], 0, (i & 1) != 0).phase_at(0).width;
             }
         }
-        const double ms = elapsed_ms(start);
+        double ms = elapsed_ms(start);
         report_lookups("alternating maps", ms, stream.size() * repeats, checksum);
     }
 }
 
 void run_all(std::string_view family, float size, float scale) {
-    const std::unique_ptr<fx_font> font = fx_create_font(family, size, 0);
+    std::unique_ptr<fx_font> font = fx_create_font(family, size, 0);
     if (!font) {
         std::println("could not create font \"{}\"", family);
         return;
     }
 
-    const std::vector<fx_glyph> editor_stream = make_editor_stream(*font);
-    const std::vector<uint32_t> universe = make_glyph_universe(*font, 16384);
+    std::vector<fx_glyph> editor_stream = make_editor_stream(*font);
+    std::vector<uint32_t> universe = make_glyph_universe(*font, 16384);
     // The platform rasterizer keeps its own per-glyph caches for the life of the process, so the
     // fill benchmark would otherwise be charged for warming them on everyone else's behalf.
     {

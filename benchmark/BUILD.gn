@@ -1,82 +1,55 @@
+assert(is_mac, "//benchmark is macOS-only")
+
 group("benchmark") {
   deps = [
-    ":drag_benchmark",
-    ":render_benchmark",
-    ":resize_benchmark",
+    ":drive_scroll",
+    ":glass_capture",
     ":scroll_benchmark",
+    ":scrollbar_benchmark",
     ":startup_benchmark",
-    "//benchmark/smoothness",
   ]
-  if (is_mac) {
-    deps += [
-      ":benchmark_analyzer",
-      ":move_mouse",
-    ]
-  }
 }
 
-executable("drag_benchmark") {
-  sources = [ "drag_benchmark.cc" ]
-  deps = [ "//px" ]
-}
-
-executable("render_benchmark") {
-  sources = [ "render_benchmark.cc" ]
-  deps = [ "../ui:retained_text" ]
-
-  if (is_mac) {
-    defines = [ "GL_SILENCE_DEPRECATION" ]
-  }
-}
-
-executable("resize_benchmark") {
-  sources = [
-    "resize_benchmark.cc",
-    "resize_sweep.h",
+# Posts a recorded scroll at the HID tap into any application's window, for
+# comparisons under Instruments (benchmark/README.md, "Measuring other apps").
+executable("drive_scroll") {
+  sources = [ "drive_scroll.mm" ]
+  frameworks = [
+    "AppKit.framework",
+    "ApplicationServices.framework",
   ]
-  deps = [
-    "//fx",
-    "//px",
+}
+
+# Captures what the display shows of any application's window at the refresh
+# rate (benchmark/README.md, "Measuring other apps").
+executable("glass_capture") {
+  sources = [ "glass_capture.mm" ]
+  frameworks = [
+    "AppKit.framework",
+    "CoreMedia.framework",
+    "CoreVideo.framework",
+    "Foundation.framework",
+    "ScreenCaptureKit.framework",
   ]
 }
 
 executable("scroll_benchmark") {
-  sources = [
-    "scroll_benchmark.cc",
-    "smoothness/timed_input.h",
-  ]
-  if (is_mac) {
-    sources += [ "smoothness/timed_input_mac.mm" ]
-  } else {
-    sources += [ "smoothness/timed_input_portable.cc" ]
-  }
+  sources = [ "scroll_benchmark.cc" ]
   deps = [
-    "//benchmark/smoothness:scroll_trace_data",
     "//px",
-    "//ui:retained_text",
-    "//ui:smooth_scroll",
+    "//ui",
+  ]
+}
+
+executable("scrollbar_benchmark") {
+  sources = [ "scrollbar_benchmark.cc" ]
+  deps = [
+    "//px",
+    "//ui",
   ]
 }
 
 executable("startup_benchmark") {
   sources = [ "startup_benchmark.cc" ]
-  deps = [ "//ui:window" ]
-}
-
-if (is_mac) {
-  executable("benchmark_analyzer") {
-    sources = [ "analyzer.mm" ]
-
-    frameworks = [
-      "AVFoundation.framework",
-      "CoreMedia.framework",
-      "CoreVideo.framework",
-      "Foundation.framework",
-    ]
-  }
-
-  executable("move_mouse") {
-    sources = [ "move_mouse.cc" ]
-    frameworks = [ "ApplicationServices.framework" ]
-  }
+  deps = [ "//ui" ]
 }

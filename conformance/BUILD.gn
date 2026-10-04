@@ -29,7 +29,7 @@ executable("buffer_conformance") {
     ":test_config",
     ":test_corpus",
     "//px",
-    "//ui:retained_text",
+    "//ui",
   ]
 }
 
@@ -41,7 +41,7 @@ executable("metrics_conformance") {
     ":test_corpus",
     "//base",
     "//px",
-    "//ui:grapheme_shaper",
+    "//ui",
   ]
 }
 
@@ -138,8 +138,8 @@ copy("test_corpus") {
 copy("ui_test_config") {
   sources = [
     "tests-ui/faces-linux.txt",
-    "tests-ui/faces-win.txt",
     "tests-ui/faces-mac.txt",
+    "tests-ui/faces-win.txt",
     "tests-ui/sizes.txt",
   ]
   outputs = [ "$root_out_dir/capture-tests-ui/{{source_file_part}}" ]
@@ -165,7 +165,7 @@ executable("ui_conformance") {
     ":ui_test_config",
     ":ui_test_corpus",
     "//px",
-    "//ui:retained_text",
+    "//ui",
   ]
 }
 

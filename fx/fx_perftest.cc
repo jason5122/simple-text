@@ -22,7 +22,7 @@ double elapsed_ms(clock_type::time_point start) {
 // land entirely inside the first benchmark and make it look slower than it is. Spinning raises the
 // clock; sleeping does not.
 void warm_up_clock() {
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     volatile uint64_t sink = 0;
     while (elapsed_ms(start) < 50.0) {
         for (int i = 0; i < 4096; ++i) {
@@ -73,13 +73,13 @@ void append_utf8(std::string& out, char32_t cp) {
 std::vector<std::string> make_glyph_coverage_lines() {
     std::vector<std::string> lines;
     std::string line;
-    const auto flush = [&] {
+    auto flush = [&] {
         if (!line.empty()) {
             lines.push_back(std::move(line));
             line.clear();
         }
     };
-    const auto add_range = [&](char32_t first, char32_t last) {
+    auto add_range = [&](char32_t first, char32_t last) {
         for (char32_t cp = first; cp <= last; ++cp) {
             append_utf8(line, cp);
             // Keep lines short enough that shaping stays the per-line operation it is in practice.
@@ -99,7 +99,7 @@ std::vector<std::string> make_glyph_coverage_lines() {
 std::vector<fx_glyph> shape_all(fx_font& font, std::span<const std::string> lines) {
     std::vector<fx_glyph> glyphs;
     for (const std::string& line : lines) {
-        const std::unique_ptr<fx_layout> layout = font.shape(line);
+        std::unique_ptr<fx_layout> layout = font.shape(line);
         glyphs.insert(glyphs.end(), layout->glyphs.begin(), layout->glyphs.end());
     }
     return glyphs;
@@ -123,12 +123,12 @@ void benchmark_shape(fx_font& font, std::span<const std::string> lines) {
     }
 
     uint64_t glyph_count = 0;
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     for (const std::string& line : lines) {
-        const std::unique_ptr<fx_layout> layout = font.shape(line);
+        std::unique_ptr<fx_layout> layout = font.shape(line);
         glyph_count += layout->glyphs.size();
     }
-    const double ms = elapsed_ms(start);
+    double ms = elapsed_ms(start);
     std::println("shape          {:9.2f} ms  {} lines, {} glyphs, {:.2f} us/line, {:.1f} MB/s", ms,
                  lines.size(), glyph_count, ms * 1000.0 / static_cast<double>(lines.size()),
                  static_cast<double>(bytes) / (ms / 1000.0) / (1024.0 * 1024.0));
@@ -139,14 +139,14 @@ void benchmark_shape(fx_font& font, std::span<const std::string> lines) {
 void benchmark_rasterize(fx_font& font, std::span<const uint32_t> ids, float scale) {
     fx_glyph_cache cache(font, scale);
     uint64_t tile_pixels = 0;
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     for (uint32_t id : ids) {
         const fx_glyph_cache::glyph_data& data = cache.lookup_glyph_data(id);
         for (const fx_glyph_cache::glyph_phase& phase : data.phases) {
             tile_pixels += static_cast<uint64_t>(phase.width) * phase.height;
         }
     }
-    const double ms = elapsed_ms(start);
+    double ms = elapsed_ms(start);
     std::println("rasterize      {:9.2f} ms  {} glyphs x {} phases, {:.1f} us/glyph, {} px cached",
                  ms, ids.size(), fx_glyph_cache::phase_count,
                  ms * 1000.0 / static_cast<double>(ids.size()), tile_pixels);
@@ -160,15 +160,15 @@ void benchmark_cache_hit(fx_font& font, std::span<const fx_glyph> glyphs, float 
     }
 
     uint64_t checksum = 0;
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     for (const fx_glyph& glyph : glyphs) {
         const fx_glyph_cache::glyph_data& data = cache.lookup_glyph_data(glyph.id);
         // The phase a renderer would pick from the glyph's fractional pen position.
-        const size_t phase = static_cast<size_t>(glyph.x_offset * fx_glyph_cache::phase_count) %
-                             fx_glyph_cache::phase_count;
+        size_t phase = static_cast<size_t>(glyph.x_offset * fx_glyph_cache::phase_count) %
+                       fx_glyph_cache::phase_count;
         checksum += data.phase_at(phase).width;
     }
-    const double ms = elapsed_ms(start);
+    double ms = elapsed_ms(start);
     std::println("cache hit      {:9.2f} ms  {} lookups, {:.1f} ns/lookup, checksum = {}", ms,
                  glyphs.size(), ms * 1e6 / static_cast<double>(glyphs.size()), checksum);
 }
@@ -190,15 +190,15 @@ uint32_t rasterize_one_phase(fx_font& font,
     }
 
     // The spare column catches the antialiased edge once a nonzero phase shifts the glyph right.
-    const int width = static_cast<int>(std::ceil(size.x)) + 1;
-    const int height = static_cast<int>(std::ceil(size.y));
+    int width = static_cast<int>(std::ceil(size.x)) + 1;
+    int height = static_cast<int>(std::ceil(size.y));
 
     // Monochrome glyphs are white ink on opaque black and carry their coverage in the color
     // channels; a color glyph is drawn over transparency and keeps its own colors.
-    const bool colored = font.is_color_glyph(glyph);
-    const color foreground = color::from_normalised(1.0f, 1.0f, 1.0f, 1.0f);
-    const color background = colored ? color::from_normalised(0.0f, 0.0f, 0.0f, 0.0f)
-                                     : color::from_normalised(0.0f, 0.0f, 0.0f, 1.0f);
+    bool colored = font.is_color_glyph(glyph);
+    color foreground = color::from_normalised(1.0f, 1.0f, 1.0f, 1.0f);
+    color background = colored ? color::from_normalised(0.0f, 0.0f, 0.0f, 0.0f)
+                               : color::from_normalised(0.0f, 0.0f, 0.0f, 1.0f);
 
     scratch.assign(static_cast<size_t>(width) * static_cast<size_t>(height),
                    background.packed_argb());
@@ -210,27 +210,27 @@ uint32_t rasterize_one_phase(fx_font& font,
 void benchmark_rasterize_raw(fx_font& font, std::span<const uint32_t> ids, float scale) {
     std::vector<uint32_t> scratch;
     uint64_t checksum = 0;
-    const auto start = clock_type::now();
+    auto start = clock_type::now();
     for (uint32_t id : ids) {
         checksum += rasterize_one_phase(font, id, scale, scratch);
     }
-    const double ms = elapsed_ms(start);
+    double ms = elapsed_ms(start);
     std::println("rasterize raw  {:9.2f} ms  {} glyphs x 1 phase, {:.1f} us/glyph, checksum = {}",
                  ms, ids.size(), ms * 1000.0 / static_cast<double>(ids.size()), checksum);
 }
 
 void run_all(std::string_view family, float size, float scale, size_t line_count) {
-    const std::unique_ptr<fx_font> font = fx_create_font(family, size, 0);
+    std::unique_ptr<fx_font> font = fx_create_font(family, size, 0);
     if (!font) {
         std::println("could not create font \"{}\"", family);
         return;
     }
 
-    const std::vector<std::string> lines = make_lines(line_count);
+    std::vector<std::string> lines = make_lines(line_count);
     // Untimed: gives the platform shaper a chance to populate its own caches, and produces the
     // glyph stream the cache-hit benchmark replays.
-    const std::vector<fx_glyph> glyphs = shape_all(*font, lines);
-    const std::vector<uint32_t> ids = unique_ids(shape_all(*font, make_glyph_coverage_lines()));
+    std::vector<fx_glyph> glyphs = shape_all(*font, lines);
+    std::vector<uint32_t> ids = unique_ids(shape_all(*font, make_glyph_coverage_lines()));
 
     // The platform rasterizer keeps its own per-glyph caches for the life of the process, so
     // whichever benchmark ran first would otherwise absorb that cost on behalf of the others.
@@ -243,7 +243,7 @@ void run_all(std::string_view family, float size, float scale, size_t line_count
         }
     }
 
-    const fx_font_metrics metrics = font->metrics();
+    fx_font_metrics metrics = font->metrics();
     std::println("--- {} {}px at {}x scale, line height {} ---", family, size, scale,
                  metrics.line_height);
     benchmark_shape(*font, lines);

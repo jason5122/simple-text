@@ -9,10 +9,6 @@ group("all") {
     "//fx:fx_glyph_cache_perftest",
     "//fx:fx_perftest",
   ]
-
-  if (is_mac) {
-    deps += [ "//benchmark" ]
-  }
 }
 
 group("tests") {

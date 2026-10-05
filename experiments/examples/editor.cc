@@ -6,7 +6,6 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
-#include <format>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -85,13 +84,7 @@ constexpr double kTabStripHeight = 32.0;
 constexpr double kStatusBarHeight = 22.0;
 constexpr double kStatusBarPadding = 16.0;
 
-// Where scroll and drag frames come from. Where the OS smooths frames painted from the events
-// (a build linked against the macOS 26 SDK; PX_OS_SMOOTHS_EVENT_FRAMES in px/px.h), every scroll
-// event adds its delta and every mouse event moves the thumb, each painting its own frame in the
-// event's own turn, with nothing sampled and no display link: Sublime Text's model. Elsewhere the
-// display link paints, sampling the input's trajectory a little behind each tick
-// (ui/smooth_scroll). Replace the initializer to try the other path.
-constexpr bool kPaintOnEvents = PX_OS_SMOOTHS_EVENT_FRAMES;
+constexpr bool kPaintOnEvents = true;
 
 // Colours. The light values are Sublime's; the dark palette sits beside it, field for field, so
 // either can be edited in place. Cmd-3 switches between them, as between Sublime's Default and
@@ -962,7 +955,7 @@ private:
     bool sidebar_visible_ = true;
     bool find_panel_visible_ = false;
     bool highlight_gutter_ = false;
-    bool dark_mode_ = false;
+    bool dark_mode_ = true;
     // The editor's area, kept from the resize events and the bounds it paints with.
     vec2 size_;
     std::string find_query_;

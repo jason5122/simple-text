@@ -1,28 +1,7 @@
-// The CAMetalLayer backing.
-//
-// ST has no Metal path; this one is laid out to match px_gl_layer.mm so the two can be compared
-// frame for frame:
-//
-//   * One process-wide device and command queue, owned by metal_render_context.mm, so pipelines
-//     and glyph atlases are shared by every window the way the single CGL context shares them.
-//
-//   * Rendering goes into a persistent BGRA8 texture, preserving ST's dirty-region economy before
-//     a blit to the drawable.
-//
-//   * Drawing is driven by setNeedsDisplayInRect: and the display link through an override of
-//     -display. Nothing polls.
-//
-//   * Presentation is tied to the Core Animation transaction (presentsWithTransaction), which is
-//     what CAOpenGLLayer's synchronous drawInCGLContext: provided implicitly: the frame that
-//     answers a resize lands in the same commit as the new bounds. Display-link frames take the
-//     same path; the tick only marks the window dirty. Presenting drawables directly from the
-//     tick was measured to run the windowed layer at 60 Hz with 40 ms of latency, and mixing the
-//     two modes made the window server discard most frames.
-
 #include "px/mac/px_mac_private.h"
 #include "px/metal_render_context.h"
-#import <Metal/Metal.h>
-#import <QuartzCore/CAMetalLayer.h>
+#include <Metal/Metal.h>
+#include <QuartzCore/CAMetalLayer.h>
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -39,6 +18,8 @@
     NSUInteger _backingWidth;
     NSUInteger _backingHeight;
     bool _stencilUnavailable;
+    NSUInteger _presentedWidth;
+    NSUInteger _presentedHeight;
 }
 - (instancetype)initWithPXW:(px_window_t*)pxw device:(id<MTLDevice>)device;
 - (void)addDirtyRect:(rect)r;
@@ -54,13 +35,15 @@
         _backingWidth = 0;
         _backingHeight = 0;
         _stencilUnavailable = false;
+        _presentedWidth = 0;
+        _presentedHeight = 0;
 
         self.device = device;
         self.pixelFormat = MTLPixelFormatBGRA8Unorm;
         self.maximumDrawableCount = 3;
         // The drawable is only ever a blit destination, which framebufferOnly forbids.
         self.framebufferOnly = NO;
-        self.presentsWithTransaction = YES;
+        self.presentsWithTransaction = NO;
 
         // Seed with a full-size rect so the first frame is a complete repaint.
         _dirty.push_back(rect{0.0, 0.0, px_window_size(pxw).x, px_window_size(pxw).y});
@@ -69,7 +52,7 @@
 }
 
 - (void)addDirtyRect:(rect)r {
-    const std::lock_guard lock(_dirtyMutex);
+    std::lock_guard lock(_dirtyMutex);
     _dirty.push_back(r);
 }
 
@@ -119,7 +102,7 @@
         return;
     }
 
-    const double scale = px_window_dpi_scale_factor(_pxw);
+    double scale = px_window_dpi_scale_factor(_pxw);
     self.contentsScale = scale;
 
     // With no colorspace set, the window server colour-matches CAMetalLayer content from sRGB to
@@ -133,19 +116,19 @@
         self.colorspace = windowColorSpace;
     }
 
-    const vec2 size = px_window_size(_pxw);
-    const vec2 device{std::floor(size.x * scale), std::floor(size.y * scale)};
-    const NSUInteger width = static_cast<NSUInteger>(device.x);
-    const NSUInteger height = static_cast<NSUInteger>(device.y);
+    vec2 size = px_window_size(_pxw);
+    vec2 device{std::floor(size.x * scale), std::floor(size.y * scale)};
+    NSUInteger width = static_cast<NSUInteger>(device.x);
+    NSUInteger height = static_cast<NSUInteger>(device.y);
     if (width < 1 || height < 1) {
         return;
     }
     self.drawableSize = CGSizeMake(device.x, device.y);
-    const rect windowBounds{0.0, 0.0, size.x, size.y};
+    rect windowBounds{0.0, 0.0, size.x, size.y};
 
     std::vector<rect> dirty;
     {
-        const std::lock_guard lock(_dirtyMutex);
+        std::lock_guard lock(_dirtyMutex);
         dirty.swap(_dirty);
     }
     // AppKit displays the layer synchronously inside a window resize, after windowDidResize: has
@@ -190,9 +173,10 @@
 
     // Acquire only after recording the persistent scene so a temporary drawable shortage never
     // delays painting.
+    bool resized = width != _presentedWidth || height != _presentedHeight;
     id<CAMetalDrawable> drawable = [self nextDrawable];
-    const uint64_t frameId = _pxw->next_frame_id;
-    const std::function<void(uint64_t, double)> presentedCallback = _pxw->frame_presented_callback;
+    uint64_t frameId = _pxw->next_frame_id;
+    std::function<void(uint64_t, double)> presentedCallback = _pxw->frame_presented_callback;
     if (drawable) {
         id<MTLTexture> destination = drawable.texture;
         id<MTLBlitCommandEncoder> blit = [commandBuffer blitCommandEncoder];
@@ -211,19 +195,35 @@
     }
     if (drawable && presentedCallback) {
         [drawable addPresentedHandler:^(id<MTLDrawable> presentedDrawable) {
-          const double presentedTime = presentedDrawable.presentedTime;
+          double presentedTime = presentedDrawable.presentedTime;
           dispatch_async(dispatch_get_main_queue(), ^{
             presentedCallback(frameId, presentedTime);
           });
         }];
     }
 
-    [commandBuffer commit];
+    bool fullScreen = (_pxw->window.styleMask & NSWindowStyleMaskFullScreen) != 0;
+    BOOL wantOpaque = fullScreen ? NO : (_pxw->background.a >= 1.0f ? YES : NO);
+    if (self.opaque != wantOpaque) {
+        self.opaque = wantOpaque;
+    }
+
     if (drawable) {
+        self.presentsWithTransaction = resized ? YES : NO;
+    }
+    if (drawable && !resized) {
+        [commandBuffer presentDrawable:drawable];
+    }
+    [commandBuffer commit];
+    if (drawable && resized) {
         // presentsWithTransaction requires the buffer to be scheduled before the drawable is
         // presented; only then does the presentation join the current transaction.
         [commandBuffer waitUntilScheduled];
         [drawable present];
+    }
+    if (drawable) {
+        _presentedWidth = width;
+        _presentedHeight = height;
     } else {
         // The pool was exhausted. The persistent texture is up to date, so another display will
         // put it on screen.

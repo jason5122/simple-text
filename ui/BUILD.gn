@@ -4,10 +4,6 @@ source_set("ui") {
     "grapheme_shaper.h",
     "retained_text.cc",
     "retained_text.h",
-    "scroll_predictor.cc",
-    "scroll_predictor.h",
-    "smooth_scroll.cc",
-    "smooth_scroll.h",
     "window.cc",
     "window.h",
   ]
@@ -23,8 +19,6 @@ source_set("ui_unittests") {
   testonly = true
   sources = [
     "grapheme_shaper_unittest.cc",
-    "scroll_predictor_unittest.cc",
-    "smooth_scroll_unittest.cc",
   ]
   deps = [
     ":ui",

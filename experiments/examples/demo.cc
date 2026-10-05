@@ -1,7 +1,7 @@
 #include "px/px.h"
 #include "ui/retained_text.h"
-#include "ui/smooth_scroll.h"
 #include "ui/window.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <print>
@@ -96,15 +96,9 @@ public:
             break;
 
         case PX_EVENT_SCROLL:
-            if (event->precise_scroll) {
-                if (scroll_.scroll(-event->scroll_delta.y, event->timestamp, kMaximumScroll)) {
-                    window_->mark_dirty();
-                }
-            } else {
-                scroll_.jump_to(scroll_.offset() - event->scroll_delta.y, kMaximumScroll);
-                window_->mark_dirty();
-            }
-            window_->set_animating(animate_phase_ || scroll_.animating());
+            scroll_offset_ =
+                std::clamp(scroll_offset_ - event->scroll_delta.y, 0.0, kMaximumScroll);
+            window_->mark_dirty();
             break;
 
         case PX_EVENT_MOUSE_MOTION:
@@ -126,10 +120,6 @@ public:
             phase_ = now * 1.5;
             window_->mark_dirty();
         }
-        if (scroll_.tick(px_now(), kMaximumScroll)) {
-            window_->mark_dirty();
-        }
-        window_->set_animating(animate_phase_ || scroll_.animating());
     }
 
     void draw(px_render_context* rc, rect bounds, const rect* dirty, int dirty_count) override {
@@ -152,7 +142,7 @@ public:
             }
         }
 
-        const double document_y = 72.0 - scroll_.offset();
+        const double document_y = 72.0 - scroll_offset_;
         const double document_width = std::max(280.0, bounds.w - 128.0);
         rc->draw_rect(rect{48.0, document_y, document_width, kDocumentHeight},
                       fcolor{0.105f, 0.115f, 0.135f, 1.0f});
@@ -295,7 +285,7 @@ private:
     static constexpr double kMaximumScroll = kDocumentHeight - 120.0;
     bool animate_phase_ = true;
     double phase_ = 0.0;
-    smooth_scroll scroll_;
+    double scroll_offset_ = 0.0;
     vec2 last_hover_pos_;
     PreparedText header_layout_;
     std::array<PreparedText, kSectionTitles.size()> section_layouts_;

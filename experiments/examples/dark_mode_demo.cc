@@ -1,6 +1,6 @@
 #include "px/px.h"
 #include "ui/retained_text.h"
-#include "ui/smooth_scroll.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -143,15 +143,9 @@ public:
 
     bool handle_event(px_event_t* event) override {
         if (event->type == PX_EVENT_SCROLL) {
-            if (event->precise_scroll) {
-                if (scroll_.scroll(-event->scroll_delta.y, event->timestamp, kMaximumScroll)) {
-                    px_mark_dirty(window_);
-                }
-            } else {
-                scroll_.jump_to(scroll_.offset() - event->scroll_delta.y, kMaximumScroll);
-                px_mark_dirty(window_);
-            }
-            px_set_animating(window_, scroll_.animating());
+            scroll_offset_ =
+                std::clamp(scroll_offset_ - event->scroll_delta.y, 0.0, kMaximumScroll);
+            px_mark_dirty(window_);
             return true;
         }
         if (event->type == PX_EVENT_KEY && event->pressed && event->key == PX_KEY_ESCAPE) {
@@ -159,13 +153,6 @@ public:
             return true;
         }
         return false;
-    }
-
-    void animation_tick(double now) override {
-        if (scroll_.tick(px_now(), kMaximumScroll)) {
-            px_mark_dirty(window_);
-        }
-        px_set_animating(window_, scroll_.animating());
     }
 
     void paint(px_render_context* context,
@@ -209,7 +196,7 @@ private:
         const double document_left = kSidebarWidth + kGutterWidth;
         const rect document_clip{kSidebarWidth, 0.0, viewport.w - kSidebarWidth, viewport.h};
         const int visible_rows = static_cast<int>(std::ceil(viewport.h / line_height_)) + 2;
-        const double scroll_offset = scroll_.offset();
+        const double scroll_offset = scroll_offset_;
         const int64_t first_line = static_cast<int64_t>(std::floor(scroll_offset / line_height_));
         const double fractional_scroll = scroll_offset - first_line * line_height_;
 
@@ -262,7 +249,7 @@ private:
     std::vector<PreparedLine> lines_;
     std::vector<PreparedText> sidebar_;
     std::vector<PreparedText> line_numbers_;
-    smooth_scroll scroll_;
+    double scroll_offset_ = 0.0;
 };
 
 }  // namespace

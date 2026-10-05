@@ -1,6 +1,5 @@
 #include "px/px.h"
 #include "ui/retained_text.h"
-#include "ui/smooth_scroll.h"
 #include "ui/window.h"
 #include <algorithm>
 #include <array>
@@ -83,8 +82,6 @@ constexpr double kTabStripHeight = 32.0;
 // The status bar along the very bottom, below the find panel: a caret position on the left.
 constexpr double kStatusBarHeight = 22.0;
 constexpr double kStatusBarPadding = 16.0;
-
-constexpr bool kPaintOnEvents = true;
 
 // Colours. The light values are Sublime's; the dark palette sits beside it, field for field, so
 // either can be edited in place. Cmd-3 switches between them, as between Sublime's Default and
@@ -488,22 +485,12 @@ public:
             // A taller window can leave the content past the new end of the range. It rests on
             // the end, as it does when the find panel closes or the font shrinks; otherwise the
             // next scroll event would snap it there.
-            if (scroll_.offset() > maximum_scroll_offset()) {
-                jump_scroll_to(scroll_.offset());
+            if (scroll_offset_ > maximum_scroll_offset()) {
+                jump_scroll_to(scroll_offset_);
             }
             break;
         case PX_EVENT_SCROLL:
-            if (event->precise_scroll && !kPaintOnEvents) {
-                // The display link paints; the event only feeds the trajectory.
-                if (scroll_.scroll(-event->scroll_delta.y, event->timestamp,
-                                   maximum_scroll_offset())) {
-                    window_->mark_dirty();
-                }
-                window_->set_animating(scroll_.animating());
-            } else {
-                // The event's own frame, painted by the commit that follows it.
-                jump_scroll_to(scroll_.offset() - event->scroll_delta.y);
-            }
+            jump_scroll_to(scroll_offset_ - event->scroll_delta.y);
             return true;
         case PX_EVENT_MOUSE_BUTTON:
             if (event->button != PX_MOUSE_LEFT) {
@@ -556,17 +543,6 @@ public:
         return false;
     }
 
-    void animation_tick(double now) override {
-        // Only the display-link path gets here; with kPaintOnEvents nothing starts the link.
-        // `now` is the frame's display time on macOS and the tick time elsewhere; the scroll
-        // samples against the tick time so it means the same thing on every platform.
-        const double tick_time = px_now();
-        if (scroll_.tick(tick_time, maximum_scroll_offset())) {
-            window_->mark_dirty();
-        }
-        window_->set_animating(scroll_.animating());
-    }
-
     void draw(px_render_context* context,
               rect bounds,
               const rect* dirty,
@@ -611,7 +587,7 @@ public:
         context->push_state(false);
         context->restrict_clip_rect(rect{sidebar_width, kTabStripHeight, bounds.w - sidebar_width,
                                          content_bottom() - kTabStripHeight});
-        const double scroll_offset = scroll_.offset();
+        const double scroll_offset = scroll_offset_;
         const int first_line = std::max(
             0, static_cast<int>(std::floor((scroll_offset - kTextTop) / line_height_)) - 1);
         const int last_line = std::min(
@@ -750,10 +726,7 @@ private:
         double previous_line_height = line_height_;
         set_body_font_size(body_font_size_ + delta);
         // Keep the same line at the top of the document, whichever view is showing.
-        scroll_.jump_to(scroll_.offset() * line_height_ / previous_line_height,
-                        std::max(0.0, document_height() - content_bottom()));
-        window_->set_animating(scroll_.animating());
-        window_->mark_dirty();
+        jump_scroll_to(scroll_offset_ * line_height_ / previous_line_height);
     }
 
     void set_find_query(std::string query) {
@@ -898,7 +871,7 @@ private:
             track.h, std::max(kMinimumThumbHeight, track.h * viewport_height / document_height()));
         const double travel = track.h - thumb_height;
         const double maximum_offset = maximum_scroll_offset();
-        const double progress = maximum_offset > 0.0 ? scroll_.offset() / maximum_offset : 0.0;
+        const double progress = maximum_offset > 0.0 ? scroll_offset_ / maximum_offset : 0.0;
         return rect{track.x, track.y + travel * progress, track.w, thumb_height};
     }
 
@@ -908,8 +881,7 @@ private:
     }
 
     void jump_scroll_to(double offset) {
-        scroll_.jump_to(offset, maximum_scroll_offset());
-        window_->set_animating(false);
+        scroll_offset_ = std::clamp(offset, 0.0, maximum_scroll_offset());
         window_->mark_dirty();
     }
 
@@ -951,7 +923,7 @@ private:
     px_font_metrics sidebar_title_metrics_;
     px_font_metrics sidebar_metrics_;
     px_font_metrics status_metrics_;
-    smooth_scroll scroll_;
+    double scroll_offset_ = 0.0;
     bool sidebar_visible_ = true;
     bool find_panel_visible_ = false;
     bool highlight_gutter_ = false;

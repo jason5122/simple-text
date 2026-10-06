@@ -426,31 +426,27 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 - (void)keyDown:(NSEvent*)event {
     [NSCursor setHiddenUntilMouseMoves:YES];
 
-    const BOOL hadMarkedText = [self hasMarkedText];
+    px_event_t e{};
+    e.type = PX_EVENT_KEY;
+    e.timestamp = event.timestamp;
+    e.key = px_mac_keycode_to_px_key(event.charactersIgnoringModifiers, event.keyCode,
+                                     event.modifierFlags);
+    e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
+    e.pressed = true;
+    e.repeat = event.isARepeat == YES;
 
-    // Bindings get first refusal, then the input context. That ordering is what ST does: it sends
-    // the key event to the handler, and only hands the event to the NSTextInputContext if the app
-    // did not consume it. An editor needs it this way, or Cmd-S would type an 's'.
-    BOOL consumed = NO;
-    if (!hadMarkedText && _pxw && _pxw->handler) {
-        px_event_t e{};
-        e.type = PX_EVENT_KEY;
-        e.timestamp = event.timestamp;
-        e.key = px_mac_keycode_to_px_key(event.charactersIgnoringModifiers, event.keyCode,
-                                         event.modifierFlags);
-        e.modifiers = px_mac_modifiers_from_ns(event.modifierFlags);
-        e.pressed = true;
-        e.repeat = event.isARepeat == YES;
-        e.window = _pxw;
-        consumed = _pxw->handler->handle_event(&e) ? YES : NO;
-        px_mac_dispatch_post_event_callbacks();
-    }
-
-    if (consumed) {
+    // Bindings get first refusal, then the input context, as in ST: an editor needs it this way,
+    // or Cmd-S would type an 's'. During a composition the input context goes first instead, and
+    // the key reaches the app only if the input method declined it.
+    BOOL hadMarkedText = [self hasMarkedText];
+    if (!hadMarkedText && px_mac_send_event(_pxw, &e)) {
         [self.inputContext discardMarkedText];
         return;
     }
-    [self.inputContext handleEvent:event];
+    BOOL handled = [self.inputContext handleEvent:event];
+    if (hadMarkedText && !handled) {
+        px_mac_send_event(_pxw, &e);
+    }
 }
 
 - (void)keyUp:(NSEvent*)event {
@@ -751,21 +747,21 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 // THE FUNNEL
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 
-void px_mac_send_event(px_window_t* window, px_event_t* event) {
+bool px_mac_send_event(px_window_t* window, px_event_t* event) {
     if (!window || !window->handler) {
-        return;
+        return false;
     }
     event->window = window;
     if (event->timestamp == 0.0) {
         event->timestamp = px_now();
     }
-    window->handler->handle_event(event);
-
-    if (window->did_first_paint && event->type >= PX_EVENT_MOUSE_BUTTON) {
+    bool handled = window->handler->handle_event(event);
+    if (window->did_first_paint) {
         window->handler->pre_sleep();
         px_mac_flush_dirty_rects(window);
     }
     px_mac_dispatch_post_event_callbacks();
+    return handled;
 }
 
 void px_mac_flush_dirty_rects(px_window_t* window) {

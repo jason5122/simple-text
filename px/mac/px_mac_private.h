@@ -66,7 +66,7 @@ struct px_window_t {
 };
 
 // Implemented in px_window.mm.
-void px_mac_send_event(px_window_t* window, px_event_t* event);
+bool px_mac_send_event(px_window_t* window, px_event_t* event);
 void px_mac_flush_dirty_rects(px_window_t* window);
 void px_mac_update_display_link(px_window_t* window);
 void px_mac_dispatch_post_event_callbacks();

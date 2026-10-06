@@ -7,6 +7,7 @@ group("examples") {
     ":editor",
     ":empty_scene",
     ":glow_demo",
+    ":input_latency_demo",
     ":resize_demo",
     ":skia_demo",
   ]
@@ -62,6 +63,14 @@ executable("editor") {
     "//ui",
   ]
 }
+executable("input_latency_demo") {
+  sources = [ "input_latency_demo.cc" ]
+  deps = [
+    "//px",
+    "//ui",
+  ]
+}
+
 executable("skia_demo") {
   sources = [ "skia_demo.cc" ]
   deps = [ "//px" ]

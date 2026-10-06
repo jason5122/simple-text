@@ -1,0 +1,18 @@
+assert(is_mac, "//benchmark is macOS-only")
+
+group("benchmark") {
+  deps = [ ":input_latency" ]
+}
+
+executable("input_latency") {
+  sources = [ "input_latency.mm" ]
+  frameworks = [
+    "AppKit.framework",
+    "ApplicationServices.framework",
+    "CoreMedia.framework",
+    "CoreVideo.framework",
+    "Foundation.framework",
+    "QuartzCore.framework",
+    "ScreenCaptureKit.framework",
+  ]
+}

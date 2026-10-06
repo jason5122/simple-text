@@ -336,8 +336,7 @@ public:
     // Called immediately before a paint. Where ST reconciles layout so paint() can stay pure.
     virtual void pre_paint() {}
 
-    // The event loop is about to block, and on macOS also after each non-keyboard event, ahead
-    // of the dirty flush (ST's send_event post-condition). Last chance to flush lazy work.
+    // The event loop is about to block. Last chance to flush lazy work.
     virtual void pre_sleep() {}
 
     // Fast path for quit: may the window close without asking the user anything?

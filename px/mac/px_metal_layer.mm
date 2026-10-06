@@ -202,6 +202,8 @@
         }];
     }
 
+    // When in fullscreen, Metal presents in direct mode. However, we can't seem to get fully
+    // smooth rendering in direct mode, so we force composited mode by setting `opaque = NO`.
     bool fullScreen = (_pxw->window.styleMask & NSWindowStyleMaskFullScreen) != 0;
     BOOL wantOpaque = fullScreen ? NO : (_pxw->background.a >= 1.0f ? YES : NO);
     if (self.opaque != wantOpaque) {

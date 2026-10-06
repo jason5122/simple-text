@@ -37,7 +37,6 @@ source_set("base") {
     "rand_util.cc",
     "rand_util.h",
     "strings.h",
-    "third_party/icu/icu_utf.h",
     "time/time.h",
     "unicode.cc",
     "unicode.h",

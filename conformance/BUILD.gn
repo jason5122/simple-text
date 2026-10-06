@@ -28,6 +28,7 @@ executable("buffer_conformance") {
     ":scripts",
     ":test_config",
     ":test_corpus",
+    "//base",
     "//px",
     "//ui",
   ]

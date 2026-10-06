@@ -25,12 +25,18 @@ executable("demo") {
 
 executable("dark_mode_demo") {
   sources = [ "dark_mode_demo.cc" ]
-  deps = [ "//ui" ]
+  deps = [
+    "//px",
+    "//ui",
+  ]
 }
 
 executable("control_char_demo") {
   sources = [ "control_char_demo.cc" ]
-  deps = [ "//ui" ]
+  deps = [
+    "//px",
+    "//ui",
+  ]
 }
 
 executable("glow_demo") {

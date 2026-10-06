@@ -27,8 +27,4 @@ group("experiments") {
     "//experiments/playground",
     "//experiments/rope",
   ]
-
-  if (is_mac) {
-    deps += [ "//experiments/mac_startup_benchmark" ]
-  }
 }

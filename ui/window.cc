@@ -48,6 +48,10 @@ void window_impl::set_handler(window_handler* handler) { handler_ = handler; }
 
 void window_impl::set_input_client(px_input_client* client) { input_client_ = client; }
 
+void window_impl::set_cursor(px_cursor_t cursor) { px_set_cursor(px_window_, cursor); }
+
+void window_impl::reset_cursor() { px_reset_cursor(px_window_); }
+
 // ── px_window_event_handler ─────────────────────────────────────────────────────────────────────
 
 bool window_impl::handle_event(px_event_t* event) {
@@ -94,7 +98,9 @@ void window_impl::try_close(std::function<void(bool)> done) {
     handler_->try_close(this, std::move(done));
 }
 
-px_cursor_t window_impl::calculate_cursor(vec2 pos) { return PX_CURSOR_ARROW; }
+px_cursor_t window_impl::calculate_cursor(vec2 pos) {
+    return root_ ? root_->calculate_cursor(pos) : PX_CURSOR_ARROW;
+}
 
 void window_impl::animation_tick(double now) {
     if (root_) {

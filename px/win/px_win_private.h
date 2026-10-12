@@ -42,6 +42,9 @@ struct px_window_t {
 
     fcolor background{0.0f, 0.0f, 0.0f, 1.0f};
     px_cursor_t cursor = PX_CURSOR_ARROW;
+    // px_set_cursor holds the cursor until px_reset_cursor; WM_SETCURSOR shows `cursor` as is
+    // meanwhile instead of asking the handler. ST keeps the inverse flag at +0x160.
+    bool cursor_locked = false;
     HBRUSH background_brush = nullptr;
 
     // Pending regions in window-space points, drained into InvalidateRect.

@@ -40,6 +40,11 @@ public:
         caret_ = boundaries_.size() - 1;
     }
 
+    px_cursor_t calculate_cursor(vec2 pos) override {
+        return pos.y >= kLineTop && pos.y < kLineTop + kBandHeight ? PX_CURSOR_IBEAM
+                                                                   : PX_CURSOR_ARROW;
+    }
+
     bool handle_event(const px_event_t* event) override {
         switch (event->type) {
         case PX_EVENT_KEY:

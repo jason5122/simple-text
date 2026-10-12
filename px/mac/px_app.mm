@@ -130,6 +130,10 @@ void build_main_menu(const char* app_name) {
     return YES;
 }
 
+- (void)applicationDidBecomeActive:(NSNotification*)notification {
+    px_mac_app_did_become_active();
+}
+
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)application {
     if (app_handler().can_quit_without_prompt()) {
         return NSTerminateNow;

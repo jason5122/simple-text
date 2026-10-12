@@ -1,0 +1,15 @@
+# Mirrors //build/config/unsafe_buffers_paths.txt.
+If:
+  PathMatch:
+    - third_party/.*
+    - experiments/.*
+    - base/.*
+    - font/.*
+    - gui/.*
+    - fx/.*
+    - px/.*
+    - ui/.*
+    - benchmark/.*
+    - conformance/.*
+CompileFlags:
+  Add: [-Wno-unsafe-buffer-usage]

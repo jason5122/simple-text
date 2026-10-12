@@ -513,6 +513,9 @@ uint64_t px_current_frame_id(px_window_t* window);
 void px_mark_rect_dirty(px_window_t* window, rect r);
 void px_mark_dirty(px_window_t* window);
 
+// px_set_cursor shows `cursor` and holds it wherever the pointer goes; px_reset_cursor returns to
+// the handler's calculate_cursor. ST brackets every drag with the pair (begin_drag sets the drag
+// handler's cursor, end_drag resets), which is why its scrollbar thumb keeps the arrow over text.
 void px_set_cursor(px_window_t* window, px_cursor_t cursor);
 void px_reset_cursor(px_window_t* window);
 

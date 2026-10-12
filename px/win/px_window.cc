@@ -646,15 +646,21 @@ LRESULT CALLBACK px_wnd_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpar
     }
 
     case WM_SETCURSOR:
+        // ST's WndProc does the same: Windows sends this for every pointer move while nothing
+        // holds the mouse, and the client area's cursor comes from the handler each time, unless
+        // px_set_cursor has pinned one for a drag.
         if (LOWORD(lparam) == HTCLIENT) {
-            POINT cursor;
-            GetCursorPos(&cursor);
-            ScreenToClient(hwnd, &cursor);
-            const px_cursor_t wanted =
-                window->handler ? window->handler->calculate_cursor(vec2{
-                                      cursor.x / window->dpi_scale, cursor.y / window->dpi_scale})
-                                : PX_CURSOR_ARROW;
-            SetCursor(win_cursor(wanted));
+            if (!window->cursor_locked) {
+                POINT cursor;
+                GetCursorPos(&cursor);
+                ScreenToClient(hwnd, &cursor);
+                window->cursor =
+                    window->handler
+                        ? window->handler->calculate_cursor(
+                              vec2{cursor.x / window->dpi_scale, cursor.y / window->dpi_scale})
+                        : PX_CURSOR_ARROW;
+            }
+            SetCursor(win_cursor(window->cursor));
             return TRUE;
         }
         break;
@@ -1053,6 +1059,7 @@ void px_mark_dirty(px_window_t* window) {
 
 void px_set_cursor(px_window_t* window, px_cursor_t cursor) {
     if (window) {
+        window->cursor_locked = true;
         window->cursor = cursor;
         SetCursor(win_cursor(cursor));
     }
@@ -1060,6 +1067,7 @@ void px_set_cursor(px_window_t* window, px_cursor_t cursor) {
 
 void px_reset_cursor(px_window_t* window) {
     if (window && window->hwnd) {
+        window->cursor_locked = false;
         // Provokes a fresh WM_SETCURSOR, which re-asks the handler. Nudging the pointer with
         // SetCursorPos would also work but moves the user's cursor, which is not ours to move.
         SendMessageW(window->hwnd, WM_SETCURSOR, reinterpret_cast<WPARAM>(window->hwnd),

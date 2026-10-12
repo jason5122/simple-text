@@ -313,6 +313,53 @@ void on_size_allocate(GtkWidget*, GtkAllocation* allocation, gpointer data) {
     px_linux_send_event(window, &e);
 }
 
+// Shows `cursor` on the drawing area. The X server and Wayland compositor keep a window's cursor
+// themselves, so an unchanged cursor is not re-sent; ST re-creates and re-sets one per event.
+void apply_cursor(px_window_t* window, px_cursor_t cursor) {
+    if (!window || !window->area) {
+        return;
+    }
+    GdkWindow* gdk_win = gtk_widget_get_window(window->area);
+    if (!gdk_win) {
+        return;
+    }
+    if (window->cursor_handle && cursor == window->cursor) {
+        return;
+    }
+    window->cursor = cursor;
+    if (window->cursor_handle) {
+        g_object_unref(window->cursor_handle);
+    }
+    window->cursor_handle =
+        gdk_cursor_new_for_display(gdk_window_get_display(gdk_win), gdk_cursor_type_for(cursor));
+    gdk_window_set_cursor(gdk_win, window->cursor_handle);
+}
+
+// ST re-evaluates the cursor after every pointer and focus event the drawing area sees, from the
+// event's position, unless px_set_cursor has pinned one for a drag.
+void update_cursor(px_window_t* window, vec2 pos) {
+    if (!window || !window->handler || window->cursor_locked) {
+        return;
+    }
+    apply_cursor(window, window->handler->calculate_cursor(pos));
+}
+
+// The same from the pointer's current position, for events that carry none.
+void update_cursor_from_pointer(px_window_t* window) {
+    if (!window || !window->area || !window->handler || window->cursor_locked) {
+        return;
+    }
+    GdkWindow* gdk_win = gtk_widget_get_window(window->area);
+    if (!gdk_win) {
+        return;
+    }
+    GdkSeat* seat = gdk_display_get_default_seat(gdk_window_get_display(gdk_win));
+    gint x = 0;
+    gint y = 0;
+    gdk_window_get_device_position(gdk_win, gdk_seat_get_pointer(seat), &x, &y, nullptr);
+    update_cursor(window, vec2{static_cast<double>(x), static_cast<double>(y)});
+}
+
 gboolean on_focus_in_event(GtkWidget*, GdkEventFocus*, gpointer data) {
     px_window_t* window = static_cast<px_window_t*>(data);
     if (!window) {
@@ -324,6 +371,7 @@ gboolean on_focus_in_event(GtkWidget*, GdkEventFocus*, gpointer data) {
     px_event_t e{};
     e.type = PX_EVENT_FOCUS_GAINED;
     px_linux_send_event(window, &e);
+    update_cursor_from_pointer(window);
     return FALSE;
 }
 
@@ -465,6 +513,7 @@ gboolean on_button_press_event(GtkWidget* widget, GdkEventButton* event, gpointe
     e.click_count = window->click_count;
     e.modifiers = px_linux_modifiers(static_cast<GdkModifierType>(event->state));
     px_linux_send_event(window, &e);
+    update_cursor(window, pos);
     return TRUE;
 }
 
@@ -485,6 +534,7 @@ gboolean on_button_release_event(GtkWidget*, GdkEventButton* event, gpointer dat
     e.click_count = 1;
     e.modifiers = px_linux_modifiers(static_cast<GdkModifierType>(event->state));
     px_linux_send_event(window, &e);
+    update_cursor(window, e.pos);
     return TRUE;
 }
 
@@ -498,6 +548,7 @@ gboolean on_motion_notify_event(GtkWidget*, GdkEventMotion* event, gpointer data
     e.pos = vec2{event->x, event->y};
     e.modifiers = px_linux_modifiers(static_cast<GdkModifierType>(event->state));
     px_linux_send_event(window, &e);
+    update_cursor(window, e.pos);
     return FALSE;
 }
 
@@ -988,35 +1039,19 @@ void px_mark_dirty(px_window_t* window) {
 }
 
 void px_set_cursor(px_window_t* window, px_cursor_t cursor) {
-    if (!window || !window->area) {
+    if (!window) {
         return;
     }
-    window->cursor = cursor;
-    GdkWindow* gdk_win = gtk_widget_get_window(window->area);
-    if (!gdk_win) {
-        return;
-    }
-    if (window->cursor_handle) {
-        g_object_unref(window->cursor_handle);
-    }
-    window->cursor_handle =
-        gdk_cursor_new_for_display(gdk_window_get_display(gdk_win), gdk_cursor_type_for(cursor));
-    gdk_window_set_cursor(gdk_win, window->cursor_handle);
+    window->cursor_locked = true;
+    apply_cursor(window, cursor);
 }
 
 void px_reset_cursor(px_window_t* window) {
-    if (!window || !window->area || !window->handler) {
+    if (!window) {
         return;
     }
-    GdkWindow* gdk_win = gtk_widget_get_window(window->area);
-    if (!gdk_win) {
-        return;
-    }
-    GdkSeat* seat = gdk_display_get_default_seat(gdk_window_get_display(gdk_win));
-    gint x = 0, y = 0;
-    gdk_window_get_device_position(gdk_win, gdk_seat_get_pointer(seat), &x, &y, nullptr);
-    px_set_cursor(window, window->handler->calculate_cursor(
-                              vec2{static_cast<double>(x), static_cast<double>(y)}));
+    window->cursor_locked = false;
+    update_cursor_from_pointer(window);
 }
 
 void px_callback_after_event(std::function<void()> fn) {

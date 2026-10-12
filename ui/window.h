@@ -58,6 +58,8 @@ public:
     virtual bool handle_event(const px_event_t* event) = 0;
     virtual void draw(px_render_context* rc, rect bounds, const rect* dirty, int dirty_count) = 0;
     virtual void animation_tick(double now) {}
+    // The cursor for a window-space point, asked every run-loop turn while the pointer is inside.
+    virtual px_cursor_t calculate_cursor(vec2 pos) { return PX_CURSOR_ARROW; }
 };
 
 // Portable window interface. Deliberately not a base class you subclass to get behaviour -- it is
@@ -82,6 +84,12 @@ public:
     virtual void set_root_control(control* root) = 0;
     virtual void set_handler(window_handler* handler) = 0;
     virtual void set_input_client(px_input_client* client) = 0;
+
+    // Holds `cursor` wherever the pointer goes until reset_cursor(), which returns to asking the
+    // root control. ST does this for the length of a drag: begin_drag sets the drag handler's
+    // cursor and end_drag resets, so a scrollbar thumb keeps the arrow over the text.
+    virtual void set_cursor(px_cursor_t cursor) = 0;
+    virtual void reset_cursor() = 0;
 
     virtual px_window_t* px_window() const = 0;
 };
@@ -110,6 +118,8 @@ public:
     void set_root_control(control* root) override;
     void set_handler(window_handler* handler) override;
     void set_input_client(px_input_client* client) override;
+    void set_cursor(px_cursor_t cursor) override;
+    void reset_cursor() override;
     px_window_t* px_window() const override { return px_window_; }
 
     // px_window_event_handler

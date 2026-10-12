@@ -48,6 +48,15 @@ struct px_window_t {
 
     fcolor background{0.0f, 0.0f, 0.0f, 1.0f};
     px_cursor_t cursor = PX_CURSOR_ARROW;
+    // What -[PXView resetCursorRects] last registered with AppKit, which re-applies it on its own
+    // (activation, entry) and must therefore agree with the per-turn answer.
+    px_cursor_t cursor_rect_cursor = PX_CURSOR_ARROW;
+    // Set when the window becomes key: the next cursor update checks what the window server is
+    // actually showing, since another application may have changed it in the meantime.
+    bool cursor_check_pending = false;
+    // px_set_cursor holds the cursor wherever the pointer goes until px_reset_cursor; the per-turn
+    // update stands down meanwhile. ST keeps the inverse flag at +0xa0 for its drags.
+    bool cursor_locked = false;
 
     // Pending regions, in window-space points. Drained into the layer by flush_dirty_rects, or by
     // the layer itself when Core Animation displays it first.
@@ -71,6 +80,7 @@ void px_mac_flush_dirty_rects(px_window_t* window);
 void px_mac_update_display_link(px_window_t* window);
 void px_mac_dispatch_post_event_callbacks();
 void px_mac_install_before_waiting_observer();
+void px_mac_app_did_become_active();
 double px_mac_host_time_seconds(uint64_t ticks);
 
 // Converts a Cocoa rect in the view's (flipped) coordinate space to our top-left point space.

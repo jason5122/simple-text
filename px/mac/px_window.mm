@@ -312,8 +312,9 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
     if (_trackingArea) {
         [self removeTrackingArea:_trackingArea];
     }
+    // ST's options (0x283): tracked whether or not the window is key.
     const NSTrackingAreaOptions options = NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved |
-                                          NSTrackingActiveInKeyWindow | NSTrackingInVisibleRect;
+                                          NSTrackingActiveAlways | NSTrackingInVisibleRect;
     _trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds
                                                  options:options
                                                    owner:self
@@ -330,7 +331,9 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
     // gets the cursor for the current mouse location and the handler is re-asked on every motion.
     const NSPoint p = [self convertPoint:self.window.mouseLocationOutsideOfEventStream
                                 fromView:nil];
-    const px_cursor_t cursor = _pxw->handler->calculate_cursor(vec2{p.x, p.y});
+    const px_cursor_t cursor =
+        _pxw->cursor_locked ? _pxw->cursor : _pxw->handler->calculate_cursor(vec2{p.x, p.y});
+    _pxw->cursor_rect_cursor = cursor;
     [self addCursorRect:self.bounds cursor:ns_cursor(cursor)];
 }
 
@@ -702,6 +705,9 @@ NSRect px_mac_ns_from_rect(rect r) { return NSMakeRect(r.x, r.y, r.w, r.h); }
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification {
+    if (_pxw) {
+        _pxw->cursor_check_pending = true;
+    }
     px_event_t e{};
     e.type = PX_EVENT_FOCUS_GAINED;  // tag 13, matching WM_SETFOCUS
     px_mac_send_event(_pxw, &e);
@@ -800,7 +806,8 @@ void px_mac_dispatch_post_event_callbacks() {
 namespace {
 
 void update_cursor_from_tracking_rects(px_window_t* window) {
-    if (!window || !window->window.isKeyWindow || !window->view || !window->handler) {
+    if (!window || !window->window.isKeyWindow || !window->view || !window->handler ||
+        window->cursor_locked) {
         return;
     }
 
@@ -810,10 +817,30 @@ void update_cursor_from_tracking_rects(px_window_t* window) {
         return;
     }
 
-    const px_cursor_t cursor = window->handler->calculate_cursor(vec2{p.x, p.y});
-    if (cursor != window->cursor) {
-        window->cursor = cursor;
-        [ns_cursor(cursor) set];
+    // Set every turn whether or not it changed, as ST does. Another application can change the
+    // cursor while the pointer stays inside this window (a switch away and back is enough), and a
+    // cache of what was last set would then hold the wrong answer until the pointer left and
+    // re-entered; AppKit re-applies a cursor rect only on entry.
+    window->cursor = window->handler->calculate_cursor(vec2{p.x, p.y});
+    NSCursor* wanted = ns_cursor(window->cursor);
+    if (window->cursor_check_pending) {
+        // -[NSCursor set] does nothing when AppKit believes the cursor is already current, and
+        // AppKit does not learn that another application changed it while this window was not
+        // key. Compare with what the window server shows and, if they differ, set some other
+        // cursor first so the real set goes through.
+        window->cursor_check_pending = false;
+        NSCursor* shown = [NSCursor currentSystemCursor];
+        if (shown && (!NSEqualPoints(shown.hotSpot, wanted.hotSpot) ||
+                      !NSEqualSizes(shown.image.size, wanted.image.size))) {
+            [(wanted == NSCursor.arrowCursor ? NSCursor.IBeamCursor : NSCursor.arrowCursor) set];
+        }
+    }
+    [wanted set];
+    // AppKit applies the registered cursor rect by itself when the pointer enters the view, so the
+    // rect has to carry the same answer as the set above.
+    if (window->cursor != window->cursor_rect_cursor) {
+        window->cursor_rect_cursor = window->cursor;
+        [window->window invalidateCursorRectsForView:window->view];
     }
 }
 
@@ -851,6 +878,15 @@ void px_mac_install_before_waiting_observer() {
     CFRunLoopAddObserver(CFRunLoopGetCurrent(), observer, kCFRunLoopCommonModes);
     CFRelease(observer);  // The run loop owns its reference for the process lifetime.
     installed = true;
+}
+
+// Another application may have changed the cursor while this one was inactive, and the key window
+// does not resign and become key again across an app switch, so the application-level activation
+// is the signal to re-check it.
+void px_mac_app_did_become_active() {
+    for (px_window_t* window : all_windows()) {
+        window->cursor_check_pending = true;
+    }
 }
 
 #pragma clang diagnostic push
@@ -1199,14 +1235,18 @@ void px_set_cursor(px_window_t* window, px_cursor_t cursor) {
     if (!window) {
         return;
     }
+    window->cursor_locked = true;
     window->cursor = cursor;
     [ns_cursor(cursor) set];
 }
 
 void px_reset_cursor(px_window_t* window) {
-    if (window) {
-        [window->window invalidateCursorRectsForView:window->view];
+    if (!window) {
+        return;
     }
+    window->cursor_locked = false;
+    [window->window invalidateCursorRectsForView:window->view];
+    update_cursor_from_tracking_rects(window);
 }
 
 void px_callback_after_event(std::function<void()> fn) {

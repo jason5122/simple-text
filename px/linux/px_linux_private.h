@@ -37,6 +37,9 @@ struct px_window_t {
     fcolor background{0.0f, 0.0f, 0.0f, 1.0f};
     px_cursor_t cursor = PX_CURSOR_ARROW;
     GdkCursor* cursor_handle = nullptr;
+    // px_set_cursor holds the cursor until px_reset_cursor; pointer and focus events leave it
+    // alone meanwhile instead of asking the handler. ST keeps the inverse flag at +0x188.
+    bool cursor_locked = false;
 
     // Pending regions in window-space points, drained into gtk_widget_queue_draw_area.
     std::vector<rect> dirty;

@@ -412,6 +412,16 @@ public:
         set_body_font_size(body_font_size);
     }
 
+    // The arrow over chrome, the I-beam over the document.
+    px_cursor_t calculate_cursor(vec2 pos) override {
+        double sidebar_width = sidebar_visible_ ? kSidebarWidth : 0.0;
+        if (pos.x < sidebar_width + gutter_width_ || pos.y >= content_bottom() ||
+            point_in_rect(pos, scrollbar_track())) {
+            return PX_CURSOR_ARROW;
+        }
+        return PX_CURSOR_IBEAM;
+    }
+
     bool handle_event(const px_event_t* event) override {
         switch (event->type) {
         case PX_EVENT_KEY:
@@ -499,6 +509,7 @@ public:
             if (!event->pressed) {
                 if (dragging_scrollbar_) {
                     dragging_scrollbar_ = false;
+                    window_->reset_cursor();
                     window_->mark_dirty();
                     return true;
                 }
@@ -520,6 +531,8 @@ public:
                     scroll_thumb_to(event->pos.y);
                 }
                 dragging_scrollbar_ = true;
+                // The arrow stays for the whole drag, wherever the pointer wanders, as in ST.
+                window_->set_cursor(PX_CURSOR_ARROW);
                 window_->mark_dirty();
                 return true;
             }
@@ -533,6 +546,7 @@ public:
         case PX_EVENT_CAPTURE_LOST:
             if (dragging_scrollbar_) {
                 dragging_scrollbar_ = false;
+                window_->reset_cursor();
                 window_->mark_dirty();
                 return true;
             }

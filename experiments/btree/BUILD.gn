@@ -1,0 +1,23 @@
+source_set("btree_lib") {
+  sources = [
+    "btree.cc",
+    "btree.h",
+  ]
+}
+
+executable("btree") {
+  sources = [ "main.cc" ]
+
+  deps = [ ":btree_lib" ]
+}
+
+source_set("btree_unittest") {
+  testonly = true
+
+  sources = [ "btree_unittest.cc" ]
+
+  deps = [
+    ":btree_lib",
+    "//testing:fuzztest",
+  ]
+}

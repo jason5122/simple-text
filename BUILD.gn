@@ -26,6 +26,7 @@ group("tests") {
 group("experiments") {
   deps = [
     "//experiments/btree",
+    "//experiments/btree:bptree_perftest",
     "//experiments/canary",
     "//experiments/examples",
     "//experiments/fuzz",

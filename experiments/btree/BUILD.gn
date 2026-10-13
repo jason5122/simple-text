@@ -1,3 +1,9 @@
+executable("btree") {
+  sources = [ "main.cc" ]
+
+  deps = [ ":btree_lib" ]
+}
+
 source_set("btree_lib") {
   sources = [
     "btree.cc",
@@ -5,10 +11,17 @@ source_set("btree_lib") {
   ]
 }
 
-executable("btree") {
-  sources = [ "main.cc" ]
+source_set("bptree_lib") {
+  sources = [
+    "bptree.cc",
+    "bptree.h",
+  ]
+}
 
-  deps = [ ":btree_lib" ]
+executable("bptree_perftest") {
+  sources = [ "bptree_perftest.cc" ]
+
+  deps = [ ":bptree_lib" ]
 }
 
 source_set("btree_unittest") {
@@ -18,6 +31,17 @@ source_set("btree_unittest") {
 
   deps = [
     ":btree_lib",
+    "//testing:fuzztest",
+  ]
+}
+
+source_set("bptree_unittest") {
+  testonly = true
+
+  sources = [ "bptree_unittest.cc" ]
+
+  deps = [
+    ":bptree_lib",
     "//testing:fuzztest",
   ]
 }

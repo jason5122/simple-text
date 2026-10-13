@@ -37,13 +37,14 @@ void measure(std::string_view name, int ops, F f) {
 int main(int argc, char** argv) {
     std::uint32_t seed =
         argc > 1 ? static_cast<std::uint32_t>(std::stoul(argv[1])) : std::random_device{}();
-    std::println("{} keys in random order, n = {}, seed {}", kKeys, bptree::n, seed);
+    std::println("{} keys in random order, n = {}, seed {}", kKeys, bptree::BPlusTree<>::fanout,
+                 seed);
 
     std::vector<int> keys(kKeys);
     std::iota(keys.begin(), keys.end(), 0);
     std::shuffle(keys.begin(), keys.end(), std::mt19937{seed});
 
-    bptree::BPlusTree tree;
+    bptree::BPlusTree<> tree;
     int inserted = 0;
     int found = 0;
     int in_ranges = 0;

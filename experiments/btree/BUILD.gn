@@ -12,10 +12,7 @@ source_set("btree_lib") {
 }
 
 source_set("bptree_lib") {
-  sources = [
-    "bptree.cc",
-    "bptree.h",
-  ]
+  sources = [ "bptree.h" ]
 }
 
 executable("bptree_perftest") {

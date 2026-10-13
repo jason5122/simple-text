@@ -31,6 +31,5 @@ group("experiments") {
     "//experiments/examples",
     "//experiments/fuzz",
     "//experiments/playground",
-    "//experiments/rope",
   ]
 }

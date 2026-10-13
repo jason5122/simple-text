@@ -35,7 +35,6 @@ executable("unit_tests") {
     "//editor:editor_unittests",
     "//experiments/btree:bptree_unittest",
     "//experiments/btree:btree_unittest",
-    "//experiments/rope:rope_unittest",
     "//fx:fx_unittests",
     "//ui:ui_unittests",
   ]

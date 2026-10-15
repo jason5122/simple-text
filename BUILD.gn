@@ -25,10 +25,12 @@ group("tests") {
 
 group("experiments") {
   deps = [
-    "//experiments/btree",
+    "//experiments/btree:bptree_example",
     "//experiments/btree:bptree_perftest",
+    "//experiments/btree:btree_example",
     "//experiments/canary",
     "//experiments/examples",
+    "//experiments/function:function_example",
     "//experiments/fuzz",
     "//experiments/playground",
   ]

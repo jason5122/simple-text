@@ -1,0 +1,9 @@
+executable("function_example") {
+  sources = [ "main.cc" ]
+
+  deps = [ ":function" ]
+}
+
+source_set("function") {
+  sources = [ "function.h" ]
+}

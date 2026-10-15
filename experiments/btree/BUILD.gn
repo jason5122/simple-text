@@ -1,7 +1,13 @@
-executable("btree") {
-  sources = [ "main.cc" ]
+executable("btree_example") {
+  sources = [ "btree_example.cc" ]
 
   deps = [ ":btree_lib" ]
+}
+
+executable("bptree_example") {
+  sources = [ "bptree_example.cc" ]
+
+  deps = [ ":bptree_lib" ]
 }
 
 source_set("btree_lib") {

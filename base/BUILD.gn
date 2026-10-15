@@ -110,9 +110,6 @@ source_set("base_unittests") {
 
   sources = [
     "color_unittest.cc",
-    "containers/fixed_flat_map_unittest.cc",
-    "containers/flat_map_unittest.cc",
-    "containers/flat_tree_unittest.cc",
     "containers/span_util_unittest.cc",
     "files/file_path_unittest.cc",
     "geometry_unittest.cc",

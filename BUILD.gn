@@ -28,6 +28,7 @@ group("experiments") {
     "//experiments/btree:bptree_example",
     "//experiments/btree:bptree_perftest",
     "//experiments/btree:btree_example",
+    "//experiments/btree:sum_tree_example",
     "//experiments/canary",
     "//experiments/examples",
     "//experiments/function:function_example",

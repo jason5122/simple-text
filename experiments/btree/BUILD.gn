@@ -10,6 +10,15 @@ executable("bptree_example") {
   deps = [ ":bptree_lib" ]
 }
 
+executable("sum_tree_example") {
+  # //experiments/rope builds an example of the same name until its SumTree is replaced by this.
+  output_name = "btree_sum_tree_example"
+
+  sources = [ "sum_tree_example.cc" ]
+
+  deps = [ ":sum_tree_lib" ]
+}
+
 source_set("btree_lib") {
   sources = [
     "btree.cc",
@@ -21,6 +30,13 @@ source_set("bptree_lib") {
   sources = [
     "bptree.cc",
     "bptree.h",
+  ]
+}
+
+source_set("sum_tree_lib") {
+  sources = [
+    "sum_tree.h",
+    "sum_tree_svg.h",
   ]
 }
 
@@ -48,6 +64,17 @@ source_set("bptree_unittest") {
 
   deps = [
     ":bptree_lib",
+    "//testing:fuzztest",
+  ]
+}
+
+source_set("sum_tree_unittest") {
+  testonly = true
+
+  sources = [ "sum_tree_unittest.cc" ]
+
+  deps = [
+    ":sum_tree_lib",
     "//testing:fuzztest",
   ]
 }

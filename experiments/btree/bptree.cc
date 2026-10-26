@@ -10,11 +10,6 @@ namespace bptree {
 
 namespace {
 
-// The pseudocode of Database System Concepts §14.3, one function per figure, with the record
-// pointers dropped since this tree stores keys only. The BPlusTree methods at the end of this
-// file are thin wrappers over these.
-namespace book {
-
 // The nonleaf nodes from the root down to the parent of the node being worked on, which is how
 // the book suggests implementing parent(N). A fixed array avoids a heap allocation on every
 // insert and remove; with at least two children per nonleaf node, a tree of int keys is never
@@ -30,77 +25,31 @@ struct Path {
 // and delete (Figure 14.21): walks from the root to the leaf that would contain v, recording the
 // nonleaf nodes visited in `path` if one is given.
 //
-// With the 0-based i below, the book's Ki, Pi, and Pi+1 are key[i], c[i], and c[i + 1].
+// The book's three cases, v below some Ki, v equal to Ki, and v above every key, all follow the
+// child after the last key that is <= v: a key equal to v is found under Pi+1, never under Pi.
 Node* find_leaf(Node* root, int v, Path* path = nullptr) {
     Node* C = root;
     while (!C->leaf) {
         if (path != nullptr) path->push(C);
-        // Let i = smallest number such that v <= C.Ki.
         int i = 0;
-        while (i < C->n && v > C->key[i]) i++;
-        if (i == C->n) {
-            // There is no such i: follow the last non-null pointer in the node, the book's Pm.
-            C = C->c[C->n].get();
-        } else if (v == C->key[i]) {
-            C = C->c[i + 1].get();
-        } else {
-            C = C->c[i].get();  // v < C.Ki
-        }
+        while (i < C->n && v >= C->key[i]) i++;
+        C = C->c[i].get();
     }
     return C;
 }
 
 // The leaf half of find (Figure 14.11): "if for some i, Ki = v then return Pi else return null".
-// Returns a pointer to the leaf entry with key v, standing in for the book's record pointer Pi.
-const int* find_in_leaf(Node* C, int v) {
-    for (int i = 0; i < C->n; i++) {
-        if (C->key[i] == v) return &C->key[i];
+// The book returns the record pointer Pi; this tree stores no records, so a bool stands in.
+bool leaf_contains(const Node& C, int v) {
+    for (int i = 0; i < C.n; i++) {
+        if (C.key[i] == v) return true;
     }
-    return nullptr;  // No record with key value v exists.
+    return false;
 }
 
-// Figure 14.11, function find(v). Assumes a non-null root.
-const int* find(Node* root, int v) { return find_in_leaf(find_leaf(root, v), v); }
-
-// Figure 14.12, function findRange(lb, ub): the keys of all records with lb <= key <= ub, in
-// order. The pointer to the next leaf, which this figure writes as C.Pn+1, is `next`.
-std::vector<int> find_range(Node* root, int lb, int ub) {
-    std::vector<int> result_set;
-    Node* C = find_leaf(root, lb);
-    // C is a leaf node. Let i be the least value such that Ki >= lb. If there is no such i, the
-    // loop leaves i past the last key, which forces the move to the next leaf below.
-    int i = 0;
-    while (i < C->n && C->key[i] < lb) i++;
-    bool done = false;
-    while (!done) {
-        if (i < C->n && C->key[i] <= ub) {
-            result_set.push_back(C->key[i]);  // Add C.Pi to resultSet.
-            i++;
-        } else if (i < C->n && C->key[i] > ub) {
-            done = true;
-        } else if (i >= C->n && C->next != nullptr) {
-            C = C->next;  // Move to next leaf.
-            i = 0;
-        } else {
-            done = true;  // No more leaves to the right.
-        }
-    }
-    return result_set;
-}
-
-// "A block of memory T" (Figures 14.16 and 14.17): room for one entry more than a node, so a
-// full node plus the entry being inserted can be laid out in order and then split in two.
-struct Block {
-    int n = 0;
-    std::array<int, 2 * t> key;
-    std::array<std::unique_ptr<Node>, 2 * t + 1> c;
-};
-
-// Figure 14.17, procedure insert_in_leaf(L, K, P). L is a leaf Node or the block T. The book's
-// two cases, before K1 or just after the highest Ki <= K, are both "shift the larger keys right
-// by one and put K in the gap".
-template <typename NodeLike>
-void insert_in_leaf(NodeLike& L, int K) {
+// Figure 14.17, procedure insert_in_leaf(L, K, P). The book's two cases, before K1 or just after
+// the highest Ki <= K, are both "shift the larger keys right by one and put K in the gap".
+void insert_in_leaf(Node& L, int K) {
     int i = L.n;
     while (i > 0 && K < L.key[i - 1]) {
         L.key[i] = L.key[i - 1];
@@ -110,9 +59,8 @@ void insert_in_leaf(NodeLike& L, int K) {
     L.n++;
 }
 
-// "insert (K′, N′) in P just after N" (Figure 14.17). P is a nonleaf Node or the block T.
-template <typename NodeLike>
-void insert_after(NodeLike& P, const Node* N, int K_prime, std::unique_ptr<Node> N_prime) {
+// "insert (K′, N′) in P just after N" (Figure 14.17).
+void insert_after(Node& P, const Node* N, int K_prime, std::unique_ptr<Node> N_prime) {
     int i = 0;
     while (P.c[i].get() != N) i++;
     // Key j sits between c[j] and c[j + 1], so K′ lands at key[i] and N′ at c[i + 1] once the
@@ -143,72 +91,24 @@ void insert_in_parent(
         return;
     }
     Node* P = path.pop();  // Let P = parent(N).
-    if (P->n + 1 < 2 * t) {
-        // P has less than 2t pointers.
-        insert_after(*P, N, K_prime, std::move(N_prime));
-    } else {
-        // Split P. Copy P to T, and insert (K′, N′) into T just after N.
-        Block T;
-        for (int i = 0; i < P->n; i++) T.key[i] = P->key[i];
-        for (int i = 0; i <= P->n; i++) T.c[i] = std::move(P->c[i]);
-        T.n = P->n;
-        insert_after(T, N, K_prime, std::move(N_prime));
-        // Erase all entries from P; create node P′.
-        P->n = 0;
+    insert_after(*P, N, K_prime, std::move(N_prime));
+    if (P->n == 2 * t) {
+        // P had 2t pointers already and now holds one more than it may: split it. The book copies
+        // P into a block of memory T with room for the extra entry; here that room is the node's
+        // spare slot, so T is P itself. Create node P′.
         auto P_prime = std::make_unique<Node>();
         P_prime->leaf = false;
-        // Copy T.P1 … T.Pt+1 into P, with the t keys that lie between those pointers. The book
-        // keeps ⌈(n+1)/2⌉ pointers, which is t + 1 for n = 2t.
-        for (int i = 0; i <= t; i++) P->c[i] = std::move(T.c[i]);
-        for (int i = 0; i < t; i++) P->key[i] = T.key[i];
-        P->n = t;
         // Let K′′ = T.Kt+1: the key between the pointers that stay and those that move.
-        int K_double_prime = T.key[t];
-        // Copy T.Pt+2 … T.P2t+1 into P′, with the t − 1 keys that lie between those pointers.
-        for (int i = t + 1; i <= 2 * t; i++) P_prime->c[i - t - 1] = std::move(T.c[i]);
-        for (int i = t + 1; i < 2 * t; i++) P_prime->key[i - t - 1] = T.key[i];
+        int K_double_prime = P->key[t];
+        // Move T.Pt+2 … T.P2t+1 into P′, with the t − 1 keys that lie between those pointers.
+        for (int i = t + 1; i <= 2 * t; i++) P_prime->c[i - t - 1] = std::move(P->c[i]);
+        for (int i = t + 1; i < 2 * t; i++) P_prime->key[i - t - 1] = P->key[i];
         P_prime->n = t - 1;
+        // T.P1 … T.Pt+1 stay in P, with the t keys between those pointers. The book keeps
+        // ⌈(n+1)/2⌉ pointers, which is t + 1 for n = 2t.
+        P->n = t;
         insert_in_parent(root, path, P, K_double_prime, std::move(P_prime));
     }
-}
-
-// Figure 14.16, procedure insert(K, P). The book assumes K is new; here a K already in its leaf
-// is rejected instead, and the return value reports whether anything was inserted.
-bool insert(std::unique_ptr<Node>& root, int K) {
-    Node* L;
-    Path path;
-    if (root == nullptr) {
-        // The tree is empty: create an empty leaf node L, which is also the root.
-        root = std::make_unique<Node>();
-        L = root.get();
-    } else {
-        // Find the leaf node L that should contain key value K.
-        L = find_leaf(root.get(), K, &path);
-        if (find_in_leaf(L, K) != nullptr) return false;
-    }
-    if (L->n < 2 * t - 1) {
-        insert_in_leaf(*L, K);
-    } else {
-        // L has 2t − 1 key values already, split it. Create L′, copy L's keys to T, and insert K
-        // into T.
-        auto L_prime = std::make_unique<Node>();
-        Block T;
-        for (int i = 0; i < L->n; i++) T.key[i] = L->key[i];
-        T.n = L->n;
-        insert_in_leaf(T, K);
-        // Set L′.Pn = L.Pn; set L.Pn = L′.
-        L_prime->next = L->next;
-        L->next = L_prime.get();
-        // Erase L.P1 through L.K2t−1 from L, then copy T.K1 … T.Kt into L and T.Kt+1 … T.K2t
-        // into L′. The book keeps ⌈n/2⌉ keys, which is t for n = 2t.
-        L->n = 0;
-        for (int i = 0; i < t; i++) L->key[L->n++] = T.key[i];
-        for (int i = t; i < 2 * t; i++) L_prime->key[L_prime->n++] = T.key[i];
-        // Let K′ be the smallest key-value in L′.
-        int K_prime = L_prime->key[0];
-        insert_in_parent(root, path, L, K_prime, std::move(L_prime));
-    }
-    return true;
 }
 
 // "delete (K, P) from N" (Figure 14.21). A leaf loses the key K. A nonleaf node loses the key K
@@ -231,10 +131,6 @@ void delete_from(Node& N, int K, const Node* P) {
     N.n--;
 }
 
-// "N has too few values/pointers" (Figure 14.21): fewer than t values in a leaf, or fewer than t
-// pointers in a nonleaf node. The book's bounds are ⌈(n−1)/2⌉ and ⌈n/2⌉, both t for n = 2t.
-bool has_too_few(const Node& N) { return N.leaf ? N.n < t : N.n + 1 < t; }
-
 // Figure 14.21, procedure delete_entry(N, K, P). `path` holds the nodes from the root down to
 // parent(N), as recorded by find_leaf, and is consumed one level per recursive call. P is the
 // pointer that follows K in a nonleaf node; leaves hold only keys, so it is absent for them.
@@ -253,7 +149,10 @@ void delete_entry(
         }
         return;
     }
-    if (!has_too_few(*N)) return;
+    // "N has too few values/pointers": fewer than t values in a leaf, or fewer than t pointers in
+    // a nonleaf node. The book's bounds are ⌈(n−1)/2⌉ and ⌈n/2⌉, both t for n = 2t.
+    int min_keys = N->leaf ? t : t - 1;
+    if (N->n >= min_keys) return;
 
     // Let N′ be the previous or next child of parent(N), preferring the previous one, and K′ the
     // value between pointers N and N′ in parent(N).
@@ -334,20 +233,6 @@ void delete_entry(
     }
 }
 
-// Figure 14.21, procedure delete(K, P), under the name remove because delete is a C++ keyword.
-// The book assumes K is present; here an absent K is reported instead.
-bool remove(std::unique_ptr<Node>& root, int K) {
-    if (root == nullptr) return false;
-    Path path;
-    // Find the leaf node L that contains (K, P).
-    Node* L = find_leaf(root.get(), K, &path);
-    if (find_in_leaf(L, K) == nullptr) return false;
-    delete_entry(root, path, L, K);
-    return true;
-}
-
-}  // namespace book
-
 // Checks the B+-tree properties of §14.3.1 on the subtree rooted at x, whose keys must all lie
 // in [lo, hi). Returns the subtree's height, or -1 on a violation, and appends x's leaves to
 // `leaves` left to right so the caller can verify the leaf chain.
@@ -375,7 +260,7 @@ int check_subtree(
             return -1;
         }
     }
-    for (int j = x->leaf ? 0 : x->n + 1; j < 2 * t; j++) {
+    for (int j = x->leaf ? 0 : x->n + 1; j <= 2 * t; j++) {
         if (x->c[j] != nullptr) {
             return -1;
         }
@@ -407,18 +292,71 @@ int check_subtree(
 
 }  // namespace
 
+// Figure 14.11, function find(v).
 bool BPlusTree::contains(int k) const {
-    return root_ != nullptr && book::find(root_.get(), k) != nullptr;
+    return root_ != nullptr && leaf_contains(*find_leaf(root_.get(), k), k);
 }
 
+// Figure 14.12, function findRange(lb, ub): the keys of all records with lb <= key <= ub, in
+// order. The pointer to the next leaf, which this figure writes as C.Pn+1, is `next`.
 std::vector<int> BPlusTree::find_range(int lb, int ub) const {
-    if (root_ == nullptr) return {};
-    return book::find_range(root_.get(), lb, ub);
+    std::vector<int> result_set;
+    if (root_ == nullptr) return result_set;
+    const Node* C = find_leaf(root_.get(), lb);
+    // Let i be the least value such that Ki >= lb, then walk the leaf chain from there until a
+    // key passes ub or the chain ends.
+    int i = 0;
+    while (i < C->n && C->key[i] < lb) i++;
+    for (; C != nullptr; C = C->next, i = 0) {
+        for (; i < C->n; i++) {
+            if (C->key[i] > ub) return result_set;
+            result_set.push_back(C->key[i]);
+        }
+    }
+    return result_set;
 }
 
-bool BPlusTree::insert(int k) { return book::insert(root_, k); }
+// Figure 14.16, procedure insert(K, P). The book assumes K is new; here a key already in its
+// leaf is rejected instead, and the return value reports whether anything was inserted.
+bool BPlusTree::insert(int k) {
+    // If the tree is empty, create an empty leaf node L, which is also the root.
+    if (root_ == nullptr) root_ = std::make_unique<Node>();
+    // Find the leaf node L that should contain key value k.
+    Path path;
+    Node* L = find_leaf(root_.get(), k, &path);
+    if (leaf_contains(*L, k)) return false;
+    insert_in_leaf(*L, k);
+    if (L->n == 2 * t) {
+        // L had 2t − 1 key values already and now holds one more than it may: split it. The book
+        // copies L's keys and k into a block of memory T with room for the extra key; here that
+        // room is the node's spare slot, so T is L itself. Create L′.
+        auto L_prime = std::make_unique<Node>();
+        // Set L′.Pn = L.Pn; set L.Pn = L′.
+        L_prime->next = L->next;
+        L->next = L_prime.get();
+        // Move T.Kt+1 … T.K2t into L′; T.K1 … T.Kt stay in L. The book keeps ⌈n/2⌉ keys, which is
+        // t for n = 2t.
+        for (int i = t; i < 2 * t; i++) L_prime->key[i - t] = L->key[i];
+        L_prime->n = t;
+        L->n = t;
+        // Let K′ be the smallest key-value in L′.
+        int K_prime = L_prime->key[0];
+        insert_in_parent(root_, path, L, K_prime, std::move(L_prime));
+    }
+    return true;
+}
 
-bool BPlusTree::remove(int k) { return book::remove(root_, k); }
+// Figure 14.21, procedure delete(K, P), under the name remove because delete is a C++ keyword.
+// The book assumes K is present; here an absent key is reported instead.
+bool BPlusTree::remove(int k) {
+    if (root_ == nullptr) return false;
+    Path path;
+    // Find the leaf node L that contains k.
+    Node* L = find_leaf(root_.get(), k, &path);
+    if (!leaf_contains(*L, k)) return false;
+    delete_entry(root_, path, L, k);
+    return true;
+}
 
 std::vector<int> BPlusTree::keys() const {
     std::vector<int> out;

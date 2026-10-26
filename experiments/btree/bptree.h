@@ -11,9 +11,10 @@ constexpr int t = 2;
 struct Node {
     bool leaf = true;
     int n = 0;  // Number of keys. A nonleaf node has n + 1 children.
-    std::array<int, 2 * t - 1> key;
-    std::array<std::unique_ptr<Node>, 2 * t> c;  // Nonleaf only.
-    Node* next = nullptr;                        // Leaf only: the book's Pn.
+    // One slot more than a node may hold, so an insert can overflow in place and then split.
+    std::array<int, 2 * t> key;
+    std::array<std::unique_ptr<Node>, 2 * t + 1> c;  // Nonleaf only.
+    Node* next = nullptr;                            // Leaf only: the book's Pn.
 };
 
 class BPlusTree {

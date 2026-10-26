@@ -14,50 +14,49 @@ namespace bptree {
 
 namespace {
 
-// The book's figures use n = 4, so the hand-built trees and the tests that trace them do too.
-std::unique_ptr<Node<4>> leaf(std::initializer_list<int> keys) {
-    auto node = std::make_unique<Node<4>>();
-    for (int k : keys) node->key[node->m++] = k;
+std::unique_ptr<Node> leaf(std::initializer_list<int> keys) {
+    auto node = std::make_unique<Node>();
+    for (int k : keys) node->key[node->n++] = k;
     return node;
 }
 
 template <typename... Children>
-std::unique_ptr<Node<4>> nonleaf(std::initializer_list<int> keys, Children... children) {
-    static_assert(sizeof...(children) <= 4);
-    auto node = std::make_unique<Node<4>>();
+std::unique_ptr<Node> nonleaf(std::initializer_list<int> keys, Children... children) {
+    static_assert(sizeof...(children) <= 2 * t);
+    auto node = std::make_unique<Node>();
     node->leaf = false;
-    for (int k : keys) node->key[node->m++] = k;
+    for (int k : keys) node->key[node->n++] = k;
     int i = 0;
     ((node->c[i++] = std::move(children)), ...);
     return node;
 }
 
-void collect_leaves(Node<4>* x, std::vector<Node<4>*>& out) {
+void collect_leaves(Node* x, std::vector<Node*>& out) {
     if (x->leaf) {
         out.push_back(x);
         return;
     }
-    for (int i = 0; i <= x->m; i++) collect_leaves(x->c[i].get(), out);
+    for (int i = 0; i <= x->n; i++) collect_leaves(x->c[i].get(), out);
 }
 
 // Adopts a hand-built tree after linking its leaf chain (the book's Pn) left to right.
-BPlusTree<4> make_tree(std::unique_ptr<Node<4>> root) {
-    std::vector<Node<4>*> leaves;
+BPlusTree make_tree(std::unique_ptr<Node> root) {
+    std::vector<Node*> leaves;
     collect_leaves(root.get(), leaves);
     for (size_t i = 0; i + 1 < leaves.size(); i++) leaves[i]->next = leaves[i + 1];
-    return BPlusTree<4>(std::move(root));
+    return BPlusTree(std::move(root));
 }
 
-std::vector<int> keys_of(const Node<4>* x) {
+std::vector<int> keys_of(const Node* x) {
     std::vector<int> out;
-    for (int i = 0; i < x->m; i++) out.push_back(x->key[i]);
+    for (int i = 0; i < x->n; i++) out.push_back(x->key[i]);
     return out;
 }
 
 // Node-by-node structural comparison. The leaf chain is not compared; check_invariants covers
 // it. `where` names the node under comparison, e.g. "root.c[1].c[0]".
-testing::AssertionResult same_tree(const Node<4>* actual,
-                                   const Node<4>* expected,
+testing::AssertionResult same_tree(const Node* actual,
+                                   const Node* expected,
                                    const std::string& where = "root") {
     if (actual->leaf != expected->leaf || keys_of(actual) != keys_of(expected)) {
         return testing::AssertionFailure()
@@ -67,7 +66,7 @@ testing::AssertionResult same_tree(const Node<4>* actual,
                << testing::PrintToString(keys_of(expected));
     }
     if (actual->leaf) return testing::AssertionSuccess();
-    for (int i = 0; i <= actual->m; i++) {
+    for (int i = 0; i <= actual->n; i++) {
         testing::AssertionResult child = same_tree(actual->c[i].get(), expected->c[i].get(),
                                                    where + ".c[" + std::to_string(i) + "]");
         if (!child) return child;
@@ -99,8 +98,8 @@ constexpr int Singh = 100;
 constexpr int Srinivasan = 110;
 constexpr int Wu = 120;
 
-// Figure 14.9: the B+-tree for the instructor file with n = 4.
-BPlusTree<4> figure_14_9() {
+// Figure 14.9: the B+-tree for the instructor file, n = 4 in the book and t = 2 here.
+BPlusTree figure_14_9() {
     return make_tree(
         nonleaf({Mozart},
                 nonleaf({Einstein, Gold}, leaf({Brandt, Califieri, Crick}),
@@ -109,7 +108,7 @@ BPlusTree<4> figure_14_9() {
 }
 
 // Figure 14.14: Figure 14.9 after inserting Adams, which split the first leaf.
-BPlusTree<4> figure_14_14() {
+BPlusTree figure_14_14() {
     return make_tree(nonleaf(
         {Mozart},
         nonleaf({Califieri, Einstein, Gold}, leaf({Adams, Brandt}), leaf({Califieri, Crick}),
@@ -118,7 +117,7 @@ BPlusTree<4> figure_14_14() {
 }
 
 // Figure 14.15: Figure 14.14 after inserting Lamport, which split a leaf and then its parent.
-BPlusTree<4> figure_14_15() {
+BPlusTree figure_14_15() {
     return make_tree(
         nonleaf({Gold, Mozart},
                 nonleaf({Califieri, Einstein}, leaf({Adams, Brandt}), leaf({Califieri, Crick}),
@@ -130,7 +129,7 @@ BPlusTree<4> figure_14_15() {
 // Figure 14.18: Figure 14.14 after deleting Srinivasan. The leaf coalesced with its left
 // sibling, and the underfull parent then borrowed a pointer from its left sibling, moving Gold
 // up to the root and Mozart down.
-BPlusTree<4> figure_14_18() {
+BPlusTree figure_14_18() {
     return make_tree(
         nonleaf({Gold},
                 nonleaf({Califieri, Einstein}, leaf({Adams, Brandt}), leaf({Califieri, Crick}),
@@ -140,7 +139,7 @@ BPlusTree<4> figure_14_18() {
 
 // Figure 14.19: Figure 14.18 after deleting Singh and Wu. The leaf borrowed Kim from its left
 // sibling, and the separator above them changed from Mozart to Kim.
-BPlusTree<4> figure_14_19() {
+BPlusTree figure_14_19() {
     return make_tree(nonleaf({Gold},
                              nonleaf({Califieri, Einstein}, leaf({Adams, Brandt}),
                                      leaf({Califieri, Crick}), leaf({Einstein, ElSaid})),
@@ -150,7 +149,7 @@ BPlusTree<4> figure_14_19() {
 // Figure 14.20: Figure 14.19 after deleting Gold. The leaf coalesced with its right sibling, its
 // parent then coalesced with the left nonleaf node, pulling Gold down from the root, and the
 // root was left with one child and removed. Gold survives as a nonleaf key with no leaf entry.
-BPlusTree<4> figure_14_20() {
+BPlusTree figure_14_20() {
     return make_tree(nonleaf({Califieri, Einstein, Gold}, leaf({Adams, Brandt}),
                              leaf({Califieri, Crick}), leaf({Einstein, ElSaid}),
                              leaf({Katz, Kim, Mozart})));
@@ -159,7 +158,7 @@ BPlusTree<4> figure_14_20() {
 }  // namespace
 
 TEST(BPlusTreeTest, EmptyTreeContainsNothing) {
-    BPlusTree<4> tree;
+    BPlusTree tree;
     EXPECT_FALSE(tree.contains(0));
     EXPECT_FALSE(tree.contains(Mozart));
 }
@@ -167,7 +166,7 @@ TEST(BPlusTreeTest, EmptyTreeContainsNothing) {
 // Einstein, Gold, Mozart, and Srinivasan double as nonleaf separators, so they also check that a
 // key equal to Ki is looked for under Pi+1 rather than Pi.
 TEST(BPlusTreeTest, FindsEveryInstructorInFigure14_9) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     for (int v : {Brandt, Califieri, Crick, Einstein, ElSaid, Gold, Katz, Kim, Mozart, Singh,
                   Srinivasan, Wu}) {
         EXPECT_TRUE(tree.contains(v)) << v;
@@ -176,20 +175,20 @@ TEST(BPlusTreeTest, FindsEveryInstructorInFigure14_9) {
 
 // One probe below the first key, one above the last, and one in each gap between neighbours.
 TEST(BPlusTreeTest, DoesNotFindAbsentKeysInFigure14_9) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     for (int v : {0, 15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125}) {
         EXPECT_FALSE(tree.contains(v)) << v;
     }
 }
 
 TEST(BPlusTreeTest, FindRangeWalksAcrossLeaves) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     EXPECT_EQ(tree.find_range(Crick, Katz),
               (std::vector<int>{Crick, Einstein, ElSaid, Gold, Katz}));
 }
 
 TEST(BPlusTreeTest, FindRangeBoundsNeedNotBeKeys) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     EXPECT_EQ(tree.find_range(55, 85), (std::vector<int>{Gold, Katz, Kim}));
     EXPECT_EQ(tree.find_range(0, 200),
               (std::vector<int>{Brandt, Califieri, Crick, Einstein, ElSaid, Gold, Katz, Kim,
@@ -197,61 +196,61 @@ TEST(BPlusTreeTest, FindRangeBoundsNeedNotBeKeys) {
 }
 
 TEST(BPlusTreeTest, FindRangeOutsideTheKeysIsEmpty) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     EXPECT_TRUE(tree.find_range(0, Adams).empty());     // Below Brandt.
     EXPECT_TRUE(tree.find_range(125, 200).empty());     // Above Wu: runs off the last leaf.
     EXPECT_TRUE(tree.find_range(Katz, Crick).empty());  // lb > ub.
-    EXPECT_TRUE(BPlusTree<4>().find_range(0, 200).empty());
+    EXPECT_TRUE(BPlusTree().find_range(0, 200).empty());
 }
 
 TEST(BPlusTreeTest, InsertIntoEmptyTreeCreatesRootLeaf) {
-    BPlusTree<4> tree;
+    BPlusTree tree;
     EXPECT_TRUE(tree.insert(Mozart));
     EXPECT_TRUE(same_tree(tree.root(), leaf({Mozart}).get()));
     EXPECT_TRUE(tree.check_invariants());
 }
 
 TEST(BPlusTreeTest, InsertingAdamsSplitsLeafIntoFigure14_14) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     EXPECT_TRUE(tree.insert(Adams));
     EXPECT_TRUE(same_tree(tree.root(), figure_14_14().root()));
     EXPECT_TRUE(tree.check_invariants());
 }
 
 TEST(BPlusTreeTest, InsertingLamportSplitsNonleafIntoFigure14_15) {
-    BPlusTree<4> tree = figure_14_14();
+    BPlusTree tree = figure_14_14();
     EXPECT_TRUE(tree.insert(Lamport));
     EXPECT_TRUE(same_tree(tree.root(), figure_14_15().root()));
     EXPECT_TRUE(tree.check_invariants());
 }
 
 TEST(BPlusTreeTest, InsertRejectsDuplicateAndLeavesTreeUnchanged) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     EXPECT_FALSE(tree.insert(Mozart));
     EXPECT_TRUE(same_tree(tree.root(), figure_14_9().root()));
 }
 
 TEST(BPlusTreeTest, CheckInvariantsRejectsUnlinkedLeafChain) {
     // A valid shape, but built without make_tree so no leaf points to the next one.
-    BPlusTree<4> tree(nonleaf({Mozart}, leaf({Brandt, Califieri}), leaf({Mozart, Singh})));
+    BPlusTree tree(nonleaf({Mozart}, leaf({Brandt, Califieri}), leaf({Mozart, Singh})));
     EXPECT_FALSE(tree.check_invariants());
 }
 
 TEST(BPlusTreeTest, CheckInvariantsRejectsKeyUnderWrongSeparator) {
     // Mozart sits under P1, which may only hold keys below K1 = Mozart.
-    BPlusTree<4> tree = make_tree(nonleaf({Mozart}, leaf({Brandt, Mozart}), leaf({Singh, Wu})));
+    BPlusTree tree = make_tree(nonleaf({Mozart}, leaf({Brandt, Mozart}), leaf({Singh, Wu})));
     EXPECT_FALSE(tree.check_invariants());
 }
 
 TEST(BPlusTreeTest, RemovingSrinivasanCoalescesAndRedistributesIntoFigure14_18) {
-    BPlusTree<4> tree = figure_14_14();
+    BPlusTree tree = figure_14_14();
     EXPECT_TRUE(tree.remove(Srinivasan));
     EXPECT_TRUE(same_tree(tree.root(), figure_14_18().root()));
     EXPECT_TRUE(tree.check_invariants());
 }
 
 TEST(BPlusTreeTest, RemovingSinghAndWuBorrowsFromLeftLeafIntoFigure14_19) {
-    BPlusTree<4> tree = figure_14_18();
+    BPlusTree tree = figure_14_18();
     EXPECT_TRUE(tree.remove(Singh));
     EXPECT_TRUE(tree.remove(Wu));
     EXPECT_TRUE(same_tree(tree.root(), figure_14_19().root()));
@@ -259,7 +258,7 @@ TEST(BPlusTreeTest, RemovingSinghAndWuBorrowsFromLeftLeafIntoFigure14_19) {
 }
 
 TEST(BPlusTreeTest, RemovingGoldCoalescesUpToTheRootIntoFigure14_20) {
-    BPlusTree<4> tree = figure_14_19();
+    BPlusTree tree = figure_14_19();
     EXPECT_TRUE(tree.remove(Gold));
     EXPECT_TRUE(same_tree(tree.root(), figure_14_20().root()));
     EXPECT_TRUE(tree.check_invariants());
@@ -270,7 +269,7 @@ TEST(BPlusTreeTest, RemovingGoldCoalescesUpToTheRootIntoFigure14_20) {
 // "symmetric". Here the first leaf, which has no previous sibling, borrows Mozart from the next
 // one and the separator above them becomes Singh.
 TEST(BPlusTreeTest, RemoveBorrowsFromNextLeafWhenThereIsNoPreviousOne) {
-    BPlusTree<4> tree =
+    BPlusTree tree =
         make_tree(nonleaf({Mozart}, leaf({Brandt, Califieri}), leaf({Mozart, Singh, Srinivasan})));
     EXPECT_TRUE(tree.remove(Brandt));
     EXPECT_TRUE(same_tree(
@@ -284,7 +283,7 @@ TEST(BPlusTreeTest, RemoveBorrowsFromNextLeafWhenThereIsNoPreviousOne) {
 // only sibling is full, so the parent borrows that sibling's first pointer; the separator 50
 // moves down into the parent and 60 moves up to the root.
 TEST(BPlusTreeTest, RemoveBorrowsFromNextNonleafWhenThereIsNoPreviousOne) {
-    BPlusTree<4> tree = make_tree(nonleaf(
+    BPlusTree tree = make_tree(nonleaf(
         {50}, nonleaf({20}, leaf({10, 15}), leaf({20, 25})),
         nonleaf({60, 70, 80}, leaf({50, 55}), leaf({60, 65}), leaf({70, 75}), leaf({80, 85}))));
     EXPECT_TRUE(tree.remove(10));
@@ -297,7 +296,7 @@ TEST(BPlusTreeTest, RemoveBorrowsFromNextNonleafWhenThereIsNoPreviousOne) {
 }
 
 TEST(BPlusTreeTest, RemovingEveryKeyEmptiesTheTree) {
-    BPlusTree<4> tree;
+    BPlusTree tree;
     for (int k : {1, 2, 3, 4, 5}) tree.insert(k);
     for (int k : {1, 2, 3, 4, 5}) EXPECT_TRUE(tree.remove(k)) << k;
     EXPECT_EQ(tree.root(), nullptr);
@@ -307,7 +306,7 @@ TEST(BPlusTreeTest, RemovingEveryKeyEmptiesTheTree) {
 }
 
 TEST(BPlusTreeTest, RemoveReturnsFalseForAbsentKeyAndLeavesTreeUnchanged) {
-    BPlusTree<4> tree = figure_14_9();
+    BPlusTree tree = figure_14_9();
     EXPECT_FALSE(tree.remove(Adams));
     EXPECT_TRUE(same_tree(tree.root(), figure_14_9().root()));
 }
@@ -315,7 +314,7 @@ TEST(BPlusTreeTest, RemoveReturnsFalseForAbsentKeyAndLeavesTreeUnchanged) {
 // Inserting an arbitrary key sequence leaves a valid B+-tree whose leaf chain reads as the sorted
 // input with duplicates dropped, and insert reports whether each key was new.
 void InsertsKeepTreeValidAndSorted(const std::vector<int>& keys) {
-    BPlusTree<4> tree;
+    BPlusTree tree;
     std::set<int> seen;
     for (int k : keys) {
         EXPECT_EQ(tree.insert(k), seen.insert(k).second) << k;
@@ -327,7 +326,7 @@ FUZZ_TEST(BPlusTreeFuzzTest, InsertsKeepTreeValidAndSorted);
 
 // contains() is true for every inserted key and false for anything else.
 void ContainsMatchesInsertedKeys(const std::vector<int>& keys, const std::vector<int>& probes) {
-    BPlusTree<4> tree;
+    BPlusTree tree;
     for (int k : keys) {
         tree.insert(k);
     }
@@ -344,7 +343,7 @@ FUZZ_TEST(BPlusTreeFuzzTest, ContainsMatchesInsertedKeys);
 // find_range returns exactly the inserted keys within [lb, ub], ascending. Keys and bounds are
 // drawn from a small range so that ranges usually cover some keys and bounds often hit one.
 void FindRangeMatchesSortedSlice(const std::vector<int>& keys, int lb, int ub) {
-    BPlusTree<4> tree;
+    BPlusTree tree;
     for (int k : keys) {
         tree.insert(k);
     }
@@ -360,10 +359,10 @@ FUZZ_TEST(BPlusTreeFuzzTest, FindRangeMatchesSortedSlice)
                  fuzztest::InRange(-5, 105));
 
 // Random interleaved inserts and removes agree with a std::set at every step, and the tree stays
-// valid throughout.
-template <typename Tree>
-void interleaved_ops_match_set_oracle(const std::vector<std::pair<bool, int>>& ops) {
-    Tree tree;
+// valid throughout. Keys come from a small range so that removes usually hit and nodes split and
+// coalesce often.
+void InterleavedInsertsAndRemovesMatchSetOracle(const std::vector<std::pair<bool, int>>& ops) {
+    BPlusTree tree;
     std::set<int> oracle;
     for (auto [is_insert, k] : ops) {
         if (is_insert) {
@@ -375,23 +374,8 @@ void interleaved_ops_match_set_oracle(const std::vector<std::pair<bool, int>>& o
     }
     EXPECT_EQ(tree.keys(), std::vector<int>(oracle.begin(), oracle.end()));
 }
-
-// At the book's n = 4, with keys from a small range so that removes usually hit and nodes split
-// and coalesce after every few operations.
-void InterleavedInsertsAndRemovesMatchSetOracle(const std::vector<std::pair<bool, int>>& ops) {
-    interleaved_ops_match_set_oracle<BPlusTree<4>>(ops);
-}
 FUZZ_TEST(BPlusTreeFuzzTest, InterleavedInsertsAndRemovesMatchSetOracle)
     .WithDomains(fuzztest::VectorOf(fuzztest::PairOf(fuzztest::Arbitrary<bool>(),
                                                      fuzztest::InRange(0, 50))));
-
-// At the default fanout, with a key range wide enough for the tree to grow several levels.
-void InterleavedInsertsAndRemovesMatchSetOracleAtDefaultFanout(
-    const std::vector<std::pair<bool, int>>& ops) {
-    interleaved_ops_match_set_oracle<BPlusTree<>>(ops);
-}
-FUZZ_TEST(BPlusTreeFuzzTest, InterleavedInsertsAndRemovesMatchSetOracleAtDefaultFanout)
-    .WithDomains(fuzztest::VectorOf(fuzztest::PairOf(fuzztest::Arbitrary<bool>(),
-                                                     fuzztest::InRange(0, 5000))));
 
 }  // namespace bptree

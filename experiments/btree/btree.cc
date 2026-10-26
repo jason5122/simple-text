@@ -1,6 +1,5 @@
 #include "experiments/btree/btree.h"
 
-#include <array>
 #include <climits>
 #include <memory>
 #include <optional>
@@ -8,15 +7,6 @@
 #include <vector>
 
 namespace btree {
-
-constexpr int t = 4;
-
-struct Node {
-    int n = 0;
-    bool leaf = true;
-    std::array<int, 2 * t - 1> key;
-    std::array<std::unique_ptr<Node>, 2 * t> c;
-};
 
 namespace {
 
@@ -145,10 +135,6 @@ int check_subtree(const Node* x, int lo, int hi, bool is_root) {
 }  // namespace
 
 BTree::BTree() : root_{std::make_unique<Node>()} {}
-
-BTree::~BTree() = default;
-BTree::BTree(BTree&&) = default;
-BTree& BTree::operator=(BTree&&) = default;
 
 bool BTree::contains(int k) const { return search(root_.get(), k).has_value(); }
 

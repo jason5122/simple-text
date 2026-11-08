@@ -119,6 +119,7 @@ inline std::string escape(std::string_view text) {
 // One arrow from the middle of each nonleaf cell to the top of its child, drawn before the cells
 // so that the cells cover the arrows' ends.
 inline void draw_arrows(const Box& box, std::string& out) {
+    if (box.cells.empty()) return;
     double cell = box.width / static_cast<double>(box.cells.size());
     for (size_t i = 0; i < box.children.size(); i++) {
         const Box& child = box.children[i];
@@ -131,6 +132,7 @@ inline void draw_arrows(const Box& box, std::string& out) {
 }
 
 inline void draw_cells(const Box& box, std::string& out) {
+    if (box.cells.empty()) return;
     double cell = box.width / static_cast<double>(box.cells.size());
     out += std::format("<g class=\"{}\">\n", box.leaf ? "leaf" : "nonleaf");
     for (size_t i = 0; i < box.cells.size(); i++) {
@@ -169,19 +171,15 @@ line { stroke: rgb(137, 135, 129); stroke-width: 1.5; }
 template <Measured Item, int t>
     requires std::formattable<Item, char> && std::formattable<typename SumTree<Item, t>::S, char>
 std::string to_svg(const SumTree<Item, t>& tree) {
+    svg::Box root = svg::build(*tree.root());
+    svg::measure(root, svg::cell_width(root, true), svg::cell_width(root, false));
+    svg::place(root, svg::margin, 0);
+    double width = std::max(root.span, 200.0) + 2 * svg::margin;  // Room for the title at least.
+    double height = svg::top + svg::levels(root) * (svg::cell_height + svg::row_gap) -
+                    svg::row_gap + svg::margin;
     std::string body;
-    double width = 2 * svg::margin;
-    double height = svg::top + svg::cell_height + svg::margin;
-    if (tree.root() != nullptr) {
-        svg::Box root = svg::build(*tree.root());
-        svg::measure(root, svg::cell_width(root, true), svg::cell_width(root, false));
-        svg::place(root, svg::margin, 0);
-        width = root.span + 2 * svg::margin;
-        height = svg::top + svg::levels(root) * (svg::cell_height + svg::row_gap) - svg::row_gap +
-                 svg::margin;
-        svg::draw_arrows(root, body);
-        svg::draw_cells(root, body);
-    }
+    svg::draw_arrows(root, body);
+    svg::draw_cells(root, body);
     std::string out =
         std::format("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {} {}\" width=\"{}\" "
                     "height=\"{}\">\n",

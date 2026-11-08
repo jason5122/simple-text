@@ -166,6 +166,7 @@ namespace btree {
 
 TEST(SumTreeTest, EmptyTreeHasTheIdentitySummaryAndNoItems) {
     Tree tree;
+    EXPECT_TRUE(tree.empty());
     EXPECT_EQ(tree.summary(), CountSum{});
     EXPECT_TRUE(values_of(tree.items()).empty());
     EXPECT_TRUE(tree.begin() == tree.end());
@@ -226,6 +227,21 @@ TEST(SumTreeTest, IteratorWalksTheSequenceWithRunningSummaries) {
 
 static_assert(std::forward_iterator<Tree::iterator>);
 
+// end() is a sentinel without a path; an iterator stepped past the last item keeps its path. The
+// two must compare equal, and inserting at either must append.
+TEST(SumTreeTest, SteppingPastTheLastItemReachesEnd) {
+    Tree tree = diagram();
+    Tree::iterator last = kth(tree, 8);
+    EXPECT_TRUE(last != tree.end());
+    ++last;
+    EXPECT_TRUE(last == tree.end());
+    EXPECT_EQ(last.start(), (CountSum{8, 31}));
+    tree.insert(last, Number{7});
+    tree.insert(tree.end(), Number{8});
+    EXPECT_EQ(values_of(tree.items()), (std::vector<int>{3, 1, 4, 1, 5, 9, 2, 6, 7, 8}));
+    EXPECT_TRUE(tree.check_invariants());
+}
+
 TEST(SumTreeTest, RangeForVisitsEveryItemInOrder) {
     Tree tree = diagram();
     std::vector<int> items;
@@ -241,7 +257,7 @@ TEST(SumTreeTest, FormatsTheShapeOneNodePerLine) {
                                             "  [(2, 14) (2, 8)]\n"
                                             "    leaf [5 9]\n"
                                             "    leaf [2 6]");
-    EXPECT_EQ(std::format("{}", Tree()), "[]");
+    EXPECT_EQ(std::format("{}", Tree()), "leaf []");
 }
 
 TEST(SumTreeTest, SvgDrawsOneCellPerEntryAndOneArrowPerChild) {
@@ -286,6 +302,58 @@ TEST(SumTreeTest, InsertIntoFullLeafSplitsIt) {
                                                nonleaf(leaf({5, 9}), leaf({2, 6})))
                                            .get()));
     EXPECT_TRUE(tree.check_invariants());
+}
+
+TEST(SumTreeTest, InsertReturnsThePositionOfTheInsertedItem) {
+    Tree tree = diagram();
+    Tree::iterator it = tree.insert(kth(tree, 3), Number{7});  // Before C, into [4, 1].
+    EXPECT_EQ(it->value, 7);
+    EXPECT_EQ(it.start(), (CountSum{2, 4}));
+    ++it;
+    EXPECT_EQ(it->value, 4);
+}
+
+// The appended item lands in the new leaf of a split that reaches the root, so the returned
+// position has to follow it into that leaf and gain a step for the new root.
+TEST(SumTreeTest, InsertReturnsThePositionAcrossASplitUpToTheRoot) {
+    Tree tree = Tree(nonleaf(leaf({1, 2, 3}), leaf({4, 5, 6}), leaf({7, 8, 9})));
+    Tree::iterator it = tree.push_back(Number{10});
+    EXPECT_EQ(it->value, 10);
+    EXPECT_EQ(it.start(), (CountSum{9, 45}));
+    ++it;
+    EXPECT_TRUE(it == tree.end());
+    EXPECT_TRUE(tree.check_invariants());
+}
+
+TEST(SumTreeTest, BuildsFromItemsInOrder) {
+    std::vector<Number> items;
+    for (int v : {3, 1, 4, 1, 5, 9, 2, 6}) items.push_back(Number{v});
+    Tree tree(items);
+    EXPECT_EQ(values_of(tree.items()), (std::vector<int>{3, 1, 4, 1, 5, 9, 2, 6}));
+    EXPECT_EQ(tree.summary(), (CountSum{8, 31}));
+    EXPECT_TRUE(tree.check_invariants());
+    EXPECT_TRUE(Tree(std::vector<Number>{}).empty());
+    EXPECT_EQ(values_of(Tree(std::vector<Number>{Number{7}}).items()), (std::vector<int>{7}));
+}
+
+TEST(SumTreeTest, InsertsARangeAndReturnsThePositionAfterIt) {
+    Tree tree = diagram();
+    std::vector<Number> items = {Number{7}, Number{8}, Number{9}};
+    Tree::iterator after = tree.insert(kth(tree, 3), items.begin(), items.end());
+    EXPECT_EQ(after->value, 4);
+    EXPECT_EQ(after.start(), (CountSum{5, 28}));
+    EXPECT_EQ(values_of(tree.items()), (std::vector<int>{3, 1, 7, 8, 9, 4, 1, 5, 9, 2, 6}));
+    EXPECT_TRUE(tree.check_invariants());
+    EXPECT_TRUE(tree.insert(tree.end(), items.begin(), items.end()) == tree.end());
+    EXPECT_EQ(tree.summary(), (CountSum{14, 79}));
+}
+
+TEST(SumTreeTest, PushBackAppends) {
+    Tree tree;
+    for (int v : {3, 1, 4}) tree.push_back(Number{v});
+    EXPECT_EQ(values_of(tree.items()), (std::vector<int>{3, 1, 4}));
+    EXPECT_EQ(tree.push_back(Number{1})->value, 1);
+    EXPECT_EQ(values_of(tree.items()), (std::vector<int>{3, 1, 4, 1}));
 }
 
 TEST(SumTreeTest, InsertSplitsUpToTheRoot) {
@@ -345,11 +413,46 @@ TEST(SumTreeTest, EraseMergesUpToTheRootAndShortensTheTree) {
     EXPECT_TRUE(tree.check_invariants());
 }
 
+// Erasing B merges leaves and then nonleaf nodes and drops the root, so the returned position has
+// to follow the item after B into the merged leaf and lose the step for the old root.
+TEST(SumTreeTest, EraseReturnsThePositionAfterTheErasedItemAcrossMerges) {
+    Tree tree = diagram();
+    Tree::iterator it = tree.erase(kth(tree, 2));
+    EXPECT_EQ(it->value, 4);
+    EXPECT_EQ(it.start(), (CountSum{1, 3}));
+    ++it;
+    EXPECT_EQ(it->value, 1);
+    EXPECT_TRUE(tree.check_invariants());
+}
+
+TEST(SumTreeTest, EraseOfALeafsLastItemReturnsTheNextLeafsFirst) {
+    Tree tree = Tree(nonleaf(leaf({1, 2, 3}), leaf({4, 5})));
+    Tree::iterator it = tree.erase(kth(tree, 3));
+    EXPECT_EQ(it->value, 4);
+    EXPECT_EQ(it.start(), (CountSum{2, 3}));
+}
+
+TEST(SumTreeTest, EraseAfterABorrowReturnsTheRightPosition) {
+    Tree tree = Tree(nonleaf(leaf({1, 2, 3}), leaf({4, 5})));
+    Tree::iterator it = tree.erase(kth(tree, 4));  // [4] borrows 3 from the left: [3, 5].
+    EXPECT_EQ(it->value, 5);
+    EXPECT_EQ(it.start(), (CountSum{3, 6}));
+}
+
+TEST(SumTreeTest, EraseOfTheLastItemReturnsEnd) {
+    Tree tree = diagram();
+    EXPECT_TRUE(tree.erase(kth(tree, 8)) == tree.end());
+    Tree one;
+    one.push_back(Number{1});
+    EXPECT_TRUE(one.erase(one.begin()) == one.end());
+    EXPECT_TRUE(one.empty());
+}
+
 TEST(SumTreeTest, ErasingEveryItemLeavesAnEmptyTree) {
     Tree tree;
     for (int v : {1, 2, 3, 4, 5}) tree.insert(tree.end(), Number{v});
     for (int i = 0; i < 5; i++) tree.erase(tree.begin());
-    EXPECT_EQ(tree.root(), nullptr);
+    EXPECT_TRUE(tree.empty());
     EXPECT_EQ(tree.summary(), CountSum{});
     tree.insert(tree.end(), Number{6});
     EXPECT_EQ(values_of(tree.items()), (std::vector<int>{6}));
@@ -386,9 +489,11 @@ void InsertsAtRandomPositionsMatchVector(const std::vector<std::pair<int, int>>&
     std::vector<int> expected;
     for (auto [position, value] : ops) {
         int index = position % (static_cast<int>(expected.size()) + 1);
-        tree.insert(kth(tree, index + 1), Number{value});
+        Tree::iterator it = tree.insert(kth(tree, index + 1), Number{value});
         expected.insert(expected.begin() + index, value);
         ASSERT_TRUE(tree.check_invariants()) << "insert " << value << " at " << index;
+        ASSERT_EQ(it->value, value) << "returned position after inserting at " << index;
+        ASSERT_EQ(it.start(), kth(tree, index + 1).start()) << "returned start at " << index;
     }
     EXPECT_EQ(values_of(tree.items()), expected);
 }
@@ -406,12 +511,16 @@ void interleaved_edits_match_vector(const std::vector<std::tuple<bool, int, int>
         int size = static_cast<int>(expected.size());
         if (is_insert) {
             int index = position % (size + 1);
-            tree.insert(kth(tree, index + 1), Number{value});
+            auto it = tree.insert(kth(tree, index + 1), Number{value});
             expected.insert(expected.begin() + index, value);
+            ASSERT_EQ(it->value, value) << "returned position after inserting at " << index;
+            ASSERT_EQ(it.start(), kth(tree, index + 1).start()) << "returned start at " << index;
         } else if (size > 0) {
             int index = position % size;
-            tree.erase(kth(tree, index + 1));
+            auto it = tree.erase(kth(tree, index + 1));
             expected.erase(expected.begin() + index);
+            ASSERT_TRUE(it == kth(tree, index + 1)) << "returned position after erasing " << index;
+            ASSERT_EQ(it.start(), kth(tree, index + 1).start()) << "returned start at " << index;
         }
         ASSERT_TRUE(tree.check_invariants()) << (is_insert ? "insert" : "erase");
         ASSERT_EQ(values_of(tree.items()), expected) << (is_insert ? "insert" : "erase");
@@ -436,6 +545,40 @@ FUZZ_TEST(SumTreeFuzzTest, InterleavedInsertsAndErasesMatchVectorAtLargerDegree)
     .WithDomains(fuzztest::VectorOf(fuzztest::TupleOf(fuzztest::Arbitrary<bool>(),
                                                       fuzztest::InRange(0, 1000),
                                                       fuzztest::InRange(-50, 50))));
+
+// Building from a vector gives a valid tree holding the same items, at every size from empty up.
+void BuildsFromAnyVector(const std::vector<int>& values) {
+    std::vector<Number> items;
+    for (int v : values) items.push_back(Number{v});
+    Tree tree(items);
+    EXPECT_TRUE(tree.check_invariants());
+    EXPECT_EQ(values_of(tree.items()), values);
+}
+FUZZ_TEST(SumTreeFuzzTest, BuildsFromAnyVector)
+    .WithDomains(fuzztest::VectorOf(fuzztest::InRange(-50, 50)).WithMaxSize(300));
+
+// Inserting ranges at random positions reads back as the vector built by the same inserts, and
+// each returned position is the one after the range.
+void RangeInsertsMatchVector(const std::vector<std::pair<int, std::vector<int>>>& ops) {
+    Tree tree;
+    std::vector<int> expected;
+    for (const auto& [position, values] : ops) {
+        int index = position % (static_cast<int>(expected.size()) + 1);
+        std::vector<Number> items;
+        for (int v : values) items.push_back(Number{v});
+        Tree::iterator after = tree.insert(kth(tree, index + 1), items.begin(), items.end());
+        expected.insert(expected.begin() + index, values.begin(), values.end());
+        ASSERT_TRUE(tree.check_invariants()) << "range of " << values.size() << " at " << index;
+        int next = index + static_cast<int>(values.size());
+        ASSERT_TRUE(after == kth(tree, next + 1)) << "returned position at " << index;
+        ASSERT_EQ(after.start(), kth(tree, next + 1).start()) << "returned start at " << index;
+    }
+    EXPECT_EQ(values_of(tree.items()), expected);
+}
+FUZZ_TEST(SumTreeFuzzTest, RangeInsertsMatchVector)
+    .WithDomains(fuzztest::VectorOf(
+        fuzztest::PairOf(fuzztest::InRange(0, 100),
+                         fuzztest::VectorOf(fuzztest::InRange(-50, 50)).WithMaxSize(40))));
 
 // With positive values the running sum is monotone, so a seek along it lands where a linear
 // scan of the prefix sums does.

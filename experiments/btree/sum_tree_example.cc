@@ -54,7 +54,7 @@ void write(std::string_view path, std::string_view svg) {
 }
 
 struct MaxKey {
-    int max = INT_MIN;  // Identity for max.
+    int max = INT_MIN;
     bool operator==(const MaxKey&) const = default;
     friend MaxKey operator+(const MaxKey& a, const MaxKey& b) { return {std::max(a.max, b.max)}; }
 };
@@ -82,12 +82,7 @@ public:
         tree_.erase(it);
         return true;
     }
-    // The keys in order: the tree's items are Keys, so project each one.
-    std::vector<int> items() const {
-        std::vector<int> out;
-        for (const Key& item : tree_) out.push_back(item.key);
-        return out;
-    }
+    const btree::SumTree<Key>& tree() const { return tree_; }
 
 private:
     // The first item whose key is at least k, since the items are kept sorted.
@@ -96,16 +91,6 @@ private:
     }
     btree::SumTree<Key> tree_;
 };
-
-void example1() {
-    BTree tree;
-    tree.insert(1);
-    tree.insert(5);
-    tree.insert(2);
-    tree.insert(4);
-    tree.insert(3);
-    std::println("{}", tree.items());
-}
 
 }  // namespace
 
@@ -144,29 +129,48 @@ struct std::formatter<Chunk> : std::formatter<std::string> {
     }
 };
 
-int main() {
-    example1();
+template <>
+struct std::formatter<Key> : std::formatter<int> {
+    auto format(const Key& k, auto& ctx) const { return std::formatter<int>::format(k.key, ctx); }
+};
 
-    // The diagram's eight items, appended in order. With t = 2 the eighth append splits the root,
-    // and the tree comes out exactly as drawn.
+// A nonleaf entry's summary is the largest key beneath it.
+template <>
+struct std::formatter<MaxKey> : std::formatter<int> {
+    auto format(const MaxKey& s, auto& ctx) const {
+        return std::formatter<int>::format(s.max, ctx);
+    }
+};
+
+void example1() {
+    BTree tree;
+    for (int k : {1, 5, 2, 4, 3}) tree.insert(k);
+    std::string keys;
+    for (const Key& k : tree.tree()) keys += std::format("{} ", k.key);
+    std::println("keys in order: {}", keys);
+    std::println("{}", tree.tree());
+    write("btree_example.svg", btree::to_svg(tree.tree()));
+}
+
+void example2() {
     Tree tree;
-    for (int v : {3, 1, 4, 1, 5, 9, 2, 6}) tree.insert(tree.end(), Number{v});
+    for (int v : {3, 1, 4, 1, 5, 9, 2, 6}) tree.push_back(Number{v});
     std::println("whole tree: {}", tree.summary());
     std::println("{}", tree);
     write("sum_tree_example.svg", btree::to_svg(tree));
 
     // An iterator walks the sequence; start() is the summary of everything before its item.
-    for (Tree::iterator c = tree.begin(); c != tree.end(); ++c) {
+    for (auto c = tree.begin(); c != tree.end(); ++c) {
         std::println("item {} at index {}, after a sum of {}", c->value, c.start().count,
                      c.start().sum);
     }
 
     // A seek never scans the sequence: it descends by comparing the target with whole subtrees.
     // Along count it answers "which item is third?"...
-    Tree::iterator third = tree.seek([](const CountSum& s) { return s.count >= 3; });
+    auto third = tree.seek([](const CountSum& s) { return s.count >= 3; });
     std::println("the 3rd item is {}", third->value);
     // ...and along sum, "where does the running sum reach 15?", in the same O(log n).
-    Tree::iterator at15 = tree.seek([](const CountSum& s) { return s.sum >= 15; });
+    auto at15 = tree.seek([](const CountSum& s) { return s.sum >= 15; });
     std::println("the running sum reaches 15 inside {}, after {} items summing to {}", at15->value,
                  at15.start().count, at15.start().sum);
 
@@ -182,12 +186,14 @@ int main() {
     tree.erase(tree.seek([](const CountSum& s) { return s.count >= 3; }));
     std::println("after erasing it again: {}", tree.summary());
     std::println("{}", tree);
+}
 
+void example3() {
     // The same tree over text, cut into chunks of eight bytes so that lines straddle chunks.
     std::string_view poem = "the quick\nbrown fox\njumps over\nthe lazy dog\n";
     Rope rope;
     for (size_t i = 0; i < poem.size(); i += 8) {
-        rope.insert(rope.end(), Chunk{std::string(poem.substr(i, 8))});
+        rope.push_back(Chunk{std::string(poem.substr(i, 8))});
     }
     std::println("{} bytes in {} lines", rope.summary().bytes, rope.summary().lines);
     std::println("{}", rope);
@@ -197,7 +203,7 @@ int main() {
     // the chunk's text before the offset. The result summarizes everything before the offset, so
     // its lines is the line number and its last_line the column.
     size_t offset = 25;
-    Rope::iterator chunk = rope.seek([&](const TextSummary& s) { return s.bytes > offset; });
+    auto chunk = rope.seek([&](const TextSummary& s) { return s.bytes > offset; });
     std::string head = chunk->text.substr(0, offset - chunk.start().bytes);
     TextSummary before = chunk.start() + Chunk{head}.summary();
     std::println("byte {} is on line {} at column {}", offset, before.lines, before.last_line);
@@ -205,8 +211,14 @@ int main() {
     // Line number to byte offset: seek the chunk holding the newline that ends the line before,
     // then step past that newline within the chunk.
     size_t line = 2;
-    Rope::iterator at = rope.seek([&](const TextSummary& s) { return s.lines >= line; });
+    auto at = rope.seek([&](const TextSummary& s) { return s.lines >= line; });
     size_t pos = 0;
     for (size_t k = line - at.start().lines; k > 0; k--) pos = at->text.find('\n', pos) + 1;
     std::println("line {} starts at byte {}", line, at.start().bytes + pos);
+}
+
+int main() {
+    example1();
+    // example2();
+    // example3();
 }

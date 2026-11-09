@@ -38,6 +38,7 @@ executable("unit_tests") {
     "//experiments/btree:rope_unittest",
     "//experiments/btree:sum_tree_unittest",
     "//fx:fx_unittests",
+    "//px:px_unittests",
     "//ui:ui_unittests",
   ]
 }

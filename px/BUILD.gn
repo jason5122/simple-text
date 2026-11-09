@@ -35,6 +35,7 @@ source_set("px") {
       "mac/px_offscreen_mac.h",
       "mac/px_offscreen_mac.mm",
       "mac/px_offscreen_metal.mm",
+      "mac/px_presentation_queue.h",
       "mac/px_window.mm",
       "metal_render_context.h",
       "metal_render_context.mm",
@@ -89,6 +90,12 @@ source_set("px") {
       "GL",
     ]
   }
+}
+
+source_set("px_unittests") {
+  testonly = true
+  sources = [ "mac/px_presentation_queue_unittest.cc" ]
+  deps = [ "//testing:gtest" ]
 }
 
 if (is_linux) {

@@ -1,4 +1,6 @@
+#include "base/functional/scope_exit.h"
 #include "px/mac/px_mac_private.h"
+#include "px/mac/px_presentation_queue.h"
 #include "px/metal_render_context.h"
 #include <Metal/Metal.h>
 #include <QuartzCore/CAMetalLayer.h>
@@ -20,9 +22,14 @@
     bool _stencilUnavailable;
     NSUInteger _presentedWidth;
     NSUInteger _presentedHeight;
+    // Presentation callbacks run on a Metal-owned queue while display runs on the main thread.
+    std::mutex _presentationMutex;
+    px_presentation_queue _presentationQueue;
+    uint64_t _lastRequestId;
 }
 - (instancetype)initWithPXW:(px_window_t*)pxw device:(id<MTLDevice>)device;
 - (void)addDirtyRect:(rect)r;
+- (void)detachWindow;
 @end
 
 @implementation PXMetalLayer
@@ -37,10 +44,11 @@
         _stencilUnavailable = false;
         _presentedWidth = 0;
         _presentedHeight = 0;
+        _lastRequestId = 0;
 
         self.device = device;
         self.pixelFormat = MTLPixelFormatBGRA8Unorm;
-        self.maximumDrawableCount = 3;
+        self.maximumDrawableCount = px_presentation_queue::kDrawableCount;
         // The drawable is only ever a blit destination, which framebufferOnly forbids.
         self.framebufferOnly = NO;
         self.presentsWithTransaction = NO;
@@ -97,6 +105,45 @@
     return true;
 }
 
+// Pending Metal callbacks can outlive the window. Retrying a deferred paint must
+// remain safe after px_destroy_window releases the handler and px_window_t.
+- (void)detachWindow {
+    _pxw = nullptr;
+}
+
+- (void)redisplayUnlessRequestedAfter:(uint64_t)requestId {
+    __weak PXMetalLayer* weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      PXMetalLayer* layer = weakSelf;
+      if (layer && layer->_pxw && layer->_lastRequestId == requestId) {
+          [layer setNeedsDisplay];
+      }
+    });
+}
+
+- (void)configurePresentationQueue {
+    NSScreen* screen = _pxw->window.screen;
+    NSNumber* screenNumber = screen.deviceDescription[@"NSScreenNumber"];
+    CGDirectDisplayID display =
+        screenNumber ? screenNumber.unsignedIntValue : kCGNullDirectDisplay;
+    double interval = 0.0;
+    if (@available(macOS 12.0, *)) {
+        interval = screen.minimumRefreshInterval;
+    }
+    if (interval <= 0.0 && display) {
+        CGDisplayModeRef mode = CGDisplayCopyDisplayMode(display);
+        double hz = mode ? CGDisplayModeGetRefreshRate(mode) : 0.0;
+        if (mode) {
+            CGDisplayModeRelease(mode);
+        }
+        if (hz > 0.0) {
+            interval = 1.0 / hz;
+        }
+    }
+    std::lock_guard lock(_presentationMutex);
+    _presentationQueue.configure(display, interval);
+}
+
 - (void)display {
     if (!_pxw || !_pxw->handler || !_queue) {
         return;
@@ -127,6 +174,42 @@
     rect windowBounds{0.0, 0.0, size.x, size.y};
 
     std::vector<rect> dirty;
+    const bool resized = width != _presentedWidth || height != _presentedHeight;
+    // Admit the whole frame before consuming dirty regions or allocating GPU work.
+    // Deferred requests merge here; a completion retries the newest application state.
+    const uint64_t requestId = ++_lastRequestId;
+    uint64_t presentationGeneration = 0;
+    [self configurePresentationQueue];
+    {
+        std::lock_guard lock(_presentationMutex);
+        if (!_presentationQueue.try_submit(requestId, resized)) {
+            return;
+        }
+        presentationGeneration = _presentationQueue.generation();
+    }
+    void (^completePresentation)(double) = ^(double presentedTime) {
+      uint64_t deferredRequest = 0;
+      {
+          std::lock_guard lock(self->_presentationMutex);
+          deferredRequest =
+              self->_presentationQueue.completed(presentedTime, presentationGeneration);
+      }
+      if (deferredRequest) {
+          [self redisplayUnlessRequestedAfter:deferredRequest];
+      }
+    };
+    bool reservationActive = true;
+    // Allocation failures and callbacks that close the window must return the slot.
+    base::ScopeExit cancelReservation([&] {
+        if (reservationActive) {
+            {
+                std::lock_guard lock(_dirtyMutex);
+                _dirty.insert(_dirty.end(), dirty.begin(), dirty.end());
+            }
+            completePresentation(0.0);
+            [self redisplayUnlessRequestedAfter:requestId];
+        }
+    });
     {
         std::lock_guard lock(_dirtyMutex);
         dirty.swap(_dirty);
@@ -143,6 +226,9 @@
 
     _pxw->handler->pre_paint();
     px_mac_dispatch_post_event_callbacks();
+    if (!_pxw || !_pxw->handler) {
+        return;
+    }
 
     if ([self ensureBackingWidth:width height:height]) {
         dirty.clear();
@@ -152,8 +238,7 @@
         return;
     }
 
-    // The queue serializes each backing-texture update and its following blit. Let CAMetalLayer's
-    // three-drawable swap queue provide backpressure instead of waiting on the GPU ourselves.
+    // One command buffer owns the backing-texture update and its following drawable blit.
     id<MTLCommandBuffer> commandBuffer = [_queue commandBuffer];
     if (!commandBuffer) {
         return;
@@ -171,12 +256,12 @@
         rc.finish();
     }
 
-    // Acquire only after recording the persistent scene so a temporary drawable shortage never
-    // delays painting.
-    bool resized = width != _presentedWidth || height != _presentedHeight;
-    id<CAMetalDrawable> drawable = [self nextDrawable];
     uint64_t frameId = _pxw->next_frame_id;
     std::function<void(uint64_t, double)> presentedCallback = _pxw->frame_presented_callback;
+
+    // Acquire only after recording the persistent scene so a temporary drawable shortage never
+    // delays painting.
+    id<CAMetalDrawable> drawable = [self nextDrawable];
     if (drawable) {
         id<MTLTexture> destination = drawable.texture;
         id<MTLBlitCommandEncoder> blit = [commandBuffer blitCommandEncoder];
@@ -193,14 +278,26 @@
             destinationOrigin:MTLOriginMake(0, 0, 0)];
         [blit endEncoding];
     }
-    if (drawable && presentedCallback) {
+    if (drawable) {
         [drawable addPresentedHandler:^(id<MTLDrawable> presentedDrawable) {
           double presentedTime = presentedDrawable.presentedTime;
-          dispatch_async(dispatch_get_main_queue(), ^{
-            presentedCallback(frameId, presentedTime);
-          });
+          completePresentation(presentedTime);
+          if (presentedCallback) {
+              dispatch_async(dispatch_get_main_queue(), ^{
+                if (self->_pxw) {
+                    presentedCallback(frameId, presentedTime);
+                }
+              });
+          }
+        }];
+    } else {
+        // An offscreen render still owns GPU resources until its command buffer completes.
+        [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
+          completePresentation(0.0);
+          [self redisplayUnlessRequestedAfter:requestId];
         }];
     }
+    reservationActive = false;
 
     // When in fullscreen, Metal presents in direct mode. However, we can't seem to get fully
     // smooth rendering in direct mode, so we force composited mode by setting `opaque = NO`.
@@ -226,13 +323,8 @@
     if (drawable) {
         _presentedWidth = width;
         _presentedHeight = height;
-    } else {
-        // The pool was exhausted. The persistent texture is up to date, so another display will
-        // put it on screen.
-        [self setNeedsDisplay];
-        if (presentedCallback) {
-            presentedCallback(frameId, 0.0);
-        }
+    } else if (presentedCallback) {
+        presentedCallback(frameId, 0.0);
     }
 
     _pxw->did_first_paint = true;
@@ -259,5 +351,11 @@ CALayer* px_mac_make_metal_layer(px_window_t* window) {
 void px_mac_metal_layer_add_dirty(CALayer* layer, rect r) {
     if ([layer isKindOfClass:[PXMetalLayer class]]) {
         [static_cast<PXMetalLayer*>(layer) addDirtyRect:r];
+    }
+}
+
+void px_mac_metal_layer_detach_window(CALayer* layer) {
+    if ([layer isKindOfClass:[PXMetalLayer class]]) {
+        [static_cast<PXMetalLayer*>(layer) detachWindow];
     }
 }

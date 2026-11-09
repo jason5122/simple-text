@@ -96,6 +96,7 @@ void px_mac_gl_layer_add_dirty(CALayer* layer, rect r);
 // code can call both backends' variants without knowing which one it installed.
 CALayer* px_mac_make_metal_layer(px_window_t* window);
 void px_mac_metal_layer_add_dirty(CALayer* layer, rect r);
+void px_mac_metal_layer_detach_window(CALayer* layer);
 
 // Implemented in px_keycode.mm.
 uint32_t px_mac_modifiers_from_ns(NSEventModifierFlags flags);

@@ -102,7 +102,10 @@ public:
 
     // Called on the main thread when a frame reaches the glass.
     void on_presented(uint64_t frame_id, double presented) {
-        if (!pending_.kind || frame_id != pending_.frame_id) {
+        // Zero reports an unpresented frame. The persistent backing texture carries its
+        // content into the next successfully presented frame, whose monotonically increasing ID
+        // is therefore also a valid observation of this change reaching the display.
+        if (!pending_.kind || presented <= 0.0 || frame_id < pending_.frame_id) {
             return;
         }
         if (log_) {

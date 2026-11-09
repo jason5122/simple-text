@@ -1051,6 +1051,7 @@ void px_destroy_window(px_window_t* window) {
     }
     window->window.delegate = nil;
     window->delegate = nil;
+    px_mac_metal_layer_detach_window(window->view.layer);
     window->view = nil;
     [window->window close];
     window->window = nil;

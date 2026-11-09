@@ -502,8 +502,11 @@ void px_set_full_screen(px_window_t* window, bool full_screen);
 void px_set_animating(px_window_t* window, bool animating);
 
 // Optional presentation telemetry. On the macOS Metal backend, the callback runs on the main
-// thread after Core Animation reports that a drawable reached the display. Other backends do not
-// currently report presentation. Passing an empty function disables the observer.
+// thread for each painted frame. `presented_time` is the Core Animation display time, or zero when
+// that frame was not presented. Invalidations coalesced before painting produce no frame ID or
+// callback. A later presentation can include earlier changes retained in the backing texture.
+// Other backends do not currently report presentation. Passing an empty function disables the
+// observer.
 void px_set_frame_presented_callback(
     px_window_t* window, std::function<void(uint64_t frame_id, double presented_time)> callback);
 // Valid only during px_window_event_handler::paint; zero on backends without frame telemetry.
